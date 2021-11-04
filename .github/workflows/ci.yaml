@@ -21,10 +21,13 @@ jobs:
           architecture: ${{ matrix.arch }}
       - name: Set up Poetry and upgrade pip
         run: |
-          pip3 install -U pip poetry
+          pip install -U pip poetry
+      - name: Install test dependencies
+        run: |
+          pip install --prefer-binary -r requirements-test.txt
       - name: Install flows
         run: |
-          pip3 install --prefer-binary .
+          pip install --prefer-binary .
       - name: Run tests
         run: |
           pytest
