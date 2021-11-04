@@ -12,14 +12,6 @@ import requests
 
 from emd_flows.constants import constants
 
-__all__ = [
-    "flow_n1",
-    "flow_n2",
-    "flow_n3",
-    "flow_n4",
-    "flow_n5",
-]
-
 API_URL = "http://webapibrt.rio.rj.gov.br/api/v1/brt"
 API_TIMEOUT = 60
 DISCORD_HOOK = getenv("DISCORD_HOOK")
