@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  pull_request:
+
+jobs:
+  tests:
+    name: ${{ matrix.os }}${{ matrix.arch }} - Python ${{ matrix.python-version }} - tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        arch: [x64]
+        python-version: ["3.7.x", "3.8.x"]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.arch }}
+      - name: Set up Poetry and upgrade pip
+        run: |
+          pip3 install -U pip poetry
+      - name: Install flows
+        run: |
+          pip3 install --prefer-binary .
+      - name: Run tests
+        run: |
+          pytest
