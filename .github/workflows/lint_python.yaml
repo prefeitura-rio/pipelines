@@ -8,7 +8,7 @@ jobs:
     name: Lint Python
     runs-on: ubuntu-latest
     steps:
-      - uses: action/checkout@v2
+      - uses: actions/checkout@v2
       - name: Lint flows
         uses: gabriel-milan/action-pylint@v1
         with:
