@@ -17,7 +17,7 @@ env:
 
 jobs:
   build-container:
-    name: Build and publish container
+    name: Build, publish and register
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -31,6 +31,10 @@ jobs:
       - name: Install Python dependencies for deploying
         run: |-
           pip install -r requirements-deploy.txt
+
+      - name: Install package locally
+        run: |-
+          pip install .
 
       - name: Update image tag in constants
         run: |-
