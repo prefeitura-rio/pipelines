@@ -57,7 +57,6 @@ Flows for emd
 ###############################################################################
 
 
-from prefect import task
 from prefect import Flow
 from prefect.run_configs import KubernetesRun
 from prefect.storage import Module
