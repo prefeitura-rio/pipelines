@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "emd_flows"
+name = "pipelines"
 version = "0.1.0"
 description = ""
 authors = ["Gabriel Gazola Milan <gabriel.gazola@poli.ufrj.br>"]
