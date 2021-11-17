@@ -8,7 +8,7 @@ from sys import argv, exit
 from typing import List
 
 
-FILE_PATH = Path("./emd_flows/constants.py")
+FILE_PATH = Path("./pipelines/constants.py")
 REPLACE_TAG = "AUTO_REPLACE_DOCKER_TAG"
 REPLACE_IMAGE = "AUTO_REPLACE_DOCKER_IMAGE"
 
