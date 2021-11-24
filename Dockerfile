@@ -1,9 +1,20 @@
-FROM prefecthq/prefect:0.15.7
+# Build arguments
+ARG PYTHON_VERSION=3.9-slim
 
-ARG DISCORD_HOOK_URL
-ENV DISCORD_HOOK $DISCORD_HOOK_URL
+# Python version: 3.9
+FROM python:${PYTHON_VERSION}
 
-RUN pip install --no-cache-dir -U "poetry==1.1.11" "pip>=21.2.4"
+# Setting environment with prefect version
+ARG PREFECT_VERSION=0.15.7
+ENV PREFECT_VERSION $PREFECT_VERSION
+
+# Setup virtual environment and prefect
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+RUN python3 -m pip install --no-cache-dir -U "pip>=21.2.4" "prefect==$PREFECT_VERSION"
+
+# Install requirements
 WORKDIR /app
-COPY . .
-RUN pip3 install --no-cache-dir -U .
+COPY requirements-docker.txt .
+RUN python3 -m pip install --no-cache-dir -U -r requirements-docker.txt
