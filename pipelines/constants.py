@@ -23,4 +23,4 @@ class constants(Enum):  # pylint: disable=c0103
     # Other constants
     ######################################
     # Prefect
-    K8S_AGENT_LABEL = "default"
+    K8S_AGENT_LABEL = "kubernetes"
