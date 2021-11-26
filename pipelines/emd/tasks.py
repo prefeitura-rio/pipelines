@@ -57,3 +57,11 @@ def say_hello(name: str = 'World') -> str:
     Greeting task.
     """
     return f'Hello, {name}!'
+
+
+@task
+def task_with_param(param: str) -> str:
+    """
+    Task with a parameter.
+    """
+    return f'Hello, {param}!'
