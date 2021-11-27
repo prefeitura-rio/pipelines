@@ -77,12 +77,12 @@ from pipelines.emd.schedules import (
     tweets_flamengo_schedule,
 )
 
-with Flow("my_flow") as say_hello:
+with Flow("my_flow") as say_hello_flow:
     say_hello()
 
-say_hello.storage = Module("pipelines.emd")
-say_hello.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-say_hello.schedule = every_two_weeks
+say_hello_flow.storage = Module("pipelines.emd")
+say_hello_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+say_hello_flow.schedule = every_two_weeks
 
 with Flow("test_flow") as flow:
     param = Parameter("param")
@@ -92,7 +92,7 @@ flow.storage = Module("pipelines.emd")
 flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 flow.schedule = task_with_param_schedule
 
-with Flow("test_flow") as tweets_flamengo:
+with Flow("test_flow") as tweets_flamengo_flow:
     q = Parameter("keyword")
     q_folder = q.replace(" ", "_").replace("-", "_")
 
@@ -106,6 +106,6 @@ with Flow("test_flow") as tweets_flamengo:
 
     upload_to_storage(q)
 
-tweets_flamengo.storage = Module("pipelines.emd")
-tweets_flamengo.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-tweets_flamengo.schedule = tweets_flamengo_schedule
+tweets_flamengo_flow.storage = Module("pipelines.emd")
+tweets_flamengo_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+tweets_flamengo_flow.schedule = tweets_flamengo_schedule
