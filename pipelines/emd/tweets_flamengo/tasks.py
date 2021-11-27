@@ -61,7 +61,7 @@ import tweepy
 
 from prefect import task
 
-CREDENTIALS = os.getenv("TWITTER_CREDENTIALS")
+CREDENTIALS = json.loads(os.getenv("TWITTER_CREDENTIALS"))
 auth = tweepy.OAuthHandler(CREDENTIALS["CONSUMER_KEY"], CREDENTIALS["CONSUMER_SECRET"])
 auth.set_access_token(CREDENTIALS["ACCESS_TOKEN"], CREDENTIALS["ACCESS_TOKEN_SECRET"])
 api = tweepy.API(auth)
