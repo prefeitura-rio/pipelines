@@ -68,6 +68,7 @@ from pipelines.emd.tweets_flamengo.tasks import (
     fetch_tweets,
     save_last_id,
     upload_to_storage,
+    get_api,
 )
 
 from pipelines.emd.schedules import (
@@ -95,9 +96,11 @@ with Flow("test_flow") as tweets_flamengo:
     q = Parameter("keyword")
     q_folder = q.replace(" ", "_").replace("-", "_")
 
+    api = get_api()
+
     fetch_last_id(q_folder)
-    last_id, created_at = get_last_id(q)
-    dd = fetch_tweets(q, last_id, created_at)
+    last_id, created_at = get_last_id(api, q)
+    dd = fetch_tweets(api, q, last_id, created_at)
 
     save_last_id(dd, q_folder)
 
