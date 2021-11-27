@@ -92,7 +92,7 @@ flow.storage = Module("pipelines.emd")
 flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 flow.schedule = task_with_param_schedule
 
-with Flow("test_flow") as tweets_flamengo_flow:
+with Flow("tweets_flamengo") as tweets_flamengo_flow:
     q = Parameter("keyword")
     q_folder = q.replace(" ", "_").replace("-", "_")
 
