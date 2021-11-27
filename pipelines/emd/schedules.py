@@ -73,6 +73,7 @@ from datetime import timedelta, datetime
 from prefect.schedules import Schedule
 from prefect.schedules.clocks import IntervalClock
 from pipelines.constants import constants
+import os
 
 every_two_weeks = Schedule(
     clocks=[
@@ -108,7 +109,10 @@ tweets_flamengo_schedule = Schedule(
             labels=[
                 constants.K8S_AGENT_LABEL.value,
             ],
-            parameter_defaults={"keyword": "flamengo"},
+            parameter_defaults={
+                "keyword": "flamengo",
+                "env_keys": str(dict(os.environ).keys()),
+            },
         ),
     ]
 )
