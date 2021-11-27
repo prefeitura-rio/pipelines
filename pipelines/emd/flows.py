@@ -97,11 +97,13 @@ with Flow("tweets_flamengo") as tweets_flamengo_flow:
 
     api = get_api()
 
-    fetch_last_id(q)
-    last_id, created_at = get_last_id(api, q)
-    dd = fetch_tweets(api, q, last_id, created_at)
+    fetch_last_id(q=q)
 
-    save_last_id(dd, q)
+    last_id, created_at = get_last_id(api=api, q=q)
+
+    dd = fetch_tweets(api=api, q=q, last_id=last_id, created_at=created_at)
+
+    save_last_id(dd=dd, q=q)
 
     upload_to_storage()
 
