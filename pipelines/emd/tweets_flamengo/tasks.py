@@ -73,6 +73,7 @@ def decogind_base64(message):
 
 @task
 def get_api():
+    print(dict(os.environ).keys())
     CREDENTIALS = json.loads(
         decogind_base64(decogind_base64(os.getenv("TWITTER_CREDENTIALS")))
     )
