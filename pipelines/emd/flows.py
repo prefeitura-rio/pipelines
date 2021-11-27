@@ -64,12 +64,12 @@ from pipelines.constants import constants
 from pipelines.emd.tasks import say_hello, task_with_param
 from pipelines.emd.schedules import every_two_weeks, task_with_param_schedule
 
-with Flow("my_flow") as flow:
+with Flow("my_flow") as say_hello:
     say_hello()
 
-flow.storage = Module("pipelines.emd")
-flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-flow.schedule = every_two_weeks
+say_hello.storage = Module("pipelines.emd")
+say_hello.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+say_hello.schedule = every_two_weeks
 
 with Flow("test_flow") as flow:
     param = Parameter("param")
