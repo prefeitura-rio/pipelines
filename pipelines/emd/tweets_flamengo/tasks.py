@@ -47,6 +47,7 @@ Tasks for emd
 # Abaixo segue um código para exemplificação, que pode ser removido.
 #
 ###############################################################################
+import base64
 import os
 import time
 from pathlib import Path
@@ -61,8 +62,7 @@ import tweepy
 
 from prefect import task
 
-import base64
-
+from pipelines.utils import log
 
 
 def decode_env(value: str):
@@ -120,12 +120,13 @@ def save_last_id(df, q):
         )
 
     if df is None:
-        print("   No new tweets found")
+        log("   No new tweets found")
     else:
         ## twitter fetch data from most recent to most oldest
         ## last_id must to be the most recent id
         df = df[["id", "created_at"]].iloc[[0]].copy()
         df.to_csv(f"{pre_path}/{q_folder}.csv", index=False, mode="a", header=False)
+    return "data/staging"
 
 
 @task
@@ -147,13 +148,13 @@ def fetch_last_id(q):
             df.columns = ["id", "created_at", "q"]
             df.drop("q", 1).to_csv(f"{pre_path}/{q_folder}.csv", index=False)
     except FileNotFoundError:
-        print(f"No table {q_folder} in storage")
+        log(f"No table {q_folder} in storage")
 
 
 @task(nout=2)
-def get_last_id(api, q):
+def get_last_id(api, q, data_path: str):
     q_folder = q.replace(" ", "_").replace("-", "_")
-    pre_path = f"data/staging/twitter_flamengo/last_id/q={q_folder}"
+    pre_path = f"{data_path}/twitter_flamengo/last_id/q={q_folder}"
     if not os.path.exists(f"{pre_path}/{q_folder}.csv"):
         tweet = api.search_tweets(q=q, count=1)[0]
         last_id = tweet.id
@@ -178,7 +179,7 @@ def fetch_tweets(api, q, last_id, created_at):
     q_folder = q.replace(" ", "_").replace("-", "_")
     dt = datetime.today().strftime("%Y-%m-%d-%H-%M-%S")
     first_page_df = None
-    print(f"{q} | last_id: {last_id} | created_at: {created_at} | file: {dt}")
+    log(f"{q} | last_id: {last_id} | created_at: {created_at} | file: {dt}")
 
     for i, page in enumerate(
         tweepy.Cursor(api.search_tweets, q=q, since_id=last_id, count=100).pages(149),
@@ -552,17 +553,17 @@ def fetch_tweets(api, q, last_id, created_at):
             ## the first tweet from first page is the most recent, how its what we call last_id
             first_page_df = dd.copy()
 
-        print(f"    page: {i} | tweets: {len(dd)} | columns: {len(dd.columns)}")
+        log(f"    page: {i} | tweets: {len(dd)} | columns: {len(dd.columns)}")
 
     return first_page_df
 
 
 @task
-def upload_to_storage():
+def upload_to_storage(path: str):
     tb_last_id = bd.Table(dataset_id="twitter_flamengo", table_id="last_id")
-    tb_last_id.append("data/staging/twitter_flamengo/last_id")
-    if os.path.isdir("data/staging/"):
-        shutil.rmtree("data/staging/")
+    tb_last_id.append(f"{path}/twitter_flamengo/last_id")
+    if os.path.isdir(f"{path}/"):
+        shutil.rmtree(f"{path}/")
 
     tb_tweet = bd.Table(dataset_id="twitter_flamengo", table_id="tweets")
     tb_tweet.append(
