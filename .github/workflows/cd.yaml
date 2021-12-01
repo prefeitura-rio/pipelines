@@ -22,6 +22,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Setup Python version
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+
       - name: Setup Google Cloud CLI
         uses: google-github-actions/setup-gcloud@v0.2.1
         with:
@@ -48,7 +53,6 @@ jobs:
         run: |-
           docker build \
             --tag "$IMAGE_NAME:$GITHUB_SHA" \
-            --build-arg DISCORD_HOOK_URL="$DISCORD_HOOK_URL" \
             .
 
       - name: Publish Docker image

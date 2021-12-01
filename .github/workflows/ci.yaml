@@ -11,7 +11,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         arch: [x64]
-        python-version: ["3.7.x", "3.8.x"]
+        python-version: ["3.9.x"]
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
