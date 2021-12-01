@@ -16,8 +16,8 @@ RUN python3 -m pip install --no-cache-dir -U "pip>=21.2.4" "prefect==$PREFECT_VE
 
 # Install requirements
 WORKDIR /app
-COPY requirements-docker.txt .
-RUN python3 -m pip install --prefer-binary --no-cache-dir -U -r requirements-docker.txt && \
+COPY . .
+RUN python3 -m pip install --prefer-binary --no-cache-dir -U . && \
     mkdir -p /opt/prefect/app/bases && \
     mkdir -p /root/.basedosdados/templates && \
     mkdir -p /root/.basedosdados/credentials/
