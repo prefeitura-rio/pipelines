@@ -46,6 +46,10 @@ jobs:
         run: |-
           pip install .
 
+      - name: Export requirements for Docker image
+        run: |-
+          poetry export -f requirements.txt --output requirements-docker.txt
+
       - name: Configure Docker with gcloud
         run: |-
           gcloud --quiet auth configure-docker
