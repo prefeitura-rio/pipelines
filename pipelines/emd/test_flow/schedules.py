@@ -74,17 +74,6 @@ from prefect.schedules import Schedule
 from prefect.schedules.clocks import IntervalClock
 from pipelines.constants import constants
 
-every_two_weeks = Schedule(
-    clocks=[
-        IntervalClock(
-            interval=timedelta(weeks=2),
-            start_date=datetime(2021, 1, 1),
-            labels=[
-                constants.K8S_AGENT_LABEL.value,
-            ],
-        ),
-    ]
-)
 
 task_with_param_schedule = Schedule(
     clocks=[
@@ -95,22 +84,6 @@ task_with_param_schedule = Schedule(
                 constants.K8S_AGENT_LABEL.value,
             ],
             parameter_defaults={"param": "value"},
-        ),
-    ]
-)
-
-
-tweets_flamengo_schedule = Schedule(
-    clocks=[
-        IntervalClock(
-            interval=timedelta(minutes=5),
-            start_date=datetime(2021, 1, 1),
-            labels=[
-                constants.K8S_AGENT_LABEL.value,
-            ],
-            parameter_defaults={
-                "keyword": "flamengo",
-            },
         ),
     ]
 )
