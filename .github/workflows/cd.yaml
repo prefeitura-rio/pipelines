@@ -60,10 +60,9 @@ jobs:
         run: |-
           docker push "$IMAGE_NAME:$GITHUB_SHA"
 
-      - name: Connect to Tailscale VPN
-        uses: tailscale/github-action@v1
-        with:
-          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+      - name: Forward port to Apollo
+        run: |-
+          kubectl port-forward -n prefect deploy/prefect-apollo 4200:4200 &
 
       - name: Register Prefect flows
         run: |-
