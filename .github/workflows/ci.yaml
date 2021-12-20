@@ -28,6 +28,9 @@ jobs:
       - name: Install flows
         run: |
           pip install --prefer-binary .
+      - name: Check if `prefect build` works
+        run: |
+          prefect build
       - name: Run tests
         run: |
           pytest
