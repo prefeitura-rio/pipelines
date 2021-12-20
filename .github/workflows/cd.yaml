@@ -62,8 +62,8 @@ jobs:
 
       - name: Connect to Tailscale VPN
         uses: tailscale/github-action@v1
-          with:
-            authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
 
       - name: Register Prefect flows
         run: |-
