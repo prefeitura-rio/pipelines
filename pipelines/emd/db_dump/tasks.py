@@ -144,8 +144,9 @@ def upload_to_gcs(path: Union[str, Path], dataset_id: str, table_id: str) -> Non
     """
     Uploads a bunch of CSVs using BD+
     """
+    # pylint: disable=C0103
     tb = bd.Table(dataset_id=dataset_id,
-                  table_id=table_id)  # pylint: disable=C0103
+                  table_id=table_id)
     if tb.table_exists(mode="staging"):
         # the name of the files need to be the same or the data doesn't get overwritten
         tb.append(

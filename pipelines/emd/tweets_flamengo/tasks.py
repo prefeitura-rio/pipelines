@@ -190,8 +190,8 @@ def get_last_id(api, q, data_path: str):  # pylint: disable=C0103
         created_at = tweet.created_at
         time.sleep(5)
     else:
-        df = pd.read_csv(
-            f"{pre_path}/{q_folder}.csv").copy()  # pylint: disable=C0103
+        df = pd.read_csv(  # pylint: disable=C0103
+            f"{pre_path}/{q_folder}.csv").copy()
         if len(df) > 0:
             log(f"Getting last_id from storage table {q_folder}")
             last_id = int(df[["id"]].iloc[-1])
