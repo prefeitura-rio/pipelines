@@ -20,6 +20,11 @@ with Flow("dump_sql_server") as dump_sql_server_flow:
     # CSV file parameters
     batch_size = Parameter("batch_size")
 
+    # BigQuery parameters
+    project_id = Parameter("project_id")
+    dataset_id = Parameter("dataset_id")
+    table_id = Parameter("table_id")
+
     # Execute query on SQL Server
     conn = sql_server_get_connection(
         server=server, user=user, password=password, database=database)
