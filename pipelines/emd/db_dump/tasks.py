@@ -38,6 +38,7 @@ def sql_server_execute(cursor, query):
     Executes a query on the SQL Server.
     """
     cursor.execute(query)
+    return cursor
 
 
 @task
@@ -89,3 +90,28 @@ def dataframe_to_csv(dataframe: pd.DataFrame, path: Union[str, Path]) -> None:
     path.mkdir(parents=True, exist_ok=True)
     # Write dataframe to CSV
     dataframe.to_csv(path, index=False)
+
+
+@task
+def dump_batches_to_csv(cursor, batch_size: int, prepath: Union[str, Path]) -> Path:
+    """
+    Dumps batches of data to CSV.
+    """
+    # Get columns
+    columns = sql_server_get_columns(cursor)
+
+    prepath = Path(prepath)
+
+    # Dump batches
+    batch = sql_server_fetch_batch(cursor, batch_size)
+    idx = 0
+    while len(batch) > 0:
+        # Convert to dataframe
+        dataframe = batch_to_dataframe(batch, columns)
+        # Write to CSV
+        dataframe_to_csv(dataframe, prepath / f"{idx}.csv")
+        # Get next batch
+        batch = sql_server_fetch_batch(cursor, batch_size)
+        idx += 1
+
+    return prepath
