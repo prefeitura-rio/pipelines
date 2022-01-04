@@ -35,7 +35,8 @@ with Flow("dump_sql_server") as dump_sql_server_flow:
 
     # Execute query on SQL Server
     conn = sql_server_get_connection(
-        server=server, user=user, password=password, database=database)
+        server=server, user=user, password=password, database=database
+    )
     cursor = sql_server_get_cursor(conn)
     cursor = sql_server_execute(cursor, query)
 
@@ -46,5 +47,4 @@ with Flow("dump_sql_server") as dump_sql_server_flow:
 
 
 dump_sql_server_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-dump_sql_server_flow.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value)
+dump_sql_server_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)

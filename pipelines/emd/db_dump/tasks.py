@@ -8,6 +8,9 @@ from typing import List, Tuple, Union
 import pandas as pd
 from prefect import task
 import pymssql
+import basedosdados as bd
+
+from pipelines.utils import log
 
 from pipelines.utils import log
 
@@ -24,7 +27,9 @@ def sql_server_get_connection(server: str, user: str, password: str, database: s
     Returns a connection to the SQL Server.
     """
     log(f"Connecting to SQL Server: {server}")
-    return pymssql.connect(server=server, user=user, password=password, database=database)
+    return pymssql.connect(
+        server=server, user=user, password=password, database=database
+    )
 
 
 @task
@@ -128,3 +133,30 @@ def dump_batches_to_csv(cursor, batch_size: int, prepath: Union[str, Path]) -> P
         idx += 1
 
     return prepath
+
+
+###############
+#
+# Upload to GCS
+#
+###############
+@task
+def upload_to_gcs(path: Union[str, Path], dataset_id: str, table_id: str) -> None:
+    tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
+    if tb.table_exists(mode="staging"):
+        # the name of the files need to be the same or the data doesn't get overwritten
+        tb.append(
+            filepath=path,
+            if_exists="replace",
+            timeout=600,
+            chunk_size=1024 ** 2 * 10,
+        )
+
+        log(
+            f"Successfully uploaded {path} to {tb.bucket_name}.staging.{dataset_id}.{table_id}"
+        )
+
+    else:
+        log(
+            "Table does not exist in STAGING, need to create it in local first.\nCreate and publish the table in BigQuery first."
+        )
