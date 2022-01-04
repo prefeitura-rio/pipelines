@@ -52,7 +52,6 @@ import os
 import time
 import json
 from datetime import datetime
-from pathlib import Path
 
 import shutil
 import pandas as pd
@@ -140,7 +139,8 @@ def save_last_id(df, q):  # pylint: disable=C0103
         # twitter fetch data from most recent to most oldest
         # last_id must to be the most recent id
         df = df[["id", "created_at"]].iloc[[0]].copy()
-        df.to_csv(f"{pre_path}/{q_folder}.csv", index=False, mode="a", header=False)
+        df.to_csv(f"{pre_path}/{q_folder}.csv",
+                  index=False, mode="a", header=False)
     return "data/staging"
 
 
@@ -150,8 +150,9 @@ def fetch_last_id(q):  # pylint: disable=C0103
     Download last_id table from storage.
     """
     q_folder = q.replace(" ", "_").replace("-", "_")
+    # pylint: disable=C0103
     st = bd.Storage(
-        dataset_id="twitter_flamengo", table_id="last_id"  # pylint: disable=C0103
+        dataset_id="twitter_flamengo", table_id="last_id",
     )
     try:
         st.download(
@@ -189,13 +190,15 @@ def get_last_id(api, q, data_path: str):  # pylint: disable=C0103
         created_at = tweet.created_at
         time.sleep(5)
     else:
-        df = pd.read_csv(f"{pre_path}/{q_folder}.csv").copy()  # pylint: disable=C0103
+        df = pd.read_csv(  # pylint: disable=C0103
+            f"{pre_path}/{q_folder}.csv").copy()
         if len(df) > 0:
             log(f"Getting last_id from storage table {q_folder}")
             last_id = int(df[["id"]].iloc[-1])
             created_at = df[["created_at"]].iloc[-1].values[0]
         else:
-            log(f"No last_id saved in table for {q}, fetch last_id from Twitter API")
+            log(
+                f"No last_id saved in table for {q}, fetch last_id from Twitter API")
             tweet = api.search_tweets(q=q, count=1)[0]
             last_id = tweet.id
             created_at = tweet.created_at
@@ -214,7 +217,8 @@ def fetch_tweets(api, q, last_id, created_at):  # pylint: disable=C0103
     log(f"{q} | last_id: {last_id} | created_at: {created_at} | file: {dt}")
 
     for i, page in enumerate(
-        tweepy.Cursor(api.search_tweets, q=q, since_id=last_id, count=100).pages(100),
+        tweepy.Cursor(api.search_tweets, q=q,
+                      since_id=last_id, count=100).pages(100),
         start=1,
     ):
         json_data = [t._json for t in page]  # pylint: disable=W0212
@@ -566,7 +570,8 @@ def fetch_tweets(api, q, last_id, created_at):  # pylint: disable=C0103
             "coordinatestype",
             "coordinatescoordinates",
         ]
-        col_not_in_dd = [col for col in cols_343 if col not in dd.columns.tolist()]
+        col_not_in_dd = [
+            col for col in cols_343 if col not in dd.columns.tolist()]
         for col in col_not_in_dd:
             dd[col] = np.nan
         dd = dd[cols_343]  # pylint: disable=C0103
