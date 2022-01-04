@@ -11,9 +11,9 @@ from pipelines.constants import constants
 from pipelines.emd.db_dump.tasks import (
     dump_batches_to_csv,
     sql_server_execute,
-    sql_server_get_columns,
     sql_server_get_connection,
     sql_server_get_cursor,
+    upload_to_gcs,
 )
 
 with Flow("dump_sql_server") as dump_sql_server_flow:
@@ -29,7 +29,6 @@ with Flow("dump_sql_server") as dump_sql_server_flow:
     batch_size = Parameter("batch_size")
 
     # BigQuery parameters
-    project_id = Parameter("project_id")
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
 
@@ -43,8 +42,10 @@ with Flow("dump_sql_server") as dump_sql_server_flow:
     # Dump batches to CSV files
     path = dump_batches_to_csv(cursor, batch_size, f"data/{uuid4()}/")
 
-    # TODO: Subir os CSVs para o GCS
+    # Upload to GCS
+    upload_to_gcs(path, dataset_id, table_id)
 
 
 dump_sql_server_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-dump_sql_server_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+dump_sql_server_flow.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value)
