@@ -10,6 +10,8 @@ from prefect import task
 import pymssql
 import basedosdados as bd
 
+from pipelines.utils import log
+
 ###############
 #
 # SQL Server
@@ -120,13 +122,28 @@ def dump_batches_to_csv(cursor, batch_size: int, prepath: Union[str, Path]) -> P
     return prepath
 
 
+###############
+#
+# Upload to GCS
+#
+###############
 @task
 def upload_to_gcs(path: Union[str, Path], dataset_id: str, table_id: str) -> None:
     tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
     if tb.table_exists(mode="staging"):
         ### the name of the files need to be the same or the data doesn't get overwritten
-        tb.append(filepath=path, if_exists="replace")
+        tb.append(
+            filepath=path,
+            if_exists="replace",
+            timeout=600,
+            chunk_size=1024 ** 2 * 10,
+        )
+
+        log(
+            f"Successfully uploaded {path} to {tb.bucket_name}.staging.{dataset_id}.{table_id}"
+        )
+
     else:
-        raise (
-            "Table does not exist, need to create it in local first.\nCreate and publish the table in BigQuery first."
+        log(
+            "Table does not exist in STAGING, need to create it in local first.\nCreate and publish the table in BigQuery first."
         )
