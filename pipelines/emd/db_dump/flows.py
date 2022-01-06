@@ -36,16 +36,17 @@ with Flow("dump_sql_server") as dump_sql_server_flow:
     conn = sql_server_get_connection(
         server=server, user=user, password=password, database=database
     )
-    cursor = sql_server_get_cursor(conn)
-    cursor = sql_server_execute(cursor, query)
+    cursor = sql_server_get_cursor(connection=conn)
+    cursor = sql_server_execute(cursor=cursor, query=query)
 
     # Dump batches to CSV files
-    path = dump_batches_to_csv(cursor, batch_size, f"data/{uuid4()}/")
+    path = dump_batches_to_csv(
+        cursor=cursor, batch_size=batch_size, prepath=f"data/{uuid4()}/"
+    )
 
     # Upload to GCS
-    upload_to_gcs(path, dataset_id, table_id)
+    upload_to_gcs(path=path, dataset_id=dataset_id, table_id=table_id)
 
 
 dump_sql_server_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-dump_sql_server_flow.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value)
+dump_sql_server_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
