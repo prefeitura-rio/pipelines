@@ -5,7 +5,7 @@ ARG PYTHON_VERSION=3.9-slim
 FROM python:${PYTHON_VERSION}
 
 # Setting environment with prefect version
-ARG PREFECT_VERSION=0.15.7
+ARG PREFECT_VERSION=0.15.9
 ENV PREFECT_VERSION $PREFECT_VERSION
 
 # Setup virtual environment and prefect
