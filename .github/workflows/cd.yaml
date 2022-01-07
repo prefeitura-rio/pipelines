@@ -9,9 +9,10 @@ env:
   DISCORD_HOOK_URL: ${{ secrets.DISCORD_HOOK_URL }}
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+  GH_PAT: ${{ secrets.GH_PAT }}
   GKE_CLUSTER: ${{ secrets.GKE_CLUSTER_NAME }}
   GKE_ZONE: ${{ secrets.GKE_ZONE }}
-  IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/prefect-flows
+  IMAGE_NAME: ghcr.io/prefeitura-rio/prefect-flows
   PREFECT__BACKEND: ${{ secrets.PREFECT__BACKEND }}
   PREFECT__SERVER__HOST: ${{ secrets.PREFECT__SERVER__HOST }}
   PREFECT__SERVER__PORT: ${{ secrets.PREFECT__SERVER__PORT }}
@@ -48,10 +49,6 @@ jobs:
         run: |-
           pip install .
 
-      - name: Configure Docker with gcloud
-        run: |-
-          gcloud --quiet auth configure-docker
-
       - name: Get GKE credentials
         uses: google-github-actions/get-gke-credentials@v0.2.1
         with:
@@ -59,15 +56,11 @@ jobs:
           location: ${{ env.GKE_ZONE }}
           credentials: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Build Docker image
-        run: |-
-          docker build \
-            --tag "$IMAGE_NAME:$GITHUB_SHA" \
-            .
-
-      - name: Publish Docker image
-        run: |-
-          docker push "$IMAGE_NAME:$GITHUB_SHA"
+      - name: Build and publish Prefect Agent image
+        run: |
+          docker build -t $IMAGE_NAME:$GITHUB_SHA images/prefect-agent
+          echo $GH_PAT | docker login ghcr.io -u gabriel-milan --password-stdin
+          docker push $IMAGE_NAME:$GITHUB_SHA
 
       - name: Forward port to Apollo
         run: |-
