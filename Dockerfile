@@ -1,11 +1,11 @@
+# Build arguments
+ARG PYTHON_VERSION=3.9-slim
+
 # Get linkerd-await
 FROM curlimages/curl:7.81.0 as linkerd
 ARG LINKERD_AWAIT_VERSION=v0.2.4
 RUN curl -sSLo /tmp/linkerd-await https://github.com/linkerd/linkerd-await/releases/download/release%2F${LINKERD_AWAIT_VERSION}/linkerd-await-${LINKERD_AWAIT_VERSION}-amd64 && \
     chmod 755 /tmp/linkerd-await
-
-# Build arguments
-ARG PYTHON_VERSION=3.9-slim
 
 # Python version: 3.9
 FROM python:${PYTHON_VERSION}
