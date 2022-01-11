@@ -109,7 +109,7 @@ def upload_to_gcs(path: Union[str, Path], dataset_id: str, table_id: str) -> Non
             filepath=path,
             if_exists="replace",
             timeout=600,
-            chunk_size=1024 ** 2 * 10,
+            # chunk_size=1024 ** 2 * 10, # TODO: review later
         )
 
         log(
