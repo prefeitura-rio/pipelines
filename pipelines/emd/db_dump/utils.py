@@ -57,9 +57,9 @@ def dataframe_to_csv(dataframe: pd.DataFrame, path: Union[str, Path]) -> None:
     Writes a dataframe to a CSV file.
     """
     # Remove filename from path
-    path = Path(path).parent
+    path = Path(path)
     # Create directory if it doesn't exist
-    path.mkdir(parents=True, exist_ok=True)
+    path.parent.mkdir(parents=True, exist_ok=True)
     # Write dataframe to CSV
     log(f"Writing dataframe to CSV: {path}")
     dataframe.to_csv(path, index=False)
