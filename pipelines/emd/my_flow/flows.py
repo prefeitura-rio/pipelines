@@ -64,13 +64,13 @@ from pipelines.constants import constants
 from pipelines.emd.my_flow.tasks import say_hello
 
 
-from pipelines.emd.my_flow.schedules import (
-    every_two_weeks,
-)
+# from pipelines.emd.my_flow.schedules import (
+#     every_two_weeks,
+# )
 
 with Flow("my_flow") as say_hello_flow:
     say_hello()
 
 say_hello_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 say_hello_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-say_hello_flow.schedule = every_two_weeks
+# say_hello_flow.schedule = every_two_weeks
