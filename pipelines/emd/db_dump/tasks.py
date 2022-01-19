@@ -162,6 +162,8 @@ def create_bd_table(path: Union[str, Path], dataset_id: str, table_id: str) -> N
     tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
 
     st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+    if tb.table_exists(mode="staging"):
+        st.delete_table(mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
 
     tb.create(
         path=path,
