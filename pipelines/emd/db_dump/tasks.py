@@ -105,7 +105,7 @@ def dump_batches_to_csv(cursor, batch_size: int, prepath: Union[str, Path]) -> P
 @task
 def dump_header_to_csv(cursor, header_path: Union[str, Path]) -> Path:
     columns = sql_server_get_columns(cursor)
-    data = cursor.fetchone()
+    data = [cursor.fetchone()]
     df = pd.DataFrame(data=data, columns=columns)
 
     header_path = Path(header_path)
