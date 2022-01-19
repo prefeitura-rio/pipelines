@@ -1,13 +1,15 @@
 """
 General purpose tasks for dumping database data.
 """
-
+from email import header
+import os
 from pathlib import Path
 from typing import Union
 
 from prefect import task
 import pymssql
 import basedosdados as bd
+import pandas as pd
 
 from pipelines.utils import log
 from pipelines.emd.db_dump.utils import (
@@ -100,6 +102,20 @@ def dump_batches_to_csv(cursor, batch_size: int, prepath: Union[str, Path]) -> P
     return prepath
 
 
+@task
+def dump_header_to_csv(cursor, header_path: Union[str, Path]) -> Path:
+    columns = sql_server_get_columns(cursor)
+    data = cursor.fetchone()
+    df = pd.DataFrame(data=data, columns=columns)
+
+    header_path = Path(header_path)
+    dataframe_to_csv(df, header_path / "header.csv")
+
+    log(f"Wrote header to {header_path}")
+
+    return header_path
+
+
 ###############
 #
 # Upload to GCS
@@ -116,8 +132,7 @@ def upload_to_gcs(path: Union[str, Path], dataset_id: str, table_id: str) -> Non
 
     if tb.table_exists(mode="staging"):
         # Delete old data
-        st.delete_table(
-            mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
+        st.delete_table(mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
         log(
             f"Successfully deleted OLD DATA {st.bucket_name}.staging.{dataset_id}.{table_id}"
         )
@@ -137,3 +152,25 @@ def upload_to_gcs(path: Union[str, Path], dataset_id: str, table_id: str) -> Non
         log(
             "Table does not exist in STAGING, need to create it in local first.\nCreate and publish the table in BigQuery first."
         )
+
+
+@task
+def create_bd_table(path: Union[str, Path], dataset_id: str, table_id: str) -> None:
+    """
+    Create table using BD+
+    """
+    tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
+
+    st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+
+    tb.create(
+        path=path,
+        if_storage_data_exists="replace",
+        if_table_config_exists="replace",
+        if_table_exists="replace",
+        location="southamerica-east1",
+    )
+
+    log(f"Sucessfully created table {st.bucket_name}.{dataset_id}.{table_id}")
+    st.delete_table(mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
+    log(f"Sucessfully remove table data from {st.bucket_name}.{dataset_id}.{table_id}")

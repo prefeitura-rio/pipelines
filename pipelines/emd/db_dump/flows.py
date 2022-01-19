@@ -10,11 +10,13 @@ from prefect.storage import GCS
 from pipelines.constants import constants
 from pipelines.emd.db_dump.tasks import (
     dump_batches_to_csv,
+    dump_header_to_csv,
     sql_server_execute,
     sql_server_get_connection,
     sql_server_get_cursor,
     sql_server_log_headers,
     upload_to_gcs,
+    create_bd_table,
 )
 
 with Flow("dump_sql_server") as dump_sql_server_flow:
@@ -50,10 +52,9 @@ with Flow("dump_sql_server") as dump_sql_server_flow:
 
 
 dump_sql_server_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-dump_sql_server_flow.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value)
+dump_sql_server_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 
-with Flow("get_headers_sql_server") as get_headers_sql_server_flow:
+with Flow("create_table_from_header") as create_table_from_header_flow:
 
     # SQL Server parameters
     server = Parameter("sql_server_hostname")
@@ -77,9 +78,13 @@ with Flow("get_headers_sql_server") as get_headers_sql_server_flow:
     cursor = sql_server_execute(cursor=cursor, query=query)
 
     # Log headers
-    sql_server_log_headers(cursor)
+    sql_server_log_headers(cursor=cursor)
 
+    # Create CSV file with headers
+    header_path = dump_header_to_csv(cursor=cursor, header_path=f"data/{uuid4()}/")
+    create_bd_table(path=header_path, dataset_id=dataset_id, table_id=table_id)
 
-get_headers_sql_server_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-get_headers_sql_server_flow.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value)
+create_table_from_header_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+create_table_from_header_flow.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value
+)
