@@ -2,11 +2,11 @@
 General utilities for all pipelines.
 """
 
+import logging
 from os import getenv
 from typing import Any, Tuple
 
 import hvac
-import logging
 import prefect
 
 
@@ -41,7 +41,10 @@ def get_vault_secret(secret_path: str, client: hvac.Client = None) -> dict:
     return vault_client.secrets.kv.read_secret_version(secret_path)['data']
 
 
-def get_username_and_password_from_secret(secret_path: str, client: hvac.Client = None) -> Tuple[str, str]:
+def get_username_and_password_from_secret(
+    secret_path: str,
+    client: hvac.Client = None,
+) -> Tuple[str, str]:
     """
     Returns a username and password from a secret in Vault.
     """

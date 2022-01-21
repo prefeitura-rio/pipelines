@@ -1,8 +1,6 @@
 """
 General purpose tasks for dumping database data.
 """
-from email import header
-import os
 from pathlib import Path
 from typing import Union
 
@@ -94,8 +92,12 @@ def dump_batches_to_csv(cursor, batch_size: int, prepath: Union[str, Path]) -> P
 
 @task
 def dump_header_to_csv(cursor, header_path: Union[str, Path]) -> Path:
+    """
+    Dumps the header to CSV.
+    """
     columns = sql_server_get_columns(cursor)
     data = [cursor.fetchone()]
+    # pylint: disable=C0103
     df = pd.DataFrame(data=data, columns=columns)
 
     header_path = Path(header_path)
@@ -150,8 +152,10 @@ def create_bd_table(path: Union[str, Path], dataset_id: str, table_id: str) -> N
     """
     Create table using BD+
     """
+    # pylint: disable=C0103
     tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
 
+    # pylint: disable=C0103
     st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
     if tb.table_exists(mode="staging"):
         st.delete_table(
