@@ -57,16 +57,6 @@ def sql_server_execute(cursor, query):
     return cursor
 
 
-@task
-def sql_server_log_headers(cursor) -> None:
-    """
-    Logs the headers of the SQL Server table.
-    """
-    log("Getting headers")
-    log(f"Columns: {sql_server_get_columns(cursor)}")
-    log(f"First line: {cursor.fetchone()}")
-
-
 ###############
 #
 # File
@@ -132,7 +122,8 @@ def upload_to_gcs(path: Union[str, Path], dataset_id: str, table_id: str) -> Non
 
     if tb.table_exists(mode="staging"):
         # Delete old data
-        st.delete_table(mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
+        st.delete_table(
+            mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
         log(
             f"Successfully deleted OLD DATA {st.bucket_name}.staging.{dataset_id}.{table_id}"
         )
@@ -163,7 +154,8 @@ def create_bd_table(path: Union[str, Path], dataset_id: str, table_id: str) -> N
 
     st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
     if tb.table_exists(mode="staging"):
-        st.delete_table(mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
+        st.delete_table(
+            mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
 
     tb.create(
         path=path,
@@ -174,5 +166,7 @@ def create_bd_table(path: Union[str, Path], dataset_id: str, table_id: str) -> N
     )
 
     log(f"Sucessfully created table {st.bucket_name}.{dataset_id}.{table_id}")
-    st.delete_table(mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
-    log(f"Sucessfully remove table data from {st.bucket_name}.{dataset_id}.{table_id}")
+    st.delete_table(mode="staging", bucket_name=st.bucket_name,
+                    not_found_ok=True)
+    log(
+        f"Sucessfully remove table data from {st.bucket_name}.{dataset_id}.{table_id}")
