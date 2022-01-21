@@ -30,7 +30,10 @@ def get_vault_client() -> hvac.Client:
     """
     Returns a Vault client.
     """
-    return hvac.Client(url=getenv('VAULT_ADDRESS'), token=getenv('VAULT_TOKEN'))
+    return hvac.Client(
+        url=getenv('VAULT_ADDRESS').strip(),
+        token=getenv('VAULT_TOKEN').strip(),
+    )
 
 
 def get_vault_secret(secret_path: str, client: hvac.Client = None) -> dict:
@@ -49,4 +52,7 @@ def get_username_and_password_from_secret(
     Returns a username and password from a secret in Vault.
     """
     secret = get_vault_secret(secret_path, client)
-    return secret['username'], secret['password']
+    return (
+        secret['data']['username'],
+        secret['data']['password'],
+    )
