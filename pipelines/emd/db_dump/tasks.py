@@ -2,57 +2,77 @@
 General purpose tasks for dumping database data.
 """
 from pathlib import Path
-from typing import Union
+from typing import Dict, Union
 
 from prefect import task
-import pymssql
 import basedosdados as bd
 import pandas as pd
 
+from pipelines.emd.db_dump.db import (
+    Database,
+    MySql,
+    SqlServer,
+)
 from pipelines.utils import log
 from pipelines.emd.db_dump.utils import (
     batch_to_dataframe,
     dataframe_to_csv,
-    sql_server_fetch_batch,
-    sql_server_get_columns,
 )
 
-###############
-#
-# SQL Server
-#
-###############
+DATABASE_MAPPING: Dict[str, Database] = {
+    "mysql": MySql,
+    "sql_server": SqlServer,
+}
 
 
+# pylint: disable=too-many-arguments
 @task(checkpoint=False)
-def sql_server_get_connection(server: str, user: str, password: str, database: str):
+def database_get(
+    database_type: str,
+    hostname: str,
+    port: int,
+    user: str,
+    password: str,
+    database: str
+) -> Database:
     """
-    Returns a connection to the SQL Server.
+    Returns a database object.
+
+    Args:
+        database_type: The type of the database.
+        hostname: The hostname of the database.
+        port: The port of the database.
+        user: The username of the database.
+        password: The password of the database.
+        database: The database name.
+
+    Returns:
+        A database object.
     """
-    log(f"Connecting to SQL Server: {server}")
-    # pylint: disable=E1101
-    return pymssql.connect(
-        server=server, user=user, password=password, database=database
+    if database_type not in DATABASE_MAPPING:
+        raise ValueError(f"Unknown database type: {database_type}")
+    return DATABASE_MAPPING[database_type](
+        hostname=hostname,
+        port=port,
+        user=user,
+        password=password,
+        database=database,
     )
 
 
 @task(checkpoint=False)
-def sql_server_get_cursor(connection):
+def database_execute(
+    database: Database,
+    query: str,
+) -> pd.DataFrame:
     """
-    Returns a cursor for the SQL Server.
-    """
-    log("Getting cursor")
-    return connection.cursor()
+    Executes a query on the database.
 
-
-@task(checkpoint=False)
-def sql_server_execute(cursor, query):
+    Args:
+        database: The database object.
+        query: The query to execute.
     """
-    Executes a query on the SQL Server.
-    """
-    log(f"Executing query: {query}")
-    cursor.execute(query)
-    return cursor
+    database.execute_query(query)
 
 
 ###############
@@ -63,19 +83,23 @@ def sql_server_execute(cursor, query):
 
 
 @task
-def dump_batches_to_csv(cursor, batch_size: int, prepath: Union[str, Path]) -> Path:
+def dump_batches_to_csv(
+    database: Database,
+    batch_size: int,
+    prepath: Union[str, Path]
+) -> Path:
     """
     Dumps batches of data to CSV.
     """
     # Get columns
-    columns = sql_server_get_columns(cursor)
+    columns = database.get_columns()
     log(f"Got columns: {columns}")
 
     prepath = Path(prepath)
     log(f"Got prepath: {prepath}")
 
     # Dump batches
-    batch = sql_server_fetch_batch(cursor, batch_size)
+    batch = database.fetch_batch(batch_size)
     idx = 0
     while len(batch) > 0:
         log(f"Dumping batch {idx} with size {len(batch)}")
@@ -84,24 +108,26 @@ def dump_batches_to_csv(cursor, batch_size: int, prepath: Union[str, Path]) -> P
         # Write to CSV
         dataframe_to_csv(dataframe, prepath / f"{idx}.csv")
         # Get next batch
-        batch = sql_server_fetch_batch(cursor, batch_size)
+        batch = database.fetch_batch(batch_size)
         idx += 1
 
     return prepath
 
 
 @task
-def dump_header_to_csv(cursor, header_path: Union[str, Path]) -> Path:
+def dump_header_to_csv(
+    database: Database,
+    header_path: Union[str, Path]
+) -> Path:
     """
     Dumps the header to CSV.
     """
-    columns = sql_server_get_columns(cursor)
-    data = [cursor.fetchone()]
-    # pylint: disable=C0103
-    df = pd.DataFrame(data=data, columns=columns)
+    columns = database.get_columns()
+    first_row = database.fetch_batch(1)
+    dataframe = pd.DataFrame(data=first_row, columns=columns)
 
     header_path = Path(header_path)
-    dataframe_to_csv(df, header_path / "header.csv")
+    dataframe_to_csv(dataframe, header_path / "header.csv")
 
     log(f"Wrote header to {header_path}")
 
