@@ -64,7 +64,8 @@ def database_get(
 def database_execute(
     database: Database,
     query: str,
-) -> pd.DataFrame:
+    wait=None,
+) -> None:
     """
     Executes a query on the database.
 
@@ -86,7 +87,8 @@ def database_execute(
 def dump_batches_to_csv(
     database: Database,
     batch_size: int,
-    prepath: Union[str, Path]
+    prepath: Union[str, Path],
+    wait=None,
 ) -> Path:
     """
     Dumps batches of data to CSV.
@@ -117,7 +119,8 @@ def dump_batches_to_csv(
 @task
 def dump_header_to_csv(
     database: Database,
-    header_path: Union[str, Path]
+    header_path: Union[str, Path],
+    wait=None,
 ) -> Path:
     """
     Dumps the header to CSV.
