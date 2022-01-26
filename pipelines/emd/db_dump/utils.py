@@ -11,28 +11,6 @@ from pipelines.utils import log
 
 ###############
 #
-# SQL Server
-#
-###############
-
-
-def sql_server_get_columns(cursor):
-    """
-    Returns the column names of the SQL Server.
-    """
-    log("Getting column names")
-    return [column[0] for column in cursor.description]
-
-
-def sql_server_fetch_batch(cursor, batch_size):
-    """
-    Fetches a batch of rows from the SQL Server.
-    """
-    log(f"Fetching batch of {batch_size} rows")
-    return cursor.fetchmany(batch_size)
-
-###############
-#
 # Dataframe
 #
 ###############
