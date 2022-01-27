@@ -74,6 +74,12 @@ class Database(ABC):
         Fetches a batch of rows from the database.
         """
 
+    @abstractmethod
+    def fetch_all(self) -> List[List]:
+        """
+        Fetches all rows from the database.
+        """
+
 
 class SqlServer(Database):
     """
@@ -147,6 +153,12 @@ class SqlServer(Database):
         """
         return [list(item) for item in self._cursor.fetchmany(batch_size)]
 
+    def fetch_all(self) -> List[List]:
+        """
+        Fetches all rows from the SQL Server.
+        """
+        return [list(item) for item in self._cursor.fetchall()]
+
 
 class MySql(Database):
     """
@@ -219,3 +231,9 @@ class MySql(Database):
         Fetches a batch of rows from the MySQL.
         """
         return [list(item) for item in self._cursor.fetchmany(batch_size)]
+
+    def fetch_all(self) -> List[List]:
+        """
+        Fetches all rows from the MySQL.
+        """
+        return [list(item) for item in self._cursor.fetchall()]
