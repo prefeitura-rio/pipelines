@@ -64,7 +64,7 @@ def database_get(
 def database_execute(
     database: Database,
     query: str,
-    wait=None,
+    wait=None,  # pylint: disable=unused-argument
 ) -> None:
     """
     Executes a query on the database.
@@ -75,6 +75,23 @@ def database_execute(
     """
     database.execute_query(query)
 
+
+@task(checkpoint=False)
+def database_fetch(
+    database: Database,
+    batch_size: str,
+    wait=None,  # pylint: disable=unused-argument
+):
+    """
+    Fetches the results of a query on the database.
+    """
+    if batch_size == "all":
+        return database.fetch_all()
+    try:
+        batch_size_no = int(batch_size)
+    except ValueError as error:
+        raise ValueError(f"Invalid batch size: {batch_size}") from error
+    return database.fetch_batch(batch_size_no)
 
 ###############
 #
@@ -88,7 +105,7 @@ def dump_batches_to_csv(
     database: Database,
     batch_size: int,
     prepath: Union[str, Path],
-    wait=None,
+    wait=None,  # pylint: disable=unused-argument
 ) -> Path:
     """
     Dumps batches of data to CSV.
@@ -120,7 +137,7 @@ def dump_batches_to_csv(
 def dump_header_to_csv(
     database: Database,
     header_path: Union[str, Path],
-    wait=None,
+    wait=None,  # pylint: disable=unused-argument
 ) -> Path:
     """
     Dumps the header to CSV.

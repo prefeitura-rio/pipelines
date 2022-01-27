@@ -10,14 +10,16 @@ from prefect.storage import GCS
 from pipelines.constants import constants
 from pipelines.emd.db_dump.db import Database
 from pipelines.emd.db_dump.tasks import (
+    create_bd_table,
+    database_execute,
+    database_fetch,
+    database_get,
     dump_batches_to_csv,
     dump_header_to_csv,
-    database_get,
-    database_execute,
     upload_to_gcs,
-    create_bd_table,
 )
 from pipelines.tasks import get_user_and_password
+from pipelines.utils import log_task
 
 with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
 
@@ -29,7 +31,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
 
     # SQL Server parameters
     hostname = Parameter("db_host")
-    port = Parameter("db_port", default=None)
+    port = Parameter("db_port")
     database = Parameter("db_database")
     database_type = Parameter("db_type")
     query = Parameter("execute_query")
@@ -68,7 +70,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
         password=password,
         database=database,
     )
-    wait_db_execute = database_execute(
+    wait_db_execute = database_execute(  # pylint: disable=invalid-name
         database=db_object,
         query=query,
     )
@@ -81,7 +83,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
     )
 
     # Create table in BigQuery
-    wait_create_db = create_bd_table(
+    wait_create_db = create_bd_table(  # pylint: disable=invalid-name
         path=header_path,
         dataset_id=dataset_id,
         table_id=table_id,
@@ -94,7 +96,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
     #####################################
 
     # Execute query
-    wait_db_execute = database_execute(
+    wait_db_execute = database_execute(  # pylint: disable=invalid-name
         database=db_object,
         query=query,
         wait=wait_create_db,
@@ -114,4 +116,69 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
 
 dump_sql_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_sql_flow.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value)
+
+with Flow("Executar query SQL") as run_sql_flow:
+
+    #####################################
+    #
+    # Parameters
+    #
+    #####################################
+
+    # SQL Server parameters
+    hostname = Parameter("db_host")
+    port = Parameter("db_port")
+    database = Parameter("db_database")
+    database_type = Parameter("db_type")
+    query = Parameter("execute_query")
+
+    # Use Vault for credentials
+    secret_path = Parameter("vault_secret_path")
+
+    # CSV file parameters
+    batch_size = Parameter("no_of_rows", default="all")
+
+    #####################################
+    #
+    # Tasks section #0 - Get credentials
+    #
+    #####################################
+
+    # Get credentials from Vault
+    user, password = get_user_and_password(secret_path=secret_path)
+
+    #####################################
+    #
+    # Tasks section #1 - Execute query
+    #
+    #####################################
+
+    # Execute query on SQL Server
+    db_object: Database = database_get(
+        database_type=database_type,
+        hostname=hostname,
+        port=port,
+        user=user,
+        password=password,
+        database=database,
+    )
+    wait_db_execute = database_execute(  # pylint: disable=invalid-name
+        database=db_object,
+        query=query,
+    )
+
+    # Get results
+    results = database_fetch(
+        database=db_object,
+        batch_size=batch_size,
+        wait=wait_db_execute,
+    )
+
+    # Log results
+    log_task(results)
+
+
+run_sql_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+run_sql_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value)
