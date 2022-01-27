@@ -82,12 +82,15 @@ def database_fetch(
     batch_size: str,
     wait=None,  # pylint: disable=unused-argument
 ):
+    """
+    Fetches the results of a query on the database.
+    """
     if batch_size == "all":
         return database.fetch_all()
     try:
         batch_size_no = int(batch_size)
-    except ValueError:
-        raise ValueError(f"Invalid batch size: {batch_size}")
+    except ValueError as error:
+        raise ValueError(f"Invalid batch size: {batch_size}") from error
     return database.fetch_batch(batch_size_no)
 
 ###############
