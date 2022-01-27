@@ -4,7 +4,7 @@ General utilities for all pipelines.
 
 import logging
 from os import getenv
-from typing import Any, Tuple
+from typing import Any, Dict, Tuple
 
 import hvac
 import prefect
@@ -56,3 +56,18 @@ def get_username_and_password_from_secret(
         secret['data']['username'],
         secret['data']['password'],
     )
+
+
+def run_local(flow: prefect.Flow, parameters: Dict[str, Any] = None):
+    """
+    Runs a flow locally.
+    """
+    # Setup for local run
+    flow.storage = None
+    flow.run_config = None
+    flow.schedule = None
+
+    # Run flow
+    if parameters:
+        return flow.run(parameters=parameters)
+    return flow.run()
