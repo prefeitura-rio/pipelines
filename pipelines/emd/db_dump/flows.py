@@ -71,6 +71,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
         password=password,
         database=database,
     )
+    
     wait_db_execute = database_execute(  # pylint: disable=invalid-name
         database=db_object,
         query=query,
@@ -97,19 +98,20 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
     #
     #####################################
 
+    ## esta executando a query duas vezes, uma para criar o header e outra para criar os batches
     # Execute query
-    wait_db_execute = database_execute(  # pylint: disable=invalid-name
-        database=db_object,
-        query=query,
-        wait=wait_create_db,
-    )
+    # wait_db_execute = database_execute(  # pylint: disable=invalid-name
+    #     database=db_object,
+    #     query=query,
+    #     wait=wait_create_db,
+    # )
 
     # Dump batches to CSV files
     path = dump_batches_to_csv(
         database=db_object,
         batch_size=batch_size,
         prepath=f"data/{uuid4()}/",
-        wait=wait_db_execute,
+        wait=wait_create_db,
     )
 
     # Upload to GCS
