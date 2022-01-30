@@ -39,7 +39,7 @@ Primeiramente, deve-se ingressar no Tailscale usando sua conta do GitHub. Para i
 
 Em seguida, autorize o acesso solicitado.
 
-Depois, você deve escolher qual “Tailnet” utilizar. Nesse caso, escolha a “basedosdados”:
+Depois, você deve escolher qual “Tailnet” utilizar. Nesse caso, escolha a “prefeitura-rio”:
 
 Dessa forma, você terá permissão para se conectar à VPN.
 
