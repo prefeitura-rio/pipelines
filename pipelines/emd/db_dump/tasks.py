@@ -194,7 +194,7 @@ def upload_to_gcs(path: Union[str, Path], dataset_id: str, table_id: str) -> Non
 
 
 @task
-def create_bd_table(path: Union[str, Path], dataset_id: str, table_id: str) -> None:
+def create_bd_table(path: Union[str, Path], dataset_id: str, table_id: str, full_dump:str) -> None:
     """
     Create table using BD+
     """
@@ -203,20 +203,37 @@ def create_bd_table(path: Union[str, Path], dataset_id: str, table_id: str) -> N
 
     # pylint: disable=C0103
     st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
-    if tb.table_exists(mode="staging"):
-        st.delete_table(
-            mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
 
-    tb.create(
-        path=path,
-        if_storage_data_exists="replace",
-        if_table_config_exists="replace",
-        if_table_exists="replace",
-        location="southamerica-east1",
-    )
+    ### full dump
+    if full_dump == 'append':
+        if tb.table_exists(mode="staging"):
+            log(f"Table table {st.bucket_name}.{dataset_id}.{table_id} already exists")
+        else:
+            tb.create(
+                path=path,
+                location="southamerica-east1",
+            )
+            log(f"Sucessfully created table {st.bucket_name}.{dataset_id}.{table_id}")
+            
+            st.delete_table(mode="staging", bucket_name=st.bucket_name,
+                            not_found_ok=True)
+            log(
+                f"Sucessfully remove table data from {st.bucket_name}.{dataset_id}.{table_id}")
+    elif full_dump == 'replace':
+        if tb.table_exists(mode="staging"):
+            st.delete_table(
+                mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
 
-    log(f"Sucessfully created table {st.bucket_name}.{dataset_id}.{table_id}")
-    st.delete_table(mode="staging", bucket_name=st.bucket_name,
-                    not_found_ok=True)
-    log(
-        f"Sucessfully remove table data from {st.bucket_name}.{dataset_id}.{table_id}")
+        tb.create(
+            path=path,
+            if_storage_data_exists="replace",
+            if_table_config_exists="replace",
+            if_table_exists="replace",
+            location="southamerica-east1",
+        )
+
+        log(f"Sucessfully created table {st.bucket_name}.{dataset_id}.{table_id}")
+        st.delete_table(mode="staging", bucket_name=st.bucket_name,
+                        not_found_ok=True)
+        log(
+            f"Sucessfully remove table data from {st.bucket_name}.{dataset_id}.{table_id}")

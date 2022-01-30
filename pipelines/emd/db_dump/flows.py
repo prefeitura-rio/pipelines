@@ -45,6 +45,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
     # BigQuery parameters
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
+    full_dump = Parameter("full_dump") # replace or  append
 
     #####################################
     #
@@ -100,6 +101,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
         database=db_object,
         query=query,
         wait=wait_create_db,
+        full_dump=full_dump,
     )
 
     # Dump batches to CSV files
