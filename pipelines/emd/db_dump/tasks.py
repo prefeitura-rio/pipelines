@@ -225,7 +225,7 @@ def create_bd_table(
                             not_found_ok=True)
             log(
                 f"Mode append: Sucessfully remove header data from {st.bucket_name}.{dataset_id}.{table_id}")
-    elif dump_type == 'replace':
+    elif dump_type == 'overwrite':
         if tb.table_exists(mode="staging"):
             log(f"Mode replace: Table {st.bucket_name}.{dataset_id}.{table_id} already exists, DELETING OLD DATA!")
             st.delete_table(
