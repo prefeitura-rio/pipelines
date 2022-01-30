@@ -90,7 +90,6 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
         dataset_id=dataset_id,
         table_id=table_id,
         full_dump=full_dump,
-        wait=header_path
     )
 
     #####################################
@@ -99,7 +98,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
     #
     #####################################
 
-    ## esta executando a query duas vezes, uma para criar o header e outra para criar os batches
+    
     # Execute query
     # wait_db_execute = database_execute(  # pylint: disable=invalid-name
     #     database=db_object,
@@ -116,12 +115,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
     )
 
     # Upload to GCS
-    upload_to_gcs(
-        path=path, 
-        dataset_id=dataset_id, 
-        table_id=table_id, 
-        wait=path
-    )
+    upload_to_gcs(path=path, dataset_id=dataset_id, table_id=table_id)
 
 
 dump_sql_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
