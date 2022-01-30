@@ -227,7 +227,7 @@ def create_bd_table(
                 f"Mode append: Sucessfully remove header data from {st.bucket_name}.{dataset_id}.{table_id}")
     elif dump_type == 'overwrite':
         if tb.table_exists(mode="staging"):
-            log(f"Mode replace: Table {st.bucket_name}.{dataset_id}.{table_id} already exists, DELETING OLD DATA!")
+            log(f"Mode overwrite: Table {st.bucket_name}.{dataset_id}.{table_id} already exists, DELETING OLD DATA!")
             st.delete_table(
                 mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
 
@@ -239,8 +239,8 @@ def create_bd_table(
             location="southamerica-east1",
         )
 
-        log(f"Mode replace: Sucessfully created table {st.bucket_name}.{dataset_id}.{table_id}")
+        log(f"Mode overwrite: Sucessfully created table {st.bucket_name}.{dataset_id}.{table_id}")
         st.delete_table(mode="staging", bucket_name=st.bucket_name,
                         not_found_ok=True)
         log(
-            f"Mode replace: Sucessfully remove header data from {st.bucket_name}.{dataset_id}.{table_id}")
+            f"Mode overwrite: Sucessfully remove header data from {st.bucket_name}.{dataset_id}.{table_id}")
