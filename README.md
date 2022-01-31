@@ -15,6 +15,8 @@ Esse repositório contém flows desenvolvidos com Prefect relacionados ao Escrit
 
 4. Os `flows` da nova pipeline deve ser importado no arquivo `pipelines/<organizacao>/__init__.py`, como no exemplo [\_\_init\_\_.py](/pipelines/emd/__init__.py)
 
+5. Por fim importe os `flows` da organização no arquivo `pipelines/flows.py`, como no exemplo [\_\_init\_\_.py](/pipelines/flows.py)
+
 
 ## Como rodar uma pipeline localmente
 
