@@ -147,14 +147,13 @@ def dump_header_to_csv(
     """
     files = glob.glob(f"{data_path}/*")
     file = files[0] if files != [] else ''
-    log(files)
-    log(file)
-    dataframe= pd.read_csv(f'{data_path}/{file}', nrows=1)
+
+    dataframe= pd.read_csv(f'{file}', nrows=1)
     
     header_path = Path(header_path)
     dataframe_to_csv(dataframe, header_path / "header.csv")
 
-    log(f"Wrote header to {header_path}")
+    log(f"Wrote header to {header_path} from file {file}")
 
     return header_path
 
