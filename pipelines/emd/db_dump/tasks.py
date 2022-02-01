@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Dict, Union
 from datetime import datetime
 
+import glob
 from prefect import task
 import basedosdados as bd
 import pandas as pd
@@ -139,15 +140,16 @@ def dump_batches_to_csv(
 def dump_header_to_csv(
     database: Database,
     header_path: Union[str, Path],
+    data_path: Union[str, Path],
     wait=None,  # pylint: disable=unused-argument
 ) -> Path:
     """
     Dumps the header to CSV.
     """
-    columns = database.get_columns()
-    first_row = database.fetch_batch(1)
-    dataframe = pd.DataFrame(data=first_row, columns=columns)
-
+    files = glob.glob(f"{data_path}/*")
+    file = files[0] if files != [] else []
+    dataframe= pd.read_csv(f'{data_path}/{file}', nrows=1)
+    
     header_path = Path(header_path)
     dataframe_to_csv(dataframe, header_path / "header.csv")
 
