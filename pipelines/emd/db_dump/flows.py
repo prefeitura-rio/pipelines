@@ -9,6 +9,9 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants
 from pipelines.emd.db_dump.db import Database
+from pipelines.emd.db_dump.schedules import (
+    daily_update_schedule,
+)
 from pipelines.emd.db_dump.tasks import (
     create_bd_table,
     database_execute,
@@ -45,7 +48,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
     # BigQuery parameters
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
-    dump_type = Parameter("dump_type", default='append') # overwrite or append
+    dump_type = Parameter("dump_type", default='append')  # overwrite or append
 
     #####################################
     #
@@ -71,7 +74,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
         password=password,
         database=database,
     )
-    
+
     wait_db_execute = database_execute(  # pylint: disable=invalid-name
         database=db_object,
         query=query,
@@ -120,6 +123,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
 dump_sql_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_sql_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value)
+dump_sql_flow.schedule = daily_update_schedule
 
 with Flow("Executar query SQL") as run_sql_flow:
 

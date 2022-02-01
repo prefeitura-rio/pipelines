@@ -17,7 +17,7 @@ class constants(Enum):  # pylint: disable=c0103
     DOCKER_IMAGE_NAME = "AUTO_REPLACE_DOCKER_IMAGE"
     DOCKER_IMAGE = f"{DOCKER_IMAGE_NAME}:{DOCKER_TAG}"
     # Prefect agents AUTO_FIND=M9w=k-b_
-    EMD_AGENT_LABEL = "808afa41-4de4-425c-935c-441d92f1c64a"
+    EMD_AGENT_LABEL = "emd"
 
     ######################################
     # Other constants
