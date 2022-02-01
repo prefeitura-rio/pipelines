@@ -90,7 +90,6 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
     
     # Create CSV file with headers
     wait_header_path = dump_header_to_csv(
-        database=db_object,
         header_path=f"data/{uuid4()}/",
         data_path=wait_batches_path,
         wait=wait_batches_path,

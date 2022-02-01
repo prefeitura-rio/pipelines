@@ -138,7 +138,6 @@ def dump_batches_to_csv(
 
 @task
 def dump_header_to_csv(
-    database: Database,
     header_path: Union[str, Path],
     data_path: Union[str, Path],
     wait=None,  # pylint: disable=unused-argument
@@ -147,7 +146,9 @@ def dump_header_to_csv(
     Dumps the header to CSV.
     """
     files = glob.glob(f"{data_path}/*")
-    file = files[0] if files != [] else []
+    file = files[0] if files != [] else ''
+    log(files)
+    log(file)
     dataframe= pd.read_csv(f'{data_path}/{file}', nrows=1)
     
     header_path = Path(header_path)
