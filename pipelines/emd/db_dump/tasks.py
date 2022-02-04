@@ -88,12 +88,16 @@ def database_fetch(
     Fetches the results of a query on the database.
     """
     if batch_size == "all":
-        return database.fetch_all()
-    try:
-        batch_size_no = int(batch_size)
-    except ValueError as error:
-        raise ValueError(f"Invalid batch size: {batch_size}") from error
-    return database.fetch_batch(batch_size_no)
+        log(f"columns: {database.get_columns()}")
+        log(f"All rows: { database.fetch_all()}")
+    else:
+        try:
+            batch_size_no = int(batch_size)
+        except ValueError as error:
+            raise ValueError(f"Invalid batch size: {batch_size}") from error
+        log(f"columns: {database.get_columns()}")
+        log(f"{batch_size_no} rows: {database.fetch_batch(batch_size_no)}")
+    
 
 ###############
 #
