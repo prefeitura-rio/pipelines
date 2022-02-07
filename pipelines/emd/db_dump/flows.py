@@ -48,7 +48,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
     # BigQuery parameters
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
-    dump_type = Parameter("dump_type", default='append')  # overwrite or append
+    dump_type = Parameter("dump_type", default="append")  # overwrite or append
 
     #####################################
     #
@@ -79,7 +79,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
         database=db_object,
         query=query,
     )
-    
+
     # Dump batches to CSV files
     wait_batches_path = dump_batches_to_csv(
         database=db_object,
@@ -87,7 +87,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
         prepath=f"data/{uuid4()}/",
         wait=wait_db_execute,
     )
-    
+
     # Create CSV file with headers
     wait_header_path = dump_header_to_csv(
         header_path=f"data/{uuid4()}/",
@@ -112,17 +112,17 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
 
     # Upload to GCS
     upload_to_gcs(
-        path=wait_batches_path, 
-        dataset_id=dataset_id, 
-        table_id=table_id, 
-        wait=wait_create_db
+        path=wait_batches_path,
+        dataset_id=dataset_id,
+        table_id=table_id,
+        wait=wait_create_db,
     )
 
 
 dump_sql_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-dump_sql_flow.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value)
+dump_sql_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 dump_sql_flow.schedule = daily_update_schedule
+
 
 with Flow("Executar query SQL") as run_sql_flow:
 
@@ -174,7 +174,7 @@ with Flow("Executar query SQL") as run_sql_flow:
         query=query,
     )
 
-    # Log results 
+    # Log results
     database_fetch(
         database=db_object,
         batch_size=batch_size,
@@ -182,7 +182,5 @@ with Flow("Executar query SQL") as run_sql_flow:
     )
 
 
-
 run_sql_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-run_sql_flow.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value)
+run_sql_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)

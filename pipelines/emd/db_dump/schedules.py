@@ -10,24 +10,23 @@ import pytz
 
 from pipelines.constants import constants
 
-daily_update_schedule = Schedule(
-    clocks=[
-        IntervalClock(
-            interval=timedelta(days=1),
-            start_date=datetime(
-                2021, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo")),
-            labels=[
-                constants.EMD_AGENT_LABEL.value,
-            ],
-            parameter_defaults={
-                "batch_size": 5000,
-                "dataset_id": "administracao_servicos_publicos_1746",
-                "db_database": "REPLICA1746",
-                "db_host": "10.70.1.34",
-                "db_port": "1433",
-                "db_type": "sql_server",
-                "dump_type": "overwrite",
-                "execute_query": """
+
+emd_1746 = (
+    IntervalClock(
+        interval=timedelta(days=1),
+        start_date=datetime(2021, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo")),
+        labels=[
+            constants.EMD_AGENT_LABEL.value,
+        ],
+        parameter_defaults={
+            "batch_size": 50000,
+            "dataset_id": "administracao_servicos_publicos_1746",
+            "db_database": "REPLICA1746",
+            "db_host": "10.70.1.34",
+            "db_port": "1433",
+            "db_type": "sql_server",
+            "dump_type": "overwrite",
+            "execute_query": """
                 USE REPLICA1746
                 select distinct ch.id_chamado, CONVERT (VARCHAR, CONVERT(DATETIME, ch.dt_inicio, 10)
                 , 20) AS [dt_inicio], CONVERT (VARCHAR, CONVERT(DATETIME, ch.dt_fim, 10), 20) AS
@@ -73,9 +72,96 @@ daily_update_schedule = Schedule(
                 tra.id_territorialidade_regiao_administrativa_fk left join tb_territorialidade as tr
                 on tr.id_territorialidade = trg.id_territorialidade_fk order by ch.id_chamado asc
                 """,
-                "table_id": "chamado",
-                "vault_secret_path": "clustersql2"
-            },
-        ),
-    ]
+            "table_id": "chamado",
+            "vault_secret_path": "clustersql2",
+        },
+    ),
+)
+
+sme_escola = (
+    IntervalClock(
+        interval=timedelta(days=1),
+        start_date=datetime(2021, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo")),
+        labels=[
+            constants.EMD_AGENT_LABEL.value,
+        ],
+        parameter_defaults={
+            "batch_size": 50000,
+            "dataset_id": "educacao_basica",
+            "db_database": "GestaoEscolar",
+            "db_host": "10.70.6.103",
+            "db_port": "1433",
+            "db_type": "sql_server",
+            "dump_type": "overwrite",
+            "execute_query": "SELECT      CRE,     Designacao,     Denominacao,     Endereco,     Bairro,     CEP,     eMail,     Telefone,     Direçao as Direcao,     MicroArea,     Polo,     Tipo_Unidade,     INEP,     SICI,     Salas_Recurso,     Salas_Aula,     Salas_Aula_Utilizadas,     Tot_Escola,     esc_id FROM GestaoEscolar.dbo.VW_BI_Escola",
+            "table_id": "escola",
+            "vault_secret_path": "clustersqlsme",
+        },
+    ),
+)
+
+sme_turma = IntervalClock(
+    interval=timedelta(days=1),
+    start_date=datetime(2021, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    labels=[
+        constants.EMD_AGENT_LABEL.value,
+    ],
+    parameter_defaults={
+        "batch_size": 50000,
+        "dataset_id": "educacao_basica",
+        "db_database": "GestaoEscolar",
+        "db_host": "10.70.6.103",
+        "db_port": "1433",
+        "db_type": "sql_server",
+        "dump_type": "overwrite",
+        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Turma",
+        "table_id": "turma",
+        "vault_secret_path": "clustersqlsme",
+    },
+)
+
+sme_dependencia = (
+    IntervalClock(
+        interval=timedelta(days=1),
+        start_date=datetime(2021, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo")),
+        labels=[
+            constants.EMD_AGENT_LABEL.value,
+        ],
+        parameter_defaults={
+            "batch_size": 50000,
+            "dataset_id": "educacao_basica",
+            "db_database": "GestaoEscolar",
+            "db_host": "10.70.6.103",
+            "db_port": "1433",
+            "db_type": "sql_server",
+            "dump_type": "overwrite",
+            "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Dependencia",
+            "table_id": "dependencia",
+            "vault_secret_path": "clustersqlsme",
+        },
+    ),
+)
+
+sme_frequencia = IntervalClock(
+    interval=timedelta(days=1),
+    start_date=datetime(2021, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    labels=[
+        constants.EMD_AGENT_LABEL.value,
+    ],
+    parameter_defaults={
+        "batch_size": 50000,
+        "dataset_id": "educacao_basica",
+        "db_database": "GestaoEscolar",
+        "db_host": "10.70.6.103",
+        "db_port": "1433",
+        "db_type": "sql_server",
+        "dump_type": "overwrite",
+        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Frequencia",
+        "table_id": "frequencia",
+        "vault_secret_path": "clustersqlsme",
+    },
+)
+
+daily_update_schedule = Schedule(
+    clocks=[emd_1746, sme_escola, sme_turma, sme_dependencia, sme_frequencia]
 )
