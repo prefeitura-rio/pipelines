@@ -11,7 +11,7 @@ import pytz
 
 from pipelines.constants import constants
 
-untuple = lambda clock: [
+untuple = lambda clocks: [
     clock[0] if type(clock) == tuple else clock for clock in clocks
 ]
 
