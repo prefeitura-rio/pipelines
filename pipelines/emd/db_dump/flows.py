@@ -26,7 +26,7 @@ from pipelines.tasks import get_user_and_password
 from pipelines.utils import log_task
 
 
-def _dum_sql_flow():
+def _dump_sql_flow():
 
     #####################################
     #
@@ -122,7 +122,7 @@ def _dum_sql_flow():
 
 
 with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
-    _dum_sql_flow()
+    _dump_sql_flow()
 
 
 dump_sql_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
@@ -193,7 +193,7 @@ run_sql_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 
 
 with Flow("Ingerir tabela Ergon") as dump_ergon_flow:
-    _dum_sql_flow()
+    _dump_sql_flow()
 
 
 dump_ergon_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
