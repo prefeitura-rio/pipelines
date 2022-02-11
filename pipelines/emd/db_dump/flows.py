@@ -3,6 +3,7 @@ Database dumping flows
 """
 
 from uuid import uuid4
+from copy import deepcopy
 
 from prefect import Flow, Parameter
 from pipelines.emd.db_dump.db import Database
@@ -125,21 +126,21 @@ dump_sql_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_sql_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 
 
-dump_ergon_flow = dump_sql_flow
+dump_ergon_flow = deepcopy(dump_sql_flow)
 dump_ergon_flow.name = "EMD: Ingerir tabelas Ergon"
 dump_ergon_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_ergon_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 dump_ergon_flow.schedule = ergon_monthly_update_schedule
 
 
-dump_sme_flow = dump_sql_flow
-dump_sme_flow.name = "SME: Ingerir tabela"
+dump_sme_flow = deepcopy(dump_sql_flow)
+dump_sme_flow.name = "SME: Ingerir tabelas"
 dump_sme_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_sme_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 dump_sme_flow.schedule = sme_daily_update_schedule
 
-dump_1746_flow = dump_sql_flow
-dump_1746_flow.name = "1746: Ingerir tabela"
+dump_1746_flow = deepcopy(dump_sql_flow)
+dump_1746_flow.name = "1746: Ingerir tabelas"
 dump_1746_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_1746_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 dump_1746_flow.schedule = _1746_daily_update_schedule
