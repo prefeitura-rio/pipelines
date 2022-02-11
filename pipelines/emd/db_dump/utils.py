@@ -23,6 +23,7 @@ def batch_to_dataframe(batch: Tuple[Tuple], columns: List[str]) -> pd.DataFrame:
     log(f"Converting batch of size {len(batch)} to dataframe")
     return pd.DataFrame(batch, columns=columns)
 
+
 ###############
 #
 # File

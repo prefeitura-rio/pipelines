@@ -62,9 +62,10 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants
 from pipelines.emd.template_pipeline.tasks import say_hello
+
 # from pipelines.emd.template_pipeline.schedules import every_two_weeks
 
-with Flow("Template Pipeline") as flow:
+with Flow("EMD: Template Pipeline") as flow:
     say_hello()
 
 flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)

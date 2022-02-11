@@ -12,7 +12,7 @@ from pipelines.emd.dbt.tasks import (
     run_dbt_model,
 )
 
-with Flow("Run DBT model") as run_dbt_model_flow:
+with Flow("EMD: Executa DBT model") as run_dbt_model_flow:
 
     # Parameters
     dataset_id = Parameter("dataset_id")
@@ -24,12 +24,8 @@ with Flow("Run DBT model") as run_dbt_model_flow:
 
     # Run DBT model
     run_dbt_model(
-        dbt_client=dbt_client,
-        dataset_id=dataset_id,
-        table_id=table_id,
-        sync=True
+        dbt_client=dbt_client, dataset_id=dataset_id, table_id=table_id, sync=True
     )
 
 run_dbt_model_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-run_dbt_model_flow.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value)
+run_dbt_model_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
