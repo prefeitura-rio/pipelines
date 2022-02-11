@@ -213,7 +213,7 @@ ergon_views = {
 }
 
 
-def get_clock(dataset_id, view_name, table_id):
+def get_clock(view_name, table_id):
     return IntervalClock(
         interval=timedelta(days=30),
         start_date=datetime(2021, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo")),
@@ -222,7 +222,7 @@ def get_clock(dataset_id, view_name, table_id):
         ],
         parameter_defaults={
             "batch_size": 50000,
-            "dataset_id": dataset_id,
+            "dataset_id": "administracao_recursos_humanos_folha_salarial",
             "db_database": "P01.PCRJ",
             "db_host": "10.70.6.22",
             "db_port": "1521",
@@ -235,34 +235,9 @@ def get_clock(dataset_id, view_name, table_id):
     )
 
 
-ergon_clocks = []
-dataset_id = "administracao_recursos_humanos_folha_salarial"
-for view, table_id in ergon_views.items():
-    view_name = view
-    ergon_clocks.append(
-        get_clock(dataset_id=dataset_id, view_name=view_name, table_id=table_id)
-    )
-
-
-# ergon_clock = IntervalClock(
-#     interval=timedelta(days=30),
-#     start_date=datetime(2021, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo")),
-#     labels=[
-#         constants.EMD_AGENT_LABEL.value,
-#     ],
-#     parameter_defaults={
-#         "batch_size": 50000,
-#         "dataset_id": "administracao_recursos_humanos_folha_salarial",
-#         "db_database": "P01.PCRJ",
-#         "db_host": "10.70.6.22",
-#         "db_port": "1521",
-#         "db_type": "oracle",
-#         "dump_type": "overwrite",
-#         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FITA_BANCO WHERE ROWNUM <= 10000",
-#         "table_id": "fita_banco",
-#         "vault_secret_path": "ergon-hom",
-#     },
-# )
-# ergon_clocks = [ergon_clock]
+ergon_clocks = [
+    get_clock(view_name=view, table_id=table_id)
+    for view, table_id in ergon_views.items()
+]
 
 ergon_monthly_update_schedule = Schedule(clocks=untuple(ergon_clocks))
