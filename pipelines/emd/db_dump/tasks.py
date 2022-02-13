@@ -37,7 +37,7 @@ def database_get(
     port: int,
     user: str,
     password: str,
-    database: str
+    database: str,
 ) -> Database:
     """
     Returns a database object.
@@ -127,7 +127,7 @@ def dump_batches_to_csv(
 
     # Dump batches
     batch = database.fetch_batch(batch_size)
-    eventid = datetime.now().strftime('%Y%m%d-%H%M%S')
+    eventid = datetime.now().strftime("%Y%m%d-%H%M%S")
     idx = 0
     while len(batch) > 0:
         log(f"Dumping batch {idx} with size {len(batch)}")
@@ -152,9 +152,9 @@ def dump_header_to_csv(
     Dumps the header to CSV.
     """
     files = glob.glob(f"{data_path}/*")
-    file = files[0] if files != [] else ''
+    file = files[0] if files != [] else ""
 
-    dataframe = pd.read_csv(f'{file}', nrows=1)
+    dataframe = pd.read_csv(f"{file}", nrows=1)
 
     header_path = Path(header_path)
     dataframe_to_csv(dataframe, header_path / "header.csv")
@@ -219,38 +219,49 @@ def create_bd_table(
     st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
 
     # full dump
-    if dump_type == 'append':
+    if dump_type == "append":
         if tb.table_exists(mode="staging"):
-            log(f"Mode append: Table {st.bucket_name}.{dataset_id}.{table_id} already exists")
+            log(
+                f"Mode append: Table {st.bucket_name}.{dataset_id}.{table_id} already exists"
+            )
         else:
             tb.create(
                 path=path,
                 location="southamerica-east1",
             )
             log(
-                f"Mode append: Sucessfully created a new table {st.bucket_name}.{dataset_id}.{table_id}")  # pylint: disable=C0301
+                f"Mode append: Sucessfully created a new table {st.bucket_name}.{dataset_id}.{table_id}"
+            )  # pylint: disable=C0301
 
-            st.delete_table(mode="staging", bucket_name=st.bucket_name,
-                            not_found_ok=True)
-            log(
-                f"Mode append: Sucessfully remove header data from {st.bucket_name}.{dataset_id}.{table_id}")  # pylint: disable=C0301
-    elif dump_type == 'overwrite':
-        if tb.table_exists(mode="staging"):
-            log(f"Mode overwrite: Table {st.bucket_name}.{dataset_id}.{table_id} already exists, DELETING OLD DATA!")  # pylint: disable=C0301
             st.delete_table(
-                mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
-
+                mode="staging", bucket_name=st.bucket_name, not_found_ok=True
+            )
+            log(
+                f"Mode append: Sucessfully remove header data from {st.bucket_name}.{dataset_id}.{table_id}"
+            )  # pylint: disable=C0301
+    elif dump_type == "overwrite":
+        if tb.table_exists(mode="staging"):
+            log(
+                f"Mode overwrite: Table {st.bucket_name}.{dataset_id}.{table_id} already exists, DELETING OLD DATA!"
+            )  # pylint: disable=C0301
+            st.delete_table(
+                mode="staging", bucket_name=st.bucket_name, not_found_ok=True
+            )
+        ## dataset is public if the project is datario
+        dataset_is_public = tb.client["bigquery_prod"].project == "datario"
         tb.create(
             path=path,
             if_storage_data_exists="replace",
             if_table_config_exists="replace",
             if_table_exists="replace",
             location="southamerica-east1",
+            dataset_is_public=dataset_is_public,
         )
 
         log(
-            f"Mode overwrite: Sucessfully created table {st.bucket_name}.{dataset_id}.{table_id}")
-        st.delete_table(mode="staging", bucket_name=st.bucket_name,
-                        not_found_ok=True)
+            f"Mode overwrite: Sucessfully created table {st.bucket_name}.{dataset_id}.{table_id}"
+        )
+        st.delete_table(mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
         log(
-            f"Mode overwrite: Sucessfully remove header data from {st.bucket_name}.{dataset_id}.{table_id}")  # pylint: disable=C0301
+            f"Mode overwrite: Sucessfully remove header data from {st.bucket_name}.{dataset_id}.{table_id}"
+        )  # pylint: disable=C0301
