@@ -223,7 +223,7 @@ def get_clock(view_name, table_id, count):
     return IntervalClock(
         interval=timedelta(days=30),
         start_date=datetime(
-            2022, 2, 11, 20, 1 + 3 * count, tzinfo=pytz.timezone("America/Sao_Paulo")
+            2022, 2, 14, 10, 32 + 3 * count, tzinfo=pytz.timezone("America/Sao_Paulo")
         ),
         labels=[
             constants.EMD_AGENT_LABEL.value,
@@ -236,7 +236,7 @@ def get_clock(view_name, table_id, count):
             "db_port": "1521",
             "db_type": "oracle",
             "dump_type": "overwrite",
-            "execute_query": f"SELECT * FROM C_ERGON.{view_name} WHERE ROWNUM <= 10000",
+            "execute_query": f"SELECT * FROM C_ERGON.{view_name}",  # WHERE ROWNUM <= 10000
             "table_id": table_id,
             "vault_secret_path": "ergon-hom",
         },
