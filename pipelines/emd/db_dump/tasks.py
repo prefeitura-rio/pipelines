@@ -20,7 +20,7 @@ from pipelines.utils import log
 from pipelines.emd.db_dump.utils import (
     batch_to_dataframe,
     dataframe_to_csv,
-    get_clean_dataframe,
+    clean_dataframe,
 )
 
 DATABASE_MAPPING: Dict[str, Database] = {
@@ -135,7 +135,7 @@ def dump_batches_to_csv(
         # Convert to dataframe
         dataframe = batch_to_dataframe(batch, columns)
         # Clean dataframe
-        dataframe = get_clean_dataframe(dataframe)
+        dataframe = clean_dataframe(dataframe)
         # Write to CSV
         dataframe_to_csv(dataframe, prepath / f"{eventid}-{idx}.csv")
         # Get next batch
