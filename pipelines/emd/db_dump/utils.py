@@ -28,7 +28,13 @@ def batch_to_dataframe(batch: Tuple[Tuple], columns: List[str]) -> pd.DataFrame:
 def clean_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
     for col in dataframe.columns.tolist():
         if dataframe[col].dtype == object:
-            dataframe[col] = dataframe[col].str.replace("\x00", "", regex=True)
+            try:
+                dataframe[col] = (
+                    dataframe[col].astype(str).str.replace("\x00", "", regex=True)
+                )
+            except Exception as e:
+                print("Column: ", col, "\nData: ", dataframe[col].tolist(), "\n", e)
+                raise
     return dataframe
 
 
