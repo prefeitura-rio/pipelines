@@ -17,7 +17,6 @@ import traceback
 from typing import (
     Dict,
     List,
-    NamedTuple,
     Tuple,
     Union,
 )
@@ -37,12 +36,6 @@ from typer import Typer
 
 app = Typer()
 FlowLike = Union[box.Box, "prefect.Flow"]
-
-
-class Source(NamedTuple):
-    """some docstring, please stop pylint"""
-    location: str
-    kind: str
 
 
 def build_and_register(  # pylint: disable=too-many-branches
@@ -140,7 +133,7 @@ def build_and_register(  # pylint: disable=too-many-branches
 
 def collect_flows(
     paths: List[str],
-) -> Dict[Source, List[FlowLike]]:
+) -> Dict[str, List[FlowLike]]:
     """
     (Adapted from Prefect original code.)
 
@@ -401,7 +394,7 @@ def main(
     # Log errors as they happen, but only exit once all files have been processed
     stats = Counter(registered=0, errored=0, skipped=0)
     for source, flows in source_to_flows.items():
-        logger.info(f"Processing {source.location!r}:")
+        logger.info(f"Processing {source!r}:")
         stats += build_and_register(
             client,
             flows,
