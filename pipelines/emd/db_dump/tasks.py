@@ -135,7 +135,7 @@ def dump_batches_to_csv(
         # Convert to dataframe
         dataframe = batch_to_dataframe(batch, columns)
         # Clean dataframe
-        dataframe = clean_dataframe(dataframe)
+        # dataframe = clean_dataframe(dataframe)
         # Write to CSV
         dataframe_to_csv(dataframe, prepath / f"{eventid}-{idx}.csv")
         # Get next batch
