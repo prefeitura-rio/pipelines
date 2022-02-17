@@ -85,4 +85,4 @@ def query_to_line(query: str) -> str:
     """
     Converts a query to a line.
     """
-    return " ".join(query.split("\n"))
+    return " ".join([line.strip() for line in query.split("\n")])
