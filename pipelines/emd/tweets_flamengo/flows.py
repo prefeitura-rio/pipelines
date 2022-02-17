@@ -73,7 +73,7 @@ from pipelines.emd.tweets_flamengo.tasks import (
 # from pipelines.emd.tweets_flamengo.schedules import tweets_flamengo_schedule
 
 
-with Flow("EMD: Captura tweets do Flamengo") as tweets_flamengo_flow:
+with Flow("EMD: escritorio - Captura tweets do Flamengo") as tweets_flamengo_flow:
     q = Parameter("keyword")
 
     api = get_api()

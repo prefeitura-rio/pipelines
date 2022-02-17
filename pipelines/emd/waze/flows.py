@@ -17,7 +17,7 @@ from pipelines.emd.waze.schedules import every_five_minutes
 
 # from pipelines.emd.template_pipeline.schedules import every_two_weeks
 
-with Flow("EMD: Waze: Alertas") as flow:
+with Flow("EMD: escritorio - Alertas Waze") as flow:
 
     areas = load_geometries()
 

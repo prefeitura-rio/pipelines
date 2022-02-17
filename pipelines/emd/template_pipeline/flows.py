@@ -65,7 +65,7 @@ from pipelines.emd.template_pipeline.tasks import say_hello
 
 # from pipelines.emd.template_pipeline.schedules import every_two_weeks
 
-with Flow("EMD: Template Pipeline") as flow:
+with Flow("EMD: template - Template Pipeline") as flow:
     say_hello()
 
 flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
