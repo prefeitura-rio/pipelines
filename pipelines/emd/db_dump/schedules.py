@@ -2,8 +2,6 @@
 Schedules for the database dump pipeline
 """
 
-
-from calendar import month
 from datetime import timedelta, datetime
 
 from prefect.schedules import Schedule
@@ -11,11 +9,10 @@ from prefect.schedules.clocks import IntervalClock
 import pytz
 
 from pipelines.constants import constants
-from pipelines.utils import query_to_line
-
-untuple = lambda clocks: [
-    clock[0] if type(clock) == tuple else clock for clock in clocks
-]
+from pipelines.utils import (
+    query_to_line,
+    untuple_clocks as untuple
+)
 
 
 #####################################
@@ -49,7 +46,8 @@ ergon_queries = {
 ergon_clocks = [
     IntervalClock(
         interval=timedelta(days=30),
-        start_date=datetime(2022, 3, 5, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo"))
+        start_date=datetime(
+            2022, 3, 5, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo"))
         + timedelta(minutes=3 * count),
         labels=[
             constants.EMD_AGENT_LABEL.value,
@@ -81,7 +79,7 @@ ergon_monthly_update_schedule = Schedule(clocks=untuple(ergon_clocks))
 sme_queries = {
     "turma": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Turma",
     "dependencia": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Dependencia",
-    ### POR ENQUANTO frequencia USA DADOS DE 2019, NAO PRECISA ATUALIZAR DIARIAMENTE
+    # POR ENQUANTO frequencia USA DADOS DE 2019, NAO PRECISA ATUALIZAR DIARIAMENTE
     # "frequencia": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Frequencia",
     "escola": """
         SELECT CRE,
@@ -146,7 +144,8 @@ sme_queries = {
 sme_clocks = [
     IntervalClock(
         interval=timedelta(days=1),
-        start_date=datetime(2022, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo"))
+        start_date=datetime(
+            2022, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo"))
         + timedelta(minutes=3 * count),
         labels=[
             constants.EMD_AGENT_LABEL.value,
@@ -278,7 +277,8 @@ _1746_queries = {
 _1746_clocks = [
     IntervalClock(
         interval=timedelta(days=1),
-        start_date=datetime(2022, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo"))
+        start_date=datetime(
+            2022, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo"))
         + timedelta(minutes=3 * count),
         labels=[
             constants.EMD_AGENT_LABEL.value,

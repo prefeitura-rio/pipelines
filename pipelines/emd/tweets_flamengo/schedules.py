@@ -69,10 +69,10 @@ Schedules for emd
 ###############################################################################
 
 
-from datetime import timedelta, datetime
-from prefect.schedules import Schedule
-from prefect.schedules.clocks import IntervalClock
-from pipelines.constants import constants
+# from datetime import timedelta, datetime
+# from prefect.schedules import Schedule
+# from prefect.schedules.clocks import IntervalClock
+# from pipelines.constants import constants
 
 # tweets_flamengo_schedule = Schedule(
 #     clocks=[

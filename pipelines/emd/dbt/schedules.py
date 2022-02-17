@@ -2,7 +2,6 @@
 Schedules for the database dump pipeline
 """
 
-from calendar import month
 from datetime import timedelta, datetime
 
 from prefect.schedules import Schedule
@@ -10,10 +9,30 @@ from prefect.schedules.clocks import IntervalClock
 import pytz
 
 from pipelines.constants import constants
+from pipelines.utils import untuple_clocks as untuple
 
-untuple = lambda clocks: [
-    clock[0] if type(clock) == tuple else clock for clock in clocks
-]
+
+def get_clock(dataset_id, table_id, count):
+    """
+    Returns a clock for the given dataset and table with an offset of
+    `count` * 3 minutes.
+    """
+    return IntervalClock(
+        interval=timedelta(days=30),
+        start_date=datetime(
+            2022, 2, 15, 12, 5, tzinfo=pytz.timezone("America/Sao_Paulo")
+        )
+        + timedelta(minutes=3 * count),
+        labels=[
+            constants.EMD_AGENT_LABEL.value,
+        ],
+        parameter_defaults={
+            "dataset_id": dataset_id,
+            "table_id": table_id,
+            "mode": "prod",
+        },
+    )
+
 
 #####################################
 #
