@@ -29,7 +29,6 @@ DATABASE_MAPPING: Dict[str, Database] = {
     "sql_server": SqlServer,
 }
 
-
 # pylint: disable=too-many-arguments
 @task(
     checkpoint=False,
@@ -71,7 +70,7 @@ def database_get(
 
 @task(
     checkpoint=False,
-    max_retries=constants.constants.TASK_MAX_RETRIES.value,
+    max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 def database_execute(
@@ -91,7 +90,7 @@ def database_execute(
 
 @task(
     checkpoint=False,
-    max_retries=constants.constants.TASK_MAX_RETRIES.value,
+    max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 def database_fetch(
@@ -122,7 +121,7 @@ def database_fetch(
 
 
 @task(
-    max_retries=constants.constants.TASK_MAX_RETRIES.value,
+    max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 def dump_batches_to_csv(
@@ -161,7 +160,7 @@ def dump_batches_to_csv(
 
 
 @task(
-    max_retries=constants.constants.TASK_MAX_RETRIES.value,
+    max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 def dump_header_to_csv(
@@ -191,7 +190,7 @@ def dump_header_to_csv(
 #
 ###############
 @task(
-    max_retries=constants.constants.TASK_MAX_RETRIES.value,
+    max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 def upload_to_gcs(
@@ -226,7 +225,7 @@ def upload_to_gcs(
 
 
 @task(
-    max_retries=constants.constants.TASK_MAX_RETRIES.value,
+    max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 def create_bd_table(
