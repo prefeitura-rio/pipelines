@@ -5,7 +5,6 @@ Utilities for `db_dump` tasks.
 from pathlib import Path
 from typing import Tuple, List, Union
 
-from unidecode import unidecode
 import pandas as pd
 import numpy as np
 
@@ -27,6 +26,9 @@ def batch_to_dataframe(batch: Tuple[Tuple], columns: List[str]) -> pd.DataFrame:
 
 
 def clean_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
+    """
+    Cleans a dataframe.
+    """
     for col in dataframe.columns.tolist():
         if dataframe[col].dtype == object:
             try:
@@ -36,8 +38,9 @@ def clean_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
                     .str.replace("\x00", "", regex=True)
                     .replace("None", np.nan, regex=True)
                 )
-            except Exception as e:
-                print("Column: ", col, "\nData: ", dataframe[col].tolist(), "\n", e)
+            except Exception as exc:
+                print("Column: ", col, "\nData: ",
+                      dataframe[col].tolist(), "\n", exc)
                 raise
     return dataframe
 
@@ -61,11 +64,6 @@ def dataframe_to_csv(dataframe: pd.DataFrame, path: Union[str, Path]) -> None:
     log(f"Writing dataframe to CSV: {path}")
     dataframe.to_csv(path, index=False, encoding="utf-8")
     log(f"Wrote dataframe to CSV: {path}")
-
-
-import os
-from pathlib import Path
-import pandas as pd
 
 
 def to_partitions(data, partition_columns, savepath):
@@ -120,4 +118,4 @@ def to_partitions(data, partition_columns, savepath):
             df_filter.to_csv(filter_save_path / "data.csv", index=False)
 
     else:
-        raise (BaseException("Data need to be a pandas DataFrame"))
+        raise BaseException("Data need to be a pandas DataFrame")

@@ -3,19 +3,16 @@ Tasks for emd
 """
 
 
-import pandas as pd
-from google.cloud import bigquery
-import basedosdados as bd
-
-from prefect import task
-from pipelines.constants import constants
-from pipelines.utils import log
-
-import requests
-import pandas as pd
 from datetime import datetime, timedelta
-from shapely.geometry import Point
+
+import basedosdados as bd
+from google.cloud import bigquery
+import pandas as pd
+from prefect import task
+import requests
 from shapely.wkt import loads
+
+from pipelines.constants import constants
 
 
 @task(
@@ -23,6 +20,9 @@ from shapely.wkt import loads
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 def load_geometries() -> pd.DataFrame:
+    """
+    Loads the geometries from the database.
+    """
     areas_dict = {
         "geometry": {
             0: "POLYGON ((-43.62216601277018 -23.08289269734031, -43.79653853090349 -23.08289269734031, -43.79653853090349 -22.91445704293636, -43.62216601277018 -22.91445704293636, -43.62216601277018 -23.08289269734031))",
@@ -111,7 +111,7 @@ def load_geometries() -> pd.DataFrame:
     }
 
     areas = pd.DataFrame.from_dict(areas_dict)
-    areas["bounds"] = areas["bounds"].apply(lambda x: loads(x))
+    areas["bounds"] = areas["bounds"].apply(loads)
     areas["coords"] = areas["bounds"].apply(
         lambda x: dict(zip(["left", "bottom", "right", "top"], x.bounds))
     )
@@ -124,6 +124,9 @@ def load_geometries() -> pd.DataFrame:
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 def fecth_waze(areas: pd.DataFrame) -> list:
+    """
+    Fetch data from waze.
+    """
     coords = areas["coords"].to_list()
 
     base_url = "https://www.waze.com/row-rtserver/web/TGeoRSS?bottom={bottom}&left={left}&ma=200&mj=200&mu=20&right={right}&top={top}&types=alerts"
@@ -146,33 +149,37 @@ def fecth_waze(areas: pd.DataFrame) -> list:
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 def normalize_data(responses: list) -> pd.DataFrame:
+    """
+    Normalize data.
+    """
     normalized = []
     for data in responses:
         alerts = data.get("alerts", [])
-        for d in alerts:
+        for dictionary in alerts:
 
             normalized.append(
                 {
                     "date": datetime.fromisoformat(data["startTime"][:10]),
                     "ts": datetime.fromisoformat(data["startTime"]),
                     "ts_alert_creation": datetime.fromtimestamp(
-                        int(str(d.get("pubMillis"))[:10])
+                        int(str(dictionary.get("pubMillis"))[:10])
                     ),
-                    "uuid": d.get("uuid"),
-                    "country": d.get("country"),
-                    "city": d.get("city"),
-                    "street": d.get("street"),
-                    "type": d.get("type"),
-                    "subtype": d.get("subtype"),
-                    "roadType": d.get("roadType"),  ## TODO change to road_type
-                    "reliability": d.get("reliability"),
-                    "confidence": d.get("confidence"),
-                    "number_thumbs_up": d.get("nThumbsUp"),
-                    "number_comments": d.get("nComments"),
-                    "report_mood": d.get("reportMood"),
-                    "magvar": d.get("magvar"),
-                    "report_rating": d.get("reportRating"),
-                    "geometry": "POINT ({x} {y})".format(**d.get("location")),
+                    "uuid": dictionary.get("uuid"),
+                    "country": dictionary.get("country"),
+                    "city": dictionary.get("city"),
+                    "street": dictionary.get("street"),
+                    "type": dictionary.get("type"),
+                    "subtype": dictionary.get("subtype"),
+                    # TODO change to road_type
+                    "roadType": dictionary.get("roadType"),
+                    "reliability": dictionary.get("reliability"),
+                    "confidence": dictionary.get("confidence"),
+                    "number_thumbs_up": dictionary.get("nThumbsUp"),
+                    "number_comments": dictionary.get("nComments"),
+                    "report_mood": dictionary.get("reportMood"),
+                    "magvar": dictionary.get("magvar"),
+                    "report_rating": dictionary.get("reportRating"),
+                    "geometry": "POINT ({x} {y})".format(**dictionary.get("location")),  # pylint: disable=consider-using-f-string
                 }
             )
 
@@ -186,7 +193,10 @@ def normalize_data(responses: list) -> pd.DataFrame:
 def upload_to_native_table(
     dataset_id: str, table_id: str, dataframe: pd.DataFrame
 ) -> None:
-    tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
+    """
+    Upload data to native table.
+    """
+    table = bd.Table(dataset_id=dataset_id, table_id=table_id)
 
     schema = [
         bigquery.SchemaField("date", "DATE"),
@@ -198,7 +208,7 @@ def upload_to_native_table(
         bigquery.SchemaField("street", "STRING"),
         bigquery.SchemaField("type", "STRING"),
         bigquery.SchemaField("subtype", "STRING"),
-        bigquery.SchemaField("roadType", "INT64"),  ## TODO change to road_type
+        bigquery.SchemaField("roadType", "INT64"),  # TODO change to road_type
         bigquery.SchemaField("reliability", "INT64"),
         bigquery.SchemaField("confidence", "INT64"),
         bigquery.SchemaField("number_thumbs_up", "INT64"),
@@ -221,8 +231,8 @@ def upload_to_native_table(
         ),
     )
 
-    job = tb.client["bigquery_prod"].load_table_from_dataframe(
-        dataframe, tb.table_full_name["prod"], job_config=job_config
+    job = table.client["bigquery_prod"].load_table_from_dataframe(
+        dataframe, table.table_full_name["prod"], job_config=job_config
     )
 
     job.result()

@@ -22,6 +22,7 @@ from pipelines.emd.db_dump.utils import (
     clean_dataframe,
 )
 from pipelines.constants import constants
+from pipelines.utils import log
 
 DATABASE_MAPPING: Dict[str, Database] = {
     "mysql": MySql,
@@ -30,6 +31,8 @@ DATABASE_MAPPING: Dict[str, Database] = {
 }
 
 # pylint: disable=too-many-arguments
+
+
 @task(
     checkpoint=False,
     max_retries=constants.TASK_MAX_RETRIES.value,
@@ -172,7 +175,7 @@ def dump_header_to_csv(
     Dumps the header to CSV.
     """
     files = glob.glob(f"{data_path}/*")
-    file = files[0] if files != [] else ""
+    file = files[0] if files else ""
 
     dataframe = pd.read_csv(f"{file}", nrows=1)
 
@@ -273,7 +276,7 @@ def create_bd_table(
             st.delete_table(
                 mode="staging", bucket_name=st.bucket_name, not_found_ok=True
             )
-        ## prod datasets is public if the project is datario. staging are private im both projects
+        # prod datasets is public if the project is datario. staging are private im both projects
         dataset_is_public = tb.client["bigquery_prod"].project == "datario"
         tb.create(
             path=path,
@@ -287,7 +290,8 @@ def create_bd_table(
         log(
             f"Mode overwrite: Sucessfully created table {st.bucket_name}.{dataset_id}.{table_id}"
         )
-        st.delete_table(mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
+        st.delete_table(
+            mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
         log(
             f"Mode overwrite: Sucessfully remove header data from {st.bucket_name}.{dataset_id}.{table_id}"
         )  # pylint: disable=C0301
