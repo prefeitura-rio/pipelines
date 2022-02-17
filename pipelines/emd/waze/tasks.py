@@ -8,6 +8,7 @@ from google.cloud import bigquery
 import basedosdados as bd
 
 from prefect import task
+from pipelines.constants import TASK_MAX_RETRIES, TASK_RETRY_DELAY
 from pipelines.utils import log
 
 import requests
@@ -17,7 +18,10 @@ from shapely.geometry import Point
 from shapely.wkt import loads
 
 
-@task
+@task(
+    max_retries=TASK_MAX_RETRIES,
+    retry_delay=datetime.timedelta(seconds=TASK_RETRY_DELAY),
+)
 def load_geometries() -> pd.DataFrame:
     areas_dict = {
         "geometry": {
@@ -115,7 +119,10 @@ def load_geometries() -> pd.DataFrame:
     return areas
 
 
-@task
+@task(
+    max_retries=TASK_MAX_RETRIES,
+    retry_delay=datetime.timedelta(seconds=TASK_RETRY_DELAY),
+)
 def fecth_waze(areas: pd.DataFrame) -> list:
     coords = areas["coords"].to_list()
 
@@ -134,7 +141,10 @@ def fecth_waze(areas: pd.DataFrame) -> list:
     return res
 
 
-@task
+@task(
+    max_retries=TASK_MAX_RETRIES,
+    retry_delay=datetime.timedelta(seconds=TASK_RETRY_DELAY),
+)
 def normalize_data(responses: list) -> pd.DataFrame:
     normalized = []
     for data in responses:
@@ -154,7 +164,7 @@ def normalize_data(responses: list) -> pd.DataFrame:
                     "street": d.get("street"),
                     "type": d.get("type"),
                     "subtype": d.get("subtype"),
-                    "roadType": d.get("roadType"),
+                    "roadType": d.get("roadType"),  ## TODO change to road_type
                     "reliability": d.get("reliability"),
                     "confidence": d.get("confidence"),
                     "number_thumbs_up": d.get("nThumbsUp"),
@@ -169,7 +179,10 @@ def normalize_data(responses: list) -> pd.DataFrame:
     return pd.concat([pd.DataFrame([r]) for r in normalized])
 
 
-@task
+@task(
+    max_retries=TASK_MAX_RETRIES,
+    retry_delay=datetime.timedelta(seconds=TASK_RETRY_DELAY),
+)
 def upload_to_native_table(
     dataset_id: str, table_id: str, dataframe: pd.DataFrame
 ) -> None:
@@ -185,7 +198,7 @@ def upload_to_native_table(
         bigquery.SchemaField("street", "STRING"),
         bigquery.SchemaField("type", "STRING"),
         bigquery.SchemaField("subtype", "STRING"),
-        bigquery.SchemaField("roadType", "INT64"),
+        bigquery.SchemaField("roadType", "INT64"),  ## TODO change to road_type
         bigquery.SchemaField("reliability", "INT64"),
         bigquery.SchemaField("confidence", "INT64"),
         bigquery.SchemaField("number_thumbs_up", "INT64"),
