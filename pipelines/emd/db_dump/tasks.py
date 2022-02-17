@@ -22,6 +22,7 @@ from pipelines.emd.db_dump.utils import (
     clean_dataframe,
 )
 from pipelines.constants import constants
+from pipelines.utils import log
 
 DATABASE_MAPPING: Dict[str, Database] = {
     "mysql": MySql,
