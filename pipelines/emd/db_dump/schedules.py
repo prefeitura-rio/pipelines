@@ -121,7 +121,7 @@ sme_queries = {
             NIS_Resp,
             Raça_Cor as Raca_Cor,
             Cod_def,
-            Deficiência as Deficiência,
+            Deficiência as Deficiencia,
             Tipo_Transporte,
             Bolsa_Familia,
             CFC,
@@ -136,7 +136,7 @@ sme_queries = {
             UP_Aval,
             Situacao,
             Cod_Ult_Mov,
-            Ult_Movimentação,
+            Ult_Movimentação as Ult_Movimentacao,
             Tot_Aluno,
             alu_id,
             tur_id
