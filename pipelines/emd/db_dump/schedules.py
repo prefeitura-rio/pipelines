@@ -2,6 +2,7 @@
 Schedules for the database dump pipeline
 """
 
+
 from calendar import month
 from datetime import timedelta, datetime
 
@@ -15,29 +16,109 @@ untuple = lambda clocks: [
     clock[0] if type(clock) == tuple else clock for clock in clocks
 ]
 
+
 #####################################
 #
-# 1746 Schedules
+# Ergon Schedules
 #
 #####################################
-emd_1746 = (
+
+ergon_queries = {
+    "cargo": "SELECT * FROM C_ERGON.VW_DLK_ERG_CARGOS_",
+    "categoria": "SELECT * FROMC_ERGON.VW_DLK_ERG_CATEGORIAS_",
+    "empresa": "SELECT * FROMC_ERGON.VW_DLK_ERG_EMPRESAS",
+    "matricula": "SELECT * FROMC_ERGON.VW_DLK_ERG_ERG_MATRICULAS",
+    "fita_banco": "SELECT * FROMC_ERGON.VW_DLK_ERG_FITA_BANCO",
+    "folha_empresa": "SELECT * FROMC_ERGON.VW_DLK_ERG_FOLHAS_EMP",
+    "forma_prov": "SELECT * FROMC_ERGON.VW_DLK_ERG_FORMAS_PROV_",
+    "funcionario": "SELECT * FROMC_ERGON.VW_DLK_ERG_FUNCIONARIOS",
+    "horario_trabalho": "SELECT * FROMC_ERGON.VW_DLK_ERG_HORARIO_TRAB_",
+    "h_setor": "SELECT * FROMC_ERGON.VW_DLK_ERG_HSETOR_",
+    "jornada": "SELECT * FROMC_ERGON.VW_DLK_ERG_JORNADAS_",
+    "orgaos_externos": "SELECT * FROMC_ERGON.VW_DLK_ERG_ORGAOS_EXTERNOS",
+    "orgaos_regime_juridico": "SELECT * FROMC_ERGON.VW_DLK_ERG_ORGAOS_REGIMES_JUR_",
+    "provimentos_ev": "SELECT * FROMC_ERGON.VW_DLK_ERG_PROVIMENTOS_EV",
+    "regime_juridico": "SELECT * FROMC_ERGON.VW_DLK_ERG_REGIMES_JUR_",
+    "tipo_folha": "SELECT * FROMC_ERGON.VW_DLK_ERG_TIPO_FOLHA",
+    "tipo_orgao": "SELECT * FROMC_ERGON.VW_DLK_ERG_TIPO_ORGAO",
+    "tipo_vinculo": "SELECT * FROMC_ERGON.VW_DLK_ERG_TIPO_VINC_",
+    "vinculo": "SELECT * FROMC_ERGON.VW_DLK_ERG_VINCULOS",
+}
+
+ergon_clocks = [
     IntervalClock(
-        interval=timedelta(days=1),
-        start_date=datetime(
-            2021, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo")
-        ),
+        interval=timedelta(days=30),
+        start_date=datetime(2022, 3, 5, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo"))
+        + timedelta(minutes=3 * count),
         labels=[
             constants.EMD_AGENT_LABEL.value,
         ],
         parameter_defaults={
             "batch_size": 50000,
-            "dataset_id": "administracao_servicos_publicos_1746",
-            "db_database": "REPLICA1746",
-            "db_host": "10.70.1.34",
+            "dataset_id": "administracao_recursos_humanos_folha_salarial",
+            "db_database": "P01.PCRJ",
+            "db_host": "10.70.6.22",
+            "db_port": "1521",
+            "db_type": "oracle",
+            "dump_type": "overwrite",
+            "execute_query": execute_query,
+            "table_id": table_id,
+            "vault_secret_path": "ergon-hom",
+        },
+    )
+    for count, (execute_query, table_id) in enumerate(ergon_queries.items())
+]
+
+ergon_monthly_update_schedule = Schedule(clocks=untuple(ergon_clocks))
+
+
+#####################################
+#
+# SME Schedules
+#
+#####################################
+sme_queries = {
+    "escola": "SELECT      CRE,     Designacao,     Denominacao,     Endereco,     Bairro,     CEP,     eMail,     Telefone,     Direçao as Direcao,     MicroArea,     Polo,     Tipo_Unidade,     INEP,     SICI,     Salas_Recurso,     Salas_Aula,     Salas_Aula_Utilizadas,     Tot_Escola,     esc_id FROM GestaoEscolar.dbo.VW_BI_Escola",
+    "turma": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Turma",
+    "dependencia": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Dependencia",
+    ### POR ENQUANTO frequencia USA DADOS DE 2019, NAO PRECISA ATUALIZAR DIARIAMENTE
+    # "frequencia": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Frequencia",
+    "aluno": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Aluno_lgpd",
+}
+sme_clocks = [
+    IntervalClock(
+        interval=timedelta(days=1),
+        start_date=datetime(2022, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo"))
+        + timedelta(minutes=3 * count),
+        labels=[
+            constants.EMD_AGENT_LABEL.value,
+        ],
+        parameter_defaults={
+            "batch_size": 50000,
+            "dataset_id": "educacao_basica",
+            "db_database": "GestaoEscolar",
+            "db_host": "10.70.6.103",
             "db_port": "1433",
             "db_type": "sql_server",
             "dump_type": "overwrite",
-            "execute_query": """
+            "execute_query": execute_query,
+            "table_id": table_id,
+            "vault_secret_path": "clustersqlsme",
+        },
+    )
+    for count, (table_id, execute_query) in enumerate(sme_queries.items())
+]
+
+sme_daily_update_schedule = Schedule(clocks=untuple(sme_clocks))
+
+
+#####################################
+#
+# 1746 Schedules
+#
+#####################################
+_1746_queries = {
+    "chamado": """
                 USE REPLICA1746
                 select distinct ch.id_chamado, CONVERT (VARCHAR, CONVERT(DATETIME, ch.dt_inicio, 10)
                 , 20) AS [dt_inicio], CONVERT (VARCHAR, CONVERT(DATETIME, ch.dt_fim, 10), 20) AS
@@ -83,170 +164,29 @@ emd_1746 = (
                 tra.id_territorialidade_regiao_administrativa_fk left join tb_territorialidade as tr
                 on tr.id_territorialidade = trg.id_territorialidade_fk order by ch.id_chamado asc
                 """,
-            "table_id": "chamado",
-            "vault_secret_path": "clustersql2",
-        },
-    ),
-)
-
-_1746_daily_update_schedule = Schedule(clocks=untuple([emd_1746]))
-
-#####################################
-#
-# SME Schedules
-#
-#####################################
-sme_escola = (
-    IntervalClock(
-        interval=timedelta(days=1),
-        start_date=datetime(
-            2021, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo")
-        ),
-        labels=[
-            constants.EMD_AGENT_LABEL.value,
-        ],
-        parameter_defaults={
-            "batch_size": 50000,
-            "dataset_id": "educacao_basica",
-            "db_database": "GestaoEscolar",
-            "db_host": "10.70.6.103",
-            "db_port": "1433",
-            "db_type": "sql_server",
-            "dump_type": "overwrite",
-            "execute_query": "SELECT      CRE,     Designacao,     Denominacao,     Endereco,     Bairro,     CEP,     eMail,     Telefone,     Direçao as Direcao,     MicroArea,     Polo,     Tipo_Unidade,     INEP,     SICI,     Salas_Recurso,     Salas_Aula,     Salas_Aula_Utilizadas,     Tot_Escola,     esc_id FROM GestaoEscolar.dbo.VW_BI_Escola",
-            "table_id": "escola",
-            "vault_secret_path": "clustersqlsme",
-        },
-    ),
-)
-
-sme_turma = IntervalClock(
-    interval=timedelta(days=1),
-    start_date=datetime(2021, 1, 1, 1, 5, tzinfo=pytz.timezone("America/Sao_Paulo")),
-    labels=[
-        constants.EMD_AGENT_LABEL.value,
-    ],
-    parameter_defaults={
-        "batch_size": 50000,
-        "dataset_id": "educacao_basica",
-        "db_database": "GestaoEscolar",
-        "db_host": "10.70.6.103",
-        "db_port": "1433",
-        "db_type": "sql_server",
-        "dump_type": "overwrite",
-        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Turma",
-        "table_id": "turma",
-        "vault_secret_path": "clustersqlsme",
-    },
-)
-
-sme_dependencia = (
-    IntervalClock(
-        interval=timedelta(days=1),
-        start_date=datetime(
-            2021, 1, 1, 1, 10, tzinfo=pytz.timezone("America/Sao_Paulo")
-        ),
-        labels=[
-            constants.EMD_AGENT_LABEL.value,
-        ],
-        parameter_defaults={
-            "batch_size": 50000,
-            "dataset_id": "educacao_basica",
-            "db_database": "GestaoEscolar",
-            "db_host": "10.70.6.103",
-            "db_port": "1433",
-            "db_type": "sql_server",
-            "dump_type": "overwrite",
-            "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Dependencia",
-            "table_id": "dependencia",
-            "vault_secret_path": "clustersqlsme",
-        },
-    ),
-)
-
-### POR ENQUANTO SO USA DADOS DE 2019, NAO PRECISA ATUALIZAR DIARIAMENTE
-# sme_frequencia = IntervalClock(
-#     interval=timedelta(days=1),
-#     start_date=datetime(2021, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo")),
-#     labels=[
-#         constants.EMD_AGENT_LABEL.value,
-#     ],
-#     parameter_defaults={
-#         "batch_size": 50000,
-#         "dataset_id": "educacao_basica",
-#         "db_database": "GestaoEscolar",
-#         "db_host": "10.70.6.103",
-#         "db_port": "1433",
-#         "db_type": "sql_server",
-#         "dump_type": "overwrite",
-#         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Frequencia",
-#         "table_id": "frequencia",
-#         "vault_secret_path": "clustersqlsme",
-#     },
-# )
-
-sme_daily_update_schedule = Schedule(
-    clocks=untuple([sme_escola, sme_turma, sme_dependencia])
-)
-
-
-#####################################
-#
-# Ergon Schedules
-#
-#####################################
-
-ergon_views = {
-    "VW_DLK_ERG_CARGOS_": "cargo",
-    "VW_DLK_ERG_CATEGORIAS_": "categoria",
-    "VW_DLK_ERG_EMPRESAS": "empresa",
-    "VW_DLK_ERG_ERG_MATRICULAS": "matricula",
-    "VW_DLK_ERG_FITA_BANCO": "fita_banco",
-    "VW_DLK_ERG_FOLHAS_EMP": "folha_empresa",
-    "VW_DLK_ERG_FORMAS_PROV_": "forma_prov",
-    "VW_DLK_ERG_FUNCIONARIOS": "funcionario",
-    "VW_DLK_ERG_HORARIO_TRAB_": "horario_trabalho",
-    "VW_DLK_ERG_HSETOR_": "h_setor",
-    "VW_DLK_ERG_JORNADAS_": "jornada",
-    "VW_DLK_ERG_ORGAOS_EXTERNOS": "orgaos_externos",
-    "VW_DLK_ERG_ORGAOS_REGIMES_JUR_": "orgaos_regime_juridico",
-    "VW_DLK_ERG_PROVIMENTOS_EV": "provimentos_ev",
-    "VW_DLK_ERG_REGIMES_JUR_": "regime_juridico",
-    "VW_DLK_ERG_TIPO_FOLHA": "tipo_folha",
-    "VW_DLK_ERG_TIPO_ORGAO": "tipo_orgao",
-    "VW_DLK_ERG_TIPO_VINC_": "tipo_vinculo",
-    "VW_DLK_ERG_VINCULOS": "vinculo",
 }
-
-
-def get_clock(view_name, table_id, count):
-    return IntervalClock(
-        interval=timedelta(days=30),
-        start_date=datetime(
-            2022, 2, 14, 10, 45, tzinfo=pytz.timezone("America/Sao_Paulo")
-        )
+_1746_clocks = [
+    IntervalClock(
+        interval=timedelta(days=1),
+        start_date=datetime(2022, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo"))
         + timedelta(minutes=3 * count),
         labels=[
             constants.EMD_AGENT_LABEL.value,
         ],
         parameter_defaults={
             "batch_size": 50000,
-            "dataset_id": "administracao_recursos_humanos_folha_salarial",
-            "db_database": "P01.PCRJ",
-            "db_host": "10.70.6.22",
-            "db_port": "1521",
-            "db_type": "oracle",
+            "dataset_id": "administracao_servicos_publicos_1746",
+            "db_database": "REPLICA1746",
+            "db_host": "10.70.1.34",
+            "db_port": "1433",
+            "db_type": "sql_server",
             "dump_type": "overwrite",
-            "execute_query": f"SELECT * FROM C_ERGON.{view_name}",  # WHERE ROWNUM <= 10000
+            "execute_query": execute_query,
             "table_id": table_id,
-            "vault_secret_path": "ergon-hom",
+            "vault_secret_path": "clustersql2",
         },
     )
-
-
-ergon_clocks = [
-    get_clock(view, table_id, count)
-    for count, (view, table_id) in enumerate(ergon_views.items())
+    for count, (table_id, execute_query) in enumerate(_1746_queries.items())
 ]
 
-ergon_monthly_update_schedule = Schedule(clocks=untuple(ergon_clocks))
+_1746_daily_update_schedule = Schedule(clocks=untuple(_1746_clocks))
