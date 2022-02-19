@@ -56,10 +56,12 @@ Flows for emd
 #
 ###############################################################################
 
+from functools import partial
 
 from prefect import Flow, Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
+
 from pipelines.constants import constants
 from pipelines.emd.tweets_flamengo.tasks import (
     fetch_last_id,
@@ -69,11 +71,16 @@ from pipelines.emd.tweets_flamengo.tasks import (
     upload_to_storage,
     get_api,
 )
+from pipelines.utils import notify_discord_on_failure
 
 # from pipelines.emd.tweets_flamengo.schedules import tweets_flamengo_schedule
 
 
-with Flow("EMD: escritorio - Captura tweets do Flamengo") as tweets_flamengo_flow:
+with Flow(
+    name="EMD: escritorio - Captura tweets do Flamengo",
+    on_failure=partial(notify_discord_on_failure,
+                       secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value),
+) as tweets_flamengo_flow:
     q = Parameter("keyword")
 
     api = get_api()
@@ -89,5 +96,6 @@ with Flow("EMD: escritorio - Captura tweets do Flamengo") as tweets_flamengo_flo
     upload_to_storage(path)
 
 tweets_flamengo_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-tweets_flamengo_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+tweets_flamengo_flow.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value)
 # tweets_flamengo_flow.schedule = tweets_flamengo_schedule

@@ -23,6 +23,8 @@ class constants(Enum):  # pylint: disable=c0103
     ######################################
     # Other constants
     ######################################
+    # Discord
+    EMD_DISCORD_WEBHOOK_SECRET_PATH = "prefect-discord-webhook"
     # Prefect
     K8S_AGENT_LABEL = "kubernetes"
     GCS_FLOWS_BUCKET = "datario-public"

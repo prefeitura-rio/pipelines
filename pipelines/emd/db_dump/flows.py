@@ -2,8 +2,9 @@
 Database dumping flows
 """
 
-from uuid import uuid4
 from copy import deepcopy
+from functools import partial
+from uuid import uuid4
 
 from prefect import Flow, Parameter
 from prefect.run_configs import KubernetesRun
@@ -26,8 +27,13 @@ from pipelines.emd.db_dump.tasks import (
     upload_to_gcs,
 )
 from pipelines.tasks import get_user_and_password
+from pipelines.utils import notify_discord_on_failure
 
-with Flow("EMD: template - Ingerir tabela de banco SQL") as dump_sql_flow:
+with Flow(
+    name="EMD: template - Ingerir tabela de banco SQL",
+    on_failure=partial(notify_discord_on_failure,
+                       secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value),
+) as dump_sql_flow:
 
     #####################################
     #
@@ -145,7 +151,11 @@ dump_1746_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_1746_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 dump_1746_flow.schedule = _1746_daily_update_schedule
 
-with Flow("EMD: template - Executar query SQL") as run_sql_flow:
+with Flow(
+    name="EMD: template - Executar query SQL",
+    on_failure=partial(notify_discord_on_failure,
+                       secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value),
+) as run_sql_flow:
     #####################################
     #
     # Parameters
