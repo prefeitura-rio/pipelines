@@ -2,14 +2,13 @@
 
 Esse repositório contém flows desenvolvidos com Prefect relacionados ao Escritório Municipal de Dados da Prefeitura do Rio de Janeiro.
 
-----
-
+---
 
 ## Criando uma nova pipeline
 
 1. Criar uma pasta com o nome do organização e o arquivo `__init__.py`
 
-2. Criar a pipeline na pasta da organização `pipelines/<organizacao>/<nova_pipeline>`, caso seja a captura de uma base a pasta deve ser o nome do `dataset_id`. 
+2. Criar a pipeline na pasta da organização `pipelines/<organizacao>/<nova_pipeline>`, caso seja a captura de uma base a pasta deve ser o nome do `dataset_id`.
 
 3. Na pasta da nova pipeline, devem ser criados os arquivos `flows.py`, `tasks.py`, `schedules.py` e `__init__.py`, como no exemplo da pipeline [template_pipeline](/pipelines/emd/template_pipeline/).
 
@@ -17,10 +16,9 @@ Esse repositório contém flows desenvolvidos com Prefect relacionados ao Escrit
 
 5. Por fim importe os `flows` da organização no arquivo `pipelines/flows.py`, como no exemplo [flows.py](/pipelines/flows.py)
 
-
 ## Como rodar uma pipeline localmente
 
- Escolha a pipeline que deseja executar (exemplo `pipelines.emd.test_flow.flows.flow`)
+Escolha a pipeline que deseja executar (exemplo `pipelines.emd.test_flow.flows.flow`)
 
 ```py
 from pipelines.emd.utils import run_local
@@ -29,7 +27,54 @@ from pipelines.emd.test_flow.flows import flow
 run_local(flow, parameters = {"param": "val"})
 ```
 
-----
+## Como testar uma pipeline na nuvem
+
+- Primeiramente, você deve assegurar que as seguintes variáveis de ambiente existam e estejam devidamente configuradas:
+
+  - `GOOGLE_APPLICATION_CREDENTIALS`: Path para um arquivo JSON com as credenciais da API do Google Cloud
+    de uma conta de serviço com acesso de escrita ao bucket `datario-public` no Google Cloud Storage.
+
+  - `PREFECT__BACKEND`: deve ter o valor `server`.
+
+  - `PREFECT__SERVER__HOST`: deve ter o valor `http://prefect-apollo.prefect.svc.cluster.local`.
+
+  - `PREFECT__SERVER__PORT`: deve ter o valor `4200`.
+
+- Em seguida, tenha certeza que você já tem acesso à UI do Prefect, tanto para realizar a submissão da run, como para
+  acompanhá-la durante o processo de execução. Caso não tenha, verifique o procedimento em https://library-emd.herokuapp.com/infraestrutura/como-acessar-a-ui-do-prefect
+
+- Escolha a pipeline que deseja executar (exemplo `pipelines.emd.test_flow.flows.flow`) e faça:
+
+```py
+from pipelines.emd.utils import run_cloud
+from pipelines.emd.test_flow.flows import flow
+
+run_cloud(
+    flow,               # O flow que você deseja executar
+    labels=[
+        "example",      # Label para identificar o agente que executará a pipeline
+    ],
+    parameters = {
+        "param": "val", # Parâmetros que serão passados para a pipeline (opcional)
+    }
+)
+```
+
+- A saída deverá se assemelhar ao exemplo abaixo:
+
+```
+[2022-02-19 12:22:57-0300] INFO - prefect.GCS | Uploading xxxxxxxx-development/2022-02-19t15-22-57-694759-00-00 to datario-public
+Flow URL: http://localhost:8080/default/flow/xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+ └── ID: xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+ └── Project: main
+ └── Labels: []
+Run submitted, please check it at:
+http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+```
+
+- (Opcional, mas recomendado) Quando acabar de desenvolver sua pipeline, delete todas as versões da mesma pela UI do Prefect.
+
+---
 
 ## Como acessar a UI do prefect
 
@@ -57,7 +102,7 @@ sudo tailscale up --accept-routes --accept-dns
 
 Caso seja solicitado o acesso a um link para autenticação, favor fazê-lo. Assim que o acesso for autorizado, será possível acessar a interface web do Prefect no endereço http://prefect-ui.prefect.svc.cluster.local:8080/.
 
-----
+---
 
 ## Como desenvolver
 
@@ -84,7 +129,7 @@ python manage.py list-projects
 Em seguida, leia com anteção os comentários em cada um dos arquivos do seu projeto, de modo a evitar conflitos e erros.
 Links para a documentação do Prefect também encontram-se nos comentários.
 
-----
+---
 
 ### Requisitos
 
