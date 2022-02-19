@@ -29,3 +29,5 @@ class constants(Enum):  # pylint: disable=c0103
     # Prefect tasks retry policy
     TASK_MAX_RETRIES = 5
     TASK_RETRY_DELAY = 10  # seconds
+    # Telegram
+    TELEGRAM_MAX_MESSAGE_LENGTH = 4096

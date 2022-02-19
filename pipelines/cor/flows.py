@@ -23,17 +23,14 @@ with Flow("COR: CET semáforos - Telegram Bot") as cet_telegram_flow:
 
     # Get data and generate messages
     dataframe = get_data()
-    message1, message2, message3, message4 = format_message(
+    messages = format_message(
         dataframe=dataframe)
 
     # Send messages
     send_messages(
         token=token,
         group_id=group_id,
-        alert1=message1,
-        alert2=message2,
-        alert3=message3,
-        alert4=message4,
+        messages=messages,
     )
 
 cet_telegram_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)

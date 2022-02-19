@@ -1,7 +1,6 @@
 """
 Tasks for cor
 """
-import math
 from time import strftime
 from typing import List, Tuple
 
@@ -9,9 +8,11 @@ import basedosdados as bd
 import pandas as pd
 from prefect import task
 
+from pipelines.constants import constants
 from pipelines.utils import (
     get_vault_secret,
     send_telegram_message,
+    smart_split,
 )
 
 
@@ -39,7 +40,7 @@ def get_data() -> pd.DataFrame:
     return bd.read_sql(query=query, billing_project_id="datario", from_file=True)
 
 
-@task(checkpoint=False, nout=4)
+@task(checkpoint=False)
 def format_message(dataframe: pd.DataFrame) -> List[str]:
     """
     Formats the message before sending it.
@@ -54,64 +55,27 @@ def format_message(dataframe: pd.DataFrame) -> List[str]:
     # Create the alert message
     thumbs_up_emoji = "\U0001F44D"
 
-    # Splits the dataframe into four clusters due to Telegram's 4096 characters limitation
-    cluster = math.ceil(len(dataframe) / 4)
-    alert1, alert2, alert3, alert4 = "", "", "", ""
-
+    # Builds all alert messages
+    alert = ""
     for row in range(len(dataframe)):
         identification = str(dataframe.iloc[row]["name"])
         latlong = str(dataframe.iloc[row]["latlong"])
         address = str(dataframe.iloc[row]["description"])
         thumbs_up = str(dataframe.iloc[row]["sum_thumbs_up"])
 
-        # Splitting the alert message across clusters
-        if row < cluster:
-            alert1 = (
-                alert1
-                + identification
-                + " - "
-                + str(map_link(address, latlong))
-                + " - "
-                + thumbs_up
-                + thumbs_up_emoji
-                + "\n \n"
-            )
-        elif cluster <= row < cluster * 2:
-            alert2 = (
-                alert2
-                + identification
-                + " - "
-                + str(map_link(address, latlong))
-                + " - "
-                + thumbs_up
-                + thumbs_up_emoji
-                + "\n \n"
-            )
-        elif cluster * 2 <= row < cluster * 3:
-            alert3 = (
-                alert3
-                + identification
-                + " - "
-                + str(map_link(address, latlong))
-                + " - "
-                + thumbs_up
-                + thumbs_up_emoji
-                + "\n \n"
-            )
-        elif row >= cluster * 3:
-            alert4 = (
-                alert4
-                + identification
-                + " - "
-                + str(map_link(address, latlong))
-                + " - "
-                + thumbs_up
-                + thumbs_up_emoji
-                + "\n \n"
-            )
+        alert += (
+            identification
+            + " - "
+            + str(map_link(address, latlong))
+            + " - "
+            + thumbs_up
+            + thumbs_up_emoji
+            + "\n \n"
+        )
 
+    # Builds the header of the message
     traffic_light_emoji = "\U0001F6A6"
-    msg_alert = (
+    msg_header = (
         traffic_light_emoji
         + " CETRIO"
         + "\n \nALERTA WAZE - Semáforo quebrado - atualizado em "
@@ -119,20 +83,28 @@ def format_message(dataframe: pd.DataFrame) -> List[str]:
         + "\n \n"
     )
 
-    return msg_alert + alert1, alert2, alert3, alert4
+    # Builds final message
+    msg = msg_header + alert
+
+    return smart_split(
+        text=msg,
+        max_length=constants.TELEGRAM_MAX_MESSAGE_LENGTH.value,
+        separator="\n",
+    )
 
 
 @task(checkpoint=False)
 # pylint: disable=too-many-arguments
 def send_messages(
-    token: str, group_id: str, alert1: str, alert2: str, alert3: str, alert4: str
+    token: str, group_id: str, messages: List[str]
 ) -> None:
     """
     Sends the alerts to the Telegram group.
     """
-    for alert in [alert1, alert2, alert3, alert4]:
-        if alert != "":
-            send_telegram_message(message=alert, token=token, chat_id=group_id)
+    for message in messages:
+        if message != "":
+            send_telegram_message(
+                message=message, token=token, chat_id=group_id)
 
     url = (
         '<a href="https://datastudio.google.com/reporting/b2841cf6-dd1b-4700-b6a4-140495e93ff4">'
