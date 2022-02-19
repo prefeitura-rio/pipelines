@@ -72,9 +72,9 @@ def get_username_and_password_from_secret(
 
 
 def notify_discord_on_failure(
-    secret_path: str,
     flow: prefect.Flow,
     state: State,
+    secret_path: str,
 ):
     """
     Notifies a Discord channel when a flow fails.
