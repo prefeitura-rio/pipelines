@@ -81,7 +81,8 @@ def notify_discord_on_failure(
     """
     url = get_vault_secret(secret_path)["data"]["url"]
     message = (
-        f"<b>{flow.name}</b> failed with message <b>\"{state.message}\"</b>\n"
+        f":man_facepalming: Flow **{flow.name}** has failed."
+        + f"\n  - State message: *\"{state.message}\"*"
     )
     send_discord_message(
         message=message,
