@@ -3,6 +3,7 @@ DBT-related flows.
 """
 
 from copy import deepcopy
+from functools import partial
 
 from prefect import Flow, Parameter
 from prefect.run_configs import KubernetesRun
@@ -18,8 +19,13 @@ from pipelines.emd.dbt.schedules import (
     ergon_monthly_update_schedule,
     sme_monthly_update_schedule,
 )
+from pipelines.utils import notify_discord_on_failure
 
-with Flow("EMD: template - Executa DBT model") as run_dbt_model_flow:
+with Flow(
+    name="EMD: template - Executa DBT model",
+    on_failure=partial(notify_discord_on_failure,
+                       secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value),
+) as run_dbt_model_flow:
 
     # Parameters
     dataset_id = Parameter("dataset_id")
