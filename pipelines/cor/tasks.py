@@ -1,12 +1,13 @@
 """
 Tasks for cor
 """
-from time import strftime
 from typing import List, Tuple
 
 import basedosdados as bd
 import pandas as pd
+import pendulum
 from prefect import task
+import pytz
 
 from pipelines.constants import constants
 from pipelines.utils import (
@@ -79,7 +80,8 @@ def format_message(dataframe: pd.DataFrame) -> List[str]:
         traffic_light_emoji
         + " CETRIO"
         + "\n \nALERTA WAZE - Semáforo quebrado - atualizado em "
-        + strftime("%Y-%m-%d %H:%M:%S")
+        + pendulum.now().replace(tzinfo=pytz.timezone("America/Sao_Paulo")
+                                 ).strftime("%Y-%m-%d %H:%M:%S")
         + "\n \n"
     )
 
