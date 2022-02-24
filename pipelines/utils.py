@@ -80,9 +80,12 @@ def notify_discord_on_failure(
     Notifies a Discord channel when a flow fails.
     """
     url = get_vault_secret(secret_path)["data"]["url"]
+    flow_run_id = prefect.context.get("flow_run_id")
     message = (
         f":man_facepalming: Flow **{flow.name}** has failed."
         + f"\n  - State message: *\"{state.message}\"*"
+        + "\n  - Link to the failed flow: "
+        + f"http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{flow_run_id}"
     )
     send_discord_message(
         message=message,
