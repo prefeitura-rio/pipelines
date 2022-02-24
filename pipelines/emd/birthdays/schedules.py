@@ -1,3 +1,7 @@
+"""
+Schedules for the daily birthday flow.
+"""
+
 from datetime import timedelta, datetime
 
 from prefect.schedules import Schedule

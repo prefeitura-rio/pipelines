@@ -1,3 +1,7 @@
+"""
+The daily birthday flow.
+"""
+
 from prefect import Flow, Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
