@@ -83,8 +83,8 @@ math_expression_schedule = Schedule(
                 constants.WORKSHOP_AGENT_LABEL.value,
             ],
             parameter_defaults={
-                "dataset_id": "workshop",
-                "table_id": "math_expression",
+                "dataset_id": "workshops",
+                "table_id": "math_expressions",
             },
         ),
     ]
