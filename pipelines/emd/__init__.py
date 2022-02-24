@@ -8,4 +8,5 @@ from pipelines.emd.template_pipeline.flows import *
 from pipelines.emd.tweets_flamengo.flows import *
 from pipelines.emd.db_dump.flows import *
 from pipelines.emd.dbt.flows import *
+from pipelines.emd.birthdays.flows import *
 from pipelines.emd.waze.flows import *
