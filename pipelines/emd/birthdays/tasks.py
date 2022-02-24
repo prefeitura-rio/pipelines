@@ -32,7 +32,7 @@ def get_birthdays_by_date(date: str) -> List[str]:
     birthdays_url = f"http://bot-rio-api.bot-rio.svc.cluster.local/users/?birthday={date}"
     response = requests.get(birthdays_url)
     response.raise_for_status()
-    return response.json()["results"]
+    return [item["name"] for item in response.json()["results"]]
 
 
 @task
