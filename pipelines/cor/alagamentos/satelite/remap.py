@@ -5,7 +5,7 @@ import time as t
 
 import netCDF4 as nc
 import numpy as np
-from osgeo import osr, gdal
+from osgeo import osr, gdal  # pylint: disable=E0401
 
 # Define KM_PER_DEGREE
 KM_PER_DEGREE = 111.32
