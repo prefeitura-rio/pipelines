@@ -1,7 +1,7 @@
 """
 Flows for emd
 """
-from prefect import Flow, Parameter, schedules
+from prefect import Flow, Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants
@@ -30,8 +30,6 @@ with Flow('goes_16') as flow:
     info = tratar_dados(filename=filename)
     path = salvar_parquet(info=info)
     upload_to_gcs(path=path, dataset_id=DATASET_ID, table_id=TABLE_ID)
-
-#abre pull request e coloca a tag de working progress
 
 # para rodar na cloud
 flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
