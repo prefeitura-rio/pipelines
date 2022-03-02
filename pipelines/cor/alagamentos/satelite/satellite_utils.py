@@ -274,11 +274,11 @@ def remap_g16(path, extent, resolution, variable, datetime_save):
 
     #     You may export the grid to GeoTIFF (and any other format supported by GDAL).
     # using GDAL from osgeo
-    time_save = datetime_save[9:]
+    time_save = str(int(datetime_save[9:11]))
 
     year = datetime_save[:4]
-    month = datetime_save[4:6]
-    day = datetime_save[6:8]
+    month = str(int(datetime_save[4:6]))
+    day = str(int(datetime_save[6:8]))
 
     tif_path = os.path.join(os.getcwd(), 'data', 'satelite', variable, 'temp',
                             f'ano={year}', f'mes={month}',
@@ -434,11 +434,11 @@ def save_parquet(variable, datetime_save):
     Save data in parquet
     '''
     date_save = datetime_save[:8]
-    time_save = datetime_save[9:]
+    time_save = str(int(datetime_save[9:11]))
 
     year = date_save[:4]
-    month = date_save[4:6]
-    day = date_save[-2:]
+    month = str(int(date_save[4:6]))
+    day = str(int(date_save[-2:]))
     tif_data = os.path.join(os.getcwd(), 'data', 'satelite', variable, 'temp',
                             f'ano={year}', f'mes={month}',
                             f'dia={day}', f'hora={time_save}', 'dados.tif')
@@ -461,8 +461,10 @@ def save_parquet(variable, datetime_save):
 
     # salva em parquet
     print('Saving on ', parquet_path)
-    filename = os.path.join(parquet_path, 'dados.parquet')
-    data.to_parquet(filename)
+    filename = os.path.join(parquet_path, 'dados.csv')
+    data.to_csv(filename, index=False)
+    # filename = os.path.join(parquet_path, 'dados.parquet')
+    # data.to_parquet(filename, index=False)
     return filename
 
 
