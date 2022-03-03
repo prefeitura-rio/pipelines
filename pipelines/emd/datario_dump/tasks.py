@@ -39,7 +39,11 @@ def get_datario_geodataframe(
     dataframe = pd.DataFrame(geodatagrame)
 
     eventid = datetime.now().strftime("%Y%m%d-%H%M%S")
+
+    log(f"Original columns: {dataframe.columns.tolist()}")
     dataframe.columns = remove_columns_accents(dataframe)
+    log(f"New columns: {dataframe.columns.tolist()}")
+
     dataframe_to_csv(dataframe, path / f"{eventid}.csv")
 
     return path
