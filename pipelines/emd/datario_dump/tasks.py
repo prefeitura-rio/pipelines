@@ -3,7 +3,7 @@ General purpose tasks for dumping database data.
 """
 import io
 from pathlib import Path
-from typing import Dict, Union
+from typing import Union
 from datetime import datetime, timedelta
 
 import geopandas as gpd

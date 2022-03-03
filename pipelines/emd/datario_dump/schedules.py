@@ -9,7 +9,7 @@ from prefect.schedules.clocks import IntervalClock
 import pytz
 
 from pipelines.constants import constants
-from pipelines.utils import query_to_line, untuple_clocks as untuple
+from pipelines.utils import untuple_clocks as untuple
 
 
 #####################################
