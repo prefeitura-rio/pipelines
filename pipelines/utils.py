@@ -257,6 +257,14 @@ def clean_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
     return dataframe
 
 
+def remove_columns_accents(dataframe: pd.DataFrame) -> list:
+    return list(
+        dataframe.columns.str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+
 ###############
 #
 # File
