@@ -59,7 +59,7 @@ tzdata = ["tzdata"]
 
 [[package]]
 name = "basedosdados"
-version = "1.6.2a8"
+version = "1.6.2a11"
 description = "Organizar e facilitar o acesso a dados brasileiros através de tabelas públicas no BigQuery."
 category = "main"
 optional = false
@@ -1435,7 +1435,7 @@ heapdict = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.11"
-content-hash = "d04702b72cf2c1b03f42a7314d30992266fa6af896e37d00983990ee77d5e1b0"
+content-hash = "6ea37d1879964ef2638573d450ea18cb4921b0711c3e8abba9597c00195f8a24"
 
 [metadata.files]
 apscheduler = [
@@ -1469,8 +1469,8 @@ attrs = [
     {file = "backports.zoneinfo-0.2.1.tar.gz", hash = "sha256:fadbfe37f74051d024037f223b8e001611eac868b5c5b06144ef4d8b799862f2"},
 ]
 basedosdados = [
-    {file = "basedosdados-1.6.2a8-py3-none-any.whl", hash = "sha256:92683f742e42a324270f11243e6252af5330409b242afae638248872400a1dcd"},
-    {file = "basedosdados-1.6.2a8.tar.gz", hash = "sha256:e3ff34874ec4a08186901f3da2bf236dae635977f361add7681c3e731d36e2fc"},
+    {file = "basedosdados-1.6.2a11-py3-none-any.whl", hash = "sha256:967d817e1140a4bdaa32605c0af926ef182e0456c8c1a055af2808161d45f757"},
+    {file = "basedosdados-1.6.2a11.tar.gz", hash = "sha256:629099714d44343b5ae32fab952832d8ecd57e6073eef88d9f018569896193ec"},
 ]
 cachetools = [
     {file = "cachetools-4.2.2-py3-none-any.whl", hash = "sha256:2cc0b89715337ab6dbba85b5b50effe2b0c74e035d83ee8ed637cf52f12ae001"},
