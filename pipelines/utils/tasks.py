@@ -6,8 +6,8 @@ from typing import Union
 from datetime import timedelta
 from uuid import uuid4
 
-import basedosdados as bd
 import glob
+import basedosdados as bd
 import pandas as pd
 from prefect import task
 
@@ -39,7 +39,9 @@ def get_user_and_password(secret_path: str):
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def dump_header_to_csv(data_path: Union[str, Path], wait=None):
+def dump_header_to_csv(
+    data_path: Union[str, Path], wait=None  # pylint: disable=unused-argument
+):
     """
     Writes a header to a CSV file.
     """
