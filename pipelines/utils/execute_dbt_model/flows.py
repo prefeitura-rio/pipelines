@@ -14,11 +14,7 @@ from pipelines.utils.execute_dbt_model.tasks import (
     get_k8s_dbt_client,
     run_dbt_model,
 )
-from pipelines.utils.execute_dbt_model.schedules import (
-    _1746_monthly_update_schedule,
-    ergon_monthly_update_schedule,
-    sme_monthly_update_schedule,
-)
+
 from pipelines.utils.utils import notify_discord_on_failure
 
 with Flow(
@@ -44,21 +40,3 @@ with Flow(
 
 run_dbt_model_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 run_dbt_model_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-
-run_dbt_ergon_flow = deepcopy(run_dbt_model_flow)
-run_dbt_ergon_flow.name = "EMD: ergon - Materializar tabelas"
-run_dbt_ergon_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-run_dbt_ergon_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-run_dbt_ergon_flow.schedule = ergon_monthly_update_schedule
-
-run_dbt_sme_flow = deepcopy(run_dbt_model_flow)
-run_dbt_sme_flow.name = "SME: educacao_basica - Materializar tabelas"
-run_dbt_sme_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-run_dbt_sme_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-run_dbt_sme_flow.schedule = sme_monthly_update_schedule
-
-run_dbt_1746_flow = deepcopy(run_dbt_model_flow)
-run_dbt_1746_flow.name = "SEOP: 1746 - Materializar tabelas"
-run_dbt_1746_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-run_dbt_1746_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-run_dbt_1746_flow.schedule = _1746_monthly_update_schedule
