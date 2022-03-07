@@ -14,7 +14,6 @@ import prefect
 from prefect.client import Client
 from prefect.engine.state import State
 from prefect.run_configs import KubernetesRun
-from prefect.utilities.exceptions import ClientError
 import requests
 import telegram
 
@@ -121,20 +120,7 @@ def run_cloud(flow: prefect.Flow, labels: List[str], parameters: Dict[str, Any] 
 
     # Change flow name for development and register
     flow.name = f"{flow.name} (development)"
-<<<<<<< HEAD:pipelines/utils.py
-    flow.run_config = KubernetesRun(
-        image="ghcr.io/prefeitura-rio/prefect-flows:latest")
-
-    client = Client()
-    try:
-        # try to create main project
-        client.create_project(project_name="main")
-    except ClientError:
-        # main project already exists
-        pass
-=======
     flow.run_config = KubernetesRun(image="ghcr.io/prefeitura-rio/prefect-flows:latest")
->>>>>>> origin/master:pipelines/utils/utils.py
     flow_id = flow.register(project_name="main", labels=[])
 
     # Get Prefect Client and submit flow run
@@ -295,16 +281,13 @@ def to_partitions(data, partition_columns, savepath):
         data (pandas.core.frame.DataFrame): Dataframe to be partitioned.
         partition_columns (list): List of columns to be used as partitions.
         savepath (str, pathlib.PosixPath): folder path to save the partitions
-
     Exemple:
-
         data = {
             "ano": [2020, 2021, 2020, 2021, 2020, 2021, 2021,2025],
             "mes": [1, 2, 3, 4, 5, 6, 6,9],
             "sigla_uf": ["SP", "SP", "RJ", "RJ", "PR", "PR", "PR","PR"],
             "dado": ["a", "b", "c", "d", "e", "f", "g",'h'],
         }
-
         to_partitions(
             data=pd.DataFrame(data),
             partition_columns=['ano','mes','sigla_uf'],

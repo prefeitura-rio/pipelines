@@ -8,13 +8,8 @@ from prefect import Flow, Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants
-<<<<<<< HEAD:pipelines/rj_cor/bot_semaforo/cet_bot/flows.py
-from pipelines.cor.cet_bot.schedules import bot_schedule
-from pipelines.cor.cet_bot.tasks import (
-=======
 from pipelines.rj_cor.bot_semaforo.schedules import bot_schedule
 from pipelines.rj_cor.bot_semaforo.tasks import (
->>>>>>> origin/master:pipelines/rj_cor/bot_semaforo/flows.py
     get_token_and_group_id,
     get_data,
     format_message,
