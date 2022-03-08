@@ -58,7 +58,7 @@ typer = "^0.4.0"
 # [tool.poetry.group.deploy.dependencies]
 google-cloud-storage = "1.42.3"
 # loguru = "^0.6.0"
-poetry = "^1.1.13"
+# poetry = "^1.1.13"
 # prefect = "0.15.9"
 python-box = {version = "^5.4.1"}
 # typer = "^0.4.0"
