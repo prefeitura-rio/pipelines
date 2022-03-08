@@ -11,7 +11,7 @@ hour_schedule = Schedule(
     clocks=[
         IntervalClock(
             interval=timedelta(hours=1),
-            start_date=datetime(2021, 1, 1, 0, 5, 0),
+            start_date=datetime(2021, 1, 1, 0, 15, 0),
             labels=[
                 constants.K8S_AGENT_LABEL.value,
             ]
