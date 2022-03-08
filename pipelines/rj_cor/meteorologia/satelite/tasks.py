@@ -12,7 +12,7 @@ import pendulum
 from prefect import task
 import s3fs
 
-from pipelines.rj_cor.alagamentos.satelite.satellite_utils import main, save_parquet
+from pipelines.rj_cor.meteorologia.satelite.satellite_utils import main, save_parquet
 
 
 @task(nout=5)
