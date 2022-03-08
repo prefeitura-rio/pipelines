@@ -8,9 +8,9 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants
 from pipelines.rj_cor.alagamentos.satelite.tasks import (slice_data, download,
-                                                      tratar_dados, salvar_parquet,
-                                                      upload_to_gcs)
+                                                      tratar_dados, salvar_parquet)
 from pipelines.rj_cor.alagamentos.satelite.schedules import hour_schedule
+from pipelines.utils.tasks import upload_to_gcs
 
 with Flow('goes_16') as flow:
     CURRENT_TIME = Parameter('CURRENT_TIME', default=None) or pendulum.now("utc")
