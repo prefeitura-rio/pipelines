@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Dict, Union
 from uuid import uuid4
 
+import basedosdados as bd
 from prefect import task
 
 from pipelines.utils.dump_db.db import (
@@ -133,14 +134,17 @@ def format_partitioned_query(
         return query
 
     # Check if the table already exists in BigQuery.
-    table_exists: bool = False
+    table = bd.Table(dataset_id, table_id)
 
     # If it doesn't, return the query as is, so we can fetch the whole table.
-    if not table_exists:
+    if not table.table_exists("staging"):
         return query
 
     # If it does, get the last partition date.
-    # TODO.
+    storage = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+    blobs = list(storage.client["storage_staging"].bucket(storage.bucket_name).list_blobs(
+        prefix=f"staging/{storage.dataset_id}/{storage.table_id}/"))
+    # TODO: get last partition using blobs list
     last_partition_date = None
 
     # Using the last partition date, get the partitioned query.
@@ -148,6 +152,7 @@ def format_partitioned_query(
     with a{uuid4().hex} as ({query})
     select * from a{uuid4().hex}
     where {partition_column} >= '{last_partition_date}'
+    order by {partition_column}
     """
 
 ###############
