@@ -120,7 +120,8 @@ def run_cloud(flow: prefect.Flow, labels: List[str], parameters: Dict[str, Any] 
 
     # Change flow name for development and register
     flow.name = f"{flow.name} (development)"
-    flow.run_config = KubernetesRun(image="ghcr.io/prefeitura-rio/prefect-flows:latest")
+    flow.run_config = KubernetesRun(
+        image="ghcr.io/prefeitura-rio/prefect-flows:latest")
     flow_id = flow.register(project_name="main", labels=[])
 
     # Get Prefect Client and submit flow run
@@ -134,7 +135,8 @@ def run_cloud(flow: prefect.Flow, labels: List[str], parameters: Dict[str, Any] 
 
     # Print flow run link so user can check it
     print("Run submitted, please check it at:")
-    print(f"http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{flow_run_id}")
+    print(
+        f"http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{flow_run_id}")
 
 
 def query_to_line(query: str) -> str:
@@ -195,7 +197,7 @@ def smart_split(
     return [
         text[:separator_index],
         *smart_split(
-            text[separator_index + len(separator) :],
+            text[separator_index + len(separator):],
             max_length,
             separator,
         ),
@@ -252,7 +254,8 @@ def clean_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
                     .replace("None", np.nan, regex=True)
                 )
             except Exception as exc:
-                print("Column: ", col, "\nData: ", dataframe[col].tolist(), "\n", exc)
+                print("Column: ", col, "\nData: ",
+                      dataframe[col].tolist(), "\n", exc)
                 raise
     return dataframe
 
