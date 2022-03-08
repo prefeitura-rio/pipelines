@@ -284,16 +284,13 @@ def to_partitions(data, partition_columns, savepath):
         data (pandas.core.frame.DataFrame): Dataframe to be partitioned.
         partition_columns (list): List of columns to be used as partitions.
         savepath (str, pathlib.PosixPath): folder path to save the partitions
-
     Exemple:
-
         data = {
             "ano": [2020, 2021, 2020, 2021, 2020, 2021, 2021,2025],
             "mes": [1, 2, 3, 4, 5, 6, 6,9],
             "sigla_uf": ["SP", "SP", "RJ", "RJ", "PR", "PR", "PR","PR"],
             "dado": ["a", "b", "c", "d", "e", "f", "g",'h'],
         }
-
         to_partitions(
             data=pd.DataFrame(data),
             partition_columns=['ano','mes','sigla_uf'],
