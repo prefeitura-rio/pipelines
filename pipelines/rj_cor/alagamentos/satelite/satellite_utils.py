@@ -348,6 +348,7 @@ def plot_g16(data, product_caracteristics, datetime_save,
     '''
     Plota produto em latlon e salva imagem
     '''
+    # TODO: Refactor this function
     variable = product_caracteristics['variable']
     cmap = product_caracteristics['cmap']
     vmin = product_caracteristics['vmin']
