@@ -18,13 +18,14 @@ from pipelines.utils.dump_db.db import (
 from pipelines.utils.dump_db.utils import (
     extract_last_partition_date,
     parse_date_columns,
-    parser_blobs_to_partition_dict,
-    to_partitions,
 )
 from pipelines.utils.utils import (
     batch_to_dataframe,
     dataframe_to_csv,
     clean_dataframe,
+    to_partitions,
+    parser_blobs_to_partition_dict,
+    get_storage_blobs,
 )
 from pipelines.constants import constants
 from pipelines.utils.utils import log
@@ -147,13 +148,8 @@ def format_partitioned_query(
     if not table.table_exists("staging"):
         return query
 
-    # If it does, get the last partition date.
-    storage = bd.Storage(dataset_id=dataset_id, table_id=table_id)
-    blobs = list(
-        storage.client["storage_staging"]
-        .bucket(storage.bucket_name)
-        .list_blobs(prefix=f"staging/{storage.dataset_id}/{storage.table_id}/")
-    )
+    blobs = get_storage_blobs(dataset_id, table_id)
+
     # extract only partitioned folders
     storage_partitions_dict = parser_blobs_to_partition_dict(blobs)
     # get last partition date
@@ -214,7 +210,8 @@ def dump_batches_to_csv(
             dataframe_to_csv(dataframe, prepath / f"{eventid}-{idx}.csv")
         else:
             dataframe, partition_columns = parse_date_columns(
-                dataframe, partition_column)
+                dataframe, partition_column
+            )
             to_partitions(dataframe, partition_columns, prepath)
         # Get next batch
         batch = database.fetch_batch(batch_size)
