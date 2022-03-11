@@ -63,25 +63,26 @@ def dump_header_to_csv(
         if found:
             break
 
+    save_header_path = f"data/{uuid4()}"
     # discover if it's a partitioned table
     if partition_folders := [folder for folder in file.split("/") if "=" in folder]:
         partition_path = "/".join(partition_folders)
-        save_header_path = Path(f"data/{uuid4()}/{partition_path}/header.csv")
-        log(f"Found partition path: {save_header_path}")
+        save_header_file_path = Path(f"{save_header_path}/{partition_path}/header.csv")
+        log(f"Found partition path: {save_header_file_path}")
 
     else:
-        save_header_path = Path(f"data/{uuid4()}/header.csv")
-        log(f"Do not found partition path: {save_header_path}")
+        save_header_file_path = Path(f"{save_header_path}/header.csv")
+        log(f"Do not found partition path: {save_header_file_path}")
 
     # Create directory if it doesn't exist
-    save_header_path.parent.mkdir(parents=True, exist_ok=True)
+    save_header_file_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Read just first row
     dataframe = pd.read_csv(file, nrows=1)
 
     # Write dataframe to CSV
-    dataframe.to_csv(save_header_path, index=False, encoding="utf-8")
-    log(f"Wrote header CSV: {save_header_path}")
+    dataframe.to_csv(save_header_file_path, index=False, encoding="utf-8")
+    log(f"Wrote header CSV: {save_header_file_path}")
 
     return save_header_path
 
