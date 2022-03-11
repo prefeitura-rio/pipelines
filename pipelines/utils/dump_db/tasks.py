@@ -93,6 +93,7 @@ def database_execute(
         database: The database object.
         query: The query to execute.
     """
+    log(f"Executing query: {query}")
     database.execute_query(query)
 
 
