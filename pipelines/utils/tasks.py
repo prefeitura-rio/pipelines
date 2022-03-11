@@ -1,12 +1,13 @@
 """
 Helper tasks that could fit any pipeline.
 """
+from datetime import timedelta
+from os import walk
+from os.path import join
 from pathlib import Path
 from typing import Union
-from datetime import timedelta
 from uuid import uuid4
 
-import glob
 import basedosdados as bd
 import pandas as pd
 from prefect import task
@@ -40,7 +41,8 @@ def get_user_and_password(secret_path: str):
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 def dump_header_to_csv(
-    data_path: Union[str, Path], wait=None  # pylint: disable=unused-argument
+    data_path: Union[str, Path],
+    wait=None,  # pylint: disable=unused-argument
 ):
     """
     Writes a header to a CSV file.
@@ -49,8 +51,12 @@ def dump_header_to_csv(
     path = Path(data_path)
     if not path.is_dir():
         path = path.parent
-    files = glob.glob(f"{path}/*")
-    file = files[0] if files else ""
+    # Grab first CSV file found
+    for subdir, _, filenames in walk(path):
+        for fname in filenames:
+            if fname.endswith(".csv"):
+                file = join(subdir, fname)
+                break
 
     # Read just first row
     dataframe = pd.read_csv(file, nrows=1)
@@ -164,7 +170,8 @@ def create_bd_table(
         log(
             f"Mode overwrite: Sucessfully created table {st.bucket_name}.{dataset_id}.{table_id}"
         )
-        st.delete_table(mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
+        st.delete_table(
+            mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
         log(
             f"Mode overwrite: Sucessfully remove header data from {st.bucket_name}.{dataset_id}.{table_id}"
         )  # pylint: disable=C0301
