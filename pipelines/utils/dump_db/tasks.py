@@ -116,20 +116,26 @@ def database_fetch(
 
 
 def parser_blobs_to_partition_dict(blobs):
+    """
+    Extracts the partition information from the blobs.
+    """
     partitions_dict = {}
     for blob in blobs:
         for folder in blob.name.split("/"):
             if "=" in folder:
-                k = folder.split("=")[0]
-                v = folder.split("=")[1]
+                key = folder.split("=")[0]
+                value = folder.split("=")[1]
                 try:
-                    partitions_dict[k].append(v)
+                    partitions_dict[key].append(value)
                 except KeyError:
-                    partitions_dict[k] = [v]
+                    partitions_dict[key] = [value]
     return partitions_dict
 
 
 def extract_last_partition_date(partitions_dict: dict):
+    """
+    Extract last date from partitions folders
+    """
     last_partition_date = None
     for partition, values in partitions_dict.items():
         try:
