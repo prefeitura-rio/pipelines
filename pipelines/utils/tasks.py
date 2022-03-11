@@ -52,11 +52,16 @@ def dump_header_to_csv(
     if not path.is_dir():
         path = path.parent
     # Grab first CSV file found
-    for subdir, _, filenames in walk(path):
+    found = False
+    for subdir, _, filenames in walk(str(path)):
         for fname in filenames:
             if fname.endswith(".csv"):
                 file = join(subdir, fname)
+                print(file)
+                found = True
                 break
+        if found:
+            break
 
     # Read just first row
     dataframe = pd.read_csv(file, nrows=1)
