@@ -22,6 +22,7 @@ from pipelines.utils.dump_db.tasks import (
     database_fetch,
     database_get,
     dump_batches_to_csv,
+    format_partitioned_query,
 )
 from pipelines.utils.tasks import get_user_and_password
 from pipelines.utils.utils import notify_discord_on_failure
@@ -40,12 +41,13 @@ with Flow(
     #
     #####################################
 
-    # SQL Server parameters
+    # DBMS parameters
     hostname = Parameter("db_host")
     port = Parameter("db_port")
     database = Parameter("db_database")
     database_type = Parameter("db_type")
     query = Parameter("execute_query")
+    partition_column = Parameter("partition_column", default=None)
 
     # Use Vault for credentials
     secret_path = Parameter("vault_secret_path")
@@ -83,6 +85,14 @@ with Flow(
         database=database,
     )
 
+    # Format partitioned query if required
+    query = format_partitioned_query(
+        query=query,
+        dataset_id=dataset_id,
+        table_id=table_id,
+        partition_column=partition_column,
+    )
+
     wait_db_execute = database_execute(  # pylint: disable=invalid-name
         database=db_object,
         query=query,
@@ -93,6 +103,7 @@ with Flow(
         database=db_object,
         batch_size=batch_size,
         prepath=f"data/{uuid4()}/",
+        partition_column=partition_column,
         wait=wait_db_execute,
     )
 
