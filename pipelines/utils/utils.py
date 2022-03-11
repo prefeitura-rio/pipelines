@@ -120,8 +120,7 @@ def run_cloud(flow: prefect.Flow, labels: List[str], parameters: Dict[str, Any] 
 
     # Change flow name for development and register
     flow.name = f"{flow.name} (development)"
-    flow.run_config = KubernetesRun(
-        image="ghcr.io/prefeitura-rio/prefect-flows:latest")
+    flow.run_config = KubernetesRun(image="ghcr.io/prefeitura-rio/prefect-flows:latest")
     flow_id = flow.register(project_name="main", labels=[])
 
     # Get Prefect Client and submit flow run
@@ -135,8 +134,7 @@ def run_cloud(flow: prefect.Flow, labels: List[str], parameters: Dict[str, Any] 
 
     # Print flow run link so user can check it
     print("Run submitted, please check it at:")
-    print(
-        f"http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{flow_run_id}")
+    print(f"http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{flow_run_id}")
 
 
 def query_to_line(query: str) -> str:
@@ -197,7 +195,7 @@ def smart_split(
     return [
         text[:separator_index],
         *smart_split(
-            text[separator_index + len(separator):],
+            text[separator_index + len(separator) :],
             max_length,
             separator,
         ),
@@ -254,8 +252,7 @@ def clean_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
                     .replace("None", np.nan, regex=True)
                 )
             except Exception as exc:
-                print("Column: ", col, "\nData: ",
-                      dataframe[col].tolist(), "\n", exc)
+                print("Column: ", col, "\nData: ", dataframe[col].tolist(), "\n", exc)
                 raise
     return dataframe
 
@@ -276,55 +273,3 @@ def remove_columns_accents(dataframe: pd.DataFrame) -> list:
 # File
 #
 ###############
-
-
-def to_partitions(data, partition_columns, savepath):
-    """Save data in to hive patitions schema, given a dataframe and a list of partition columns.
-    Args:
-        data (pandas.core.frame.DataFrame): Dataframe to be partitioned.
-        partition_columns (list): List of columns to be used as partitions.
-        savepath (str, pathlib.PosixPath): folder path to save the partitions
-    Exemple:
-        data = {
-            "ano": [2020, 2021, 2020, 2021, 2020, 2021, 2021,2025],
-            "mes": [1, 2, 3, 4, 5, 6, 6,9],
-            "sigla_uf": ["SP", "SP", "RJ", "RJ", "PR", "PR", "PR","PR"],
-            "dado": ["a", "b", "c", "d", "e", "f", "g",'h'],
-        }
-        to_partitions(
-            data=pd.DataFrame(data),
-            partition_columns=['ano','mes','sigla_uf'],
-            savepath='partitions/'
-        )
-    """
-
-    if isinstance(data, (pd.core.frame.DataFrame)):
-
-        savepath = Path(savepath)
-
-        unique_combinations = (
-            data[partition_columns]
-            .drop_duplicates(subset=partition_columns)
-            .to_dict(orient="records")
-        )
-
-        for filter_combination in unique_combinations:
-            patitions_values = [
-                f"{partition}={value}"
-                for partition, value in filter_combination.items()
-            ]
-            filter_save_path = Path(savepath / "/".join(patitions_values))
-            filter_save_path.mkdir(parents=True, exist_ok=True)
-
-            df_filter = data.loc[
-                data[filter_combination.keys()]
-                .isin(filter_combination.values())
-                .all(axis=1),
-                :,
-            ]
-            df_filter = df_filter.drop(columns=partition_columns)
-
-            df_filter.to_csv(filter_save_path / "data.csv", index=False)
-
-    else:
-        raise BaseException("Data need to be a pandas DataFrame")
