@@ -209,6 +209,10 @@ def dump_batches_to_csv(
     prepath = Path(prepath)
     log(f"Got prepath: {prepath}")
 
+    if not partition_column:
+        log("NO partition column specified! Writing unique files")
+    else:
+        log(f"Partition column: {partition_column} FOUND!! Write to partitioned files")
     # Dump batches
     batch = database.fetch_batch(batch_size)
     eventid = datetime.now().strftime("%Y%m%d-%H%M%S")
