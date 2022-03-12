@@ -36,7 +36,7 @@ def log(msg: Any, level: str = "info") -> None:
 
 
 @prefect.task(checkpoint=False)
-def log_task(msg: Any, level: str = "info"):
+def log_task(msg: Any, level: str = "info", wait=None):
     """
     Logs a message to prefect's logger.
     """

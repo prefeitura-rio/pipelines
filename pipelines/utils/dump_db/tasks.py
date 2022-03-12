@@ -142,6 +142,7 @@ def format_partitioned_query(
     """
     # If no partition column is specified, return the query as is.
     if partition_column is None:
+        log("No partition column specified. Returning query as is.")
         return query
 
     # Check if the table already exists in BigQuery.
@@ -149,6 +150,7 @@ def format_partitioned_query(
 
     # If it doesn't, return the query as is, so we can fetch the whole table.
     if not table.table_exists("staging"):
+        log("No table was found. Returning query as is.")
         return query
 
     blobs = get_storage_blobs(dataset_id, table_id)
@@ -167,6 +169,11 @@ def format_partitioned_query(
     # `aux_name` must be unique and start with a letter, for better compatibility with
     # multiple DBMSs.
     aux_name = f"a{uuid4().hex}"
+
+    log(
+        "Partitioned detected, retuning a NEW QUERY with partitioned columns and filters."
+    )
+
     return f"""
     with {aux_name} as ({query})
     select * from {aux_name}
