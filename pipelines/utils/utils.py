@@ -112,7 +112,12 @@ def run_local(flow: prefect.Flow, parameters: Dict[str, Any] = None):
     return flow.run(show_flow_logs=True)
 
 
-def run_cloud(flow: prefect.Flow, labels: List[str], parameters: Dict[str, Any] = None):
+def run_cloud(
+    flow: prefect.Flow,
+    labels: List[str],
+    parameters: Dict[str, Any] = None,
+    run_description: str = "",
+):
     """
     Runs a flow on Prefect Server (must have VPN configured).
     """
@@ -128,7 +133,7 @@ def run_cloud(flow: prefect.Flow, labels: List[str], parameters: Dict[str, Any] 
     client = Client()
     flow_run_id = client.create_flow_run(
         flow_id=flow_id,
-        run_name=f"TEST RUN - {flow.name}",
+        run_name=f"TEST RUN - {run_description} - {flow.name}",
         labels=labels,
         parameters=parameters,
     )
