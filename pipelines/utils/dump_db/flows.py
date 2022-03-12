@@ -92,7 +92,7 @@ with Flow(
         dataset_id=dataset_id,
         table_id=table_id,
         partition_column=partition_column,
-        lower_bound_date=None,
+        lower_bound_date=lower_bound_date,
     )
 
     wait_db_execute = database_execute(  # pylint: disable=invalid-name
