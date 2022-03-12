@@ -126,7 +126,7 @@ _1746_clocks = [
     IntervalClock(
         interval=timedelta(days=1),
         start_date=datetime(
-            2022, 3, 13, 3, 20, tzinfo=pytz.timezone("America/Sao_Paulo")
+            2022, 3, 13, 0, 0, tzinfo=pytz.timezone("America/Sao_Paulo")
         )
         + timedelta(minutes=15 * count),
         labels=[
