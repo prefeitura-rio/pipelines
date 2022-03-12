@@ -8,7 +8,7 @@ from typing import List, Tuple
 
 import pandas as pd
 
-from pipelines.utils.utils import log
+from pipelines.utils.utils import log, remove_columns_accents
 
 
 def extract_last_partition_date(partitions_dict: dict):
@@ -47,3 +47,38 @@ def parse_date_columns(
     dataframe[data_col] = dataframe[data_col].dt.date
 
     return dataframe, [ano_col, mes_col, data_col]
+
+
+cols = [
+    "Ano",
+    "CRE",
+    "Unidade",
+    "Grupamento",
+    "Turma",
+    "Turno",
+    "COC",
+    "Turmas",
+    "Alunos",
+    "Masculinos",
+    "Femininos",
+    "Não_Def",
+    "Def",
+    "Masculinos_Não_Def",
+    "Masculinos_Def",
+    "Femininos_Não_Def",
+    "Femininos_Def",
+    "Vagas",
+    "capacidade",
+    "tur_id",
+    "pft_capacidade",
+]
+
+
+def build_query_new_columns(table_columns: List[str]) -> List[str]:
+    new_cols = remove_columns_accents(pd.DataFrame(columns=table_columns))
+    return "\n".join(
+        [
+            f"{old_col} AS {new_col},"
+            for old_col, new_col in zip(table_columns, new_cols)
+        ]
+    )

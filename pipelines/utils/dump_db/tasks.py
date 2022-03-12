@@ -18,6 +18,7 @@ from pipelines.utils.dump_db.db import (
 from pipelines.utils.dump_db.utils import (
     extract_last_partition_date,
     parse_date_columns,
+    build_query_new_columns,
 )
 from pipelines.utils.utils import (
     batch_to_dataframe,
@@ -205,6 +206,9 @@ def dump_batches_to_csv(
     # Get columns
     columns = database.get_columns()
     log(f"Got columns: {columns}")
+
+    new_query_cols = build_query_new_columns(table_columns=columns)
+    log(f"New query columns without accents: \n {new_query_cols}")
 
     prepath = Path(prepath)
     log(f"Got prepath: {prepath}")

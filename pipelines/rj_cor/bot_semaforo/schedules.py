@@ -26,7 +26,7 @@ bot_schedule = Schedule(
             interval=timedelta(hours=1),
             start_date=datetime(2021, 1, 1),
             labels=[
-                constants.EMD_AGENT_LABEL.value,
+                constants.RJ_COR_AGENT_LABEL.value,
             ],
             parameter_defaults={
                 "secret_path": "cet-bot",
