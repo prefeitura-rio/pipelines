@@ -51,6 +51,7 @@ def database_get(
     user: str,
     password: str,
     database: str,
+    wait=None,  # pylint: disable=unused-argument
 ) -> Database:
     """
     Returns a database object.
@@ -134,6 +135,7 @@ def format_partitioned_query(
     table_id: str,
     partition_column: str = None,
     lower_bound_date: str = None,
+    wait=None,  # pylint: disable=unused-argument
 ):
     """
     Formats a query for fetching partitioned data.
