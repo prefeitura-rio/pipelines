@@ -139,8 +139,10 @@ def run_cloud(
     )
 
     # Print flow run link so user can check it
-    print("Run submitted, please check it at:")
-    print(f"http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{flow_run_id}")
+    print(f"Run submitted: TEST RUN - {run_description} - {flow.name}")
+    print(
+        f"Please check at: http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{flow_run_id}"
+    )
 
 
 def query_to_line(query: str) -> str:
