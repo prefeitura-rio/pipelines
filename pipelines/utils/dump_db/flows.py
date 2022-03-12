@@ -48,6 +48,7 @@ with Flow(
     database_type = Parameter("db_type")
     query = Parameter("execute_query")
     partition_column = Parameter("partition_column", default=None)
+    lower_bound_date = Parameter("lower_bound_date", default=None)
 
     # Use Vault for credentials
     secret_path = Parameter("vault_secret_path")
@@ -91,6 +92,7 @@ with Flow(
         dataset_id=dataset_id,
         table_id=table_id,
         partition_column=partition_column,
+        lower_bound_date=None,
     )
 
     wait_db_execute = database_execute(  # pylint: disable=invalid-name
