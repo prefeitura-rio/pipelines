@@ -84,10 +84,6 @@ def generate_schedules(
 ) -> List[IntervalClock]:
     """
     Generates multiple schedules for database dumping.
-
-    Args:
-
-    Returns:
     """
     db_port = str(db_port)
     clocks = []
@@ -121,3 +117,4 @@ def generate_schedules(
                 parameter_defaults=parameter_defaults,
             )
         )
+    return clocks
