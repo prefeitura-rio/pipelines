@@ -18,13 +18,15 @@ from pipelines.utils.dump_db.db import (
 from pipelines.utils.dump_db.utils import (
     extract_last_partition_date,
     parse_date_columns,
-    parser_blobs_to_partition_dict,
-    to_partitions,
+    build_query_new_columns,
 )
 from pipelines.utils.utils import (
     batch_to_dataframe,
     dataframe_to_csv,
     clean_dataframe,
+    to_partitions,
+    parser_blobs_to_partition_dict,
+    get_storage_blobs,
 )
 from pipelines.constants import constants
 from pipelines.utils.utils import log
@@ -50,6 +52,7 @@ def database_get(
     user: str,
     password: str,
     database: str,
+    wait=None,  # pylint: disable=unused-argument
 ) -> Database:
     """
     Returns a database object.
@@ -132,12 +135,15 @@ def format_partitioned_query(
     dataset_id: str,
     table_id: str,
     partition_column: str = None,
+    lower_bound_date: str = None,
+    wait=None,  # pylint: disable=unused-argument
 ):
     """
     Formats a query for fetching partitioned data.
     """
     # If no partition column is specified, return the query as is.
     if partition_column is None:
+        log("NO partition column specified. Returning query as is")
         return query
 
     # Check if the table already exists in BigQuery.
@@ -145,29 +151,34 @@ def format_partitioned_query(
 
     # If it doesn't, return the query as is, so we can fetch the whole table.
     if not table.table_exists("staging"):
+        log("NO tables was found. Returning query as is")
         return query
 
-    # If it does, get the last partition date.
-    storage = bd.Storage(dataset_id=dataset_id, table_id=table_id)
-    blobs = list(
-        storage.client["storage_staging"]
-        .bucket(storage.bucket_name)
-        .list_blobs(prefix=f"staging/{storage.dataset_id}/{storage.table_id}/")
-    )
+    blobs = get_storage_blobs(dataset_id, table_id)
+
     # extract only partitioned folders
     storage_partitions_dict = parser_blobs_to_partition_dict(blobs)
     # get last partition date
     last_partition_date = extract_last_partition_date(storage_partitions_dict)
 
+    if lower_bound_date:
+        last_date = min(lower_bound_date, last_partition_date)
+    else:
+        last_date = last_partition_date
+
     # Using the last partition date, get the partitioned query.
     # `aux_name` must be unique and start with a letter, for better compatibility with
     # multiple DBMSs.
     aux_name = f"a{uuid4().hex}"
+
+    log(
+        f"Partitioned DETECTED: {partition_column}, retuning a NEW QUERY with partitioned columns and filters"
+    )
+
     return f"""
     with {aux_name} as ({query})
     select * from {aux_name}
-    where {partition_column} >= '{last_partition_date}'
-    order by {partition_column}
+    where {partition_column} >= '{last_date}'
     """
 
 
@@ -196,15 +207,24 @@ def dump_batches_to_csv(
     columns = database.get_columns()
     log(f"Got columns: {columns}")
 
+    new_query_cols = build_query_new_columns(table_columns=columns)
+    log("New query columns without accents:")
+    log(f"{new_query_cols}")
+
     prepath = Path(prepath)
     log(f"Got prepath: {prepath}")
 
+    if not partition_column:
+        log("NO partition column specified! Writing unique files")
+    else:
+        log(f"Partition column: {partition_column} FOUND!! Write to partitioned files")
     # Dump batches
     batch = database.fetch_batch(batch_size)
     eventid = datetime.now().strftime("%Y%m%d-%H%M%S")
     idx = 0
     while len(batch) > 0:
-        log(f"Dumping batch {idx} with size {len(batch)}")
+        if idx % 100 == 0:
+            log(f"Dumping batch {idx} with size {len(batch)}")
         # Convert to dataframe
         dataframe = batch_to_dataframe(batch, columns)
         # Clean dataframe
@@ -214,10 +234,13 @@ def dump_batches_to_csv(
             dataframe_to_csv(dataframe, prepath / f"{eventid}-{idx}.csv")
         else:
             dataframe, partition_columns = parse_date_columns(
-                dataframe, partition_column)
+                dataframe, partition_column
+            )
             to_partitions(dataframe, partition_columns, prepath)
         # Get next batch
         batch = database.fetch_batch(batch_size)
         idx += 1
+
+    log(f"Dumped {idx} batchs with size {len(batch)}, total of {idx*batch_size}")
 
     return prepath

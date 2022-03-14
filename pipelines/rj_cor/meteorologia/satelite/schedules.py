@@ -12,9 +12,10 @@ hour_schedule = Schedule(
         IntervalClock(
             interval=timedelta(hours=1),
             start_date=datetime(2021, 1, 1, 0, 15, 0),
+            # TODO - Replace with RJ_COR_AGENT_LABEL
             labels=[
                 constants.K8S_AGENT_LABEL.value,
-            ]
+            ],
         ),
     ]
 )

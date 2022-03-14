@@ -7,6 +7,7 @@ from os import getenv
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Union
 
+import basedosdados as bd
 import hvac
 import numpy as np
 import pandas as pd
@@ -35,7 +36,9 @@ def log(msg: Any, level: str = "info") -> None:
 
 
 @prefect.task(checkpoint=False)
-def log_task(msg: Any, level: str = "info"):
+def log_task(
+    msg: Any, level: str = "info", wait=None  # pylint: disable=unused-argument
+):
     """
     Logs a message to prefect's logger.
     """
@@ -108,10 +111,15 @@ def run_local(flow: prefect.Flow, parameters: Dict[str, Any] = None):
     # Run flow
     if parameters:
         return flow.run(parameters=parameters)
-    return flow.run()
+    return flow.run(show_flow_logs=True)
 
 
-def run_cloud(flow: prefect.Flow, labels: List[str], parameters: Dict[str, Any] = None):
+def run_cloud(
+    flow: prefect.Flow,
+    labels: List[str],
+    parameters: Dict[str, Any] = None,
+    run_description: str = "",
+):
     """
     Runs a flow on Prefect Server (must have VPN configured).
     """
@@ -127,14 +135,16 @@ def run_cloud(flow: prefect.Flow, labels: List[str], parameters: Dict[str, Any] 
     client = Client()
     flow_run_id = client.create_flow_run(
         flow_id=flow_id,
-        run_name=f"TEST RUN - {flow.name}",
+        run_name=f"TEST RUN - {run_description} - {flow.name}",
         labels=labels,
         parameters=parameters,
     )
 
     # Print flow run link so user can check it
-    print("Run submitted, please check it at:")
-    print(f"http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{flow_run_id}")
+    print(f"Run submitted: TEST RUN - {run_description} - {flow.name}")
+    print(
+        f"Please check at: http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{flow_run_id}"
+    )
 
 
 def query_to_line(query: str) -> str:
@@ -225,16 +235,13 @@ def dataframe_to_csv(dataframe: pd.DataFrame, path: Union[str, Path]) -> None:
     # Create directory if it doesn't exist
     path.parent.mkdir(parents=True, exist_ok=True)
     # Write dataframe to CSV
-    log(f"Writing dataframe to CSV: {path}")
     dataframe.to_csv(path, index=False, encoding="utf-8")
-    log(f"Wrote dataframe to CSV: {path}")
 
 
 def batch_to_dataframe(batch: Tuple[Tuple], columns: List[str]) -> pd.DataFrame:
     """
     Converts a batch of rows to a dataframe.
     """
-    log(f"Converting batch of size {len(batch)} to dataframe")
     return pd.DataFrame(batch, columns=columns)
 
 
@@ -268,8 +275,101 @@ def remove_columns_accents(dataframe: pd.DataFrame) -> list:
     )
 
 
+def to_partitions(data: pd.DataFrame, partition_columns: List[str], savepath: str):
+    """Save data in to hive patitions schema, given a dataframe and a list of partition columns.
+    Args:
+        data (pandas.core.frame.DataFrame): Dataframe to be partitioned.
+        partition_columns (list): List of columns to be used as partitions.
+        savepath (str, pathlib.PosixPath): folder path to save the partitions
+    Exemple:
+        data = {
+            "ano": [2020, 2021, 2020, 2021, 2020, 2021, 2021,2025],
+            "mes": [1, 2, 3, 4, 5, 6, 6,9],
+            "sigla_uf": ["SP", "SP", "RJ", "RJ", "PR", "PR", "PR","PR"],
+            "dado": ["a", "b", "c", "d", "e", "f", "g",'h'],
+        }
+        to_partitions(
+            data=pd.DataFrame(data),
+            partition_columns=['ano','mes','sigla_uf'],
+            savepath='partitions/'
+        )
+    """
+
+    if isinstance(data, (pd.core.frame.DataFrame)):
+
+        savepath = Path(savepath)
+
+        # create unique combinations between partition columns
+        unique_combinations = (
+            data[partition_columns]
+            .drop_duplicates(subset=partition_columns)
+            .to_dict(orient="records")
+        )
+
+        for filter_combination in unique_combinations:
+            patitions_values = [
+                f"{partition}={value}"
+                for partition, value in filter_combination.items()
+            ]
+
+            # get filtered data
+            df_filter = data.loc[
+                data[filter_combination.keys()]
+                .isin(filter_combination.values())
+                .all(axis=1),
+                :,
+            ]
+            df_filter = df_filter.drop(columns=partition_columns)
+
+            # create folder tree
+            filter_save_path = Path(savepath / "/".join(patitions_values))
+            filter_save_path.mkdir(parents=True, exist_ok=True)
+            file_filter_save_path = Path(filter_save_path) / "data.csv"
+
+            # append data to csv
+            df_filter.to_csv(
+                file_filter_save_path,
+                index=False,
+                mode="a",
+                header=not file_filter_save_path.exists(),
+            )
+    else:
+        raise BaseException("Data need to be a pandas DataFrame")
+
+
 ###############
 #
-# File
+# Storage utils
 #
 ###############
+
+
+def get_storage_blobs(dataset_id: str, table_id: str) -> list:
+    """
+    Get all blobs from a table in a dataset.
+    """
+
+    storage = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+    return list(
+        storage.client["storage_staging"]
+        .bucket(storage.bucket_name)
+        .list_blobs(prefix=f"staging/{storage.dataset_id}/{storage.table_id}/")
+    )
+
+
+def parser_blobs_to_partition_dict(blobs: list) -> dict:
+    """
+    Extracts the partition information from the blobs.
+    """
+
+    partitions_dict = {}
+    for blob in blobs:
+        for folder in blob.name.split("/"):
+            if "=" in folder:
+                key = folder.split("=")[0]
+                value = folder.split("=")[1]
+                try:
+                    partitions_dict[key].append(value)
+                except KeyError:
+                    partitions_dict[key] = [value]
+    return partitions_dict

@@ -3,10 +3,10 @@ ARG PYTHON_VERSION=3.9-slim
 
 # Get linkerd-await and Oracle Instant Client
 FROM curlimages/curl:7.81.0 as curl-step
-ARG LINKERD_AWAIT_VERSION=v0.2.4
+ARG LINKERD_AVERSION=v0.2.4
 ARG ORACLE_INSTANT_CLIENT_URL=https://download.oracle.com/otn_software/linux/instantclient/215000/instantclient-basic-linux.x64-21.5.0.0.0dbru.zip
 ARG GDAL_WHEELS_URL=https://sourceforge.net/projects/gdal-wheels-for-linux/files/GDAL-3.4.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl/download
-RUN curl -sSLo /tmp/linkerd-await https://github.com/linkerd/linkerd-await/releases/download/release%2F${LINKERD_AWAIT_VERSION}/linkerd-await-${LINKERD_AWAIT_VERSION}-amd64 && \
+RUN curl -sSLo /tmp/linkerd-await https://github.com/linkerd/linkerd-await/releases/download/release%2F${LINKERD_AVERSION}/linkerd-await-${LINKERD_AVERSION}-amd64 && \
     chmod 755 /tmp/linkerd-await && \
     curl -sSLo /tmp/instantclient.zip $ORACLE_INSTANT_CLIENT_URL && \
     curl -sSLo /tmp/GDAL-3.4.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl $GDAL_WHEELS_URL
