@@ -52,7 +52,8 @@ def dump_header_to_csv(
     if not path.is_dir():
         path = path.parent
     # Grab first CSV file found
-    found = False
+    found: bool = False
+    file: str = None
     for subdir, _, filenames in walk(str(path)):
         for fname in filenames:
             if fname.endswith(".csv"):
