@@ -4,6 +4,7 @@ Schedules for the database dump pipeline
 
 from datetime import timedelta, datetime
 
+from prefect.core.task import NoDefault
 from prefect.schedules import Schedule
 from prefect.schedules.clocks import IntervalClock
 import pytz
@@ -20,7 +21,7 @@ from pipelines.utils.utils import query_to_line, untuple_clocks as untuple
 _1746_queries = {
     "chamado": {
         "partition_column": "dt_inicio",
-        "lower_bound_date": None,
+        "lower_bound_date": NoDefault,
         "dump_type": "append",
         "execute_query": """
             USE REPLICA1746

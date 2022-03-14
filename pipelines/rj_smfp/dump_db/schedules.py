@@ -4,6 +4,7 @@ Schedules for the database dump pipeline
 
 from datetime import timedelta, datetime
 
+from prefect.core.task import NoDefault
 from prefect.schedules import Schedule
 from prefect.schedules.clocks import IntervalClock
 import pytz
@@ -20,118 +21,118 @@ from pipelines.utils.utils import query_to_line, untuple_clocks as untuple
 
 ergon_queries = {
     "cargo": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_CARGOS_",
     },
     "categoria": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_CATEGORIAS_",
     },
     "empresa": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_EMPRESAS",
     },
     "matricula": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_ERG_MATRICULAS",
     },
     # TODO check if administracao_recursos_humanos_folha_salarial.fita_banco works in bq and storage
     "fita_banco": {
         "partition_column": "MES_ANO",
-        "lower_bound_date": None,
+        "lower_bound_date": NoDefault,
         "dump_type": "append",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FITA_BANCO",
     },
     # TODO check if administracao_recursos_humanos_folha_salarial.folha_empresa works in bq and storage
     "folha_empresa": {
         "partition_column": "MES_ANO",
-        "lower_bound_date": None,
+        "lower_bound_date": NoDefault,
         "dump_type": "append",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FOLHAS_EMP",
     },
     "forma_prov": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FORMAS_PROV_",
     },
     "funcionario": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FUNCIONARIOS",
     },
     "horario_trabalho": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_HORARIO_TRAB_",
     },
     "h_setor": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_HSETOR_",
     },
     "jornada": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_JORNADAS_",
     },
     "orgaos_externos": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_ORGAOS_EXTERNOS",
     },
     "orgaos_regime_juridico": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_ORGAOS_REGIMES_JUR_",
     },
     "provimentos_ev": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_PROVIMENTOS_EV",
     },
     "regime_juridico": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_REGIMES_JUR_",
     },
     "tipo_folha": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_TIPO_FOLHA",
     },
     "tipo_orgao": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_TIPO_ORGAO",
     },
     "tipo_vinculo": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_TIPO_VINC_",
     },
     "vinculo": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_VINCULOS",
     },

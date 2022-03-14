@@ -4,6 +4,7 @@ Schedules for the database dump pipeline
 
 from datetime import timedelta, datetime
 
+from prefect.core.task import NoDefault
 from prefect.schedules import Schedule
 from prefect.schedules.clocks import IntervalClock
 import pytz
@@ -19,26 +20,26 @@ from pipelines.utils.utils import query_to_line, untuple_clocks as untuple
 #####################################
 sme_queries = {
     "turma": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Turma",
     },
     "dependencia": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Dependencia",
     },
     "avaliacao": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Avaliacao",
     },
     "aluno_turma_coc": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": """
             SELECT 
@@ -67,8 +68,8 @@ sme_queries = {
         """,
     },
     "aluno_tuma_coc0": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": """
             SELECT 
@@ -98,13 +99,13 @@ sme_queries = {
     },
     "frequencia": {
         "partition_column": "dataInicio",
-        "lower_bound_date": None,
+        "lower_bound_date": NoDefault,
         "dump_type": "append",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Frequencia",
     },
     "escola": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": """
             SELECT 
@@ -131,8 +132,8 @@ sme_queries = {
         """,
     },
     "aluno": {
-        "partition_column": None,
-        "lower_bound_date": None,
+        "partition_column": NoDefault,
+        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": """
             SELECT 
@@ -177,7 +178,8 @@ sme_queries = {
 sme_clocks = [
     IntervalClock(
         interval=timedelta(days=1),
-        start_date=datetime(2022, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo"))
+        start_date=datetime(
+            2022, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo"))
         + timedelta(minutes=15 * count),
         labels=[
             constants.RJ_SME_AGENT_LABEL.value,
@@ -200,4 +202,5 @@ sme_clocks = [
     for count, (table_id, parameters) in enumerate(sme_queries.items())
 ]
 
-sme_educacao_basica_daily_update_schedule = Schedule(clocks=untuple(sme_clocks))
+sme_educacao_basica_daily_update_schedule = Schedule(
+    clocks=untuple(sme_clocks))
