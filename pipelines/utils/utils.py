@@ -36,7 +36,9 @@ def log(msg: Any, level: str = "info") -> None:
 
 
 @prefect.task(checkpoint=False)
-def log_task(msg: Any, level: str = "info", wait=None):
+def log_task(
+    msg: Any, level: str = "info", wait=None  # pylint: disable=unused-argument
+):
     """
     Logs a message to prefect's logger.
     """
