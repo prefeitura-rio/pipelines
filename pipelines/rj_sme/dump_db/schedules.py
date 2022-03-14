@@ -6,11 +6,11 @@ from datetime import timedelta, datetime
 
 from prefect.core.task import NoDefault
 from prefect.schedules import Schedule
-from prefect.schedules.clocks import IntervalClock
 import pytz
 
 from pipelines.constants import constants
-from pipelines.utils.utils import query_to_line, untuple_clocks as untuple
+from pipelines.utils.dump_db.utils import generate_schedules
+from pipelines.utils.utils import untuple_clocks as untuple
 
 
 #####################################
@@ -175,32 +175,23 @@ sme_queries = {
         """,
     },
 }
-sme_clocks = [
-    IntervalClock(
-        interval=timedelta(days=1),
-        start_date=datetime(
-            2022, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo"))
-        + timedelta(minutes=15 * count),
-        labels=[
-            constants.RJ_SME_AGENT_LABEL.value,
-        ],
-        parameter_defaults={
-            "batch_size": 50000,
-            "vault_secret_path": "clustersqlsme",
-            "db_database": "GestaoEscolar",
-            "db_host": "10.70.6.103",
-            "db_port": "1433",
-            "db_type": "sql_server",
-            "dataset_id": "educacao_basica",
-            "table_id": table_id,
-            "dump_type": parameters["dump_type"],
-            "partition_column": parameters["partition_column"],
-            "lower_bound_date": parameters["lower_bound_date"],
-            "execute_query": query_to_line(parameters["execute_query"]),
-        },
-    )
-    for count, (table_id, parameters) in enumerate(sme_queries.items())
-]
+
+sme_clocks = generate_schedules(
+    interval=timedelta(days=1),
+    start_date=datetime(
+        2022, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo")
+    ),
+    labels=[
+        constants.RJ_SME_AGENT_LABEL.value,
+    ],
+    db_database="GestaoEscolar",
+    db_host="10.70.6.103",
+    db_port="1433",
+    db_type="sql_server",
+    dataset_id="educacao_basica",
+    vault_secret_path="clustersqlsme",
+    table_parameters=sme_queries,
+)
 
 sme_educacao_basica_daily_update_schedule = Schedule(
     clocks=untuple(sme_clocks))
