@@ -4,7 +4,6 @@ Schedules for the database dump pipeline
 
 from datetime import timedelta, datetime
 
-from prefect.core.task import NoDefault
 from prefect.schedules import Schedule
 import pytz
 
@@ -20,26 +19,18 @@ from pipelines.utils.utils import untuple_clocks as untuple
 #####################################
 sme_queries = {
     "turma": {
-        "partition_column": NoDefault,
-        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Turma",
     },
     "dependencia": {
-        "partition_column": NoDefault,
-        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Dependencia",
     },
     "avaliacao": {
-        "partition_column": NoDefault,
-        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Avaliacao",
     },
     "aluno_turma_coc": {
-        "partition_column": NoDefault,
-        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": """
             SELECT 
@@ -68,8 +59,6 @@ sme_queries = {
         """,
     },
     "aluno_tuma_coc0": {
-        "partition_column": NoDefault,
-        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": """
             SELECT 
@@ -99,13 +88,10 @@ sme_queries = {
     },
     "frequencia": {
         "partition_column": "dataInicio",
-        "lower_bound_date": NoDefault,
         "dump_type": "append",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Frequencia",
     },
     "escola": {
-        "partition_column": NoDefault,
-        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": """
             SELECT 
@@ -132,8 +118,6 @@ sme_queries = {
         """,
     },
     "aluno": {
-        "partition_column": NoDefault,
-        "lower_bound_date": NoDefault,
         "dump_type": "overwrite",
         "execute_query": """
             SELECT 
