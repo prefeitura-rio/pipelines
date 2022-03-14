@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 from typing import List, Tuple, Union
 
 import pandas as pd
-import pytz
 
 from prefect.schedules.clocks import IntervalClock
 from pipelines.utils.utils import (
@@ -68,7 +67,7 @@ def build_query_new_columns(table_columns: List[str]) -> List[str]:
     )
 
 
-def generate_schedules(
+def generate_schedules(  # pylint: disable=too-many-arguments,too-many-locals
     interval: timedelta,
     start_date: datetime,
     labels: List[str],
