@@ -141,7 +141,7 @@ def format_message(dataframe: pd.DataFrame) -> List[str]:
             .replace(tzinfo=pytz.timezone("America/Sao_Paulo"))
             .strftime("%Y-%m-%d %H:%M:%S"),
             "%Y-%m-%d %H:%M:%S",
-        )
+        ) - timedelta(hours=3)
         current_minus_1h = current - timedelta(minutes=60)
         return current_minus_1h, current
 
@@ -192,7 +192,11 @@ def format_message(dataframe: pd.DataFrame) -> List[str]:
     )
 
     # Builds final message
-    msg = msg_header + alert
+    if alert != "":
+        msg = msg_header + alert
+    else:
+        alert = "Não foram encontrados alertas no período" + "\n \n"
+        msg = msg_header + alert
 
     return smart_split(
         text=msg,
