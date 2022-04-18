@@ -76,6 +76,20 @@ def database_execute(
     database.execute_query(query)
 
 
+@task(checkpoint=False)
+def database_fetch(
+    database: Database,
+    batch_size: str,
+    wait=None,  # pylint: disable=unused-argument
+):
+    if batch_size == "all":
+        return database.fetch_all()
+    try:
+        batch_size_no = int(batch_size)
+    except ValueError:
+        raise ValueError(f"Invalid batch size: {batch_size}")
+    return database.fetch_batch(batch_size_no)
+
 ###############
 #
 # File
