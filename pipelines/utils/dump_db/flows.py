@@ -88,7 +88,7 @@ with Flow(
     )
 
     # Format partitioned query if required
-    query = format_partitioned_query(
+    formated_query = format_partitioned_query(
         query=query,
         dataset_id=dataset_id,
         table_id=table_id,
@@ -99,8 +99,8 @@ with Flow(
 
     db_execute = database_execute(  # pylint: disable=invalid-name
         database=db_object,
-        query=query,
-        wait=query,
+        query=formated_query,
+        wait=formated_query,
     )
 
     # Dump batches to CSV files
