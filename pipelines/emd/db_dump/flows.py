@@ -70,7 +70,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
         password=password,
         database=database,
     )
-    wait_db_execute = database_execute(
+    wait_db_execute = database_execute(  # pylint: disable=invalid-name
         database=db_object,
         query=query,
     )
@@ -83,7 +83,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
     )
 
     # Create table in BigQuery
-    wait_create_db = create_bd_table(
+    wait_create_db = create_bd_table(  # pylint: disable=invalid-name
         path=header_path,
         dataset_id=dataset_id,
         table_id=table_id,
@@ -96,7 +96,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
     #####################################
 
     # Execute query
-    wait_db_execute = database_execute(
+    wait_db_execute = database_execute(  # pylint: disable=invalid-name
         database=db_object,
         query=query,
         wait=wait_create_db,
@@ -163,7 +163,7 @@ with Flow("Executar query SQL") as run_sql_flow:
         password=password,
         database=database,
     )
-    wait_db_execute = database_execute(
+    wait_db_execute = database_execute(  # pylint: disable=invalid-name
         database=db_object,
         query=query,
     )
