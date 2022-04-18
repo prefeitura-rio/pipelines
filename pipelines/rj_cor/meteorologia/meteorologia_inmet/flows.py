@@ -7,14 +7,14 @@ from prefect import Flow
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants
-from pipelines.rj_cor.alagamentos.meteorologia_inmet.tasks import (slice_data, download,
+from pipelines.rj_cor.meteorologia.meteorologia_inmet.tasks import (slice_data, download,
                                                                    tratar_dados, salvar_dados)
-from pipelines.rj_cor.alagamentos.meteorologia_inmet.schedules import hour_schedule
+from pipelines.rj_cor.meteorologia.meteorologia_inmet.schedules import hour_schedule
 from pipelines.utils.tasks import upload_to_gcs
 
-with Flow('meteorologia_inmet') as flow:
+with Flow('COR: Meteorologia - Meteorologia INMET') as flow:
     # CURRENT_TIME = Parameter('CURRENT_TIME', default=None) or pendulum.now("utc")
-    CURRENT_TIME = pendulum.now("utc")
+    CURRENT_TIME = pendulum.now('America/Sao_Paulo')
 
     DATASET_ID = 'meio_ambiente_clima'
     TABLE_ID = 'meteorologia_inmet'
