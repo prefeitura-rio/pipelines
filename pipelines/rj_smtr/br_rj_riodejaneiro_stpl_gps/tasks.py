@@ -2,8 +2,7 @@
 """
 Tasks for br_rj_riodejaneiro_stpl_gps
 """
-# pylint disable=invalid-name, C0103
-
+# pylint: disable=C0103,W0703
 ###############################################################################
 #
 # Aqui é onde devem ser definidas as tasks para os flows do projeto.
