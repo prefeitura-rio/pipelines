@@ -1,3 +1,7 @@
+"""
+Tasks for the daily birthday flow.
+"""
+
 from typing import List
 
 import pendulum
