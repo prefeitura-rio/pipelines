@@ -159,18 +159,20 @@ def save_treated_local(dataframe, file_path, mode="staging"):
 
 
 @task
-def get_raw(url, headers=None):
+def get_raw(url, headers=None, kind: str = None):
     """Request data from a url API
 
     Args:
         url (str): URL to send request to
         headers (dict, optional): Aditional fields to send along the request. Defaults to None.
-
+        kind (str, optional): Kind of API being captured.
+        Possible values are 'stpl', 'brt' and 'sppo'
     Returns:
         dict: "data" contains the response object from the request, "timestamp" contains
         the run time timestamp, "error" catches errors that may occur during task execution.
     """
-    headers = get_vault_secret("stpl_api")["data"]
+    if kind == "stpl":
+        headers = get_vault_secret("stpl_api")["data"]
     data = None
     error = None
     timestamp = pendulum.now(constants.TIMEZONE.value)
