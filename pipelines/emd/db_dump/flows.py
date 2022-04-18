@@ -54,7 +54,7 @@ with Flow("dump_sql_server") as dump_sql_server_flow:
 dump_sql_server_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_sql_server_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 
-with Flow("get_headers_sql_server") as get_headers_sql_server_flow:
+with Flow("create_table_from_header") as create_table_from_header_flow:
 
     # SQL Server parameters
     server = Parameter("sql_server_hostname")
@@ -84,7 +84,7 @@ with Flow("get_headers_sql_server") as get_headers_sql_server_flow:
     header_path = dump_header_to_csv(cursor=cursor, header_path=f"data/{uuid4()}/")
     create_bd_table(path=header_path, dataset_id=dataset_id, table_id=table_id)
 
-get_headers_sql_server_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-get_headers_sql_server_flow.run_config = KubernetesRun(
+create_table_from_header_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+create_table_from_header_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value
 )
