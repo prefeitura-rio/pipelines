@@ -2,8 +2,6 @@
 """
 Flows for emd
 """
-from functools import partial
-
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants
