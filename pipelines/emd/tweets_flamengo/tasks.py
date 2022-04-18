@@ -100,12 +100,13 @@ def creat_path_tree(path):
 
 @task
 def save_last_id(df, q):
-    pre_path = f"data/staging/twitter_flamengo/last_id/q={q}"
+    q_folder = q.replace(" ", "_").replace("-", "_")
+    pre_path = f"data/staging/twitter_flamengo/last_id/q={q_folder}"
     creat_path_tree(pre_path)
 
-    if not os.path.exists(f"{pre_path}/{q}.csv"):
+    if not os.path.exists(f"{pre_path}/{q_folder}.csv"):
         pd.DataFrame({"q": [], "id": [], "created_at": []}).to_csv(
-            f"{pre_path}/{q}.csv", index=False
+            f"{pre_path}/{q_folder}.csv", index=False
         )
 
     if df is None:
@@ -114,28 +115,29 @@ def save_last_id(df, q):
         ## twitter fetch data from most recent to most oldest
         ## last_id must to be the most recent id
         df = df[["id", "created_at"]].iloc[[0]].copy()
-        df.to_csv(f"{pre_path}/{q}.csv", index=False, mode="a", header=False)
+        df.to_csv(f"{pre_path}/{q_folder}.csv", index=False, mode="a", header=False)
 
 
 @task
 def fetch_last_id(q):
+    q_folder = q.replace(" ", "_").replace("-", "_")
     st = bd.Storage(dataset_id="twitter_flamengo", table_id="last_id")
     try:
         st.download(
-            filename=f"{q}.csv",
+            filename=f"{q_folder}.csv",
             savepath="data",
-            partitions=f"q={q}/",
+            partitions=f"q={q_folder}/",
             mode="staging",
             if_not_exists="raise",
         )
 
-        pre_path = f"data/staging/twitter_flamengo/last_id/q={q}"
-        df = pd.read_csv(f"{pre_path}/{q}.csv")
+        pre_path = f"data/staging/twitter_flamengo/last_id/q={q_folder}"
+        df = pd.read_csv(f"{pre_path}/{q_folder}.csv")
         if "q" in df.columns.tolist():
             df.columns = ["id", "created_at", "q"]
-            df.drop("q", 1).to_csv(f"{pre_path}/{q}.csv", index=False)
+            df.drop("q", 1).to_csv(f"{pre_path}/{q_folder}.csv", index=False)
     except FileNotFoundError:
-        print(f"No table {q} in storage")
+        print(f"No table {q_folder} in storage")
 
 
 @task
@@ -546,7 +548,7 @@ def fetch_tweets(api, q, last_id, created_at):
 
 
 @task
-def upload_to_storage(q):
+def upload_to_storage():
     tb_last_id = bd.Table(dataset_id="twitter_flamengo", table_id="last_id")
     tb_last_id.append("data/staging/twitter_flamengo/last_id")
     if os.path.isdir("data/staging/"):
