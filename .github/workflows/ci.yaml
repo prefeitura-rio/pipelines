@@ -33,7 +33,7 @@ jobs:
           prefect build
       - name: Get changed files for code tree analysis
         id: files
-        uses: jitterbit/get-changed-files@v1
+        uses: Ana06/get-changed-files@v2.1.0
       - name: Perform code tree analysis
         run: |
           python .github/workflows/scripts/code_tree_analysis.py "${{ steps.files.outputs.all }}"
