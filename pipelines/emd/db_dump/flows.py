@@ -127,25 +127,25 @@ dump_sql_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 
 
 dump_ergon_flow = deepcopy(dump_sql_flow)
-dump_ergon_flow.name = "EMD: Ingerir tabelas Ergon"
+dump_ergon_flow.name = "EMD: ergon - Ingerir tabelas"
 dump_ergon_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_ergon_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 dump_ergon_flow.schedule = ergon_monthly_update_schedule
 
 
 dump_sme_flow = deepcopy(dump_sql_flow)
-dump_sme_flow.name = "SME: Ingerir tabelas"
+dump_sme_flow.name = "SME: educacao_basica - Ingerir tabelas"
 dump_sme_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_sme_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 dump_sme_flow.schedule = sme_daily_update_schedule
 
 dump_1746_flow = deepcopy(dump_sql_flow)
-dump_1746_flow.name = "1746: Ingerir tabelas"
+dump_1746_flow.name = "SEOP: 1746 - Ingerir tabelas"
 dump_1746_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_1746_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 dump_1746_flow.schedule = _1746_daily_update_schedule
 
-with Flow("EMD: Executar query SQL") as run_sql_flow:
+with Flow("EMD: template - Executar query SQL") as run_sql_flow:
     #####################################
     #
     # Parameters
