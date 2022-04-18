@@ -43,10 +43,6 @@ def geolocator(q: str) -> list:
 
         long = response.json()[1][0][3]['x']
         lat = response.json()[1][0][3]['y']
-        i += 1
-        #print(f"Estou na {i}a linha da tabela.")
         return [lat, long]
     except:
-        i += 1
-        #print(f"Estou na {i}a linha da tabela.")
         return [None, None]

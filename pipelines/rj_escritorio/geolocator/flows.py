@@ -77,8 +77,8 @@ with Flow("my_flow") as flow:
     lista_enderecos = importa_bases_e_chamados()
     novos_enderecos = enderecos_novos(lista_enderecos, upstream_tasks=[lista_enderecos])
     base_geolocalizada = geolocaliza_enderecos(novos_enderecos, upstream_tasks=[novos_enderecos])
-    cria_csv(lista_enderecos[3], base_geolocalizada, upstream_tasks=[base_geolocalizada])
-    upload_to_gcs(constants.PATH_BASE_ENDERECOS.value, constants.DATASET_ID.value, constants.TABLE_ID.value)
+    csv_criado = cria_csv(lista_enderecos[3], base_geolocalizada, upstream_tasks=[base_geolocalizada])
+    upload_to_gcs(constants.PATH_BASE_ENDERECOS.value, constants.DATASET_ID.value, constants.TABLE_ID.value, upstream_tasks=[csv_criado])
 
 flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
