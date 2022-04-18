@@ -61,7 +61,7 @@ def rename_current_flow_run(prefix, dataset_id, table_id):
     """
     flow_run_id = prefect.context.get("flow_run_id")
     client = Client()
-    return client.set_flow_run_name(flow_run_id, f"{prefix}: {dataset_id}_{table_id}")
+    return client.set_flow_run_name(flow_run_id, f"{prefix}: {dataset_id}.{table_id}")
 
 
 ##################
