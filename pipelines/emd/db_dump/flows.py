@@ -13,6 +13,7 @@ from pipelines.emd.db_dump.tasks import (
     sql_server_execute,
     sql_server_get_connection,
     sql_server_get_cursor,
+    sql_server_log_headers,
     upload_to_gcs,
 )
 
@@ -49,4 +50,36 @@ with Flow("dump_sql_server") as dump_sql_server_flow:
 
 
 dump_sql_server_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-dump_sql_server_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+dump_sql_server_flow.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value)
+
+with Flow("get_headers_sql_server") as get_headers_sql_server_flow:
+
+    # SQL Server parameters
+    server = Parameter("sql_server_hostname")
+    user = Parameter("sql_server_user")
+    password = Parameter("sql_server_password")
+    database = Parameter("sql_server_database")
+    query = Parameter("execute_query")
+
+    # CSV file parameters
+    batch_size = Parameter("batch_size")
+
+    # BigQuery parameters
+    dataset_id = Parameter("dataset_id")
+    table_id = Parameter("table_id")
+
+    # Execute query on SQL Server
+    conn = sql_server_get_connection(
+        server=server, user=user, password=password, database=database
+    )
+    cursor = sql_server_get_cursor(connection=conn)
+    cursor = sql_server_execute(cursor=cursor, query=query)
+
+    # Log headers
+    sql_server_log_headers(cursor)
+
+
+get_headers_sql_server_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+get_headers_sql_server_flow.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value)
