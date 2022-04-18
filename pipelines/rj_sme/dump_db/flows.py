@@ -4,7 +4,6 @@ Database dumping flows for sme project
 
 from copy import deepcopy
 
-from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 

@@ -50,6 +50,9 @@ def parse_date_columns(
 
 
 def build_query_new_columns(table_columns: List[str]) -> List[str]:
+    """ "
+    Creates the query without accents.
+    """
     new_cols = remove_columns_accents(pd.DataFrame(columns=table_columns))
     return "\n".join(
         [
