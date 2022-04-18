@@ -29,16 +29,17 @@ with Flow(
     data, hora = slice_data(current_time=CURRENT_TIME)
 
     dados = download(data=data)
-    dados = tratar_dados(dados=dados, hora=hora)
-    path = salvar_dados(dados=dados)
+    dados, partitions = tratar_dados(dados=dados, hora=hora)
+    PATH = salvar_dados(dados=dados, partitions=partitions)
 
     # Create table in BigQuery
     create_table_and_upload_to_gcs(
-        data_path=path,
+        data_path=PATH,
         dataset_id=DATASET_ID,
         table_id=TABLE_ID,
         dump_type=DUMP_TYPE,
-        wait=path,
+        partitions=partitions,
+        wait=PATH,
     )
 
 # para rodar na cloud

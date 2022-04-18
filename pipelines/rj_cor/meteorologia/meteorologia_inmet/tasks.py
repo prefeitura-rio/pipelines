@@ -84,8 +84,8 @@ def download(data: str) -> pd.DataFrame:
     return dados
 
 
-@task
-def tratar_dados(dados: pd.DataFrame, hora: str) -> pd.DataFrame:
+@task(nout=2)
+def tratar_dados(dados: pd.DataFrame, hora: str) -> Tuple[pd.DataFrame, str]:
     """
     Renomeia colunas e filtra dados com a hora do timestamp de execução
     """
@@ -179,21 +179,31 @@ def tratar_dados(dados: pd.DataFrame, hora: str) -> pd.DataFrame:
     dados["horario"] = pd.to_datetime(dados.horario, format="%H:%M:%S").dt.time
     dados["data"] = pd.to_datetime(dados.data, format="%Y-%m-%d")
 
-    return dados
+    # Pegar o dia máximo que aparece na base como partição
+    max_date = str(dados["data"].max())
+    ano = max_date[:4]
+    mes = str(int(max_date[5:7]))
+    dia = str(int(max_date[8:10]))
+
+    partitions = f"ano={ano}/mes={mes}/dia={dia}"
+    print(">>> partitions", partitions)
+    return dados, partitions
 
 
 @task
-def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
+def salvar_dados(dados: pd.DataFrame, partitions: str) -> Union[str, Path]:
     """
     Salvar dados em csv
     """
-    base_path = os.path.join(os.getcwd(), "data", "meteorologia_inmet", "output")
+    base_path = Path(os.getcwd(), "data", "meteorologia_inmet", "output", partitions)
 
     if not os.path.exists(base_path):
         os.makedirs(base_path)
 
-    filename = os.path.join(base_path, f"dados_{pendulum.now()}.csv")
+    now = pendulum.now().to_datetime_string().replace(":", "")
+    filename = str(base_path / f"dados_{now}.csv")
 
     print(f"Saving {filename}")
-    dados.to_csv(filename, index=False)
+    # dados.to_csv(filename, index=False)
+    dados.to_csv(r"{}".format(filename), index=False)
     return filename
