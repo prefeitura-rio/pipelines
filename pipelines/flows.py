@@ -7,4 +7,3 @@ Imports all flows for every project so we can register all of them.
 ###############################################################################
 from pipelines.emd import *
 from pipelines.cor.flows import *
-from pipelines.workshop.flows import *
