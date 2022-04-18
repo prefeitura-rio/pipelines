@@ -53,7 +53,7 @@ import json
 import os
 from pathlib import Path
 
-from basedosdados import Table, Storage
+from basedosdados import Storage
 import pandas as pd
 import pendulum
 from prefect import task
@@ -159,18 +159,20 @@ def save_treated_local(dataframe, file_path, mode="staging"):
 
 
 @task
-def get_raw(url, headers=None):
+def get_raw(url, headers=None, kind: str = None):
     """Request data from a url API
 
     Args:
         url (str): URL to send request to
         headers (dict, optional): Aditional fields to send along the request. Defaults to None.
-
+        kind (str, optional): Kind of API being captured.
+        Possible values are 'stpl', 'brt' and 'sppo'
     Returns:
         dict: "data" contains the response object from the request, "timestamp" contains
         the run time timestamp, "error" catches errors that may occur during task execution.
     """
-    headers = get_vault_secret("stpl_api")["data"]
+    if kind == "stpl":
+        headers = get_vault_secret("stpl_api")["data"]
     data = None
     error = None
     timestamp = pendulum.now(constants.TIMEZONE.value)
@@ -286,21 +288,6 @@ def upload_logs_to_bq(dataset_id, parent_table_id, timestamp, error):
     # save local
     dataframe.to_csv(filepath, index=False)
     # BD Table object
-    tb_obj = Table(dataset_id=dataset_id, table_id=table_id)
-    # create and publish if table does not exist, append to it otherwise
-    if not tb_obj.table_exists("staging"):
-        tb_obj.create(
-            path=f"{timestamp}/{table_id}",
-            if_table_exists="replace",
-            if_storage_data_exists="replace",
-            if_table_config_exists="pass",
-        )
-    elif not tb_obj.table_exists("prod"):
-        tb_obj.publish(if_exists="replace")
-    else:
-        tb_obj.append(filepath=f"{timestamp}/{table_id}", if_exists="replace")
-
-    return tb_obj.table_exists("prod")
-
+    create_or_append_table(dataset_id=dataset_id, table_id=table_id, path=filepath)
     # delete local file
     # shutil.rmtree(f"{timestamp}")

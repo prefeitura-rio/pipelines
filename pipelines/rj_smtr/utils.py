@@ -49,14 +49,12 @@ def create_or_append_table(dataset_id, table_id, path):
             path=path,
             if_table_exists="pass",
             if_storage_data_exists="replace",
-            if_table_config_exists="pass",
+            if_table_config_exists="replace",
         )
         log("Table created in STAGING")
     else:
         log("Table already exists in STAGING, appending to it...")
-        tb_obj.append(
-            filepath=path, if_exists="replace", timeout=600, chunk_size=1024 * 1024 * 10
-        )
+        tb_obj.append(filepath=path, if_exists="replace", timeout=600)
         log("Appended to table on STAGING successfully.")
 
 
