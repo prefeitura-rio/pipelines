@@ -69,6 +69,7 @@ from pipelines.emd.tweets_flamengo.tasks import (
     save_last_id,
     upload_to_storage,
     get_api,
+    get_environ_keys,
 )
 
 from pipelines.emd.schedules import (
@@ -94,6 +95,8 @@ flow.schedule = task_with_param_schedule
 
 with Flow("tweets_flamengo") as tweets_flamengo_flow:
     q = Parameter("keyword")
+
+    env_keys = get_environ_keys()
 
     api = get_api()
 
