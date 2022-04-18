@@ -8,7 +8,6 @@ import numpy as np
 from osgeo import osr, gdal  # pylint: disable=E0401
 
 
-
 def export_image(image, path):
     '''
     Export imagem em tif
@@ -44,7 +43,7 @@ def get_scale_offset(path, variable):
     return scale, offset
 
 
-def remap(path, variable, extent, resolution, goes16_extent):
+def remap(path, variable, extent, resolution, goes16_extent):  # pylint: disable=too-many-locals
     '''
     Converte coordenada X, Y para latlon
     '''
@@ -52,20 +51,20 @@ def remap(path, variable, extent, resolution, goes16_extent):
     offset = 0
 
     # Define KM_PER_DEGREE
-    KM_PER_DEGREE = 111.32
+    km_per_degree = 111.32
 
     # GOES-16 Spatial Reference System
-    sourcePrj = osr.SpatialReference()
+    source_prj = osr.SpatialReference()
     # sourcePrj.ImportFromProj4('+proj=geos +h=35786023.0 +a=6378137.0\
     # +b=6356752.31414 +f=0.00335281068119356027489803406172 +lat_0=0.0\
     # +lon_0=-75 +sweep=x +no_defs')
-    sourcePrj.ImportFromProj4(
+    source_prj.ImportFromProj4(
         '+proj=geos +h=35786000 +a=6378140 +b=6356750 +lon_0=-75 +sweep=x')
 
     # Lat/lon WSG84 Spatial Reference System
-    targetPrj = osr.SpatialReference()
+    target_prj = osr.SpatialReference()
     #targetPrj.ImportFromProj4('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
-    targetPrj.ImportFromProj4('+proj=latlong +datum=WGS84')
+    target_prj.ImportFromProj4('+proj=latlong +datum=WGS84')
 
     # GOES-16 Extent (satellite projection) [llx, lly, urx, ury]
     #goes16_extent = [x_1, y_1, x_2, y_2]
@@ -82,14 +81,14 @@ def remap(path, variable, extent, resolution, goes16_extent):
     raw = gdal.Open(connection_info)
 
     # Setup projection and geo-transformation
-    raw.SetProjection(sourcePrj.ExportToWkt())
+    raw.SetProjection(source_prj.ExportToWkt())
     #raw.SetGeoTransform(get_geot(goes16_extent, raw.RasterYSize, raw.RasterXSize))
     raw.SetGeoTransform(
         get_geot(goes16_extent, raw.RasterYSize, raw.RasterXSize))
 
     # Compute grid dimension
-    sizex = int(((extent[2] - extent[0]) * KM_PER_DEGREE) / resolution)
-    sizey = int(((extent[3] - extent[1]) * KM_PER_DEGREE) / resolution)
+    sizex = int(((extent[2] - extent[0]) * km_per_degree) / resolution)
+    sizey = int(((extent[3] - extent[1]) * km_per_degree) / resolution)
 
     # Get memory driver
     mem_driver = gdal.GetDriverByName('MEM')
@@ -98,7 +97,7 @@ def remap(path, variable, extent, resolution, goes16_extent):
     grid = mem_driver.Create('grid', sizex, sizey, 1, gdal.GDT_Float32)
 
     # Setup projection and geo-transformation
-    grid.SetProjection(targetPrj.ExportToWkt())
+    grid.SetProjection(target_prj.ExportToWkt())
     grid.SetGeoTransform(get_geot(extent, grid.RasterYSize, grid.RasterXSize))
 
     # Perform the projection/resampling
@@ -107,7 +106,7 @@ def remap(path, variable, extent, resolution, goes16_extent):
 
     start = t.time()
 
-    gdal.ReprojectImage(raw, grid, sourcePrj.ExportToWkt(), targetPrj.ExportToWkt(),
+    gdal.ReprojectImage(raw, grid, source_prj.ExportToWkt(), target_prj.ExportToWkt(),
                         gdal.GRA_NearestNeighbour, options=['NUM_THREADS=ALL_CPUS'])
 
     print('- finished! Time:', t.time() - start, 'seconds')
