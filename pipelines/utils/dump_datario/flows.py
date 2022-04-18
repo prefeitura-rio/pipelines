@@ -6,7 +6,7 @@ Database dumping flows
 from functools import partial
 from uuid import uuid4
 
-from prefect import Flow, Parameter
+from prefect import Flow, Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
@@ -15,6 +15,7 @@ from pipelines.utils.tasks import (
     create_bd_table,
     upload_to_gcs,
     dump_header_to_csv,
+    check_table_exists,
 )
 from pipelines.utils.dump_datario.tasks import (
     get_datario_geodataframe,
@@ -54,35 +55,49 @@ with Flow(
         url=url, path=f"data/{uuid4()}/"
     )
 
-    # Create CSV file with headers
-    header_path = dump_header_to_csv(
-        data_path=datario_path,
-        wait=datario_path,
+    EXISTS = check_table_exists(
+        dataset_id=dataset_id, table_id=table_id, wait=datario_path
     )
 
-    # Create table in BigQuery
-    create_db = create_bd_table(  # pylint: disable=invalid-name
-        path=header_path,
-        dataset_id=dataset_id,
-        table_id=table_id,
-        dump_type=dump_type,
-        wait=header_path,
-    )
+    # Create header and table if they don't exists
+    with case(EXISTS, False):
 
-    #####################################
-    #
-    # Tasks section #2 - Dump batches
-    #
-    #####################################
+        # Create CSV file with headers
+        header_path = dump_header_to_csv(
+            data_path=datario_path,
+            wait=datario_path,
+        )
 
-    # Upload to GCS
-    upload_to_gcs(
-        path=datario_path,
-        dataset_id=dataset_id,
-        table_id=table_id,
-        wait=create_db,
-    )
+        # Create table in BigQuery
+        create_db = create_bd_table(  # pylint: disable=invalid-name
+            path=header_path,
+            dataset_id=dataset_id,
+            table_id=table_id,
+            dump_type=dump_type,
+            wait=header_path,
+        )
 
+        #####################################
+        #
+        # Tasks section #2 - Dump batches
+        #
+        #####################################
+
+        # Upload to GCS
+        upload_to_gcs(
+            path=datario_path,
+            dataset_id=dataset_id,
+            table_id=table_id,
+            wait=create_db,
+        )
+
+    with case(EXISTS, True):
+        upload_to_gcs(
+            path=datario_path,
+            dataset_id=dataset_id,
+            table_id=table_id,
+            wait=EXISTS,
+        )
 
 dump_datario_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_datario_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
