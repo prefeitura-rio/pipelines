@@ -66,7 +66,12 @@ from pipelines.rj_smtr.example.tasks import say_hello
 # from pipelines.rj_smtr.example.schedules import every_two_weeks
 from pipelines.utils.decorators import Flow
 
-with Flow("my_flow") as flow:
+with Flow(
+    "my_flow",
+    code_owners=[
+        "@hellcassius#1223",
+    ],
+) as flow:
     say_hello()
 
 flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)

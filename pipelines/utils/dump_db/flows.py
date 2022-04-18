@@ -32,6 +32,10 @@ from pipelines.utils.dump_db.tasks import (
 
 with Flow(
     name=utils_constants.FLOW_DUMP_DB_NAME.value,
+    code_owners=[
+        "@pimbel#2426",
+        "@Gabriel Gazola Milan#8183",
+    ],
 ) as dump_sql_flow:
 
     #####################################
@@ -174,6 +178,10 @@ dump_sql_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 
 with Flow(
     name="EMD: template - Executar query SQL",
+    code_owners=[
+        "@pimbel#2426",
+        "@Gabriel Gazola Milan#8183",
+    ],
 ) as run_sql_flow:
     #####################################
     #

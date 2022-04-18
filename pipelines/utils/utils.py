@@ -7,7 +7,7 @@ import logging
 from os import getenv, walk
 from os.path import join
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
 
 import basedosdados as bd
@@ -20,6 +20,8 @@ import telegram
 from prefect.client import Client
 from prefect.engine.state import State
 from prefect.run_configs import KubernetesRun
+
+from pipelines.constants import constants
 
 
 def log(msg: Any, level: str = "info") -> None:
@@ -79,17 +81,27 @@ def notify_discord_on_failure(
     flow: prefect.Flow,
     state: State,
     secret_path: str,
+    code_owners: Optional[List[str]] = None,
 ):
     """
     Notifies a Discord channel when a flow fails.
     """
     url = get_vault_secret(secret_path)["data"]["url"]
     flow_run_id = prefect.context.get("flow_run_id")
+    code_owners = code_owners or constants.DEFAULT_CODE_OWNERS.value
+    at_code_owners = []
+    for code_owner in code_owners:
+        if code_owner.startswith("@"):
+            at_code_owners.append(code_owner)
+        else:
+            at_code_owners.append(f"@{code_owner}")
     message = (
         f":man_facepalming: Flow **{flow.name}** has failed."
         + f'\n  - State message: *"{state.message}"*'
         + "\n  - Link to the failed flow: "
         + f"http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{flow_run_id}"
+        + "\n  - Extra attention:"
+        + "\n    - ".join(at_code_owners)
     )
     send_discord_message(
         message=message,

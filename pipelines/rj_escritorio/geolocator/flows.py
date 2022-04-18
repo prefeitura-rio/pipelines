@@ -29,7 +29,12 @@ from pipelines.utils.tasks import (
     create_table_and_upload_to_gcs,
 )
 
-with Flow("EMD: escritorio - Geolocalizacao de chamados 1746") as daily_geolocator_flow:
+with Flow(
+    "EMD: escritorio - Geolocalizacao de chamados 1746",
+    code_owners=[
+        "@Bloom#5927",
+    ],
+) as daily_geolocator_flow:
     # [enderecos_conhecidos, enderecos_ontem, chamados_ontem, base_enderecos_atual]
     # Materialization parameters
     materialize_after_dump = Parameter(

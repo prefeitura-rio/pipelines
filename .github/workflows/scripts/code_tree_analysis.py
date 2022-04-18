@@ -459,7 +459,9 @@ if __name__ == "__main__":
     changed_files = [
         file_
         for file_ in changed_files
-        if file_.endswith(".py") and file_.startswith("pipelines")
+        if file_.endswith(".py")
+        and file_.startswith("pipelines")
+        and "cookiecutter" not in file_
     ]
     print("We're interested in these files:")
     for file_ in changed_files:

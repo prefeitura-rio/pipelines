@@ -19,6 +19,10 @@ from pipelines.utils.tasks import rename_current_flow_run_dataset_table
 
 with Flow(
     name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+    code_owners=[
+        "@pimbel#2426",
+        "@Gabriel Gazola Milan#8183",
+    ],
 ) as run_dbt_model_flow:
 
     # Parameters
