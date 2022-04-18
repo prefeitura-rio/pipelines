@@ -1,8 +1,11 @@
 # Pipelines
 
-Esse repositório contém flows desenvolvidos com Prefect relacionados ao Escritório Municipal de Dados da Prefeitura do Rio de Janeiro.
+Este repositório contém fluxos de captura e subida de dados no datalake
+da Prefeitura do Rio de Janeiro. O repositório é gerido pelo Escritório
+Municipal de Dados (EMD) e alimentado de forma colaborativa com as equipes de
+dados e tecnologia das Secretarias.
 
----
+> 💜 Todo o código é desenvolvido em Python utilizando o software livre [Prefect](https://prefect.io/).
 
 ## Configuração de ambiente para desenvolvimento
 
@@ -148,34 +151,32 @@ run_local(flow, parameters = {"param": "val"})
 
 ### Como testar uma pipeline na nuvem
 
-- Primeiramente, você deve assegurar que as seguintes variáveis de ambiente existam e estejam devidamente configuradas:
+1. Configure as variáveis de ambiente num arquivo chamado `.env` na raiz
+   do projeto:
 
-  - `GOOGLE_APPLICATION_CREDENTIALS`: Path para um arquivo JSON com as credenciais da API do Google Cloud
-    de uma conta de serviço com acesso de escrita ao bucket `datario-public` no Google Cloud Storage.
-
-  - `PREFECT__BACKEND`: deve ter o valor `server`.
-
-  - `PREFECT__SERVER__HOST`: deve ter o valor `http://prefect-apollo.prefect.svc.cluster.local`.
-
-  - `PREFECT__SERVER__PORT`: deve ter o valor `4200`.
-
-  - `VAULT_ADDRESS`: deve ter o valor `http://vault.vault.svc.cluster.local:8200/`
-
-  - `VAULT_TOKEN`: deve ter o valor do token do órgão para o qual você está desenvolvendo. Caso não saiba o token, entre em contato.
+```
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials.json  # Credenciais do Google Cloud
+PREFECT__BACKEND=server
+PREFECT__SERVER__HOST=http://prefect-apollo.prefect.svc.cluster.local
+PREFECT__SERVER__PORT=4200
+VAULT_ADDRESS=http://vault.vault.svc.cluster.local:8200/
+VAULT_TOKEN=<token> # Valor do token do órgão para o qual você está desenvolvendo. Caso não saiba o token, entre em contato.
+```
 
 - Em seguida, tenha certeza que você já tem acesso à UI do Prefect, tanto para realizar a submissão da run, como para
   acompanhá-la durante o processo de execução. Caso não tenha, verifique o procedimento em https://library-emd.herokuapp.com/infraestrutura/como-acessar-a-ui-do-prefect
 
-- Escolha a pipeline que deseja executar (exemplo `pipelines.emd.test_flow.flows.flow`) e faça:
+2. Crie o arquivo `test.py` com a pipeline que deseja executar e adicione a função `run_cloud`
+   com os parâmetros necessários:
 
 ```py
-from pipelines.emd.utils import run_cloud
-from pipelines.emd.test_flow.flows import flow
+from pipelines.utils import run_cloud
+from pipelines.[secretaria].[pipeline].flows import flow # Complete com as infos da sua pipeline
 
 run_cloud(
     flow,               # O flow que você deseja executar
     labels=[
-        "example",      # Label para identificar o agente que executará a pipeline
+        "example",      # Label para identificar o agente que irá executar a pipeline (ex: rj-sme)
     ],
     parameters = {
         "param": "val", # Parâmetros que serão passados para a pipeline (opcional)
@@ -183,9 +184,15 @@ run_cloud(
 )
 ```
 
-- A saída deverá se assemelhar ao exemplo abaixo:
+3. Rode a pipeline com:
 
+```sh
+python test.py
 ```
+
+A saída deve se assemelhar ao exemplo abaixo:
+
+```sh
 [2022-02-19 12:22:57-0300] INFO - prefect.GCS | Uploading xxxxxxxx-development/2022-02-19t15-22-57-694759-00-00 to datario-public
 Flow URL: http://localhost:8080/default/flow/xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
  └── ID: xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
