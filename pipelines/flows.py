@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Imports all flows for every project so we can register all of them.
 """
@@ -5,5 +6,10 @@ Imports all flows for every project so we can register all of them.
 ###############################################################################
 # Automatically managed, please do not touch
 ###############################################################################
-from pipelines.emd import *
-from pipelines.cor.flows import *
+from pipelines.datario import *
+from pipelines.rj_cor import *
+from pipelines.rj_escritorio import *
+from pipelines.rj_segovi import *
+from pipelines.rj_sme import *
+from pipelines.rj_smfp import *
+from pipelines.utils import *

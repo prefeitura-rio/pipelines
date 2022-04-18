@@ -1,4 +1,7 @@
-# Test pipelines
+# user defined
+**/data/
+test_local.py
+pylint.txt
 test.py
 
 # Byte-compiled / optimized / DLL files

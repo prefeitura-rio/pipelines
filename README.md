@@ -7,125 +7,149 @@ dados e tecnologia das Secretarias.
 
 > 💜 Todo o código é desenvolvido em Python utilizando o software livre [Prefect](https://prefect.io/).
 
-## Prepare o ambiente
+## Configuração de ambiente para desenvolvimento
 
-### Requrimentos
+### Requisitos
 
-- Python 3.6+
-- Poetry
+- Um editor de texto (recomendado VS Code)
+- Python 3.9.x
+- `pip`
+- (Opcional, mas recomendado) Um ambiente virtual para desenvolvimento (`miniconda`, `virtualenv` ou similares)
 
-### Instalação
+### Procedimentos
 
-```sh
-python -m venv .venv # recomendamos que use um ambiente virtual
-source .venv/bin/activate # ative o ambiente
-poetry install # instale os requisitos do projeto
-```
-
-## Como adicionar seu órgão
-
-As pipelines dos diferentes órgãos funcionam de forma independente,
-porém todo o código é registrado neste repositório.
-
-O código é separado da seguinte forma:
+- Clonar esse repositório
 
 ```
-├── pipelines              <- (0) Esta é a pasta onde estão os códigos das pipelines
-│   ├── emd                <- (1) Cada órgão tem uma pasta com seus códigos (esta é do EMD)
-│   ├── cor                <- Esta por exemplo é a pasta do Centro de Operações (COR)
-│   ├── smtr               <- E esta é da Secretaria Municipal de Transportes (SMTR)
-│   └── ...                <- (2) Outros órgãos podem adicionar aqui suas pastas, basta...
-├── manage.py              <- (3) Este arquivo possui comandos auxiliares
+git clone https://github.com/prefeitura-rio/pipelines
 ```
 
-**Para criar a pasta do seu órgão, basta rodar o comando abaixo:**
+- Abrí-lo no seu editor de texto
 
-```sh
-python manage.py add-project <sigla do órgão em snakecase*>
+- No seu ambiente de desenvolvimento, instalar [poetry](https://python-poetry.org/) para gerenciamento de dependências
+
+```
+pip3 install poetry
 ```
 
-*snakecase: sem acentos, minúsculo e sem espaços.
+- Instalar as dependências para desenvolvimento
 
-Após rodar, sua pasta deve aparecer em [`pipelines/`](/pipelines/).
+```
+poetry install
+```
 
-Para listar os órgãos e nomes registrados, basta rodar:
+- Instalar os hooks de pré-commit (ver [#127](https://github.com/prefeitura-rio/pipelines/pull/127) para entendimento dos hooks)
 
-```sh
+```
+pre-commit install
+```
+
+- Pronto! Seu ambiente está configurado para desenvolvimento.
+
+---
+
+## Como desenvolver
+
+### Estrutura de diretorios
+
+```
+orgao/                       # diretório raiz para o órgão
+|-- projeto1/                # diretório de projeto
+|-- |-- __init__.py          # vazio
+|-- |-- constants.py         # valores constantes para o projeto
+|-- |-- flows.py             # declaração dos flows
+|-- |-- schedules.py         # declaração dos schedules
+|-- |-- tasks.py             # declaração das tasks
+|-- |-- utils.py             # funções auxiliares para o projeto
+...
+|-- __init__.py              # importa todos os flows de todos os projetos
+|-- constants.py             # valores constantes para o órgão
+|-- flows.py                 # declaração de flows genéricos do órgão
+|-- schedules.py             # declaração de schedules genéricos do órgão
+|-- tasks.py                 # declaração de tasks genéricas do órgão
+|-- utils.py                 # funções auxiliares para o órgão
+
+orgao2/
+...
+
+utils/
+|-- __init__.py
+|-- flow1/
+|-- |-- __init__.py
+|-- |-- flows.py
+|-- |-- tasks.py
+|-- |-- utils.py
+|-- flows.py                 # declaração de flows genéricos
+|-- tasks.py                 # declaração de tasks genéricas
+|-- utils.py                 # funções auxiliares
+
+constants.py                 # valores constantes para todos os órgãos
+
+```
+
+### Adicionando órgãos e projetos
+
+O script `manage.py` é responsável por criar e listar projetos desse repositório. Para usá-lo, no entanto, você deve instalar as dependências em `requirements-cli.txt`:
+
+```
+pip3 install -r requirements-cli.txt
+```
+
+Você pode obter mais informações sobre os comandos com
+
+```
+python manage.py --help
+```
+
+O comando `add-agency` permite que você adicione um novo órgão a partir do template padrão. Para fazê-lo, basta executar
+
+```
+python manage.py add-agency nome-do-orgao
+```
+
+Isso irá criar um novo diretório com o nome `nome-do-orgao` em `pipelines/` com o template padrão, já adaptado ao nome do órgão. O nome do órgão deve estar em [snake case](https://en.wikipedia.org/wiki/Snake_case) e deve ser único. Qualquer conflito com um projeto já existente será reportado.
+
+Para listar os órgão existentes e nomes reservados, basta fazer
+
+```
 python manage.py list-projects
 ```
 
-## Como criar sua 1a pipeline
+Em seguida, leia com anteção os comentários em cada um dos arquivos do seu projeto, de modo a evitar conflitos e erros.
+Links para a documentação do Prefect também encontram-se nos comentários.
 
-Uma vez criada a pasta do seu órgão, é possível construir e testar
-pipelines (**flows**).
+Caso o órgão para o qual você desenvolverá um projeto já exista, basta fazer
 
-### Configuração
+```
+python manage.py add-project nome-do-orgao nome-do-projeto
+```
 
-1. Crie a pipeline na pasta do seu órgão
-   `pipelines/<orgao>/<nova_pipeline>`. Caso seja a captura de uma
-   base a pasta deve ser o nome do `dataset_id`.
+### Adicionando dependências para execução
 
-2. Copie os arquivos de
-   [template_pipeline](/pipelines/emd/template_pipeline/) para a pasta
-   criada.
+- Requisitos de pipelines devem ser adicionados com
 
-> O que são esses arquivos? O Prefect utiliza arquivos específicos
-> chamados de `flows.py` (conjunto/fluxo de ações), `tasks.py` (ações) e
-> `schedules.py` (rotinas) na construção de pipelines. [Leia mais aqui](https://docs.prefect.io/core/concepts/tasks.html).
+```
+poetry add <package>
+```
 
-3. Edite o arquivo `pipelines/<orgao>/__init__.py`, registrando sua nova
-   pipeline:
+- Requisitos do `manage.py` estão em `requirements-cli.txt`
+
+- Requisitos para a Action de deployment estão em `requirements-deploy.txt`
+
+- Requisitos para testes estão em `requirements-tests.txt`
+
+### Como testar uma pipeline localmente
+
+Escolha a pipeline que deseja executar (exemplo `pipelines.rj_escritorio.template_pipeline.flows.flow`)
 
 ```py
-from .<nova_pipeline>.flows import *
-```
-
-4. Ao final da configuração, a estrutura obtida deve ser a seguinte:
-
-```
-├── pipelines
-│   └── <orgao>                <- Pasta do seu órgão
-│       ├── __init__.py        <- Arquivo editado em no Passo 3
-│       └── <nova_pipeline>    <- Pasta da sua nova pipeline
-│           ├── __init__.py    <- Arquivo vazio
-│           ├── flows.py       <- Arquivo onde será escrito o fluxo de ações
-│           ├── schedules.py   <- Arquivo onde serão escritas as rotinas (quando a pipeline irá rodar)
-│           └── tasks.py       <- Arquivo onde serão escritas as ações (funções)
-```
-
-### Construindo a pipeline
-
-1. Comece pelo arquivo `pipelines/<orgao>/<nova_pipeline>/flows.py`, declarando o fluxo que será executado
-   pela pipeline assim como chamando as funções (tasks) que serão
-   executadas. No próopio arquivo você encontra instruções específicas
-   de como escrevê-lo.
-
-> As funções não precisam ter sido criadas ainda em
-   `tasks.py`, recomendamos que pense nos passos (inputs e outputs
-   necessários de cada um) e depois
-   escreva as funções em si.
-
-2. Após escrever o fluxo, crie as funções necessárias para sua execução
-   em `pipelines/<orgao>/<nova_pipeline>/tasks.py`. Este arquivo também
-   possui instruções de como escrevê-lo.
-
-> Caso necessário, crie um arquivo `pipelines/<orgao>/constants.py` ([exemplo](/pipelines/constants.py)) para armazenar constantes que serão utilizadas nas `tasks`.
-
-## Testando sua pipeline
-
-### Local
-
-1. Crie o arquivo `test.py` importanto a pipeline que deseja executar e adicione a função `run_local`
-com os parâmetros necessários:
-
-```py
-from pipelines.emd.utils import run_local
-from pipelines.emd.test_flow.flows import flow
+from pipelines.utils.utils import run_local
+pipelines.rj_escritorio.template_pipeline.flows import flow
 
 run_local(flow, parameters = {"param": "val"})
 ```
 
-3. Rode a pipeline localmente com:
+### Como testar uma pipeline na nuvem
 
 ```sh
 python pipelines/test.py
@@ -143,12 +167,15 @@ PREFECT__SERVER__HOST=http://prefect-apollo.prefect.svc.cluster.local
 PREFECT__SERVER__PORT=4200
 ```
 
-> Atenção: `GOOGLE_APPLICATION_CREDENTIALS` deve conter a credencial de uma conta de
-> serviço com (no mínimo) acesso de **escrita** ao bucket datario-public no Google
-> Cloud Storage.
+- `VAULT_ADDRESS`: deve ter o valor `http://vault.vault.svc.cluster.local:8200/`
+
+- `VAULT_TOKEN`: deve ter o valor do token do órgão para o qual você está desenvolvendo. Caso não saiba o token, entre em contato.
+
+- Em seguida, tenha certeza que você já tem acesso à UI do Prefect, tanto para realizar a submissão da run, como para
+  acompanhá-la durante o processo de execução. Caso não tenha, verifique o procedimento em https://library-emd.herokuapp.com/infraestrutura/como-acessar-a-ui-do-prefect
 
 2. Crie o arquivo `test.py` com a pipeline que deseja executar e adicione a função `run_cloud`
-com os parâmetros necessários:
+   com os parâmetros necessários:
 
 ```py
 from pipelines.utils import run_cloud
@@ -183,34 +210,4 @@ Run submitted, please check it at:
 http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
-> ATENÇÃO : Tenha certeza que você possui acesso à interface do Prefect
-> [neste link](http://prefect-ui.prefect.svc.cluster.local:8080/). Você
-> precisa do acesso tanto para submeter a run como para acompanhá-la durante a execução. Caso não tenha, verifique o procedimento em [aqui](https://library-emd.herokuapp.com/infraestrutura/como-acessar-a-ui-do-prefect).
-
-4. (**Recomendado**) Quando acabar de desenvolver sua pipeline, delete
-   todas as versõs teste da mesma na interface do Prefect.
-
-<!-- ## Como desenvolver
-
-O script `manage.py` é responsável por criar e listar projetos desse repositório. Para usá-lo, no entanto, você deve instalar as dependências em `requirements-cli.txt`. Você pode obter mais informações sobre os comandos
-
-```
-python manage.py --help
-```
-
-O comando `add-project` permite que você crie um novo projeto a partir do template padrão. Para criar um novo projeto, basta fazer
-
-```
-python manage.py add-project nome-do-projeto
-```
-
-Isso irá criar um novo diretório com o nome `nome-do-projeto` em `pipelines/` com o template padrão, já adaptado ao nome do projeto. O nome do projeto deve estar em [snake case](https://en.wikipedia.org/wiki/Snake_case) e deve ser único. Qualquer conflito com um projeto já existente será reportado.
-
-Para listar os projetos existentes e nomes reservados, basta fazer
-
-```
-python manage.py list-projects
-```
-
-Em seguida, leia com anteção os comentários em cada um dos arquivos do seu projeto, de modo a evitar conflitos e erros.
-Links para a documentação do Prefect também encontram-se nos comentários. -->
+- (Opcional, mas recomendado) Quando acabar de desenvolver sua pipeline, delete todas as versões da mesma pela UI do Prefect.
