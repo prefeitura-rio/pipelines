@@ -21,7 +21,7 @@ with Flow(
 ) as cor_meteorologia_precipitacao_alertario:
 
     DATASET_ID = "meio_ambiente_clima"
-    TABLE_ID = "precipitacao_alertario"
+    TABLE_ID = "taxa_precipitacao_alertario"
     DUMP_TYPE = "append"
 
     filename, current_time = download()

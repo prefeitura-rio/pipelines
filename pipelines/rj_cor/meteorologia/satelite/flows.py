@@ -29,7 +29,7 @@ with Flow(
     # Para taxa de precipitação
     VARIAVEL_RR = "RRQPEF"
     DATASET_ID_RR = "meio_ambiente_clima"
-    TABLE_ID_RR = "satelite_taxa_precipitacao"
+    TABLE_ID_RR = "taxa_precipitacao_satelite"
     DUMP_TYPE = "append"
 
     filename_rr = download(
@@ -51,7 +51,7 @@ with Flow(
     # Para quantidade de água precipitável
     VARIAVEL_TPW = "TPWF"
     DATASET_ID_TPW = "meio_ambiente_clima"
-    TABLE_ID_TPW = "satelite_quantidade_agua_precipitavel"
+    TABLE_ID_TPW = "volume_agua_precipitavel_satelite"
 
     filename_tpw = download(
         variavel=VARIAVEL_TPW, ano=ano, dia_juliano=dia_juliano, hora=hora
