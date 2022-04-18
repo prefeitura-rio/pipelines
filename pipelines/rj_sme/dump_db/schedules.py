@@ -27,6 +27,10 @@ sme_queries = {
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Dependencia",
     },
+    "movimentacao": {
+        "dump_type": "overwrite",
+        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Movimentacao",
+    },
     "avaliacao": {
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Avaliacao",
