@@ -2,8 +2,6 @@
 """
 Flows for precipitacao_alertario
 """
-from functools import partial
-
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants
@@ -17,14 +15,9 @@ from pipelines.rj_cor.meteorologia.precipitacao_alertario.schedules import (
 )
 from pipelines.utils.decorators import Flow
 from pipelines.utils.tasks import create_table_and_upload_to_gcs
-from pipelines.utils.utils import notify_discord_on_failure
 
 with Flow(
-    name="COR: Meteorologia - Precipitacao ALERTARIO",
-    on_failure=partial(
-        notify_discord_on_failure,
-        secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value,
-    ),
+    name="COR: Meteorologia - Precipitacao ALERTARIO"
 ) as cor_meteorologia_precipitacao_alertario:
 
     DATASET_ID = "meio_ambiente_clima"

@@ -2,8 +2,6 @@
 """
 Flows for meteorologia_inmet
 """
-from functools import partial
-
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
@@ -18,14 +16,9 @@ from pipelines.rj_cor.meteorologia.meteorologia_inmet.tasks import (
 from pipelines.rj_cor.meteorologia.meteorologia_inmet.schedules import hour_schedule
 from pipelines.utils.decorators import Flow
 from pipelines.utils.tasks import create_table_and_upload_to_gcs
-from pipelines.utils.utils import notify_discord_on_failure
 
 with Flow(
-    name="COR: Meteorologia - Meteorologia INMET",
-    on_failure=partial(
-        notify_discord_on_failure,
-        secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value,
-    ),
+    name="COR: Meteorologia - Meteorologia INMET"
 ) as cor_meteorologia_meteorologia_inmet:
 
     DATASET_ID = "meio_ambiente_clima"
