@@ -61,7 +61,7 @@ import requests
 
 from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.utils import create_or_append_table
-from pipelines.utils.utils import log
+from pipelines.utils.utils import log, get_vault_secret
 
 
 @task
@@ -170,7 +170,7 @@ def get_raw(url, headers=None):
         dict: "data" contains the response object from the request, "timestamp" contains
         the run time timestamp, "error" catches errors that may occur during task execution.
     """
-
+    headers = get_vault_secret("stpl_api")["data"]
     data = None
     error = None
     timestamp = pendulum.now(constants.TIMEZONE.value)

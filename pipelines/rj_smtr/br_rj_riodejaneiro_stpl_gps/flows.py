@@ -74,7 +74,6 @@ from pipelines.rj_smtr.tasks import (
 from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks import (
     pre_treatment_br_rj_riodejaneiro_stpl_gps,
 )
-from pipelines.utils.utils import get_vault_secret
 
 from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.schedules import every_minute
 
@@ -85,8 +84,6 @@ with Flow("Captura_GPS_STPL") as stpl_captura:
     url = Parameter("url")
     key_column = Parameter("key_column")
 
-    headers = get_vault_secret("stpl_api")["data"]
-
     file_dict = create_current_date_hour_partition()
 
     filepath = get_file_path_and_partitions(
@@ -96,7 +93,7 @@ with Flow("Captura_GPS_STPL") as stpl_captura:
         partitions=file_dict["partitions"],
     )
 
-    status_dict = get_raw(url=url, headers=headers)
+    status_dict = get_raw(url=url)
 
     raw_filepath = save_raw_local(data=status_dict["data"], file_path=filepath)
 
