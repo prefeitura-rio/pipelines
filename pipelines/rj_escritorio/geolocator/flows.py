@@ -59,7 +59,7 @@ Flows for geolocator
 #
 ###############################################################################
 
-
+import prefect
 from pipelines.constants import constants
 from pipelines.rj_escritorio.geolocator.constants import (
     constants as geolocator_constants,
@@ -76,6 +76,8 @@ from prefect import Flow
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
+today = prefect.context.get("today")
+
 with Flow("EMD: escritorio - Geolocalizacao de chamados 1746") as daily_geolocator_flow:
     # [enderecos_conhecidos, enderecos_ontem, chamados_ontem, base_enderecos_atual]
     lista_enderecos = importa_bases_e_chamados()
@@ -91,7 +93,7 @@ with Flow("EMD: escritorio - Geolocalizacao de chamados 1746") as daily_geolocat
         upstream_tasks=[base_geolocalizada],
     )
     upload_to_gcs(
-        path=geolocator_constants.PATH_BASE_ENDERECOS.value,
+        path=f"{geolocator_constants.PATH_BASE_ENDERECOS.value}_{today}.csv",
         dataset_id=geolocator_constants.DATASET_ID.value,
         table_id=geolocator_constants.TABLE_ID.value,
         upstream_tasks=[csv_criado],
