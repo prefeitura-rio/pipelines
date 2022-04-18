@@ -3,7 +3,7 @@ General purpose tasks for dumping database data.
 """
 from pathlib import Path
 from typing import Dict, Union
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import glob
 from prefect import task
@@ -34,7 +34,7 @@ DATABASE_MAPPING: Dict[str, Database] = {
 @task(
     checkpoint=False,
     max_retries=constants.TASK_MAX_RETRIES,
-    retry_delay=datetime.timedelta(seconds=constants.TASK_RETRY_DELAY),
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY),
 )
 def database_get(
     database_type: str,
@@ -72,7 +72,7 @@ def database_get(
 @task(
     checkpoint=False,
     max_retries=constants.constants.TASK_MAX_RETRIES,
-    retry_delay=datetime.timedelta(seconds=constants.TASK_RETRY_DELAY),
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY),
 )
 def database_execute(
     database: Database,
@@ -92,7 +92,7 @@ def database_execute(
 @task(
     checkpoint=False,
     max_retries=constants.constants.TASK_MAX_RETRIES,
-    retry_delay=datetime.timedelta(seconds=constants.TASK_RETRY_DELAY),
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY),
 )
 def database_fetch(
     database: Database,
@@ -123,7 +123,7 @@ def database_fetch(
 
 @task(
     max_retries=constants.constants.TASK_MAX_RETRIES,
-    retry_delay=datetime.timedelta(seconds=constants.TASK_RETRY_DELAY),
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY),
 )
 def dump_batches_to_csv(
     database: Database,
@@ -162,7 +162,7 @@ def dump_batches_to_csv(
 
 @task(
     max_retries=constants.constants.TASK_MAX_RETRIES,
-    retry_delay=datetime.timedelta(seconds=constants.TASK_RETRY_DELAY),
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY),
 )
 def dump_header_to_csv(
     header_path: Union[str, Path],
@@ -192,7 +192,7 @@ def dump_header_to_csv(
 ###############
 @task(
     max_retries=constants.constants.TASK_MAX_RETRIES,
-    retry_delay=datetime.timedelta(seconds=constants.TASK_RETRY_DELAY),
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY),
 )
 def upload_to_gcs(
     path: Union[str, Path],
@@ -227,7 +227,7 @@ def upload_to_gcs(
 
 @task(
     max_retries=constants.constants.TASK_MAX_RETRIES,
-    retry_delay=datetime.timedelta(seconds=constants.TASK_RETRY_DELAY),
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY),
 )
 def create_bd_table(
     path: Union[str, Path],

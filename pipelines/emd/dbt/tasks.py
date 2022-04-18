@@ -1,7 +1,7 @@
 """
 Tasks related to DBT flows.
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from dbt_client import DbtClient
 from prefect import task
@@ -15,7 +15,7 @@ from pipelines.constants import constants
 @task(
     checkpoint=False,
     max_retries=constants.TASK_MAX_RETRIES,
-    retry_delay=datetime.timedelta(seconds=constants.TASK_RETRY_DELAY),
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY),
 )
 def get_k8s_dbt_client(
     mode: str = "dev",
@@ -33,7 +33,7 @@ def get_k8s_dbt_client(
 @task(
     checkpoint=False,
     max_retries=constants.TASK_MAX_RETRIES,
-    retry_delay=datetime.timedelta(seconds=constants.TASK_RETRY_DELAY),
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY),
 )
 def run_dbt_model(
     dbt_client: DbtClient,
