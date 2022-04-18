@@ -22,8 +22,8 @@ def get_token_and_group_id(secret_path: str) -> Tuple[str, int]:
     """
     secret = get_vault_secret(secret_path, client=None)
     return (
-        secret["data"]["token"],
-        secret["data"]["group_id"],
+        secret["data"]["token"].strip(),
+        int(secret["data"]["group_id"].strip()),
     )
 
 
@@ -59,7 +59,7 @@ def format_message(dataframe: pd.DataFrame) -> List[str]:
     alert1, alert2, alert3, alert4 = "", "", "", ""
 
     for row in range(len(dataframe)):
-        identification = str(dataframe.iloc[row]["name"])[:4]
+        identification = str(dataframe.iloc[row]["name"])
         latlong = str(dataframe.iloc[row]["latlong"])
         address = str(dataframe.iloc[row]["description"])
         thumbs_up = str(dataframe.iloc[row]["sum_thumbs_up"])
@@ -132,9 +132,10 @@ def send_messages(
     """
     for alert in [alert1, alert2, alert3, alert4]:
         if alert != "":
-            send_telegram_message(token, group_id, alert)
+            send_telegram_message(message=alert, token=token, chat_id=group_id)
+
     url = (
         '<a href="https://datastudio.google.com/reporting/b2841cf6-dd1b-4700-b6a4-140495e93ff4">'
         + "MAPA GERAL</a>"
     )
-    send_telegram_message(token, group_id, url)
+    send_telegram_message(message=url, token=token, chat_id=group_id)
