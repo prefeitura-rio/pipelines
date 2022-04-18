@@ -7,6 +7,7 @@ from typing import Any
 import logging
 import prefect
 
+
 def log(msg: Any, level: str = 'info') -> None:
     """
     Logs a message to prefect's logger.
@@ -20,5 +21,4 @@ def log(msg: Any, level: str = 'info') -> None:
     }
     if level not in levels:
         raise ValueError(f"Invalid log level: {level}")
-    prefect.context.logger.log(levels[level], msg)
-
+    prefect.context.logger.log(levels[level], msg)  # pylint: disable=E1101

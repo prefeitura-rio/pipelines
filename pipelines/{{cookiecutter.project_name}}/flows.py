@@ -38,7 +38,7 @@ Flows for {{cookiecutter.project_name}}
 # from prefect import task
 # from prefect import Flow
 # from prefect.run_configs import KubernetesRun
-# from prefect.storage import Module
+# from prefect.storage import GCS
 # from pipelines.constants import constants
 # from my_tasks import my_task, another_task
 # from my_schedules import some_schedule
@@ -47,7 +47,7 @@ Flows for {{cookiecutter.project_name}}
 #     a = my_task(param1=1, param2=2)
 #     b = another_task(a, param3=3)
 #
-# flow.storage = Module("pipelines")
+# flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 # flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 # flow.schedule = some_schedule
 # -----------------------------------------------------------------------------
@@ -59,7 +59,7 @@ Flows for {{cookiecutter.project_name}}
 
 from prefect import Flow
 from prefect.run_configs import KubernetesRun
-from prefect.storage import Module
+from prefect.storage import GCS
 from pipelines.constants import constants
 from pipelines.{{cookiecutter.project_name}}.tasks import say_hello
 from pipelines.{{cookiecutter.project_name}}.schedules import every_two_weeks
@@ -67,6 +67,6 @@ from pipelines.{{cookiecutter.project_name}}.schedules import every_two_weeks
 with Flow("my_flow") as flow:
     say_hello()
 
-flow.storage = Module("pipelines.{{cookiecutter.project_name}}")
+flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 flow.schedule = every_two_weeks

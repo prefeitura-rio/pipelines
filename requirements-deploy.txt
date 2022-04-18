@@ -1,1 +1,2 @@
 prefect==0.15.7
+google-cloud-storage==1.42.1
