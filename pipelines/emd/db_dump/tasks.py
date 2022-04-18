@@ -3,6 +3,7 @@ General purpose tasks for dumping database data.
 """
 from pathlib import Path
 from typing import Dict, Union
+from datetime import datetime
 
 from prefect import task
 import basedosdados as bd
@@ -119,13 +120,14 @@ def dump_batches_to_csv(
 
     # Dump batches
     batch = database.fetch_batch(batch_size)
+    eventid = datetime.now().strftime('%Y%m%d-%H%M%S') 
     idx = 0
     while len(batch) > 0:
         log(f"Dumping batch {idx} with size {len(batch)}")
         # Convert to dataframe
         dataframe = batch_to_dataframe(batch, columns)
         # Write to CSV
-        dataframe_to_csv(dataframe, prepath / f"{idx}.csv")
+        dataframe_to_csv(dataframe, prepath / f"{eventid}-{idx}.csv")
         # Get next batch
         batch = database.fetch_batch(batch_size)
         idx += 1
@@ -169,13 +171,6 @@ def upload_to_gcs(path: Union[str, Path], dataset_id: str, table_id: str) -> Non
     st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
 
     if tb.table_exists(mode="staging"):
-        # Delete old data
-        st.delete_table(
-            mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
-        log(
-            f"Successfully deleted OLD DATA {st.bucket_name}.staging.{dataset_id}.{table_id}"
-        )
-
         # the name of the files need to be the same or the data doesn't get overwritten
         tb.append(
             filepath=path,
@@ -207,20 +202,21 @@ def create_bd_table(path: Union[str, Path], dataset_id: str, table_id: str, full
     ### full dump
     if full_dump == 'append':
         if tb.table_exists(mode="staging"):
-            log(f"Table table {st.bucket_name}.{dataset_id}.{table_id} already exists")
+            log(f"Mode append: Table {st.bucket_name}.{dataset_id}.{table_id} already exists")
         else:
             tb.create(
                 path=path,
                 location="southamerica-east1",
             )
-            log(f"Sucessfully created table {st.bucket_name}.{dataset_id}.{table_id}")
+            log(f"Mode append: Sucessfully created a new table {st.bucket_name}.{dataset_id}.{table_id}")
             
             st.delete_table(mode="staging", bucket_name=st.bucket_name,
                             not_found_ok=True)
             log(
-                f"Sucessfully remove table data from {st.bucket_name}.{dataset_id}.{table_id}")
+                f"Mode append: Sucessfully remove header data from {st.bucket_name}.{dataset_id}.{table_id}")
     elif full_dump == 'replace':
         if tb.table_exists(mode="staging"):
+            log(f"Mode replace: Table {st.bucket_name}.{dataset_id}.{table_id} already exists, DELETING OLD DATA!")
             st.delete_table(
                 mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
 
@@ -232,8 +228,8 @@ def create_bd_table(path: Union[str, Path], dataset_id: str, table_id: str, full
             location="southamerica-east1",
         )
 
-        log(f"Sucessfully created table {st.bucket_name}.{dataset_id}.{table_id}")
+        log(f"Mode replace: Sucessfully created table {st.bucket_name}.{dataset_id}.{table_id}")
         st.delete_table(mode="staging", bucket_name=st.bucket_name,
                         not_found_ok=True)
         log(
-            f"Sucessfully remove table data from {st.bucket_name}.{dataset_id}.{table_id}")
+            f"Mode replace: Sucessfully remove header data from {st.bucket_name}.{dataset_id}.{table_id}")
