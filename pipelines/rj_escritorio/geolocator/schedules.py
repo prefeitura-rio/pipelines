@@ -69,14 +69,15 @@ Schedules for geolocator
 ###############################################################################
 
 
-from prefect import task
 from datetime import timedelta
 import pendulum
+
 from prefect.schedules import Schedule
 from prefect.schedules.clocks import IntervalClock
+
 from pipelines.constants import constants
 
-every_day_at_for_pm = Schedule(
+every_day_at_four_am = Schedule(
     clocks=[
         IntervalClock(
             interval=timedelta(days=1),

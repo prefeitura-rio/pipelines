@@ -48,13 +48,19 @@ Tasks for geolocator
 #
 ###############################################################################
 
-from prefect import task
-import requests
-import basedosdados as bd
-import pandas as pd
+
 from datetime import datetime, timedelta
 import time
+
+import basedosdados as bd
+import pandas as pd
+from prefect import task, context
+import requests
+
 from pipelines.rj_escritorio.geolocator.utils import geolocator
+from pipelines.rj_escritorio.geolocator.constants import constants as geolocator_constants
+from pipelines.utils.utils import log
+
 
 #Importando os dados
 @task
@@ -69,10 +75,8 @@ def importa_bases_e_chamados() -> list:
     enderecos_conhecidos = base_enderecos_atual['endereco_completo']
 
 
-    d1 = datetime.now() - timedelta(1)
-    d2 = datetime.now()                                                                                                                                                                                    
-    d1 = datetime.strftime(d1, '%Y-%m-%d')
-    d2 = datetime.strftime(d2, '%Y-%m-%d')
+    d1 = context.today
+    d2 = context.yesterday
     query_2 = f'''
     with teste as (
     SELECT 
@@ -101,8 +105,8 @@ def enderecos_novos(lista_enderecos: list) -> pd.DataFrame:
     """
     Retorna apenas os endereços não catalogados que entraram no dia anterior
     """
-    enderecos_novos = lista_enderecos[1][~lista_enderecos[1].isin(lista_enderecos[0])]
-    base_enderecos_novos = lista_enderecos[2][lista_enderecos[2]['endereco_completo'].isin(enderecos_novos)]
+    novos_enderecos = lista_enderecos[1][~lista_enderecos[1].isin(lista_enderecos[0])]
+    base_enderecos_novos = lista_enderecos[2][lista_enderecos[2]['endereco_completo'].isin(novos_enderecos)]
     return base_enderecos_novos
 
 #Geolocalizando
@@ -115,7 +119,7 @@ def geolocaliza_enderecos(base_enderecos_novos: pd.DataFrame):
 
     coordenadas = base_enderecos_novos['endereco_completo'].apply(lambda x : pd.Series(geolocator(x), index=['lat', 'long']))
 
-    print("--- %s seconds ---" % (time.time() - start_time))
+    log("--- %s seconds ---" % (time.time() - start_time))
 
     base_enderecos_novos['latitude'] = coordenadas['lat']
     base_enderecos_novos['longitude'] = coordenadas['long']
@@ -129,4 +133,4 @@ def cria_csv(base_enderecos_atual, base_enderecos_novos):
     Une os endereços previamente catalogados com os novos e cria um csv.
     """
     base_enderecos_atualizada = base_enderecos_atual.append(base_enderecos_novos, ignore_index=True)
-    base_enderecos_atualizada.to_csv("D:\\Bruno Almeida\\Escritorio de Dados\\sandbox\\seconserva-buracos\\data\\base_enderecos.csv", index=False)
+    base_enderecos_atualizada.to_csv(geolocator_constants.PATH_BASE_ENDERECOS.value, index=False)
