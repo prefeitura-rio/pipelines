@@ -80,35 +80,3 @@ def salvar_parquet(info: dict) -> Union[str, Path]:
     print(f'Saving {variable} in parquet')
     filename = save_parquet(variable, datetime_save)
     return filename
-
-@task
-def upload_to_gcs(path: Union[str, Path], dataset_id: str, table_id: str) -> None:
-    """
-    Uploads a bunch of CSVs using BD+
-    """
-    table = bd.Table(dataset_id=dataset_id, table_id=table_id)
-    _ = bd.Storage(dataset_id=dataset_id, table_id=table_id)
-
-    if table.table_exists(mode="staging"):
-        # Delete old data
-        # st.delete_table(
-        #     mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
-        # log(
-        #     f"Successfully deleted OLD DATA {st.bucket_name}.staging.{dataset_id}.{table_id}"
-        # )
-
-        # the name of the files need to be the same or the data doesn't get overwritten
-        table.append(
-            filepath=path,
-            if_exists="replace",
-        )
-
-        log(
-            f"Successfully uploaded {path} to {table.bucket_name}.staging.{dataset_id}.{table_id}"
-        )
-
-    else:
-        log(
-            "Table does not exist in STAGING, need to create it in local first.\nCreate\
-                 and publish the table in BigQuery first."
-        )

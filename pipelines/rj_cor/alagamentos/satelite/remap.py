@@ -7,21 +7,6 @@ import netCDF4 as nc
 import numpy as np
 from osgeo import osr, gdal  # pylint: disable=E0401
 
-# Define KM_PER_DEGREE
-KM_PER_DEGREE = 111.32
-
-# GOES-16 Spatial Reference System
-sourcePrj = osr.SpatialReference()
-# sourcePrj.ImportFromProj4('+proj=geos +h=35786023.0 +a=6378137.0\
-# +b=6356752.31414 +f=0.00335281068119356027489803406172 +lat_0=0.0\
-# +lon_0=-75 +sweep=x +no_defs')
-sourcePrj.ImportFromProj4(
-    '+proj=geos +h=35786000 +a=6378140 +b=6356750 +lon_0=-75 +sweep=x')
-
-# Lat/lon WSG84 Spatial Reference System
-targetPrj = osr.SpatialReference()
-#targetPrj.ImportFromProj4('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
-targetPrj.ImportFromProj4('+proj=latlong +datum=WGS84')
 
 
 def export_image(image, path):
@@ -66,6 +51,22 @@ def remap(path, variable, extent, resolution, goes16_extent):
     scale = 1
     offset = 0
 
+    # Define KM_PER_DEGREE
+    KM_PER_DEGREE = 111.32
+
+    # GOES-16 Spatial Reference System
+    sourcePrj = osr.SpatialReference()
+    # sourcePrj.ImportFromProj4('+proj=geos +h=35786023.0 +a=6378137.0\
+    # +b=6356752.31414 +f=0.00335281068119356027489803406172 +lat_0=0.0\
+    # +lon_0=-75 +sweep=x +no_defs')
+    sourcePrj.ImportFromProj4(
+        '+proj=geos +h=35786000 +a=6378140 +b=6356750 +lon_0=-75 +sweep=x')
+
+    # Lat/lon WSG84 Spatial Reference System
+    targetPrj = osr.SpatialReference()
+    #targetPrj.ImportFromProj4('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
+    targetPrj.ImportFromProj4('+proj=latlong +datum=WGS84')
+
     # GOES-16 Extent (satellite projection) [llx, lly, urx, ury]
     #goes16_extent = [x_1, y_1, x_2, y_2]
 
@@ -86,7 +87,6 @@ def remap(path, variable, extent, resolution, goes16_extent):
     raw.SetGeoTransform(
         get_geot(goes16_extent, raw.RasterYSize, raw.RasterXSize))
 
-    #print (KM_PER_DEGREE)
     # Compute grid dimension
     sizex = int(((extent[2] - extent[0]) * KM_PER_DEGREE) / resolution)
     sizey = int(((extent[3] - extent[1]) * KM_PER_DEGREE) / resolution)
