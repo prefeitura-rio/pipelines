@@ -9,12 +9,12 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import Module
 
 from emd_flows.constants import constants
-from emd_flows.schedules import (
+from emd_flows.flows.emd.schedules import (
     minute_schedule,
     five_minute_schedule,
     fifteen_minute_schedule,
 )
-from emd_flows.tasks import (
+from emd_flows.flows.emd.tasks import (
     get_random_api,
     fetch_from_api,
     csv_to_dataframe,
