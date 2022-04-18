@@ -87,7 +87,7 @@ sme_queries = {
         "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_type": "append",
-        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Movimentacao",
+        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Movimentacao_lgpd",
     },
     "turma": {
         "dump_type": "overwrite",
