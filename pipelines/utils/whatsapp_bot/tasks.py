@@ -55,10 +55,9 @@ def send_whatsapp_message(bot_api_url: str, chat_id: str, message: str):
     except requests.exceptions.HTTPError as exc:
         if response.status_code == 404:
             raise WhatsAppBotNotFoundError("Whatsapp Bot not found.") from exc
-        else:
-            raise WhatsAppSendMessageError(
-                "Error sending message to Whatsapp Bot."
-            ) from exc
+        raise WhatsAppSendMessageError(
+            "Error sending message to Whatsapp Bot."
+        ) from exc
     except requests.exceptions.RequestException as exc:
         raise WhatsAppSendMessageError(
             "Error sending message to Whatsapp Bot."
