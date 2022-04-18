@@ -99,14 +99,6 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
     #
     #####################################
 
-    
-    # Execute query
-    # wait_db_execute = database_execute(  # pylint: disable=invalid-name
-    #     database=db_object,
-    #     query=query,
-    #     wait=wait_create_db,
-    # )
-
     # Dump batches to CSV files
     path = dump_batches_to_csv(
         database=db_object,

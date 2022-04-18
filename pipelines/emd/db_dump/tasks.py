@@ -198,7 +198,7 @@ def create_bd_table(
     path: Union[str, Path], 
     dataset_id: str, 
     table_id: str, 
-    full_dump:str, 
+    dump_type:str, 
     wait=None,  # pylint: disable=unused-argument
 ) -> None:
     """
@@ -211,7 +211,7 @@ def create_bd_table(
     st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
 
     ### full dump
-    if full_dump == 'append':
+    if dump_type == 'append':
         if tb.table_exists(mode="staging"):
             log(f"Mode append: Table {st.bucket_name}.{dataset_id}.{table_id} already exists")
         else:
@@ -225,7 +225,7 @@ def create_bd_table(
                             not_found_ok=True)
             log(
                 f"Mode append: Sucessfully remove header data from {st.bucket_name}.{dataset_id}.{table_id}")
-    elif full_dump == 'replace':
+    elif dump_type == 'replace':
         if tb.table_exists(mode="staging"):
             log(f"Mode replace: Table {st.bucket_name}.{dataset_id}.{table_id} already exists, DELETING OLD DATA!")
             st.delete_table(
