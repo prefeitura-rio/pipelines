@@ -52,7 +52,7 @@ sme_queries = {
                 capacidade AS capacidade,
                 tur_id AS tur_id,
                 pft_capacidade AS pft_capacidade
-            FROM GestaoEscolar.dbo.VW_BI_Aluno_Turma_COC0
+            FROM GestaoEscolar.dbo.VW_BI_Aluno_Turma_com_COC0
         """,
     },
     "frequencia": {
