@@ -12,11 +12,11 @@ import hvac
 import numpy as np
 import pandas as pd
 import prefect
+import requests
+import telegram
 from prefect.client import Client
 from prefect.engine.state import State
 from prefect.run_configs import KubernetesRun
-import requests
-import telegram
 
 
 def log(msg: Any, level: str = "info") -> None:
@@ -36,9 +36,7 @@ def log(msg: Any, level: str = "info") -> None:
 
 
 @prefect.task(checkpoint=False)
-def log_task(
-    msg: Any, level: str = "info", wait=None  # pylint: disable=unused-argument
-):
+def log_task(msg: Any, level: str = "info", wait=None):  # pylint: disable=unused-argument
     """
     Logs a message to prefect's logger.
     """
@@ -111,7 +109,7 @@ def run_local(flow: prefect.Flow, parameters: Dict[str, Any] = None):
     # Run flow
     if parameters:
         return flow.run(parameters=parameters)
-    return flow.run(show_flow_logs=True)
+    return flow.run()
 
 
 def run_cloud(
@@ -167,21 +165,21 @@ def send_discord_message(
     )
 
 
-def send_telegram_message(
-    message: str,
-    token: str,
-    chat_id: int,
-    parse_mode: str = telegram.ParseMode.HTML,
-):
-    """
-    Sends a message to a Telegram chat.
-    """
-    bot = telegram.Bot(token=token)
-    bot.send_message(
-        chat_id=chat_id,
-        text=message,
-        parse_mode=parse_mode,
-    )
+# def send_telegram_message(
+#     message: str,
+#     token: str,
+#     chat_id: int,
+#     parse_mode: str = telegram.ParseMode.HTML,
+# ):
+#     """
+#     Sends a message to a Telegram chat.
+#     """
+#     bot = telegram.Bot(token=token)
+#     bot.send_message(
+#         chat_id=chat_id,
+#         text=message,
+#         parse_mode=parse_mode,
+#     )
 
 
 def smart_split(
@@ -308,15 +306,12 @@ def to_partitions(data: pd.DataFrame, partition_columns: List[str], savepath: st
 
         for filter_combination in unique_combinations:
             patitions_values = [
-                f"{partition}={value}"
-                for partition, value in filter_combination.items()
+                f"{partition}={value}" for partition, value in filter_combination.items()
             ]
 
             # get filtered data
             df_filter = data.loc[
-                data[filter_combination.keys()]
-                .isin(filter_combination.values())
-                .all(axis=1),
+                data[filter_combination.keys()].isin(filter_combination.values()).all(axis=1),
                 :,
             ]
             df_filter = df_filter.drop(columns=partition_columns)

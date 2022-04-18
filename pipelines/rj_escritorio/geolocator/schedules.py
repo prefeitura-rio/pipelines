@@ -70,22 +70,20 @@ Schedules for geolocator
 
 
 from datetime import timedelta
-import pendulum
 
+import pendulum
+from pipelines.constants import constants
 from prefect.schedules import Schedule
 from prefect.schedules.clocks import IntervalClock
-
-from pipelines.constants import constants
 
 every_day_at_four_am = Schedule(
     clocks=[
         IntervalClock(
             interval=timedelta(days=1),
-            start_date=pendulum.datetime(
-                2021, 1, 1, 4, 0, 0, tz="America/Sao_Paulo"),
+            start_date=pendulum.datetime(2021, 1, 1, 4, 0, 0, tz="America/Sao_Paulo"),
             labels=[
                 constants.K8S_AGENT_LABEL.value,
-            ]
+            ],
         )
     ]
 )

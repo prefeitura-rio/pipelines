@@ -53,29 +53,32 @@ import time
 
 import basedosdados as bd
 import pandas as pd
-from prefect import task, context
-
+import prefect
+from pipelines.rj_escritorio.geolocator.constants import (
+    constants as geolocator_constants,
+)
 from pipelines.rj_escritorio.geolocator.utils import geolocator
-from pipelines.rj_escritorio.geolocator.constants import constants as geolocator_constants
 from pipelines.utils.utils import log
+from prefect import task
 
 
-#Importando os dados
+# Importando os dados
 @task
 def importa_bases_e_chamados() -> list:
     """
     Importa a base de endereços completa e os endereços dos chamados que entraram no dia anterior.
     """
-    query = '''
+    query = """
     SELECT * FROM `rj-escritorio-dev.seconserva_buracos.habitacao_urbana_enderecos_geolocalizados`
-    '''
-    base_enderecos_atual = bd.read_sql(query, billing_project_id="rj-escritorio-dev", from_file=True)
-    enderecos_conhecidos = base_enderecos_atual['endereco_completo']
+    """
+    base_enderecos_atual = bd.read_sql(
+        query, billing_project_id="rj-escritorio-dev", from_file=True
+    )
+    enderecos_conhecidos = base_enderecos_atual["endereco_completo"]
 
-
-    d1 = context.get("today")
-    d2 = context.get("yesterday")
-    query_2 = f'''
+    d1 = prefect.context.get("yesterday")
+    d2 = prefect.context.get("today")
+    query_2 = f"""
     with teste as (
     SELECT 
     'Brasil' pais,
@@ -91,40 +94,49 @@ def importa_bases_e_chamados() -> list:
         ORDER BY id_chamado ASC
     )
     select distinct endereco_completo, pais, estado, municipio, bairro, logradouro, numero_porta from teste
-    '''
+    """
     chamados_ontem = bd.read_sql(query_2, billing_project_id="rj-escritorio-dev", from_file=True)
-    enderecos_ontem = chamados_ontem['endereco_completo']
+    enderecos_ontem = chamados_ontem["endereco_completo"]
 
     return [enderecos_conhecidos, enderecos_ontem, chamados_ontem, base_enderecos_atual]
 
-#Pegando apenas os endereços NOVOS que entraram ontem
+
+# Pegando apenas os endereços NOVOS que entraram ontem
 @task
 def enderecos_novos(lista_enderecos: list) -> pd.DataFrame:
     """
     Retorna apenas os endereços não catalogados que entraram no dia anterior
     """
     novos_enderecos = lista_enderecos[1][~lista_enderecos[1].isin(lista_enderecos[0])]
-    base_enderecos_novos = lista_enderecos[2][lista_enderecos[2]['endereco_completo'].isin(novos_enderecos)]
+    base_enderecos_novos = lista_enderecos[2][
+        lista_enderecos[2]["endereco_completo"].isin(novos_enderecos)
+    ]
+    # for i in range(0, 4):
+    #     log(i)
+    #     log(lista_enderecos[i].head(5))
     return base_enderecos_novos
 
-#Geolocalizando
+
+# Geolocalizando
 @task
-def geolocaliza_enderecos(base_enderecos_novos: pd.DataFrame):
+def geolocaliza_enderecos(base_enderecos_novos: pd.DataFrame) -> pd.DataFrame:
     """
     Geolocaliza todos os novos endereços que entraram no dia anterior.
     """
     start_time = time.time()
-
-    coordenadas = base_enderecos_novos['endereco_completo'].apply(lambda x : pd.Series(geolocator(x), index=['lat', 'long']))
+    coordenadas = base_enderecos_novos["endereco_completo"].apply(
+        lambda x: pd.Series(geolocator(x), index=["lat", "long"])
+    )
 
     log("--- %s seconds ---" % (time.time() - start_time))
 
-    base_enderecos_novos['latitude'] = coordenadas['lat']
-    base_enderecos_novos['longitude'] = coordenadas['long']
+    base_enderecos_novos["latitude"] = coordenadas["lat"]
+    base_enderecos_novos["longitude"] = coordenadas["long"]
 
     return base_enderecos_novos
 
-#Adicionando os endereços novos geolocalizados na base de endereços que já possuímos
+
+# Adicionando os endereços novos geolocalizados na base de endereços que já possuímos
 @task
 def cria_csv(base_enderecos_atual, base_enderecos_novos):
     """
