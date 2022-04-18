@@ -168,21 +168,21 @@ def send_discord_message(
     )
 
 
-# def send_telegram_message(
-#     message: str,
-#     token: str,
-#     chat_id: int,
-#     parse_mode: str = telegram.ParseMode.HTML,
-# ):
-#     """
-#     Sends a message to a Telegram chat.
-#     """
-#     bot = telegram.Bot(token=token)
-#     bot.send_message(
-#         chat_id=chat_id,
-#         text=message,
-#         parse_mode=parse_mode,
-#     )
+def send_telegram_message(
+    message: str,
+    token: str,
+    chat_id: int,
+    parse_mode: str = telegram.ParseMode.HTML,
+):
+    """
+    Sends a message to a Telegram chat.
+    """
+    bot = telegram.Bot(token=token)
+    bot.send_message(
+        chat_id=chat_id,
+        text=message,
+        parse_mode=parse_mode,
+    )
 
 
 def smart_split(

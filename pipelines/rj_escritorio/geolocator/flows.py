@@ -76,7 +76,7 @@ from prefect import Flow
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
-with Flow("my_flow") as flow:
+with Flow("EMD: escritorio - Geolocalizacao de chamados 1746") as daily_geolocator_flow:
     # [enderecos_conhecidos, enderecos_ontem, chamados_ontem, base_enderecos_atual]
     lista_enderecos = importa_bases_e_chamados()
     novos_enderecos = enderecos_novos(
@@ -97,6 +97,6 @@ with Flow("my_flow") as flow:
         upstream_tasks=[csv_criado],
     )
 
-flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+daily_geolocator_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+daily_geolocator_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 # flow.schedule = every_day_at_four_am
