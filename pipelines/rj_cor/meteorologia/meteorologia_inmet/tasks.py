@@ -19,27 +19,33 @@ from pipelines.constants import constants
 
 
 @task(nout=2)
-def slice_data(current_time: str) -> Tuple[str, str]:
+def get_dates() -> Tuple[str, str]:
+    """
+    Task para obter o dia atual e o anterior
+    """
+    # segundo o manual do inmet o dado vem em UTC
+    current_time = pendulum.now("UTC").format("YYYY-MM-DD")
+    yesterday = pendulum.yesterday("UTC").format("YYYY-MM-DD")
+    return current_time, yesterday
+
+
+@task()
+def slice_data(current_time: str) -> str:
     """
     Retorna a data e hora do timestamp de execução
     """
     if not isinstance(current_time, str):
         current_time = current_time.to_datetime_string()
 
-    current_time = (
-        current_time or pendulum.now("America/Sao_Paulo").to_datetime_string()
-    )
-
     data = current_time[:10]
-    hora = current_time[11:13]
-    return data, hora
+    return data
 
 
 @task(
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def download(data: str) -> pd.DataFrame:
+def download(data: str, yesterday: str) -> pd.DataFrame:
     """
     Faz o request na data especificada e retorna dados
     """
@@ -57,10 +63,13 @@ def download(data: str) -> pd.DataFrame:
         "A656",
     ]
 
-    # Faz o request do dia atual e salva na variável raw
+    # Faz o request do dia atual e anterior e salva na variável raw
+    # Trazer desde o dia anterior evita problemas quando já é outro dia
+    # no UTC, visto que ele só traria dados do novo dia e substituiria
+    # no arquivo da partição do dia atual no nosso timezone
     raw = []
     for id_estacao in estacoes_unicas:
-        url = f"https://apitempo.inmet.gov.br/estacao/{data}/{data}/{id_estacao}"
+        url = f"https://apitempo.inmet.gov.br/estacao/{yesterday}/{data}/{id_estacao}"
         res = requests.get(url)
         if res.status_code != 200:
             print(
@@ -85,7 +94,7 @@ def download(data: str) -> pd.DataFrame:
 
 
 @task(nout=2)
-def tratar_dados(dados: pd.DataFrame, hora: str) -> Tuple[pd.DataFrame, str]:
+def tratar_dados(dados: pd.DataFrame) -> Tuple[pd.DataFrame, str]:
     """
     Renomeia colunas e filtra dados com a hora do timestamp de execução
     """
@@ -137,9 +146,6 @@ def tratar_dados(dados: pd.DataFrame, hora: str) -> Tuple[pd.DataFrame, str]:
 
     dados = dados.rename(columns=rename_cols)
 
-    # Seleciona apenas dados daquela hora
-    dados = dados[dados["horario"] == str(hora) + "00"]
-
     # Converte coluna de horas de 2300 para 23:00:00
     dados["horario"] = pd.to_datetime(dados.horario, format="%H%M")
     dados["horario"] = dados.horario.apply(lambda x: datetime.strftime(x, "%H:%M:%S"))
@@ -185,13 +191,20 @@ def tratar_dados(dados: pd.DataFrame, hora: str) -> Tuple[pd.DataFrame, str]:
     mes = str(int(max_date[5:7]))
     dia = str(int(max_date[8:10]))
 
+    # Seleciona apenas dados daquele dia (devido à UTC)
+    dados = dados[dados["data"] == max_date]
+
+    # Remove linhas com todos os dados nan
+    dados = dados.dropna(subset=float_cols, how='all')
+
     partitions = f"ano={ano}/mes={mes}/dia={dia}"
     print(">>> partitions", partitions)
+    print(">>>> max hora ", dados[~dados.temperatura.isna()].horario.max())
     return dados, partitions
 
 
 @task
-def salvar_dados(dados: pd.DataFrame, partitions: str) -> Union[str, Path]:
+def salvar_dados(dados: pd.DataFrame, partitions: str, data: str) -> Union[str, Path]:
     """
     Salvar dados em csv
     """
@@ -200,8 +213,7 @@ def salvar_dados(dados: pd.DataFrame, partitions: str) -> Union[str, Path]:
     if not os.path.exists(base_path):
         os.makedirs(base_path)
 
-    now = pendulum.now().to_datetime_string().replace(":", "")
-    filename = str(base_path / f"dados_{now}.csv")
+    filename = str(base_path / f"dados_{data}.csv")
 
     print(f"Saving {filename}")
     # dados.to_csv(filename, index=False)
