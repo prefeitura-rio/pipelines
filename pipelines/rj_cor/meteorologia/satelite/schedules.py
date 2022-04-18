@@ -14,7 +14,7 @@ hour_schedule = Schedule(
             start_date=datetime(2021, 1, 1, 0, 15, 0),
             labels=[
                 constants.K8S_AGENT_LABEL.value,
-            ]
+            ],
         ),
     ]
 )
