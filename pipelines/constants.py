@@ -24,4 +24,4 @@ class constants(Enum):  # pylint: disable=c0103
     ######################################
     # Prefect
     K8S_AGENT_LABEL = "kubernetes"
-    GCS_FLOWS_BUCKET = "escritorio-temp-public"
+    GCS_FLOWS_BUCKET = "datario-public"
