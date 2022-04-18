@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 General utilities for all pipelines.
 """
@@ -257,7 +258,14 @@ def clean_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
                     .replace("None", np.nan, regex=True)
                 )
             except Exception as exc:
-                print("Column: ", col, "\nData: ", dataframe[col].tolist(), "\n", exc)
+                print(
+                    "Column: ",
+                    col,
+                    "\nData: ",
+                    dataframe[col].tolist(),
+                    "\n",
+                    exc,
+                )
                 raise
     return dataframe
 

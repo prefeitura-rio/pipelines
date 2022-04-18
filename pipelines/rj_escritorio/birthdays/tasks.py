@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Tasks for the daily birthday flow.
 """

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Helper tasks that could fit any pipeline.
 """
@@ -127,19 +128,22 @@ def create_bd_table(
                 dataset_is_public=dataset_is_public,
             )
             log(
-                f"Mode append: Sucessfully created a new table {st.bucket_name}.{dataset_id}.{table_id}"
+                "Mode append: Sucessfully created a new table "
+                f"{st.bucket_name}.{dataset_id}.{table_id}"
             )  # pylint: disable=C0301
 
             st.delete_table(
                 mode="staging", bucket_name=st.bucket_name, not_found_ok=True
             )
             log(
-                f"Mode append: Sucessfully remove header data from {st.bucket_name}.{dataset_id}.{table_id}"
+                "Mode append: Sucessfully remove header data from "
+                f"{st.bucket_name}.{dataset_id}.{table_id}"
             )  # pylint: disable=C0301
     elif dump_type == "overwrite":
         if tb.table_exists(mode="staging"):
             log(
-                f"Mode overwrite: Table {st.bucket_name}.{dataset_id}.{table_id} already exists, DELETING OLD DATA!"
+                f"Mode overwrite: Table {st.bucket_name}.{dataset_id}.{table_id} "
+                "already exists, DELETING OLD DATA!"
             )  # pylint: disable=C0301
             st.delete_table(
                 mode="staging", bucket_name=st.bucket_name, not_found_ok=True
@@ -159,7 +163,8 @@ def create_bd_table(
         )
         st.delete_table(mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
         log(
-            f"Mode overwrite: Sucessfully remove header data from {st.bucket_name}.{dataset_id}.{table_id}"
+            f"Mode overwrite: Sucessfully remove header data from "
+            f"{st.bucket_name}.{dataset_id}.{table_id}"
         )  # pylint: disable=C0301
 
 
@@ -171,6 +176,7 @@ def upload_to_gcs(
     path: Union[str, Path],
     dataset_id: str,
     table_id: str,
+    partitions=None,
     wait=None,  # pylint: disable=unused-argument
 ) -> None:
     """
@@ -182,10 +188,7 @@ def upload_to_gcs(
 
     if tb.table_exists(mode="staging"):
         # the name of the files need to be the same or the data doesn't get overwritten
-        tb.append(
-            filepath=path,
-            if_exists="replace",
-        )
+        tb.append(filepath=path, if_exists="replace", partitions=partitions)
 
         log(
             f"Successfully uploaded {path} to {tb.bucket_name}.staging.{dataset_id}.{table_id}"
@@ -194,5 +197,23 @@ def upload_to_gcs(
     else:
         # pylint: disable=C0301
         log(
-            "Table does not exist in STAGING, need to create it in local first.\nCreate and publish the table in BigQuery first."
+            "Table does not exist in STAGING, need to create it in local first.\n"
+            "Create and publish the table in BigQuery first."
         )
+
+
+@task(
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def check_table_exists(
+    dataset_id: str,
+    table_id: str,
+    wait=None,  # pylint: disable=unused-argument
+) -> bool:
+    """
+    Check if table exists in staging on GCP
+    """
+    # pylint: disable=C0103
+    tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
+    return tb.table_exists(mode="staging")

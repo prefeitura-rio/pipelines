@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Constants for all flows
 """
@@ -22,15 +23,21 @@ class constants(Enum):  # pylint: disable=c0103
 
     RJ_DATARIO_AGENT_LABEL = "datario"
     RJ_DATARIO_DEV_AGENT_LABEL = "datario-dev"
+
     RJ_ESCRITORIO_AGENT_LABEL = "rj-escritorio"
     RJ_ESCRITORIO_DEV_AGENT_LABEL = "rj-escritorio-dev"
+
     RJ_SMTR_AGENT_LABEL = "rj-smtr"
     RJ_SMTR_DEV_AGENT_LABEL = "rj-smtr-dev"
 
     RJ_SME_AGENT_LABEL = "rj-sme"
+
     RJ_SEGOVI_AGENT_LABEL = "rj-segovi"
+
     RJ_COR_AGENT_LABEL = "rj-cor"
+
     RJ_SMFP_AGENT_LABEL = "rj-smfp"
+
     RJ_SECONSERVA_AGENT_LABEL = "rj-seconserva"
 
     ######################################

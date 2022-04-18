@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Database dumping flows
 """
@@ -40,7 +41,8 @@ with Flow(
     # BigQuery parameters
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
-    dump_type = Parameter("dump_type", default="overwrite")  # overwrite or append
+    # overwrite or append
+    dump_type = Parameter("dump_type", default="overwrite")
 
     #####################################
     #

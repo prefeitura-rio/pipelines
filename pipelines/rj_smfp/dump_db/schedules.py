@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Schedules for the database dump pipeline
 """
@@ -41,7 +42,8 @@ ergon_queries = {
         "dump_type": "append",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FITA_BANCO",
     },
-    # TODO check if administracao_recursos_humanos_folha_salarial.folha_empresa works in bq and storage
+    # TODO check if administracao_recursos_humanos_folha_salarial.folha_empresa
+    # works in bq and storage
     "folha_empresa": {
         "partition_column": "MES_ANO",
         "dump_type": "append",

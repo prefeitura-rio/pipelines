@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Tasks for cor
 """
@@ -105,8 +106,7 @@ def send_messages(token: str, group_id: str, messages: List[str]) -> None:
     """
     for message in messages:
         if message != "":
-            send_telegram_message(
-                message=message, token=token, chat_id=group_id)
+            send_telegram_message(message=message, token=token, chat_id=group_id)
 
     url = (
         '<a href="https://datastudio.google.com/reporting/b2841cf6-dd1b-4700-b6a4-140495e93ff4">'

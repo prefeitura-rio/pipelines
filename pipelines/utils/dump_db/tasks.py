@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 General purpose tasks for dumping database data.
 """
@@ -172,7 +173,8 @@ def format_partitioned_query(
     aux_name = f"a{uuid4().hex}"
 
     log(
-        f"Partitioned DETECTED: {partition_column}, retuning a NEW QUERY with partitioned columns and filters"
+        f"Partitioned DETECTED: {partition_column}, retuning a NEW QUERY "
+        "with partitioned columns and filters"
     )
 
     return f"""

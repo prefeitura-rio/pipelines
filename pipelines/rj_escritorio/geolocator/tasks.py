@@ -128,7 +128,7 @@ def geolocaliza_enderecos(base_enderecos_novos: pd.DataFrame) -> pd.DataFrame:
         lambda x: pd.Series(geolocator(x), index=["lat", "long"])
     )
 
-    log("--- %s seconds ---" % (time.time() - start_time))
+    log(f"--- {(time.time() - start_time)} seconds ---")
 
     base_enderecos_novos["latitude"] = coordenadas["lat"]
     base_enderecos_novos["longitude"] = coordenadas["long"]

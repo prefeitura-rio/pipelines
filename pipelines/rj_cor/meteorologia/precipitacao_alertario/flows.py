@@ -1,21 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-Flows for meteorologia_inmet
+Flows for precipitacao_alertario
 """
-import pendulum
-
 from prefect import Flow, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants
-from pipelines.rj_cor.meteorologia.meteorologia_inmet.tasks import (
-    slice_data,
+from pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks import (
     download,
     tratar_dados,
     salvar_dados,
 )
-from pipelines.rj_cor.meteorologia.meteorologia_inmet.schedules import (
-    hour_schedule)
+from pipelines.rj_cor.meteorologia.precipitacao_alertario.schedules import (
+    minute_schedule,
+)
 from pipelines.utils.tasks import (
     check_table_exists,
     create_bd_table,
@@ -24,27 +22,24 @@ from pipelines.utils.tasks import (
 )
 
 with Flow(
-    "COR: Meteorologia - Meteorologia INMET"
-        ) as cor_meteorologia_meteorologia_inmet:
-    CURRENT_TIME = pendulum.now("UTC")  # segundo o manual é UTC
+    "COR: Meteorologia - Precipitacao ALERTARIO"
+        ) as cor_meteorologia_precipitacao_alertario:
 
     DATASET_ID = "meio_ambiente_clima"
-    TABLE_ID = "meteorologia_inmet"
+    TABLE_ID = "precipitacao_alertario"
     DUMP_TYPE = "append"
 
-    data, hora = slice_data(current_time=CURRENT_TIME)
-
-    dados = download(data=data)
-    dados = tratar_dados(dados=dados, hora=hora)
-    path = salvar_dados(dados=dados)
+    filename, current_time = download()
+    dados = tratar_dados(filename=filename)
+    path, partitions = salvar_dados(dados=dados, current_time=current_time)
 
     # Check if table exists
-    EXISTS = check_table_exists(dataset_id=DATASET_ID, table_id=TABLE_ID, wait=path)
+    EXISTS = check_table_exists(dataset_id=DATASET_ID, table_id=TABLE_ID)
 
     # Create header and table if they don't exists
     with case(EXISTS, False):
         # Create CSV file with headers
-        header_path = dump_header_to_csv(data_path=path, wait=EXISTS)
+        header_path = dump_header_to_csv(data_path=path)
 
         # Create table in BigQuery
         create_db = create_bd_table(  # pylint: disable=invalid-name
@@ -59,16 +54,22 @@ with Flow(
             path=path,
             dataset_id=DATASET_ID,
             table_id=TABLE_ID,
+            partitions=partitions,
             wait=create_db,
         )
 
     with case(EXISTS, True):
         # Upload to GCS
-        upload_to_gcs(path=path, dataset_id=DATASET_ID, table_id=TABLE_ID, wait=EXISTS)
+        upload_to_gcs(
+            path=path,
+            dataset_id=DATASET_ID,
+            table_id=TABLE_ID,
+            partitions=partitions,
+        )
 
 # para rodar na cloud
-cor_meteorologia_meteorologia_inmet.storage = GCS(
+cor_meteorologia_precipitacao_alertario.storage = GCS(
     constants.GCS_FLOWS_BUCKET.value)
-cor_meteorologia_meteorologia_inmet.run_config = KubernetesRun(
+cor_meteorologia_precipitacao_alertario.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value)
-cor_meteorologia_meteorologia_inmet.schedule = hour_schedule
+cor_meteorologia_precipitacao_alertario.schedule = minute_schedule
