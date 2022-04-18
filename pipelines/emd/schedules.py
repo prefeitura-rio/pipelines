@@ -85,3 +85,18 @@ every_two_weeks = Schedule(
         ),
     ]
 )
+
+task_with_param_schedule = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(hours=1),
+            start_date=datetime(2021, 1, 1),
+            labels=[
+                constants.K8S_AGENT_LABEL.value,
+            ],
+            parameter_defaults={
+                "param": "value"
+            }
+        ),
+    ]
+)
