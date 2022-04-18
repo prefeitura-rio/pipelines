@@ -8,6 +8,7 @@ from typing import List, Tuple, Union
 import pandas as pd
 from prefect import task
 import pymssql
+import basedosdados as bd
 
 ###############
 #
@@ -21,7 +22,9 @@ def sql_server_get_connection(server: str, user: str, password: str, database: s
     """
     Returns a connection to the SQL Server.
     """
-    return pymssql.connect(server=server, user=user, password=password, database=database)
+    return pymssql.connect(
+        server=server, user=user, password=password, database=database
+    )
 
 
 @task
@@ -89,3 +92,15 @@ def dataframe_to_csv(dataframe: pd.DataFrame, path: Union[str, Path]) -> None:
     path.mkdir(parents=True, exist_ok=True)
     # Write dataframe to CSV
     dataframe.to_csv(path, index=False)
+
+
+@task
+def upload_to_gcs(path: Union[str, Path], dataset_id: str, table_id: str) -> None:
+    tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
+    if tb.table_exists(mode="staging"):
+        ### the name of the files need to be the same or the data doesn't get overwritten
+        tb.append(filepath=path, if_exists="replace")
+    else:
+        raise (
+            "Table does not exist, need to create it in local first.\nCreate and publish the table in BigQuery first."
+        )
