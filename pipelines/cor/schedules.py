@@ -30,12 +30,12 @@ bot_schedule = Schedule(
             start_date=datetime(2021, 1, 1),
             labels=[
                 constants.EMD_AGENT_LABEL.value,
-            ]
+            ],
+            parameter_defaults={
+                "secret_path": "cet-bot",
+            },
         ),
     ],
-    parameter_defaults={
-        "secret_path": "cet-bot",
-    }
     # # Only on weekdays
     # filters=[filters.is_weekday],
     # or_filters=[
