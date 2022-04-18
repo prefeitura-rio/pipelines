@@ -16,12 +16,12 @@ from pipelines.emd.db_dump.db import (
     Oracle,
     SqlServer,
 )
-from pipelines.utils import log
 from pipelines.emd.db_dump.utils import (
     batch_to_dataframe,
     dataframe_to_csv,
     clean_dataframe,
 )
+from pipelines.constants import TASK_MAX_RETRIES, TASK_RETRY_DELAY
 
 DATABASE_MAPPING: Dict[str, Database] = {
     "mysql": MySql,
@@ -31,7 +31,11 @@ DATABASE_MAPPING: Dict[str, Database] = {
 
 
 # pylint: disable=too-many-arguments
-@task(checkpoint=False)
+@task(
+    checkpoint=False,
+    max_retries=TASK_MAX_RETRIES,
+    retry_delay=datetime.timedelta(seconds=TASK_RETRY_DELAY),
+)
 def database_get(
     database_type: str,
     hostname: str,
@@ -65,7 +69,11 @@ def database_get(
     )
 
 
-@task(checkpoint=False)
+@task(
+    checkpoint=False,
+    max_retries=TASK_MAX_RETRIES,
+    retry_delay=datetime.timedelta(seconds=TASK_RETRY_DELAY),
+)
 def database_execute(
     database: Database,
     query: str,
@@ -81,7 +89,11 @@ def database_execute(
     database.execute_query(query)
 
 
-@task(checkpoint=False)
+@task(
+    checkpoint=False,
+    max_retries=TASK_MAX_RETRIES,
+    retry_delay=datetime.timedelta(seconds=TASK_RETRY_DELAY),
+)
 def database_fetch(
     database: Database,
     batch_size: str,
@@ -109,7 +121,10 @@ def database_fetch(
 ###############
 
 
-@task
+@task(
+    max_retries=TASK_MAX_RETRIES,
+    retry_delay=datetime.timedelta(seconds=TASK_RETRY_DELAY),
+)
 def dump_batches_to_csv(
     database: Database,
     batch_size: int,
@@ -145,7 +160,10 @@ def dump_batches_to_csv(
     return prepath
 
 
-@task
+@task(
+    max_retries=TASK_MAX_RETRIES,
+    retry_delay=datetime.timedelta(seconds=TASK_RETRY_DELAY),
+)
 def dump_header_to_csv(
     header_path: Union[str, Path],
     data_path: Union[str, Path],
@@ -172,7 +190,10 @@ def dump_header_to_csv(
 # Upload to GCS
 #
 ###############
-@task
+@task(
+    max_retries=TASK_MAX_RETRIES,
+    retry_delay=datetime.timedelta(seconds=TASK_RETRY_DELAY),
+)
 def upload_to_gcs(
     path: Union[str, Path],
     dataset_id: str,
@@ -204,7 +225,10 @@ def upload_to_gcs(
         )
 
 
-@task
+@task(
+    max_retries=TASK_MAX_RETRIES,
+    retry_delay=datetime.timedelta(seconds=TASK_RETRY_DELAY),
+)
 def create_bd_table(
     path: Union[str, Path],
     dataset_id: str,
