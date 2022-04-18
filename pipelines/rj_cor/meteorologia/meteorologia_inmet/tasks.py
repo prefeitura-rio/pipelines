@@ -204,6 +204,14 @@ def tratar_dados(dados: pd.DataFrame) -> Tuple[pd.DataFrame, str]:
     mes = str(int(br_timezone[5:7]))
     dia = str(int(br_timezone[8:10]))
 
+    # Define colunas que serão salvas
+    dados = dados[['id_estacao', 'data', 'horario', 'pressao', 'pressao_maxima',
+       'radiacao_global', 'temperatura_orvalho', 'temperatura_minima',
+       'umidade_minima', 'temperatura_orvalho_maximo', 'direcao_vento',
+       'acumulado_chuva_1_h', 'pressao_minima', 'umidade_maxima',
+       'velocidade_vento', 'temperatura_orvalho_minimo', 'temperatura_maxima',
+       'rajada_vento_max', 'temperatura', 'umidade']]
+
     # Seleciona apenas dados daquele dia (devido à UTC)
     dados = dados[dados["data"] == br_timezone]
 
