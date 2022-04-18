@@ -21,7 +21,9 @@ from pipelines.utils.tasks import (
     dump_header_to_csv,
 )
 
-with Flow("COR: Meteorologia - Pluviometria ALERTARIO") as flow:
+with Flow(
+    "COR: Meteorologia - Precipitacao ALERTARIO"
+        ) as cor_meteorologia_precipitacao_alertario:
 
     DATASET_ID = "meio_ambiente_clima"
     TABLE_ID = "precipitacao_alertario"
@@ -66,6 +68,8 @@ with Flow("COR: Meteorologia - Pluviometria ALERTARIO") as flow:
         )
 
 # para rodar na cloud
-flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-flow.schedule = minute_schedule
+cor_meteorologia_precipitacao_alertario.storage = GCS(
+    constants.GCS_FLOWS_BUCKET.value)
+cor_meteorologia_precipitacao_alertario.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value)
+cor_meteorologia_precipitacao_alertario.schedule = minute_schedule

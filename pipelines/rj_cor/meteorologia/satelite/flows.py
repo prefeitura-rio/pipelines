@@ -22,8 +22,7 @@ from pipelines.utils.tasks import (
     dump_header_to_csv,
 )
 
-with Flow("COR: Meteorologia - Satelite") as flow:
-    # CURRENT_TIME = Parameter('CURRENT_TIME', default=pendulum.now("utc"))
+with Flow("COR: Meteorologia - Satelite GOES 16") as cor_meteorologia_goes16:
     CURRENT_TIME = pendulum.now("UTC")
 
     ano, mes, dia, hora, dia_juliano = slice_data(current_time=CURRENT_TIME)
@@ -34,7 +33,10 @@ with Flow("COR: Meteorologia - Satelite") as flow:
     TABLE_ID = "satelite_taxa_precipitacao"
     DUMP_TYPE = "append"
 
-    filename = download(variavel=VARIAVEL, ano=ano, dia_juliano=dia_juliano, hora=hora)
+    filename = download(variavel=VARIAVEL,
+                        ano=ano,
+                        dia_juliano=dia_juliano,
+                        hora=hora)
     info = tratar_dados(filename=filename)
     path, partitions = salvar_parquet(info=info)
 
@@ -77,7 +79,10 @@ with Flow("COR: Meteorologia - Satelite") as flow:
     DATASET_ID = "meio_ambiente_clima"
     TABLE_ID = "satelite_quantidade_agua_precipitavel"
 
-    filename = download(variavel=VARIAVEL, ano=ano, dia_juliano=dia_juliano, hora=hora)
+    filename = download(variavel=VARIAVEL,
+                        ano=ano,
+                        dia_juliano=dia_juliano,
+                        hora=hora)
     info = tratar_dados(filename=filename)
     path, partitions = salvar_parquet(info=info)
 
@@ -116,6 +121,7 @@ with Flow("COR: Meteorologia - Satelite") as flow:
         )
 
 # para rodar na cloud
-flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-flow.schedule = hour_schedule
+cor_meteorologia_goes16.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+cor_meteorologia_goes16.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value)
+cor_meteorologia_goes16.schedule = hour_schedule
