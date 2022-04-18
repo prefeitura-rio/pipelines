@@ -38,7 +38,7 @@ def get_data() -> pd.DataFrame:
     """
     query = """
     WITH semaforos AS (
-    SELECT 
+    SELECT
     *,
     ST_BUFFER(geometry, 100) raio
     FROM `rj-escritorio-dev.transporte_rodoviario_cet.semaforos`),
@@ -53,7 +53,7 @@ def get_data() -> pd.DataFrame:
         type = 'HAZARD'
         AND subtype='HAZARD_ON_ROAD_TRAFFIC_LIGHT_FAULT'
         AND city = 'Rio de Janeiro'
-        AND DATE_DIFF(CURRENT_DATE(), CAST(ts as DATETIME), DAY) < 1 ), 
+        AND DATE_DIFF(CURRENT_DATE(), CAST(ts as DATETIME), DAY) < 1 ),
     intermediate_query AS (
         SELECT
         distinct_selection.*,
@@ -74,15 +74,16 @@ def get_data() -> pd.DataFrame:
         ORDER BY
         ts),
     clusters AS (
-        SELECT 
+        SELECT
             *,
-            -- epsilon: The epsilon that specifies the radius, measured in meters, around a core value. 10 20 50
-            ST_CLUSTERDBSCAN(geometry, 50, 1) OVER () AS cluster_num,     
+            -- epsilon: The epsilon that specifies the radius, measured in meters,
+            -- around a core value. 10 20 50
+            ST_CLUSTERDBSCAN(geometry, 50, 1) OVER () AS cluster_num,
             SAFE_CAST(FORMAT_DATE('%s', ts) AS INT64) AS ts_epoch,
         FROM intermediate_query),
 
-    pontos_de_alertas AS (    
-    SELECT 
+    pontos_de_alertas AS (
+    SELECT
         cluster_num,
         MAX(ts) as ts,
         MAX(uuid) as uuid,
@@ -99,7 +100,7 @@ def get_data() -> pd.DataFrame:
     ORDER BY cluster_num),
 
     alertas_no_raio AS (
-    SELECT 
+    SELECT
     s.name,
     DATETIME(MIN(ts), 'America/Sao_Paulo') initial_ts,
     s.description,
@@ -109,12 +110,12 @@ def get_data() -> pd.DataFrame:
         ON ST_COVERS(s.raio, a.centroid)
     GROUP BY s.name, s.description)
 
-    SELECT 
+    SELECT
     alertas_no_raio.*,
     ST_Y(geometry) semaforo_latitude,
     ST_X(geometry) semaforo_longitude
     FROM alertas_no_raio
-    LEFT JOIN semaforos 
+    LEFT JOIN semaforos
         ON alertas_no_raio.name = semaforos.name
     ORDER BY initial_ts DESC
     """
@@ -132,7 +133,8 @@ def format_message(dataframe: pd.DataFrame) -> List[str]:
         url = '<a href="' + url + '">' + street + "</a>"
         return url
 
-    # Gets current "date and time" and "current date and time minus 1 hour in  list [current, current_minus_1h]
+    # Gets current "date and time" and "current date and time minus 1 hour in
+    # list [current, current_minus_1h]
     def current_date_time() -> List:
         current = datetime.strptime(
             pendulum.now()
@@ -190,10 +192,7 @@ def format_message(dataframe: pd.DataFrame) -> List[str]:
     )
 
     # Builds final message
-    if msg != "":
-        msg = msg_header + alert
-    else:
-        msg = ""
+    msg = msg_header + alert
 
     return smart_split(
         text=msg,
