@@ -4,7 +4,7 @@ Constants for all flows
 from enum import Enum
 
 
-class constants(Enum):
+class constants(Enum):  # pylint: disable=c0103
     """
     Constants used in the EMD flows.
     """

@@ -1,5 +1,7 @@
+"""
+Testing scheduled workflows
+"""
 from datetime import datetime
-from io import StringIO
 from os import getenv
 
 import pandas as pd
@@ -9,6 +11,14 @@ from prefect.storage import Module
 import requests
 
 from emd_flows.constants import constants
+
+__all__ = [
+    "flow_n1",
+    "flow_n2",
+    "flow_n3",
+    "flow_n4",
+    "flow_n5",
+]
 
 API_URL = "http://webapibrt.rio.rj.gov.br/api/v1/brt"
 API_TIMEOUT = 60
@@ -24,16 +34,16 @@ def fetch_from_api() -> list:
         response = requests.get(API_URL, timeout=API_TIMEOUT)
         response.raise_for_status()
         return response.json()["veiculos"]
-    except Exception as e:
+    except Exception as e:  # pylint: disable=c0103
         raise e
 
 
 @task
-def csv_to_dataframe(data: list) -> pd.DataFrame:
+def csv_to_dataframe(data_list: list) -> pd.DataFrame:
     """
     Convert CSV to DataFrame
     """
-    return pd.DataFrame(data)
+    return pd.DataFrame(data_list)
 
 
 @task
@@ -51,11 +61,15 @@ def log_to_discord(dataframe: pd.DataFrame, timestamp: datetime, wf_name: str) -
     """
     if dataframe is None:
         payload = {
-            "content": f"{timestamp.strftime('%Y-%m-%d %H:%M:%S')} - {wf_name} - timed out or something else"
+            "content": f"""{
+                timestamp.strftime('%Y-%m-%d %H:%M:%S')
+            } - {wf_name} - timed out or something else"""
         }
     else:
         payload = {
-            "content": f"{timestamp.strftime('%Y-%m-%d %H:%M:%S')} - {wf_name} - {dataframe.shape[0]} rows"
+            "content": f"""{
+                timestamp.strftime('%Y-%m-%d %H:%M:%S')
+            } - {wf_name} - {dataframe.shape[0]} rows"""
         }
     requests.post(DISCORD_HOOK, data=payload)
 
