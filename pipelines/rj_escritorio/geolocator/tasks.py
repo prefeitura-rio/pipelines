@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Tasks for geolocator
 """
@@ -80,22 +81,26 @@ def importa_bases_e_chamados() -> list:
     d2 = prefect.context.get("today")
     query_2 = f"""
     with teste as (
-    SELECT 
+    SELECT
     'Brasil' pais,
     'RJ' estado,
     'Rio de Janeiro' municipio,
     no_bairro bairro,
     no_logradouro logradouro,
     ds_endereco_numero numero_porta,
-    CONCAT(no_logradouro, ' ', ds_endereco_numero, ', ', no_bairro, ', ', 'Rio de Janeiro, RJ, Brasil') endereco_completo
+    CONCAT(no_logradouro, ' ', ds_endereco_numero, ', ', no_bairro,
+         ', ', 'Rio de Janeiro, RJ, Brasil') endereco_completo
     FROM `rj-segovi.administracao_servicos_publicos_1746_staging.chamado`
         WHERE no_logradouro IS NOT NULL
         AND dt_inicio >= '{d1}' AND dt_inicio <= '{d2}'
         ORDER BY id_chamado ASC
     )
-    select distinct endereco_completo, pais, estado, municipio, bairro, logradouro, numero_porta from teste
+    select distinct endereco_completo, pais, estado, municipio, bairro, logradouro, numero_porta
+        from teste
     """
-    chamados_ontem = bd.read_sql(query_2, billing_project_id="rj-escritorio-dev", from_file=True)
+    chamados_ontem = bd.read_sql(
+        query_2, billing_project_id="rj-escritorio-dev", from_file=True
+    )
     enderecos_ontem = chamados_ontem["endereco_completo"]
 
     return [enderecos_conhecidos, enderecos_ontem, chamados_ontem, base_enderecos_atual]
@@ -142,5 +147,9 @@ def cria_csv(base_enderecos_atual, base_enderecos_novos):
     """
     Une os endereços previamente catalogados com os novos e cria um csv.
     """
-    base_enderecos_atualizada = base_enderecos_atual.append(base_enderecos_novos, ignore_index=True)
-    base_enderecos_atualizada.to_csv(geolocator_constants.PATH_BASE_ENDERECOS.value, index=False)
+    base_enderecos_atualizada = base_enderecos_atual.append(
+        base_enderecos_novos, ignore_index=True
+    )
+    base_enderecos_atualizada.to_csv(
+        geolocator_constants.PATH_BASE_ENDERECOS.value, index=False
+    )

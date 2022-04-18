@@ -37,7 +37,9 @@ def log(msg: Any, level: str = "info") -> None:
 
 
 @prefect.task(checkpoint=False)
-def log_task(msg: Any, level: str = "info", wait=None):  # pylint: disable=unused-argument
+def log_task(
+    msg: Any, level: str = "info", wait=None
+):  # pylint: disable=unused-argument
     """
     Logs a message to prefect's logger.
     """
@@ -314,12 +316,15 @@ def to_partitions(data: pd.DataFrame, partition_columns: List[str], savepath: st
 
         for filter_combination in unique_combinations:
             patitions_values = [
-                f"{partition}={value}" for partition, value in filter_combination.items()
+                f"{partition}={value}"
+                for partition, value in filter_combination.items()
             ]
 
             # get filtered data
             df_filter = data.loc[
-                data[filter_combination.keys()].isin(filter_combination.values()).all(axis=1),
+                data[filter_combination.keys()]
+                .isin(filter_combination.values())
+                .all(axis=1),
                 :,
             ]
             df_filter = df_filter.drop(columns=partition_columns)

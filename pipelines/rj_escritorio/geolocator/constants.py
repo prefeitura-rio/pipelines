@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Constant values for the rj_escritorio projects
 """
@@ -37,6 +38,7 @@ class constants(Enum):  # pylint: disable=c0103
     """
     Constant values for the geolocator project
     """
+
     PATH_BASE_ENDERECOS = "/tmp/base_enderecos.csv"
-    DATASET_ID = 'seconserva_buracos'
-    TABLE_ID = 'habitacao_urbana_enderecos_geolocalizados'
+    DATASET_ID = "seconserva_buracos"
+    TABLE_ID = "habitacao_urbana_enderecos_geolocalizados"

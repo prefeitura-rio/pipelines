@@ -33,10 +33,7 @@ with Flow("COR: Meteorologia - Satelite GOES 16") as cor_meteorologia_goes16:
     TABLE_ID = "satelite_taxa_precipitacao"
     DUMP_TYPE = "append"
 
-    filename = download(variavel=VARIAVEL,
-                        ano=ano,
-                        dia_juliano=dia_juliano,
-                        hora=hora)
+    filename = download(variavel=VARIAVEL, ano=ano, dia_juliano=dia_juliano, hora=hora)
     info = tratar_dados(filename=filename)
     path, partitions = salvar_parquet(info=info)
 
@@ -79,10 +76,7 @@ with Flow("COR: Meteorologia - Satelite GOES 16") as cor_meteorologia_goes16:
     DATASET_ID = "meio_ambiente_clima"
     TABLE_ID = "satelite_quantidade_agua_precipitavel"
 
-    filename = download(variavel=VARIAVEL,
-                        ano=ano,
-                        dia_juliano=dia_juliano,
-                        hora=hora)
+    filename = download(variavel=VARIAVEL, ano=ano, dia_juliano=dia_juliano, hora=hora)
     info = tratar_dados(filename=filename)
     path, partitions = salvar_parquet(info=info)
 
@@ -122,6 +116,5 @@ with Flow("COR: Meteorologia - Satelite GOES 16") as cor_meteorologia_goes16:
 
 # para rodar na cloud
 cor_meteorologia_goes16.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-cor_meteorologia_goes16.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value)
+cor_meteorologia_goes16.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 cor_meteorologia_goes16.schedule = hour_schedule
