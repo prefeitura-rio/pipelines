@@ -195,6 +195,7 @@ def format_partitioned_query(
 @task(
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+    nout=2,
 )
 def dump_batches_to_csv(
     database: Database,
@@ -245,6 +246,6 @@ def dump_batches_to_csv(
         batch = database.fetch_batch(batch_size)
         idx += 1
 
-    log(f"Dumped {idx} batchs with size {len(batch)}, total of {idx*batch_size}")
+    log(f"Dumped {idx} batches with size {len(batch)}, total of {idx*batch_size}")
 
-    return prepath
+    return prepath, idx

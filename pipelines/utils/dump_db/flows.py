@@ -19,6 +19,7 @@ from pipelines.utils.dump_db.db import Database
 from pipelines.utils.tasks import (
     create_bd_table,
     get_current_flow_labels,
+    greater_than,
     upload_to_gcs,
     dump_header_to_csv,
 )
@@ -124,7 +125,7 @@ with Flow(
     )
 
     # Dump batches to CSV files
-    batches_path = dump_batches_to_csv(
+    batches_path, num_batches = dump_batches_to_csv(
         database=db_object,
         batch_size=batch_size,
         prepath=f"data/{uuid4()}/",
@@ -132,73 +133,74 @@ with Flow(
         wait=db_execute,
     )
 
-    # TODO: Skip all downstream tasks if no data was dumped
+    data_exists = greater_than(num_batches, 0)
 
-    table_exists = check_table_exists(  # pylint: disable=invalid-name
-        dataset_id=dataset_id, table_id=table_id, wait=batches_path
-    )
-
-    # Create header and table if they don't exists
-    with case(table_exists, False):
-
-        # Create CSV file with headers
-        header_path = dump_header_to_csv(
-            data_path=batches_path,
-            wait=batches_path,
+    with case(data_exists, True):
+        table_exists = check_table_exists(  # pylint: disable=invalid-name
+            dataset_id=dataset_id, table_id=table_id, wait=batches_path
         )
 
-        # Create table in BigQuery
-        create_db = create_bd_table(  # pylint: disable=invalid-name
-            path=header_path,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            dump_type=dump_type,
-            wait=header_path,
-        )
+        # Create header and table if they don't exists
+        with case(table_exists, False):
 
-        #####################################
-        #
-        # Tasks section #2 - Dump batches
-        #
-        #####################################
+            # Create CSV file with headers
+            header_path = dump_header_to_csv(
+                data_path=batches_path,
+                wait=batches_path,
+            )
 
-        # Upload to GCS
-        upload_to_gcs(
-            path=batches_path,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            wait=create_db,
-        )
+            # Create table in BigQuery
+            create_db = create_bd_table(  # pylint: disable=invalid-name
+                path=header_path,
+                dataset_id=dataset_id,
+                table_id=table_id,
+                dump_type=dump_type,
+                wait=header_path,
+            )
 
-    with case(table_exists, True):
-        # Upload to GCS
-        upload_to_gcs(
-            path=batches_path,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            wait=table_exists,
-        )
+            #####################################
+            #
+            # Tasks section #2 - Dump batches
+            #
+            #####################################
 
-    with case(materialize_after_dump, True):
-        # Trigger DBT flow run
-        current_flow_labels = get_current_flow_labels()
-        materialization_flow = create_flow_run(
-            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
-            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters={
-                "dataset_id": dataset_id,
-                "table_id": table_id,
-                "mode": materialization_mode,
-            },
-            labels=current_flow_labels,
-            run_name=f"Materialize {dataset_id}.{table_id}",
-        )
-        wait_for_materialization = wait_for_flow_run(
-            materialization_flow,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
-        )
+            # Upload to GCS
+            upload_to_gcs(
+                path=batches_path,
+                dataset_id=dataset_id,
+                table_id=table_id,
+                wait=create_db,
+            )
+
+        with case(table_exists, True):
+            # Upload to GCS
+            upload_to_gcs(
+                path=batches_path,
+                dataset_id=dataset_id,
+                table_id=table_id,
+                wait=table_exists,
+            )
+
+        with case(materialize_after_dump, True):
+            # Trigger DBT flow run
+            current_flow_labels = get_current_flow_labels()
+            materialization_flow = create_flow_run(
+                flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+                project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                parameters={
+                    "dataset_id": dataset_id,
+                    "table_id": table_id,
+                    "mode": materialization_mode,
+                },
+                labels=current_flow_labels,
+                run_name=f"Materialize {dataset_id}.{table_id}",
+            )
+            wait_for_materialization = wait_for_flow_run(
+                materialization_flow,
+                stream_states=True,
+                stream_logs=True,
+                raise_final_state=True,
+            )
 
 dump_sql_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_sql_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)

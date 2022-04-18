@@ -36,14 +36,11 @@ ergon_queries = {
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_ERG_MATRICULAS",
     },
-    # TODO check if administracao_recursos_humanos_folha_salarial.fita_banco works in bq and storage
     "fita_banco": {
         "partition_column": "MES_ANO",
         "dump_type": "append",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FITA_BANCO",
     },
-    # TODO check if administracao_recursos_humanos_folha_salarial.folha_empresa
-    # works in bq and storage
     "folha_empresa": {
         "partition_column": "MES_ANO",
         "dump_type": "append",
