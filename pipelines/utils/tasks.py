@@ -55,13 +55,13 @@ def greater_than(value, compare_to) -> bool:
 
 
 @task
-def rename_current_flow_run(prefix, dataset_id, table_id):
+def rename_current_flow_run(msg: str) -> None:
     """
     Rename the current flow run.
     """
     flow_run_id = prefect.context.get("flow_run_id")
     client = Client()
-    return client.set_flow_run_name(flow_run_id, f"{prefix}: {dataset_id}.{table_id}")
+    return client.set_flow_run_name(flow_run_id, msg)
 
 
 ##################

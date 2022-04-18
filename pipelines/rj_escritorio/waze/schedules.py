@@ -14,7 +14,7 @@ every_five_minutes = Schedule(
             interval=timedelta(minutes=5),
             start_date=datetime(2021, 1, 1),
             labels=[
-                constants.RJ_DATARIO_AGENT_LABEL.value,
+                constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
             ],
         ),
     ]

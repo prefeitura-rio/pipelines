@@ -8,6 +8,7 @@ from functools import partial
 from prefect import Flow
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
+import pendulum
 
 from pipelines.constants import constants
 from pipelines.rj_escritorio.waze.tasks import (
@@ -18,8 +19,8 @@ from pipelines.rj_escritorio.waze.tasks import (
 )
 from pipelines.rj_escritorio.waze.schedules import every_five_minutes
 from pipelines.utils.utils import notify_discord_on_failure
+from pipelines.utils.tasks import rename_current_flow_run
 
-# from pipelines.emd.template_pipeline.schedules import every_two_weeks
 
 with Flow(
     name="EMD: escritorio - Alertas Waze",
@@ -28,6 +29,17 @@ with Flow(
         secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value,
     ),
 ) as flow:
+    dataset_id = "transporte_rodoviario_waze"
+    table_id = "alertas"
+
+    #####################################
+    #
+    # Rename flow run
+    #
+    #####################################
+    now = pendulum.now(pendulum.timezone("America/Sao_Paulo"))
+    now = f"{now.hour}:{f'0{now.minute}' if len(str(now.minute))==1 else now.minute}"
+    rename_flow_run = rename_current_flow_run(msg=f"Waze: {now}")
 
     areas = load_geometries()
 
@@ -36,8 +48,8 @@ with Flow(
     df = normalize_data(responses=res)
 
     upload_to_native_table(
-        dataset_id="transporte_rodoviario_waze",
-        table_id="alertas",
+        dataset_id=dataset_id,
+        table_id=table_id,
         dataframe=df,
     )
 

@@ -38,7 +38,7 @@ with Flow(
     #
     #####################################
     rename_flow_run = rename_current_flow_run(
-        prefix="Materialize", dataset_id=dataset_id, table_id=table_id
+        msg=f"Materializ: {dataset_id}.{table_id}"
     )
 
     # Get DBT client

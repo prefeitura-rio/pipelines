@@ -63,9 +63,7 @@ with Flow(
     # Rename flow run
     #
     #####################################
-    rename_flow_run = rename_current_flow_run(
-        prefix="Dump", dataset_id=dataset_id, table_id=table_id
-    )
+    rename_flow_run = rename_current_flow_run(msg=f"Dump: {dataset_id}.{table_id}")
 
     #####################################
     #
