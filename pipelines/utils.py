@@ -11,6 +11,7 @@ import prefect
 from prefect.client import Client
 from prefect.engine.state import State
 from prefect.run_configs import KubernetesRun
+from prefect.utilities.exceptions import ClientError
 import requests
 import telegram
 
@@ -116,6 +117,14 @@ def run_cloud(flow: prefect.Flow, labels: List[str], parameters: Dict[str, Any] 
     flow.name = f"{flow.name} (development)"
     flow.run_config = KubernetesRun(
         image="ghcr.io/prefeitura-rio/prefect-flows:latest")
+
+    client = Client()
+    try:
+        # try to create main project
+        client.create_project(project_name="main")
+    except ClientError:
+        # main project already exists
+        pass
     flow_id = flow.register(project_name="main", labels=[])
 
     # Get Prefect Client and submit flow run
