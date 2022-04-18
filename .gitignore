@@ -1,6 +1,7 @@
 # user defined
 **/data/
 test_local.py
+pylint.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

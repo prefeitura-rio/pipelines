@@ -6,7 +6,6 @@ Schedules for the database dump pipeline
 from datetime import timedelta, datetime
 
 from prefect.schedules import Schedule
-from prefect.schedules.clocks import IntervalClock
 import pytz
 
 from pipelines.constants import constants
