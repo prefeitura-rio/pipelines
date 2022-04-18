@@ -66,7 +66,7 @@ run_cloud(
 [2022-02-19 12:22:57-0300] INFO - prefect.GCS | Uploading xxxxxxxx-development/2022-02-19t15-22-57-694759-00-00 to datario-public
 Flow URL: http://localhost:8080/default/flow/xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
  └── ID: xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
- └── Project: main
+ └── Project: main 
  └── Labels: []
 Run submitted, please check it at:
 http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
