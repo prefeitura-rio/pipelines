@@ -39,6 +39,6 @@ class constants(Enum):  # pylint: disable=c0103
     Constant values for the geolocator project
     """
 
-    PATH_BASE_ENDERECOS = "/tmp/base_enderecos"
+    PATH_BASE_ENDERECOS = "/tmp/base_enderecos.csv"
     DATASET_ID = "dados_mestres"
     TABLE_ID = "enderecos_geolocalizados"
