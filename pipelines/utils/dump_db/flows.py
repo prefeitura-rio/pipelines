@@ -112,6 +112,8 @@ with Flow(
         wait=db_execute,
     )
 
+    # TODO: Skip all downstream tasks if no data was dumped
+
     # Create CSV file with headers
     header_path = dump_header_to_csv(
         data_path=batches_path,
