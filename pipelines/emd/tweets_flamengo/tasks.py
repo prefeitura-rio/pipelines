@@ -140,7 +140,7 @@ def fetch_last_id(q):
         print(f"No table {q_folder} in storage")
 
 
-@task
+@task(nout=2)
 def get_last_id(api, q):
     q_folder = q.replace(" ", "_").replace("-", "_")
     pre_path = f"data/staging/twitter_flamengo/last_id/q={q_folder}"
