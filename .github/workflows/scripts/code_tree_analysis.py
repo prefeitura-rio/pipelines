@@ -413,18 +413,35 @@ def log(message: str):
     """
     Logs a message to the output of a GitHub Action.
     """
+    # TODO: https://github.community/t/set-output-truncates-multiline-strings/16852/5
     global message_id
     print(f'::set-output name=message_{message_id}::"{message}"')
     message_id += 1
 
 
-def identify_code_owners(files: List[str]):
+def identify_code_owners(files: List[str]) -> List[str]:
     """
     Identifies the code owners in order to warn them.
     """
-    # # Load the code owners YAML file.
-    # with open("code_owners.yaml") as file_:
-    #     code_owners = yaml.safe_load(file_)
+    # Load the code owners YAML file.
+    with open("code_owners.yaml") as file_:
+        code_owners = yaml.safe_load(file_)
+
+    # Get the code owners.
+    owners = set()
+    for file_ in files:
+        path_parts = file_.split("/")
+        section = code_owners
+        for i in range(len(path_parts) - 1):
+            if path_parts[i] in code_owners:
+                current_owners = section[path_parts[i]]["owners"]
+                section = section[path_parts[i]]["dir"]
+            else:
+                break
+        owners.update(current_owners)
+
+    # Return the owners.
+    return list(owners)
 
 
 if __name__ == "__main__":
@@ -483,7 +500,10 @@ if __name__ == "__main__":
         log("")
         log("")
 
-    # TODO: add code owners
+    code_owners = identify_code_owners(changed_files)
+    print("These are the code owners:")
+    for owner in code_owners:
+        print(f"\t- {owner}")
 
     # Check for variable name conflicts.
     conflicts = check_for_variable_name_conflicts(changed_files, "pipelines/")
