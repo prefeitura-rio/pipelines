@@ -23,7 +23,9 @@ untuple = lambda clocks: [
 emd_1746 = (
     IntervalClock(
         interval=timedelta(days=1),
-        start_date=datetime(2021, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo")),
+        start_date=datetime(
+            2021, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo")
+        ),
         labels=[
             constants.EMD_AGENT_LABEL.value,
         ],
@@ -87,8 +89,7 @@ emd_1746 = (
     ),
 )
 
-_1746_clocks = [emd_1746]
-_1746_daily_update_schedule = Schedule(clocks=untuple(_1746_clocks))
+_1746_daily_update_schedule = Schedule(clocks=untuple([emd_1746]))
 
 #####################################
 #
@@ -98,7 +99,9 @@ _1746_daily_update_schedule = Schedule(clocks=untuple(_1746_clocks))
 sme_escola = (
     IntervalClock(
         interval=timedelta(days=1),
-        start_date=datetime(2021, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo")),
+        start_date=datetime(
+            2021, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo")
+        ),
         labels=[
             constants.EMD_AGENT_LABEL.value,
         ],
@@ -119,7 +122,7 @@ sme_escola = (
 
 sme_turma = IntervalClock(
     interval=timedelta(days=1),
-    start_date=datetime(2021, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2021, 1, 1, 1, 5, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.EMD_AGENT_LABEL.value,
     ],
@@ -140,7 +143,9 @@ sme_turma = IntervalClock(
 sme_dependencia = (
     IntervalClock(
         interval=timedelta(days=1),
-        start_date=datetime(2021, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo")),
+        start_date=datetime(
+            2021, 1, 1, 1, 10, tzinfo=pytz.timezone("America/Sao_Paulo")
+        ),
         labels=[
             constants.EMD_AGENT_LABEL.value,
         ],
@@ -180,8 +185,9 @@ sme_dependencia = (
 #     },
 # )
 
-sme_clocks = [sme_escola, sme_turma, sme_dependencia]
-sme_daily_update_schedule = Schedule(clocks=untuple(sme_clocks))
+sme_daily_update_schedule = Schedule(
+    clocks=untuple([sme_escola, sme_turma, sme_dependencia])
+)
 
 
 #####################################
