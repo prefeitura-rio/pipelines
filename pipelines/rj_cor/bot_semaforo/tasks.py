@@ -30,7 +30,7 @@ def get_token_and_group_id(secret_path: str) -> Tuple[str, int]:
     )
 
 
-@task(checkpoint=False)
+# @task(checkpoint=False)
 def get_data() -> pd.DataFrame:
     """
     Returns the dataframe with the alerts.
@@ -121,15 +121,21 @@ def get_data() -> pd.DataFrame:
     return bd.read_sql(query=query, billing_project_id="rj-cor", from_file=True)
 
 
-@task(checkpoint=False)
-def format_message(dataframe: pd.DataFrame) -> List[str]:
+# @task(checkpoint=False)
+def format_message(dataframe: pd.DataFrame) -> pd.Series:
     """
     Formats the message before sending it.
     """
     # Create a link for eath alert on google maps
-    def map_link(street, latlong):
-        url = "https://www.google.com/maps/search/?api=1&query=" + latlong + "&zoom=21"
-        url = '<a href="' + url + '">' + street + "</a>"
+    def map_link(dataframe: pd.DataFrame):
+        url = (
+            "https://www.google.com/maps/search/?api=1&query="
+            + dataframe["semaforo_latitude"].astype(str)
+            + ","
+            + dataframe["semaforo_longitude"].astype(str)
+            + "&zoom=21"
+        )
+        url = '<a href="' + url + '">' + dataframe["description"] + "</a>"
         return url
 
     def current_date_time():
@@ -137,41 +143,38 @@ def format_message(dataframe: pd.DataFrame) -> List[str]:
         Gets current "date and time" and "current date and time minus 1 hour in
         list [current, current_minus_1h]
         """
-        current = datetime.now(pytz.timezone("America/Sao_Paulo"))
+        date_format = "%Y-%m-%d %H:%M:%S"
+        current = datetime.strptime(
+            datetime.now(pytz.timezone("America/Sao_Paulo")).strftime(date_format),
+            date_format,
+        )
         current_minus_1h = current - timedelta(minutes=60)
         return current_minus_1h, current
 
     # Builds all alert messages
-    alert = ""
+    alert = None
     thumbs_up_emoji = "\U0001F44D"
     current_minus_1h, current = current_date_time()
-    for row in range(len(dataframe)):
-        if (
-            dataframe.iloc[row]["initial_ts"] > current_minus_1h
-            and dataframe.iloc[row]["initial_ts"] <= current
-        ):
-            identification = str(dataframe.iloc[row]["name"])
-            latlong = str(
-                str(dataframe.iloc[row]["semaforo_latitude"])
-                + ", "
-                + str(dataframe.iloc[row]["semaforo_longitude"])
-            )
-            address = str(dataframe.iloc[row]["description"])
-            thumbs_up = str(dataframe.iloc[row]["sum_thumbs_up"])
 
-            alert += (
-                str(dataframe.iloc[row]["initial_ts"])[11:16]
-                + " - "
-                + identification
-                + " - "
-                + str(map_link(address, latlong))
-                + " - "
-                + thumbs_up
-                + thumbs_up_emoji
-                + "\n \n"
-            )
+    mask = (dataframe["initial_ts"] > current_minus_1h) & (
+        dataframe["initial_ts"] <= current
+    )
+    filered_alerts = dataframe[mask]
+    if len(filered_alerts) > 0:
+        filered_alerts["url"] = map_link(filered_alerts)
+        filered_alerts["alert"] = (
+            filered_alerts["initial_ts"].apply(lambda x: str(x)[11:16])
+            + " - "
+            + filered_alerts["name"]
+            + " - "
+            + filered_alerts["url"]
+            + " - "
+            + filered_alerts["sum_thumbs_up"].astype(str)
+            + thumbs_up_emoji
+            + "\n \n"
+        )
+        alert = "".join(filered_alerts["alert"].tolist())
 
-    # Builds the header of the message
     traffic_light_emoji = "\U0001F6A6"
     msg_header = (
         traffic_light_emoji
@@ -187,11 +190,11 @@ def format_message(dataframe: pd.DataFrame) -> List[str]:
     )
 
     # Builds final message
-    if alert != "":
+    if alert:
         msg = msg_header + alert
     else:
         alert = "Não foram encontrados alertas no período" + "\n \n"
-        msg = msg_header + alert
+        msg = msg_header
 
     return smart_split(
         text=msg,
