@@ -3,6 +3,7 @@
 Database dumping flows
 """
 
+from datetime import timedelta
 from uuid import uuid4
 
 from prefect import Parameter, case
@@ -174,8 +175,8 @@ with Flow(
             wait_for_materialization.max_retries = (
                 dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
             )
-            wait_for_materialization.retry_delay = (
-                dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
+            wait_for_materialization.retry_delay = timedelta(
+                seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
             )
 
 
