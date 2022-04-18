@@ -103,7 +103,6 @@ with Flow(
 
     # Create CSV file with headers
     wait_header_path = dump_header_to_csv(
-        header_path=f"data/{uuid4()}/",
         data_path=wait_batches_path,
         wait=wait_batches_path,
     )

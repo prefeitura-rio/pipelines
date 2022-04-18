@@ -4,6 +4,7 @@ Helper tasks that could fit any pipeline.
 from pathlib import Path
 from typing import Union
 from datetime import timedelta
+from uuid import uuid4
 
 import basedosdados as bd
 import glob
@@ -39,16 +40,22 @@ def get_user_and_password(secret_path: str):
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def create_header(path: Union[str, Path]):
+def dump_header_to_csv(data_path: Union[str, Path], wait=None):
     """
     Writes a header to a CSV file.
     """
     # Remove filename from path
-    path = Path(path)
-    dataframe = pd.read_csv(path, nrows=10)
+    path = Path(data_path)
+    if not path.is_dir():
+        path = path.parent
+    files = glob.glob(f"{path}/*")
+    file = files[0] if files else ""
+
+    # Read just first row
+    dataframe = pd.read_csv(file, nrows=1)
 
     # Create directory if it doesn't exist
-    save_header_path = Path("data/header.csv")
+    save_header_path = Path(f"data/{uuid4()}/header.csv")
     save_header_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Write dataframe to CSV
@@ -56,31 +63,6 @@ def create_header(path: Union[str, Path]):
     log(f"Wrote header CSV: {path}")
 
     return save_header_path
-
-
-@task(
-    max_retries=constants.TASK_MAX_RETRIES.value,
-    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
-)
-def dump_header_to_csv(
-    header_path: Union[str, Path],
-    data_path: Union[str, Path],
-    wait=None,  # pylint: disable=unused-argument
-) -> Path:
-    """
-    Dumps the header to CSV.
-    """
-    files = glob.glob(f"{data_path}/*")
-    file = files[0] if files else ""
-
-    dataframe = pd.read_csv(f"{file}", nrows=1)
-
-    header_path = Path(header_path)
-    dataframe_to_csv(dataframe, header_path / "header.csv")
-
-    log(f"Wrote header to {header_path} from file {file}")
-
-    return header_path
 
 
 @task(
