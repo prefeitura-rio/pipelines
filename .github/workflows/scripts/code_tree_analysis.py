@@ -3,6 +3,7 @@ import ast
 from pathlib import Path
 import sys
 from typing import List, Tuple, Union
+from uuid import uuid4
 
 import networkx as nx
 from prefect import Flow
@@ -406,6 +407,13 @@ def check_for_variable_name_conflicts(
     return conflicts
 
 
+def log(message: str):
+    """
+    Logs a message to the output of a GitHub Action.
+    """
+    print(f'::set-output name={uuid4().hex}::"{message}"')
+
+
 if __name__ == "__main__":
 
     # Assert arguments.
@@ -448,34 +456,35 @@ if __name__ == "__main__":
         print(f"\t- {file_}")
 
     # Start a PR message
-    initial_message = "### Análise da árvore de código\n\n"
-    message = initial_message
+    log("### Análise da árvore de código")
+    log("")
+    log("")
 
     # Format a message for the files that depend on the exported declarations.
     if len(dependent_files) > 0:
-        message += "*Os seguintes arquivos são afetados diretamente por alterações "
-        message += "realizadas nesse pull request:*"
+        log("*Os seguintes arquivos são afetados diretamente por alterações ")
+        log("realizadas nesse pull request:*")
         for file_ in dependent_files:
-            message += f"\n\t- {file_}"
-        message += "\n\n"
+            log("")
+            log(f"\t- {file_}")
+        log("")
+        log("")
 
     # TODO: add code owners
 
     # Check for variable name conflicts.
     conflicts = check_for_variable_name_conflicts(changed_files, "pipelines/")
     if len(conflicts) > 0:
-        message += "*Existem conflitos entre nomes de variáveis nos seguintes objetos:*"
+        log("*Existem conflitos entre nomes de variáveis nos seguintes objetos:*")
         for conflict in conflicts:
-            message += f"\n\t- {conflict[0]} e {conflict[1]}"
-        message += "\n\n"
+            log("")
+            log("\t- {conflict[0]} e {conflict[1]}")
+        log("")
+        log("")
 
     # If there is nothing wrong, let'em know!
-    if len(message) == len(initial_message):
-        message += "*Nenhum problema encontrado!*"
-
-    # Output to GitHub Actions.
-    print("\n\n\n")
-    print(f'::set-output name=pr-message::"{message}"')
+    if len(dependent_files) == 0 and len(conflicts) == 0:
+        log("*Nenhum problema encontrado!*")
 
     # Raise if there are conflicts
     if len(conflicts) > 0:
