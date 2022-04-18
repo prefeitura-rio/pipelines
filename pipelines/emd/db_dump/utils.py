@@ -41,7 +41,7 @@ def dataframe_to_csv(dataframe: pd.DataFrame, path: Union[str, Path]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     # Write dataframe to CSV
     log(f"Writing dataframe to CSV: {path}")
-    dataframe.to_csv(path, index=False)
+    dataframe.to_csv(path, index=False, encoding="utf-8")
     log(f"Wrote dataframe to CSV: {path}")
 
 

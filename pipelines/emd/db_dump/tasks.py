@@ -133,6 +133,9 @@ def dump_batches_to_csv(
         log(f"Dumping batch {idx} with size {len(batch)}")
         # Convert to dataframe
         dataframe = batch_to_dataframe(batch, columns)
+        if idx == 0:
+            log("first batch:", batch)
+
         # Write to CSV
         dataframe_to_csv(dataframe, prepath / f"{eventid}-{idx}.csv")
         # Get next batch
