@@ -33,13 +33,13 @@ General purpose functions for the geolocator project
 import requests
 
 
-def geolocator(q: str) -> list:
+def geolocator(query_string: str) -> list:
     """
     Utiliza a api do waze pra geolocalizar (lat/long) um endereço.
     """
 
     url = (
-        f"https://gapi.waze.com/autocomplete/q?q={q}&e=ALL&c=web"
+        f"https://gapi.waze.com/autocomplete/q?q={query_string}&e=ALL&c=web"
         "&gxy=1&exp=8%2C10%2C12&v=-22.9370135%2C-43.18795323%3B-22.9301167%2C-43.1815052&lang=pt"
     )
 
@@ -51,5 +51,5 @@ def geolocator(q: str) -> list:
         long = response.json()[1][0][3]["x"]
         lat = response.json()[1][0][3]["y"]
         return [lat, long]
-    except:
+    except:  # pylint: disable=bare-except
         return [None, None]

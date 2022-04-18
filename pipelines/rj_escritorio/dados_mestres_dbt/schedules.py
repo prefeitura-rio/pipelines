@@ -5,11 +5,12 @@ Schedules for the database dump pipeline
 
 from datetime import datetime, timedelta
 
+from prefect.schedules import Schedule
 import pytz
+
 from pipelines.constants import constants
 from pipelines.utils.execute_dbt_model.utils import generate_execute_dbt_model_schedules
 from pipelines.utils.utils import untuple_clocks as untuple
-from prefect.schedules import Schedule
 
 dados_mestresviews = {
     "bairro": {"dataset_id": "dados_mestres", "mode": "dev"},

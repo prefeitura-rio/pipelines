@@ -133,7 +133,7 @@ with Flow(
 
     # TODO: Skip all downstream tasks if no data was dumped
 
-    table_exists = check_table_exists(
+    table_exists = check_table_exists(  # pylint: disable=invalid-name
         dataset_id=dataset_id, table_id=table_id, wait=batches_path
     )
 
