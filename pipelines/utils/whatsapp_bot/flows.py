@@ -22,10 +22,9 @@ from pipelines.utils.whatsapp_bot.tasks import (
 
 with Flow(
     name=utils_constants.FLOW_SEND_WHATSAPP_MESSAGE_NAME.value,
-    on_failure=partial(
-        notify_discord_on_failure,
-        secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value,
-    ),
+    code_owners=[
+        "@Gabriel Gazola Milan#8183",
+    ],
 ) as whatsapp_bot_send_message_flow:
 
     #####################################

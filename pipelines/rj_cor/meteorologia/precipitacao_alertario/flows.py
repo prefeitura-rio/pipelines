@@ -17,7 +17,10 @@ from pipelines.utils.decorators import Flow
 from pipelines.utils.tasks import create_table_and_upload_to_gcs
 
 with Flow(
-    name="COR: Meteorologia - Precipitacao ALERTARIO"
+    name="COR: Meteorologia - Precipitacao ALERTARIO",
+    code_owners=[
+        "@PatyBC#4954",
+    ],
 ) as cor_meteorologia_precipitacao_alertario:
 
     DATASET_ID = "meio_ambiente_clima"

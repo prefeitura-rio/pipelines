@@ -19,8 +19,11 @@ from pipelines.utils.tasks import (
 )
 
 with Flow(
-    name="COR: Meteorologia - Satelite GOES 16"
-)as cor_meteorologia_goes16:
+    name="COR: Meteorologia - Satelite GOES 16",
+    code_owners=[
+        "@PatyBC#4954",
+    ],
+) as cor_meteorologia_goes16:
 
     CURRENT_TIME = get_dates()
 

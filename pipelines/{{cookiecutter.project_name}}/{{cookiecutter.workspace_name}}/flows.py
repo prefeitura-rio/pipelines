@@ -65,9 +65,14 @@ from pipelines.{{cookiecutter.project_name}}.{{cookiecutter.workspace_name}}.tas
 # from pipelines.{{cookiecutter.project_name}}.{{cookiecutter.workspace_name}}.schedules import every_two_weeks
 from pipelines.utils.decorators import Flow
 
-with Flow("my_flow") as flow:
+with Flow(
+    "my_flow",
+    code_owners=[
+        "@your-discord-username",
+    ]
+) as {{cookiecutter.project_name}}_{{cookiecutter.workspace_name}}_flow:
     say_hello()
 
-flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+{{cookiecutter.project_name}}_{{cookiecutter.workspace_name}}_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+{{cookiecutter.project_name}}_{{cookiecutter.workspace_name}}_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 # flow.schedule = every_two_weeks

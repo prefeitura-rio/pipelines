@@ -78,7 +78,12 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks import (
 # from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.schedules import every_minute
 from pipelines.utils.decorators import Flow
 
-with Flow("SMTR: gps_stpl - Captura") as stpl_captura:
+with Flow(
+    "SMTR: gps_stpl - Captura",
+    code_owners=[
+        "@hellcassius#1223",
+    ],
+) as stpl_captura:
 
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
