@@ -4,7 +4,6 @@ Flows for meteorologia_inmet
 """
 from functools import partial
 
-from prefect import Flow
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
