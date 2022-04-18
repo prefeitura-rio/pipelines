@@ -30,7 +30,7 @@ def get_token_and_group_id(secret_path: str) -> Tuple[str, int]:
     )
 
 
-# @task(checkpoint=False)
+@task(checkpoint=False)
 def get_data() -> pd.DataFrame:
     """
     Returns the dataframe with the alerts.
@@ -121,7 +121,7 @@ def get_data() -> pd.DataFrame:
     return bd.read_sql(query=query, billing_project_id="rj-cor", from_file=True)
 
 
-# @task(checkpoint=False)
+@task(checkpoint=False)
 def format_message(dataframe: pd.DataFrame) -> pd.Series:
     """
     Formats the message before sending it.
