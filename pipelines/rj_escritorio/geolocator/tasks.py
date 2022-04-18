@@ -25,7 +25,7 @@ def importa_bases_e_chamados() -> list:
     Importa a base de endereços completa e os endereços dos chamados que entraram no dia anterior.
     """
     query = """
-    SELECT * FROM `rj-escritorio-dev.dados_mestres.enderecos_geolocalizados`
+    SELECT * FROM `rj-escritorio-dev.dados_mestres_staging.enderecos_geolocalizados`
     """
     base_enderecos_atual = bd.read_sql(
         query, billing_project_id="rj-escritorio-dev", from_file=True
@@ -48,7 +48,7 @@ def importa_bases_e_chamados() -> list:
          ', ', 'Rio de Janeiro, RJ, Brasil') endereco_completo
     FROM `rj-segovi.administracao_servicos_publicos_1746_staging.chamado`
         WHERE no_logradouro IS NOT NULL
-        AND dt_inicio >= '{d1}' AND dt_inicio <= '{d2}'
+        AND dt_inicio >= '2021-03-23' AND dt_inicio <= '{d2}'
         ORDER BY id_chamado ASC
     )
     select distinct

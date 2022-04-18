@@ -100,7 +100,9 @@ def notify_discord_on_failure(
 def set_default_parameters(
     flow: prefect.Flow, default_parameters: dict
 ) -> prefect.Flow:
-
+    """
+    Sets default parameters for a flow.
+    """
     for parameter in flow.parameters():
         if parameter.name in default_parameters:
             parameter.default = default_parameters[parameter.name]
