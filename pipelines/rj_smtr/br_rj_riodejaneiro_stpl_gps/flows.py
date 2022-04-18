@@ -58,13 +58,19 @@ Flows for br_rj_riodejaneiro_stpl_gps
 ###############################################################################
 
 
-from ast import Param
-from inspect import Parameter
 from prefect import Flow, Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants
-from pipelines.rj_smtr.tasks import *
+from pipelines.rj_smtr.tasks import (
+    create_current_date_hour_partition,
+    get_file_path_and_partitions,
+    get_raw,
+    save_raw_local,
+    save_treated_local,
+    upload_logs_to_bq,
+    bq_upload,
+)
 from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks import (
     pre_treatment_br_rj_riodejaneiro_stpl_gps,
 )
@@ -104,7 +110,7 @@ with Flow("Captura_GPS_STPL") as stpl_captura:
         error=status_dict["error"],
     )
 
-    treatd_filepath = save_treated_local(df=treated_status["df"], file_path=filepath)
+    treatd_filepath = save_treated_local(dataframe=treated_status["df"], file_path=filepath)
 
     bq_upload(
         dataset_id=dataset_id,

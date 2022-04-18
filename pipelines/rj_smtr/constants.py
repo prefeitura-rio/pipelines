@@ -38,6 +38,7 @@ class constants(Enum):  # pylint: disable=c0103
     """
     Constant values for the rj_smtr projects
     """
+
     MAX_TIMEOUT_SECONDS = 60
     STPL_DATASET_ID = "br_rj_riodejaneiro_stpl_gps"
     STPL_TABLE_ID = "registros"

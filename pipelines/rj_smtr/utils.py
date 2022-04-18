@@ -29,15 +29,15 @@ General purpose functions for rj_smtr
 # ```
 #
 ###############################################################################
+from basedosdados import Table
+
 from pipelines.utils.utils import log
 
-from basedosdados import Table, Storage
-
 def create_or_append_table(dataset_id, table_id, path):
-    tb = Table(table_id=table_id, dataset_id=dataset_id)
-    if not tb.table_exists("staging"):
-        log.info("Table does not exist in STAGING, creating table...")
-        tb.create(
+    tb_obj = Table(table_id=table_id, dataset_id=dataset_id)
+    if not tb_obj.table_exists("staging"):
+        log("Table does not exist in STAGING, creating table...")
+        tb_obj.create(
             path=path,
             if_table_exists="pass",
             if_storage_data_exists="replace",
@@ -46,14 +46,14 @@ def create_or_append_table(dataset_id, table_id, path):
         log("Table created in STAGING")
     else:
         log("Table already exists in STAGING, appending to it...")
-        tb.append(
+        tb_obj.append(
             filepath=path, if_exists="replace", timeout=600, chunk_size=1024 * 1024 * 10
         )
         log("Appended to table on STAGING successfully.")
 
-    if not tb.table_exists("prod"):
+    if not tb_obj.table_exists("prod"):
         log("Table does not exist in PROD, publishing...")
-        tb.publish(if_exists="pass")
+        tb_obj.publish(if_exists="pass")
         log("Published table in PROD successfully.")
     else:
         log("Table already published in PROD.")

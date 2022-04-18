@@ -75,10 +75,10 @@ from prefect.schedules import Schedule
 from prefect.schedules.clocks import IntervalClock
 from pipelines.constants import constants
 
-every_two_weeks = Schedule(
+every_minute = Schedule(
     clocks=[
         IntervalClock(
-            interval=timedelta(weeks=2),
+            interval=timedelta(minutes=1),
             start_date=datetime(2021, 1, 1),
             labels=[
                 constants.RJ_SMTR_AGENT_LABEL.value,

@@ -49,8 +49,7 @@ Tasks for br_rj_riodejaneiro_stpl_gps
 #
 ###############################################################################
 from pipelines.rj_smtr.constants import constants
-from pipelines.utils.utils import log, notify_discord_on_failure
-
+from pipelines.utils.utils import log
 
 from datetime import timedelta
 import pandas as pd
@@ -114,12 +113,12 @@ def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict, key_column):
             lambda x: timedelta(seconds=0) <= x <= timedelta(minutes=1)
         )
         df_treated = df_treated[mask]
-        log.info(f"Shape antes da filtragem: {df.shape}")
-        log.info(f"Shape após a filtrage: {df_treated.shape}")
+        log(f"Shape antes da filtragem: {df.shape}")
+        log(f"Shape após a filtrage: {df_treated.shape}")
         if df_treated.shape[0] == 0:
             error = ValueError("After filtering, the dataframe is empty!")
         df = df_treated
     except:
         err = traceback.format_exc()
         # log_critical(f"Failed to filter STPL data: \n{err}")
-    return {"df": df, "error": error}
+    return {"df": df, "error": err}
