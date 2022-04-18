@@ -2,6 +2,7 @@
 """
 Flows for emd
 """
+
 # pylint: disable=C0103
 
 from functools import partial
@@ -19,7 +20,7 @@ from pipelines.rj_escritorio.waze.tasks import (
 )
 from pipelines.rj_escritorio.waze.schedules import every_five_minutes
 from pipelines.utils.utils import notify_discord_on_failure
-from pipelines.utils.tasks import rename_current_flow_run, get_now_time
+from pipelines.utils.tasks import rename_current_flow_run_now_time, get_now_time
 
 
 with Flow(
@@ -37,8 +38,9 @@ with Flow(
     # Rename flow run
     #
     #####################################
-    now_time = get_now_time()
-    rename_flow_run = rename_current_flow_run(msg=f"Waze: {now_time}")
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix="Waze: ", now_time=get_now_time()
+    )
 
     areas = load_geometries()
 

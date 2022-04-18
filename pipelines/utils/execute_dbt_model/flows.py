@@ -15,7 +15,7 @@ from pipelines.utils.execute_dbt_model.tasks import (
     get_k8s_dbt_client,
     run_dbt_model,
 )
-from pipelines.utils.tasks import rename_current_flow_run
+from pipelines.utils.tasks import rename_current_flow_run_dataset_table
 
 from pipelines.utils.utils import notify_discord_on_failure
 
@@ -37,8 +37,8 @@ with Flow(
     # Rename flow run
     #
     #####################################
-    rename_flow_run = rename_current_flow_run(
-        msg=f"Materialize: {dataset_id}.{table_id}"
+    rename_flow_run = rename_current_flow_run_dataset_table(
+        prefix="Materialize: ", dataset_id=dataset_id, table_id=table_id
     )
 
     # Get DBT client

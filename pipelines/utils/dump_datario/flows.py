@@ -16,7 +16,7 @@ from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.tasks import (
     create_bd_table,
     get_current_flow_labels,
-    rename_current_flow_run,
+    rename_current_flow_run_dataset_table,
     upload_to_gcs,
     dump_header_to_csv,
     check_table_exists,
@@ -63,7 +63,9 @@ with Flow(
     # Rename flow run
     #
     #####################################
-    rename_flow_run = rename_current_flow_run(msg=f"Dump: {dataset_id}.{table_id}")
+    rename_flow_run = rename_current_flow_run_dataset_table(
+        prefix="Dump: ", dataset_id=dataset_id, table_id=table_id
+    )
 
     #####################################
     #
