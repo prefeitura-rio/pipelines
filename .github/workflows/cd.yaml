@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - master
-    paths:
-      - 'pipelines/**'
 
 env:
   DISCORD_HOOK_URL: ${{ secrets.DISCORD_HOOK_URL }}
