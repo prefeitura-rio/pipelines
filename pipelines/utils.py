@@ -26,6 +26,14 @@ def log(msg: Any, level: str = 'info') -> None:
     prefect.context.logger.log(levels[level], msg)  # pylint: disable=E1101
 
 
+@prefect.task(checkpoint=False)
+def log_task(msg: Any, level: str = "info"):
+    """
+    Logs a message to prefect's logger.
+    """
+    log(msg, level)
+
+
 def get_vault_client() -> hvac.Client:
     """
     Returns a Vault client.
