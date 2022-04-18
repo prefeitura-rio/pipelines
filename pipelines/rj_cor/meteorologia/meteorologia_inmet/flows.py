@@ -30,16 +30,16 @@ with Flow(
 
     dados = download(data=data)
     dados, partitions = tratar_dados(dados=dados, hora=hora)
-    path = salvar_dados(dados=dados, partitions=partitions)
+    PATH = salvar_dados(dados=dados, partitions=partitions)
 
     # Create table in BigQuery
     create_table_and_upload_to_gcs(
-        data_path=path,
+        data_path=PATH,
         dataset_id=DATASET_ID,
         table_id=TABLE_ID,
         dump_type=DUMP_TYPE,
         partitions=partitions,
-        wait=path,
+        wait=PATH,
     )
 
 # para rodar na cloud
