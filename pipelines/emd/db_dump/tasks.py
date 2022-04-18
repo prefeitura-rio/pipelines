@@ -162,7 +162,12 @@ def dump_header_to_csv(
 #
 ###############
 @task
-def upload_to_gcs(path: Union[str, Path], dataset_id: str, table_id: str) -> None:
+def upload_to_gcs(
+    path: Union[str, Path], 
+    dataset_id: str, 
+    table_id: str,
+    wait=None,  # pylint: disable=unused-argument
+) -> None:
     """
     Uploads a bunch of CSVs using BD+
     """
@@ -189,7 +194,13 @@ def upload_to_gcs(path: Union[str, Path], dataset_id: str, table_id: str) -> Non
 
 
 @task
-def create_bd_table(path: Union[str, Path], dataset_id: str, table_id: str, full_dump:str) -> None:
+def create_bd_table(
+    path: Union[str, Path], 
+    dataset_id: str, 
+    table_id: str, 
+    full_dump:str, 
+    wait=None,  # pylint: disable=unused-argument
+) -> None:
     """
     Create table using BD+
     """

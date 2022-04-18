@@ -90,6 +90,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
         dataset_id=dataset_id,
         table_id=table_id,
         full_dump=full_dump,
+        wait=header_path,
     )
 
     #####################################
@@ -115,7 +116,12 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
     )
 
     # Upload to GCS
-    upload_to_gcs(path=path, dataset_id=dataset_id, table_id=table_id)
+    upload_to_gcs(
+        path=path, 
+        dataset_id=dataset_id, 
+        table_id=table_id, 
+        wait=path
+    )
 
 
 dump_sql_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
