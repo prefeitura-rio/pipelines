@@ -59,7 +59,7 @@ with Flow("COR: Meteorologia - Satelite GOES 16") as cor_meteorologia_goes16:
     info_tpw = tratar_dados(filename=filename_tpw)
     path_tpw, partitions_tpw = salvar_parquet(info=info_tpw)
 
-    waiting_tpw = create_table_and_upload_to_gcs(
+    create_table_and_upload_to_gcs(
         data_path=path_tpw,
         dataset_id=DATASET_ID_TPW,
         table_id=TABLE_ID_TPW,
