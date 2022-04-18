@@ -2,25 +2,27 @@
 """
 Flows for emd
 """
-import pendulum
-
-from prefect import Flow
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants
 from pipelines.rj_cor.meteorologia.satelite.tasks import (
+    get_dates,
     slice_data,
     download,
     tratar_dados,
     salvar_parquet,
 )
 from pipelines.rj_cor.meteorologia.satelite.schedules import hour_schedule
+from pipelines.utils.decorators import Flow
 from pipelines.utils.tasks import (
     create_table_and_upload_to_gcs,
 )
 
-with Flow("COR: Meteorologia - Satelite GOES 16") as cor_meteorologia_goes16:
-    CURRENT_TIME = pendulum.now("UTC")
+with Flow(
+    name="COR: Meteorologia - Satelite GOES 16"
+)as cor_meteorologia_goes16:
+
+    CURRENT_TIME = get_dates()
 
     ano, mes, dia, hora, dia_juliano = slice_data(current_time=CURRENT_TIME)
 

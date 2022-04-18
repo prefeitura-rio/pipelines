@@ -3,4 +3,4 @@
 Prefect flows for rj_smfp project
 """
 
-from pipelines.rj_smfp.dump_db.flows import *
+from pipelines.rj_smfp.dump_db_ergon.flows import *
