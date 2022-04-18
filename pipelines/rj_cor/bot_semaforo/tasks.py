@@ -48,7 +48,7 @@ def get_data() -> pd.DataFrame:
         DISTINCT ts,
         uuid
     FROM
-        `datario.transporte_rodoviario_waze.alertas`
+        `rj-escritorio-dev.transporte_rodoviario_waze.alertas`
     WHERE
         type = 'HAZARD'
         AND subtype='HAZARD_ON_ROAD_TRAFFIC_LIGHT_FAULT'
@@ -64,7 +64,7 @@ def get_data() -> pd.DataFrame:
         FROM
         distinct_selection
         LEFT JOIN
-        `datario.transporte_rodoviario_waze.alertas` AS original
+        `rj-escritorio-dev.transporte_rodoviario_waze.alertas` AS original
         ON
         distinct_selection.ts = original.ts
         AND distinct_selection.uuid = original.uuid
