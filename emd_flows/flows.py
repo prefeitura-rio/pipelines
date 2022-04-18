@@ -5,6 +5,7 @@ Testing scheduled workflows
 from datetime import datetime
 
 from prefect import Flow
+from prefect.environments import KubernetesJobEnvironment
 from prefect.run_configs import KubernetesRun
 from prefect.storage import Module
 
@@ -34,6 +35,9 @@ with Flow("flow_0") as flow_0:
 flow_0.storage = Module("emd_flows.flows")
 flow_0.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 flow_0.schedule = fifteen_minute_schedule
+flow_0.environment = KubernetesJobEnvironment(
+    labels=[constants.K8S_AGENT_LABEL.value]
+)
 
 
 with Flow("flow_1") as flow_1:
