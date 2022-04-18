@@ -19,34 +19,6 @@ from pipelines.utils.utils import untuple_clocks as untuple
 #
 #####################################
 sme_queries = {
-    "movimentacao": {
-        "dump_type": "overwrite",  # TODO: maybe partition
-        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Movimentacao",
-    },
-    "frequencia": {
-        "partition_column": "datainicio",
-        "lower_bound_date": "2022-03-01",
-        "dump_type": "append",
-        "execute_query": """
-            SELECT
-                esc_id AS esc_id,
-                tur_id AS tur_id,
-                turma AS turma,
-                alu_id AS alu_id,
-                coc AS coc,
-                dataInicio AS datainicio,
-                dataFim AS datafim,
-                diasLetivos AS diasletivos,
-                temposLetivos AS temposletivos,
-                faltasGlb AS faltasglb,
-                dis_id AS dis_id,
-                disciplinaCodigo AS disciplinacodigo,
-                disciplina AS disciplina,
-                faltasDis AS faltasdis,
-                cargaHorariaSemanal AS cargahorariasemanal
-            FROM GestaoEscolar.dbo.VW_BI_Frequencia
-        """,
-    },
     "coc": {
         "dump_type": "overwrite",  # TODO: check if it is possible to partition, this run takes 70 minutes
         "materialize_after_dump": True,
@@ -76,6 +48,40 @@ sme_queries = {
                 pft_capacidade AS pft_capacidade
             FROM GestaoEscolar.dbo.VW_BI_Aluno_Turma_COC
         """,
+    },
+    "frequencia": {
+        "partition_column": "datainicio",
+        "lower_bound_date": "2022-03-01",
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "dump_type": "append",
+        "execute_query": """
+            SELECT
+                esc_id AS esc_id,
+                tur_id AS tur_id,
+                turma AS turma,
+                alu_id AS alu_id,
+                coc AS coc,
+                dataInicio AS datainicio,
+                dataFim AS datafim,
+                diasLetivos AS diasletivos,
+                temposLetivos AS temposletivos,
+                faltasGlb AS faltasglb,
+                dis_id AS dis_id,
+                disciplinaCodigo AS disciplinacodigo,
+                disciplina AS disciplina,
+                faltasDis AS faltasdis,
+                cargaHorariaSemanal AS cargahorariasemanal
+            FROM GestaoEscolar.dbo.VW_BI_Frequencia
+        """,
+    },
+    "movimentacao": {
+        "partition_column": "data_mov",
+        "lower_bound_date": "2022-03-01",
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "dump_type": "append",
+        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Movimentacao",
     },
     "turma": {
         "dump_type": "overwrite",
