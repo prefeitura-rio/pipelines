@@ -22,7 +22,6 @@ _1746_queries = {
         "partition_column": "dt_inicio",
         "dump_type": "append",
         "execute_query": """
-            USE REPLICA1746
             SELECT
                 DISTINCT ch.id_chamado,
                 CONVERT (
@@ -116,16 +115,12 @@ _1746_queries = {
                 LEFT JOIN tb_territorialidade_regiao_administrativa_bairro AS tra ON tra.id_bairro_fk = br.id_bairro
                 LEFT JOIN tb_territorialidade_regiao_administrativa AS trg ON trg.id_territorialidade_regiao_administrativa = tra.id_territorialidade_regiao_administrativa_fk
                 LEFT JOIN tb_territorialidade AS tr ON tr.id_territorialidade = trg.id_territorialidade_fk
-            ORDER BY
-                ch.id_chamado ASC
         """,
     },
 }
 _1746_clocks = generate_schedules(
     interval=timedelta(days=1),
-    start_date=datetime(
-        2022, 3, 13, 0, 0, tzinfo=pytz.timezone("America/Sao_Paulo")
-    ),
+    start_date=datetime(2022, 3, 13, 0, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_SEGOVI_AGENT_LABEL.value,
     ],
