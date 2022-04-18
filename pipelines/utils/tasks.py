@@ -261,6 +261,13 @@ def upload_to_gcs(
     if dump_type == "overwrite":
         st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
         st.delete_table(mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
+        log(
+            f"Mode overwrite: Sucessfully remove older data from {st.bucket_name}.{dataset_id}.{table_id}"
+        )  # pylint: disable=C0301
+    else:
+        log(
+            f"Mode append: Uploading data to {st.bucket_name}.{dataset_id}.{table_id}"
+        )  # pylint: disable=C0301
 
     if tb.table_exists(mode="staging"):
         # the name of the files need to be the same or the data doesn't get overwritten
