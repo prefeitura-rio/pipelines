@@ -74,6 +74,7 @@ import pendulum
 import xarray as xr
 
 from pipelines.rj_cor.meteorologia.satelite.remap import remap
+from pipelines.utils.utils import log
 
 
 def converte_timezone(datetime_save: str) -> str:
@@ -407,7 +408,7 @@ def treat_data(
     return data
 
 
-def save_parquet(variable: str, datetime_save: str) -> Tuple[Union[str, Path], str]:
+def save_parquet(variable: str, datetime_save: str) -> Union[str, Path]:
     """
     Save data in parquet
     """
@@ -444,20 +445,24 @@ def save_parquet(variable: str, datetime_save: str) -> Tuple[Union[str, Path], s
     )
 
     # cria pasta se ela não existe
+    base_path = os.path.join(
+        os.getcwd(), "data", "satelite", variable, "output"
+    )
+
     parquet_path = os.path.join(
-        os.getcwd(), "data", "satelite", variable, "output", partitions
+        base_path, partitions
     )
 
     if not os.path.exists(parquet_path):
         os.makedirs(parquet_path)
 
     # salva em parquet
-    print("Saving on ", parquet_path)
+    log(f"Saving on base_path {base_path}")
     filename = os.path.join(parquet_path, "dados.csv")
     data.to_csv(filename, index=False)
     # filename = os.path.join(parquet_path, 'dados.parquet')
     # data.to_parquet(filename, index=False)
-    return filename, partitions
+    return base_path
 
 
 def main(path: Union[str, Path]):

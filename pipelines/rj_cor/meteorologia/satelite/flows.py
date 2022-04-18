@@ -37,7 +37,7 @@ with Flow(
     )
 
     info_rr = tratar_dados(filename=filename_rr)
-    path_rr, partitions_rr = salvar_parquet(info=info_rr)
+    path_rr = salvar_parquet(info=info_rr)
 
     # Create table in BigQuery
     create_table_and_upload_to_gcs(
@@ -58,7 +58,7 @@ with Flow(
     )
 
     info_tpw = tratar_dados(filename=filename_tpw)
-    path_tpw, partitions_tpw = salvar_parquet(info=info_tpw)
+    path_tpw = salvar_parquet(info=info_tpw)
 
     create_table_and_upload_to_gcs(
         data_path=path_tpw,
