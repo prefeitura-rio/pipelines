@@ -280,6 +280,7 @@ def remove_columns_accents(dataframe: pd.DataFrame) -> list:
         dataframe.columns.str.normalize("NFKD")
         .str.encode("ascii", errors="ignore")
         .str.decode("utf-8")
+        .str.replace(" ", "_")
     )
 
 
