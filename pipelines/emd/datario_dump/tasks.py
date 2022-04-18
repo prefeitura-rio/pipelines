@@ -13,6 +13,7 @@ import requests
 
 from pipelines.utils import (
     dataframe_to_csv,
+    remove_columns_accents,
 )
 from pipelines.constants import constants
 from pipelines.utils import log
@@ -38,6 +39,7 @@ def get_datario_geodataframe(
     dataframe = pd.DataFrame(geodatagrame)
 
     eventid = datetime.now().strftime("%Y%m%d-%H%M%S")
+    dataframe.columns = remove_columns_accents(dataframe)
     dataframe_to_csv(dataframe, path / f"{eventid}.csv")
 
     return path
