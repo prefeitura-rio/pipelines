@@ -6,11 +6,11 @@ from datetime import timedelta, datetime
 
 from prefect.core.task import NoDefault
 from prefect.schedules import Schedule
-from prefect.schedules.clocks import IntervalClock
 import pytz
 
 from pipelines.constants import constants
-from pipelines.utils.utils import query_to_line, untuple_clocks as untuple
+from pipelines.utils.dump_db.utils import generate_schedules
+from pipelines.utils.utils import untuple_clocks as untuple
 
 
 #####################################
@@ -123,32 +123,21 @@ _1746_queries = {
         """,
     },
 }
-_1746_clocks = [
-    IntervalClock(
-        interval=timedelta(days=1),
-        start_date=datetime(
-            2022, 3, 13, 0, 0, tzinfo=pytz.timezone("America/Sao_Paulo")
-        )
-        + timedelta(minutes=15 * count),
-        labels=[
-            constants.RJ_SEGOVI_AGENT_LABEL.value,
-        ],
-        parameter_defaults={
-            "batch_size": 50000,
-            "vault_secret_path": "clustersql2",
-            "db_database": "REPLICA1746",
-            "db_host": "10.70.1.34",
-            "db_port": "1433",
-            "db_type": "sql_server",
-            "dataset_id": "administracao_servicos_publicos_1746",
-            "table_id": table_id,
-            "dump_type": parameters["dump_type"],
-            "partition_column": parameters["partition_column"],
-            "lower_bound_date": parameters["lower_bound_date"],
-            "execute_query": query_to_line(parameters["execute_query"]),
-        },
-    )
-    for count, (table_id, parameters) in enumerate(_1746_queries.items())
-]
+_1746_clocks = generate_schedules(
+    interval=timedelta(days=1),
+    start_date=datetime(
+        2022, 3, 13, 0, 0, tzinfo=pytz.timezone("America/Sao_Paulo")
+    ),
+    labels=[
+        constants.RJ_SEGOVI_AGENT_LABEL.value,
+    ],
+    db_database="REPLICA1746",
+    db_host="10.70.1.34",
+    db_port="1433",
+    db_type="sql_server",
+    dataset_id="administracao_servicos_publicos_1746",
+    vault_secret_path="clustersql2",
+    table_parameters=_1746_queries,
+)
 
 _1746_daily_update_schedule = Schedule(clocks=untuple(_1746_clocks))
