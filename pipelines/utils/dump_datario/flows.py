@@ -53,6 +53,7 @@ with Flow(
     materialization_mode = Parameter(
         "materialization_mode", default="dev", required=False
     )
+    materialize_to_datario = Parameter("materialize_to_datario", default=False, required=False)
 
     #####################################
     #
@@ -91,6 +92,7 @@ with Flow(
                 "dataset_id": dataset_id,
                 "table_id": table_id,
                 "mode": materialization_mode,
+                "materialize_to_datario": materialize_to_datario,
             },
             labels=current_flow_labels,
             run_name=f"Materialize {dataset_id}.{table_id}",

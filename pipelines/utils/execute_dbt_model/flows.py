@@ -5,9 +5,10 @@ DBT-related flows.
 
 from functools import partial
 
-from prefect import Flow, Parameter
+from prefect import Flow, Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
+from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 
 from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
@@ -30,7 +31,8 @@ with Flow(
     # Parameters
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
-    mode = Parameter("mode", default="dev")
+    mode = Parameter("mode", default="dev", required=False)
+    materialize_to_datario = Parameter("materialize_to_datario", default=False, required=False)
 
     #####################################
     #
@@ -45,12 +47,34 @@ with Flow(
     dbt_client = get_k8s_dbt_client(mode=mode, wait=rename_flow_run)
 
     # Run DBT model
-    run_dbt_model(
+    materialize_this = run_dbt_model(
         dbt_client=dbt_client,
         dataset_id=dataset_id,
         table_id=table_id,
         sync=True,
     )
+
+    with case(materialize_to_datario):
+        datario_materialization_flow = create_flow_run(
+            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+            parameters={
+                "dataset_id": dataset_id,
+                "table_id": table_id,
+            },
+            labels=[
+                constants.RJ_DATARIO_AGENT_LABEL.value,
+            ],
+            run_name=f"Publish to datario: {dataset_id}.{table_id}",
+        )
+        datario_materialization_flow.set_upstream(materialize_this)
+
+        wait_for_materialization = wait_for_flow_run(
+            datario_materialization_flow,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
 
 run_dbt_model_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 run_dbt_model_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
