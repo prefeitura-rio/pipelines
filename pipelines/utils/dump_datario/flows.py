@@ -11,9 +11,6 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 from pipelines.constants import constants
-from pipelines.utils.dump_datario.schedules import (
-    diretorio_monthly_update_schedule,
-)
 from pipelines.utils.tasks import (
     create_bd_table,
     upload_to_gcs,
