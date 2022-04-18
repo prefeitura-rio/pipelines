@@ -13,8 +13,15 @@ import pendulum
 from prefect import task
 import s3fs
 
-from pipelines.constants import constants
 from pipelines.rj_cor.meteorologia.satelite.satellite_utils import main, save_parquet
+
+@task()
+def get_dates() -> str:
+    """
+    Task para obter o dia atual
+    """
+    current_time = pendulum.now("UTC").to_datetime_string()
+    return current_time
 
 
 @task(nout=5)
@@ -22,11 +29,6 @@ def slice_data(current_time: str) -> Tuple[str, str, str, str, str]:
     """
     slice data em ano. mês, dia, hora e dia juliano
     """
-    if not isinstance(current_time, str):
-        current_time = current_time.to_datetime_string()
-
-    current_time = current_time or pendulum.now("utc").to_datetime_string()
-
     ano = current_time[:4]
     mes = current_time[5:7]
     dia = current_time[8:10]
@@ -36,8 +38,8 @@ def slice_data(current_time: str) -> Tuple[str, str, str, str, str]:
 
 
 @task(
-    max_retries=constants.TASK_MAX_RETRIES.value,
-    retry_delay=dt.timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+    max_retries=10,
+    retry_delay=dt.timedelta(seconds=60),
 )
 def download(variavel: str, ano: str, dia_juliano: str, hora: str) -> Union[str, Path]:
     """
@@ -47,6 +49,7 @@ def download(variavel: str, ano: str, dia_juliano: str, hora: str) -> Union[str,
     s3_fs = s3fs.S3FileSystem(anon=True)
 
     # Get first file of GOES-16 data (multiband format) at this time
+
     file = np.sort(
         np.array(
             s3_fs.find(f"noaa-goes16/ABI-L2-{variavel}/{ano}/{dia_juliano}/{hora}/")

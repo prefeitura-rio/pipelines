@@ -1,0 +1,17 @@
+pipelines:
+  owners:
+    - gabriel-milan
+    - d116626
+  dir:
+    rj_cor:
+      owners:
+        - gabriel-milan
+        - d116626
+      dir:
+        meteorologia:
+          owners:
+            - patriciacatandi
+    rj_smtr:
+      owners:
+        - hellcassius
+        - fernandascovino
