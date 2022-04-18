@@ -12,6 +12,7 @@ from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 
 from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
+from pipelines.utils.dump_db.constants import constants as dump_db_constants
 from pipelines.utils.dump_db.db import Database
 
 from pipelines.utils.tasks import (
@@ -169,6 +170,12 @@ with Flow(
                 stream_states=True,
                 stream_logs=True,
                 raise_final_state=True,
+            )
+            wait_for_materialization.max_retries = (
+                dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
+            )
+            wait_for_materialization.retry_delay = (
+                dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
             )
 
 
