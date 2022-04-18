@@ -79,7 +79,7 @@ with Flow(
 
     # Upload to GCS
     upload_to_gcs(
-        path=wait_create_db,
+        path=wait_datario_path,
         dataset_id=dataset_id,
         table_id=table_id,
         wait=wait_create_db,
