@@ -87,6 +87,7 @@ tweepy = "4.4.0"
 urllib3 = "1.26.7"
 websocket-client = "1.2.1"
 zict = "2.0.0"
+Shapely = "1.8.0"
 
 [tool.poetry.dev-dependencies]
 pytest_cov = "^3.0.0"
