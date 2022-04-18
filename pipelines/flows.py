@@ -6,4 +6,5 @@ Imports all flows for every project so we can register all of them.
 # Automatically managed, please do not touch
 ###############################################################################
 from pipelines.emd import *
+from pipelines.cor.alagamentos.precipitacao_alertario.flows import *
 from pipelines.cor.flows import *
