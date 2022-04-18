@@ -14,7 +14,7 @@ import pendulum
 from prefect import task
 
 from pipelines.constants import constants
-from pipelines.utils.utils import get_username_and_password_from_secret
+from pipelines.utils.utils import get_vault_secret
 
 ###################################################################################
 ######## Ver de trocar o nome da coluna data_medição e deixar padronizado #########
@@ -30,12 +30,14 @@ def download() -> Tuple[pd.DataFrame, str]:
     '''
 
     # Acessar FTP Riomidia
-    host = '187.111.97.195'
     dirname = '/alertario/'
     filename = 'EstacoesMapa.txt'
 
     # Acessar username e password
-    username, password = get_username_and_password_from_secret('ftp_riomidia')
+    dicionario = get_vault_secret('riomidia')
+    host = dicionario['data']['host']
+    username = dicionario['data']['username']
+    password = dicionario['data']['password']
 
     # Cria pasta para salvar arquivo de download
     base_path = os.path.join(os.getcwd(),'data', 'precipitacao_alertario', 'input')
