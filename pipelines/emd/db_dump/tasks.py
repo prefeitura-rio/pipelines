@@ -1,8 +1,6 @@
 """
 General purpose tasks for dumping database data.
 """
-from email import header
-import os
 from pathlib import Path
 from typing import Union
 
@@ -57,16 +55,6 @@ def sql_server_execute(cursor, query):
     return cursor
 
 
-@task
-def sql_server_log_headers(cursor) -> None:
-    """
-    Logs the headers of the SQL Server table.
-    """
-    log("Getting headers")
-    log(f"Columns: {sql_server_get_columns(cursor)}")
-    log(f"First line: {cursor.fetchone()}")
-
-
 ###############
 #
 # File
@@ -104,8 +92,12 @@ def dump_batches_to_csv(cursor, batch_size: int, prepath: Union[str, Path]) -> P
 
 @task
 def dump_header_to_csv(cursor, header_path: Union[str, Path]) -> Path:
+    """
+    Dumps the header to CSV.
+    """
     columns = sql_server_get_columns(cursor)
     data = [cursor.fetchone()]
+    # pylint: disable=C0103
     df = pd.DataFrame(data=data, columns=columns)
 
     header_path = Path(header_path)
@@ -132,7 +124,8 @@ def upload_to_gcs(path: Union[str, Path], dataset_id: str, table_id: str) -> Non
 
     if tb.table_exists(mode="staging"):
         # Delete old data
-        st.delete_table(mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
+        st.delete_table(
+            mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
         log(
             f"Successfully deleted OLD DATA {st.bucket_name}.staging.{dataset_id}.{table_id}"
         )
@@ -159,11 +152,14 @@ def create_bd_table(path: Union[str, Path], dataset_id: str, table_id: str) -> N
     """
     Create table using BD+
     """
+    # pylint: disable=C0103
     tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
 
+    # pylint: disable=C0103
     st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
     if tb.table_exists(mode="staging"):
-        st.delete_table(mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
+        st.delete_table(
+            mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
 
     tb.create(
         path=path,
@@ -174,5 +170,7 @@ def create_bd_table(path: Union[str, Path], dataset_id: str, table_id: str) -> N
     )
 
     log(f"Sucessfully created table {st.bucket_name}.{dataset_id}.{table_id}")
-    st.delete_table(mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
-    log(f"Sucessfully remove table data from {st.bucket_name}.{dataset_id}.{table_id}")
+    st.delete_table(mode="staging", bucket_name=st.bucket_name,
+                    not_found_ok=True)
+    log(
+        f"Sucessfully remove table data from {st.bucket_name}.{dataset_id}.{table_id}")
