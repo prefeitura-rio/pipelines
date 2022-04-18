@@ -74,6 +74,7 @@ def upload_to_gcs(
     path: Union[str, Path],
     dataset_id: str,
     table_id: str,
+    partitions=None,
     wait=None,  # pylint: disable=unused-argument
 ) -> None:
     """
@@ -88,6 +89,7 @@ def upload_to_gcs(
         tb.append(
             filepath=path,
             if_exists="replace",
+            partitions=partitions
         )
 
         log(

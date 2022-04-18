@@ -28,8 +28,8 @@ with Flow('COR: Meteorologia - Satelite') as flow:
                         dia_juliano=dia_juliano,
                         hora=hora)
     info = tratar_dados(filename=filename)
-    path = salvar_parquet(info=info)
-    upload_to_gcs(path=path, dataset_id=DATASET_ID, table_id=TABLE_ID)
+    path, partitions = salvar_parquet(info=info)
+    upload_to_gcs(path=path, dataset_id=DATASET_ID, table_id=TABLE_ID, partitions=partitions)
 
     # Para taxa de precipitação
     VARIAVEL = 'RRQPEF'
@@ -41,8 +41,8 @@ with Flow('COR: Meteorologia - Satelite') as flow:
                         dia_juliano=dia_juliano,
                         hora=hora)
     info = tratar_dados(filename=filename)
-    path = salvar_parquet(info=info)
-    upload_to_gcs(path=path, dataset_id=DATASET_ID, table_id=TABLE_ID)
+    path, partitions = salvar_parquet(info=info)
+    upload_to_gcs(path=path, dataset_id=DATASET_ID, table_id=TABLE_ID, partitions=partitions)
 
 # para rodar na cloud
 flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
