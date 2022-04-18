@@ -20,6 +20,14 @@ class constants(Enum):  # pylint: disable=c0103
     # Prefect agents AUTO_FIND=M9w=k-b_
     EMD_AGENT_LABEL = "emd"
 
+    RJ_ESCRITORIO_AGENT_LABEL = "rj-escritorio"
+    RJ_ESCRITORIO_DEV_AGENT_LABEL = "rj-escritorio-dev"
+    RJ_DATARIO_AGENT_LABEL = "datario"
+    RJ_DATARIO_DEV_AGENT_LABEL = "datario-dev"
+
+    RJ_SME_AGENT_LABEL = "rj-sme"
+    RJ_SME_DEV_AGENT_LABEL = "rj-sme-dev"
+
     ######################################
     # Other constants
     ######################################

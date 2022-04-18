@@ -9,10 +9,7 @@ from prefect.schedules.clocks import IntervalClock
 import pytz
 
 from pipelines.constants import constants
-from pipelines.utils import (
-    query_to_line,
-    untuple_clocks as untuple
-)
+from pipelines.utils import query_to_line, untuple_clocks as untuple
 
 
 #####################################
@@ -46,8 +43,7 @@ ergon_queries = {
 ergon_clocks = [
     IntervalClock(
         interval=timedelta(days=30),
-        start_date=datetime(
-            2022, 3, 5, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo"))
+        start_date=datetime(2022, 3, 5, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo"))
         + timedelta(minutes=3 * count),
         labels=[
             constants.EMD_AGENT_LABEL.value,
@@ -144,11 +140,10 @@ sme_queries = {
 sme_clocks = [
     IntervalClock(
         interval=timedelta(days=1),
-        start_date=datetime(
-            2022, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo"))
+        start_date=datetime(2022, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo"))
         + timedelta(minutes=3 * count),
         labels=[
-            constants.EMD_AGENT_LABEL.value,
+            constants.RJ_SME_AGENT_LABEL.value,
         ],
         parameter_defaults={
             "batch_size": 50000,
@@ -277,8 +272,7 @@ _1746_queries = {
 _1746_clocks = [
     IntervalClock(
         interval=timedelta(days=1),
-        start_date=datetime(
-            2022, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo"))
+        start_date=datetime(2022, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo"))
         + timedelta(minutes=3 * count),
         labels=[
             constants.EMD_AGENT_LABEL.value,
