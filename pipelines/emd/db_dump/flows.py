@@ -76,21 +76,30 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
         database=db_object,
         query=query,
     )
-
+    
+    # Dump batches to CSV files
+    wait_batches_path = dump_batches_to_csv(
+        database=db_object,
+        batch_size=batch_size,
+        prepath=f"data/{uuid4()}/",
+        wait=wait_db_execute,
+    )
+    
     # Create CSV file with headers
-    header_path = dump_header_to_csv(
+    wait_header_path = dump_header_to_csv(
         database=db_object,
         header_path=f"data/{uuid4()}/",
-        wait=wait_db_execute,
+        data_path=wait_batches_path,
+        wait=wait_batches_path,
     )
 
     # Create table in BigQuery
     wait_create_db = create_bd_table(  # pylint: disable=invalid-name
-        path=header_path,
+        path=wait_header_path,
         dataset_id=dataset_id,
         table_id=table_id,
         dump_type=dump_type,
-        wait=header_path,
+        wait=wait_header_path,
     )
 
     #####################################
@@ -99,20 +108,12 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
     #
     #####################################
 
-    # Dump batches to CSV files
-    path = dump_batches_to_csv(
-        database=db_object,
-        batch_size=batch_size,
-        prepath=f"data/{uuid4()}/",
-        wait=wait_create_db,
-    )
-
     # Upload to GCS
     upload_to_gcs(
-        path=path, 
+        path=wait_batches_path, 
         dataset_id=dataset_id, 
         table_id=table_id, 
-        wait=path
+        wait=wait_create_db
     )
 
 
