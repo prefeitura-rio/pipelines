@@ -4,10 +4,12 @@ General utilities for all pipelines.
 
 import logging
 from os import getenv
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, List, Tuple
 
 import hvac
 import prefect
+from prefect.client import Client
+from prefect.run_configs import KubernetesRun
 import telegram
 
 
@@ -80,6 +82,34 @@ def run_local(flow: prefect.Flow, parameters: Dict[str, Any] = None):
     if parameters:
         return flow.run(parameters=parameters)
     return flow.run()
+
+
+def run_cloud(flow: prefect.Flow, labels: List[str], parameters: Dict[str, Any] = None):
+    """
+    Runs a flow on Prefect Server (must have VPN configured).
+    """
+    # Setup no schedule
+    flow.schedule = None
+
+    # Change flow name for development and register
+    flow.name = f"{flow.name} (development)"
+    flow.run_config = KubernetesRun(
+        image="ghcr.io/prefeitura-rio/prefect-flows:latest")
+    flow_id = flow.register(project_name="main", labels=[])
+
+    # Get Prefect Client and submit flow run
+    client = Client()
+    flow_run_id = client.create_flow_run(
+        flow_id=flow_id,
+        run_name=f"TEST RUN - {flow.name}",
+        labels=labels,
+        parameters=parameters,
+    )
+
+    # Print flow run link so user can check it
+    print("Run submitted, please check it at:")
+    print(
+        f"http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{flow_run_id}")
 
 
 def query_to_line(query: str) -> str:
