@@ -133,6 +133,7 @@ def send_messages(
     for alert in [alert1, alert2, alert3, alert4]:
         if alert != "":
             send_telegram_message(message=alert, token=token, chat_id=group_id)
+
     url = (
         '<a href="https://datastudio.google.com/reporting/b2841cf6-dd1b-4700-b6a4-140495e93ff4">'
         + "MAPA GERAL</a>"
