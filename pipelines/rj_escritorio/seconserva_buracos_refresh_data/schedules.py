@@ -5,12 +5,11 @@ Schedules for the database dump pipeline
 
 from datetime import datetime, timedelta
 
-from prefect.schedules import Schedule
-from prefect.schedules.clocks import IntervalClock
 import pytz
-
 from pipelines.constants import constants
 from pipelines.utils.utils import untuple_clocks as untuple
+from prefect.schedules import Schedule
+from prefect.schedules.clocks import IntervalClock
 
 #####################################
 #
@@ -34,7 +33,7 @@ seconserva_buracos_clocks = [
         parameter_defaults={
             "dataset_id": "seconserva_buracos",
             "table_id": table_id,
-            "mode": "prod",
+            "mode": "dev",
         },
     )
     for count, (_, table_id) in enumerate(seconserva_buracos_tables.items())
