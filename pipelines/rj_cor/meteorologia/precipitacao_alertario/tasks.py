@@ -148,6 +148,23 @@ def tratar_dados(filename: Union[str, Path]) -> pd.DataFrame:
     ]
     dados[float_cols] = dados[float_cols].apply(pd.to_numeric, errors="coerce")
 
+    # Normaliza nomes das estações e troca por id
+    dados.estacao = dados.estacao.str.normalize('NFKD').str.encode('ascii',errors='ignore').str.decode('utf-8')
+
+    map_estacoes = {"Ilha do governador": 8, "Jardim botanico": 16, "Riocentro": 19,
+        "Guaratiba": 20, "Barrinha": 17, "Recreio": 30, "Grota funda": 25, "Bangu": 12,
+        "Saude": 15, "Cidade de deus": 18, "Santa cruz": 22, "Iraja": 11, "Grande meier": 23,
+        "Sao cristovao": 32, "Campo grande": 26, "Av brasil mendanha": 29, "Tijuca muda": 33,
+        "Madureira": 10, "Piedade": 13, "Anchieta": 24, "Laranjeiras": 31, "Sepetiba": 27,
+        "Tanque": 14, "Grajau": 7, "Tijuca": 4, "Vidigal": 1, "Urca": 2, "Copacabana": 6,
+        "Alto da boa vista": 28, "Grajau jacarepagua": 21, "Penha": 9, "Rocinha": 3,
+        "Santa teresa": 5}
+    dados['estacao'] = dados.estacao.replace(map_estacoes)
+
+    dados = dados.rename(columns={'estacao': 'id_estacao'})
+
+    dados['id_estacao'] = dados['id_estacao'].astype(int)
+
     return dados
 
 
