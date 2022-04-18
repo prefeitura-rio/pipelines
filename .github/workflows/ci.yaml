@@ -31,6 +31,12 @@ jobs:
       - name: Check if `prefect build` works
         run: |
           prefect build
+      - name: Get changed files for code tree analysis
+        id: files
+        uses: jitterbit/get-changed-files@v1
+      - name: Perform code tree analysis
+        run: |
+          python .github/workflows/scripts/code_tree_analysis.py "${{ steps.files.outputs.all }}"
       - name: Run tests
         run: |
           pytest
