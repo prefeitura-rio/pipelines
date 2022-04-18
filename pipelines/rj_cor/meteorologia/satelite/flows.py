@@ -18,10 +18,10 @@ with Flow('COR: Meteorologia - Satelite') as flow:
 
     ano, mes, dia, hora, dia_juliano = slice_data(current_time=CURRENT_TIME)
 
-    # Para quantidade de água precipitável
-    VARIAVEL = 'TPWF'
+   # Para taxa de precipitação
+    VARIAVEL = 'RRQPEF'
     DATASET_ID = 'meio_ambiente_clima'
-    TABLE_ID = 'satelite_quantidade_agua_precipitavel'
+    TABLE_ID = 'satelite_taxa_precipitacao'
 
     filename = download(variavel=VARIAVEL,
                         ano=ano,
@@ -31,10 +31,10 @@ with Flow('COR: Meteorologia - Satelite') as flow:
     path, partitions = salvar_parquet(info=info)
     upload_to_gcs(path=path, dataset_id=DATASET_ID, table_id=TABLE_ID, partitions=partitions)
 
-    # Para taxa de precipitação
-    VARIAVEL = 'RRQPEF'
+    # Para quantidade de água precipitável
+    VARIAVEL = 'TPWF'
     DATASET_ID = 'meio_ambiente_clima'
-    TABLE_ID = 'satelite_taxa_precipitacao'
+    TABLE_ID = 'satelite_quantidade_agua_precipitavel'
 
     filename = download(variavel=VARIAVEL,
                         ano=ano,
