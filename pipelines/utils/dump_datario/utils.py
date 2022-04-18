@@ -1,38 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-General utilities for interacting with dbt-rpc
+General utilities for interacting with datario-dump
 """
+
 from datetime import timedelta, datetime
 from typing import List
 
-from dbt_client import DbtClient
 from prefect.schedules.clocks import IntervalClock
 
 
-def get_dbt_client(
-    host: str = "dbt-rpc",
-    port: int = 8580,
-    jsonrpc_version: str = "2.0",
-) -> DbtClient:
-    """
-    Returns a DBT RPC client.
-
-    Args:
-        host: The hostname of the DBT RPC server.
-        port: The port of the DBT RPC server.
-        jsonrpc_version: The JSON-RPC version to use.
-
-    Returns:
-        A DBT RPC client.
-    """
-    return DbtClient(
-        host=host,
-        port=port,
-        jsonrpc_version=jsonrpc_version,
-    )
-
-
-def generate_dbt_schedules(  # pylint: disable=too-many-arguments,too-many-locals
+def generate_dump_datario_schedules(  # pylint: disable=too-many-arguments,too-many-locals
     interval: timedelta,
     start_date: datetime,
     labels: List[str],
@@ -40,14 +17,15 @@ def generate_dbt_schedules(  # pylint: disable=too-many-arguments,too-many-local
     runs_interval_minutes: int = 15,
 ) -> List[IntervalClock]:
     """
-    Generates multiple schedules for execute dbt model.
+    Generates multiple schedules for dumping datario tables.
     """
     clocks = []
     for count, (table_id, parameters) in enumerate(table_parameters.items()):
         parameter_defaults = {
+            "url": parameters["url"],
             "dataset_id": parameters["dataset_id"],
+            "dump_type": parameters["dump_type"],
             "table_id": table_id,
-            "mode": parameters["mode"],
         }
         clocks.append(
             IntervalClock(

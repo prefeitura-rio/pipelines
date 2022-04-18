@@ -10,7 +10,7 @@ from prefect.storage import GCS
 
 from pipelines.constants import constants
 from pipelines.utils.dump_datario.flows import dump_datario_flow
-from pipelines.rj_escritorio.dump_datario.schedules import (
+from pipelines.rj_escritorio.diretorio_dump_datario.schedules import (
     diretorio_monthly_update_schedule,
 )
 
