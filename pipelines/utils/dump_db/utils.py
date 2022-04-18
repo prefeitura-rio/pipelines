@@ -3,7 +3,6 @@ Utilities for the Database Dump flows.
 """
 
 from datetime import datetime
-from pathlib import Path
 from typing import List, Tuple
 
 import pandas as pd
