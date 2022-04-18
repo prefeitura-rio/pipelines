@@ -97,15 +97,15 @@ with Flow("tweets_flamengo") as tweets_flamengo_flow:
 
     api = get_api()
 
-    fetch_last_id(q=q)
+    data_path = fetch_last_id(q=q)
 
-    last_id, created_at = get_last_id(api=api, q=q)
+    last_id, created_at = get_last_id(api=api, q=q, data_path=data_path)
 
     dd = fetch_tweets(api=api, q=q, last_id=last_id, created_at=created_at)
 
-    save_last_id(df=dd, q=q)
+    path = save_last_id(df=dd, q=q)
 
-    upload_to_storage()
+    upload_to_storage(path)
 
 tweets_flamengo_flow.storage = Module("pipelines.emd")
 tweets_flamengo_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
