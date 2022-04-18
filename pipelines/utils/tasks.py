@@ -272,10 +272,7 @@ def upload_to_gcs(
 
     else:
         # pylint: disable=C0301
-        log(
-            "Table does not exist in STAGING, need to create it in local first.\n"
-            "Create and publish the table in BigQuery first."
-        )
+        log("Table does not exist in STAGING, need to create first.\n")
 
 
 @task(
