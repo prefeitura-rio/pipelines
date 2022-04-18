@@ -6,7 +6,7 @@ Flows for geolocator
 """
 
 
-from prefect import Flow, Parameter, case
+from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
@@ -23,6 +23,7 @@ from pipelines.rj_escritorio.geolocator.tasks import (  # get_today,
     importa_bases_e_chamados,
 )
 from pipelines.utils.constants import constants as utils_constants
+from pipelines.utils.decorators import Flow
 from pipelines.utils.tasks import (
     get_current_flow_labels,
     create_table_and_upload_to_gcs,
@@ -37,7 +38,9 @@ with Flow("EMD: escritorio - Geolocalizacao de chamados 1746") as daily_geolocat
     materialization_mode = Parameter(
         "materialization_mode", default="dev", required=False
     )
-    materialize_to_datario = Parameter("materialize_to_datario", default=False, required=False)
+    materialize_to_datario = Parameter(
+        "materialize_to_datario", default=False, required=False
+    )
     dataset_id = geolocator_constants.DATASET_ID.value
     table_id = geolocator_constants.TABLE_ID.value
 

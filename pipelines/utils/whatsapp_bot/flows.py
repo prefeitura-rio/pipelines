@@ -7,12 +7,13 @@ https://github.com/prefeitura-rio/whatsapp-bot
 
 from functools import partial
 
-from prefect import Flow, Parameter
+from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
+from pipelines.utils.decorators import Flow
 from pipelines.utils.utils import notify_discord_on_failure
 from pipelines.utils.whatsapp_bot.tasks import (
     get_whatsapp_bot_api_url,

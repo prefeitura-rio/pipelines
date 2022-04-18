@@ -58,12 +58,13 @@ Flows for example
 ###############################################################################
 
 
-from prefect import Flow
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants
 from pipelines.rj_smtr.example.tasks import say_hello
+
 # from pipelines.rj_smtr.example.schedules import every_two_weeks
+from pipelines.utils.decorators import Flow
 
 with Flow("my_flow") as flow:
     say_hello()

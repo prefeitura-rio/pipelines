@@ -6,7 +6,7 @@ Database dumping flows
 from functools import partial
 from uuid import uuid4
 
-from prefect import Flow, Parameter, case
+from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
@@ -22,6 +22,7 @@ from pipelines.utils.tasks import (
     rename_current_flow_run_dataset_table,
     create_table_and_upload_to_gcs,
 )
+from pipelines.utils.decorators import Flow
 from pipelines.utils.dump_db.tasks import (
     database_execute,
     database_fetch,
@@ -33,10 +34,6 @@ from pipelines.utils.utils import notify_discord_on_failure
 
 with Flow(
     name=utils_constants.FLOW_DUMP_DB_NAME.value,
-    on_failure=partial(
-        notify_discord_on_failure,
-        secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value,
-    ),
 ) as dump_sql_flow:
 
     #####################################
@@ -179,10 +176,6 @@ dump_sql_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 
 with Flow(
     name="EMD: template - Executar query SQL",
-    on_failure=partial(
-        notify_discord_on_failure,
-        secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value,
-    ),
 ) as run_sql_flow:
     #####################################
     #

@@ -59,7 +59,7 @@ Flows for emd
 
 from functools import partial
 
-from prefect import Flow, Parameter
+from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
@@ -72,6 +72,7 @@ from pipelines.rj_escritorio.tweets_flamengo.tasks import (
     upload_to_storage,
     get_api,
 )
+from pipelines.utils.decorators import Flow
 from pipelines.utils.utils import notify_discord_on_failure
 
 # from pipelines.emd.tweets_flamengo.schedules import tweets_flamengo_schedule
@@ -79,10 +80,6 @@ from pipelines.utils.utils import notify_discord_on_failure
 
 with Flow(
     name="EMD: escritorio - Captura tweets do Flamengo",
-    on_failure=partial(
-        notify_discord_on_failure,
-        secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value,
-    ),
 ) as tweets_flamengo_flow:
     q = Parameter("keyword")
 

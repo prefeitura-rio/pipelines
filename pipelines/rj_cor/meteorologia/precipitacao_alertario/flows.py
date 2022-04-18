@@ -2,7 +2,6 @@
 """
 Flows for precipitacao_alertario
 """
-from prefect import Flow
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants
@@ -14,6 +13,7 @@ from pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks import (
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.schedules import (
     minute_schedule,
 )
+from pipelines.utils.decorators import Flow
 from pipelines.utils.tasks import create_table_and_upload_to_gcs
 
 with Flow(
