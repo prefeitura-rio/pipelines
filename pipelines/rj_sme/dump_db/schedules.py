@@ -88,10 +88,28 @@ sme_queries = {
         """,
     },
     "frequencia": {
-        "partition_column": "dataInicio",
+        "partition_column": "datainicio",
         "lower_bound_date": "2022-03-01",
         "dump_type": "append",
-        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Frequencia",
+        "execute_query": """
+            SELECT 
+                esc_id AS esc_id,
+                tur_id AS tur_id,
+                turma AS turma,
+                alu_id AS alu_id,
+                coc AS coc,
+                dataInicio AS datainicio,
+                dataFim AS datafim,
+                diasLetivos AS diasletivos,
+                temposLetivos AS temposletivos,
+                faltasGlb AS faltasglb,
+                dis_id AS dis_id,
+                disciplinaCodigo AS disciplinacodigo,
+                disciplina AS disciplina,
+                faltasDis AS faltasdis,
+                cargaHorariaSemanal AS cargahorariasemanal
+            FROM GestaoEscolar.dbo.VW_BI_Frequencia
+        """,
     },
     "escola": {
         "dump_type": "overwrite",
