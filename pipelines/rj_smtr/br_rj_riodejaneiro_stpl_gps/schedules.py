@@ -88,6 +88,7 @@ every_minute = Schedule(
                 "table_id": "registros",
                 "url": "http://zn4.m2mcontrol.com.br/api/integracao/veiculos",
                 "key_column": "codigo",
+                "kind": "stpl",
             },
         ),
     ]

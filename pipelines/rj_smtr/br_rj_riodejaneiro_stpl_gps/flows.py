@@ -78,12 +78,13 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks import (
 from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.schedules import every_minute
 from pipelines.utils.decorators import Flow
 
-with Flow("Captura_GPS_STPL") as stpl_captura:
+with Flow("SMTR: gps_stpl - Captura") as stpl_captura:
 
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
     url = Parameter("url")
     key_column = Parameter("key_column")
+    kind = Parameter("kind")
 
     file_dict = create_current_date_hour_partition()
 
@@ -94,7 +95,7 @@ with Flow("Captura_GPS_STPL") as stpl_captura:
         partitions=file_dict["partitions"],
     )
 
-    status_dict = get_raw(url=url)
+    status_dict = get_raw(url=url, kind=kind)
 
     raw_filepath = save_raw_local(data=status_dict["data"], file_path=filepath)
 
@@ -124,4 +125,4 @@ with Flow("Captura_GPS_STPL") as stpl_captura:
 
 stpl_captura.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 stpl_captura.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-# stpl_captura.schedule = every_minute
+stpl_captura.schedule = every_minute
