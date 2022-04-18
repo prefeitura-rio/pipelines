@@ -288,21 +288,6 @@ def upload_logs_to_bq(dataset_id, parent_table_id, timestamp, error):
     # save local
     dataframe.to_csv(filepath, index=False)
     # BD Table object
-    tb_obj = Table(dataset_id=dataset_id, table_id=table_id)
-    # create and publish if table does not exist, append to it otherwise
-    if not tb_obj.table_exists("staging"):
-        tb_obj.create(
-            path=f"{timestamp}/{table_id}",
-            if_table_exists="replace",
-            if_storage_data_exists="replace",
-            if_table_config_exists="pass",
-        )
-    elif not tb_obj.table_exists("prod"):
-        tb_obj.publish(if_exists="replace")
-    else:
-        tb_obj.append(filepath=f"{timestamp}/{table_id}", if_exists="replace")
-
-    return tb_obj.table_exists("prod")
-
+    create_or_append_table(dataset_id=dataset_id, table_id=table_id, path=filepath)
     # delete local file
     # shutil.rmtree(f"{timestamp}")
