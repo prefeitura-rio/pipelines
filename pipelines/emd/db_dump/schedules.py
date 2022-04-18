@@ -2,6 +2,7 @@
 Schedules for the database dump pipeline
 """
 
+from calendar import month
 from datetime import timedelta, datetime
 
 from prefect.schedules import Schedule
@@ -10,7 +11,11 @@ import pytz
 
 from pipelines.constants import constants
 
-
+#####################################
+#
+# 1746 Schedules
+#
+#####################################
 emd_1746 = (
     IntervalClock(
         interval=timedelta(days=1),
@@ -78,7 +83,11 @@ emd_1746 = (
     ),
 )
 
-
+#####################################
+#
+# SME Schedules
+#
+#####################################
 sme_escola = (
     IntervalClock(
         interval=timedelta(days=1),
@@ -143,27 +152,94 @@ sme_dependencia = (
     ),
 )
 
-sme_frequencia = IntervalClock(
-    interval=timedelta(days=1),
-    start_date=datetime(2021, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo")),
-    labels=[
-        constants.EMD_AGENT_LABEL.value,
-    ],
-    parameter_defaults={
-        "batch_size": 50000,
-        "dataset_id": "educacao_basica",
-        "db_database": "GestaoEscolar",
-        "db_host": "10.70.6.103",
-        "db_port": "1433",
-        "db_type": "sql_server",
-        "dump_type": "overwrite",
-        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Frequencia",
-        "table_id": "frequencia",
-        "vault_secret_path": "clustersqlsme",
-    },
-)
+### POR ENQUANTO SO USA DADOS DE 2019
+# sme_frequencia = IntervalClock(
+#     interval=timedelta(days=1),
+#     start_date=datetime(2021, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo")),
+#     labels=[
+#         constants.EMD_AGENT_LABEL.value,
+#     ],
+#     parameter_defaults={
+#         "batch_size": 50000,
+#         "dataset_id": "educacao_basica",
+#         "db_database": "GestaoEscolar",
+#         "db_host": "10.70.6.103",
+#         "db_port": "1433",
+#         "db_type": "sql_server",
+#         "dump_type": "overwrite",
+#         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Frequencia",
+#         "table_id": "frequencia",
+#         "vault_secret_path": "clustersqlsme",
+#     },
+# )
 
-clocks = [emd_1746, sme_escola, sme_turma, sme_dependencia, sme_frequencia]
+
+#####################################
+#
+# Ergon Schedules
+#
+#####################################
+
+ergon_views = {
+    "VW_DLK_ERG_CARGOS_": "cargo",
+    "VW_DLK_ERG_CATEGORIAS_": "categoria",
+    "VW_DLK_ERG_EMPRESAS": "empresa",
+    "VW_DLK_ERG_ERG_MATRICULAS": "matricula",
+    "VW_DLK_ERG_FITA_BANCO": "fita_banco",
+    "VW_DLK_ERG_FOLHAS_EMP": "folha_empresa",
+    "VW_DLK_ERG_FORMAS_PROV_": "forma_prov",
+    "VW_DLK_ERG_FUNCIONARIOS": "funcionario",
+    "VW_DLK_ERG_HORARIO_TRAB_": "horario_trabalho",
+    "VW_DLK_ERG_HSETOR_": "h_setor",
+    "VW_DLK_ERG_JORNADAS_": "jornada",
+    "VW_DLK_ERG_ORGAOS_EXTERNOS": "orgaos_externos",
+    "VW_DLK_ERG_ORGAOS_REGIMES_JUR_": "orgaos_regime_juridico",
+    "VW_DLK_ERG_PROVIMENTOS_EV": "provimentos_ev",
+    "VW_DLK_ERG_REGIMES_JUR_": "regime_juridico",
+    "VW_DLK_ERG_TIPO_FOLHA": "tipo_folha",
+    "VW_DLK_ERG_TIPO_ORGAO": "tipo_orgao",
+    "VW_DLK_ERG_TIPO_VINC_": "tipo_vinculo",
+    "VW_DLK_ERG_VINCULOS": "vinculo",
+}
+
+
+def get_clock(dataset_id, view_name, table_id):
+    return IntervalClock(
+        interval=timedelta(days=30),
+        start_date=datetime(2021, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo")),
+        labels=[
+            constants.EMD_AGENT_LABEL.value,
+        ],
+        parameter_defaults={
+            "batch_size": 50000,
+            "dataset_id": dataset_id,
+            "db_database": "P01.PCRJ",
+            "db_host": "10.70.6.22",
+            "db_port": "1521",
+            "db_type": "oracle",
+            "dump_type": "overwrite",
+            "execute_query": f"SELECT * FROM C_ERGON.{view_name} WHERE ROWNUM <= 10000",
+            "table_id": table_id,
+            "vault_secret_path": "ergon-hom",
+        },
+    )
+
+
+ergon_clocks = []
+dataset_id = "administracao_recursos_humanos_folha_salarial"
+for view, table_id in ergon_views.items():
+    view_name = view
+    ergon_clocks.append(
+        get_clock(dataset_id=dataset_id, view_name=view_name, table_id=table_id)
+    )
+
+
+#####################################
+#
+# Prefect clocks
+#
+#####################################
+clocks = [emd_1746, sme_escola, sme_turma, sme_dependencia] + ergon_clocks
 clocks = [clock[0] if type(clock) == tuple else clock for clock in clocks]
 
 daily_update_schedule = Schedule(clocks=clocks)
