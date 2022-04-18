@@ -5,6 +5,7 @@ Utilities for `db_dump` tasks.
 from pathlib import Path
 from typing import Tuple, List, Union
 
+from unidecode import unidecode
 import pandas as pd
 
 from pipelines.utils import log
@@ -22,6 +23,14 @@ def batch_to_dataframe(batch: Tuple[Tuple], columns: List[str]) -> pd.DataFrame:
     """
     log(f"Converting batch of size {len(batch)} to dataframe")
     return pd.DataFrame(batch, columns=columns)
+
+
+def get_clean_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
+    for col in dataframe.columns.tolist():
+        dataframe[col] = dataframe[col].apply(
+            lambda x: unidecode(str(x)) if x is not None else x
+        )
+    return dataframe
 
 
 ###############
