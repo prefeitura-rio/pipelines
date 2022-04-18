@@ -71,7 +71,7 @@ def importa_bases_e_chamados() -> list:
     Importa a base de endereços completa e os endereços dos chamados que entraram no dia anterior.
     """
     query = """
-    SELECT * FROM `rj-escritorio-dev.seconserva_buracos.habitacao_urbana_enderecos_geolocalizados`
+    SELECT * FROM `rj-escritorio-dev.dados_mestres.enderecos_geolocalizados`
     """
     base_enderecos_atual = bd.read_sql(
         query, billing_project_id="rj-escritorio-dev", from_file=True
@@ -87,6 +87,7 @@ def importa_bases_e_chamados() -> list:
     'RJ' estado,
     'Rio de Janeiro' municipio,
     no_bairro bairro,
+    id_logradouro,
     no_logradouro logradouro,
     ds_endereco_numero numero_porta,
     CONCAT(no_logradouro, ' ', ds_endereco_numero, ', ', no_bairro,
@@ -96,7 +97,9 @@ def importa_bases_e_chamados() -> list:
         AND dt_inicio >= '{d1}' AND dt_inicio <= '{d2}'
         ORDER BY id_chamado ASC
     )
-    select distinct endereco_completo, pais, estado, municipio, bairro, logradouro, numero_porta
+    select distinct
+        endereco_completo, pais, estado, municipio,
+        bairro, id_logradouro, logradouro, numero_porta
         from teste
     """
     chamados_ontem = bd.read_sql(
@@ -151,9 +154,11 @@ def cria_csv(base_enderecos_atual, base_enderecos_novos):
     """
     Une os endereços previamente catalogados com os novos e cria um csv.
     """
+    today = prefect.context.get("today")
+
     base_enderecos_atualizada = base_enderecos_atual.append(
         base_enderecos_novos, ignore_index=True
     )
     base_enderecos_atualizada.to_csv(
-        geolocator_constants.PATH_BASE_ENDERECOS.value, index=False
+        f"{geolocator_constants.PATH_BASE_ENDERECOS.value}_{today}.csv", index=False
     )

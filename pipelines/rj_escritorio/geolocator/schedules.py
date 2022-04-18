@@ -83,7 +83,7 @@ every_day_at_four_am = Schedule(
             interval=timedelta(days=1),
             start_date=pendulum.datetime(2021, 1, 1, 4, 0, 0, tz="America/Sao_Paulo"),
             labels=[
-                constants.K8S_AGENT_LABEL.value,
+                constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
             ],
         )
     ]
