@@ -28,3 +28,25 @@ General purpose functions for the geolocator project
 # ```
 #
 ###############################################################################
+import requests
+
+def geolocator(q: str) -> list:
+    # q = 'praia de botafogo 200'
+    # q = ' '.join(q.split(' '))
+
+    url = f"https://gapi.waze.com/autocomplete/q?q={q}&e=ALL&c=web&gxy=1&exp=8%2C10%2C12&v=-22.9370135%2C-43.18795323%3B-22.9301167%2C-43.1815052&lang=pt"
+
+    payload={}
+    headers = {}
+    try:
+        response = requests.request("GET", url, headers=headers, data=payload)
+
+        long = response.json()[1][0][3]['x']
+        lat = response.json()[1][0][3]['y']
+        i += 1
+        #print(f"Estou na {i}a linha da tabela.")
+        return [lat, long]
+    except:
+        i += 1
+        #print(f"Estou na {i}a linha da tabela.")
+        return [None, None]

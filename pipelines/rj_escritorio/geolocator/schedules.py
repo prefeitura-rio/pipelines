@@ -69,19 +69,22 @@ Schedules for geolocator
 ###############################################################################
 
 
-from datetime import timedelta, datetime
+from prefect import task
+from datetime import timedelta
+import pendulum
 from prefect.schedules import Schedule
 from prefect.schedules.clocks import IntervalClock
 from pipelines.constants import constants
 
-every_two_weeks = Schedule(
+every_day_at_for_pm = Schedule(
     clocks=[
         IntervalClock(
-            interval=timedelta(weeks=2),
-            start_date=datetime(2021, 1, 1),
+            interval=timedelta(days=1),
+            start_date=pendulum.datetime(
+                2021, 1, 1, 4, 0, 0, tz="America/Sao_Paulo"),
             labels=[
-                constants.RJ_ESCRITORIO_AGENT_LABEL.value,
+                constants.K8S_AGENT_LABEL.value,
             ]
-        ),
+        )
     ]
 )

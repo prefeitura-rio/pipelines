@@ -61,12 +61,25 @@ from prefect import Flow
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants
-from pipelines.rj_escritorio.geolocator.tasks import say_hello
-# from pipelines.rj_escritorio.geolocator.schedules import every_two_weeks
+from pipelines.rj_escritorio.geolocator.tasks import importa_bases_e_chamados, cria_csv, geolocaliza_enderecos, enderecos_novos
+from pipelines.utils.tasks import upload_to_gcs 
+import requests
+import basedosdados as bd
+import pandas as pd
+from datetime import datetime, timedelta
+import time
+from pipelines.rj_escritorio.geolocator.utils import geolocator
+from pipelines.rj_escritorio.geolocator.constants import constants
+from pipelines.rj_escritorio.geolocator.schedules import every_day_at_for_pm
 
 with Flow("my_flow") as flow:
-    say_hello()
+    #[enderecos_conhecidos, enderecos_ontem, chamados_ontem, base_enderecos_atual]
+    lista_enderecos = importa_bases_e_chamados()
+    novos_enderecos = enderecos_novos(lista_enderecos, upstream_tasks=[lista_enderecos])
+    base_geolocalizada = geolocaliza_enderecos(novos_enderecos, upstream_tasks=[novos_enderecos])
+    cria_csv(lista_enderecos[3], base_geolocalizada, upstream_tasks=[base_geolocalizada])
+    upload_to_gcs(constants.PATH_BASE_ENDERECOS.value, constants.DATASET_ID.value, constants.TABLE_ID.value)
 
 flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-# flow.schedule = every_two_weeks
+#flow.schedule = every_day_at_for_pm
