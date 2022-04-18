@@ -146,19 +146,16 @@ def create_table_and_upload_to_gcs(
     if dump_type == "append":
         if tb.table_exists(mode="staging"):
             log(
-                f"MODE APPEND: Table already exists:"
+                f"MODE APPEND: Table ALREADY EXISTS:"
                 f"\n{table_staging}"
                 f"\n{storage_path_link}"
             )
         else:
             # the header is needed to create a table when dosen't exist
+            log("MODE APPEND: Table DOSEN'T EXISTS\n" "Start to CREATE HEADER file")
             header_path = dump_header_to_csv(data_path=data_path)
-            log(
-                "MODE APPEND: Table dosen't exists\n"
-                f"{table_staging}\n"
-                "Created HEADER file:\n"
-                f"{header_path}"
-            )
+            log("MODE APPEND: Created HEADER file:\n" f"{header_path}")
+
             tb.create(
                 path=header_path,
                 if_storage_data_exists="replace",
@@ -206,13 +203,10 @@ def create_table_and_upload_to_gcs(
 
         # the header is needed to create a table when dosen't exist
         # in overwrite mode the header is always created
+        log("MODE OVERWRITE: Table DOSEN'T EXISTS\n" "Start to CREATE HEADER file")
         header_path = dump_header_to_csv(data_path=data_path)
-        log(
-            f"MODE OVERWRITE: Table don't exists\n"
-            f"{table_staging}\n"
-            f"Created HEADER file:\n"
-            f"{header_path}"
-        )
+        log("MODE OVERWRITE: Created HEADER file:\n" f"{header_path}")
+
         tb.create(
             path=header_path,
             if_storage_data_exists="replace",
@@ -224,7 +218,7 @@ def create_table_and_upload_to_gcs(
 
         log(
             "MODE OVERWRITE: Sucessfully CREATED TABLE\n"
-            f"{table_staging}"
+            f"{table_staging}\n"
             f"{storage_path_link}"
         )
 
@@ -247,13 +241,13 @@ def create_table_and_upload_to_gcs(
         tb.append(filepath=data_path, if_exists="replace", partitions=partitions)
 
         log(
-            f"MODE UPLOAD: Successfully uploaded {data_path} to Storage:\n"
+            f"STEP UPLOAD: Successfully uploaded {data_path} to Storage:\n"
             f"{storage_path}\n"
             f"{storage_path_link}"
         )
     else:
         # pylint: disable=C0301
-        log("MODE UPLOAD: Table does not exist in STAGING, need to create first")
+        log("STEP UPLOAD: Table does not exist in STAGING, need to create first")
 
 
 @task(
