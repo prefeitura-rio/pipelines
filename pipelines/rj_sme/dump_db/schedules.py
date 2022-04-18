@@ -19,21 +19,9 @@ from pipelines.utils.utils import untuple_clocks as untuple
 #
 #####################################
 sme_queries = {
-    "turma": {
-        "dump_type": "overwrite",
-        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Turma",
-    },
-    "dependencia": {
-        "dump_type": "overwrite",
-        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Dependencia",
-    },
     "movimentacao": {
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Movimentacao",
-    },
-    "avaliacao": {
-        "dump_type": "overwrite",
-        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Avaliacao",
     },
     "coc": {
         "dump_type": "overwrite",
@@ -87,7 +75,27 @@ sme_queries = {
             FROM GestaoEscolar.dbo.VW_BI_Frequencia
         """,
     },
+    "turma": {
+        "dump_type": "overwrite",
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Turma",
+    },
+    "dependencia": {
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "dump_type": "overwrite",
+        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Dependencia",
+    },
+    "avaliacao": {
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "dump_type": "overwrite",
+        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Avaliacao",
+    },
     "escola": {
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
         "dump_type": "overwrite",
         "execute_query": """
             SELECT
@@ -114,6 +122,8 @@ sme_queries = {
         """,
     },
     "aluno": {
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
         "dump_type": "overwrite",
         "execute_query": """
             SELECT
