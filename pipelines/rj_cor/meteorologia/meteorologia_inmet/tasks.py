@@ -217,14 +217,16 @@ def salvar_dados(dados: pd.DataFrame, partitions: str, data: str) -> Union[str, 
     """
     Salvar dados em csv
     """
-    base_path = Path(os.getcwd(), "data", "meteorologia_inmet", "output", partitions)
+    base_path = Path(os.getcwd(), "data", "meteorologia_inmet", "output")
 
-    if not os.path.exists(base_path):
-        os.makedirs(base_path)
+    partition_path = os.path.join(base_path, partitions)
 
-    filename = str(base_path / f"dados_{data}.csv")
+    if not os.path.exists(partition_path):
+        os.makedirs(partition_path)
+
+    filename = str(partition_path / f"dados_{data}.csv")
 
     log(f"Saving {filename}")
     # dados.to_csv(filename, index=False)
     dados.to_csv(r"{}".format(filename), index=False)
-    return filename
+    return base_path

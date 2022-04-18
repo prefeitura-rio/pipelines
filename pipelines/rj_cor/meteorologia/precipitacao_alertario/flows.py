@@ -26,7 +26,7 @@ with Flow(
 
     filename, current_time = download()
     dados = tratar_dados(filename=filename)
-    path, partitions = salvar_dados(dados=dados, current_time=current_time)
+    path = salvar_dados(dados=dados, current_time=current_time)
 
     # Create table in BigQuery
     create_table_and_upload_to_gcs(
@@ -34,7 +34,6 @@ with Flow(
         dataset_id=DATASET_ID,
         table_id=TABLE_ID,
         dump_type=DUMP_TYPE,
-        partitions=partitions,
         wait=path,
     )
 

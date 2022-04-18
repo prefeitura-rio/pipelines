@@ -15,6 +15,7 @@ import s3fs
 
 from pipelines.rj_cor.meteorologia.satelite.satellite_utils import main, save_parquet
 
+
 @task()
 def get_dates() -> str:
     """
@@ -78,8 +79,8 @@ def tratar_dados(filename: str) -> dict:
     return info
 
 
-@task(nout=2)
-def salvar_parquet(info: dict) -> Tuple[Union[str, Path], str]:
+@task
+def salvar_parquet(info: dict) -> Union[str, Path]:
     """
     Converter dados de tif para parquet
     """
@@ -87,5 +88,5 @@ def salvar_parquet(info: dict) -> Tuple[Union[str, Path], str]:
     variable = info["variable"]
     datetime_save = info["datetime_save"]
     print(f"Saving {variable} in parquet")
-    filename, partitions = save_parquet(variable, datetime_save)
-    return filename, partitions
+    filename = save_parquet(variable, datetime_save)
+    return filename

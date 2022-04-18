@@ -39,7 +39,6 @@ with Flow(
         dataset_id=DATASET_ID,
         table_id=TABLE_ID,
         dump_type=DUMP_TYPE,
-        partitions=partitions,
         wait=PATH,
     )
 

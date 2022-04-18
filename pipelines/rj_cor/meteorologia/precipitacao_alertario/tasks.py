@@ -151,10 +151,10 @@ def tratar_dados(filename: Union[str, Path]) -> pd.DataFrame:
     return dados
 
 
-@task(nout=2)
+@task
 def salvar_dados(
     dados: pd.DataFrame, current_time: str
-) -> Tuple[Union[str, Path], str]:
+) -> Union[str, Path]:
     """
     Salvar dados tratados em csv para conseguir subir pro GCP
     """
@@ -165,14 +165,16 @@ def salvar_dados(
     partitions = os.path.join(f"ano={ano}", f"mes={mes}", f"dia={dia}")
 
     base_path = os.path.join(
-        os.getcwd(), "data", "precipitacao_alertario", "output", partitions
+        os.getcwd(), "data", "precipitacao_alertario", "output"
     )
 
-    if not os.path.exists(base_path):
-        os.makedirs(base_path)
+    partition_path = os.path.join(base_path, partitions)
 
-    filename = os.path.join(base_path, f"dados_{current_time}.csv")
+    if not os.path.exists(partition_path):
+        os.makedirs(partition_path)
+
+    filename = os.path.join(partition_path, f"dados_{current_time}.csv")
 
     log(f"Saving {filename}")
     dados.to_csv(filename, index=False)
-    return filename, partitions
+    return base_path
