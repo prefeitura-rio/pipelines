@@ -19,7 +19,6 @@ class constants(Enum):  # pylint: disable=c0103
     DOCKER_IMAGE_NAME = "AUTO_REPLACE_DOCKER_IMAGE"
     DOCKER_IMAGE = f"{DOCKER_IMAGE_NAME}:{DOCKER_TAG}"
     # Prefect agents AUTO_FIND=M9w=k-b_
-    EMD_AGENT_LABEL = "emd"
 
     RJ_DATARIO_AGENT_LABEL = "datario"
     RJ_DATARIO_DEV_AGENT_LABEL = "datario-dev"
@@ -48,6 +47,7 @@ class constants(Enum):  # pylint: disable=c0103
     # Prefect
     K8S_AGENT_LABEL = "kubernetes"
     GCS_FLOWS_BUCKET = "datario-public"
+    PREFECT_DEFAULT_PROJECT = "main"
     # Prefect tasks retry policy
     TASK_MAX_RETRIES = 5
     TASK_RETRY_DELAY = 10  # seconds

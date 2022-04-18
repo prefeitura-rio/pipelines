@@ -2,6 +2,8 @@
 """
 General purpose tasks for dumping database data.
 """
+# pylint disable=unused-argument, W0613
+
 import io
 from pathlib import Path
 from typing import Union
@@ -33,6 +35,7 @@ from pipelines.constants import constants
 def get_datario_geodataframe(
     url: str,
     path: Union[str, Path],
+    wait=None,  # pylint: disable=unused-argument
 ):
     """ "
     Save a CSV from data.rio API

@@ -118,8 +118,7 @@ def get_data() -> pd.DataFrame:
         ON alertas_no_raio.name = semaforos.name
     ORDER BY initial_ts DESC
     """
-    # TODO change billing_project_id to rj-cor
-    return bd.read_sql(query=query, billing_project_id="datario", from_file=True)
+    return bd.read_sql(query=query, billing_project_id="rj-cor", from_file=True)
 
 
 @task(checkpoint=False)

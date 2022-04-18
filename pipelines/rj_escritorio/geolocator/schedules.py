@@ -73,9 +73,11 @@ Schedules for geolocator
 from datetime import timedelta
 
 import pendulum
-from pipelines.constants import constants
 from prefect.schedules import Schedule
 from prefect.schedules.clocks import IntervalClock
+
+from pipelines.constants import constants
+
 
 every_day_at_four_am = Schedule(
     clocks=[
@@ -85,6 +87,10 @@ every_day_at_four_am = Schedule(
             labels=[
                 constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
             ],
+            parameter_defaults={
+                "materialize_after_dump": True,
+                "materialization_mode": "dev",
+            },
         )
     ]
 )
