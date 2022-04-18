@@ -8,7 +8,7 @@ from google.cloud import bigquery
 import basedosdados as bd
 
 from prefect import task
-from pipelines.constants import TASK_MAX_RETRIES, TASK_RETRY_DELAY
+from pipelines.constants import constants
 from pipelines.utils import log
 
 import requests
@@ -19,8 +19,8 @@ from shapely.wkt import loads
 
 
 @task(
-    max_retries=TASK_MAX_RETRIES,
-    retry_delay=datetime.timedelta(seconds=TASK_RETRY_DELAY),
+    max_retries=constants.TASK_MAX_RETRIES,
+    retry_delay=datetime.timedelta(seconds=constants.TASK_RETRY_DELAY),
 )
 def load_geometries() -> pd.DataFrame:
     areas_dict = {
@@ -120,8 +120,8 @@ def load_geometries() -> pd.DataFrame:
 
 
 @task(
-    max_retries=TASK_MAX_RETRIES,
-    retry_delay=datetime.timedelta(seconds=TASK_RETRY_DELAY),
+    max_retries=constants.TASK_MAX_RETRIES,
+    retry_delay=datetime.timedelta(seconds=constants.TASK_RETRY_DELAY),
 )
 def fecth_waze(areas: pd.DataFrame) -> list:
     coords = areas["coords"].to_list()
@@ -142,8 +142,8 @@ def fecth_waze(areas: pd.DataFrame) -> list:
 
 
 @task(
-    max_retries=TASK_MAX_RETRIES,
-    retry_delay=datetime.timedelta(seconds=TASK_RETRY_DELAY),
+    max_retries=constants.TASK_MAX_RETRIES,
+    retry_delay=datetime.timedelta(seconds=constants.TASK_RETRY_DELAY),
 )
 def normalize_data(responses: list) -> pd.DataFrame:
     normalized = []
@@ -180,8 +180,8 @@ def normalize_data(responses: list) -> pd.DataFrame:
 
 
 @task(
-    max_retries=TASK_MAX_RETRIES,
-    retry_delay=datetime.timedelta(seconds=TASK_RETRY_DELAY),
+    max_retries=constants.TASK_MAX_RETRIES,
+    retry_delay=datetime.timedelta(seconds=constants.TASK_RETRY_DELAY),
 )
 def upload_to_native_table(
     dataset_id: str, table_id: str, dataframe: pd.DataFrame
