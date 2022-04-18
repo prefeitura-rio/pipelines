@@ -143,7 +143,7 @@ def format_partitioned_query(
     """
     # If no partition column is specified, return the query as is.
     if partition_column is None:
-        log("No partition column specified. Returning query as is.")
+        log("NO partition column specified. Returning query as is")
         return query
 
     # Check if the table already exists in BigQuery.
@@ -151,7 +151,7 @@ def format_partitioned_query(
 
     # If it doesn't, return the query as is, so we can fetch the whole table.
     if not table.table_exists("staging"):
-        log("No table was found. Returning query as is.")
+        log("NO tables was found. Returning query as is")
         return query
 
     blobs = get_storage_blobs(dataset_id, table_id)
@@ -172,7 +172,7 @@ def format_partitioned_query(
     aux_name = f"a{uuid4().hex}"
 
     log(
-        "Partitioned detected, retuning a NEW QUERY with partitioned columns and filters."
+        f"Partitioned DETECTED: {partition_column}, retuning a NEW QUERY with partitioned columns and filters"
     )
 
     return f"""
@@ -208,7 +208,7 @@ def dump_batches_to_csv(
     log(f"Got columns: {columns}")
 
     new_query_cols = build_query_new_columns(table_columns=columns)
-    log(f"New query columns without accents: \n {new_query_cols}")
+    log(f"New query columns without accents:\n{new_query_cols}")
 
     prepath = Path(prepath)
     log(f"Got prepath: {prepath}")
