@@ -225,7 +225,7 @@ def get_clock(view_name, table_id, count):
         start_date=datetime(
             2022, 2, 14, 10, 45, tzinfo=pytz.timezone("America/Sao_Paulo")
         )
-        + timedelta(minutes=+3 * count),
+        + timedelta(minutes=3 * count),
         labels=[
             constants.EMD_AGENT_LABEL.value,
         ],
