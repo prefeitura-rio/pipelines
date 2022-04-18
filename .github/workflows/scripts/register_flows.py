@@ -17,7 +17,6 @@ import traceback
 from typing import (
     Dict,
     List,
-    NamedTuple,
     Tuple,
     Union,
 )
