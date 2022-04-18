@@ -3,7 +3,6 @@
 Database dumping flows
 """
 
-from functools import partial
 from uuid import uuid4
 
 from prefect import Parameter, case
@@ -22,7 +21,6 @@ from pipelines.utils.decorators import Flow
 from pipelines.utils.dump_datario.tasks import (
     get_datario_geodataframe,
 )
-from pipelines.utils.utils import notify_discord_on_failure
 
 with Flow(
     name=utils_constants.FLOW_DUMP_DATARIO_NAME.value,

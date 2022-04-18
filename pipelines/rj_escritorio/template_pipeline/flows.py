@@ -57,15 +57,12 @@ Flows for emd
 #
 ###############################################################################
 
-from functools import partial
-
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 from pipelines.constants import constants
 from pipelines.rj_escritorio.template_pipeline.tasks import say_hello
 from pipelines.utils.decorators import Flow
-from pipelines.utils.utils import notify_discord_on_failure
 
 # from pipelines.emd.template_pipeline.schedules import every_two_weeks
 

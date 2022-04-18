@@ -5,8 +5,6 @@ Flows for emd
 
 # pylint: disable=C0103
 
-from functools import partial
-
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
@@ -20,7 +18,6 @@ from pipelines.rj_escritorio.waze.tasks import (
 from pipelines.rj_escritorio.waze.schedules import every_five_minutes
 from pipelines.utils.decorators import Flow
 from pipelines.utils.tasks import rename_current_flow_run_now_time, get_now_time
-from pipelines.utils.utils import notify_discord_on_failure
 
 
 with Flow(

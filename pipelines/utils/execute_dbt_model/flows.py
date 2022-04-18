@@ -3,8 +3,6 @@
 DBT-related flows.
 """
 
-from functools import partial
-
 from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
@@ -18,8 +16,6 @@ from pipelines.utils.execute_dbt_model.tasks import (
     run_dbt_model,
 )
 from pipelines.utils.tasks import rename_current_flow_run_dataset_table
-
-from pipelines.utils.utils import notify_discord_on_failure
 
 with Flow(
     name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,

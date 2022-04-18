@@ -3,8 +3,6 @@
 Flows for cor
 """
 
-from functools import partial
-
 from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
@@ -18,7 +16,6 @@ from pipelines.rj_cor.bot_semaforo.tasks import (
     send_messages,
 )
 from pipelines.utils.decorators import Flow
-from pipelines.utils.utils import notify_discord_on_failure
 
 with Flow(
     name="COR: CET semáforos - Telegram Bot",

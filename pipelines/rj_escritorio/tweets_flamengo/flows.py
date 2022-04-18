@@ -57,8 +57,6 @@ Flows for emd
 #
 ###############################################################################
 
-from functools import partial
-
 from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
@@ -73,7 +71,6 @@ from pipelines.rj_escritorio.tweets_flamengo.tasks import (
     get_api,
 )
 from pipelines.utils.decorators import Flow
-from pipelines.utils.utils import notify_discord_on_failure
 
 # from pipelines.emd.tweets_flamengo.schedules import tweets_flamengo_schedule
 

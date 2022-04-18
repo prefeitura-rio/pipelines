@@ -3,7 +3,6 @@
 Database dumping flows
 """
 
-from functools import partial
 from uuid import uuid4
 
 from prefect import Parameter, case
@@ -30,7 +29,6 @@ from pipelines.utils.dump_db.tasks import (
     dump_batches_to_csv,
     format_partitioned_query,
 )
-from pipelines.utils.utils import notify_discord_on_failure
 
 with Flow(
     name=utils_constants.FLOW_DUMP_DB_NAME.value,
