@@ -33,8 +33,8 @@ DATABASE_MAPPING: Dict[str, Database] = {
 # pylint: disable=too-many-arguments
 @task(
     checkpoint=False,
-    max_retries=constants.TASK_MAX_RETRIES,
-    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY),
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 def database_get(
     database_type: str,
@@ -71,8 +71,8 @@ def database_get(
 
 @task(
     checkpoint=False,
-    max_retries=constants.constants.TASK_MAX_RETRIES,
-    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY),
+    max_retries=constants.constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 def database_execute(
     database: Database,
@@ -91,8 +91,8 @@ def database_execute(
 
 @task(
     checkpoint=False,
-    max_retries=constants.constants.TASK_MAX_RETRIES,
-    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY),
+    max_retries=constants.constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 def database_fetch(
     database: Database,
@@ -122,8 +122,8 @@ def database_fetch(
 
 
 @task(
-    max_retries=constants.constants.TASK_MAX_RETRIES,
-    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY),
+    max_retries=constants.constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 def dump_batches_to_csv(
     database: Database,
@@ -161,8 +161,8 @@ def dump_batches_to_csv(
 
 
 @task(
-    max_retries=constants.constants.TASK_MAX_RETRIES,
-    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY),
+    max_retries=constants.constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 def dump_header_to_csv(
     header_path: Union[str, Path],
@@ -191,8 +191,8 @@ def dump_header_to_csv(
 #
 ###############
 @task(
-    max_retries=constants.constants.TASK_MAX_RETRIES,
-    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY),
+    max_retries=constants.constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 def upload_to_gcs(
     path: Union[str, Path],
@@ -226,8 +226,8 @@ def upload_to_gcs(
 
 
 @task(
-    max_retries=constants.constants.TASK_MAX_RETRIES,
-    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY),
+    max_retries=constants.constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 def create_bd_table(
     path: Union[str, Path],
