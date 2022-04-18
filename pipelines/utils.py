@@ -10,16 +10,16 @@ import hvac
 import prefect
 
 
-def log(msg: Any, level: str = 'info') -> None:
+def log(msg: Any, level: str = "info") -> None:
     """
     Logs a message to prefect's logger.
     """
     levels = {
-        'debug': logging.DEBUG,
-        'info': logging.INFO,
-        'warning': logging.WARNING,
-        'error': logging.ERROR,
-        'critical': logging.CRITICAL,
+        "debug": logging.DEBUG,
+        "info": logging.INFO,
+        "warning": logging.WARNING,
+        "error": logging.ERROR,
+        "critical": logging.CRITICAL,
     }
     if level not in levels:
         raise ValueError(f"Invalid log level: {level}")
@@ -39,8 +39,8 @@ def get_vault_client() -> hvac.Client:
     Returns a Vault client.
     """
     return hvac.Client(
-        url=getenv('VAULT_ADDRESS').strip(),
-        token=getenv('VAULT_TOKEN').strip(),
+        url=getenv("VAULT_ADDRESS").strip(),
+        token=getenv("VAULT_TOKEN").strip(),
     )
 
 
@@ -49,7 +49,7 @@ def get_vault_secret(secret_path: str, client: hvac.Client = None) -> dict:
     Returns a secret from Vault.
     """
     vault_client = client if client else get_vault_client()
-    return vault_client.secrets.kv.read_secret_version(secret_path)['data']
+    return vault_client.secrets.kv.read_secret_version(secret_path)["data"]
 
 
 def get_username_and_password_from_secret(
@@ -61,8 +61,8 @@ def get_username_and_password_from_secret(
     """
     secret = get_vault_secret(secret_path, client)
     return (
-        secret['data']['username'],
-        secret['data']['password'],
+        secret["data"]["username"],
+        secret["data"]["password"],
     )
 
 
@@ -79,3 +79,10 @@ def run_local(flow: prefect.Flow, parameters: Dict[str, Any] = None):
     if parameters:
         return flow.run(parameters=parameters)
     return flow.run()
+
+
+def query_to_line(query: str) -> str:
+    """
+    Converts a query to a line.
+    """
+    return " ".join(query.split("\n"))
