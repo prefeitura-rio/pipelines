@@ -2,7 +2,6 @@
 Schedules for the database dump pipeline
 """
 
-from calendar import month
 from datetime import timedelta, datetime
 
 from prefect.schedules import Schedule
@@ -10,10 +9,7 @@ from prefect.schedules.clocks import IntervalClock
 import pytz
 
 from pipelines.constants import constants
-
-untuple = lambda clocks: [
-    clock[0] if type(clock) == tuple else clock for clock in clocks
-]
+from pipelines.utils import untuple_clocks as untuple
 
 #####################################
 #
@@ -122,7 +118,8 @@ sme_escola = (
 
 sme_turma = IntervalClock(
     interval=timedelta(days=1),
-    start_date=datetime(2021, 1, 1, 1, 5, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(
+        2021, 1, 1, 1, 5, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.EMD_AGENT_LABEL.value,
     ],
@@ -164,7 +161,7 @@ sme_dependencia = (
     ),
 )
 
-### POR ENQUANTO SO USA DADOS DE 2019, NAO PRECISA ATUALIZAR DIARIAMENTE
+# POR ENQUANTO SO USA DADOS DE 2019, NAO PRECISA ATUALIZAR DIARIAMENTE
 # sme_frequencia = IntervalClock(
 #     interval=timedelta(days=1),
 #     start_date=datetime(2021, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo")),
@@ -220,6 +217,10 @@ ergon_views = {
 
 
 def get_clock(view_name, table_id, count):
+    """
+    Returns a clock for a given view name and table id, offsetting the
+    start date by the count of schedules.
+    """
     return IntervalClock(
         interval=timedelta(days=30),
         start_date=datetime(
@@ -237,7 +238,8 @@ def get_clock(view_name, table_id, count):
             "db_port": "1521",
             "db_type": "oracle",
             "dump_type": "overwrite",
-            "execute_query": f"SELECT * FROM C_ERGON.{view_name}",  # WHERE ROWNUM <= 10000
+            # WHERE ROWNUM <= 10000
+            "execute_query": f"SELECT * FROM C_ERGON.{view_name}",
             "table_id": table_id,
             "vault_secret_path": "ergon-hom",
         },

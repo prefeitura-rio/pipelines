@@ -1,7 +1,7 @@
 """
 Tasks related to DBT flows.
 """
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from dbt_client import DbtClient
 from prefect import task

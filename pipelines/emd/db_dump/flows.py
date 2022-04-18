@@ -6,12 +6,16 @@ from uuid import uuid4
 from copy import deepcopy
 
 from prefect import Flow, Parameter
-from pipelines.emd.db_dump.db import Database
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
-from pipelines.constants import constants
 
-from pipelines.tasks import get_user_and_password
+from pipelines.constants import constants
+from pipelines.emd.db_dump.db import Database
+from pipelines.emd.db_dump.schedules import (
+    ergon_monthly_update_schedule,
+    sme_daily_update_schedule,
+    _1746_daily_update_schedule,
+)
 from pipelines.emd.db_dump.tasks import (
     create_bd_table,
     database_execute,
@@ -21,11 +25,7 @@ from pipelines.emd.db_dump.tasks import (
     dump_header_to_csv,
     upload_to_gcs,
 )
-from pipelines.emd.db_dump.schedules import (
-    ergon_monthly_update_schedule,
-    sme_daily_update_schedule,
-    _1746_daily_update_schedule,
-)
+from pipelines.tasks import get_user_and_password
 
 with Flow("EMD: Ingerir tabela de banco SQL") as dump_sql_flow:
 

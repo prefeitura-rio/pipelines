@@ -8,6 +8,7 @@ from typing import Any, Dict, Tuple
 
 import hvac
 import prefect
+import telegram
 
 
 def log(msg: Any, level: str = "info") -> None:
@@ -86,3 +87,29 @@ def query_to_line(query: str) -> str:
     Converts a query to a line.
     """
     return " ".join(query.split("\n"))
+
+
+def send_telegram_message(
+    message: str,
+    token: str,
+    chat_id: int,
+    parse_mode: str = telegram.ParseMode.HTML,
+):
+    """
+    Sends a message to a Telegram chat.
+    """
+    bot = telegram.Bot(token=token)
+    bot.send_message(
+        chat_id=chat_id,
+        text=message,
+        parse_mode=parse_mode,
+    )
+
+
+def untuple_clocks(clocks):
+    """
+    Converts a list of tuples to a list of clocks.
+    """
+    return [
+        clock[0] if isinstance(clock, tuple) else clock for clock in clocks
+    ]
