@@ -18,7 +18,7 @@ from pipelines.constants import constants
 # from pipelines.rj_cor.meteorologia.meteorologia_inmet.meteorologia_utils import converte_timezone
 
 
-@task()
+@task(nout=2)
 def get_dates() -> Tuple[str, str]:
     """
     Task para obter o dia atual e o anterior
