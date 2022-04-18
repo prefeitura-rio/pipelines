@@ -101,14 +101,21 @@ def upload_to_gcs(path: Union[str, Path], dataset_id: str, table_id: str) -> Non
     Uploads a bunch of CSVs using BD+
     """
     # pylint: disable=C0103
-    tb = bd.Table(dataset_id=dataset_id,
-                  table_id=table_id)
+    tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
+    st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+
     if tb.table_exists(mode="staging"):
+        # Delete old data
+        st.delete_table(mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
+        log(
+            f"Successfully deleted OLD DATA {st.bucket_name}.staging.{dataset_id}.{table_id}"
+        )
+
         # the name of the files need to be the same or the data doesn't get overwritten
         tb.append(
             filepath=path,
             if_exists="replace",
-            timeout=600,
+            # timeout=600, # TODO: review later
             # chunk_size=1024 ** 2 * 10, # TODO: review later
         )
 
