@@ -74,7 +74,7 @@ with Flow(
     #####################################
 
     datario_path = get_datario_geodataframe(  # pylint: disable=invalid-name
-        url=url, path=f"data/{uuid4()}/"
+        url=url, path=f"data/{uuid4()}/", wait=rename_flow_run
     )
 
     EXISTS = check_table_exists(

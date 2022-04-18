@@ -33,6 +33,7 @@ from pipelines.constants import constants
 def get_datario_geodataframe(
     url: str,
     path: Union[str, Path],
+    wait=None,
 ):
     """ "
     Save a CSV from data.rio API

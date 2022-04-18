@@ -82,7 +82,7 @@ with Flow(
     #
     #####################################
     rename_flow_run = rename_current_flow_run_dataset_table(
-        prefix="Dump: ", dataset_id=dataset_id, table_id=table_id
+        prefix="Dump: ", dataset_id=dataset_id, table_id=table_id, wait=table_id
     )
     #####################################
     #
@@ -91,7 +91,9 @@ with Flow(
     #####################################
 
     # Get credentials from Vault
-    user, password = get_user_and_password(secret_path=secret_path)
+    user, password = get_user_and_password(
+        secret_path=secret_path, wait=rename_flow_run
+    )
 
     #####################################
     #

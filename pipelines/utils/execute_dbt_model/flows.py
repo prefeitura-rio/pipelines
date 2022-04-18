@@ -38,11 +38,11 @@ with Flow(
     #
     #####################################
     rename_flow_run = rename_current_flow_run_dataset_table(
-        prefix="Materialize: ", dataset_id=dataset_id, table_id=table_id
+        prefix="Materialize: ", dataset_id=dataset_id, table_id=table_id, wait=table_id
     )
 
     # Get DBT client
-    dbt_client = get_k8s_dbt_client(mode=mode)
+    dbt_client = get_k8s_dbt_client(mode=mode, wait=rename_flow_run)
 
     # Run DBT model
     run_dbt_model(

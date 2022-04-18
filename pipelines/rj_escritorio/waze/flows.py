@@ -42,16 +42,17 @@ with Flow(
         prefix="Waze: ", now_time=get_now_time()
     )
 
-    areas = load_geometries()
+    areas = load_geometries(wait=rename_flow_run)
 
-    res = fecth_waze(areas=areas)
+    responses = fecth_waze(areas=areas, wait=areas)
 
-    df = normalize_data(responses=res)
+    dataframe = normalize_data(responses=responses, wait=responses)
 
     upload_to_native_table(
         dataset_id=dataset_id,
         table_id=table_id,
-        dataframe=df,
+        dataframe=dataframe,
+        wait=dataframe,
     )
 
 flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)

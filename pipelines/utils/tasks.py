@@ -2,6 +2,8 @@
 """
 Helper tasks that could fit any pipeline.
 """
+# pylint: disable=unused-argument
+
 from datetime import timedelta
 from os import walk
 from os.path import join
@@ -28,9 +30,7 @@ from pipelines.utils.utils import get_username_and_password_from_secret, log
 
 
 @prefect.task(checkpoint=False)
-def log_task(
-    msg: Any, level: str = "info", wait=None
-):  # pylint: disable=unused-argument
+def log_task(msg: Any, level: str = "info", wait=None):
     """
     Logs a message to prefect's logger.
     """
@@ -66,7 +66,7 @@ def greater_than(value, compare_to) -> bool:
 
 
 @task
-def rename_current_flow_run_now_time(prefix: str, now_time) -> None:
+def rename_current_flow_run_now_time(prefix: str, now_time=None, wait=None) -> None:
     """
     Rename the current flow run.
     """
@@ -76,7 +76,9 @@ def rename_current_flow_run_now_time(prefix: str, now_time) -> None:
 
 
 @task
-def rename_current_flow_run_dataset_table(prefix: str, dataset_id, table_id) -> None:
+def rename_current_flow_run_dataset_table(
+    prefix: str, dataset_id, table_id, wait=None
+) -> None:
     """
     Rename the current flow run.
     """
@@ -93,7 +95,7 @@ def rename_current_flow_run_dataset_table(prefix: str, dataset_id, table_id) -> 
 
 
 @task(checkpoint=False, nout=2)
-def get_user_and_password(secret_path: str):
+def get_user_and_password(secret_path: str, wait=None):
     """
     Returns the user and password for the given secret path.
     """
