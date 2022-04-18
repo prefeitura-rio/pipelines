@@ -131,7 +131,6 @@ def create_table_and_upload_to_gcs(
     table_staging = f"{tb.table_full_name['staging']}"
     # pylint: disable=C0103
     st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
-    st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
     storage_path = f"{st.bucket_name}.staging.{dataset_id}.{table_id}"
     storage_path_link = (
         f"https://console.cloud.google.com/storage/browser/{storage_path}"
