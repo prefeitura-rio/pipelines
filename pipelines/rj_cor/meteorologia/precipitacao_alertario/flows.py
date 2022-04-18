@@ -19,7 +19,6 @@ with Flow('COR: Meteorologia - Pluviometria ALERTARIO') as flow:
     DATASET_ID = 'meio_ambiente_clima'
     TABLE_ID = 'precipitacao_alertario'
     DUMP_TYPE = 'append'
-    #dump_type = Parameter("dump_type", default="append")  # overwrite or append
 
     filename, current_time = download()
     dados = tratar_dados(filename=filename)
@@ -46,6 +45,7 @@ with Flow('COR: Meteorologia - Pluviometria ALERTARIO') as flow:
         path=path,
         dataset_id=DATASET_ID,
         table_id=TABLE_ID,
+        partitions=partitions,
         wait=wait_create_db,
     )
 
