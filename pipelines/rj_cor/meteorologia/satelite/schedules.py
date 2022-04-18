@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Schedules for meteorologia_inmet
 Rodar a cada 1 hora

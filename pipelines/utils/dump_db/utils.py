@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Utilities for the Database Dump flows.
 """
@@ -43,8 +44,7 @@ def parse_date_columns(
     cols = [ano_col, mes_col, data_col]
     for col in cols:
         if col in dataframe.columns:
-            raise ValueError(
-                f"Column {col} already exists, please review your model.")
+            raise ValueError(f"Column {col} already exists, please review your model.")
 
     dataframe[data_col] = pd.to_datetime(dataframe[partition_date_column])
     dataframe[ano_col] = dataframe[data_col].dt.year
@@ -100,18 +100,14 @@ def generate_schedules(  # pylint: disable=too-many-arguments,too-many-locals
             "execute_query": query_to_line(parameters["execute_query"]),
         }
         if "partition_column" in parameters:
-            parameter_defaults["partition_column"] = parameters[
-                "partition_column"
-            ]
+            parameter_defaults["partition_column"] = parameters["partition_column"]
         if "lower_bound_date" in parameters:
-            parameter_defaults["lower_bound_date"] = parameters[
-                "lower_bound_date"
-            ]
+            parameter_defaults["lower_bound_date"] = parameters["lower_bound_date"]
         clocks.append(
             IntervalClock(
                 interval=interval,
-                start_date=start_date +
-                timedelta(minutes=runs_interval_minutes * count),
+                start_date=start_date
+                + timedelta(minutes=runs_interval_minutes * count),
                 labels=labels,
                 parameter_defaults=parameter_defaults,
             )

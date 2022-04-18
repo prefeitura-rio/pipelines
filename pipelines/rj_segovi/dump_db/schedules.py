@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Schedules for the database dump pipeline
 """
@@ -65,7 +66,8 @@ _1746_queries = {
                     GROUP BY
                         id_chamado_fk
                 ) AS cch ON cch.id_chamado_fk = ch.id_chamado
-                INNER JOIN tb_classificacao_chamado AS cl ON cl.id_classificacao_chamado = Ultima_Classificacao
+                INNER JOIN tb_classificacao_chamado AS cl
+                    ON cl.id_classificacao_chamado = Ultima_Classificacao
                 INNER JOIN tb_classificacao AS cll ON cll.id_classificacao = cl.id_classificacao_fk
                 INNER JOIN tb_subtipo AS sub ON sub.id_subtipo = cll.id_subtipo_fk
                 INNER JOIN tb_tipo AS tp ON tp.id_tipo = sub.id_tipo_fk
@@ -80,7 +82,8 @@ _1746_queries = {
                         id_chamado_fk
                 ) AS ad ON ad.id_chamado_fk = ch.id_chamado
                 LEFT JOIN tb_andamento AS an ON an.id_andamento = ad.Ultimo_Status
-                LEFT JOIN tb_status_especifico AS ste ON ste.id_status_especifico = an.id_status_especifico_fk
+                LEFT JOIN tb_status_especifico AS ste
+                    ON ste.id_status_especifico = an.id_status_especifico_fk
                 INNER JOIN tb_status AS st ON st.id_status = ch.id_status_fk
                 INNER JOIN (
                     SELECT
@@ -91,8 +94,10 @@ _1746_queries = {
                     GROUP BY
                         id_chamado_fk
                 ) AS rc ON rc.id_chamado_fk = ch.id_chamado
-                INNER JOIN tb_responsavel_chamado AS rec ON rec.id_responsavel_chamado = rc.Responsavel
-                INNER JOIN tb_unidade_organizacional AS uo ON uo.id_unidade_organizacional = rec.id_unidade_organizacional_fk
+                INNER JOIN tb_responsavel_chamado AS rec
+                    ON rec.id_responsavel_chamado = rc.Responsavel
+                INNER JOIN tb_unidade_organizacional AS uo
+                    ON uo.id_unidade_organizacional = rec.id_unidade_organizacional_fk
                 INNER JOIN (
                     SELECT
                         max (id_protocolo_chamado) primeiro_protocolo,
@@ -102,19 +107,27 @@ _1746_queries = {
                     GROUP BY
                         id_chamado_fk
                 ) AS prc ON prc.id_chamado_fk = ch.id_chamado
-                INNER JOIN tb_protocolo_chamado AS prcc ON prcc.id_protocolo_chamado = prc.primeiro_protocolo
+                INNER JOIN tb_protocolo_chamado AS prcc
+                    ON prcc.id_protocolo_chamado = prc.primeiro_protocolo
                 INNER JOIN tb_protocolo AS pr ON pr.id_protocolo = prcc.id_protocolo_fk
                 LEFT JOIN tb_pessoa AS pe ON pe.id_pessoa = ch.id_pessoa_fk
-                INNER JOIN tb_origem_ocorrencia AS oc ON oc.id_origem_ocorrencia = ch.id_origem_ocorrencia_fk
-                LEFT JOIN tb_bairro_logradouro AS bl ON bl.id_bairro_logradouro = ch.id_bairro_logradouro_fk
+                INNER JOIN tb_origem_ocorrencia AS oc
+                    ON oc.id_origem_ocorrencia = ch.id_origem_ocorrencia_fk
+                LEFT JOIN tb_bairro_logradouro AS bl
+                    ON bl.id_bairro_logradouro = ch.id_bairro_logradouro_fk
                 LEFT JOIN tb_logradouro AS lg ON lg.id_logradouro = bl.id_logradouro_fk
                 LEFT JOIN tb_bairro AS br ON br.id_bairro = bl.id_bairro_fk
-                LEFT JOIN tb_classificacao_cenario_sla AS ccs ON ccs.id_classificacao_fk = cl.id_classificacao_fk
+                LEFT JOIN tb_classificacao_cenario_sla AS ccs
+                    ON ccs.id_classificacao_fk = cl.id_classificacao_fk
                 LEFT JOIN tb_justificativa AS jt ON jt.id_justificativa = cl.id_justificativa_fk
                 LEFT JOIN tb_chamado_sla AS chs ON chs.id_chamado_fk = ch.id_chamado
-                LEFT JOIN tb_territorialidade_regiao_administrativa_bairro AS tra ON tra.id_bairro_fk = br.id_bairro
-                LEFT JOIN tb_territorialidade_regiao_administrativa AS trg ON trg.id_territorialidade_regiao_administrativa = tra.id_territorialidade_regiao_administrativa_fk
-                LEFT JOIN tb_territorialidade AS tr ON tr.id_territorialidade = trg.id_territorialidade_fk
+                LEFT JOIN tb_territorialidade_regiao_administrativa_bairro AS tra
+                    ON tra.id_bairro_fk = br.id_bairro
+                LEFT JOIN tb_territorialidade_regiao_administrativa AS trg
+                    ON trg.id_territorialidade_regiao_administrativa =
+                        tra.id_territorialidade_regiao_administrativa_fk
+                LEFT JOIN tb_territorialidade AS tr
+                    ON tr.id_territorialidade = trg.id_territorialidade_fk
         """,
     },
 }

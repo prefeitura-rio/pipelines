@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 DBT-related flows.
 """
@@ -34,7 +35,10 @@ with Flow(
 
     # Run DBT model
     run_dbt_model(
-        dbt_client=dbt_client, dataset_id=dataset_id, table_id=table_id, sync=True
+        dbt_client=dbt_client,
+        dataset_id=dataset_id,
+        table_id=table_id,
+        sync=True,
     )
 
 run_dbt_model_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)

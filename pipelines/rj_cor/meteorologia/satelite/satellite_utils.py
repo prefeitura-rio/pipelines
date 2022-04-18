@@ -1,6 +1,7 @@
-'''
+# -*- coding: utf-8 -*-
+"""
 Funções úteis no tratamento de dados de satélite
-'''
+"""
 ####################################################################
 # LICENSE
 # Copyright (C) 2018 - INPE - NATIONAL INSTITUTE FOR SPACE RESEARCH
@@ -65,7 +66,7 @@ from typing import Tuple
 
 import netCDF4 as nc
 import numpy as np
-from osgeo import gdal   # pylint: disable=E0401
+from osgeo import gdal  # pylint: disable=E0401
 import pendulum
 import xarray as xr
 
@@ -73,40 +74,39 @@ from pipelines.rj_cor.meteorologia.satelite.remap import remap
 
 
 def converte_timezone(datetime_save: str) -> str:
-    '''
+    """
     Recebe o formato de data hora em 'YYYYMMDD HHmm' no UTC e
     retorna no mesmo formato no horário São Paulo
-    '''
-    datahora = pendulum.from_format(datetime_save, 'YYYYMMDD HHmm')
-    datahora = datahora.in_tz('America/Sao_Paulo')
-    return datahora.format('YYYYMMDD HHmm')
+    """
+    datahora = pendulum.from_format(datetime_save, "YYYYMMDD HHmm")
+    datahora = datahora.in_tz("America/Sao_Paulo")
+    return datahora.format("YYYYMMDD HHmm")
 
 
 def get_info(path: str) -> Tuple[dict, str]:
-    '''
+    """
     # Getting Information From the File Name  (Time, Date,
     # Product Type, Variable and Defining the CMAP)
-    '''
+    """
     # Search for the Scan start in the file name
-    start = (path[path.find("_s")+2:path.find("_e")])
+    start = path[path.find("_s") + 2 : path.find("_e")]
     # Converting from julian day to dd-mm-yyyy
     year = int(start[0:4])
     # Subtract 1 because the year starts at "0"
     dayjulian = int(start[4:7]) - 1
     # Convert from julian to conventional
-    dayconventional = datetime.datetime(
-        year, 1, 1) + datetime.timedelta(dayjulian)
+    dayconventional = datetime.datetime(year, 1, 1) + datetime.timedelta(dayjulian)
     # Format the date according to the strftime directives
     # date = dayconventional.strftime('%d-%b-%Y')
     # Time of the start of the Scan
     # time = start[7:9] + ":" + start[9:11] + ":" + start[11:13] + " UTC"
 
     # Date as string
-    date_save = dayconventional.strftime('%Y%m%d')
+    date_save = dayconventional.strftime("%Y%m%d")
 
     # Time (UTC) as string
     time_save = start[7:11]
-    datetime_save = str(date_save) + ' ' + time_save
+    datetime_save = str(date_save) + " " + time_save
 
     # Converte data/hora de UTC para horário de São Paulo
     datetime_save = converte_timezone(datetime_save=datetime_save)
@@ -114,130 +114,167 @@ def get_info(path: str) -> Tuple[dict, str]:
     # =====================================================================
     # Detect the product type
     # =====================================================================
-    product = (path[path.find("L2-")+3:path.find("-M6")])  # "-M3" or "-M4"
+    product = path[path.find("L2-") + 3 : path.find("-M6")]  # "-M3" or "-M4"
     print(product)
 
     # Nem todos os produtos foram adicionados no dicionário de características
     # dos produtos. Olhar arquivo original caso o produto não estaja aqui
     product_caracteristics = {}
     # CMIPF - Cloud and Moisture Imagery: 'CMI'
-    product_caracteristics['CMIPF'] = {'variable': 'CMI',
-                                       'vmin': -50,
-                                       'vmax': 50,
-                                       'cmap': "jet"}
+    product_caracteristics["CMIPF"] = {
+        "variable": "CMI",
+        "vmin": -50,
+        "vmax": 50,
+        "cmap": "jet",
+    }
     # CMIPC - Cloud and Moisture Imagery: 'CMI'
-    product_caracteristics['CMIPC'] = {'variable': 'CMI',
-                                       'vmin': -50,
-                                       'vmax': 50,
-                                       'cmap': "jet"}
+    product_caracteristics["CMIPC"] = {
+        "variable": "CMI",
+        "vmin": -50,
+        "vmax": 50,
+        "cmap": "jet",
+    }
     # CMIPM - Cloud and Moisture Imagery: 'CMI'
-    product_caracteristics['CMIPM'] = {'variable': 'CMI',
-                                       'vmin': -50,
-                                       'vmax': 50,
-                                       'cmap': "jet"}
+    product_caracteristics["CMIPM"] = {
+        "variable": "CMI",
+        "vmin": -50,
+        "vmax": 50,
+        "cmap": "jet",
+    }
     # ACHAF - Cloud Top Height: 'HT'
-    product_caracteristics['ACHAF'] = {'variable': 'HT',
-                                       'vmin': 0,
-                                       'vmax': 15000,
-                                       'cmap': "rainbow"}
+    product_caracteristics["ACHAF"] = {
+        "variable": "HT",
+        "vmin": 0,
+        "vmax": 15000,
+        "cmap": "rainbow",
+    }
     # ACHTF - Cloud Top Temperature: 'TEMP'
-    product_caracteristics['ACHATF'] = {'variable': 'TEMP',
-                                        'vmin': 180,
-                                        'vmax': 300,
-                                        'cmap': "jet"}
+    product_caracteristics["ACHATF"] = {
+        "variable": "TEMP",
+        "vmin": 180,
+        "vmax": 300,
+        "cmap": "jet",
+    }
     # ACMF - Clear Sky Masks: 'BCM'
-    product_caracteristics['ACMF'] = {'variable': 'BCM',
-                                      'vmin': 0,
-                                      'vmax': 1,
-                                      'cmap': "gray"}
+    product_caracteristics["ACMF"] = {
+        "variable": "BCM",
+        "vmin": 0,
+        "vmax": 1,
+        "cmap": "gray",
+    }
     # ACTPF - Cloud Top Phase: 'Phase'
-    product_caracteristics['ACTPF'] = {'variable': 'Phase',
-                                       'vmin': 0,
-                                       'vmax': 5,
-                                       'cmap': "jet"}
+    product_caracteristics["ACTPF"] = {
+        "variable": "Phase",
+        "vmin": 0,
+        "vmax": 5,
+        "cmap": "jet",
+    }
     # ADPF - Aerosol Detection: 'Smoke'
-    product_caracteristics['ADPF'] = {'variable': 'Smoke',
-                                      'vmin': 0,
-                                      'vmax': 255,
-                                      'cmap': "jet"}
+    product_caracteristics["ADPF"] = {
+        "variable": "Smoke",
+        "vmin": 0,
+        "vmax": 255,
+        "cmap": "jet",
+    }
     # AODF - Aerosol Optical Depth: 'AOD'
-    product_caracteristics['AODF'] = {'variable': 'AOD',
-                                      'vmin': 0,
-                                      'vmax': 2,
-                                      'cmap': "rainbow"}
+    product_caracteristics["AODF"] = {
+        "variable": "AOD",
+        "vmin": 0,
+        "vmax": 2,
+        "cmap": "rainbow",
+    }
     # CODF - Cloud Optical Depth: 'COD'
-    product_caracteristics['CODF'] = {'variable': 'CODF',
-                                      'vmin': 0,
-                                      'vmax': 100,
-                                      'cmap': "jet"}
+    product_caracteristics["CODF"] = {
+        "variable": "CODF",
+        "vmin": 0,
+        "vmax": 100,
+        "cmap": "jet",
+    }
     # CPSF - Cloud Particle Size: 'PSD'
-    product_caracteristics['CPSF'] = {'variable': 'PSD',
-                                      'vmin': 0,
-                                      'vmax': 80,
-                                      'cmap': "rainbow"}
+    product_caracteristics["CPSF"] = {
+        "variable": "PSD",
+        "vmin": 0,
+        "vmax": 80,
+        "cmap": "rainbow",
+    }
     # CTPF - Cloud Top Pressure: 'PRES'
-    product_caracteristics['CTPF'] = {'variable': 'PRES',
-                                      'vmin': 0,
-                                      'vmax': 1100,
-                                      'cmap': "rainbow"}
+    product_caracteristics["CTPF"] = {
+        "variable": "PRES",
+        "vmin": 0,
+        "vmax": 1100,
+        "cmap": "rainbow",
+    }
     # DSIF - Derived Stability Indices: 'CAPE', 'KI', 'LI', 'SI', 'TT'
-    product_caracteristics['DSIF'] = {'variable': 'CAPE',
-                                      'vmin': 0,
-                                      'vmax': 1000,
-                                      'cmap': "jet"}
+    product_caracteristics["DSIF"] = {
+        "variable": "CAPE",
+        "vmin": 0,
+        "vmax": 1000,
+        "cmap": "jet",
+    }
     # FDCF - Fire-Hot Spot Characterization: 'Area', 'Mask', 'Power', 'Temp'
-    product_caracteristics['FDCF'] = {'variable': 'Mask',
-                                      'vmin': 0,
-                                      'vmax': 255,
-                                      'cmap': "jet"}
+    product_caracteristics["FDCF"] = {
+        "variable": "Mask",
+        "vmin": 0,
+        "vmax": 255,
+        "cmap": "jet",
+    }
     # LSTF - Land Surface (Skin) Temperature: 'LST'
-    product_caracteristics['LSTF'] = {'variable': 'LST',
-                                      'vmin': 213,
-                                      'vmax': 330,
-                                      'cmap': "jet"}
+    product_caracteristics["LSTF"] = {
+        "variable": "LST",
+        "vmin": 213,
+        "vmax": 330,
+        "cmap": "jet",
+    }
     # RRQPEF - Rainfall Rate - Quantitative Prediction Estimate: 'RRQPE'
-    product_caracteristics['RRQPEF'] = {'variable': 'RRQPE',
-                                        'vmin': 0,
-                                        'vmax': 50,
-                                        'cmap': "jet"}
+    product_caracteristics["RRQPEF"] = {
+        "variable": "RRQPE",
+        "vmin": 0,
+        "vmax": 50,
+        "cmap": "jet",
+    }
     # SSTF - Sea Surface (Skin) Temperature: 'SST'
-    product_caracteristics['SSTF'] = {'variable': 'SSTF',
-                                      'vmin': 268,
-                                      'vmax': 308,
-                                      'cmap': "jet"}
+    product_caracteristics["SSTF"] = {
+        "variable": "SSTF",
+        "vmin": 268,
+        "vmax": 308,
+        "cmap": "jet",
+    }
     # TPWF - Total Precipitable Water: 'TPW'
-    product_caracteristics['TPWF'] = {'variable': 'TPW',
-                                      'vmin': 0,
-                                      'vmax': 60,
-                                      'cmap': "jet"}
+    product_caracteristics["TPWF"] = {
+        "variable": "TPW",
+        "vmin": 0,
+        "vmax": 60,
+        "cmap": "jet",
+    }
 
-    #variable = product_caracteristics[product]['variable']
-    #vmin = product_caracteristics[product]['vmin']
-    #vmax = product_caracteristics[product]['vmax']
-    #cmap = product_caracteristics[product]['cmap']
+    # variable = product_caracteristics[product]['variable']
+    # vmin = product_caracteristics[product]['vmin']
+    # vmax = product_caracteristics[product]['vmax']
+    # cmap = product_caracteristics[product]['cmap']
     product_caracteristics = product_caracteristics[product]
-    product_caracteristics['product'] = product
-    variable = product_caracteristics['variable']
+    product_caracteristics["product"] = product
+    variable = product_caracteristics["variable"]
 
     if variable == "CMI":
         # Search for the GOES-16 channel in the file name
-        product_caracteristics['band'] = int(
-            (path[path.find("M3C" or "M4C")+3:path.find("_G16")]))
+        product_caracteristics["band"] = int(
+            (path[path.find("M3C" or "M4C") + 3 : path.find("_G16")])
+        )
     else:
-        product_caracteristics['band'] = np.nan
+        product_caracteristics["band"] = np.nan
 
     return product_caracteristics, datetime_save
 
 
 def get_goes_extent(data):
-    '''
+    """
     define espatial limits
-    '''
-    pph = data.variables['goes_imager_projection'].perspective_point_height
-    x_1 = data.variables['x_image_bounds'][0] * pph
-    x_2 = data.variables['x_image_bounds'][1] * pph
-    y_1 = data.variables['y_image_bounds'][1] * pph
-    y_2 = data.variables['y_image_bounds'][0] * pph
+    """
+    pph = data.variables["goes_imager_projection"].perspective_point_height
+    x_1 = data.variables["x_image_bounds"][0] * pph
+    x_2 = data.variables["x_image_bounds"][1] * pph
+    y_1 = data.variables["y_image_bounds"][1] * pph
+    y_2 = data.variables["y_image_bounds"][0] * pph
     goes16_extent = [x_1, y_1, x_2, y_2]
 
     # Get the latitude and longitude image bounds
@@ -250,9 +287,9 @@ def get_goes_extent(data):
 
 
 def remap_g16(path, extent, resolution, variable, datetime_save):
-    '''
+    """
     the GOES-16 image is reprojected to the rectangular projection in the extent region
-    '''
+    """
     # Open the file using the NetCDF4 library
     data = nc.Dataset(path)
     # see_data = np.ma.getdata(data.variables[variable][:])
@@ -275,27 +312,52 @@ def remap_g16(path, extent, resolution, variable, datetime_save):
     month = str(int(datetime_save[4:6]))
     day = str(int(datetime_save[6:8]))
 
-    tif_path = os.path.join(os.getcwd(), 'data', 'satelite', variable, 'temp',
-                            f'ano={year}', f'mes={month}',
-                            f'dia={day}', f'hora={time_save}')
+    tif_path = os.path.join(
+        os.getcwd(),
+        "data",
+        "satelite",
+        variable,
+        "temp",
+        f"ano={year}",
+        f"mes={month}",
+        f"dia={day}",
+        f"hora={time_save}",
+    )
     if not os.path.exists(tif_path):
         os.makedirs(tif_path)
 
     # Export the result to GeoTIFF
-    driver = gdal.GetDriverByName('GTiff')
-    filename = os.path.join(tif_path, 'dados.tif')
+    driver = gdal.GetDriverByName("GTiff")
+    filename = os.path.join(tif_path, "dados.tif")
     driver.CreateCopy(filename, grid, 0)
     return grid, goes16_extent
 
 
 def treat_data(data, variable, reprojection_variables):
-    '''
+    """
     Treat nans and Temperature data, extent, product, variable, date_save,
     time_save, bmap, cmap, vmin, vmax, dpi, band, path
-    '''
-    if variable in ('Dust', 'Smoke', 'TPW', 'PRES', 'HT', 'TEMP', 'AOD',
-                    'COD', 'PSD', 'CAPE', 'KI', 'LI', 'SI', 'TT', 'FSC',
-                    'RRQPE', 'VAML', 'VAH'):
+    """
+    if variable in (
+        "Dust",
+        "Smoke",
+        "TPW",
+        "PRES",
+        "HT",
+        "TEMP",
+        "AOD",
+        "COD",
+        "PSD",
+        "CAPE",
+        "KI",
+        "LI",
+        "SI",
+        "TT",
+        "FSC",
+        "RRQPE",
+        "VAML",
+        "VAH",
+    ):
         data[data == max(data[0])] = np.nan
         data[data == min(data[0])] = np.nan
 
@@ -304,10 +366,10 @@ def treat_data(data, variable, reprojection_variables):
         data[data == min(data[0])] = np.nan
 
         # Call the reprojection funcion again to get only the valid SST pixels
-        path = reprojection_variables['path']
-        extent = reprojection_variables['extent']
-        resolution = reprojection_variables['resolution']
-        goes16_extent = reprojection_variables['goes16_extent']
+        path = reprojection_variables["path"]
+        extent = reprojection_variables["extent"]
+        resolution = reprojection_variables["resolution"]
+        goes16_extent = reprojection_variables["goes16_extent"]
 
         grid = remap(path, "DQF", extent, resolution, goes16_extent)
         data_dqf = grid.ReadAsArray()
@@ -339,38 +401,65 @@ def treat_data(data, variable, reprojection_variables):
 
 
 def save_parquet(variable, datetime_save):
-    '''
+    """
     Save data in parquet
-    '''
+    """
     date_save = datetime_save[:8]
     time_save = str(int(datetime_save[9:11]))
 
     year = date_save[:4]
     month = str(int(date_save[4:6]))
     day = str(int(date_save[-2:]))
-    tif_data = os.path.join(os.getcwd(), 'data', 'satelite', variable, 'temp',
-                            f'ano={year}', f'mes={month}',
-                            f'dia={day}', f'hora={time_save}', 'dados.tif')
+    tif_data = os.path.join(
+        os.getcwd(),
+        "data",
+        "satelite",
+        variable,
+        "temp",
+        f"ano={year}",
+        f"mes={month}",
+        f"dia={day}",
+        f"hora={time_save}",
+        "dados.tif",
+    )
 
-    data = xr.open_dataset(tif_data, engine='rasterio')
+    data = xr.open_dataset(tif_data, engine="rasterio")
     # print('>>>>>>>>>>>>>>> data', data['band_data'].values)
 
     # Converte para dataframe trocando o nome das colunas
 
-    data = data.to_dataframe().reset_index()[['x', 'y', 'band_data']]\
-        .rename({'y': 'latitude', 'x': 'longitude', 'band_data': f'{variable.lower()}'}, axis=1)
+    data = (
+        data.to_dataframe()
+        .reset_index()[["x", "y", "band_data"]]
+        .rename(
+            {
+                "y": "latitude",
+                "x": "longitude",
+                "band_data": f"{variable.lower()}",
+            },
+            axis=1,
+        )
+    )
 
     # cria pasta se ela não existe
-    parquet_path = os.path.join(os.getcwd(), 'data', 'satelite', variable, 'output',
-                                f'ano={year}', f'mes={month}',
-                                f'dia={day}', f'hora={time_save}')
+    parquet_path = os.path.join(
+        os.getcwd(),
+        "data",
+        "satelite",
+        variable,
+        "output",
+        f"ano={year}",
+        f"mes={month}",
+        f"dia={day}",
+        f"hora={time_save}",
+    )
 
     if not os.path.exists(parquet_path):
         os.makedirs(parquet_path)
 
     # salva em parquet
-    print('Saving on ', parquet_path)
-    filename = os.path.join(parquet_path, 'dados.csv')
+    print("Saving on ", parquet_path)
+    filename = os.path.join(parquet_path, "dados.csv")
     data.to_csv(filename, index=False)
     # filename = os.path.join(parquet_path, 'dados.parquet')
     # data.to_parquet(filename, index=False)
@@ -378,9 +467,9 @@ def save_parquet(variable, datetime_save):
 
 
 def main(path):
-    '''
+    """
     Função principal para converter dados x,y em lon,lat
-    '''
+    """
     # Create the basemap reference for the Rectangular Projection.
     # You may choose the region you want.
     # Full Disk Extent
@@ -396,22 +485,28 @@ def main(path):
     resolution = 5
 
     # Get information from the image file
-    product_caracteristics,  datetime_save = get_info(path)
+    product_caracteristics, datetime_save = get_info(path)
     # product, variable, vmin, vmax, cmap, band
 
     # Call the remap function to convert x, y to lon, lat and save geotiff
-    grid, goes16_extent = remap_g16(path, extent, resolution,
-                                    product_caracteristics['variable'],
-                                    datetime_save)
+    grid, goes16_extent = remap_g16(
+        path,
+        extent,
+        resolution,
+        product_caracteristics["variable"],
+        datetime_save,
+    )
 
-    info = {'product': product_caracteristics['product'],
-            'variable': product_caracteristics['variable'],
-            'vmin': product_caracteristics['vmin'],
-            'vmax': product_caracteristics['vmax'],
-            'cmap': product_caracteristics['cmap'],
-            'datetime_save': datetime_save,
-            'band': product_caracteristics['band'],
-            'extent': extent,
-            'resolution': resolution}
+    info = {
+        "product": product_caracteristics["product"],
+        "variable": product_caracteristics["variable"],
+        "vmin": product_caracteristics["vmin"],
+        "vmax": product_caracteristics["vmax"],
+        "cmap": product_caracteristics["cmap"],
+        "datetime_save": datetime_save,
+        "band": product_caracteristics["band"],
+        "extent": extent,
+        "resolution": resolution,
+    }
 
     return grid, goes16_extent, info

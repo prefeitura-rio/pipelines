@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+# flake8: noqa: E501
 """
 Tasks for emd
 """
@@ -179,7 +181,11 @@ def normalize_data(responses: list) -> pd.DataFrame:
                     "report_mood": dictionary.get("reportMood"),
                     "magvar": dictionary.get("magvar"),
                     "report_rating": dictionary.get("reportRating"),
-                    "geometry": "POINT ({x} {y})".format(**dictionary.get("location")),  # pylint: disable=consider-using-f-string
+                    "geometry": "POINT ({x} {y})".format(
+                        **dictionary.get(
+                            "location"
+                        )  # pylint: disable=consider-using-f-string
+                    ),
                 }
             )
 
