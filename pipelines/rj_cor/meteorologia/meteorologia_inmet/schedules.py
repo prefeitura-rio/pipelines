@@ -14,7 +14,7 @@ hour_schedule = Schedule(
             start_date=datetime(2021, 1, 1, 0, 5, 0),
             # TODO - Replace with RJ_COR_AGENT_LABEL
             labels=[
-                constants.K8S_AGENT_LABEL.value,
+                constants.RJ_COR_AGENT_LABEL.value,
             ],
         ),
     ]
