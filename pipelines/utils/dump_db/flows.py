@@ -47,8 +47,8 @@ with Flow(
     database = Parameter("db_database")
     database_type = Parameter("db_type")
     query = Parameter("execute_query")
-    partition_column = Parameter("partition_column", default=None)
-    lower_bound_date = Parameter("lower_bound_date", default=None)
+    partition_column = Parameter("partition_column", required=False)
+    lower_bound_date = Parameter("lower_bound_date", required=False)
 
     # Use Vault for credentials
     secret_path = Parameter("vault_secret_path")
