@@ -55,6 +55,16 @@ def sql_server_execute(cursor, query):
     return cursor
 
 
+@task
+def sql_server_log_headers(cursor) -> None:
+    """
+    Logs the headers of the SQL Server table.
+    """
+    log("Getting headers")
+    log(f"Columns: {sql_server_get_columns(cursor)}")
+    log(f"First line: {cursor.fetchone()}")
+
+
 ###############
 #
 # File
@@ -106,7 +116,8 @@ def upload_to_gcs(path: Union[str, Path], dataset_id: str, table_id: str) -> Non
 
     if tb.table_exists(mode="staging"):
         # Delete old data
-        st.delete_table(mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
+        st.delete_table(
+            mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
         log(
             f"Successfully deleted OLD DATA {st.bucket_name}.staging.{dataset_id}.{table_id}"
         )
@@ -115,8 +126,6 @@ def upload_to_gcs(path: Union[str, Path], dataset_id: str, table_id: str) -> Non
         tb.append(
             filepath=path,
             if_exists="replace",
-            # timeout=600, # TODO: review later
-            # chunk_size=1024 ** 2 * 10, # TODO: review later
         )
 
         log(
