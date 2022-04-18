@@ -431,9 +431,10 @@ def identify_code_owners(files: List[str]) -> List[str]:
         path_parts = file_.split("/")
         section = code_owners
         for i in range(len(path_parts) - 1):
-            if path_parts[i] in code_owners:
+            if path_parts[i] in section:
                 current_owners = section[path_parts[i]]["owners"]
-                section = section[path_parts[i]]["dir"]
+                if "dir" in section[path_parts[i]]:
+                    section = section[path_parts[i]]["dir"]
             else:
                 break
         owners.update(current_owners)
@@ -479,6 +480,8 @@ if __name__ == "__main__":
     dependent_files = set()
     for declaration in exported_declarations:
         dependent_files.update(graph.successors(declaration))
+    if "pipelines/flows.py" in dependent_files:
+        dependent_files.remove("pipelines/flows.py")
     print("These files depend on the exported declarations:")
     for file_ in dependent_files:
         print(f"\t- {file_}")
