@@ -28,8 +28,9 @@ diretorio_clocks = [
         interval=timedelta(days=30),
         start_date=datetime(2022, 3, 5, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo"))
         + timedelta(minutes=3 * count),
+        # TODO change to RJ_DATARIO_AGENT_LABEL when it's ready
         labels=[
-            constants.EMD_AGENT_LABEL.value,
+            constants.RJ_DATARIO_AGENT_LABEL.value,
         ],
         parameter_defaults={
             "url": url,
