@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Flows for emd
+Flows for br_rj_riodejaneiro_stpl_gps
 """
 
 ###############################################################################
@@ -24,7 +24,7 @@ Flows for emd
 # mandatório configurar alguns parâmetros dele, os quais são:
 # - storage: onde esse flow está armazenado. No caso, o storage é o
 #   próprio módulo Python que contém o flow. Sendo assim, deve-se
-#   configurar o storage como o pipelines.emd
+#   configurar o storage como o pipelines.rj_smtr
 # - run_config: para o caso de execução em cluster Kubernetes, que é
 #   provavelmente o caso, é necessário configurar o run_config com a
 #   imagem Docker que será usada para executar o flow. Assim sendo,
@@ -57,44 +57,71 @@ Flows for emd
 #
 ###############################################################################
 
+
 from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
-
 from pipelines.constants import constants
-from pipelines.rj_escritorio.tweets_flamengo.tasks import (
-    fetch_last_id,
-    get_last_id,
-    fetch_tweets,
-    save_last_id,
-    upload_to_storage,
-    get_api,
+from pipelines.rj_smtr.tasks import (
+    create_current_date_hour_partition,
+    get_file_path_and_partitions,
+    get_raw,
+    save_raw_local,
+    save_treated_local,
+    upload_logs_to_bq,
+    bq_upload,
 )
+from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks import (
+    pre_treatment_br_rj_riodejaneiro_stpl_gps,
+)
+
+from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.schedules import every_minute
 from pipelines.utils.decorators import Flow
 
-# from pipelines.emd.tweets_flamengo.schedules import tweets_flamengo_schedule
+with Flow("Captura_GPS_STPL") as stpl_captura:
+
+    dataset_id = Parameter("dataset_id")
+    table_id = Parameter("table_id")
+    url = Parameter("url")
+    key_column = Parameter("key_column")
+
+    file_dict = create_current_date_hour_partition()
+
+    filepath = get_file_path_and_partitions(
+        dataset_id=dataset_id,
+        table_id=table_id,
+        filename=file_dict["filename"],
+        partitions=file_dict["partitions"],
+    )
+
+    status_dict = get_raw(url=url)
+
+    raw_filepath = save_raw_local(data=status_dict["data"], file_path=filepath)
+
+    treated_status = pre_treatment_br_rj_riodejaneiro_stpl_gps(
+        status_dict=status_dict, key_column=key_column
+    )
+
+    upload_logs_to_bq(
+        dataset_id=dataset_id,
+        parent_table_id=table_id,
+        timestamp=status_dict["timestamp"],
+        error=status_dict["error"],
+    )
+
+    treated_filepath = save_treated_local(
+        dataframe=treated_status["df"], file_path=filepath
+    )
+
+    bq_upload(
+        dataset_id=dataset_id,
+        table_id=table_id,
+        filepath=treated_filepath,
+        raw_filepath=raw_filepath,
+        partitions=file_dict["partitions"],
+    )
 
 
-with Flow(
-    name="EMD: escritorio - Captura tweets do Flamengo",
-) as tweets_flamengo_flow:
-    q = Parameter("keyword")
-
-    api = get_api()
-
-    data_path = fetch_last_id(q=q)  # pylint: disable=C0103
-
-    last_id, created_at = get_last_id(api=api, q=q, data_path=data_path)
-
-    dd = fetch_tweets(api=api, q=q, last_id=last_id, created_at=created_at)
-
-    path = save_last_id(df=dd, q=q)  # pylint: disable=C0103
-
-    upload_to_storage(path)
-
-tweets_flamengo_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-tweets_flamengo_flow.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value,
-    labels=[constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value],
-)
-# tweets_flamengo_flow.schedule = tweets_flamengo_schedule
+stpl_captura.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+stpl_captura.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+# stpl_captura.schedule = every_minute

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Flows for emd
+Flows for rj_smtr
 """
 
 ###############################################################################
@@ -24,7 +24,7 @@ Flows for emd
 # mandatório configurar alguns parâmetros dele, os quais são:
 # - storage: onde esse flow está armazenado. No caso, o storage é o
 #   próprio módulo Python que contém o flow. Sendo assim, deve-se
-#   configurar o storage como o pipelines.emd
+#   configurar o storage como o pipelines.rj_smtr
 # - run_config: para o caso de execução em cluster Kubernetes, que é
 #   provavelmente o caso, é necessário configurar o run_config com a
 #   imagem Docker que será usada para executar o flow. Assim sendo,
@@ -57,44 +57,16 @@ Flows for emd
 #
 ###############################################################################
 
-from prefect import Parameter
-from prefect.run_configs import KubernetesRun
-from prefect.storage import GCS
 
-from pipelines.constants import constants
-from pipelines.rj_escritorio.tweets_flamengo.tasks import (
-    fetch_last_id,
-    get_last_id,
-    fetch_tweets,
-    save_last_id,
-    upload_to_storage,
-    get_api,
-)
-from pipelines.utils.decorators import Flow
+# from prefect import Flow
+# from prefect.run_configs import KubernetesRun
+# from prefect.storage import GCS
+# from pipelines.constants import constants
+# # from pipelines.rj_smtr.schedules import every_two_weeks
 
-# from pipelines.emd.tweets_flamengo.schedules import tweets_flamengo_schedule
+# with Flow("my_flow") as flow:
+#     say_hello()
 
-
-with Flow(
-    name="EMD: escritorio - Captura tweets do Flamengo",
-) as tweets_flamengo_flow:
-    q = Parameter("keyword")
-
-    api = get_api()
-
-    data_path = fetch_last_id(q=q)  # pylint: disable=C0103
-
-    last_id, created_at = get_last_id(api=api, q=q, data_path=data_path)
-
-    dd = fetch_tweets(api=api, q=q, last_id=last_id, created_at=created_at)
-
-    path = save_last_id(df=dd, q=q)  # pylint: disable=C0103
-
-    upload_to_storage(path)
-
-tweets_flamengo_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-tweets_flamengo_flow.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value,
-    labels=[constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value],
-)
-# tweets_flamengo_flow.schedule = tweets_flamengo_schedule
+# flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+# flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+# flow.schedule = every_two_weeks

@@ -4,7 +4,6 @@ Flows for emd
 """
 from functools import partial
 
-from prefect import Flow
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants
@@ -16,6 +15,7 @@ from pipelines.rj_cor.meteorologia.satelite.tasks import (
     salvar_parquet,
 )
 from pipelines.rj_cor.meteorologia.satelite.schedules import hour_schedule
+from pipelines.utils.decorators import Flow
 from pipelines.utils.tasks import (
     create_table_and_upload_to_gcs,
 )

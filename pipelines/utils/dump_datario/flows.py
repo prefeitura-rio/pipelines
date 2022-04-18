@@ -3,10 +3,9 @@
 Database dumping flows
 """
 
-from functools import partial
 from uuid import uuid4
 
-from prefect import Flow, Parameter, case
+from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
@@ -18,17 +17,13 @@ from pipelines.utils.tasks import (
     get_current_flow_labels,
     rename_current_flow_run_dataset_table,
 )
+from pipelines.utils.decorators import Flow
 from pipelines.utils.dump_datario.tasks import (
     get_datario_geodataframe,
 )
-from pipelines.utils.utils import notify_discord_on_failure
 
 with Flow(
     name=utils_constants.FLOW_DUMP_DATARIO_NAME.value,
-    on_failure=partial(
-        notify_discord_on_failure,
-        secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value,
-    ),
 ) as dump_datario_flow:
 
     #####################################
@@ -53,7 +48,9 @@ with Flow(
     materialization_mode = Parameter(
         "materialization_mode", default="dev", required=False
     )
-    materialize_to_datario = Parameter("materialize_to_datario", default=False, required=False)
+    materialize_to_datario = Parameter(
+        "materialize_to_datario", default=False, required=False
+    )
 
     #####################################
     #

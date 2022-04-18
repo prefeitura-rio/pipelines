@@ -32,49 +32,49 @@ ergon_queries = {
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_EMPRESAS",
     },
-    "matricula": {
-        "dump_type": "overwrite",
-        "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_ERG_MATRICULAS",
-    },
-    "fita_banco": {
-        "partition_column": "MES_ANO",
-        "dump_type": "append",
-        "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FITA_BANCO",
-    },
-    "folha_empresa": {
-        "partition_column": "MES_ANO",
-        "dump_type": "append",
-        "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FOLHAS_EMP",
-    },
-    "forma_prov": {
-        "dump_type": "overwrite",
-        "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FORMAS_PROV_",
-    },
+    # "matricula": {
+    #     "dump_type": "overwrite",
+    #     "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_ERG_MATRICULAS",
+    # },
+    # "fita_banco": {
+    #     "partition_column": "MES_ANO",
+    #     "dump_type": "append",
+    #     "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FITA_BANCO",
+    # },
+    # "folha_empresa": {
+    #     "partition_column": "MES_ANO",
+    #     "dump_type": "append",
+    #     "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FOLHAS_EMP",
+    # },
+    # "forma_prov": {
+    #     "dump_type": "overwrite",
+    #     "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FORMAS_PROV_",
+    # },
     "funcionario": {
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FUNCIONARIOS",
     },
-    "horario_trabalho": {
-        "dump_type": "overwrite",
-        "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_HORARIO_TRAB_",
-    },
-    "h_setor": {
-        "dump_type": "overwrite",
-        "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_HSETOR_",
-    },
+    # "horario_trabalho": {
+    #     "dump_type": "overwrite",
+    #     "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_HORARIO_TRAB_",
+    # },
+    # "h_setor": {
+    #     "dump_type": "overwrite",
+    #     "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_HSETOR_",
+    # },
     "jornada": {
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_JORNADAS_",
     },
-    "orgaos_externos": {
-        "dump_type": "overwrite",
-        "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_ORGAOS_EXTERNOS",
-    },
-    "orgaos_regime_juridico": {
-        "dump_type": "overwrite",
-        "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_ORGAOS_REGIMES_JUR_",
-    },
-    "provimentos_ev": {
+    # "orgaos_externos": {
+    #     "dump_type": "overwrite",
+    #     "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_ORGAOS_EXTERNOS",
+    # },
+    # "orgaos_regime_juridico": {
+    #     "dump_type": "overwrite",
+    #     "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_ORGAOS_REGIMES_JUR_",
+    # },
+    "provimento": {
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_PROVIMENTOS_EV",
     },
@@ -82,10 +82,10 @@ ergon_queries = {
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_REGIMES_JUR_",
     },
-    "tipo_folha": {
-        "dump_type": "overwrite",
-        "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_TIPO_FOLHA",
-    },
+    # "tipo_folha": {
+    #     "dump_type": "overwrite",
+    #     "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_TIPO_FOLHA",
+    # },
     "tipo_orgao": {
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_TIPO_ORGAO",
@@ -94,10 +94,10 @@ ergon_queries = {
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_TIPO_VINC_",
     },
-    "vinculo": {
-        "dump_type": "overwrite",
-        "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_VINCULOS",
-    },
+    # "vinculo": {
+    #     "dump_type": "overwrite",
+    #     "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_VINCULOS",
+    # },
 }
 
 
@@ -111,7 +111,7 @@ ergon_clocks = generate_dump_db_schedules(
     db_host="10.70.6.22",
     db_port="1521",
     db_type="oracle",
-    dataset_id="administracao_recursos_humanos_folha_salarial",
+    dataset_id="administracao_recursos_humanos_ergon",
     vault_secret_path="ergon-hom",
     table_parameters=ergon_queries,
 )

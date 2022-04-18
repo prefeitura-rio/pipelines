@@ -3,11 +3,10 @@
 Flows for cor
 """
 
-from functools import partial
-
-from prefect import Flow, Parameter
+from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
+
 from pipelines.constants import constants
 from pipelines.rj_cor.bot_semaforo.schedules import bot_schedule
 from pipelines.rj_cor.bot_semaforo.tasks import (
@@ -16,14 +15,10 @@ from pipelines.rj_cor.bot_semaforo.tasks import (
     format_message,
     send_messages,
 )
-from pipelines.utils.utils import notify_discord_on_failure
+from pipelines.utils.decorators import Flow
 
 with Flow(
     name="COR: CET semáforos - Telegram Bot",
-    on_failure=partial(
-        notify_discord_on_failure,
-        secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value,
-    ),
 ) as cet_telegram_flow:
 
     secret_path = Parameter("secret_path")
