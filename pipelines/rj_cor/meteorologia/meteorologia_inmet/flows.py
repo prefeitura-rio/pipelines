@@ -9,6 +9,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants
 from pipelines.rj_cor.meteorologia.meteorologia_inmet.tasks import (
+    get_dates,
     slice_data,
     download,
     tratar_dados,
@@ -20,12 +21,12 @@ from pipelines.utils.tasks import create_table_and_upload_to_gcs
 with Flow(
     "COR: Meteorologia - Meteorologia INMET"
 ) as cor_meteorologia_meteorologia_inmet:
-    CURRENT_TIME = pendulum.now("UTC")  # segundo o manual é UTC
-    YESTERDAY = pendulum.yesterday("UTC").format("YYYY-MM-DD")
 
     DATASET_ID = "meio_ambiente_clima"
     TABLE_ID = "meteorologia_inmet"
     DUMP_TYPE = "append"
+
+    CURRENT_TIME, YESTERDAY = get_dates()
 
     data = slice_data(current_time=CURRENT_TIME)
 
