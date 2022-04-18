@@ -1,4 +1,15 @@
 [[package]]
+name = "affine"
+version = "2.3.0"
+description = "Matrices describing affine transformation of the plane."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.extras]
+test = ["pytest (>=3.0)", "pytest-cov", "pydocstyle", "coveralls"]
+
+[[package]]
 name = "aiobotocore"
 version = "2.1.2"
 description = "Async client for aws services using botocore and aiohttp"
@@ -1538,6 +1549,32 @@ optional = false
 python-versions = ">=3.6"
 
 [[package]]
+name = "rasterio"
+version = "1.2.10"
+description = "Fast and direct raster I/O for use with Numpy and SciPy"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+affine = "*"
+attrs = "*"
+certifi = "*"
+click = ">=4.0"
+click-plugins = "*"
+cligj = ">=0.5"
+numpy = "*"
+snuggs = ">=1.4.1"
+
+[package.extras]
+all = ["numpydoc", "hypothesis", "matplotlib", "pytest-cov (>=2.2.0)", "sphinx", "ipython (>=2.0)", "boto3 (>=1.2.4)", "shapely", "pytest (>=2.8.2)", "packaging", "sphinx-rtd-theme", "ghp-import"]
+docs = ["ghp-import", "numpydoc", "sphinx", "sphinx-rtd-theme"]
+ipython = ["ipython (>=2.0)"]
+plot = ["matplotlib"]
+s3 = ["boto3 (>=1.2.4)"]
+test = ["boto3 (>=1.2.4)", "hypothesis", "packaging", "pytest-cov (>=2.2.0)", "pytest (>=2.8.2)", "shapely"]
+
+[[package]]
 name = "requests"
 version = "2.26.0"
 description = "Python HTTP for Humans."
@@ -1569,6 +1606,26 @@ requests = ">=2.0.0"
 
 [package.extras]
 rsa = ["oauthlib[signedtoken] (>=3.0.0)"]
+
+[[package]]
+name = "rioxarray"
+version = "0.9.0"
+description = "rasterio xarray extension."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+packaging = "*"
+pyproj = ">=2.2"
+rasterio = "*"
+xarray = ">=0.17"
+
+[package.extras]
+all = ["scipy", "sphinx-click (==1.1.0)", "nbsphinx", "sphinx-rtd-theme", "pytest (>=3.6)", "pytest-cov", "pytest-timeout", "dask", "netcdf4", "sphinx-click (==1.1.0)", "nbsphinx", "sphinx-rtd-theme", "black", "flake8", "pylint", "isort", "pre-commit"]
+dev = ["pytest (>=3.6)", "pytest-cov", "pytest-timeout", "dask", "netcdf4", "sphinx-click (==1.1.0)", "nbsphinx", "sphinx-rtd-theme", "black", "flake8", "pylint", "isort", "pre-commit"]
+doc = ["sphinx-click (==1.1.0)", "nbsphinx", "sphinx-rtd-theme"]
+interp = ["scipy"]
 
 [[package]]
 name = "rsa"
@@ -1657,6 +1714,21 @@ description = "Python 2 and 3 compatibility utilities"
 category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
+
+[[package]]
+name = "snuggs"
+version = "1.4.7"
+description = "Snuggs are s-expressions for Numpy"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+numpy = "*"
+pyparsing = ">=2.1.6"
+
+[package.extras]
+test = ["pytest", "hypothesis"]
 
 [[package]]
 name = "sortedcontainers"
@@ -1904,9 +1976,13 @@ heapdict = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.11"
-content-hash = "9482d2e596dd263fbc5c12434cffa4ceed265e155eea06faf58b76b4cbf14d87"
+content-hash = "22c229797c3723f8646d37f3103efc9a9e0c1b6d8b1e33606e58a84f384d8240"
 
 [metadata.files]
+affine = [
+    {file = "affine-2.3.0-py2.py3-none-any.whl", hash = "sha256:34b05b070d954c382e56f02c207a372d8a32621a87653cc30cdd31cd7f65799f"},
+    {file = "affine-2.3.0.tar.gz", hash = "sha256:2e045def1aa29e613c42e801a7e10e0b9bacfed1a7c6af0cadf8843530a15102"},
+]
 aiobotocore = [
     {file = "aiobotocore-2.1.2.tar.gz", hash = "sha256:00fd7f43cc0484d8ed274fd0be492aa16a7fea679dbea96a602bb722ca4c2d22"},
 ]
@@ -3313,6 +3389,17 @@ pyyaml = [
     {file = "PyYAML-6.0-cp39-cp39-win_amd64.whl", hash = "sha256:b3d267842bf12586ba6c734f89d1f5b871df0273157918b0ccefa29deb05c21c"},
     {file = "PyYAML-6.0.tar.gz", hash = "sha256:68fb519c14306fec9720a2a5b45bc9f0c8d1b9c72adf45c37baedfcd949c35a2"},
 ]
+rasterio = [
+    {file = "rasterio-1.2.10-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:f86efb0e4989201f244d6818575d442b716ce81af6cd969c3caead76b9690837"},
+    {file = "rasterio-1.2.10-cp36-cp36m-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:831b6dbefb409c3ece23fa219d8446a7534e30c69a075fd366e72742b1f94c58"},
+    {file = "rasterio-1.2.10-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:42a1a6364313c384fcd631d850792621301e930449b47f72ced048c415c9c84e"},
+    {file = "rasterio-1.2.10-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:1572003273225162933d4c88729076ac39050e7becd9de7d31988d1dd40942c1"},
+    {file = "rasterio-1.2.10-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:8f9867a3b6663396260fc5bdfbea372cac9202074b709478db741767f40dfffc"},
+    {file = "rasterio-1.2.10-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:ba95aa3221814e364ef49cf8dd8ca4a73e2ea702bd9228a3a845e197091792ae"},
+    {file = "rasterio-1.2.10-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:2394ce0ae1e7b49b456ddc6bbf00ce6840656e926046c1a5a54cd0f66ea67dc4"},
+    {file = "rasterio-1.2.10-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:c73248b4ba0564798bf64df869834821a7b823a4c9ceda3de9b772d69c3f5405"},
+    {file = "rasterio-1.2.10.tar.gz", hash = "sha256:6062456047ba6494fe18bd0da98a383b6fad5306b16cd52a22e76c59172a2b5f"},
+]
 requests = [
     {file = "requests-2.26.0-py2.py3-none-any.whl", hash = "sha256:6c1246513ecd5ecd4528a0906f910e8f0f9c6b8ec72030dc9fd154dc1a6efd24"},
     {file = "requests-2.26.0.tar.gz", hash = "sha256:b8aa58f8cf793ffd8782d3d8cb19e66ef36f7aba4353eec859e74678b01b07a7"},
@@ -3320,6 +3407,9 @@ requests = [
 requests-oauthlib = [
     {file = "requests-oauthlib-1.3.1.tar.gz", hash = "sha256:75beac4a47881eeb94d5ea5d6ad31ef88856affe2332b9aafb52c6452ccf0d7a"},
     {file = "requests_oauthlib-1.3.1-py2.py3-none-any.whl", hash = "sha256:2577c501a2fb8d05a304c09d090d6e47c306fef15809d102b327cf8364bddab5"},
+]
+rioxarray = [
+    {file = "rioxarray-0.9.0.tar.gz", hash = "sha256:88b21353f4e2bd54219865d0cebf84b65ab2a072e92c079714a1bdb7b31f131e"},
 ]
 rsa = [
     {file = "rsa-4.8-py3-none-any.whl", hash = "sha256:95c5d300c4e879ee69708c428ba566c59478fd653cc3a22243eeb8ed846950bb"},
@@ -3395,6 +3485,10 @@ shapely = [
 six = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
     {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
+]
+snuggs = [
+    {file = "snuggs-1.4.7-py3-none-any.whl", hash = "sha256:988dde5d4db88e9d71c99457404773dabcc7a1c45971bfbe81900999942d9f07"},
+    {file = "snuggs-1.4.7.tar.gz", hash = "sha256:501cf113fe3892e14e2fee76da5cd0606b7e149c411c271898e6259ebde2617b"},
 ]
 sortedcontainers = [
     {file = "sortedcontainers-2.4.0-py2.py3-none-any.whl", hash = "sha256:a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0"},

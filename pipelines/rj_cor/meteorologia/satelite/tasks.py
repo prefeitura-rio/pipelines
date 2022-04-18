@@ -12,6 +12,7 @@ import pendulum
 from prefect import task
 import s3fs
 
+from pipelines.constants import constants
 from pipelines.rj_cor.meteorologia.satelite.satellite_utils import main, save_parquet
 
 
@@ -34,7 +35,10 @@ def slice_data(current_time: str) -> Tuple[str, str, str, str, str]:
     return ano, mes, dia, hora, dia_juliano
 
 
-@task
+@task(
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=dt.timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
 def download(variavel: str,
              ano: str,
              dia_juliano: str,
