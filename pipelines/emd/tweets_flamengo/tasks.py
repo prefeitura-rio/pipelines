@@ -50,7 +50,6 @@ Tasks for emd
 import base64
 import os
 import time
-from pathlib import Path
 import json
 from datetime import datetime
 
@@ -66,14 +65,21 @@ from pipelines.utils import log
 
 
 def decode_env(value: str):
+    """
+    Decodes a base64 value.
+    """
     return base64.b64decode(value).decode()
+
 
 @task
 def get_api():
+    """
+    Get the Twitter API.
+    """
 
     CREDENTIALS = json.loads(
         decode_env(os.getenv("TWITTER_CREDENTIALS"))
-    )
+    )  # pylint: disable=C0103
 
     auth = tweepy.OAuthHandler(
         CREDENTIALS["CONSUMER_KEY"], CREDENTIALS["CONSUMER_SECRET"]
@@ -84,7 +90,10 @@ def get_api():
     return tweepy.API(auth)
 
 
-def normalize_cols(df):
+def normalize_cols(df):  # pylint: disable=C0103
+    """
+    Normalize columns names.
+    """
     return (
         df.str.normalize("NFKD")
         .str.encode("ascii", errors="ignore")
@@ -101,6 +110,9 @@ def normalize_cols(df):
 
 
 def creat_path_tree(path):
+    """
+    Creates a path tree.
+    """
     current_path = ""
     for folder in path.split("/"):
         current_path += f"{folder}/"
@@ -110,6 +122,9 @@ def creat_path_tree(path):
 
 @task
 def save_last_id(df, q):
+    """
+    Save the last tweet ID.
+    """
     q_folder = q.replace(" ", "_").replace("-", "_")
     pre_path = f"data/staging/twitter_flamengo/last_id/q={q_folder}"
     creat_path_tree(pre_path)
@@ -122,15 +137,19 @@ def save_last_id(df, q):
     if df is None:
         log("   No new tweets found")
     else:
-        ## twitter fetch data from most recent to most oldest
-        ## last_id must to be the most recent id
+        # twitter fetch data from most recent to most oldest
+        # last_id must to be the most recent id
         df = df[["id", "created_at"]].iloc[[0]].copy()
-        df.to_csv(f"{pre_path}/{q_folder}.csv", index=False, mode="a", header=False)
+        df.to_csv(f"{pre_path}/{q_folder}.csv",
+                  index=False, mode="a", header=False)
     return "data/staging"
 
 
 @task
 def fetch_last_id(q):
+    """
+    some docstring
+    """
     q_folder = q.replace(" ", "_").replace("-", "_")
     st = bd.Storage(dataset_id="twitter_flamengo", table_id="last_id")
     try:
@@ -146,13 +165,17 @@ def fetch_last_id(q):
         df = pd.read_csv(f"{pre_path}/{q_folder}.csv")
         if "q" in df.columns.tolist():
             df.columns = ["id", "created_at", "q"]
-            df.drop("q", 1).to_csv(f"{pre_path}/{q_folder}.csv", index=False)
+            df.drop("q", 1).to_csv(
+                f"{pre_path}/{q_folder}.csv", index=False)  # pylint: disable=E1101
     except FileNotFoundError:
         log(f"No table {q_folder} in storage")
 
 
 @task(nout=2)
 def get_last_id(api, q, data_path: str):
+    """
+    some docstring
+    """
     q_folder = q.replace(" ", "_").replace("-", "_")
     pre_path = f"{data_path}/twitter_flamengo/last_id/q={q_folder}"
     if not os.path.exists(f"{pre_path}/{q_folder}.csv"):
@@ -176,16 +199,20 @@ def get_last_id(api, q, data_path: str):
 
 @task
 def fetch_tweets(api, q, last_id, created_at):
+    """
+    some docstring
+    """
     q_folder = q.replace(" ", "_").replace("-", "_")
     dt = datetime.today().strftime("%Y-%m-%d-%H-%M-%S")
     first_page_df = None
     log(f"{q} | last_id: {last_id} | created_at: {created_at} | file: {dt}")
 
     for i, page in enumerate(
-        tweepy.Cursor(api.search_tweets, q=q, since_id=last_id, count=100).pages(149),
+        tweepy.Cursor(api.search_tweets, q=q,
+                      since_id=last_id, count=100).pages(149),
         start=1,
     ):
-        json_data = [t._json for t in page]
+        json_data = [t._json for t in page]  # pylint: disable=W0212
         dd = pd.json_normalize(json_data)
         dd.columns = normalize_cols(dd.columns)
 
@@ -534,7 +561,8 @@ def fetch_tweets(api, q, last_id, created_at):
             "coordinatestype",
             "coordinatescoordinates",
         ]
-        col_not_in_dd = [col for col in cols_343 if col not in dd.columns.tolist()]
+        col_not_in_dd = [
+            col for col in cols_343 if col not in dd.columns.tolist()]
         for col in col_not_in_dd:
             dd[col] = np.nan
         dd = dd[cols_343]
@@ -549,8 +577,8 @@ def fetch_tweets(api, q, last_id, created_at):
             )
         else:
             dd.to_csv(f"data/tweets/q={q_folder}/{dt}.csv", index=False)
-            ## twitter fetch data from most recent to most oldest
-            ## the first tweet from first page is the most recent, how its what we call last_id
+            # twitter fetch data from most recent to most oldest
+            # the first tweet from first page is the most recent, how its what we call last_id
             first_page_df = dd.copy()
 
         log(f"    page: {i} | tweets: {len(dd)} | columns: {len(dd.columns)}")
@@ -560,6 +588,9 @@ def fetch_tweets(api, q, last_id, created_at):
 
 @task
 def upload_to_storage(path: str):
+    """
+    some docstring
+    """
     tb_last_id = bd.Table(dataset_id="twitter_flamengo", table_id="last_id")
     tb_last_id.append(f"{path}/twitter_flamengo/last_id")
     if os.path.isdir(f"{path}/"):

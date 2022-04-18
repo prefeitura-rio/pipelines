@@ -73,7 +73,6 @@ from datetime import timedelta, datetime
 from prefect.schedules import Schedule
 from prefect.schedules.clocks import IntervalClock
 from pipelines.constants import constants
-import os
 
 every_two_weeks = Schedule(
     clocks=[
