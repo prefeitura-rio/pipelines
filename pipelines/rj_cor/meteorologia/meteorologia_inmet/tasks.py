@@ -14,6 +14,7 @@ from prefect import task
 import requests
 
 from pipelines.constants import constants
+from pipelines.utils.utils import log
 
 # from pipelines.rj_cor.meteorologia.meteorologia_inmet.meteorologia_utils import converte_timezone
 
@@ -111,7 +112,9 @@ def tratar_dados(dados: pd.DataFrame) -> Tuple[pd.DataFrame, str]:
         horario = datahora.format("HH:mm:SS")
         return data, horario
 
-    drop_cols = ["DC_NOME", "VL_LATITUDE", "VL_LONGITUDE", "TEM_SEN", "UF"]
+    drop_cols = ["DC_NOME", "VL_LATITUDE", "VL_LONGITUDE", "TEM_SEN", "UF", 'TEN_BAT', 'TEM_CPU']
+    # Checa se todas estão no df
+    drop_cols = [c for c in drop_cols if c in dados.columns]
 
     # Remove colunas que já temos os dados em outras tabelas
     dados = dados.drop(drop_cols, axis=1)
@@ -149,9 +152,19 @@ def tratar_dados(dados: pd.DataFrame) -> Tuple[pd.DataFrame, str]:
     # Converte coluna de horas de 2300 para 23:00:00
     dados["horario"] = pd.to_datetime(dados.horario, format="%H%M")
     dados["horario"] = dados.horario.apply(lambda x: datetime.strftime(x, "%H:%M:%S"))
+    log("Data hora máxima antes da conversão: {} {}".format(
+        dados.data.max(),
+        dados[dados['data'] == dados.data.max()].horario.max())
+    )
+
     # Converte horário de UTC para America/Sao Paulo
     dados[["data", "horario"]] = dados[["data", "horario"]].apply(
         lambda x: converte_timezone(x.data, x.horario), axis=1, result_type="expand"
+    )
+
+    log("Data hora máxima depois da conversão: {} {}".format(
+        dados.data.max(),
+        dados[dados['data'] == dados.data.max()].horario.max())
     )
 
     # Ordenamento de variáveis
@@ -185,14 +198,22 @@ def tratar_dados(dados: pd.DataFrame) -> Tuple[pd.DataFrame, str]:
     dados["horario"] = pd.to_datetime(dados.horario, format="%H:%M:%S").dt.time
     dados["data"] = pd.to_datetime(dados.data, format="%Y-%m-%d")
 
-    # Pegar o dia máximo que aparece na base como partição
-    max_date = str(dados["data"].max())
-    ano = max_date[:4]
-    mes = str(int(max_date[5:7]))
-    dia = str(int(max_date[8:10]))
+    # Pegar o dia no nosso timezone como partição
+    br_timezone = pendulum.now("America/Sao_Paulo").format("YYYY-MM-DD")
+    ano = br_timezone[:4]
+    mes = str(int(br_timezone[5:7]))
+    dia = str(int(br_timezone[8:10]))
+
+    # Define colunas que serão salvas
+    dados = dados[['id_estacao', 'data', 'horario', 'pressao', 'pressao_maxima',
+       'radiacao_global', 'temperatura_orvalho', 'temperatura_minima',
+       'umidade_minima', 'temperatura_orvalho_maximo', 'direcao_vento',
+       'acumulado_chuva_1_h', 'pressao_minima', 'umidade_maxima',
+       'velocidade_vento', 'temperatura_orvalho_minimo', 'temperatura_maxima',
+       'rajada_vento_max', 'temperatura', 'umidade']]
 
     # Seleciona apenas dados daquele dia (devido à UTC)
-    dados = dados[dados["data"] == max_date]
+    dados = dados[dados["data"] == br_timezone]
 
     # Remove linhas com todos os dados nan
     dados = dados.dropna(subset=float_cols, how='all')
