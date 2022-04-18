@@ -25,11 +25,10 @@ def batch_to_dataframe(batch: Tuple[Tuple], columns: List[str]) -> pd.DataFrame:
     return pd.DataFrame(batch, columns=columns)
 
 
-def get_clean_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
+def clean_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
     for col in dataframe.columns.tolist():
-        dataframe[col] = dataframe[col].apply(
-            lambda x: unidecode(str(x)) if x is not None else x
-        )
+        if dataframe[col].dtype == object:
+            dataframe[col] = dataframe[col].str.replace("\x00", "", regex=True)
     return dataframe
 
 
