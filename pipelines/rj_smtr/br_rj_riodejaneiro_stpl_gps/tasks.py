@@ -2,6 +2,7 @@
 """
 Tasks for br_rj_riodejaneiro_stpl_gps
 """
+# pylint disable=invalid-name, C0103
 
 ###############################################################################
 #
@@ -48,18 +49,30 @@ Tasks for br_rj_riodejaneiro_stpl_gps
 # Abaixo segue um código para exemplificação, que pode ser removido.
 #
 ###############################################################################
-from pipelines.rj_smtr.constants import constants
-from pipelines.utils.utils import log
-
 from datetime import timedelta
+import traceback
+
 import pandas as pd
 import pendulum
 from prefect import task
-import traceback
+
+
+from pipelines.rj_smtr.constants import constants
+from pipelines.utils.utils import log
 
 
 @task
 def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict, key_column):
+    """Parse data from status_dict['data'] to DataFrame as partially nested table.
+
+    Args:
+        status_dict (dict): Contains data, run time timestamp and any previous error
+        key_column (str): Unique key field from each dict within data
+
+    Returns:
+        dict: "df" contains the transformed DataFrame from data, "error" contains any caught error
+        during execution.
+    """
 
     columns = [key_column, "dataHora", "timestamp_captura", "content"]
     data = status_dict["data"]
@@ -79,7 +92,7 @@ def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict, key_column):
     timestamp_captura = pd.to_datetime(timestamp)
     # separate each nested piece in data into a row
     df["content"] = [piece for piece in data]
-    # retrive key column from each nested piece in data
+    # retrive key field from each nested piece in data
     df[key_column] = [piece[key_column] for piece in data]
     df["dataHora"] = [piece["dataHora"] for piece in data]
     df["timestamp_captura"] = timestamp_captura
@@ -118,7 +131,7 @@ def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict, key_column):
         if df_treated.shape[0] == 0:
             error = ValueError("After filtering, the dataframe is empty!")
         df = df_treated
-    except:
-        err = traceback.format_exc()
+    except Exception:
+        error = traceback.format_exc()
         # log_critical(f"Failed to filter STPL data: \n{err}")
-    return {"df": df, "error": err}
+    return {"df": df, "error": error}

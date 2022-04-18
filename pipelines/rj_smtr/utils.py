@@ -33,7 +33,15 @@ from basedosdados import Table
 
 from pipelines.utils.utils import log
 
+
 def create_or_append_table(dataset_id, table_id, path):
+    """Conditionally create table or append data to its relative GCS folder.
+
+    Args:
+        dataset_id (str): target dataset_id on BigQuery
+        table_id (str): target table_id on BigQuery
+        path (str): Path to .csv data file
+    """
     tb_obj = Table(table_id=table_id, dataset_id=dataset_id)
     if not tb_obj.table_exists("staging"):
         log("Table does not exist in STAGING, creating table...")

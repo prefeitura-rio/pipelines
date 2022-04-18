@@ -48,11 +48,12 @@ Tasks for rj_smtr
 # Abaixo segue um código para exemplificação, que pode ser removido.
 #
 ###############################################################################
-from basedosdados import Table, Storage
 import json
 import os
-import pandas as pd
 from pathlib import Path
+
+from basedosdados import Table, Storage
+import pandas as pd
 import pendulum
 from prefect import task
 import requests
@@ -64,6 +65,12 @@ from pipelines.utils.utils import log
 
 @task
 def create_current_date_hour_partition():
+    """Create partitioned directory structure to save data locally
+
+    Returns:
+        dict: "filename" contains the name which to upload the csv, "partitions" contains
+        the partitioned directory path
+    """
     timezone = constants.TIMEZONE.value
 
     capture_time = pendulum.now(timezone)
@@ -81,6 +88,17 @@ def create_current_date_hour_partition():
 
 @task
 def get_file_path_and_partitions(dataset_id, table_id, filename, partitions):
+    """Get the full path which to save data locally before upload
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+        filename (str): Single csv name
+        partitions (str): Partitioned directory structure, ie "ano=2022/mes=03/data=01"
+
+    Returns:
+        str: Final path which to save files
+    """
 
     # If not specific table_id, use resource one
     # if not table_id:
@@ -90,7 +108,8 @@ def get_file_path_and_partitions(dataset_id, table_id, filename, partitions):
     # Get data folder from environment variable
     data_folder = os.getenv("DATA_FOLDER", "data")
 
-    file_path = f"{os.getcwd()}/{data_folder}/{{mode}}/{dataset_id}/{table_id}/{partitions}/{filename}.{{filetype}}"
+    file_path = f"{os.getcwd()}/{data_folder}/{{mode}}/{dataset_id}/{table_id}"
+    file_path += f"/{partitions}/{filename}.{{filetype}}"
     log(f"creating file path {file_path}")
 
     return file_path
@@ -98,6 +117,17 @@ def get_file_path_and_partitions(dataset_id, table_id, filename, partitions):
 
 @task
 def save_raw_local(data, file_path, mode="raw"):
+    """Dumps json response from API to .json file
+
+    Args:
+        data (response): Response from API request
+        file_path (str): Path which to save raw file
+        mode (str, optional): Folder to save locally, later folder which to upload to GCS.
+        Defaults to "raw".
+
+    Returns:
+        str: Path to the saved file
+    """
 
     _file_path = file_path.format(mode=mode, filetype="json")
     Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
@@ -108,6 +138,17 @@ def save_raw_local(data, file_path, mode="raw"):
 
 @task
 def save_treated_local(dataframe, file_path, mode="staging"):
+    """Save treated file locally
+
+    Args:
+        dataframe (pandas.core.DataFrame): Data to save as .csv file
+        file_path (_type_): Path which to save .csv files
+        mode (str, optional): Directory to save locally, later folder which to upload to GCS.
+        Defaults to "staging".
+
+    Returns:
+        str: Path to the saved file
+    """
 
     _file_path = file_path.format(mode=mode, filetype="csv")
     Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
@@ -118,6 +159,16 @@ def save_treated_local(dataframe, file_path, mode="staging"):
 
 @task
 def get_raw(url, headers=None):
+    """Request data from a url API
+
+    Args:
+        url (str): URL to send request to
+        headers (dict, optional): Aditional fields to send along the request. Defaults to None.
+
+    Returns:
+        dict: "data" contains the response object from the request, "timestamp" contains
+        the run time timestamp, "error" catches errors that may occur during task execution.
+    """
 
     data = None
     error = None
@@ -137,19 +188,32 @@ def get_raw(url, headers=None):
 
     if error:
         return {"data": data, "timestamp": timestamp.isoformat(), "error": error}
-    elif data.ok:
+    if data.ok:
         return {
             "data": data,
             "error": error,
             "timestamp": timestamp.isoformat(),
         }
-    else:
-        error = f"Requests failed with error {data.status_code}"
-        return {"error": error, "timestamp": timestamp.isoformat(), "data": data}
+    # else
+    error = f"Requests failed with error {data.status_code}"
+    return {"error": error, "timestamp": timestamp.isoformat(), "data": data}
 
 
 @task
 def bq_upload(dataset_id, table_id, filepath, raw_filepath=None, partitions=None):
+    """Upload raw and treated data to GCS and BigQuery
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+        filepath (str): Path to the saved treated .csv file
+        raw_filepath (str, optional): Path to raw .json file. Defaults to None.
+        partitions (str, optional): Partitioned directory structure, ie "ano=2022/mes=03/data=01".
+        Defaults to None.
+
+    Returns:
+        None
+    """
     log(
         f"""
     Received inputs:
@@ -160,11 +224,15 @@ def bq_upload(dataset_id, table_id, filepath, raw_filepath=None, partitions=None
     partitions = {partitions}, type = {type(partitions)}
     """
     )
+
     # Upload raw to staging
     if raw_filepath:
         st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
         log(
-            f"Uploading raw file: {raw_filepath} to bucket {st_obj.bucket_name} at {st_obj.bucket_name}/{dataset_id}/{table_id}"
+            f"""Uploading raw file:
+            {raw_filepath}
+            to bucket {st_obj.bucket_name}
+            at {st_obj.bucket_name}/{dataset_id}/{table_id}"""
         )
         st_obj.upload(
             path=raw_filepath, partitions=partitions, mode="raw", if_exists="replace"
@@ -184,9 +252,22 @@ def bq_upload(dataset_id, table_id, filepath, raw_filepath=None, partitions=None
 
 
 @task
-def upload_logs_to_bq(dataset_id, ref_table_id, timestamp, error):
+def upload_logs_to_bq(dataset_id, parent_table_id, timestamp, error):
+    """Upload execution status table to BigQuery.
+    Table is uploaded to the same dataset, named {parent_table_id}_logs.
 
-    table_id = ref_table_id + "_logs"
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        parent_table_id (str): Parent table id related to the status table
+        timestamp (str): ISO formatted timestamp string
+        error (str): String associated with error caught during execution
+
+    Returns:
+        None
+    """
+
+    table_id = parent_table_id + "_logs"
 
     filepath = Path(
         f"{timestamp}/{table_id}/data={pendulum.parse(timestamp).date()}/{table_id}_{timestamp}.csv"

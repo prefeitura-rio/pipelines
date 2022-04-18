@@ -81,8 +81,14 @@ every_minute = Schedule(
             interval=timedelta(minutes=1),
             start_date=datetime(2021, 1, 1),
             labels=[
-                constants.RJ_SMTR_AGENT_LABEL.value,
-            ]
+                constants.RJ_SMTR_DEV_AGENT_LABEL.value,
+            ],
+            parameter_defaults={
+                "dataset_id": "br_rj_riodejaneiro_stpl_gps",
+                "table_id": "registros",
+                "url": "http://zn4.m2mcontrol.com.br/api/integracao/veiculos",
+                "key_column": "codigo",
+            },
         ),
     ]
 )

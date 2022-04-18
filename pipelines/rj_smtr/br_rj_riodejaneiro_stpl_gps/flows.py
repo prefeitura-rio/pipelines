@@ -76,7 +76,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks import (
 )
 from pipelines.utils.utils import get_vault_secret
 
-# from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.schedules import every_two_weeks
+from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.schedules import every_minute
 
 with Flow("Captura_GPS_STPL") as stpl_captura:
 
@@ -105,12 +105,14 @@ with Flow("Captura_GPS_STPL") as stpl_captura:
 
     upload_logs_to_bq(
         dataset_id=dataset_id,
-        ref_table_id=table_id,
+        parent_table_id=table_id,
         timestamp=status_dict["timestamp"],
         error=status_dict["error"],
     )
 
-    treatd_filepath = save_treated_local(dataframe=treated_status["df"], file_path=filepath)
+    treatd_filepath = save_treated_local(
+        dataframe=treated_status["df"], file_path=filepath
+    )
 
     bq_upload(
         dataset_id=dataset_id,
@@ -121,6 +123,6 @@ with Flow("Captura_GPS_STPL") as stpl_captura:
     )
 
 
-# stpl_captura.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-# stpl_captura.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-# flow.schedule = every_two_weeks
+stpl_captura.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+stpl_captura.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+stpl_captura.schedule = every_minute
