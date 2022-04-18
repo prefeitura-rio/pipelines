@@ -21,6 +21,7 @@ with Flow(
     "COR: Meteorologia - Meteorologia INMET"
 ) as cor_meteorologia_meteorologia_inmet:
     CURRENT_TIME = pendulum.now("UTC")  # segundo o manual é UTC
+    YESTERDAY = pendulum.yesterday("UTC").format("YYYY-MM-DD")
 
     DATASET_ID = "meio_ambiente_clima"
     TABLE_ID = "meteorologia_inmet"
@@ -28,7 +29,7 @@ with Flow(
 
     data = slice_data(current_time=CURRENT_TIME)
 
-    dados = download(data=data)
+    dados = download(data=data, yesterday=YESTERDAY)
     dados, partitions = tratar_dados(dados=dados)
     PATH = salvar_dados(dados=dados, partitions=partitions, data=data)
 

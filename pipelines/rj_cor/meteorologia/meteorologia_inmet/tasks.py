@@ -19,7 +19,7 @@ from pipelines.constants import constants
 
 
 @task()
-def slice_data(current_time: str) -> Tuple[str, str]:
+def slice_data(current_time: str) -> str:
     """
     Retorna a data e hora do timestamp de execução
     """
@@ -34,7 +34,7 @@ def slice_data(current_time: str) -> Tuple[str, str]:
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def download(data: str) -> pd.DataFrame:
+def download(data: str, yesterday: str) -> pd.DataFrame:
     """
     Faz o request na data especificada e retorna dados
     """
@@ -52,10 +52,13 @@ def download(data: str) -> pd.DataFrame:
         "A656",
     ]
 
-    # Faz o request do dia atual e salva na variável raw
+    # Faz o request do dia atual e anterior e salva na variável raw
+    # Trazer desde o dia anterior evita problemas quando já é outro dia
+    # no UTC, visto que ele só traria dados do novo dia e substituiria
+    # no arquivo da partição do dia atual no nosso timezone
     raw = []
     for id_estacao in estacoes_unicas:
-        url = f"https://apitempo.inmet.gov.br/estacao/{data}/{data}/{id_estacao}"
+        url = f"https://apitempo.inmet.gov.br/estacao/{yesterday}/{data}/{id_estacao}"
         res = requests.get(url)
         if res.status_code != 200:
             print(
