@@ -14,12 +14,9 @@ from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.tasks import (
-    create_bd_table,
+    create_table_and_upload_to_gcs,
     get_current_flow_labels,
     rename_current_flow_run_dataset_table,
-    upload_to_gcs,
-    dump_header_to_csv,
-    check_table_exists,
 )
 from pipelines.utils.dump_datario.tasks import (
     get_datario_geodataframe,
@@ -76,51 +73,13 @@ with Flow(
         url=url, path=f"data/{uuid4()}/", wait=rename_flow_run
     )
 
-    EXISTS = check_table_exists(
-        dataset_id=dataset_id, table_id=table_id, wait=datario_path
+    create_table_and_upload_to_gcs(
+        data_path=datario_path,
+        dataset_id=dataset_id,
+        table_id=table_id,
+        dump_type=dump_type,
+        wait=datario_path,
     )
-
-    # Create header and table if they don't exists
-    with case(EXISTS, False):
-
-        # Create CSV file with headers
-        header_path = dump_header_to_csv(
-            data_path=datario_path,
-            wait=datario_path,
-        )
-
-        # Create table in BigQuery
-        create_db = create_bd_table(  # pylint: disable=invalid-name
-            path=header_path,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            dump_type=dump_type,
-            wait=header_path,
-        )
-
-        #####################################
-        #
-        # Tasks section #2 - Dump batches
-        #
-        #####################################
-
-        # Upload to GCS
-        upload_to_gcs(
-            path=datario_path,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            dump_type=dump_type,
-            wait=create_db,
-        )
-
-    with case(EXISTS, True):
-        upload_to_gcs(
-            path=datario_path,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            dump_type=dump_type,
-            wait=EXISTS,
-        )
 
     with case(materialize_after_dump, True):
         # Trigger DBT flow run

@@ -16,12 +16,11 @@ from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.dump_db.db import Database
 
 from pipelines.utils.tasks import (
-    create_bd_table,
     get_current_flow_labels,
+    get_user_and_password,
     greater_than,
     rename_current_flow_run_dataset_table,
-    upload_to_gcs,
-    dump_header_to_csv,
+    create_table_and_upload_to_gcs,
 )
 from pipelines.utils.dump_db.tasks import (
     database_execute,
@@ -30,7 +29,6 @@ from pipelines.utils.dump_db.tasks import (
     dump_batches_to_csv,
     format_partitioned_query,
 )
-from pipelines.utils.tasks import get_user_and_password, check_table_exists
 from pipelines.utils.utils import notify_discord_on_failure
 
 with Flow(
@@ -139,52 +137,14 @@ with Flow(
     data_exists = greater_than(num_batches, 0)
 
     with case(data_exists, True):
-        table_exists = check_table_exists(  # pylint: disable=invalid-name
-            dataset_id=dataset_id, table_id=table_id, wait=batches_path
+
+        create_table_and_upload_to_gcs(
+            data_path=batches_path,
+            dataset_id=dataset_id,
+            table_id=table_id,
+            dump_type=dump_type,
+            wait=data_exists,
         )
-
-        # Create header and table if they don't exists
-        with case(table_exists, False):
-
-            # Create CSV file with headers
-            header_path = dump_header_to_csv(
-                data_path=batches_path,
-                wait=batches_path,
-            )
-
-            # Create table in BigQuery
-            create_db = create_bd_table(  # pylint: disable=invalid-name
-                path=header_path,
-                dataset_id=dataset_id,
-                table_id=table_id,
-                dump_type=dump_type,
-                wait=header_path,
-            )
-
-            #####################################
-            #
-            # Tasks section #2 - Dump batches
-            #
-            #####################################
-
-            # Upload to GCS
-            upload_to_gcs(
-                path=batches_path,
-                dataset_id=dataset_id,
-                table_id=table_id,
-                dump_type=dump_type,
-                wait=create_db,
-            )
-
-        with case(table_exists, True):
-            # Upload to GCS
-            upload_to_gcs(
-                path=batches_path,
-                dataset_id=dataset_id,
-                table_id=table_id,
-                dump_type=dump_type,
-                wait=table_exists,
-            )
 
         with case(materialize_after_dump, True):
             # Trigger DBT flow run
