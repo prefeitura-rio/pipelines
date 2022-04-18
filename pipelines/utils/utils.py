@@ -109,7 +109,7 @@ def run_local(flow: prefect.Flow, parameters: Dict[str, Any] = None):
     # Run flow
     if parameters:
         return flow.run(parameters=parameters)
-    return flow.run()
+    return flow.run(show_flow_logs=True)
 
 
 def run_cloud(flow: prefect.Flow, labels: List[str], parameters: Dict[str, Any] = None):
