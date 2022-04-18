@@ -22,7 +22,7 @@ tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>
 
 [[package]]
 name = "basedosdados"
-version = "1.6.2a5"
+version = "1.6.2a6"
 description = "Organizar e facilitar o acesso a dados brasileiros através de tabelas públicas no BigQuery."
 category = "main"
 optional = false
@@ -1242,7 +1242,7 @@ heapdict = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.11"
-content-hash = "e1ed243f89bdfd61bda35e50e291b9d1f7520ea5cd487475b41b4f6599d30a80"
+content-hash = "46d62242822f284e2f7b17a0fe391e2d7a36522a696548f5098ec6748a968fda"
 
 [metadata.files]
 atomicwrites = [
@@ -1254,8 +1254,8 @@ attrs = [
     {file = "attrs-21.4.0.tar.gz", hash = "sha256:626ba8234211db98e869df76230a137c4c40a12d72445c45d5f5b716f076e2fd"},
 ]
 basedosdados = [
-    {file = "basedosdados-1.6.2a5-py3-none-any.whl", hash = "sha256:835a4aae3fdc4a2d2d519645a2e7b2af835e22b58a85bba24ba528ffa90c69d1"},
-    {file = "basedosdados-1.6.2a5.tar.gz", hash = "sha256:ee2769e6e737bc5c8e738ec4f520e135eb2b1d8908429d75513095a04a8df2e8"},
+    {file = "basedosdados-1.6.2a6-py3-none-any.whl", hash = "sha256:7a93bf33a1d72f6645777d765c0f3e91fcc12bc2fdd3891b8863e3d8cca1bbd7"},
+    {file = "basedosdados-1.6.2a6.tar.gz", hash = "sha256:5e8bf19e5471248febe2a00313a2bcce0cad30d95a833bfc6b152febbcdf7909"},
 ]
 cachetools = [
     {file = "cachetools-4.2.4-py3-none-any.whl", hash = "sha256:92971d3cb7d2a97efff7c7bb1657f21a8f5fb309a37530537c71b1774189f2d1"},

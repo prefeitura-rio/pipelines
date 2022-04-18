@@ -12,7 +12,7 @@ MarkupSafe = "2.0.1"
 PyMySQL = {extras = ["rsa"], version = "^1.0.2"}
 PyYAML = "6.0"
 Shapely = "1.8.0"
-basedosdados = "1.6.2a5"
+basedosdados = "1.6.2a6"
 cachetools = "4.2.4"
 certifi = "2021.10.8"
 charset-normalizer = "2.0.8"
