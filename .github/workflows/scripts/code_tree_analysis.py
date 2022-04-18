@@ -359,9 +359,45 @@ def build_dependency_graph(root_directory: str) -> nx.DiGraph:
 
 if __name__ == "__main__":
 
+    # Assert arguments.
     if len(sys.argv) != 2:
         print(f"Usage: python {sys.argv[0]} <changed_files>")
 
-    changed_files = sys.argv[1]
-    print(f'Changed files: "{changed_files}"')
-    # build_dependency_graph("pipelines/")
+    # Get modified files
+    changed_files: List[str] = sys.argv[1].split(" ")
+    print("These are all the changed files:")
+    for file_ in changed_files:
+        print(f"\t- {file_}")
+
+    # Filter out non-Python and non-pipelines files.
+    changed_files = [
+        file_
+        for file_ in changed_files
+        if file_.endswith(".py") and file_.startswith("pipelines")
+    ]
+    print("We're interested in these files:")
+    for file_ in changed_files:
+        print(f"\t- {file_}")
+
+    # Build the dependency graph.
+    graph = build_dependency_graph("pipelines/")
+
+    # Get all declarations that the exported files export.
+    exported_declarations = set()
+    for file_ in changed_files:
+        exported_declarations.update(get_declared(file_))
+    print("These files export these declarations:")
+    for declaration in exported_declarations:
+        print(f"\t- {declaration}")
+
+    # Get all files that depend on the exported declarations.
+    dependent_files = set()
+    for declaration in exported_declarations:
+        dependent_files.update(graph.successors(declaration))
+    print("These files depend on the exported declarations:")
+    for file_ in dependent_files:
+        print(f"\t- {file_}")
+
+    # Output to GitHub Actions.
+    print("\n\n\n")
+    print(f"::set-output name=pr-message::{','.join(changed_files)}")
