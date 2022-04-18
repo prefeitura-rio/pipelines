@@ -28,6 +28,7 @@ from pipelines.utils.utils import (
     to_partitions,
     parser_blobs_to_partition_dict,
     get_storage_blobs,
+    remove_columns_accents,
 )
 from pipelines.constants import constants
 from pipelines.utils.utils import log
@@ -230,6 +231,7 @@ def dump_batches_to_csv(
         # Convert to dataframe
         dataframe = batch_to_dataframe(batch, columns)
         # Clean dataframe
+        dataframe.columns = remove_columns_accents(dataframe)
         dataframe = clean_dataframe(dataframe)
         # Write to CSV
         if not partition_column:
