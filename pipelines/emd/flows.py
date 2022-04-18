@@ -62,7 +62,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import Module
 from pipelines.constants import constants
 from pipelines.emd.tasks import say_hello, task_with_param
-from pipelines.emd.schedules import every_two_weeks
+from pipelines.emd.schedules import every_two_weeks, task_with_param_schedule
 
 with Flow("my_flow") as flow:
     say_hello()
@@ -77,4 +77,4 @@ with Flow("test_flow") as flow:
 
 flow.storage = Module("pipelines.emd")
 flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-# flow.schedule = every_two_weeks
+flow.schedule = task_with_param_schedule
