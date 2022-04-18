@@ -12,6 +12,7 @@ import pendulum
 from prefect import task
 import s3fs
 
+from pipelines.constants import constants
 from pipelines.rj_cor.meteorologia.satelite.satellite_utils import main, save_parquet
 
 
@@ -34,7 +35,10 @@ def slice_data(current_time: str) -> Tuple[str, str, str, str, str]:
     return ano, mes, dia, hora, dia_juliano
 
 
-@task
+@task(
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=dt.timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
 def download(variavel: str,
              ano: str,
              dia_juliano: str,
@@ -73,8 +77,8 @@ def tratar_dados(filename: str) -> dict:
     return info
 
 
-@task
-def salvar_parquet(info: dict) -> Union[str, Path]:
+@task(nout=2)
+def salvar_parquet(info: dict) -> Tuple[Union[str, Path], str]:
     '''
     Converter dados de tif para parquet
     '''
@@ -82,5 +86,5 @@ def salvar_parquet(info: dict) -> Union[str, Path]:
     variable = info['variable']
     datetime_save = info['datetime_save']
     print(f'Saving {variable} in parquet')
-    filename = save_parquet(variable, datetime_save)
-    return filename
+    filename, partitions = save_parquet(variable, datetime_save)
+    return filename, partitions

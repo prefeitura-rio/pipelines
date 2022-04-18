@@ -1,7 +1,7 @@
 """
 Tasks for meteorologia_inmet
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import os
 from pathlib import Path
@@ -12,7 +12,8 @@ import pendulum
 from prefect import task
 import requests
 
-#from pipelines.cor.alagamentos.meteorologia_inmet.utils import main, save_parquet
+from pipelines.constants import constants
+#from pipelines.rj_cor.meteorologia.meteorologia_inmet.meteorologia_utils import converte_timezone
 
 
 @task(nout=2)
@@ -30,7 +31,10 @@ def slice_data(current_time: str) -> Tuple[str, str]:
     return data, hora
 
 
-@task
+@task(
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
 def download(data: str) -> pd.DataFrame:
     '''
     Faz o request na data especificada e retorna dados
@@ -52,15 +56,8 @@ def download(data: str) -> pd.DataFrame:
         raw.append(json.loads(res.text))
 
     # Faz um flat da lista de listas
-    #flat_list = [item for sublist in raw for item in sublist]
-    #raw = flat_list.copy()
-
-    # remove da lista colunas que não serão interessantes
-    # pois já tem essa informação na tabela estacoes_inmet
-    drop_cols = ['DC_NOME', 'VL_LATITUDE', 'VL_LONGITUDE', 'TEM_SEN', 'UF']
-    for i, j in enumerate(raw):
-        print('\n>>>', j)
-        raw[i] = {key: j[0][key] for key in j[0] if key not in drop_cols}
+    flat_list = [item for sublist in raw for item in sublist]
+    raw = flat_list.copy()
 
     # converte para dados
     dados = pd.DataFrame(raw)
@@ -73,6 +70,25 @@ def tratar_dados(dados: pd.DataFrame, hora: str) -> pd.DataFrame:
     '''
     Renomeia colunas e filtra dados com a hora do timestamp de execução
     '''
+
+    def converte_timezone(data: str, horario: str) -> str:
+        '''
+        Recebe o formato de data em YYYY-MM-DD e hora em HH:mm:SS no UTC
+        e retorna no mesmo formato no horário São Paulo
+        '''
+        datahora = pendulum.from_format(data + ' ' +  horario, 'YYYY-MM-DD HH:mm:SS')
+        datahora = datahora.in_tz('America/Sao_Paulo')
+
+        data = datahora.format('YYYY-MM-DD')
+        horario = datahora.format('HH:mm:SS')
+        return data, horario
+
+
+    drop_cols = ['DC_NOME', 'VL_LATITUDE', 'VL_LONGITUDE', 'TEM_SEN', 'UF']
+
+    # Remove colunas que já temos os dados em outras tabelas
+    dados = dados.drop(drop_cols, axis=1)
+
     # Adequando nome das variáveis
     rename_cols = {
         'DC_NOME': 'estacao',
@@ -109,6 +125,11 @@ def tratar_dados(dados: pd.DataFrame, hora: str) -> pd.DataFrame:
     dados['horario'] = pd.to_datetime(dados.horario, format='%H%M')
     dados['horario'] = dados.horario.apply(
         lambda x: datetime.strftime(x, '%H:%M:%S'))
+    # Converte horário de UTC para America/Sao Paulo
+    dados[['data', 'horario']] = (dados[['data', 'horario']]
+                                    .apply(lambda x: converte_timezone(x.data, x.horario),
+                                            axis=1,
+                                            result_type="expand"))
 
     # Ordenamento de variáveis
     chaves_primarias = ['id_estacao', 'data', 'horario']
@@ -142,7 +163,7 @@ def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
     if not os.path.exists(base_path):
         os.makedirs(base_path)
 
-    filename = os.path.join(base_path, 'dados.csv')
+    filename = os.path.join(base_path, f'dados_{pendulum.now()}.csv')
 
     print(f'Saving {filename}')
     dados.to_csv(filename, index=False)
