@@ -61,6 +61,7 @@ with Flow(
             parameters={
                 "dataset_id": dataset_id,
                 "table_id": table_id,
+                "mode": "prod",
             },
             labels=[
                 constants.RJ_DATARIO_AGENT_LABEL.value,
