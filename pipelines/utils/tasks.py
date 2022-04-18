@@ -35,6 +35,14 @@ def get_current_flow_labels() -> List[str]:
     return flow_run_view.labels
 
 
+@task
+def greater_than(value, compare_to) -> bool:
+    """
+    Returns True if value is greater than compare_to.
+    """
+    return value > compare_to
+
+
 ##################
 #
 # Hashicorp Vault
@@ -235,4 +243,6 @@ def check_table_exists(
     """
     # pylint: disable=C0103
     tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
-    return tb.table_exists(mode="staging")
+    exists = tb.table_exists(mode="staging")
+    log(f"Table {dataset_id}.{table_id} exists in staging: {exists}")
+    return exists
