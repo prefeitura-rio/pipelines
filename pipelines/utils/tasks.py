@@ -11,6 +11,7 @@ from uuid import uuid4
 
 import basedosdados as bd
 import pandas as pd
+import pendulum
 import prefect
 from prefect import task
 from prefect.backend import FlowRunView
@@ -34,6 +35,16 @@ def log_task(
     Logs a message to prefect's logger.
     """
     log(msg, level)
+
+
+@prefect.task(checkpoint=False)
+def get_now_time():
+    """
+    Returns the HH:MM.
+    """
+    now = pendulum.now(pendulum.timezone("America/Sao_Paulo"))
+
+    return f"{now.hour}:{f'0{now.minute}' if len(str(now.minute))==1 else now.minute}"
 
 
 @task

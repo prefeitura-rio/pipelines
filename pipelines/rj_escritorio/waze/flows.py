@@ -2,13 +2,13 @@
 """
 Flows for emd
 """
+# pylint: disable=C0103
 
 from functools import partial
 
 from prefect import Flow
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
-import pendulum
 
 from pipelines.constants import constants
 from pipelines.rj_escritorio.waze.tasks import (
@@ -19,7 +19,7 @@ from pipelines.rj_escritorio.waze.tasks import (
 )
 from pipelines.rj_escritorio.waze.schedules import every_five_minutes
 from pipelines.utils.utils import notify_discord_on_failure
-from pipelines.utils.tasks import rename_current_flow_run
+from pipelines.utils.tasks import rename_current_flow_run, get_now_time
 
 
 with Flow(
@@ -37,9 +37,8 @@ with Flow(
     # Rename flow run
     #
     #####################################
-    now = pendulum.now(pendulum.timezone("America/Sao_Paulo"))
-    now = f"{now.hour}:{f'0{now.minute}' if len(str(now.minute))==1 else now.minute}"
-    rename_flow_run = rename_current_flow_run(msg=f"Waze: {now}")
+    now_time = get_now_time()
+    rename_flow_run = rename_current_flow_run(msg=f"Waze: {now_time}")
 
     areas = load_geometries()
 
