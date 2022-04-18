@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from prefect import task
 import pandas as pd
 
-from pipelines.utils.dump_db import (
+from pipelines.utils.dump_db.db import (
     Database,
     MySql,
     Oracle,
