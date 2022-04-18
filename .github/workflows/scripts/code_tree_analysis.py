@@ -475,7 +475,7 @@ if __name__ == "__main__":
 
     # Output to GitHub Actions.
     print("\n\n\n")
-    print(f"::set-output name=pr-message::{message}")
+    print(f'::set-output name=pr-message::"{message}"')
 
     # Raise if there are conflicts
     if len(conflicts) > 0:
