@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=too-many-locals
 """
 Funções úteis no tratamento de dados de satélite
 """
@@ -289,7 +290,7 @@ def get_goes_extent(data: pd.DataFrame) -> list:
 
 
 def remap_g16(
-    path: Union[str, Path],  # pylint: disable=too-many-locals
+    path: Union[str, Path],
     extent: list,
     resolution: int,
     variable: str,
