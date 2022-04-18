@@ -94,17 +94,16 @@ flow.schedule = task_with_param_schedule
 
 with Flow("tweets_flamengo") as tweets_flamengo_flow:
     q = Parameter("keyword")
-    q_folder = q.replace(" ", "_").replace("-", "_")
 
     api = get_api()
 
-    fetch_last_id(q_folder)
+    fetch_last_id(q)
     last_id, created_at = get_last_id(api, q)
     dd = fetch_tweets(api, q, last_id, created_at)
 
-    save_last_id(dd, q_folder)
+    save_last_id(dd, q)
 
-    upload_to_storage(q)
+    upload_to_storage()
 
 tweets_flamengo_flow.storage = Module("pipelines.emd")
 tweets_flamengo_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
