@@ -27,13 +27,13 @@ with Flow('COR: Meteorologia - Pluviometria ALERTARIO') as flow:
         current_time=current_time)
 
     # Check if table exists
-    exists = check_table_exists(
+    EXISTS = check_table_exists(
        dataset_id=DATASET_ID,
        table_id=TABLE_ID
    )
 
     # Create header and table if they don't exists
-    with case(exists, False):
+    with case(EXISTS, False):
         # Create CSV file with headers
         header_path = dump_header_to_csv(
             data_path=path
@@ -56,7 +56,7 @@ with Flow('COR: Meteorologia - Pluviometria ALERTARIO') as flow:
             wait=create_db,
         )
 
-    with case(exists, True):
+    with case(EXISTS, True):
         # Upload to GCS
         upload_to_gcs(
             path=path,
