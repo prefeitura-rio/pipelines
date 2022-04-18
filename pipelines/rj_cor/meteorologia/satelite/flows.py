@@ -70,5 +70,8 @@ with Flow("COR: Meteorologia - Satelite GOES 16") as cor_meteorologia_goes16:
 
 # para rodar na cloud
 cor_meteorologia_goes16.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-cor_meteorologia_goes16.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+cor_meteorologia_goes16.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[constants.RJ_COR_AGENT_LABEL.value],
+)
 cor_meteorologia_goes16.schedule = hour_schedule

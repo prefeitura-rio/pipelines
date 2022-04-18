@@ -41,6 +41,7 @@ with Flow(
 # para rodar na cloud
 cor_meteorologia_precipitacao_alertario.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 cor_meteorologia_precipitacao_alertario.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value
+    image=constants.DOCKER_IMAGE.value,
+    labels=[constants.RJ_COR_AGENT_LABEL.value],
 )
 cor_meteorologia_precipitacao_alertario.schedule = minute_schedule

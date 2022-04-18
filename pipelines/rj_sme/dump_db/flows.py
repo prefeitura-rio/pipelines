@@ -14,7 +14,6 @@ from pipelines.rj_sme.dump_db.schedules import (
     sme_educacao_basica_daily_update_schedule,
 )
 from pipelines.utils.dump_db.flows import dump_sql_flow
-
 from pipelines.utils.utils import set_default_parameters
 
 dump_sme_flow = deepcopy(dump_sql_flow)

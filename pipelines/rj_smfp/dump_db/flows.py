@@ -14,10 +14,29 @@ from pipelines.rj_smfp.dump_db.schedules import (
     ergon_monthly_update_schedule,
 )
 from pipelines.utils.dump_db.flows import dump_sql_flow
+from pipelines.utils.utils import set_default_parameters
 
 
 dump_ergon_flow = deepcopy(dump_sql_flow)
 dump_ergon_flow.name = "EMD: ergon - Ingerir tabelas de banco SQL"
 dump_ergon_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-dump_ergon_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+dump_ergon_flow.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[
+        constants.RJ_SMFP_AGENT_LABEL.value,
+    ],
+)
+
+ergon_default_parameters = {
+    "db_database": "P01.PCRJ",
+    "db_host": "10.70.6.22",
+    "db_port": "1521",
+    "db_type": "oracle",
+    "vault_secret_path": "ergon-hom",
+    "dataset_id": "administracao_recursos_humanos_folha_salarial",
+}
+dump_ergon_flow = set_default_parameters(
+    dump_ergon_flow, default_parameters=ergon_default_parameters
+)
+
 dump_ergon_flow.schedule = ergon_monthly_update_schedule

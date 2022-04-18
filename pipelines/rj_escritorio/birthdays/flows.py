@@ -24,5 +24,10 @@ with Flow("EMD: Aniversariante do dia") as birthday_flow:
     send_birthday_message(names=birthdays, secret_path=secret_path)
 
 birthday_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-birthday_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+birthday_flow.run_config = (
+    KubernetesRun(
+        image=constants.DOCKER_IMAGE.value,
+        labels=[constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value],
+    ),
+)
 birthday_flow.schedule = daily_at_9am

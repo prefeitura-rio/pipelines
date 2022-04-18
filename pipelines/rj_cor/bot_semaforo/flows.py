@@ -43,5 +43,8 @@ with Flow(
     )
 
 cet_telegram_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-cet_telegram_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+cet_telegram_flow.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[constants.RJ_COR_AGENT_LABEL.value],
+)
 cet_telegram_flow.schedule = bot_schedule

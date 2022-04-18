@@ -79,4 +79,7 @@ with Flow(
     say_hello()
 
 flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+flow.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value],
+)
