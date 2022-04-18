@@ -61,28 +61,10 @@ from prefect import Flow, Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants
-from pipelines.emd.tasks import say_hello, task_with_param
-from pipelines.emd.tweets_flamengo.tasks import (
-    fetch_last_id,
-    get_last_id,
-    fetch_tweets,
-    save_last_id,
-    upload_to_storage,
-    get_api,
-)
 
-from pipelines.emd.schedules import (
-    every_two_weeks,
-    task_with_param_schedule,
-    tweets_flamengo_schedule,
-)
+from pipelines.emd.test_flow.tasks import task_with_param
+from pipelines.emd.test_flow.schedules import task_with_param_schedule
 
-with Flow("my_flow") as say_hello_flow:
-    say_hello()
-
-say_hello_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-say_hello_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-say_hello_flow.schedule = every_two_weeks
 
 with Flow("test_flow") as flow:
     param = Parameter("param")
@@ -91,22 +73,3 @@ with Flow("test_flow") as flow:
 flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 flow.schedule = task_with_param_schedule
-
-with Flow("tweets_flamengo") as tweets_flamengo_flow:
-    q = Parameter("keyword")
-
-    api = get_api()
-
-    data_path = fetch_last_id(q=q)  # pylint: disable=C0103
-
-    last_id, created_at = get_last_id(api=api, q=q, data_path=data_path)
-
-    dd = fetch_tweets(api=api, q=q, last_id=last_id, created_at=created_at)
-
-    path = save_last_id(df=dd, q=q)  # pylint: disable=C0103
-
-    upload_to_storage(path)
-
-tweets_flamengo_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-tweets_flamengo_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-tweets_flamengo_flow.schedule = tweets_flamengo_schedule
