@@ -137,7 +137,8 @@ with Flow(
         )
 
         log_task(
-            f"Please check at: http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{materialization_flow}"
+            msg=f"Please check at: http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{materialization_flow}",
+            wait=materialization_flow,
         )
         wait_for_materialization = wait_for_flow_run(
             materialization_flow,
