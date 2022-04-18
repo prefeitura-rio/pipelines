@@ -11,8 +11,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 from pipelines.constants import constants
-from pipelines.emd.db_dump.db import Database
-from pipelines.emd.db_dump.schedules import (
+from pipelines.emd.datario_dump.schedules import (
     diretorio_monthly_update_schedule,
 )
 from pipelines.tasks import (
@@ -23,7 +22,6 @@ from pipelines.tasks import (
 from pipelines.emd.datario_dump.tasks import (
     get_datario_geodataframe,
 )
-from pipelines.tasks import get_user_and_password
 from pipelines.utils import notify_discord_on_failure
 
 with Flow(
