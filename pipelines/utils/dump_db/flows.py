@@ -10,7 +10,6 @@ from prefect import Flow, Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
-from prefect.tasks.prefect.flow_run_rename import RenameFlowRun
 
 from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
@@ -20,6 +19,7 @@ from pipelines.utils.tasks import (
     create_bd_table,
     get_current_flow_labels,
     greater_than,
+    rename_current_flow_run,
     upload_to_gcs,
     dump_header_to_csv,
 )
@@ -80,7 +80,7 @@ with Flow(
     # Rename flow run
     #
     #####################################
-    rename_flow_run = RenameFlowRun(flow_run_name=f"Dump {dataset_id}.{table_id}")
+    rename_flow_run = rename_current_flow_run("Dump", dataset_id, table_id)
 
     #####################################
     #

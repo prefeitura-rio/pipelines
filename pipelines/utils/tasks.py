@@ -14,6 +14,7 @@ import pandas as pd
 import prefect
 from prefect import task
 from prefect.backend import FlowRunView
+from prefect.client import Client
 
 from pipelines.constants import constants
 from pipelines.utils.utils import get_username_and_password_from_secret, log
@@ -41,6 +42,16 @@ def greater_than(value, compare_to) -> bool:
     Returns True if value is greater than compare_to.
     """
     return value > compare_to
+
+
+@task
+def rename_current_flow_run(prefix, dataset_id, table_id):
+    """
+    Rename the current flow run.
+    """
+    flow_run_id = prefect.context.get("flow_run_id")
+    client = Client()
+    return client.set_flow_run_name(flow_run_id, f"{prefix}: {dataset_id}_{table_id}")
 
 
 ##################
