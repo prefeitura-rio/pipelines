@@ -25,7 +25,7 @@ sme_queries = {
         "dump_type": "overwrite",  # TODO: check if it is possible to partition, this run takes over 1 hour
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Avaliacao",
     },
-    "coc": {
+    "coc": {  # essa tabela utiliza a view coc0 pois contem o coc 0 e de 1 a 5
         "dump_type": "overwrite",  # TODO: check if it is possible to partition, this run takes over 1 hour
         "materialize_after_dump": True,
         "materialization_mode": "prod",
@@ -52,7 +52,7 @@ sme_queries = {
                 capacidade AS capacidade,
                 tur_id AS tur_id,
                 pft_capacidade AS pft_capacidade
-            FROM GestaoEscolar.dbo.VW_BI_Aluno_Turma_COC
+            FROM GestaoEscolar.dbo.VW_BI_Aluno_Turma_COC0
         """,
     },
     "frequencia": {
