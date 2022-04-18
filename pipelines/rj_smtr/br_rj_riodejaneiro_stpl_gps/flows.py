@@ -58,7 +58,7 @@ Flows for br_rj_riodejaneiro_stpl_gps
 ###############################################################################
 
 
-from prefect import Flow, Parameter
+from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants
@@ -76,6 +76,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks import (
 )
 
 from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.schedules import every_minute
+from pipelines.utils.decorators import Flow
 
 with Flow("Captura_GPS_STPL") as stpl_captura:
 

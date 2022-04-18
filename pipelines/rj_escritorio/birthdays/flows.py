@@ -3,7 +3,7 @@
 The daily birthday flow.
 """
 
-from prefect import Flow, Parameter
+from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
@@ -14,6 +14,7 @@ from pipelines.rj_escritorio.birthdays.tasks import (
     get_todays_date,
     send_birthday_message,
 )
+from pipelines.utils.decorators import Flow
 
 with Flow("EMD: Aniversariante do dia") as birthday_flow:
 
