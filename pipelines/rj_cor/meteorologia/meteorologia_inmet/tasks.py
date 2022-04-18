@@ -26,10 +26,6 @@ def slice_data(current_time: str) -> Tuple[str, str]:
     if not isinstance(current_time, str):
         current_time = current_time.to_datetime_string()
 
-    current_time = (
-        current_time or pendulum.now("America/Sao_Paulo").to_datetime_string()
-    )
-
     data = current_time[:10]
     return data
 
@@ -186,6 +182,7 @@ def tratar_dados(dados: pd.DataFrame) -> Tuple[pd.DataFrame, str]:
 
     partitions = f"ano={ano}/mes={mes}/dia={dia}"
     print(">>> partitions", partitions)
+    print(">>>> max hora ", dados[~dados.temperatura.isna()].horario.max())
     return dados, partitions
 
 
