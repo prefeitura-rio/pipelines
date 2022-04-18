@@ -62,7 +62,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants
 from pipelines.emd.template_pipeline.tasks import say_hello
-from pipelines.emd.template_pipeline.schedules import every_two_weeks
+# from pipelines.emd.template_pipeline.schedules import every_two_weeks
 
 with Flow("Template Pipeline") as flow:
     say_hello()
