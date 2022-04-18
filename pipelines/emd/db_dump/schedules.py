@@ -213,11 +213,11 @@ ergon_views = {
 }
 
 
-def get_clock(view_name, table_id):
+def get_clock(view_name, table_id, count):
     return IntervalClock(
         interval=timedelta(days=30),
         start_date=datetime(
-            2022, 2, 11, 19, 1, tzinfo=pytz.timezone("America/Sao_Paulo")
+            2022, 2, 11, 20, 1 + 3 * count, tzinfo=pytz.timezone("America/Sao_Paulo")
         ),
         labels=[
             constants.EMD_AGENT_LABEL.value,
@@ -238,8 +238,8 @@ def get_clock(view_name, table_id):
 
 
 ergon_clocks = [
-    get_clock(view_name=view, table_id=table_id)
-    for view, table_id in ergon_views.items()
+    get_clock(view, table_id, count)
+    for count, (view, table_id) in enumerate(ergon_views.items())
 ]
 
 ergon_monthly_update_schedule = Schedule(clocks=untuple(ergon_clocks))
