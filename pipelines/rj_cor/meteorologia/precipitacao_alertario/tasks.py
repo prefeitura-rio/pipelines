@@ -148,6 +148,43 @@ def tratar_dados(filename: Union[str, Path]) -> pd.DataFrame:
     ]
     dados[float_cols] = dados[float_cols].apply(pd.to_numeric, errors="coerce")
 
+    # Normaliza nomes das estações e troca por id
+    dados.estacao = (dados.estacao
+                     .str.normalize('NFKD')
+                     .str.encode('ascii', errors='ignore')
+                     .str.decode('utf-8'))
+
+    dados.estacao = dados.estacao.replace({
+                                          'Jacarepagua/tanque': 'Tanque',
+                                          'Jacarepagua/cidade de deus': 'Cidade de deus',
+                                          'Barra/barrinha': 'Barrinha',
+                                          'Barra/riocentro': 'Riocentro',
+                                          'Est. grajau/jacarepagua': 'Grajau jacarepagua',
+                                          'Av. brasil/mendanha': 'Av brasil mendanha',
+                                          'Recreio dos bandeirantes': 'Recreio',
+                                          'Tijuca/muda': 'Tijuca muda'})
+
+    map_estacoes = {"Ilha do governador": 8, "Jardim botanico": 16,
+                    "Riocentro": 19, "Guaratiba": 20, "Barrinha": 17,
+                    "Recreio": 30, "Grota funda": 25, "Bangu": 12,
+                    "Saude": 15, "Cidade de deus": 18, "Santa cruz": 22,
+                    "Sao cristovao": 32, "Campo grande": 26, "Av brasil mendanha": 29,
+                    "Madureira": 10, "Piedade": 13, "Anchieta": 24, "Laranjeiras": 31,
+                    "Tanque": 14, "Grajau": 7, "Tijuca": 4, "Vidigal": 1, "Urca": 2,
+                    "Alto da boa vista": 28, "Grajau jacarepagua": 21, "Penha": 9,
+                    "Santa teresa": 5, "Grande meier": 23, "Tijuca muda": 33,
+                    "Iraja": 11, "Sepetiba": 27, "Copacabana": 6, "Rocinha": 3}
+    dados['estacao'] = dados.estacao.replace(map_estacoes)
+
+    dados = dados.rename(columns={'estacao': 'id_estacao'})
+
+    dados['id_estacao'] = dados['id_estacao'].astype(int)
+
+    # Fixar ordem das colunas
+    dados = dados[['data_medicao', 'id_estacao', 'acumulado_chuva_15_min',
+                   'acumulado_chuva_1_h', 'acumulado_chuva_4_h', 'acumulado_chuva_24_h',
+                   'acumulado_chuva_96_h']]
+
     return dados
 
 

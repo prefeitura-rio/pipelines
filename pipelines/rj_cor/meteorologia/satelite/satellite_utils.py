@@ -456,6 +456,10 @@ def save_parquet(variable: str, datetime_save: str) -> Union[str, Path]:
     if not os.path.exists(parquet_path):
         os.makedirs(parquet_path)
 
+    # Fixa ordem das colunas
+    print('>>>>>', ['longitude', 'latitude', variable.lower()])
+    data = data[['longitude', 'latitude', variable.lower()]]
+
     # salva em parquet
     log(f"Saving on base_path {base_path}")
     filename = os.path.join(parquet_path, "dados.csv")
