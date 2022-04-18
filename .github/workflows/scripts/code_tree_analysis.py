@@ -2,9 +2,10 @@
 import ast
 from pathlib import Path
 import sys
-from typing import List, Union
+from typing import List, Tuple, Union
 
 import networkx as nx
+from prefect import Flow
 
 
 def filename_to_python_module(filename: str) -> str:
@@ -357,6 +358,54 @@ def build_dependency_graph(root_directory: str) -> nx.DiGraph:
     return graph
 
 
+def check_for_variable_name_conflicts(
+    changed_files: List[str], root_directory: str
+) -> List[Tuple[str, str]]:
+    """
+    Checks if there will be any conflicts with variable names.
+    """
+    # Get all Python files.
+    files = [
+        file_
+        for file_ in list_all_python_files(root_directory)
+        if "cookiecutter" not in file_
+    ]
+
+    # Remove all changed files from the list of files.
+    files = [file_ for file_ in files if file_ not in changed_files]
+
+    # Get all declared things in the changed files.
+    declared_changed = set()
+    for file_ in files:
+        if file_ in changed_files:
+            file_declared = set(get_declared(file_))
+            declared_changed.update(file_declared)
+
+    # Get all declared things in the remaining files.
+    declared_remaning = set()
+    for file_ in files:
+        file_declared = set(get_declared(file_))
+        declared_remaning.update(file_declared)
+
+    # Filter out what is not a Flow.
+    declared_changed = [
+        obj for obj in declared_changed if object_is_instance(obj, Flow)
+    ]
+    declared_remaning = [
+        obj for obj in declared_remaning if object_is_instance(obj, Flow)
+    ]
+
+    # Check for conflicts.
+    conflicts = []
+    for changed in declared_changed:
+        for remaining in declared_remaning:
+            if changed.split(".")[-1] == remaining.split(".")[-1]:
+                conflicts.append((changed, remaining))
+
+    # Return the conflicts.
+    return conflicts
+
+
 if __name__ == "__main__":
 
     # Assert arguments.
@@ -398,6 +447,36 @@ if __name__ == "__main__":
     for file_ in dependent_files:
         print(f"\t- {file_}")
 
+    # Start a PR message
+    initial_message = "### Análise da árvore de código\n\n"
+    message = initial_message
+
+    # Format a message for the files that depend on the exported declarations.
+    if len(dependent_files) > 0:
+        message += "*Os seguintes arquivos são afetados diretamente por alterações "
+        message += "realizadas nesse pull request:*"
+        for file_ in dependent_files:
+            message += f"\n\t- {file_}"
+        message += "\n\n"
+
+    # TODO: add code owners
+
+    # Check for variable name conflicts.
+    conflicts = check_for_variable_name_conflicts(changed_files, "pipelines/")
+    if len(conflicts) > 0:
+        message += "*Existem conflitos entre nomes de variáveis nos seguintes objetos:*"
+        for conflict in conflicts:
+            message += f"\n\t- {conflict[0]} e {conflict[1]}"
+        message += "\n\n"
+
+    # If there is nothing wrong, let'em know!
+    if len(message) == len(initial_message):
+        message += "*Nenhum problema encontrado!*"
+
     # Output to GitHub Actions.
     print("\n\n\n")
     print(f"::set-output name=pr-message::{','.join(changed_files)}")
+
+    # Raise if there are conflicts
+    if len(conflicts) > 0:
+        raise Exception("There are variable name conflicts!")
