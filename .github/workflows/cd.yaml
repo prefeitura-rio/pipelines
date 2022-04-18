@@ -5,7 +5,7 @@ on:
     branches:
       - master
     paths:
-      - "pipelines/*"
+      - 'pipelines/**'
 
 env:
   DISCORD_HOOK_URL: ${{ secrets.DISCORD_HOOK_URL }}
