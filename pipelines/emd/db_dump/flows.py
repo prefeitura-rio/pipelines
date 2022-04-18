@@ -14,7 +14,6 @@ from pipelines.emd.db_dump.tasks import (
     sql_server_execute,
     sql_server_get_connection,
     sql_server_get_cursor,
-    sql_server_log_headers,
     upload_to_gcs,
     create_bd_table,
 )
