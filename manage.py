@@ -12,9 +12,9 @@ from string_utils import is_snake_case
 
 CONSTANTS_FILE_PATH = Path(__file__).parent / "pipelines" / "constants.py"
 CONSTANTS_FIND_AGENTS_TEXT = "M9w=k-b_\n"
-COOKIECUTTER_PATH_AGENCY = Path(__file__).parent / "cookiecutters"
+COOKIECUTTER_PATH_AGENCY = Path(__file__).parent / "pipelines"
 COOKIECUTTER_PATH_PROJECT = (
-    Path(__file__).parent / "cookiecutters" / "{{cookiecutter.project_name}}"
+    Path(__file__).parent / "pipelines" / "{{cookiecutter.project_name}}"
 )
 FLOWS_FILE_PATH = Path(__file__).parent / "pipelines" / "flows.py"
 PIPELINES_PATH = Path(__file__).parent / "pipelines"
