@@ -111,7 +111,6 @@ tweets_flamengo_schedule = Schedule(
             ],
             parameter_defaults={
                 "keyword": "flamengo",
-                "env_keys": str(dict(os.environ).keys()),
             },
         ),
     ]

@@ -184,7 +184,7 @@ def fetch_tweets(api, q, last_id, created_at):
     print(f"{q} | last_id: {last_id} | created_at: {created_at} | file: {dt}")
 
     for i, page in enumerate(
-        tweepy.Cursor(api.search_tweets, q=q, since_id=last_id, count=100).pages(10000),
+        tweepy.Cursor(api.search_tweets, q=q, since_id=last_id, count=100).pages(149),
         start=1,
     ):
         json_data = [t._json for t in page]
