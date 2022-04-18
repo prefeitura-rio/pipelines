@@ -2,7 +2,7 @@
 """
 Helper tasks that could fit any pipeline.
 """
-# pylint: disable=unused-argument
+# pylint: disable=unused-argument, R0913
 
 from datetime import timedelta
 from os import walk
