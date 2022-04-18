@@ -3,10 +3,12 @@ import ast
 from pathlib import Path
 import sys
 from typing import List, Tuple, Union
-from uuid import uuid4
 
 import networkx as nx
 from prefect import Flow
+import yaml
+
+message_id = 0
 
 
 def filename_to_python_module(filename: str) -> str:
@@ -411,7 +413,18 @@ def log(message: str):
     """
     Logs a message to the output of a GitHub Action.
     """
-    print(f'::set-output name={uuid4().hex}::"{message}"')
+    global message_id
+    print(f'::set-output name=message_{message_id}::"{message}"')
+    message_id += 1
+
+
+def identify_code_owners(files: List[str]):
+    """
+    Identifies the code owners in order to warn them.
+    """
+    # # Load the code owners YAML file.
+    # with open("code_owners.yaml") as file_:
+    #     code_owners = yaml.safe_load(file_)
 
 
 if __name__ == "__main__":
