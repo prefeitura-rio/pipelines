@@ -22,6 +22,7 @@ from pipelines.utils.dump_db.tasks import (
     database_fetch,
     database_get,
     dump_batches_to_csv,
+    format_partitioned_query,
 )
 from pipelines.utils.tasks import get_user_and_password
 from pipelines.utils.utils import notify_discord_on_failure
@@ -40,12 +41,14 @@ with Flow(
     #
     #####################################
 
-    # SQL Server parameters
+    # DBMS parameters
     hostname = Parameter("db_host")
     port = Parameter("db_port")
     database = Parameter("db_database")
     database_type = Parameter("db_type")
     query = Parameter("execute_query")
+    partition_column = Parameter("partition_column", required=False)
+    lower_bound_date = Parameter("lower_bound_date", required=False)
 
     # Use Vault for credentials
     secret_path = Parameter("vault_secret_path")
@@ -81,34 +84,49 @@ with Flow(
         user=user,
         password=password,
         database=database,
+        wait=user,
     )
 
-    wait_db_execute = database_execute(  # pylint: disable=invalid-name
-        database=db_object,
+    # Format partitioned query if required
+    formated_query = format_partitioned_query(
         query=query,
+        dataset_id=dataset_id,
+        table_id=table_id,
+        partition_column=partition_column,
+        lower_bound_date=lower_bound_date,
+        wait=db_object,
+    )
+
+    db_execute = database_execute(  # pylint: disable=invalid-name
+        database=db_object,
+        query=formated_query,
+        wait=formated_query,
     )
 
     # Dump batches to CSV files
-    wait_batches_path = dump_batches_to_csv(
+    batches_path = dump_batches_to_csv(
         database=db_object,
         batch_size=batch_size,
         prepath=f"data/{uuid4()}/",
-        wait=wait_db_execute,
+        partition_column=partition_column,
+        wait=db_execute,
     )
 
+    # TODO: Skip all downstream tasks if no data was dumped
+
     # Create CSV file with headers
-    wait_header_path = dump_header_to_csv(
-        data_path=wait_batches_path,
-        wait=wait_batches_path,
+    header_path = dump_header_to_csv(
+        data_path=batches_path,
+        wait=batches_path,
     )
 
     # Create table in BigQuery
-    wait_create_db = create_bd_table(  # pylint: disable=invalid-name
-        path=wait_header_path,
+    create_db = create_bd_table(  # pylint: disable=invalid-name
+        path=header_path,
         dataset_id=dataset_id,
         table_id=table_id,
         dump_type=dump_type,
-        wait=wait_header_path,
+        wait=header_path,
     )
 
     #####################################
@@ -119,10 +137,10 @@ with Flow(
 
     # Upload to GCS
     upload_to_gcs(
-        path=wait_batches_path,
+        path=batches_path,
         dataset_id=dataset_id,
         table_id=table_id,
-        wait=wait_create_db,
+        wait=create_db,
     )
 
 
@@ -180,7 +198,7 @@ with Flow(
         password=password,
         database=database,
     )
-    wait_db_execute = database_execute(  # pylint: disable=invalid-name
+    db_execute = database_execute(  # pylint: disable=invalid-name
         database=db_object,
         query=query,
     )
@@ -189,7 +207,7 @@ with Flow(
     database_fetch(
         database=db_object,
         batch_size=batch_size,
-        wait=wait_db_execute,
+        wait=db_execute,
     )
 run_sql_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 run_sql_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)

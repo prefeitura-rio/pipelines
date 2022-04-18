@@ -18,17 +18,20 @@ class constants(Enum):  # pylint: disable=c0103
     DOCKER_IMAGE_NAME = "AUTO_REPLACE_DOCKER_IMAGE"
     DOCKER_IMAGE = f"{DOCKER_IMAGE_NAME}:{DOCKER_TAG}"
     # Prefect agents AUTO_FIND=M9w=k-b_
-    METEOROLOGIA_INMET_AGENT_LABEL = "emd"
-    SATELITE_AGENT_LABEL = "emd"
     EMD_AGENT_LABEL = "emd"
 
-    RJ_ESCRITORIO_AGENT_LABEL = "rj-escritorio"
-    RJ_ESCRITORIO_DEV_AGENT_LABEL = "rj-escritorio-dev"
     RJ_DATARIO_AGENT_LABEL = "datario"
     RJ_DATARIO_DEV_AGENT_LABEL = "datario-dev"
+    RJ_ESCRITORIO_AGENT_LABEL = "rj-escritorio"
+    RJ_ESCRITORIO_DEV_AGENT_LABEL = "rj-escritorio-dev"
+    RJ_SMTR_AGENT_LABEL = "rj-smtr"
+    RJ_SMTR_DEV_AGENT_LABEL = "rj-smtr-dev"
 
     RJ_SME_AGENT_LABEL = "rj-sme"
-    RJ_SME_DEV_AGENT_LABEL = "rj-sme-dev"
+    RJ_SEGOVI_AGENT_LABEL = "rj-segovi"
+    RJ_COR_AGENT_LABEL = "rj-cor"
+    RJ_SMFP_AGENT_LABEL = "rj-smfp"
+    RJ_SECONSERVA_AGENT_LABEL = "rj-seconserva"
 
     ######################################
     # Other constants

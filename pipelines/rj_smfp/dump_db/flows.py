@@ -15,7 +15,7 @@ from pipelines.utils.dump_db.flows import dump_sql_flow
 
 
 dump_ergon_flow = deepcopy(dump_sql_flow)
-dump_ergon_flow.name = "EMD: ergon - Ingerir tabelas"
+dump_ergon_flow.name = "EMD: ergon - Ingerir tabelas de banco SQL"
 dump_ergon_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_ergon_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 dump_ergon_flow.schedule = ergon_monthly_update_schedule
