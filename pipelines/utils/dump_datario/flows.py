@@ -53,7 +53,9 @@ with Flow(
     materialization_mode = Parameter(
         "materialization_mode", default="dev", required=False
     )
-    materialize_to_datario = Parameter("materialize_to_datario", default=False, required=False)
+    materialize_to_datario = Parameter(
+        "materialize_to_datario", default=False, required=False
+    )
 
     #####################################
     #

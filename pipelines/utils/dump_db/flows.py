@@ -61,7 +61,9 @@ with Flow(
     materialization_mode = Parameter(
         "materialization_mode", default="dev", required=False
     )
-    materialize_to_datario = Parameter("materialize_to_datario", default=False, required=False)
+    materialize_to_datario = Parameter(
+        "materialize_to_datario", default=False, required=False
+    )
 
     # Use Vault for credentials
     secret_path = Parameter("vault_secret_path")

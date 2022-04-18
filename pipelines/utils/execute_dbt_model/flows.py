@@ -32,7 +32,9 @@ with Flow(
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
     mode = Parameter("mode", default="dev", required=False)
-    materialize_to_datario = Parameter("materialize_to_datario", default=False, required=False)
+    materialize_to_datario = Parameter(
+        "materialize_to_datario", default=False, required=False
+    )
 
     #####################################
     #
