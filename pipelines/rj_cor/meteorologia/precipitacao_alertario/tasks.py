@@ -146,7 +146,7 @@ def salvar_dados(dados: pd.DataFrame, current_time: str) -> Tuple[Union[str, Pat
                              'precipitacao_alertario',
                              'output',
                              partitions)
-    
+
     if not os.path.exists(base_path):
         os.makedirs(base_path)
 
