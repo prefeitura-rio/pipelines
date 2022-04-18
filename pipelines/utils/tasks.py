@@ -68,7 +68,8 @@ def dump_header_to_csv(
     # discover if it's a partitioned table
     if partition_folders := [folder for folder in file.split("/") if "=" in folder]:
         partition_path = "/".join(partition_folders)
-        save_header_file_path = Path(f"{save_header_path}/{partition_path}/header.csv")
+        save_header_file_path = Path(
+            f"{save_header_path}/{partition_path}/header.csv")
         log(f"Found partition path: {save_header_file_path}")
 
     else:
@@ -157,7 +158,8 @@ def create_bd_table(
         log(
             f"Mode overwrite: Sucessfully created table {st.bucket_name}.{dataset_id}.{table_id}"
         )
-        st.delete_table(mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
+        st.delete_table(
+            mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
         log(
             f"Mode overwrite: Sucessfully remove header data from {st.bucket_name}.{dataset_id}.{table_id}"
         )  # pylint: disable=C0301

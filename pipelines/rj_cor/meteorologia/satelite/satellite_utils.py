@@ -251,7 +251,7 @@ def get_goes_extent(data: pd.DataFrame) -> list:
     return goes16_extent
 
 
-def remap_g16(path: Union[str, Path],
+def remap_g16(path: Union[str, Path],  # pylint: disable=too-many-locals
               extent: list,
               resolution: int,
               variable: str,
