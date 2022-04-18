@@ -150,6 +150,16 @@ def tratar_dados(filename: Union[str, Path]) -> pd.DataFrame:
 
     # Normaliza nomes das estações e troca por id
     dados.estacao = dados.estacao.str.normalize('NFKD').str.encode('ascii',errors='ignore').str.decode('utf-8')
+    dados.estacao = dados.estacao.replace({
+        'Jacarepagua/tanque': 'Tanque',
+        'Jacarepagua/cidade de deus': 'Cidade de deus',
+        'Barra/barrinha': 'Barrinha',
+        'Barra/riocentro': 'Riocentro',
+        'Est. grajau/jacarepagua': 'Grajau jacarepagua',
+        'Av. brasil/mendanha': 'Av brasil mendanha',
+        'Recreio dos bandeirantes': 'Recreio',
+        'Tijuca/muda': 'Tijuca muda'}
+    )
 
     map_estacoes = {"Ilha do governador": 8, "Jardim botanico": 16, "Riocentro": 19,
         "Guaratiba": 20, "Barrinha": 17, "Recreio": 30, "Grota funda": 25, "Bangu": 12,
