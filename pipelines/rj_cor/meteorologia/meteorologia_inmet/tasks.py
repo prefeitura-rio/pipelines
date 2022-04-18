@@ -182,6 +182,9 @@ def tratar_dados(dados: pd.DataFrame) -> Tuple[pd.DataFrame, str]:
 
     # Seleciona apenas dados daquele dia (devido à UTC)
     dados = dados[dados["data"] == max_date]
+    
+    # Remove linhas com todos os dados nan 
+    dados = dados.dropna(subset=float_cols, how='all')
 
     partitions = f"ano={ano}/mes={mes}/dia={dia}"
     print(">>> partitions", partitions)
