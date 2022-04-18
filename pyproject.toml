@@ -27,6 +27,7 @@ s3fs = "^2022.2.0"
 Shapely = "^1.8.1"
 tweepy = "4.4"
 xarray = "^2022.3.0"
+loguru = "^0.6.0"
 
 
 
