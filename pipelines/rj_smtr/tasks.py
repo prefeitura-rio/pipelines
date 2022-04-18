@@ -53,7 +53,7 @@ import json
 import os
 from pathlib import Path
 
-from basedosdados import Table, Storage
+from basedosdados import Storage
 import pandas as pd
 import pendulum
 from prefect import task

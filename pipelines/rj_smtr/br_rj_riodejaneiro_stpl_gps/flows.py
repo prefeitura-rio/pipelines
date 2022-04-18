@@ -125,4 +125,4 @@ with Flow("SMTR: gps_stpl - Captura") as stpl_captura:
 
 stpl_captura.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 stpl_captura.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-# stpl_captura.schedule = every_minute
+stpl_captura.schedule = every_minute
