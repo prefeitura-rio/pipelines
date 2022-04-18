@@ -19,14 +19,9 @@ from pipelines.utils.decorators import Flow
 from pipelines.utils.tasks import (
     create_table_and_upload_to_gcs,
 )
-from pipelines.utils.utils import notify_discord_on_failure
 
 with Flow(
-    name="COR: Meteorologia - Satelite GOES 16",
-    on_failure=partial(
-        notify_discord_on_failure,
-        secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value,
-    ),
+    name="COR: Meteorologia - Satelite GOES 16"
 )as cor_meteorologia_goes16:
 
     CURRENT_TIME = get_dates()
