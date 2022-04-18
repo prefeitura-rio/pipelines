@@ -24,4 +24,3 @@ dump_sme_flow.name = "SME: educacao_basica - Ingerir tabelas de banco SQL"
 dump_sme_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_sme_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 dump_sme_flow.schedule = sme_educacao_basica_daily_update_schedule
-dump_sme_flow.p
