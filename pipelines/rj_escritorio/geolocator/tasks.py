@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# flake8: noqa: E722
 """
 Tasks for geolocator
 """
@@ -135,8 +136,11 @@ def geolocaliza_enderecos(base_enderecos_novos: pd.DataFrame) -> pd.DataFrame:
 
     log(f"--- {(time.time() - start_time)} seconds ---")
 
-    base_enderecos_novos["latitude"] = coordenadas["lat"]
-    base_enderecos_novos["longitude"] = coordenadas["long"]
+    try:
+        base_enderecos_novos["latitude"] = coordenadas["lat"]
+        base_enderecos_novos["longitude"] = coordenadas["long"]
+    except:
+        log("Não foram identificados chamados abertos no dia anterior.")
 
     return base_enderecos_novos
 
