@@ -76,6 +76,7 @@ sme_views = {
     "escola": "escola",
     "frequencia": "frequencia",
     "turma": "turma",
+    "aluno": "aluno",
 }
 
 sme_clocks = [
