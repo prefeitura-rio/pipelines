@@ -1,6 +1,6 @@
 """
 Schedules for emd
-Rodar a cada hora no minuto 30 para garantir que 
+Rodar a cada hora no minuto 30 para garantir que
 temos o satélite já fez pelo menos um escaneamento
 da superfície
 """
