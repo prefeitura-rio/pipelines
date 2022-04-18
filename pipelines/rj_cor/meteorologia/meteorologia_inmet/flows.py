@@ -25,7 +25,7 @@ with Flow(
 
     DATASET_ID = "meio_ambiente_clima"
     TABLE_ID = "meteorologia_inmet"
-    DUMP_TYPE = "replace"
+    DUMP_TYPE = "append"
 
     data = slice_data(current_time=CURRENT_TIME)
 
