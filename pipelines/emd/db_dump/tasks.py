@@ -247,7 +247,7 @@ def create_bd_table(
             st.delete_table(
                 mode="staging", bucket_name=st.bucket_name, not_found_ok=True
             )
-        ## dataset is public if the project is datario
+        ## prod datasets is public if the project is datario. staging are private im both projects
         dataset_is_public = tb.client["bigquery_prod"].project == "datario"
         tb.create(
             path=path,
