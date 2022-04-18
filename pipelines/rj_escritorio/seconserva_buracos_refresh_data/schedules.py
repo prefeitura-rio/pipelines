@@ -34,7 +34,7 @@ seconserva_buracos_clocks = [
         parameter_defaults={
             "dataset_id": "seconserva_buracos",
             "table_id": table_id,
-            "mode": "prod",
+            "mode": "dev",
         },
     )
     for count, (_, table_id) in enumerate(seconserva_buracos_tables.items())

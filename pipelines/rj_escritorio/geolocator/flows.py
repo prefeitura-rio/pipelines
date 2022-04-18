@@ -37,6 +37,7 @@ with Flow("EMD: escritorio - Geolocalizacao de chamados 1746") as daily_geolocat
     materialization_mode = Parameter(
         "materialization_mode", default="dev", required=False
     )
+    materialize_to_datario = Parameter("materialize_to_datario", default=False, required=False)
     dataset_id = geolocator_constants.DATASET_ID.value
     table_id = geolocator_constants.TABLE_ID.value
 
@@ -71,6 +72,7 @@ with Flow("EMD: escritorio - Geolocalizacao de chamados 1746") as daily_geolocat
                 "dataset_id": dataset_id,
                 "table_id": table_id,
                 "mode": materialization_mode,
+                "materialize_to_datario": materialize_to_datario,
             },
             labels=current_flow_labels,
             run_name=f"Materialize {dataset_id}.{table_id}",
