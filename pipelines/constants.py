@@ -48,6 +48,7 @@ class constants(Enum):  # pylint: disable=c0103
     K8S_AGENT_LABEL = "kubernetes"
     GCS_FLOWS_BUCKET = "datario-public"
     PREFECT_DEFAULT_PROJECT = "main"
+    DEFAULT_CODE_OWNERS = ["@pipeliners"]
     # Prefect tasks retry policy
     TASK_MAX_RETRIES = 5
     TASK_RETRY_DELAY = 10  # seconds
