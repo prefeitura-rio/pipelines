@@ -97,6 +97,16 @@ def notify_discord_on_failure(
     )
 
 
+def set_default_parameters(
+    flow: prefect.Flow, default_parameters: dict
+) -> prefect.Flow:
+
+    for parameter in flow.parameters():
+        if parameter.name in default_parameters:
+            parameter.default = default_parameters[parameter.name]
+    return flow
+
+
 def run_local(flow: prefect.Flow, parameters: Dict[str, Any] = None):
     """
     Runs a flow locally.
