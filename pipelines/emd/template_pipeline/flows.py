@@ -1,5 +1,5 @@
 """
-Flows for basedosdados
+Flows for emd
 """
 
 ###############################################################################
@@ -23,7 +23,7 @@ Flows for basedosdados
 # mandatório configurar alguns parâmetros dele, os quais são:
 # - storage: onde esse flow está armazenado. No caso, o storage é o
 #   próprio módulo Python que contém o flow. Sendo assim, deve-se
-#   configurar o storage como o pipelines.basedosdados
+#   configurar o storage como o pipelines.emd
 # - run_config: para o caso de execução em cluster Kubernetes, que é
 #   provavelmente o caso, é necessário configurar o run_config com a
 #   imagem Docker que será usada para executar o flow. Assim sendo,
