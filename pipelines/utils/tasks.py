@@ -256,10 +256,10 @@ def upload_to_gcs(
     """
     # pylint: disable=C0103
     tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
-    # st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+    st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
 
     if dump_type == "overwrite":
-        st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+
         st.delete_table(mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
         log(
             f"Mode overwrite: Sucessfully remove older data from {st.bucket_name}.{dataset_id}.{table_id}"
