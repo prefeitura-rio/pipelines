@@ -2,7 +2,6 @@
 Database dumping flows
 """
 
-from copy import deepcopy
 from functools import partial
 from uuid import uuid4
 

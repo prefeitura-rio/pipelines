@@ -33,6 +33,9 @@ def get_datario_geodataframe(
     url: str,
     path: Union[str, Path],
 ):
+    """ "
+    Save a CSV from data.rio API
+    """
     path = Path(path)
     request = requests.get(url)
     geodatagrame = gpd.read_file(io.BytesIO(request.content))
