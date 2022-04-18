@@ -62,7 +62,7 @@ with Flow(
         "materialize_after_dump", default=False, required=False
     )
     materialization_mode = Parameter(
-        "materialization_mode", required=False, default="dev"
+        "materialization_mode", default="dev", required=False
     )
 
     # Use Vault for credentials

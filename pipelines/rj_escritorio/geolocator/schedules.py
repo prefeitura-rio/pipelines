@@ -88,7 +88,7 @@ every_day_at_four_am = Schedule(
                 constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
             ],
             parameter_defaults={
-                "materialize_after_dump": "true",
+                "materialize_after_dump": True,
                 "materialization_mode": "dev",
             },
         )

@@ -14,8 +14,8 @@ from pipelines.rj_escritorio.dados_mestres_dump_datario.schedules import (
     dados_mestresmonthly_update_schedule,
 )
 
-dump_dados_mestresflow = deepcopy(dump_datario_flow)
-dump_dados_mestresflow.name = "EMD: dados_mestres - Ingerir tabelas do data.rio"
-dump_dados_mestresflow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-dump_dados_mestresflow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-dump_dados_mestresflow.schedule = dados_mestresmonthly_update_schedule
+dump_dados_mestres_flow = deepcopy(dump_datario_flow)
+dump_dados_mestres_flow.name = "EMD: dados_mestres - Ingerir tabelas do data.rio"
+dump_dados_mestres_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+dump_dados_mestres_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+dump_dados_mestres_flow.schedule = dados_mestresmonthly_update_schedule

@@ -86,7 +86,7 @@ with Flow("EMD: escritorio - Geolocalizacao de chamados 1746") as daily_geolocat
         "materialize_after_dump", default=False, required=False
     )
     materialization_mode = Parameter(
-        "materialization_mode", required=False, default="dev"
+        "materialization_mode", default="dev", required=False
     )
     dataset_id = geolocator_constants.DATASET_ID.value
     table_id = geolocator_constants.TABLE_ID.value
