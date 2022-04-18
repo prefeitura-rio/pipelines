@@ -10,9 +10,9 @@ from prefect.storage import GCS
 
 from pipelines.constants import constants
 
-# from pipelines.rj_smfp.dump_db.schedules import (
-#     ergon_monthly_update_schedule,
-# )
+from pipelines.rj_smfp.dump_db.schedules import (
+    ergon_monthly_update_schedule,
+)
 from pipelines.utils.dump_db.flows import dump_sql_flow
 
 

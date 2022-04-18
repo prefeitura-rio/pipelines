@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable="unexpected-keyword-arg"
+# pylint: disable="unexpected-keyword-arg", C0103
 
 """
 Flows for geolocator
