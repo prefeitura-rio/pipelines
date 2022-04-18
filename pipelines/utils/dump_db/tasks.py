@@ -199,7 +199,8 @@ def dump_batches_to_csv(
     eventid = datetime.now().strftime("%Y%m%d-%H%M%S")
     idx = 0
     while len(batch) > 0:
-        log(f"Dumping batch {idx} with size {len(batch)}")
+        if idx % 100 == 0:
+            log(f"Dumping batch {idx} with size {len(batch)}")
         # Convert to dataframe
         dataframe = batch_to_dataframe(batch, columns)
         # Clean dataframe
