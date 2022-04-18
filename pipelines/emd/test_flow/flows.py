@@ -63,7 +63,7 @@ from prefect.storage import GCS
 from pipelines.constants import constants
 
 from pipelines.emd.test_flow.tasks import task_with_param
-from pipelines.emd.test_flow.schedules import task_with_param_schedule
+# from pipelines.emd.test_flow.schedules import task_with_param_schedule
 
 
 with Flow("test_flow") as flow:
@@ -72,4 +72,4 @@ with Flow("test_flow") as flow:
 
 flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-flow.schedule = task_with_param_schedule
+# flow.schedule = task_with_param_schedule
