@@ -49,13 +49,11 @@ Tasks for geolocator
 ###############################################################################
 
 
-from datetime import datetime, timedelta
 import time
 
 import basedosdados as bd
 import pandas as pd
 from prefect import task, context
-import requests
 
 from pipelines.rj_escritorio.geolocator.utils import geolocator
 from pipelines.rj_escritorio.geolocator.constants import constants as geolocator_constants
@@ -75,8 +73,8 @@ def importa_bases_e_chamados() -> list:
     enderecos_conhecidos = base_enderecos_atual['endereco_completo']
 
 
-    d1 = context.today
-    d2 = context.yesterday
+    d1 = context.get("today")
+    d2 = context.get("yesterday")
     query_2 = f'''
     with teste as (
     SELECT 
