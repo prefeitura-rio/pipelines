@@ -9,5 +9,6 @@ from pipelines.datario import *
 from pipelines.rj_cor import *
 from pipelines.rj_escritorio import *
 from pipelines.rj_segovi import *
+from pipelines.rj_sme import *
 from pipelines.rj_smfp import *
 from pipelines.utils import *
