@@ -71,7 +71,7 @@ jobs:
 
       - name: Forward port to Apollo
         run: |-
-          kubectl port-forward -n prefect deploy/prefect-apollo 4200:4200 &
+          bash -c "kubectl port-forward -n prefect deploy/prefect-apollo 4200:4200 &" && sleep 5
 
       - name: Register Prefect flows
         run: |-
