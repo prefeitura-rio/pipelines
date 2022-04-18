@@ -37,7 +37,7 @@ with Flow("dump_sql_server") as dump_sql_server_flow:
     table_id = Parameter("table_id")
 
     # Get credentials from Vault
-    user, password = get_user_and_password(secret_path)
+    user, password = get_user_and_password(secret_path=secret_path)
 
     # Execute query on SQL Server
     conn = sql_server_get_connection(
@@ -77,7 +77,7 @@ with Flow("create_table_from_header") as create_table_from_header_flow:
     table_id = Parameter("table_id")
 
     # Get credentials from Vault
-    user, password = get_user_and_password(secret_path)
+    user, password = get_user_and_password(secret_path=secret_path)
 
     # Execute query on SQL Server
     conn = sql_server_get_connection(
