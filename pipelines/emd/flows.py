@@ -62,7 +62,19 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import Module
 from pipelines.constants import constants
 from pipelines.emd.tasks import say_hello, task_with_param
-from pipelines.emd.schedules import every_two_weeks, task_with_param_schedule
+from pipelines.emd.tweets_flamengo.tasks import (
+    fetch_last_id,
+    get_last_id,
+    fetch_tweets,
+    save_last_id,
+    upload_to_storage,
+)
+
+from pipelines.emd.schedules import (
+    every_two_weeks,
+    task_with_param_schedule,
+    tweets_flamengo_schedule,
+)
 
 with Flow("my_flow") as say_hello:
     say_hello()
@@ -78,3 +90,19 @@ with Flow("test_flow") as flow:
 flow.storage = Module("pipelines.emd")
 flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 flow.schedule = task_with_param_schedule
+
+with Flow("test_flow") as tweets_flamengo:
+    q = Parameter("keyword")
+    q_folder = q.replace(" ", "_").replace("-", "_")
+
+    fetch_last_id(q_folder)
+    last_id, created_at = get_last_id(q)
+    dd = fetch_tweets(q, last_id, created_at)
+
+    save_last_id(dd, q_folder)
+
+    upload_to_storage(q)
+
+tweets_flamengo.storage = Module("pipelines.emd")
+tweets_flamengo.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+tweets_flamengo.schedule = tweets_flamengo_schedule
