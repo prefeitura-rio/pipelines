@@ -107,6 +107,9 @@ def create_bd_table(
     # pylint: disable=C0103
     st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
 
+    # prod datasets is public if the project is datario. staging are private im both projects
+    dataset_is_public = tb.client["bigquery_prod"].project == "datario"
+
     # full dump
     if dump_type == "append":
         if tb.table_exists(mode="staging"):
@@ -116,7 +119,11 @@ def create_bd_table(
         else:
             tb.create(
                 path=path,
+                if_storage_data_exists="replace",
+                if_table_config_exists="replace",
+                if_table_exists="replace",
                 location="southamerica-east1",
+                dataset_is_public=dataset_is_public,
             )
             log(
                 f"Mode append: Sucessfully created a new table {st.bucket_name}.{dataset_id}.{table_id}"
@@ -136,8 +143,7 @@ def create_bd_table(
             st.delete_table(
                 mode="staging", bucket_name=st.bucket_name, not_found_ok=True
             )
-        # prod datasets is public if the project is datario. staging are private im both projects
-        dataset_is_public = tb.client["bigquery_prod"].project == "datario"
+
         tb.create(
             path=path,
             if_storage_data_exists="replace",
