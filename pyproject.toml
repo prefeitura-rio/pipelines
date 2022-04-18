@@ -68,6 +68,7 @@ pydata-google-auth = "1.2.0"
 pymssql = "2.2.3"
 PyMySQL = {extras = ["rsa"], version = "^1.0.2"}
 pyparsing = "3.0.6"
+python = ">=3.8,<3.11"
 python-box = "5.4.1"
 python-dateutil = "2.8.2"
 python-slugify = "5.0.2"
