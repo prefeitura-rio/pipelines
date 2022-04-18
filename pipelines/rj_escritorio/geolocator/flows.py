@@ -59,8 +59,6 @@ Flows for geolocator
 #
 ###############################################################################
 
-
-import prefect
 from pipelines.constants import constants
 from pipelines.rj_escritorio.geolocator.constants import (
     constants as geolocator_constants,
