@@ -171,6 +171,7 @@ def upload_to_gcs(
     path: Union[str, Path],
     dataset_id: str,
     table_id: str,
+    partitions=None,
     wait=None,  # pylint: disable=unused-argument
 ) -> None:
     """
@@ -185,6 +186,7 @@ def upload_to_gcs(
         tb.append(
             filepath=path,
             if_exists="replace",
+            partitions=partitions
         )
 
         log(
@@ -196,3 +198,19 @@ def upload_to_gcs(
         log(
             "Table does not exist in STAGING, need to create it in local first.\nCreate and publish the table in BigQuery first."
         )
+
+@task(
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def check_table_exists(
+    dataset_id: str,
+    table_id: str,
+    wait=None,  # pylint: disable=unused-argument
+) -> bool:
+    """
+    Check if table exists in staging on GCP
+    """
+    # pylint: disable=C0103
+    tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
+    return tb.table_exists(mode='staging')
