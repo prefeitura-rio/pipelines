@@ -18,7 +18,7 @@ from pipelines.constants import constants
 # from pipelines.rj_cor.meteorologia.meteorologia_inmet.meteorologia_utils import converte_timezone
 
 
-@task(nout=2)
+@task()
 def slice_data(current_time: str) -> Tuple[str, str]:
     """
     Retorna a data e hora do timestamp de execução
@@ -31,8 +31,7 @@ def slice_data(current_time: str) -> Tuple[str, str]:
     )
 
     data = current_time[:10]
-    hora = current_time[11:13]
-    return data, hora
+    return data
 
 
 @task(
@@ -85,7 +84,7 @@ def download(data: str) -> pd.DataFrame:
 
 
 @task(nout=2)
-def tratar_dados(dados: pd.DataFrame, hora: str) -> Tuple[pd.DataFrame, str]:
+def tratar_dados(dados: pd.DataFrame) -> Tuple[pd.DataFrame, str]:
     """
     Renomeia colunas e filtra dados com a hora do timestamp de execução
     """
@@ -137,9 +136,6 @@ def tratar_dados(dados: pd.DataFrame, hora: str) -> Tuple[pd.DataFrame, str]:
 
     dados = dados.rename(columns=rename_cols)
 
-    # Seleciona apenas dados daquela hora
-    dados = dados[dados["horario"] == str(hora) + "00"]
-
     # Converte coluna de horas de 2300 para 23:00:00
     dados["horario"] = pd.to_datetime(dados.horario, format="%H%M")
     dados["horario"] = dados.horario.apply(lambda x: datetime.strftime(x, "%H:%M:%S"))
@@ -185,13 +181,16 @@ def tratar_dados(dados: pd.DataFrame, hora: str) -> Tuple[pd.DataFrame, str]:
     mes = str(int(max_date[5:7]))
     dia = str(int(max_date[8:10]))
 
+    # Seleciona apenas dados daquele dia (devido à UTC)
+    dados = dados[dados["data"] == max_date]
+
     partitions = f"ano={ano}/mes={mes}/dia={dia}"
     print(">>> partitions", partitions)
     return dados, partitions
 
 
 @task
-def salvar_dados(dados: pd.DataFrame, partitions: str) -> Union[str, Path]:
+def salvar_dados(dados: pd.DataFrame, partitions: str, data: str) -> Union[str, Path]:
     """
     Salvar dados em csv
     """
@@ -200,8 +199,7 @@ def salvar_dados(dados: pd.DataFrame, partitions: str) -> Union[str, Path]:
     if not os.path.exists(base_path):
         os.makedirs(base_path)
 
-    now = pendulum.now().to_datetime_string().replace(":", "")
-    filename = str(base_path / f"dados_{now}.csv")
+    filename = str(base_path / f"dados_{data}.csv")
 
     print(f"Saving {filename}")
     # dados.to_csv(filename, index=False)

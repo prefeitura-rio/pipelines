@@ -23,23 +23,23 @@ with Flow(
     CURRENT_TIME = pendulum.now("UTC")  # segundo o manual é UTC
 
     DATASET_ID = "meio_ambiente_clima"
-    TABLE_ID = "meteorologia_inmet_part"  # ########
-    DUMP_TYPE = "append"
+    TABLE_ID = "meteorologia_inmet"
+    DUMP_TYPE = "replace"
 
-    data, hora = slice_data(current_time=CURRENT_TIME)
+    data = slice_data(current_time=CURRENT_TIME)
 
     dados = download(data=data)
-    dados, partitions = tratar_dados(dados=dados, hora=hora)
-    path = salvar_dados(dados=dados, partitions=partitions)
+    dados, partitions = tratar_dados(dados=dados)
+    PATH = salvar_dados(dados=dados, partitions=partitions, data=data)
 
     # Create table in BigQuery
     create_table_and_upload_to_gcs(
-        data_path=path,
+        data_path=PATH,
         dataset_id=DATASET_ID,
         table_id=TABLE_ID,
         dump_type=DUMP_TYPE,
         partitions=partitions,
-        wait=path,
+        wait=PATH,
     )
 
 # para rodar na cloud
