@@ -19,7 +19,7 @@ from pipelines.utils import log
 ###############
 
 
-@task
+@task(checkpoint=False)
 def sql_server_get_connection(server: str, user: str, password: str, database: str):
     """
     Returns a connection to the SQL Server.
@@ -31,7 +31,7 @@ def sql_server_get_connection(server: str, user: str, password: str, database: s
     )
 
 
-@task
+@task(checkpoint=False)
 def sql_server_get_cursor(connection):
     """
     Returns a cursor for the SQL Server.
@@ -40,7 +40,7 @@ def sql_server_get_cursor(connection):
     return connection.cursor()
 
 
-@task
+@task(checkpoint=False)
 def sql_server_execute(cursor, query):
     """
     Executes a query on the SQL Server.
