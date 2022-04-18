@@ -75,7 +75,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks import (
     pre_treatment_br_rj_riodejaneiro_stpl_gps,
 )
 
-from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.schedules import every_minute
+# from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.schedules import every_minute
 from pipelines.utils.decorators import Flow
 
 with Flow("SMTR: gps_stpl - Captura") as stpl_captura:
@@ -125,4 +125,4 @@ with Flow("SMTR: gps_stpl - Captura") as stpl_captura:
 
 stpl_captura.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 stpl_captura.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-stpl_captura.schedule = every_minute
+# stpl_captura.schedule = every_minute
