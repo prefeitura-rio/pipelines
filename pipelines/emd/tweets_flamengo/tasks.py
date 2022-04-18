@@ -61,10 +61,17 @@ import tweepy
 
 from prefect import task
 
-CREDENTIALS = json.loads(os.getenv("TWITTER_CREDENTIALS"))
-auth = tweepy.OAuthHandler(CREDENTIALS["CONSUMER_KEY"], CREDENTIALS["CONSUMER_SECRET"])
-auth.set_access_token(CREDENTIALS["ACCESS_TOKEN"], CREDENTIALS["ACCESS_TOKEN_SECRET"])
-api = tweepy.API(auth)
+
+@task
+def get_api():
+    CREDENTIALS = json.loads(os.getenv("TWITTER_CREDENTIALS"))
+    auth = tweepy.OAuthHandler(
+        CREDENTIALS["CONSUMER_KEY"], CREDENTIALS["CONSUMER_SECRET"]
+    )
+    auth.set_access_token(
+        CREDENTIALS["ACCESS_TOKEN"], CREDENTIALS["ACCESS_TOKEN_SECRET"]
+    )
+    return tweepy.API(auth)
 
 
 def normalize_cols(df):
@@ -132,7 +139,7 @@ def fetch_last_id(q):
 
 
 @task
-def get_last_id(q):
+def get_last_id(api, q):
     q_folder = q.replace(" ", "_").replace("-", "_")
     pre_path = f"data/staging/twitter_flamengo/last_id/q={q_folder}"
     if not os.path.exists(f"{pre_path}/{q_folder}.csv"):
@@ -155,7 +162,7 @@ def get_last_id(q):
 
 
 @task
-def fetch_tweets(q, last_id, created_at):
+def fetch_tweets(api, q, last_id, created_at):
     q_folder = q.replace(" ", "_").replace("-", "_")
     dt = datetime.today().strftime("%Y-%m-%d-%H-%M-%S")
     first_page_df = None
