@@ -17,22 +17,26 @@ from pipelines.emd.db_dump.schedules import (
     sme_daily_update_schedule,
     _1746_daily_update_schedule,
 )
-from pipelines.emd.db_dump.tasks import (
+from pipelines.tasks import (
     create_bd_table,
+    upload_to_gcs,
+    dump_header_to_csv,
+)
+from pipelines.emd.db_dump.tasks import (
     database_execute,
     database_fetch,
     database_get,
     dump_batches_to_csv,
-    dump_header_to_csv,
-    upload_to_gcs,
 )
 from pipelines.tasks import get_user_and_password
 from pipelines.utils import notify_discord_on_failure
 
 with Flow(
     name="EMD: template - Ingerir tabela de banco SQL",
-    on_failure=partial(notify_discord_on_failure,
-                       secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value),
+    on_failure=partial(
+        notify_discord_on_failure,
+        secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value,
+    ),
 ) as dump_sql_flow:
 
     #####################################
@@ -99,7 +103,6 @@ with Flow(
 
     # Create CSV file with headers
     wait_header_path = dump_header_to_csv(
-        header_path=f"data/{uuid4()}/",
         data_path=wait_batches_path,
         wait=wait_batches_path,
     )
@@ -153,8 +156,10 @@ dump_1746_flow.schedule = _1746_daily_update_schedule
 
 with Flow(
     name="EMD: template - Executar query SQL",
-    on_failure=partial(notify_discord_on_failure,
-                       secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value),
+    on_failure=partial(
+        notify_discord_on_failure,
+        secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value,
+    ),
 ) as run_sql_flow:
     #####################################
     #
