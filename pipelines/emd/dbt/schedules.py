@@ -104,7 +104,7 @@ _1746_views = {
 
 
 _1746_clocks = [
-    get_clock("educacao_basica", table_id, count)
+    get_clock("administracao_servicos_publicos_1746", table_id, count)
     for count, (_, table_id) in enumerate(_1746_views.items())
 ]
 
