@@ -77,9 +77,10 @@ def get_api():
     Get the Twitter API.
     """
 
+    # pylint: disable=C0103
     CREDENTIALS = json.loads(
         decode_env(os.getenv("TWITTER_CREDENTIALS"))
-    )  # pylint: disable=C0103
+    )
 
     auth = tweepy.OAuthHandler(
         CREDENTIALS["CONSUMER_KEY"], CREDENTIALS["CONSUMER_SECRET"]
@@ -121,7 +122,7 @@ def creat_path_tree(path):
 
 
 @task
-def save_last_id(df, q):
+def save_last_id(df, q):  # pylint: disable=C0103
     """
     Save the last tweet ID.
     """
@@ -146,12 +147,13 @@ def save_last_id(df, q):
 
 
 @task
-def fetch_last_id(q):
+def fetch_last_id(q):  # pylint: disable=C0103
     """
     some docstring
     """
     q_folder = q.replace(" ", "_").replace("-", "_")
-    st = bd.Storage(dataset_id="twitter_flamengo", table_id="last_id")
+    st = bd.Storage(dataset_id="twitter_flamengo",  # pylint: disable=C0103
+                    table_id="last_id")
     try:
         st.download(
             filename=f"{q_folder}.csv",
@@ -162,17 +164,17 @@ def fetch_last_id(q):
         )
 
         pre_path = f"data/staging/twitter_flamengo/last_id/q={q_folder}"
-        df = pd.read_csv(f"{pre_path}/{q_folder}.csv")
+        df = pd.read_csv(f"{pre_path}/{q_folder}.csv")  # pylint: disable=C0103
         if "q" in df.columns.tolist():
             df.columns = ["id", "created_at", "q"]
-            df.drop("q", 1).to_csv(
-                f"{pre_path}/{q_folder}.csv", index=False)  # pylint: disable=E1101
+            df.drop("q", 1).to_csv(  # pylint: disable=E1101
+                f"{pre_path}/{q_folder}.csv", index=False)
     except FileNotFoundError:
         log(f"No table {q_folder} in storage")
 
 
 @task(nout=2)
-def get_last_id(api, q, data_path: str):
+def get_last_id(api, q, data_path: str):  # pylint: disable=C0103
     """
     some docstring
     """
@@ -184,7 +186,8 @@ def get_last_id(api, q, data_path: str):
         created_at = tweet.created_at
         time.sleep(5)
     else:
-        df = pd.read_csv(f"{pre_path}/{q_folder}.csv").copy()
+        df = pd.read_csv(  # pylint: disable=C0103
+            f"{pre_path}/{q_folder}.csv").copy()
         if len(df) > 0:
 
             last_id = int(df[["id"]].iloc[-1])
@@ -198,12 +201,12 @@ def get_last_id(api, q, data_path: str):
 
 
 @task
-def fetch_tweets(api, q, last_id, created_at):
+def fetch_tweets(api, q, last_id, created_at): # pylint: disable=C0103
     """
     some docstring
     """
     q_folder = q.replace(" ", "_").replace("-", "_")
-    dt = datetime.today().strftime("%Y-%m-%d-%H-%M-%S")
+    dt = datetime.today().strftime("%Y-%m-%d-%H-%M-%S") # pylint: disable=C0103
     first_page_df = None
     log(f"{q} | last_id: {last_id} | created_at: {created_at} | file: {dt}")
 
@@ -213,7 +216,7 @@ def fetch_tweets(api, q, last_id, created_at):
         start=1,
     ):
         json_data = [t._json for t in page]  # pylint: disable=W0212
-        dd = pd.json_normalize(json_data)
+        dd = pd.json_normalize(json_data) # pylint: disable=C0103
         dd.columns = normalize_cols(dd.columns)
 
         cols_343 = [
@@ -565,7 +568,7 @@ def fetch_tweets(api, q, last_id, created_at):
             col for col in cols_343 if col not in dd.columns.tolist()]
         for col in col_not_in_dd:
             dd[col] = np.nan
-        dd = dd[cols_343]
+        dd = dd[cols_343] # pylint: disable=C0103
 
         creat_path_tree(f"data/tweets/q={q_folder}")
         if os.path.exists(f"data/tweets/q={q_folder}/{dt}.csv"):
