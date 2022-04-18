@@ -22,7 +22,7 @@ tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>
 
 [[package]]
 name = "basedosdados"
-version = "1.6.2a1"
+version = "1.6.2a5"
 description = "Organizar e facilitar o acesso a dados brasileiros através de tabelas públicas no BigQuery."
 category = "main"
 optional = false
@@ -34,7 +34,7 @@ click = "8.0.3"
 google-cloud-bigquery = "2.30.1"
 google-cloud-bigquery-storage = "1.1.0"
 google-cloud-storage = "1.42.3"
-Jinja2 = "2.11.2"
+Jinja2 = "3.0.3"
 pandas = "1.2.4"
 pandas-gbq = "0.13.2"
 pyaml = "20.4.0"
@@ -514,17 +514,17 @@ python-versions = "*"
 
 [[package]]
 name = "jinja2"
-version = "2.11.2"
+version = "3.0.3"
 description = "A very fast and expressive template engine."
 category = "main"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+python-versions = ">=3.6"
 
 [package.dependencies]
-MarkupSafe = ">=0.23"
+MarkupSafe = ">=2.0"
 
 [package.extras]
-i18n = ["Babel (>=0.8)"]
+i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "locket"
@@ -1242,7 +1242,7 @@ heapdict = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.11"
-content-hash = "65120f65d855380642b5940407cf35f16619a757d29f7c9aaab65951092d7645"
+content-hash = "e1ed243f89bdfd61bda35e50e291b9d1f7520ea5cd487475b41b4f6599d30a80"
 
 [metadata.files]
 atomicwrites = [
@@ -1254,8 +1254,8 @@ attrs = [
     {file = "attrs-21.4.0.tar.gz", hash = "sha256:626ba8234211db98e869df76230a137c4c40a12d72445c45d5f5b716f076e2fd"},
 ]
 basedosdados = [
-    {file = "basedosdados-1.6.2a1-py3-none-any.whl", hash = "sha256:eb21eeb92d1142a8046a14b1f6757370cc3546899e4730e805728536f29265d0"},
-    {file = "basedosdados-1.6.2a1.tar.gz", hash = "sha256:770407516f1677e5a32ea89ed1712465f86c49eb922f71e74cb1822b9ed0bfa2"},
+    {file = "basedosdados-1.6.2a5-py3-none-any.whl", hash = "sha256:835a4aae3fdc4a2d2d519645a2e7b2af835e22b58a85bba24ba528ffa90c69d1"},
+    {file = "basedosdados-1.6.2a5.tar.gz", hash = "sha256:ee2769e6e737bc5c8e738ec4f520e135eb2b1d8908429d75513095a04a8df2e8"},
 ]
 cachetools = [
     {file = "cachetools-4.2.4-py3-none-any.whl", hash = "sha256:92971d3cb7d2a97efff7c7bb1657f21a8f5fb309a37530537c71b1774189f2d1"},
@@ -1590,8 +1590,8 @@ iniconfig = [
     {file = "iniconfig-1.1.1.tar.gz", hash = "sha256:bc3af051d7d14b2ee5ef9969666def0cd1a000e121eaea580d4a313df4b37f32"},
 ]
 jinja2 = [
-    {file = "Jinja2-2.11.2-py2.py3-none-any.whl", hash = "sha256:f0a4641d3cf955324a89c04f3d94663aa4d638abe8f733ecd3582848e1c37035"},
-    {file = "Jinja2-2.11.2.tar.gz", hash = "sha256:89aab215427ef59c34ad58735269eb58b1a5808103067f7bb9d5836c651b3bb0"},
+    {file = "Jinja2-3.0.3-py3-none-any.whl", hash = "sha256:077ce6014f7b40d03b47d1f1ca4b0fc8328a692bd284016f806ed0eaca390ad8"},
+    {file = "Jinja2-3.0.3.tar.gz", hash = "sha256:611bb273cd68f3b993fabdc4064fc858c5b47a973cb5aa7999ec1ba405c87cd7"},
 ]
 locket = [
     {file = "locket-0.2.1-py2.py3-none-any.whl", hash = "sha256:12b6ada59d1f50710bca9704dbadd3f447dbf8dac6664575c1281cadab8e6449"},
