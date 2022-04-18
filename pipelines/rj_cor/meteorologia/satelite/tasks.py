@@ -14,7 +14,6 @@ from prefect import task
 import s3fs
 
 from pipelines.rj_cor.meteorologia.satelite.satellite_utils import main, save_parquet
-from pipelines.utils.utils import log
 
 @task()
 def get_dates() -> str:
