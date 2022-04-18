@@ -9,6 +9,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.8.x"
+      - name: Set up Poetry and upgrade pip
+        run: |
+          pip install -U pip poetry
+      - name: Install flows
+        run: |
+          pip install --prefer-binary .
       - name: Lint flows
         uses: gabriel-milan/action-pylint@v1
         with:
