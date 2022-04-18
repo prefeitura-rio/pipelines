@@ -7,7 +7,7 @@ version = "0.1.0"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.11"
-basedosdados = "1.6.2a11"
+basedosdados = "1.6.2"
 cx-Oracle = "^8.3.0"
 dbt-client = "^0.1.2"
 geopandas = "^0.10.2"
