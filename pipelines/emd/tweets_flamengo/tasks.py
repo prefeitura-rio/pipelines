@@ -61,10 +61,22 @@ import tweepy
 
 from prefect import task
 
+import base64
+
+
+def decogind_base64(message):
+    # decoding the base64 string
+    base64_bytes = message.encode("ascii")
+    message_bytes = base64.b64decode(base64_bytes)
+    return message_bytes.decode("ascii")
+
 
 @task
-def get_api():
-    CREDENTIALS = json.loads(os.getenv("TWITTER_CREDENTIALS"))
+def get_api(q):
+    CREDENTIALS = json.loads(
+        decogind_base64(decogind_base64(os.getenv("TWITTER_CREDENTIALS")))
+    )
+
     auth = tweepy.OAuthHandler(
         CREDENTIALS["CONSUMER_KEY"], CREDENTIALS["CONSUMER_SECRET"]
     )
