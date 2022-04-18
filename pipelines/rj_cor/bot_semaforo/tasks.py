@@ -39,8 +39,7 @@ def get_data() -> pd.DataFrame:
     SELECT *
     FROM `rj-escritorio-dev.transporte_rodoviario_waze.alertas_tratadas_semaforos`
     """
-    # TODO change billing_project_id to rj-cor
-    return bd.read_sql(query=query, billing_project_id="datario", from_file=True)
+    return bd.read_sql(query=query, billing_project_id="rj-cor", from_file=True)
 
 
 @task(checkpoint=False)
