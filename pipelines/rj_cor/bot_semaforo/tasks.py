@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 
 import basedosdados as bd
 import pandas as pd
-import pendulum
 from prefect import task
 import pytz
 
@@ -133,25 +132,23 @@ def format_message(dataframe: pd.DataFrame) -> List[str]:
         url = '<a href="' + url + '">' + street + "</a>"
         return url
 
-    # Gets current "date and time" and "current date and time minus 1 hour in
-    # list [current, current_minus_1h]
-    def current_date_time() -> List:
-        current = datetime.strptime(
-            pendulum.now()
-            .replace(tzinfo=pytz.timezone("America/Sao_Paulo"))
-            .strftime("%Y-%m-%d %H:%M:%S"),
-            "%Y-%m-%d %H:%M:%S",
-        )
+    def current_date_time():
+        """
+        Gets current "date and time" and "current date and time minus 1 hour in
+        list [current, current_minus_1h]
+        """
+        current = datetime.now(pytz.timezone("America/Sao_Paulo"))
         current_minus_1h = current - timedelta(minutes=60)
         return current_minus_1h, current
 
     # Builds all alert messages
     alert = ""
     thumbs_up_emoji = "\U0001F44D"
+    current_minus_1h, current = current_date_time()
     for row in range(len(dataframe)):
         if (
-            dataframe.iloc[row]["initial_ts"] > current_date_time()[0]
-            and dataframe.iloc[row]["initial_ts"] <= current_date_time()[1]
+            dataframe.iloc[row]["initial_ts"] > current_minus_1h
+            and dataframe.iloc[row]["initial_ts"] <= current
         ):
             identification = str(dataframe.iloc[row]["name"])
             latlong = str(
@@ -180,19 +177,21 @@ def format_message(dataframe: pd.DataFrame) -> List[str]:
         traffic_light_emoji
         + " CETRIO"
         + "\n \nALERTA WAZE - Semáforo quebrado - atualizado em "
-        + pendulum.now()
-        .replace(tzinfo=pytz.timezone("America/Sao_Paulo"))
-        .strftime("%Y-%m-%d %H:%M:%S")
+        + current.strftime("%Y-%m-%d %H:%M:%S")
         + "\n"
         + "Alertas no período de: "
-        + str(current_date_time()[0])[11:16]
+        + current_minus_1h.strftime("%H:%M")
         + " -> "
-        + str(current_date_time()[1])[11:16]
+        + current.strftime("%H:%M")
         + "\n \n"
     )
 
     # Builds final message
-    msg = msg_header + alert
+    if alert != "":
+        msg = msg_header + alert
+    else:
+        alert = "Não foram encontrados alertas no período" + "\n \n"
+        msg = msg_header + alert
 
     return smart_split(
         text=msg,
