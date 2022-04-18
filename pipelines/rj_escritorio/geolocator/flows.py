@@ -61,6 +61,11 @@ Flows for geolocator
 
 
 import prefect
+from prefect import Flow, Parameter, case
+from prefect.run_configs import KubernetesRun
+from prefect.storage import GCS
+from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
+
 from pipelines.constants import constants
 from pipelines.rj_escritorio.geolocator.constants import (
     constants as geolocator_constants,
@@ -74,10 +79,6 @@ from pipelines.rj_escritorio.geolocator.tasks import (
 )
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.tasks import get_current_flow_labels, log_task, upload_to_gcs
-from prefect import Flow, Parameter, case
-from prefect.run_configs import KubernetesRun
-from prefect.storage import GCS
-from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 
 with Flow("EMD: escritorio - Geolocalizacao de chamados 1746") as daily_geolocator_flow:
     # [enderecos_conhecidos, enderecos_ontem, chamados_ontem, base_enderecos_atual]
