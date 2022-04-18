@@ -56,16 +56,23 @@ Flows for emd
 #
 ###############################################################################
 
+from functools import partial
 
 from prefect import Flow
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
+
 from pipelines.constants import constants
 from pipelines.emd.template_pipeline.tasks import say_hello
+from pipelines.utils import notify_discord_on_failure
 
 # from pipelines.emd.template_pipeline.schedules import every_two_weeks
 
-with Flow("EMD: template - Template Pipeline") as flow:
+with Flow(
+    name="EMD: template - Template Pipeline",
+    on_failure=partial(notify_discord_on_failure,
+                       secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value),
+) as flow:
     say_hello()
 
 flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)

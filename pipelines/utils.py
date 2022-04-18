@@ -9,7 +9,9 @@ from typing import Any, Dict, List, Tuple
 import hvac
 import prefect
 from prefect.client import Client
+from prefect.engine.state import State
 from prefect.run_configs import KubernetesRun
+import requests
 import telegram
 
 
@@ -69,6 +71,24 @@ def get_username_and_password_from_secret(
     )
 
 
+def notify_discord_on_failure(
+    secret_path: str,
+    flow: prefect.Flow,
+    state: State,
+):
+    """
+    Notifies a Discord channel when a flow fails.
+    """
+    url = get_vault_secret(secret_path)["data"]["url"]
+    message = (
+        f"<b>{flow.name}</b> failed with message <b>\"{state.message}\"</b>\n"
+    )
+    send_discord_message(
+        message=message,
+        webhook_url=url,
+    )
+
+
 def run_local(flow: prefect.Flow, parameters: Dict[str, Any] = None):
     """
     Runs a flow locally.
@@ -117,6 +137,19 @@ def query_to_line(query: str) -> str:
     Converts a query to a line.
     """
     return " ".join([line.strip() for line in query.split("\n")])
+
+
+def send_discord_message(
+    message: str,
+    webhook_url: str,
+) -> None:
+    """
+    Sends a message to a Discord channel.
+    """
+    requests.post(
+        webhook_url,
+        data={"content": message},
+    )
 
 
 def send_telegram_message(
