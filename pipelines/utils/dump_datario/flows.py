@@ -20,6 +20,7 @@ from pipelines.utils.tasks import (
     upload_to_gcs,
     dump_header_to_csv,
     check_table_exists,
+    log_task,
 )
 from pipelines.utils.dump_datario.tasks import (
     get_datario_geodataframe,
@@ -133,6 +134,10 @@ with Flow(
             },
             labels=current_flow_labels,
             run_name=f"Materialize {dataset_id}.{table_id}",
+        )
+
+        log_task(
+            f"Please check at: http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{materialization_flow}"
         )
         wait_for_materialization = wait_for_flow_run(
             materialization_flow,

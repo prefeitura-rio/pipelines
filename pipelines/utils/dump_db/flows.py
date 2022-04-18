@@ -22,6 +22,7 @@ from pipelines.utils.tasks import (
     rename_current_flow_run,
     upload_to_gcs,
     dump_header_to_csv,
+    log_task,
 )
 from pipelines.utils.dump_db.tasks import (
     database_execute,
@@ -196,12 +197,18 @@ with Flow(
                 labels=current_flow_labels,
                 run_name=f"Materialize {dataset_id}.{table_id}",
             )
+
+            log_task(
+                f"Please check at: http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{materialization_flow}"
+            )
+
             wait_for_materialization = wait_for_flow_run(
                 materialization_flow,
                 stream_states=True,
                 stream_logs=True,
                 raise_final_state=True,
             )
+
 
 dump_sql_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_sql_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)

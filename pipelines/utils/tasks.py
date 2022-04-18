@@ -6,7 +6,7 @@ from datetime import timedelta
 from os import walk
 from os.path import join
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Any
 from uuid import uuid4
 
 import basedosdados as bd
@@ -24,6 +24,16 @@ from pipelines.utils.utils import get_username_and_password_from_secret, log
 # Utilities for flow management
 #
 ##################
+
+
+@prefect.task(checkpoint=False)
+def log_task(
+    msg: Any, level: str = "info", wait=None
+):  # pylint: disable=unused-argument
+    """
+    Logs a message to prefect's logger.
+    """
+    log(msg, level)
 
 
 @task
