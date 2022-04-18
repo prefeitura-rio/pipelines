@@ -28,31 +28,23 @@ with Flow("COR: Meteorologia - Satelite") as flow:
 
     ano, mes, dia, hora, dia_juliano = slice_data(current_time=CURRENT_TIME)
 
-   # Para taxa de precipitação
-    VARIAVEL = 'RRQPEF'
-    DATASET_ID = 'meio_ambiente_clima'
-    TABLE_ID = 'satelite_taxa_precipitacao'
-    DUMP_TYPE = 'append'
+    # Para taxa de precipitação
+    VARIAVEL = "RRQPEF"
+    DATASET_ID = "meio_ambiente_clima"
+    TABLE_ID = "satelite_taxa_precipitacao"
+    DUMP_TYPE = "append"
 
-    filename = download(variavel=VARIAVEL,
-                        ano=ano,
-                        dia_juliano=dia_juliano,
-                        hora=hora)
+    filename = download(variavel=VARIAVEL, ano=ano, dia_juliano=dia_juliano, hora=hora)
     info = tratar_dados(filename=filename)
     path, partitions = salvar_parquet(info=info)
 
     # Check if table exists
-    EXISTS = check_table_exists(
-        dataset_id=DATASET_ID,
-        table_id=TABLE_ID
-    )
+    EXISTS = check_table_exists(dataset_id=DATASET_ID, table_id=TABLE_ID)
 
     # Create header and table if they don't exists
     with case(EXISTS, False):
         # Create CSV file with headers
-        header_path = dump_header_to_csv(
-            data_path=path
-        )
+        header_path = dump_header_to_csv(data_path=path)
 
         # Create table in BigQuery
         create_db = create_bd_table(  # pylint: disable=invalid-name
@@ -81,29 +73,21 @@ with Flow("COR: Meteorologia - Satelite") as flow:
         )
 
     # Para quantidade de água precipitável
-    VARIAVEL = 'TPWF'
-    DATASET_ID = 'meio_ambiente_clima'
-    TABLE_ID = 'satelite_quantidade_agua_precipitavel'
+    VARIAVEL = "TPWF"
+    DATASET_ID = "meio_ambiente_clima"
+    TABLE_ID = "satelite_quantidade_agua_precipitavel"
 
-    filename = download(variavel=VARIAVEL,
-                        ano=ano,
-                        dia_juliano=dia_juliano,
-                        hora=hora)
+    filename = download(variavel=VARIAVEL, ano=ano, dia_juliano=dia_juliano, hora=hora)
     info = tratar_dados(filename=filename)
     path, partitions = salvar_parquet(info=info)
 
     # Check if table exists
-    EXISTS = check_table_exists(
-        dataset_id=DATASET_ID,
-        table_id=TABLE_ID
-    )
+    EXISTS = check_table_exists(dataset_id=DATASET_ID, table_id=TABLE_ID)
 
     # Create header and table if they don't exists
     with case(EXISTS, False):
         # Create CSV file with headers
-        header_path = dump_header_to_csv(
-            data_path=path
-        )
+        header_path = dump_header_to_csv(data_path=path)
 
         # Create table in BigQuery
         create_db = create_bd_table(  # pylint: disable=invalid-name

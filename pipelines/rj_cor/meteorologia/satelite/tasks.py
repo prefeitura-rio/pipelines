@@ -39,10 +39,7 @@ def slice_data(current_time: str) -> Tuple[str, str, str, str, str]:
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=dt.timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def download(variavel: str,
-             ano: str,
-             dia_juliano: str,
-             hora: str) -> Union[str, Path]:
+def download(variavel: str, ano: str, dia_juliano: str, hora: str) -> Union[str, Path]:
     """
     Acessa o S3 e faz o download do primeiro arquivo da data-hora especificada
     """
@@ -84,8 +81,8 @@ def salvar_parquet(info: dict) -> Tuple[Union[str, Path], str]:
     Converter dados de tif para parquet
     """
     # print('\n>>>> Started with info: ', ingoes16_extentfo)
-    variable = info['variable']
-    datetime_save = info['datetime_save']
-    print(f'Saving {variable} in parquet')
+    variable = info["variable"]
+    datetime_save = info["datetime_save"]
+    print(f"Saving {variable} in parquet")
     filename, partitions = save_parquet(variable, datetime_save)
     return filename, partitions
