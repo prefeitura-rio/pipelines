@@ -1,5 +1,5 @@
 """
-Tasks for emd
+Tasks for twitter scraping.
 """
 
 ###############################################################################
@@ -52,6 +52,7 @@ import os
 import time
 import json
 from datetime import datetime
+from pathlib import Path
 
 import shutil
 import pandas as pd
@@ -78,9 +79,7 @@ def get_api():
     """
 
     # pylint: disable=C0103
-    CREDENTIALS = json.loads(
-        decode_env(os.getenv("TWITTER_CREDENTIALS"))
-    )
+    CREDENTIALS = json.loads(decode_env(os.getenv("TWITTER_CREDENTIALS")))
 
     auth = tweepy.OAuthHandler(
         CREDENTIALS["CONSUMER_KEY"], CREDENTIALS["CONSUMER_SECRET"]
@@ -141,19 +140,19 @@ def save_last_id(df, q):  # pylint: disable=C0103
         # twitter fetch data from most recent to most oldest
         # last_id must to be the most recent id
         df = df[["id", "created_at"]].iloc[[0]].copy()
-        df.to_csv(f"{pre_path}/{q_folder}.csv",
-                  index=False, mode="a", header=False)
+        df.to_csv(f"{pre_path}/{q_folder}.csv", index=False, mode="a", header=False)
     return "data/staging"
 
 
 @task
 def fetch_last_id(q):  # pylint: disable=C0103
     """
-    some docstring
+    Download last_id table from storage.
     """
     q_folder = q.replace(" ", "_").replace("-", "_")
-    st = bd.Storage(dataset_id="twitter_flamengo",  # pylint: disable=C0103
-                    table_id="last_id")
+    st = bd.Storage(
+        dataset_id="twitter_flamengo", table_id="last_id"  # pylint: disable=C0103
+    )
     try:
         st.download(
             filename=f"{q_folder}.csv",
@@ -168,31 +167,35 @@ def fetch_last_id(q):  # pylint: disable=C0103
         if "q" in df.columns.tolist():
             df.columns = ["id", "created_at", "q"]
             df.drop("q", 1).to_csv(  # pylint: disable=E1101
-                f"{pre_path}/{q_folder}.csv", index=False)
+                f"{pre_path}/{q_folder}.csv", index=False
+            )
     except FileNotFoundError:
         log(f"No table {q_folder} in storage")
+
+    return "data/staging"
 
 
 @task(nout=2)
 def get_last_id(api, q, data_path: str):  # pylint: disable=C0103
     """
-    some docstring
+    Get last_id from storage table or twitter api.
     """
     q_folder = q.replace(" ", "_").replace("-", "_")
     pre_path = f"{data_path}/twitter_flamengo/last_id/q={q_folder}"
     if not os.path.exists(f"{pre_path}/{q_folder}.csv"):
+        log(f"No last_id table found for {q}, fetch last_id from Twitter API")
         tweet = api.search_tweets(q=q, count=1)[0]
         last_id = tweet.id
         created_at = tweet.created_at
         time.sleep(5)
     else:
-        df = pd.read_csv(  # pylint: disable=C0103
-            f"{pre_path}/{q_folder}.csv").copy()
+        df = pd.read_csv(f"{pre_path}/{q_folder}.csv").copy()  # pylint: disable=C0103
         if len(df) > 0:
-
+            log(f"Getting last_id from storage table {q_folder}")
             last_id = int(df[["id"]].iloc[-1])
             created_at = df[["created_at"]].iloc[-1].values[0]
         else:
+            log(f"No last_id saved in table for {q}, fetch last_id from Twitter API")
             tweet = api.search_tweets(q=q, count=1)[0]
             last_id = tweet.id
             created_at = tweet.created_at
@@ -201,22 +204,21 @@ def get_last_id(api, q, data_path: str):  # pylint: disable=C0103
 
 
 @task
-def fetch_tweets(api, q, last_id, created_at): # pylint: disable=C0103
+def fetch_tweets(api, q, last_id, created_at):  # pylint: disable=C0103
     """
-    some docstring
+    Scrapy tweets since last_id in batchs of 100 tweets.
     """
     q_folder = q.replace(" ", "_").replace("-", "_")
-    dt = datetime.today().strftime("%Y-%m-%d-%H-%M-%S") # pylint: disable=C0103
+    dt = datetime.today().strftime("%Y-%m-%d-%H-%M-%S")  # pylint: disable=C0103
     first_page_df = None
     log(f"{q} | last_id: {last_id} | created_at: {created_at} | file: {dt}")
 
     for i, page in enumerate(
-        tweepy.Cursor(api.search_tweets, q=q,
-                      since_id=last_id, count=100).pages(149),
+        tweepy.Cursor(api.search_tweets, q=q, since_id=last_id, count=100).pages(100),
         start=1,
     ):
         json_data = [t._json for t in page]  # pylint: disable=W0212
-        dd = pd.json_normalize(json_data) # pylint: disable=C0103
+        dd = pd.json_normalize(json_data)  # pylint: disable=C0103
         dd.columns = normalize_cols(dd.columns)
 
         cols_343 = [
@@ -564,11 +566,10 @@ def fetch_tweets(api, q, last_id, created_at): # pylint: disable=C0103
             "coordinatestype",
             "coordinatescoordinates",
         ]
-        col_not_in_dd = [
-            col for col in cols_343 if col not in dd.columns.tolist()]
+        col_not_in_dd = [col for col in cols_343 if col not in dd.columns.tolist()]
         for col in col_not_in_dd:
             dd[col] = np.nan
-        dd = dd[cols_343] # pylint: disable=C0103
+        dd = dd[cols_343]  # pylint: disable=C0103
 
         creat_path_tree(f"data/tweets/q={q_folder}")
         if os.path.exists(f"data/tweets/q={q_folder}/{dt}.csv"):
@@ -592,7 +593,7 @@ def fetch_tweets(api, q, last_id, created_at): # pylint: disable=C0103
 @task
 def upload_to_storage(path: str):
     """
-    some docstring
+    upload data to storage
     """
     tb_last_id = bd.Table(dataset_id="twitter_flamengo", table_id="last_id")
     tb_last_id.append(f"{path}/twitter_flamengo/last_id")
@@ -603,6 +604,5 @@ def upload_to_storage(path: str):
     tb_tweet.append(
         "data/tweets",
     )
-
     if os.path.isdir("data/tweets/"):
         shutil.rmtree("data/tweets/")

@@ -108,6 +108,5 @@ with Flow("tweets_flamengo") as tweets_flamengo_flow:
     upload_to_storage(path)
 
 tweets_flamengo_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-tweets_flamengo_flow.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value)
+tweets_flamengo_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 tweets_flamengo_flow.schedule = tweets_flamengo_schedule
