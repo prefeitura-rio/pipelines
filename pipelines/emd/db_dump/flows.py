@@ -27,7 +27,7 @@ from pipelines.emd.db_dump.schedules import (
     _1746_daily_update_schedule,
 )
 
-with Flow("EMD: escritorio - Ingerir tabela de banco SQL") as dump_sql_flow:
+with Flow("EMD: template - Ingerir tabela de banco SQL") as dump_sql_flow:
 
     #####################################
     #
