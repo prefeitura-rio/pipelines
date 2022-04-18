@@ -68,7 +68,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
         password=password,
         database=database,
     )
-    database_execute(
+    wait_db_execute = database_execute(
         database=db_object,
         query=query,
     )
@@ -77,10 +77,11 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
     header_path = dump_header_to_csv(
         database=db_object,
         header_path=f"data/{uuid4()}/",
+        wait=wait_db_execute,
     )
 
     # Create table in BigQuery
-    create_bd_table(
+    wait_create_db = create_bd_table(
         path=header_path,
         dataset_id=dataset_id,
         table_id=table_id,
@@ -93,9 +94,10 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
     #####################################
 
     # Execute query
-    database_execute(
+    wait_db_execute = database_execute(
         database=db_object,
         query=query,
+        wait=wait_create_db,
     )
 
     # Dump batches to CSV files
@@ -103,6 +105,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
         database=db_object,
         batch_size=batch_size,
         prepath=f"data/{uuid4()}/",
+        wait=wait_db_execute,
     )
 
     # Upload to GCS
