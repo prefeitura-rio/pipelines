@@ -4,7 +4,7 @@ Schedules for cor
 
 from datetime import timedelta, datetime, time
 
-from prefect.schedules import Schedule  # , filters
+from prefect.schedules import Schedule
 from prefect.schedules.clocks import IntervalClock
 import pytz
 
@@ -33,10 +33,4 @@ bot_schedule = Schedule(
             },
         ),
     ],
-    # # Only on weekdays
-    # filters=[filters.is_weekday],
-    # or_filters=[
-    #     # Only between 7am and 11:59pm
-    #     filters.between_times(custom_time(7), custom_time(23, 59, 59)),
-    # ]
 )
