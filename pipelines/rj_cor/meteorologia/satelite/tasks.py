@@ -14,7 +14,6 @@ from prefect import task
 import s3fs
 
 from pipelines.rj_cor.meteorologia.satelite.satellite_utils import main, save_parquet
-from pipelines.utils.utils import log
 
 @task()
 def get_dates() -> str:
@@ -50,11 +49,10 @@ def download(variavel: str, ano: str, dia_juliano: str, hora: str) -> Union[str,
     s3_fs = s3fs.S3FileSystem(anon=True)
 
     # Get first file of GOES-16 data (multiband format) at this time
-    s3_file = f"noaa-goes16/ABI-L2-{variavel}/{ano}/{dia_juliano}/{hora}/"
-    log(">>> s3 file ", s3_file)
+
     file = np.sort(
         np.array(
-            s3_fs.find(s3_file)
+            s3_fs.find(f"noaa-goes16/ABI-L2-{variavel}/{ano}/{dia_juliano}/{hora}/")
         )
     )[0]
 
