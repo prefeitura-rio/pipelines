@@ -35,7 +35,7 @@ sme_clocks = [
         )
         + timedelta(minutes=3 * count),
         labels=[
-            constants.EMD_AGENT_LABEL.value,
+            constants.RJ_SME_AGENT_LABEL.value,
         ],
         parameter_defaults={
             "dataset_id": "educacao_basica",

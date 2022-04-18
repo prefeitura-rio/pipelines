@@ -25,7 +25,7 @@ def get_clock(dataset_id, table_id, count):
         )
         + timedelta(minutes=3 * count),
         labels=[
-            constants.EMD_AGENT_LABEL.value,
+            constants.RJ_SMFP_AGENT_LABEL.value,
         ],
         parameter_defaults={
             "dataset_id": dataset_id,
@@ -72,7 +72,7 @@ ergon_clocks = [
         )
         + timedelta(minutes=3 * count),
         labels=[
-            constants.EMD_AGENT_LABEL.value,
+            constants.RJ_SMFP_AGENT_LABEL.value,
         ],
         parameter_defaults={
             "dataset_id": "administracao_recursos_humanos_folha_salarial",
