@@ -13,10 +13,12 @@ from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect.tasks.prefect.flow_run_rename import RenameFlowRun
 
 from pipelines.constants import constants
+from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.dump_db.db import Database
 
 from pipelines.utils.tasks import (
     create_bd_table,
+    get_current_flow_labels,
     upload_to_gcs,
     dump_header_to_csv,
 )
@@ -57,7 +59,6 @@ with Flow(
     materialize_after_dump = Parameter(
         "materialize_after_dump", default=False, required=False
     )
-    materialization_flow_name = Parameter("materialization_flow_name", required=False)
     materialization_mode = Parameter(
         "materialization_mode", required=False, default="dev"
     )
@@ -180,20 +181,19 @@ with Flow(
 
     with case(materialize_after_dump, True):
         # Trigger DBT flow run
+        current_flow_labels = get_current_flow_labels()
         materialization_flow = create_flow_run(
-            flow_name=materialization_flow_name,
+            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
             project_name=constants.PREFECT_DEFAULT_PROJECT.value,
             parameters={
                 "dataset_id": dataset_id,
                 "table_id": table_id,
                 "mode": materialization_mode,
             },
-            labels=[
-                # TODO: add parent labels
-            ],
+            labels=current_flow_labels,
             run_name=f"Materialize {dataset_id}.{table_id}",
         )
-        wait_for_flow_a = wait_for_flow_run(
+        wait_for_materialization = wait_for_flow_run(
             materialization_flow,
             stream_states=True,
             stream_logs=True,
