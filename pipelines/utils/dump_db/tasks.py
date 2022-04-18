@@ -236,6 +236,6 @@ def dump_batches_to_csv(
         batch = database.fetch_batch(batch_size)
         idx += 1
 
-    log(f"Dumped {idx} batchs with size {len(batch)}")
+    log(f"Dumped {idx} batchs with size {len(batch)}, total of {idx*batch_size}")
 
     return prepath
