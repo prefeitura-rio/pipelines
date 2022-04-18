@@ -45,7 +45,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
     # BigQuery parameters
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
-    full_dump = Parameter("full_dump", default='append') # replace or  append
+    dump_type = Parameter("dump_type", default='append') # replace or  append
 
     #####################################
     #
@@ -89,7 +89,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
         path=header_path,
         dataset_id=dataset_id,
         table_id=table_id,
-        full_dump=full_dump,
+        dump_type=dump_type,
         wait=header_path,
     )
 
