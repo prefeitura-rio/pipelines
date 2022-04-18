@@ -8,8 +8,6 @@ from pipelines.constants import constants
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks import (download,
                                                                         tratar_dados, salvar_dados)
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.schedules import minute_schedule
-from pipelines.utils.tasks import upload_to_gcs
-
 from pipelines.utils.tasks import (
     create_bd_table,
     upload_to_gcs,
@@ -28,7 +26,7 @@ with Flow('COR: Meteorologia - Pluviometria ALERTARIO') as flow:
     path, partitions = salvar_dados(
         dados=dados,
         current_time=current_time)
-    
+
         # Create CSV file with headers
     wait_header_path = dump_header_to_csv(
         data_path=path
@@ -50,9 +48,6 @@ with Flow('COR: Meteorologia - Pluviometria ALERTARIO') as flow:
         table_id=TABLE_ID,
         wait=wait_create_db,
     )
-    
-    
-    # upload_to_gcs(path=path, dataset_id=DATASET_ID, table_id=TABLE_ID, partitions=partitions)
 
 # para rodar na cloud
 flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
