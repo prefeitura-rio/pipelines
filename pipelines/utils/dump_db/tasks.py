@@ -115,6 +115,32 @@ def database_fetch(
         log(f"{batch_size_no} rows: {database.fetch_batch(batch_size_no)}")
 
 
+def parser_blobs_to_partition_dict(blobs):
+    partitions_dict = {}
+    for blob in blobs:
+        for folder in blob.name.split("/"):
+            if "=" in folder:
+                k = folder.split("=")[0]
+                v = folder.split("=")[1]
+                try:
+                    partitions_dict[k].append(v)
+                except KeyError:
+                    partitions_dict[k] = [v]
+    return partitions_dict
+
+
+def extract_last_partition_date(partitions_dict: dict):
+    last_partition_date = None
+    for partition, values in partitions_dict.items():
+        try:
+            last_partition_date = datetime.strptime(max(values), "%Y-%m-%d").strftime(
+                "%Y-%m-%d"
+            )
+        except ValueError:
+            log(f"Partition {partition} is not a date")
+    return last_partition_date
+
+
 @task(
     checkpoint=False,
     max_retries=constants.TASK_MAX_RETRIES.value,
@@ -147,16 +173,11 @@ def format_partitioned_query(
         .bucket(storage.bucket_name)
         .list_blobs(prefix=f"staging/{storage.dataset_id}/{storage.table_id}/")
     )
-
     # extract only partitioned folders
-    filter_partitions_folders = lambda blob_folder: "=" in blob_folder
-    get_partitions_folders = lambda blob: (
-        "/".join(filter(filter_partitions_folders, blob.name.split("/")))
-    )
-    storage_partitions = list({get_partitions_folders(blob) for blob in blobs})
+    storage_partitions_dict = parser_blobs_to_partition_dict(blobs)
 
     # TODO: get last partition using blobs list
-    last_partition_date = None
+    last_partition_date = extract_last_partition_date(storage_partitions_dict)
 
     # Using the last partition date, get the partitioned query.
     # `aux_name` must be unique and start with a letter, for better compatibility with
