@@ -2,6 +2,17 @@
 
 Esse repositório contém flows desenvolvidos com Prefect relacionados ao Escritório Municipal de Dados da Prefeitura do Rio de Janeiro.
 
+
+---
+
+### Requisitos
+
+- Requisitos Python em tempo de execução devem ser adicionados ao `pyproject.toml` na raiz desse repositório.
+- Requisitos do `manage.py` estão em `requirements-cli.txt`
+- Requisitos para a Action de deployment estão em `requirements-deploy.txt`
+- Requisitos para testes estão em `requirements-tests.txt`
+
+
 ---
 
 
@@ -29,15 +40,6 @@ python manage.py list-projects
 
 Em seguida, leia com anteção os comentários em cada um dos arquivos do seu projeto, de modo a evitar conflitos e erros.
 Links para a documentação do Prefect também encontram-se nos comentários.
-
----
-
-### Requisitos
-
-- Requisitos Python em tempo de execução devem ser adicionados ao `pyproject.toml` na raiz desse repositório.
-- Requisitos do `manage.py` estão em `requirements-cli.txt`
-- Requisitos para a Action de deployment estão em `requirements-deploy.txt`
-- Requisitos para testes estão em `requirements-tests.txt`
 
 ----
 
