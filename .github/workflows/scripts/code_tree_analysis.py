@@ -502,10 +502,11 @@ if __name__ == "__main__":
     for owner in code_owners:
         print(f"\t- {owner}")
 
-    message += "**Os seguintes usuários devem ser avisados sobre a alteração:**"
-    for owner in code_owners:
-        message += f"\n\t- @{owner}"
-    message += "\n\n"
+    if len(code_owners) > 0:
+        message += "**Os seguintes usuários devem ser avisados sobre a alteração:**"
+        for owner in code_owners:
+            message += f"\n\t- @{owner}"
+        message += "\n\n"
 
     # Check for variable name conflicts.
     conflicts = check_for_variable_name_conflicts(changed_files, "pipelines/")
