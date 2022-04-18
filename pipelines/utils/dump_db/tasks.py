@@ -136,6 +136,7 @@ def extract_last_partition_date(partitions_dict: dict):
             last_partition_date = datetime.strptime(max(values), "%Y-%m-%d").strftime(
                 "%Y-%m-%d"
             )
+            log(f"{partition} is in date format Y-m-d")
         except ValueError:
             log(f"Partition {partition} is not a date")
     return last_partition_date
