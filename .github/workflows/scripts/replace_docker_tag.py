@@ -4,7 +4,7 @@ Opens the `constants.py` file and updates the
 """
 
 from pathlib import Path
-from sys import argv
+from sys import argv, exit
 from typing import List
 
 
@@ -19,6 +19,7 @@ def get_name_version_from_args() -> List[str]:
     """
     if len(argv) != 3:
         print("Usage: replace_docker_tag.py <image_name> <version>")
+        exit(1)
     return argv[1], argv[2]
 
 
