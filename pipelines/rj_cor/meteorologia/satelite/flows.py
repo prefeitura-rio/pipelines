@@ -25,42 +25,47 @@ with Flow("COR: Meteorologia - Satelite GOES 16") as cor_meteorologia_goes16:
     ano, mes, dia, hora, dia_juliano = slice_data(current_time=CURRENT_TIME)
 
     # Para taxa de precipitação
-    VARIAVEL = "RRQPEF"
-    DATASET_ID = "meio_ambiente_clima"
-    TABLE_ID = "satelite_taxa_precipitacao"
+    VARIAVEL_RR = "RRQPEF"
+    DATASET_ID_RR = "meio_ambiente_clima"
+    TABLE_ID_RR = "satelite_taxa_precipitacao"
     DUMP_TYPE = "append"
 
-    filename = download(variavel=VARIAVEL, ano=ano, dia_juliano=dia_juliano, hora=hora)
-    info = tratar_dados(filename=filename)
-    path, partitions = salvar_parquet(info=info)
+    filename_rr = download(
+        variavel=VARIAVEL_RR, ano=ano, dia_juliano=dia_juliano, hora=hora
+    )
+
+    info_rr = tratar_dados(filename=filename_rr)
+    path_rr, partitions_rr = salvar_parquet(info=info_rr)
 
     # Create table in BigQuery
     create_table_and_upload_to_gcs(
-        data_path=path,
-        dataset_id=DATASET_ID,
-        table_id=TABLE_ID,
+        data_path=path_rr,
+        dataset_id=DATASET_ID_RR,
+        table_id=TABLE_ID_RR,
         dump_type=DUMP_TYPE,
-        partitions=partitions,
-        wait=path,
+        partitions=partitions_rr,
+        wait=path_rr,
     )
 
     # Para quantidade de água precipitável
-    VARIAVEL = "TPWF"
-    DATASET_ID = "meio_ambiente_clima"
-    TABLE_ID = "satelite_quantidade_agua_precipitavel"
+    VARIAVEL_TPW = "TPWF"
+    DATASET_ID_TPW = "meio_ambiente_clima"
+    TABLE_ID_TPW = "satelite_quantidade_agua_precipitavel"
 
-    filename = download(variavel=VARIAVEL, ano=ano, dia_juliano=dia_juliano, hora=hora)
-    info = tratar_dados(filename=filename)
-    path, partitions = salvar_parquet(info=info)
+    filename_tpw = download(
+        variavel=VARIAVEL_TPW, ano=ano, dia_juliano=dia_juliano, hora=hora
+    )
 
-    # Create table in BigQuery
-    create_table_and_upload_to_gcs(
-        data_path=path,
-        dataset_id=DATASET_ID,
-        table_id=TABLE_ID,
+    info_tpw = tratar_dados(filename=filename_tpw)
+    path_tpw, partitions_tpw = salvar_parquet(info=info_tpw)
+
+    waiting_tpw = create_table_and_upload_to_gcs(
+        data_path=path_tpw,
+        dataset_id=DATASET_ID_TPW,
+        table_id=TABLE_ID_TPW,
         dump_type=DUMP_TYPE,
-        partitions=partitions,
-        wait=path,
+        partitions=partitions_tpw,
+        wait=path_tpw,
     )
 
 # para rodar na cloud
