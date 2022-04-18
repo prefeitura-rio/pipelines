@@ -83,8 +83,9 @@ with Flow("Captura_GPS_STPL") as stpl_captura:
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
     url = Parameter("url")
-    headers = get_vault_secret("stpl_api")["data"]
     key_column = Parameter("key_column")
+
+    headers = get_vault_secret("stpl_api")["data"]
 
     file_dict = create_current_date_hour_partition()
 
@@ -110,14 +111,14 @@ with Flow("Captura_GPS_STPL") as stpl_captura:
         error=status_dict["error"],
     )
 
-    treatd_filepath = save_treated_local(
+    treated_filepath = save_treated_local(
         dataframe=treated_status["df"], file_path=filepath
     )
 
     bq_upload(
         dataset_id=dataset_id,
         table_id=table_id,
-        filepath=treatd_filepath,
+        filepath=treated_filepath,
         raw_filepath=raw_filepath,
         partitions=file_dict["partitions"],
     )

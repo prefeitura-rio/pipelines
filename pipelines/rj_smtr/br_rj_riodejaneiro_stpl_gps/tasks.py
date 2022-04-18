@@ -91,7 +91,7 @@ def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict, key_column):
     df = pd.DataFrame(columns=columns)
     timestamp_captura = pd.to_datetime(timestamp)
     # separate each nested piece in data into a row
-    df["content"] = [piece for piece in data]
+    df["content"] = list(data)
     # retrive key field from each nested piece in data
     df[key_column] = [piece[key_column] for piece in data]
     df["dataHora"] = [piece["dataHora"] for piece in data]
