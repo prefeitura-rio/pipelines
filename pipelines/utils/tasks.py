@@ -6,15 +6,34 @@ from datetime import timedelta
 from os import walk
 from os.path import join
 from pathlib import Path
-from typing import Union
+from typing import List, Union
 from uuid import uuid4
 
 import basedosdados as bd
 import pandas as pd
+import prefect
 from prefect import task
+from prefect.backend import FlowRunView
 
 from pipelines.constants import constants
 from pipelines.utils.utils import get_username_and_password_from_secret, log
+
+##################
+#
+# Utilities for flow management
+#
+##################
+
+
+@task
+def get_current_flow_labels() -> List[str]:
+    """
+    Get the labels of the current flow.
+    """
+    flow_run_id = prefect.context.get("flow_run_id")
+    flow_run_view = FlowRunView.from_flow_run_id(flow_run_id)
+    return flow_run_view.labels
+
 
 ##################
 #

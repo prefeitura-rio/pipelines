@@ -5,14 +5,15 @@ DBT-related flows.
 
 from copy import deepcopy
 
+from prefect.run_configs import KubernetesRun
+from prefect.storage import GCS
+
 from pipelines.constants import constants
 from pipelines.rj_escritorio.dados_mestres_dbt.schedules import (
     dados_mestresdaily_update_schedule,
     dados_mestresweekly_update_schedule,
 )
 from pipelines.utils.execute_dbt_model.flows import run_dbt_model_flow
-from prefect.run_configs import KubernetesRun
-from prefect.storage import GCS
 
 run_dbt_dados_mestresflow = deepcopy(run_dbt_model_flow)
 run_dbt_dados_mestresflow.name = "EMD: dados_mestres - Materializar tabelas DBT"

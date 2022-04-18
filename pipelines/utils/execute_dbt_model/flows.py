@@ -10,6 +10,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 from pipelines.constants import constants
+from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.execute_dbt_model.tasks import (
     get_k8s_dbt_client,
     run_dbt_model,
@@ -18,7 +19,7 @@ from pipelines.utils.execute_dbt_model.tasks import (
 from pipelines.utils.utils import notify_discord_on_failure
 
 with Flow(
-    name="EMD: template - Executa DBT model",
+    name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
     on_failure=partial(
         notify_discord_on_failure,
         secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value,

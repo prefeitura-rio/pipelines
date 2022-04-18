@@ -9,12 +9,16 @@ from uuid import uuid4
 from prefect import Flow, Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
+from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
+from prefect.tasks.prefect.flow_run_rename import RenameFlowRun
 
 from pipelines.constants import constants
+from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.dump_db.db import Database
 
 from pipelines.utils.tasks import (
     create_bd_table,
+    get_current_flow_labels,
     upload_to_gcs,
     dump_header_to_csv,
 )
@@ -51,6 +55,14 @@ with Flow(
     partition_column = Parameter("partition_column", required=False)
     lower_bound_date = Parameter("lower_bound_date", required=False)
 
+    # Materialization parameters
+    materialize_after_dump = Parameter(
+        "materialize_after_dump", default=False, required=False
+    )
+    materialization_mode = Parameter(
+        "materialization_mode", required=False, default="dev"
+    )
+
     # Use Vault for credentials
     secret_path = Parameter("vault_secret_path")
 
@@ -61,6 +73,13 @@ with Flow(
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
     dump_type = Parameter("dump_type", default="append")  # overwrite or append
+
+    #####################################
+    #
+    # Rename flow run
+    #
+    #####################################
+    rename_flow_run = RenameFlowRun(flow_run_name=f"Dump {dataset_id}.{table_id}")
 
     #####################################
     #
@@ -115,12 +134,12 @@ with Flow(
 
     # TODO: Skip all downstream tasks if no data was dumped
 
-    EXISTS = check_table_exists(
+    table_exists = check_table_exists(  # pylint: disable=invalid-name
         dataset_id=dataset_id, table_id=table_id, wait=batches_path
     )
 
     # Create header and table if they don't exists
-    with case(EXISTS, False):
+    with case(table_exists, False):
 
         # Create CSV file with headers
         header_path = dump_header_to_csv(
@@ -151,13 +170,34 @@ with Flow(
             wait=create_db,
         )
 
-    with case(EXISTS, True):
+    with case(table_exists, True):
         # Upload to GCS
         upload_to_gcs(
             path=batches_path,
             dataset_id=dataset_id,
             table_id=table_id,
-            wait=EXISTS,
+            wait=table_exists,
+        )
+
+    with case(materialize_after_dump, True):
+        # Trigger DBT flow run
+        current_flow_labels = get_current_flow_labels()
+        materialization_flow = create_flow_run(
+            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+            parameters={
+                "dataset_id": dataset_id,
+                "table_id": table_id,
+                "mode": materialization_mode,
+            },
+            labels=current_flow_labels,
+            run_name=f"Materialize {dataset_id}.{table_id}",
+        )
+        wait_for_materialization = wait_for_flow_run(
+            materialization_flow,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
         )
 
 dump_sql_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
