@@ -17,6 +17,7 @@ from pipelines.constants import constants
 
 # from pipelines.rj_cor.meteorologia.meteorologia_inmet.meteorologia_utils import converte_timezone
 
+
 @task()
 def get_dates() -> Tuple[str, str]:
     """
@@ -192,8 +193,8 @@ def tratar_dados(dados: pd.DataFrame) -> Tuple[pd.DataFrame, str]:
 
     # Seleciona apenas dados daquele dia (devido à UTC)
     dados = dados[dados["data"] == max_date]
-    
-    # Remove linhas com todos os dados nan 
+
+    # Remove linhas com todos os dados nan
     dados = dados.dropna(subset=float_cols, how='all')
 
     partitions = f"ano={ano}/mes={mes}/dia={dia}"
