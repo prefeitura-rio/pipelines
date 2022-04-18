@@ -230,7 +230,7 @@ def create_table_and_upload_to_gcs(
 
         st.delete_table(mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
         log(
-            f"MODE OVERWRITE: Sucessfully REMOVED HEADER DATA from Storage:"
+            f"MODE OVERWRITE: Sucessfully REMOVED HEADER DATA from Storage\n:"
             f"{storage_path}\n"
             f"{storage_path_link}"
         )  # pylint: disable=C0301
