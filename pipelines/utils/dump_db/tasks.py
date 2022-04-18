@@ -149,7 +149,7 @@ def format_partitioned_query(
     )
 
     # extract only partitioned folders
-    filter_partitions_folders = lambda blob: "=" in blob
+    filter_partitions_folders = lambda blob_folder: "=" in blob_folder
     get_partitions_folders = lambda blob: (
         "/".join(filter(filter_partitions_folders, blob.name.split("/")))
     )
