@@ -103,6 +103,15 @@ def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-l
             parameter_defaults["partition_column"] = parameters["partition_column"]
         if "lower_bound_date" in parameters:
             parameter_defaults["lower_bound_date"] = parameters["lower_bound_date"]
+        if "materialize_after_dump" in parameters:
+            parameter_defaults["materialize_after_dump"] = parameters[
+                "materialize_after_dump"
+            ]
+        if "materialization_mode" in parameters:
+            parameter_defaults["materialization_mode"] = parameters[
+                "materialization_mode"
+            ]
+
         clocks.append(
             IntervalClock(
                 interval=interval,

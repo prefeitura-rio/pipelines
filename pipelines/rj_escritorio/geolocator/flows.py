@@ -60,9 +60,10 @@ Flows for geolocator
 ###############################################################################
 
 
-from prefect import Flow
+from prefect import Flow, Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
+from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 
 from pipelines.constants import constants
 from pipelines.rj_escritorio.geolocator.constants import (
@@ -75,10 +76,24 @@ from pipelines.rj_escritorio.geolocator.tasks import (
     geolocaliza_enderecos,
     importa_bases_e_chamados,
 )
-from pipelines.utils.tasks import upload_to_gcs
+from pipelines.utils.constants import constants as utils_constants
+from pipelines.utils.tasks import (
+    upload_to_gcs,
+    get_current_flow_labels,
+)
 
 with Flow("EMD: escritorio - Geolocalizacao de chamados 1746") as daily_geolocator_flow:
     # [enderecos_conhecidos, enderecos_ontem, chamados_ontem, base_enderecos_atual]
+    # Materialization parameters
+    materialize_after_dump = Parameter(
+        "materialize_after_dump", default=False, required=False
+    )
+    materialization_mode = Parameter(
+        "materialization_mode", required=False, default="dev"
+    )
+    dataset_id = geolocator_constants.DATASET_ID.value
+    table_id = geolocator_constants.TABLE_ID.value
+
     lista_enderecos = importa_bases_e_chamados()
     novos_enderecos = enderecos_novos(
         lista_enderecos=lista_enderecos, upstream_tasks=[lista_enderecos]
@@ -93,10 +108,31 @@ with Flow("EMD: escritorio - Geolocalizacao de chamados 1746") as daily_geolocat
     )
     upload_to_gcs(
         path=geolocator_constants.PATH_BASE_ENDERECOS.value,
-        dataset_id=geolocator_constants.DATASET_ID.value,
-        table_id=geolocator_constants.TABLE_ID.value,
+        dataset_id=dataset_id,
+        table_id=table_id,
         upstream_tasks=[csv_criado],
     )
+
+    with case(materialize_after_dump, True):
+        # Trigger DBT flow run
+        current_flow_labels = get_current_flow_labels()
+        materialization_flow = create_flow_run(
+            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+            parameters={
+                "dataset_id": dataset_id,
+                "table_id": table_id,
+                "mode": materialization_mode,
+            },
+            labels=current_flow_labels,
+            run_name=f"Materialize {dataset_id}.{table_id}",
+        )
+        wait_for_materialization = wait_for_flow_run(
+            materialization_flow,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
 
 daily_geolocator_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 daily_geolocator_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
