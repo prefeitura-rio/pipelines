@@ -64,11 +64,10 @@ from pipelines.rj_escritorio.geolocator.constants import (
     constants as geolocator_constants,
 )
 from pipelines.rj_escritorio.geolocator.schedules import every_day_at_four_am
-from pipelines.rj_escritorio.geolocator.tasks import (
+from pipelines.rj_escritorio.geolocator.tasks import (  # get_today,
     cria_csv,
     enderecos_novos,
     geolocaliza_enderecos,
-    get_today,
     importa_bases_e_chamados,
 )
 from pipelines.utils.constants import constants as utils_constants
@@ -102,10 +101,9 @@ with Flow("EMD: escritorio - Geolocalizacao de chamados 1746") as daily_geolocat
         base_enderecos_novos=base_geolocalizada,
         upstream_tasks=[base_geolocalizada],
     )
-    today = get_today()
+    # today = get_today()
     upload_to_gcs(
-        path=f"{geolocator_constants.PATH_BASE_ENDERECOS.value}_ \
-            {today}.csv",
+        path=geolocator_constants.PATH_BASE_ENDERECOS.value,
         dataset_id=geolocator_constants.DATASET_ID.value,
         table_id=geolocator_constants.TABLE_ID.value,
         upstream_tasks=[csv_criado],
