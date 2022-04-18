@@ -142,8 +142,19 @@ def format_partitioned_query(
 
     # If it does, get the last partition date.
     storage = bd.Storage(dataset_id=dataset_id, table_id=table_id)
-    blobs = list(storage.client["storage_staging"].bucket(storage.bucket_name).list_blobs(
-        prefix=f"staging/{storage.dataset_id}/{storage.table_id}/"))
+    blobs = list(
+        storage.client["storage_staging"]
+        .bucket(storage.bucket_name)
+        .list_blobs(prefix=f"staging/{storage.dataset_id}/{storage.table_id}/")
+    )
+
+    # extract only partitioned folders
+    filter_partitions_folders = lambda blob: "=" in blob
+    get_partitions_folders = lambda blob: (
+        "/".join(filter(filter_partitions_folders, blob.name.split("/")))
+    )
+    storage_partitions = list({get_partitions_folders(blob) for blob in blobs})
+
     # TODO: get last partition using blobs list
     last_partition_date = None
 
@@ -157,6 +168,7 @@ def format_partitioned_query(
     where {partition_column} >= '{last_partition_date}'
     order by {partition_column}
     """
+
 
 ###############
 #
