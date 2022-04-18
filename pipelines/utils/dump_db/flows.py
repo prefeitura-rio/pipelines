@@ -173,6 +173,7 @@ with Flow(
                 path=batches_path,
                 dataset_id=dataset_id,
                 table_id=table_id,
+                dump_type=dump_type,
                 wait=create_db,
             )
 
@@ -182,6 +183,7 @@ with Flow(
                 path=batches_path,
                 dataset_id=dataset_id,
                 table_id=table_id,
+                dump_type=dump_type,
                 wait=table_exists,
             )
 

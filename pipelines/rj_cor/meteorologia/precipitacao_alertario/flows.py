@@ -55,6 +55,7 @@ with Flow(
             dataset_id=DATASET_ID,
             table_id=TABLE_ID,
             partitions=partitions,
+            dump_type=DUMP_TYPE,
             wait=create_db,
         )
 
@@ -65,6 +66,7 @@ with Flow(
             dataset_id=DATASET_ID,
             table_id=TABLE_ID,
             partitions=partitions,
+            dump_type=DUMP_TYPE,
         )
 
 # para rodar na cloud

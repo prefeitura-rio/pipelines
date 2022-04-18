@@ -248,6 +248,7 @@ def upload_to_gcs(
     dataset_id: str,
     table_id: str,
     partitions=None,
+    dump_type: str = "append",
     wait=None,  # pylint: disable=unused-argument
 ) -> None:
     """
@@ -256,6 +257,10 @@ def upload_to_gcs(
     # pylint: disable=C0103
     tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
     # st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+
+    if dump_type == "overwrite":
+        st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+        st.delete_table(mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
 
     if tb.table_exists(mode="staging"):
         # the name of the files need to be the same or the data doesn't get overwritten

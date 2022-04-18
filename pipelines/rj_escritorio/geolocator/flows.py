@@ -107,6 +107,7 @@ with Flow("EMD: escritorio - Geolocalizacao de chamados 1746") as daily_geolocat
         path=geolocator_constants.PATH_BASE_ENDERECOS.value,
         dataset_id=dataset_id,
         table_id=table_id,
+        dump_type="append",
         upstream_tasks=[csv_criado],
     )
 

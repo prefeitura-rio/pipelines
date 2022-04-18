@@ -110,6 +110,7 @@ with Flow(
             path=datario_path,
             dataset_id=dataset_id,
             table_id=table_id,
+            dump_type=dump_type,
             wait=create_db,
         )
 
@@ -118,6 +119,7 @@ with Flow(
             path=datario_path,
             dataset_id=dataset_id,
             table_id=table_id,
+            dump_type=dump_type,
             wait=EXISTS,
         )
 
