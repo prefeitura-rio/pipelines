@@ -20,7 +20,7 @@ def get_clock(dataset_id, table_id, count):
     return IntervalClock(
         interval=timedelta(days=30),
         start_date=datetime(
-            2022, 1, 1, 8, 30, tzinfo=pytz.timezone("America/Sao_Paulo")
+            2022, 2, 15, 12, 5, tzinfo=pytz.timezone("America/Sao_Paulo")
         )
         + timedelta(minutes=3 * count),
         labels=[
