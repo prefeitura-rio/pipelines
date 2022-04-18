@@ -84,6 +84,7 @@ with Flow(
         user=user,
         password=password,
         database=database,
+        wait=user,
     )
 
     # Format partitioned query if required
@@ -93,35 +94,37 @@ with Flow(
         table_id=table_id,
         partition_column=partition_column,
         lower_bound_date=lower_bound_date,
+        wait=db_object,
     )
 
-    wait_db_execute = database_execute(  # pylint: disable=invalid-name
+    db_execute = database_execute(  # pylint: disable=invalid-name
         database=db_object,
         query=query,
+        wait=query,
     )
 
     # Dump batches to CSV files
-    wait_batches_path = dump_batches_to_csv(
+    batches_path = dump_batches_to_csv(
         database=db_object,
         batch_size=batch_size,
         prepath=f"data/{uuid4()}/",
         partition_column=partition_column,
-        wait=wait_db_execute,
+        wait=db_execute,
     )
 
     # Create CSV file with headers
-    wait_header_path = dump_header_to_csv(
-        data_path=wait_batches_path,
-        wait=wait_batches_path,
+    header_path = dump_header_to_csv(
+        data_path=batches_path,
+        wait=batches_path,
     )
 
     # Create table in BigQuery
-    wait_create_db = create_bd_table(  # pylint: disable=invalid-name
-        path=wait_header_path,
+    create_db = create_bd_table(  # pylint: disable=invalid-name
+        path=header_path,
         dataset_id=dataset_id,
         table_id=table_id,
         dump_type=dump_type,
-        wait=wait_header_path,
+        wait=header_path,
     )
 
     #####################################
@@ -132,10 +135,10 @@ with Flow(
 
     # Upload to GCS
     upload_to_gcs(
-        path=wait_batches_path,
+        path=batches_path,
         dataset_id=dataset_id,
         table_id=table_id,
-        wait=wait_create_db,
+        wait=create_db,
     )
 
 
@@ -193,7 +196,7 @@ with Flow(
         password=password,
         database=database,
     )
-    wait_db_execute = database_execute(  # pylint: disable=invalid-name
+    db_execute = database_execute(  # pylint: disable=invalid-name
         database=db_object,
         query=query,
     )
@@ -202,7 +205,7 @@ with Flow(
     database_fetch(
         database=db_object,
         batch_size=batch_size,
-        wait=wait_db_execute,
+        wait=db_execute,
     )
 run_sql_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 run_sql_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
