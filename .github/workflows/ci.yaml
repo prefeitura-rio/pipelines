@@ -25,6 +25,10 @@ jobs:
       - name: Install test dependencies
         run: |
           pip install --prefer-binary -r requirements-test.txt
+      - name: Install GDAL for osgeo deps
+        run: |
+          curl -sSLo ./GDAL-3.4.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl https://sourceforge.net/projects/gdal-wheels-for-linux/files/GDAL-3.4.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl/download
+          python -m pip install --no-cache-dir ./GDAL-3.4.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl
       - name: Install flows
         run: |
           pip install --prefer-binary .
