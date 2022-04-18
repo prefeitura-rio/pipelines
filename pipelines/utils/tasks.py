@@ -132,7 +132,10 @@ def create_table_and_upload_to_gcs(
     # pylint: disable=C0103
     st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
     storage_path = f"{st.bucket_name}.staging.{dataset_id}.{table_id}"
-    storage_path_link = f"https://console.cloud.google.com/storage/browser/{st.bucket_name}/staging/{dataset_id}/{table_id}"
+    storage_path_link = (
+        f"https://console.cloud.google.com/storage/browser/{st.bucket_name}"
+        f"/staging/{dataset_id}/{table_id}"
+    )
 
     # prod datasets is public if the project is datario. staging are private im both projects
     dataset_is_public = tb.client["bigquery_prod"].project == "datario"
