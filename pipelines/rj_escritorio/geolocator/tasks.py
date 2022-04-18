@@ -9,12 +9,13 @@ import time
 import basedosdados as bd
 import pandas as pd
 import prefect
+from prefect import task
+
 from pipelines.rj_escritorio.geolocator.constants import (
     constants as geolocator_constants,
 )
 from pipelines.rj_escritorio.geolocator.utils import geolocator
 from pipelines.utils.utils import log
-from prefect import task
 
 
 # Importando os dados
