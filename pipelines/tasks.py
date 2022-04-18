@@ -16,7 +16,7 @@ from pipelines.utils import (
 ##################
 
 
-@task(checkpoint=False)
+@task(checkpoint=False, nout=2)
 def get_user_and_password(secret_path: str):
     """
     Returns the user and password for the given secret path.
