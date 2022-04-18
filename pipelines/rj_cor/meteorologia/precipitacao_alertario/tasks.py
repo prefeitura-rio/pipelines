@@ -14,6 +14,7 @@ import pendulum
 from prefect import task
 
 from pipelines.constants import constants
+from pipelines.utils.utils import get_username_and_password_from_secret
 
 ###################################################################################
 ######## Ver de trocar o nome da coluna data_medição e deixar padronizado #########
@@ -25,18 +26,18 @@ from pipelines.constants import constants
     )
 def download() -> Tuple[pd.DataFrame, str]:
     '''
-    Faz o request na data especificado e retorna dados
-    Tentando conseguir com o sardinha o ftp que permite
-    termos os dados atualizados a cada 5 minutos
+    Faz o request e salva dados localmente
     '''
+
     # Acessar FTP Riomidia
-    #### colocar no .env
     host = '187.111.97.195'
     dirname = '/alertario/'
     filename = 'EstacoesMapa.txt'
-    username = 'escdados'
-    password = ''
 
+    # Acessar username e password
+    username, password = get_username_and_password_from_secret('ftp_riomidia')
+
+    # Cria pasta para salvar arquivo de download
     base_path = os.path.join(os.getcwd(),'data', 'precipitacao_alertario', 'input')
 
     if not os.path.exists(base_path):
@@ -78,7 +79,7 @@ def download() -> Tuple[pd.DataFrame, str]:
 
     ftp.quit()
 
-    # Hora atual no formato YYYYMMDDHHmm
+    # Hora atual no formato YYYYMMDDHHmm para criar partições
     current_time = pendulum.now('America/Sao_Paulo').strftime("%Y%m%d%H%M")
 
     return save_on, current_time
@@ -90,7 +91,9 @@ def tratar_dados(filename: Union[str, Path]) -> pd.DataFrame:
     Renomeia colunas e filtra dados com a hora e minuto do timestamp
     de execução mais próximo à este
     '''
-    colunas = ['id', 'estacao', 'localizacao', 'data_medicao', 'latitude', 'longitude',
+
+    colunas = ['id', 'estacao', 'localizacao', 'data_medicao',
+                'latitude', 'longitude',
                 'acumulado_chuva_15_min', 'acumulado_chuva_1_h',
                 'acumulado_chuva_4_h', 'acumulado_chuva_24_h',
                 'acumulado_chuva_96_h', 'acumulado_chuva_mes']
@@ -99,7 +102,6 @@ def tratar_dados(filename: Union[str, Path]) -> pd.DataFrame:
 
     # Adequando formato de data
     dados['data_medicao'] = pd.to_datetime(dados['data_medicao'], format='%H:%M - %d/%m/%Y')
-
 
     # Ordenação de variáveis
     cols_order = [
@@ -133,7 +135,7 @@ def tratar_dados(filename: Union[str, Path]) -> pd.DataFrame:
 @task(nout=2)
 def salvar_dados(dados: pd.DataFrame, current_time: str) -> Tuple[Union[str, Path], str]:
     '''
-    Salvar dados em csv
+    Salvar dados tratados em csv para conseguir subir pro GCP
     '''
 
     ano = current_time[:4]
