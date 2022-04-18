@@ -59,9 +59,11 @@ def create_or_append_table(dataset_id, table_id, path):
         )
         log("Appended to table on STAGING successfully.")
 
-    if not tb_obj.table_exists("prod"):
-        log("Table does not exist in PROD, publishing...")
-        tb_obj.publish(if_exists="pass")
-        log("Published table in PROD successfully.")
-    else:
-        log("Table already published in PROD.")
+
+# Removed due to future use of DBT for managing publishing
+# if not tb_obj.table_exists("prod"):
+#     log("Table does not exist in PROD, publishing...")
+#     tb_obj.publish(if_exists="pass")
+#     log("Published table in PROD successfully.")
+# else:
+#     log("Table already published in PROD.")
