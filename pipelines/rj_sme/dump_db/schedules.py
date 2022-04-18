@@ -19,20 +19,16 @@ from pipelines.utils.utils import untuple_clocks as untuple
 #
 #####################################
 sme_queries = {
-    "turma": {
-        "dump_type": "overwrite",
-        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Turma",
-    },
-    "dependencia": {
-        "dump_type": "overwrite",
-        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Dependencia",
-    },
     "avaliacao": {
-        "dump_type": "overwrite",
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "dump_type": "overwrite",  # TODO: check if it is possible to partition, this run takes over 1 hour
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Avaliacao",
     },
-    "aluno_turma_coc": {
-        "dump_type": "overwrite",
+    "coc": {
+        "dump_type": "overwrite",  # TODO: check if it is possible to partition, this run takes over 1 hour
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
         "execute_query": """
             SELECT
                 Ano AS Ano,
@@ -59,37 +55,11 @@ sme_queries = {
             FROM GestaoEscolar.dbo.VW_BI_Aluno_Turma_COC
         """,
     },
-    "aluno_tuma_coc0": {
-        "dump_type": "overwrite",
-        "execute_query": """
-            SELECT
-                Ano AS Ano,
-                CRE AS CRE,
-                Unidade AS Unidade,
-                Grupamento AS Grupamento,
-                Turma AS Turma,
-                Turno AS Turno,
-                COC AS COC,
-                Turmas AS Turmas,
-                Alunos AS Alunos,
-                Masculinos AS Masculinos,
-                Femininos AS Femininos,
-                Não_Def AS Nao_Def,
-                Def AS Def,
-                Masculinos_Não_Def AS Masculinos_Nao_Def,
-                Masculinos_Def AS Masculinos_Def,
-                Femininos_Não_Def AS Femininos_Nao_Def,
-                Femininos_Def AS Femininos_Def,
-                Vagas AS Vagas,
-                capacidade AS capacidade,
-                tur_id AS tur_id,
-                pft_capacidade AS pft_capacidade
-            FROM GestaoEscolar.dbo.VW_BI_Aluno_Turma_com_COC0
-        """,
-    },
     "frequencia": {
         "partition_column": "datainicio",
         "lower_bound_date": "2022-03-01",
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
         "dump_type": "append",
         "execute_query": """
             SELECT
@@ -111,7 +81,29 @@ sme_queries = {
             FROM GestaoEscolar.dbo.VW_BI_Frequencia
         """,
     },
+    "movimentacao": {
+        "partition_column": "data_mov",
+        "lower_bound_date": "2022-03-01",
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "dump_type": "append",
+        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Movimentacao_lgpd",
+    },
+    "turma": {
+        "dump_type": "overwrite",
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Turma",
+    },
+    "dependencia": {
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "dump_type": "overwrite",
+        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Dependencia",
+    },
     "escola": {
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
         "dump_type": "overwrite",
         "execute_query": """
             SELECT
@@ -138,6 +130,8 @@ sme_queries = {
         """,
     },
     "aluno": {
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
         "dump_type": "overwrite",
         "execute_query": """
             SELECT
