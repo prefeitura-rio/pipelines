@@ -64,16 +64,20 @@ from prefect.storage import GCS
 from pipelines.constants import constants
 from pipelines.rj_escritorio.geolocator.tasks import importa_bases_e_chamados, cria_csv, geolocaliza_enderecos, enderecos_novos
 from pipelines.rj_escritorio.geolocator.constants import constants as geolocator_constants
-from pipelines.rj_escritorio.geolocator.schedules import every_day_at_four_am
-from pipelines.utils.tasks import upload_to_gcs 
+# from pipelines.rj_escritorio.geolocator.schedules import every_day_at_four_am
+from pipelines.utils.tasks import upload_to_gcs
 
 with Flow("my_flow") as flow:
     #[enderecos_conhecidos, enderecos_ontem, chamados_ontem, base_enderecos_atual]
     lista_enderecos = importa_bases_e_chamados()
-    novos_enderecos = enderecos_novos(lista_enderecos, upstream_tasks=[lista_enderecos])
-    base_geolocalizada = geolocaliza_enderecos(novos_enderecos, upstream_tasks=[novos_enderecos])
-    csv_criado = cria_csv(lista_enderecos[3], base_geolocalizada, upstream_tasks=[base_geolocalizada])
-    upload_to_gcs(geolocator_constants.PATH_BASE_ENDERECOS.value, geolocator_constants.DATASET_ID.value, geolocator_constants.TABLE_ID.value, upstream_tasks=[csv_criado])
+    novos_enderecos = enderecos_novos(lista_enderecos, upstream_tasks=[  # pylint: disable=E1123
+                                      lista_enderecos])
+    base_geolocalizada = geolocaliza_enderecos(novos_enderecos, upstream_tasks=[  # pylint: disable=E1123
+                                               novos_enderecos])
+    csv_criado = cria_csv(lista_enderecos[3], base_geolocalizada, upstream_tasks=[  # pylint: disable=E1123,C0103
+                          base_geolocalizada])
+    upload_to_gcs(geolocator_constants.PATH_BASE_ENDERECOS.value, geolocator_constants.DATASET_ID.value,  # pylint: disable=E1123
+                  geolocator_constants.TABLE_ID.value, upstream_tasks=[csv_criado])
 
 flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)

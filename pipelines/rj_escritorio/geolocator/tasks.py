@@ -60,7 +60,7 @@ from pipelines.rj_escritorio.geolocator.constants import constants as geolocator
 from pipelines.utils.utils import log
 
 
-#Importando os dados
+# Importando os dados
 @task
 def importa_bases_e_chamados() -> list:
     """
@@ -69,12 +69,12 @@ def importa_bases_e_chamados() -> list:
     query = '''
     SELECT * FROM `rj-escritorio-dev.seconserva_buracos.habitacao_urbana_enderecos_geolocalizados`
     '''
-    base_enderecos_atual = bd.read_sql(query, billing_project_id="rj-escritorio-dev", from_file=True)
+    base_enderecos_atual = bd.read_sql(
+        query, billing_project_id="rj-escritorio-dev", from_file=True)
     enderecos_conhecidos = base_enderecos_atual['endereco_completo']
 
-
-    d1 = context.get("today")
-    d2 = context.get("yesterday")
+    d1 = context.get("today")  # pylint: disable=invalid-name
+    d2 = context.get("yesterday")  # pylint: disable=invalid-name
     query_2 = f'''
     with teste as (
     SELECT 
@@ -92,22 +92,29 @@ def importa_bases_e_chamados() -> list:
     )
     select distinct endereco_completo, pais, estado, municipio, bairro, logradouro, numero_porta from teste
     '''
-    chamados_ontem = bd.read_sql(query_2, billing_project_id="rj-escritorio-dev", from_file=True)
+    chamados_ontem = bd.read_sql(
+        query_2, billing_project_id="rj-escritorio-dev", from_file=True)
     enderecos_ontem = chamados_ontem['endereco_completo']
 
     return [enderecos_conhecidos, enderecos_ontem, chamados_ontem, base_enderecos_atual]
 
-#Pegando apenas os endereços NOVOS que entraram ontem
+# Pegando apenas os endereços NOVOS que entraram ontem
+
+
 @task
 def enderecos_novos(lista_enderecos: list) -> pd.DataFrame:
     """
     Retorna apenas os endereços não catalogados que entraram no dia anterior
     """
-    novos_enderecos = lista_enderecos[1][~lista_enderecos[1].isin(lista_enderecos[0])]
-    base_enderecos_novos = lista_enderecos[2][lista_enderecos[2]['endereco_completo'].isin(novos_enderecos)]
+    novos_enderecos = lista_enderecos[1][~lista_enderecos[1].isin(
+        lista_enderecos[0])]
+    base_enderecos_novos = lista_enderecos[2][lista_enderecos[2]['endereco_completo'].isin(
+        novos_enderecos)]
     return base_enderecos_novos
 
-#Geolocalizando
+# Geolocalizando
+
+
 @task
 def geolocaliza_enderecos(base_enderecos_novos: pd.DataFrame):
     """
@@ -115,20 +122,25 @@ def geolocaliza_enderecos(base_enderecos_novos: pd.DataFrame):
     """
     start_time = time.time()
 
-    coordenadas = base_enderecos_novos['endereco_completo'].apply(lambda x : pd.Series(geolocator(x), index=['lat', 'long']))
+    coordenadas = base_enderecos_novos['endereco_completo'].apply(
+        lambda x: pd.Series(geolocator(x), index=['lat', 'long']))
 
-    log("--- %s seconds ---" % (time.time() - start_time))
+    log(f"--- {(time.time() - start_time)} seconds ---")
 
     base_enderecos_novos['latitude'] = coordenadas['lat']
     base_enderecos_novos['longitude'] = coordenadas['long']
 
     return base_enderecos_novos
 
-#Adicionando os endereços novos geolocalizados na base de endereços que já possuímos
+# Adicionando os endereços novos geolocalizados na base de endereços que já possuímos
+
+
 @task
 def cria_csv(base_enderecos_atual, base_enderecos_novos):
     """
     Une os endereços previamente catalogados com os novos e cria um csv.
     """
-    base_enderecos_atualizada = base_enderecos_atual.append(base_enderecos_novos, ignore_index=True)
-    base_enderecos_atualizada.to_csv(geolocator_constants.PATH_BASE_ENDERECOS.value, index=False)
+    base_enderecos_atualizada = base_enderecos_atual.append(
+        base_enderecos_novos, ignore_index=True)
+    base_enderecos_atualizada.to_csv(
+        geolocator_constants.PATH_BASE_ENDERECOS.value, index=False)
