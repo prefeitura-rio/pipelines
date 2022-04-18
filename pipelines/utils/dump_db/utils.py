@@ -68,6 +68,7 @@ def to_partitions(data: pd.DataFrame, partition_columns: List[str], savepath: st
 
         savepath = Path(savepath)
 
+        # create unique combinations between partition columns
         unique_combinations = (
             data[partition_columns]
             .drop_duplicates(subset=partition_columns)
@@ -79,9 +80,8 @@ def to_partitions(data: pd.DataFrame, partition_columns: List[str], savepath: st
                 f"{partition}={value}"
                 for partition, value in filter_combination.items()
             ]
-            filter_save_path = Path(savepath / "/".join(patitions_values))
-            filter_save_path.mkdir(parents=True, exist_ok=True)
 
+            # get filtered data
             df_filter = data.loc[
                 data[filter_combination.keys()]
                 .isin(filter_combination.values())
@@ -90,9 +90,17 @@ def to_partitions(data: pd.DataFrame, partition_columns: List[str], savepath: st
             ]
             df_filter = df_filter.drop(columns=partition_columns)
 
-            file_path = Path(filter_save_path) / "data.csv"
+            # create folder tree
+            filter_save_path = Path(savepath / "/".join(patitions_values))
+            filter_save_path.mkdir(parents=True, exist_ok=True)
+            file_filter_save_path = Path(filter_save_path) / "data.csv"
+
+            # append data to csv
             df_filter.to_csv(
-                file_path, index=False, mode="a", header=not file_path.exists()
+                file_filter_save_path,
+                index=False,
+                mode="a",
+                header=not file_filter_save_path.exists(),
             )
     else:
         raise BaseException("Data need to be a pandas DataFrame")
@@ -110,11 +118,11 @@ def parse_date_columns(
     cols = [ano_col, mes_col, data_col]
     for col in cols:
         if col in dataframe.columns:
-            raise ValueError(
-                f"Column {col} already exists, please review your model.")
-    dataframe[data_col] = pd.to_datetime(
-        dataframe[partition_date_column])
+            raise ValueError(f"Column {col} already exists, please review your model.")
+
+    dataframe[data_col] = pd.to_datetime(dataframe[partition_date_column])
     dataframe[ano_col] = dataframe[data_col].dt.year
     dataframe[mes_col] = dataframe[data_col].dt.month
     dataframe[data_col] = dataframe[data_col].dt.date
+
     return dataframe, [ano_col, mes_col, data_col]
