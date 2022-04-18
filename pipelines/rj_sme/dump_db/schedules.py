@@ -178,9 +178,7 @@ sme_queries = {
 sme_clocks = [
     IntervalClock(
         interval=timedelta(days=1),
-        start_date=datetime(
-            2022, 1, 1, 3, 20, tzinfo=pytz.timezone("America/Sao_Paulo")
-        )
+        start_date=datetime(2022, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo"))
         + timedelta(minutes=15 * count),
         labels=[
             constants.RJ_SME_AGENT_LABEL.value,

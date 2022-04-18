@@ -141,7 +141,7 @@ ergon_clocks = [
     IntervalClock(
         interval=timedelta(days=30),
         start_date=datetime(
-            2022, 3, 12, 3, 20, tzinfo=pytz.timezone("America/Sao_Paulo")
+            2022, 3, 12, 3, 0, tzinfo=pytz.timezone("America/Sao_Paulo")
         )
         + timedelta(minutes=3 * count),
         labels=[
