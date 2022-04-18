@@ -20,6 +20,9 @@ from pipelines.utils.utils import query_to_line, untuple_clocks as untuple
 sme_queries = {
     "turma": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Turma",
     "dependencia": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Dependencia",
+    "avaliacao": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Avaliacao",
+    "aluno_turma_coc": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Aluno_Turma_COC",
+    "aluno_tuma_coc0": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Aluno_Turma_com_COC0",
     # POR ENQUANTO frequencia USA DADOS DE 2019, NAO PRECISA ATUALIZAR DIARIAMENTE
     # "frequencia": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Frequencia",
     "escola": """
