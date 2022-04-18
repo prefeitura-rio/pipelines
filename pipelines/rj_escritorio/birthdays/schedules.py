@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Schedules for the daily birthday flow.
 """

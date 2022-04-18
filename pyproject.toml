@@ -27,6 +27,9 @@ s3fs = "^2022.2.0"
 Shapely = "^1.8.1"
 tweepy = "4.4"
 xarray = "^2022.3.0"
+rasterio = "1.2.10"
+rioxarray = "0.9.0"
+loguru = "^0.6.0"
 
 
 
@@ -67,10 +70,12 @@ python-box = {version = "^5.4.1"}
 # optional = true
 
 # [tool.poetry.group.dev.dependencies]
+black = "^22.1.0"
+flake8 = "^4.0.1"
+pre-commit = "^2.17.0"
 
 [tool.poetry.scripts]
 lint = "scripts.lint:main"
-
 
 [build-system]
 build-backend = "poetry.core.masonry.api"

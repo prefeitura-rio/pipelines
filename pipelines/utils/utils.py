@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 General utilities for all pipelines.
 """
@@ -111,7 +112,7 @@ def run_local(flow: prefect.Flow, parameters: Dict[str, Any] = None):
     # Run flow
     if parameters:
         return flow.run(parameters=parameters)
-    return flow.run(show_flow_logs=True)
+    return flow.run()
 
 
 def run_cloud(
@@ -259,7 +260,14 @@ def clean_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
                     .replace("None", np.nan, regex=True)
                 )
             except Exception as exc:
-                print("Column: ", col, "\nData: ", dataframe[col].tolist(), "\n", exc)
+                print(
+                    "Column: ",
+                    col,
+                    "\nData: ",
+                    dataframe[col].tolist(),
+                    "\n",
+                    exc,
+                )
                 raise
     return dataframe
 

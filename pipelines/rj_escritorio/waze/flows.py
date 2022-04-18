@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Flows for emd
 """
@@ -35,7 +36,9 @@ with Flow(
     df = normalize_data(responses=res)
 
     upload_to_native_table(
-        dataset_id="transporte_rodoviario_waze", table_id="alertas", dataframe=df
+        dataset_id="transporte_rodoviario_waze",
+        table_id="alertas",
+        dataframe=df,
     )
 
 flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)

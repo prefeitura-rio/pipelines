@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Prefect flows for {{cookiecutter.project_name}} project
+Prefect flows for precipitacao_alertario project
 """
 ###############################################################################
 # Automatically managed, please do not touch
 ###############################################################################
-from pipelines.{{cookiecutter.project_name}}.flows import *
-from pipelines.{{cookiecutter.project_name}}.{{cookiecutter.workspace_name}}.flows import *

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Schedules for emd
 """
@@ -81,7 +82,7 @@ every_two_weeks = Schedule(
             start_date=datetime(2021, 1, 1),
             labels=[
                 constants.K8S_AGENT_LABEL.value,
-            ]
+            ],
         ),
     ]
 )

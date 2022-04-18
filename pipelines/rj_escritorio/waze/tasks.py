@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+# flake8: noqa: E501
 """
 Tasks for emd
 """
@@ -170,8 +172,7 @@ def normalize_data(responses: list) -> pd.DataFrame:
                     "street": dictionary.get("street"),
                     "type": dictionary.get("type"),
                     "subtype": dictionary.get("subtype"),
-                    # TODO change to road_type
-                    "roadType": dictionary.get("roadType"),
+                    "road_type": dictionary.get("roadType"),
                     "reliability": dictionary.get("reliability"),
                     "confidence": dictionary.get("confidence"),
                     "number_thumbs_up": dictionary.get("nThumbsUp"),
@@ -179,7 +180,9 @@ def normalize_data(responses: list) -> pd.DataFrame:
                     "report_mood": dictionary.get("reportMood"),
                     "magvar": dictionary.get("magvar"),
                     "report_rating": dictionary.get("reportRating"),
-                    "geometry": "POINT ({x} {y})".format(**dictionary.get("location")),  # pylint: disable=consider-using-f-string
+                    "geometry": "POINT ({x} {y})".format(
+                        **dictionary.get("location")
+                    ),  # pylint: disable=consider-using-f-string
                 }
             )
 
@@ -208,7 +211,7 @@ def upload_to_native_table(
         bigquery.SchemaField("street", "STRING"),
         bigquery.SchemaField("type", "STRING"),
         bigquery.SchemaField("subtype", "STRING"),
-        bigquery.SchemaField("roadType", "INT64"),  # TODO change to road_type
+        bigquery.SchemaField("road_type", "INT64"),
         bigquery.SchemaField("reliability", "INT64"),
         bigquery.SchemaField("confidence", "INT64"),
         bigquery.SchemaField("number_thumbs_up", "INT64"),

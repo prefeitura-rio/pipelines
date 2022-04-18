@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Schedules for the database dump pipeline
 """
@@ -33,7 +34,7 @@ sme_queries = {
     "aluno_turma_coc": {
         "dump_type": "overwrite",
         "execute_query": """
-            SELECT 
+            SELECT
                 Ano AS Ano,
                 CRE AS CRE,
                 Unidade AS Unidade,
@@ -61,7 +62,7 @@ sme_queries = {
     "aluno_tuma_coc0": {
         "dump_type": "overwrite",
         "execute_query": """
-            SELECT 
+            SELECT
                 Ano AS Ano,
                 CRE AS CRE,
                 Unidade AS Unidade,
@@ -95,7 +96,7 @@ sme_queries = {
     "escola": {
         "dump_type": "overwrite",
         "execute_query": """
-            SELECT 
+            SELECT
                 CRE,
                 Designacao,
                 Denominacao,
@@ -121,7 +122,7 @@ sme_queries = {
     "aluno": {
         "dump_type": "overwrite",
         "execute_query": """
-            SELECT 
+            SELECT
                 Ano,
                 Matricula,
                 Nome,

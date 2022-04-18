@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Schedules for cor
 """
@@ -12,7 +13,10 @@ from pipelines.constants import constants
 
 
 def custom_time(
-    hour: int = 0, minute: int = 0, second: int = 0, timezone: str = "America/Sao_Paulo"
+    hour: int = 0,
+    minute: int = 0,
+    second: int = 0,
+    timezone: str = "America/Sao_Paulo",
 ):
     """
     Returns a time object with the given hour, minute and second.
