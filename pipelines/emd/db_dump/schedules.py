@@ -78,6 +78,7 @@ emd_1746 = (
     ),
 )
 
+
 sme_escola = (
     IntervalClock(
         interval=timedelta(days=1),
@@ -162,6 +163,7 @@ sme_frequencia = IntervalClock(
     },
 )
 
-daily_update_schedule = Schedule(
-    clocks=[emd_1746, sme_escola, sme_turma, sme_dependencia, sme_frequencia]
-)
+clocks = [emd_1746, sme_escola, sme_turma, sme_dependencia, sme_frequencia]
+clocks = [clock[0] if type(clock) == tuple else clock for clock in clocks]
+
+daily_update_schedule = Schedule(clocks=clocks)
