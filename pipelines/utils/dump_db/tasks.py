@@ -1,9 +1,10 @@
 """
 General purpose tasks for dumping database data.
 """
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, Union
-from datetime import datetime, timedelta
+from uuid import uuid4
 
 from prefect import task
 
@@ -112,6 +113,42 @@ def database_fetch(
         log(f"columns: {database.get_columns()}")
         log(f"{batch_size_no} rows: {database.fetch_batch(batch_size_no)}")
 
+
+@task(
+    checkpoint=False,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def format_partitioned_query(
+    query: str,
+    dataset_id: str,
+    table_id: str,
+    partition_column: str = None,
+):
+    """
+    Formats a query for fetching partitioned data.
+    """
+    # If no partition column is specified, return the query as is.
+    if partition_column is None:
+        return query
+
+    # Check if the table already exists in BigQuery.
+    table_exists: bool = False
+
+    # If it doesn't, return the query as is, so we can fetch the whole table.
+    if not table_exists:
+        return query
+
+    # If it does, get the last partition date.
+    # TODO.
+    last_partition_date = None
+
+    # Using the last partition date, get the partitioned query.
+    return f"""
+    with a{uuid4().hex} as ({query})
+    select * from a{uuid4().hex}
+    where {partition_column} >= '{last_partition_date}'
+    """
 
 ###############
 #
