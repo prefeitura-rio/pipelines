@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Schedules for precipitacao_alertario
 Rodar a cada 5 minutos
@@ -14,7 +15,7 @@ minute_schedule = Schedule(
             start_date=datetime(2021, 1, 1, 0, 1, 0),
             labels=[
                 constants.K8S_AGENT_LABEL.value,
-            ]
+            ],
         ),
     ]
 )

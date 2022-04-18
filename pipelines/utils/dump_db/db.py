@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Database definitions for SQL pipelines.
 """
@@ -278,7 +279,8 @@ class Oracle(Database):
         """
         # pylint: disable=E1101
         return cx_Oracle.connect(
-            f"{self._user}/{self._password}@{self._hostname}:{self._port}/{self._database}"
+            f"{self._user}/{self._password}@"
+            f"{self._hostname}:{self._port}/{self._database}"
         )
 
     def get_cursor(self):

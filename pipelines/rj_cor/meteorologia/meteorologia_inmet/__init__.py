@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Prefect flows for meteorologia_inmet project
 """

@@ -70,10 +70,12 @@ python-box = {version = "^5.4.1"}
 # optional = true
 
 # [tool.poetry.group.dev.dependencies]
+black = "^22.1.0"
+flake8 = "^4.0.1"
+pre-commit = "^2.17.0"
 
 [tool.poetry.scripts]
 lint = "scripts.lint:main"
-
 
 [build-system]
 build-backend = "poetry.core.masonry.api"

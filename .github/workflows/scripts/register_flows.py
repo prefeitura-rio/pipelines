@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Custom script for registering flows.
 """
@@ -96,7 +97,7 @@ def build_and_register(  # pylint: disable=too-many-branches
                 while attempts < max_retries:
                     attempts += 1
                     try:
-                        flow_id, flow_version, is_new = register_serialized_flow(
+                        (flow_id, flow_version, is_new,) = register_serialized_flow(
                             client=client,
                             serialized_flow=serialized_flow,
                             project_id=project_id,
@@ -107,8 +108,7 @@ def build_and_register(  # pylint: disable=too-many-branches
                         logger.error("Error registering flow:")
                         logger.error(traceback.format_exc())
                         if attempts < max_retries:
-                            logger.error(
-                                f"Retrying in {retry_interval} seconds...")
+                            logger.error(f"Retrying in {retry_interval} seconds...")
                             sleep(retry_interval)
                         else:
                             stats["errored"] += 1
@@ -125,8 +125,7 @@ def build_and_register(  # pylint: disable=too-many-branches
                     logger.success(f"  └── Version: {flow_version}")
                     stats["registered"] += 1
                 else:
-                    logger.warning(
-                        " Skipped (metadata unchanged)", fg="yellow")
+                    logger.warning(" Skipped (metadata unchanged)", fg="yellow")
                     stats["skipped"] += 1
     return stats
 
@@ -192,8 +191,7 @@ def get_project_id(client: "prefect.Client", project: str) -> str:
         - str: the project id
     """
     resp = client.graphql(
-        {"query": {
-            with_args("project", {"where": {"name": {"_eq": project}}}): {"id"}}}
+        {"query": {with_args("project", {"where": {"name": {"_eq": project}}}): {"id"}}}
     )
     if resp.data.project:
         return resp.data.project[0].id
@@ -249,12 +247,10 @@ def prepare_flows(flows: "List[FlowLike]") -> None:
         if isinstance(flow, dict):
             # Add any extra labels to the flow
             if flow.get("environment"):
-                new_labels = set(flow["environment"].get(
-                    "labels") or []).union(labels)
+                new_labels = set(flow["environment"].get("labels") or []).union(labels)
                 flow["environment"]["labels"] = sorted(new_labels)
             else:
-                new_labels = set(flow["run_config"].get(
-                    "labels") or []).union(labels)
+                new_labels = set(flow["run_config"].get("labels") or []).union(labels)
                 flow["run_config"]["labels"] = sorted(new_labels)
         else:
             # Set the default flow result if not specified
@@ -376,7 +372,7 @@ def main(
         - retry_interval (int, optional): The number of seconds to wait between
     """
 
-    if not(project and path):
+    if not (project and path):
         raise ValueError("Must specify a project and path")
 
     # Expands paths to find all python files

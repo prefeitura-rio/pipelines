@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 General utilities for interacting with dbt-rpc
 """

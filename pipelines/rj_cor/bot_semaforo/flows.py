@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Flows for cor
 """
@@ -42,6 +43,5 @@ with Flow(
     )
 
 cet_telegram_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-cet_telegram_flow.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value)
+cet_telegram_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 cet_telegram_flow.schedule = bot_schedule

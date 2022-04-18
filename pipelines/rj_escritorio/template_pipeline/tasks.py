@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Tasks for emd
 """
@@ -52,8 +53,8 @@ from prefect import task
 
 
 @task
-def say_hello(name: str = 'World') -> str:
+def say_hello(name: str = "World") -> str:
     """
     Greeting task.
     """
-    return f'Hello, {name}!'
+    return f"Hello, {name}!"
