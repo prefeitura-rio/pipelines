@@ -13,11 +13,11 @@ import hvac
 import numpy as np
 import pandas as pd
 import prefect
+import requests
+import telegram
 from prefect.client import Client
 from prefect.engine.state import State
 from prefect.run_configs import KubernetesRun
-import requests
-import telegram
 
 
 def log(msg: Any, level: str = "info") -> None:
@@ -38,8 +38,8 @@ def log(msg: Any, level: str = "info") -> None:
 
 @prefect.task(checkpoint=False)
 def log_task(
-    msg: Any, level: str = "info", wait=None  # pylint: disable=unused-argument
-):
+    msg: Any, level: str = "info", wait=None
+):  # pylint: disable=unused-argument
     """
     Logs a message to prefect's logger.
     """

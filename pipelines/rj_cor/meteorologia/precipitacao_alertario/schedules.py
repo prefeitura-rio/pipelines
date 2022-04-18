@@ -14,7 +14,7 @@ minute_schedule = Schedule(
             interval=timedelta(minutes=15),
             start_date=datetime(2021, 1, 1, 0, 1, 0),
             labels=[
-                constants.K8S_AGENT_LABEL.value,
+                constants.RJ_COR_AGENT_LABEL.value,
             ],
         ),
     ]

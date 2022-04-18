@@ -22,8 +22,7 @@ from pipelines.utils.tasks import (
     dump_header_to_csv,
 )
 
-with Flow("COR: Meteorologia - Satelite") as flow:
-    # CURRENT_TIME = Parameter('CURRENT_TIME', default=pendulum.now("utc"))
+with Flow("COR: Meteorologia - Satelite GOES 16") as cor_meteorologia_goes16:
     CURRENT_TIME = pendulum.now("UTC")
 
     ano, mes, dia, hora, dia_juliano = slice_data(current_time=CURRENT_TIME)
@@ -116,6 +115,6 @@ with Flow("COR: Meteorologia - Satelite") as flow:
         )
 
 # para rodar na cloud
-flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-flow.schedule = hour_schedule
+cor_meteorologia_goes16.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+cor_meteorologia_goes16.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+cor_meteorologia_goes16.schedule = hour_schedule
