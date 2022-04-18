@@ -8,8 +8,8 @@ from prefect import Flow, Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants
-from pipelines.cor.schedules import bot_schedule
-from pipelines.cor.tasks import (
+from pipelines.cor.cet_bot.schedules import bot_schedule
+from pipelines.cor.cet_bot.tasks import (
     get_token_and_group_id,
     get_data,
     format_message,

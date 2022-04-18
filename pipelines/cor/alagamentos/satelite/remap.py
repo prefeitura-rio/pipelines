@@ -12,22 +12,25 @@ KM_PER_DEGREE = 111.32
 
 # GOES-16 Spatial Reference System
 sourcePrj = osr.SpatialReference()
-#sourcePrj.ImportFromProj4('+proj=geos +h=35786023.0 +a=6378137.0\
+# sourcePrj.ImportFromProj4('+proj=geos +h=35786023.0 +a=6378137.0\
 # +b=6356752.31414 +f=0.00335281068119356027489803406172 +lat_0=0.0\
 # +lon_0=-75 +sweep=x +no_defs')
-sourcePrj.ImportFromProj4('+proj=geos +h=35786000 +a=6378140 +b=6356750 +lon_0=-75 +sweep=x')
+sourcePrj.ImportFromProj4(
+    '+proj=geos +h=35786000 +a=6378140 +b=6356750 +lon_0=-75 +sweep=x')
 
 # Lat/lon WSG84 Spatial Reference System
 targetPrj = osr.SpatialReference()
 #targetPrj.ImportFromProj4('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
 targetPrj.ImportFromProj4('+proj=latlong +datum=WGS84')
 
-def export_image(image,path):
+
+def export_image(image, path):
     '''
     Export imagem em tif
     '''
     driver = gdal.GetDriverByName('netCDF')
-    return driver.CreateCopy(path,image,0)
+    return driver.CreateCopy(path, image, 0)
+
 
 def get_geot(extent, nlines, ncols):
     '''
@@ -35,7 +38,8 @@ def get_geot(extent, nlines, ncols):
     '''
     resx = (extent[2] - extent[0]) / ncols
     resy = (extent[3] - extent[1]) / nlines
-    return [extent[0], resx, 0, extent[3] , 0, -resy]
+    return [extent[0], resx, 0, extent[3], 0, -resy]
+
 
 def get_scale_offset(path, variable):
     '''
@@ -47,12 +51,13 @@ def get_scale_offset(path, variable):
         scale = 1
         offset = 0
     else:
-        scale = data.variables[variable].scale_factor
-        offset = data.variables[variable].add_offset
+        scale = data.variables[variable].scale_factor  # pylint: disable=unsubscriptable-object
+        offset = data.variables[variable].add_offset  # pylint: disable=unsubscriptable-object
     #scale = 0
     #offset = 0
     data.close()
     return scale, offset
+
 
 def remap(path, variable, extent, resolution, goes16_extent):
     '''
@@ -78,7 +83,8 @@ def remap(path, variable, extent, resolution, goes16_extent):
     # Setup projection and geo-transformation
     raw.SetProjection(sourcePrj.ExportToWkt())
     #raw.SetGeoTransform(get_geot(goes16_extent, raw.RasterYSize, raw.RasterXSize))
-    raw.SetGeoTransform(get_geot(goes16_extent, raw.RasterYSize, raw.RasterXSize))
+    raw.SetGeoTransform(
+        get_geot(goes16_extent, raw.RasterYSize, raw.RasterXSize))
 
     #print (KM_PER_DEGREE)
     # Compute grid dimension
@@ -97,14 +103,14 @@ def remap(path, variable, extent, resolution, goes16_extent):
 
     # Perform the projection/resampling
 
-    print ('Remapping', path)
+    print('Remapping', path)
 
     start = t.time()
 
-    gdal.ReprojectImage(raw, grid, sourcePrj.ExportToWkt(), targetPrj.ExportToWkt(),\
+    gdal.ReprojectImage(raw, grid, sourcePrj.ExportToWkt(), targetPrj.ExportToWkt(),
                         gdal.GRA_NearestNeighbour, options=['NUM_THREADS=ALL_CPUS'])
 
-    print ('- finished! Time:', t.time() - start, 'seconds')
+    print('- finished! Time:', t.time() - start, 'seconds')
 
     # Close file
     raw = None
@@ -121,7 +127,7 @@ def remap(path, variable, extent, resolution, goes16_extent):
     array = array * scale + offset
     #np.ma.masked_where(array, array == 100, False)
 
-    #grid.GetRasterBand(1).SetNoDataValue(-1)
+    # grid.GetRasterBand(1).SetNoDataValue(-1)
     grid.GetRasterBand(1).WriteArray(array)
 
     return grid
