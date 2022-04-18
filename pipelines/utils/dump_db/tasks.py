@@ -133,6 +133,7 @@ def format_partitioned_query(
     dataset_id: str,
     table_id: str,
     partition_column: str = None,
+    lower_bound_date: str = None,
 ):
     """
     Formats a query for fetching partitioned data.
@@ -155,6 +156,11 @@ def format_partitioned_query(
     # get last partition date
     last_partition_date = extract_last_partition_date(storage_partitions_dict)
 
+    if lower_bound_date:
+        last_date = min(lower_bound_date, last_partition_date)
+    else:
+        last_date = last_partition_date
+
     # Using the last partition date, get the partitioned query.
     # `aux_name` must be unique and start with a letter, for better compatibility with
     # multiple DBMSs.
@@ -162,7 +168,7 @@ def format_partitioned_query(
     return f"""
     with {aux_name} as ({query})
     select * from {aux_name}
-    where {partition_column} >= '{last_partition_date}'
+    where {partition_column} >= '{last_date}'
     """
 
 
