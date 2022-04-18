@@ -231,9 +231,7 @@ def dataframe_to_csv(dataframe: pd.DataFrame, path: Union[str, Path]) -> None:
     # Create directory if it doesn't exist
     path.parent.mkdir(parents=True, exist_ok=True)
     # Write dataframe to CSV
-    log(f"Writing dataframe to CSV: {path}")
     dataframe.to_csv(path, index=False, encoding="utf-8")
-    log(f"Wrote dataframe to CSV: {path}")
 
 
 def batch_to_dataframe(batch: Tuple[Tuple], columns: List[str]) -> pd.DataFrame:
