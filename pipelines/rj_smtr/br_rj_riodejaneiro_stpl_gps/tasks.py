@@ -60,21 +60,29 @@ import traceback
 
 
 @task
-def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict):
+def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict, key_column):
 
+    columns = [key_column, "dataHora", "timestamp_captura", "content"]
     data = status_dict["data"]
     timestamp = status_dict["timestamp"]
 
     if status_dict["error"] is not None:
-        return {"treated_data": pd.DataFrame(), "error": status_dict["error"]}
+        return {"df": pd.DataFrame(), "error": status_dict["error"]}
 
     error = None
-
+    # get tz info from constants
     timezone = constants.TIMEZONE.value
 
-    data = data.json()
-    df = pd.DataFrame(data["veiculos"])
+    data = data.json()["veiculos"]
+
+    # initialize df for nested columns
+    df = pd.DataFrame(columns=columns)
     timestamp_captura = pd.to_datetime(timestamp)
+    # separate each nested piece in data into a row
+    df["content"] = [piece for piece in data]
+    # retrive key column from each nested piece in data
+    df[key_column] = [piece[key_column] for piece in data]
+    df["dataHora"] = [piece["dataHora"] for piece in data]
     df["timestamp_captura"] = timestamp_captura
     df["dataHora"] = df["dataHora"].apply(
         lambda ms: pd.to_datetime(
@@ -114,4 +122,4 @@ def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict):
     except:
         err = traceback.format_exc()
         # log_critical(f"Failed to filter STPL data: \n{err}")
-    return {"treated_data": df, "error": error}
+    return {"df": df, "error": error}

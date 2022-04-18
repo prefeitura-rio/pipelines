@@ -96,6 +96,7 @@ def get_file_path_and_partitions(dataset_id, table_id, filename, partitions):
 
     return file_path
 
+
 @task
 def save_raw_local(data, file_path, mode="raw"):
 
@@ -136,7 +137,7 @@ def get_raw(url, headers=None):
             error = "Data from API is none!"
 
     if error:
-        return {"timestamp": timestamp.isoformat(), "error": error}
+        return {"data": data, "timestamp": timestamp.isoformat(), "error": error}
     elif data.ok:
         return {
             "data": data,
@@ -145,7 +146,7 @@ def get_raw(url, headers=None):
         }
     else:
         error = f"Requests failed with error {data.status_code}"
-        return {"error": error, "timestamp": timestamp.isoformat()}
+        return {"error": error, "timestamp": timestamp.isoformat(), "data": data}
 
 
 @task
@@ -163,7 +164,7 @@ def bq_upload(dataset_id, table_id, filepath, raw_filepath=None, partitions=None
     # Upload raw to staging
     if raw_filepath:
         st = Storage(table_id=table_id, dataset_id=dataset_id)
-        log.info(
+        log(
             f"Uploading raw file: {raw_filepath} to bucket {st.bucket_name} at {st.bucket_name}/{dataset_id}/{table_id}"
         )
         st.upload(

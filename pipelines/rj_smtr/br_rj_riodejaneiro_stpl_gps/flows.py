@@ -60,7 +60,7 @@ Flows for br_rj_riodejaneiro_stpl_gps
 
 from ast import Param
 from inspect import Parameter
-from prefect import Flow
+from prefect import Flow, Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants
@@ -68,6 +68,7 @@ from pipelines.rj_smtr.tasks import *
 from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks import (
     pre_treatment_br_rj_riodejaneiro_stpl_gps,
 )
+from pipelines.utils.utils import get_vault_secret
 
 # from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.schedules import every_two_weeks
 
@@ -76,8 +77,11 @@ with Flow("Captura_GPS_STPL") as stpl_captura:
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
     url = Parameter("url")
+    headers = get_vault_secret("stpl_api")["data"]
+    key_column = Parameter("key_column")
 
     file_dict = create_current_date_hour_partition()
+
     filepath = get_file_path_and_partitions(
         dataset_id=dataset_id,
         table_id=table_id,
@@ -85,10 +89,13 @@ with Flow("Captura_GPS_STPL") as stpl_captura:
         partitions=file_dict["partitions"],
     )
 
-    status_dict = get_raw(url)
+    status_dict = get_raw(url=url, headers=headers)
 
     raw_filepath = save_raw_local(data=status_dict["data"], file_path=filepath)
-    treated_status = pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict=status_dict)
+
+    treated_status = pre_treatment_br_rj_riodejaneiro_stpl_gps(
+        status_dict=status_dict, key_column=key_column
+    )
 
     upload_logs_to_bq(
         dataset_id=dataset_id,
@@ -108,6 +115,6 @@ with Flow("Captura_GPS_STPL") as stpl_captura:
     )
 
 
-flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+# stpl_captura.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+# stpl_captura.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 # flow.schedule = every_two_weeks
