@@ -62,11 +62,13 @@ Funções úteis no tratamento de dados de satélite
 
 import datetime
 import os
-from typing import Tuple
+from pathlib import Path
+from typing import Tuple, Union
 
 import netCDF4 as nc
 import numpy as np
-from osgeo import gdal  # pylint: disable=E0401
+from osgeo import gdal   # pylint: disable=E0401
+import pandas as pd
 import pendulum
 import xarray as xr
 
@@ -266,7 +268,7 @@ def get_info(path: str) -> Tuple[dict, str]:
     return product_caracteristics, datetime_save
 
 
-def get_goes_extent(data):
+def get_goes_extent(data: pd.DataFrame) -> list:
     """
     define espatial limits
     """
@@ -286,7 +288,11 @@ def get_goes_extent(data):
     return goes16_extent
 
 
-def remap_g16(path, extent, resolution, variable, datetime_save):
+def remap_g16(path: Union[str, Path],  # pylint: disable=too-many-locals
+              extent: list,
+              resolution: int,
+              variable: str,
+              datetime_save: str):
     """
     the GOES-16 image is reprojected to the rectangular projection in the extent region
     """
@@ -311,18 +317,14 @@ def remap_g16(path, extent, resolution, variable, datetime_save):
     year = datetime_save[:4]
     month = str(int(datetime_save[4:6]))
     day = str(int(datetime_save[6:8]))
+    partitions = os.path.join(f'ano={year}', f'mes={month}',
+                              f'dia={day}', f'hora={time_save}')
 
-    tif_path = os.path.join(
-        os.getcwd(),
-        "data",
-        "satelite",
-        variable,
-        "temp",
-        f"ano={year}",
-        f"mes={month}",
-        f"dia={day}",
-        f"hora={time_save}",
-    )
+    tif_path = os.path.join(os.getcwd(),
+                            'data', 'satelite',
+                            variable, 'temp',
+                            partitions)
+
     if not os.path.exists(tif_path):
         os.makedirs(tif_path)
 
@@ -333,7 +335,7 @@ def remap_g16(path, extent, resolution, variable, datetime_save):
     return grid, goes16_extent
 
 
-def treat_data(data, variable, reprojection_variables):
+def treat_data(data: pd.DataFrame, variable: str, reprojection_variables: dict) -> pd.DataFrame:
     """
     Treat nans and Temperature data, extent, product, variable, date_save,
     time_save, bmap, cmap, vmin, vmax, dpi, band, path
@@ -400,7 +402,7 @@ def treat_data(data, variable, reprojection_variables):
     return data
 
 
-def save_parquet(variable, datetime_save):
+def save_parquet(variable: str, datetime_save: str) -> Tuple[Union[str, Path], str]:
     """
     Save data in parquet
     """
@@ -410,20 +412,14 @@ def save_parquet(variable, datetime_save):
     year = date_save[:4]
     month = str(int(date_save[4:6]))
     day = str(int(date_save[-2:]))
-    tif_data = os.path.join(
-        os.getcwd(),
-        "data",
-        "satelite",
-        variable,
-        "temp",
-        f"ano={year}",
-        f"mes={month}",
-        f"dia={day}",
-        f"hora={time_save}",
-        "dados.tif",
-    )
+    partitions = os.path.join(f'ano={year}', f'mes={month}',
+                              f'dia={day}', f'hora={time_save}')
 
-    data = xr.open_dataset(tif_data, engine="rasterio")
+    tif_data = os.path.join(os.getcwd(), 'data', 'satelite',
+                            variable, 'temp',
+                            partitions, 'dados.tif')
+
+    data = xr.open_dataset(tif_data, engine='rasterio')
     # print('>>>>>>>>>>>>>>> data', data['band_data'].values)
 
     # Converte para dataframe trocando o nome das colunas
@@ -442,17 +438,10 @@ def save_parquet(variable, datetime_save):
     )
 
     # cria pasta se ela não existe
-    parquet_path = os.path.join(
-        os.getcwd(),
-        "data",
-        "satelite",
-        variable,
-        "output",
-        f"ano={year}",
-        f"mes={month}",
-        f"dia={day}",
-        f"hora={time_save}",
-    )
+    parquet_path = os.path.join(os.getcwd(),
+                                'data', 'satelite',
+                                variable, 'output',
+                                partitions)
 
     if not os.path.exists(parquet_path):
         os.makedirs(parquet_path)
@@ -463,10 +452,10 @@ def save_parquet(variable, datetime_save):
     data.to_csv(filename, index=False)
     # filename = os.path.join(parquet_path, 'dados.parquet')
     # data.to_parquet(filename, index=False)
-    return filename
+    return filename, partitions
 
 
-def main(path):
+def main(path: Union[str, Path]):
     """
     Função principal para converter dados x,y em lon,lat
     """
