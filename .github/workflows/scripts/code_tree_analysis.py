@@ -413,10 +413,8 @@ def log(message: str):
     """
     Logs a message to the output of a GitHub Action.
     """
-    # TODO: https://github.community/t/set-output-truncates-multiline-strings/16852/5
-    global message_id
-    print(f'::set-output name=message_{message_id}::"{message}"')
-    message_id += 1
+    message = message.replace("\n", "%0A")
+    print(f"::set-output name=pr-message::{message}")
 
 
 def identify_code_owners(files: List[str]) -> List[str]:
@@ -486,19 +484,15 @@ if __name__ == "__main__":
         print(f"\t- {file_}")
 
     # Start a PR message
-    log("### Análise da árvore de código")
-    log("")
-    log("")
+    message = "### Análise da árvore de código\n\n"
 
     # Format a message for the files that depend on the exported declarations.
     if len(dependent_files) > 0:
-        log("*Os seguintes arquivos são afetados diretamente por alterações ")
-        log("realizadas nesse pull request:*")
+        message += "*Os seguintes arquivos são afetados diretamente por alterações "
+        message += "realizadas nesse pull request:*"
         for file_ in dependent_files:
-            log("")
-            log(f"\t- {file_}")
-        log("")
-        log("")
+            message += f"\n\t- {file_}"
+        message += "\n\n"
 
     code_owners = identify_code_owners(changed_files)
     print("These are the code owners:")
@@ -508,16 +502,16 @@ if __name__ == "__main__":
     # Check for variable name conflicts.
     conflicts = check_for_variable_name_conflicts(changed_files, "pipelines/")
     if len(conflicts) > 0:
-        log("*Existem conflitos entre nomes de variáveis nos seguintes objetos:*")
+        message += "*Existem conflitos entre nomes de variáveis nos seguintes objetos:*"
         for conflict in conflicts:
-            log("")
-            log("\t- {conflict[0]} e {conflict[1]}")
-        log("")
-        log("")
+            message += "\n\t- {conflict[0]} e {conflict[1]}"
+        message += "\n\n"
 
     # If there is nothing wrong, let'em know!
     if len(dependent_files) == 0 and len(conflicts) == 0:
-        log("*Nenhum problema encontrado!*")
+        message += "*Nenhum problema encontrado!*"
+
+    log(message)
 
     # Raise if there are conflicts
     if len(conflicts) > 0:
