@@ -1,2 +1,3 @@
 prefect==0.15.7
+poetry==1.1.11
 google-cloud-storage==1.42.1
