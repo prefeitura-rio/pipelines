@@ -43,7 +43,6 @@ with Flow("COR: Meteorologia - Satelite GOES 16") as cor_meteorologia_goes16:
         dataset_id=DATASET_ID_RR,
         table_id=TABLE_ID_RR,
         dump_type=DUMP_TYPE,
-        partitions=partitions_rr,
         wait=path_rr,
     )
 
@@ -64,7 +63,6 @@ with Flow("COR: Meteorologia - Satelite GOES 16") as cor_meteorologia_goes16:
         dataset_id=DATASET_ID_TPW,
         table_id=TABLE_ID_TPW,
         dump_type=DUMP_TYPE,
-        partitions=partitions_tpw,
         wait=path_tpw,
     )
 
