@@ -121,7 +121,7 @@ def dump_batches_to_csv(
 
     # Dump batches
     batch = database.fetch_batch(batch_size)
-    eventid = datetime.now().strftime('%Y%m%d-%H%M%S') 
+    eventid = datetime.now().strftime('%Y%m%d-%H%M%S')
     idx = 0
     while len(batch) > 0:
         log(f"Dumping batch {idx} with size {len(batch)}")
@@ -165,8 +165,8 @@ def dump_header_to_csv(
 ###############
 @task
 def upload_to_gcs(
-    path: Union[str, Path], 
-    dataset_id: str, 
+    path: Union[str, Path],
+    dataset_id: str,
     table_id: str,
     wait=None,  # pylint: disable=unused-argument
 ) -> None:
@@ -175,7 +175,7 @@ def upload_to_gcs(
     """
     # pylint: disable=C0103
     tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
-    st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+    # st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
 
     if tb.table_exists(mode="staging"):
         # the name of the files need to be the same or the data doesn't get overwritten
@@ -197,10 +197,10 @@ def upload_to_gcs(
 
 @task
 def create_bd_table(
-    path: Union[str, Path], 
-    dataset_id: str, 
-    table_id: str, 
-    dump_type:str, 
+    path: Union[str, Path],
+    dataset_id: str,
+    table_id: str,
+    dump_type: str,
     wait=None,  # pylint: disable=unused-argument
 ) -> None:
     """
@@ -212,7 +212,7 @@ def create_bd_table(
     # pylint: disable=C0103
     st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
 
-    ### full dump
+    # full dump
     if dump_type == 'append':
         if tb.table_exists(mode="staging"):
             log(f"Mode append: Table {st.bucket_name}.{dataset_id}.{table_id} already exists")
@@ -221,15 +221,16 @@ def create_bd_table(
                 path=path,
                 location="southamerica-east1",
             )
-            log(f"Mode append: Sucessfully created a new table {st.bucket_name}.{dataset_id}.{table_id}")
-            
+            log(
+                f"Mode append: Sucessfully created a new table {st.bucket_name}.{dataset_id}.{table_id}")  # pylint: disable=C0301
+
             st.delete_table(mode="staging", bucket_name=st.bucket_name,
                             not_found_ok=True)
             log(
-                f"Mode append: Sucessfully remove header data from {st.bucket_name}.{dataset_id}.{table_id}")
+                f"Mode append: Sucessfully remove header data from {st.bucket_name}.{dataset_id}.{table_id}")  # pylint: disable=C0301
     elif dump_type == 'overwrite':
         if tb.table_exists(mode="staging"):
-            log(f"Mode overwrite: Table {st.bucket_name}.{dataset_id}.{table_id} already exists, DELETING OLD DATA!")
+            log(f"Mode overwrite: Table {st.bucket_name}.{dataset_id}.{table_id} already exists, DELETING OLD DATA!")  # pylint: disable=C0301
             st.delete_table(
                 mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
 
@@ -241,8 +242,9 @@ def create_bd_table(
             location="southamerica-east1",
         )
 
-        log(f"Mode overwrite: Sucessfully created table {st.bucket_name}.{dataset_id}.{table_id}")
+        log(
+            f"Mode overwrite: Sucessfully created table {st.bucket_name}.{dataset_id}.{table_id}")
         st.delete_table(mode="staging", bucket_name=st.bucket_name,
                         not_found_ok=True)
         log(
-            f"Mode overwrite: Sucessfully remove header data from {st.bucket_name}.{dataset_id}.{table_id}")
+            f"Mode overwrite: Sucessfully remove header data from {st.bucket_name}.{dataset_id}.{table_id}")  # pylint: disable=C0301
