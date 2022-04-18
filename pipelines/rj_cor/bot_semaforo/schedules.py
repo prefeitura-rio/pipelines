@@ -4,7 +4,7 @@ Schedules for cor
 
 from datetime import timedelta, datetime, time
 
-from prefect.schedules import Schedule  # , filters
+from prefect.schedules import Schedule
 from prefect.schedules.clocks import IntervalClock
 import pytz
 
@@ -25,6 +25,7 @@ bot_schedule = Schedule(
         IntervalClock(
             interval=timedelta(hours=1),
             start_date=datetime(2021, 1, 1),
+            # TODO change to RJ_COR_AGENT_LABEL when it's ready
             labels=[
                 constants.EMD_AGENT_LABEL.value,
             ],
@@ -33,10 +34,4 @@ bot_schedule = Schedule(
             },
         ),
     ],
-    # # Only on weekdays
-    # filters=[filters.is_weekday],
-    # or_filters=[
-    #     # Only between 7am and 11:59pm
-    #     filters.between_times(custom_time(7), custom_time(23, 59, 59)),
-    # ]
 )

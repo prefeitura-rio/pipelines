@@ -48,23 +48,23 @@ with Flow(
     #
     #####################################
 
-    wait_datario_path = get_datario_geodataframe(  # pylint: disable=invalid-name
+    datario_path = get_datario_geodataframe(  # pylint: disable=invalid-name
         url=url, path=f"data/{uuid4()}/"
     )
 
     # Create CSV file with headers
-    wait_header_path = dump_header_to_csv(
-        data_path=wait_datario_path,
-        wait=wait_datario_path,
+    header_path = dump_header_to_csv(
+        data_path=datario_path,
+        wait=datario_path,
     )
 
     # Create table in BigQuery
-    wait_create_db = create_bd_table(  # pylint: disable=invalid-name
-        path=wait_header_path,
+    create_db = create_bd_table(  # pylint: disable=invalid-name
+        path=header_path,
         dataset_id=dataset_id,
         table_id=table_id,
         dump_type=dump_type,
-        wait=wait_header_path,
+        wait=header_path,
     )
 
     #####################################
@@ -75,10 +75,10 @@ with Flow(
 
     # Upload to GCS
     upload_to_gcs(
-        path=wait_datario_path,
+        path=datario_path,
         dataset_id=dataset_id,
         table_id=table_id,
-        wait=wait_create_db,
+        wait=create_db,
     )
 
 

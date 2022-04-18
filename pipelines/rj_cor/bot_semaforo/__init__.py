@@ -1,0 +1,3 @@
+"""
+CET Semaphores Telegram Bot
+"""
