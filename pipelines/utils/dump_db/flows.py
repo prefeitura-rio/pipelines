@@ -22,7 +22,6 @@ from pipelines.utils.tasks import (
     rename_current_flow_run_dataset_table,
     upload_to_gcs,
     dump_header_to_csv,
-    log_task,
 )
 from pipelines.utils.dump_db.tasks import (
     database_execute,
@@ -200,10 +199,6 @@ with Flow(
                 },
                 labels=current_flow_labels,
                 run_name=f"Materialize {dataset_id}.{table_id}",
-            )
-            log_task(
-                msg=f"Please check at: http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{materialization_flow}",
-                wait=materialization_flow,
             )
 
             wait_for_materialization = wait_for_flow_run(
