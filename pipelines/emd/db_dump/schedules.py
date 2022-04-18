@@ -254,13 +254,17 @@ ergon_clock = IntervalClock(
     },
 )
 
+ergon_clocks = [ergon_clock]
+ergon_clocks_ = [clock[0] if type(clock) == tuple else clock for clock in ergon_clocks]
+
+ergon_monthly_update_schedule = Schedule(clocks=ergon_clocks_)
 
 #####################################
 #
 # Prefect clocks
 #
 #####################################
-clocks = [emd_1746, sme_escola, sme_turma, sme_dependencia, ergon_clock]
+clocks = [emd_1746, sme_escola, sme_turma, sme_dependencia]
 clocks = [clock[0] if type(clock) == tuple else clock for clock in clocks]
 
 daily_update_schedule = Schedule(clocks=clocks)
