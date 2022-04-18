@@ -137,3 +137,40 @@ Links para a documentação do Prefect também encontram-se nos comentários.
 - Requisitos do `manage.py` estão em `requirements-cli.txt`
 - Requisitos para a Action de deployment estão em `requirements-deploy.txt`
 - Requisitos para testes estão em `requirements-tests.txt`
+
+## Estrutura de diretorios
+
+```
+orgao/                       # diretório raiz para o órgão
+|-- projeto1/                # diretório de projeto
+|-- |-- __init__.py          # vazio
+|-- |-- constants.py         # valores constantes para o projeto
+|-- |-- flows.py             # declaração dos flows
+|-- |-- schedules.py         # declaração dos schedules
+|-- |-- tasks.py             # declaração das tasks
+|-- |-- utils.py             # funções auxiliares para o projeto
+...
+|-- __init__.py              # importa todos os flows de todos os projetos
+|-- constants.py             # valores constantes para o órgão
+|-- flows.py                 # declaração de flows genéricos do órgão
+|-- schedules.py             # declaração de schedules genéricos do órgão
+|-- tasks.py                 # declaração de tasks genéricas do órgão
+|-- utils.py                 # funções auxiliares para o órgão
+
+orgao2/
+...
+
+utils/
+|-- __init__.py
+|-- flow1/
+|-- |-- __init__.py
+|-- |-- flows.py
+|-- |-- tasks.py
+|-- |-- utils.py
+|-- flows.py                 # declaração de flows genéricos
+|-- tasks.py                 # declaração de tasks genéricas
+|-- utils.py                 # funções auxiliares
+
+constants.py                 # valores constantes para todos os órgãos
+
+```
