@@ -67,8 +67,11 @@ def dump_header_to_csv(
     if partition_folders := [folder for folder in file.split("/") if "=" in folder]:
         partition_path = "/".join(partition_folders)
         save_header_path = Path(f"data/{uuid4()}/{partition_path}/header.csv")
+        log(f"Found partition path: {save_header_path}")
+
     else:
         save_header_path = Path(f"data/{uuid4()}/header.csv")
+        log(f"Do not found partition path: {save_header_path}")
 
     # Create directory if it doesn't exist
     save_header_path.parent.mkdir(parents=True, exist_ok=True)
@@ -78,9 +81,9 @@ def dump_header_to_csv(
 
     # Write dataframe to CSV
     dataframe.to_csv(save_header_path, index=False, encoding="utf-8")
-    log(f"Wrote header CSV: {path}")
+    log(f"Wrote header CSV: {save_header_path}")
 
-    return save_header_path.parent
+    return save_header_path
 
 
 @task(
