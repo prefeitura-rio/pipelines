@@ -18,4 +18,8 @@ class constants(Enum):  # pylint: disable=c0103
     ######################################
     # Other constants
     ######################################
+    # Docker
     DOCKER_IMAGE = f"{DOCKER_IMAGE_NAME}:{DOCKER_TAG}"
+
+    # Prefect
+    K8S_AGENT_LABEL = "default"
