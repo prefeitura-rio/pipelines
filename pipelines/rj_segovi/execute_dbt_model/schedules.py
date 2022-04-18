@@ -18,7 +18,7 @@ _1746_views = {
 }
 
 _1746_clocks = generate_execute_dbt_model_schedules(
-    interval=timedelta(days=30),
+    interval=timedelta(days=1),
     start_date=datetime(2022, 3, 21, 4, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_SEGOVI_AGENT_LABEL.value,
@@ -27,4 +27,4 @@ _1746_clocks = generate_execute_dbt_model_schedules(
     runs_interval_minutes=5,
 )
 
-_1746_monthly_update_schedule = Schedule(clocks=untuple(_1746_clocks))
+_1746_daily_update_schedule = Schedule(clocks=untuple(_1746_clocks))

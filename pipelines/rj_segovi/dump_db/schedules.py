@@ -133,7 +133,7 @@ _1746_queries = {
 }
 _1746_clocks = generate_dump_db_schedules(
     interval=timedelta(days=1),
-    start_date=datetime(2022, 3, 13, 0, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2022, 3, 21, 2, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_SEGOVI_AGENT_LABEL.value,
     ],
