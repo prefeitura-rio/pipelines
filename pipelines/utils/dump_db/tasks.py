@@ -208,7 +208,8 @@ def dump_batches_to_csv(
     log(f"Got columns: {columns}")
 
     new_query_cols = build_query_new_columns(table_columns=columns)
-    log(f"New query columns without accents:\n{new_query_cols}")
+    log("New query columns without accents:")
+    log(f"{new_query_cols}")
 
     prepath = Path(prepath)
     log(f"Got prepath: {prepath}")
