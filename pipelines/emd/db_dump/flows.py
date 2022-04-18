@@ -43,7 +43,7 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
     secret_path = Parameter("vault_secret_path")
 
     # CSV file parameters
-    batch_size = Parameter("batch_size", default=5000)
+    batch_size = Parameter("batch_size", default=50000)
 
     # BigQuery parameters
     dataset_id = Parameter("dataset_id")
@@ -174,15 +174,13 @@ with Flow("Executar query SQL") as run_sql_flow:
         query=query,
     )
 
-    # Get results
-    results = database_fetch(
+    # Log results 
+    database_fetch(
         database=db_object,
         batch_size=batch_size,
         wait=wait_db_execute,
     )
 
-    # Log results
-    log_task(results)
 
 
 run_sql_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
