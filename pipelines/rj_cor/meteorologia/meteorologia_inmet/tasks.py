@@ -73,13 +73,8 @@ def download(data: str, yesterday: str) -> pd.DataFrame:
         url = f"https://apitempo.inmet.gov.br/estacao/{yesterday}/{data}/{id_estacao}"
         res = requests.get(url)
         if res.status_code != 200:
-            print(
-                "Problema no id: ",
-                id_estacao,
-                "\n",
-                res.status_code,
-                "\n",
-                url,
+            log(
+                f"Problema no id: {id_estacao}, {res.status_code}, {url}"
             )
             continue
         raw.append(json.loads(res.text))
@@ -152,19 +147,10 @@ def tratar_dados(dados: pd.DataFrame) -> Tuple[pd.DataFrame, str]:
     # Converte coluna de horas de 2300 para 23:00:00
     dados["horario"] = pd.to_datetime(dados.horario, format="%H%M")
     dados["horario"] = dados.horario.apply(lambda x: datetime.strftime(x, "%H:%M:%S"))
-    log("Data hora máxima antes da conversão: {} {}".format(
-        dados.data.max(),
-        dados[dados['data'] == dados.data.max()].horario.max())
-    )
 
     # Converte horário de UTC para America/Sao Paulo
     dados[["data", "horario"]] = dados[["data", "horario"]].apply(
         lambda x: converte_timezone(x.data, x.horario), axis=1, result_type="expand"
-    )
-
-    log("Data hora máxima depois da conversão: {} {}".format(
-        dados.data.max(),
-        dados[dados['data'] == dados.data.max()].horario.max())
     )
 
     # Ordenamento de variáveis
@@ -205,12 +191,14 @@ def tratar_dados(dados: pd.DataFrame) -> Tuple[pd.DataFrame, str]:
     dia = str(int(br_timezone[8:10]))
 
     # Define colunas que serão salvas
-    dados = dados[['id_estacao', 'data', 'horario', 'pressao', 'pressao_maxima',
-       'radiacao_global', 'temperatura_orvalho', 'temperatura_minima',
-       'umidade_minima', 'temperatura_orvalho_maximo', 'direcao_vento',
-       'acumulado_chuva_1_h', 'pressao_minima', 'umidade_maxima',
-       'velocidade_vento', 'temperatura_orvalho_minimo', 'temperatura_maxima',
-       'rajada_vento_max', 'temperatura', 'umidade']]
+    dados = dados[[
+        'id_estacao', 'data', 'horario', 'pressao', 'pressao_maxima',
+        'radiacao_global', 'temperatura_orvalho', 'temperatura_minima',
+        'umidade_minima', 'temperatura_orvalho_maximo', 'direcao_vento',
+        'acumulado_chuva_1_h', 'pressao_minima', 'umidade_maxima',
+        'velocidade_vento', 'temperatura_orvalho_minimo', 'temperatura_maxima',
+        'rajada_vento_max', 'temperatura', 'umidade'
+    ]]
 
     # Seleciona apenas dados daquele dia (devido à UTC)
     dados = dados[dados["data"] == br_timezone]
@@ -219,7 +207,7 @@ def tratar_dados(dados: pd.DataFrame) -> Tuple[pd.DataFrame, str]:
     dados = dados.dropna(subset=float_cols, how='all')
 
     partitions = f"ano={ano}/mes={mes}/dia={dia}"
-    print(">>> partitions", partitions)
+    log(f">>> partitions{partitions}")
     print(">>>> max hora ", dados[~dados.temperatura.isna()].horario.max())
     return dados, partitions
 
@@ -236,7 +224,7 @@ def salvar_dados(dados: pd.DataFrame, partitions: str, data: str) -> Union[str, 
 
     filename = str(base_path / f"dados_{data}.csv")
 
-    print(f"Saving {filename}")
+    log(f"Saving {filename}")
     # dados.to_csv(filename, index=False)
     dados.to_csv(r"{}".format(filename), index=False)
     return filename

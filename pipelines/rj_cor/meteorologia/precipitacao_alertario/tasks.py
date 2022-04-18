@@ -15,7 +15,7 @@ import pendulum
 from prefect import task
 
 from pipelines.constants import constants
-from pipelines.utils.utils import get_vault_secret
+from pipelines.utils.utils import get_vault_secret, log
 
 ###################################################################################
 #        Ver de trocar o nome da coluna data_medição e deixar padronizado         #
@@ -53,33 +53,33 @@ def download() -> Tuple[pd.DataFrame, str]:
     try:
         ftp = ftplib.FTP(host)
     except (socket.error, socket.gaierror):
-        print(f"ERROR: cannot reach {host}")
+        log(f"ERROR: cannot reach {host}")
         raise
-    print(f"*** Connected to host {host}")
+    log(f"*** Connected to host {host}")
 
     try:
         ftp.login(username, password)
     except ftplib.error_perm:
-        print("ERROR: cannot login")
+        log("ERROR: cannot login")
         ftp.quit()
         raise
-    print("*** Logged in successfully")
+    log("*** Logged in successfully")
 
     try:
         ftp.cwd(dirname)
     except ftplib.error_perm:
-        print(f"ERROR: cannot CD to {dirname}")
+        log(f"ERROR: cannot CD to {dirname}")
         ftp.quit()
         raise
-    print(f"*** Changed to folder: {dirname}")
+    log(f"*** Changed to folder: {dirname}")
 
     try:
         with open(save_on, "wb") as file:
-            print("Getting " + filename)
+            log("Getting " + filename)
             ftp.retrbinary("RETR " + filename, file.write)
-        print(f"File downloaded to {save_on}")
+        log(f"File downloaded to {save_on}")
     except ftplib.error_perm:
-        print(f"ERROR: cannot read file {filename}")
+        log(f"ERROR: cannot read file {filename}")
         raise
 
     ftp.quit()
@@ -173,6 +173,6 @@ def salvar_dados(
 
     filename = os.path.join(base_path, f"dados_{current_time}.csv")
 
-    print(f"Saving {filename}")
+    log(f"Saving {filename}")
     dados.to_csv(filename, index=False)
     return filename, partitions
