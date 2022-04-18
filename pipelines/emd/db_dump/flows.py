@@ -40,12 +40,12 @@ with Flow("Ingerir tabela de banco SQL") as dump_sql_flow:
     secret_path = Parameter("vault_secret_path")
 
     # CSV file parameters
-    batch_size = Parameter("batch_size")
+    batch_size = Parameter("batch_size", default=5000)
 
     # BigQuery parameters
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
-    dump_type = Parameter("dump_type", default='append') # replace or  append
+    dump_type = Parameter("dump_type", default='append') # overwrite or append
 
     #####################################
     #
