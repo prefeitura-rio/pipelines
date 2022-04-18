@@ -219,7 +219,7 @@ def salvar_dados(dados: pd.DataFrame, partitions: str, data: str) -> Union[str, 
     """
     base_path = Path(os.getcwd(), "data", "meteorologia_inmet", "output")
 
-    partition_path = os.path.join(base_path, partitions)
+    partition_path = Path(base_path, partitions)
 
     if not os.path.exists(partition_path):
         os.makedirs(partition_path)
