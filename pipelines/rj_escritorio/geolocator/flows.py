@@ -99,4 +99,4 @@ with Flow("EMD: escritorio - Geolocalizacao de chamados 1746") as daily_geolocat
 
 daily_geolocator_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 daily_geolocator_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-# flow.schedule = every_day_at_four_am
+daily_geolocator_flow.schedule = every_day_at_four_am
