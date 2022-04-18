@@ -101,39 +101,10 @@ ergon_queries = {
     },
 }
 
-# ergon_clocks = [
-#     IntervalClock(
-#         interval=timedelta(days=30),
-#         start_date=datetime(
-#             2022, 3, 12, 3, 0, tzinfo=pytz.timezone("America/Sao_Paulo")
-#         )
-#         + timedelta(minutes=3 * count),
-#         labels=[
-#             constants.RJ_SMFP_AGENT_LABEL.value,
-#         ],
-#         parameter_defaults={
-#             "batch_size": 50000,
-#             "vault_secret_path": "ergon-hom",
-#             "db_database": "P01.PCRJ",
-#             "db_host": "10.70.6.22",
-#             "db_port": "1521",
-#             "db_type": "oracle",
-#             "dataset_id": "administracao_recursos_humanos_folha_salarial",
-#             "table_id": table_id,
-#             "dump_type": parameters["dump_type"],
-#             "partition_column": parameters["partition_column"],
-#             "lower_bound_date": parameters["lower_bound_date"],
-#             "execute_query": query_to_line(parameters["execute_query"]),
-#         },
-#     )
-#     for count, (table_id, parameters) in enumerate(ergon_queries.items())
-# ]
 
 ergon_clocks = generate_schedules(
     interval=timedelta(days=30),
-    start_date=datetime(
-        2022, 3, 12, 3, 0, tzinfo=pytz.timezone("America/Sao_Paulo")
-    ),
+    start_date=datetime(2022, 3, 12, 3, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_SMFP_AGENT_LABEL.value,
     ],

@@ -54,7 +54,7 @@ sme_queries = {
                 Vagas AS Vagas,
                 capacidade AS capacidade,
                 tur_id AS tur_id,
-                pft_capacidade AS pft_capacidade,
+                pft_capacidade AS pft_capacidade
             FROM GestaoEscolar.dbo.VW_BI_Aluno_Turma_COC
         """,
     },
@@ -82,7 +82,7 @@ sme_queries = {
                 Vagas AS Vagas,
                 capacidade AS capacidade,
                 tur_id AS tur_id,
-                pft_capacidade AS pft_capacidade,
+                pft_capacidade AS pft_capacidade
             FROM GestaoEscolar.dbo.VW_BI_Aluno_Turma_com_COC0
         """,
     },
@@ -162,9 +162,7 @@ sme_queries = {
 
 sme_clocks = generate_schedules(
     interval=timedelta(days=1),
-    start_date=datetime(
-        2022, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo")
-    ),
+    start_date=datetime(2022, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_SME_AGENT_LABEL.value,
     ],
@@ -177,5 +175,4 @@ sme_clocks = generate_schedules(
     table_parameters=sme_queries,
 )
 
-sme_educacao_basica_daily_update_schedule = Schedule(
-    clocks=untuple(sme_clocks))
+sme_educacao_basica_daily_update_schedule = Schedule(clocks=untuple(sme_clocks))
