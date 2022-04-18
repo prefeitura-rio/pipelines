@@ -76,6 +76,7 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+**/tweets_flamengo/*.ipynb
 
 # IPython
 profile_default/
