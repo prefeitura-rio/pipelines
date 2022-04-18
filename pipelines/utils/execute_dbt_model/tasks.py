@@ -2,6 +2,8 @@
 """
 Tasks related to DBT flows.
 """
+# pylint: disable=unused-argument
+
 from datetime import timedelta
 
 from dbt_client import DbtClient
@@ -20,6 +22,7 @@ from pipelines.constants import constants
 )
 def get_k8s_dbt_client(
     mode: str = "dev",
+    wait=None,
 ) -> DbtClient:
     """
     Get a DBT client for the Kubernetes cluster.

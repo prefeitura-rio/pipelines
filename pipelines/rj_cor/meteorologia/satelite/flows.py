@@ -59,6 +59,7 @@ with Flow("COR: Meteorologia - Satelite GOES 16") as cor_meteorologia_goes16:
             dataset_id=DATASET_ID,
             table_id=TABLE_ID,
             partitions=partitions,
+            dump_type=DUMP_TYPE,
             wait=create_db,
         )
 
@@ -69,6 +70,7 @@ with Flow("COR: Meteorologia - Satelite GOES 16") as cor_meteorologia_goes16:
             dataset_id=DATASET_ID,
             table_id=TABLE_ID,
             partitions=partitions,
+            dump_type=DUMP_TYPE,
         )
 
     # Para quantidade de água precipitável
@@ -102,6 +104,7 @@ with Flow("COR: Meteorologia - Satelite GOES 16") as cor_meteorologia_goes16:
             dataset_id=DATASET_ID,
             table_id=TABLE_ID,
             partitions=partitions,
+            dump_type=DUMP_TYPE,
             wait=create_db,
         )
 
@@ -112,6 +115,7 @@ with Flow("COR: Meteorologia - Satelite GOES 16") as cor_meteorologia_goes16:
             dataset_id=DATASET_ID,
             table_id=TABLE_ID,
             partitions=partitions,
+            dump_type=DUMP_TYPE,
         )
 
 # para rodar na cloud

@@ -9,14 +9,20 @@ from uuid import uuid4
 from prefect import Flow, Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
+from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 
 from pipelines.constants import constants
+from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.dump_db.db import Database
 
 from pipelines.utils.tasks import (
     create_bd_table,
+    get_current_flow_labels,
+    greater_than,
+    rename_current_flow_run_dataset_table,
     upload_to_gcs,
     dump_header_to_csv,
+    log_task,
 )
 from pipelines.utils.dump_db.tasks import (
     database_execute,
@@ -29,7 +35,7 @@ from pipelines.utils.tasks import get_user_and_password, check_table_exists
 from pipelines.utils.utils import notify_discord_on_failure
 
 with Flow(
-    name="EMD: template - Ingerir tabela de banco SQL",
+    name=utils_constants.FLOW_DUMP_DB_NAME.value,
     on_failure=partial(
         notify_discord_on_failure,
         secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value,
@@ -51,6 +57,14 @@ with Flow(
     partition_column = Parameter("partition_column", required=False)
     lower_bound_date = Parameter("lower_bound_date", required=False)
 
+    # Materialization parameters
+    materialize_after_dump = Parameter(
+        "materialize_after_dump", default=False, required=False
+    )
+    materialization_mode = Parameter(
+        "materialization_mode", default="dev", required=False
+    )
+
     # Use Vault for credentials
     secret_path = Parameter("vault_secret_path")
 
@@ -64,12 +78,22 @@ with Flow(
 
     #####################################
     #
+    # Rename flow run
+    #
+    #####################################
+    rename_flow_run = rename_current_flow_run_dataset_table(
+        prefix="Dump: ", dataset_id=dataset_id, table_id=table_id, wait=table_id
+    )
+    #####################################
+    #
     # Tasks section #0 - Get credentials
     #
     #####################################
 
     # Get credentials from Vault
-    user, password = get_user_and_password(secret_path=secret_path)
+    user, password = get_user_and_password(
+        secret_path=secret_path, wait=rename_flow_run
+    )
 
     #####################################
     #
@@ -105,7 +129,7 @@ with Flow(
     )
 
     # Dump batches to CSV files
-    batches_path = dump_batches_to_csv(
+    batches_path, num_batches = dump_batches_to_csv(
         database=db_object,
         batch_size=batch_size,
         prepath=f"data/{uuid4()}/",
@@ -113,52 +137,82 @@ with Flow(
         wait=db_execute,
     )
 
-    # TODO: Skip all downstream tasks if no data was dumped
+    data_exists = greater_than(num_batches, 0)
 
-    EXISTS = check_table_exists(
-        dataset_id=dataset_id, table_id=table_id, wait=batches_path
-    )
-
-    # Create header and table if they don't exists
-    with case(EXISTS, False):
-
-        # Create CSV file with headers
-        header_path = dump_header_to_csv(
-            data_path=batches_path,
-            wait=batches_path,
+    with case(data_exists, True):
+        table_exists = check_table_exists(  # pylint: disable=invalid-name
+            dataset_id=dataset_id, table_id=table_id, wait=batches_path
         )
 
-        # Create table in BigQuery
-        create_db = create_bd_table(  # pylint: disable=invalid-name
-            path=header_path,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            dump_type=dump_type,
-            wait=header_path,
-        )
+        # Create header and table if they don't exists
+        with case(table_exists, False):
 
-        #####################################
-        #
-        # Tasks section #2 - Dump batches
-        #
-        #####################################
+            # Create CSV file with headers
+            header_path = dump_header_to_csv(
+                data_path=batches_path,
+                wait=batches_path,
+            )
 
-        # Upload to GCS
-        upload_to_gcs(
-            path=batches_path,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            wait=create_db,
-        )
+            # Create table in BigQuery
+            create_db = create_bd_table(  # pylint: disable=invalid-name
+                path=header_path,
+                dataset_id=dataset_id,
+                table_id=table_id,
+                dump_type=dump_type,
+                wait=header_path,
+            )
 
-    with case(EXISTS, True):
-        # Upload to GCS
-        upload_to_gcs(
-            path=batches_path,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            wait=EXISTS,
-        )
+            #####################################
+            #
+            # Tasks section #2 - Dump batches
+            #
+            #####################################
+
+            # Upload to GCS
+            upload_to_gcs(
+                path=batches_path,
+                dataset_id=dataset_id,
+                table_id=table_id,
+                dump_type=dump_type,
+                wait=create_db,
+            )
+
+        with case(table_exists, True):
+            # Upload to GCS
+            upload_to_gcs(
+                path=batches_path,
+                dataset_id=dataset_id,
+                table_id=table_id,
+                dump_type=dump_type,
+                wait=table_exists,
+            )
+
+        with case(materialize_after_dump, True):
+            # Trigger DBT flow run
+            current_flow_labels = get_current_flow_labels()
+            materialization_flow = create_flow_run(
+                flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+                project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                parameters={
+                    "dataset_id": dataset_id,
+                    "table_id": table_id,
+                    "mode": materialization_mode,
+                },
+                labels=current_flow_labels,
+                run_name=f"Materialize {dataset_id}.{table_id}",
+            )
+            log_task(
+                msg=f"Please check at: http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{materialization_flow}",
+                wait=materialization_flow,
+            )
+
+            wait_for_materialization = wait_for_flow_run(
+                materialization_flow,
+                stream_states=True,
+                stream_logs=True,
+                raise_final_state=True,
+            )
+
 
 dump_sql_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_sql_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)

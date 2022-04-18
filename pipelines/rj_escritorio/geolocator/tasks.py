@@ -56,12 +56,13 @@ import time
 import basedosdados as bd
 import pandas as pd
 import prefect
+from prefect import task
+
 from pipelines.rj_escritorio.geolocator.constants import (
     constants as geolocator_constants,
 )
 from pipelines.rj_escritorio.geolocator.utils import geolocator
 from pipelines.utils.utils import log
-from prefect import task
 
 
 # Importando os dados
@@ -78,8 +79,8 @@ def importa_bases_e_chamados() -> list:
     )
     enderecos_conhecidos = base_enderecos_atual["endereco_completo"]
 
-    d1 = prefect.context.get("yesterday")
-    d2 = prefect.context.get("today")
+    d1 = prefect.context.get("yesterday")  # pylint: disable=invalid-name
+    d2 = prefect.context.get("today")  # pylint: disable=invalid-name
     query_2 = f"""
     with teste as (
     SELECT
@@ -142,7 +143,7 @@ def geolocaliza_enderecos(base_enderecos_novos: pd.DataFrame) -> pd.DataFrame:
     try:
         base_enderecos_novos["latitude"] = coordenadas["lat"]
         base_enderecos_novos["longitude"] = coordenadas["long"]
-    except:
+    except:  # pylint: disable=bare-except
         log("Não foram identificados chamados abertos no dia anterior.")
 
     return base_enderecos_novos

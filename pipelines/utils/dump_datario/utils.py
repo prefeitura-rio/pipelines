@@ -27,6 +27,14 @@ def generate_dump_datario_schedules(  # pylint: disable=too-many-arguments,too-m
             "dump_type": parameters["dump_type"],
             "table_id": table_id,
         }
+        if "materialize_after_dump" in parameters:
+            parameter_defaults["materialize_after_dump"] = parameters[
+                "materialize_after_dump"
+            ]
+        if "materialization_mode" in parameters:
+            parameter_defaults["materialization_mode"] = parameters[
+                "materialization_mode"
+            ]
         clocks.append(
             IntervalClock(
                 interval=interval,

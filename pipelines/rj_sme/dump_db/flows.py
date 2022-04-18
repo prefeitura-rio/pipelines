@@ -9,6 +9,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 from pipelines.constants import constants
+
 from pipelines.rj_sme.dump_db.schedules import (
     sme_educacao_basica_daily_update_schedule,
 )

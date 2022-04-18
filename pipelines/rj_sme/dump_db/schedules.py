@@ -92,7 +92,7 @@ sme_queries = {
         "lower_bound_date": "2022-03-01",
         "dump_type": "append",
         "execute_query": """
-            SELECT 
+            SELECT
                 esc_id AS esc_id,
                 tur_id AS tur_id,
                 turma AS turma,

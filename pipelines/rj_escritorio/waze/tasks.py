@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # flake8: noqa: E501
+# pylint: disable=unused-argument
 """
 Tasks for emd
 """
@@ -21,7 +22,7 @@ from pipelines.constants import constants
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def load_geometries() -> pd.DataFrame:
+def load_geometries(wait=None) -> pd.DataFrame:
     """
     Loads the geometries from the database.
     """
@@ -125,7 +126,7 @@ def load_geometries() -> pd.DataFrame:
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def fecth_waze(areas: pd.DataFrame) -> list:
+def fecth_waze(areas: pd.DataFrame, wait=None) -> list:
     """
     Fetch data from waze.
     """
@@ -150,7 +151,7 @@ def fecth_waze(areas: pd.DataFrame) -> list:
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def normalize_data(responses: list) -> pd.DataFrame:
+def normalize_data(responses: list, wait=None) -> pd.DataFrame:
     """
     Normalize data.
     """
@@ -194,7 +195,7 @@ def normalize_data(responses: list) -> pd.DataFrame:
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 def upload_to_native_table(
-    dataset_id: str, table_id: str, dataframe: pd.DataFrame
+    dataset_id: str, table_id: str, dataframe: pd.DataFrame, wait=None
 ) -> None:
     """
     Upload data to native table.

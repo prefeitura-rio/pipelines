@@ -3,6 +3,8 @@
 Flows for emd
 """
 
+# pylint: disable=C0103
+
 from functools import partial
 
 from prefect import Flow
@@ -18,8 +20,8 @@ from pipelines.rj_escritorio.waze.tasks import (
 )
 from pipelines.rj_escritorio.waze.schedules import every_five_minutes
 from pipelines.utils.utils import notify_discord_on_failure
+from pipelines.utils.tasks import rename_current_flow_run_now_time, get_now_time
 
-# from pipelines.emd.template_pipeline.schedules import every_two_weeks
 
 with Flow(
     name="EMD: escritorio - Alertas Waze",
@@ -28,17 +30,29 @@ with Flow(
         secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value,
     ),
 ) as flow:
+    dataset_id = "transporte_rodoviario_waze"
+    table_id = "alertas"
 
-    areas = load_geometries()
+    #####################################
+    #
+    # Rename flow run
+    #
+    #####################################
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix="Waze: ", now_time=get_now_time()
+    )
 
-    res = fecth_waze(areas=areas)
+    areas = load_geometries(wait=rename_flow_run)
 
-    df = normalize_data(responses=res)
+    responses = fecth_waze(areas=areas, wait=areas)
+
+    dataframe = normalize_data(responses=responses, wait=responses)
 
     upload_to_native_table(
-        dataset_id="transporte_rodoviario_waze",
-        table_id="alertas",
-        dataframe=df,
+        dataset_id=dataset_id,
+        table_id=table_id,
+        dataframe=dataframe,
+        wait=dataframe,
     )
 
 flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)

@@ -58,12 +58,19 @@ with Flow(
             path=path,
             dataset_id=DATASET_ID,
             table_id=TABLE_ID,
+            dump_type=DUMP_TYPE,
             wait=create_db,
         )
 
     with case(EXISTS, True):
         # Upload to GCS
-        upload_to_gcs(path=path, dataset_id=DATASET_ID, table_id=TABLE_ID, wait=EXISTS)
+        upload_to_gcs(
+            path=path,
+            dataset_id=DATASET_ID,
+            table_id=TABLE_ID,
+            dump_type=DUMP_TYPE,
+            wait=EXISTS,
+        )
 
 # para rodar na cloud
 cor_meteorologia_meteorologia_inmet.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
