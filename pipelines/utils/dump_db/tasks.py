@@ -163,7 +163,6 @@ def format_partitioned_query(
     with {aux_name} as ({query})
     select * from {aux_name}
     where {partition_column} >= '{last_partition_date}'
-    order by {partition_column}
     """
 
 
