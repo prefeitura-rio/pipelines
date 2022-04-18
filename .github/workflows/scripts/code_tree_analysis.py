@@ -484,28 +484,35 @@ if __name__ == "__main__":
         print(f"\t- {file_}")
 
     # Start a PR message
-    message = "### Análise da árvore de código\n\n"
+    message = "### Análise da árvore de código\n"
 
     # Format a message for the files that depend on the exported declarations.
     if len(dependent_files) > 0:
-        message += "*Os seguintes arquivos são afetados diretamente por alterações "
-        message += "realizadas nesse pull request:*"
+        message += "**Os seguintes arquivos são afetados diretamente por alterações "
+        message += "realizadas nesse pull request:**"
         for file_ in dependent_files:
             message += f"\n\t- {file_}"
-        message += "\n\n"
+        message += "\n"
 
     code_owners = identify_code_owners(changed_files)
     print("These are the code owners:")
     for owner in code_owners:
         print(f"\t- {owner}")
 
+    message += "**Os seguintes usuários devem ser avisados sobre a alteração:**"
+    for owner in code_owners:
+        message += f"\n\t- @{owner}"
+    message += "\n"
+
     # Check for variable name conflicts.
     conflicts = check_for_variable_name_conflicts(changed_files, "pipelines/")
     if len(conflicts) > 0:
-        message += "*Existem conflitos entre nomes de variáveis nos seguintes objetos:*"
+        message += (
+            "**Existem conflitos entre nomes de variáveis nos seguintes objetos:**"
+        )
         for conflict in conflicts:
             message += "\n\t- {conflict[0]} e {conflict[1]}"
-        message += "\n\n"
+        message += "\n"
 
     # If there is nothing wrong, let'em know!
     if len(dependent_files) == 0 and len(conflicts) == 0:
