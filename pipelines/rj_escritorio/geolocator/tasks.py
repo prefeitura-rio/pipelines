@@ -56,13 +56,12 @@ import time
 import basedosdados as bd
 import pandas as pd
 import prefect
-from prefect import task
-
 from pipelines.rj_escritorio.geolocator.constants import (
     constants as geolocator_constants,
 )
 from pipelines.rj_escritorio.geolocator.utils import geolocator
 from pipelines.utils.utils import log
+from prefect import task
 
 
 # Importando os dados
@@ -149,17 +148,28 @@ def geolocaliza_enderecos(base_enderecos_novos: pd.DataFrame) -> pd.DataFrame:
     return base_enderecos_novos
 
 
+# @task
+# def get_today() -> str:
+#     """
+#     Pega o endereço de hoje no formato YYYY-MM-DD
+#     """
+#     today = prefect.context.get("today")
+#     return today
+
+
 # Adicionando os endereços novos geolocalizados na base de endereços que já possuímos
 @task
-def cria_csv(base_enderecos_atual, base_enderecos_novos):
+def cria_csv(base_enderecos_atual: pd.DataFrame, base_enderecos_novos: pd.DataFrame):
     """
     Une os endereços previamente catalogados com os novos e cria um csv.
     """
-    today = prefect.context.get("today")
+    # today = prefect.context.get("today")
 
     base_enderecos_atualizada = base_enderecos_atual.append(
         base_enderecos_novos, ignore_index=True
     )
     base_enderecos_atualizada.to_csv(
-        f"{geolocator_constants.PATH_BASE_ENDERECOS.value}_{today}.csv", index=False
+        # f"{geolocator_constants.PATH_BASE_ENDERECOS.value}_{today}.csv", index=False
+        geolocator_constants.PATH_BASE_ENDERECOS.value,
+        index=False,
     )
