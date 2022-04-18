@@ -88,6 +88,7 @@ sme_queries = {
     },
     "frequencia": {
         "partition_column": "dataInicio",
+        "lower_bound_date": "2022-03-01",
         "dump_type": "append",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Frequencia",
     },
