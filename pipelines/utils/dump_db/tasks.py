@@ -148,9 +148,12 @@ def format_partitioned_query(
     last_partition_date = None
 
     # Using the last partition date, get the partitioned query.
+    # `aux_name` must be unique and start with a letter, for better compatibility with
+    # multiple DBMSs.
+    aux_name = f"a{uuid4().hex}"
     return f"""
-    with a{uuid4().hex} as ({query})
-    select * from a{uuid4().hex}
+    with {aux_name} as ({query})
+    select * from {aux_name}
     where {partition_column} >= '{last_partition_date}'
     order by {partition_column}
     """
