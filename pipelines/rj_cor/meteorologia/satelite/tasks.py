@@ -13,8 +13,8 @@ import pendulum
 from prefect import task
 import s3fs
 
-from pipelines.constants import constants
 from pipelines.rj_cor.meteorologia.satelite.satellite_utils import main, save_parquet
+from pipelines.utils.utils import log
 
 @task()
 def get_dates() -> str:
@@ -51,7 +51,7 @@ def download(variavel: str, ano: str, dia_juliano: str, hora: str) -> Union[str,
 
     # Get first file of GOES-16 data (multiband format) at this time
     s3_file = f"noaa-goes16/ABI-L2-{variavel}/{ano}/{dia_juliano}/{hora}/"
-    print(">>> s3 file", s3_file)
+    log(">>> s3 file ", s3_file)
     file = np.sort(
         np.array(
             s3_fs.find(s3_file)
