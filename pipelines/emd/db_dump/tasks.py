@@ -13,6 +13,7 @@ import pandas as pd
 from pipelines.emd.db_dump.db import (
     Database,
     MySql,
+    Oracle,
     SqlServer,
 )
 from pipelines.utils import log
@@ -23,6 +24,7 @@ from pipelines.emd.db_dump.utils import (
 
 DATABASE_MAPPING: Dict[str, Database] = {
     "mysql": MySql,
+    "oracle": Oracle,
     "sql_server": SqlServer,
 }
 
@@ -97,7 +99,7 @@ def database_fetch(
             raise ValueError(f"Invalid batch size: {batch_size}") from error
         log(f"columns: {database.get_columns()}")
         log(f"{batch_size_no} rows: {database.fetch_batch(batch_size_no)}")
-    
+
 
 ###############
 #
@@ -152,8 +154,8 @@ def dump_header_to_csv(
     files = glob.glob(f"{data_path}/*")
     file = files[0] if files != [] else ''
 
-    dataframe= pd.read_csv(f'{file}', nrows=1)
-    
+    dataframe = pd.read_csv(f'{file}', nrows=1)
+
     header_path = Path(header_path)
     dataframe_to_csv(dataframe, header_path / "header.csv")
 
