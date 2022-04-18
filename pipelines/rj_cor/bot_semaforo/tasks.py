@@ -194,7 +194,7 @@ def format_message(dataframe: pd.DataFrame) -> pd.Series:
         msg = msg_header + alert
     else:
         alert = "Não foram encontrados alertas no período" + "\n \n"
-        msg = msg_header
+        msg = msg_header + alert
 
     return smart_split(
         text=msg,
