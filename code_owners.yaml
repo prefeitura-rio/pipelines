@@ -8,6 +8,9 @@ pipelines:
         - gabriel-milan
         - d116626
       dir:
+        bot_semaforo:
+          owners:
+            - andersonguicor
         meteorologia:
           owners:
             - patriciacatandi
@@ -15,3 +18,11 @@ pipelines:
       owners:
         - hellcassius
         - fernandascovino
+    rj_escritorio:
+      owners:
+        - gabriel-milan
+        - d116626
+      dir:
+        geolocator:
+          owners:
+            - BrunodePauloAlmeida
