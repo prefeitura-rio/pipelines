@@ -69,7 +69,7 @@ def add_agent(project_name: str):
 
 
 @logger.catch
-def cut_cookie(project_name: str):
+def cut_agency_cookie(agency_name: str):
     """
     Runs the cookiecutter command.
 
@@ -79,7 +79,8 @@ def cut_cookie(project_name: str):
         str(COOKIECUTTER_PATH),
         no_input=True,
         extra_context={
-            "project_name": project_name,
+            "project_name": "example",
+            "agency_name": agency_name,
         },
         output_dir=str(COOKIECUTTER_PATH)
     )
@@ -136,14 +137,86 @@ def check_name(input: str) -> str:
         exit(1)
 
 
+@logger.catch
+def agency_must_exist(input: str) -> str:
+    """
+    Checks whether the agency exists.
+
+    :param input: The input.
+    :return: The input if it exists, otherwise an error message.
+    """
+    try:
+        import pipelines
+    except ImportError:
+        logger.error(
+            "Não foi possível importar as pipelines."
+        )
+        exit(1)
+    pkgpath = path.dirname(pipelines.__file__)
+    agencies = [name for _, name, _ in pkgutil.iter_modules([pkgpath])]
+    if input in agencies:
+        return input
+    else:
+        logger.error(
+            f"A agência {input} não existe."
+        )
+        exit(1)
+
+
+@logger.catch
+def project_must_not_exist_in_agency(input: str, agency: str) -> str:
+    """
+    Checks whether the project exists in the agency.
+
+    :param input: The input.
+    :param agency: The agency.
+    :return: The input if it exists, otherwise an error message.
+    """
+    try:
+        import pipelines
+    except ImportError:
+        logger.error(
+            "Não foi possível importar as pipelines."
+        )
+        exit(1)
+    pkgpath = path.dirname(pipelines.__file__)
+    agencies = [name for _, name, _ in pkgutil.iter_modules([pkgpath])]
+    if agency in agencies:
+        projects = [name for _, name,
+                    _ in pkgutil.iter_modules([pkgpath / agency])]
+        if input in projects:
+            logger.error(
+                f"O projeto {input} já existe na agência {agency}."
+            )
+            exit(1)
+        return input
+    else:
+        logger.error(
+            f"O órgão {agency} não foi encontrado."
+        )
+        exit(1)
+
+
 @app.command()
-def add_project(project_name: str = typer.Argument(..., callback=check_name)):
+def add_agency(agency_name: str = typer.Argument(..., callback=check_name)):
     """
-    Cria um novo projeto usando o cookiecutter.
+    Cria um novo órgão usando o cookiecutter.
     """
-    add_agent(project_name)
-    add_import(project_name)
-    cut_cookie(project_name)
+    add_agent(agency_name)
+    add_import(agency_name)
+    cut_agency_cookie(agency_name)
+
+
+@app.command()
+def add_project(
+    agency_name: str = typer.Argument(..., callback=agency_must_exist),
+    project_name: str = typer.Argument(...,
+                                       callback=project_must_not_exist_in_agency),
+):
+    """
+    Cria um novo projeto no órgão usando o cookiecutter.
+    """
+    # TODO.
 
 
 @app.command()

@@ -2,8 +2,6 @@
 Flows for cor
 """
 
-from functools import partial
-
 from prefect import Flow, Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
@@ -15,13 +13,8 @@ from pipelines.cor.tasks import (
     format_message,
     send_messages,
 )
-from pipelines.utils import notify_discord_on_failure
 
-with Flow(
-    name="COR: CET semáforos - Telegram Bot",
-    on_failure=partial(notify_discord_on_failure,
-                       secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value),
-) as cet_telegram_flow:
+with Flow("COR: CET semáforos - Telegram Bot") as cet_telegram_flow:
 
     secret_path = Parameter("secret_path")
 
@@ -30,14 +23,17 @@ with Flow(
 
     # Get data and generate messages
     dataframe = get_data()
-    messages = format_message(
+    message1, message2, message3, message4 = format_message(
         dataframe=dataframe)
 
     # Send messages
     send_messages(
         token=token,
         group_id=group_id,
-        messages=messages,
+        alert1=message1,
+        alert2=message2,
+        alert3=message3,
+        alert4=message4,
     )
 
 cet_telegram_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
