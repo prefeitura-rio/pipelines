@@ -16,9 +16,9 @@ Funções úteis no tratamento de dados de satélite
 # along with this program. If not, see http://www.gnu.org/licenses/.
 ####################################################################
 
-#===================================================================
+# ===================================================================
 # Acronym Description
-#===================================================================
+# ===================================================================
 # ACHAF - Cloud Top Height: 'HT'
 # ACHTF - Cloud Top Temperature: 'TEMP'
 # ACMF - Clear Sky Masks: 'BCM'
@@ -55,13 +55,13 @@ Funções úteis no tratamento de dados de satélite
 # VAAF - Volcanic Ash: 'VAH'
 # VAAF - Volcanic Ash: 'VAML'
 
-#====================================================================
+# ====================================================================
 # Required Libraries
-#====================================================================
+# ====================================================================
 
 import datetime
 import os
-#import pip._internal as pip #import pip
+# import pip._internal as pip #import pip
 #import sys
 from typing import Tuple
 
@@ -69,14 +69,14 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 import netCDF4 as nc
 import numpy as np
-from osgeo import gdal
+from osgeo import gdal   # pylint: disable=E0401
 import xarray as xr
 
 from pipelines.cor.alagamentos.satelite.cpt_convert import load_cpt
 from pipelines.cor.alagamentos.satelite.remap import remap
 
 # try:
-#     from osgeo import osr, gdal
+#     from osgeo import osr, gdal  # pylint: disable=E0401
 # except ImportError:
 #     # Confere se o python é o 3.8
 #     if sys.version[:3] == '3.8':
@@ -86,7 +86,7 @@ from pipelines.cor.alagamentos.satelite.remap import remap
 #         pip.main(['install', package])
 #     else:
 #         print('Problema ao instalar gdal no python ', sys.version[:3])
-#     from osgeo import osr, gdal
+#     from osgeo import osr, gdal  # pylint: disable=E0401
 
 # cpt_convert explanation
 # https://geonetcast.wordpress.com/2017/06/02/geonetclass-manipulating-goes-16-data-with-python-part-v/
@@ -104,7 +104,8 @@ def get_info(path: str) -> Tuple[dict, str]:
     # Subtract 1 because the year starts at "0"
     dayjulian = int(start[4:7]) - 1
     # Convert from julian to conventional
-    dayconventional = datetime.datetime(year,1,1) + datetime.timedelta(dayjulian)
+    dayconventional = datetime.datetime(
+        year, 1, 1) + datetime.timedelta(dayjulian)
     # Format the date according to the strftime directives
     # date = dayconventional.strftime('%d-%b-%Y')
     # Time of the start of the Scan
@@ -112,13 +113,13 @@ def get_info(path: str) -> Tuple[dict, str]:
     # Date as string
     date_save = dayconventional.strftime('%Y%m%d')
     # Time (UTC) as string
-    time_save = start [7:9] + start [9:11]
+    time_save = start[7:9] + start[9:11]
     datetime_save = str(date_save) + ' ' + time_save
 
-    #=====================================================================
+    # =====================================================================
     # Detect the product type
-    #=====================================================================
-    product = (path[path.find("L2-")+3:path.find("-M6")]) #"-M3" or "-M4"
+    # =====================================================================
+    product = (path[path.find("L2-")+3:path.find("-M6")])  # "-M3" or "-M4"
     print(product)
 
     # Nem todos os produtos foram adicionados no dicionário de características
@@ -126,24 +127,24 @@ def get_info(path: str) -> Tuple[dict, str]:
     product_caracteristics = {}
     # CMIPF - Cloud and Moisture Imagery: 'CMI'
     product_caracteristics['CMIPF'] = {'variable': 'CMI',
-                                        'vmin': -50,
-                                        'vmax': 50,
-                                        'cmap': "jet"}
+                                       'vmin': -50,
+                                       'vmax': 50,
+                                       'cmap': "jet"}
     # CMIPC - Cloud and Moisture Imagery: 'CMI'
     product_caracteristics['CMIPC'] = {'variable': 'CMI',
-                                        'vmin': -50,
-                                        'vmax': 50,
-                                        'cmap': "jet"}
+                                       'vmin': -50,
+                                       'vmax': 50,
+                                       'cmap': "jet"}
     # CMIPM - Cloud and Moisture Imagery: 'CMI'
     product_caracteristics['CMIPM'] = {'variable': 'CMI',
-                                        'vmin': -50,
-                                        'vmax': 50,
-                                        'cmap': "jet"}
+                                       'vmin': -50,
+                                       'vmax': 50,
+                                       'cmap': "jet"}
     # ACHAF - Cloud Top Height: 'HT'
     product_caracteristics['ACHAF'] = {'variable': 'HT',
-                                        'vmin': 0,
-                                        'vmax': 15000,
-                                        'cmap': "rainbow"}
+                                       'vmin': 0,
+                                       'vmax': 15000,
+                                       'cmap': "rainbow"}
     # ACHTF - Cloud Top Temperature: 'TEMP'
     product_caracteristics['ACHATF'] = {'variable': 'TEMP',
                                         'vmin': 180,
@@ -151,54 +152,54 @@ def get_info(path: str) -> Tuple[dict, str]:
                                         'cmap': "jet"}
     # ACMF - Clear Sky Masks: 'BCM'
     product_caracteristics['ACMF'] = {'variable': 'BCM',
-                                        'vmin': 0,
-                                        'vmax': 1,
-                                        'cmap': "gray"}
+                                      'vmin': 0,
+                                      'vmax': 1,
+                                      'cmap': "gray"}
     # ACTPF - Cloud Top Phase: 'Phase'
     product_caracteristics['ACTPF'] = {'variable': 'Phase',
-                                        'vmin': 0,
-                                        'vmax': 5,
-                                        'cmap': "jet"}
+                                       'vmin': 0,
+                                       'vmax': 5,
+                                       'cmap': "jet"}
     # ADPF - Aerosol Detection: 'Smoke'
     product_caracteristics['ADPF'] = {'variable': 'Smoke',
-                                        'vmin': 0,
-                                        'vmax': 255,
-                                        'cmap': "jet"}
+                                      'vmin': 0,
+                                      'vmax': 255,
+                                      'cmap': "jet"}
     # AODF - Aerosol Optical Depth: 'AOD'
     product_caracteristics['AODF'] = {'variable': 'AOD',
-                                        'vmin': 0,
-                                        'vmax': 2,
-                                        'cmap': "rainbow"}
+                                      'vmin': 0,
+                                      'vmax': 2,
+                                      'cmap': "rainbow"}
     # CODF - Cloud Optical Depth: 'COD'
     product_caracteristics['CODF'] = {'variable': 'CODF',
-                                        'vmin': 0,
-                                        'vmax': 100,
-                                        'cmap': "jet"}
+                                      'vmin': 0,
+                                      'vmax': 100,
+                                      'cmap': "jet"}
     # CPSF - Cloud Particle Size: 'PSD'
     product_caracteristics['CPSF'] = {'variable': 'PSD',
-                                        'vmin': 0,
-                                        'vmax': 80,
-                                        'cmap': "rainbow"}
+                                      'vmin': 0,
+                                      'vmax': 80,
+                                      'cmap': "rainbow"}
     # CTPF - Cloud Top Pressure: 'PRES'
     product_caracteristics['CTPF'] = {'variable': 'PRES',
-                                        'vmin': 0,
-                                        'vmax': 1100,
-                                        'cmap': "rainbow"}
+                                      'vmin': 0,
+                                      'vmax': 1100,
+                                      'cmap': "rainbow"}
     # DSIF - Derived Stability Indices: 'CAPE', 'KI', 'LI', 'SI', 'TT'
     product_caracteristics['DSIF'] = {'variable': 'CAPE',
-                                        'vmin': 0,
-                                        'vmax': 1000,
-                                        'cmap': "jet"}
+                                      'vmin': 0,
+                                      'vmax': 1000,
+                                      'cmap': "jet"}
     # FDCF - Fire-Hot Spot Characterization: 'Area', 'Mask', 'Power', 'Temp'
     product_caracteristics['FDCF'] = {'variable': 'Mask',
-                                        'vmin': 0,
-                                        'vmax': 255,
-                                        'cmap': "jet"}
+                                      'vmin': 0,
+                                      'vmax': 255,
+                                      'cmap': "jet"}
     # LSTF - Land Surface (Skin) Temperature: 'LST'
     product_caracteristics['LSTF'] = {'variable': 'LST',
-                                        'vmin': 213,
-                                        'vmax': 330,
-                                        'cmap': "jet"}
+                                      'vmin': 213,
+                                      'vmax': 330,
+                                      'cmap': "jet"}
     # RRQPEF - Rainfall Rate - Quantitative Prediction Estimate: 'RRQPE'
     product_caracteristics['RRQPEF'] = {'variable': 'RRQPE',
                                         'vmin': 0,
@@ -206,14 +207,14 @@ def get_info(path: str) -> Tuple[dict, str]:
                                         'cmap': "jet"}
     # SSTF - Sea Surface (Skin) Temperature: 'SST'
     product_caracteristics['SSTF'] = {'variable': 'SSTF',
-                                        'vmin': 268,
-                                        'vmax': 308,
-                                        'cmap': "jet"}
+                                      'vmin': 268,
+                                      'vmax': 308,
+                                      'cmap': "jet"}
     # TPWF - Total Precipitable Water: 'TPW'
     product_caracteristics['TPWF'] = {'variable': 'TPW',
-                                        'vmin': 0,
-                                        'vmax': 60,
-                                        'cmap': "jet"}
+                                      'vmin': 0,
+                                      'vmax': 60,
+                                      'cmap': "jet"}
 
     #variable = product_caracteristics[product]['variable']
     #vmin = product_caracteristics[product]['vmin']
@@ -224,12 +225,14 @@ def get_info(path: str) -> Tuple[dict, str]:
     variable = product_caracteristics['variable']
 
     if variable == "CMI":
-    	# Search for the GOES-16 channel in the file name
-        product_caracteristics['band'] = int((path[path.find("M3C" or "M4C")+3:path.find("_G16")]))
+        # Search for the GOES-16 channel in the file name
+        product_caracteristics['band'] = int(
+            (path[path.find("M3C" or "M4C")+3:path.find("_G16")]))
     else:
         product_caracteristics['band'] = np.nan
 
     return product_caracteristics, datetime_save
+
 
 def get_goes_extent(data):
     '''
@@ -249,6 +252,7 @@ def get_goes_extent(data):
     # min_lat = float(geo_extent.geospatial_southbound_latitude)
     # max_lat = float(geo_extent.geospatial_northbound_latitude)
     return goes16_extent
+
 
 def remap_g16(path, extent, resolution, variable, datetime_save):
     '''
@@ -276,8 +280,8 @@ def remap_g16(path, extent, resolution, variable, datetime_save):
     month = datetime_save[4:6]
     day = datetime_save[6:8]
 
-    tif_path = os.path.join(os.getcwd(), 'data', 'satelite', variable, 'temp',\
-                            f'ano={year}', f'mes={month}',\
+    tif_path = os.path.join(os.getcwd(), 'data', 'satelite', variable, 'temp',
+                            f'ano={year}', f'mes={month}',
                             f'dia={day}', f'hora={time_save}')
     if not os.path.exists(tif_path):
         os.makedirs(tif_path)
@@ -359,7 +363,7 @@ def plot_g16(data, product_caracteristics, datetime_save,
     #                '[9.61 μm]', '[10.35 μm]','[11.20 μm]','[12.30 μm]','[13.30 μm]']
 
     # Choose a title for the plot
-    #Title = " GOES-16 ABI CMI band " + str(band) + "       " +  Wavelenghts[int(band)] +\
+    # Title = " GOES-16 ABI CMI band " + str(band) + "       " +  Wavelenghts[int(band)] +\
     #  "       " + unit + "       " + date + "       " + time
     # Insert the institution name
     #Institution = "GNC-A Blog"
@@ -367,7 +371,8 @@ def plot_g16(data, product_caracteristics, datetime_save,
     if variable == "CMI":
         if band <= 6:
             # Converts a CPT file to be used in Python
-            cpt = load_cpt('E:\\VLAB\\Python\\Colortables\\Square Root Visible Enhancement.cpt')
+            cpt = load_cpt(
+                'E:\\VLAB\\Python\\Colortables\\Square Root Visible Enhancement.cpt')
             # Makes a linear interpolation
             cpt_convert = LinearSegmentedColormap('cpt', cpt)
             # Plot the GOES-16 channel with the converted CPT colors (you may alter the min and
@@ -381,7 +386,8 @@ def plot_g16(data, product_caracteristics, datetime_save,
             cpt_convert = LinearSegmentedColormap('cpt', cpt)
             # Plot the GOES-16 channel with the converted CPT colors (you may alter the min
             # and max to match your preference)
-            bmap.imshow(data, origin='upper', cmap=cpt_convert, vmin=-112.15, vmax=56.85)
+            bmap.imshow(data, origin='upper', cmap=cpt_convert,
+                        vmin=-112.15, vmax=56.85)
             # Insert the colorbar at the bottom
         elif 7 < band < 11:
             # Converts a CPT file to be used in Python
@@ -390,7 +396,8 @@ def plot_g16(data, product_caracteristics, datetime_save,
             cpt_convert = LinearSegmentedColormap('cpt', cpt)
             # Plot the GOES-16 channel with the converted CPT colors (you may alter the
             # min and max to match your preference)
-            bmap.imshow(data, origin='upper', cmap=cpt_convert, vmin=-112.15, vmax=56.85)
+            bmap.imshow(data, origin='upper', cmap=cpt_convert,
+                        vmin=-112.15, vmax=56.85)
             # Insert the colorbar at the bottom
         elif band > 10:
             # Converts a CPT file to be used in Python
@@ -406,12 +413,12 @@ def plot_g16(data, product_caracteristics, datetime_save,
         bmap.imshow(data, origin='upper', cmap=cmap, vmin=vmin, vmax=vmax)
 
     #cb = bmap.colorbar(location='bottom', size = '1%', pad = '-1.0%')
-    #cb.outline.set_visible(False)
+    # cb.outline.set_visible(False)
     # Remove the colorbar outline
     #cb.ax.tick_params(width = 0)
     # Remove the colorbar ticks
     # Put the colobar labels inside the colorbar
-    #cb.ax.xaxis.set_tick_params(pad=-17)
+    # cb.ax.xaxis.set_tick_params(pad=-17)
     # Change the color and size of the colorbar labels
     #cb.ax.tick_params(axis='x', colors='black', labelsize=12)
 
@@ -432,8 +439,8 @@ def save_parquet(variable, datetime_save):
     year = date_save[:4]
     month = date_save[4:6]
     day = date_save[-2:]
-    tif_data = os.path.join(os.getcwd(), 'data', 'satelite', variable, 'temp',\
-                            f'ano={year}', f'mes={month}',\
+    tif_data = os.path.join(os.getcwd(), 'data', 'satelite', variable, 'temp',
+                            f'ano={year}', f'mes={month}',
                             f'dia={day}', f'hora={time_save}', 'dados.tif')
 
     data = xr.open_dataset(tif_data, engine='rasterio')
@@ -442,12 +449,12 @@ def save_parquet(variable, datetime_save):
     # Converte para dataframe trocando o nome das colunas
 
     data = data.to_dataframe().reset_index()[['x', 'y', 'band_data']]\
-            .rename({'y': 'latitude', 'x': 'longitude', 'band_data':f'{variable.lower()}'}, axis=1)
+        .rename({'y': 'latitude', 'x': 'longitude', 'band_data': f'{variable.lower()}'}, axis=1)
 
     # cria pasta se ela não existe
-    parquet_path = os.path.join(os.getcwd(), 'data', 'satelite', variable, 'output',\
-                            f'ano={year}', f'mes={month}',\
-                            f'dia={day}', f'hora={time_save}')
+    parquet_path = os.path.join(os.getcwd(), 'data', 'satelite', variable, 'output',
+                                f'ano={year}', f'mes={month}',
+                                f'dia={day}', f'hora={time_save}')
 
     if not os.path.exists(parquet_path):
         os.makedirs(parquet_path)
@@ -457,6 +464,7 @@ def save_parquet(variable, datetime_save):
     filename = os.path.join(parquet_path, 'dados.parquet')
     data.to_parquet(filename)
     return filename
+
 
 def main(path):
     '''
@@ -485,14 +493,14 @@ def main(path):
                                     product_caracteristics['variable'],
                                     datetime_save)
 
-    info = {'product':product_caracteristics['product'],
-    	    'variable': product_caracteristics['variable'],
-    	    'vmin': product_caracteristics['vmin'],
-    	    'vmax': product_caracteristics['vmax'],
-    	    'cmap': product_caracteristics['cmap'],
-    	    'datetime_save': datetime_save,
-    	    'band': product_caracteristics['band'],
-    	    'extent': extent,
-    	    'resolution': resolution}
+    info = {'product': product_caracteristics['product'],
+            'variable': product_caracteristics['variable'],
+            'vmin': product_caracteristics['vmin'],
+            'vmax': product_caracteristics['vmax'],
+            'cmap': product_caracteristics['cmap'],
+            'datetime_save': datetime_save,
+            'band': product_caracteristics['band'],
+            'extent': extent,
+            'resolution': resolution}
 
     return grid, goes16_extent, info
