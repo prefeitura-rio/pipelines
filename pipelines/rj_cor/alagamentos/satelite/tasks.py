@@ -13,7 +13,7 @@ import pendulum
 from prefect import task
 import s3fs
 
-from pipelines.utils import log
+from pipelines.utils.utils import log
 from pipelines.rj_cor.alagamentos.satelite.satellite_utils import main, save_parquet
 
 @task(nout=5)
