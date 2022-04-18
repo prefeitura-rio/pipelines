@@ -23,7 +23,7 @@ jobs:
         uses: gabriel-milan/action-pylint@v1
         with:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-          path: "emd_flows/"
+          path: "pipelines/"
           fail: true
           pr-message: true
       - name: Lint tests
