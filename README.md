@@ -151,25 +151,17 @@ run_local(flow, parameters = {"param": "val"})
 
 ### Como testar uma pipeline na nuvem
 
-```sh
-python pipelines/test.py
-```
-
-### Na nuvem
-
 1. Configure as variáveis de ambiente num arquivo chamado `.env` na raiz
    do projeto:
 
-```.env
+```
 GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials.json  # Credenciais do Google Cloud
 PREFECT__BACKEND=server
 PREFECT__SERVER__HOST=http://prefect-apollo.prefect.svc.cluster.local
 PREFECT__SERVER__PORT=4200
+VAULT_ADDRESS=http://vault.vault.svc.cluster.local:8200/
+VAULT_TOKEN=<token> # Valor do token do órgão para o qual você está desenvolvendo. Caso não saiba o token, entre em contato.
 ```
-
-- `VAULT_ADDRESS`: deve ter o valor `http://vault.vault.svc.cluster.local:8200/`
-
-- `VAULT_TOKEN`: deve ter o valor do token do órgão para o qual você está desenvolvendo. Caso não saiba o token, entre em contato.
 
 - Em seguida, tenha certeza que você já tem acesso à UI do Prefect, tanto para realizar a submissão da run, como para
   acompanhá-la durante o processo de execução. Caso não tenha, verifique o procedimento em https://library-emd.herokuapp.com/infraestrutura/como-acessar-a-ui-do-prefect
@@ -192,10 +184,10 @@ run_cloud(
 )
 ```
 
-3. Rode a pipeline localmente com:
+3. Rode a pipeline com:
 
 ```sh
-python pipelines/test.py
+python test.py
 ```
 
 A saída deve se assemelhar ao exemplo abaixo:
