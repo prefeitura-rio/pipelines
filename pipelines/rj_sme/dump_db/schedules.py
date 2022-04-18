@@ -19,8 +19,14 @@ from pipelines.utils.utils import untuple_clocks as untuple
 #
 #####################################
 sme_queries = {
+    "avaliacao": {
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "dump_type": "overwrite",  # TODO: check if it is possible to partition, this run takes over 1 hour
+        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Avaliacao",
+    },
     "coc": {
-        "dump_type": "overwrite",  # TODO: check if it is possible to partition, this run takes 70 minutes
+        "dump_type": "overwrite",  # TODO: check if it is possible to partition, this run takes over 1 hour
         "materialize_after_dump": True,
         "materialization_mode": "prod",
         "execute_query": """
@@ -94,12 +100,6 @@ sme_queries = {
         "materialization_mode": "prod",
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Dependencia",
-    },
-    "avaliacao": {
-        "materialize_after_dump": True,
-        "materialization_mode": "prod",
-        "dump_type": "overwrite",
-        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Avaliacao",
     },
     "escola": {
         "materialize_after_dump": True,
