@@ -23,7 +23,7 @@ def slice_data(current_time: str) -> Tuple[str, str]:
     if not isinstance(current_time, str):
         current_time = current_time.to_datetime_string()
 
-    current_time = current_time or pendulum.now("utc").to_datetime_string()
+    current_time = current_time or pendulum.now('America/Sao_Paulo').to_datetime_string()
 
     data = current_time[:10]
     hora = current_time[11:13]

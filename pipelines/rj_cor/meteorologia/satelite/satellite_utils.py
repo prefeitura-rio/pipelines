@@ -61,35 +61,25 @@ Funções úteis no tratamento de dados de satélite
 
 import datetime
 import os
-# import pip._internal as pip #import pip
-#import sys
 from typing import Tuple
 
-import matplotlib.pyplot as plt
-from matplotlib.colors import LinearSegmentedColormap
 import netCDF4 as nc
 import numpy as np
 from osgeo import gdal   # pylint: disable=E0401
+import pendulum
 import xarray as xr
 
-from pipelines.rj_cor.alagamentos.satelite.cpt_convert import load_cpt
-from pipelines.rj_cor.alagamentos.satelite.remap import remap
+from pipelines.rj_cor.meteorologia.satelite.remap import remap
 
-# try:
-#     from osgeo import osr, gdal  # pylint: disable=E0401
-# except ImportError:
-#     # Confere se o python é o 3.8
-#     if sys.version[:3] == '3.8':
-#         package = os.path.join(os.getcwd(),
-#                       'pacotes_gdal',
-#                       'GDAL-3.4.1-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.whl')
-#         pip.main(['install', package])
-#     else:
-#         print('Problema ao instalar gdal no python ', sys.version[:3])
-#     from osgeo import osr, gdal  # pylint: disable=E0401
 
-# cpt_convert explanation
-# https://geonetcast.wordpress.com/2017/06/02/geonetclass-manipulating-goes-16-data-with-python-part-v/
+def converte_timezone(datetime_save: str) -> str:
+    '''
+    Recebe o formato de data hora em 'YYYYMMDD HHmm' no UTC e
+    retorna no mesmo formato no horário São Paulo
+    '''
+    datahora = pendulum.from_format(datetime_save, 'YYYYMMDD HHmm')
+    datahora = datahora.in_tz('America/Sao_Paulo')
+    return datahora.format('YYYYMMDD HHmm')
 
 
 def get_info(path: str) -> Tuple[dict, str]:
@@ -110,11 +100,16 @@ def get_info(path: str) -> Tuple[dict, str]:
     # date = dayconventional.strftime('%d-%b-%Y')
     # Time of the start of the Scan
     # time = start[7:9] + ":" + start[9:11] + ":" + start[11:13] + " UTC"
+
     # Date as string
     date_save = dayconventional.strftime('%Y%m%d')
+
     # Time (UTC) as string
-    time_save = start[7:9] + start[9:11]
+    time_save = start[7:11]
     datetime_save = str(date_save) + ' ' + time_save
+
+    # Converte data/hora de UTC para horário de São Paulo
+    datetime_save = converte_timezone(datetime_save=datetime_save)
 
     # =====================================================================
     # Detect the product type
@@ -341,93 +336,6 @@ def treat_data(data, variable, reprojection_variables):
         data[data <= 200] = np.nan
 
     return data
-
-
-def plot_g16(data, product_caracteristics, datetime_save,
-             bmap, dpi):
-    '''
-    Plota produto em latlon e salva imagem
-    '''
-    # TODO: Refactor this function
-    variable = product_caracteristics['variable']
-    cmap = product_caracteristics['cmap']
-    vmin = product_caracteristics['vmin']
-    vmax = product_caracteristics['vmax']
-    band = product_caracteristics['band']
-
-    date_save = datetime_save[:8]
-    time_save = datetime_save[9:]
-
-    # Create a GOES-16 bands string array
-    # Wavelenghts = ['[]','[0.47 μm]','[0.64 μm]','[0.865 μm]','[1.378 μm]','[1.61 μm]',
-    #                '[2.25 μm]','[3.90 μm]','[6.19 μm]','[6.95 μm]','[7.34 μm]','[8.50 μm]',
-    #                '[9.61 μm]', '[10.35 μm]','[11.20 μm]','[12.30 μm]','[13.30 μm]']
-
-    # Choose a title for the plot
-    # Title = " GOES-16 ABI CMI band " + str(band) + "       " +  Wavelenghts[int(band)] +\
-    #  "       " + unit + "       " + date + "       " + time
-    # Insert the institution name
-    #Institution = "GNC-A Blog"
-
-    if variable == "CMI":
-        if band <= 6:
-            # Converts a CPT file to be used in Python
-            cpt = load_cpt(
-                'E:\\VLAB\\Python\\Colortables\\Square Root Visible Enhancement.cpt')
-            # Makes a linear interpolation
-            cpt_convert = LinearSegmentedColormap('cpt', cpt)
-            # Plot the GOES-16 channel with the converted CPT colors (you may alter the min and
-            # max to match your preference)
-            bmap.imshow(data, origin='upper', cmap=cpt_convert, vmin=0, vmax=1)
-            # Insert the colorbar at the bottom
-        elif band == 7:
-            # Converts a CPT file to be used in Python
-            cpt = load_cpt('E:\\VLAB\\Python\\Colortables\\SVGAIR2_TEMP.cpt')
-            # Makes a linear interpolation
-            cpt_convert = LinearSegmentedColormap('cpt', cpt)
-            # Plot the GOES-16 channel with the converted CPT colors (you may alter the min
-            # and max to match your preference)
-            bmap.imshow(data, origin='upper', cmap=cpt_convert,
-                        vmin=-112.15, vmax=56.85)
-            # Insert the colorbar at the bottom
-        elif 7 < band < 11:
-            # Converts a CPT file to be used in Python
-            cpt = load_cpt('E:\\VLAB\\Python\\Colortables\\SVGAWVX_TEMP.cpt')
-            # Makes a linear interpolation
-            cpt_convert = LinearSegmentedColormap('cpt', cpt)
-            # Plot the GOES-16 channel with the converted CPT colors (you may alter the
-            # min and max to match your preference)
-            bmap.imshow(data, origin='upper', cmap=cpt_convert,
-                        vmin=-112.15, vmax=56.85)
-            # Insert the colorbar at the bottom
-        elif band > 10:
-            # Converts a CPT file to be used in Python
-            cpt = load_cpt('E:\\VLAB\\Python\\Colortables\\IR4AVHRR6.cpt')
-            # Makes a linear interpolation
-            cpt_convert = LinearSegmentedColormap('cpt', cpt)
-            # Plot the GOES-16 channel with the converted CPT colors (you may alter
-            # the min and max to match your preference)
-            #bmap.imshow(data, origin='upper', cmap='gray', vmin=-103, vmax=84)
-            bmap.imshow(data, origin='upper', cmap='gray_r', vmin=-70, vmax=40)
-            # Insert the colorbar at the bottom
-    else:
-        bmap.imshow(data, origin='upper', cmap=cmap, vmin=vmin, vmax=vmax)
-
-    #cb = bmap.colorbar(location='bottom', size = '1%', pad = '-1.0%')
-    # cb.outline.set_visible(False)
-    # Remove the colorbar outline
-    #cb.ax.tick_params(width = 0)
-    # Remove the colorbar ticks
-    # Put the colobar labels inside the colorbar
-    # cb.ax.xaxis.set_tick_params(pad=-17)
-    # Change the color and size of the colorbar labels
-    #cb.ax.tick_params(axis='x', colors='black', labelsize=12)
-
-    # Save the result
-    fig_name = variable + '_' + date_save + time_save + '.png'
-    print('fig name',  fig_name)
-    plt.savefig(fig_name, dpi=dpi, pad_inches=0)
-    # plt.savefig('C:\VLAB\GOES-16_Ch13.png', dpi=dpi, bbox_inches='tight', pad_inches=0)
 
 
 def save_parquet(variable, datetime_save):
