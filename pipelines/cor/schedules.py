@@ -33,6 +33,9 @@ bot_schedule = Schedule(
             ]
         ),
     ],
+    parameter_defaults={
+        "secret_path": "cet-bot",
+    }
     # # Only on weekdays
     # filters=[filters.is_weekday],
     # or_filters=[
