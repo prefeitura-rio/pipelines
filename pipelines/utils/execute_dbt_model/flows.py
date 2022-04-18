@@ -37,7 +37,9 @@ with Flow(
     # Rename flow run
     #
     #####################################
-    rename_flow_run = rename_current_flow_run("Materialize", dataset_id, table_id)
+    rename_flow_run = rename_current_flow_run(
+        prefix="Materialize", dataset_id=dataset_id, table_id=table_id
+    )
 
     # Get DBT client
     dbt_client = get_k8s_dbt_client(mode=mode)

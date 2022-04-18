@@ -34,7 +34,7 @@ from pipelines.utils.tasks import get_user_and_password, check_table_exists
 from pipelines.utils.utils import notify_discord_on_failure
 
 with Flow(
-    name="EMD: template - Ingerir tabela de banco SQL",
+    name=utils_constants.FLOW_DUMP_DB_NAME.value,
     on_failure=partial(
         notify_discord_on_failure,
         secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value,
@@ -80,8 +80,9 @@ with Flow(
     # Rename flow run
     #
     #####################################
-    rename_flow_run = rename_current_flow_run("Dump", dataset_id, table_id)
-
+    rename_flow_run = rename_current_flow_run(
+        prefix="Dump", dataset_id=dataset_id, table_id=table_id
+    )
     #####################################
     #
     # Tasks section #0 - Get credentials
