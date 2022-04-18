@@ -35,7 +35,7 @@ from pipelines.constants import constants
 def get_datario_geodataframe(
     url: str,
     path: Union[str, Path],
-    wait=None,  # pylint disable=unused-argument
+    wait=None,  # pylint: disable=unused-argument
 ):
     """ "
     Save a CSV from data.rio API
