@@ -216,7 +216,9 @@ ergon_views = {
 def get_clock(view_name, table_id):
     return IntervalClock(
         interval=timedelta(days=30),
-        start_date=datetime(2021, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo")),
+        start_date=datetime(
+            2022, 2, 11, 19, 1, tzinfo=pytz.timezone("America/Sao_Paulo")
+        ),
         labels=[
             constants.EMD_AGENT_LABEL.value,
         ],
