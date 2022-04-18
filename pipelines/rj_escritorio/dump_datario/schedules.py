@@ -30,7 +30,7 @@ diretorio_clocks = [
         + timedelta(minutes=3 * count),
         # TODO change to RJ_DATARIO_AGENT_LABEL when it's ready
         labels=[
-            constants.RJ_DATARIO_AGENT_LABEL.value,
+            constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
         ],
         parameter_defaults={
             "url": url,
