@@ -9,7 +9,7 @@ from prefect.schedules import Schedule
 import pytz
 
 from pipelines.constants import constants
-from pipelines.utils.dump_db.utils import generate_schedules
+from pipelines.utils.dump_db.utils import generate_dump_db_schedules
 from pipelines.utils.utils import untuple_clocks as untuple
 
 
@@ -162,7 +162,7 @@ sme_queries = {
     },
 }
 
-sme_clocks = generate_schedules(
+sme_clocks = generate_dump_db_schedules(
     interval=timedelta(days=1),
     start_date=datetime(2022, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[

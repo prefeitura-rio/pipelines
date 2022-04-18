@@ -10,7 +10,7 @@ import pytz
 
 from pipelines.constants import constants
 from pipelines.utils.utils import untuple_clocks as untuple
-from pipelines.utils.execute_dbt_model import generate_dbt_schedules
+from pipelines.utils.execute_dbt_model import generate_execute_dbt_model_schedules
 
 
 diretorio_views = {
@@ -18,7 +18,7 @@ diretorio_views = {
     "logradouro": {"dataset_id": "diretorio", "mode": "dev"},
 }
 
-diretorio_clocks = generate_dbt_schedules(
+diretorio_clocks = generate_execute_dbt_model_schedules(
     interval=timedelta(days=7),
     start_date=datetime(2022, 3, 21, 3, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[

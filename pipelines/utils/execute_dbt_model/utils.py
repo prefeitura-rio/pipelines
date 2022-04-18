@@ -32,7 +32,7 @@ def get_dbt_client(
     )
 
 
-def generate_dbt_schedules(  # pylint: disable=too-many-arguments,too-many-locals
+def generate_execute_dbt_model_schedules(  # pylint: disable=too-many-arguments,too-many-locals
     interval: timedelta,
     start_date: datetime,
     labels: List[str],

@@ -67,7 +67,7 @@ def build_query_new_columns(table_columns: List[str]) -> List[str]:
     )
 
 
-def generate_schedules(  # pylint: disable=too-many-arguments,too-many-locals
+def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-locals
     interval: timedelta,
     start_date: datetime,
     labels: List[str],
