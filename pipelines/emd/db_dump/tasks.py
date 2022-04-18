@@ -12,8 +12,6 @@ import basedosdados as bd
 
 from pipelines.utils import log
 
-from pipelines.utils import log
-
 ###############
 #
 # SQL Server
@@ -27,6 +25,7 @@ def sql_server_get_connection(server: str, user: str, password: str, database: s
     Returns a connection to the SQL Server.
     """
     log(f"Connecting to SQL Server: {server}")
+    # pylint: disable=E1101
     return pymssql.connect(
         server=server, user=user, password=password, database=database
     )
@@ -142,7 +141,11 @@ def dump_batches_to_csv(cursor, batch_size: int, prepath: Union[str, Path]) -> P
 ###############
 @task
 def upload_to_gcs(path: Union[str, Path], dataset_id: str, table_id: str) -> None:
-    tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
+    """
+    Uploads a bunch of CSVs using BD+
+    """
+    tb = bd.Table(dataset_id=dataset_id,
+                  table_id=table_id)  # pylint: disable=C0103
     if tb.table_exists(mode="staging"):
         # the name of the files need to be the same or the data doesn't get overwritten
         tb.append(
@@ -157,6 +160,7 @@ def upload_to_gcs(path: Union[str, Path], dataset_id: str, table_id: str) -> Non
         )
 
     else:
+        # pylint: disable=C0301
         log(
             "Table does not exist in STAGING, need to create it in local first.\nCreate and publish the table in BigQuery first."
         )
