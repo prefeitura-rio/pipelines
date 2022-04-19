@@ -20,7 +20,7 @@ jobs:
 
       - name: Upgrade pip
         run: |
-          pip install -U pip poetry
+          pip install -U pip poetry pdoc3
 
       - name: Install GDAL for osgeo deps
         run: |
