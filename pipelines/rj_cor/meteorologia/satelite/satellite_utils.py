@@ -445,20 +445,16 @@ def save_parquet(variable: str, datetime_save: str) -> Union[str, Path]:
     )
 
     # cria pasta se ela não existe
-    base_path = os.path.join(
-        os.getcwd(), "data", "satelite", variable, "output"
-    )
+    base_path = os.path.join(os.getcwd(), "data", "satelite", variable, "output")
 
-    parquet_path = os.path.join(
-        base_path, partitions
-    )
+    parquet_path = os.path.join(base_path, partitions)
 
     if not os.path.exists(parquet_path):
         os.makedirs(parquet_path)
 
     # Fixa ordem das colunas
-    print('>>>>>', ['longitude', 'latitude', variable.lower()])
-    data = data[['longitude', 'latitude', variable.lower()]]
+    print(">>>>>", ["longitude", "latitude", variable.lower()])
+    data = data[["longitude", "latitude", variable.lower()]]
 
     # salva em parquet
     log(f"Saving on base_path {base_path}")
