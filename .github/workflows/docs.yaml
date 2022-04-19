@@ -29,11 +29,11 @@ jobs:
 
       - name: Install package and doc dependencies
         run: |
-          poetry install
+          python -m pip install .
 
       - name: Generate docs
         run: |
-          poetry run docs
+          pdoc3 --html --html-dir docs pipelines
 
       - name: Deploy docs
         uses: JamesIves/github-pages-deploy-action@v4.2.3
