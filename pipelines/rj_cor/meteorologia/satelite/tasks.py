@@ -60,7 +60,7 @@ def download(variavel: str, ano: str, dia_juliano: str, hora: str) -> Union[str,
             )
         )[0]
         origem = "aws"
-    except Exception:
+    except RuntimeError:
         bucket_name = "gcp-public-data-goes-16"
         partition_file = f"ABI-L2-{variavel}/{ano}/{dia_juliano}/{hora}/"
         file = list_blobs_with_prefix(
