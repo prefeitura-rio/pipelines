@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>pipelines.rj_smtr.tasks API documentation</title>
+<meta name="description" content="Tasks for rj_smtr" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pipelines.rj_smtr.tasks</code></h1>
+</header>
+<section id="section-intro">
+<p>Tasks for rj_smtr</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># -*- coding: utf-8 -*-
+&#34;&#34;&#34;
+Tasks for rj_smtr
+&#34;&#34;&#34;
+# pylint: disable=W0703
+
+###############################################################################
+#
+# Aqui é onde devem ser definidas as tasks para os flows do projeto.
+# Cada task representa um passo da pipeline. Não é estritamente necessário
+# tratar todas as exceções que podem ocorrer durante a execução de uma task,
+# mas é recomendável, ainda que não vá implicar em  uma quebra no sistema.
+# Mais informações sobre tasks podem ser encontradas na documentação do
+# Prefect: https://docs.prefect.io/core/concepts/tasks.html
+#
+# De modo a manter consistência na codebase, todo o código escrito passará
+# pelo pylint. Todos os warnings e erros devem ser corrigidos.
+#
+# As tasks devem ser definidas como funções comuns ao Python, com o decorador
+# @task acima. É recomendado inserir type hints para as variáveis.
+#
+# Um exemplo de task é o seguinte:
+#
+# -----------------------------------------------------------------------------
+# from prefect import task
+#
+# @task
+# def my_task(param1: str, param2: int) -&gt; str:
+#     &#34;&#34;&#34;
+#     My task description.
+#     &#34;&#34;&#34;
+#     return f&#39;{param1} {param2}&#39;
+# -----------------------------------------------------------------------------
+#
+# Você também pode usar pacotes Python arbitrários, como numpy, pandas, etc.
+#
+# -----------------------------------------------------------------------------
+# from prefect import task
+# import numpy as np
+#
+# @task
+# def my_task(a: np.ndarray, b: np.ndarray) -&gt; str:
+#     &#34;&#34;&#34;
+#     My task description.
+#     &#34;&#34;&#34;
+#     return np.add(a, b)
+# -----------------------------------------------------------------------------
+#
+# Abaixo segue um código para exemplificação, que pode ser removido.
+#
+###############################################################################
+import json
+import os
+from pathlib import Path
+
+from basedosdados import Storage
+import pandas as pd
+import pendulum
+from prefect import task
+import requests
+
+from pipelines.rj_smtr.constants import constants
+from pipelines.rj_smtr.utils import create_or_append_table
+from pipelines.utils.utils import log, get_vault_secret
+
+
+@task
+def create_current_date_hour_partition():
+    &#34;&#34;&#34;Create partitioned directory structure to save data locally
+
+    Returns:
+        dict: &#34;filename&#34; contains the name which to upload the csv, &#34;partitions&#34; contains
+        the partitioned directory path
+    &#34;&#34;&#34;
+    timezone = constants.TIMEZONE.value
+
+    capture_time = pendulum.now(timezone)
+    date = capture_time.strftime(&#34;%Y-%m-%d&#34;)
+    hour = capture_time.strftime(&#34;%H&#34;)
+    filename = capture_time.strftime(&#34;%Y-%m-%d-%H-%M-%S&#34;)
+
+    partitions = f&#34;data={date}/hora={hour}&#34;
+
+    return {
+        &#34;filename&#34;: filename,
+        &#34;partitions&#34;: partitions,
+    }
+
+
+@task
+def get_file_path_and_partitions(dataset_id, table_id, filename, partitions):
+    &#34;&#34;&#34;Get the full path which to save data locally before upload
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+        filename (str): Single csv name
+        partitions (str): Partitioned directory structure, ie &#34;ano=2022/mes=03/data=01&#34;
+
+    Returns:
+        str: Final path which to save files
+    &#34;&#34;&#34;
+
+    # If not specific table_id, use resource one
+    # if not table_id:
+    #     table_id = context.resources.basedosdados_config[&#34;table_id&#34;]
+    # dataset_id = context.resources.basedosdados_config[&#34;dataset_id&#34;]
+
+    # Get data folder from environment variable
+    data_folder = os.getenv(&#34;DATA_FOLDER&#34;, &#34;data&#34;)
+
+    file_path = f&#34;{os.getcwd()}/{data_folder}/{{mode}}/{dataset_id}/{table_id}&#34;
+    file_path += f&#34;/{partitions}/{filename}.{{filetype}}&#34;
+    log(f&#34;creating file path {file_path}&#34;)
+
+    return file_path
+
+
+@task
+def save_raw_local(data, file_path, mode=&#34;raw&#34;):
+    &#34;&#34;&#34;Dumps json response from API to .json file
+
+    Args:
+        data (response): Response from API request
+        file_path (str): Path which to save raw file
+        mode (str, optional): Folder to save locally, later folder which to upload to GCS.
+        Defaults to &#34;raw&#34;.
+
+    Returns:
+        str: Path to the saved file
+    &#34;&#34;&#34;
+
+    _file_path = file_path.format(mode=mode, filetype=&#34;json&#34;)
+    Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
+    json.dump(data.json(), Path(_file_path).open(&#34;w&#34;, encoding=&#34;utf-8&#34;))
+
+    return _file_path
+
+
+@task
+def save_treated_local(dataframe, file_path, mode=&#34;staging&#34;):
+    &#34;&#34;&#34;Save treated file locally
+
+    Args:
+        dataframe (pandas.core.DataFrame): Data to save as .csv file
+        file_path (_type_): Path which to save .csv files
+        mode (str, optional): Directory to save locally, later folder which to upload to GCS.
+        Defaults to &#34;staging&#34;.
+
+    Returns:
+        str: Path to the saved file
+    &#34;&#34;&#34;
+
+    _file_path = file_path.format(mode=mode, filetype=&#34;csv&#34;)
+    Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
+    dataframe.to_csv(_file_path, index=False)
+
+    return _file_path
+
+
+@task
+def get_raw(url, headers=None, kind: str = None):
+    &#34;&#34;&#34;Request data from a url API
+
+    Args:
+        url (str): URL to send request to
+        headers (dict, optional): Aditional fields to send along the request. Defaults to None.
+        kind (str, optional): Kind of API being captured.
+        Possible values are &#39;stpl&#39;, &#39;brt&#39; and &#39;sppo&#39;
+    Returns:
+        dict: &#34;data&#34; contains the response object from the request, &#34;timestamp&#34; contains
+        the run time timestamp, &#34;error&#34; catches errors that may occur during task execution.
+    &#34;&#34;&#34;
+    if kind == &#34;stpl&#34;:
+        headers = get_vault_secret(&#34;stpl_api&#34;)[&#34;data&#34;]
+    data = None
+    error = None
+    timestamp = pendulum.now(constants.TIMEZONE.value)
+    try:
+        data = requests.get(
+            url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
+        )
+    except requests.exceptions.ReadTimeout as err:
+        error = err
+    except Exception as err:
+        error = f&#34;Unknown exception while trying to fetch data from {url}: {err}&#34;
+
+    if data is None:
+        if error is None:
+            error = &#34;Data from API is none!&#34;
+
+    if error:
+        return {&#34;data&#34;: data, &#34;timestamp&#34;: timestamp.isoformat(), &#34;error&#34;: error}
+    if data.ok:
+        return {
+            &#34;data&#34;: data,
+            &#34;error&#34;: error,
+            &#34;timestamp&#34;: timestamp.isoformat(),
+        }
+    # else
+    error = f&#34;Requests failed with error {data.status_code}&#34;
+    return {&#34;error&#34;: error, &#34;timestamp&#34;: timestamp.isoformat(), &#34;data&#34;: data}
+
+
+@task
+def bq_upload(dataset_id, table_id, filepath, raw_filepath=None, partitions=None):
+    &#34;&#34;&#34;Upload raw and treated data to GCS and BigQuery
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+        filepath (str): Path to the saved treated .csv file
+        raw_filepath (str, optional): Path to raw .json file. Defaults to None.
+        partitions (str, optional): Partitioned directory structure, ie &#34;ano=2022/mes=03/data=01&#34;.
+        Defaults to None.
+
+    Returns:
+        None
+    &#34;&#34;&#34;
+    log(
+        f&#34;&#34;&#34;
+    Received inputs:
+    raw_filepath = {raw_filepath}, type = {type(raw_filepath)}
+    treated_filepath = {filepath}, type = {type(filepath)}
+    dataset_id = {dataset_id}, type = {type(dataset_id)}
+    table_id = {table_id}, type = {type(table_id)}
+    partitions = {partitions}, type = {type(partitions)}
+    &#34;&#34;&#34;
+    )
+
+    # Upload raw to staging
+    if raw_filepath:
+        st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
+        log(
+            f&#34;&#34;&#34;Uploading raw file:
+            {raw_filepath}
+            to bucket {st_obj.bucket_name}
+            at {st_obj.bucket_name}/{dataset_id}/{table_id}&#34;&#34;&#34;
+        )
+        st_obj.upload(
+            path=raw_filepath, partitions=partitions, mode=&#34;raw&#34;, if_exists=&#34;replace&#34;
+        )
+
+    # creates and publish table if it does not exist, append to it otherwise
+    if partitions:
+        # If table is partitioned, get parent directory wherein partitions are stored
+        tb_dir = filepath.split(partitions)[0]
+        create_or_append_table(dataset_id, table_id, tb_dir)
+    else:
+        create_or_append_table(dataset_id, table_id, filepath)
+
+    # Delete local Files
+    # log(f&#34;Deleting local files: {raw_filepath}, {filepath}&#34;)
+    # cleanup_local(filepath, raw_filepath)
+
+
+@task
+def upload_logs_to_bq(dataset_id, parent_table_id, timestamp, error):
+    &#34;&#34;&#34;Upload execution status table to BigQuery.
+    Table is uploaded to the same dataset, named {parent_table_id}_logs.
+
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        parent_table_id (str): Parent table id related to the status table
+        timestamp (str): ISO formatted timestamp string
+        error (str): String associated with error caught during execution
+
+    Returns:
+        None
+    &#34;&#34;&#34;
+
+    table_id = parent_table_id + &#34;_logs&#34;
+
+    filepath = Path(
+        f&#34;{timestamp}/{table_id}/data={pendulum.parse(timestamp).date()}/{table_id}_{timestamp}.csv&#34;
+    )
+    # create partition directory
+    filepath.parent.mkdir(exist_ok=True, parents=True)
+    # create dataframe to be uploaded
+    dataframe = pd.DataFrame(
+        {
+            &#34;timestamp_captura&#34;: [pd.to_datetime(timestamp)],
+            &#34;sucesso&#34;: [error is None],
+            &#34;erro&#34;: [error],
+        }
+    )
+    # save local
+    dataframe.to_csv(filepath, index=False)
+    # BD Table object
+    create_or_append_table(dataset_id=dataset_id, table_id=table_id, path=filepath)
+    # delete local file
+    # shutil.rmtree(f&#34;{timestamp}&#34;)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pipelines.rj_smtr.tasks.bq_upload"><code class="name flex">
+<span>def <span class="ident">bq_upload</span></span>(<span>dataset_id, table_id, filepath, raw_filepath=None, partitions=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Upload raw and treated data to GCS and BigQuery</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>dataset_id on BigQuery</dd>
+<dt><strong><code>table_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>table_id on BigQuery</dd>
+<dt><strong><code>filepath</code></strong> :&ensp;<code>str</code></dt>
+<dd>Path to the saved treated .csv file</dd>
+<dt><strong><code>raw_filepath</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Path to raw .json file. Defaults to None.</dd>
+<dt><strong><code>partitions</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Partitioned directory structure, ie "ano=2022/mes=03/data=01".</dd>
+</dl>
+<p>Defaults to None.</p>
+<h2 id="returns">Returns</h2>
+<p>None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def bq_upload(dataset_id, table_id, filepath, raw_filepath=None, partitions=None):
+    &#34;&#34;&#34;Upload raw and treated data to GCS and BigQuery
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+        filepath (str): Path to the saved treated .csv file
+        raw_filepath (str, optional): Path to raw .json file. Defaults to None.
+        partitions (str, optional): Partitioned directory structure, ie &#34;ano=2022/mes=03/data=01&#34;.
+        Defaults to None.
+
+    Returns:
+        None
+    &#34;&#34;&#34;
+    log(
+        f&#34;&#34;&#34;
+    Received inputs:
+    raw_filepath = {raw_filepath}, type = {type(raw_filepath)}
+    treated_filepath = {filepath}, type = {type(filepath)}
+    dataset_id = {dataset_id}, type = {type(dataset_id)}
+    table_id = {table_id}, type = {type(table_id)}
+    partitions = {partitions}, type = {type(partitions)}
+    &#34;&#34;&#34;
+    )
+
+    # Upload raw to staging
+    if raw_filepath:
+        st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
+        log(
+            f&#34;&#34;&#34;Uploading raw file:
+            {raw_filepath}
+            to bucket {st_obj.bucket_name}
+            at {st_obj.bucket_name}/{dataset_id}/{table_id}&#34;&#34;&#34;
+        )
+        st_obj.upload(
+            path=raw_filepath, partitions=partitions, mode=&#34;raw&#34;, if_exists=&#34;replace&#34;
+        )
+
+    # creates and publish table if it does not exist, append to it otherwise
+    if partitions:
+        # If table is partitioned, get parent directory wherein partitions are stored
+        tb_dir = filepath.split(partitions)[0]
+        create_or_append_table(dataset_id, table_id, tb_dir)
+    else:
+        create_or_append_table(dataset_id, table_id, filepath)
+
+    # Delete local Files
+    # log(f&#34;Deleting local files: {raw_filepath}, {filepath}&#34;)
+    # cleanup_local(filepath, raw_filepath)</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.tasks.create_current_date_hour_partition"><code class="name flex">
+<span>def <span class="ident">create_current_date_hour_partition</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create partitioned directory structure to save data locally</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>"filename" contains the name which to upload the csv, "partitions" contains</dd>
+</dl>
+<p>the partitioned directory path</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def create_current_date_hour_partition():
+    &#34;&#34;&#34;Create partitioned directory structure to save data locally
+
+    Returns:
+        dict: &#34;filename&#34; contains the name which to upload the csv, &#34;partitions&#34; contains
+        the partitioned directory path
+    &#34;&#34;&#34;
+    timezone = constants.TIMEZONE.value
+
+    capture_time = pendulum.now(timezone)
+    date = capture_time.strftime(&#34;%Y-%m-%d&#34;)
+    hour = capture_time.strftime(&#34;%H&#34;)
+    filename = capture_time.strftime(&#34;%Y-%m-%d-%H-%M-%S&#34;)
+
+    partitions = f&#34;data={date}/hora={hour}&#34;
+
+    return {
+        &#34;filename&#34;: filename,
+        &#34;partitions&#34;: partitions,
+    }</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.tasks.get_file_path_and_partitions"><code class="name flex">
+<span>def <span class="ident">get_file_path_and_partitions</span></span>(<span>dataset_id, table_id, filename, partitions)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the full path which to save data locally before upload</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>dataset_id on BigQuery</dd>
+<dt><strong><code>table_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>table_id on BigQuery</dd>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>Single csv name</dd>
+<dt><strong><code>partitions</code></strong> :&ensp;<code>str</code></dt>
+<dd>Partitioned directory structure, ie "ano=2022/mes=03/data=01"</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>Final path which to save files</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_file_path_and_partitions(dataset_id, table_id, filename, partitions):
+    &#34;&#34;&#34;Get the full path which to save data locally before upload
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+        filename (str): Single csv name
+        partitions (str): Partitioned directory structure, ie &#34;ano=2022/mes=03/data=01&#34;
+
+    Returns:
+        str: Final path which to save files
+    &#34;&#34;&#34;
+
+    # If not specific table_id, use resource one
+    # if not table_id:
+    #     table_id = context.resources.basedosdados_config[&#34;table_id&#34;]
+    # dataset_id = context.resources.basedosdados_config[&#34;dataset_id&#34;]
+
+    # Get data folder from environment variable
+    data_folder = os.getenv(&#34;DATA_FOLDER&#34;, &#34;data&#34;)
+
+    file_path = f&#34;{os.getcwd()}/{data_folder}/{{mode}}/{dataset_id}/{table_id}&#34;
+    file_path += f&#34;/{partitions}/{filename}.{{filetype}}&#34;
+    log(f&#34;creating file path {file_path}&#34;)
+
+    return file_path</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.tasks.get_raw"><code class="name flex">
+<span>def <span class="ident">get_raw</span></span>(<span>url, headers=None, kind: str = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request data from a url API</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>url</code></strong> :&ensp;<code>str</code></dt>
+<dd>URL to send request to</dd>
+<dt><strong><code>headers</code></strong> :&ensp;<code>dict</code>, optional</dt>
+<dd>Aditional fields to send along the request. Defaults to None.</dd>
+<dt><strong><code>kind</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Kind of API being captured.</dd>
+</dl>
+<p>Possible values are 'stpl', 'brt' and 'sppo'</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>"data" contains the response object from the request, "timestamp" contains</dd>
+</dl>
+<p>the run time timestamp, "error" catches errors that may occur during task execution.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_raw(url, headers=None, kind: str = None):
+    &#34;&#34;&#34;Request data from a url API
+
+    Args:
+        url (str): URL to send request to
+        headers (dict, optional): Aditional fields to send along the request. Defaults to None.
+        kind (str, optional): Kind of API being captured.
+        Possible values are &#39;stpl&#39;, &#39;brt&#39; and &#39;sppo&#39;
+    Returns:
+        dict: &#34;data&#34; contains the response object from the request, &#34;timestamp&#34; contains
+        the run time timestamp, &#34;error&#34; catches errors that may occur during task execution.
+    &#34;&#34;&#34;
+    if kind == &#34;stpl&#34;:
+        headers = get_vault_secret(&#34;stpl_api&#34;)[&#34;data&#34;]
+    data = None
+    error = None
+    timestamp = pendulum.now(constants.TIMEZONE.value)
+    try:
+        data = requests.get(
+            url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
+        )
+    except requests.exceptions.ReadTimeout as err:
+        error = err
+    except Exception as err:
+        error = f&#34;Unknown exception while trying to fetch data from {url}: {err}&#34;
+
+    if data is None:
+        if error is None:
+            error = &#34;Data from API is none!&#34;
+
+    if error:
+        return {&#34;data&#34;: data, &#34;timestamp&#34;: timestamp.isoformat(), &#34;error&#34;: error}
+    if data.ok:
+        return {
+            &#34;data&#34;: data,
+            &#34;error&#34;: error,
+            &#34;timestamp&#34;: timestamp.isoformat(),
+        }
+    # else
+    error = f&#34;Requests failed with error {data.status_code}&#34;
+    return {&#34;error&#34;: error, &#34;timestamp&#34;: timestamp.isoformat(), &#34;data&#34;: data}</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.tasks.save_raw_local"><code class="name flex">
+<span>def <span class="ident">save_raw_local</span></span>(<span>data, file_path, mode='raw')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Dumps json response from API to .json file</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>response</code></dt>
+<dd>Response from API request</dd>
+<dt><strong><code>file_path</code></strong> :&ensp;<code>str</code></dt>
+<dd>Path which to save raw file</dd>
+<dt><strong><code>mode</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Folder to save locally, later folder which to upload to GCS.</dd>
+</dl>
+<p>Defaults to "raw".</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>Path to the saved file</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def save_raw_local(data, file_path, mode=&#34;raw&#34;):
+    &#34;&#34;&#34;Dumps json response from API to .json file
+
+    Args:
+        data (response): Response from API request
+        file_path (str): Path which to save raw file
+        mode (str, optional): Folder to save locally, later folder which to upload to GCS.
+        Defaults to &#34;raw&#34;.
+
+    Returns:
+        str: Path to the saved file
+    &#34;&#34;&#34;
+
+    _file_path = file_path.format(mode=mode, filetype=&#34;json&#34;)
+    Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
+    json.dump(data.json(), Path(_file_path).open(&#34;w&#34;, encoding=&#34;utf-8&#34;))
+
+    return _file_path</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.tasks.save_treated_local"><code class="name flex">
+<span>def <span class="ident">save_treated_local</span></span>(<span>dataframe, file_path, mode='staging')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Save treated file locally</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dataframe</code></strong> :&ensp;<code>pandas.core.DataFrame</code></dt>
+<dd>Data to save as .csv file</dd>
+<dt><strong><code>file_path</code></strong> :&ensp;<code>_type_</code></dt>
+<dd>Path which to save .csv files</dd>
+<dt><strong><code>mode</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Directory to save locally, later folder which to upload to GCS.</dd>
+</dl>
+<p>Defaults to "staging".</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>Path to the saved file</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def save_treated_local(dataframe, file_path, mode=&#34;staging&#34;):
+    &#34;&#34;&#34;Save treated file locally
+
+    Args:
+        dataframe (pandas.core.DataFrame): Data to save as .csv file
+        file_path (_type_): Path which to save .csv files
+        mode (str, optional): Directory to save locally, later folder which to upload to GCS.
+        Defaults to &#34;staging&#34;.
+
+    Returns:
+        str: Path to the saved file
+    &#34;&#34;&#34;
+
+    _file_path = file_path.format(mode=mode, filetype=&#34;csv&#34;)
+    Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
+    dataframe.to_csv(_file_path, index=False)
+
+    return _file_path</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.tasks.upload_logs_to_bq"><code class="name flex">
+<span>def <span class="ident">upload_logs_to_bq</span></span>(<span>dataset_id, parent_table_id, timestamp, error)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Upload execution status table to BigQuery.
+Table is uploaded to the same dataset, named {parent_table_id}_logs.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>dataset_id on BigQuery</dd>
+<dt><strong><code>parent_table_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Parent table id related to the status table</dd>
+<dt><strong><code>timestamp</code></strong> :&ensp;<code>str</code></dt>
+<dd>ISO formatted timestamp string</dd>
+<dt><strong><code>error</code></strong> :&ensp;<code>str</code></dt>
+<dd>String associated with error caught during execution</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def upload_logs_to_bq(dataset_id, parent_table_id, timestamp, error):
+    &#34;&#34;&#34;Upload execution status table to BigQuery.
+    Table is uploaded to the same dataset, named {parent_table_id}_logs.
+
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        parent_table_id (str): Parent table id related to the status table
+        timestamp (str): ISO formatted timestamp string
+        error (str): String associated with error caught during execution
+
+    Returns:
+        None
+    &#34;&#34;&#34;
+
+    table_id = parent_table_id + &#34;_logs&#34;
+
+    filepath = Path(
+        f&#34;{timestamp}/{table_id}/data={pendulum.parse(timestamp).date()}/{table_id}_{timestamp}.csv&#34;
+    )
+    # create partition directory
+    filepath.parent.mkdir(exist_ok=True, parents=True)
+    # create dataframe to be uploaded
+    dataframe = pd.DataFrame(
+        {
+            &#34;timestamp_captura&#34;: [pd.to_datetime(timestamp)],
+            &#34;sucesso&#34;: [error is None],
+            &#34;erro&#34;: [error],
+        }
+    )
+    # save local
+    dataframe.to_csv(filepath, index=False)
+    # BD Table object
+    create_or_append_table(dataset_id=dataset_id, table_id=table_id, path=filepath)
+    # delete local file
+    # shutil.rmtree(f&#34;{timestamp}&#34;)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pipelines.rj_smtr" href="index.html">pipelines.rj_smtr</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pipelines.rj_smtr.tasks.bq_upload" href="#pipelines.rj_smtr.tasks.bq_upload">bq_upload</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.create_current_date_hour_partition" href="#pipelines.rj_smtr.tasks.create_current_date_hour_partition">create_current_date_hour_partition</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.get_file_path_and_partitions" href="#pipelines.rj_smtr.tasks.get_file_path_and_partitions">get_file_path_and_partitions</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.get_raw" href="#pipelines.rj_smtr.tasks.get_raw">get_raw</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.save_raw_local" href="#pipelines.rj_smtr.tasks.save_raw_local">save_raw_local</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.save_treated_local" href="#pipelines.rj_smtr.tasks.save_treated_local">save_treated_local</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.upload_logs_to_bq" href="#pipelines.rj_smtr.tasks.upload_logs_to_bq">upload_logs_to_bq</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

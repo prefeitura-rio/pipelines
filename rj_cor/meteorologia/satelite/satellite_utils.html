@@ -1,0 +1,1270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>pipelines.rj_cor.meteorologia.satelite.satellite_utils API documentation</title>
+<meta name="description" content="Funções úteis no tratamento de dados de satélite" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pipelines.rj_cor.meteorologia.satelite.satellite_utils</code></h1>
+</header>
+<section id="section-intro">
+<p>Funções úteis no tratamento de dados de satélite</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># -*- coding: utf-8 -*-
+# pylint: disable=too-many-locals
+&#34;&#34;&#34;
+Funções úteis no tratamento de dados de satélite
+&#34;&#34;&#34;
+####################################################################
+# LICENSE
+# Copyright (C) 2018 - INPE - NATIONAL INSTITUTE FOR SPACE RESEARCH
+# This program is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see http://www.gnu.org/licenses/.
+####################################################################
+
+# ===================================================================
+# Acronym Description
+# ===================================================================
+# ACHAF - Cloud Top Height: &#39;HT&#39;
+# ACHTF - Cloud Top Temperature: &#39;TEMP&#39;
+# ACMF - Clear Sky Masks: &#39;BCM&#39;
+# ACTPF - Cloud Top Phase: &#39;Phase&#39;
+# ADPF - Aerosol Detection: &#39;Smoke&#39;
+# ADPF - Aerosol Detection: &#39;Dust&#39;
+# AODF - Aerosol Optical Depth: &#39;AOD&#39;
+# CMIPF - Cloud and Moisture Imagery: &#39;CMI&#39;
+# CMIPC - Cloud and Moisture Imagery: &#39;CMI&#39;
+# CMIPM - Cloud and Moisture Imagery: &#39;CMI&#39;
+# CODF - Cloud Optical Depth: &#39;COD&#39;
+# CPSF - Cloud Particle Size: &#39;PSD&#39;
+# CTPF - Cloud Top Pressure: &#39;PRES&#39;
+# DMWF - Derived Motion Winds: &#39;pressure&#39;
+# DMWF - Derived Motion Winds: &#39;temperature&#39;
+# DMWF - Derived Motion Winds: &#39;wind_direction&#39;
+# DMWF - Derived Motion Winds: &#39;wind_speed&#39;
+# DSIF - Derived Stability Indices: &#39;CAPE&#39;
+# DSIF - Derived Stability Indices: &#39;KI&#39;
+# DSIF - Derived Stability Indices: &#39;LI&#39;
+# DSIF - Derived Stability Indices: &#39;SI&#39;
+# DSIF - Derived Stability Indices: &#39;TT&#39;
+# DSRF - Downward Shortwave Radiation: &#39;DSR&#39;
+# FDCF - Fire-Hot Spot Characterization: &#39;Area&#39;
+# FDCF - Fire-Hot Spot Characterization: &#39;Mask&#39;
+# FDCF - Fire-Hot Spot Characterization: &#39;Power&#39;
+# FDCF - Fire-Hot Spot Characterization: &#39;Temp&#39;
+# FSCF - Snow Cover: &#39;FSC&#39;
+# LSTF - Land Surface (Skin) Temperature: &#39;LST&#39;
+# RRQPEF - Rainfall Rate - Quantitative Prediction Estimate: &#39;RRQPE&#39;
+# RSR - Reflected Shortwave Radiation: &#39;RSR&#39;
+# SSTF - Sea Surface (Skin) Temperature: &#39;SST&#39;
+# TPWF - Total Precipitable Water: &#39;TPW&#39;
+# VAAF - Volcanic Ash: &#39;VAH&#39;
+# VAAF - Volcanic Ash: &#39;VAML&#39;
+
+# ====================================================================
+# Required Libraries
+# ====================================================================
+
+import base64
+import datetime
+import json
+import os
+from pathlib import Path
+from typing import Tuple, Union
+
+from google.oauth2 import service_account
+from google.cloud import storage
+import netCDF4 as nc
+import numpy as np
+from osgeo import gdal  # pylint: disable=E0401
+import pandas as pd
+import pendulum
+import xarray as xr
+
+from pipelines.rj_cor.meteorologia.satelite.remap import remap
+from pipelines.utils.utils import log
+
+
+def get_credentials_from_env(mode: str = &#34;prod&#34;) -&gt; service_account.Credentials:
+    &#34;&#34;&#34;
+    Gets credentials from env vars
+    &#34;&#34;&#34;
+    if mode not in [&#34;prod&#34;, &#34;staging&#34;]:
+        raise ValueError(&#34;Mode must be &#39;prod&#39; or &#39;staging&#39;&#34;)
+    env: str = os.getenv(f&#34;BASEDOSDADOS_CREDENTIALS_{mode.upper()}&#34;, &#34;&#34;)
+    if env == &#34;&#34;:
+        raise ValueError(f&#34;BASEDOSDADOS_CREDENTIALS_{mode.upper()} env var not set!&#34;)
+    info: dict = json.loads(base64.b64decode(env))
+
+    return service_account.Credentials.from_service_account_info(info)
+
+
+def list_blobs_with_prefix(bucket_name: str, prefix: str, mode: str = &#34;prod&#34;) -&gt; str:
+    &#34;&#34;&#34;
+    Lists all the blobs in the bucket that begin with the prefix.
+    This can be used to list all blobs in a &#34;folder&#34;, e.g. &#34;public/&#34;.
+    Mode needs to be &#34;prod&#34; or &#34;staging&#34;
+    &#34;&#34;&#34;
+
+    credentials = get_credentials_from_env(mode=mode)
+    storage_client = storage.Client(credentials=credentials)
+
+    # Note: Client.list_blobs requires at least package version 1.17.0.
+    blobs = storage_client.list_blobs(bucket_name, prefix=prefix)
+
+    files = []
+
+    for blob in blobs:
+        files.append(blob.name)
+
+    files.sort()
+
+    return files[0]
+
+
+def download_blob(
+    bucket_name: str,
+    source_blob_name: str,
+    destination_file_name: Union[str, Path],
+    mode: str = &#34;prod&#34;,
+):
+    &#34;&#34;&#34;
+    Downloads a blob from the bucket.
+    Mode needs to be &#34;prod&#34; or &#34;staging&#34;
+
+    # The ID of your GCS bucket
+    # bucket_name = &#34;your-bucket-name&#34;
+
+    # The ID of your GCS object
+    # source_blob_name = &#34;storage-object-name&#34;
+
+    # The path to which the file should be downloaded
+    # destination_file_name = &#34;local/path/to/file&#34;
+    &#34;&#34;&#34;
+
+    credentials = get_credentials_from_env(mode=mode)
+    storage_client = storage.Client(credentials=credentials)
+
+    bucket = storage_client.bucket(bucket_name)
+
+    blob = bucket.blob(source_blob_name)
+    blob.download_to_filename(destination_file_name)
+
+    log(
+        f&#34;Downloaded storage object {source_blob_name} from bucket\
+        {bucket_name} to local file {destination_file_name}.&#34;
+    )
+
+
+def converte_timezone(datetime_save: str) -&gt; str:
+    &#34;&#34;&#34;
+    Recebe o formato de data hora em &#39;YYYYMMDD HHmm&#39; no UTC e
+    retorna no mesmo formato no horário São Paulo
+    &#34;&#34;&#34;
+    datahora = pendulum.from_format(datetime_save, &#34;YYYYMMDD HHmm&#34;)
+    datahora = datahora.in_tz(&#34;America/Sao_Paulo&#34;)
+    return datahora.format(&#34;YYYYMMDD HHmm&#34;)
+
+
+def get_info(path: str) -&gt; Tuple[dict, str]:
+    &#34;&#34;&#34;
+    # Getting Information From the File Name  (Time, Date,
+    # Product Type, Variable and Defining the CMAP)
+    &#34;&#34;&#34;
+    # Search for the Scan start in the file name
+    start = path[path.find(&#34;_s&#34;) + 2 : path.find(&#34;_e&#34;)]
+    # Converting from julian day to dd-mm-yyyy
+    year = int(start[0:4])
+    # Subtract 1 because the year starts at &#34;0&#34;
+    dayjulian = int(start[4:7]) - 1
+    # Convert from julian to conventional
+    dayconventional = datetime.datetime(year, 1, 1) + datetime.timedelta(dayjulian)
+    # Format the date according to the strftime directives
+    # date = dayconventional.strftime(&#39;%d-%b-%Y&#39;)
+    # Time of the start of the Scan
+    # time = start[7:9] + &#34;:&#34; + start[9:11] + &#34;:&#34; + start[11:13] + &#34; UTC&#34;
+
+    # Date as string
+    date_save = dayconventional.strftime(&#34;%Y%m%d&#34;)
+
+    # Time (UTC) as string
+    time_save = start[7:11]
+    datetime_save = str(date_save) + &#34; &#34; + time_save
+
+    # Converte data/hora de UTC para horário de São Paulo
+    datetime_save = converte_timezone(datetime_save=datetime_save)
+
+    # =====================================================================
+    # Detect the product type
+    # =====================================================================
+    product = path[path.find(&#34;L2-&#34;) + 3 : path.find(&#34;-M6&#34;)]  # &#34;-M3&#34; or &#34;-M4&#34;
+    print(product)
+
+    # Nem todos os produtos foram adicionados no dicionário de características
+    # dos produtos. Olhar arquivo original caso o produto não estaja aqui
+    product_caracteristics = {}
+    # CMIPF - Cloud and Moisture Imagery: &#39;CMI&#39;
+    product_caracteristics[&#34;CMIPF&#34;] = {
+        &#34;variable&#34;: &#34;CMI&#34;,
+        &#34;vmin&#34;: -50,
+        &#34;vmax&#34;: 50,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # CMIPC - Cloud and Moisture Imagery: &#39;CMI&#39;
+    product_caracteristics[&#34;CMIPC&#34;] = {
+        &#34;variable&#34;: &#34;CMI&#34;,
+        &#34;vmin&#34;: -50,
+        &#34;vmax&#34;: 50,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # CMIPM - Cloud and Moisture Imagery: &#39;CMI&#39;
+    product_caracteristics[&#34;CMIPM&#34;] = {
+        &#34;variable&#34;: &#34;CMI&#34;,
+        &#34;vmin&#34;: -50,
+        &#34;vmax&#34;: 50,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # ACHAF - Cloud Top Height: &#39;HT&#39;
+    product_caracteristics[&#34;ACHAF&#34;] = {
+        &#34;variable&#34;: &#34;HT&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 15000,
+        &#34;cmap&#34;: &#34;rainbow&#34;,
+    }
+    # ACHTF - Cloud Top Temperature: &#39;TEMP&#39;
+    product_caracteristics[&#34;ACHATF&#34;] = {
+        &#34;variable&#34;: &#34;TEMP&#34;,
+        &#34;vmin&#34;: 180,
+        &#34;vmax&#34;: 300,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # ACMF - Clear Sky Masks: &#39;BCM&#39;
+    product_caracteristics[&#34;ACMF&#34;] = {
+        &#34;variable&#34;: &#34;BCM&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 1,
+        &#34;cmap&#34;: &#34;gray&#34;,
+    }
+    # ACTPF - Cloud Top Phase: &#39;Phase&#39;
+    product_caracteristics[&#34;ACTPF&#34;] = {
+        &#34;variable&#34;: &#34;Phase&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 5,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # ADPF - Aerosol Detection: &#39;Smoke&#39;
+    product_caracteristics[&#34;ADPF&#34;] = {
+        &#34;variable&#34;: &#34;Smoke&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 255,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # AODF - Aerosol Optical Depth: &#39;AOD&#39;
+    product_caracteristics[&#34;AODF&#34;] = {
+        &#34;variable&#34;: &#34;AOD&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 2,
+        &#34;cmap&#34;: &#34;rainbow&#34;,
+    }
+    # CODF - Cloud Optical Depth: &#39;COD&#39;
+    product_caracteristics[&#34;CODF&#34;] = {
+        &#34;variable&#34;: &#34;CODF&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 100,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # CPSF - Cloud Particle Size: &#39;PSD&#39;
+    product_caracteristics[&#34;CPSF&#34;] = {
+        &#34;variable&#34;: &#34;PSD&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 80,
+        &#34;cmap&#34;: &#34;rainbow&#34;,
+    }
+    # CTPF - Cloud Top Pressure: &#39;PRES&#39;
+    product_caracteristics[&#34;CTPF&#34;] = {
+        &#34;variable&#34;: &#34;PRES&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 1100,
+        &#34;cmap&#34;: &#34;rainbow&#34;,
+    }
+    # DSIF - Derived Stability Indices: &#39;CAPE&#39;, &#39;KI&#39;, &#39;LI&#39;, &#39;SI&#39;, &#39;TT&#39;
+    product_caracteristics[&#34;DSIF&#34;] = {
+        &#34;variable&#34;: &#34;CAPE&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 1000,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # FDCF - Fire-Hot Spot Characterization: &#39;Area&#39;, &#39;Mask&#39;, &#39;Power&#39;, &#39;Temp&#39;
+    product_caracteristics[&#34;FDCF&#34;] = {
+        &#34;variable&#34;: &#34;Mask&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 255,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # LSTF - Land Surface (Skin) Temperature: &#39;LST&#39;
+    product_caracteristics[&#34;LSTF&#34;] = {
+        &#34;variable&#34;: &#34;LST&#34;,
+        &#34;vmin&#34;: 213,
+        &#34;vmax&#34;: 330,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # RRQPEF - Rainfall Rate - Quantitative Prediction Estimate: &#39;RRQPE&#39;
+    product_caracteristics[&#34;RRQPEF&#34;] = {
+        &#34;variable&#34;: &#34;RRQPE&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 50,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # SSTF - Sea Surface (Skin) Temperature: &#39;SST&#39;
+    product_caracteristics[&#34;SSTF&#34;] = {
+        &#34;variable&#34;: &#34;SSTF&#34;,
+        &#34;vmin&#34;: 268,
+        &#34;vmax&#34;: 308,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # TPWF - Total Precipitable Water: &#39;TPW&#39;
+    product_caracteristics[&#34;TPWF&#34;] = {
+        &#34;variable&#34;: &#34;TPW&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 60,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+
+    # variable = product_caracteristics[product][&#39;variable&#39;]
+    # vmin = product_caracteristics[product][&#39;vmin&#39;]
+    # vmax = product_caracteristics[product][&#39;vmax&#39;]
+    # cmap = product_caracteristics[product][&#39;cmap&#39;]
+    product_caracteristics = product_caracteristics[product]
+    product_caracteristics[&#34;product&#34;] = product
+    variable = product_caracteristics[&#34;variable&#34;]
+
+    if variable == &#34;CMI&#34;:
+        # Search for the GOES-16 channel in the file name
+        product_caracteristics[&#34;band&#34;] = int(
+            (path[path.find(&#34;M3C&#34; or &#34;M4C&#34;) + 3 : path.find(&#34;_G16&#34;)])
+        )
+    else:
+        product_caracteristics[&#34;band&#34;] = np.nan
+
+    return product_caracteristics, datetime_save
+
+
+def get_goes_extent(data: pd.DataFrame) -&gt; list:
+    &#34;&#34;&#34;
+    define espatial limits
+    &#34;&#34;&#34;
+    pph = data.variables[&#34;goes_imager_projection&#34;].perspective_point_height
+    x_1 = data.variables[&#34;x_image_bounds&#34;][0] * pph
+    x_2 = data.variables[&#34;x_image_bounds&#34;][1] * pph
+    y_1 = data.variables[&#34;y_image_bounds&#34;][1] * pph
+    y_2 = data.variables[&#34;y_image_bounds&#34;][0] * pph
+    goes16_extent = [x_1, y_1, x_2, y_2]
+
+    # Get the latitude and longitude image bounds
+    # geo_extent = data.variables[&#39;geospatial_lat_lon_extent&#39;]
+    # min_lon = float(geo_extent.geospatial_westbound_longitude)
+    # max_lon = float(geo_extent.geospatial_eastbound_longitude)
+    # min_lat = float(geo_extent.geospatial_southbound_latitude)
+    # max_lat = float(geo_extent.geospatial_northbound_latitude)
+    return goes16_extent
+
+
+def remap_g16(
+    path: Union[str, Path],
+    extent: list,
+    resolution: int,
+    variable: str,
+    datetime_save: str,
+):
+    &#34;&#34;&#34;
+    the GOES-16 image is reprojected to the rectangular projection in the extent region
+    &#34;&#34;&#34;
+    # Open the file using the NetCDF4 library
+    data = nc.Dataset(path)
+    # see_data = np.ma.getdata(data.variables[variable][:])
+    # print(&#39;\n\n&gt;&gt;&gt;&gt;&gt;&gt; netcdf &#39;, np.unique(see_data)[:100])
+
+    # Calculate the image extent required for the reprojection
+    goes16_extent = get_goes_extent(data)
+
+    # Close the NetCDF file after getting the data
+    data.close()
+
+    # Call the reprojection funcion
+    grid = remap(path, variable, extent, resolution, goes16_extent)
+
+    #     You may export the grid to GeoTIFF (and any other format supported by GDAL).
+    # using GDAL from osgeo
+    time_save = str(int(datetime_save[9:11]))
+
+    year = datetime_save[:4]
+    month = str(int(datetime_save[4:6]))
+    day = str(int(datetime_save[6:8]))
+    partitions = os.path.join(
+        f&#34;ano={year}&#34;, f&#34;mes={month}&#34;, f&#34;dia={day}&#34;, f&#34;hora={time_save}&#34;
+    )
+
+    tif_path = os.path.join(
+        os.getcwd(), &#34;data&#34;, &#34;satelite&#34;, variable, &#34;temp&#34;, partitions
+    )
+
+    if not os.path.exists(tif_path):
+        os.makedirs(tif_path)
+
+    # Export the result to GeoTIFF
+    driver = gdal.GetDriverByName(&#34;GTiff&#34;)
+    filename = os.path.join(tif_path, &#34;dados.tif&#34;)
+    driver.CreateCopy(filename, grid, 0)
+    return grid, goes16_extent
+
+
+def treat_data(
+    data: pd.DataFrame, variable: str, reprojection_variables: dict
+) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Treat nans and Temperature data, extent, product, variable, date_save,
+    time_save, bmap, cmap, vmin, vmax, dpi, band, path
+    &#34;&#34;&#34;
+    if variable in (
+        &#34;Dust&#34;,
+        &#34;Smoke&#34;,
+        &#34;TPW&#34;,
+        &#34;PRES&#34;,
+        &#34;HT&#34;,
+        &#34;TEMP&#34;,
+        &#34;AOD&#34;,
+        &#34;COD&#34;,
+        &#34;PSD&#34;,
+        &#34;CAPE&#34;,
+        &#34;KI&#34;,
+        &#34;LI&#34;,
+        &#34;SI&#34;,
+        &#34;TT&#34;,
+        &#34;FSC&#34;,
+        &#34;RRQPE&#34;,
+        &#34;VAML&#34;,
+        &#34;VAH&#34;,
+    ):
+        data[data == max(data[0])] = np.nan
+        data[data == min(data[0])] = np.nan
+
+    if variable == &#34;SST&#34;:
+        data[data == max(data[0])] = np.nan
+        data[data == min(data[0])] = np.nan
+
+        # Call the reprojection funcion again to get only the valid SST pixels
+        path = reprojection_variables[&#34;path&#34;]
+        extent = reprojection_variables[&#34;extent&#34;]
+        resolution = reprojection_variables[&#34;resolution&#34;]
+        goes16_extent = reprojection_variables[&#34;goes16_extent&#34;]
+
+        grid = remap(path, &#34;DQF&#34;, extent, resolution, goes16_extent)
+        data_dqf = grid.ReadAsArray()
+        # If the Quality Flag is not 0, set as NaN
+        data[data_dqf != 0] = np.nan
+
+    if variable == &#34;Mask&#34;:
+        data[data == -99] = np.nan
+        data[data == 40] = np.nan
+        data[data == 50] = np.nan
+        data[data == 60] = np.nan
+        data[data == 150] = np.nan
+        data[data == max(data[0])] = np.nan
+        data[data == min(data[0])] = np.nan
+
+    if variable == &#34;BCM&#34;:
+        data[data == 255] = np.nan
+        data[data == 0] = np.nan
+
+    if variable == &#34;Phase&#34;:
+        data[data &gt;= 5] = np.nan
+        data[data == 0] = np.nan
+
+    if variable == &#34;LST&#34;:
+        data[data &gt;= 335] = np.nan
+        data[data &lt;= 200] = np.nan
+
+    return data
+
+
+def save_parquet(variable: str, datetime_save: str) -&gt; Union[str, Path]:
+    &#34;&#34;&#34;
+    Save data in parquet
+    &#34;&#34;&#34;
+    date_save = datetime_save[:8]
+    time_save = str(int(datetime_save[9:11]))
+
+    year = date_save[:4]
+    month = str(int(date_save[4:6]))
+    day = str(int(date_save[-2:]))
+    partitions = os.path.join(
+        f&#34;ano={year}&#34;, f&#34;mes={month}&#34;, f&#34;dia={day}&#34;, f&#34;hora={time_save}&#34;
+    )
+
+    tif_data = os.path.join(
+        os.getcwd(), &#34;data&#34;, &#34;satelite&#34;, variable, &#34;temp&#34;, partitions, &#34;dados.tif&#34;
+    )
+
+    data = xr.open_dataset(tif_data, engine=&#34;rasterio&#34;)
+    # print(&#39;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; data&#39;, data[&#39;band_data&#39;].values)
+
+    # Converte para dataframe trocando o nome das colunas
+
+    data = (
+        data.to_dataframe()
+        .reset_index()[[&#34;x&#34;, &#34;y&#34;, &#34;band_data&#34;]]
+        .rename(
+            {
+                &#34;y&#34;: &#34;latitude&#34;,
+                &#34;x&#34;: &#34;longitude&#34;,
+                &#34;band_data&#34;: f&#34;{variable.lower()}&#34;,
+            },
+            axis=1,
+        )
+    )
+
+    # cria pasta se ela não existe
+    base_path = os.path.join(os.getcwd(), &#34;data&#34;, &#34;satelite&#34;, variable, &#34;output&#34;)
+
+    parquet_path = os.path.join(base_path, partitions)
+
+    if not os.path.exists(parquet_path):
+        os.makedirs(parquet_path)
+
+    # Fixa ordem das colunas
+    print(&#34;&gt;&gt;&gt;&gt;&gt;&#34;, [&#34;longitude&#34;, &#34;latitude&#34;, variable.lower()])
+    data = data[[&#34;longitude&#34;, &#34;latitude&#34;, variable.lower()]]
+
+    # salva em parquet
+    log(f&#34;Saving on base_path {base_path}&#34;)
+    filename = os.path.join(parquet_path, &#34;dados.csv&#34;)
+    data.to_csv(filename, index=False)
+    # filename = os.path.join(parquet_path, &#39;dados.parquet&#39;)
+    # data.to_parquet(filename, index=False)
+    return base_path
+
+
+def main(path: Union[str, Path]):
+    &#34;&#34;&#34;
+    Função principal para converter dados x,y em lon,lat
+    &#34;&#34;&#34;
+    # Create the basemap reference for the Rectangular Projection.
+    # You may choose the region you want.
+    # Full Disk Extent
+    # extent = [-156.00, -81.30, 6.30, 81.30]
+    # Brazil region
+    extent = [-90.0, -40.0, -20.0, 10.0]
+    # # Região da cidade do Rio de Janeiro
+    # lat_max, lon_min = (-22.802842397418548, -43.81200531887697)
+    # lat_min, lon_max = (-23.073487725280266, -43.11300020870994)
+    # extent = [lon_min, lat_min, lon_max, lat_max]
+
+    # Choose the image resolution (the higher the number the faster the processing is)
+    resolution = 5
+
+    # Get information from the image file
+    product_caracteristics, datetime_save = get_info(path)
+    # product, variable, vmin, vmax, cmap, band
+
+    # Call the remap function to convert x, y to lon, lat and save geotiff
+    grid, goes16_extent = remap_g16(
+        path,
+        extent,
+        resolution,
+        product_caracteristics[&#34;variable&#34;],
+        datetime_save,
+    )
+
+    info = {
+        &#34;product&#34;: product_caracteristics[&#34;product&#34;],
+        &#34;variable&#34;: product_caracteristics[&#34;variable&#34;],
+        &#34;vmin&#34;: product_caracteristics[&#34;vmin&#34;],
+        &#34;vmax&#34;: product_caracteristics[&#34;vmax&#34;],
+        &#34;cmap&#34;: product_caracteristics[&#34;cmap&#34;],
+        &#34;datetime_save&#34;: datetime_save,
+        &#34;band&#34;: product_caracteristics[&#34;band&#34;],
+        &#34;extent&#34;: extent,
+        &#34;resolution&#34;: resolution,
+    }
+
+    return grid, goes16_extent, info</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.converte_timezone"><code class="name flex">
+<span>def <span class="ident">converte_timezone</span></span>(<span>datetime_save: str) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Recebe o formato de data hora em 'YYYYMMDD HHmm' no UTC e
+retorna no mesmo formato no horário São Paulo</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def converte_timezone(datetime_save: str) -&gt; str:
+    &#34;&#34;&#34;
+    Recebe o formato de data hora em &#39;YYYYMMDD HHmm&#39; no UTC e
+    retorna no mesmo formato no horário São Paulo
+    &#34;&#34;&#34;
+    datahora = pendulum.from_format(datetime_save, &#34;YYYYMMDD HHmm&#34;)
+    datahora = datahora.in_tz(&#34;America/Sao_Paulo&#34;)
+    return datahora.format(&#34;YYYYMMDD HHmm&#34;)</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.download_blob"><code class="name flex">
+<span>def <span class="ident">download_blob</span></span>(<span>bucket_name: str, source_blob_name: str, destination_file_name: Union[str, pathlib.Path], mode: str = 'prod')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Downloads a blob from the bucket.
+Mode needs to be "prod" or "staging"</p>
+<h1 id="the-id-of-your-gcs-bucket">The ID of your GCS bucket</h1>
+<h1 id="bucket_name-your-bucket-name">bucket_name = "your-bucket-name"</h1>
+<h1 id="the-id-of-your-gcs-object">The ID of your GCS object</h1>
+<h1 id="source_blob_name-storage-object-name">source_blob_name = "storage-object-name"</h1>
+<h1 id="the-path-to-which-the-file-should-be-downloaded">The path to which the file should be downloaded</h1>
+<h1 id="destination_file_name-localpathtofile">destination_file_name = "local/path/to/file"</h1></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def download_blob(
+    bucket_name: str,
+    source_blob_name: str,
+    destination_file_name: Union[str, Path],
+    mode: str = &#34;prod&#34;,
+):
+    &#34;&#34;&#34;
+    Downloads a blob from the bucket.
+    Mode needs to be &#34;prod&#34; or &#34;staging&#34;
+
+    # The ID of your GCS bucket
+    # bucket_name = &#34;your-bucket-name&#34;
+
+    # The ID of your GCS object
+    # source_blob_name = &#34;storage-object-name&#34;
+
+    # The path to which the file should be downloaded
+    # destination_file_name = &#34;local/path/to/file&#34;
+    &#34;&#34;&#34;
+
+    credentials = get_credentials_from_env(mode=mode)
+    storage_client = storage.Client(credentials=credentials)
+
+    bucket = storage_client.bucket(bucket_name)
+
+    blob = bucket.blob(source_blob_name)
+    blob.download_to_filename(destination_file_name)
+
+    log(
+        f&#34;Downloaded storage object {source_blob_name} from bucket\
+        {bucket_name} to local file {destination_file_name}.&#34;
+    )</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_credentials_from_env"><code class="name flex">
+<span>def <span class="ident">get_credentials_from_env</span></span>(<span>mode: str = 'prod') ‑> google.oauth2.service_account.Credentials</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Gets credentials from env vars</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_credentials_from_env(mode: str = &#34;prod&#34;) -&gt; service_account.Credentials:
+    &#34;&#34;&#34;
+    Gets credentials from env vars
+    &#34;&#34;&#34;
+    if mode not in [&#34;prod&#34;, &#34;staging&#34;]:
+        raise ValueError(&#34;Mode must be &#39;prod&#39; or &#39;staging&#39;&#34;)
+    env: str = os.getenv(f&#34;BASEDOSDADOS_CREDENTIALS_{mode.upper()}&#34;, &#34;&#34;)
+    if env == &#34;&#34;:
+        raise ValueError(f&#34;BASEDOSDADOS_CREDENTIALS_{mode.upper()} env var not set!&#34;)
+    info: dict = json.loads(base64.b64decode(env))
+
+    return service_account.Credentials.from_service_account_info(info)</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_goes_extent"><code class="name flex">
+<span>def <span class="ident">get_goes_extent</span></span>(<span>data: pandas.core.frame.DataFrame) ‑> list</span>
+</code></dt>
+<dd>
+<div class="desc"><p>define espatial limits</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_goes_extent(data: pd.DataFrame) -&gt; list:
+    &#34;&#34;&#34;
+    define espatial limits
+    &#34;&#34;&#34;
+    pph = data.variables[&#34;goes_imager_projection&#34;].perspective_point_height
+    x_1 = data.variables[&#34;x_image_bounds&#34;][0] * pph
+    x_2 = data.variables[&#34;x_image_bounds&#34;][1] * pph
+    y_1 = data.variables[&#34;y_image_bounds&#34;][1] * pph
+    y_2 = data.variables[&#34;y_image_bounds&#34;][0] * pph
+    goes16_extent = [x_1, y_1, x_2, y_2]
+
+    # Get the latitude and longitude image bounds
+    # geo_extent = data.variables[&#39;geospatial_lat_lon_extent&#39;]
+    # min_lon = float(geo_extent.geospatial_westbound_longitude)
+    # max_lon = float(geo_extent.geospatial_eastbound_longitude)
+    # min_lat = float(geo_extent.geospatial_southbound_latitude)
+    # max_lat = float(geo_extent.geospatial_northbound_latitude)
+    return goes16_extent</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_info"><code class="name flex">
+<span>def <span class="ident">get_info</span></span>(<span>path: str) ‑> Tuple[dict, str]</span>
+</code></dt>
+<dd>
+<div class="desc"><h1 id="getting-information-from-the-file-name-time-date">Getting Information From the File Name
+(Time, Date,</h1>
+<h1 id="product-type-variable-and-defining-the-cmap">Product Type, Variable and Defining the CMAP)</h1></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_info(path: str) -&gt; Tuple[dict, str]:
+    &#34;&#34;&#34;
+    # Getting Information From the File Name  (Time, Date,
+    # Product Type, Variable and Defining the CMAP)
+    &#34;&#34;&#34;
+    # Search for the Scan start in the file name
+    start = path[path.find(&#34;_s&#34;) + 2 : path.find(&#34;_e&#34;)]
+    # Converting from julian day to dd-mm-yyyy
+    year = int(start[0:4])
+    # Subtract 1 because the year starts at &#34;0&#34;
+    dayjulian = int(start[4:7]) - 1
+    # Convert from julian to conventional
+    dayconventional = datetime.datetime(year, 1, 1) + datetime.timedelta(dayjulian)
+    # Format the date according to the strftime directives
+    # date = dayconventional.strftime(&#39;%d-%b-%Y&#39;)
+    # Time of the start of the Scan
+    # time = start[7:9] + &#34;:&#34; + start[9:11] + &#34;:&#34; + start[11:13] + &#34; UTC&#34;
+
+    # Date as string
+    date_save = dayconventional.strftime(&#34;%Y%m%d&#34;)
+
+    # Time (UTC) as string
+    time_save = start[7:11]
+    datetime_save = str(date_save) + &#34; &#34; + time_save
+
+    # Converte data/hora de UTC para horário de São Paulo
+    datetime_save = converte_timezone(datetime_save=datetime_save)
+
+    # =====================================================================
+    # Detect the product type
+    # =====================================================================
+    product = path[path.find(&#34;L2-&#34;) + 3 : path.find(&#34;-M6&#34;)]  # &#34;-M3&#34; or &#34;-M4&#34;
+    print(product)
+
+    # Nem todos os produtos foram adicionados no dicionário de características
+    # dos produtos. Olhar arquivo original caso o produto não estaja aqui
+    product_caracteristics = {}
+    # CMIPF - Cloud and Moisture Imagery: &#39;CMI&#39;
+    product_caracteristics[&#34;CMIPF&#34;] = {
+        &#34;variable&#34;: &#34;CMI&#34;,
+        &#34;vmin&#34;: -50,
+        &#34;vmax&#34;: 50,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # CMIPC - Cloud and Moisture Imagery: &#39;CMI&#39;
+    product_caracteristics[&#34;CMIPC&#34;] = {
+        &#34;variable&#34;: &#34;CMI&#34;,
+        &#34;vmin&#34;: -50,
+        &#34;vmax&#34;: 50,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # CMIPM - Cloud and Moisture Imagery: &#39;CMI&#39;
+    product_caracteristics[&#34;CMIPM&#34;] = {
+        &#34;variable&#34;: &#34;CMI&#34;,
+        &#34;vmin&#34;: -50,
+        &#34;vmax&#34;: 50,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # ACHAF - Cloud Top Height: &#39;HT&#39;
+    product_caracteristics[&#34;ACHAF&#34;] = {
+        &#34;variable&#34;: &#34;HT&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 15000,
+        &#34;cmap&#34;: &#34;rainbow&#34;,
+    }
+    # ACHTF - Cloud Top Temperature: &#39;TEMP&#39;
+    product_caracteristics[&#34;ACHATF&#34;] = {
+        &#34;variable&#34;: &#34;TEMP&#34;,
+        &#34;vmin&#34;: 180,
+        &#34;vmax&#34;: 300,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # ACMF - Clear Sky Masks: &#39;BCM&#39;
+    product_caracteristics[&#34;ACMF&#34;] = {
+        &#34;variable&#34;: &#34;BCM&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 1,
+        &#34;cmap&#34;: &#34;gray&#34;,
+    }
+    # ACTPF - Cloud Top Phase: &#39;Phase&#39;
+    product_caracteristics[&#34;ACTPF&#34;] = {
+        &#34;variable&#34;: &#34;Phase&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 5,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # ADPF - Aerosol Detection: &#39;Smoke&#39;
+    product_caracteristics[&#34;ADPF&#34;] = {
+        &#34;variable&#34;: &#34;Smoke&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 255,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # AODF - Aerosol Optical Depth: &#39;AOD&#39;
+    product_caracteristics[&#34;AODF&#34;] = {
+        &#34;variable&#34;: &#34;AOD&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 2,
+        &#34;cmap&#34;: &#34;rainbow&#34;,
+    }
+    # CODF - Cloud Optical Depth: &#39;COD&#39;
+    product_caracteristics[&#34;CODF&#34;] = {
+        &#34;variable&#34;: &#34;CODF&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 100,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # CPSF - Cloud Particle Size: &#39;PSD&#39;
+    product_caracteristics[&#34;CPSF&#34;] = {
+        &#34;variable&#34;: &#34;PSD&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 80,
+        &#34;cmap&#34;: &#34;rainbow&#34;,
+    }
+    # CTPF - Cloud Top Pressure: &#39;PRES&#39;
+    product_caracteristics[&#34;CTPF&#34;] = {
+        &#34;variable&#34;: &#34;PRES&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 1100,
+        &#34;cmap&#34;: &#34;rainbow&#34;,
+    }
+    # DSIF - Derived Stability Indices: &#39;CAPE&#39;, &#39;KI&#39;, &#39;LI&#39;, &#39;SI&#39;, &#39;TT&#39;
+    product_caracteristics[&#34;DSIF&#34;] = {
+        &#34;variable&#34;: &#34;CAPE&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 1000,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # FDCF - Fire-Hot Spot Characterization: &#39;Area&#39;, &#39;Mask&#39;, &#39;Power&#39;, &#39;Temp&#39;
+    product_caracteristics[&#34;FDCF&#34;] = {
+        &#34;variable&#34;: &#34;Mask&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 255,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # LSTF - Land Surface (Skin) Temperature: &#39;LST&#39;
+    product_caracteristics[&#34;LSTF&#34;] = {
+        &#34;variable&#34;: &#34;LST&#34;,
+        &#34;vmin&#34;: 213,
+        &#34;vmax&#34;: 330,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # RRQPEF - Rainfall Rate - Quantitative Prediction Estimate: &#39;RRQPE&#39;
+    product_caracteristics[&#34;RRQPEF&#34;] = {
+        &#34;variable&#34;: &#34;RRQPE&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 50,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # SSTF - Sea Surface (Skin) Temperature: &#39;SST&#39;
+    product_caracteristics[&#34;SSTF&#34;] = {
+        &#34;variable&#34;: &#34;SSTF&#34;,
+        &#34;vmin&#34;: 268,
+        &#34;vmax&#34;: 308,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # TPWF - Total Precipitable Water: &#39;TPW&#39;
+    product_caracteristics[&#34;TPWF&#34;] = {
+        &#34;variable&#34;: &#34;TPW&#34;,
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 60,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+
+    # variable = product_caracteristics[product][&#39;variable&#39;]
+    # vmin = product_caracteristics[product][&#39;vmin&#39;]
+    # vmax = product_caracteristics[product][&#39;vmax&#39;]
+    # cmap = product_caracteristics[product][&#39;cmap&#39;]
+    product_caracteristics = product_caracteristics[product]
+    product_caracteristics[&#34;product&#34;] = product
+    variable = product_caracteristics[&#34;variable&#34;]
+
+    if variable == &#34;CMI&#34;:
+        # Search for the GOES-16 channel in the file name
+        product_caracteristics[&#34;band&#34;] = int(
+            (path[path.find(&#34;M3C&#34; or &#34;M4C&#34;) + 3 : path.find(&#34;_G16&#34;)])
+        )
+    else:
+        product_caracteristics[&#34;band&#34;] = np.nan
+
+    return product_caracteristics, datetime_save</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.list_blobs_with_prefix"><code class="name flex">
+<span>def <span class="ident">list_blobs_with_prefix</span></span>(<span>bucket_name: str, prefix: str, mode: str = 'prod') ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Lists all the blobs in the bucket that begin with the prefix.
+This can be used to list all blobs in a "folder", e.g. "public/".
+Mode needs to be "prod" or "staging"</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def list_blobs_with_prefix(bucket_name: str, prefix: str, mode: str = &#34;prod&#34;) -&gt; str:
+    &#34;&#34;&#34;
+    Lists all the blobs in the bucket that begin with the prefix.
+    This can be used to list all blobs in a &#34;folder&#34;, e.g. &#34;public/&#34;.
+    Mode needs to be &#34;prod&#34; or &#34;staging&#34;
+    &#34;&#34;&#34;
+
+    credentials = get_credentials_from_env(mode=mode)
+    storage_client = storage.Client(credentials=credentials)
+
+    # Note: Client.list_blobs requires at least package version 1.17.0.
+    blobs = storage_client.list_blobs(bucket_name, prefix=prefix)
+
+    files = []
+
+    for blob in blobs:
+        files.append(blob.name)
+
+    files.sort()
+
+    return files[0]</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.main"><code class="name flex">
+<span>def <span class="ident">main</span></span>(<span>path: Union[str, pathlib.Path])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Função principal para converter dados x,y em lon,lat</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def main(path: Union[str, Path]):
+    &#34;&#34;&#34;
+    Função principal para converter dados x,y em lon,lat
+    &#34;&#34;&#34;
+    # Create the basemap reference for the Rectangular Projection.
+    # You may choose the region you want.
+    # Full Disk Extent
+    # extent = [-156.00, -81.30, 6.30, 81.30]
+    # Brazil region
+    extent = [-90.0, -40.0, -20.0, 10.0]
+    # # Região da cidade do Rio de Janeiro
+    # lat_max, lon_min = (-22.802842397418548, -43.81200531887697)
+    # lat_min, lon_max = (-23.073487725280266, -43.11300020870994)
+    # extent = [lon_min, lat_min, lon_max, lat_max]
+
+    # Choose the image resolution (the higher the number the faster the processing is)
+    resolution = 5
+
+    # Get information from the image file
+    product_caracteristics, datetime_save = get_info(path)
+    # product, variable, vmin, vmax, cmap, band
+
+    # Call the remap function to convert x, y to lon, lat and save geotiff
+    grid, goes16_extent = remap_g16(
+        path,
+        extent,
+        resolution,
+        product_caracteristics[&#34;variable&#34;],
+        datetime_save,
+    )
+
+    info = {
+        &#34;product&#34;: product_caracteristics[&#34;product&#34;],
+        &#34;variable&#34;: product_caracteristics[&#34;variable&#34;],
+        &#34;vmin&#34;: product_caracteristics[&#34;vmin&#34;],
+        &#34;vmax&#34;: product_caracteristics[&#34;vmax&#34;],
+        &#34;cmap&#34;: product_caracteristics[&#34;cmap&#34;],
+        &#34;datetime_save&#34;: datetime_save,
+        &#34;band&#34;: product_caracteristics[&#34;band&#34;],
+        &#34;extent&#34;: extent,
+        &#34;resolution&#34;: resolution,
+    }
+
+    return grid, goes16_extent, info</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.remap_g16"><code class="name flex">
+<span>def <span class="ident">remap_g16</span></span>(<span>path: Union[str, pathlib.Path], extent: list, resolution: int, variable: str, datetime_save: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>the GOES-16 image is reprojected to the rectangular projection in the extent region</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def remap_g16(
+    path: Union[str, Path],
+    extent: list,
+    resolution: int,
+    variable: str,
+    datetime_save: str,
+):
+    &#34;&#34;&#34;
+    the GOES-16 image is reprojected to the rectangular projection in the extent region
+    &#34;&#34;&#34;
+    # Open the file using the NetCDF4 library
+    data = nc.Dataset(path)
+    # see_data = np.ma.getdata(data.variables[variable][:])
+    # print(&#39;\n\n&gt;&gt;&gt;&gt;&gt;&gt; netcdf &#39;, np.unique(see_data)[:100])
+
+    # Calculate the image extent required for the reprojection
+    goes16_extent = get_goes_extent(data)
+
+    # Close the NetCDF file after getting the data
+    data.close()
+
+    # Call the reprojection funcion
+    grid = remap(path, variable, extent, resolution, goes16_extent)
+
+    #     You may export the grid to GeoTIFF (and any other format supported by GDAL).
+    # using GDAL from osgeo
+    time_save = str(int(datetime_save[9:11]))
+
+    year = datetime_save[:4]
+    month = str(int(datetime_save[4:6]))
+    day = str(int(datetime_save[6:8]))
+    partitions = os.path.join(
+        f&#34;ano={year}&#34;, f&#34;mes={month}&#34;, f&#34;dia={day}&#34;, f&#34;hora={time_save}&#34;
+    )
+
+    tif_path = os.path.join(
+        os.getcwd(), &#34;data&#34;, &#34;satelite&#34;, variable, &#34;temp&#34;, partitions
+    )
+
+    if not os.path.exists(tif_path):
+        os.makedirs(tif_path)
+
+    # Export the result to GeoTIFF
+    driver = gdal.GetDriverByName(&#34;GTiff&#34;)
+    filename = os.path.join(tif_path, &#34;dados.tif&#34;)
+    driver.CreateCopy(filename, grid, 0)
+    return grid, goes16_extent</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.save_parquet"><code class="name flex">
+<span>def <span class="ident">save_parquet</span></span>(<span>variable: str, datetime_save: str) ‑> Union[str, pathlib.Path]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Save data in parquet</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_parquet(variable: str, datetime_save: str) -&gt; Union[str, Path]:
+    &#34;&#34;&#34;
+    Save data in parquet
+    &#34;&#34;&#34;
+    date_save = datetime_save[:8]
+    time_save = str(int(datetime_save[9:11]))
+
+    year = date_save[:4]
+    month = str(int(date_save[4:6]))
+    day = str(int(date_save[-2:]))
+    partitions = os.path.join(
+        f&#34;ano={year}&#34;, f&#34;mes={month}&#34;, f&#34;dia={day}&#34;, f&#34;hora={time_save}&#34;
+    )
+
+    tif_data = os.path.join(
+        os.getcwd(), &#34;data&#34;, &#34;satelite&#34;, variable, &#34;temp&#34;, partitions, &#34;dados.tif&#34;
+    )
+
+    data = xr.open_dataset(tif_data, engine=&#34;rasterio&#34;)
+    # print(&#39;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; data&#39;, data[&#39;band_data&#39;].values)
+
+    # Converte para dataframe trocando o nome das colunas
+
+    data = (
+        data.to_dataframe()
+        .reset_index()[[&#34;x&#34;, &#34;y&#34;, &#34;band_data&#34;]]
+        .rename(
+            {
+                &#34;y&#34;: &#34;latitude&#34;,
+                &#34;x&#34;: &#34;longitude&#34;,
+                &#34;band_data&#34;: f&#34;{variable.lower()}&#34;,
+            },
+            axis=1,
+        )
+    )
+
+    # cria pasta se ela não existe
+    base_path = os.path.join(os.getcwd(), &#34;data&#34;, &#34;satelite&#34;, variable, &#34;output&#34;)
+
+    parquet_path = os.path.join(base_path, partitions)
+
+    if not os.path.exists(parquet_path):
+        os.makedirs(parquet_path)
+
+    # Fixa ordem das colunas
+    print(&#34;&gt;&gt;&gt;&gt;&gt;&#34;, [&#34;longitude&#34;, &#34;latitude&#34;, variable.lower()])
+    data = data[[&#34;longitude&#34;, &#34;latitude&#34;, variable.lower()]]
+
+    # salva em parquet
+    log(f&#34;Saving on base_path {base_path}&#34;)
+    filename = os.path.join(parquet_path, &#34;dados.csv&#34;)
+    data.to_csv(filename, index=False)
+    # filename = os.path.join(parquet_path, &#39;dados.parquet&#39;)
+    # data.to_parquet(filename, index=False)
+    return base_path</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.treat_data"><code class="name flex">
+<span>def <span class="ident">treat_data</span></span>(<span>data: pandas.core.frame.DataFrame, variable: str, reprojection_variables: dict) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Treat nans and Temperature data, extent, product, variable, date_save,
+time_save, bmap, cmap, vmin, vmax, dpi, band, path</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def treat_data(
+    data: pd.DataFrame, variable: str, reprojection_variables: dict
+) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Treat nans and Temperature data, extent, product, variable, date_save,
+    time_save, bmap, cmap, vmin, vmax, dpi, band, path
+    &#34;&#34;&#34;
+    if variable in (
+        &#34;Dust&#34;,
+        &#34;Smoke&#34;,
+        &#34;TPW&#34;,
+        &#34;PRES&#34;,
+        &#34;HT&#34;,
+        &#34;TEMP&#34;,
+        &#34;AOD&#34;,
+        &#34;COD&#34;,
+        &#34;PSD&#34;,
+        &#34;CAPE&#34;,
+        &#34;KI&#34;,
+        &#34;LI&#34;,
+        &#34;SI&#34;,
+        &#34;TT&#34;,
+        &#34;FSC&#34;,
+        &#34;RRQPE&#34;,
+        &#34;VAML&#34;,
+        &#34;VAH&#34;,
+    ):
+        data[data == max(data[0])] = np.nan
+        data[data == min(data[0])] = np.nan
+
+    if variable == &#34;SST&#34;:
+        data[data == max(data[0])] = np.nan
+        data[data == min(data[0])] = np.nan
+
+        # Call the reprojection funcion again to get only the valid SST pixels
+        path = reprojection_variables[&#34;path&#34;]
+        extent = reprojection_variables[&#34;extent&#34;]
+        resolution = reprojection_variables[&#34;resolution&#34;]
+        goes16_extent = reprojection_variables[&#34;goes16_extent&#34;]
+
+        grid = remap(path, &#34;DQF&#34;, extent, resolution, goes16_extent)
+        data_dqf = grid.ReadAsArray()
+        # If the Quality Flag is not 0, set as NaN
+        data[data_dqf != 0] = np.nan
+
+    if variable == &#34;Mask&#34;:
+        data[data == -99] = np.nan
+        data[data == 40] = np.nan
+        data[data == 50] = np.nan
+        data[data == 60] = np.nan
+        data[data == 150] = np.nan
+        data[data == max(data[0])] = np.nan
+        data[data == min(data[0])] = np.nan
+
+    if variable == &#34;BCM&#34;:
+        data[data == 255] = np.nan
+        data[data == 0] = np.nan
+
+    if variable == &#34;Phase&#34;:
+        data[data &gt;= 5] = np.nan
+        data[data == 0] = np.nan
+
+    if variable == &#34;LST&#34;:
+        data[data &gt;= 335] = np.nan
+        data[data &lt;= 200] = np.nan
+
+    return data</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pipelines.rj_cor.meteorologia.satelite" href="index.html">pipelines.rj_cor.meteorologia.satelite</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.converte_timezone" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.converte_timezone">converte_timezone</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.download_blob" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.download_blob">download_blob</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_credentials_from_env" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_credentials_from_env">get_credentials_from_env</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_goes_extent" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_goes_extent">get_goes_extent</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_info" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_info">get_info</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.list_blobs_with_prefix" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.list_blobs_with_prefix">list_blobs_with_prefix</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.main" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.main">main</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.remap_g16" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.remap_g16">remap_g16</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.save_parquet" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.save_parquet">save_parquet</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.treat_data" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.treat_data">treat_data</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
