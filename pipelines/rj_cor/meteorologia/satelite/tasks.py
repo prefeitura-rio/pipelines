@@ -13,7 +13,12 @@ import pendulum
 from prefect import task
 import s3fs
 
-from pipelines.rj_cor.meteorologia.satelite.satellite_utils import main, save_parquet
+from pipelines.rj_cor.meteorologia.satelite.satellite_utils import (
+    main,
+    save_parquet,
+    list_blobs_with_prefix,
+    download_blob,
+)
 
 
 @task()
@@ -38,24 +43,30 @@ def slice_data(current_time: str) -> Tuple[str, str, str, str, str]:
     return ano, mes, dia, hora, dia_juliano
 
 
-@task(
-    max_retries=10,
-    retry_delay=dt.timedelta(seconds=60),
-)
+@task(max_retries=10, retry_delay=dt.timedelta(seconds=60))
 def download(variavel: str, ano: str, dia_juliano: str, hora: str) -> Union[str, Path]:
     """
     Acessa o S3 e faz o download do primeiro arquivo da data-hora especificada
     """
-    # Use the anonymous credentials to access public data
-    s3_fs = s3fs.S3FileSystem(anon=True)
 
-    # Get first file of GOES-16 data (multiband format) at this time
+    try:
+        # Use the anonymous credentials to access public data
+        s3_fs = s3fs.S3FileSystem(anon=True)
 
-    file = np.sort(
-        np.array(
-            s3_fs.find(f"noaa-goes16/ABI-L2-{variavel}/{ano}/{dia_juliano}/{hora}/")
+        # Get first file of GOES-16 data (multiband format) at this time
+        file = np.sort(
+            np.array(
+                s3_fs.find(f"noaa-goes16/ABI-L2-{variavel}/{ano}/{dia_juliano}/{hora}/")
+            )
+        )[0]
+        origem = "aws"
+    except RuntimeError:
+        bucket_name = "gcp-public-data-goes-16"
+        partition_file = f"ABI-L2-{variavel}/{ano}/{dia_juliano}/{hora}/"
+        file = list_blobs_with_prefix(
+            bucket_name=bucket_name, prefix=partition_file, mode="prod"
         )
-    )[0]
+        origem = "gcp"
 
     base_path = os.path.join(os.getcwd(), "data", "satelite", variavel[:-1], "input")
 
@@ -64,7 +75,15 @@ def download(variavel: str, ano: str, dia_juliano: str, hora: str) -> Union[str,
     print(">>>>>>>>>>>>>>> basepath", base_path)
 
     filename = os.path.join(base_path, file.split("/")[-1])
-    s3_fs.get(file, filename)
+    if origem == "aws":
+        s3_fs.get(file, filename)
+    else:
+        download_blob(
+            bucket_name=bucket_name,
+            source_blob_name=file,
+            destination_file_name=filename,
+            mode="prod",
+        )
     return filename
 
 
