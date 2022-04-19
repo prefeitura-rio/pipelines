@@ -61,13 +61,15 @@ def download(variavel: str, ano: str, dia_juliano: str, hora: str) -> Union[str,
         env: str = os.getenv(f"BASEDOSDADOS_CREDENTIALS_{mode.upper()}", "")
         if env == "":
             raise ValueError(
-                f"BASEDOSDADOS_CREDENTIALS_{mode.upper()} env var not set!")
+                f"BASEDOSDADOS_CREDENTIALS_{mode.upper()} env var not set!"
+            )
         info: dict = json.loads(base64.b64decode(env))
 
         return service_account.Credentials.from_service_account_info(info)
 
-
-    def list_blobs_with_prefix(bucket_name: str, prefix: str, mode: str = "prod") -> str:
+    def list_blobs_with_prefix(
+        bucket_name: str, prefix: str, mode: str = "prod"
+    ) -> str:
         """
         Lists all the blobs in the bucket that begin with the prefix.
         This can be used to list all blobs in a "folder", e.g. "public/".
@@ -89,11 +91,12 @@ def download(variavel: str, ano: str, dia_juliano: str, hora: str) -> Union[str,
 
         return files[0]
 
-
-    def download_blob(bucket_name: str,
-                      source_blob_name: str,
-                      destination_file_name: Union[str, Path],
-                      mode: str = "prod"):
+    def download_blob(
+        bucket_name: str,
+        source_blob_name: str,
+        destination_file_name: Union[str, Path],
+        mode: str = "prod",
+    ):
         """
         Downloads a blob from the bucket.
         Mode needs to be "prod" or "staging"
@@ -121,7 +124,6 @@ def download(variavel: str, ano: str, dia_juliano: str, hora: str) -> Union[str,
             {bucket_name} to local file {destination_file_name}."
         )
 
-
     try:
         # Use the anonymous credentials to access public data
         s3_fs = s3fs.S3FileSystem(anon=True)
@@ -132,15 +134,14 @@ def download(variavel: str, ano: str, dia_juliano: str, hora: str) -> Union[str,
                 s3_fs.find(f"noaa-goes16/ABI-L2-{variavel}/{ano}/{dia_juliano}/{hora}/")
             )
         )[0]
-        origem = 'aws'
+        origem = "aws"
     except Exception:
-        bucket_name = 'gcp-public-data-goes-16'
+        bucket_name = "gcp-public-data-goes-16"
         partition_file = f"ABI-L2-{variavel}/{ano}/{dia_juliano}/{hora}/"
         file = list_blobs_with_prefix(
-            bucket_name=bucket_name,
-            prefix=partition_file,
-            mode="prod")
-        origem = 'gcp'
+            bucket_name=bucket_name, prefix=partition_file, mode="prod"
+        )
+        origem = "gcp"
 
     base_path = os.path.join(os.getcwd(), "data", "satelite", variavel[:-1], "input")
 
@@ -149,13 +150,15 @@ def download(variavel: str, ano: str, dia_juliano: str, hora: str) -> Union[str,
     print(">>>>>>>>>>>>>>> basepath", base_path)
 
     filename = os.path.join(base_path, file.split("/")[-1])
-    if origem == 'aws':
+    if origem == "aws":
         s3_fs.get(file, filename)
     else:
-        download_blob(bucket_name=bucket_name,
-                      source_blob_name=file,
-                      destination_file_name=filename,
-                      mode="prod")
+        download_blob(
+            bucket_name=bucket_name,
+            source_blob_name=file,
+            destination_file_name=filename,
+            mode="prod",
+        )
     return filename
 
 
