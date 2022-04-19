@@ -3,17 +3,22 @@
 Tasks for emd
 """
 
+import base64
 import datetime as dt
+import json
 import os
 from pathlib import Path
 from typing import Tuple, Union
 
+from google.oauth2 import service_account
+from google.cloud import storage
 import numpy as np
 import pendulum
 from prefect import task
 import s3fs
 
 from pipelines.rj_cor.meteorologia.satelite.satellite_utils import main, save_parquet
+from pipelines.utils.utils import log
 
 
 @task()
@@ -46,16 +51,96 @@ def download(variavel: str, ano: str, dia_juliano: str, hora: str) -> Union[str,
     """
     Acessa o S3 e faz o download do primeiro arquivo da data-hora especificada
     """
-    # Use the anonymous credentials to access public data
-    s3_fs = s3fs.S3FileSystem(anon=True)
 
-    # Get first file of GOES-16 data (multiband format) at this time
+    def get_credentials_from_env(mode: str = "prod") -> service_account.Credentials:
+        """
+        Gets credentials from env vars
+        """
+        if mode not in ["prod", "staging"]:
+            raise ValueError("Mode must be 'prod' or 'staging'")
+        env: str = os.getenv(f"BASEDOSDADOS_CREDENTIALS_{mode.upper()}", "")
+        if env == "":
+            raise ValueError(
+                f"BASEDOSDADOS_CREDENTIALS_{mode.upper()} env var not set!")
+        info: dict = json.loads(base64.b64decode(env))
 
-    file = np.sort(
-        np.array(
-            s3_fs.find(f"noaa-goes16/ABI-L2-{variavel}/{ano}/{dia_juliano}/{hora}/")
+        return service_account.Credentials.from_service_account_info(info)
+
+
+    def list_blobs_with_prefix(bucket_name: str, prefix: str, mode: str = "prod") -> str:
+        """
+        Lists all the blobs in the bucket that begin with the prefix.
+        This can be used to list all blobs in a "folder", e.g. "public/".
+        Mode needs to be "prod" or "staging"
+        """
+
+        credentials = get_credentials_from_env(mode=mode)
+        storage_client = storage.Client(credentials=credentials)
+
+        # Note: Client.list_blobs requires at least package version 1.17.0.
+        blobs = storage_client.list_blobs(bucket_name, prefix=prefix)
+
+        files = []
+
+        for blob in blobs:
+            files.append(blob.name)
+
+        files.sort()
+
+        return files[0]
+
+
+    def download_blob(bucket_name: str,
+                      source_blob_name: str,
+                      destination_file_name: Union[str, Path],
+                      mode: str = "prod"):
+        """
+        Downloads a blob from the bucket.
+        Mode needs to be "prod" or "staging"
+
+        # The ID of your GCS bucket
+        # bucket_name = "your-bucket-name"
+
+        # The ID of your GCS object
+        # source_blob_name = "storage-object-name"
+
+        # The path to which the file should be downloaded
+        # destination_file_name = "local/path/to/file"
+        """
+
+        credentials = get_credentials_from_env(mode=mode)
+        storage_client = storage.Client(credentials=credentials)
+
+        bucket = storage_client.bucket(bucket_name)
+
+        blob = bucket.blob(source_blob_name)
+        blob.download_to_filename(destination_file_name)
+
+        log(
+            f"Downloaded storage object {source_blob_name} from bucket\
+            {bucket_name} to local file {destination_file_name}."
         )
-    )[0]
+
+
+    try:
+        # Use the anonymous credentials to access public data
+        s3_fs = s3fs.S3FileSystem(anon=True)
+
+        # Get first file of GOES-16 data (multiband format) at this time
+        file = np.sort(
+            np.array(
+                s3_fs.find(f"noaa-goes16/ABI-L2-{variavel}/{ano}/{dia_juliano}/{hora}/")
+            )
+        )[0]
+        origem = 'aws'
+    except Exception:
+        bucket_name = 'gcp-public-data-goes-16'
+        partition_file = f"ABI-L2-{variavel}/{ano}/{dia_juliano}/{hora}/"
+        file = list_blobs_with_prefix(
+            bucket_name=bucket_name,
+            prefix=partition_file,
+            mode="prod")
+        origem = 'gcp'
 
     base_path = os.path.join(os.getcwd(), "data", "satelite", variavel[:-1], "input")
 
@@ -64,7 +149,13 @@ def download(variavel: str, ano: str, dia_juliano: str, hora: str) -> Union[str,
     print(">>>>>>>>>>>>>>> basepath", base_path)
 
     filename = os.path.join(base_path, file.split("/")[-1])
-    s3_fs.get(file, filename)
+    if origem == 'aws':
+        s3_fs.get(file, filename)
+    else:
+        download_blob(bucket_name=bucket_name,
+                      source_blob_name=file,
+                      destination_file_name=filename,
+                      mode="prod")
     return filename
 
 

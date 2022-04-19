@@ -202,6 +202,10 @@ def tratar_dados(filename: Union[str, Path]) -> pd.DataFrame:
         "Sepetiba": 27,
         "Copacabana": 6,
         "Rocinha": 3,
+        "Gericino": 40,
+        "Itanhanga": 41,
+        "Mendanha": 42,
+        "Sumare": 43
     }
     dados["estacao"] = dados.estacao.replace(map_estacoes)
 
