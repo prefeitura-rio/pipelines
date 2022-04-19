@@ -27,7 +27,7 @@ class CustomFlow(Flow):
     notify people when a FlowRun fails.
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         name: str,
         schedule: Schedule = None,

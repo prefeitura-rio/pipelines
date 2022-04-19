@@ -22,11 +22,11 @@ sme_queries = {
     "avaliacao": {
         "materialize_after_dump": True,
         "materialization_mode": "prod",
-        "dump_type": "overwrite",  # TODO: check if it is possible to partition, this run takes over 1 hour
+        "dump_type": "overwrite",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Avaliacao",
     },
     "coc": {  # essa tabela utiliza a view coc0 pois contem o coc 0 e de 1 a 5
-        "dump_type": "overwrite",  # TODO: check if it is possible to partition, this run takes over 1 hour
+        "dump_type": "overwrite",
         "materialize_after_dump": True,
         "materialization_mode": "prod",
         "execute_query": """
