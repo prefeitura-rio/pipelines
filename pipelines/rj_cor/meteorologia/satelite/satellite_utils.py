@@ -193,7 +193,12 @@ def get_info(path: str) -> Tuple[dict, str]:
     # =====================================================================
     # Detect the product type
     # =====================================================================
-    product = path[path.find("L2-") + 3 : path.find("-M6")]  # "-M3" or "-M4"
+    procura_M = path.find("-M6")
+    if procura_M == -1:
+        procura_M = path.find("-M3")
+    if procura_M == -1:
+        procura_M = path.find("-M4")
+    product = path[path.find("L2-") + 3 : procura_M]
     print(product)
 
     # Nem todos os produtos foram adicionados no dicionário de características
