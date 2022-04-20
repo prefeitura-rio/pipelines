@@ -104,6 +104,7 @@ def list_blobs_with_prefix(bucket_name: str, prefix: str, mode: str = "prod") ->
 
     credentials = get_credentials_from_env(mode=mode)
     storage_client = storage.Client(credentials=credentials)
+    # storage_client = storage.Client()
 
     # Note: Client.list_blobs requires at least package version 1.17.0.
     blobs = storage_client.list_blobs(bucket_name, prefix=prefix)
@@ -140,6 +141,7 @@ def download_blob(
 
     credentials = get_credentials_from_env(mode=mode)
     storage_client = storage.Client(credentials=credentials)
+    # storage_client = storage.Client()
 
     bucket = storage_client.bucket(bucket_name)
 
@@ -193,7 +195,12 @@ def get_info(path: str) -> Tuple[dict, str]:
     # =====================================================================
     # Detect the product type
     # =====================================================================
-    product = path[path.find("L2-") + 3 : path.find("-M6")]  # "-M3" or "-M4"
+    procura_M = path.find("-M6")
+    if procura_M == -1:
+        procura_M = path.find("-M3")
+    if procura_M == -1:
+        procura_M = path.find("-M4")
+    product = path[path.find("L2-") + 3 : procura_M]
     print(product)
 
     # Nem todos os produtos foram adicionados no dicionário de características
