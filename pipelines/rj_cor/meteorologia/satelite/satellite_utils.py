@@ -61,11 +61,15 @@ Funções úteis no tratamento de dados de satélite
 # Required Libraries
 # ====================================================================
 
+import base64
 import datetime
+import json
 import os
 from pathlib import Path
 from typing import Tuple, Union
 
+from google.oauth2 import service_account
+from google.cloud import storage
 import netCDF4 as nc
 import numpy as np
 from osgeo import gdal  # pylint: disable=E0401
@@ -75,6 +79,77 @@ import xarray as xr
 
 from pipelines.rj_cor.meteorologia.satelite.remap import remap
 from pipelines.utils.utils import log
+
+
+def get_credentials_from_env(mode: str = "prod") -> service_account.Credentials:
+    """
+    Gets credentials from env vars
+    """
+    if mode not in ["prod", "staging"]:
+        raise ValueError("Mode must be 'prod' or 'staging'")
+    env: str = os.getenv(f"BASEDOSDADOS_CREDENTIALS_{mode.upper()}", "")
+    if env == "":
+        raise ValueError(f"BASEDOSDADOS_CREDENTIALS_{mode.upper()} env var not set!")
+    info: dict = json.loads(base64.b64decode(env))
+
+    return service_account.Credentials.from_service_account_info(info)
+
+
+def list_blobs_with_prefix(bucket_name: str, prefix: str, mode: str = "prod") -> str:
+    """
+    Lists all the blobs in the bucket that begin with the prefix.
+    This can be used to list all blobs in a "folder", e.g. "public/".
+    Mode needs to be "prod" or "staging"
+    """
+
+    credentials = get_credentials_from_env(mode=mode)
+    storage_client = storage.Client(credentials=credentials)
+
+    # Note: Client.list_blobs requires at least package version 1.17.0.
+    blobs = storage_client.list_blobs(bucket_name, prefix=prefix)
+
+    files = []
+
+    for blob in blobs:
+        files.append(blob.name)
+
+    files.sort()
+
+    return files[0]
+
+
+def download_blob(
+    bucket_name: str,
+    source_blob_name: str,
+    destination_file_name: Union[str, Path],
+    mode: str = "prod",
+):
+    """
+    Downloads a blob from the bucket.
+    Mode needs to be "prod" or "staging"
+
+    # The ID of your GCS bucket
+    # bucket_name = "your-bucket-name"
+
+    # The ID of your GCS object
+    # source_blob_name = "storage-object-name"
+
+    # The path to which the file should be downloaded
+    # destination_file_name = "local/path/to/file"
+    """
+
+    credentials = get_credentials_from_env(mode=mode)
+    storage_client = storage.Client(credentials=credentials)
+
+    bucket = storage_client.bucket(bucket_name)
+
+    blob = bucket.blob(source_blob_name)
+    blob.download_to_filename(destination_file_name)
+
+    log(
+        f"Downloaded storage object {source_blob_name} from bucket\
+        {bucket_name} to local file {destination_file_name}."
+    )
 
 
 def converte_timezone(datetime_save: str) -> str:
@@ -445,20 +520,16 @@ def save_parquet(variable: str, datetime_save: str) -> Union[str, Path]:
     )
 
     # cria pasta se ela não existe
-    base_path = os.path.join(
-        os.getcwd(), "data", "satelite", variable, "output"
-    )
+    base_path = os.path.join(os.getcwd(), "data", "satelite", variable, "output")
 
-    parquet_path = os.path.join(
-        base_path, partitions
-    )
+    parquet_path = os.path.join(base_path, partitions)
 
     if not os.path.exists(parquet_path):
         os.makedirs(parquet_path)
 
     # Fixa ordem das colunas
-    print('>>>>>', ['longitude', 'latitude', variable.lower()])
-    data = data[['longitude', 'latitude', variable.lower()]]
+    print(">>>>>", ["longitude", "latitude", variable.lower()])
+    data = data[["longitude", "latitude", variable.lower()]]
 
     # salva em parquet
     log(f"Saving on base_path {base_path}")

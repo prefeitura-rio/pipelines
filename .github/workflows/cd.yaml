@@ -9,7 +9,6 @@ on:
       - "pipelines/**/*"
 
 env:
-  DISCORD_HOOK_URL: ${{ secrets.DISCORD_HOOK_URL }}
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
   GH_PAT: ${{ secrets.GH_PAT }}

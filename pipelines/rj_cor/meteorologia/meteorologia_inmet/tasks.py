@@ -73,9 +73,7 @@ def download(data: str, yesterday: str) -> pd.DataFrame:
         url = f"https://apitempo.inmet.gov.br/estacao/{yesterday}/{data}/{id_estacao}"
         res = requests.get(url)
         if res.status_code != 200:
-            log(
-                f"Problema no id: {id_estacao}, {res.status_code}, {url}"
-            )
+            log(f"Problema no id: {id_estacao}, {res.status_code}, {url}")
             continue
         raw.append(json.loads(res.text))
 
@@ -107,7 +105,15 @@ def tratar_dados(dados: pd.DataFrame) -> Tuple[pd.DataFrame, str]:
         horario = datahora.format("HH:mm:SS")
         return data, horario
 
-    drop_cols = ["DC_NOME", "VL_LATITUDE", "VL_LONGITUDE", "TEM_SEN", "UF", 'TEN_BAT', 'TEM_CPU']
+    drop_cols = [
+        "DC_NOME",
+        "VL_LATITUDE",
+        "VL_LONGITUDE",
+        "TEM_SEN",
+        "UF",
+        "TEN_BAT",
+        "TEM_CPU",
+    ]
     # Checa se todas estão no df
     drop_cols = [c for c in drop_cols if c in dados.columns]
 
@@ -191,20 +197,36 @@ def tratar_dados(dados: pd.DataFrame) -> Tuple[pd.DataFrame, str]:
     dia = str(int(br_timezone[8:10]))
 
     # Define colunas que serão salvas
-    dados = dados[[
-        'id_estacao', 'data', 'horario', 'pressao', 'pressao_maxima',
-        'radiacao_global', 'temperatura_orvalho', 'temperatura_minima',
-        'umidade_minima', 'temperatura_orvalho_maximo', 'direcao_vento',
-        'acumulado_chuva_1_h', 'pressao_minima', 'umidade_maxima',
-        'velocidade_vento', 'temperatura_orvalho_minimo', 'temperatura_maxima',
-        'rajada_vento_max', 'temperatura', 'umidade'
-    ]]
+    dados = dados[
+        [
+            "id_estacao",
+            "data",
+            "horario",
+            "pressao",
+            "pressao_maxima",
+            "radiacao_global",
+            "temperatura_orvalho",
+            "temperatura_minima",
+            "umidade_minima",
+            "temperatura_orvalho_maximo",
+            "direcao_vento",
+            "acumulado_chuva_1_h",
+            "pressao_minima",
+            "umidade_maxima",
+            "velocidade_vento",
+            "temperatura_orvalho_minimo",
+            "temperatura_maxima",
+            "rajada_vento_max",
+            "temperatura",
+            "umidade",
+        ]
+    ]
 
     # Seleciona apenas dados daquele dia (devido à UTC)
     dados = dados[dados["data"] == br_timezone]
 
     # Remove linhas com todos os dados nan
-    dados = dados.dropna(subset=float_cols, how='all')
+    dados = dados.dropna(subset=float_cols, how="all")
 
     partitions = f"ano={ano}/mes={mes}/dia={dia}"
     log(f">>> partitions{partitions}")
