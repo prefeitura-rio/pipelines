@@ -50,21 +50,27 @@ from pipelines.utils.utils import untuple_clocks as untuple
 
 ergon_queries = {
     &#34;cargo&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_type&#34;: &#34;overwrite&#34;,
         &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_CARGOS_&#34;,
     },
     &#34;categoria&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_type&#34;: &#34;overwrite&#34;,
         &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_CATEGORIAS_&#34;,
     },
-    &#34;empresa&#34;: {
-        &#34;dump_type&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_EMPRESAS&#34;,
-    },
-    # &#34;matricula&#34;: {
+    # &#34;empresa&#34;: {
     #     &#34;dump_type&#34;: &#34;overwrite&#34;,
-    #     &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_ERG_MATRICULAS&#34;,
+    #     &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_EMPRESAS&#34;,
     # },
+    &#34;matricula&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_type&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_ERG_MATRICULAS&#34;,
+    },
     # &#34;fita_banco&#34;: {
     #     &#34;partition_column&#34;: &#34;MES_ANO&#34;,
     #     &#34;dump_type&#34;: &#34;append&#34;,
@@ -75,39 +81,57 @@ ergon_queries = {
     #     &#34;dump_type&#34;: &#34;append&#34;,
     #     &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_FOLHAS_EMP&#34;,
     # },
-    # &#34;forma_prov&#34;: {
-    #     &#34;dump_type&#34;: &#34;overwrite&#34;,
-    #     &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_FORMAS_PROV_&#34;,
-    # },
+    &#34;forma_provimento&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_type&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_FORMAS_PROV_&#34;,
+    },
     &#34;funcionario&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_type&#34;: &#34;overwrite&#34;,
         &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_FUNCIONARIOS&#34;,
     },
-    # &#34;horario_trabalho&#34;: {
-    #     &#34;dump_type&#34;: &#34;overwrite&#34;,
-    #     &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_HORARIO_TRAB_&#34;,
-    # },
-    # &#34;h_setor&#34;: {
-    #     &#34;dump_type&#34;: &#34;overwrite&#34;,
-    #     &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_HSETOR_&#34;,
-    # },
+    &#34;horario_trabalho&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_type&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_HORARIO_TRAB_&#34;,
+    },
+    &#34;setor&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_type&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_HSETOR_&#34;,
+    },
     &#34;jornada&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_type&#34;: &#34;overwrite&#34;,
         &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_JORNADAS_&#34;,
     },
-    # &#34;orgaos_externos&#34;: {
-    #     &#34;dump_type&#34;: &#34;overwrite&#34;,
-    #     &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_ORGAOS_EXTERNOS&#34;,
-    # },
-    # &#34;orgaos_regime_juridico&#34;: {
-    #     &#34;dump_type&#34;: &#34;overwrite&#34;,
-    #     &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_ORGAOS_REGIMES_JUR_&#34;,
-    # },
+    &#34;orgaos_externos&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_type&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_ORGAOS_EXTERNOS&#34;,
+    },
+    &#34;orgaos_regime_juridico&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_type&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_ORGAOS_REGIMES_JUR_&#34;,
+    },
     &#34;provimento&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_type&#34;: &#34;overwrite&#34;,
         &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_PROVIMENTOS_EV&#34;,
     },
     &#34;regime_juridico&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_type&#34;: &#34;overwrite&#34;,
         &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_REGIMES_JUR_&#34;,
     },
@@ -116,23 +140,29 @@ ergon_queries = {
     #     &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_TIPO_FOLHA&#34;,
     # },
     &#34;tipo_orgao&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_type&#34;: &#34;overwrite&#34;,
         &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_TIPO_ORGAO&#34;,
     },
     &#34;tipo_vinculo&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_type&#34;: &#34;overwrite&#34;,
         &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_TIPO_VINC_&#34;,
     },
-    # &#34;vinculo&#34;: {
-    #     &#34;dump_type&#34;: &#34;overwrite&#34;,
-    #     &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_VINCULOS&#34;,
-    # },
+    &#34;vinculo&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_type&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_VINCULOS&#34;,
+    },
 }
 
 
 ergon_clocks = generate_dump_db_schedules(
     interval=timedelta(days=30),
-    start_date=datetime(2022, 3, 12, 3, 0, tzinfo=pytz.timezone(&#34;America/Sao_Paulo&#34;)),
+    start_date=datetime(2022, 4, 26, 18, 30, tzinfo=pytz.timezone(&#34;America/Sao_Paulo&#34;)),
     labels=[
         constants.RJ_SMFP_AGENT_LABEL.value,
     ],
