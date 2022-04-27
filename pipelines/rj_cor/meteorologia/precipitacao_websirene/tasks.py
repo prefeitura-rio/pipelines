@@ -5,12 +5,11 @@ Tasks for precipitacao_alertario
 from datetime import timedelta
 import os
 from pathlib import Path
-from typing import Union, Tuple
+from typing import Union
 
 import pandas as pd
-import pandas_read_xml as pdx
-import pendulum
 from prefect import task
+import pandas_read_xml as pdx
 
 from pipelines.constants import constants
 
@@ -51,24 +50,19 @@ def download_tratar_dados() -> pd.DataFrame:
 
     # Converte de UTC para horário São Paulo
     dfr["data_medicao_utc"] = pd.to_datetime(dfr["data_medicao_utc"])
-    dfr["data_medicao"] = (
+    dfr["data"] = (
         dfr["data_medicao_utc"]
         .dt.tz_convert("America/Sao_Paulo")
         .dt.strftime("%Y-%m-%d %H:%M:%S")
     )
-    dfr["data_medicao"] = pd.to_datetime(dfr["data_medicao"])
+    dfr["data"] = pd.to_datetime(dfr["data"])
 
-    # Cria coluna com data e hora da medição
-    dfr["data"] = dfr["data_medicao"].dt.strftime("%Y-%m-%d")
-    dfr["hora"] = dfr["data_medicao"].dt.strftime("%H")
-
-    dfr = dfr.drop(["data_medicao_utc", "data_medicao"], axis=1)
+    dfr = dfr.drop(["data_medicao_utc"], axis=1)
 
     # Ordenação de variáveis
     cols_order = [
-        "data",
-        "hora",
         "id_estacao",
+        "data",
         "acumulado_chuva_15_min",
         "acumulado_chuva_1_h",
         "acumulado_chuva_4_h",
@@ -93,8 +87,8 @@ def download_tratar_dados() -> pd.DataFrame:
     return dfr
 
 
-@task(nout=2)
-def salvar_dados(dfr: pd.DataFrame) -> Tuple[Union[str, Path], str]:
+@task
+def salvar_dados(dfr: pd.DataFrame) -> Union[str, Path]:
     """
     Salvar dados tratados em csv para conseguir subir pro GCP
     """
@@ -104,19 +98,18 @@ def salvar_dados(dfr: pd.DataFrame) -> Tuple[Union[str, Path], str]:
     ano = max_date[:4]
     mes = str(int(max_date[5:7]))
     dia = str(int(max_date[8:10]))
-    hora = str(dfr["hora"].max())
 
     partitions = f"ano={ano}/mes={mes}/dia={dia}"
 
-    base_path = os.path.join(
-        os.getcwd(), "data", "precipitacao_websirene", "output", partitions
-    )
+    base_path = os.path.join(os.getcwd(), "data", "precipitacao_websirene", "output")
 
-    if not os.path.exists(base_path):
-        os.makedirs(base_path)
+    partition_path = os.path.join(base_path, partitions)
 
-    filename = os.path.join(base_path, f"dados_{max_date}_{hora}.csv")
+    if not os.path.exists(partition_path):
+        os.makedirs(partition_path)
+
+    filename = os.path.join(partition_path, f"dados_{max_date}.csv")
 
     print(f"Saving {filename}")
     dfr.to_csv(filename, index=False)
-    return filename, partitions
+    return base_path
