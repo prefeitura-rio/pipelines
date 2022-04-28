@@ -268,7 +268,14 @@ def dump_batches_to_csv(
         # Convert to dataframe
         dataframe = batch_to_dataframe(batch, columns)
         # Clean dataframe
+        old_columns = dataframe.columns.tolist()
         dataframe.columns = remove_columns_accents(dataframe)
+        new_columns_dict = dictionary = dict(
+            zip(old_columns, dataframe.columns.tolist())
+        )
+        if idx == 0:
+            log(f"New columns without accents: {new_columns_dict}")
+
         dataframe = clean_dataframe(dataframe)
         # Write to CSV
         if not partition_column:
@@ -278,7 +285,9 @@ def dump_batches_to_csv(
                 dataframe, partition_column
             )
             to_partitions(
-                dataframe, date_partition_columns + partition_columns[1:], prepath
+                dataframe,
+                date_partition_columns + new_columns_dict[partition_columns[1:]],
+                prepath,
             )
         # Get next batch
         batch = database.fetch_batch(batch_size)
