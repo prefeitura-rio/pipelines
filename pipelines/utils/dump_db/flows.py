@@ -30,6 +30,7 @@ from pipelines.utils.dump_db.tasks import (
     database_get,
     dump_batches_to_csv,
     format_partitioned_query,
+    parse_comma_separated_string_to_list,
 )
 
 with Flow(
@@ -52,7 +53,7 @@ with Flow(
     database = Parameter("db_database")
     database_type = Parameter("db_type")
     query = Parameter("execute_query")
-    partition_column = Parameter("partition_column", required=False)
+    partition_columns = Parameter("partition_columns", required=False, default="")
     lower_bound_date = Parameter("lower_bound_date", required=False)
 
     # Materialization parameters
@@ -102,6 +103,9 @@ with Flow(
     #
     #####################################
 
+    # Parse partition columns
+    partition_columns = parse_comma_separated_string_to_list(text=partition_columns)
+
     # Execute query on SQL Server
     db_object: Database = database_get(
         database_type=database_type,
@@ -118,7 +122,7 @@ with Flow(
         query=query,
         dataset_id=dataset_id,
         table_id=table_id,
-        partition_column=partition_column,
+        partition_column=partition_columns,
         lower_bound_date=lower_bound_date,
         wait=db_object,
     )
@@ -134,7 +138,7 @@ with Flow(
         database=db_object,
         batch_size=batch_size,
         prepath=f"data/{uuid4()}/",
-        partition_column=partition_column,
+        partition_column=partition_columns,
         wait=db_execute,
     )
 
