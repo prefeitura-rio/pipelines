@@ -4,7 +4,7 @@ General purpose tasks for dumping database data.
 """
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, Union
+from typing import Dict, List, Union
 from uuid import uuid4
 
 import basedosdados as bd
@@ -136,17 +136,20 @@ def format_partitioned_query(
     query: str,
     dataset_id: str,
     table_id: str,
-    partition_column: str = None,
+    partition_columns: List[str] = None,
     lower_bound_date: str = None,
+    date_format: str = None,
     wait=None,  # pylint: disable=unused-argument
 ):
     """
     Formats a query for fetching partitioned data.
     """
     # If no partition column is specified, return the query as is.
-    if partition_column is None:
+    if len(partition_columns) == 0 or partition_columns[0] == "":
         log("NO partition column specified. Returning query as is")
         return query
+
+    partition_column = partition_columns[0]
 
     # Check if the table already exists in BigQuery.
     table = bd.Table(dataset_id, table_id)
@@ -161,7 +164,9 @@ def format_partitioned_query(
     # extract only partitioned folders
     storage_partitions_dict = parser_blobs_to_partition_dict(blobs)
     # get last partition date
-    last_partition_date = extract_last_partition_date(storage_partitions_dict)
+    last_partition_date = extract_last_partition_date(
+        storage_partitions_dict, date_format
+    )
 
     if lower_bound_date:
         last_date = min(lower_bound_date, last_partition_date)
@@ -192,6 +197,32 @@ def format_partitioned_query(
 ###############
 
 
+@task
+def parse_comma_separated_string_to_list(text: str) -> List[str]:
+    """
+    Parses a comma separated string to a list.
+
+    Args:
+        text: The text to parse.
+
+    Returns:
+        A list of strings.
+    """
+    if text is None or text == "":
+        return []
+    # Remove extras.
+    text = text.replace("\n", "")
+    text = text.replace("\r", "")
+    text = text.replace("\t", "")
+    while text.find(",,") != -1:
+        text = text.replace(",,", ",")
+    while text.endswith(","):
+        text = text[:-1]
+    result = [x.strip() for x in text.split(",")]
+    result = [item for item in result if item != "" and item is not None]
+    return result
+
+
 @task(
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
@@ -201,7 +232,7 @@ def dump_batches_to_csv(
     database: Database,
     batch_size: int,
     prepath: Union[str, Path],
-    partition_column: str = None,
+    partition_columns: List[str] = None,
     wait=None,  # pylint: disable=unused-argument
 ) -> Path:
     """
@@ -217,6 +248,11 @@ def dump_batches_to_csv(
 
     prepath = Path(prepath)
     log(f"Got prepath: {prepath}")
+
+    if len(partition_columns) == 0 or partition_columns[0] == "":
+        partition_column = None
+    else:
+        partition_column = partition_columns[0]
 
     if not partition_column:
         log("NO partition column specified! Writing unique files")
@@ -238,10 +274,12 @@ def dump_batches_to_csv(
         if not partition_column:
             dataframe_to_csv(dataframe, prepath / f"{eventid}-{idx}.csv")
         else:
-            dataframe, partition_columns = parse_date_columns(
+            dataframe, date_partition_columns = parse_date_columns(
                 dataframe, partition_column
             )
-            to_partitions(dataframe, partition_columns, prepath)
+            to_partitions(
+                dataframe, date_partition_columns + partition_columns[1:], prepath
+            )
         # Get next batch
         batch = database.fetch_batch(batch_size)
         idx += 1
