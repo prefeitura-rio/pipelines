@@ -33,7 +33,7 @@ General purpose tasks for dumping database data.
 &#34;&#34;&#34;
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, Union
+from typing import Dict, List, Union
 from uuid import uuid4
 
 import basedosdados as bd
@@ -165,17 +165,20 @@ def format_partitioned_query(
     query: str,
     dataset_id: str,
     table_id: str,
-    partition_column: str = None,
+    partition_columns: List[str] = None,
     lower_bound_date: str = None,
+    date_format: str = None,
     wait=None,  # pylint: disable=unused-argument
 ):
     &#34;&#34;&#34;
     Formats a query for fetching partitioned data.
     &#34;&#34;&#34;
     # If no partition column is specified, return the query as is.
-    if partition_column is None:
+    if len(partition_columns) == 0 or partition_columns[0] == &#34;&#34;:
         log(&#34;NO partition column specified. Returning query as is&#34;)
         return query
+
+    partition_column = partition_columns[0]
 
     # Check if the table already exists in BigQuery.
     table = bd.Table(dataset_id, table_id)
@@ -190,7 +193,9 @@ def format_partitioned_query(
     # extract only partitioned folders
     storage_partitions_dict = parser_blobs_to_partition_dict(blobs)
     # get last partition date
-    last_partition_date = extract_last_partition_date(storage_partitions_dict)
+    last_partition_date = extract_last_partition_date(
+        storage_partitions_dict, date_format
+    )
 
     if lower_bound_date:
         last_date = min(lower_bound_date, last_partition_date)
@@ -221,6 +226,32 @@ def format_partitioned_query(
 ###############
 
 
+@task
+def parse_comma_separated_string_to_list(text: str) -&gt; List[str]:
+    &#34;&#34;&#34;
+    Parses a comma separated string to a list.
+
+    Args:
+        text: The text to parse.
+
+    Returns:
+        A list of strings.
+    &#34;&#34;&#34;
+    if text is None or text == &#34;&#34;:
+        return []
+    # Remove extras.
+    text = text.replace(&#34;\n&#34;, &#34;&#34;)
+    text = text.replace(&#34;\r&#34;, &#34;&#34;)
+    text = text.replace(&#34;\t&#34;, &#34;&#34;)
+    while text.find(&#34;,,&#34;) != -1:
+        text = text.replace(&#34;,,&#34;, &#34;,&#34;)
+    while text.endswith(&#34;,&#34;):
+        text = text[:-1]
+    result = [x.strip() for x in text.split(&#34;,&#34;)]
+    result = [item for item in result if item != &#34;&#34; and item is not None]
+    return result
+
+
 @task(
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
@@ -230,7 +261,7 @@ def dump_batches_to_csv(
     database: Database,
     batch_size: int,
     prepath: Union[str, Path],
-    partition_column: str = None,
+    partition_columns: List[str] = None,
     wait=None,  # pylint: disable=unused-argument
 ) -&gt; Path:
     &#34;&#34;&#34;
@@ -246,6 +277,11 @@ def dump_batches_to_csv(
 
     prepath = Path(prepath)
     log(f&#34;Got prepath: {prepath}&#34;)
+
+    if len(partition_columns) == 0 or partition_columns[0] == &#34;&#34;:
+        partition_column = None
+    else:
+        partition_column = partition_columns[0]
 
     if not partition_column:
         log(&#34;NO partition column specified! Writing unique files&#34;)
@@ -267,10 +303,12 @@ def dump_batches_to_csv(
         if not partition_column:
             dataframe_to_csv(dataframe, prepath / f&#34;{eventid}-{idx}.csv&#34;)
         else:
-            dataframe, partition_columns = parse_date_columns(
+            dataframe, date_partition_columns = parse_date_columns(
                 dataframe, partition_column
             )
-            to_partitions(dataframe, partition_columns, prepath)
+            to_partitions(
+                dataframe, date_partition_columns + partition_columns[1:], prepath
+            )
         # Get next batch
         batch = database.fetch_batch(batch_size)
         idx += 1
@@ -424,7 +462,7 @@ def database_get(
 </details>
 </dd>
 <dt id="pipelines.utils.dump_db.tasks.dump_batches_to_csv"><code class="name flex">
-<span>def <span class="ident">dump_batches_to_csv</span></span>(<span>database: <a title="pipelines.utils.dump_db.db.Database" href="db.html#pipelines.utils.dump_db.db.Database">Database</a>, batch_size: int, prepath: Union[str, pathlib.Path], partition_column: str = None, wait=None) ‑> pathlib.Path</span>
+<span>def <span class="ident">dump_batches_to_csv</span></span>(<span>database: <a title="pipelines.utils.dump_db.db.Database" href="db.html#pipelines.utils.dump_db.db.Database">Database</a>, batch_size: int, prepath: Union[str, pathlib.Path], partition_columns: List[str] = None, wait=None) ‑> pathlib.Path</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Dumps batches of data to CSV.</p></div>
@@ -441,7 +479,7 @@ def dump_batches_to_csv(
     database: Database,
     batch_size: int,
     prepath: Union[str, Path],
-    partition_column: str = None,
+    partition_columns: List[str] = None,
     wait=None,  # pylint: disable=unused-argument
 ) -&gt; Path:
     &#34;&#34;&#34;
@@ -457,6 +495,11 @@ def dump_batches_to_csv(
 
     prepath = Path(prepath)
     log(f&#34;Got prepath: {prepath}&#34;)
+
+    if len(partition_columns) == 0 or partition_columns[0] == &#34;&#34;:
+        partition_column = None
+    else:
+        partition_column = partition_columns[0]
 
     if not partition_column:
         log(&#34;NO partition column specified! Writing unique files&#34;)
@@ -478,10 +521,12 @@ def dump_batches_to_csv(
         if not partition_column:
             dataframe_to_csv(dataframe, prepath / f&#34;{eventid}-{idx}.csv&#34;)
         else:
-            dataframe, partition_columns = parse_date_columns(
+            dataframe, date_partition_columns = parse_date_columns(
                 dataframe, partition_column
             )
-            to_partitions(dataframe, partition_columns, prepath)
+            to_partitions(
+                dataframe, date_partition_columns + partition_columns[1:], prepath
+            )
         # Get next batch
         batch = database.fetch_batch(batch_size)
         idx += 1
@@ -492,7 +537,7 @@ def dump_batches_to_csv(
 </details>
 </dd>
 <dt id="pipelines.utils.dump_db.tasks.format_partitioned_query"><code class="name flex">
-<span>def <span class="ident">format_partitioned_query</span></span>(<span>query: str, dataset_id: str, table_id: str, partition_column: str = None, lower_bound_date: str = None, wait=None)</span>
+<span>def <span class="ident">format_partitioned_query</span></span>(<span>query: str, dataset_id: str, table_id: str, partition_columns: List[str] = None, lower_bound_date: str = None, date_format: str = None, wait=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Formats a query for fetching partitioned data.</p></div>
@@ -509,17 +554,20 @@ def format_partitioned_query(
     query: str,
     dataset_id: str,
     table_id: str,
-    partition_column: str = None,
+    partition_columns: List[str] = None,
     lower_bound_date: str = None,
+    date_format: str = None,
     wait=None,  # pylint: disable=unused-argument
 ):
     &#34;&#34;&#34;
     Formats a query for fetching partitioned data.
     &#34;&#34;&#34;
     # If no partition column is specified, return the query as is.
-    if partition_column is None:
+    if len(partition_columns) == 0 or partition_columns[0] == &#34;&#34;:
         log(&#34;NO partition column specified. Returning query as is&#34;)
         return query
+
+    partition_column = partition_columns[0]
 
     # Check if the table already exists in BigQuery.
     table = bd.Table(dataset_id, table_id)
@@ -534,7 +582,9 @@ def format_partitioned_query(
     # extract only partitioned folders
     storage_partitions_dict = parser_blobs_to_partition_dict(blobs)
     # get last partition date
-    last_partition_date = extract_last_partition_date(storage_partitions_dict)
+    last_partition_date = extract_last_partition_date(
+        storage_partitions_dict, date_format
+    )
 
     if lower_bound_date:
         last_date = min(lower_bound_date, last_partition_date)
@@ -556,6 +606,48 @@ def format_partitioned_query(
     select * from {aux_name}
     where {partition_column} &gt;= &#39;{last_date}&#39;
     &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="pipelines.utils.dump_db.tasks.parse_comma_separated_string_to_list"><code class="name flex">
+<span>def <span class="ident">parse_comma_separated_string_to_list</span></span>(<span>text: str) ‑> List[str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Parses a comma separated string to a list.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>text</code></strong></dt>
+<dd>The text to parse.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A list of strings.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def parse_comma_separated_string_to_list(text: str) -&gt; List[str]:
+    &#34;&#34;&#34;
+    Parses a comma separated string to a list.
+
+    Args:
+        text: The text to parse.
+
+    Returns:
+        A list of strings.
+    &#34;&#34;&#34;
+    if text is None or text == &#34;&#34;:
+        return []
+    # Remove extras.
+    text = text.replace(&#34;\n&#34;, &#34;&#34;)
+    text = text.replace(&#34;\r&#34;, &#34;&#34;)
+    text = text.replace(&#34;\t&#34;, &#34;&#34;)
+    while text.find(&#34;,,&#34;) != -1:
+        text = text.replace(&#34;,,&#34;, &#34;,&#34;)
+    while text.endswith(&#34;,&#34;):
+        text = text[:-1]
+    result = [x.strip() for x in text.split(&#34;,&#34;)]
+    result = [item for item in result if item != &#34;&#34; and item is not None]
+    return result</code></pre>
 </details>
 </dd>
 </dl>
@@ -581,6 +673,7 @@ def format_partitioned_query(
 <li><code><a title="pipelines.utils.dump_db.tasks.database_get" href="#pipelines.utils.dump_db.tasks.database_get">database_get</a></code></li>
 <li><code><a title="pipelines.utils.dump_db.tasks.dump_batches_to_csv" href="#pipelines.utils.dump_db.tasks.dump_batches_to_csv">dump_batches_to_csv</a></code></li>
 <li><code><a title="pipelines.utils.dump_db.tasks.format_partitioned_query" href="#pipelines.utils.dump_db.tasks.format_partitioned_query">format_partitioned_query</a></code></li>
+<li><code><a title="pipelines.utils.dump_db.tasks.parse_comma_separated_string_to_list" href="#pipelines.utils.dump_db.tasks.parse_comma_separated_string_to_list">parse_comma_separated_string_to_list</a></code></li>
 </ul>
 </li>
 </ul>

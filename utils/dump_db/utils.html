@@ -45,7 +45,7 @@ from pipelines.utils.utils import (
 )
 
 
-def extract_last_partition_date(partitions_dict: dict):
+def extract_last_partition_date(partitions_dict: dict, date_format: str):
     &#34;&#34;&#34;
     Extract last date from partitions folders
     &#34;&#34;&#34;
@@ -53,7 +53,7 @@ def extract_last_partition_date(partitions_dict: dict):
     for partition, values in partitions_dict.items():
         try:
             last_partition_date = datetime.strptime(max(values), &#34;%Y-%m-%d&#34;).strftime(
-                &#34;%Y-%m-%d&#34;
+                date_format
             )
             log(f&#34;{partition} is in date format Y-m-d&#34;)
         except ValueError:
@@ -128,8 +128,8 @@ def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-l
             &#34;dump_type&#34;: parameters[&#34;dump_type&#34;],
             &#34;execute_query&#34;: query_to_line(parameters[&#34;execute_query&#34;]),
         }
-        if &#34;partition_column&#34; in parameters:
-            parameter_defaults[&#34;partition_column&#34;] = parameters[&#34;partition_column&#34;]
+        if &#34;partition_columns&#34; in parameters:
+            parameter_defaults[&#34;partition_columns&#34;] = parameters[&#34;partition_columns&#34;]
         if &#34;lower_bound_date&#34; in parameters:
             parameter_defaults[&#34;lower_bound_date&#34;] = parameters[&#34;lower_bound_date&#34;]
         if &#34;materialize_after_dump&#34; in parameters:
@@ -184,7 +184,7 @@ Creates the query without accents.</p></div>
 </details>
 </dd>
 <dt id="pipelines.utils.dump_db.utils.extract_last_partition_date"><code class="name flex">
-<span>def <span class="ident">extract_last_partition_date</span></span>(<span>partitions_dict: dict)</span>
+<span>def <span class="ident">extract_last_partition_date</span></span>(<span>partitions_dict: dict, date_format: str)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Extract last date from partitions folders</p></div>
@@ -192,7 +192,7 @@ Creates the query without accents.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def extract_last_partition_date(partitions_dict: dict):
+<pre><code class="python">def extract_last_partition_date(partitions_dict: dict, date_format: str):
     &#34;&#34;&#34;
     Extract last date from partitions folders
     &#34;&#34;&#34;
@@ -200,7 +200,7 @@ Creates the query without accents.</p></div>
     for partition, values in partitions_dict.items():
         try:
             last_partition_date = datetime.strptime(max(values), &#34;%Y-%m-%d&#34;).strftime(
-                &#34;%Y-%m-%d&#34;
+                date_format
             )
             log(f&#34;{partition} is in date format Y-m-d&#34;)
         except ValueError:
@@ -249,8 +249,8 @@ Creates the query without accents.</p></div>
             &#34;dump_type&#34;: parameters[&#34;dump_type&#34;],
             &#34;execute_query&#34;: query_to_line(parameters[&#34;execute_query&#34;]),
         }
-        if &#34;partition_column&#34; in parameters:
-            parameter_defaults[&#34;partition_column&#34;] = parameters[&#34;partition_column&#34;]
+        if &#34;partition_columns&#34; in parameters:
+            parameter_defaults[&#34;partition_columns&#34;] = parameters[&#34;partition_columns&#34;]
         if &#34;lower_bound_date&#34; in parameters:
             parameter_defaults[&#34;lower_bound_date&#34;] = parameters[&#34;lower_bound_date&#34;]
         if &#34;materialize_after_dump&#34; in parameters:
