@@ -45,7 +45,7 @@ def parse_date_columns(
     for col in cols:
         if col in dataframe.columns:
             raise ValueError(f"Column {col} already exists, please review your model.")
-    dataframe[data_col] = dataframe[data_col].astype(str)
+    dataframe[partition_date_column] = dataframe[partition_date_column].astype(str)
     dataframe[data_col] = pd.to_datetime(dataframe[partition_date_column])
     dataframe[ano_col] = dataframe[data_col].dt.year
     dataframe[mes_col] = dataframe[data_col].dt.month
