@@ -280,11 +280,15 @@ def dump_batches_to_csv(
             dataframe_to_csv(dataframe, prepath / f"{eventid}-{idx}.csv")
         else:
             dataframe, date_partition_columns = parse_date_columns(
-                dataframe, partition_column
+                dataframe, new_columns_dict[partition_column]
             )
+
+            partitions = date_partition_columns + [
+                new_columns_dict[col] for col in partition_columns[1:]
+            ]
             to_partitions(
                 dataframe,
-                date_partition_columns + new_columns_dict[partition_columns[1:]],
+                partitions,
                 prepath,
             )
         # Get next batch
