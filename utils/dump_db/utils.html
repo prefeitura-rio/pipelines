@@ -75,7 +75,15 @@ def parse_date_columns(
         if col in dataframe.columns:
             raise ValueError(f&#34;Column {col} already exists, please review your model.&#34;)
 
+    log(&#34;=== Starting to parse date columns ===&#34;)
+    log(f&#34;Partition date column: {partition_date_column}&#34;)
+    log(f&#34;Original column head:\n{dataframe[partition_date_column].head()}&#34;)
+    log(f&#34;Original column dtype:\n{dataframe[partition_date_column].dtype}&#34;)
+
     dataframe[data_col] = pd.to_datetime(dataframe[partition_date_column])
+
+    log(f&#34;Parsed date column head:\n{dataframe[data_col].head()}&#34;)
+    log(f&#34;Parsed date column dtype:\n{dataframe[data_col].dtype}&#34;)
     dataframe[ano_col] = dataframe[data_col].dt.year
     dataframe[mes_col] = dataframe[data_col].dt.month
     dataframe[data_col] = dataframe[data_col].dt.date
@@ -297,7 +305,15 @@ Creates the query without accents.</p></div>
         if col in dataframe.columns:
             raise ValueError(f&#34;Column {col} already exists, please review your model.&#34;)
 
+    log(&#34;=== Starting to parse date columns ===&#34;)
+    log(f&#34;Partition date column: {partition_date_column}&#34;)
+    log(f&#34;Original column head:\n{dataframe[partition_date_column].head()}&#34;)
+    log(f&#34;Original column dtype:\n{dataframe[partition_date_column].dtype}&#34;)
+
     dataframe[data_col] = pd.to_datetime(dataframe[partition_date_column])
+
+    log(f&#34;Parsed date column head:\n{dataframe[data_col].head()}&#34;)
+    log(f&#34;Parsed date column dtype:\n{dataframe[data_col].dtype}&#34;)
     dataframe[ano_col] = dataframe[data_col].dt.year
     dataframe[mes_col] = dataframe[data_col].dt.month
     dataframe[data_col] = dataframe[data_col].dt.date
