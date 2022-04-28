@@ -125,7 +125,7 @@ with Flow(
         query=query,
         dataset_id=dataset_id,
         table_id=table_id,
-        partition_column=partition_columns,
+        partition_columns=partition_columns,
         lower_bound_date=lower_bound_date,
         date_format=partition_date_format,
         wait=db_object,
@@ -142,7 +142,7 @@ with Flow(
         database=db_object,
         batch_size=batch_size,
         prepath=f"data/{uuid4()}/",
-        partition_column=partition_columns,
+        partition_columns=partition_columns,
         wait=db_execute,
     )
 

@@ -56,7 +56,7 @@ sme_queries = {
         """,
     },
     "frequencia": {
-        "partition_column": "datainicio",
+        "partition_columns": "datainicio",
         "lower_bound_date": "2022-03-01",
         "materialize_after_dump": True,
         "materialization_mode": "prod",
@@ -82,7 +82,7 @@ sme_queries = {
         """,
     },
     "movimentacao": {
-        "partition_column": "data_mov",
+        "partition_columns": "data_mov",
         "lower_bound_date": "2022-03-01",
         "materialize_after_dump": True,
         "materialization_mode": "prod",
