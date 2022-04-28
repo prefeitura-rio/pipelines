@@ -270,9 +270,7 @@ def dump_batches_to_csv(
         # Clean dataframe
         old_columns = dataframe.columns.tolist()
         dataframe.columns = remove_columns_accents(dataframe)
-        new_columns_dict = dictionary = dict(
-            zip(old_columns, dataframe.columns.tolist())
-        )
+        new_columns_dict = dict(zip(old_columns, dataframe.columns.tolist()))
         if idx == 0:
             log(f"New columns without accents: {new_columns_dict}")
 
