@@ -16,7 +16,7 @@ from pipelines.utils.utils import (
 )
 
 
-def extract_last_partition_date(partitions_dict: dict):
+def extract_last_partition_date(partitions_dict: dict, date_format: str):
     """
     Extract last date from partitions folders
     """
@@ -24,7 +24,7 @@ def extract_last_partition_date(partitions_dict: dict):
     for partition, values in partitions_dict.items():
         try:
             last_partition_date = datetime.strptime(max(values), "%Y-%m-%d").strftime(
-                "%Y-%m-%d"
+                date_format
             )
             log(f"{partition} is in date format Y-m-d")
         except ValueError:

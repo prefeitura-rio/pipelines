@@ -138,6 +138,7 @@ def format_partitioned_query(
     table_id: str,
     partition_columns: List[str] = None,
     lower_bound_date: str = None,
+    date_format: str = None,
     wait=None,  # pylint: disable=unused-argument
 ):
     """
@@ -163,7 +164,9 @@ def format_partitioned_query(
     # extract only partitioned folders
     storage_partitions_dict = parser_blobs_to_partition_dict(blobs)
     # get last partition date
-    last_partition_date = extract_last_partition_date(storage_partitions_dict)
+    last_partition_date = extract_last_partition_date(
+        storage_partitions_dict, date_format
+    )
 
     if lower_bound_date:
         last_date = min(lower_bound_date, last_partition_date)

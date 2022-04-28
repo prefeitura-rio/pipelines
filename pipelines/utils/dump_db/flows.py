@@ -54,6 +54,9 @@ with Flow(
     database_type = Parameter("db_type")
     query = Parameter("execute_query")
     partition_columns = Parameter("partition_columns", required=False, default="")
+    partition_date_format = Parameter(
+        "partition_date_format", required=False, default="%Y-%m-%d"
+    )
     lower_bound_date = Parameter("lower_bound_date", required=False)
 
     # Materialization parameters
@@ -124,6 +127,7 @@ with Flow(
         table_id=table_id,
         partition_column=partition_columns,
         lower_bound_date=lower_bound_date,
+        date_format=partition_date_format,
         wait=db_object,
     )
 
