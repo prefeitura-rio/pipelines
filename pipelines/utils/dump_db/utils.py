@@ -16,7 +16,7 @@ from pipelines.utils.utils import (
 )
 
 
-def extract_last_partition_date(partitions_dict: dict):
+def extract_last_partition_date(partitions_dict: dict, date_format: str):
     """
     Extract last date from partitions folders
     """
@@ -24,7 +24,7 @@ def extract_last_partition_date(partitions_dict: dict):
     for partition, values in partitions_dict.items():
         try:
             last_partition_date = datetime.strptime(max(values), "%Y-%m-%d").strftime(
-                "%Y-%m-%d"
+                date_format
             )
             log(f"{partition} is in date format Y-m-d")
         except ValueError:
@@ -99,8 +99,8 @@ def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-l
             "dump_type": parameters["dump_type"],
             "execute_query": query_to_line(parameters["execute_query"]),
         }
-        if "partition_column" in parameters:
-            parameter_defaults["partition_column"] = parameters["partition_column"]
+        if "partition_columns" in parameters:
+            parameter_defaults["partition_columns"] = parameters["partition_columns"]
         if "lower_bound_date" in parameters:
             parameter_defaults["lower_bound_date"] = parameters["lower_bound_date"]
         if "materialize_after_dump" in parameters:
