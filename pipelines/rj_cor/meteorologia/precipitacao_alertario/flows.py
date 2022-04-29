@@ -6,6 +6,7 @@ from prefect import case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
+
 from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks import (
@@ -32,7 +33,7 @@ with Flow(
     DATASET_ID = "meio_ambiente_clima"
     TABLE_ID = "taxa_precipitacao_alertario"
     DUMP_TYPE = "append"
-    MATERIALIZE_AFTER_DUMP = True
+    MATERIALIZE_AFTER_DUMP = False
     MATERIALIZE_TO_DATARIO = False
     MATERIALIZATION_MODE = "dev"
 
@@ -41,7 +42,7 @@ with Flow(
     path = salvar_dados(dados=dados, current_time=current_time)
 
     # Create table in BigQuery
-    create_table_and_upload_to_gcs(
+    UPLOAD_TABLE = create_table_and_upload_to_gcs(
         data_path=path,
         dataset_id=DATASET_ID,
         table_id=TABLE_ID,
@@ -64,6 +65,8 @@ with Flow(
             labels=current_flow_labels,
             run_name=f"Materialize {DATASET_ID}.{TABLE_ID}",
         )
+
+        materialization_flow.set_upstream(UPLOAD_TABLE)
 
         wait_for_materialization = wait_for_flow_run(
             materialization_flow,
