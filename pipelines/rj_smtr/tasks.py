@@ -255,6 +255,39 @@ def bq_upload(dataset_id, table_id, filepath, raw_filepath=None, partitions=None
 
 
 @task
+def bq_upload_from_dict(paths: dict, dataset_id: str, partition_levels: int = 1):
+    """Upload multiple tables from a dict structured as {table_id: csv_path}.
+        Present use case assumes table partitioned once. Adjust the parameter
+        'partition_levels' to best suit new uses.
+        i.e. if your csv is saved as:
+            <table_id>/date=<run_date>/<filename>.csv
+        it has 1 level of partition.
+        if your csv file is saved as:
+            <table_id>/date=<run_date>/hour=<run_hour>/<filename>.csv
+        it has 2 levels of partition
+
+    Args:
+        paths (dict): _description_
+        dataset_id (str): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    for key in paths.keys():
+        log("#" * 80)
+        log(f"KEY = {key}")
+        tb_dir = paths[key].parent
+        for i in range(partition_levels):
+            tb_dir = tb_dir.parent
+        log(f"tb_dir = {tb_dir}")
+        create_or_append_table(dataset_id=dataset_id, table_id=key, path=tb_dir)
+
+    log(f"Returning -> {tb_dir.parent}")
+
+    return tb_dir.parent
+
+
+@task
 def upload_logs_to_bq(dataset_id, parent_table_id, timestamp, error):
     """Upload execution status table to BigQuery.
     Table is uploaded to the same dataset, named {parent_table_id}_logs.
