@@ -34,7 +34,7 @@ with Flow(
     DATASET_ID = "meio_ambiente_clima"
     TABLE_ID = "meteorologia_inmet"
     DUMP_TYPE = "append"
-    MATERIALIZE_AFTER_DUMP = True
+    MATERIALIZE_AFTER_DUMP = False
     MATERIALIZE_TO_DATARIO = False
     MATERIALIZATION_MODE = "dev"
 
