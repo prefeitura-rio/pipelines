@@ -31,6 +31,7 @@ _1746_default_parameters = {
     "db_type": "sql_server",
     "dataset_id": "administracao_servicos_publicos_1746",
     "vault_secret_path": "clustersql2",
+    "lower_bound_date": "2021-01-01",
 }
 dump_1746_flow = set_default_parameters(
     dump_1746_flow, default_parameters=_1746_default_parameters
