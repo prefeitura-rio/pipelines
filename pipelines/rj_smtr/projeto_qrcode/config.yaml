@@ -1,0 +1,62 @@
+models:
+  agency:
+      source: http://jeap.rio.rj.gov.br/MOB/get_agency.rule?sys=MOB
+      json:
+        model: agency
+        pk: agency_id
+        fields: 
+          name: agency_name
+  linha:
+    source: http://jeap.rio.rj.gov.br/MOB/get_linhas.rule?sys=MOB
+    json:
+      model: linha
+      pk: linha_id
+      fields: 
+        agency: agency_id
+        mode: idModalSmtr
+        initials: sigla
+        name: NomeLinha
+  route:
+    source: http://jeap.rio.rj.gov.br/MOB/get_routes.rule?sys=MOB
+    json:
+      model: route
+      pk: route_id
+      fields: 
+        linha: linha_id
+        agency: agency_id
+        mode: idModalSmtr
+        short_name: route_short_name
+        vista: Vista
+  trip:
+    source: http://jeap.rio.rj.gov.br/MOB/get_trips.rule?sys=MOB
+    json:
+      model: trip
+      pk: trip_id
+      fields: 
+        route: route_id
+        headsign: trip_headsign
+        via: via
+        version: versao
+        direction: Direcao
+      fix_lenght:
+        headsign: 50
+  stop:
+    source: http://jeap.rio.rj.gov.br/MOB/get_stops.rule?sys=MOB&INDICE=0
+    json:
+      model: stop
+      pk: stop_id
+      fields: 
+        mode: idModalSmtr
+        name: stop_name
+        address: endereco
+        latitude: stop_lat
+        longitude: stop_lon
+  sequence:
+    source: http://jeap.rio.rj.gov.br/MOB/get_stop_times.rule?sys=MOB
+    json:
+      model: sequence
+      pk: ""
+      fields: 
+        trip: trip_id
+        stop: stop_id
+        order: stop_sequence
