@@ -133,7 +133,7 @@ ergon_queries = {
 
 ergon_clocks = generate_dump_db_schedules(
     interval=timedelta(days=30),
-    start_date=datetime(2022, 4, 26, 18, 30, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2022, 5, 1, 18, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_SMFP_AGENT_LABEL.value,
     ],
