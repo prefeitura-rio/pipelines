@@ -1,6 +1,6 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.1.0
+    rev: v4.2.0
     hooks:
     - id: check-added-large-files # prevents adding large files
     - id: detect-private-key # detects private keys
@@ -14,7 +14,7 @@ repos:
     -   id: black
         language_version: python3.9
         exclude: 'pipelines\/\{\{cookiecutter\.project_name\}\}.*'
--   repo: https://gitlab.com/pycqa/flake8
-    rev: 3.9.2
+-   repo: https://github.com/PyCQA/flake8
+    rev: 4.0.1
     hooks:
     - id: flake8
