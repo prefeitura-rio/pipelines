@@ -277,7 +277,8 @@ def bq_upload_from_dict(paths: dict, dataset_id: str, partition_levels: int = 1)
         log("#" * 80)
         log(f"KEY = {key}")
         tb_dir = paths[key].parent
-        for i in range(partition_levels):
+        # climb up the partition directories to reach the table dir
+        for i in range(partition_levels):  # pylint: disable=unused-variable
             tb_dir = tb_dir.parent
         log(f"tb_dir = {tb_dir}")
         create_or_append_table(dataset_id=dataset_id, table_id=key, path=tb_dir)

@@ -105,7 +105,11 @@ def bq_project(kind: str = "bigquery_prod"):
 
 
 def get_table_max_value(
-    query_project_id: str, dataset_id: str, table_id: str, field_name: str, wait=None
+    query_project_id: str,
+    dataset_id: str,
+    table_id: str,
+    field_name: str,
+    wait=None,  # pylint: disable=unused-argument
 ):
     """Query a table to get the maximum value for the chosen field.
     Useful to incrementally materialize tables via DBT

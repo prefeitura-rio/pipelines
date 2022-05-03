@@ -56,7 +56,6 @@ from pathlib import Path
 import jinja2
 import pendulum
 import requests
-from basedosdados import Table
 from dbt_client import DbtClient
 from prefect import task
 from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.constants import constants
@@ -93,9 +92,9 @@ def request_data(endpoints: dict):
         log("#" * 80)
         log(f"KEY = {key}")
 
-        # Start with empty contents, page count = 0 and id = 0
+        # Start with empty contents, page count = 0 and file_id = 0
         contents = None
-        id = 0
+        file_id = 0
         page_count = 0
 
         # Setup a template for every CSV file
@@ -103,19 +102,19 @@ def request_data(endpoints: dict):
             "{{run_date}}/{{key}}/data_versao={{run_date}}/{{key}}_version-{{run_date}}-{{id}}.csv"
         )
 
-        # The first next is the initial URL
-        next = endpoints[key]["url"]
+        # The first next_page is the initial URL
+        next_page = endpoints[key]["url"]
 
         # Iterate over pages
-        while next:
+        while next_page:
             page_count += 1
 
             try:
 
                 # Get data
-                log(f"URL = {next}")
+                log(f"URL = {next_page}")
                 data = requests.get(
-                    next, timeout=constants.SIGMOB_GET_REQUESTS_TIMEOUT.value
+                    next_page, timeout=constants.SIGMOB_GET_REQUESTS_TIMEOUT.value
                 )
 
                 # Raise exception if not 200
@@ -133,9 +132,9 @@ def request_data(endpoints: dict):
 
                 # Get next page
                 if "next" in data and data["next"] != "EOF" and data["next"] != "":
-                    next = data["next"]
+                    next_page = data["next"]
                 else:
-                    next = None
+                    next_page = None
 
             except Exception as e:
                 err = traceback.format_exc()
@@ -147,17 +146,17 @@ def request_data(endpoints: dict):
             if page_count % constants.SIGMOB_PAGES_FOR_CSV_FILE.value == 0:
 
                 # Increment file ID
-                id += 1
-                # "{{run_date}}/{{key}}/data_versao={{run_date}}/{{key}}_version-{{run_date}}-{{id}}.csv"
+                file_id += 1
+                # "{{run_date}}/{{key}}/data_versao={{run_date}}/{{key}}_version-{{run_date}}-{{file_id}}.csv"
                 path = Path(
                     path_template.render(
-                        run_date=run_date, key=key, id="{:03}".format(id)
+                        run_date=run_date, key=key, id="{:03}".format(file_id)
                     )
                 )
                 log(f"Reached page count {page_count}, saving file at {path}")
 
                 # If it's the first file, create directories and save path
-                if id == 1:
+                if file_id == 1:
                     paths_dict[key] = path
                     path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -169,11 +168,13 @@ def request_data(endpoints: dict):
 
         # Save last file
         if contents is not None:
-            id += 1
+            file_id += 1
             path = Path(
-                path_template.render(run_date=run_date, key=key, id="{:03}".format(id))
+                path_template.render(
+                    run_date=run_date, key=key, id="{:03}".format(file_id)
+                )
             )
-            if id == 1:
+            if file_id == 1:
                 paths_dict[key] = path
                 path.parent.mkdir(parents=True, exist_ok=True)
             generate_df_and_save(contents, path)
@@ -205,7 +206,6 @@ def run_dbt_schema(
     if refresh:
         run_command += "--full-refresh"
     client.cli(run_command)
-    return None
 
 
 @task
@@ -218,6 +218,22 @@ def build_incremental_model(
     refresh: bool = False,
     wait=None,  # pylint: disable=unused-argument
 ):
+    """_summary_
+
+    Args:
+        dbt_client (DbtClient): DBT interface object
+        dataset_id (str): Dataset id on BigQuery
+        base_table_id (str): Base table from which to materialize (usually, an external table)
+        mat_table_id (str): Target table id for materialization
+        field_name (str, optional): Key field (column) for dbt incremental filters.
+        Defaults to "data_versao".
+        refresh (bool, optional): If True, rebuild the table from scratch. Defaults to False.
+        wait (NoneType, optional): Placeholder parameter, used to wait previous tasks finish.
+        Defaults to None.
+
+    Returns:
+        bool: whether the table was fully built or not.
+    """
     query_project_id = bq_project()
     last_mat_date = get_table_max_value(
         query_project_id, dataset_id, mat_table_id, field_name
