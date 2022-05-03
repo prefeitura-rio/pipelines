@@ -43,6 +43,8 @@ ergon_queries = {
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_ERG_MATRICULAS",
     },
     "fita_banco": {
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
         "partition_columns": "MES_ANO",
         "dump_type": "append",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FITA_BANCO",
