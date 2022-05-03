@@ -42,11 +42,11 @@ ergon_queries = {
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_ERG_MATRICULAS",
     },
-    # "fita_banco": {
-    #     "partition_columns": "MES_ANO",
-    #     "dump_type": "append",
-    #     "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FITA_BANCO",
-    # },
+    "fita_banco": {
+        "partition_columns": "MES_ANO",
+        "dump_type": "append",
+        "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FITA_BANCO",
+    },
     # "folha_empresa": {
     #     "partition_columns": "MES_ANO",
     #     "dump_type": "append",
