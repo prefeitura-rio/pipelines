@@ -18,9 +18,8 @@ from pipelines.rj_escritorio.geolocator.constants import (
 from pipelines.rj_escritorio.geolocator.schedules import every_day_at_four_am
 from pipelines.rj_escritorio.geolocator.tasks import (  # get_today,
     cria_csv,
-    enderecos_novos,
+    seleciona_enderecos_novos,
     geolocaliza_enderecos,
-    importa_bases_e_chamados,
 )
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.decorators import Flow
@@ -49,10 +48,7 @@ with Flow(
     dataset_id = geolocator_constants.DATASET_ID.value
     table_id = geolocator_constants.TABLE_ID.value
 
-    lista_enderecos = importa_bases_e_chamados()
-    novos_enderecos, possui_enderecos_novos = enderecos_novos(
-        lista_enderecos=lista_enderecos, upstream_tasks=[lista_enderecos]
-    )
+    novos_enderecos, possui_enderecos_novos = seleciona_enderecos_novos()
 
     # Roda apenas se houver endereços novos
     with case(possui_enderecos_novos, True):

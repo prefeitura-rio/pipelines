@@ -12,7 +12,6 @@ from typing import Union, Tuple
 import basedosdados as bd
 import pandas as pd
 import pendulum
-import prefect
 from prefect import task
 
 from pipelines.rj_escritorio.geolocator.utils import geolocator
@@ -20,65 +19,44 @@ from pipelines.utils.utils import log
 
 
 # Importando os dados
-@task
-def importa_bases_e_chamados() -> list:
+@task(nout=2)
+def seleciona_enderecos_novos() -> Tuple[pd.DataFrame, bool]:
     """
-    Importa a base de endereços completa e os endereços dos chamados que entraram no dia anterior.
+    Seleciona base de endereços chamados que entraram no dia anterior e não estão geolocalizados.
     """
     query = """
-    SELECT * FROM `rj-escritorio-dev.dados_mestres_staging.enderecos_geolocalizados`
+    WITH
+    end_conhecidos AS (
+        SELECT endereco_completo
+        FROM `rj-escritorio-dev.dados_mestres_staging.enderecos_geolocalizados`
+    ),
+    chamados_ontem AS (
+        SELECT
+        'Brasil' pais,
+        'RJ' estado,
+        'Rio de Janeiro' municipio,
+        no_bairro bairro,
+        id_logradouro,
+        no_logradouro logradouro,
+        ds_endereco_numero numero_porta,
+        CONCAT(no_logradouro, ' ', ds_endereco_numero, ', ', no_bairro,
+            ', ', 'Rio de Janeiro, RJ, Brasil') endereco_completo
+        FROM `rj-segovi.administracao_servicos_publicos_1746_staging.chamado`
+        WHERE no_logradouro IS NOT NULL
+            AND CAST(dt_inicio AS TIMESTAMP) BETWEEN DATE_ADD(CAST(CURRENT_DATE() AS TIMESTAMP), INTERVAL -1 DAY) AND CURRENT_TIMESTAMP()
+        )
+
+    SELECT DISTINCT
+    ch.endereco_completo, pais, estado, municipio,
+    bairro, id_logradouro, logradouro, numero_porta
+    FROM chamados_ontem ch
+    LEFT JOIN end_conhecidos ec ON ec.endereco_completo = ch.endereco_completo
+    WHERE ec.endereco_completo IS NULL AND ch.endereco_completo IS NOT NULL
     """
-    base_enderecos_atual = bd.read_sql(
+    base_enderecos_novos = bd.read_sql(
         query, billing_project_id="rj-escritorio-dev", from_file=True
     )
-    enderecos_conhecidos = base_enderecos_atual["endereco_completo"]
-
-    d1 = prefect.context.get("yesterday")  # pylint: disable=invalid-name
-    d2 = prefect.context.get("today")  # pylint: disable=invalid-name
-    query_2 = f"""
-    with teste as (
-    SELECT
-    'Brasil' pais,
-    'RJ' estado,
-    'Rio de Janeiro' municipio,
-    no_bairro bairro,
-    id_logradouro,
-    no_logradouro logradouro,
-    ds_endereco_numero numero_porta,
-    CONCAT(no_logradouro, ' ', ds_endereco_numero, ', ', no_bairro,
-         ', ', 'Rio de Janeiro, RJ, Brasil') endereco_completo
-    FROM `rj-segovi.administracao_servicos_publicos_1746_staging.chamado`
-        WHERE no_logradouro IS NOT NULL
-        AND dt_inicio >= '{d1}' AND dt_inicio <= '{d2}'
-        ORDER BY id_chamado ASC
-    )
-    select distinct
-        endereco_completo, pais, estado, municipio,
-        bairro, id_logradouro, logradouro, numero_porta
-        from teste
-    """
-    chamados_ontem = bd.read_sql(
-        query_2, billing_project_id="rj-escritorio-dev", from_file=True
-    )
-    enderecos_ontem = chamados_ontem["endereco_completo"]
-
-    return [enderecos_conhecidos, enderecos_ontem, chamados_ontem, base_enderecos_atual]
-
-
-# Pegando apenas os endereços NOVOS que entraram ontem
-@task(nout=2)
-def enderecos_novos(lista_enderecos: list) -> Tuple[pd.DataFrame, bool]:
-    """
-    Retorna apenas os endereços não catalogados que entraram no dia anterior
-    """
-    novos_enderecos = lista_enderecos[1][~lista_enderecos[1].isin(lista_enderecos[0])]
-    base_enderecos_novos = lista_enderecos[2][
-        lista_enderecos[2]["endereco_completo"].isin(novos_enderecos)
-    ]
-
-    log(f"Quantidade de endereços novos: {len(novos_enderecos)}")
-
-    possui_enderecos_novos = len(novos_enderecos) > 0
+    possui_enderecos_novos = base_enderecos_novos.shape[0] > 0
 
     return base_enderecos_novos, possui_enderecos_novos
 
@@ -121,14 +99,22 @@ def cria_csv(base_enderecos_novos: pd.DataFrame) -> Union[str, Path]:
     Une os endereços previamente catalogados com os novos e cria um csv.
     """
 
-    # Converte "id_logradouro" e "numero_porta" em inteiro para retirar zero dos decimais
-    base_enderecos_novos[["id_logradouro", "numero_porta"]] = (
-        base_enderecos_novos[["id_logradouro", "numero_porta"]]
-        .astype(float)
-        .astype(int)
-    )
+    # Fixa ordem das colunas
+    cols_order = [
+        "endereco_completo",
+        "pais",
+        "estado",
+        "municipio",
+        "bairro",
+        "id_logradouro",
+        "logradouro",
+        "numero_porta",
+        "latitude",
+        "longitude",
+    ]
+    base_enderecos_novos[cols_order] = base_enderecos_novos[cols_order]
 
-    # Hora atual no formato YYYYMMDDHHmm para criar partições
+    # Hora atual no formato YYYY-MM-DD para criar partições
     current_day = pendulum.now("America/Sao_Paulo").strftime("%Y-%m-%d")
 
     ano = current_day[:4]
