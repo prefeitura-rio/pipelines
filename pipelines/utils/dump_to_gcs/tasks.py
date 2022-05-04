@@ -98,11 +98,8 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
     job = client["bigquery"].query(query)
     while not job.done():
         sleep(1)
-    dest_table = job._properties["configuration"][
-        "query"
-    ][  # pylint: disable=protected-access
-        "destinationTable"
-    ]
+    # pylint: disable=protected-access
+    dest_table = job._properties["configuration"]["query"]["destinationTable"]
     dest_project_id = dest_table["projectId"]
     dest_dataset_id = dest_table["datasetId"]
     dest_table_id = dest_table["tableId"]
