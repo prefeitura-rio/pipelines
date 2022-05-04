@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
+"""
+Tasks for dumping data directly from BigQuery to GCS.
+"""
 from time import sleep
 from typing import Union
 
-import basedosdados as bd
 from basedosdados.download.base import google_client
 from basedosdados.upload.base import Base
 from google.cloud import bigquery
 import jinja2
-import pandas as pd
 from prefect import task
 
 from pipelines.utils.utils import log
 
 
 @task
-def download_data_to_gcs(
+def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
     project_id: str = None,
     dataset_id: str = None,
     table_id: str = None,
@@ -64,15 +65,14 @@ def download_data_to_gcs(
                     **query_params,
                 }
             )
-        except jinja2.TemplateError as e:
-            raise ValueError(f"Error rendering query: {e}")
+        except jinja2.TemplateError as exc:
+            raise ValueError(f"Error rendering query: {exc}") from exc
         log(f"Query was rendered: {query}")
 
     # If query is not a string, raise an error
     if not isinstance(query, str):
         raise ValueError("query must be either a string or a Jinja2 template")
-    else:
-        log(f"Query was provided: {query}")
+    log(f"Query was provided: {query}")
 
     # Get billing project ID
     if not billing_project_id:
@@ -98,7 +98,11 @@ def download_data_to_gcs(
     job = client["bigquery"].query(query)
     while not job.done():
         sleep(1)
-    dest_table = job._properties["configuration"]["query"]["destinationTable"]
+    dest_table = job._properties["configuration"][
+        "query"
+    ][  # pylint: disable=protected-access
+        "destinationTable"
+    ]
     dest_project_id = dest_table["projectId"]
     dest_dataset_id = dest_table["datasetId"]
     dest_table_id = dest_table["tableId"]
