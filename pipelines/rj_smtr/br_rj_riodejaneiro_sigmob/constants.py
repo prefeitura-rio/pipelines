@@ -67,22 +67,22 @@ class constants(Enum):  # pylint: disable=c0103
             "url": "http://jeap.rio.rj.gov.br/MOB/get_routes.rule?sys=MOB",
             "key_column": "route_id",
         },
-        # "shapes": {
-        #     "url": "http://jeap.rio.rj.gov.br/MOB/get_shapes.rule?sys=MOB&INDICE=0",
-        #     "key_column": "shape_id",
-        # },
-        # "stops": {
-        #     "url": "http://jeap.rio.rj.gov.br/MOB/get_stops.rule?sys=MOB&INDICE=0",
-        #     "key_column": "stop_id",
-        # },
+        "shapes": {
+            "url": "http://jeap.rio.rj.gov.br/MOB/get_shapes.rule?sys=MOB&INDICE=0",
+            "key_column": "shape_id",
+        },
+        "stops": {
+            "url": "http://jeap.rio.rj.gov.br/MOB/get_stops.rule?sys=MOB&INDICE=0",
+            "key_column": "stop_id",
+        },
         "stop_times": {
             "url": "http://jeap.rio.rj.gov.br/MOB/get_stop_times.rule?sys=MOB",
             "key_column": "stop_id",
         },
-        # "stop_details": {
-        #     "url": "http://jeap.rio.rj.gov.br/MOB/get_stops_details.rule?sys=MOB&INDICE=0",
-        #     "key_column": "stop_id",
-        # },
+        "stop_details": {
+            "url": "http://jeap.rio.rj.gov.br/MOB/get_stops_details.rule?sys=MOB&INDICE=0",
+            "key_column": "stop_id",
+        },
         "trips": {
             "url": "http://jeap.rio.rj.gov.br/MOB/get_trips.rule?sys=MOB",
             "key_column": "trip_id",

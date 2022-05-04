@@ -64,6 +64,7 @@ from pipelines.rj_smtr.utils import (
     generate_df_and_save,
     get_table_max_value,
 )
+from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log
 
 
@@ -191,6 +192,7 @@ def run_dbt_schema(
     client: DbtClient,
     dataset_id: str = "br_rj_riodejaneiro_sigmob",
     refresh: bool = False,
+    wait=None,  # pylint: disable=unused-argument
 ):
     """Run a whole schema (dataset) worth of models
 
@@ -204,11 +206,11 @@ def run_dbt_schema(
     """
     run_command = f"run --select models/{dataset_id}"
     if refresh:
-        run_command += "--full-refresh"
-    client.cli(run_command)
+        run_command += " --full-refresh"
+    client.cli(run_command, sync=True)
 
 
-@task
+@task(max_retries=3, retry_delay=timedelta(seconds=10))
 def build_incremental_model(
     dbt_client: DbtClient,
     dataset_id: str,
@@ -218,7 +220,9 @@ def build_incremental_model(
     refresh: bool = False,
     wait=None,  # pylint: disable=unused-argument
 ):
-    """_summary_
+    """
+        Utility task for backfilling table in predetermined steps.
+        Assumes the step sizes will be defined on the .sql file.
 
     Args:
         dbt_client (DbtClient): DBT interface object
@@ -241,20 +245,34 @@ def build_incremental_model(
     last_base_date = get_table_max_value(
         query_project_id, dataset_id, base_table_id, field_name
     )
+    log(
+        f"""
+    Base table last version: {last_base_date}
+    Materialized table last version: {last_mat_date}
+    """
+    )
+    run_command = f"run --select models/{dataset_id}/{mat_table_id}.sql"
 
-    run_command = f"run --select models/{dataset_id}/{mat_table_id}"
     if refresh:
-        run_command += "--full-refresh"
+        log("Running in full refresh mode")
+        log(f"DBT will run the following command:\n{run_command+' --full-refresh'}")
+        dbt_client.cli(run_command + " --full-refresh", sync=True)
 
     if last_base_date > last_mat_date:
+        log("Running interval step materialization")
+        log(f"DBT will run the following command:\n{run_command}")
         while last_base_date > last_mat_date:
+            running = dbt_client.cli(run_command, sync=True)
             last_mat_date = get_table_max_value(
                 query_project_id,
                 dataset_id,
                 mat_table_id,
                 field_name,
-                wait=dbt_client.cli(run_command),
+                wait=running,
             )
+            log(f"After this step, materialized table last version is: {last_mat_date}")
             if last_mat_date == last_base_date:
+                log("Materialized table reached base table version!")
                 return True
+    log("Did not run interval step materialization...")
     return False

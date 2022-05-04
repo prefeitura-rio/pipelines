@@ -61,6 +61,7 @@ import requests
 
 from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.utils import create_or_append_table
+from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_vault_secret
 
 
@@ -85,6 +86,11 @@ def create_current_date_hour_partition():
         "filename": filename,
         "partitions": partitions,
     }
+
+
+@task
+def get_local_dbt_client(host: str, port: int):
+    return get_dbt_client(host=host, port=port)
 
 
 @task
