@@ -4,16 +4,17 @@
 Tasks for geolocator
 """
 
+import os
+from pathlib import Path
 import time
+from typing import Union, Tuple
 
 import basedosdados as bd
 import pandas as pd
+import pendulum
 import prefect
 from prefect import task
 
-from pipelines.rj_escritorio.geolocator.constants import (
-    constants as geolocator_constants,
-)
 from pipelines.rj_escritorio.geolocator.utils import geolocator
 from pipelines.utils.utils import log
 
@@ -65,8 +66,8 @@ def importa_bases_e_chamados() -> list:
 
 
 # Pegando apenas os endereços NOVOS que entraram ontem
-@task
-def enderecos_novos(lista_enderecos: list) -> pd.DataFrame:
+@task(nout=2)
+def enderecos_novos(lista_enderecos: list) -> Tuple[pd.DataFrame, bool]:
     """
     Retorna apenas os endereços não catalogados que entraram no dia anterior
     """
@@ -74,10 +75,12 @@ def enderecos_novos(lista_enderecos: list) -> pd.DataFrame:
     base_enderecos_novos = lista_enderecos[2][
         lista_enderecos[2]["endereco_completo"].isin(novos_enderecos)
     ]
-    # for i in range(0, 4):
-    #     log(i)
-    #     log(lista_enderecos[i].head(5))
-    return base_enderecos_novos
+
+    log(f"Quantidade de endereços novos: {len(novos_enderecos)}")
+
+    possui_enderecos_novos = len(novos_enderecos) > 0
+
+    return base_enderecos_novos, possui_enderecos_novos
 
 
 # Geolocalizando
@@ -113,17 +116,38 @@ def geolocaliza_enderecos(base_enderecos_novos: pd.DataFrame) -> pd.DataFrame:
 
 # Adicionando os endereços novos geolocalizados na base de endereços que já possuímos
 @task
-def cria_csv(base_enderecos_atual: pd.DataFrame, base_enderecos_novos: pd.DataFrame):
+def cria_csv(base_enderecos_novos: pd.DataFrame) -> Union[str, Path]:
     """
     Une os endereços previamente catalogados com os novos e cria um csv.
     """
-    # today = prefect.context.get("today")
 
-    base_enderecos_atualizada = base_enderecos_atual.append(
-        base_enderecos_novos, ignore_index=True
+    # Converte "id_logradouro" e "numero_porta" em inteiro para retirar zero dos decimais
+    base_enderecos_novos[["id_logradouro", "numero_porta"]] = (
+        base_enderecos_novos[["id_logradouro", "numero_porta"]]
+        .astype(float)
+        .astype(int)
     )
-    base_enderecos_atualizada.to_csv(
-        # f"{geolocator_constants.PATH_BASE_ENDERECOS.value}_{today}.csv", index=False
-        geolocator_constants.PATH_BASE_ENDERECOS.value,
+
+    # Hora atual no formato YYYYMMDDHHmm para criar partições
+    current_day = pendulum.now("America/Sao_Paulo").strftime("%Y-%m-%d")
+
+    ano = current_day[:4]
+    mes = str(int(current_day[5:7]))
+    partitions = os.path.join(
+        f"ano_particao={ano}", f"mes_particao={mes}", f"data_particao={current_day}"
+    )
+
+    base_path = os.path.join(os.getcwd(), "tmp", "geolocator")
+    partition_path = os.path.join(base_path, partitions)
+
+    if not os.path.exists(partition_path):
+        os.makedirs(partition_path)
+
+    filename = os.path.join(partition_path, "base_enderecos.csv")
+    log(f"File is saved on: {filename}")
+
+    base_enderecos_novos.to_csv(
+        filename,
         index=False,
     )
+    return base_path

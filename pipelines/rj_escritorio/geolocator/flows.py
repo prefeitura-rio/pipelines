@@ -50,48 +50,50 @@ with Flow(
     table_id = geolocator_constants.TABLE_ID.value
 
     lista_enderecos = importa_bases_e_chamados()
-    novos_enderecos = enderecos_novos(
+    novos_enderecos, possui_enderecos_novos = enderecos_novos(
         lista_enderecos=lista_enderecos, upstream_tasks=[lista_enderecos]
     )
-    base_geolocalizada = geolocaliza_enderecos(
-        base_enderecos_novos=novos_enderecos, upstream_tasks=[novos_enderecos]
-    )
-    csv_criado = cria_csv(  # pylint: disable=invalid-name
-        base_enderecos_atual=lista_enderecos[3],
-        base_enderecos_novos=base_geolocalizada,
-        upstream_tasks=[base_geolocalizada],
-    )
-    # today = get_today()
-    create_table_and_upload_to_gcs(
-        data_path=geolocator_constants.PATH_BASE_ENDERECOS.value,
-        dataset_id=geolocator_constants.DATASET_ID.value,
-        table_id=geolocator_constants.TABLE_ID.value,
-        dump_type="append",
-        upstream_tasks=[csv_criado],
-    )
 
-    with case(materialize_after_dump, True):
-        # Trigger DBT flow run
-        current_flow_labels = get_current_flow_labels()
-        materialization_flow = create_flow_run(
-            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
-            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters={
-                "dataset_id": dataset_id,
-                "table_id": table_id,
-                "mode": materialization_mode,
-                "materialize_to_datario": materialize_to_datario,
-            },
-            labels=current_flow_labels,
-            run_name=f"Materialize {dataset_id}.{table_id}",
+    # Roda apenas se houver endereços novos
+    with case(possui_enderecos_novos, True):
+        base_geolocalizada = geolocaliza_enderecos(
+            base_enderecos_novos=novos_enderecos, upstream_tasks=[novos_enderecos]
+        )
+        base_path = cria_csv(  # pylint: disable=invalid-name
+            base_enderecos_novos=base_geolocalizada,
+            upstream_tasks=[base_geolocalizada],
+        )
+        # today = get_today()
+        create_table_and_upload_to_gcs(
+            data_path=base_path,
+            dataset_id=geolocator_constants.DATASET_ID.value,
+            table_id=geolocator_constants.TABLE_ID.value,
+            dump_type="append",
+            wait=base_path,
         )
 
-        wait_for_materialization = wait_for_flow_run(
-            materialization_flow,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
-        )
+        with case(materialize_after_dump, True):
+            # Trigger DBT flow run
+            current_flow_labels = get_current_flow_labels()
+            materialization_flow = create_flow_run(
+                flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+                project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                parameters={
+                    "dataset_id": dataset_id,
+                    "table_id": table_id,
+                    "mode": materialization_mode,
+                    "materialize_to_datario": materialize_to_datario,
+                },
+                labels=current_flow_labels,
+                run_name=f"Materialize {dataset_id}.{table_id}",
+            )
+
+            wait_for_materialization = wait_for_flow_run(
+                materialization_flow,
+                stream_states=True,
+                stream_logs=True,
+                raise_final_state=True,
+            )
 
 daily_geolocator_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 daily_geolocator_flow.run_config = KubernetesRun(
