@@ -90,6 +90,16 @@ def create_current_date_hour_partition():
 
 @task
 def get_local_dbt_client(host: str, port: int):
+    """Set a DBT client for running CLI commands. Requires
+    building container image for your queries repository.
+
+    Args:
+        host (str): hostname. When running locally, usually 'localhost'
+        port (int): the port number in which the DBT rpc is running
+
+    Returns:
+        DbtClient: object used to run DBT commands.
+    """
     return get_dbt_client(host=host, port=port)
 
 

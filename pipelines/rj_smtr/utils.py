@@ -84,7 +84,7 @@ def generate_df_and_save(data: dict, fname: Path):
     dataframe[data["key_column"]] = [
         piece[data["key_column"]] for piece in data["data"]
     ]
-    dataframe["content"] = [piece for piece in data["data"]]
+    dataframe["content"] = list(data["data"])
 
     # Save dataframe to CSV
     dataframe.to_csv(fname, index=False)

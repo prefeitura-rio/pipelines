@@ -64,7 +64,6 @@ from pipelines.rj_smtr.utils import (
     generate_df_and_save,
     get_table_max_value,
 )
-from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log
 
 
@@ -137,11 +136,11 @@ def request_data(endpoints: dict):
                 else:
                     next_page = None
 
-            except Exception as e:
+            except Exception as unknown_error:
                 err = traceback.format_exc()
                 log(err)
                 # log_critical(f"Failed to request data from SIGMOB: \n{err}")
-                raise e
+                raise unknown_error
 
             # Create a new file for every (constants.SIGMOB_PAGES_FOR_CSV_FILE.value) pages
             if page_count % constants.SIGMOB_PAGES_FOR_CSV_FILE.value == 0:
@@ -211,7 +210,7 @@ def run_dbt_schema(
 
 
 @task(max_retries=3, retry_delay=timedelta(seconds=10))
-def build_incremental_model(
+def build_incremental_model(  # pylint: disable=too-many-arguments
     dbt_client: DbtClient,
     dataset_id: str,
     base_table_id: str,
