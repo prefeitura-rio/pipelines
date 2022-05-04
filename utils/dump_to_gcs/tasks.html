@@ -45,9 +45,9 @@ from pipelines.utils.utils import log
 
 @task
 def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
+    dataset_id: str,
+    table_id: str,
     project_id: str = None,
-    dataset_id: str = None,
-    table_id: str = None,
     query: Union[str, jinja2.Template] = None,
     query_params: dict = None,
     mode: str = &#34;prod&#34;,
@@ -57,10 +57,6 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
     &#34;&#34;&#34;
     Get data from BigQuery.
     &#34;&#34;&#34;
-    # Either (dataset_id and table_id) or query must be provided
-    if not (dataset_id and table_id) and not query:
-        raise ValueError(&#34;Either (dataset_id and table_id) or query must be provided&#34;)
-
     # Try to get project_id from environment variable
     if not project_id:
         log(&#34;Project ID was not provided, trying to get it from environment variable&#34;)
@@ -75,28 +71,29 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
             )
         log(f&#34;Project ID was inferred from environment variables: {project_id}&#34;)
 
-    # If dataset_id and table_id are provided, build query from it
-    if dataset_id and table_id:
+    # If query is not provided, build query from it
+    if not query:
         query = f&#34;SELECT * FROM `{project_id}.{dataset_id}.{table_id}`&#34;
         log(f&#34;Query was inferred from dataset_id and table_id: {query}&#34;)
 
     # If query is provided, use it!
     # If it&#39;s a template, we must render it.
-    if not query_params:
-        query_params = {}
-    if isinstance(query, jinja2.Template):
-        try:
-            query = query.render(
-                {
-                    &#34;project_id&#34;: project_id,
-                    &#34;dataset_id&#34;: dataset_id,
-                    &#34;table_id&#34;: table_id,
-                    **query_params,
-                }
-            )
-        except jinja2.TemplateError as exc:
-            raise ValueError(f&#34;Error rendering query: {exc}&#34;) from exc
-        log(f&#34;Query was rendered: {query}&#34;)
+    if not query:
+        if not query_params:
+            query_params = {}
+        if isinstance(query, jinja2.Template):
+            try:
+                query = query.render(
+                    {
+                        &#34;project_id&#34;: project_id,
+                        &#34;dataset_id&#34;: dataset_id,
+                        &#34;table_id&#34;: table_id,
+                        **query_params,
+                    }
+                )
+            except jinja2.TemplateError as exc:
+                raise ValueError(f&#34;Error rendering query: {exc}&#34;) from exc
+            log(f&#34;Query was rendered: {query}&#34;)
 
     # If query is not a string, raise an error
     if not isinstance(query, str):
@@ -136,7 +133,7 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
         f&#34;Query results were stored in {dest_project_id}.{dest_dataset_id}.{dest_table_id}&#34;
     )
 
-    blob_path = f&#34;gs://datario/share/{dataset_id}/{table_id}/data.tar.gz&#34;
+    blob_path = f&#34;gs://datario/share/{dataset_id}/{table_id}/data.csv.gz&#34;
     log(f&#34;Loading data to {blob_path}&#34;)
     dataset_ref = bigquery.DatasetReference(dest_project_id, dest_dataset_id)
     table_ref = dataset_ref.table(dest_table_id)
@@ -159,7 +156,7 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pipelines.utils.dump_to_gcs.tasks.download_data_to_gcs"><code class="name flex">
-<span>def <span class="ident">download_data_to_gcs</span></span>(<span>project_id: str = None, dataset_id: str = None, table_id: str = None, query: Union[str, jinja2.environment.Template] = None, query_params: dict = None, mode: str = 'prod', billing_project_id: str = None, location: str = 'southamerica-east1')</span>
+<span>def <span class="ident">download_data_to_gcs</span></span>(<span>dataset_id: str, table_id: str, project_id: str = None, query: Union[str, jinja2.environment.Template] = None, query_params: dict = None, mode: str = 'prod', billing_project_id: str = None, location: str = 'southamerica-east1')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get data from BigQuery.</p></div>
@@ -169,9 +166,9 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
 </summary>
 <pre><code class="python">@task
 def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
+    dataset_id: str,
+    table_id: str,
     project_id: str = None,
-    dataset_id: str = None,
-    table_id: str = None,
     query: Union[str, jinja2.Template] = None,
     query_params: dict = None,
     mode: str = &#34;prod&#34;,
@@ -181,10 +178,6 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
     &#34;&#34;&#34;
     Get data from BigQuery.
     &#34;&#34;&#34;
-    # Either (dataset_id and table_id) or query must be provided
-    if not (dataset_id and table_id) and not query:
-        raise ValueError(&#34;Either (dataset_id and table_id) or query must be provided&#34;)
-
     # Try to get project_id from environment variable
     if not project_id:
         log(&#34;Project ID was not provided, trying to get it from environment variable&#34;)
@@ -199,28 +192,29 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
             )
         log(f&#34;Project ID was inferred from environment variables: {project_id}&#34;)
 
-    # If dataset_id and table_id are provided, build query from it
-    if dataset_id and table_id:
+    # If query is not provided, build query from it
+    if not query:
         query = f&#34;SELECT * FROM `{project_id}.{dataset_id}.{table_id}`&#34;
         log(f&#34;Query was inferred from dataset_id and table_id: {query}&#34;)
 
     # If query is provided, use it!
     # If it&#39;s a template, we must render it.
-    if not query_params:
-        query_params = {}
-    if isinstance(query, jinja2.Template):
-        try:
-            query = query.render(
-                {
-                    &#34;project_id&#34;: project_id,
-                    &#34;dataset_id&#34;: dataset_id,
-                    &#34;table_id&#34;: table_id,
-                    **query_params,
-                }
-            )
-        except jinja2.TemplateError as exc:
-            raise ValueError(f&#34;Error rendering query: {exc}&#34;) from exc
-        log(f&#34;Query was rendered: {query}&#34;)
+    if not query:
+        if not query_params:
+            query_params = {}
+        if isinstance(query, jinja2.Template):
+            try:
+                query = query.render(
+                    {
+                        &#34;project_id&#34;: project_id,
+                        &#34;dataset_id&#34;: dataset_id,
+                        &#34;table_id&#34;: table_id,
+                        **query_params,
+                    }
+                )
+            except jinja2.TemplateError as exc:
+                raise ValueError(f&#34;Error rendering query: {exc}&#34;) from exc
+            log(f&#34;Query was rendered: {query}&#34;)
 
     # If query is not a string, raise an error
     if not isinstance(query, str):
@@ -260,7 +254,7 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
         f&#34;Query results were stored in {dest_project_id}.{dest_dataset_id}.{dest_table_id}&#34;
     )
 
-    blob_path = f&#34;gs://datario/share/{dataset_id}/{table_id}/data.tar.gz&#34;
+    blob_path = f&#34;gs://datario/share/{dataset_id}/{table_id}/data.csv.gz&#34;
     log(f&#34;Loading data to {blob_path}&#34;)
     dataset_ref = bigquery.DatasetReference(dest_project_id, dest_dataset_id)
     table_ref = dataset_ref.table(dest_table_id)

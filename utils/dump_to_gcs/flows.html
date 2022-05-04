@@ -49,8 +49,8 @@ with Flow(
 ) as dump_to_gcs_flow:
 
     project_id = Parameter(&#34;project_id&#34;, required=False)
-    dataset_id = Parameter(&#34;dataset_id&#34;, required=False)
-    table_id = Parameter(&#34;table_id&#34;, required=False)
+    dataset_id = Parameter(&#34;dataset_id&#34;)
+    table_id = Parameter(&#34;table_id&#34;)
     query = Parameter(&#34;query&#34;, required=False)
     query_params = Parameter(&#34;query_params&#34;, required=False)
     mode = Parameter(&#34;bd_mode&#34;, required=False, default=&#34;prod&#34;)
