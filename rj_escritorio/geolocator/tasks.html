@@ -33,80 +33,61 @@
 Tasks for geolocator
 &#34;&#34;&#34;
 
+import os
+from pathlib import Path
 import time
+from typing import Union, Tuple
 
 import basedosdados as bd
 import pandas as pd
-import prefect
+import pendulum
 from prefect import task
 
-from pipelines.rj_escritorio.geolocator.constants import (
-    constants as geolocator_constants,
-)
 from pipelines.rj_escritorio.geolocator.utils import geolocator
 from pipelines.utils.utils import log
 
 
 # Importando os dados
-@task
-def importa_bases_e_chamados() -&gt; list:
+@task(nout=2)
+def seleciona_enderecos_novos() -&gt; Tuple[pd.DataFrame, bool]:
     &#34;&#34;&#34;
-    Importa a base de endereços completa e os endereços dos chamados que entraram no dia anterior.
+    Seleciona base de endereços chamados que entraram no dia anterior e não estão geolocalizados.
     &#34;&#34;&#34;
     query = &#34;&#34;&#34;
-    SELECT * FROM `rj-escritorio-dev.dados_mestres_staging.enderecos_geolocalizados`
+    WITH
+    end_conhecidos AS (
+        SELECT endereco_completo
+        FROM `rj-escritorio-dev.dados_mestres_staging.enderecos_geolocalizados`
+    ),
+    chamados_ontem AS (
+        SELECT
+        &#39;Brasil&#39; pais,
+        &#39;RJ&#39; estado,
+        &#39;Rio de Janeiro&#39; municipio,
+        no_bairro bairro,
+        id_logradouro,
+        no_logradouro logradouro,
+        ds_endereco_numero numero_porta,
+        CONCAT(no_logradouro, &#39; &#39;, ds_endereco_numero, &#39;, &#39;, no_bairro,
+            &#39;, &#39;, &#39;Rio de Janeiro, RJ, Brasil&#39;) endereco_completo
+        FROM `rj-segovi.administracao_servicos_publicos_1746_staging.chamado`
+        WHERE no_logradouro IS NOT NULL
+            AND CAST(dt_inicio AS TIMESTAMP) BETWEEN DATE_ADD(CAST(CURRENT_DATE() AS TIMESTAMP), INTERVAL -1 DAY) AND CURRENT_TIMESTAMP()
+        )
+
+    SELECT DISTINCT
+    ch.endereco_completo, pais, estado, municipio,
+    bairro, id_logradouro, logradouro, numero_porta
+    FROM chamados_ontem ch
+    LEFT JOIN end_conhecidos ec ON ec.endereco_completo = ch.endereco_completo
+    WHERE ec.endereco_completo IS NULL AND ch.endereco_completo IS NOT NULL
     &#34;&#34;&#34;
-    base_enderecos_atual = bd.read_sql(
+    base_enderecos_novos = bd.read_sql(
         query, billing_project_id=&#34;rj-escritorio-dev&#34;, from_file=True
     )
-    enderecos_conhecidos = base_enderecos_atual[&#34;endereco_completo&#34;]
+    possui_enderecos_novos = base_enderecos_novos.shape[0] &gt; 0
 
-    d1 = prefect.context.get(&#34;yesterday&#34;)  # pylint: disable=invalid-name
-    d2 = prefect.context.get(&#34;today&#34;)  # pylint: disable=invalid-name
-    query_2 = f&#34;&#34;&#34;
-    with teste as (
-    SELECT
-    &#39;Brasil&#39; pais,
-    &#39;RJ&#39; estado,
-    &#39;Rio de Janeiro&#39; municipio,
-    no_bairro bairro,
-    id_logradouro,
-    no_logradouro logradouro,
-    ds_endereco_numero numero_porta,
-    CONCAT(no_logradouro, &#39; &#39;, ds_endereco_numero, &#39;, &#39;, no_bairro,
-         &#39;, &#39;, &#39;Rio de Janeiro, RJ, Brasil&#39;) endereco_completo
-    FROM `rj-segovi.administracao_servicos_publicos_1746_staging.chamado`
-        WHERE no_logradouro IS NOT NULL
-        AND dt_inicio &gt;= &#39;{d1}&#39; AND dt_inicio &lt;= &#39;{d2}&#39;
-        ORDER BY id_chamado ASC
-    )
-    select distinct
-        endereco_completo, pais, estado, municipio,
-        bairro, id_logradouro, logradouro, numero_porta
-        from teste
-    &#34;&#34;&#34;
-    chamados_ontem = bd.read_sql(
-        query_2, billing_project_id=&#34;rj-escritorio-dev&#34;, from_file=True
-    )
-    enderecos_ontem = chamados_ontem[&#34;endereco_completo&#34;]
-
-    return [enderecos_conhecidos, enderecos_ontem, chamados_ontem, base_enderecos_atual]
-
-
-# Pegando apenas os endereços NOVOS que entraram ontem
-@task
-def enderecos_novos(lista_enderecos: list) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    Retorna apenas os endereços não catalogados que entraram no dia anterior
-    &#34;&#34;&#34;
-    novos_enderecos = lista_enderecos[1][~lista_enderecos[1].isin(lista_enderecos[0])]
-    base_enderecos_novos = lista_enderecos[2][
-        lista_enderecos[2][&#34;endereco_completo&#34;].isin(novos_enderecos)
-    ]
-    # for i in range(0, 4):
-    #     log(i)
-    #     log(lista_enderecos[i].head(5))
-    return base_enderecos_novos
+    return base_enderecos_novos, possui_enderecos_novos
 
 
 # Geolocalizando
@@ -142,20 +123,49 @@ def geolocaliza_enderecos(base_enderecos_novos: pd.DataFrame) -&gt; pd.DataFrame
 
 # Adicionando os endereços novos geolocalizados na base de endereços que já possuímos
 @task
-def cria_csv(base_enderecos_atual: pd.DataFrame, base_enderecos_novos: pd.DataFrame):
+def cria_csv(base_enderecos_novos: pd.DataFrame) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
     Une os endereços previamente catalogados com os novos e cria um csv.
     &#34;&#34;&#34;
-    # today = prefect.context.get(&#34;today&#34;)
 
-    base_enderecos_atualizada = base_enderecos_atual.append(
-        base_enderecos_novos, ignore_index=True
+    # Fixa ordem das colunas
+    cols_order = [
+        &#34;endereco_completo&#34;,
+        &#34;pais&#34;,
+        &#34;estado&#34;,
+        &#34;municipio&#34;,
+        &#34;bairro&#34;,
+        &#34;id_logradouro&#34;,
+        &#34;logradouro&#34;,
+        &#34;numero_porta&#34;,
+        &#34;latitude&#34;,
+        &#34;longitude&#34;,
+    ]
+    base_enderecos_novos[cols_order] = base_enderecos_novos[cols_order]
+
+    # Hora atual no formato YYYY-MM-DD para criar partições
+    current_day = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y-%m-%d&#34;)
+
+    ano = current_day[:4]
+    mes = str(int(current_day[5:7]))
+    partitions = os.path.join(
+        f&#34;ano_particao={ano}&#34;, f&#34;mes_particao={mes}&#34;, f&#34;data_particao={current_day}&#34;
     )
-    base_enderecos_atualizada.to_csv(
-        # f&#34;{geolocator_constants.PATH_BASE_ENDERECOS.value}_{today}.csv&#34;, index=False
-        geolocator_constants.PATH_BASE_ENDERECOS.value,
+
+    base_path = os.path.join(os.getcwd(), &#34;tmp&#34;, &#34;geolocator&#34;)
+    partition_path = os.path.join(base_path, partitions)
+
+    if not os.path.exists(partition_path):
+        os.makedirs(partition_path)
+
+    filename = os.path.join(partition_path, &#34;base_enderecos.csv&#34;)
+    log(f&#34;File is saved on: {filename}&#34;)
+
+    base_enderecos_novos.to_csv(
+        filename,
         index=False,
-    )</code></pre>
+    )
+    return base_path</code></pre>
 </details>
 </section>
 <section>
@@ -166,7 +176,7 @@ def cria_csv(base_enderecos_atual: pd.DataFrame, base_enderecos_novos: pd.DataFr
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pipelines.rj_escritorio.geolocator.tasks.cria_csv"><code class="name flex">
-<span>def <span class="ident">cria_csv</span></span>(<span>base_enderecos_atual: pandas.core.frame.DataFrame, base_enderecos_novos: pandas.core.frame.DataFrame)</span>
+<span>def <span class="ident">cria_csv</span></span>(<span>base_enderecos_novos: pandas.core.frame.DataFrame) ‑> Union[str, pathlib.Path]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Une os endereços previamente catalogados com os novos e cria um csv.</p></div>
@@ -175,44 +185,49 @@ def cria_csv(base_enderecos_atual: pd.DataFrame, base_enderecos_novos: pd.DataFr
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def cria_csv(base_enderecos_atual: pd.DataFrame, base_enderecos_novos: pd.DataFrame):
+def cria_csv(base_enderecos_novos: pd.DataFrame) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
     Une os endereços previamente catalogados com os novos e cria um csv.
     &#34;&#34;&#34;
-    # today = prefect.context.get(&#34;today&#34;)
 
-    base_enderecos_atualizada = base_enderecos_atual.append(
-        base_enderecos_novos, ignore_index=True
-    )
-    base_enderecos_atualizada.to_csv(
-        # f&#34;{geolocator_constants.PATH_BASE_ENDERECOS.value}_{today}.csv&#34;, index=False
-        geolocator_constants.PATH_BASE_ENDERECOS.value,
-        index=False,
-    )</code></pre>
-</details>
-</dd>
-<dt id="pipelines.rj_escritorio.geolocator.tasks.enderecos_novos"><code class="name flex">
-<span>def <span class="ident">enderecos_novos</span></span>(<span>lista_enderecos: list) ‑> pandas.core.frame.DataFrame</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Retorna apenas os endereços não catalogados que entraram no dia anterior</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task
-def enderecos_novos(lista_enderecos: list) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    Retorna apenas os endereços não catalogados que entraram no dia anterior
-    &#34;&#34;&#34;
-    novos_enderecos = lista_enderecos[1][~lista_enderecos[1].isin(lista_enderecos[0])]
-    base_enderecos_novos = lista_enderecos[2][
-        lista_enderecos[2][&#34;endereco_completo&#34;].isin(novos_enderecos)
+    # Fixa ordem das colunas
+    cols_order = [
+        &#34;endereco_completo&#34;,
+        &#34;pais&#34;,
+        &#34;estado&#34;,
+        &#34;municipio&#34;,
+        &#34;bairro&#34;,
+        &#34;id_logradouro&#34;,
+        &#34;logradouro&#34;,
+        &#34;numero_porta&#34;,
+        &#34;latitude&#34;,
+        &#34;longitude&#34;,
     ]
-    # for i in range(0, 4):
-    #     log(i)
-    #     log(lista_enderecos[i].head(5))
-    return base_enderecos_novos</code></pre>
+    base_enderecos_novos[cols_order] = base_enderecos_novos[cols_order]
+
+    # Hora atual no formato YYYY-MM-DD para criar partições
+    current_day = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y-%m-%d&#34;)
+
+    ano = current_day[:4]
+    mes = str(int(current_day[5:7]))
+    partitions = os.path.join(
+        f&#34;ano_particao={ano}&#34;, f&#34;mes_particao={mes}&#34;, f&#34;data_particao={current_day}&#34;
+    )
+
+    base_path = os.path.join(os.getcwd(), &#34;tmp&#34;, &#34;geolocator&#34;)
+    partition_path = os.path.join(base_path, partitions)
+
+    if not os.path.exists(partition_path):
+        os.makedirs(partition_path)
+
+    filename = os.path.join(partition_path, &#34;base_enderecos.csv&#34;)
+    log(f&#34;File is saved on: {filename}&#34;)
+
+    base_enderecos_novos.to_csv(
+        filename,
+        index=False,
+    )
+    return base_path</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_escritorio.geolocator.tasks.geolocaliza_enderecos"><code class="name flex">
@@ -245,58 +260,55 @@ def geolocaliza_enderecos(base_enderecos_novos: pd.DataFrame) -&gt; pd.DataFrame
     return base_enderecos_novos</code></pre>
 </details>
 </dd>
-<dt id="pipelines.rj_escritorio.geolocator.tasks.importa_bases_e_chamados"><code class="name flex">
-<span>def <span class="ident">importa_bases_e_chamados</span></span>(<span>) ‑> list</span>
+<dt id="pipelines.rj_escritorio.geolocator.tasks.seleciona_enderecos_novos"><code class="name flex">
+<span>def <span class="ident">seleciona_enderecos_novos</span></span>(<span>) ‑> Tuple[pandas.core.frame.DataFrame, bool]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Importa a base de endereços completa e os endereços dos chamados que entraram no dia anterior.</p></div>
+<div class="desc"><p>Seleciona base de endereços chamados que entraram no dia anterior e não estão geolocalizados.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@task
-def importa_bases_e_chamados() -&gt; list:
+<pre><code class="python">@task(nout=2)
+def seleciona_enderecos_novos() -&gt; Tuple[pd.DataFrame, bool]:
     &#34;&#34;&#34;
-    Importa a base de endereços completa e os endereços dos chamados que entraram no dia anterior.
+    Seleciona base de endereços chamados que entraram no dia anterior e não estão geolocalizados.
     &#34;&#34;&#34;
     query = &#34;&#34;&#34;
-    SELECT * FROM `rj-escritorio-dev.dados_mestres_staging.enderecos_geolocalizados`
+    WITH
+    end_conhecidos AS (
+        SELECT endereco_completo
+        FROM `rj-escritorio-dev.dados_mestres_staging.enderecos_geolocalizados`
+    ),
+    chamados_ontem AS (
+        SELECT
+        &#39;Brasil&#39; pais,
+        &#39;RJ&#39; estado,
+        &#39;Rio de Janeiro&#39; municipio,
+        no_bairro bairro,
+        id_logradouro,
+        no_logradouro logradouro,
+        ds_endereco_numero numero_porta,
+        CONCAT(no_logradouro, &#39; &#39;, ds_endereco_numero, &#39;, &#39;, no_bairro,
+            &#39;, &#39;, &#39;Rio de Janeiro, RJ, Brasil&#39;) endereco_completo
+        FROM `rj-segovi.administracao_servicos_publicos_1746_staging.chamado`
+        WHERE no_logradouro IS NOT NULL
+            AND CAST(dt_inicio AS TIMESTAMP) BETWEEN DATE_ADD(CAST(CURRENT_DATE() AS TIMESTAMP), INTERVAL -1 DAY) AND CURRENT_TIMESTAMP()
+        )
+
+    SELECT DISTINCT
+    ch.endereco_completo, pais, estado, municipio,
+    bairro, id_logradouro, logradouro, numero_porta
+    FROM chamados_ontem ch
+    LEFT JOIN end_conhecidos ec ON ec.endereco_completo = ch.endereco_completo
+    WHERE ec.endereco_completo IS NULL AND ch.endereco_completo IS NOT NULL
     &#34;&#34;&#34;
-    base_enderecos_atual = bd.read_sql(
+    base_enderecos_novos = bd.read_sql(
         query, billing_project_id=&#34;rj-escritorio-dev&#34;, from_file=True
     )
-    enderecos_conhecidos = base_enderecos_atual[&#34;endereco_completo&#34;]
+    possui_enderecos_novos = base_enderecos_novos.shape[0] &gt; 0
 
-    d1 = prefect.context.get(&#34;yesterday&#34;)  # pylint: disable=invalid-name
-    d2 = prefect.context.get(&#34;today&#34;)  # pylint: disable=invalid-name
-    query_2 = f&#34;&#34;&#34;
-    with teste as (
-    SELECT
-    &#39;Brasil&#39; pais,
-    &#39;RJ&#39; estado,
-    &#39;Rio de Janeiro&#39; municipio,
-    no_bairro bairro,
-    id_logradouro,
-    no_logradouro logradouro,
-    ds_endereco_numero numero_porta,
-    CONCAT(no_logradouro, &#39; &#39;, ds_endereco_numero, &#39;, &#39;, no_bairro,
-         &#39;, &#39;, &#39;Rio de Janeiro, RJ, Brasil&#39;) endereco_completo
-    FROM `rj-segovi.administracao_servicos_publicos_1746_staging.chamado`
-        WHERE no_logradouro IS NOT NULL
-        AND dt_inicio &gt;= &#39;{d1}&#39; AND dt_inicio &lt;= &#39;{d2}&#39;
-        ORDER BY id_chamado ASC
-    )
-    select distinct
-        endereco_completo, pais, estado, municipio,
-        bairro, id_logradouro, logradouro, numero_porta
-        from teste
-    &#34;&#34;&#34;
-    chamados_ontem = bd.read_sql(
-        query_2, billing_project_id=&#34;rj-escritorio-dev&#34;, from_file=True
-    )
-    enderecos_ontem = chamados_ontem[&#34;endereco_completo&#34;]
-
-    return [enderecos_conhecidos, enderecos_ontem, chamados_ontem, base_enderecos_atual]</code></pre>
+    return base_enderecos_novos, possui_enderecos_novos</code></pre>
 </details>
 </dd>
 </dl>
@@ -318,9 +330,8 @@ def importa_bases_e_chamados() -&gt; list:
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="pipelines.rj_escritorio.geolocator.tasks.cria_csv" href="#pipelines.rj_escritorio.geolocator.tasks.cria_csv">cria_csv</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.geolocator.tasks.enderecos_novos" href="#pipelines.rj_escritorio.geolocator.tasks.enderecos_novos">enderecos_novos</a></code></li>
 <li><code><a title="pipelines.rj_escritorio.geolocator.tasks.geolocaliza_enderecos" href="#pipelines.rj_escritorio.geolocator.tasks.geolocaliza_enderecos">geolocaliza_enderecos</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.geolocator.tasks.importa_bases_e_chamados" href="#pipelines.rj_escritorio.geolocator.tasks.importa_bases_e_chamados">importa_bases_e_chamados</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.geolocator.tasks.seleciona_enderecos_novos" href="#pipelines.rj_escritorio.geolocator.tasks.seleciona_enderecos_novos">seleciona_enderecos_novos</a></code></li>
 </ul>
 </li>
 </ul>
