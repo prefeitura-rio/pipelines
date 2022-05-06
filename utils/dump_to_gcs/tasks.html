@@ -50,8 +50,8 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
     table_id: str,
     project_id: str = None,
     query: Union[str, jinja2.Template] = None,
-    query_params: dict = None,
-    mode: str = &#34;prod&#34;,
+    jinja_query_params: dict = None,
+    bd_project_mode: str = &#34;prod&#34;,
     billing_project_id: str = None,
     location: str = &#34;southamerica-east1&#34;,
     maximum_bytes_processed: float = dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
@@ -64,7 +64,7 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
         log(&#34;Project ID was not provided, trying to get it from environment variable&#34;)
         try:
             bd_base = Base()
-            project_id = bd_base.config[&#34;gcloud-projects&#34;][mode][&#34;name&#34;]
+            project_id = bd_base.config[&#34;gcloud-projects&#34;][bd_project_mode][&#34;name&#34;]
         except KeyError:
             pass
         if not project_id:
@@ -85,8 +85,8 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
     # If query is provided, use it!
     # If it&#39;s a template, we must render it.
     if not query:
-        if not query_params:
-            query_params = {}
+        if not jinja_query_params:
+            jinja_query_params = {}
         if isinstance(query, jinja2.Template):
             try:
                 query = query.render(
@@ -94,7 +94,7 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
                         &#34;project_id&#34;: project_id,
                         &#34;dataset_id&#34;: dataset_id,
                         &#34;table_id&#34;: table_id,
-                        **query_params,
+                        **jinja_query_params,
                     }
                 )
             except jinja2.TemplateError as exc:
@@ -181,7 +181,7 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pipelines.utils.dump_to_gcs.tasks.download_data_to_gcs"><code class="name flex">
-<span>def <span class="ident">download_data_to_gcs</span></span>(<span>dataset_id: str, table_id: str, project_id: str = None, query: Union[str, jinja2.environment.Template] = None, query_params: dict = None, mode: str = 'prod', billing_project_id: str = None, location: str = 'southamerica-east1', maximum_bytes_processed: float = 1073741824)</span>
+<span>def <span class="ident">download_data_to_gcs</span></span>(<span>dataset_id: str, table_id: str, project_id: str = None, query: Union[str, jinja2.environment.Template] = None, jinja_query_params: dict = None, bd_project_mode: str = 'prod', billing_project_id: str = None, location: str = 'southamerica-east1', maximum_bytes_processed: float = 1073741824)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get data from BigQuery.</p></div>
@@ -195,8 +195,8 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
     table_id: str,
     project_id: str = None,
     query: Union[str, jinja2.Template] = None,
-    query_params: dict = None,
-    mode: str = &#34;prod&#34;,
+    jinja_query_params: dict = None,
+    bd_project_mode: str = &#34;prod&#34;,
     billing_project_id: str = None,
     location: str = &#34;southamerica-east1&#34;,
     maximum_bytes_processed: float = dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
@@ -209,7 +209,7 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
         log(&#34;Project ID was not provided, trying to get it from environment variable&#34;)
         try:
             bd_base = Base()
-            project_id = bd_base.config[&#34;gcloud-projects&#34;][mode][&#34;name&#34;]
+            project_id = bd_base.config[&#34;gcloud-projects&#34;][bd_project_mode][&#34;name&#34;]
         except KeyError:
             pass
         if not project_id:
@@ -230,8 +230,8 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
     # If query is provided, use it!
     # If it&#39;s a template, we must render it.
     if not query:
-        if not query_params:
-            query_params = {}
+        if not jinja_query_params:
+            jinja_query_params = {}
         if isinstance(query, jinja2.Template):
             try:
                 query = query.render(
@@ -239,7 +239,7 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
                         &#34;project_id&#34;: project_id,
                         &#34;dataset_id&#34;: dataset_id,
                         &#34;table_id&#34;: table_id,
-                        **query_params,
+                        **jinja_query_params,
                     }
                 )
             except jinja2.TemplateError as exc:
