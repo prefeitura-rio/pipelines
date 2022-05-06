@@ -21,8 +21,8 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
     table_id: str,
     project_id: str = None,
     query: Union[str, jinja2.Template] = None,
-    query_params: dict = None,
-    mode: str = "prod",
+    jinja_query_params: dict = None,
+    bd_project_mode: str = "prod",
     billing_project_id: str = None,
     location: str = "southamerica-east1",
     maximum_bytes_processed: float = dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
@@ -35,7 +35,7 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
         log("Project ID was not provided, trying to get it from environment variable")
         try:
             bd_base = Base()
-            project_id = bd_base.config["gcloud-projects"][mode]["name"]
+            project_id = bd_base.config["gcloud-projects"][bd_project_mode]["name"]
         except KeyError:
             pass
         if not project_id:
@@ -56,8 +56,8 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
     # If query is provided, use it!
     # If it's a template, we must render it.
     if not query:
-        if not query_params:
-            query_params = {}
+        if not jinja_query_params:
+            jinja_query_params = {}
         if isinstance(query, jinja2.Template):
             try:
                 query = query.render(
@@ -65,7 +65,7 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
                         "project_id": project_id,
                         "dataset_id": dataset_id,
                         "table_id": table_id,
-                        **query_params,
+                        **jinja_query_params,
                     }
                 )
             except jinja2.TemplateError as exc:
