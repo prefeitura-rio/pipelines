@@ -89,7 +89,7 @@ def download(variavel: str, ano: str, dia_juliano: str, hora: str) -&gt; Union[s
             )
         )[0]
         origem = &#34;aws&#34;
-    except RuntimeError:
+    except IndexError:
         bucket_name = &#34;gcp-public-data-goes-16&#34;
         partition_file = f&#34;ABI-L2-{variavel}/{ano}/{dia_juliano}/{hora}/&#34;
         file = list_blobs_with_prefix(
@@ -173,7 +173,7 @@ def download(variavel: str, ano: str, dia_juliano: str, hora: str) -&gt; Union[s
             )
         )[0]
         origem = &#34;aws&#34;
-    except RuntimeError:
+    except IndexError:
         bucket_name = &#34;gcp-public-data-goes-16&#34;
         partition_file = f&#34;ABI-L2-{variavel}/{ano}/{dia_juliano}/{hora}/&#34;
         file = list_blobs_with_prefix(
