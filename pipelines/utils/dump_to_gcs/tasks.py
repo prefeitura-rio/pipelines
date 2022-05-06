@@ -11,7 +11,8 @@ from google.cloud import bigquery
 import jinja2
 from prefect import task
 
-from pipelines.utils.utils import log
+from pipelines.utils.dump_to_gcs.constants import constants as dump_to_gcs_constants
+from pipelines.utils.utils import human_readable, log
 
 
 @task
@@ -24,6 +25,7 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
     mode: str = "prod",
     billing_project_id: str = None,
     location: str = "southamerica-east1",
+    maximum_bytes_processed: float = dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
 ):
     """
     Get data from BigQuery.
@@ -41,6 +43,10 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
                 "project_id must be either provided or inferred from environment variables"
             )
         log(f"Project ID was inferred from environment variables: {project_id}")
+
+    # Asserts that dataset_id and table_id are provided
+    if not dataset_id or not table_id:
+        raise ValueError("dataset_id and table_id must be provided")
 
     # If query is not provided, build query from it
     if not query:
@@ -89,9 +95,28 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
             f"Billing project ID was inferred from environment variables: {billing_project_id}"
         )
 
+    # Checking if data exceeds the maximum allowed size
+    log("Checking if data exceeds the maximum allowed size")
+    client = google_client(project_id, billing_project_id, from_file=True, reauth=False)
+    job_config = bigquery.QueryJobConfig()
+    job_config.dry_run = True
+    job = client["bigquery"].query(query, job_config=job_config)
+    while not job.done():
+        sleep(1)
+    table_size = job.total_bytes_processed
+    log(f'Table size: {human_readable(table_size, unit="B", unit_divider=1024)}')
+    if table_size > maximum_bytes_processed:
+        max_allowed_size = human_readable(
+            maximum_bytes_processed,
+            unit="B",
+            unit_divider=1024,
+        )
+        raise ValueError(
+            f"Table size exceeds the maximum allowed size: {max_allowed_size}"
+        )
+
     # Get data
     log("Querying data from BigQuery")
-    client = google_client(project_id, billing_project_id, from_file=True, reauth=False)
     job = client["bigquery"].query(query)
     while not job.done():
         sleep(1)
