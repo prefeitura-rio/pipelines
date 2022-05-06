@@ -272,6 +272,36 @@ def untuple_clocks(clocks):
 
 ###############
 #
+# Text formatting
+#
+###############
+
+
+def human_readable(
+    value: Union[int, float],
+    unit: str = &#34;&#34;,
+    unit_prefixes: List[str] = None,
+    unit_divider: int = 1000,
+    decimal_places: int = 2,
+):
+    &#34;&#34;&#34;
+    Formats a value in a human readable way.
+    &#34;&#34;&#34;
+    if unit_prefixes is None:
+        unit_prefixes = [&#34;&#34;, &#34;k&#34;, &#34;M&#34;, &#34;G&#34;, &#34;T&#34;, &#34;P&#34;, &#34;E&#34;, &#34;Z&#34;, &#34;Y&#34;]
+    if value == 0:
+        return f&#34;{value}{unit}&#34;
+    unit_prefix = unit_prefixes[0]
+    for prefix in unit_prefixes[1:]:
+        if value &lt; unit_divider:
+            break
+        unit_prefix = prefix
+        value /= unit_divider
+    return f&#34;{value:.{decimal_places}f}{unit_prefix}{unit}&#34;
+
+
+###############
+#
 # Dataframe
 #
 ###############
@@ -699,6 +729,38 @@ def dump_header_to_csv(
     &#34;&#34;&#34;
     vault_client = client if client else get_vault_client()
     return vault_client.secrets.kv.read_secret_version(secret_path)[&#34;data&#34;]</code></pre>
+</details>
+</dd>
+<dt id="pipelines.utils.utils.human_readable"><code class="name flex">
+<span>def <span class="ident">human_readable</span></span>(<span>value: Union[int, float], unit: str = '', unit_prefixes: List[str] = None, unit_divider: int = 1000, decimal_places: int = 2)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Formats a value in a human readable way.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def human_readable(
+    value: Union[int, float],
+    unit: str = &#34;&#34;,
+    unit_prefixes: List[str] = None,
+    unit_divider: int = 1000,
+    decimal_places: int = 2,
+):
+    &#34;&#34;&#34;
+    Formats a value in a human readable way.
+    &#34;&#34;&#34;
+    if unit_prefixes is None:
+        unit_prefixes = [&#34;&#34;, &#34;k&#34;, &#34;M&#34;, &#34;G&#34;, &#34;T&#34;, &#34;P&#34;, &#34;E&#34;, &#34;Z&#34;, &#34;Y&#34;]
+    if value == 0:
+        return f&#34;{value}{unit}&#34;
+    unit_prefix = unit_prefixes[0]
+    for prefix in unit_prefixes[1:]:
+        if value &lt; unit_divider:
+            break
+        unit_prefix = prefix
+        value /= unit_divider
+    return f&#34;{value:.{decimal_places}f}{unit_prefix}{unit}&#34;</code></pre>
 </details>
 </dd>
 <dt id="pipelines.utils.utils.log"><code class="name flex">
@@ -1146,6 +1208,7 @@ savepath='partitions/'
 <li><code><a title="pipelines.utils.utils.get_username_and_password_from_secret" href="#pipelines.utils.utils.get_username_and_password_from_secret">get_username_and_password_from_secret</a></code></li>
 <li><code><a title="pipelines.utils.utils.get_vault_client" href="#pipelines.utils.utils.get_vault_client">get_vault_client</a></code></li>
 <li><code><a title="pipelines.utils.utils.get_vault_secret" href="#pipelines.utils.utils.get_vault_secret">get_vault_secret</a></code></li>
+<li><code><a title="pipelines.utils.utils.human_readable" href="#pipelines.utils.utils.human_readable">human_readable</a></code></li>
 <li><code><a title="pipelines.utils.utils.log" href="#pipelines.utils.utils.log">log</a></code></li>
 <li><code><a title="pipelines.utils.utils.notify_discord_on_failure" href="#pipelines.utils.utils.notify_discord_on_failure">notify_discord_on_failure</a></code></li>
 <li><code><a title="pipelines.utils.utils.parser_blobs_to_partition_dict" href="#pipelines.utils.utils.parser_blobs_to_partition_dict">parser_blobs_to_partition_dict</a></code></li>

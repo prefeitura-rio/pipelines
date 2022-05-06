@@ -40,7 +40,8 @@ from google.cloud import bigquery
 import jinja2
 from prefect import task
 
-from pipelines.utils.utils import log
+from pipelines.utils.dump_to_gcs.constants import constants as dump_to_gcs_constants
+from pipelines.utils.utils import human_readable, log
 
 
 @task
@@ -53,6 +54,7 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
     mode: str = &#34;prod&#34;,
     billing_project_id: str = None,
     location: str = &#34;southamerica-east1&#34;,
+    maximum_bytes_processed: float = dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
 ):
     &#34;&#34;&#34;
     Get data from BigQuery.
@@ -70,6 +72,10 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
                 &#34;project_id must be either provided or inferred from environment variables&#34;
             )
         log(f&#34;Project ID was inferred from environment variables: {project_id}&#34;)
+
+    # Asserts that dataset_id and table_id are provided
+    if not dataset_id or not table_id:
+        raise ValueError(&#34;dataset_id and table_id must be provided&#34;)
 
     # If query is not provided, build query from it
     if not query:
@@ -118,9 +124,28 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
             f&#34;Billing project ID was inferred from environment variables: {billing_project_id}&#34;
         )
 
+    # Checking if data exceeds the maximum allowed size
+    log(&#34;Checking if data exceeds the maximum allowed size&#34;)
+    client = google_client(project_id, billing_project_id, from_file=True, reauth=False)
+    job_config = bigquery.QueryJobConfig()
+    job_config.dry_run = True
+    job = client[&#34;bigquery&#34;].query(query, job_config=job_config)
+    while not job.done():
+        sleep(1)
+    table_size = job.total_bytes_processed
+    log(f&#39;Table size: {human_readable(table_size, unit=&#34;B&#34;, unit_divider=1024)}&#39;)
+    if table_size &gt; maximum_bytes_processed:
+        max_allowed_size = human_readable(
+            maximum_bytes_processed,
+            unit=&#34;B&#34;,
+            unit_divider=1024,
+        )
+        raise ValueError(
+            f&#34;Table size exceeds the maximum allowed size: {max_allowed_size}&#34;
+        )
+
     # Get data
     log(&#34;Querying data from BigQuery&#34;)
-    client = google_client(project_id, billing_project_id, from_file=True, reauth=False)
     job = client[&#34;bigquery&#34;].query(query)
     while not job.done():
         sleep(1)
@@ -156,7 +181,7 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pipelines.utils.dump_to_gcs.tasks.download_data_to_gcs"><code class="name flex">
-<span>def <span class="ident">download_data_to_gcs</span></span>(<span>dataset_id: str, table_id: str, project_id: str = None, query: Union[str, jinja2.environment.Template] = None, query_params: dict = None, mode: str = 'prod', billing_project_id: str = None, location: str = 'southamerica-east1')</span>
+<span>def <span class="ident">download_data_to_gcs</span></span>(<span>dataset_id: str, table_id: str, project_id: str = None, query: Union[str, jinja2.environment.Template] = None, query_params: dict = None, mode: str = 'prod', billing_project_id: str = None, location: str = 'southamerica-east1', maximum_bytes_processed: float = 1073741824)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get data from BigQuery.</p></div>
@@ -174,6 +199,7 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
     mode: str = &#34;prod&#34;,
     billing_project_id: str = None,
     location: str = &#34;southamerica-east1&#34;,
+    maximum_bytes_processed: float = dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
 ):
     &#34;&#34;&#34;
     Get data from BigQuery.
@@ -191,6 +217,10 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
                 &#34;project_id must be either provided or inferred from environment variables&#34;
             )
         log(f&#34;Project ID was inferred from environment variables: {project_id}&#34;)
+
+    # Asserts that dataset_id and table_id are provided
+    if not dataset_id or not table_id:
+        raise ValueError(&#34;dataset_id and table_id must be provided&#34;)
 
     # If query is not provided, build query from it
     if not query:
@@ -239,9 +269,28 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
             f&#34;Billing project ID was inferred from environment variables: {billing_project_id}&#34;
         )
 
+    # Checking if data exceeds the maximum allowed size
+    log(&#34;Checking if data exceeds the maximum allowed size&#34;)
+    client = google_client(project_id, billing_project_id, from_file=True, reauth=False)
+    job_config = bigquery.QueryJobConfig()
+    job_config.dry_run = True
+    job = client[&#34;bigquery&#34;].query(query, job_config=job_config)
+    while not job.done():
+        sleep(1)
+    table_size = job.total_bytes_processed
+    log(f&#39;Table size: {human_readable(table_size, unit=&#34;B&#34;, unit_divider=1024)}&#39;)
+    if table_size &gt; maximum_bytes_processed:
+        max_allowed_size = human_readable(
+            maximum_bytes_processed,
+            unit=&#34;B&#34;,
+            unit_divider=1024,
+        )
+        raise ValueError(
+            f&#34;Table size exceeds the maximum allowed size: {max_allowed_size}&#34;
+        )
+
     # Get data
     log(&#34;Querying data from BigQuery&#34;)
-    client = google_client(project_id, billing_project_id, from_file=True, reauth=False)
     job = client[&#34;bigquery&#34;].query(query)
     while not job.done():
         sleep(1)
