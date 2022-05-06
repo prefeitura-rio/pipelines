@@ -84,7 +84,9 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
         )
         try:
             bd_base = Base()
-            billing_project_id = bd_base.config["gcloud-projects"][mode]["name"]
+            billing_project_id = bd_base.config["gcloud-projects"][bd_project_mode][
+                "name"
+            ]
         except KeyError:
             pass
         if not billing_project_id:
