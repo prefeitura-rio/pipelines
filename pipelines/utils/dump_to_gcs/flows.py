@@ -21,11 +21,13 @@ with Flow(
 ) as dump_to_gcs_flow:
 
     project_id = Parameter("project_id", required=False)
-    dataset_id = Parameter("dataset_id")
+    dataset_id = Parameter("dataset_id")  # dataset_id or dataset_id_staging
     table_id = Parameter("table_id")
     query = Parameter("query", required=False)
-    query_params = Parameter("query_params", required=False)
-    mode = Parameter("bd_mode", required=False, default="prod")
+    jinja_query_params = Parameter("jinja_query_params", required=False)
+    bd_project_mode = Parameter(
+        "bd_project_mode", required=False, default="prod"
+    )  # prod or staging
     billing_project_id = Parameter("billing_project_id", required=False)
     maximum_bytes_processed = Parameter(
         "maximum_bytes_processed",
@@ -38,8 +40,8 @@ with Flow(
         dataset_id=dataset_id,
         table_id=table_id,
         query=query,
-        query_params=query_params,
-        mode=mode,
+        jinja_query_params=jinja_query_params,
+        bd_project_mode=bd_project_mode,
         billing_project_id=billing_project_id,
         maximum_bytes_processed=maximum_bytes_processed,
     )
