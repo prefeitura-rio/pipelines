@@ -205,8 +205,30 @@ def run_dbt_schema(
     """
     run_command = f"run --select models/{dataset_id}"
     if refresh:
+        log(f"Will run the following command:\n{run_command} in full refresh mode")
         run_command += " --full-refresh"
     client.cli(run_command, sync=True)
+    return log(f"Finished running schema {dataset_id}")
+
+
+# @task(max_retries=3, retry_delay=timedelta(seconds=10))
+# def incremental_backfill(  # pylint: disable=too-many-arguments
+#     dbt_client: DbtClient,
+#     dataset_id: str,
+#     base_table_id: str,
+#     mat_table_id: str,
+#     field_name: str = "data_versao",
+#     interval_days=15,
+#     refresh: bool = False,
+#     wait=None,  # pylint: disable=unused-argument
+# ):
+#     query_project_id = bq_project()
+#     last_mat_date = get_table_max_value(
+#         query_project_id, dataset_id, mat_table_id, field_name
+#     )
+#     last_base_date = get_table_max_value(
+#         query_project_id, dataset_id, base_table_id, field_name
+#     )
 
 
 @task(max_retries=3, retry_delay=timedelta(seconds=10))
@@ -256,6 +278,9 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
         log("Running in full refresh mode")
         log(f"DBT will run the following command:\n{run_command+' --full-refresh'}")
         dbt_client.cli(run_command + " --full-refresh", sync=True)
+        last_mat_date = get_table_max_value(
+            query_project_id, dataset_id, mat_table_id, field_name
+        )
 
     if last_base_date > last_mat_date:
         log("Running interval step materialization")
