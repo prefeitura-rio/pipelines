@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_cor.meteorologia API documentation</title>
-<meta name="description" content="" />
+<title>pipelines.rj_cor.meteorologia.precipitacao_websirene.flows API documentation</title>
+<meta name="description" content="Flows for precipitacao_alertario" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,30 +19,63 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_cor.meteorologia</code></h1>
+<h1 class="title">Module <code>pipelines.rj_cor.meteorologia.precipitacao_websirene.flows</code></h1>
 </header>
 <section id="section-intro">
+<p>Flows for precipitacao_alertario</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># -*- coding: utf-8 -*-
+&#34;&#34;&#34;
+Flows for precipitacao_alertario
+&#34;&#34;&#34;
+from prefect.run_configs import KubernetesRun
+from prefect.storage import GCS
+from pipelines.constants import constants
+from pipelines.rj_cor.meteorologia.precipitacao_websirene.tasks import (
+    download_tratar_dados,
+    salvar_dados,
+)
+from pipelines.rj_cor.meteorologia.precipitacao_websirene.schedules import (
+    MINUTE_SCHEDULE,
+)
+from pipelines.utils.decorators import Flow
+from pipelines.utils.tasks import create_table_and_upload_to_gcs
+
+with Flow(
+    &#34;COR: Meteorologia - Precipitacao WEBSIRENE&#34;,
+    code_owners=[
+        &#34;@PatyBC#4954&#34;,
+    ],
+) as cor_meteorologia_precipitacao_websirene:
+
+    DATASET_ID = &#34;meio_ambiente_clima&#34;
+    TABLE_ID = &#34;taxa_precipitacao_websirene&#34;
+    DUMP_TYPE = &#34;append&#34;
+
+    DFR = download_tratar_dados()
+    PATH = salvar_dados(dfr=DFR)
+
+    # Create table in BigQuery
+    create_table_and_upload_to_gcs(
+        data_path=PATH,
+        dataset_id=DATASET_ID,
+        table_id=TABLE_ID,
+        dump_type=DUMP_TYPE,
+        wait=PATH,
+    )
+
+# para rodar na cloud
+cor_meteorologia_precipitacao_websirene.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+cor_meteorologia_precipitacao_websirene.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value
+)
+cor_meteorologia_precipitacao_websirene.schedule = MINUTE_SCHEDULE</code></pre>
+</details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
-<dl>
-<dt><code class="name"><a title="pipelines.rj_cor.meteorologia.meteorologia_inmet" href="meteorologia_inmet/index.html">pipelines.rj_cor.meteorologia.meteorologia_inmet</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for meteorologia_inmet project</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario" href="precipitacao_alertario/index.html">pipelines.rj_cor.meteorologia.precipitacao_alertario</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for precipitacao_alertario project</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_cor.meteorologia.precipitacao_websirene" href="precipitacao_websirene/index.html">pipelines.rj_cor.meteorologia.precipitacao_websirene</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for precipitacao_alertario project</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_cor.meteorologia.satelite" href="satelite/index.html">pipelines.rj_cor.meteorologia.satelite</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for workshop project</p></div>
-</dd>
-</dl>
 </section>
 <section>
 </section>
@@ -59,15 +92,7 @@
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines.rj_cor" href="../index.html">pipelines.rj_cor</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="pipelines.rj_cor.meteorologia.meteorologia_inmet" href="meteorologia_inmet/index.html">pipelines.rj_cor.meteorologia.meteorologia_inmet</a></code></li>
-<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario" href="precipitacao_alertario/index.html">pipelines.rj_cor.meteorologia.precipitacao_alertario</a></code></li>
-<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_websirene" href="precipitacao_websirene/index.html">pipelines.rj_cor.meteorologia.precipitacao_websirene</a></code></li>
-<li><code><a title="pipelines.rj_cor.meteorologia.satelite" href="satelite/index.html">pipelines.rj_cor.meteorologia.satelite</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_websirene" href="index.html">pipelines.rj_cor.meteorologia.precipitacao_websirene</a></code></li>
 </ul>
 </li>
 </ul>
