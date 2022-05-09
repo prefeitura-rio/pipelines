@@ -42,13 +42,15 @@ ergon_queries = {
         "dump_type": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_ERG_MATRICULAS",
     },
-    # "fita_banco": {
-    #     "partition_column": "MES_ANO",
-    #     "dump_type": "append",
-    #     "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FITA_BANCO",
-    # },
+    "fita_banco": {
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "partition_columns": "MES_ANO",
+        "dump_type": "append",
+        "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FITA_BANCO",
+    },
     # "folha_empresa": {
-    #     "partition_column": "MES_ANO",
+    #     "partition_columns": "MES_ANO",
     #     "dump_type": "append",
     #     "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FOLHAS_EMP",
     # },
@@ -133,7 +135,7 @@ ergon_queries = {
 
 ergon_clocks = generate_dump_db_schedules(
     interval=timedelta(days=30),
-    start_date=datetime(2022, 4, 26, 18, 30, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2022, 5, 2, 13, 5, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_SMFP_AGENT_LABEL.value,
     ],
