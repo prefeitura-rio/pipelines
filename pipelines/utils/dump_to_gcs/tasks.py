@@ -24,7 +24,7 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
     jinja_query_params: dict = None,
     bd_project_mode: str = "prod",
     billing_project_id: str = None,
-    location: str = "southamerica-east1",
+    location: str = "US",
     maximum_bytes_processed: float = dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
 ):
     """
