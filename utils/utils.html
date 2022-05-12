@@ -128,7 +128,7 @@ def notify_discord_on_failure(
         f&#34;:man_facepalming: Flow **{flow.name}** has failed.&#34;
         + f&#39;\n  - State message: *&#34;{state.message}&#34;*&#39;
         + &#34;\n  - Link to the failed flow: &#34;
-        + f&#34;http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{flow_run_id}&#34;
+        + f&#34;https://prefect.dados.rio/flow-run/{flow_run_id}&#34;
         + &#34;\n  - Extra attention:&#34;
         + &#34;\n    - &#34;.join(at_code_owners)
     )
@@ -193,9 +193,7 @@ def run_cloud(
 
     # Print flow run link so user can check it
     print(f&#34;Run submitted: TEST RUN - {run_description} - {flow.name}&#34;)
-    print(
-        f&#34;Please check at: http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{flow_run_id}&#34;
-    )
+    print(f&#34;Please check at: https://prefect.dados.rio/flow-run/{flow_run_id}&#34;)
 
 
 def query_to_line(query: str) -&gt; str:
@@ -824,7 +822,7 @@ def dump_header_to_csv(
         f&#34;:man_facepalming: Flow **{flow.name}** has failed.&#34;
         + f&#39;\n  - State message: *&#34;{state.message}&#34;*&#39;
         + &#34;\n  - Link to the failed flow: &#34;
-        + f&#34;http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{flow_run_id}&#34;
+        + f&#34;https://prefect.dados.rio/flow-run/{flow_run_id}&#34;
         + &#34;\n  - Extra attention:&#34;
         + &#34;\n    - &#34;.join(at_code_owners)
     )
@@ -939,9 +937,7 @@ def dump_header_to_csv(
 
     # Print flow run link so user can check it
     print(f&#34;Run submitted: TEST RUN - {run_description} - {flow.name}&#34;)
-    print(
-        f&#34;Please check at: http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{flow_run_id}&#34;
-    )</code></pre>
+    print(f&#34;Please check at: https://prefect.dados.rio/flow-run/{flow_run_id}&#34;)</code></pre>
 </details>
 </dd>
 <dt id="pipelines.utils.utils.run_local"><code class="name flex">
