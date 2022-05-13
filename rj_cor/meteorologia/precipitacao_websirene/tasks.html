@@ -126,9 +126,11 @@ def salvar_dados(dfr: pd.DataFrame) -&gt; Union[str, Path]:
     max_date = str(dfr[&#34;data&#34;].max())
     ano = max_date[:4]
     mes = str(int(max_date[5:7]))
-    dia = str(int(max_date[8:10]))
+    data = str(max_date[:10])
 
-    partitions = f&#34;ano={ano}/mes={mes}/dia={dia}&#34;
+    partitions = os.path.join(
+        f&#34;ano_particao={ano}&#34;, f&#34;mes_particao={mes}&#34;, f&#34;data_particao={data}&#34;
+    )
 
     base_path = os.path.join(os.getcwd(), &#34;data&#34;, &#34;precipitacao_websirene&#34;, &#34;output&#34;)
 
@@ -252,9 +254,11 @@ def salvar_dados(dfr: pd.DataFrame) -&gt; Union[str, Path]:
     max_date = str(dfr[&#34;data&#34;].max())
     ano = max_date[:4]
     mes = str(int(max_date[5:7]))
-    dia = str(int(max_date[8:10]))
+    data = str(max_date[:10])
 
-    partitions = f&#34;ano={ano}/mes={mes}/dia={dia}&#34;
+    partitions = os.path.join(
+        f&#34;ano_particao={ano}&#34;, f&#34;mes_particao={mes}&#34;, f&#34;data_particao={data}&#34;
+    )
 
     base_path = os.path.join(os.getcwd(), &#34;data&#34;, &#34;precipitacao_websirene&#34;, &#34;output&#34;)
 

@@ -31,8 +31,11 @@
 &#34;&#34;&#34;
 Flows for precipitacao_alertario
 &#34;&#34;&#34;
+from prefect import case, Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
+from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
+
 from pipelines.constants import constants
 from pipelines.rj_cor.meteorologia.precipitacao_websirene.tasks import (
     download_tratar_dados,
@@ -41,8 +44,12 @@ from pipelines.rj_cor.meteorologia.precipitacao_websirene.tasks import (
 from pipelines.rj_cor.meteorologia.precipitacao_websirene.schedules import (
     MINUTE_SCHEDULE,
 )
+from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.decorators import Flow
-from pipelines.utils.tasks import create_table_and_upload_to_gcs
+from pipelines.utils.tasks import (
+    create_table_and_upload_to_gcs,
+    get_current_flow_labels,
+)
 
 with Flow(
     &#34;COR: Meteorologia - Precipitacao WEBSIRENE&#34;,
@@ -55,17 +62,51 @@ with Flow(
     TABLE_ID = &#34;taxa_precipitacao_websirene&#34;
     DUMP_TYPE = &#34;append&#34;
 
+    # Materialization parameters
+    MATERIALIZE_AFTER_DUMP = Parameter(
+        &#34;materialize_after_dump&#34;, default=False, required=False
+    )
+    MATERIALIZE_TO_DATARIO = Parameter(
+        &#34;materialize_to_datario&#34;, default=False, required=False
+    )
+    MATERIALIZATION_MODE = Parameter(&#34;mode&#34;, default=&#34;dev&#34;, required=False)
+
     DFR = download_tratar_dados()
     PATH = salvar_dados(dfr=DFR)
 
     # Create table in BigQuery
-    create_table_and_upload_to_gcs(
+    UPLOAD_TABLE = create_table_and_upload_to_gcs(
         data_path=PATH,
         dataset_id=DATASET_ID,
         table_id=TABLE_ID,
         dump_type=DUMP_TYPE,
         wait=PATH,
     )
+
+    # Trigger DBT flow run
+    with case(MATERIALIZE_AFTER_DUMP, True):
+        current_flow_labels = get_current_flow_labels()
+        materialization_flow = create_flow_run(
+            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+            parameters={
+                &#34;dataset_id&#34;: DATASET_ID,
+                &#34;table_id&#34;: TABLE_ID,
+                &#34;mode&#34;: MATERIALIZATION_MODE,
+                &#34;materialize_to_datario&#34;: MATERIALIZE_TO_DATARIO,
+            },
+            labels=current_flow_labels,
+            run_name=f&#34;Materialize {DATASET_ID}.{TABLE_ID}&#34;,
+        )
+
+        materialization_flow.set_upstream(UPLOAD_TABLE)
+
+        wait_for_materialization = wait_for_flow_run(
+            materialization_flow,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
 
 # para rodar na cloud
 cor_meteorologia_precipitacao_websirene.storage = GCS(constants.GCS_FLOWS_BUCKET.value)

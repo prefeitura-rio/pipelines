@@ -430,8 +430,12 @@ def remap_g16(
     year = datetime_save[:4]
     month = str(int(datetime_save[4:6]))
     day = str(int(datetime_save[6:8]))
+    data = year + &#34;-&#34; + month.zfill(2) + &#34;-&#34; + day.zfill(2)
     partitions = os.path.join(
-        f&#34;ano={year}&#34;, f&#34;mes={month}&#34;, f&#34;dia={day}&#34;, f&#34;hora={time_save}&#34;
+        f&#34;ano_particao={year}&#34;,
+        f&#34;mes_particao={month}&#34;,
+        f&#34;data_particao={data}&#34;,
+        f&#34;hora={time_save}&#34;,
     )
 
     tif_path = os.path.join(
@@ -526,9 +530,13 @@ def save_parquet(variable: str, datetime_save: str) -&gt; Union[str, Path]:
 
     year = date_save[:4]
     month = str(int(date_save[4:6]))
-    day = str(int(date_save[-2:]))
+    day = str(int(date_save[6:8]))
+    date = year + &#34;-&#34; + month.zfill(2) + &#34;-&#34; + day.zfill(2)
     partitions = os.path.join(
-        f&#34;ano={year}&#34;, f&#34;mes={month}&#34;, f&#34;dia={day}&#34;, f&#34;hora={time_save}&#34;
+        f&#34;ano_particao={year}&#34;,
+        f&#34;mes_particao={month}&#34;,
+        f&#34;data_particao={date}&#34;,
+        f&#34;hora={time_save}&#34;,
     )
 
     tif_data = os.path.join(
@@ -1083,8 +1091,12 @@ Mode needs to be "prod" or "staging"</p></div>
     year = datetime_save[:4]
     month = str(int(datetime_save[4:6]))
     day = str(int(datetime_save[6:8]))
+    data = year + &#34;-&#34; + month.zfill(2) + &#34;-&#34; + day.zfill(2)
     partitions = os.path.join(
-        f&#34;ano={year}&#34;, f&#34;mes={month}&#34;, f&#34;dia={day}&#34;, f&#34;hora={time_save}&#34;
+        f&#34;ano_particao={year}&#34;,
+        f&#34;mes_particao={month}&#34;,
+        f&#34;data_particao={data}&#34;,
+        f&#34;hora={time_save}&#34;,
     )
 
     tif_path = os.path.join(
@@ -1119,9 +1131,13 @@ Mode needs to be "prod" or "staging"</p></div>
 
     year = date_save[:4]
     month = str(int(date_save[4:6]))
-    day = str(int(date_save[-2:]))
+    day = str(int(date_save[6:8]))
+    date = year + &#34;-&#34; + month.zfill(2) + &#34;-&#34; + day.zfill(2)
     partitions = os.path.join(
-        f&#34;ano={year}&#34;, f&#34;mes={month}&#34;, f&#34;dia={day}&#34;, f&#34;hora={time_save}&#34;
+        f&#34;ano_particao={year}&#34;,
+        f&#34;mes_particao={month}&#34;,
+        f&#34;data_particao={date}&#34;,
+        f&#34;hora={time_save}&#34;,
     )
 
     tif_data = os.path.join(
