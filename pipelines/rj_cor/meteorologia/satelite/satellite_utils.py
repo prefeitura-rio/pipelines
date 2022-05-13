@@ -497,9 +497,11 @@ def save_parquet(variable: str, datetime_save: str) -> Union[str, Path]:
 
     year = date_save[:4]
     month = str(int(date_save[4:6]))
-    day = str(int(date_save[-2:]))
     partitions = os.path.join(
-        f"ano={year}", f"mes={month}", f"dia={day}", f"hora={time_save}"
+        f"ano_particao={year}",
+        f"mes_particao={month}",
+        f"data_particao={date_save}",
+        f"hora={time_save}",
     )
 
     tif_data = os.path.join(
