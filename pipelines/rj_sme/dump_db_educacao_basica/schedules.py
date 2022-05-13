@@ -82,7 +82,7 @@ sme_queries = {
         """,
     },
     "movimentacao": {
-        "partition_columns": "data_mov",
+        "partition_columns": "Data_mov",
         "lower_bound_date": "2022-03-01",
         "materialize_after_dump": True,
         "materialization_mode": "prod",
