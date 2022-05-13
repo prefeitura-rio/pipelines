@@ -97,9 +97,11 @@ def salvar_dados(dfr: pd.DataFrame) -> Union[str, Path]:
     max_date = str(dfr["data"].max())
     ano = max_date[:4]
     mes = str(int(max_date[5:7]))
-    dia = str(int(max_date[8:10]))
+    data = str(max_date[:10])
 
-    partitions = f"ano={ano}/mes={mes}/dia={dia}"
+    partitions = os.path.join(
+        f"ano_particao={ano}", f"mes_particao={mes}", f"data_particao={data}"
+    )
 
     base_path = os.path.join(os.getcwd(), "data", "precipitacao_websirene", "output")
 
