@@ -302,15 +302,34 @@ def dump_batches_to_csv(  # pylint: disable=too-many-locals
         new_columns_dict = dict(zip(old_columns, dataframe.columns.tolist()))
         if idx == 0:
             log(f&#34;New columns without accents: {new_columns_dict}&#34;)
+        if new_columns_dict[partition_column] not in dataframe.columns:
+            log(
+                f&#34;Partition column {new_columns_dict[partition_column]}&#34;
+                &#34;not found in dataframe columns BEFORE cleaning&#34;
+            )
+            log(f&#34;Columns: {dataframe.columns}&#34;)
 
         dataframe = clean_dataframe(dataframe)
+        if new_columns_dict[partition_column] not in dataframe.columns:
+            log(
+                f&#34;Partition column {new_columns_dict[partition_column]}&#34;
+                &#34;not found in dataframe columns AFTER cleaning&#34;
+            )
+            log(f&#34;Columns: {dataframe.columns}&#34;)
         # Write to CSV
         if not partition_column:
             dataframe_to_csv(dataframe, prepath / f&#34;{eventid}-{idx}.csv&#34;)
         else:
-            dataframe, date_partition_columns = parse_date_columns(
-                dataframe, new_columns_dict[partition_column]
-            )
+            try:
+                dataframe, date_partition_columns = parse_date_columns(
+                    dataframe, new_columns_dict[partition_column]
+                )
+            except KeyError:
+                log(
+                    f&#34;Partition column {new_columns_dict[partition_column]}&#34;
+                    &#34;not found in dataframe columns ON TRY/EXCEPT&#34;
+                )
+                log(f&#34;Columns: {dataframe.columns}&#34;)
 
             partitions = date_partition_columns + [
                 new_columns_dict[col] for col in partition_columns[1:]
@@ -531,15 +550,34 @@ def dump_batches_to_csv(  # pylint: disable=too-many-locals
         new_columns_dict = dict(zip(old_columns, dataframe.columns.tolist()))
         if idx == 0:
             log(f&#34;New columns without accents: {new_columns_dict}&#34;)
+        if new_columns_dict[partition_column] not in dataframe.columns:
+            log(
+                f&#34;Partition column {new_columns_dict[partition_column]}&#34;
+                &#34;not found in dataframe columns BEFORE cleaning&#34;
+            )
+            log(f&#34;Columns: {dataframe.columns}&#34;)
 
         dataframe = clean_dataframe(dataframe)
+        if new_columns_dict[partition_column] not in dataframe.columns:
+            log(
+                f&#34;Partition column {new_columns_dict[partition_column]}&#34;
+                &#34;not found in dataframe columns AFTER cleaning&#34;
+            )
+            log(f&#34;Columns: {dataframe.columns}&#34;)
         # Write to CSV
         if not partition_column:
             dataframe_to_csv(dataframe, prepath / f&#34;{eventid}-{idx}.csv&#34;)
         else:
-            dataframe, date_partition_columns = parse_date_columns(
-                dataframe, new_columns_dict[partition_column]
-            )
+            try:
+                dataframe, date_partition_columns = parse_date_columns(
+                    dataframe, new_columns_dict[partition_column]
+                )
+            except KeyError:
+                log(
+                    f&#34;Partition column {new_columns_dict[partition_column]}&#34;
+                    &#34;not found in dataframe columns ON TRY/EXCEPT&#34;
+                )
+                log(f&#34;Columns: {dataframe.columns}&#34;)
 
             partitions = date_partition_columns + [
                 new_columns_dict[col] for col in partition_columns[1:]
