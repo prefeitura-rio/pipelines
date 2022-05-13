@@ -99,7 +99,7 @@ def notify_discord_on_failure(
         f":man_facepalming: Flow **{flow.name}** has failed."
         + f'\n  - State message: *"{state.message}"*'
         + "\n  - Link to the failed flow: "
-        + f"http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{flow_run_id}"
+        + f"https://prefect.dados.rio/flow-run/{flow_run_id}"
         + "\n  - Extra attention:"
         + "\n    - ".join(at_code_owners)
     )
@@ -164,9 +164,7 @@ def run_cloud(
 
     # Print flow run link so user can check it
     print(f"Run submitted: TEST RUN - {run_description} - {flow.name}")
-    print(
-        f"Please check at: http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{flow_run_id}"
-    )
+    print(f"Please check at: https://prefect.dados.rio/flow-run/{flow_run_id}")
 
 
 def query_to_line(query: str) -> str:

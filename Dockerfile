@@ -1,14 +1,11 @@
 # Build arguments
 ARG PYTHON_VERSION=3.9-slim
 
-# Get linkerd-await and Oracle Instant Client
+# Get Oracle Instant Client
 FROM curlimages/curl:7.81.0 as curl-step
-ARG LINKERD_AVERSION=v0.2.4
 ARG ORACLE_INSTANT_CLIENT_URL=https://download.oracle.com/otn_software/linux/instantclient/215000/instantclient-basic-linux.x64-21.5.0.0.0dbru.zip
 ARG GDAL_WHEELS_URL=https://sourceforge.net/projects/gdal-wheels-for-linux/files/GDAL-3.4.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl/download
-RUN curl -sSLo /tmp/linkerd-await https://github.com/linkerd/linkerd-await/releases/download/release%2F${LINKERD_AVERSION}/linkerd-await-${LINKERD_AVERSION}-amd64 && \
-    chmod 755 /tmp/linkerd-await && \
-    curl -sSLo /tmp/instantclient.zip $ORACLE_INSTANT_CLIENT_URL && \
+RUN curl -sSLo /tmp/instantclient.zip $ORACLE_INSTANT_CLIENT_URL && \
     curl -sSLo /tmp/GDAL-3.4.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl $GDAL_WHEELS_URL
 
 # Unzip Oracle Instant Client
@@ -53,7 +50,3 @@ RUN python3 -m pip install --prefer-binary --no-cache-dir -U . && \
     mkdir -p /root/.basedosdados/credentials/ && \
     python3 -m pip install --no-cache-dir /tmp/GDAL-3.4.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl && \
     rm /tmp/GDAL-3.4.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl
-
-# Copy linkerd-await and setup entrypoint
-COPY --from=curl-step /tmp/linkerd-await /linkerd-await
-ENTRYPOINT ["/linkerd-await", "--shutdown", "--"]

@@ -82,7 +82,7 @@ sme_queries = {
         """,
     },
     "movimentacao": {
-        "partition_columns": "data_mov",
+        "partition_columns": "Data_mov",
         "lower_bound_date": "2022-03-01",
         "materialize_after_dump": True,
         "materialization_mode": "prod",
@@ -176,7 +176,7 @@ sme_queries = {
 
 sme_clocks = generate_dump_db_schedules(
     interval=timedelta(days=1),
-    start_date=datetime(2022, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2022, 5, 13, 12, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_SME_AGENT_LABEL.value,
     ],
