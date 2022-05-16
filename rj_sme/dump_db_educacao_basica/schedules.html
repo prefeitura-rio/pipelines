@@ -50,14 +50,16 @@ from pipelines.utils.utils import untuple_clocks as untuple
 sme_queries = {
     &#34;avaliacao&#34;: {
         &#34;materialize_after_dump&#34;: True,
+        &#34;partition_columns&#34;: &#34;Ano&#34;,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
-        &#34;dump_type&#34;: &#34;overwrite&#34;,
+        &#34;dump_type&#34;: &#34;append&#34;,
         &#34;execute_query&#34;: &#34;SELECT * FROM GestaoEscolar.dbo.VW_BI_Avaliacao&#34;,
     },
     &#34;coc&#34;: {  # essa tabela utiliza a view coc0 pois contem o coc 0 e de 1 a 5
-        &#34;dump_type&#34;: &#34;overwrite&#34;,
         &#34;materialize_after_dump&#34;: True,
+        &#34;partition_columns&#34;: &#34;Ano&#34;,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_type&#34;: &#34;append&#34;,
         &#34;execute_query&#34;: &#34;&#34;&#34;
             SELECT
                 Ano AS Ano,
@@ -159,12 +161,12 @@ sme_queries = {
         &#34;&#34;&#34;,
     },
     &#34;aluno_historico&#34;: {
-        &#34;materialize_after_dump&#34;: False,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;partition_columns&#34;: &#34;Ano&#34;,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
-        &#34;dump_type&#34;: &#34;overwrite&#34;,
+        &#34;dump_type&#34;: &#34;append&#34;,
         &#34;execute_query&#34;: &#34;&#34;&#34;
             SELECT
-            TOP 10000
                 *
             FROM GestaoEscolar.dbo.VW_BI_Aluno_Todos_LGPD
         &#34;&#34;&#34;,
