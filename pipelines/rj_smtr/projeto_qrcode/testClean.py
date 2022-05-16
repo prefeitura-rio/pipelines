@@ -7,6 +7,8 @@ import numpy as np
 import requests
 import yaml
 
+
+import json
 ##### puxa datalake ######
 def get_data(query) -> pd.DataFrame:
     """
@@ -59,15 +61,16 @@ def get_frota_determinada() -> pd.DataFrame:
                     data_versao,
                     route_short_name,
                     frota_servico,
+                    route_id,
                     data_feriado
                 from(
                     select 
                         f.data,
+                        f.route_id,
                         data_feriado,
                         DATE(f.data_versao) data_versao,
                         route_short_name,
                         sum(FrotaServico) frota_servico,
-                        -- consorcio
                     from (
                         select * 
                         from rj-smtr.br_rj_riodejaneiro_sigmob.frota_determinada_desaninhada f1
@@ -83,8 +86,7 @@ def get_frota_determinada() -> pd.DataFrame:
                         DATE(f1.data_versao) = d.data_versao_efetiva_frota_determinada) f
                     join (
                         select  
-                            route_id, 
-                            -- agency_id,
+                            route_id,
                             route_short_name,
                             data_versao
                         from rj-smtr.br_rj_riodejaneiro_sigmob.routes_desaninhada
@@ -104,7 +106,7 @@ def get_frota_determinada() -> pd.DataFrame:
                         f.data_versao_efetiva_holidays = DATE(h.data_versao)
                         and f.data = h.data_feriado
                     group by 
-                        f.data, data_feriado, f.data_versao, route_short_name
+                        f.data, data_feriado, f.data_versao, route_short_name, f.route_id
                     order by f.data desc
                 )
                 where
@@ -128,22 +130,39 @@ def get_calendar_sspo() -> pd.DataFrame:
     
     #stage 1.1 - calendario de operacao 
     query = """  
-            select 
-                route_id, 
-                route_short_name,
-                monday,
-                tuesday,
-                wednesday,
-                thursday,
-                friday,
-                saturday,
-                sunday,
-                holiday
-            from `rj-smtr-dev.projeto_qrcode.sppo_calendar`
-            where
-    """
+            select
+                    f.route_id,
+                    f.old_route_id,
+                    c.route_short_name,
+                    id_modal,
+                    monday,
+                    tuesday,
+                    wednesday,
+                    thursday,
+                    friday,
+                    saturday,
+                    sunday,
+                    holiday
+                from `rj-smtr-dev.projeto_qrcode_test.calendar` c
 
-    query += " " +datetime.datetime.today().strftime('%A').lower() +" = '1'"
+            cross join (
+                select 
+                        route_id,
+                        old_route_id,
+                        route_short_name,
+                        data_versao
+
+                from rj-smtr-dev.br_rj_riodejaneiro_sigmob.routes_desaninhada f1
+                join (
+                    select
+                        data,
+                        data_versao_efetiva_routes,
+                    from rj-smtr.br_rj_riodejaneiro_sigmob.data_versao_efetiva) d
+            on 
+            """
+    #query += "DATE(f1.data_versao) = d.data_versao_efetiva_routes and d.data = date('{}')) f where f.route_short_name=c.route_short_name and c.{} ='1' and f.route_id is not null".format(datetime.datetime.today().strftime('%Y-%m-%d'),datetime.datetime.today().strftime('%A').lower())
+    query += "DATE(f1.data_versao) = d.data_versao_efetiva_routes and d.data = date('{}')) f where f.route_short_name=c.route_short_name and c.{} ='1' and f.route_id is not null".format(date_now.strftime('%Y-%m-%d'),date_now.strftime('%A').lower())
+
     sppo_calendar_today = get_data(query)
     # ~ marca um operador NOT
     sppo_calendar_today = sppo_calendar_today[~sppo_calendar_today["route_short_name"].str.contains('SV|SN|SP|SR|SE|LECD')]
@@ -206,187 +225,185 @@ def xptoB(frota_ops,frota_det,calendar,date_now,faixa_horaria)->pd.DataFrame:
     datas = frota_det['data'].unique() #formatar data
     linhas = frota_det['route_short_name'].unique()
     frota_operante=pd.DataFrame([],index=linhas,columns=datas)
-    frota_operante['operante']=True
+    frota_operante['route_short_name']=linhas
     frota_operante['operante_faixa']="Sem previsão de funcionamento"      
     #print(frota_operante)
 
-
     #################### manha ##########################
-    frota_ops_manha=frota_ops.loc[frota_ops['hora'] >= faixa_horaria['manhã'][0]]  
-    frota_ops_manha=frota_ops_manha.loc[frota_ops['hora'] < faixa_horaria['manhã'][1]] 
-   
+    frota_ops_manha=frota_ops.loc[frota_ops['hora'] >= faixa_horaria['Manhã'][0]]  
+    frota_ops_manha=frota_ops_manha.loc[frota_ops['hora'] < faixa_horaria['Manhã'][1]] 
+    frota_operante['operante']=True
+
     for item in linhas:
         crl=0
 
-        for i in range(0,10):#setar range = date_interval como parametro do pipeline # pegar do date.unique
+        for i in range(1,10):#setar range = date_interval como parametro do pipeline # pegar do date.unique
             date = date_now - datetime.timedelta(days=i)
             
-            #pegar por servico e data e faixa e pegar a maior  para saber frota ops        
-            frota_ops_manha_dia = frota_ops_manha.loc[frota_ops['servico'] == item]
-            frota_ops_manha_dia = frota_ops_manha_dia.loc[frota_ops_manha_dia['data']==date.strftime('%Y-%m-%d')]
-            #print(frota_ops_dia['data'].unique(),frota_ops_dia['frota_aferida'].max())
-
             #pegar a frota det por dia
             frota=frota_det.loc[frota_det['route_short_name'] == item]
             frota=frota[frota['data']==date.strftime('%Y-%m-%d')]
 
-            #cruza para pegar feriado e dia de operação
-            roda_feriado = calendar[calendar['route_short_name']==item]['holiday'].squeeze() =="1" and frota[frota['data']==date.strftime('%Y-%m-%d')]['data_feriado'].squeeze()
-                    
-            if calendar[calendar['route_short_name']==item][date.strftime('%A').lower()].squeeze()=="1" or  roda_feriado:
-                crl+=1
-                percent=frota_ops_manha_dia['frota_aferida'].max()/frota[frota['data']==date.strftime('%Y-%m-%d')]['frota_servico'].squeeze()
-                if type(percent) == np.float64:
-                    frota_operante[date].loc[item]=percent
-                else:
-                    frota_operante[date].loc[item]=0
-            
-            if crl <=5 and frota_operante[date].loc[item] == frota_operante[date].loc[item]: # frota_operante[date].loc[item] == frota_operante[date].loc[item] checks not NaN
+            #pegar por servico e data e faixa e pegar a maior  para saber frota ops        
+            frota_ops_manha_dia = frota_ops_manha.loc[frota_ops['servico'] == item]
+            frota_ops_manha_dia = frota_ops_manha_dia.loc[frota_ops_manha_dia['data']==date.strftime('%Y-%m-%d')]
 
-                #verifica domingo  and feriado 
-                if date.strftime('%A').lower()=="sunday" and frota[frota['data']==date.strftime('%Y-%m-%d')]['data_feriado'].squeeze():
-                    frota_operante['operante'].loc[item]=frota_operante[date].loc[item] >= 0.4 and frota_operante['operante'].loc[item]
-                else:
-                    frota_operante['operante'].loc[item]=frota_operante[date].loc[item] >= 0.2 and frota_operante['operante'].loc[item]
-        
+            #cruza para pegar feriado e dia de operação e decidir se operante ou não
+            if not calendar[calendar['route_short_name']==item].empty:
+                
+                roda_feriado = calendar[calendar['route_short_name']==item]['holiday'].item() =='1' and frota[frota['data']==date.strftime('%Y-%m-%d')]['data_feriado'].squeeze()
+
+                if calendar[calendar['route_short_name']==item][date.strftime('%A').lower()].item()=="1" or  roda_feriado:
+                    crl+=1
+                    
+                    if crl <=5: # frota_operante[date].loc[item] == frota_operante[date].loc[item] checks not NaN
+                        percent=frota_ops_manha_dia['frota_aferida'].max()/frota[frota['data']==date.strftime('%Y-%m-%d')]['frota_servico'].squeeze()
+                        
+                        if percent==percent and type(percent) == np.float64:
+                            frota_operante[date].loc[item]=percent
+                            
+                        else:
+                            frota_operante[date].loc[item]=0
+                            
+                        #verifica domingo  and feriado 
+                        #no oficio, 80% da frota det dia util | 40% em dom e feriado --> 0.2|0.1
+                        if date.strftime('%A').lower()=="sunday" and frota[frota['data']==date.strftime('%Y-%m-%d')]['data_feriado'].squeeze():
+                            frota_operante['operante'].loc[item]=frota_operante[date].loc[item] >= 0.1 and frota_operante['operante'].loc[item]
+                        else:
+                            frota_operante['operante'].loc[item]=frota_operante[date].loc[item] >= 0.2 and frota_operante['operante'].loc[item]
+                    
+            elif crl<5:
+                frota_operante['operante'].loc[item] =False
+
         if frota_operante['operante'].loc[item] and frota_operante['operante_faixa'].loc[item]=="Sem previsão de funcionamento":
             frota_operante['operante_faixa'].loc[item]="Manhã"
-        elif frota_operante['operante_faixa'].loc[item]!="Sem previsão de funcionamento":
+        elif frota_operante['operante'].loc[item]:#frota_operante['operante_faixa'].loc[item]!="Sem previsão de funcionamento":
             frota_operante['operante_faixa'].loc[item]+=" Manhã"
     
     ######################################################
 
 
+
     ######################Tarde/nooite ######################
     frota_ops_tarde_noite=frota_ops.loc[frota_ops['hora'] >= faixa_horaria['Tarde/Noite'][0]]  
     frota_ops_tarde_noite=frota_ops_tarde_noite.loc[frota_ops['hora'] < faixa_horaria['Tarde/Noite'][1]]
+    frota_operante['operante']=True
+
     for item in linhas:
         crl=0
 
-        for i in range(0,10):#setar range = date_interval como parametro do pipeline # pegar do date.unique
+        for i in range(1,10):#setar range = date_interval como parametro do pipeline # pegar do date.unique
             date = date_now - datetime.timedelta(days=i)
             
+            #pegar a frota det por dia
+            frota=frota_det.loc[frota_det['route_short_name'] == item]
+            frota=frota[frota['data']==date.strftime('%Y-%m-%d')]
+
             #pegar por servico e data e faixa e pegar a maior  para saber frota ops        
             frota_ops_tarde_noite_dia = frota_ops_tarde_noite.loc[frota_ops['servico'] == item]
             frota_ops_tarde_noite_dia = frota_ops_tarde_noite_dia.loc[frota_ops_tarde_noite_dia['data']==date.strftime('%Y-%m-%d')]
-            #print(frota_ops_dia['data'].unique(),frota_ops_dia['frota_aferida'].max())
+         
 
-            #pegar a frota det por dia
-            frota=frota_det.loc[frota_det['route_short_name'] == item]
-            frota=frota[frota['data']==date.strftime('%Y-%m-%d')]
 
-            #cruza para pegar feriado e dia de operação
-            roda_feriado = calendar[calendar['route_short_name']==item]['holiday'].squeeze() =="1" and frota[frota['data']==date.strftime('%Y-%m-%d')]['data_feriado'].squeeze()
+            #cruza para pegar feriado e dia de operação e decidir se operante ou não
+            if not calendar[calendar['route_short_name']==item].empty:
+                
+                roda_feriado = calendar[calendar['route_short_name']==item]['holiday'].item() =='1' and frota[frota['data']==date.strftime('%Y-%m-%d')]['data_feriado'].squeeze()
+
+                if calendar[calendar['route_short_name']==item][date.strftime('%A').lower()].item()=="1" or  roda_feriado:
+                    crl+=1
                     
-            if calendar[calendar['route_short_name']==item][date.strftime('%A').lower()].squeeze()=="1" or  roda_feriado:
-                crl+=1
-                percent=frota_ops_tarde_noite_dia['frota_aferida'].max()/frota[frota['data']==date.strftime('%Y-%m-%d')]['frota_servico'].squeeze()
-                if type(percent) == np.float64:
-                    frota_operante[date].loc[item]=percent
-                else:
-                    frota_operante[date].loc[item]=0
-            
-            if crl <=5 and frota_operante[date].loc[item] == frota_operante[date].loc[item]: # frota_operante[date].loc[item] == frota_operante[date].loc[item] checks not NaN
-                #verifica domingo  and feriado 
-                if date.strftime('%A').lower()=="sunday" and frota[frota['data']==date.strftime('%Y-%m-%d')]['data_feriado'].squeeze():
-                    frota_operante['operante'].loc[item]=frota_operante[date].loc[item] >= 0.4 and frota_operante['operante'].loc[item]
-                else:
-                    frota_operante['operante'].loc[item]=frota_operante[date].loc[item] >= 0.2 and frota_operante['operante'].loc[item]
-        
+                    if crl <=5: # frota_operante[date].loc[item] == frota_operante[date].loc[item] checks not NaN
+                        percent=frota_ops_tarde_noite_dia['frota_aferida'].max()/frota[frota['data']==date.strftime('%Y-%m-%d')]['frota_servico'].squeeze()
+                        
+                        if percent==percent and type(percent) == np.float64:
+                            frota_operante[date].loc[item]=percent
+                            
+                        else:
+                            frota_operante[date].loc[item]=0
+                            
+                        #verifica domingo  and feriado 
+                        #no oficio, 80% da frota det dia util | 40% em dom e feriado --> 0.2|0.1
+                        if date.strftime('%A').lower()=="sunday" and frota[frota['data']==date.strftime('%Y-%m-%d')]['data_feriado'].squeeze():
+                            frota_operante['operante'].loc[item]=frota_operante[date].loc[item] >= 0.1 and frota_operante['operante'].loc[item]
+                        else:
+                            frota_operante['operante'].loc[item]=frota_operante[date].loc[item] >= 0.2 and frota_operante['operante'].loc[item]
+                    
+            elif crl<5:
+                frota_operante['operante'].loc[item] =False
+
         if frota_operante['operante'].loc[item] and frota_operante['operante_faixa'].loc[item]=="Sem previsão de funcionamento":
             frota_operante['operante_faixa'].loc[item]="Tarde/Noite"
-        elif frota_operante['operante_faixa'].loc[item]!="Sem previsão de funcionamento":
+        elif frota_operante['operante'].loc[item]:#frota_operante['operante_faixa'].loc[item]!="Sem previsão de funcionamento":
             frota_operante['operante_faixa'].loc[item]+=" Tarde/Noite"
+        
     
+
     ######################################################
 
+    
     
     #######################Noturno######################
+
+
+    # como o periodo é 22 - 4, faremos um união
     frota_ops_noturno=frota_ops.loc[frota_ops['hora'] >= faixa_horaria['Noturno'][0]]  
-    frota_ops_noturno=frota_ops_noturno.loc[frota_ops['hora'] < faixa_horaria['Noturno'][1]] 
-    
+    frota_ops_noturno= frota_ops_noturno.append(frota_ops_noturno.loc[frota_ops['hora'] < faixa_horaria['Noturno'][1]])
+    frota_operante['operante']=True
+
     for item in linhas:
         crl=0
 
-        for i in range(0,10):#setar range = date_interval como parametro do pipeline # pegar do date.unique
+        for i in range(1,10):#setar range = date_interval como parametro do pipeline # pegar do date.unique
             date = date_now - datetime.timedelta(days=i)
-            
-            #pegar por servico e data e faixa e pegar a maior  para saber frota ops        
-            frota_ops_noturno_dia = frota_ops_noturno.loc[frota_ops['servico'] == item]
-            frota_ops_noturno_dia = frota_ops_noturno_dia.loc[frota_ops_noturno_dia['data']==date.strftime('%Y-%m-%d')]
-            #print(frota_ops_dia['data'].unique(),frota_ops_dia['frota_aferida'].max())
 
             #pegar a frota det por dia
             frota=frota_det.loc[frota_det['route_short_name'] == item]
             frota=frota[frota['data']==date.strftime('%Y-%m-%d')]
-
-            #cruza para pegar feriado e dia de operação
-            roda_feriado = calendar[calendar['route_short_name']==item]['holiday'].squeeze() =="1" and frota[frota['data']==date.strftime('%Y-%m-%d')]['data_feriado'].squeeze()
-                    
-            if calendar[calendar['route_short_name']==item][date.strftime('%A').lower()].squeeze()=="1" or  roda_feriado:
-                crl+=1
-                percent=frota_ops_noturno_dia['frota_aferida'].max()/frota[frota['data']==date.strftime('%Y-%m-%d')]['frota_servico'].squeeze()
-                if type(percent) == np.float64:
-                    frota_operante[date].loc[item]=percent
-                else:
-                    frota_operante[date].loc[item]=0
             
-            if crl <=5 and frota_operante[date].loc[item] == frota_operante[date].loc[item]: # frota_operante[date].loc[item] == frota_operante[date].loc[item] checks not NaN
-                #verifica domingo  and feriado 
-                if date.strftime('%A').lower()=="sunday" and frota[frota['data']==date.strftime('%Y-%m-%d')]['data_feriado'].squeeze():
-                    frota_operante['operante'].loc[item]=frota_operante[date].loc[item] >= 0.4 and frota_operante['operante'].loc[item]
-                else:
-                    frota_operante['operante'].loc[item]=frota_operante[date].loc[item] >= 0.2 and frota_operante['operante'].loc[item]
-        
+            #pegar por servico e data e faixa e pegar a maior  para saber frota ops        
+            frota_ops_noturno_dia = frota_ops_noturno.loc[frota_ops['servico'] == item]# <--- jogar isso para fora do for.
+            frota_ops_noturno_dia = frota_ops_noturno_dia.loc[frota_ops_noturno_dia['data']==date.strftime('%Y-%m-%d')]
+
+                      
+
+            #cruza para pegar feriado e dia de operação e decidir se operante ou não
+            if not calendar[calendar['route_short_name']==item].empty:
+
+                
+                #print("parte1 calendar[calendar['route_short_name']==item]['holiday'].squeeze() =='1' ", calendar[calendar['route_short_name']==item]['holiday'].item() =="1", calendar[calendar['route_short_name']==item]['holiday'].item())
+                #print("parte2 frota[frota['data']==date.strftime('%Y-%m-%d')]['data_feriado'].squeeze() ",frota[frota['data']==date.strftime('%Y-%m-%d')]['data_feriado'].item(),frota[frota['data']==date.strftime('%Y-%m-%d')]['data_feriado'].item() and True )
+
+                roda_feriado = calendar[calendar['route_short_name']==item]['holiday'].item() =='1' and frota[frota['data']==date.strftime('%Y-%m-%d')]['data_feriado'].squeeze()
+                
+                #print(frota_ops_noturno_dia)
+                #print('roda', roda_feriado,"calendar[calendar['route_short_name']==item]['holiday'].item() =='1' " ,calendar[calendar['route_short_name']==item]['holiday'].item() =='1',"crl ", crl, " frota[frota['data']==date.strftime('%Y-%m-%d')]['data_feriado'].item()",frota[frota['data']==date.strftime('%Y-%m-%d')]['data_feriado'].item())
+                if calendar[calendar['route_short_name']==item][date.strftime('%A').lower()].item()=="1" or  roda_feriado:
+                    crl+=1
+                
+                    if crl <=5: # frota_operante[date].loc[item] == frota_operante[date].loc[item] checks not NaN
+                        percent=frota_ops_noturno_dia['frota_aferida'].max()/frota[frota['data']==date.strftime('%Y-%m-%d')]['frota_servico'].squeeze()
+                        if percent==percent and type(percent) == np.float64:
+                            frota_operante[date].loc[item]=percent
+                        else:
+                            frota_operante[date].loc[item]=0
+
+                        #verifica domingo  and feriado 
+                        #no oficio, 80% da frota det dia util | 40% em dom e feriado --> 0.2|0.1
+                        if date.strftime('%A').lower()=="sunday" and frota[frota['data']==date.strftime('%Y-%m-%d')]['data_feriado'].squeeze():
+                            frota_operante['operante'].loc[item]=frota_operante[date].loc[item] >= 0.1 and frota_operante['operante'].loc[item]
+                        else:
+                            frota_operante['operante'].loc[item]=frota_operante[date].loc[item] >= 0.2 and frota_operante['operante'].loc[item]
+                    
+            elif crl<5:
+                frota_operante['operante'].loc[item] =False
+
+        #exit()
         if frota_operante['operante'].loc[item] and frota_operante['operante_faixa'].loc[item]=="Sem previsão de funcionamento":
             frota_operante['operante_faixa'].loc[item]="Noturno"
-        elif frota_operante['operante_faixa'].loc[item]!="Sem previsão de funcionamento":
+        elif frota_operante['operante'].loc[item]:#frota_operante['operante_faixa'].loc[item]!="Sem previsão de funcionamento":
             frota_operante['operante_faixa'].loc[item]+=" Noturno"
-    
-    ######################################################
-
-    
-    ######################hora util########################
-    frota_ops_hora_util=frota_ops.loc[frota_ops['hora'] >= faixa_horaria['Hora útil'][0]]  
-    frota_ops_hora_util=frota_ops_hora_util.loc[frota_ops['hora'] < faixa_horaria['Hora útil'][1]]
-
-    for item in linhas:
-        crl=0
-
-        for i in range(0,10):#setar range = date_interval como parametro do pipeline # pegar do date.unique
-            date = date_now - datetime.timedelta(days=i)
-            
-            #pegar por servico e data e faixa e pegar a maior  para saber frota ops        
-            frota_ops_hora_util_dia = frota_ops_hora_util.loc[frota_ops['servico'] == item]
-            frota_ops_hora_util_dia = frota_ops_hora_util_dia.loc[frota_ops_hora_util_dia['data']==date.strftime('%Y-%m-%d')]
-            #print(frota_ops_dia['data'].unique(),frota_ops_dia['frota_aferida'].max())
-
-            #pegar a frota det por dia
-            frota=frota_det.loc[frota_det['route_short_name'] == item]
-            frota=frota[frota['data']==date.strftime('%Y-%m-%d')]
-
-            #cruza para pegar feriado e dia de operação
-            roda_feriado = calendar[calendar['route_short_name']==item]['holiday'].squeeze() =="1" and frota[frota['data']==date.strftime('%Y-%m-%d')]['data_feriado'].squeeze()
-                    
-            if calendar[calendar['route_short_name']==item][date.strftime('%A').lower()].squeeze()=="1" or  roda_feriado:
-                crl+=1
-                percent=frota_ops_hora_util_dia['frota_aferida'].max()/frota[frota['data']==date.strftime('%Y-%m-%d')]['frota_servico'].squeeze()
-                if type(percent) == np.float64:
-                    frota_operante[date].loc[item]=percent
-                else:
-                    frota_operante[date].loc[item]=0
-            
-            if crl <=5 and frota_operante[date].loc[item] == frota_operante[date].loc[item]: # frota_operante[date].loc[item] == frota_operante[date].loc[item] checks not NaN
-                #verifica domingo  and feriado 
-                if date.strftime('%A').lower()=="sunday" and frota[frota['data']==date.strftime('%Y-%m-%d')]['data_feriado'].squeeze():
-                    frota_operante['operante'].loc[item]=frota_operante[date].loc[item] >= 0.4 and frota_operante['operante'].loc[item]
-                else:
-                    frota_operante['operante'].loc[item]=frota_operante[date].loc[item] >= 0.2 and frota_operante['operante'].loc[item]
         
-        if frota_operante['operante'].loc[item] and frota_operante['operante_faixa'].loc[item]=="Sem previsão de funcionamento":
-            frota_operante['operante_faixa'].loc[item]="Hora útil"
-        elif frota_operante['operante_faixa'].loc[item]!="Sem previsão de funcionamento":
-            frota_operante['operante_faixa'].loc[item]+=" Hora útil"
     
     ######################################################
     
@@ -440,32 +457,64 @@ import pickle
 
 def open_data(path_df):
 
-    with open("/home/d/code/SMTR/pipelines/pipelines/rj_smtr/qrcode/"+path_df+".picle", 'rb') as data:
+    with open("/home/d/code/SMTR/pipelines/pipelines/rj_smtr/projeto_qrcode/"+path_df+".picle", 'rb') as data:
         df = pickle.load(data)
         return df
 
 def save_data(df,df_name):
 
-    with open('/home/d/code/SMTR/pipelines/pipelines/rj_smtr/qrcode/'+df_name+".picle", 'wb') as output:
+    with open('/home/d/code/SMTR/pipelines/pipelines/rj_smtr/projeto_qrcode/'+df_name+".picle", 'wb') as output:
         pickle.dump(df, output)
 
+#.
+date_now= datetime.datetime(2022,5,1)#datetime.datetime.now()
+
+#criando arquivos de dados
+#fops=get_frota_ops()
+#save_data(fops,"frota_ops")
+#fdet=get_frota_determinada()
+#save_data(fdet,"frotdet")
+#calend=get_calendar_sspo()
+#save_data(calend,"calendar_sppo")
 
 #starts here
-date_now= datetime.datetime(2022,3,29)#datetime.datetime.now()
-frota_ops=open_data("frota_ops")#get_frota_ops()
+frota_ops=open_data(path_df"frota_ops")#get_frota_ops()
 frota_det=open_data("frotdet")# get_frota_determinada() 
 calendar=open_data("calendar_sppo")#get_calendar_sspo()
 
-frota_ops = frota_ops[~frota_ops["servico"].str.contains('SV|SN|SP|SR|SE|LECD')]
+print('sanity start\n')
+print ( "today is ", date_now)
+print ("frota_ops\n",frota_ops)
+print ("frota_det\n",frota_det)
+print (calendar)
+print("frota ops vs det por frota_det['route_short_name']\n",[frota_ops['servico'].iloc[i] in frota_det['route_short_name'].unique() for i in range(len(frota_det['route_short_name'].unique()))])
+print("datas \n", frota_det['data'].unique())
+print("frota ops vs det por data\n", [(frota_det['data'].unique()[i]==frota_ops['data'].unique()[i]) for i in range(len(frota_det['data'].unique()))])
+print('sanity end\n')
+#print ('achei route_id ', frota_det[frota_det['route_id'] =='O0439AAA0A'].squeeze() ) #  df['Comedy_Score'].where(df['Rating_Score'] < 50)
+
+
+#verificar necessidade dessa liha.
+#frota_ops = frota_ops[~frota_ops["servico"].str.contains('SV|SN|SP|SR|SE|LECD')]
 #.
 
 #faixa=date_now
 #faixa_horaria={'manhã': ( faixa.replace(hour=5) ,faixa.replace(hour=11) ), 'Tarde/Noite':( faixa.replace(hour=14),faixa.replace(hour=20) ),'Hora útil':(faixa.replace(hour=5),faixa.replace(hour=20)),'Noturno':(faixa.replace(hour=22),faixa.replace(hour=4))}
 
-faixa_horaria={'manhã': (5 ,11), 'Tarde/Noite':(14,20 ),'Hora útil':(5,20),'Noturno':(22,4)}
+faixa_horaria={'Manhã': (5 ,11), 'Tarde/Noite':(14,20 ),'Noturno':(22,4)}
 
 resultado = xptoB(frota_ops,frota_det,calendar,date_now,faixa_horaria)
-print(resultado['operante_faixa'])
+
+#print(resultado[resultado["operante_faixa"].str.contains("Tarde", regex=False)]) #print(resultado[resultado["operante_faixa"]=="Noturno"])
+#aplicando correção do dict
+
+resultado["operante_faixa"][resultado["operante_faixa"]=="Manhã Tarde/Noite"]="Hora útil"
+resultado["operante_faixa"][resultado["operante_faixa"]=="Manhã Tarde/Noite Noturno"]="24h"
+
+#print(resultado)
+#exit()
+
+
 
 DEFAULT_TIMEOUT = 60
 CONFIG_FILENAME = "config.yaml"
@@ -473,25 +522,53 @@ ACTIVE_FILENAME = "trip_id_regular.json"
 STOP_FIXTURE_FILENAME = "fixtures/stop.json"
 OUTPUT_JSON = f"{{model}}.json"
 
+for model in ["agency","linha","route","sequence", "stop" ,"trip"]:
+    config = yaml.load(
+        open(CONFIG_FILENAME, "r"), 
+        Loader=yaml.FullLoader
+    )["models"][model]#["route"]#marretado aqui
+    result=fetch_sigmob_api(config["source"])
+
+    fixture = []
+    for i, record in enumerate(result):
+        
+        record = parse_data_to_fixture(record, config["json"], i)
+
+        ##### only for trip
+        if model=="trips":
+            route_short_name=calendar['route_short_name'][calendar["route_id"]==record['fields']["route"]]
+            if route_short_name.empty:
+                record['fields']["operation_time"]="Sem previsão de funcionamento"
+            else:
+                faixa=resultado["operante_faixa"].loc[resultado["route_short_name"] == route_short_name.item()]
+                if faixa.empty:
+                    record['fields']["operation_time"]="Sem previsão de funcionamento"
+                else:
+                    record['fields']["operation_time"]=faixa.squeeze()
+
+
+        #if _is_active(record, model):            
+        fixture.append(record)
 
 
 
-config = yaml.load(
-    open(CONFIG_FILENAME, "r"), 
-    Loader=yaml.FullLoader
-)["models"]["trip"]#["route"]#marretado aqui
-result=fetch_sigmob_api(config["source"])
+    #with open('data.json', 'w', encoding='utf8') as f:
+    #json.dump(fixture, f,indent=4, ensure_ascii=False)#, ensure_ascii=False)
 
-fixture = []
-for i, record in enumerate(result):
-    
-    record = parse_data_to_fixture(record, config["json"], i)
-    #record['fields']=record['fields'].update({'operation_time':resultado.loc[record['fields']['route']]['operante_faixa']}) 
-    print (record,type(record))
-    exit()
-    #if _is_active(record, model):
-    #    fixture.append(record)
+    fname = OUTPUT_JSON.format(model=model)
+    with open(fname, "w", encoding='utf8') as f:
+        json.dump(fixture, f, indent=4, ensure_ascii=False)
+        print("Fixture saved on "+fname)
+    #exit()
 
-print (record,type(record))
-exit()
 
+
+'''
+# pipeline roudup
+ ---  refazer os arquivos de dados. <-- done
+ --- replicar noturno para demais faixas <-- done
+ --- cruzamento do route_id na tabela frota_det com o trips.json  <--done
+ --- gerar arquivo json com o generate fixtures em trip. -->done
+ --- fazer o controle de modelo do json --> done
+ --- organizar e rodar pipeline. <-- doing
+'''

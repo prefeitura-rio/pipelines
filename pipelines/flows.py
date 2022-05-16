@@ -11,4 +11,5 @@ from pipelines.rj_escritorio import *
 from pipelines.rj_segovi import *
 from pipelines.rj_sme import *
 from pipelines.rj_smfp import *
+from pipelines.rj_smtr import *
 from pipelines.utils import *

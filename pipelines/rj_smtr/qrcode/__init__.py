@@ -1,3 +1,0 @@
-"""
-QRCODE SIGMOB Bot
-"""
