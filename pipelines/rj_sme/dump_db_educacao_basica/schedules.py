@@ -21,14 +21,16 @@ from pipelines.utils.utils import untuple_clocks as untuple
 sme_queries = {
     "avaliacao": {
         "materialize_after_dump": True,
+        "partition_columns": "Ano",
         "materialization_mode": "prod",
-        "dump_type": "overwrite",
+        "dump_type": "append",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Avaliacao",
     },
     "coc": {  # essa tabela utiliza a view coc0 pois contem o coc 0 e de 1 a 5
-        "dump_type": "overwrite",
         "materialize_after_dump": True,
+        "partition_columns": "Ano",
         "materialization_mode": "prod",
+        "dump_type": "append",
         "execute_query": """
             SELECT
                 Ano AS Ano,
@@ -130,12 +132,12 @@ sme_queries = {
         """,
     },
     "aluno_historico": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
+        "partition_columns": "Ano",
         "materialization_mode": "prod",
-        "dump_type": "overwrite",
+        "dump_type": "append",
         "execute_query": """
             SELECT
-            TOP 10000
                 *
             FROM GestaoEscolar.dbo.VW_BI_Aluno_Todos_LGPD
         """,
