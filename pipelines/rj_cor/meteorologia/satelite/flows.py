@@ -69,7 +69,7 @@ with Flow(
     # Para quantidade de água precipitável
     VARIAVEL_TPW = "TPWF"
     DATASET_ID_TPW = "meio_ambiente_clima"
-    TABLE_ID_TPW = "volume_agua_precipitavel_satelite"
+    TABLE_ID_TPW = "quantidade_agua_precipitavel_satelite"
 
     filename_tpw = download(
         variavel=VARIAVEL_TPW, ano=ano, dia_juliano=dia_juliano, hora=hora
