@@ -158,6 +158,17 @@ sme_queries = {
             FROM GestaoEscolar.dbo.VW_BI_Escola
         &#34;&#34;&#34;,
     },
+    &#34;aluno_historico&#34;: {
+        &#34;materialize_after_dump&#34;: False,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_type&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;
+            SELECT
+            TOP 10000
+                *
+            FROM GestaoEscolar.dbo.VW_BI_Aluno_Todos_LGPD
+        &#34;&#34;&#34;,
+    },
     &#34;aluno&#34;: {
         &#34;materialize_after_dump&#34;: True,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
