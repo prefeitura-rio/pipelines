@@ -195,12 +195,12 @@ def get_info(path: str) -> Tuple[dict, str]:
     # =====================================================================
     # Detect the product type
     # =====================================================================
-    procura_M = path.find("-M6")
-    if procura_M == -1:
-        procura_M = path.find("-M3")
-    if procura_M == -1:
-        procura_M = path.find("-M4")
-    product = path[path.find("L2-") + 3 : procura_M]
+    procura_m = path.find("-M6")
+    if procura_m == -1:
+        procura_m = path.find("-M3")
+    if procura_m == -1:
+        procura_m = path.find("-M4")
+    product = path[path.find("L2-") + 3 : procura_m]
     print(product)
 
     # Nem todos os produtos foram adicionados no dicionário de características
@@ -403,8 +403,12 @@ def remap_g16(
     year = datetime_save[:4]
     month = str(int(datetime_save[4:6]))
     day = str(int(datetime_save[6:8]))
+    data = year + "-" + month.zfill(2) + "-" + day.zfill(2)
     partitions = os.path.join(
-        f"ano={year}", f"mes={month}", f"dia={day}", f"hora={time_save}"
+        f"ano_particao={year}",
+        f"mes_particao={month}",
+        f"data_particao={data}",
+        f"hora={time_save}",
     )
 
     tif_path = os.path.join(
@@ -499,9 +503,13 @@ def save_parquet(variable: str, datetime_save: str) -> Union[str, Path]:
 
     year = date_save[:4]
     month = str(int(date_save[4:6]))
-    day = str(int(date_save[-2:]))
+    day = str(int(date_save[6:8]))
+    date = year + "-" + month.zfill(2) + "-" + day.zfill(2)
     partitions = os.path.join(
-        f"ano={year}", f"mes={month}", f"dia={day}", f"hora={time_save}"
+        f"ano_particao={year}",
+        f"mes_particao={month}",
+        f"data_particao={date}",
+        f"hora={time_save}",
     )
 
     tif_data = os.path.join(
@@ -556,11 +564,14 @@ def main(path: Union[str, Path]):
     # Full Disk Extent
     # extent = [-156.00, -81.30, 6.30, 81.30]
     # Brazil region
-    extent = [-90.0, -40.0, -20.0, 10.0]
-    # # Região da cidade do Rio de Janeiro
+    # extent = [-90.0, -40.0, -20.0, 10.0]
+    # Região da cidade do Rio de Janeiro
     # lat_max, lon_min = (-22.802842397418548, -43.81200531887697)
     # lat_min, lon_max = (-23.073487725280266, -43.11300020870994)
-    # extent = [lon_min, lat_min, lon_max, lat_max]
+    # Estado do RJ
+    lat_max, lon_max = (-20.69080839963545, -40.28483671464648)
+    lat_min, lon_min = (-23.801876626302175, -45.05290312102409)
+    extent = [lon_min, lat_min, lon_max, lat_max]
 
     # Choose the image resolution (the higher the number the faster the processing is)
     resolution = 5

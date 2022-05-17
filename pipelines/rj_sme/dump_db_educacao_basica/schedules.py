@@ -21,14 +21,16 @@ from pipelines.utils.utils import untuple_clocks as untuple
 sme_queries = {
     "avaliacao": {
         "materialize_after_dump": True,
+        "partition_columns": "Ano",
         "materialization_mode": "prod",
-        "dump_type": "overwrite",
+        "dump_type": "append",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Avaliacao",
     },
     "coc": {  # essa tabela utiliza a view coc0 pois contem o coc 0 e de 1 a 5
-        "dump_type": "overwrite",
         "materialize_after_dump": True,
+        "partition_columns": "Ano",
         "materialization_mode": "prod",
+        "dump_type": "append",
         "execute_query": """
             SELECT
                 Ano AS Ano,
@@ -56,7 +58,7 @@ sme_queries = {
         """,
     },
     "frequencia": {
-        "partition_column": "datainicio",
+        "partition_columns": "datainicio",
         "lower_bound_date": "2022-03-01",
         "materialize_after_dump": True,
         "materialization_mode": "prod",
@@ -82,7 +84,7 @@ sme_queries = {
         """,
     },
     "movimentacao": {
-        "partition_column": "data_mov",
+        "partition_columns": "Data_mov",
         "lower_bound_date": "2022-03-01",
         "materialize_after_dump": True,
         "materialization_mode": "prod",
@@ -127,6 +129,17 @@ sme_queries = {
                 Tot_Escola,
                 esc_id
             FROM GestaoEscolar.dbo.VW_BI_Escola
+        """,
+    },
+    "aluno_historico": {
+        "materialize_after_dump": True,
+        "partition_columns": "Ano",
+        "materialization_mode": "prod",
+        "dump_type": "append",
+        "execute_query": """
+            SELECT
+                *
+            FROM GestaoEscolar.dbo.VW_BI_Aluno_Todos_LGPD
         """,
     },
     "aluno": {
@@ -176,7 +189,7 @@ sme_queries = {
 
 sme_clocks = generate_dump_db_schedules(
     interval=timedelta(days=1),
-    start_date=datetime(2022, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2022, 5, 13, 12, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_SME_AGENT_LABEL.value,
     ],

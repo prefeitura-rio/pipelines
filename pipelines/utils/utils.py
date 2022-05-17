@@ -99,7 +99,7 @@ def notify_discord_on_failure(
         f":man_facepalming: Flow **{flow.name}** has failed."
         + f'\n  - State message: *"{state.message}"*'
         + "\n  - Link to the failed flow: "
-        + f"http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{flow_run_id}"
+        + f"https://prefect.dados.rio/flow-run/{flow_run_id}"
         + "\n  - Extra attention:"
         + "\n    - ".join(at_code_owners)
     )
@@ -164,9 +164,7 @@ def run_cloud(
 
     # Print flow run link so user can check it
     print(f"Run submitted: TEST RUN - {run_description} - {flow.name}")
-    print(
-        f"Please check at: http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{flow_run_id}"
-    )
+    print(f"Please check at: https://prefect.dados.rio/flow-run/{flow_run_id}")
 
 
 def query_to_line(query: str) -> str:
@@ -239,6 +237,36 @@ def untuple_clocks(clocks):
     Converts a list of tuples to a list of clocks.
     """
     return [clock[0] if isinstance(clock, tuple) else clock for clock in clocks]
+
+
+###############
+#
+# Text formatting
+#
+###############
+
+
+def human_readable(
+    value: Union[int, float],
+    unit: str = "",
+    unit_prefixes: List[str] = None,
+    unit_divider: int = 1000,
+    decimal_places: int = 2,
+):
+    """
+    Formats a value in a human readable way.
+    """
+    if unit_prefixes is None:
+        unit_prefixes = ["", "k", "M", "G", "T", "P", "E", "Z", "Y"]
+    if value == 0:
+        return f"{value}{unit}"
+    unit_prefix = unit_prefixes[0]
+    for prefix in unit_prefixes[1:]:
+        if value < unit_divider:
+            break
+        unit_prefix = prefix
+        value /= unit_divider
+    return f"{value:.{decimal_places}f}{unit_prefix}{unit}"
 
 
 ###############

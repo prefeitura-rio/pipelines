@@ -20,7 +20,8 @@ from pipelines.utils.utils import untuple_clocks as untuple
 #####################################
 _1746_queries = {
     "chamado": {
-        "partition_column": "dt_inicio",
+        "partition_columns": "dt_inicio",
+        "lower_bound_date": "2021-01-01",
         "materialize_after_dump": True,
         "materialization_mode": "dev",
         "dump_type": "append",
