@@ -22,6 +22,7 @@ sme_queries = {
     "avaliacao": {
         "materialize_after_dump": True,
         "partition_columns": "Ano",
+        "partition_date_format": "%Y",
         "materialization_mode": "prod",
         "dump_type": "append",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Avaliacao",
@@ -29,6 +30,7 @@ sme_queries = {
     "coc": {  # essa tabela utiliza a view coc0 pois contem o coc 0 e de 1 a 5
         "materialize_after_dump": True,
         "partition_columns": "Ano",
+        "partition_date_format": "%Y",
         "materialization_mode": "prod",
         "dump_type": "append",
         "execute_query": """
@@ -134,6 +136,7 @@ sme_queries = {
     "aluno_historico": {
         "materialize_after_dump": True,
         "partition_columns": "Ano",
+        "partition_date_format": "%Y",
         "materialization_mode": "prod",
         "dump_type": "append",
         "execute_query": """
