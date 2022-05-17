@@ -80,7 +80,7 @@ def run_local_backfill(
 
     while start_date < end_date:
         # Run flow
-        parameters["CURRENT_TIME"] = end_date
+        parameters["CURRENT_TIME"] = end_date.to_datetime_string()
         flow.run(parameters=parameters)
         # Update end_date backwards
         if interval_period == "hours":
