@@ -128,8 +128,13 @@ def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-l
             &#34;dump_type&#34;: parameters[&#34;dump_type&#34;],
             &#34;execute_query&#34;: query_to_line(parameters[&#34;execute_query&#34;]),
         }
+
         if &#34;partition_columns&#34; in parameters:
             parameter_defaults[&#34;partition_columns&#34;] = parameters[&#34;partition_columns&#34;]
+        if &#34;partition_date_format&#34; in parameters:
+            parameter_defaults[&#34;partition_date_format&#34;] = parameters[
+                &#34;partition_date_format&#34;
+            ]
         if &#34;lower_bound_date&#34; in parameters:
             parameter_defaults[&#34;lower_bound_date&#34;] = parameters[&#34;lower_bound_date&#34;]
         if &#34;materialize_after_dump&#34; in parameters:
@@ -249,8 +254,13 @@ Creates the query without accents.</p></div>
             &#34;dump_type&#34;: parameters[&#34;dump_type&#34;],
             &#34;execute_query&#34;: query_to_line(parameters[&#34;execute_query&#34;]),
         }
+
         if &#34;partition_columns&#34; in parameters:
             parameter_defaults[&#34;partition_columns&#34;] = parameters[&#34;partition_columns&#34;]
+        if &#34;partition_date_format&#34; in parameters:
+            parameter_defaults[&#34;partition_date_format&#34;] = parameters[
+                &#34;partition_date_format&#34;
+            ]
         if &#34;lower_bound_date&#34; in parameters:
             parameter_defaults[&#34;lower_bound_date&#34;] = parameters[&#34;lower_bound_date&#34;]
         if &#34;materialize_after_dump&#34; in parameters:
