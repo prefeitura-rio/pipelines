@@ -48,7 +48,7 @@ def get_elasticsearch_client(
     Get an Elasticsearch client with configuration from Vault
     &#34;&#34;&#34;
     try:
-        es_config: str = get_vault_secret(es_config_secret_path)[&#34;config&#34;]
+        es_config: str = get_vault_secret(es_config_secret_path)[&#34;data&#34;][&#34;config&#34;]
     except Exception as exc:  # pylint: disable=broad-except
         log(f&#34;Failed to get Elasticsearch config: {exc}&#34;, &#34;error&#34;)
         return None
@@ -157,7 +157,7 @@ def index_document(
     Get an Elasticsearch client with configuration from Vault
     &#34;&#34;&#34;
     try:
-        es_config: str = get_vault_secret(es_config_secret_path)[&#34;config&#34;]
+        es_config: str = get_vault_secret(es_config_secret_path)[&#34;data&#34;][&#34;config&#34;]
     except Exception as exc:  # pylint: disable=broad-except
         log(f&#34;Failed to get Elasticsearch config: {exc}&#34;, &#34;error&#34;)
         return None
