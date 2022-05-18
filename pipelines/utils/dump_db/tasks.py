@@ -328,6 +328,7 @@ def dump_batches_to_csv(  # pylint: disable=too-many-locals,too-many-statements
             table_id=table_id,
             metrics={"batch_to_dataframe": time_fetch_batch},
         )
+        index_document(doc)
         # Clean dataframe
         start_fetch_batch = time()
         old_columns = dataframe.columns.tolist()
@@ -345,6 +346,7 @@ def dump_batches_to_csv(  # pylint: disable=too-many-locals,too-many-statements
             table_id=table_id,
             metrics={"clean_dataframe": time_fetch_batch},
         )
+        index_document(doc)
         # Write to CSV
         start_fetch_batch = time()
         if not partition_column:
@@ -371,6 +373,7 @@ def dump_batches_to_csv(  # pylint: disable=too-many-locals,too-many-statements
             table_id=table_id,
             metrics={"batch_to_csv": time_fetch_batch},
         )
+        index_document(doc)
         # Get next batch
         start_fetch_batch = time()
         batch = database.fetch_batch(batch_size)
@@ -383,6 +386,7 @@ def dump_batches_to_csv(  # pylint: disable=too-many-locals,too-many-statements
             table_id=table_id,
             metrics={"fetch_batch": time_fetch_batch},
         )
+        index_document(doc)
         idx += 1
 
     log(f"Dumped {idx} batches with size {len(batch)}, total of {idx*batch_size}")
