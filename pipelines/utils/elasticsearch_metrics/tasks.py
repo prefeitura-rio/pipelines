@@ -40,7 +40,7 @@ def format_metrics(
 
 
 @task(checkpoint=False)
-def post_metrics(
+def post_metrics(  # pylint: disable=too-many-arguments
     flow_name: str = None,
     labels: List[str] = None,
     event_type: str = None,

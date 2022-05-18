@@ -20,12 +20,12 @@ def get_elasticsearch_client(
     """
     try:
         es_config: str = get_vault_secret(es_config_secret_path)["config"]
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=broad-except
         log(f"Failed to get Elasticsearch config: {exc}", "error")
         return None
     try:
         es_config_dict: dict = json.loads(base64.b64decode(es_config.encode()).decode())
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=broad-except
         log(f"Failed to decode Elasticsearch config: {exc}", "error")
         return None
     return Elasticsearch(**es_config_dict)
@@ -67,7 +67,7 @@ def index_document(
         return None
     try:
         es_client.index(index=index, document=document)
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=broad-except
         log(f"Failed to index document: {exc}", "error")
         return None
     return document
