@@ -15,12 +15,6 @@ from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.dump_db.constants import constants as dump_db_constants
 from pipelines.utils.dump_db.db import Database
-from pipelines.utils.elasticsearch_metrics.tasks import (
-    format_metrics,
-    post_metrics,
-    start_timer,
-    stop_timer,
-)
 from pipelines.utils.tasks import (
     get_current_flow_labels,
     get_user_and_password,
@@ -139,24 +133,14 @@ with Flow(
         wait=db_object,
     )
 
-    db_execute_timer = start_timer()
-    db_execute_timer.set_upstream(db_object)
-    db_execute_timer.set_upstream(formated_query)
     db_execute = database_execute(  # pylint: disable=invalid-name
         database=db_object,
         query=formated_query,
         wait=formated_query,
-    )
-    db_execute_time_elapsed = stop_timer(start_time=db_execute_timer)
-    db_execute_time_elapsed.set_upstream(db_execute)
-    db_execute_metrics = format_metrics(db_execute=db_execute_time_elapsed)
-    post_metrics(
         flow_name="dump_db",
         labels=current_flow_labels,
-        event_type="db_execute",
         dataset_id=dataset_id,
         table_id=table_id,
-        metrics=db_execute_metrics,
     )
 
     # Dump batches to CSV files
@@ -166,6 +150,10 @@ with Flow(
         prepath=f"data/{uuid4()}/",
         partition_columns=partition_columns,
         wait=db_execute,
+        flow_name="dump_db",
+        labels=current_flow_labels,
+        dataset_id=dataset_id,
+        table_id=table_id,
     )
 
     data_exists = greater_than(num_batches, 0)
@@ -266,6 +254,7 @@ with Flow(
     db_execute = database_execute(  # pylint: disable=invalid-name
         database=db_object,
         query=query,
+        flow_name="execute_sql",
     )
 
     # Log results
@@ -273,6 +262,7 @@ with Flow(
         database=db_object,
         batch_size=batch_size,
         wait=db_execute,
+        flow_name="execute_sql",
     )
 run_sql_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 run_sql_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
