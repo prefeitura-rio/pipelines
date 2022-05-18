@@ -19,7 +19,7 @@ def get_elasticsearch_client(
     Get an Elasticsearch client with configuration from Vault
     """
     try:
-        es_config: str = get_vault_secret(es_config_secret_path)["config"]
+        es_config: str = get_vault_secret(es_config_secret_path)["data"]["config"]
     except Exception as exc:  # pylint: disable=broad-except
         log(f"Failed to get Elasticsearch config: {exc}", "error")
         return None
