@@ -263,7 +263,7 @@ def parse_comma_separated_string_to_list(text: str) -> List[str]:
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
     nout=2,
 )
-def dump_batches_to_csv(  # pylint: disable=too-many-locals
+def dump_batches_to_csv(  # pylint: disable=too-many-locals,too-many-statements
     database: Database,
     batch_size: int,
     prepath: Union[str, Path],
