@@ -99,8 +99,13 @@ def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-l
             "dump_type": parameters["dump_type"],
             "execute_query": query_to_line(parameters["execute_query"]),
         }
+
         if "partition_columns" in parameters:
             parameter_defaults["partition_columns"] = parameters["partition_columns"]
+        if "partition_date_format" in parameters:
+            parameter_defaults["partition_date_format"] = parameters[
+                "partition_date_format"
+            ]
         if "lower_bound_date" in parameters:
             parameter_defaults["lower_bound_date"] = parameters["lower_bound_date"]
         if "materialize_after_dump" in parameters:
