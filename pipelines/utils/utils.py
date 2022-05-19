@@ -280,7 +280,7 @@ def human_readable(
 
 def dataframe_to_csv(dataframe: pd.DataFrame, path: Union[str, Path]) -> None:
     """
-    Writes a dataframe to a chosen file format.
+    Writes a dataframe to CSV file.
     """
     # Remove filename from path
     path = Path(path)
@@ -292,11 +292,17 @@ def dataframe_to_csv(dataframe: pd.DataFrame, path: Union[str, Path]) -> None:
 
 
 def dataframe_to_parquet(dataframe: pd.DataFrame, path: Union[str, Path]):
+    """
+    Writes a dataframe to Parquet file with Schema as STRING.
+    """
+
     table = pa.Table.from_pandas(dataframe)
 
+    # cast new column data types
     schema = pa.schema([pa.field(col, pa.string()) for col in dataframe.columns])
     table.cast(target_schema=schema)
 
+    # save parquet file, this away data will be overwrite if the file exists
     pqwriter = pq.ParquetWriter(path, table.schema)
     pqwriter.write_table(table)
 
@@ -414,6 +420,7 @@ def to_partitions(
                     header=not file_filter_save_path.exists(),
                 )
             elif save_data_type == "parquet":
+                # TODO: make this apeend data
                 dataframe_to_parquet(dataframe=df_filter, path=file_filter_save_path)
     else:
         raise BaseException("Data need to be a pandas DataFrame")
