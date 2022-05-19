@@ -358,8 +358,8 @@ def clean_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
                 dataframe[col] = (
                     dataframe[col]
                     .astype(str)
-                    .str.replace("\x00", "", regex=True)
-                    .replace("None", np.nan, regex=True)
+                    .str.replace("\x00", "")
+                    .replace("None", np.nan)
                 )
             except Exception as exc:
                 print(
