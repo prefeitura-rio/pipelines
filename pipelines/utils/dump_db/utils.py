@@ -96,7 +96,7 @@ def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-l
             "db_type": db_type,
             "dataset_id": dataset_id,
             "table_id": table_id,
-            "dump_type": parameters["dump_type"],
+            "dump_mode": parameters["dump_mode"],
             "execute_query": query_to_line(parameters["execute_query"]),
         }
 

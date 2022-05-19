@@ -64,7 +64,7 @@ with Flow(
             data_path=base_path,
             dataset_id=geolocator_constants.DATASET_ID.value,
             table_id=geolocator_constants.TABLE_ID.value,
-            dump_type="append",
+            dump_mode="append",
             wait=base_path,
         )
 

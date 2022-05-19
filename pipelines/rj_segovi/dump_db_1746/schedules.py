@@ -24,7 +24,7 @@ _1746_queries = {
         "lower_bound_date": "2021-01-01",
         "materialize_after_dump": True,
         "materialization_mode": "dev",
-        "dump_type": "append",
+        "dump_mode": "append",
         "execute_query": """
             SELECT
                 DISTINCT ch.id_chamado,
