@@ -28,7 +28,7 @@ from pipelines.utils.dump_db.tasks import (
     database_execute,
     database_fetch,
     database_get,
-    dump_batches_to_csv,
+    dump_batches_to_file,
     format_partitioned_query,
     parse_comma_separated_string_to_list,
 )
@@ -139,7 +139,7 @@ with Flow(
     )
 
     # Dump batches to CSV files
-    batches_path, num_batches = dump_batches_to_csv(
+    batches_path, num_batches = dump_batches_to_file(
         database=db_object,
         batch_size=batch_size,
         prepath=f"data/{uuid4()}/",

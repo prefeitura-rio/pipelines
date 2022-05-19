@@ -146,7 +146,7 @@ def format_partitioned_query(
     Formats a query for fetching partitioned data.
     """
     # If no partition column is specified, return the query as is.
-    if len(partition_columns) == 0 or partition_columns[0] == "":
+    if not partition_columns or partition_columns[0] == "":
         log("NO partition column specified. Returning query as is")
         return query
 
@@ -209,13 +209,13 @@ def parse_comma_separated_string_to_list(text: str) -> List[str]:
     Returns:
         A list of strings.
     """
-    if text is None or text == "":
+    if text is None or not text:
         return []
     # Remove extras.
     text = text.replace("\n", "")
     text = text.replace("\r", "")
     text = text.replace("\t", "")
-    while text.find(",,") != -1:
+    while ",," in text:
         text = text.replace(",,", ",")
     while text.endswith(","):
         text = text[:-1]
@@ -251,7 +251,7 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals
     prepath = Path(prepath)
     log(f"Got prepath: {prepath}")
 
-    if len(partition_columns) == 0 or partition_columns[0] == "":
+    if not partition_columns or partition_columns[0] == "":
         partition_column = None
     else:
         partition_column = partition_columns[0]
@@ -278,13 +278,7 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals
 
         dataframe = clean_dataframe(dataframe)
         # Write to CSV
-        if not partition_column:
-            if save_data_type == "csv":
-                dataframe_to_csv(dataframe, prepath / f"{eventid}-{idx}.csv")
-            elif save_data_type == "parquet":
-                dataframe_to_parquet(dataframe, prepath / f"{eventid}-{idx}.csv")
-
-        else:
+        if partition_column:
             dataframe, date_partition_columns = parse_date_columns(
                 dataframe, new_columns_dict[partition_column]
             )
@@ -297,6 +291,11 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals
                 partitions,
                 prepath,
             )
+        elif save_data_type == "csv":
+            dataframe_to_csv(dataframe, prepath / f"{eventid}-{idx}.csv")
+        elif save_data_type == "parquet":
+            dataframe_to_parquet(dataframe, prepath / f"{eventid}-{idx}.csv")
+
         # Get next batch
         batch = database.fetch_batch(batch_size)
         idx += 1
