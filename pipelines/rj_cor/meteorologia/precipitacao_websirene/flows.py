@@ -31,7 +31,7 @@ with Flow(
 
     DATASET_ID = "meio_ambiente_clima"
     TABLE_ID = "taxa_precipitacao_websirene"
-    DUMP_TYPE = "append"
+    DUMP_MODE = "append"
 
     # Materialization parameters
     MATERIALIZE_AFTER_DUMP = Parameter(
@@ -50,7 +50,7 @@ with Flow(
         data_path=PATH,
         dataset_id=DATASET_ID,
         table_id=TABLE_ID,
-        dump_type=DUMP_TYPE,
+        dump_mode=DUMP_MODE,
         wait=PATH,
     )
 

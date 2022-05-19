@@ -79,7 +79,8 @@ with Flow(
     # BigQuery parameters
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
-    dump_type = Parameter("dump_type", default="append")  # overwrite or append
+    dump_mode = Parameter("dump_mode", default="append")  # overwrite or append
+    save_data_type = Parameter("save_data_type", default="csv")  # csv or parquet
 
     #####################################
     #
@@ -143,6 +144,7 @@ with Flow(
         batch_size=batch_size,
         prepath=f"data/{uuid4()}/",
         partition_columns=partition_columns,
+        save_data_type=save_data_type,
         wait=db_execute,
     )
 
@@ -154,7 +156,7 @@ with Flow(
             data_path=batches_path,
             dataset_id=dataset_id,
             table_id=table_id,
-            dump_type=dump_type,
+            dump_mode=dump_mode,
             wait=data_exists,
         )
 

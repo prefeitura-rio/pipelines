@@ -24,6 +24,7 @@ from pipelines.utils.dump_db.utils import (
 from pipelines.utils.utils import (
     batch_to_dataframe,
     dataframe_to_csv,
+    dataframe_to_parquet,
     clean_dataframe,
     to_partitions,
     parser_blobs_to_partition_dict,
@@ -228,15 +229,16 @@ def parse_comma_separated_string_to_list(text: str) -> List[str]:
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
     nout=2,
 )
-def dump_batches_to_csv(  # pylint: disable=too-many-locals
+def dump_batches_to_file(  # pylint: disable=too-many-locals
     database: Database,
     batch_size: int,
     prepath: Union[str, Path],
     partition_columns: List[str] = None,
+    save_data_type: str = "csv",
     wait=None,  # pylint: disable=unused-argument
 ) -> Path:
     """
-    Dumps batches of data to CSV.
+    Dumps batches of data to FILE.
     """
     # Get columns
     columns = database.get_columns()
@@ -277,7 +279,11 @@ def dump_batches_to_csv(  # pylint: disable=too-many-locals
         dataframe = clean_dataframe(dataframe)
         # Write to CSV
         if not partition_column:
-            dataframe_to_csv(dataframe, prepath / f"{eventid}-{idx}.csv")
+            if save_data_type == "csv":
+                dataframe_to_csv(dataframe, prepath / f"{eventid}-{idx}.csv")
+            elif save_data_type == "parquet":
+                dataframe_to_parquet(dataframe, prepath / f"{eventid}-{idx}.csv")
+
         else:
             dataframe, date_partition_columns = parse_date_columns(
                 dataframe, new_columns_dict[partition_column]

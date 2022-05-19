@@ -42,7 +42,7 @@ with Flow(
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
     # overwrite or append
-    dump_type = Parameter("dump_type", default="overwrite")
+    dump_mode = Parameter("dump_mode", default="overwrite")
 
     # Materialization parameters
     materialize_after_dump = Parameter(
@@ -78,7 +78,7 @@ with Flow(
         data_path=datario_path,
         dataset_id=dataset_id,
         table_id=table_id,
-        dump_type=dump_type,
+        dump_mode=dump_mode,
         wait=datario_path,
     )
 
