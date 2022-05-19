@@ -310,8 +310,9 @@ def dataframe_to_parquet(dataframe: pd.DataFrame, path: Union[str, Path]):
     # - Close the writer
     if Path(path).exists():
         # Load it
-        original_table = pq.read_table(source=path, pre_buffer=False,
-                                       use_threads=True, memory_map=True)
+        original_table = pq.read_table(
+            source=path, pre_buffer=False, use_threads=True, memory_map=True
+        )
         # Cast `table` to the same schema
         table = table.cast(original_table.schema)
         # Open up a writer
