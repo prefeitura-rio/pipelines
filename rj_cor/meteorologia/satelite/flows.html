@@ -67,7 +67,7 @@ with Flow(
     VARIAVEL_RR = &#34;RRQPEF&#34;
     DATASET_ID_RR = &#34;meio_ambiente_clima&#34;
     TABLE_ID_RR = &#34;taxa_precipitacao_satelite&#34;
-    DUMP_TYPE = &#34;append&#34;
+    DUMP_MODE = &#34;append&#34;
 
     # Materialization parameters
     MATERIALIZE_AFTER_DUMP = Parameter(
@@ -91,7 +91,7 @@ with Flow(
         data_path=path_rr,
         dataset_id=DATASET_ID_RR,
         table_id=TABLE_ID_RR,
-        dump_type=DUMP_TYPE,
+        dump_mode=DUMP_MODE,
         wait=path_rr,
     )
 
@@ -111,7 +111,7 @@ with Flow(
         data_path=path_tpw,
         dataset_id=DATASET_ID_TPW,
         table_id=TABLE_ID_TPW,
-        dump_type=DUMP_TYPE,
+        dump_mode=DUMP_MODE,
         wait=path_tpw,
     )
 

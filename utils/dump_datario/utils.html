@@ -53,7 +53,7 @@ def generate_dump_datario_schedules(  # pylint: disable=too-many-arguments,too-m
         parameter_defaults = {
             &#34;url&#34;: parameters[&#34;url&#34;],
             &#34;dataset_id&#34;: parameters[&#34;dataset_id&#34;],
-            &#34;dump_type&#34;: parameters[&#34;dump_type&#34;],
+            &#34;dump_mode&#34;: parameters[&#34;dump_mode&#34;],
             &#34;table_id&#34;: table_id,
         }
         if &#34;materialize_after_dump&#34; in parameters:
@@ -107,7 +107,7 @@ def generate_dump_datario_schedules(  # pylint: disable=too-many-arguments,too-m
         parameter_defaults = {
             &#34;url&#34;: parameters[&#34;url&#34;],
             &#34;dataset_id&#34;: parameters[&#34;dataset_id&#34;],
-            &#34;dump_type&#34;: parameters[&#34;dump_type&#34;],
+            &#34;dump_mode&#34;: parameters[&#34;dump_mode&#34;],
             &#34;table_id&#34;: table_id,
         }
         if &#34;materialize_after_dump&#34; in parameters:
