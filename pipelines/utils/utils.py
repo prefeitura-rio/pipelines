@@ -295,16 +295,50 @@ def dataframe_to_parquet(dataframe: pd.DataFrame, path: Union[str, Path]):
     """
     Writes a dataframe to Parquet file with Schema as STRING.
     """
+    # Code adapted from
+    # https://stackoverflow.com/a/70817689/9944075
 
+    # Load table from pandas
     table = pa.Table.from_pandas(dataframe)
 
-    # cast new column data types
-    schema = pa.schema([pa.field(col, pa.string()) for col in dataframe.columns])
-    table.cast(target_schema=schema)
-
-    # save parquet file, this away data will be overwrite if the file exists
-    pqwriter = pq.ParquetWriter(path, table.schema)
-    pqwriter.write_table(table)
+    # If the file already exists, we:
+    # - Load it
+    # - Cast `table` to the same schema
+    # - Open up a writer
+    # - Write the original table
+    # - Write the new table
+    # - Close the writer
+    if Path(path).exists():
+        # Load it
+        original_table = pq.read_table(source=path, pre_buffer=False,
+                                       use_threads=True, memory_map=True)
+        # Cast `table` to the same schema
+        table = table.cast(original_table.schema)
+        # Open up a writer
+        writer = pq.ParquetWriter(path, table.schema)
+        # Write the original table
+        writer.write_table(original_table)
+        # Write the new table
+        writer.write_table(table)
+        # Close the writer
+        writer.close()
+    # If the file doesn't exist, we:
+    # - Setup data types
+    # - Cast `table` to the schema
+    # - Open up a writer
+    # - Write the table
+    # - Close the writer
+    else:
+        # Setup data types
+        schema = pa.schema([pa.field(col, pa.string()) for col in dataframe.columns])
+        # Cast `table` to the schema
+        table.cast(target_schema=schema)
+        # Open up a writer
+        writer = pq.ParquetWriter(path, table.schema)
+        # Write the table
+        writer.write_table(table)
+        # Close the writer
+        writer.close()
 
 
 def batch_to_dataframe(batch: Tuple[Tuple], columns: List[str]) -> pd.DataFrame:
@@ -420,7 +454,6 @@ def to_partitions(
                     header=not file_filter_save_path.exists(),
                 )
             elif save_data_type == "parquet":
-                # TODO: make this apeend data
                 dataframe_to_parquet(dataframe=df_filter, path=file_filter_save_path)
     else:
         raise BaseException("Data need to be a pandas DataFrame")
