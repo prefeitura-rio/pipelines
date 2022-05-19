@@ -79,7 +79,7 @@ with Flow(
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
     dump_mode = Parameter("dump_mode", default="append")  # overwrite or append
-    save_data_type = Parameter("save_data_type", default="csv")  # csv or parquet
+    batch_data_type = Parameter("batch_data_type", default="csv")  # csv or parquet
 
     #####################################
     #
@@ -150,7 +150,7 @@ with Flow(
         batch_size=batch_size,
         prepath=f"data/{uuid4()}/",
         partition_columns=partition_columns,
-        save_data_type=save_data_type,
+        batch_data_type=batch_data_type,
         wait=db_execute,
         flow_name="dump_db",
         labels=current_flow_labels,

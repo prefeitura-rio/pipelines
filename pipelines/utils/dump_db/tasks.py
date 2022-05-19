@@ -269,7 +269,7 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
     batch_size: int,
     prepath: Union[str, Path],
     partition_columns: List[str] = None,
-    save_data_type: str = "csv",
+    batch_data_type: str = "csv",
     wait=None,  # pylint: disable=unused-argument
     flow_name: str = None,
     labels: List[str] = None,
@@ -279,6 +279,7 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
     """
     Dumps batches of data to FILE.
     """
+    start_time = time()
     # Get columns
     columns = database.get_columns()
     log(f"Got columns: {columns}")
@@ -299,16 +300,39 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
         log("NO partition column specified! Writing unique files")
     else:
         log(f"Partition column: {partition_column} FOUND!! Write to partitioned files")
+    start_fetch_batch = time()
     # Dump batches
     batch = database.fetch_batch(batch_size)
+    time_fetch_batch = time() - start_fetch_batch
+    doc = format_document(
+        flow_name=flow_name,
+        labels=labels,
+        event_type="fetch_batch",
+        dataset_id=dataset_id,
+        table_id=table_id,
+        metrics={"fetch_batch": time_fetch_batch},
+    )
+    index_document(doc)
     eventid = datetime.now().strftime("%Y%m%d-%H%M%S")
     idx = 0
     while len(batch) > 0:
         if idx % 100 == 0:
             log(f"Dumping batch {idx} with size {len(batch)}")
+        start_fetch_batch = time()
         # Convert to dataframe
         dataframe = batch_to_dataframe(batch, columns)
+        time_fetch_batch = time() - start_fetch_batch
+        doc = format_document(
+            flow_name=flow_name,
+            labels=labels,
+            event_type="batch_to_dataframe",
+            dataset_id=dataset_id,
+            table_id=table_id,
+            metrics={"batch_to_dataframe": time_fetch_batch},
+        )
+        index_document(doc)
         # Clean dataframe
+        start_fetch_batch = time()
         old_columns = dataframe.columns.tolist()
         dataframe.columns = remove_columns_accents(dataframe)
         new_columns_dict = dict(zip(old_columns, dataframe.columns.tolist()))
@@ -316,6 +340,16 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
             log(f"New columns without accents: {new_columns_dict}")
 
         dataframe = clean_dataframe(dataframe)
+        time_fetch_batch = time() - start_fetch_batch
+        doc = format_document(
+            flow_name=flow_name,
+            labels=labels,
+            event_type="clean_dataframe",
+            dataset_id=dataset_id,
+            table_id=table_id,
+            metrics={"clean_dataframe": time_fetch_batch},
+        )
+        index_document(doc)
         # Write to CSV
         start_fetch_batch = time()
         if partition_column:
@@ -331,25 +365,46 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
                 partitions,
                 prepath,
             )
-        elif save_data_type == "csv":
+        elif batch_data_type == "csv":
             dataframe_to_csv(dataframe, prepath / f"{eventid}-{idx}.csv")
-        elif save_data_type == "parquet":
+        elif batch_data_type == "parquet":
             dataframe_to_parquet(dataframe, prepath / f"{eventid}-{idx}.csv")
 
         time_fetch_batch = time() - start_fetch_batch
         doc = format_document(
             flow_name=flow_name,
             labels=labels,
-            event_type="batch_to_csv",
+            event_type=f"batch_to_{batch_data_type}",
             dataset_id=dataset_id,
             table_id=table_id,
-            metrics={"batch_to_csv": time_fetch_batch},
+            metrics={f"batch_to_{batch_data_type}": time_fetch_batch},
         )
         index_document(doc)
         # Get next batch
+        start_fetch_batch = time()
         batch = database.fetch_batch(batch_size)
+        time_fetch_batch = time() - start_fetch_batch
+        doc = format_document(
+            flow_name=flow_name,
+            labels=labels,
+            event_type="fetch_batch",
+            dataset_id=dataset_id,
+            table_id=table_id,
+            metrics={"fetch_batch": time_fetch_batch},
+        )
+        index_document(doc)
         idx += 1
 
     log(f"Dumped {idx} batches with size {len(batch)}, total of {idx*batch_size}")
 
+    time_elapsed = time() - start_time
+    doc = format_document(
+        flow_name=flow_name,
+        labels=labels,
+        event_type="batches_to_csv",
+        dataset_id=dataset_id,
+        table_id=table_id,
+        metrics={"batches_to_csv": time_elapsed},
+    )
+    index_document(doc)
     return prepath, idx
