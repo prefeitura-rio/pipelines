@@ -24,7 +24,7 @@ def generate_dump_datario_schedules(  # pylint: disable=too-many-arguments,too-m
         parameter_defaults = {
             "url": parameters["url"],
             "dataset_id": parameters["dataset_id"],
-            "dump_type": parameters["dump_type"],
+            "dump_mode": parameters["dump_mode"],
             "table_id": table_id,
         }
         if "materialize_after_dump" in parameters:
