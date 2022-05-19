@@ -32,6 +32,7 @@ s3fs = "^2022.2.0"
 tweepy = "4.4"
 xarray = "^2022.3.0"
 black = "20.8b1"
+elasticsearch = "^8.2.0"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.12.2"

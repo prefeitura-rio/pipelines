@@ -4,6 +4,7 @@ General purpose tasks for dumping database data.
 """
 from datetime import datetime, timedelta
 from pathlib import Path
+from time import time
 from typing import Dict, List, Union
 from uuid import uuid4
 
@@ -20,6 +21,10 @@ from pipelines.utils.dump_db.utils import (
     extract_last_partition_date,
     parse_date_columns,
     build_query_new_columns,
+)
+from pipelines.utils.elasticsearch_metrics.utils import (
+    format_document,
+    index_document,
 )
 from pipelines.utils.utils import (
     batch_to_dataframe,
@@ -91,6 +96,10 @@ def database_execute(
     database: Database,
     query: str,
     wait=None,  # pylint: disable=unused-argument
+    flow_name: str = None,
+    labels: List[str] = None,
+    dataset_id: str = None,
+    table_id: str = None,
 ) -> None:
     """
     Executes a query on the database.
@@ -99,8 +108,19 @@ def database_execute(
         database: The database object.
         query: The query to execute.
     """
+    start_time = time()
     log(f"Executing query: {query}")
     database.execute_query(query)
+    time_elapsed = time() - start_time
+    doc = format_document(
+        flow_name=flow_name,
+        labels=labels,
+        event_type="db_execute",
+        dataset_id=dataset_id,
+        table_id=table_id,
+        metrics={"db_execute": time_elapsed},
+    )
+    index_document(doc)
 
 
 @task(
@@ -112,10 +132,15 @@ def database_fetch(
     database: Database,
     batch_size: str,
     wait=None,  # pylint: disable=unused-argument
+    flow_name: str = None,
+    labels: List[str] = None,
+    dataset_id: str = None,
+    table_id: str = None,
 ):
     """
     Fetches the results of a query on the database.
     """
+    start_time = time()
     if batch_size == "all":
         log(f"columns: {database.get_columns()}")
         log(f"All rows: { database.fetch_all()}")
@@ -126,6 +151,16 @@ def database_fetch(
             raise ValueError(f"Invalid batch size: {batch_size}") from error
         log(f"columns: {database.get_columns()}")
         log(f"{batch_size_no} rows: {database.fetch_batch(batch_size_no)}")
+    time_elapsed = time() - start_time
+    doc = format_document(
+        flow_name=flow_name,
+        labels=labels,
+        event_type="db_fetch",
+        dataset_id=dataset_id,
+        table_id=table_id,
+        metrics={"db_fetch": time_elapsed},
+    )
+    index_document(doc)
 
 
 @task(

@@ -62,7 +62,7 @@ with Flow(
         current_labels = get_current_flow_labels()
         running_at_datario = is_running_at_datario(current_labels)
         with case(running_at_datario, True):
-            log_warning = log_task(
+            log_warning = log_task(  # pylint: disable=invalid-name
                 "You're running this flow at the datario agent, "
                 "I won't submit any more flow runs."
             )
