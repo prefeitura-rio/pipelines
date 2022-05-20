@@ -164,6 +164,18 @@ sme_queries = {
             FROM GestaoEscolar.dbo.VW_BI_Escola
         &#34;&#34;&#34;,
     },
+    &#34;aluno_turma&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;partition_columns&#34;: &#34;Ano&#34;,
+        &#34;partition_date_format&#34;: &#34;%Y&#34;,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_mode&#34;: &#34;append&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;
+            SELECT
+                *
+            FROM GestaoEscolar.dbo.VW_BI_Aluno_Turma
+        &#34;&#34;&#34;,
+    },
     &#34;aluno_historico&#34;: {
         &#34;materialize_after_dump&#34;: True,
         &#34;partition_columns&#34;: &#34;Ano&#34;,
