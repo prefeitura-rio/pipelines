@@ -29,6 +29,7 @@ from pipelines.utils.elasticsearch_metrics.utils import (
 from pipelines.utils.utils import (
     batch_to_dataframe,
     dataframe_to_csv,
+    dataframe_to_parquet,
     clean_dataframe,
     to_partitions,
     parser_blobs_to_partition_dict,
@@ -180,7 +181,7 @@ def format_partitioned_query(
     Formats a query for fetching partitioned data.
     """
     # If no partition column is specified, return the query as is.
-    if len(partition_columns) == 0 or partition_columns[0] == "":
+    if not partition_columns or partition_columns[0] == "":
         log("NO partition column specified. Returning query as is")
         return query
 
@@ -243,13 +244,13 @@ def parse_comma_separated_string_to_list(text: str) -> List[str]:
     Returns:
         A list of strings.
     """
-    if text is None or text == "":
+    if text is None or not text:
         return []
     # Remove extras.
     text = text.replace("\n", "")
     text = text.replace("\r", "")
     text = text.replace("\t", "")
-    while text.find(",,") != -1:
+    while ",," in text:
         text = text.replace(",,", ",")
     while text.endswith(","):
         text = text[:-1]
@@ -263,11 +264,12 @@ def parse_comma_separated_string_to_list(text: str) -> List[str]:
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
     nout=2,
 )
-def dump_batches_to_csv(  # pylint: disable=too-many-locals,too-many-statements
+def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
     database: Database,
     batch_size: int,
     prepath: Union[str, Path],
     partition_columns: List[str] = None,
+    batch_data_type: str = "csv",
     wait=None,  # pylint: disable=unused-argument
     flow_name: str = None,
     labels: List[str] = None,
@@ -275,7 +277,7 @@ def dump_batches_to_csv(  # pylint: disable=too-many-locals,too-many-statements
     table_id: str = None,
 ) -> Path:
     """
-    Dumps batches of data to CSV.
+    Dumps batches of data to FILE.
     """
     start_time = time()
     # Get columns
@@ -289,7 +291,7 @@ def dump_batches_to_csv(  # pylint: disable=too-many-locals,too-many-statements
     prepath = Path(prepath)
     log(f"Got prepath: {prepath}")
 
-    if len(partition_columns) == 0 or partition_columns[0] == "":
+    if not partition_columns or partition_columns[0] == "":
         partition_column = None
     else:
         partition_column = partition_columns[0]
@@ -298,8 +300,8 @@ def dump_batches_to_csv(  # pylint: disable=too-many-locals,too-many-statements
         log("NO partition column specified! Writing unique files")
     else:
         log(f"Partition column: {partition_column} FOUND!! Write to partitioned files")
-    # Dump batches
     start_fetch_batch = time()
+    # Dump batches
     batch = database.fetch_batch(batch_size)
     time_fetch_batch = time() - start_fetch_batch
     doc = format_document(
@@ -316,8 +318,8 @@ def dump_batches_to_csv(  # pylint: disable=too-many-locals,too-many-statements
     while len(batch) > 0:
         if idx % 100 == 0:
             log(f"Dumping batch {idx} with size {len(batch)}")
-        # Convert to dataframe
         start_fetch_batch = time()
+        # Convert to dataframe
         dataframe = batch_to_dataframe(batch, columns)
         time_fetch_batch = time() - start_fetch_batch
         doc = format_document(
@@ -336,6 +338,7 @@ def dump_batches_to_csv(  # pylint: disable=too-many-locals,too-many-statements
         new_columns_dict = dict(zip(old_columns, dataframe.columns.tolist()))
         if idx == 0:
             log(f"New columns without accents: {new_columns_dict}")
+
         dataframe = clean_dataframe(dataframe)
         time_fetch_batch = time() - start_fetch_batch
         doc = format_document(
@@ -349,9 +352,7 @@ def dump_batches_to_csv(  # pylint: disable=too-many-locals,too-many-statements
         index_document(doc)
         # Write to CSV
         start_fetch_batch = time()
-        if not partition_column:
-            dataframe_to_csv(dataframe, prepath / f"{eventid}-{idx}.csv")
-        else:
+        if partition_column:
             dataframe, date_partition_columns = parse_date_columns(
                 dataframe, new_columns_dict[partition_column]
             )
@@ -360,18 +361,24 @@ def dump_batches_to_csv(  # pylint: disable=too-many-locals,too-many-statements
                 new_columns_dict[col] for col in partition_columns[1:]
             ]
             to_partitions(
-                dataframe,
-                partitions,
-                prepath,
+                data=dataframe,
+                partition_columns=partitions,
+                savepath=prepath,
+                data_type=batch_data_type,
             )
+        elif batch_data_type == "csv":
+            dataframe_to_csv(dataframe, prepath / f"{eventid}-{idx}.csv")
+        elif batch_data_type == "parquet":
+            dataframe_to_parquet(dataframe, prepath / f"{eventid}-{idx}.parquet")
+
         time_fetch_batch = time() - start_fetch_batch
         doc = format_document(
             flow_name=flow_name,
             labels=labels,
-            event_type="batch_to_csv",
+            event_type=f"batch_to_{batch_data_type}",
             dataset_id=dataset_id,
             table_id=table_id,
-            metrics={"batch_to_csv": time_fetch_batch},
+            metrics={f"batch_to_{batch_data_type}": time_fetch_batch},
         )
         index_document(doc)
         # Get next batch

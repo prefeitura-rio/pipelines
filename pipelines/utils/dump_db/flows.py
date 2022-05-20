@@ -27,7 +27,7 @@ from pipelines.utils.dump_db.tasks import (
     database_execute,
     database_fetch,
     database_get,
-    dump_batches_to_csv,
+    dump_batches_to_file,
     format_partitioned_query,
     parse_comma_separated_string_to_list,
 )
@@ -79,6 +79,7 @@ with Flow(
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
     dump_mode = Parameter("dump_mode", default="append")  # overwrite or append
+    batch_data_type = Parameter("batch_data_type", default="csv")  # csv or parquet
 
     #####################################
     #
@@ -144,11 +145,12 @@ with Flow(
     )
 
     # Dump batches to CSV files
-    batches_path, num_batches = dump_batches_to_csv(
+    batches_path, num_batches = dump_batches_to_file(
         database=db_object,
         batch_size=batch_size,
         prepath=f"data/{uuid4()}/",
         partition_columns=partition_columns,
+        batch_data_type=batch_data_type,
         wait=db_execute,
         flow_name="dump_db",
         labels=current_flow_labels,
