@@ -15,6 +15,8 @@ import hvac
 import numpy as np
 import pandas as pd
 import prefect
+import pyarrow as pa
+import pyarrow.parquet as pq
 import requests
 import telegram
 from prefect.client import Client
@@ -59,7 +61,7 @@ def get_vault_secret(secret_path: str, client: hvac.Client = None) -> dict:
     """
     Returns a secret from Vault.
     """
-    vault_client = client if client else get_vault_client()
+    vault_client = client or get_vault_client()
     return vault_client.secrets.kv.read_secret_version(secret_path)["data"]
 
 
@@ -278,14 +280,63 @@ def human_readable(
 
 def dataframe_to_csv(dataframe: pd.DataFrame, path: Union[str, Path]) -> None:
     """
-    Writes a dataframe to a CSV file.
+    Writes a dataframe to CSV file.
     """
     # Remove filename from path
     path = Path(path)
     # Create directory if it doesn't exist
     path.parent.mkdir(parents=True, exist_ok=True)
+
     # Write dataframe to CSV
     dataframe.to_csv(path, index=False, encoding="utf-8")
+
+
+def dataframe_to_parquet(dataframe: pd.DataFrame, path: Union[str, Path]):
+    """
+    Writes a dataframe to Parquet file with Schema as STRING.
+    """
+    # Code adapted from
+    # https://stackoverflow.com/a/70817689/9944075
+
+    # Load table from pandas
+    table = pa.Table.from_pandas(dataframe)
+
+    # If the file already exists, we:
+    # - Load it
+    # - Cast `table` to the same schema
+    # - Open up a writer
+    # - Write the original table
+    # - Write the new table
+    # - Close the writer
+    if Path(path).exists():
+        # Load it
+        original_table = pq.read_table(
+            source=path, pre_buffer=False, use_threads=True, memory_map=True
+        )
+        # Cast `table` to the same schema
+        table = table.cast(original_table.schema)
+        # Open up a writer
+        writer = pq.ParquetWriter(path, table.schema)
+        # Write the original table
+        writer.write_table(original_table)
+    # If the file doesn't exist, we:
+    # - Setup data types
+    # - Cast `table` to the schema
+    # - Open up a writer
+    # - Write the table
+    # - Close the writer
+    else:
+        # Setup data types
+        schema = pa.schema([pa.field(col, pa.string()) for col in dataframe.columns])
+        # Cast `table` to the schema
+        table.cast(target_schema=schema)
+        # Open up a writer
+        writer = pq.ParquetWriter(path, table.schema)
+
+    # Write the new table
+    writer.write_table(table)
+    # Close the writer
+    writer.close()
 
 
 def batch_to_dataframe(batch: Tuple[Tuple], columns: List[str]) -> pd.DataFrame:
@@ -305,8 +356,8 @@ def clean_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
                 dataframe[col] = (
                     dataframe[col]
                     .astype(str)
-                    .str.replace("\x00", "", regex=True)
-                    .replace("None", np.nan, regex=True)
+                    .str.replace("\x00", "")
+                    .replace("None", np.nan)
                 )
             except Exception as exc:
                 print(
@@ -337,7 +388,12 @@ def remove_columns_accents(dataframe: pd.DataFrame) -> list:
     )
 
 
-def to_partitions(data: pd.DataFrame, partition_columns: List[str], savepath: str):
+def to_partitions(
+    data: pd.DataFrame,
+    partition_columns: List[str],
+    savepath: str,
+    data_type: str = "csv",
+):  # sourcery skip: raise-specific-error
     """Save data in to hive patitions schema, given a dataframe and a list of partition columns.
     Args:
         data (pandas.core.frame.DataFrame): Dataframe to be partitioned.
@@ -381,20 +437,22 @@ def to_partitions(data: pd.DataFrame, partition_columns: List[str], savepath: st
                 .all(axis=1),
                 :,
             ]
-            df_filter = df_filter.drop(columns=partition_columns)
+            df_filter = df_filter.drop(columns=partition_columns).reset_index(drop=True)
 
             # create folder tree
             filter_save_path = Path(savepath / "/".join(patitions_values))
             filter_save_path.mkdir(parents=True, exist_ok=True)
-            file_filter_save_path = Path(filter_save_path) / "data.csv"
-
-            # append data to csv
-            df_filter.to_csv(
-                file_filter_save_path,
-                index=False,
-                mode="a",
-                header=not file_filter_save_path.exists(),
-            )
+            file_filter_save_path = Path(filter_save_path) / f"data.{data_type}"
+            if data_type == "csv":
+                # append data to csv
+                df_filter.to_csv(
+                    file_filter_save_path,
+                    index=False,
+                    mode="a",
+                    header=not file_filter_save_path.exists(),
+                )
+            elif data_type == "parquet":
+                dataframe_to_parquet(dataframe=df_filter, path=file_filter_save_path)
     else:
         raise BaseException("Data need to be a pandas DataFrame")
 
