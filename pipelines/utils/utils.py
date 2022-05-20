@@ -423,6 +423,8 @@ def to_partitions(
                 )
             elif data_type == "parquet":
                 dataframe_to_parquet(dataframe=df_filter, path=file_filter_save_path)
+            else:
+                raise ValueError(f"Invalid data type: {data_type}")
     else:
         raise BaseException("Data need to be a pandas DataFrame")
 
@@ -465,24 +467,26 @@ def parser_blobs_to_partition_dict(blobs: list) -> dict:
     return partitions_dict
 
 
-def dump_header_to_csv(
-    data_path: Union[str, Path],
-):
+def dump_header_to_file(data_path: Union[str, Path], data_type: str = "csv"):
     """
     Writes a header to a CSV file.
     """
+    try:
+        assert data_type in ["csv", "parquet"]
+    except AssertionError:
+        raise ValueError(f"Invalid data type: {data_type}")
     # Remove filename from path
     path = Path(data_path)
     if not path.is_dir():
         path = path.parent
-    # Grab first CSV file found
+    # Grab first `data_type` file found
     found: bool = False
     file: str = None
     for subdir, _, filenames in walk(str(path)):
         for fname in filenames:
-            if fname.endswith(".csv"):
+            if fname.endswith(f".{data_type}"):
                 file = join(subdir, fname)
-                log(f"Found CSV file: {file}")
+                log(f"Found {data_type.upper()} file: {file}")
                 found = True
                 break
         if found:
@@ -492,21 +496,26 @@ def dump_header_to_csv(
     # discover if it's a partitioned table
     if partition_folders := [folder for folder in file.split("/") if "=" in folder]:
         partition_path = "/".join(partition_folders)
-        save_header_file_path = Path(f"{save_header_path}/{partition_path}/header.csv")
+        save_header_file_path = Path(
+            f"{save_header_path}/{partition_path}/header.{data_type}"
+        )
         log(f"Found partition path: {save_header_file_path}")
 
     else:
-        save_header_file_path = Path(f"{save_header_path}/header.csv")
+        save_header_file_path = Path(f"{save_header_path}/header.{data_type}")
         log(f"Do not found partition path: {save_header_file_path}")
 
     # Create directory if it doesn't exist
     save_header_file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Read just first row
-    dataframe = pd.read_csv(file, nrows=1)
+    # Read just first row and write dataframe to file
+    if data_type == "csv":
+        dataframe = pd.read_csv(file, nrows=1)
+        dataframe.to_csv(save_header_file_path, index=False, encoding="utf-8")
+    elif data_type == "parquet":
+        dataframe = pd.read_parquet(file)[:1]
+        dataframe_to_parquet(dataframe=dataframe, path=save_header_file_path)
 
-    # Write dataframe to CSV
-    dataframe.to_csv(save_header_file_path, index=False, encoding="utf-8")
-    log(f"Wrote header CSV: {save_header_file_path}")
+    log(f"Wrote {data_type.upper()} header at {save_header_file_path}")
 
     return save_header_path
