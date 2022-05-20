@@ -452,6 +452,8 @@ def to_partitions(
                 )
             elif data_type == &#34;parquet&#34;:
                 dataframe_to_parquet(dataframe=df_filter, path=file_filter_save_path)
+            else:
+                raise ValueError(f&#34;Invalid data type: {data_type}&#34;)
     else:
         raise BaseException(&#34;Data need to be a pandas DataFrame&#34;)
 
@@ -494,24 +496,26 @@ def parser_blobs_to_partition_dict(blobs: list) -&gt; dict:
     return partitions_dict
 
 
-def dump_header_to_csv(
-    data_path: Union[str, Path],
-):
+def dump_header_to_file(data_path: Union[str, Path], data_type: str = &#34;csv&#34;):
     &#34;&#34;&#34;
     Writes a header to a CSV file.
     &#34;&#34;&#34;
+    try:
+        assert data_type in [&#34;csv&#34;, &#34;parquet&#34;]
+    except AssertionError:
+        raise ValueError(f&#34;Invalid data type: {data_type}&#34;)
     # Remove filename from path
     path = Path(data_path)
     if not path.is_dir():
         path = path.parent
-    # Grab first CSV file found
+    # Grab first `data_type` file found
     found: bool = False
     file: str = None
     for subdir, _, filenames in walk(str(path)):
         for fname in filenames:
-            if fname.endswith(&#34;.csv&#34;):
+            if fname.endswith(f&#34;.{data_type}&#34;):
                 file = join(subdir, fname)
-                log(f&#34;Found CSV file: {file}&#34;)
+                log(f&#34;Found {data_type.upper()} file: {file}&#34;)
                 found = True
                 break
         if found:
@@ -521,22 +525,27 @@ def dump_header_to_csv(
     # discover if it&#39;s a partitioned table
     if partition_folders := [folder for folder in file.split(&#34;/&#34;) if &#34;=&#34; in folder]:
         partition_path = &#34;/&#34;.join(partition_folders)
-        save_header_file_path = Path(f&#34;{save_header_path}/{partition_path}/header.csv&#34;)
+        save_header_file_path = Path(
+            f&#34;{save_header_path}/{partition_path}/header.{data_type}&#34;
+        )
         log(f&#34;Found partition path: {save_header_file_path}&#34;)
 
     else:
-        save_header_file_path = Path(f&#34;{save_header_path}/header.csv&#34;)
+        save_header_file_path = Path(f&#34;{save_header_path}/header.{data_type}&#34;)
         log(f&#34;Do not found partition path: {save_header_file_path}&#34;)
 
     # Create directory if it doesn&#39;t exist
     save_header_file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Read just first row
-    dataframe = pd.read_csv(file, nrows=1)
+    # Read just first row and write dataframe to file
+    if data_type == &#34;csv&#34;:
+        dataframe = pd.read_csv(file, nrows=1)
+        dataframe.to_csv(save_header_file_path, index=False, encoding=&#34;utf-8&#34;)
+    elif data_type == &#34;parquet&#34;:
+        dataframe = pd.read_parquet(file)[:1]
+        dataframe_to_parquet(dataframe=dataframe, path=save_header_file_path)
 
-    # Write dataframe to CSV
-    dataframe.to_csv(save_header_file_path, index=False, encoding=&#34;utf-8&#34;)
-    log(f&#34;Wrote header CSV: {save_header_file_path}&#34;)
+    log(f&#34;Wrote {data_type.upper()} header at {save_header_file_path}&#34;)
 
     return save_header_path</code></pre>
 </details>
@@ -650,8 +659,8 @@ def dump_header_to_csv(
     dataframe.to_parquet(path, engine=&#34;pyarrow&#34;)</code></pre>
 </details>
 </dd>
-<dt id="pipelines.utils.utils.dump_header_to_csv"><code class="name flex">
-<span>def <span class="ident">dump_header_to_csv</span></span>(<span>data_path: Union[str, pathlib.Path])</span>
+<dt id="pipelines.utils.utils.dump_header_to_file"><code class="name flex">
+<span>def <span class="ident">dump_header_to_file</span></span>(<span>data_path: Union[str, pathlib.Path], data_type: str = 'csv')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Writes a header to a CSV file.</p></div>
@@ -659,24 +668,26 @@ def dump_header_to_csv(
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def dump_header_to_csv(
-    data_path: Union[str, Path],
-):
+<pre><code class="python">def dump_header_to_file(data_path: Union[str, Path], data_type: str = &#34;csv&#34;):
     &#34;&#34;&#34;
     Writes a header to a CSV file.
     &#34;&#34;&#34;
+    try:
+        assert data_type in [&#34;csv&#34;, &#34;parquet&#34;]
+    except AssertionError:
+        raise ValueError(f&#34;Invalid data type: {data_type}&#34;)
     # Remove filename from path
     path = Path(data_path)
     if not path.is_dir():
         path = path.parent
-    # Grab first CSV file found
+    # Grab first `data_type` file found
     found: bool = False
     file: str = None
     for subdir, _, filenames in walk(str(path)):
         for fname in filenames:
-            if fname.endswith(&#34;.csv&#34;):
+            if fname.endswith(f&#34;.{data_type}&#34;):
                 file = join(subdir, fname)
-                log(f&#34;Found CSV file: {file}&#34;)
+                log(f&#34;Found {data_type.upper()} file: {file}&#34;)
                 found = True
                 break
         if found:
@@ -686,22 +697,27 @@ def dump_header_to_csv(
     # discover if it&#39;s a partitioned table
     if partition_folders := [folder for folder in file.split(&#34;/&#34;) if &#34;=&#34; in folder]:
         partition_path = &#34;/&#34;.join(partition_folders)
-        save_header_file_path = Path(f&#34;{save_header_path}/{partition_path}/header.csv&#34;)
+        save_header_file_path = Path(
+            f&#34;{save_header_path}/{partition_path}/header.{data_type}&#34;
+        )
         log(f&#34;Found partition path: {save_header_file_path}&#34;)
 
     else:
-        save_header_file_path = Path(f&#34;{save_header_path}/header.csv&#34;)
+        save_header_file_path = Path(f&#34;{save_header_path}/header.{data_type}&#34;)
         log(f&#34;Do not found partition path: {save_header_file_path}&#34;)
 
     # Create directory if it doesn&#39;t exist
     save_header_file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Read just first row
-    dataframe = pd.read_csv(file, nrows=1)
+    # Read just first row and write dataframe to file
+    if data_type == &#34;csv&#34;:
+        dataframe = pd.read_csv(file, nrows=1)
+        dataframe.to_csv(save_header_file_path, index=False, encoding=&#34;utf-8&#34;)
+    elif data_type == &#34;parquet&#34;:
+        dataframe = pd.read_parquet(file)[:1]
+        dataframe_to_parquet(dataframe=dataframe, path=save_header_file_path)
 
-    # Write dataframe to CSV
-    dataframe.to_csv(save_header_file_path, index=False, encoding=&#34;utf-8&#34;)
-    log(f&#34;Wrote header CSV: {save_header_file_path}&#34;)
+    log(f&#34;Wrote {data_type.upper()} header at {save_header_file_path}&#34;)
 
     return save_header_path</code></pre>
 </details>
@@ -1223,6 +1239,8 @@ savepath='partitions/'
                 )
             elif data_type == &#34;parquet&#34;:
                 dataframe_to_parquet(dataframe=df_filter, path=file_filter_save_path)
+            else:
+                raise ValueError(f&#34;Invalid data type: {data_type}&#34;)
     else:
         raise BaseException(&#34;Data need to be a pandas DataFrame&#34;)</code></pre>
 </details>
@@ -1311,7 +1329,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.utils.utils.clean_dataframe" href="#pipelines.utils.utils.clean_dataframe">clean_dataframe</a></code></li>
 <li><code><a title="pipelines.utils.utils.dataframe_to_csv" href="#pipelines.utils.utils.dataframe_to_csv">dataframe_to_csv</a></code></li>
 <li><code><a title="pipelines.utils.utils.dataframe_to_parquet" href="#pipelines.utils.utils.dataframe_to_parquet">dataframe_to_parquet</a></code></li>
-<li><code><a title="pipelines.utils.utils.dump_header_to_csv" href="#pipelines.utils.utils.dump_header_to_csv">dump_header_to_csv</a></code></li>
+<li><code><a title="pipelines.utils.utils.dump_header_to_file" href="#pipelines.utils.utils.dump_header_to_file">dump_header_to_file</a></code></li>
 <li><code><a title="pipelines.utils.utils.get_storage_blobs" href="#pipelines.utils.utils.get_storage_blobs">get_storage_blobs</a></code></li>
 <li><code><a title="pipelines.utils.utils.get_username_and_password_from_secret" href="#pipelines.utils.utils.get_username_and_password_from_secret">get_username_and_password_from_secret</a></code></li>
 <li><code><a title="pipelines.utils.utils.get_vault_client" href="#pipelines.utils.utils.get_vault_client">get_vault_client</a></code></li>
