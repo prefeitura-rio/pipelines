@@ -361,14 +361,15 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
                 new_columns_dict[col] for col in partition_columns[1:]
             ]
             to_partitions(
-                dataframe,
-                partitions,
-                prepath,
+                data=dataframe,
+                partition_columns=partitions,
+                savepath=prepath,
+                data_type=batch_data_type,
             )
         elif batch_data_type == "csv":
             dataframe_to_csv(dataframe, prepath / f"{eventid}-{idx}.csv")
         elif batch_data_type == "parquet":
-            dataframe_to_parquet(dataframe, prepath / f"{eventid}-{idx}.csv")
+            dataframe_to_parquet(dataframe, prepath / f"{eventid}-{idx}.parquet")
 
         time_fetch_batch = time() - start_fetch_batch
         doc = format_document(

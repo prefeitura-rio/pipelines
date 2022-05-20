@@ -319,16 +319,6 @@ def dataframe_to_parquet(dataframe: pd.DataFrame, path: Union[str, Path]):
         writer = pq.ParquetWriter(path, table.schema)
         # Write the original table
         writer.write_table(original_table)
-        # Write the new table
-        writer.write_table(table)
-        # Close the writer
-        writer.close()
-    # If the file doesn't exist, we:
-    # - Setup data types
-    # - Cast `table` to the schema
-    # - Open up a writer
-    # - Write the table
-    # - Close the writer
     else:
         # Setup data types
         schema = pa.schema([pa.field(col, pa.string()) for col in dataframe.columns])
@@ -336,10 +326,11 @@ def dataframe_to_parquet(dataframe: pd.DataFrame, path: Union[str, Path]):
         table.cast(target_schema=schema)
         # Open up a writer
         writer = pq.ParquetWriter(path, table.schema)
-        # Write the table
-        writer.write_table(table)
-        # Close the writer
-        writer.close()
+
+    # Write the new table
+    writer.write_table(table)
+    # Close the writer
+    writer.close()
 
 
 def batch_to_dataframe(batch: Tuple[Tuple], columns: List[str]) -> pd.DataFrame:
@@ -395,7 +386,7 @@ def to_partitions(
     data: pd.DataFrame,
     partition_columns: List[str],
     savepath: str,
-    save_data_type: str = "csv",
+    data_type: str = "csv",
 ):  # sourcery skip: raise-specific-error
     """Save data in to hive patitions schema, given a dataframe and a list of partition columns.
     Args:
@@ -445,8 +436,8 @@ def to_partitions(
             # create folder tree
             filter_save_path = Path(savepath / "/".join(patitions_values))
             filter_save_path.mkdir(parents=True, exist_ok=True)
-            file_filter_save_path = Path(filter_save_path) / f"data.{save_data_type}"
-            if save_data_type == "csv":
+            file_filter_save_path = Path(filter_save_path) / f"data.{data_type}"
+            if data_type == "csv":
                 # append data to csv
                 df_filter.to_csv(
                     file_filter_save_path,
@@ -454,7 +445,7 @@ def to_partitions(
                     mode="a",
                     header=not file_filter_save_path.exists(),
                 )
-            elif save_data_type == "parquet":
+            elif data_type == "parquet":
                 dataframe_to_parquet(dataframe=df_filter, path=file_filter_save_path)
     else:
         raise BaseException("Data need to be a pandas DataFrame")
