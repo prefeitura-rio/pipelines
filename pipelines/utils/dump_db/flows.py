@@ -72,7 +72,7 @@ with Flow(
     # Use Vault for credentials
     secret_path = Parameter("vault_secret_path")
 
-    # CSV file parameters
+    # Data file parameters
     batch_size = Parameter("batch_size", default=50000)
 
     # BigQuery parameters
@@ -144,7 +144,7 @@ with Flow(
         table_id=table_id,
     )
 
-    # Dump batches to CSV files
+    # Dump batches to files
     batches_path, num_batches = dump_batches_to_file(
         database=db_object,
         batch_size=batch_size,
@@ -226,7 +226,7 @@ with Flow(
     # Use Vault for credentials
     secret_path = Parameter("vault_secret_path")
 
-    # CSV file parameters
+    # Data file parameters
     batch_size = Parameter("no_of_rows", default="all")
 
     #####################################
