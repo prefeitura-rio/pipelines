@@ -44,8 +44,6 @@ import hvac
 import numpy as np
 import pandas as pd
 import prefect
-import pyarrow as pa
-import pyarrow.parquet as pq
 import requests
 import telegram
 from prefect.client import Client
@@ -327,45 +325,17 @@ def dataframe_to_parquet(dataframe: pd.DataFrame, path: Union[str, Path]):
     # Code adapted from
     # https://stackoverflow.com/a/70817689/9944075
 
-    # Load table from pandas
-    table = pa.Table.from_pandas(dataframe)
-
     # If the file already exists, we:
     # - Load it
-    # - Cast `table` to the same schema
-    # - Open up a writer
-    # - Write the original table
-    # - Write the new table
-    # - Close the writer
+    # - Merge the new dataframe with the existing one
     if Path(path).exists():
         # Load it
-        original_table = pq.read_table(
-            source=path, pre_buffer=False, use_threads=True, memory_map=True
-        )
-        # Cast `table` to the same schema
-        table = table.cast(original_table.schema)
-        # Open up a writer
-        writer = pq.ParquetWriter(path, table.schema)
-        # Write the original table
-        writer.write_table(original_table)
-    # If the file doesn&#39;t exist, we:
-    # - Setup data types
-    # - Cast `table` to the schema
-    # - Open up a writer
-    # - Write the table
-    # - Close the writer
-    else:
-        # Setup data types
-        schema = pa.schema([pa.field(col, pa.string()) for col in dataframe.columns])
-        # Cast `table` to the schema
-        table.cast(target_schema=schema)
-        # Open up a writer
-        writer = pq.ParquetWriter(path, table.schema)
+        original_df = pd.read_parquet(path)
+        # Merge the new dataframe with the existing one
+        dataframe = pd.concat([original_df, dataframe], sort=False)
 
-    # Write the new table
-    writer.write_table(table)
-    # Close the writer
-    writer.close()
+    # Write dataframe to Parquet
+    dataframe.to_parquet(path, engine=&#34;pyarrow&#34;)
 
 
 def batch_to_dataframe(batch: Tuple[Tuple], columns: List[str]) -&gt; pd.DataFrame:
@@ -667,45 +637,17 @@ def dump_header_to_csv(
     # Code adapted from
     # https://stackoverflow.com/a/70817689/9944075
 
-    # Load table from pandas
-    table = pa.Table.from_pandas(dataframe)
-
     # If the file already exists, we:
     # - Load it
-    # - Cast `table` to the same schema
-    # - Open up a writer
-    # - Write the original table
-    # - Write the new table
-    # - Close the writer
+    # - Merge the new dataframe with the existing one
     if Path(path).exists():
         # Load it
-        original_table = pq.read_table(
-            source=path, pre_buffer=False, use_threads=True, memory_map=True
-        )
-        # Cast `table` to the same schema
-        table = table.cast(original_table.schema)
-        # Open up a writer
-        writer = pq.ParquetWriter(path, table.schema)
-        # Write the original table
-        writer.write_table(original_table)
-    # If the file doesn&#39;t exist, we:
-    # - Setup data types
-    # - Cast `table` to the schema
-    # - Open up a writer
-    # - Write the table
-    # - Close the writer
-    else:
-        # Setup data types
-        schema = pa.schema([pa.field(col, pa.string()) for col in dataframe.columns])
-        # Cast `table` to the schema
-        table.cast(target_schema=schema)
-        # Open up a writer
-        writer = pq.ParquetWriter(path, table.schema)
+        original_df = pd.read_parquet(path)
+        # Merge the new dataframe with the existing one
+        dataframe = pd.concat([original_df, dataframe], sort=False)
 
-    # Write the new table
-    writer.write_table(table)
-    # Close the writer
-    writer.close()</code></pre>
+    # Write dataframe to Parquet
+    dataframe.to_parquet(path, engine=&#34;pyarrow&#34;)</code></pre>
 </details>
 </dd>
 <dt id="pipelines.utils.utils.dump_header_to_csv"><code class="name flex">
