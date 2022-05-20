@@ -502,8 +502,8 @@ def dump_header_to_file(data_path: Union[str, Path], data_type: str = &#34;csv&#
     &#34;&#34;&#34;
     try:
         assert data_type in [&#34;csv&#34;, &#34;parquet&#34;]
-    except AssertionError:
-        raise ValueError(f&#34;Invalid data type: {data_type}&#34;)
+    except AssertionError as exc:
+        raise ValueError(f&#34;Invalid data type: {data_type}&#34;) from exc
     # Remove filename from path
     path = Path(data_path)
     if not path.is_dir():
@@ -674,8 +674,8 @@ def dump_header_to_file(data_path: Union[str, Path], data_type: str = &#34;csv&#
     &#34;&#34;&#34;
     try:
         assert data_type in [&#34;csv&#34;, &#34;parquet&#34;]
-    except AssertionError:
-        raise ValueError(f&#34;Invalid data type: {data_type}&#34;)
+    except AssertionError as exc:
+        raise ValueError(f&#34;Invalid data type: {data_type}&#34;) from exc
     # Remove filename from path
     path = Path(data_path)
     if not path.is_dir():
