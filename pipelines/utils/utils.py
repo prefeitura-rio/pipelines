@@ -319,6 +319,12 @@ def dataframe_to_parquet(dataframe: pd.DataFrame, path: Union[str, Path]):
         writer = pq.ParquetWriter(path, table.schema)
         # Write the original table
         writer.write_table(original_table)
+    # If the file doesn't exist, we:
+    # - Setup data types
+    # - Cast `table` to the schema
+    # - Open up a writer
+    # - Write the table
+    # - Close the writer
     else:
         # Setup data types
         schema = pa.schema([pa.field(col, pa.string()) for col in dataframe.columns])
