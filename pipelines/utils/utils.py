@@ -15,8 +15,6 @@ import hvac
 import numpy as np
 import pandas as pd
 import prefect
-import pyarrow as pa
-import pyarrow.parquet as pq
 import requests
 import telegram
 from prefect.client import Client
