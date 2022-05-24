@@ -44,6 +44,8 @@ class constants(Enum):  # pylint: disable=c0103
     TIMEZONE = "America/Sao_Paulo"
     CAPTURA_FLOW_NAME = "SMTR- Captura - SIGMOB"
     MATERIALIZE_FLOW_NAME = "SMTR - DBT execute - SIGMOB"
+    TASK_MAX_RETRIES = 3
+    TASK_RETRY_DELAY = 10
     ENDPOINTS = {
         "agency": {
             "url": "http://jeap.rio.rj.gov.br/MOB/get_agency.rule?sys=MOB",
@@ -69,22 +71,22 @@ class constants(Enum):  # pylint: disable=c0103
             "url": "http://jeap.rio.rj.gov.br/MOB/get_routes.rule?sys=MOB",
             "key_column": "route_id",
         },
-        # "shapes": {
-        #     "url": "http://jeap.rio.rj.gov.br/MOB/get_shapes.rule?sys=MOB&INDICE=0",
-        #     "key_column": "shape_id",
-        # },
-        # "stops": {
-        #     "url": "http://jeap.rio.rj.gov.br/MOB/get_stops.rule?sys=MOB&INDICE=0",
-        #     "key_column": "stop_id",
-        # },
+        "shapes": {
+            "url": "http://jeap.rio.rj.gov.br/MOB/get_shapes.rule?sys=MOB&INDICE=0",
+            "key_column": "shape_id",
+        },
+        "stops": {
+            "url": "http://jeap.rio.rj.gov.br/MOB/get_stops.rule?sys=MOB&INDICE=0",
+            "key_column": "stop_id",
+        },
         "stop_times": {
             "url": "http://jeap.rio.rj.gov.br/MOB/get_stop_times.rule?sys=MOB",
             "key_column": "stop_id",
         },
-        # "stop_details": {
-        #     "url": "http://jeap.rio.rj.gov.br/MOB/get_stops_details.rule?sys=MOB&INDICE=0",
-        #     "key_column": "stop_id",
-        # },
+        "stop_details": {
+            "url": "http://jeap.rio.rj.gov.br/MOB/get_stops_details.rule?sys=MOB&INDICE=0",
+            "key_column": "stop_id",
+        },
         "trips": {
             "url": "http://jeap.rio.rj.gov.br/MOB/get_trips.rule?sys=MOB",
             "key_column": "trip_id",

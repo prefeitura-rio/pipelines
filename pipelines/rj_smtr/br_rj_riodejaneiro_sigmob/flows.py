@@ -71,12 +71,15 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks import (
     build_incremental_model,
     request_data,
     run_dbt_schema,
+    run_dbt_command,
 )
 
-from pipelines.rj_smtr.tasks import get_local_dbt_client
+# from pipelines.rj_smtr.tasks import get_local_dbt_client
 
 from pipelines.utils.decorators import Flow
-from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client, run_dbt_model
+from pipelines.utils.execute_dbt_model.tasks import (
+    get_k8s_dbt_client,
+)
 
 
 with Flow(
@@ -88,10 +91,10 @@ with Flow(
     dataset_id = Parameter("dataset_id", default="br_rj_riodejaneiro_sigmob")
     backfill = Parameter("backfill", default=False)
 
-    # dbt_client = get_k8s_dbt_client()
+    dbt_client = get_k8s_dbt_client(mode="dev")
     # For local development: comment above and uncomment below
-    dbt_client = get_local_dbt_client(host="localhost", port=3001)
-    run = run_dbt_schema(client=dbt_client, dataset_id=dataset_id, refresh=backfill)
+    # dbt_client = get_local_dbt_client(host="localhost", port=3001)
+    run = run_dbt_schema(dbt_client=dbt_client, dataset_id=dataset_id, refresh=backfill)
     with case(backfill, True):
         incremental_run = build_incremental_model(
             dbt_client=dbt_client,
@@ -100,13 +103,14 @@ with Flow(
             mat_table_id="shapes_geom",
             wait=run,
         )
-        last_run = run_dbt_model(
-            dbt_client=dbt_client, dataset_id=dataset_id, table_id="data_versao_efetiva"
+        last_run = run_dbt_command(
+            dbt_client=dbt_client,
+            dataset_id=dataset_id,
+            table_id="data_versao_efetiva",
+            flags="--full-refresh",
         )
     materialize_sigmob.set_dependencies(
-        task=incremental_run,
-        upstream_tasks=[dbt_client, run],
-        downstream_tasks=[last_run],
+        task=last_run, upstream_tasks=[dbt_client, run, incremental_run]
     )
 
 with Flow(
@@ -127,7 +131,7 @@ with Flow(
             flow_name=materialize_sigmob.name,
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             parameters={"dataset_id": "br_rj_riodejaneiro_sigmob", "backfill": False},
-            # labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+            labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
             run_name="SMTR - Atualizar tabelas após captura",
         )
         materialize_run.set_upstream(bq_upload)

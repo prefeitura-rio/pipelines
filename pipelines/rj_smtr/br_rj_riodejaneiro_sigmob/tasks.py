@@ -186,49 +186,75 @@ def request_data(endpoints: dict):
     return paths_dict
 
 
-@task
+@task(
+    checkpoint=False,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def run_dbt_command(
+    dbt_client: DbtClient,
+    dataset_id: str = None,
+    table_id: str = None,
+    command: str = "run",
+    flags: str = None,
+):
+    """
+    Runs a dbt command. If passing a dataset_id only, will run the entire dataset.
+    If also passing a table_id, will select the dbt model specified at the path:
+    models/<dataset_id>/<table_id>.sql.
+
+    Args:
+        dbt_client (DbtClient): Dbt interface of interaction
+        dataset_id (str, optional): dataset_id on BigQuery, also folder name on
+        your queries repo. Defaults to None.
+        table_id (str, optional): table_id on BigQuery, also .sql file name on your
+        models folder. Defaults to None.
+        command (str, optional): dbt command to run. Defaults to "run".
+        flags (str, optional): flags allowed to the specific command.
+        Should be preceeded by "--" Defaults to None.
+        sync (bool, optional): _description_. Defaults to True.
+    """
+    run_command = f"dbt {command}"
+    if dataset_id:
+        run_command += f" --select models/{dataset_id}/"
+        if table_id:
+            run_command += f"{table_id}"
+    if flags:
+        run_command += f" {flags}"
+
+    log(f"Will run the following command:\n{run_command}")
+    dbt_client.cli(run_command, sync=True)
+    return log("Finished running dbt command")
+
+
+@task(
+    checkpoint=False,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
 def run_dbt_schema(
-    client: DbtClient,
-    dataset_id: str = "br_rj_riodejaneiro_sigmob",
+    dbt_client: DbtClient,
+    dataset_id: str,
     refresh: bool = False,
     wait=None,  # pylint: disable=unused-argument
 ):
     """Run a whole schema (dataset) worth of models
 
     Args:
-        client (DbtClient): Dbt interface of interaction
+        dbt_client (DbtClient): Dbt interface of interaction
         dataset_id (str, optional): Dataset id on BigQuery. Defaults to "br_rj_riodejaneiro_sigmob".
         refresh (bool, optional): If true, rebuild all models from scratch. Defaults to False.
 
     Returns:
         None
     """
+
     run_command = f"run --select models/{dataset_id}"
     if refresh:
         log(f"Will run the following command:\n{run_command} in full refresh mode")
         run_command += " --full-refresh"
-    client.cli(run_command, sync=True)
+    dbt_client.cli(run_command, sync=True)
     return log(f"Finished running schema {dataset_id}")
-
-
-# @task(max_retries=3, retry_delay=timedelta(seconds=10))
-# def incremental_backfill(  # pylint: disable=too-many-arguments
-#     dbt_client: DbtClient,
-#     dataset_id: str,
-#     base_table_id: str,
-#     mat_table_id: str,
-#     field_name: str = "data_versao",
-#     interval_days=15,
-#     refresh: bool = False,
-#     wait=None,  # pylint: disable=unused-argument
-# ):
-#     query_project_id = bq_project()
-#     last_mat_date = get_table_max_value(
-#         query_project_id, dataset_id, mat_table_id, field_name
-#     )
-#     last_base_date = get_table_max_value(
-#         query_project_id, dataset_id, base_table_id, field_name
-#     )
 
 
 @task(max_retries=3, retry_delay=timedelta(seconds=10))
@@ -259,6 +285,7 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
     Returns:
         bool: whether the table was fully built or not.
     """
+
     query_project_id = bq_project()
     last_mat_date = get_table_max_value(
         query_project_id, dataset_id, mat_table_id, field_name
