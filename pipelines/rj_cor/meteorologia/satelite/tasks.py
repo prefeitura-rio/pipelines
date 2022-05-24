@@ -35,6 +35,7 @@ def slice_data(current_time: str) -> Tuple[str, str, str, str, str]:
     """
     slice data em ano. mês, dia, hora e dia juliano
     """
+    current_time = str(current_time)
     ano = current_time[:4]
     mes = current_time[5:7]
     dia = current_time[8:10]
