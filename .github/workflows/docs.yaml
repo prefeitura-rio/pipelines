@@ -33,7 +33,7 @@ jobs:
 
       - name: Generate docs
         run: |
-          pdoc3 --html --html-dir docs pipelines
+          pdoc3 --html --html-dir docs -c "lunr_search={}" pipelines
 
       - name: Deploy docs
         uses: JamesIves/github-pages-deploy-action@v4.2.3

@@ -401,8 +401,12 @@ def remap_g16(
     year = datetime_save[:4]
     month = str(int(datetime_save[4:6]))
     day = str(int(datetime_save[6:8]))
+    data = year + "-" + month.zfill(2) + "-" + day.zfill(2)
     partitions = os.path.join(
-        f"ano={year}", f"mes={month}", f"dia={day}", f"hora={time_save}"
+        f"ano_particao={year}",
+        f"mes_particao={month}",
+        f"data_particao={data}",
+        f"hora={time_save}",
     )
 
     tif_path = os.path.join(
@@ -497,9 +501,13 @@ def save_parquet(variable: str, datetime_save: str) -> Union[str, Path]:
 
     year = date_save[:4]
     month = str(int(date_save[4:6]))
-    day = str(int(date_save[-2:]))
+    day = str(int(date_save[6:8]))
+    date = year + "-" + month.zfill(2) + "-" + day.zfill(2)
     partitions = os.path.join(
-        f"ano={year}", f"mes={month}", f"dia={day}", f"hora={time_save}"
+        f"ano_particao={year}",
+        f"mes_particao={month}",
+        f"data_particao={date}",
+        f"hora={time_save}",
     )
 
     tif_data = os.path.join(

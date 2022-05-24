@@ -21,14 +21,18 @@ from pipelines.utils.utils import untuple_clocks as untuple
 sme_queries = {
     "avaliacao": {
         "materialize_after_dump": True,
+        "partition_columns": "Ano",
+        "partition_date_format": "%Y",
         "materialization_mode": "prod",
-        "dump_type": "overwrite",
+        "dump_mode": "append",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Avaliacao",
     },
     "coc": {  # essa tabela utiliza a view coc0 pois contem o coc 0 e de 1 a 5
-        "dump_type": "overwrite",
         "materialize_after_dump": True,
+        "partition_columns": "Ano",
+        "partition_date_format": "%Y",
         "materialization_mode": "prod",
+        "dump_mode": "append",
         "execute_query": """
             SELECT
                 Ano AS Ano,
@@ -57,10 +61,11 @@ sme_queries = {
     },
     "frequencia": {
         "partition_columns": "datainicio",
+        "partition_date_format": "%Y-%m-%d",
         "lower_bound_date": "2022-03-01",
         "materialize_after_dump": True,
         "materialization_mode": "prod",
-        "dump_type": "append",
+        "dump_mode": "append",
         "execute_query": """
             SELECT
                 esc_id AS esc_id,
@@ -82,15 +87,16 @@ sme_queries = {
         """,
     },
     "movimentacao": {
-        "partition_columns": "data_mov",
+        "partition_columns": "Data_mov",
+        "partition_date_format": "%Y-%m-%d",
         "lower_bound_date": "2022-03-01",
         "materialize_after_dump": True,
         "materialization_mode": "prod",
-        "dump_type": "append",
+        "dump_mode": "append",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Movimentacao_lgpd",
     },
     "turma": {
-        "dump_type": "overwrite",
+        "dump_mode": "overwrite",
         "materialize_after_dump": True,
         "materialization_mode": "prod",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Turma",
@@ -98,13 +104,13 @@ sme_queries = {
     "dependencia": {
         "materialize_after_dump": True,
         "materialization_mode": "prod",
-        "dump_type": "overwrite",
+        "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Dependencia",
     },
     "escola": {
         "materialize_after_dump": True,
         "materialization_mode": "prod",
-        "dump_type": "overwrite",
+        "dump_mode": "overwrite",
         "execute_query": """
             SELECT
                 CRE,
@@ -129,10 +135,34 @@ sme_queries = {
             FROM GestaoEscolar.dbo.VW_BI_Escola
         """,
     },
+    "aluno_turma": {
+        "materialize_after_dump": True,
+        "partition_columns": "Ano",
+        "partition_date_format": "%Y",
+        "materialization_mode": "prod",
+        "dump_mode": "append",
+        "execute_query": """
+            SELECT
+                *
+            FROM GestaoEscolar.dbo.VW_BI_Aluno_Turma
+        """,
+    },
+    "aluno_historico": {
+        "materialize_after_dump": True,
+        "partition_columns": "Ano",
+        "partition_date_format": "%Y",
+        "materialization_mode": "prod",
+        "dump_mode": "append",
+        "execute_query": """
+            SELECT
+                *
+            FROM GestaoEscolar.dbo.VW_BI_Aluno_Todos_LGPD
+        """,
+    },
     "aluno": {
         "materialize_after_dump": True,
         "materialization_mode": "prod",
-        "dump_type": "overwrite",
+        "dump_mode": "overwrite",
         "execute_query": """
             SELECT
                 Ano,
@@ -176,7 +206,7 @@ sme_queries = {
 
 sme_clocks = generate_dump_db_schedules(
     interval=timedelta(days=1),
-    start_date=datetime(2022, 1, 1, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2022, 5, 13, 2, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_SME_AGENT_LABEL.value,
     ],

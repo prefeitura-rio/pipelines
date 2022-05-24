@@ -2,7 +2,7 @@
 """
 Flows for meteorologia_inmet
 """
-from prefect import case
+from prefect import case, Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
@@ -33,10 +33,16 @@ with Flow(
 
     DATASET_ID = "meio_ambiente_clima"
     TABLE_ID = "meteorologia_inmet"
-    DUMP_TYPE = "append"
-    MATERIALIZE_AFTER_DUMP = False
-    MATERIALIZE_TO_DATARIO = False
-    MATERIALIZATION_MODE = "dev"
+    DUMP_MODE = "append"
+
+    # Materialization parameters
+    MATERIALIZE_AFTER_DUMP = Parameter(
+        "materialize_after_dump", default=False, required=False
+    )
+    MATERIALIZE_TO_DATARIO = Parameter(
+        "materialize_to_datario", default=False, required=False
+    )
+    MATERIALIZATION_MODE = Parameter("mode", default="dev", required=False)
 
     CURRENT_TIME, YESTERDAY = get_dates()
 
@@ -51,7 +57,7 @@ with Flow(
         data_path=PATH,
         dataset_id=DATASET_ID,
         table_id=TABLE_ID,
-        dump_type=DUMP_TYPE,
+        dump_mode=DUMP_MODE,
         wait=PATH,
     )
 
