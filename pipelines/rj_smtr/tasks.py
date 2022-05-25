@@ -61,6 +61,7 @@ import requests
 
 from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.utils import create_or_append_table
+from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_vault_secret
 
 
@@ -85,6 +86,21 @@ def create_current_date_hour_partition():
         "filename": filename,
         "partitions": partitions,
     }
+
+
+@task
+def get_local_dbt_client(host: str, port: int):
+    """Set a DBT client for running CLI commands. Requires
+    building container image for your queries repository.
+
+    Args:
+        host (str): hostname. When running locally, usually 'localhost'
+        port (int): the port number in which the DBT rpc is running
+
+    Returns:
+        DbtClient: object used to run DBT commands.
+    """
+    return get_dbt_client(host=host, port=port)
 
 
 @task
@@ -252,6 +268,40 @@ def bq_upload(dataset_id, table_id, filepath, raw_filepath=None, partitions=None
     # Delete local Files
     # log(f"Deleting local files: {raw_filepath}, {filepath}")
     # cleanup_local(filepath, raw_filepath)
+
+
+@task
+def bq_upload_from_dict(paths: dict, dataset_id: str, partition_levels: int = 1):
+    """Upload multiple tables from a dict structured as {table_id: csv_path}.
+        Present use case assumes table partitioned once. Adjust the parameter
+        'partition_levels' to best suit new uses.
+        i.e. if your csv is saved as:
+            <table_id>/date=<run_date>/<filename>.csv
+        it has 1 level of partition.
+        if your csv file is saved as:
+            <table_id>/date=<run_date>/hour=<run_hour>/<filename>.csv
+        it has 2 levels of partition
+
+    Args:
+        paths (dict): _description_
+        dataset_id (str): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    for key in paths.keys():
+        log("#" * 80)
+        log(f"KEY = {key}")
+        tb_dir = paths[key].parent
+        # climb up the partition directories to reach the table dir
+        for i in range(partition_levels):  # pylint: disable=unused-variable
+            tb_dir = tb_dir.parent
+        log(f"tb_dir = {tb_dir}")
+        create_or_append_table(dataset_id=dataset_id, table_id=key, path=tb_dir)
+
+    log(f"Returning -> {tb_dir.parent}")
+
+    return tb_dir.parent
 
 
 @task

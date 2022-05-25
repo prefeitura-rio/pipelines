@@ -29,7 +29,12 @@ General purpose functions for rj_smtr
 # ```
 #
 ###############################################################################
+from pathlib import Path
+
+import basedosdados as bd
 from basedosdados import Table
+import pandas as pd
+
 
 from pipelines.utils.utils import log
 
@@ -65,3 +70,60 @@ def create_or_append_table(dataset_id, table_id, path):
 #     log("Published table in PROD successfully.")
 # else:
 #     log("Table already published in PROD.")
+
+
+def generate_df_and_save(data: dict, fname: Path):
+    """Save DataFrame as csv
+
+    Args:
+        data (dict): dict with the data which to build the DataFrame
+        fname (Path): _description_
+    """
+    # Generate dataframe
+    dataframe = pd.DataFrame()
+    dataframe[data["key_column"]] = [
+        piece[data["key_column"]] for piece in data["data"]
+    ]
+    dataframe["content"] = list(data["data"])
+
+    # Save dataframe to CSV
+    dataframe.to_csv(fname, index=False)
+
+
+def bq_project(kind: str = "bigquery_prod"):
+    """Get the set BigQuery project_id
+
+    Args:
+        kind (str, optional): Which client to get the project name from.
+        Options are 'bigquery_staging', 'bigquery_prod' and 'storage_staging'
+        Defaults to 'bigquery_prod'.
+
+    Returns:
+        str: the requested project_id
+    """
+    return bd.upload.base.Base().client[kind].project
+
+
+def get_table_max_value(
+    query_project_id: str,
+    dataset_id: str,
+    table_id: str,
+    field_name: str,
+    wait=None,  # pylint: disable=unused-argument
+):
+    """Query a table to get the maximum value for the chosen field.
+    Useful to incrementally materialize tables via DBT
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+        field_name (str): column name to query
+    """
+    query = f"""
+        SELECT
+            max({field_name})
+        FROM {query_project_id}.{dataset_id}.{table_id}
+    """
+    result = bd.read_sql(query=query, billing_project_id=bq_project())
+
+    return result.iloc[0][0]
