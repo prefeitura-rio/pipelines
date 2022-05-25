@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks API documentation</title>
+<meta name="description" content="Tasks for br_rj_riodejaneiro_sigmob" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks</code></h1>
+</header>
+<section id="section-intro">
+<p>Tasks for br_rj_riodejaneiro_sigmob</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># -*- coding: utf-8 -*-
+&#34;&#34;&#34;
+Tasks for br_rj_riodejaneiro_sigmob
+&#34;&#34;&#34;
+
+###############################################################################
+#
+# Aqui é onde devem ser definidas as tasks para os flows do projeto.
+# Cada task representa um passo da pipeline. Não é estritamente necessário
+# tratar todas as exceções que podem ocorrer durante a execução de uma task,
+# mas é recomendável, ainda que não vá implicar em  uma quebra no sistema.
+# Mais informações sobre tasks podem ser encontradas na documentação do
+# Prefect: https://docs.prefect.io/core/concepts/tasks.html
+#
+# De modo a manter consistência na codebase, todo o código escrito passará
+# pelo pylint. Todos os warnings e erros devem ser corrigidos.
+#
+# As tasks devem ser definidas como funções comuns ao Python, com o decorador
+# @task acima. É recomendado inserir type hints para as variáveis.
+#
+# Um exemplo de task é o seguinte:
+#
+# -----------------------------------------------------------------------------
+# from prefect import task
+#
+# @task
+# def my_task(param1: str, param2: int) -&gt; str:
+#     &#34;&#34;&#34;
+#     My task description.
+#     &#34;&#34;&#34;
+#     return f&#39;{param1} {param2}&#39;
+# -----------------------------------------------------------------------------
+#
+# Você também pode usar pacotes Python arbitrários, como numpy, pandas, etc.
+#
+# -----------------------------------------------------------------------------
+# from prefect import task
+# import numpy as np
+#
+# @task
+# def my_task(a: np.ndarray, b: np.ndarray) -&gt; str:
+#     &#34;&#34;&#34;
+#     My task description.
+#     &#34;&#34;&#34;
+import traceback
+from datetime import timedelta
+from pathlib import Path
+
+#     return np.add(a, b)
+# -----------------------------------------------------------------------------
+#
+# Abaixo segue um código para exemplificação, que pode ser removido.
+#
+###############################################################################
+
+import jinja2
+import pendulum
+import requests
+from dbt_client import DbtClient
+from prefect import task
+from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.constants import constants
+from pipelines.rj_smtr.utils import (
+    bq_project,
+    generate_df_and_save,
+    get_table_max_value,
+)
+from pipelines.utils.utils import log
+
+
+@task(max_retries=3, retry_delay=timedelta(seconds=30))
+def request_data(endpoints: dict):
+    &#34;&#34;&#34;Request data from multiple API&#39;s
+
+    Args:
+        endpoints (dict): dict contaning the API id, URL and unique_key column
+
+    Raises:
+        e: Any exception during the request. Usually timeouts
+
+    Returns:
+        dict: containing the paths for the data saved during each request
+    &#34;&#34;&#34;
+
+    # Get resources
+    run_date = pendulum.now(constants.TIMEZONE.value).date()
+
+    # Initialize empty dict for storing file paths
+    paths_dict = {}
+
+    # Iterate over endpoints
+    for key in endpoints.keys():
+        log(&#34;#&#34; * 80)
+        log(f&#34;KEY = {key}&#34;)
+
+        # Start with empty contents, page count = 0 and file_id = 0
+        contents = None
+        file_id = 0
+        page_count = 0
+
+        # Setup a template for every CSV file
+        path_template = jinja2.Template(
+            &#34;{{run_date}}/{{key}}/data_versao={{run_date}}/{{key}}_version-{{run_date}}-{{id}}.csv&#34;
+        )
+
+        # The first next_page is the initial URL
+        next_page = endpoints[key][&#34;url&#34;]
+
+        # Iterate over pages
+        while next_page:
+            page_count += 1
+
+            try:
+
+                # Get data
+                log(f&#34;URL = {next_page}&#34;)
+                data = requests.get(
+                    next_page, timeout=constants.SIGMOB_GET_REQUESTS_TIMEOUT.value
+                )
+
+                # Raise exception if not 200
+                data.raise_for_status()
+                data = data.json()
+
+                # Store contents
+                if contents is None:
+                    contents = {
+                        &#34;data&#34;: data[&#34;result&#34;] if &#34;result&#34; in data else data[&#34;data&#34;],
+                        &#34;key_column&#34;: endpoints[key][&#34;key_column&#34;],
+                    }
+                else:
+                    contents[&#34;data&#34;].extend(data[&#34;data&#34;])  # pylint: disable=E1136
+
+                # Get next page
+                if &#34;next&#34; in data and data[&#34;next&#34;] != &#34;EOF&#34; and data[&#34;next&#34;] != &#34;&#34;:
+                    next_page = data[&#34;next&#34;]
+                else:
+                    next_page = None
+
+            except Exception as unknown_error:
+                err = traceback.format_exc()
+                log(err)
+                # log_critical(f&#34;Failed to request data from SIGMOB: \n{err}&#34;)
+                raise unknown_error
+
+            # Create a new file for every (constants.SIGMOB_PAGES_FOR_CSV_FILE.value) pages
+            if page_count % constants.SIGMOB_PAGES_FOR_CSV_FILE.value == 0:
+
+                # Increment file ID
+                file_id += 1
+                # &#34;{{run_date}}/{{key}}/data_versao={{run_date}}/{{key}}_version-{{run_date}}-{{file_id}}.csv&#34;
+                path = Path(
+                    path_template.render(
+                        run_date=run_date, key=key, id=&#34;{:03}&#34;.format(file_id)
+                    )
+                )
+                log(f&#34;Reached page count {page_count}, saving file at {path}&#34;)
+
+                # If it&#39;s the first file, create directories and save path
+                if file_id == 1:
+                    paths_dict[key] = path
+                    path.parent.mkdir(parents=True, exist_ok=True)
+
+                # Save CSV file
+                generate_df_and_save(contents, path)
+
+                # Reset contents
+                contents = None
+
+        # Save last file
+        if contents is not None:
+            file_id += 1
+            path = Path(
+                path_template.render(
+                    run_date=run_date, key=key, id=&#34;{:03}&#34;.format(file_id)
+                )
+            )
+            if file_id == 1:
+                paths_dict[key] = path
+                path.parent.mkdir(parents=True, exist_ok=True)
+            generate_df_and_save(contents, path)
+            log(f&#34;Saved last file with page count {page_count} at {path}&#34;)
+
+        # Move on to the next endpoint.
+
+    # Return paths
+    return paths_dict
+
+
+@task(
+    checkpoint=False,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def run_dbt_command(
+    dbt_client: DbtClient,
+    dataset_id: str = None,
+    table_id: str = None,
+    command: str = &#34;run&#34;,
+    flags: str = None,
+):
+    &#34;&#34;&#34;
+    Runs a dbt command. If passing a dataset_id only, will run the entire dataset.
+    If also passing a table_id, will select the dbt model specified at the path:
+    models/&lt;dataset_id&gt;/&lt;table_id&gt;.sql.
+
+    Args:
+        dbt_client (DbtClient): Dbt interface of interaction
+        dataset_id (str, optional): dataset_id on BigQuery, also folder name on
+        your queries repo. Defaults to None.
+        table_id (str, optional): table_id on BigQuery, also .sql file name on your
+        models folder. Defaults to None.
+        command (str, optional): dbt command to run. Defaults to &#34;run&#34;.
+        flags (str, optional): flags allowed to the specific command.
+        Should be preceeded by &#34;--&#34; Defaults to None.
+        sync (bool, optional): _description_. Defaults to True.
+    &#34;&#34;&#34;
+    run_command = f&#34;dbt {command}&#34;
+    if dataset_id:
+        run_command += f&#34; --select models/{dataset_id}/&#34;
+        if table_id:
+            run_command += f&#34;{table_id}&#34;
+    if flags:
+        run_command += f&#34; {flags}&#34;
+
+    log(f&#34;Will run the following command:\n{run_command}&#34;)
+    dbt_client.cli(run_command, sync=True)
+    return log(&#34;Finished running dbt command&#34;)
+
+
+@task(
+    checkpoint=False,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def run_dbt_schema(
+    dbt_client: DbtClient,
+    dataset_id: str,
+    refresh: bool = False,
+    wait=None,  # pylint: disable=unused-argument
+):
+    &#34;&#34;&#34;Run a whole schema (dataset) worth of models
+
+    Args:
+        dbt_client (DbtClient): Dbt interface of interaction
+        dataset_id (str, optional): Dataset id on BigQuery. Defaults to &#34;br_rj_riodejaneiro_sigmob&#34;.
+        refresh (bool, optional): If true, rebuild all models from scratch. Defaults to False.
+
+    Returns:
+        None
+    &#34;&#34;&#34;
+
+    run_command = f&#34;run --select models/{dataset_id}&#34;
+    if refresh:
+        log(f&#34;Will run the following command:\n{run_command} in full refresh mode&#34;)
+        run_command += &#34; --full-refresh&#34;
+    dbt_client.cli(run_command, sync=True)
+    return log(f&#34;Finished running schema {dataset_id}&#34;)
+
+
+@task(max_retries=3, retry_delay=timedelta(seconds=10))
+def build_incremental_model(  # pylint: disable=too-many-arguments
+    dbt_client: DbtClient,
+    dataset_id: str,
+    base_table_id: str,
+    mat_table_id: str,
+    field_name: str = &#34;data_versao&#34;,
+    refresh: bool = False,
+    wait=None,  # pylint: disable=unused-argument
+):
+    &#34;&#34;&#34;
+        Utility task for backfilling table in predetermined steps.
+        Assumes the step sizes will be defined on the .sql file.
+
+    Args:
+        dbt_client (DbtClient): DBT interface object
+        dataset_id (str): Dataset id on BigQuery
+        base_table_id (str): Base table from which to materialize (usually, an external table)
+        mat_table_id (str): Target table id for materialization
+        field_name (str, optional): Key field (column) for dbt incremental filters.
+        Defaults to &#34;data_versao&#34;.
+        refresh (bool, optional): If True, rebuild the table from scratch. Defaults to False.
+        wait (NoneType, optional): Placeholder parameter, used to wait previous tasks finish.
+        Defaults to None.
+
+    Returns:
+        bool: whether the table was fully built or not.
+    &#34;&#34;&#34;
+
+    query_project_id = bq_project()
+    last_mat_date = get_table_max_value(
+        query_project_id, dataset_id, mat_table_id, field_name
+    )
+    last_base_date = get_table_max_value(
+        query_project_id, dataset_id, base_table_id, field_name
+    )
+    log(
+        f&#34;&#34;&#34;
+    Base table last version: {last_base_date}
+    Materialized table last version: {last_mat_date}
+    &#34;&#34;&#34;
+    )
+    run_command = f&#34;run --select models/{dataset_id}/{mat_table_id}.sql&#34;
+
+    if refresh:
+        log(&#34;Running in full refresh mode&#34;)
+        log(f&#34;DBT will run the following command:\n{run_command+&#39; --full-refresh&#39;}&#34;)
+        dbt_client.cli(run_command + &#34; --full-refresh&#34;, sync=True)
+        last_mat_date = get_table_max_value(
+            query_project_id, dataset_id, mat_table_id, field_name
+        )
+
+    if last_base_date &gt; last_mat_date:
+        log(&#34;Running interval step materialization&#34;)
+        log(f&#34;DBT will run the following command:\n{run_command}&#34;)
+        while last_base_date &gt; last_mat_date:
+            running = dbt_client.cli(run_command, sync=True)
+            last_mat_date = get_table_max_value(
+                query_project_id,
+                dataset_id,
+                mat_table_id,
+                field_name,
+                wait=running,
+            )
+            log(f&#34;After this step, materialized table last version is: {last_mat_date}&#34;)
+            if last_mat_date == last_base_date:
+                log(&#34;Materialized table reached base table version!&#34;)
+                return True
+    log(&#34;Did not run interval step materialization...&#34;)
+    return False</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.build_incremental_model"><code class="name flex">
+<span>def <span class="ident">build_incremental_model</span></span>(<span>dbt_client: dbt_client.dbt_client.DbtClient, dataset_id: str, base_table_id: str, mat_table_id: str, field_name: str = 'data_versao', refresh: bool = False, wait=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Utility task for backfilling table in predetermined steps.
+Assumes the step sizes will be defined on the .sql file.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dbt_client</code></strong> :&ensp;<code>DbtClient</code></dt>
+<dd>DBT interface object</dd>
+<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Dataset id on BigQuery</dd>
+<dt><strong><code>base_table_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Base table from which to materialize (usually, an external table)</dd>
+<dt><strong><code>mat_table_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Target table id for materialization</dd>
+<dt><strong><code>field_name</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Key field (column) for dbt incremental filters.</dd>
+<dt>Defaults to "data_versao".</dt>
+<dt><strong><code>refresh</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If True, rebuild the table from scratch. Defaults to False.</dd>
+<dt><strong><code>wait</code></strong> :&ensp;<code>NoneType</code>, optional</dt>
+<dd>Placeholder parameter, used to wait previous tasks finish.</dd>
+</dl>
+<p>Defaults to None.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bool</code></dt>
+<dd>whether the table was fully built or not.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(max_retries=3, retry_delay=timedelta(seconds=10))
+def build_incremental_model(  # pylint: disable=too-many-arguments
+    dbt_client: DbtClient,
+    dataset_id: str,
+    base_table_id: str,
+    mat_table_id: str,
+    field_name: str = &#34;data_versao&#34;,
+    refresh: bool = False,
+    wait=None,  # pylint: disable=unused-argument
+):
+    &#34;&#34;&#34;
+        Utility task for backfilling table in predetermined steps.
+        Assumes the step sizes will be defined on the .sql file.
+
+    Args:
+        dbt_client (DbtClient): DBT interface object
+        dataset_id (str): Dataset id on BigQuery
+        base_table_id (str): Base table from which to materialize (usually, an external table)
+        mat_table_id (str): Target table id for materialization
+        field_name (str, optional): Key field (column) for dbt incremental filters.
+        Defaults to &#34;data_versao&#34;.
+        refresh (bool, optional): If True, rebuild the table from scratch. Defaults to False.
+        wait (NoneType, optional): Placeholder parameter, used to wait previous tasks finish.
+        Defaults to None.
+
+    Returns:
+        bool: whether the table was fully built or not.
+    &#34;&#34;&#34;
+
+    query_project_id = bq_project()
+    last_mat_date = get_table_max_value(
+        query_project_id, dataset_id, mat_table_id, field_name
+    )
+    last_base_date = get_table_max_value(
+        query_project_id, dataset_id, base_table_id, field_name
+    )
+    log(
+        f&#34;&#34;&#34;
+    Base table last version: {last_base_date}
+    Materialized table last version: {last_mat_date}
+    &#34;&#34;&#34;
+    )
+    run_command = f&#34;run --select models/{dataset_id}/{mat_table_id}.sql&#34;
+
+    if refresh:
+        log(&#34;Running in full refresh mode&#34;)
+        log(f&#34;DBT will run the following command:\n{run_command+&#39; --full-refresh&#39;}&#34;)
+        dbt_client.cli(run_command + &#34; --full-refresh&#34;, sync=True)
+        last_mat_date = get_table_max_value(
+            query_project_id, dataset_id, mat_table_id, field_name
+        )
+
+    if last_base_date &gt; last_mat_date:
+        log(&#34;Running interval step materialization&#34;)
+        log(f&#34;DBT will run the following command:\n{run_command}&#34;)
+        while last_base_date &gt; last_mat_date:
+            running = dbt_client.cli(run_command, sync=True)
+            last_mat_date = get_table_max_value(
+                query_project_id,
+                dataset_id,
+                mat_table_id,
+                field_name,
+                wait=running,
+            )
+            log(f&#34;After this step, materialized table last version is: {last_mat_date}&#34;)
+            if last_mat_date == last_base_date:
+                log(&#34;Materialized table reached base table version!&#34;)
+                return True
+    log(&#34;Did not run interval step materialization...&#34;)
+    return False</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.request_data"><code class="name flex">
+<span>def <span class="ident">request_data</span></span>(<span>endpoints: dict)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request data from multiple API's</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>endpoints</code></strong> :&ensp;<code>dict</code></dt>
+<dd>dict contaning the API id, URL and unique_key column</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>e</code></dt>
+<dd>Any exception during the request. Usually timeouts</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>containing the paths for the data saved during each request</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(max_retries=3, retry_delay=timedelta(seconds=30))
+def request_data(endpoints: dict):
+    &#34;&#34;&#34;Request data from multiple API&#39;s
+
+    Args:
+        endpoints (dict): dict contaning the API id, URL and unique_key column
+
+    Raises:
+        e: Any exception during the request. Usually timeouts
+
+    Returns:
+        dict: containing the paths for the data saved during each request
+    &#34;&#34;&#34;
+
+    # Get resources
+    run_date = pendulum.now(constants.TIMEZONE.value).date()
+
+    # Initialize empty dict for storing file paths
+    paths_dict = {}
+
+    # Iterate over endpoints
+    for key in endpoints.keys():
+        log(&#34;#&#34; * 80)
+        log(f&#34;KEY = {key}&#34;)
+
+        # Start with empty contents, page count = 0 and file_id = 0
+        contents = None
+        file_id = 0
+        page_count = 0
+
+        # Setup a template for every CSV file
+        path_template = jinja2.Template(
+            &#34;{{run_date}}/{{key}}/data_versao={{run_date}}/{{key}}_version-{{run_date}}-{{id}}.csv&#34;
+        )
+
+        # The first next_page is the initial URL
+        next_page = endpoints[key][&#34;url&#34;]
+
+        # Iterate over pages
+        while next_page:
+            page_count += 1
+
+            try:
+
+                # Get data
+                log(f&#34;URL = {next_page}&#34;)
+                data = requests.get(
+                    next_page, timeout=constants.SIGMOB_GET_REQUESTS_TIMEOUT.value
+                )
+
+                # Raise exception if not 200
+                data.raise_for_status()
+                data = data.json()
+
+                # Store contents
+                if contents is None:
+                    contents = {
+                        &#34;data&#34;: data[&#34;result&#34;] if &#34;result&#34; in data else data[&#34;data&#34;],
+                        &#34;key_column&#34;: endpoints[key][&#34;key_column&#34;],
+                    }
+                else:
+                    contents[&#34;data&#34;].extend(data[&#34;data&#34;])  # pylint: disable=E1136
+
+                # Get next page
+                if &#34;next&#34; in data and data[&#34;next&#34;] != &#34;EOF&#34; and data[&#34;next&#34;] != &#34;&#34;:
+                    next_page = data[&#34;next&#34;]
+                else:
+                    next_page = None
+
+            except Exception as unknown_error:
+                err = traceback.format_exc()
+                log(err)
+                # log_critical(f&#34;Failed to request data from SIGMOB: \n{err}&#34;)
+                raise unknown_error
+
+            # Create a new file for every (constants.SIGMOB_PAGES_FOR_CSV_FILE.value) pages
+            if page_count % constants.SIGMOB_PAGES_FOR_CSV_FILE.value == 0:
+
+                # Increment file ID
+                file_id += 1
+                # &#34;{{run_date}}/{{key}}/data_versao={{run_date}}/{{key}}_version-{{run_date}}-{{file_id}}.csv&#34;
+                path = Path(
+                    path_template.render(
+                        run_date=run_date, key=key, id=&#34;{:03}&#34;.format(file_id)
+                    )
+                )
+                log(f&#34;Reached page count {page_count}, saving file at {path}&#34;)
+
+                # If it&#39;s the first file, create directories and save path
+                if file_id == 1:
+                    paths_dict[key] = path
+                    path.parent.mkdir(parents=True, exist_ok=True)
+
+                # Save CSV file
+                generate_df_and_save(contents, path)
+
+                # Reset contents
+                contents = None
+
+        # Save last file
+        if contents is not None:
+            file_id += 1
+            path = Path(
+                path_template.render(
+                    run_date=run_date, key=key, id=&#34;{:03}&#34;.format(file_id)
+                )
+            )
+            if file_id == 1:
+                paths_dict[key] = path
+                path.parent.mkdir(parents=True, exist_ok=True)
+            generate_df_and_save(contents, path)
+            log(f&#34;Saved last file with page count {page_count} at {path}&#34;)
+
+        # Move on to the next endpoint.
+
+    # Return paths
+    return paths_dict</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.run_dbt_command"><code class="name flex">
+<span>def <span class="ident">run_dbt_command</span></span>(<span>dbt_client: dbt_client.dbt_client.DbtClient, dataset_id: str = None, table_id: str = None, command: str = 'run', flags: str = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Runs a dbt command. If passing a dataset_id only, will run the entire dataset.
+If also passing a table_id, will select the dbt model specified at the path:
+models/<dataset_id>/<table_id>.sql.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dbt_client</code></strong> :&ensp;<code>DbtClient</code></dt>
+<dd>Dbt interface of interaction</dd>
+<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>dataset_id on BigQuery, also folder name on</dd>
+<dt>your queries repo. Defaults to None.</dt>
+<dt><strong><code>table_id</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>table_id on BigQuery, also .sql file name on your</dd>
+<dt>models folder. Defaults to None.</dt>
+<dt><strong><code>command</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>dbt command to run. Defaults to "run".</dd>
+<dt><strong><code>flags</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>flags allowed to the specific command.</dd>
+<dt>Should be preceeded by "&ndash;" Defaults to None.</dt>
+<dt><strong><code>sync</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd><em>description</em>. Defaults to True.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    checkpoint=False,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def run_dbt_command(
+    dbt_client: DbtClient,
+    dataset_id: str = None,
+    table_id: str = None,
+    command: str = &#34;run&#34;,
+    flags: str = None,
+):
+    &#34;&#34;&#34;
+    Runs a dbt command. If passing a dataset_id only, will run the entire dataset.
+    If also passing a table_id, will select the dbt model specified at the path:
+    models/&lt;dataset_id&gt;/&lt;table_id&gt;.sql.
+
+    Args:
+        dbt_client (DbtClient): Dbt interface of interaction
+        dataset_id (str, optional): dataset_id on BigQuery, also folder name on
+        your queries repo. Defaults to None.
+        table_id (str, optional): table_id on BigQuery, also .sql file name on your
+        models folder. Defaults to None.
+        command (str, optional): dbt command to run. Defaults to &#34;run&#34;.
+        flags (str, optional): flags allowed to the specific command.
+        Should be preceeded by &#34;--&#34; Defaults to None.
+        sync (bool, optional): _description_. Defaults to True.
+    &#34;&#34;&#34;
+    run_command = f&#34;dbt {command}&#34;
+    if dataset_id:
+        run_command += f&#34; --select models/{dataset_id}/&#34;
+        if table_id:
+            run_command += f&#34;{table_id}&#34;
+    if flags:
+        run_command += f&#34; {flags}&#34;
+
+    log(f&#34;Will run the following command:\n{run_command}&#34;)
+    dbt_client.cli(run_command, sync=True)
+    return log(&#34;Finished running dbt command&#34;)</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.run_dbt_schema"><code class="name flex">
+<span>def <span class="ident">run_dbt_schema</span></span>(<span>dbt_client: dbt_client.dbt_client.DbtClient, dataset_id: str, refresh: bool = False, wait=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Run a whole schema (dataset) worth of models</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dbt_client</code></strong> :&ensp;<code>DbtClient</code></dt>
+<dd>Dbt interface of interaction</dd>
+<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Dataset id on BigQuery. Defaults to "br_rj_riodejaneiro_sigmob".</dd>
+<dt><strong><code>refresh</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If true, rebuild all models from scratch. Defaults to False.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    checkpoint=False,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def run_dbt_schema(
+    dbt_client: DbtClient,
+    dataset_id: str,
+    refresh: bool = False,
+    wait=None,  # pylint: disable=unused-argument
+):
+    &#34;&#34;&#34;Run a whole schema (dataset) worth of models
+
+    Args:
+        dbt_client (DbtClient): Dbt interface of interaction
+        dataset_id (str, optional): Dataset id on BigQuery. Defaults to &#34;br_rj_riodejaneiro_sigmob&#34;.
+        refresh (bool, optional): If true, rebuild all models from scratch. Defaults to False.
+
+    Returns:
+        None
+    &#34;&#34;&#34;
+
+    run_command = f&#34;run --select models/{dataset_id}&#34;
+    if refresh:
+        log(f&#34;Will run the following command:\n{run_command} in full refresh mode&#34;)
+        run_command += &#34; --full-refresh&#34;
+    dbt_client.cli(run_command, sync=True)
+    return log(f&#34;Finished running schema {dataset_id}&#34;)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<form>
+<input id="lunr-search" name="q" placeholder="🔎 Search ..." aria-label="Search"
+disabled minlength="2">
+</form>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.css" integrity="sha512-j1u8eUJ4f23xPPxwOrLUPQaCD2dwzNqqmDDcWS4deWsMv2ohLqmXXuP3hU7g8TyzbMSakP/mMqoNBYWj8AEIFg==" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.js" integrity="sha512-plGUER9JkeEWPPqQBE4sdLqBoQug5Ap+BCGMc7bJ8BXkm+VVj6QzkpBz5Yv2yPkkq+cqg9IpkBaGCas6uDbW8g==" crossorigin></script>
+<style>
+.modal-dialog iframe {
+width: 100vw;
+height: calc(100vh - 80px);
+}
+@media screen and (min-width: 700px) {
+.modal-dialog iframe {
+width: 70vw;
+height: 80vh;
+}
+}
+.modal-dialog .tingle-modal-box {width: auto;}
+.modal-dialog .tingle-modal-box__content {padding: 0;}
+</style>
+<script>
+const input = document.getElementById('lunr-search');
+input.disabled = false;
+input.form.addEventListener('submit', (ev) => {
+ev.preventDefault();
+const url = new URL(window.location);
+url.searchParams.set('q', input.value);
+history.replaceState({}, null, url.toString());
+search(input.value);
+});
+const query = new URL(window.location).searchParams.get('q');
+if (query)
+search(query);
+function search(query) {
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
+new tingle.modal({
+cssClass: ['modal-dialog'],
+onClose: () => {
+const url = new URL(window.location);
+url.searchParams.delete('q');
+history.replaceState({}, null, url.toString());
+setTimeout(() => input.focus(), 100);
+}
+}).setContent('<iframe src="' + url + '"></iframe>').open();
+}
+</script>
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_sigmob" href="index.html">pipelines.rj_smtr.br_rj_riodejaneiro_sigmob</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.build_incremental_model" href="#pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.build_incremental_model">build_incremental_model</a></code></li>
+<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.request_data" href="#pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.request_data">request_data</a></code></li>
+<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.run_dbt_command" href="#pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.run_dbt_command">run_dbt_command</a></code></li>
+<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.run_dbt_schema" href="#pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.run_dbt_schema">run_dbt_schema</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

@@ -58,7 +58,12 @@ General purpose functions for rj_smtr
 # ```
 #
 ###############################################################################
+from pathlib import Path
+
+import basedosdados as bd
 from basedosdados import Table
+import pandas as pd
+
 
 from pipelines.utils.utils import log
 
@@ -93,7 +98,64 @@ def create_or_append_table(dataset_id, table_id, path):
 #     tb_obj.publish(if_exists=&#34;pass&#34;)
 #     log(&#34;Published table in PROD successfully.&#34;)
 # else:
-#     log(&#34;Table already published in PROD.&#34;)</code></pre>
+#     log(&#34;Table already published in PROD.&#34;)
+
+
+def generate_df_and_save(data: dict, fname: Path):
+    &#34;&#34;&#34;Save DataFrame as csv
+
+    Args:
+        data (dict): dict with the data which to build the DataFrame
+        fname (Path): _description_
+    &#34;&#34;&#34;
+    # Generate dataframe
+    dataframe = pd.DataFrame()
+    dataframe[data[&#34;key_column&#34;]] = [
+        piece[data[&#34;key_column&#34;]] for piece in data[&#34;data&#34;]
+    ]
+    dataframe[&#34;content&#34;] = list(data[&#34;data&#34;])
+
+    # Save dataframe to CSV
+    dataframe.to_csv(fname, index=False)
+
+
+def bq_project(kind: str = &#34;bigquery_prod&#34;):
+    &#34;&#34;&#34;Get the set BigQuery project_id
+
+    Args:
+        kind (str, optional): Which client to get the project name from.
+        Options are &#39;bigquery_staging&#39;, &#39;bigquery_prod&#39; and &#39;storage_staging&#39;
+        Defaults to &#39;bigquery_prod&#39;.
+
+    Returns:
+        str: the requested project_id
+    &#34;&#34;&#34;
+    return bd.upload.base.Base().client[kind].project
+
+
+def get_table_max_value(
+    query_project_id: str,
+    dataset_id: str,
+    table_id: str,
+    field_name: str,
+    wait=None,  # pylint: disable=unused-argument
+):
+    &#34;&#34;&#34;Query a table to get the maximum value for the chosen field.
+    Useful to incrementally materialize tables via DBT
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+        field_name (str): column name to query
+    &#34;&#34;&#34;
+    query = f&#34;&#34;&#34;
+        SELECT
+            max({field_name})
+        FROM {query_project_id}.{dataset_id}.{table_id}
+    &#34;&#34;&#34;
+    result = bd.read_sql(query=query, billing_project_id=bq_project())
+
+    return result.iloc[0][0]</code></pre>
 </details>
 </section>
 <section>
@@ -103,6 +165,41 @@ def create_or_append_table(dataset_id, table_id, path):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="pipelines.rj_smtr.utils.bq_project"><code class="name flex">
+<span>def <span class="ident">bq_project</span></span>(<span>kind: str = 'bigquery_prod')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the set BigQuery project_id</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>kind</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Which client to get the project name from.</dd>
+</dl>
+<p>Options are 'bigquery_staging', 'bigquery_prod' and 'storage_staging'
+Defaults to 'bigquery_prod'.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>the requested project_id</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def bq_project(kind: str = &#34;bigquery_prod&#34;):
+    &#34;&#34;&#34;Get the set BigQuery project_id
+
+    Args:
+        kind (str, optional): Which client to get the project name from.
+        Options are &#39;bigquery_staging&#39;, &#39;bigquery_prod&#39; and &#39;storage_staging&#39;
+        Defaults to &#39;bigquery_prod&#39;.
+
+    Returns:
+        str: the requested project_id
+    &#34;&#34;&#34;
+    return bd.upload.base.Base().client[kind].project</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_smtr.utils.create_or_append_table"><code class="name flex">
 <span>def <span class="ident">create_or_append_table</span></span>(<span>dataset_id, table_id, path)</span>
 </code></dt>
@@ -143,6 +240,84 @@ def create_or_append_table(dataset_id, table_id, path):
         log(&#34;Table already exists in STAGING, appending to it...&#34;)
         tb_obj.append(filepath=path, if_exists=&#34;replace&#34;, timeout=600)
         log(&#34;Appended to table on STAGING successfully.&#34;)</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.utils.generate_df_and_save"><code class="name flex">
+<span>def <span class="ident">generate_df_and_save</span></span>(<span>data: dict, fname: pathlib.Path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Save DataFrame as csv</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>dict</code></dt>
+<dd>dict with the data which to build the DataFrame</dd>
+<dt><strong><code>fname</code></strong> :&ensp;<code>Path</code></dt>
+<dd><em>description</em></dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def generate_df_and_save(data: dict, fname: Path):
+    &#34;&#34;&#34;Save DataFrame as csv
+
+    Args:
+        data (dict): dict with the data which to build the DataFrame
+        fname (Path): _description_
+    &#34;&#34;&#34;
+    # Generate dataframe
+    dataframe = pd.DataFrame()
+    dataframe[data[&#34;key_column&#34;]] = [
+        piece[data[&#34;key_column&#34;]] for piece in data[&#34;data&#34;]
+    ]
+    dataframe[&#34;content&#34;] = list(data[&#34;data&#34;])
+
+    # Save dataframe to CSV
+    dataframe.to_csv(fname, index=False)</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.utils.get_table_max_value"><code class="name flex">
+<span>def <span class="ident">get_table_max_value</span></span>(<span>query_project_id: str, dataset_id: str, table_id: str, field_name: str, wait=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Query a table to get the maximum value for the chosen field.
+Useful to incrementally materialize tables via DBT</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>dataset_id on BigQuery</dd>
+<dt><strong><code>table_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>table_id on BigQuery</dd>
+<dt><strong><code>field_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>column name to query</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_table_max_value(
+    query_project_id: str,
+    dataset_id: str,
+    table_id: str,
+    field_name: str,
+    wait=None,  # pylint: disable=unused-argument
+):
+    &#34;&#34;&#34;Query a table to get the maximum value for the chosen field.
+    Useful to incrementally materialize tables via DBT
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+        field_name (str): column name to query
+    &#34;&#34;&#34;
+    query = f&#34;&#34;&#34;
+        SELECT
+            max({field_name})
+        FROM {query_project_id}.{dataset_id}.{table_id}
+    &#34;&#34;&#34;
+    result = bd.read_sql(query=query, billing_project_id=bq_project())
+
+    return result.iloc[0][0]</code></pre>
 </details>
 </dd>
 </dl>
@@ -209,7 +384,10 @@ setTimeout(() => input.focus(), 100);
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="pipelines.rj_smtr.utils.bq_project" href="#pipelines.rj_smtr.utils.bq_project">bq_project</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.create_or_append_table" href="#pipelines.rj_smtr.utils.create_or_append_table">create_or_append_table</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.generate_df_and_save" href="#pipelines.rj_smtr.utils.generate_df_and_save">generate_df_and_save</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.get_table_max_value" href="#pipelines.rj_smtr.utils.get_table_max_value">get_table_max_value</a></code></li>
 </ul>
 </li>
 </ul>
