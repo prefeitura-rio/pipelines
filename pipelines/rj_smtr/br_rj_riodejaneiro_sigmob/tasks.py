@@ -128,7 +128,7 @@ def request_data(endpoints: dict):
                         "key_column": endpoints[key]["key_column"],
                     }
                 else:
-                    contents["data"].extend(data["data"])
+                    contents["data"].extend(data["data"])  # pylint: disable=E1136
 
                 # Get next page
                 if "next" in data and data["next"] != "EOF" and data["next"] != "":

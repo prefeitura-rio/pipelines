@@ -94,23 +94,23 @@ with Flow(
     dbt_client = get_k8s_dbt_client(mode="dev")
     # For local development: comment above and uncomment below
     # dbt_client = get_local_dbt_client(host="localhost", port=3001)
-    run = run_dbt_schema(dbt_client=dbt_client, dataset_id=dataset_id, refresh=backfill)
+    RUN = run_dbt_schema(dbt_client=dbt_client, dataset_id=dataset_id, refresh=backfill)
     with case(backfill, True):
-        incremental_run = build_incremental_model(
+        INCREMENTAL_RUN = build_incremental_model(
             dbt_client=dbt_client,
             dataset_id=dataset_id,
             base_table_id="shapes",
             mat_table_id="shapes_geom",
-            wait=run,
+            wait=RUN,
         )
-        last_run = run_dbt_command(
+        LAST_RUN = run_dbt_command(
             dbt_client=dbt_client,
             dataset_id=dataset_id,
             table_id="data_versao_efetiva",
             flags="--full-refresh",
         )
     materialize_sigmob.set_dependencies(
-        task=last_run, upstream_tasks=[dbt_client, run, incremental_run]
+        task=LAST_RUN, upstream_tasks=[dbt_client, RUN, INCREMENTAL_RUN]
     )
 
 with Flow(
@@ -132,7 +132,7 @@ with Flow(
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             parameters={"dataset_id": "br_rj_riodejaneiro_sigmob", "backfill": False},
             labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
-            run_name="SMTR - Atualizar tabelas após captura",
+            run_name="SMTR - Materialzar SIGMOB após captura",
         )
         materialize_run.set_upstream(bq_upload)
     wait_for_materialization = wait_for_flow_run(
