@@ -81,7 +81,7 @@ every_day = Schedule(
             interval=timedelta(days=1),
             start_date=datetime(2021, 1, 1),
             labels=[
-                constants.RJ_SMTR_AGENT_LABEL.value,
+                constants.RJ_SMTR_DEV_AGENT_LABEL.value,
             ],
         ),
     ]
