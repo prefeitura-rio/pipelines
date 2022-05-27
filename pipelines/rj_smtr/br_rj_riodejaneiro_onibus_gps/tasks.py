@@ -133,9 +133,9 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(status_dict: dict):
             error = ValueError("After filtering, the dataframe is empty!")
             log_critical(f"@here\nFailed to filter SPPO data: \n{error}")
         df = df_treated  # pylint: disable=C0103
-    except Exception:  # pylint: disable = W0702
+    except Exception:  # pylint: disable = W0703
         err = traceback.format_exc()
         log_critical(f"@here\nFailed to filter SPPO data: \n{err}")
-    log_critical(f"@here\n Got SPPO data at {timestamp} sucessfully")
+    # log_critical(f"@here\n Got SPPO data at {timestamp} sucessfully")
 
     return {"df": df, "error": error}

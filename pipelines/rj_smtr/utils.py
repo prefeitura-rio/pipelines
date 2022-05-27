@@ -142,5 +142,5 @@ def log_critical(message: str, secret_path: str = constants.CRITICAL_SECRET_PATH
             Defaults to constants.CRITICAL_SECRET_PATH.value.
     _
     """
-    url = get_vault_secret(secret_path=secret_path)["data"]["webhook"]
+    url = get_vault_secret(secret_path=secret_path)["data"]["url"]
     return send_discord_message(message=message, webhook_url=url)

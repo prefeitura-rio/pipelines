@@ -72,6 +72,7 @@ from pipelines.rj_smtr.tasks import (
     bq_upload,
 )
 from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.constants import constants
+from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.schedules import every_minute
 from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
     pre_treatment_br_rj_riodejaneiro_onibus_gps,
 )
@@ -129,4 +130,4 @@ with Flow(
 
 captura_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_sppo.run_config = KubernetesRun(image=emd_constants.DOCKER_IMAGE.value)
-# flow.schedule = every_two_weeks
+captura_sppo.schedule = every_minute

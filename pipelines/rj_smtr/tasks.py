@@ -343,7 +343,7 @@ def upload_logs_to_bq(dataset_id, parent_table_id, timestamp, error):
     dataframe.to_csv(filepath, index=False)
     # BD Table object
     create_or_append_table(
-        dataset_id=dataset_id, table_id=table_id, path=filepath.parent
+        dataset_id=dataset_id, table_id=table_id, path=filepath.parent.parent
     )
     # delete local file
     # shutil.rmtree(f"{timestamp}")
