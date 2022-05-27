@@ -35,8 +35,12 @@ import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
 
-
-from pipelines.utils.utils import log
+from pipelines.rj_smtr.constants import constants
+from pipelines.utils.utils import (
+    log,
+    send_discord_message,
+    get_vault_secret,
+)
 
 
 def create_or_append_table(dataset_id, table_id, path):
@@ -127,3 +131,16 @@ def get_table_max_value(
     result = bd.read_sql(query=query, billing_project_id=bq_project())
 
     return result.iloc[0][0]
+
+
+def log_critical(message: str, secret_path: str = constants.CRITICAL_SECRET_PATH.value):
+    """Logs message to critical discord channel specified
+
+        Args:
+            message (str): Message to post on the channel
+            secret_path (str, optional): Secret path storing the webhook to critical channel.
+            Defaults to constants.CRITICAL_SECRET_PATH.value.
+    _
+    """
+    url = get_vault_secret(secret_path=secret_path)["data"]["webhook"]
+    return send_discord_message(message=message, webhook_url=url)

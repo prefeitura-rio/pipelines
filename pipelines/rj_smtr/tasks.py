@@ -189,6 +189,10 @@ def get_raw(url, headers=None, kind: str = None):
     """
     if kind == "stpl":
         headers = get_vault_secret("stpl_api")["data"]
+    if kind == "sppo":
+        access = get_vault_secret("sppo_api")["data"]
+        key = list(access)[0]
+        url = f"{url}{key}={access[key]}"
     data = None
     error = None
     timestamp = pendulum.now(constants.TIMEZONE.value)
@@ -338,6 +342,8 @@ def upload_logs_to_bq(dataset_id, parent_table_id, timestamp, error):
     # save local
     dataframe.to_csv(filepath, index=False)
     # BD Table object
-    create_or_append_table(dataset_id=dataset_id, table_id=table_id, path=filepath)
+    create_or_append_table(
+        dataset_id=dataset_id, table_id=table_id, path=filepath.parent
+    )
     # delete local file
     # shutil.rmtree(f"{timestamp}")
