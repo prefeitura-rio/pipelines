@@ -40,6 +40,7 @@ from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.decorators import Flow
 from pipelines.utils.dump_to_gcs.constants import constants as dump_to_gcs_constants
 from pipelines.utils.dump_to_gcs.tasks import download_data_to_gcs
+from pipelines.utils.tasks import rename_current_flow_run_dataset_table
 
 with Flow(
     name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
@@ -62,6 +63,10 @@ with Flow(
         &#34;maximum_bytes_processed&#34;,
         required=False,
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
+    )
+
+    rename_flow_run = rename_current_flow_run_dataset_table(
+        prefix=&#34;Dump to GCS: &#34;, dataset_id=dataset_id, table_id=table_id
     )
 
     download_data_to_gcs(
