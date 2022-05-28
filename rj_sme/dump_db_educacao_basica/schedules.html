@@ -50,6 +50,8 @@ from pipelines.utils.utils import untuple_clocks as untuple
 sme_queries = {
     &#34;avaliacao&#34;: {
         &#34;materialize_after_dump&#34;: True,
+        &#34;materialize_to_datario&#34;: True,
+        &#34;dump_to_gcs&#34;: True,
         &#34;partition_columns&#34;: &#34;Ano&#34;,
         &#34;partition_date_format&#34;: &#34;%Y&#34;,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
@@ -58,6 +60,8 @@ sme_queries = {
     },
     &#34;coc&#34;: {  # essa tabela utiliza a view coc0 pois contem o coc 0 e de 1 a 5
         &#34;materialize_after_dump&#34;: True,
+        &#34;materialize_to_datario&#34;: True,
+        &#34;dump_to_gcs&#34;: True,
         &#34;partition_columns&#34;: &#34;Ano&#34;,
         &#34;partition_date_format&#34;: &#34;%Y&#34;,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
@@ -93,6 +97,8 @@ sme_queries = {
         &#34;partition_date_format&#34;: &#34;%Y-%m-%d&#34;,
         &#34;lower_bound_date&#34;: &#34;2022-03-01&#34;,
         &#34;materialize_after_dump&#34;: True,
+        &#34;materialize_to_datario&#34;: True,
+        &#34;dump_to_gcs&#34;: True,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_mode&#34;: &#34;append&#34;,
         &#34;execute_query&#34;: &#34;&#34;&#34;
@@ -120,6 +126,8 @@ sme_queries = {
         &#34;partition_date_format&#34;: &#34;%Y-%m-%d&#34;,
         &#34;lower_bound_date&#34;: &#34;2022-03-01&#34;,
         &#34;materialize_after_dump&#34;: True,
+        &#34;materialize_to_datario&#34;: True,
+        &#34;dump_to_gcs&#34;: True,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_mode&#34;: &#34;append&#34;,
         &#34;execute_query&#34;: &#34;SELECT * FROM GestaoEscolar.dbo.VW_BI_Movimentacao_lgpd&#34;,
@@ -127,17 +135,23 @@ sme_queries = {
     &#34;turma&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
         &#34;materialize_after_dump&#34;: True,
+        &#34;materialize_to_datario&#34;: True,
+        &#34;dump_to_gcs&#34;: True,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;execute_query&#34;: &#34;SELECT * FROM GestaoEscolar.dbo.VW_BI_Turma&#34;,
     },
     &#34;dependencia&#34;: {
         &#34;materialize_after_dump&#34;: True,
+        &#34;materialize_to_datario&#34;: True,
+        &#34;dump_to_gcs&#34;: True,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
         &#34;execute_query&#34;: &#34;SELECT * FROM GestaoEscolar.dbo.VW_BI_Dependencia&#34;,
     },
     &#34;escola&#34;: {
         &#34;materialize_after_dump&#34;: True,
+        &#34;materialize_to_datario&#34;: True,
+        &#34;dump_to_gcs&#34;: True,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
         &#34;execute_query&#34;: &#34;&#34;&#34;
@@ -190,6 +204,8 @@ sme_queries = {
     },
     &#34;aluno&#34;: {
         &#34;materialize_after_dump&#34;: True,
+        &#34;materialize_to_datario&#34;: True,
+        &#34;dump_to_gcs&#34;: True,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
         &#34;execute_query&#34;: &#34;&#34;&#34;
