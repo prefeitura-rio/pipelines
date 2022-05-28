@@ -3,6 +3,8 @@
 General utilities for all pipelines.
 """
 
+import base64
+import json
 import logging
 from os import getenv, walk
 from os.path import join
@@ -11,6 +13,9 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
 
 import basedosdados as bd
+from google.cloud import storage
+from google.cloud.storage.blob import Blob
+from google.oauth2 import service_account
 import hvac
 import numpy as np
 import pandas as pd
@@ -436,6 +441,20 @@ def to_partitions(
 ###############
 
 
+def get_credentials_from_env(mode: str = "prod") -> service_account.Credentials:
+    """
+    Gets credentials from env vars
+    """
+    if mode not in ["prod", "staging"]:
+        raise ValueError("Mode must be 'prod' or 'staging'")
+    env: str = getenv(f"BASEDOSDADOS_CREDENTIALS_{mode.upper()}", "")
+    if env == "":
+        raise ValueError(f"BASEDOSDADOS_CREDENTIALS_{mode.upper()} env var not set!")
+    info: dict = json.loads(base64.b64decode(env))
+
+    return service_account.Credentials.from_service_account_info(info)
+
+
 def get_storage_blobs(dataset_id: str, table_id: str) -> list:
     """
     Get all blobs from a table in a dataset.
@@ -447,6 +466,24 @@ def get_storage_blobs(dataset_id: str, table_id: str) -> list:
         .bucket(storage.bucket_name)
         .list_blobs(prefix=f"staging/{storage.dataset_id}/{storage.table_id}/")
     )
+
+
+def list_blobs_with_prefix(
+    bucket_name: str, prefix: str, mode: str = "prod"
+) -> List[Blob]:
+    """
+    Lists all the blobs in the bucket that begin with the prefix.
+    This can be used to list all blobs in a "folder", e.g. "public/".
+    Mode needs to be "prod" or "staging"
+    """
+
+    credentials = get_credentials_from_env(mode=mode)
+    storage_client = storage.Client(credentials=credentials)
+
+    # Note: Client.list_blobs requires at least package version 1.17.0.
+    blobs: List[Blob] = storage_client.list_blobs(bucket_name, prefix=prefix)
+
+    return blobs
 
 
 def parser_blobs_to_partition_dict(blobs: list) -> dict:

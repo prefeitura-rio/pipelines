@@ -12,7 +12,7 @@ import jinja2
 from prefect import task
 
 from pipelines.utils.dump_to_gcs.constants import constants as dump_to_gcs_constants
-from pipelines.utils.utils import human_readable, log
+from pipelines.utils.utils import human_readable, list_blobs_with_prefix, log
 
 
 @task
@@ -144,3 +144,14 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
     )
     extract_job.result()
     log("Data was loaded successfully")
+
+    # Get the BLOB we've just created and make it public
+    blobs = list_blobs_with_prefix(
+        "datario", f"share/{dataset_id}/{table_id}/data.csv.gz"
+    )
+    if not blobs:
+        raise ValueError(f"No blob found at {blob_path}")
+    blob = blobs[0]
+    log(f"Blob found at {blob.name}")
+    blob.make_public()
+    log("Blob was made public")
