@@ -32,6 +32,8 @@
 General utilities for all pipelines.
 &#34;&#34;&#34;
 
+import base64
+import json
 import logging
 from os import getenv, walk
 from os.path import join
@@ -40,6 +42,9 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
 
 import basedosdados as bd
+from google.cloud import storage
+from google.cloud.storage.blob import Blob
+from google.oauth2 import service_account
 import hvac
 import numpy as np
 import pandas as pd
@@ -465,17 +470,49 @@ def to_partitions(
 ###############
 
 
+def get_credentials_from_env(mode: str = &#34;prod&#34;) -&gt; service_account.Credentials:
+    &#34;&#34;&#34;
+    Gets credentials from env vars
+    &#34;&#34;&#34;
+    if mode not in [&#34;prod&#34;, &#34;staging&#34;]:
+        raise ValueError(&#34;Mode must be &#39;prod&#39; or &#39;staging&#39;&#34;)
+    env: str = getenv(f&#34;BASEDOSDADOS_CREDENTIALS_{mode.upper()}&#34;, &#34;&#34;)
+    if env == &#34;&#34;:
+        raise ValueError(f&#34;BASEDOSDADOS_CREDENTIALS_{mode.upper()} env var not set!&#34;)
+    info: dict = json.loads(base64.b64decode(env))
+
+    return service_account.Credentials.from_service_account_info(info)
+
+
 def get_storage_blobs(dataset_id: str, table_id: str) -&gt; list:
     &#34;&#34;&#34;
     Get all blobs from a table in a dataset.
     &#34;&#34;&#34;
 
-    storage = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+    bd_storage = bd.Storage(dataset_id=dataset_id, table_id=table_id)
     return list(
-        storage.client[&#34;storage_staging&#34;]
-        .bucket(storage.bucket_name)
-        .list_blobs(prefix=f&#34;staging/{storage.dataset_id}/{storage.table_id}/&#34;)
+        bd_storage.client[&#34;storage_staging&#34;]
+        .bucket(bd_storage.bucket_name)
+        .list_blobs(prefix=f&#34;staging/{bd_storage.dataset_id}/{bd_storage.table_id}/&#34;)
     )
+
+
+def list_blobs_with_prefix(
+    bucket_name: str, prefix: str, mode: str = &#34;prod&#34;
+) -&gt; List[Blob]:
+    &#34;&#34;&#34;
+    Lists all the blobs in the bucket that begin with the prefix.
+    This can be used to list all blobs in a &#34;folder&#34;, e.g. &#34;public/&#34;.
+    Mode needs to be &#34;prod&#34; or &#34;staging&#34;
+    &#34;&#34;&#34;
+
+    credentials = get_credentials_from_env(mode=mode)
+    storage_client = storage.Client(credentials=credentials)
+
+    # Note: Client.list_blobs requires at least package version 1.17.0.
+    blobs: List[Blob] = storage_client.list_blobs(bucket_name, prefix=prefix)
+
+    return blobs
 
 
 def parser_blobs_to_partition_dict(blobs: list) -&gt; dict:
@@ -722,6 +759,29 @@ def dump_header_to_file(data_path: Union[str, Path], data_type: str = &#34;csv&#
     return save_header_path</code></pre>
 </details>
 </dd>
+<dt id="pipelines.utils.utils.get_credentials_from_env"><code class="name flex">
+<span>def <span class="ident">get_credentials_from_env</span></span>(<span>mode: str = 'prod') ‑> google.oauth2.service_account.Credentials</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Gets credentials from env vars</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_credentials_from_env(mode: str = &#34;prod&#34;) -&gt; service_account.Credentials:
+    &#34;&#34;&#34;
+    Gets credentials from env vars
+    &#34;&#34;&#34;
+    if mode not in [&#34;prod&#34;, &#34;staging&#34;]:
+        raise ValueError(&#34;Mode must be &#39;prod&#39; or &#39;staging&#39;&#34;)
+    env: str = getenv(f&#34;BASEDOSDADOS_CREDENTIALS_{mode.upper()}&#34;, &#34;&#34;)
+    if env == &#34;&#34;:
+        raise ValueError(f&#34;BASEDOSDADOS_CREDENTIALS_{mode.upper()} env var not set!&#34;)
+    info: dict = json.loads(base64.b64decode(env))
+
+    return service_account.Credentials.from_service_account_info(info)</code></pre>
+</details>
+</dd>
 <dt id="pipelines.utils.utils.get_storage_blobs"><code class="name flex">
 <span>def <span class="ident">get_storage_blobs</span></span>(<span>dataset_id: str, table_id: str) ‑> list</span>
 </code></dt>
@@ -736,11 +796,11 @@ def dump_header_to_file(data_path: Union[str, Path], data_type: str = &#34;csv&#
     Get all blobs from a table in a dataset.
     &#34;&#34;&#34;
 
-    storage = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+    bd_storage = bd.Storage(dataset_id=dataset_id, table_id=table_id)
     return list(
-        storage.client[&#34;storage_staging&#34;]
-        .bucket(storage.bucket_name)
-        .list_blobs(prefix=f&#34;staging/{storage.dataset_id}/{storage.table_id}/&#34;)
+        bd_storage.client[&#34;storage_staging&#34;]
+        .bucket(bd_storage.bucket_name)
+        .list_blobs(prefix=f&#34;staging/{bd_storage.dataset_id}/{bd_storage.table_id}/&#34;)
     )</code></pre>
 </details>
 </dd>
@@ -833,6 +893,35 @@ def dump_header_to_file(data_path: Union[str, Path], data_type: str = &#34;csv&#
         unit_prefix = prefix
         value /= unit_divider
     return f&#34;{value:.{decimal_places}f}{unit_prefix}{unit}&#34;</code></pre>
+</details>
+</dd>
+<dt id="pipelines.utils.utils.list_blobs_with_prefix"><code class="name flex">
+<span>def <span class="ident">list_blobs_with_prefix</span></span>(<span>bucket_name: str, prefix: str, mode: str = 'prod') ‑> List[google.cloud.storage.blob.Blob]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Lists all the blobs in the bucket that begin with the prefix.
+This can be used to list all blobs in a "folder", e.g. "public/".
+Mode needs to be "prod" or "staging"</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def list_blobs_with_prefix(
+    bucket_name: str, prefix: str, mode: str = &#34;prod&#34;
+) -&gt; List[Blob]:
+    &#34;&#34;&#34;
+    Lists all the blobs in the bucket that begin with the prefix.
+    This can be used to list all blobs in a &#34;folder&#34;, e.g. &#34;public/&#34;.
+    Mode needs to be &#34;prod&#34; or &#34;staging&#34;
+    &#34;&#34;&#34;
+
+    credentials = get_credentials_from_env(mode=mode)
+    storage_client = storage.Client(credentials=credentials)
+
+    # Note: Client.list_blobs requires at least package version 1.17.0.
+    blobs: List[Blob] = storage_client.list_blobs(bucket_name, prefix=prefix)
+
+    return blobs</code></pre>
 </details>
 </dd>
 <dt id="pipelines.utils.utils.log"><code class="name flex">
@@ -1330,11 +1419,13 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.utils.utils.dataframe_to_csv" href="#pipelines.utils.utils.dataframe_to_csv">dataframe_to_csv</a></code></li>
 <li><code><a title="pipelines.utils.utils.dataframe_to_parquet" href="#pipelines.utils.utils.dataframe_to_parquet">dataframe_to_parquet</a></code></li>
 <li><code><a title="pipelines.utils.utils.dump_header_to_file" href="#pipelines.utils.utils.dump_header_to_file">dump_header_to_file</a></code></li>
+<li><code><a title="pipelines.utils.utils.get_credentials_from_env" href="#pipelines.utils.utils.get_credentials_from_env">get_credentials_from_env</a></code></li>
 <li><code><a title="pipelines.utils.utils.get_storage_blobs" href="#pipelines.utils.utils.get_storage_blobs">get_storage_blobs</a></code></li>
 <li><code><a title="pipelines.utils.utils.get_username_and_password_from_secret" href="#pipelines.utils.utils.get_username_and_password_from_secret">get_username_and_password_from_secret</a></code></li>
 <li><code><a title="pipelines.utils.utils.get_vault_client" href="#pipelines.utils.utils.get_vault_client">get_vault_client</a></code></li>
 <li><code><a title="pipelines.utils.utils.get_vault_secret" href="#pipelines.utils.utils.get_vault_secret">get_vault_secret</a></code></li>
 <li><code><a title="pipelines.utils.utils.human_readable" href="#pipelines.utils.utils.human_readable">human_readable</a></code></li>
+<li><code><a title="pipelines.utils.utils.list_blobs_with_prefix" href="#pipelines.utils.utils.list_blobs_with_prefix">list_blobs_with_prefix</a></code></li>
 <li><code><a title="pipelines.utils.utils.log" href="#pipelines.utils.utils.log">log</a></code></li>
 <li><code><a title="pipelines.utils.utils.notify_discord_on_failure" href="#pipelines.utils.utils.notify_discord_on_failure">notify_discord_on_failure</a></code></li>
 <li><code><a title="pipelines.utils.utils.parser_blobs_to_partition_dict" href="#pipelines.utils.utils.parser_blobs_to_partition_dict">parser_blobs_to_partition_dict</a></code></li>

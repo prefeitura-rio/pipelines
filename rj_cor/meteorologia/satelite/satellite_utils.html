@@ -90,14 +90,11 @@ Funções úteis no tratamento de dados de satélite
 # Required Libraries
 # ====================================================================
 
-import base64
 import datetime
-import json
 import os
 from pathlib import Path
 from typing import Tuple, Union
 
-from google.oauth2 import service_account
 from google.cloud import storage
 import netCDF4 as nc
 import numpy as np
@@ -107,43 +104,17 @@ import pendulum
 import xarray as xr
 
 from pipelines.rj_cor.meteorologia.satelite.remap import remap
-from pipelines.utils.utils import log
+from pipelines.utils.utils import get_credentials_from_env, list_blobs_with_prefix, log
 
 
-def get_credentials_from_env(mode: str = &#34;prod&#34;) -&gt; service_account.Credentials:
-    &#34;&#34;&#34;
-    Gets credentials from env vars
-    &#34;&#34;&#34;
-    if mode not in [&#34;prod&#34;, &#34;staging&#34;]:
-        raise ValueError(&#34;Mode must be &#39;prod&#39; or &#39;staging&#39;&#34;)
-    env: str = os.getenv(f&#34;BASEDOSDADOS_CREDENTIALS_{mode.upper()}&#34;, &#34;&#34;)
-    if env == &#34;&#34;:
-        raise ValueError(f&#34;BASEDOSDADOS_CREDENTIALS_{mode.upper()} env var not set!&#34;)
-    info: dict = json.loads(base64.b64decode(env))
-
-    return service_account.Credentials.from_service_account_info(info)
-
-
-def list_blobs_with_prefix(bucket_name: str, prefix: str, mode: str = &#34;prod&#34;) -&gt; str:
+def get_blob_with_prefix(bucket_name: str, prefix: str, mode: str = &#34;prod&#34;) -&gt; str:
     &#34;&#34;&#34;
     Lists all the blobs in the bucket that begin with the prefix.
     This can be used to list all blobs in a &#34;folder&#34;, e.g. &#34;public/&#34;.
     Mode needs to be &#34;prod&#34; or &#34;staging&#34;
     &#34;&#34;&#34;
-
-    credentials = get_credentials_from_env(mode=mode)
-    storage_client = storage.Client(credentials=credentials)
-
-    # Note: Client.list_blobs requires at least package version 1.17.0.
-    blobs = storage_client.list_blobs(bucket_name, prefix=prefix)
-
-    files = []
-
-    for blob in blobs:
-        files.append(blob.name)
-
+    files = [b.name for b in list_blobs_with_prefix(bucket_name, prefix, mode)]
     files.sort()
-
     return files[0]
 
 
@@ -708,27 +679,26 @@ Mode needs to be "prod" or "staging"</p>
     )</code></pre>
 </details>
 </dd>
-<dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_credentials_from_env"><code class="name flex">
-<span>def <span class="ident">get_credentials_from_env</span></span>(<span>mode: str = 'prod') ‑> google.oauth2.service_account.Credentials</span>
+<dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_blob_with_prefix"><code class="name flex">
+<span>def <span class="ident">get_blob_with_prefix</span></span>(<span>bucket_name: str, prefix: str, mode: str = 'prod') ‑> str</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Gets credentials from env vars</p></div>
+<div class="desc"><p>Lists all the blobs in the bucket that begin with the prefix.
+This can be used to list all blobs in a "folder", e.g. "public/".
+Mode needs to be "prod" or "staging"</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_credentials_from_env(mode: str = &#34;prod&#34;) -&gt; service_account.Credentials:
+<pre><code class="python">def get_blob_with_prefix(bucket_name: str, prefix: str, mode: str = &#34;prod&#34;) -&gt; str:
     &#34;&#34;&#34;
-    Gets credentials from env vars
+    Lists all the blobs in the bucket that begin with the prefix.
+    This can be used to list all blobs in a &#34;folder&#34;, e.g. &#34;public/&#34;.
+    Mode needs to be &#34;prod&#34; or &#34;staging&#34;
     &#34;&#34;&#34;
-    if mode not in [&#34;prod&#34;, &#34;staging&#34;]:
-        raise ValueError(&#34;Mode must be &#39;prod&#39; or &#39;staging&#39;&#34;)
-    env: str = os.getenv(f&#34;BASEDOSDADOS_CREDENTIALS_{mode.upper()}&#34;, &#34;&#34;)
-    if env == &#34;&#34;:
-        raise ValueError(f&#34;BASEDOSDADOS_CREDENTIALS_{mode.upper()} env var not set!&#34;)
-    info: dict = json.loads(base64.b64decode(env))
-
-    return service_account.Credentials.from_service_account_info(info)</code></pre>
+    files = [b.name for b in list_blobs_with_prefix(bucket_name, prefix, mode)]
+    files.sort()
+    return files[0]</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_goes_extent"><code class="name flex">
@@ -957,40 +927,6 @@ Mode needs to be "prod" or "staging"</p>
         product_caracteristics[&#34;band&#34;] = np.nan
 
     return product_caracteristics, datetime_save</code></pre>
-</details>
-</dd>
-<dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.list_blobs_with_prefix"><code class="name flex">
-<span>def <span class="ident">list_blobs_with_prefix</span></span>(<span>bucket_name: str, prefix: str, mode: str = 'prod') ‑> str</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Lists all the blobs in the bucket that begin with the prefix.
-This can be used to list all blobs in a "folder", e.g. "public/".
-Mode needs to be "prod" or "staging"</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def list_blobs_with_prefix(bucket_name: str, prefix: str, mode: str = &#34;prod&#34;) -&gt; str:
-    &#34;&#34;&#34;
-    Lists all the blobs in the bucket that begin with the prefix.
-    This can be used to list all blobs in a &#34;folder&#34;, e.g. &#34;public/&#34;.
-    Mode needs to be &#34;prod&#34; or &#34;staging&#34;
-    &#34;&#34;&#34;
-
-    credentials = get_credentials_from_env(mode=mode)
-    storage_client = storage.Client(credentials=credentials)
-
-    # Note: Client.list_blobs requires at least package version 1.17.0.
-    blobs = storage_client.list_blobs(bucket_name, prefix=prefix)
-
-    files = []
-
-    for blob in blobs:
-        files.append(blob.name)
-
-    files.sort()
-
-    return files[0]</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.main"><code class="name flex">
@@ -1328,10 +1264,9 @@ setTimeout(() => input.focus(), 100);
 <ul class="">
 <li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.converte_timezone" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.converte_timezone">converte_timezone</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.download_blob" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.download_blob">download_blob</a></code></li>
-<li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_credentials_from_env" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_credentials_from_env">get_credentials_from_env</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_blob_with_prefix" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_blob_with_prefix">get_blob_with_prefix</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_goes_extent" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_goes_extent">get_goes_extent</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_info" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_info">get_info</a></code></li>
-<li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.list_blobs_with_prefix" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.list_blobs_with_prefix">list_blobs_with_prefix</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.main" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.main">main</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.remap_g16" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.remap_g16">remap_g16</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.save_parquet" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.save_parquet">save_parquet</a></code></li>

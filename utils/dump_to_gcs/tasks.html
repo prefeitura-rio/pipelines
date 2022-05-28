@@ -41,7 +41,7 @@ import jinja2
 from prefect import task
 
 from pipelines.utils.dump_to_gcs.constants import constants as dump_to_gcs_constants
-from pipelines.utils.utils import human_readable, log
+from pipelines.utils.utils import human_readable, list_blobs_with_prefix, log
 
 
 @task
@@ -172,7 +172,18 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
         job_config=job_config,
     )
     extract_job.result()
-    log(&#34;Data was loaded successfully&#34;)</code></pre>
+    log(&#34;Data was loaded successfully&#34;)
+
+    # Get the BLOB we&#39;ve just created and make it public
+    blobs = list_blobs_with_prefix(
+        &#34;datario&#34;, f&#34;share/{dataset_id}/{table_id}/data.csv.gz&#34;
+    )
+    if not blobs:
+        raise ValueError(f&#34;No blob found at {blob_path}&#34;)
+    blob = blobs[0]  # pylint: disable=unsubscriptable-object
+    log(f&#34;Blob found at {blob.name}&#34;)
+    blob.make_public()
+    log(&#34;Blob was made public&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -319,7 +330,18 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
         job_config=job_config,
     )
     extract_job.result()
-    log(&#34;Data was loaded successfully&#34;)</code></pre>
+    log(&#34;Data was loaded successfully&#34;)
+
+    # Get the BLOB we&#39;ve just created and make it public
+    blobs = list_blobs_with_prefix(
+        &#34;datario&#34;, f&#34;share/{dataset_id}/{table_id}/data.csv.gz&#34;
+    )
+    if not blobs:
+        raise ValueError(f&#34;No blob found at {blob_path}&#34;)
+    blob = blobs[0]  # pylint: disable=unsubscriptable-object
+    log(f&#34;Blob found at {blob.name}&#34;)
+    blob.make_public()
+    log(&#34;Blob was made public&#34;)</code></pre>
 </details>
 </dd>
 </dl>
