@@ -481,9 +481,9 @@ def list_blobs_with_prefix(
     storage_client = storage.Client(credentials=credentials)
 
     # Note: Client.list_blobs requires at least package version 1.17.0.
-    blobs: List[Blob] = storage_client.list_blobs(bucket_name, prefix=prefix)
+    blobs = storage_client.list_blobs(bucket_name, prefix=prefix)
 
-    return blobs
+    return list(blobs)
 
 
 def parser_blobs_to_partition_dict(blobs: list) -> dict:
