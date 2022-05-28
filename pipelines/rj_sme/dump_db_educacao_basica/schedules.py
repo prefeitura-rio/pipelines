@@ -69,7 +69,7 @@ sme_queries = {
         "lower_bound_date": "2022-03-01",
         "materialize_after_dump": True,
         "materialize_to_datario": True,
-        "dump_to_gcs": True,
+        "dump_to_gcs": False,  # exceeds 1GB
         "materialization_mode": "prod",
         "dump_mode": "append",
         "execute_query": """
@@ -98,7 +98,7 @@ sme_queries = {
         "lower_bound_date": "2022-03-01",
         "materialize_after_dump": True,
         "materialize_to_datario": True,
-        "dump_to_gcs": True,
+        "dump_to_gcs": False,  # exceeds 1GB
         "materialization_mode": "prod",
         "dump_mode": "append",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Movimentacao_lgpd",
