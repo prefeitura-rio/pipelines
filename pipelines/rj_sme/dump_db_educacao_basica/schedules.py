@@ -21,6 +21,8 @@ from pipelines.utils.utils import untuple_clocks as untuple
 sme_queries = {
     "avaliacao": {
         "materialize_after_dump": True,
+        "materialize_to_datario": True,
+        "dump_to_gcs": True,
         "partition_columns": "Ano",
         "partition_date_format": "%Y",
         "materialization_mode": "prod",
@@ -29,6 +31,8 @@ sme_queries = {
     },
     "coc": {  # essa tabela utiliza a view coc0 pois contem o coc 0 e de 1 a 5
         "materialize_after_dump": True,
+        "materialize_to_datario": True,
+        "dump_to_gcs": True,
         "partition_columns": "Ano",
         "partition_date_format": "%Y",
         "materialization_mode": "prod",
@@ -64,6 +68,8 @@ sme_queries = {
         "partition_date_format": "%Y-%m-%d",
         "lower_bound_date": "2022-03-01",
         "materialize_after_dump": True,
+        "materialize_to_datario": True,
+        "dump_to_gcs": True,
         "materialization_mode": "prod",
         "dump_mode": "append",
         "execute_query": """
@@ -91,6 +97,8 @@ sme_queries = {
         "partition_date_format": "%Y-%m-%d",
         "lower_bound_date": "2022-03-01",
         "materialize_after_dump": True,
+        "materialize_to_datario": True,
+        "dump_to_gcs": True,
         "materialization_mode": "prod",
         "dump_mode": "append",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Movimentacao_lgpd",
@@ -98,17 +106,23 @@ sme_queries = {
     "turma": {
         "dump_mode": "overwrite",
         "materialize_after_dump": True,
+        "materialize_to_datario": True,
+        "dump_to_gcs": True,
         "materialization_mode": "prod",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Turma",
     },
     "dependencia": {
         "materialize_after_dump": True,
+        "materialize_to_datario": True,
+        "dump_to_gcs": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Dependencia",
     },
     "escola": {
         "materialize_after_dump": True,
+        "materialize_to_datario": True,
+        "dump_to_gcs": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
@@ -161,6 +175,8 @@ sme_queries = {
     },
     "aluno": {
         "materialize_after_dump": True,
+        "materialize_to_datario": True,
+        "dump_to_gcs": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
