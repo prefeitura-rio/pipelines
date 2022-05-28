@@ -61,9 +61,7 @@ Funções úteis no tratamento de dados de satélite
 # Required Libraries
 # ====================================================================
 
-import base64
 import datetime
-import json
 import os
 from pathlib import Path
 from typing import Tuple, Union

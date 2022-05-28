@@ -151,7 +151,7 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
     )
     if not blobs:
         raise ValueError(f"No blob found at {blob_path}")
-    blob = blobs[0]
+    blob = blobs[0]  # pylint: disable=unsubscriptable-object
     log(f"Blob found at {blob.name}")
     blob.make_public()
     log("Blob was made public")

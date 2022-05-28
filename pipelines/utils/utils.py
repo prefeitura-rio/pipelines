@@ -460,11 +460,11 @@ def get_storage_blobs(dataset_id: str, table_id: str) -> list:
     Get all blobs from a table in a dataset.
     """
 
-    storage = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+    bd_storage = bd.Storage(dataset_id=dataset_id, table_id=table_id)
     return list(
-        storage.client["storage_staging"]
-        .bucket(storage.bucket_name)
-        .list_blobs(prefix=f"staging/{storage.dataset_id}/{storage.table_id}/")
+        bd_storage.client["storage_staging"]
+        .bucket(bd_storage.bucket_name)
+        .list_blobs(prefix=f"staging/{bd_storage.dataset_id}/{bd_storage.table_id}/")
     )
 
 
