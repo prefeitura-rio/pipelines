@@ -15,7 +15,6 @@ from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.dump_db.constants import constants as dump_db_constants
 from pipelines.utils.dump_db.db import Database
-
 from pipelines.utils.tasks import (
     get_current_flow_labels,
     get_user_and_password,
@@ -28,10 +27,11 @@ from pipelines.utils.dump_db.tasks import (
     database_execute,
     database_fetch,
     database_get,
-    dump_batches_to_csv,
+    dump_batches_to_file,
     format_partitioned_query,
     parse_comma_separated_string_to_list,
 )
+from pipelines.utils.dump_to_gcs.constants import constants as dump_to_gcs_constants
 
 with Flow(
     name=utils_constants.FLOW_DUMP_DB_NAME.value,
@@ -70,16 +70,25 @@ with Flow(
         "materialize_to_datario", default=False, required=False
     )
 
+    # Dump to GCS after? Should only dump to GCS if materializing to datario
+    dump_to_gcs = Parameter("dump_to_gcs", default=False, required=False)
+    maximum_bytes_processed = Parameter(
+        "maximum_bytes_processed",
+        required=False,
+        default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
+    )
+
     # Use Vault for credentials
     secret_path = Parameter("vault_secret_path")
 
-    # CSV file parameters
+    # Data file parameters
     batch_size = Parameter("batch_size", default=50000)
 
     # BigQuery parameters
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
-    dump_type = Parameter("dump_type", default="append")  # overwrite or append
+    dump_mode = Parameter("dump_mode", default="append")  # overwrite or append
+    batch_data_type = Parameter("batch_data_type", default="csv")  # csv or parquet
 
     #####################################
     #
@@ -105,6 +114,9 @@ with Flow(
     # Tasks section #1 - Create table
     #
     #####################################
+
+    # Get current flow labels
+    current_flow_labels = get_current_flow_labels()
 
     # Parse partition columns
     partition_columns = parse_comma_separated_string_to_list(text=partition_columns)
@@ -135,15 +147,24 @@ with Flow(
         database=db_object,
         query=formated_query,
         wait=formated_query,
+        flow_name="dump_db",
+        labels=current_flow_labels,
+        dataset_id=dataset_id,
+        table_id=table_id,
     )
 
-    # Dump batches to CSV files
-    batches_path, num_batches = dump_batches_to_csv(
+    # Dump batches to files
+    batches_path, num_batches = dump_batches_to_file(
         database=db_object,
         batch_size=batch_size,
         prepath=f"data/{uuid4()}/",
         partition_columns=partition_columns,
+        batch_data_type=batch_data_type,
         wait=db_execute,
+        flow_name="dump_db",
+        labels=current_flow_labels,
+        dataset_id=dataset_id,
+        table_id=table_id,
     )
 
     data_exists = greater_than(num_batches, 0)
@@ -154,13 +175,12 @@ with Flow(
             data_path=batches_path,
             dataset_id=dataset_id,
             table_id=table_id,
-            dump_type=dump_type,
+            dump_mode=dump_mode,
             wait=data_exists,
         )
 
         with case(materialize_after_dump, True):
             # Trigger DBT flow run
-            current_flow_labels = get_current_flow_labels()
             materialization_flow = create_flow_run(
                 flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
                 project_name=constants.PREFECT_DEFAULT_PROJECT.value,
@@ -186,6 +206,31 @@ with Flow(
             wait_for_materialization.retry_delay = timedelta(
                 seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
             )
+
+            with case(dump_to_gcs, True):
+                # Trigger Dump to GCS flow run with project id as datario
+                dump_to_gcs_flow = create_flow_run(
+                    flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
+                    project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                    parameters={
+                        "project_id": "datario",
+                        "dataset_id": dataset_id,
+                        "table_id": table_id,
+                        "maximum_bytes_processed": maximum_bytes_processed,
+                    },
+                    labels=[
+                        "datario",
+                    ],
+                    run_name=f"Dump to GCS {dataset_id}.{table_id}",
+                )
+                dump_to_gcs_flow.set_upstream(wait_for_materialization)
+
+                wait_for_dump_to_gcs = wait_for_flow_run(
+                    dump_to_gcs_flow,
+                    stream_states=True,
+                    stream_logs=True,
+                    raise_final_state=True,
+                )
 
 
 dump_sql_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
@@ -215,7 +260,7 @@ with Flow(
     # Use Vault for credentials
     secret_path = Parameter("vault_secret_path")
 
-    # CSV file parameters
+    # Data file parameters
     batch_size = Parameter("no_of_rows", default="all")
 
     #####################################
@@ -245,6 +290,7 @@ with Flow(
     db_execute = database_execute(  # pylint: disable=invalid-name
         database=db_object,
         query=query,
+        flow_name="execute_sql",
     )
 
     # Log results
@@ -252,6 +298,7 @@ with Flow(
         database=db_object,
         batch_size=batch_size,
         wait=db_execute,
+        flow_name="execute_sql",
     )
 run_sql_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 run_sql_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)

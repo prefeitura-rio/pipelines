@@ -16,7 +16,7 @@ import s3fs
 from pipelines.rj_cor.meteorologia.satelite.satellite_utils import (
     main,
     save_parquet,
-    list_blobs_with_prefix,
+    get_blob_with_prefix,
     download_blob,
 )
 
@@ -64,7 +64,7 @@ def download(variavel: str, ano: str, dia_juliano: str, hora: str) -> Union[str,
     except IndexError:
         bucket_name = "gcp-public-data-goes-16"
         partition_file = f"ABI-L2-{variavel}/{ano}/{dia_juliano}/{hora}/"
-        file = list_blobs_with_prefix(
+        file = get_blob_with_prefix(
             bucket_name=bucket_name, prefix=partition_file, mode="prod"
         )
         origem = "gcp"

@@ -3,6 +3,8 @@
 General utilities for all pipelines.
 """
 
+import base64
+import json
 import logging
 from os import getenv, walk
 from os.path import join
@@ -11,6 +13,9 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
 
 import basedosdados as bd
+from google.cloud import storage
+from google.cloud.storage.blob import Blob
+from google.oauth2 import service_account
 import hvac
 import numpy as np
 import pandas as pd
@@ -59,7 +64,7 @@ def get_vault_secret(secret_path: str, client: hvac.Client = None) -> dict:
     """
     Returns a secret from Vault.
     """
-    vault_client = client if client else get_vault_client()
+    vault_client = client or get_vault_client()
     return vault_client.secrets.kv.read_secret_version(secret_path)["data"]
 
 
@@ -278,14 +283,35 @@ def human_readable(
 
 def dataframe_to_csv(dataframe: pd.DataFrame, path: Union[str, Path]) -> None:
     """
-    Writes a dataframe to a CSV file.
+    Writes a dataframe to CSV file.
     """
     # Remove filename from path
     path = Path(path)
     # Create directory if it doesn't exist
     path.parent.mkdir(parents=True, exist_ok=True)
+
     # Write dataframe to CSV
     dataframe.to_csv(path, index=False, encoding="utf-8")
+
+
+def dataframe_to_parquet(dataframe: pd.DataFrame, path: Union[str, Path]):
+    """
+    Writes a dataframe to Parquet file with Schema as STRING.
+    """
+    # Code adapted from
+    # https://stackoverflow.com/a/70817689/9944075
+
+    # If the file already exists, we:
+    # - Load it
+    # - Merge the new dataframe with the existing one
+    if Path(path).exists():
+        # Load it
+        original_df = pd.read_parquet(path)
+        # Merge the new dataframe with the existing one
+        dataframe = pd.concat([original_df, dataframe], sort=False)
+
+    # Write dataframe to Parquet
+    dataframe.to_parquet(path, engine="pyarrow")
 
 
 def batch_to_dataframe(batch: Tuple[Tuple], columns: List[str]) -> pd.DataFrame:
@@ -305,8 +331,8 @@ def clean_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
                 dataframe[col] = (
                     dataframe[col]
                     .astype(str)
-                    .str.replace("\x00", "", regex=True)
-                    .replace("None", np.nan, regex=True)
+                    .str.replace("\x00", "")
+                    .replace("None", np.nan)
                 )
             except Exception as exc:
                 print(
@@ -337,7 +363,12 @@ def remove_columns_accents(dataframe: pd.DataFrame) -> list:
     )
 
 
-def to_partitions(data: pd.DataFrame, partition_columns: List[str], savepath: str):
+def to_partitions(
+    data: pd.DataFrame,
+    partition_columns: List[str],
+    savepath: str,
+    data_type: str = "csv",
+):  # sourcery skip: raise-specific-error
     """Save data in to hive patitions schema, given a dataframe and a list of partition columns.
     Args:
         data (pandas.core.frame.DataFrame): Dataframe to be partitioned.
@@ -381,20 +412,24 @@ def to_partitions(data: pd.DataFrame, partition_columns: List[str], savepath: st
                 .all(axis=1),
                 :,
             ]
-            df_filter = df_filter.drop(columns=partition_columns)
+            df_filter = df_filter.drop(columns=partition_columns).reset_index(drop=True)
 
             # create folder tree
             filter_save_path = Path(savepath / "/".join(patitions_values))
             filter_save_path.mkdir(parents=True, exist_ok=True)
-            file_filter_save_path = Path(filter_save_path) / "data.csv"
-
-            # append data to csv
-            df_filter.to_csv(
-                file_filter_save_path,
-                index=False,
-                mode="a",
-                header=not file_filter_save_path.exists(),
-            )
+            file_filter_save_path = Path(filter_save_path) / f"data.{data_type}"
+            if data_type == "csv":
+                # append data to csv
+                df_filter.to_csv(
+                    file_filter_save_path,
+                    index=False,
+                    mode="a",
+                    header=not file_filter_save_path.exists(),
+                )
+            elif data_type == "parquet":
+                dataframe_to_parquet(dataframe=df_filter, path=file_filter_save_path)
+            else:
+                raise ValueError(f"Invalid data type: {data_type}")
     else:
         raise BaseException("Data need to be a pandas DataFrame")
 
@@ -406,17 +441,49 @@ def to_partitions(data: pd.DataFrame, partition_columns: List[str], savepath: st
 ###############
 
 
+def get_credentials_from_env(mode: str = "prod") -> service_account.Credentials:
+    """
+    Gets credentials from env vars
+    """
+    if mode not in ["prod", "staging"]:
+        raise ValueError("Mode must be 'prod' or 'staging'")
+    env: str = getenv(f"BASEDOSDADOS_CREDENTIALS_{mode.upper()}", "")
+    if env == "":
+        raise ValueError(f"BASEDOSDADOS_CREDENTIALS_{mode.upper()} env var not set!")
+    info: dict = json.loads(base64.b64decode(env))
+
+    return service_account.Credentials.from_service_account_info(info)
+
+
 def get_storage_blobs(dataset_id: str, table_id: str) -> list:
     """
     Get all blobs from a table in a dataset.
     """
 
-    storage = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+    bd_storage = bd.Storage(dataset_id=dataset_id, table_id=table_id)
     return list(
-        storage.client["storage_staging"]
-        .bucket(storage.bucket_name)
-        .list_blobs(prefix=f"staging/{storage.dataset_id}/{storage.table_id}/")
+        bd_storage.client["storage_staging"]
+        .bucket(bd_storage.bucket_name)
+        .list_blobs(prefix=f"staging/{bd_storage.dataset_id}/{bd_storage.table_id}/")
     )
+
+
+def list_blobs_with_prefix(
+    bucket_name: str, prefix: str, mode: str = "prod"
+) -> List[Blob]:
+    """
+    Lists all the blobs in the bucket that begin with the prefix.
+    This can be used to list all blobs in a "folder", e.g. "public/".
+    Mode needs to be "prod" or "staging"
+    """
+
+    credentials = get_credentials_from_env(mode=mode)
+    storage_client = storage.Client(credentials=credentials)
+
+    # Note: Client.list_blobs requires at least package version 1.17.0.
+    blobs = storage_client.list_blobs(bucket_name, prefix=prefix)
+
+    return list(blobs)
 
 
 def parser_blobs_to_partition_dict(blobs: list) -> dict:
@@ -437,24 +504,26 @@ def parser_blobs_to_partition_dict(blobs: list) -> dict:
     return partitions_dict
 
 
-def dump_header_to_csv(
-    data_path: Union[str, Path],
-):
+def dump_header_to_file(data_path: Union[str, Path], data_type: str = "csv"):
     """
     Writes a header to a CSV file.
     """
+    try:
+        assert data_type in ["csv", "parquet"]
+    except AssertionError as exc:
+        raise ValueError(f"Invalid data type: {data_type}") from exc
     # Remove filename from path
     path = Path(data_path)
     if not path.is_dir():
         path = path.parent
-    # Grab first CSV file found
+    # Grab first `data_type` file found
     found: bool = False
     file: str = None
     for subdir, _, filenames in walk(str(path)):
         for fname in filenames:
-            if fname.endswith(".csv"):
+            if fname.endswith(f".{data_type}"):
                 file = join(subdir, fname)
-                log(f"Found CSV file: {file}")
+                log(f"Found {data_type.upper()} file: {file}")
                 found = True
                 break
         if found:
@@ -464,21 +533,26 @@ def dump_header_to_csv(
     # discover if it's a partitioned table
     if partition_folders := [folder for folder in file.split("/") if "=" in folder]:
         partition_path = "/".join(partition_folders)
-        save_header_file_path = Path(f"{save_header_path}/{partition_path}/header.csv")
+        save_header_file_path = Path(
+            f"{save_header_path}/{partition_path}/header.{data_type}"
+        )
         log(f"Found partition path: {save_header_file_path}")
 
     else:
-        save_header_file_path = Path(f"{save_header_path}/header.csv")
+        save_header_file_path = Path(f"{save_header_path}/header.{data_type}")
         log(f"Do not found partition path: {save_header_file_path}")
 
     # Create directory if it doesn't exist
     save_header_file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Read just first row
-    dataframe = pd.read_csv(file, nrows=1)
+    # Read just first row and write dataframe to file
+    if data_type == "csv":
+        dataframe = pd.read_csv(file, nrows=1)
+        dataframe.to_csv(save_header_file_path, index=False, encoding="utf-8")
+    elif data_type == "parquet":
+        dataframe = pd.read_parquet(file)[:1]
+        dataframe_to_parquet(dataframe=dataframe, path=save_header_file_path)
 
-    # Write dataframe to CSV
-    dataframe.to_csv(save_header_file_path, index=False, encoding="utf-8")
-    log(f"Wrote header CSV: {save_header_file_path}")
+    log(f"Wrote {data_type.upper()} header at {save_header_file_path}")
 
     return save_header_path

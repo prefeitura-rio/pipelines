@@ -20,7 +20,7 @@ from pipelines.constants import constants
 from pipelines.utils.utils import (
     get_username_and_password_from_secret,
     log,
-    dump_header_to_csv,
+    dump_header_to_file,
 )
 
 ##################
@@ -119,7 +119,7 @@ def create_table_and_upload_to_gcs(
     data_path: Union[str, Path],
     dataset_id: str,
     table_id: str,
-    dump_type: str,
+    dump_mode: str,
     wait=None,  # pylint: disable=unused-argument
 ) -> None:
     """
@@ -145,7 +145,7 @@ def create_table_and_upload_to_gcs(
     #
     #####################################
     log("STARTING TABLE CREATION MANAGEMENT")
-    if dump_type == "append":
+    if dump_mode == "append":
         if tb.table_exists(mode="staging"):
             log(
                 f"MODE APPEND: Table ALREADY EXISTS:"
@@ -155,7 +155,7 @@ def create_table_and_upload_to_gcs(
         else:
             # the header is needed to create a table when dosen't exist
             log("MODE APPEND: Table DOSEN'T EXISTS\n" "Start to CREATE HEADER file")
-            header_path = dump_header_to_csv(data_path=data_path)
+            header_path = dump_header_to_file(data_path=data_path)
             log("MODE APPEND: Created HEADER file:\n" f"{header_path}")
 
             tb.create(
@@ -180,7 +180,7 @@ def create_table_and_upload_to_gcs(
                 f"{storage_path}\n"
                 f"{storage_path_link}"
             )  # pylint: disable=C0301
-    elif dump_type == "overwrite":
+    elif dump_mode == "overwrite":
         if tb.table_exists(mode="staging"):
             log(
                 "MODE OVERWRITE: Table ALREADY EXISTS, DELETING OLD DATA!\n"
@@ -205,7 +205,7 @@ def create_table_and_upload_to_gcs(
         # the header is needed to create a table when dosen't exist
         # in overwrite mode the header is always created
         log("MODE OVERWRITE: Table DOSEN'T EXISTS\n" "Start to CREATE HEADER file")
-        header_path = dump_header_to_csv(data_path=data_path)
+        header_path = dump_header_to_file(data_path=data_path)
         log("MODE OVERWRITE: Created HEADER file:\n" f"{header_path}")
 
         tb.create(
@@ -231,7 +231,7 @@ def create_table_and_upload_to_gcs(
 
     #####################################
     #
-    # Uploads a bunch of CSVs using BD+
+    # Uploads a bunch of files using BD+
     #
     #####################################
 

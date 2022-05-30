@@ -38,7 +38,7 @@ with Flow(
     VARIAVEL_RR = "RRQPEF"
     DATASET_ID_RR = "meio_ambiente_clima"
     TABLE_ID_RR = "taxa_precipitacao_satelite"
-    DUMP_TYPE = "append"
+    DUMP_MODE = "append"
 
     # Materialization parameters
     MATERIALIZE_AFTER_DUMP = Parameter(
@@ -62,14 +62,14 @@ with Flow(
         data_path=path_rr,
         dataset_id=DATASET_ID_RR,
         table_id=TABLE_ID_RR,
-        dump_type=DUMP_TYPE,
+        dump_mode=DUMP_MODE,
         wait=path_rr,
     )
 
     # Para quantidade de água precipitável
     VARIAVEL_TPW = "TPWF"
     DATASET_ID_TPW = "meio_ambiente_clima"
-    TABLE_ID_TPW = "volume_agua_precipitavel_satelite"
+    TABLE_ID_TPW = "quantidade_agua_precipitavel_satelite"
 
     filename_tpw = download(
         variavel=VARIAVEL_TPW, ano=ano, dia_juliano=dia_juliano, hora=hora
@@ -82,7 +82,7 @@ with Flow(
         data_path=path_tpw,
         dataset_id=DATASET_ID_TPW,
         table_id=TABLE_ID_TPW,
-        dump_type=DUMP_TYPE,
+        dump_mode=DUMP_MODE,
         wait=path_tpw,
     )
 

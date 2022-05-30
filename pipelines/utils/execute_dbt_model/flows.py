@@ -13,9 +13,14 @@ from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.decorators import Flow
 from pipelines.utils.execute_dbt_model.tasks import (
     get_k8s_dbt_client,
+    is_running_at_datario,
     run_dbt_model,
 )
-from pipelines.utils.tasks import rename_current_flow_run_dataset_table
+from pipelines.utils.tasks import (
+    get_current_flow_labels,
+    log_task,
+    rename_current_flow_run_dataset_table,
+)
 
 with Flow(
     name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
@@ -54,27 +59,38 @@ with Flow(
     )
 
     with case(materialize_to_datario, True):
-        datario_materialization_flow = create_flow_run(
-            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
-            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters={
-                "dataset_id": dataset_id,
-                "table_id": table_id,
-                "mode": "prod",
-            },
-            labels=[
-                constants.RJ_DATARIO_AGENT_LABEL.value,
-            ],
-            run_name=f"Publish to datario: {dataset_id}.{table_id}",
-        )
-        datario_materialization_flow.set_upstream(materialize_this)
+        current_labels = get_current_flow_labels()
+        running_at_datario = is_running_at_datario(current_labels)
+        with case(running_at_datario, True):
+            log_warning = log_task(  # pylint: disable=invalid-name
+                "You're running this flow at the datario agent, "
+                "I won't submit any more flow runs."
+            )
+            log_warning.set_upstream(running_at_datario)
+        with case(running_at_datario, False):
+            datario_materialization_flow = create_flow_run(
+                flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+                project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                parameters={
+                    "dataset_id": dataset_id,
+                    "table_id": table_id,
+                    "mode": "prod",
+                    "materialize_to_datario": False,  # setting this to true might cause an
+                    # infinite loop
+                },
+                labels=[
+                    constants.RJ_DATARIO_AGENT_LABEL.value,
+                ],
+                run_name=f"Publish to datario: {dataset_id}.{table_id}",
+            )
+            datario_materialization_flow.set_upstream(materialize_this)
 
-        wait_for_materialization = wait_for_flow_run(
-            datario_materialization_flow,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
-        )
+            wait_for_materialization = wait_for_flow_run(
+                datario_materialization_flow,
+                stream_states=True,
+                stream_logs=True,
+                raise_final_state=True,
+            )
 
 run_dbt_model_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 run_dbt_model_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)

@@ -5,6 +5,7 @@ Tasks related to DBT flows.
 # pylint: disable=unused-argument
 
 from datetime import timedelta
+from typing import List
 
 from dbt_client import DbtClient
 from prefect import task
@@ -52,3 +53,11 @@ def run_dbt_model(
         f"run --models {dataset_id}.{table_id}",
         sync=sync,
     )
+
+
+@task(checkpoint=False)
+def is_running_at_datario(current_flow_labels: List[str]) -> bool:
+    """
+    Check if the current flow is running at datario agent.
+    """
+    return "datario" in current_flow_labels
