@@ -522,7 +522,7 @@ def save_parquet(variable: str, datetime_save: str) -> Union[str, Path]:
     data.to_csv(filename, index=False)
     # filename = os.path.join(parquet_path, 'dados.parquet')
     # data.to_parquet(filename, index=False)
-    return base_path
+    return base_path, filename
 
 
 def main(path: Union[str, Path]):

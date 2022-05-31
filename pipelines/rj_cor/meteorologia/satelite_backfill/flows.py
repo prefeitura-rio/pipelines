@@ -34,7 +34,7 @@ with Flow("satelite_goes_16_backfill") as satelite_goes_16_backfill:
     VARIAVEL_TPW = "TPWF"
     DATASET_ID_TPW = "meio_ambiente_clima"
     TABLE_ID_TPW = "quantidade_agua_precipitavel_satelite"
-    DUMP_TYPE = "append"
+    DUMP_MODE = "append"
 
     print_param(CURRENT_TIME)
 
@@ -45,18 +45,18 @@ with Flow("satelite_goes_16_backfill") as satelite_goes_16_backfill:
     )
 
     info_tpw = tratar_dados(filename=filename_tpw)
-    path_tpw = salvar_parquet(info=info_tpw)
+    path_tpw, file_tpw = salvar_parquet(info=info_tpw)
 
     waiting_tpw = create_table_and_upload_to_gcs(
         data_path=path_tpw,
         dataset_id=DATASET_ID_TPW,
         table_id=TABLE_ID_TPW,
-        dump_type=DUMP_TYPE,
+        dump_mode=DUMP_MODE,
         wait=path_tpw,
     )
     # Edge(upstream_task = create_table_and_upload_to_gcs,
     #                                downstream_task = delete_files)
-    # delete_files(filename=filename_tpw, wait=waiting_tpw)
+    delete_files(filename=file_tpw, wait=waiting_tpw)
 
     VARIAVEL_RR = "RRQPEF"
     DATASET_ID_RR = "meio_ambiente_clima"
@@ -67,18 +67,18 @@ with Flow("satelite_goes_16_backfill") as satelite_goes_16_backfill:
     )
 
     info_rr = tratar_dados(filename=filename_rr)
-    path_rr = salvar_parquet(info=info_rr)
+    path_rr, file_rr = salvar_parquet(info=info_rr)
 
     waiting_rr = create_table_and_upload_to_gcs(
         data_path=path_rr,
         dataset_id=DATASET_ID_RR,
         table_id=TABLE_ID_RR,
-        dump_type=DUMP_TYPE,
+        dump_mode=DUMP_MODE,
         wait=path_rr,
     )
     # Edge(upstream_task = create_table_and_upload_to_gcs,
     #                                downstream_task = delete_files)
-    # delete_files(filename=filename_rr, wait=waiting_rr)
+    delete_files(filename=file_rr, wait=waiting_rr)
 
 # para rodar na cloud
 satelite_goes_16_backfill.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
