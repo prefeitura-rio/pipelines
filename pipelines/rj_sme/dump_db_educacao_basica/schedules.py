@@ -151,6 +151,8 @@ sme_queries = {
     },
     "aluno_turma": {
         "materialize_after_dump": True,
+        "materialize_to_datario": True,
+        "dump_to_gcs": True,
         "partition_columns": "Ano",
         "partition_date_format": "%Y",
         "materialization_mode": "prod",
@@ -163,6 +165,8 @@ sme_queries = {
     },
     "aluno_historico": {
         "materialize_after_dump": True,
+        "materialize_to_datario": True,
+        "dump_to_gcs": True,
         "partition_columns": "Ano",
         "partition_date_format": "%Y",
         "materialization_mode": "prod",
