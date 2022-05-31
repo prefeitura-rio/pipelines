@@ -24,6 +24,8 @@ dados_mestrestables = {
         "dataset_id": "dados_mestres",
         "dump_mode": "overwrite",
         "materialize_after_dump": True,
+        "materialize_to_datario": True,
+        "dump_to_gcs": True,
         "materialization_mode": "dev",
     },
     "logradouro": {
@@ -31,6 +33,8 @@ dados_mestrestables = {
         "dataset_id": "dados_mestres",
         "dump_mode": "overwrite",
         "materialize_after_dump": True,
+        "materialize_to_datario": True,
+        "dump_to_gcs": True,
         "materialization_mode": "dev",
     },
 }
