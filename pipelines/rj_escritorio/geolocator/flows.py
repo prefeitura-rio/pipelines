@@ -5,6 +5,7 @@
 Flows for geolocator
 """
 
+from datetime import timedelta
 
 from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
@@ -23,6 +24,8 @@ from pipelines.rj_escritorio.geolocator.tasks import (  # get_today,
 )
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.decorators import Flow
+from pipelines.utils.dump_db.constants import constants as dump_db_constants
+from pipelines.utils.dump_to_gcs.constants import constants as dump_to_gcs_constants
 from pipelines.utils.tasks import (
     get_current_flow_labels,
     create_table_and_upload_to_gcs,
@@ -45,6 +48,15 @@ with Flow(
     materialize_to_datario = Parameter(
         "materialize_to_datario", default=False, required=False
     )
+
+    # Dump to GCS after? Should only dump to GCS if materializing to datario
+    dump_to_gcs = Parameter("dump_to_gcs", default=False, required=False)
+    maximum_bytes_processed = Parameter(
+        "maximum_bytes_processed",
+        required=False,
+        default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
+    )
+
     dataset_id = geolocator_constants.DATASET_ID.value
     table_id = geolocator_constants.TABLE_ID.value
 
@@ -90,6 +102,39 @@ with Flow(
                 stream_logs=True,
                 raise_final_state=True,
             )
+
+            wait_for_materialization.max_retries = (
+                dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
+            )
+            wait_for_materialization.retry_delay = timedelta(
+                seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
+            )
+
+            with case(dump_to_gcs, True):
+                # Trigger Dump to GCS flow run with project id as datario
+                dump_to_gcs_flow = create_flow_run(
+                    flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
+                    project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                    parameters={
+                        "project_id": "datario",
+                        "dataset_id": dataset_id,
+                        "table_id": table_id,
+                        "maximum_bytes_processed": maximum_bytes_processed,
+                    },
+                    labels=[
+                        "datario",
+                    ],
+                    run_name=f"Dump to GCS {dataset_id}.{table_id}",
+                )
+                dump_to_gcs_flow.set_upstream(wait_for_materialization)
+
+                wait_for_dump_to_gcs = wait_for_flow_run(
+                    dump_to_gcs_flow,
+                    stream_states=True,
+                    stream_logs=True,
+                    raise_final_state=True,
+                )
+
 
 daily_geolocator_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 daily_geolocator_flow.run_config = KubernetesRun(
