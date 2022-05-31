@@ -56,7 +56,7 @@ with Flow("satelite_goes_16_backfill") as satelite_goes_16_backfill:
     )
     # Edge(upstream_task = create_table_and_upload_to_gcs,
     #                                downstream_task = delete_files)
-    delete_files(filename=file_tpw, wait=waiting_tpw)
+    delete_files(filename=file_tpw, input_filename=filename_tpw, wait=waiting_tpw)
 
     VARIAVEL_RR = "RRQPEF"
     DATASET_ID_RR = "meio_ambiente_clima"
@@ -78,7 +78,7 @@ with Flow("satelite_goes_16_backfill") as satelite_goes_16_backfill:
     )
     # Edge(upstream_task = create_table_and_upload_to_gcs,
     #                                downstream_task = delete_files)
-    delete_files(filename=file_rr, wait=waiting_rr)
+    delete_files(filename=file_rr, input_filename=filename_rr, wait=waiting_rr)
 
 # para rodar na cloud
 satelite_goes_16_backfill.storage = GCS(constants.GCS_FLOWS_BUCKET.value)

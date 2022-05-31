@@ -73,7 +73,7 @@ def download(variavel: str, ano: str, dia_juliano: str, hora: str) -> Union[str,
 
     if not os.path.exists(base_path):
         os.makedirs(base_path)
-    print(">>>>>>>>>>>>>>> basepath", base_path)
+    # print(">>>>>>>>>>>>>>> basepath", base_path)
 
     filename = os.path.join(base_path, file.split("/")[-1])
     if origem == "aws":
