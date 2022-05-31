@@ -194,7 +194,7 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pipelines.utils.dump_to_gcs.tasks.download_data_to_gcs"><code class="name flex">
-<span>def <span class="ident">download_data_to_gcs</span></span>(<span>dataset_id: str, table_id: str, project_id: str = None, query: Union[str, jinja2.environment.Template] = None, jinja_query_params: dict = None, bd_project_mode: str = 'prod', billing_project_id: str = None, location: str = 'US', maximum_bytes_processed: float = 1073741824)</span>
+<span>def <span class="ident">download_data_to_gcs</span></span>(<span>dataset_id: str, table_id: str, project_id: str = None, query: Union[str, jinja2.environment.Template] = None, jinja_query_params: dict = None, bd_project_mode: str = 'prod', billing_project_id: str = None, location: str = 'US', maximum_bytes_processed: float = 5368709120)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get data from BigQuery.</p></div>
