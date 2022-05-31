@@ -25,7 +25,7 @@ _1746_queries = {
         "materialize_after_dump": True,
         "materialization_mode": "dev",
         "materialize_to_datario": True,
-        "dump_to_gcs": False,
+        "dump_to_gcs": True,
         "dump_mode": "append",
         "execute_query": """
             SELECT
