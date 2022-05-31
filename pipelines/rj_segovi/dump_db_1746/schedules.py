@@ -24,6 +24,8 @@ _1746_queries = {
         "lower_bound_date": "2021-01-01",
         "materialize_after_dump": True,
         "materialization_mode": "dev",
+        "materialize_to_datario": True,
+        "dump_to_gcs": True,
         "dump_mode": "append",
         "execute_query": """
             SELECT
