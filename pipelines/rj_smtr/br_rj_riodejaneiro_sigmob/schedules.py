@@ -71,17 +71,22 @@ Schedules for br_rj_riodejaneiro_sigmob
 
 
 from datetime import timedelta, datetime
+import pytz
 from prefect.schedules import Schedule
 from prefect.schedules.clocks import IntervalClock
-from pipelines.constants import constants
+
+from pipelines.constants import constants as emd_constants
+from pipelines.rj_smtr.constants import constants
 
 every_day = Schedule(
     clocks=[
         IntervalClock(
             interval=timedelta(days=1),
-            start_date=datetime(2021, 1, 1),
+            start_date=datetime(
+                2021, 1, 1, 0, 30, tzinfo=pytz.timezone(constants.TIMEZONE.value)
+            ),
             labels=[
-                constants.RJ_SMTR_DEV_AGENT_LABEL.value,
+                emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value,
             ],
         ),
     ]

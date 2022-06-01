@@ -188,8 +188,6 @@ def request_data(endpoints: dict):
 
 @task(
     checkpoint=False,
-    max_retries=constants.TASK_MAX_RETRIES.value,
-    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 def run_dbt_command(
     dbt_client: DbtClient,
@@ -197,6 +195,7 @@ def run_dbt_command(
     table_id: str = None,
     command: str = "run",
     flags: str = None,
+    wait=None,  # pylint: disable=unused-argument, too-many-arguments
 ):
     """
     Runs a dbt command. If passing a dataset_id only, will run the entire dataset.
@@ -218,7 +217,7 @@ def run_dbt_command(
     if dataset_id:
         run_command += f" --select models/{dataset_id}/"
         if table_id:
-            run_command += f"{table_id}"
+            run_command += f"{table_id}.sql"
     if flags:
         run_command += f" {flags}"
 

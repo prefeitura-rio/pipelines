@@ -81,7 +81,6 @@ from pipelines.utils.execute_dbt_model.tasks import (
     get_k8s_dbt_client,
 )
 
-
 with Flow(
     "SMTR - DBT execute - SIGMOB",
     code_owners=[
@@ -108,6 +107,14 @@ with Flow(
             dataset_id=dataset_id,
             table_id="data_versao_efetiva",
             flags="--full-refresh",
+            wait=INCREMENTAL_RUN,
+        )
+        TESTS = run_dbt_command(
+            command="test", dbt_client=dbt_client, dataset_id=dataset_id, wait=LAST_RUN
+        )
+    with case(backfill, False):
+        TESTS = run_dbt_command(
+            command="test", dbt_client=dbt_client, dataset_id=dataset_id, wait=RUN
         )
     materialize_sigmob.set_dependencies(
         task=LAST_RUN, upstream_tasks=[dbt_client, RUN, INCREMENTAL_RUN]
