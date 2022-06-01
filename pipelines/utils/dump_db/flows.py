@@ -218,7 +218,9 @@ with Flow(
                         "table_id": table_id,
                         "maximum_bytes_processed": maximum_bytes_processed,
                     },
-                    labels=current_flow_labels,
+                    labels=[
+                        "datario",
+                    ],
                     run_name=f"Dump to GCS {dataset_id}.{table_id}",
                 )
                 dump_to_gcs_flow.set_upstream(wait_for_materialization)
