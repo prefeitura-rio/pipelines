@@ -61,14 +61,11 @@ Funções úteis no tratamento de dados de satélite
 # Required Libraries
 # ====================================================================
 
-import base64
 import datetime
-import json
 import os
 from pathlib import Path
 from typing import Tuple, Union
 
-from google.oauth2 import service_account
 from google.cloud import storage
 import netCDF4 as nc
 import numpy as np
@@ -78,43 +75,17 @@ import pendulum
 import xarray as xr
 
 from pipelines.rj_cor.meteorologia.satelite.remap import remap
-from pipelines.utils.utils import log
+from pipelines.utils.utils import get_credentials_from_env, list_blobs_with_prefix, log
 
 
-def get_credentials_from_env(mode: str = "prod") -> service_account.Credentials:
-    """
-    Gets credentials from env vars
-    """
-    if mode not in ["prod", "staging"]:
-        raise ValueError("Mode must be 'prod' or 'staging'")
-    env: str = os.getenv(f"BASEDOSDADOS_CREDENTIALS_{mode.upper()}", "")
-    if env == "":
-        raise ValueError(f"BASEDOSDADOS_CREDENTIALS_{mode.upper()} env var not set!")
-    info: dict = json.loads(base64.b64decode(env))
-
-    return service_account.Credentials.from_service_account_info(info)
-
-
-def list_blobs_with_prefix(bucket_name: str, prefix: str, mode: str = "prod") -> str:
+def get_blob_with_prefix(bucket_name: str, prefix: str, mode: str = "prod") -> str:
     """
     Lists all the blobs in the bucket that begin with the prefix.
     This can be used to list all blobs in a "folder", e.g. "public/".
     Mode needs to be "prod" or "staging"
     """
-
-    credentials = get_credentials_from_env(mode=mode)
-    storage_client = storage.Client(credentials=credentials)
-
-    # Note: Client.list_blobs requires at least package version 1.17.0.
-    blobs = storage_client.list_blobs(bucket_name, prefix=prefix)
-
-    files = []
-
-    for blob in blobs:
-        files.append(blob.name)
-
+    files = [b.name for b in list_blobs_with_prefix(bucket_name, prefix, mode)]
     files.sort()
-
     return files[0]
 
 
