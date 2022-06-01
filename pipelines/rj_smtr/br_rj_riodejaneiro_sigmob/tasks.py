@@ -189,13 +189,13 @@ def request_data(endpoints: dict):
 @task(
     checkpoint=False,
 )
-def run_dbt_command(
+def run_dbt_command(  # pylint disable=R0913
     dbt_client: DbtClient,
     dataset_id: str = None,
     table_id: str = None,
     command: str = "run",
     flags: str = None,
-    wait=None,  # pylint: disable=unused-argument, too-many-arguments
+    wait=None,  # pylint: disable=unused-argument
 ):
     """
     Runs a dbt command. If passing a dataset_id only, will run the entire dataset.
