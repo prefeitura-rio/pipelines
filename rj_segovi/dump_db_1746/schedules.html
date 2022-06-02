@@ -79,11 +79,11 @@ select
         when uop.id_unidade_pai_fk in (71, 610, 55, 23) then uop2.no_unidade_organizacional
         WHEN uop.no_unidade_organizacional &lt;&gt; ins.no_instituicao THEN uop.no_unidade_organizacional
         WHEN uop.no_unidade_organizacional = ins.no_instituicao THEN uo.no_unidade_organizacional
-    ELSE NULL END AS [UO Mãe],
+    ELSE NULL END AS [uo_mae],
     case
         when ch.dt_fim is null then &#39;Não Encerrado&#39;
         when ch.dt_fim is not null then &#39;Encerrado&#39;
-    end as &#39;Situação&#39;,
+    end as &#39;situacao&#39;,
     case
         when st.no_status = &#39;Fechado com solução&#39; then &#39;Atendido&#39;
         when st.no_status in (
@@ -93,7 +93,7 @@ select
             &#39;Sem possibilidade de atendimento&#39;, &#39;Cancelado&#39;
         ) then &#39;Não atendido&#39;
         when st.no_status = &#39;Não constatado&#39; then &#39;Não constatado&#39;
-    else &#39;Andamento&#39; end as &#39;Tipo_situação&#39;,
+    else &#39;Andamento&#39; end as &#39;tipo_situacao&#39;,
     case when CONVERT (
         VARCHAR,
         CONVERT(
@@ -116,7 +116,7 @@ select
         VARCHAR,
         CONVERT(DATETIME, ch.dt_fim, 10),
         20
-    ) then &#39;Fora do prazo&#39; else &#39;Fora do prazo&#39; end as &#39;Prazo&#39;,
+    ) then &#39;Fora do prazo&#39; else &#39;Fora do prazo&#39; end as &#39;prazo&#39;,
     uo.fl_ouvidoria,
     id_tipo,
     no_tipo,
@@ -142,7 +142,7 @@ select
     count (
         case when cv.ic_vinculo = &#39;O&#39;
         or cv.ic_vinculo = &#39;S&#39; then cv.id_chamado_pai_fk end
-    ) as &#39;Reclamações&#39;,
+    ) as &#39;reclamacoes&#39;,
     no_justificativa
 from
     tb_chamado as ch
