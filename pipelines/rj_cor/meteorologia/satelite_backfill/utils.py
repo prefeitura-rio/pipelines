@@ -130,14 +130,15 @@ def run_local_missing(
     #     return
 
     date_list = backfill_parameters["date_list"]
-    save_removed_dates = []
+    # save_removed_dates = []
 
     while len(date_list):
         # Run flow
         parameters["CURRENT_TIME"] = date_list[0]
         flow.run(parameters=parameters)
         # Update end_date backwards
-        removed = date_list.pop(0)
-        save_removed_dates.append(removed)
+        date_list.pop(0)
+        #  removed = date_list.pop(0)
+    #     save_removed_dates.append(removed)
 
-    print(f"Items removed: {save_removed_dates}")
+    # print(f"Items removed: {save_removed_dates}")

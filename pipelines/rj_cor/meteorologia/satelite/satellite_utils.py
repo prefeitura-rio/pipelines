@@ -171,7 +171,7 @@ def get_info(path: str) -> Tuple[dict, str]:
     if procura_m == -1:
         procura_m = path.find("-M4")
     product = path[path.find("L2-") + 3 : procura_m]
-    print(product)
+    # print(product)
 
     # Nem todos os produtos foram adicionados no dicionário de características
     # dos produtos. Olhar arquivo original caso o produto não estaja aqui
@@ -513,7 +513,6 @@ def save_parquet(variable: str, datetime_save: str) -> Union[str, Path]:
         os.makedirs(parquet_path)
 
     # Fixa ordem das colunas
-    print(">>>>>", ["longitude", "latitude", variable.lower()])
     data = data[["longitude", "latitude", variable.lower()]]
 
     # salva em parquet

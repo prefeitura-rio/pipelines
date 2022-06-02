@@ -106,9 +106,9 @@ def remap(
 
     # Perform the projection/resampling
 
-    print("Remapping", path)
+    # print("Remapping", path)
 
-    start = t.time()
+    # start = t.time()
 
     gdal.ReprojectImage(
         raw,
@@ -119,7 +119,7 @@ def remap(
         options=["NUM_THREADS=ALL_CPUS"],
     )
 
-    print("- finished! Time:", t.time() - start, "seconds")
+    # print("- finished! Time:", t.time() - start, "seconds")
 
     # Close file
     raw = None
