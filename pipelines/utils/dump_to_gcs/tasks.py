@@ -138,7 +138,7 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
         f"Query results were stored in {dest_project_id}.{dest_dataset_id}.{dest_table_id}"
     )
 
-    blob_path = f"gs://datario/share/{dataset_id}/{table_id}/data.csv.gz"
+    blob_path = f"gs://datario/share/{dataset_id}/{table_id}/data*.csv.gz"
     log(f"Loading data to {blob_path}")
     dataset_ref = bigquery.DatasetReference(dest_project_id, dest_dataset_id)
     table_ref = dataset_ref.table(dest_table_id)
@@ -153,15 +153,13 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
     log("Data was loaded successfully")
 
     # Get the BLOB we've just created and make it public
-    blobs = list_blobs_with_prefix(
-        "datario", f"share/{dataset_id}/{table_id}/data.csv.gz"
-    )
+    blobs = list_blobs_with_prefix("datario", f"share/{dataset_id}/{table_id}/")
     if not blobs:
         raise ValueError(f"No blob found at {blob_path}")
-    blob = blobs[0]  # pylint: disable=unsubscriptable-object
-    log(f"Blob found at {blob.name}")
-    blob.make_public()
-    log("Blob was made public")
+    for blob in blobs:
+        log(f"Blob found at {blob.name}")
+        blob.make_public()
+        log("Blob was made public")
 
 
 @task
