@@ -4,6 +4,7 @@ General utilities for all pipelines.
 """
 
 import base64
+from datetime import datetime
 import json
 import logging
 from os import getenv, walk
@@ -13,6 +14,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
 
 import basedosdados as bd
+import croniter
 from google.cloud import storage
 from google.cloud.storage.blob import Blob
 from google.oauth2 import service_account
@@ -20,11 +22,12 @@ import hvac
 import numpy as np
 import pandas as pd
 import prefect
-import requests
-import telegram
 from prefect.client import Client
 from prefect.engine.state import State
 from prefect.run_configs import KubernetesRun
+from redis_pal import RedisPal
+import requests
+import telegram
 
 from pipelines.constants import constants
 
@@ -48,6 +51,60 @@ def log(msg: Any, level: str = "info") -> None:
     if level not in levels:
         raise ValueError(f"Invalid log level: {level}")
     prefect.context.logger.log(levels[level], msg)  # pylint: disable=E1101
+
+
+###############
+#
+# Datetime utils
+#
+###############
+
+
+def determine_whether_to_execute_or_not(
+    cron_expression: str, datetime_now: datetime, datetime_last_execution: datetime
+) -> bool:
+    """
+    Determines whether the cron expression is currently valid.
+
+    Args:
+        cron_expression: The cron expression to check.
+        datetime_now: The current datetime.
+        datetime_last_execution: The last datetime the cron expression was executed.
+
+    Returns:
+        True if the cron expression should trigger, False otherwise.
+    """
+    cron_expression_iterator = croniter.croniter(
+        cron_expression, datetime_last_execution
+    )
+    next_cron_expression_time = cron_expression_iterator.get_next(datetime)
+    if next_cron_expression_time <= datetime_now:
+        return True
+    return False
+
+
+###############
+#
+# Redis
+#
+###############
+
+
+def get_redis_client(
+    host: str = "redis.redis.svc.cluster.local",
+    port: int = 6379,
+    db: int = 0,  # pylint: disable=C0103
+    password: str = None,
+) -> RedisPal:
+    """
+    Returns a Redis client.
+    """
+    return RedisPal(
+        host=host,
+        port=port,
+        db=db,
+        password=password,
+    )
 
 
 def get_vault_client() -> hvac.Client:
