@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# pylint: disable-all
+# pylint: skip-file
 """
 Tasks for twitter scraping.
 """
