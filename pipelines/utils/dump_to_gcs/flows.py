@@ -43,7 +43,7 @@ with Flow(
     desired_crontab = Parameter(
         "desired_crontab",
         required=False,
-        default="* * * * *",
+        default="0 0 * * *",
     )
 
     rename_flow_run = rename_current_flow_run_dataset_table(
