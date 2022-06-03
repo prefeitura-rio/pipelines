@@ -31,6 +31,7 @@
 &#34;&#34;&#34;
 Tasks for dumping data directly from BigQuery to GCS.
 &#34;&#34;&#34;
+from datetime import datetime
 from time import sleep
 from typing import Union
 
@@ -41,7 +42,13 @@ import jinja2
 from prefect import task
 
 from pipelines.utils.dump_to_gcs.constants import constants as dump_to_gcs_constants
-from pipelines.utils.utils import human_readable, list_blobs_with_prefix, log
+from pipelines.utils.utils import (
+    determine_whether_to_execute_or_not,
+    get_redis_client,
+    human_readable,
+    list_blobs_with_prefix,
+    log,
+)
 
 
 @task
@@ -183,7 +190,72 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
     blob = blobs[0]  # pylint: disable=unsubscriptable-object
     log(f&#34;Blob found at {blob.name}&#34;)
     blob.make_public()
-    log(&#34;Blob was made public&#34;)</code></pre>
+    log(&#34;Blob was made public&#34;)
+
+
+@task
+def get_project_id(
+    project_id: str = None,
+    bd_project_mode: str = &#34;prod&#34;,
+):
+    &#34;&#34;&#34;
+    Get the project ID.
+    &#34;&#34;&#34;
+    if project_id:
+        return project_id
+    log(&#34;Project ID was not provided, trying to get it from environment variable&#34;)
+    try:
+        bd_base = Base()
+        project_id = bd_base.config[&#34;gcloud-projects&#34;][bd_project_mode][&#34;name&#34;]
+    except KeyError:
+        pass
+    if not project_id:
+        raise ValueError(
+            &#34;project_id must be either provided or inferred from environment variables&#34;
+        )
+    log(f&#34;Project ID was inferred from environment variables: {project_id}&#34;)
+    return project_id
+
+
+@task(nout=2)
+def trigger_cron_job(
+    project_id: str,
+    dataset_id: str,
+    table_id: str,
+    cron_expression: str,
+):
+    &#34;&#34;&#34;
+    Tells whether to trigger a cron job.
+    &#34;&#34;&#34;
+    redis_client = get_redis_client()
+    key = f&#34;{project_id}__{dataset_id}__{table_id}&#34;
+    log(f&#34;Checking if cron job should be triggered for {key}&#34;)
+    val = redis_client.get(key)
+    current_datetime = datetime.now()
+    if val and val is dict and &#34;last_trigger&#34; in val:
+        last_trigger = val[&#34;last_trigger&#34;]
+        log(f&#34;Last trigger: {last_trigger}&#34;)
+        if last_trigger:
+            return determine_whether_to_execute_or_not(
+                cron_expression, current_datetime, last_trigger
+            )
+    log(f&#34;No last trigger found for {key}&#34;)
+    return True, current_datetime
+
+
+@task
+def update_last_trigger(
+    project_id: str,
+    dataset_id: str,
+    table_id: str,
+    execution_time: datetime,
+):
+    &#34;&#34;&#34;
+    Update the last trigger.
+    &#34;&#34;&#34;
+    redis_client = get_redis_client()
+    key = f&#34;{project_id}__{dataset_id}__{table_id}&#34;
+    redis_client.set(key, {&#34;last_trigger&#34;: execution_time})</code></pre>
 </details>
 </section>
 <section>
@@ -344,6 +416,98 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
     log(&#34;Blob was made public&#34;)</code></pre>
 </details>
 </dd>
+<dt id="pipelines.utils.dump_to_gcs.tasks.get_project_id"><code class="name flex">
+<span>def <span class="ident">get_project_id</span></span>(<span>project_id: str = None, bd_project_mode: str = 'prod')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the project ID.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_project_id(
+    project_id: str = None,
+    bd_project_mode: str = &#34;prod&#34;,
+):
+    &#34;&#34;&#34;
+    Get the project ID.
+    &#34;&#34;&#34;
+    if project_id:
+        return project_id
+    log(&#34;Project ID was not provided, trying to get it from environment variable&#34;)
+    try:
+        bd_base = Base()
+        project_id = bd_base.config[&#34;gcloud-projects&#34;][bd_project_mode][&#34;name&#34;]
+    except KeyError:
+        pass
+    if not project_id:
+        raise ValueError(
+            &#34;project_id must be either provided or inferred from environment variables&#34;
+        )
+    log(f&#34;Project ID was inferred from environment variables: {project_id}&#34;)
+    return project_id</code></pre>
+</details>
+</dd>
+<dt id="pipelines.utils.dump_to_gcs.tasks.trigger_cron_job"><code class="name flex">
+<span>def <span class="ident">trigger_cron_job</span></span>(<span>project_id: str, dataset_id: str, table_id: str, cron_expression: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Tells whether to trigger a cron job.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(nout=2)
+def trigger_cron_job(
+    project_id: str,
+    dataset_id: str,
+    table_id: str,
+    cron_expression: str,
+):
+    &#34;&#34;&#34;
+    Tells whether to trigger a cron job.
+    &#34;&#34;&#34;
+    redis_client = get_redis_client()
+    key = f&#34;{project_id}__{dataset_id}__{table_id}&#34;
+    log(f&#34;Checking if cron job should be triggered for {key}&#34;)
+    val = redis_client.get(key)
+    current_datetime = datetime.now()
+    if val and val is dict and &#34;last_trigger&#34; in val:
+        last_trigger = val[&#34;last_trigger&#34;]
+        log(f&#34;Last trigger: {last_trigger}&#34;)
+        if last_trigger:
+            return determine_whether_to_execute_or_not(
+                cron_expression, current_datetime, last_trigger
+            )
+    log(f&#34;No last trigger found for {key}&#34;)
+    return True, current_datetime</code></pre>
+</details>
+</dd>
+<dt id="pipelines.utils.dump_to_gcs.tasks.update_last_trigger"><code class="name flex">
+<span>def <span class="ident">update_last_trigger</span></span>(<span>project_id: str, dataset_id: str, table_id: str, execution_time: datetime.datetime)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Update the last trigger.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def update_last_trigger(
+    project_id: str,
+    dataset_id: str,
+    table_id: str,
+    execution_time: datetime,
+):
+    &#34;&#34;&#34;
+    Update the last trigger.
+    &#34;&#34;&#34;
+    redis_client = get_redis_client()
+    key = f&#34;{project_id}__{dataset_id}__{table_id}&#34;
+    redis_client.set(key, {&#34;last_trigger&#34;: execution_time})</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -409,6 +573,9 @@ setTimeout(() => input.focus(), 100);
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="pipelines.utils.dump_to_gcs.tasks.download_data_to_gcs" href="#pipelines.utils.dump_to_gcs.tasks.download_data_to_gcs">download_data_to_gcs</a></code></li>
+<li><code><a title="pipelines.utils.dump_to_gcs.tasks.get_project_id" href="#pipelines.utils.dump_to_gcs.tasks.get_project_id">get_project_id</a></code></li>
+<li><code><a title="pipelines.utils.dump_to_gcs.tasks.trigger_cron_job" href="#pipelines.utils.dump_to_gcs.tasks.trigger_cron_job">trigger_cron_job</a></code></li>
+<li><code><a title="pipelines.utils.dump_to_gcs.tasks.update_last_trigger" href="#pipelines.utils.dump_to_gcs.tasks.update_last_trigger">update_last_trigger</a></code></li>
 </ul>
 </li>
 </ul>

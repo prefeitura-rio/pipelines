@@ -33,6 +33,7 @@ General utilities for all pipelines.
 &#34;&#34;&#34;
 
 import base64
+from datetime import datetime
 import json
 import logging
 from os import getenv, walk
@@ -42,6 +43,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
 
 import basedosdados as bd
+import croniter
 from google.cloud import storage
 from google.cloud.storage.blob import Blob
 from google.oauth2 import service_account
@@ -49,11 +51,12 @@ import hvac
 import numpy as np
 import pandas as pd
 import prefect
-import requests
-import telegram
 from prefect.client import Client
 from prefect.engine.state import State
 from prefect.run_configs import KubernetesRun
+from redis_pal import RedisPal
+import requests
+import telegram
 
 from pipelines.constants import constants
 
@@ -77,6 +80,60 @@ def log(msg: Any, level: str = &#34;info&#34;) -&gt; None:
     if level not in levels:
         raise ValueError(f&#34;Invalid log level: {level}&#34;)
     prefect.context.logger.log(levels[level], msg)  # pylint: disable=E1101
+
+
+###############
+#
+# Datetime utils
+#
+###############
+
+
+def determine_whether_to_execute_or_not(
+    cron_expression: str, datetime_now: datetime, datetime_last_execution: datetime
+) -&gt; bool:
+    &#34;&#34;&#34;
+    Determines whether the cron expression is currently valid.
+
+    Args:
+        cron_expression: The cron expression to check.
+        datetime_now: The current datetime.
+        datetime_last_execution: The last datetime the cron expression was executed.
+
+    Returns:
+        True if the cron expression should trigger, False otherwise.
+    &#34;&#34;&#34;
+    cron_expression_iterator = croniter.croniter(
+        cron_expression, datetime_last_execution
+    )
+    next_cron_expression_time = cron_expression_iterator.get_next(datetime)
+    if next_cron_expression_time &lt;= datetime_now:
+        return True
+    return False
+
+
+###############
+#
+# Redis
+#
+###############
+
+
+def get_redis_client(
+    host: str = &#34;redis.redis.svc.cluster.local&#34;,
+    port: int = 6379,
+    db: int = 0,  # pylint: disable=C0103
+    password: str = None,
+) -&gt; RedisPal:
+    &#34;&#34;&#34;
+    Returns a Redis client.
+    &#34;&#34;&#34;
+    return RedisPal(
+        host=host,
+        port=port,
+        db=db,
+        password=password,
+    )
 
 
 def get_vault_client() -&gt; hvac.Client:
@@ -696,6 +753,49 @@ def dump_header_to_file(data_path: Union[str, Path], data_type: str = &#34;csv&#
     dataframe.to_parquet(path, engine=&#34;pyarrow&#34;)</code></pre>
 </details>
 </dd>
+<dt id="pipelines.utils.utils.determine_whether_to_execute_or_not"><code class="name flex">
+<span>def <span class="ident">determine_whether_to_execute_or_not</span></span>(<span>cron_expression: str, datetime_now: datetime.datetime, datetime_last_execution: datetime.datetime) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Determines whether the cron expression is currently valid.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>cron_expression</code></strong></dt>
+<dd>The cron expression to check.</dd>
+<dt><strong><code>datetime_now</code></strong></dt>
+<dd>The current datetime.</dd>
+<dt><strong><code>datetime_last_execution</code></strong></dt>
+<dd>The last datetime the cron expression was executed.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>True if the cron expression should trigger, False otherwise.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def determine_whether_to_execute_or_not(
+    cron_expression: str, datetime_now: datetime, datetime_last_execution: datetime
+) -&gt; bool:
+    &#34;&#34;&#34;
+    Determines whether the cron expression is currently valid.
+
+    Args:
+        cron_expression: The cron expression to check.
+        datetime_now: The current datetime.
+        datetime_last_execution: The last datetime the cron expression was executed.
+
+    Returns:
+        True if the cron expression should trigger, False otherwise.
+    &#34;&#34;&#34;
+    cron_expression_iterator = croniter.croniter(
+        cron_expression, datetime_last_execution
+    )
+    next_cron_expression_time = cron_expression_iterator.get_next(datetime)
+    if next_cron_expression_time &lt;= datetime_now:
+        return True
+    return False</code></pre>
+</details>
+</dd>
 <dt id="pipelines.utils.utils.dump_header_to_file"><code class="name flex">
 <span>def <span class="ident">dump_header_to_file</span></span>(<span>data_path: Union[str, pathlib.Path], data_type: str = 'csv')</span>
 </code></dt>
@@ -780,6 +880,32 @@ def dump_header_to_file(data_path: Union[str, Path], data_type: str = &#34;csv&#
     info: dict = json.loads(base64.b64decode(env))
 
     return service_account.Credentials.from_service_account_info(info)</code></pre>
+</details>
+</dd>
+<dt id="pipelines.utils.utils.get_redis_client"><code class="name flex">
+<span>def <span class="ident">get_redis_client</span></span>(<span>host: str = 'redis.redis.svc.cluster.local', port: int = 6379, db: int = 0, password: str = None) ‑> redis_pal.RedisPal.RedisPal</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns a Redis client.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_redis_client(
+    host: str = &#34;redis.redis.svc.cluster.local&#34;,
+    port: int = 6379,
+    db: int = 0,  # pylint: disable=C0103
+    password: str = None,
+) -&gt; RedisPal:
+    &#34;&#34;&#34;
+    Returns a Redis client.
+    &#34;&#34;&#34;
+    return RedisPal(
+        host=host,
+        port=port,
+        db=db,
+        password=password,
+    )</code></pre>
 </details>
 </dd>
 <dt id="pipelines.utils.utils.get_storage_blobs"><code class="name flex">
@@ -1418,8 +1544,10 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.utils.utils.clean_dataframe" href="#pipelines.utils.utils.clean_dataframe">clean_dataframe</a></code></li>
 <li><code><a title="pipelines.utils.utils.dataframe_to_csv" href="#pipelines.utils.utils.dataframe_to_csv">dataframe_to_csv</a></code></li>
 <li><code><a title="pipelines.utils.utils.dataframe_to_parquet" href="#pipelines.utils.utils.dataframe_to_parquet">dataframe_to_parquet</a></code></li>
+<li><code><a title="pipelines.utils.utils.determine_whether_to_execute_or_not" href="#pipelines.utils.utils.determine_whether_to_execute_or_not">determine_whether_to_execute_or_not</a></code></li>
 <li><code><a title="pipelines.utils.utils.dump_header_to_file" href="#pipelines.utils.utils.dump_header_to_file">dump_header_to_file</a></code></li>
 <li><code><a title="pipelines.utils.utils.get_credentials_from_env" href="#pipelines.utils.utils.get_credentials_from_env">get_credentials_from_env</a></code></li>
+<li><code><a title="pipelines.utils.utils.get_redis_client" href="#pipelines.utils.utils.get_redis_client">get_redis_client</a></code></li>
 <li><code><a title="pipelines.utils.utils.get_storage_blobs" href="#pipelines.utils.utils.get_storage_blobs">get_storage_blobs</a></code></li>
 <li><code><a title="pipelines.utils.utils.get_username_and_password_from_secret" href="#pipelines.utils.utils.get_username_and_password_from_secret">get_username_and_password_from_secret</a></code></li>
 <li><code><a title="pipelines.utils.utils.get_vault_client" href="#pipelines.utils.utils.get_vault_client">get_vault_client</a></code></li>
