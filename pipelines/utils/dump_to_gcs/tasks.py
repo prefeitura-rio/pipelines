@@ -200,14 +200,17 @@ def trigger_cron_job(
     """
     redis_client = get_redis_client()
     key = f"{project_id}__{dataset_id}__{table_id}"
+    log(f"Checking if cron job should be triggered for {key}")
     val = redis_client.get(key)
     current_datetime = datetime.now()
     if val and val is dict and "last_trigger" in val:
         last_trigger = val["last_trigger"]
+        log(f"Last trigger: {last_trigger}")
         if last_trigger:
             return determine_whether_to_execute_or_not(
                 cron_expression, current_datetime, last_trigger
             )
+    log(f"No last trigger found for {key}")
     return True, current_datetime
 
 
