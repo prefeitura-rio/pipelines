@@ -45,6 +45,5 @@ class constants(Enum):  # pylint: disable=c0103
     RETRY_DELAY = 10
     STPL_DATASET_ID = "br_rj_riodejaneiro_stpl_gps"
     STPL_TABLE_ID = "registros"
-    TIMEZONE = timezone("America/Sao_Paulo")
+    TIMEZONE = "America/Sao_Paulo"
     CRITICAL_SECRET_PATH = "critical_webhook"
-    REDIS_HOST = "localhost"

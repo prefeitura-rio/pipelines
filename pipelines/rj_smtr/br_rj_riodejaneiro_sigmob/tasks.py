@@ -42,28 +42,23 @@ Tasks for br_rj_riodejaneiro_sigmob
 #     """
 #     My task description.
 #     """
-import traceback
-from datetime import timedelta
-from pathlib import Path
-
 #     return np.add(a, b)
 # -----------------------------------------------------------------------------
 #
 # Abaixo segue um código para exemplificação, que pode ser removido.
 #
 ###############################################################################
+import traceback
+from datetime import timedelta
+from pathlib import Path
 
 import jinja2
 import pendulum
-import requests
-from dbt_client import DbtClient
 from prefect import task
+import requests
+
 from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.constants import constants
-from pipelines.rj_smtr.utils import (
-    bq_project,
-    generate_df_and_save,
-    get_table_max_value,
-)
+from pipelines.rj_smtr.utils import generate_df_and_save, log_critical
 from pipelines.utils.utils import log
 
 
@@ -139,7 +134,7 @@ def request_data(endpoints: dict):
             except Exception as unknown_error:
                 err = traceback.format_exc()
                 log(err)
-                # log_critical(f"Failed to request data from SIGMOB: \n{err}")
+                log_critical(f"Failed to request data from SIGMOB: \n{err}")
                 raise unknown_error
 
             # Create a new file for every (constants.SIGMOB_PAGES_FOR_CSV_FILE.value) pages
@@ -184,146 +179,3 @@ def request_data(endpoints: dict):
 
     # Return paths
     return paths_dict
-
-
-@task(
-    checkpoint=False,
-    max_retries=constants.TASK_MAX_RETRIES.value,
-    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
-)
-def run_dbt_command(
-    dbt_client: DbtClient,
-    dataset_id: str = None,
-    table_id: str = None,
-    command: str = "run",
-    flags: str = None,
-):
-    """
-    Runs a dbt command. If passing a dataset_id only, will run the entire dataset.
-    If also passing a table_id, will select the dbt model specified at the path:
-    models/<dataset_id>/<table_id>.sql.
-
-    Args:
-        dbt_client (DbtClient): Dbt interface of interaction
-        dataset_id (str, optional): dataset_id on BigQuery, also folder name on
-        your queries repo. Defaults to None.
-        table_id (str, optional): table_id on BigQuery, also .sql file name on your
-        models folder. Defaults to None.
-        command (str, optional): dbt command to run. Defaults to "run".
-        flags (str, optional): flags allowed to the specific command.
-        Should be preceeded by "--" Defaults to None.
-        sync (bool, optional): _description_. Defaults to True.
-    """
-    run_command = f"dbt {command}"
-    if dataset_id:
-        run_command += f" --select models/{dataset_id}/"
-        if table_id:
-            run_command += f"{table_id}.sql"
-    if flags:
-        run_command += f" {flags}"
-
-    log(f"Will run the following command:\n{run_command}")
-    dbt_client.cli(run_command, sync=True)
-    return log("Finished running dbt command")
-
-
-@task(
-    checkpoint=False,
-    max_retries=constants.TASK_MAX_RETRIES.value,
-    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
-)
-def run_dbt_schema(
-    dbt_client: DbtClient,
-    dataset_id: str,
-    refresh: bool = False,
-    wait=None,  # pylint: disable=unused-argument
-):
-    """Run a whole schema (dataset) worth of models
-
-    Args:
-        dbt_client (DbtClient): Dbt interface of interaction
-        dataset_id (str, optional): Dataset id on BigQuery. Defaults to "br_rj_riodejaneiro_sigmob".
-        refresh (bool, optional): If true, rebuild all models from scratch. Defaults to False.
-
-    Returns:
-        None
-    """
-
-    run_command = f"run --select models/{dataset_id}"
-    if refresh:
-        log(f"Will run the following command:\n{run_command} in full refresh mode")
-        run_command += " --full-refresh"
-    dbt_client.cli(run_command, sync=True)
-    return log(f"Finished running schema {dataset_id}")
-
-
-@task(max_retries=3, retry_delay=timedelta(seconds=10))
-def build_incremental_model(  # pylint: disable=too-many-arguments
-    dbt_client: DbtClient,
-    dataset_id: str,
-    base_table_id: str,
-    mat_table_id: str,
-    field_name: str = "data_versao",
-    refresh: bool = False,
-    wait=None,  # pylint: disable=unused-argument
-):
-    """
-        Utility task for backfilling table in predetermined steps.
-        Assumes the step sizes will be defined on the .sql file.
-
-    Args:
-        dbt_client (DbtClient): DBT interface object
-        dataset_id (str): Dataset id on BigQuery
-        base_table_id (str): Base table from which to materialize (usually, an external table)
-        mat_table_id (str): Target table id for materialization
-        field_name (str, optional): Key field (column) for dbt incremental filters.
-        Defaults to "data_versao".
-        refresh (bool, optional): If True, rebuild the table from scratch. Defaults to False.
-        wait (NoneType, optional): Placeholder parameter, used to wait previous tasks finish.
-        Defaults to None.
-
-    Returns:
-        bool: whether the table was fully built or not.
-    """
-
-    query_project_id = bq_project()
-    last_mat_date = get_table_max_value(
-        query_project_id, dataset_id, mat_table_id, field_name
-    )
-    last_base_date = get_table_max_value(
-        query_project_id, dataset_id, base_table_id, field_name
-    )
-    log(
-        f"""
-    Base table last version: {last_base_date}
-    Materialized table last version: {last_mat_date}
-    """
-    )
-    run_command = f"run --select models/{dataset_id}/{mat_table_id}.sql"
-
-    if refresh:
-        log("Running in full refresh mode")
-        log(f"DBT will run the following command:\n{run_command+' --full-refresh'}")
-        dbt_client.cli(run_command + " --full-refresh", sync=True)
-        last_mat_date = get_table_max_value(
-            query_project_id, dataset_id, mat_table_id, field_name
-        )
-
-    if last_base_date > last_mat_date:
-        log("Running interval step materialization")
-        log(f"DBT will run the following command:\n{run_command}")
-        while last_base_date > last_mat_date:
-            running = dbt_client.cli(run_command, sync=True)
-            last_mat_date = get_table_max_value(
-                query_project_id,
-                dataset_id,
-                mat_table_id,
-                field_name,
-                wait=running,
-            )
-            log(f"After this step, materialized table last version is: {last_mat_date}")
-            if last_mat_date == last_base_date:
-                log("Materialized table reached base table version!")
-                return True
-    log("Did not run interval step materialization...")
-    return False
