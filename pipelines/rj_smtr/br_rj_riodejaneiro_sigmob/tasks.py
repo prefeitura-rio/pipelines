@@ -58,7 +58,7 @@ from prefect import task
 import requests
 
 from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.constants import constants
-from pipelines.rj_smtr.utils import generate_df_and_save
+from pipelines.rj_smtr.utils import generate_df_and_save, log_critical
 from pipelines.utils.utils import log
 
 
@@ -134,7 +134,7 @@ def request_data(endpoints: dict):
             except Exception as unknown_error:
                 err = traceback.format_exc()
                 log(err)
-                # log_critical(f"Failed to request data from SIGMOB: \n{err}")
+                log_critical(f"Failed to request data from SIGMOB: \n{err}")
                 raise unknown_error
 
             # Create a new file for every (constants.SIGMOB_PAGES_FOR_CSV_FILE.value) pages

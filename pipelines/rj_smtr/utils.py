@@ -37,6 +37,21 @@ import pandas as pd
 
 
 from pipelines.utils.utils import log
+from pipelines.utils.utils import get_vault_secret, send_discord_message
+from pipelines.rj_smtr import constants
+
+
+def log_critical(message: str, secret_path: str = constants.CRITICAL_SECRET_PATH.value):
+    """Logs message to critical discord channel specified
+
+    Args:
+        message (str): Message to post on the channel
+        secret_path (str, optional): Secret path storing the webhook to critical channel.
+        Defaults to constants.CRITICAL_SECRETPATH.value.
+
+    """
+    url = get_vault_secret(secret_path=secret_path)["data"]["url"]
+    return send_discord_message(message=message, webhook_url=url)
 
 
 def create_or_append_table(dataset_id, table_id, path):
