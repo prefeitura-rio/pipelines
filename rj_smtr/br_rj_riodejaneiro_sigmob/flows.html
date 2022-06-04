@@ -94,28 +94,24 @@ from pipelines.constants import constants as emd_constants
 from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.constants import (
     constants as sigmob_constants,
 )
-from pipelines.rj_smtr.tasks import bq_upload_from_dict
-from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.schedules import every_day
-from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks import (
-    build_incremental_model,
-    request_data,
+from pipelines.rj_smtr.tasks import (
+    bq_upload_from_dict,
     run_dbt_schema,
     run_dbt_command,
+    build_incremental_model,
+    # , get_local_dbt_client
 )
-
-# from pipelines.rj_smtr.tasks import get_local_dbt_client
+from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.schedules import every_day
+from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks import request_data
 
 from pipelines.utils.decorators import Flow
 from pipelines.utils.execute_dbt_model.tasks import (
     get_k8s_dbt_client,
 )
 
-
 with Flow(
     &#34;SMTR - DBT execute - SIGMOB&#34;,
-    code_owners=[
-        &#34;@your-discord-username&#34;,
-    ],
+    code_owners=[&#34;@hellcassius#1223&#34;, &#34;@fernandascovino#9750&#34;],
 ) as materialize_sigmob:
     dataset_id = Parameter(&#34;dataset_id&#34;, default=&#34;br_rj_riodejaneiro_sigmob&#34;)
     backfill = Parameter(&#34;backfill&#34;, default=False)
@@ -137,6 +133,14 @@ with Flow(
             dataset_id=dataset_id,
             table_id=&#34;data_versao_efetiva&#34;,
             flags=&#34;--full-refresh&#34;,
+            wait=INCREMENTAL_RUN,
+        )
+        TESTS = run_dbt_command(
+            command=&#34;test&#34;, dbt_client=dbt_client, dataset_id=dataset_id, wait=LAST_RUN
+        )
+    with case(backfill, False):
+        TESTS = run_dbt_command(
+            command=&#34;test&#34;, dbt_client=dbt_client, dataset_id=dataset_id, wait=RUN
         )
     materialize_sigmob.set_dependencies(
         task=LAST_RUN, upstream_tasks=[dbt_client, RUN, INCREMENTAL_RUN]

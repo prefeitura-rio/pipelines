@@ -71,28 +71,23 @@ Tasks for br_rj_riodejaneiro_sigmob
 #     &#34;&#34;&#34;
 #     My task description.
 #     &#34;&#34;&#34;
-import traceback
-from datetime import timedelta
-from pathlib import Path
-
 #     return np.add(a, b)
 # -----------------------------------------------------------------------------
 #
 # Abaixo segue um código para exemplificação, que pode ser removido.
 #
 ###############################################################################
+import traceback
+from datetime import timedelta
+from pathlib import Path
 
 import jinja2
 import pendulum
-import requests
-from dbt_client import DbtClient
 from prefect import task
+import requests
+
 from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.constants import constants
-from pipelines.rj_smtr.utils import (
-    bq_project,
-    generate_df_and_save,
-    get_table_max_value,
-)
+from pipelines.rj_smtr.utils import generate_df_and_save, log_critical
 from pipelines.utils.utils import log
 
 
@@ -168,7 +163,7 @@ def request_data(endpoints: dict):
             except Exception as unknown_error:
                 err = traceback.format_exc()
                 log(err)
-                # log_critical(f&#34;Failed to request data from SIGMOB: \n{err}&#34;)
+                log_critical(f&#34;Failed to request data from SIGMOB: \n{err}&#34;)
                 raise unknown_error
 
             # Create a new file for every (constants.SIGMOB_PAGES_FOR_CSV_FILE.value) pages
@@ -212,150 +207,7 @@ def request_data(endpoints: dict):
         # Move on to the next endpoint.
 
     # Return paths
-    return paths_dict
-
-
-@task(
-    checkpoint=False,
-    max_retries=constants.TASK_MAX_RETRIES.value,
-    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
-)
-def run_dbt_command(
-    dbt_client: DbtClient,
-    dataset_id: str = None,
-    table_id: str = None,
-    command: str = &#34;run&#34;,
-    flags: str = None,
-):
-    &#34;&#34;&#34;
-    Runs a dbt command. If passing a dataset_id only, will run the entire dataset.
-    If also passing a table_id, will select the dbt model specified at the path:
-    models/&lt;dataset_id&gt;/&lt;table_id&gt;.sql.
-
-    Args:
-        dbt_client (DbtClient): Dbt interface of interaction
-        dataset_id (str, optional): dataset_id on BigQuery, also folder name on
-        your queries repo. Defaults to None.
-        table_id (str, optional): table_id on BigQuery, also .sql file name on your
-        models folder. Defaults to None.
-        command (str, optional): dbt command to run. Defaults to &#34;run&#34;.
-        flags (str, optional): flags allowed to the specific command.
-        Should be preceeded by &#34;--&#34; Defaults to None.
-        sync (bool, optional): _description_. Defaults to True.
-    &#34;&#34;&#34;
-    run_command = f&#34;dbt {command}&#34;
-    if dataset_id:
-        run_command += f&#34; --select models/{dataset_id}/&#34;
-        if table_id:
-            run_command += f&#34;{table_id}&#34;
-    if flags:
-        run_command += f&#34; {flags}&#34;
-
-    log(f&#34;Will run the following command:\n{run_command}&#34;)
-    dbt_client.cli(run_command, sync=True)
-    return log(&#34;Finished running dbt command&#34;)
-
-
-@task(
-    checkpoint=False,
-    max_retries=constants.TASK_MAX_RETRIES.value,
-    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
-)
-def run_dbt_schema(
-    dbt_client: DbtClient,
-    dataset_id: str,
-    refresh: bool = False,
-    wait=None,  # pylint: disable=unused-argument
-):
-    &#34;&#34;&#34;Run a whole schema (dataset) worth of models
-
-    Args:
-        dbt_client (DbtClient): Dbt interface of interaction
-        dataset_id (str, optional): Dataset id on BigQuery. Defaults to &#34;br_rj_riodejaneiro_sigmob&#34;.
-        refresh (bool, optional): If true, rebuild all models from scratch. Defaults to False.
-
-    Returns:
-        None
-    &#34;&#34;&#34;
-
-    run_command = f&#34;run --select models/{dataset_id}&#34;
-    if refresh:
-        log(f&#34;Will run the following command:\n{run_command} in full refresh mode&#34;)
-        run_command += &#34; --full-refresh&#34;
-    dbt_client.cli(run_command, sync=True)
-    return log(f&#34;Finished running schema {dataset_id}&#34;)
-
-
-@task(max_retries=3, retry_delay=timedelta(seconds=10))
-def build_incremental_model(  # pylint: disable=too-many-arguments
-    dbt_client: DbtClient,
-    dataset_id: str,
-    base_table_id: str,
-    mat_table_id: str,
-    field_name: str = &#34;data_versao&#34;,
-    refresh: bool = False,
-    wait=None,  # pylint: disable=unused-argument
-):
-    &#34;&#34;&#34;
-        Utility task for backfilling table in predetermined steps.
-        Assumes the step sizes will be defined on the .sql file.
-
-    Args:
-        dbt_client (DbtClient): DBT interface object
-        dataset_id (str): Dataset id on BigQuery
-        base_table_id (str): Base table from which to materialize (usually, an external table)
-        mat_table_id (str): Target table id for materialization
-        field_name (str, optional): Key field (column) for dbt incremental filters.
-        Defaults to &#34;data_versao&#34;.
-        refresh (bool, optional): If True, rebuild the table from scratch. Defaults to False.
-        wait (NoneType, optional): Placeholder parameter, used to wait previous tasks finish.
-        Defaults to None.
-
-    Returns:
-        bool: whether the table was fully built or not.
-    &#34;&#34;&#34;
-
-    query_project_id = bq_project()
-    last_mat_date = get_table_max_value(
-        query_project_id, dataset_id, mat_table_id, field_name
-    )
-    last_base_date = get_table_max_value(
-        query_project_id, dataset_id, base_table_id, field_name
-    )
-    log(
-        f&#34;&#34;&#34;
-    Base table last version: {last_base_date}
-    Materialized table last version: {last_mat_date}
-    &#34;&#34;&#34;
-    )
-    run_command = f&#34;run --select models/{dataset_id}/{mat_table_id}.sql&#34;
-
-    if refresh:
-        log(&#34;Running in full refresh mode&#34;)
-        log(f&#34;DBT will run the following command:\n{run_command+&#39; --full-refresh&#39;}&#34;)
-        dbt_client.cli(run_command + &#34; --full-refresh&#34;, sync=True)
-        last_mat_date = get_table_max_value(
-            query_project_id, dataset_id, mat_table_id, field_name
-        )
-
-    if last_base_date &gt; last_mat_date:
-        log(&#34;Running interval step materialization&#34;)
-        log(f&#34;DBT will run the following command:\n{run_command}&#34;)
-        while last_base_date &gt; last_mat_date:
-            running = dbt_client.cli(run_command, sync=True)
-            last_mat_date = get_table_max_value(
-                query_project_id,
-                dataset_id,
-                mat_table_id,
-                field_name,
-                wait=running,
-            )
-            log(f&#34;After this step, materialized table last version is: {last_mat_date}&#34;)
-            if last_mat_date == last_base_date:
-                log(&#34;Materialized table reached base table version!&#34;)
-                return True
-    log(&#34;Did not run interval step materialization...&#34;)
-    return False</code></pre>
+    return paths_dict</code></pre>
 </details>
 </section>
 <section>
@@ -365,112 +217,6 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.build_incremental_model"><code class="name flex">
-<span>def <span class="ident">build_incremental_model</span></span>(<span>dbt_client: dbt_client.dbt_client.DbtClient, dataset_id: str, base_table_id: str, mat_table_id: str, field_name: str = 'data_versao', refresh: bool = False, wait=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Utility task for backfilling table in predetermined steps.
-Assumes the step sizes will be defined on the .sql file.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>dbt_client</code></strong> :&ensp;<code>DbtClient</code></dt>
-<dd>DBT interface object</dd>
-<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code></dt>
-<dd>Dataset id on BigQuery</dd>
-<dt><strong><code>base_table_id</code></strong> :&ensp;<code>str</code></dt>
-<dd>Base table from which to materialize (usually, an external table)</dd>
-<dt><strong><code>mat_table_id</code></strong> :&ensp;<code>str</code></dt>
-<dd>Target table id for materialization</dd>
-<dt><strong><code>field_name</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>Key field (column) for dbt incremental filters.</dd>
-<dt>Defaults to "data_versao".</dt>
-<dt><strong><code>refresh</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>If True, rebuild the table from scratch. Defaults to False.</dd>
-<dt><strong><code>wait</code></strong> :&ensp;<code>NoneType</code>, optional</dt>
-<dd>Placeholder parameter, used to wait previous tasks finish.</dd>
-</dl>
-<p>Defaults to None.</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>bool</code></dt>
-<dd>whether the table was fully built or not.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task(max_retries=3, retry_delay=timedelta(seconds=10))
-def build_incremental_model(  # pylint: disable=too-many-arguments
-    dbt_client: DbtClient,
-    dataset_id: str,
-    base_table_id: str,
-    mat_table_id: str,
-    field_name: str = &#34;data_versao&#34;,
-    refresh: bool = False,
-    wait=None,  # pylint: disable=unused-argument
-):
-    &#34;&#34;&#34;
-        Utility task for backfilling table in predetermined steps.
-        Assumes the step sizes will be defined on the .sql file.
-
-    Args:
-        dbt_client (DbtClient): DBT interface object
-        dataset_id (str): Dataset id on BigQuery
-        base_table_id (str): Base table from which to materialize (usually, an external table)
-        mat_table_id (str): Target table id for materialization
-        field_name (str, optional): Key field (column) for dbt incremental filters.
-        Defaults to &#34;data_versao&#34;.
-        refresh (bool, optional): If True, rebuild the table from scratch. Defaults to False.
-        wait (NoneType, optional): Placeholder parameter, used to wait previous tasks finish.
-        Defaults to None.
-
-    Returns:
-        bool: whether the table was fully built or not.
-    &#34;&#34;&#34;
-
-    query_project_id = bq_project()
-    last_mat_date = get_table_max_value(
-        query_project_id, dataset_id, mat_table_id, field_name
-    )
-    last_base_date = get_table_max_value(
-        query_project_id, dataset_id, base_table_id, field_name
-    )
-    log(
-        f&#34;&#34;&#34;
-    Base table last version: {last_base_date}
-    Materialized table last version: {last_mat_date}
-    &#34;&#34;&#34;
-    )
-    run_command = f&#34;run --select models/{dataset_id}/{mat_table_id}.sql&#34;
-
-    if refresh:
-        log(&#34;Running in full refresh mode&#34;)
-        log(f&#34;DBT will run the following command:\n{run_command+&#39; --full-refresh&#39;}&#34;)
-        dbt_client.cli(run_command + &#34; --full-refresh&#34;, sync=True)
-        last_mat_date = get_table_max_value(
-            query_project_id, dataset_id, mat_table_id, field_name
-        )
-
-    if last_base_date &gt; last_mat_date:
-        log(&#34;Running interval step materialization&#34;)
-        log(f&#34;DBT will run the following command:\n{run_command}&#34;)
-        while last_base_date &gt; last_mat_date:
-            running = dbt_client.cli(run_command, sync=True)
-            last_mat_date = get_table_max_value(
-                query_project_id,
-                dataset_id,
-                mat_table_id,
-                field_name,
-                wait=running,
-            )
-            log(f&#34;After this step, materialized table last version is: {last_mat_date}&#34;)
-            if last_mat_date == last_base_date:
-                log(&#34;Materialized table reached base table version!&#34;)
-                return True
-    log(&#34;Did not run interval step materialization...&#34;)
-    return False</code></pre>
-</details>
-</dd>
 <dt id="pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.request_data"><code class="name flex">
 <span>def <span class="ident">request_data</span></span>(<span>endpoints: dict)</span>
 </code></dt>
@@ -567,7 +313,7 @@ def request_data(endpoints: dict):
             except Exception as unknown_error:
                 err = traceback.format_exc()
                 log(err)
-                # log_critical(f&#34;Failed to request data from SIGMOB: \n{err}&#34;)
+                log_critical(f&#34;Failed to request data from SIGMOB: \n{err}&#34;)
                 raise unknown_error
 
             # Create a new file for every (constants.SIGMOB_PAGES_FOR_CSV_FILE.value) pages
@@ -612,126 +358,6 @@ def request_data(endpoints: dict):
 
     # Return paths
     return paths_dict</code></pre>
-</details>
-</dd>
-<dt id="pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.run_dbt_command"><code class="name flex">
-<span>def <span class="ident">run_dbt_command</span></span>(<span>dbt_client: dbt_client.dbt_client.DbtClient, dataset_id: str = None, table_id: str = None, command: str = 'run', flags: str = None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Runs a dbt command. If passing a dataset_id only, will run the entire dataset.
-If also passing a table_id, will select the dbt model specified at the path:
-models/<dataset_id>/<table_id>.sql.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>dbt_client</code></strong> :&ensp;<code>DbtClient</code></dt>
-<dd>Dbt interface of interaction</dd>
-<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>dataset_id on BigQuery, also folder name on</dd>
-<dt>your queries repo. Defaults to None.</dt>
-<dt><strong><code>table_id</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>table_id on BigQuery, also .sql file name on your</dd>
-<dt>models folder. Defaults to None.</dt>
-<dt><strong><code>command</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>dbt command to run. Defaults to "run".</dd>
-<dt><strong><code>flags</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>flags allowed to the specific command.</dd>
-<dt>Should be preceeded by "&ndash;" Defaults to None.</dt>
-<dt><strong><code>sync</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd><em>description</em>. Defaults to True.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task(
-    checkpoint=False,
-    max_retries=constants.TASK_MAX_RETRIES.value,
-    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
-)
-def run_dbt_command(
-    dbt_client: DbtClient,
-    dataset_id: str = None,
-    table_id: str = None,
-    command: str = &#34;run&#34;,
-    flags: str = None,
-):
-    &#34;&#34;&#34;
-    Runs a dbt command. If passing a dataset_id only, will run the entire dataset.
-    If also passing a table_id, will select the dbt model specified at the path:
-    models/&lt;dataset_id&gt;/&lt;table_id&gt;.sql.
-
-    Args:
-        dbt_client (DbtClient): Dbt interface of interaction
-        dataset_id (str, optional): dataset_id on BigQuery, also folder name on
-        your queries repo. Defaults to None.
-        table_id (str, optional): table_id on BigQuery, also .sql file name on your
-        models folder. Defaults to None.
-        command (str, optional): dbt command to run. Defaults to &#34;run&#34;.
-        flags (str, optional): flags allowed to the specific command.
-        Should be preceeded by &#34;--&#34; Defaults to None.
-        sync (bool, optional): _description_. Defaults to True.
-    &#34;&#34;&#34;
-    run_command = f&#34;dbt {command}&#34;
-    if dataset_id:
-        run_command += f&#34; --select models/{dataset_id}/&#34;
-        if table_id:
-            run_command += f&#34;{table_id}&#34;
-    if flags:
-        run_command += f&#34; {flags}&#34;
-
-    log(f&#34;Will run the following command:\n{run_command}&#34;)
-    dbt_client.cli(run_command, sync=True)
-    return log(&#34;Finished running dbt command&#34;)</code></pre>
-</details>
-</dd>
-<dt id="pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.run_dbt_schema"><code class="name flex">
-<span>def <span class="ident">run_dbt_schema</span></span>(<span>dbt_client: dbt_client.dbt_client.DbtClient, dataset_id: str, refresh: bool = False, wait=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Run a whole schema (dataset) worth of models</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>dbt_client</code></strong> :&ensp;<code>DbtClient</code></dt>
-<dd>Dbt interface of interaction</dd>
-<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>Dataset id on BigQuery. Defaults to "br_rj_riodejaneiro_sigmob".</dd>
-<dt><strong><code>refresh</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>If true, rebuild all models from scratch. Defaults to False.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>None</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task(
-    checkpoint=False,
-    max_retries=constants.TASK_MAX_RETRIES.value,
-    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
-)
-def run_dbt_schema(
-    dbt_client: DbtClient,
-    dataset_id: str,
-    refresh: bool = False,
-    wait=None,  # pylint: disable=unused-argument
-):
-    &#34;&#34;&#34;Run a whole schema (dataset) worth of models
-
-    Args:
-        dbt_client (DbtClient): Dbt interface of interaction
-        dataset_id (str, optional): Dataset id on BigQuery. Defaults to &#34;br_rj_riodejaneiro_sigmob&#34;.
-        refresh (bool, optional): If true, rebuild all models from scratch. Defaults to False.
-
-    Returns:
-        None
-    &#34;&#34;&#34;
-
-    run_command = f&#34;run --select models/{dataset_id}&#34;
-    if refresh:
-        log(f&#34;Will run the following command:\n{run_command} in full refresh mode&#34;)
-        run_command += &#34; --full-refresh&#34;
-    dbt_client.cli(run_command, sync=True)
-    return log(f&#34;Finished running schema {dataset_id}&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -798,10 +424,7 @@ setTimeout(() => input.focus(), 100);
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.build_incremental_model" href="#pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.build_incremental_model">build_incremental_model</a></code></li>
 <li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.request_data" href="#pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.request_data">request_data</a></code></li>
-<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.run_dbt_command" href="#pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.run_dbt_command">run_dbt_command</a></code></li>
-<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.run_dbt_schema" href="#pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks.run_dbt_schema">run_dbt_schema</a></code></li>
 </ul>
 </li>
 </ul>

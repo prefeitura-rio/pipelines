@@ -66,6 +66,21 @@ import pandas as pd
 
 
 from pipelines.utils.utils import log
+from pipelines.utils.utils import get_vault_secret, send_discord_message
+from pipelines.rj_smtr.constants import constants
+
+
+def log_critical(message: str, secret_path: str = constants.CRITICAL_SECRET_PATH.value):
+    &#34;&#34;&#34;Logs message to critical discord channel specified
+
+    Args:
+        message (str): Message to post on the channel
+        secret_path (str, optional): Secret path storing the webhook to critical channel.
+        Defaults to constants.CRITICAL_SECRETPATH.value.
+
+    &#34;&#34;&#34;
+    url = get_vault_secret(secret_path=secret_path)[&#34;data&#34;][&#34;url&#34;]
+    return send_discord_message(message=message, webhook_url=url)
 
 
 def create_or_append_table(dataset_id, table_id, path):
@@ -320,6 +335,36 @@ Useful to incrementally materialize tables via DBT</p>
     return result.iloc[0][0]</code></pre>
 </details>
 </dd>
+<dt id="pipelines.rj_smtr.utils.log_critical"><code class="name flex">
+<span>def <span class="ident">log_critical</span></span>(<span>message: str, secret_path: str = 'critical_webhook')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Logs message to critical discord channel specified</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>str</code></dt>
+<dd>Message to post on the channel</dd>
+<dt><strong><code>secret_path</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Secret path storing the webhook to critical channel.</dd>
+</dl>
+<p>Defaults to constants.CRITICAL_SECRETPATH.value.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def log_critical(message: str, secret_path: str = constants.CRITICAL_SECRET_PATH.value):
+    &#34;&#34;&#34;Logs message to critical discord channel specified
+
+    Args:
+        message (str): Message to post on the channel
+        secret_path (str, optional): Secret path storing the webhook to critical channel.
+        Defaults to constants.CRITICAL_SECRETPATH.value.
+
+    &#34;&#34;&#34;
+    url = get_vault_secret(secret_path=secret_path)[&#34;data&#34;][&#34;url&#34;]
+    return send_discord_message(message=message, webhook_url=url)</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -388,6 +433,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.utils.create_or_append_table" href="#pipelines.rj_smtr.utils.create_or_append_table">create_or_append_table</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.generate_df_and_save" href="#pipelines.rj_smtr.utils.generate_df_and_save">generate_df_and_save</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.get_table_max_value" href="#pipelines.rj_smtr.utils.get_table_max_value">get_table_max_value</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.log_critical" href="#pipelines.rj_smtr.utils.log_critical">log_critical</a></code></li>
 </ul>
 </li>
 </ul>

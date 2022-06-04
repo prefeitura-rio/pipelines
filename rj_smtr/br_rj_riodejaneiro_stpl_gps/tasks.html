@@ -87,6 +87,7 @@ from prefect import task
 
 from pipelines.rj_smtr.constants import constants
 from pipelines.utils.utils import log
+from pipelines.rj_smtr.utils import log_critical
 
 
 @task
@@ -155,13 +156,13 @@ def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict, key_column):
         )
         df_treated = df_treated[mask]
         log(f&#34;Shape antes da filtragem: {df.shape}&#34;)
-        log(f&#34;Shape após a filtrage: {df_treated.shape}&#34;)
+        log(f&#34;Shape após a filtragem: {df_treated.shape}&#34;)
         if df_treated.shape[0] == 0:
             error = ValueError(&#34;After filtering, the dataframe is empty!&#34;)
         df = df_treated
     except Exception:
         error = traceback.format_exc()
-        # log_critical(f&#34;Failed to filter STPL data: \n{err}&#34;)
+        log_critical(f&#34;Failed to filter STPL data: \n{error}&#34;)
     return {&#34;df&#34;: df, &#34;error&#34;: error}</code></pre>
 </details>
 </section>
@@ -260,13 +261,13 @@ def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict, key_column):
         )
         df_treated = df_treated[mask]
         log(f&#34;Shape antes da filtragem: {df.shape}&#34;)
-        log(f&#34;Shape após a filtrage: {df_treated.shape}&#34;)
+        log(f&#34;Shape após a filtragem: {df_treated.shape}&#34;)
         if df_treated.shape[0] == 0:
             error = ValueError(&#34;After filtering, the dataframe is empty!&#34;)
         df = df_treated
     except Exception:
         error = traceback.format_exc()
-        # log_critical(f&#34;Failed to filter STPL data: \n{err}&#34;)
+        log_critical(f&#34;Failed to filter STPL data: \n{error}&#34;)
     return {&#34;df&#34;: df, &#34;error&#34;: error}</code></pre>
 </details>
 </dd>
