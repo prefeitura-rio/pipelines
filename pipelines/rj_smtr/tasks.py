@@ -62,6 +62,7 @@ from prefect import task
 import requests
 
 from pipelines.rj_smtr.constants import constants
+from pipelines.constants import constants as emd_constants
 from pipelines.rj_smtr.utils import (
     create_or_append_table,
     bq_project,
@@ -134,8 +135,8 @@ def run_dbt_command(  # pylint disable=R0913
 
 @task(
     checkpoint=False,
-    max_retries=constants.TASK_MAX_RETRIES.value,
-    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+    max_retries=emd_constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=emd_constants.TASK_RETRY_DELAY.value),
 )
 def run_dbt_schema(
     dbt_client: DbtClient,
