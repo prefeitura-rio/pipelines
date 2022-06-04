@@ -65,16 +65,15 @@ from pipelines.constants import constants as emd_constants
 from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.constants import (
     constants as sigmob_constants,
 )
-from pipelines.rj_smtr.tasks import bq_upload_from_dict
-from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.schedules import every_day
-from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks import (
-    build_incremental_model,
-    request_data,
+from pipelines.rj_smtr.tasks import (
+    bq_upload_from_dict,
     run_dbt_schema,
     run_dbt_command,
+    build_incremental_model
+    #, get_local_dbt_client
 )
-
-# from pipelines.rj_smtr.tasks import get_local_dbt_client
+from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.schedules import every_day
+from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks import request_data
 
 from pipelines.utils.decorators import Flow
 from pipelines.utils.execute_dbt_model.tasks import (
