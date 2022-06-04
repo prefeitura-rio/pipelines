@@ -69,8 +69,8 @@ from pipelines.rj_smtr.tasks import (
     bq_upload_from_dict,
     run_dbt_schema,
     run_dbt_command,
-    build_incremental_model
-    #, get_local_dbt_client
+    build_incremental_model,
+    # , get_local_dbt_client
 )
 from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.schedules import every_day
 from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks import request_data
