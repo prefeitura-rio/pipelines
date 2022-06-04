@@ -32,6 +32,7 @@ Constant values for the rj_smtr projects
 ###############################################################################
 
 from enum import Enum
+from pytz import timezone
 
 
 class constants(Enum):  # pylint: disable=c0103
@@ -40,7 +41,10 @@ class constants(Enum):  # pylint: disable=c0103
     """
 
     MAX_TIMEOUT_SECONDS = 60
+    MAX_RETRIES = 3
+    RETRY_DELAY = 10
     STPL_DATASET_ID = "br_rj_riodejaneiro_stpl_gps"
     STPL_TABLE_ID = "registros"
-    TIMEZONE = "America/Sao_Paulo"
+    TIMEZONE = timezone("America/Sao_Paulo")
     CRITICAL_SECRET_PATH = "critical_webhook"
+    REDIS_HOST = "localhost"

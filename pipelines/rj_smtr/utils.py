@@ -29,11 +29,13 @@ General purpose functions for rj_smtr
 # ```
 #
 ###############################################################################
+from datetime import datetime
 from pathlib import Path
 
 import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
+from redis_pal import RedisPal
 
 from pipelines.rj_smtr.constants import constants
 from pipelines.utils.utils import (
@@ -144,3 +146,15 @@ def log_critical(message: str, secret_path: str = constants.CRITICAL_SECRET_PATH
     """
     url = get_vault_secret(secret_path=secret_path)["data"]["url"]
     return send_discord_message(message=message, webhook_url=url)
+
+
+def get_last_run_timestamp(dataset_id: str, table_id: str):
+    rp = RedisPal(constants.REDIS_HOST.value)
+    runs = rp.get(dataset_id)
+    if runs is None:
+        rp.set(dataset_id, table_id)
+    try:
+        last_run_timestamp = runs[table_id]["last_run_timestamp"]
+    except TypeError:
+        return None
+    return last_run_timestamp

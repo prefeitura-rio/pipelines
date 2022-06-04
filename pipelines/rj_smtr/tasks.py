@@ -49,6 +49,7 @@ Tasks for rj_smtr
 # Abaixo segue um código para exemplificação, que pode ser removido.
 #
 ###############################################################################
+from datetime import datetime, timedelta
 import json
 import os
 from pathlib import Path
@@ -57,10 +58,11 @@ from basedosdados import Storage
 import pandas as pd
 import pendulum
 from prefect import task
+from redis_pal import RedisPal
 import requests
 
 from pipelines.rj_smtr.constants import constants
-from pipelines.rj_smtr.utils import create_or_append_table
+from pipelines.rj_smtr.utils import create_or_append_table, get_last_run_timestamp
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_vault_secret
 
@@ -345,5 +347,31 @@ def upload_logs_to_bq(dataset_id, parent_table_id, timestamp, error):
     create_or_append_table(
         dataset_id=dataset_id, table_id=table_id, path=filepath.parent.parent
     )
-    # delete local file
-    # shutil.rmtree(f"{timestamp}")
+
+
+@task(
+    checkpoint=False,
+    max_retries=constants.MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.RETRY_DELAY.value),
+)
+def get_date_range(dataset_id: str, table_id: str):
+    start_ts = get_last_run_timestamp(dataset_id=dataset_id, table_id=table_id)
+    if start_ts is None:
+        return None
+    end_ts = datetime.now(constants.TIMEZONE.value).strftime("%Y-%m-%dT%H:%M:S")
+    date_range = {"date_range_start": start_ts, "date_range_end": end_ts}
+    return f'-- vars "{date_range}"'
+
+
+@task
+def set_last_run_timestamp(dataset_id: str, table_id: str, wait=None):
+    rp = RedisPal(constants.REDIS_HOST.value)
+    update_dict = {
+        table_id: {
+            "last_run_timestamp": datetime.now(constants.TIMEZONE.value).strftime(
+                "%Y-%m-%dT%H:%M:S"
+            )
+        }
+    }
+    rp.set(dataset_id, update_dict)
+    return True

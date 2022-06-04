@@ -58,16 +58,21 @@ Flows for br_rj_riodejaneiro_onibus_gps
 ###############################################################################
 
 
+from sys import flags
 from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants as emd_constants
+from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks import run_dbt_command
 from pipelines.rj_smtr.tasks import (
     create_current_date_hour_partition,
+    get_date_range,
     get_file_path_and_partitions,
+    get_local_dbt_client,
     get_raw,
     save_raw_local,
     save_treated_local,
+    set_last_run_timestamp,
     upload_logs_to_bq,
     bq_upload,
 )
@@ -79,6 +84,27 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
 
 # from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.schedules import every_two_weeks
 from pipelines.utils.decorators import Flow
+from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
+
+with Flow(
+    "SMTR - Materializar - br_rj_riodejaneiro_veiculos.gps_sppo",
+    code_owners=["@hellcassius#1223", "@fernandascovino#9750"],
+) as materialize_flow:
+    dataset_id = Parameter("dataset_id", "br_rj_riodejaneiro_veiculos")
+    table_id = Parameter("table_id", "gps_sppo")
+
+    dbt_client = get_local_dbt_client(host="localhost", port=3001)
+    # dbt_client = get_k8s_dbt_client(mode='dev')
+    date_range = get_date_range(dataset_id, table_id)
+    RUN = run_dbt_command(
+        dbt_client=dbt_client,
+        dataset_id=dataset_id,
+        table_id=table_id,
+        command="run",
+        flags=date_range,
+    )
+    set_last_run_timestamp(dataset_id=dataset_id, table_id=table_id, wait=RUN)
+
 
 with Flow(
     "SMTR - Captura - GPS SPPO",

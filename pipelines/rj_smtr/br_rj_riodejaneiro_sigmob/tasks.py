@@ -218,7 +218,7 @@ def run_dbt_command(
     if dataset_id:
         run_command += f" --select models/{dataset_id}/"
         if table_id:
-            run_command += f"{table_id}"
+            run_command += f"{table_id}.sql"
     if flags:
         run_command += f" {flags}"
 
