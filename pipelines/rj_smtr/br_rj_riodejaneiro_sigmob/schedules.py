@@ -83,7 +83,7 @@ every_day = Schedule(
         IntervalClock(
             interval=timedelta(days=1),
             start_date=datetime(
-                2021, 1, 1, 0, 30, tzinfo=pytz.timezone(constants.TIMEZONE.value)
+                2021, 1, 1, 0, 0, tzinfo=pytz.timezone(constants.TIMEZONE.value)
             ),
             labels=[
                 emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value,
