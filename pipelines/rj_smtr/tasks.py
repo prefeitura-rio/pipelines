@@ -96,7 +96,7 @@ def get_local_dbt_client(host: str, port: int):
 @task(
     checkpoint=False,
 )
-def run_dbt_command(  # pylint disable=R0913
+def run_dbt_command(  # pylint: disable=too-many-arguments
     dbt_client: DbtClient,
     dataset_id: str = None,
     table_id: str = None,
