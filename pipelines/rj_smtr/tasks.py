@@ -52,40 +52,30 @@ Tasks for rj_smtr
 import json
 import os
 from pathlib import Path
+from datetime import timedelta
 
 from basedosdados import Storage
+from dbt_client import DbtClient
 import pandas as pd
 import pendulum
 from prefect import task
 import requests
 
 from pipelines.rj_smtr.constants import constants
-from pipelines.rj_smtr.utils import create_or_append_table
+from pipelines.constants import constants as emd_constants
+from pipelines.rj_smtr.utils import (
+    create_or_append_table,
+    bq_project,
+    get_table_max_value,
+)
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_vault_secret
 
-
-@task
-def create_current_date_hour_partition():
-    """Create partitioned directory structure to save data locally
-
-    Returns:
-        dict: "filename" contains the name which to upload the csv, "partitions" contains
-        the partitioned directory path
-    """
-    timezone = constants.TIMEZONE.value
-
-    capture_time = pendulum.now(timezone)
-    date = capture_time.strftime("%Y-%m-%d")
-    hour = capture_time.strftime("%H")
-    filename = capture_time.strftime("%Y-%m-%d-%H-%M-%S")
-
-    partitions = f"data={date}/hora={hour}"
-
-    return {
-        "filename": filename,
-        "partitions": partitions,
-    }
+###############
+#
+# DBT
+#
+###############
 
 
 @task
@@ -103,9 +93,179 @@ def get_local_dbt_client(host: str, port: int):
     return get_dbt_client(host=host, port=port)
 
 
+@task(
+    checkpoint=False,
+)
+def run_dbt_command(  # pylint: disable=too-many-arguments
+    dbt_client: DbtClient,
+    dataset_id: str = None,
+    table_id: str = None,
+    command: str = "run",
+    flags: str = None,
+    wait=None,  # pylint: disable=unused-argument
+):
+    """
+    Runs a dbt command. If passing a dataset_id only, will run the entire dataset.
+    If also passing a table_id, will select the dbt model specified at the path:
+    models/<dataset_id>/<table_id>.sql.
+
+    Args:
+        dbt_client (DbtClient): Dbt interface of interaction
+        dataset_id (str, optional): dataset_id on BigQuery, also folder name on
+        your queries repo. Defaults to None.
+        table_id (str, optional): table_id on BigQuery, also .sql file name on your
+        models folder. Defaults to None.
+        command (str, optional): dbt command to run. Defaults to "run".
+        flags (str, optional): flags allowed to the specific command.
+        Should be preceeded by "--" Defaults to None.
+        sync (bool, optional): _description_. Defaults to True.
+    """
+    run_command = f"dbt {command}"
+    if dataset_id:
+        run_command += f" --select models/{dataset_id}/"
+        if table_id:
+            run_command += f"{table_id}.sql"
+    if flags:
+        run_command += f" {flags}"
+
+    log(f"Will run the following command:\n{run_command}")
+    dbt_client.cli(run_command, sync=True)
+    return log("Finished running dbt command")
+
+
+@task(
+    checkpoint=False,
+    max_retries=emd_constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=emd_constants.TASK_RETRY_DELAY.value),
+)
+def run_dbt_schema(
+    dbt_client: DbtClient,
+    dataset_id: str,
+    refresh: bool = False,
+    wait=None,  # pylint: disable=unused-argument
+):
+    """Run a whole schema (dataset) worth of models
+
+    Args:
+        dbt_client (DbtClient): Dbt interface of interaction
+        dataset_id (str, optional): Dataset id on BigQuery. Defaults to "br_rj_riodejaneiro_sigmob".
+        refresh (bool, optional): If true, rebuild all models from scratch. Defaults to False.
+
+    Returns:
+        None
+    """
+
+    run_command = f"run --select models/{dataset_id}"
+    if refresh:
+        log(f"Will run the following command:\n{run_command} in full refresh mode")
+        run_command += " --full-refresh"
+    dbt_client.cli(run_command, sync=True)
+    return log(f"Finished running schema {dataset_id}")
+
+
+@task(max_retries=3, retry_delay=timedelta(seconds=10))
+def build_incremental_model(  # pylint: disable=too-many-arguments
+    dbt_client: DbtClient,
+    dataset_id: str,
+    base_table_id: str,
+    mat_table_id: str,
+    field_name: str = "data_versao",
+    refresh: bool = False,
+    wait=None,  # pylint: disable=unused-argument
+):
+    """
+        Utility task for backfilling table in predetermined steps.
+        Assumes the step sizes will be defined on the .sql file.
+
+    Args:
+        dbt_client (DbtClient): DBT interface object
+        dataset_id (str): Dataset id on BigQuery
+        base_table_id (str): Base table from which to materialize (usually, an external table)
+        mat_table_id (str): Target table id for materialization
+        field_name (str, optional): Key field (column) for dbt incremental filters.
+        Defaults to "data_versao".
+        refresh (bool, optional): If True, rebuild the table from scratch. Defaults to False.
+        wait (NoneType, optional): Placeholder parameter, used to wait previous tasks finish.
+        Defaults to None.
+
+    Returns:
+        bool: whether the table was fully built or not.
+    """
+
+    query_project_id = bq_project()
+    last_mat_date = get_table_max_value(
+        query_project_id, dataset_id, mat_table_id, field_name
+    )
+    last_base_date = get_table_max_value(
+        query_project_id, dataset_id, base_table_id, field_name
+    )
+    log(
+        f"""
+    Base table last version: {last_base_date}
+    Materialized table last version: {last_mat_date}
+    """
+    )
+    run_command = f"run --select models/{dataset_id}/{mat_table_id}.sql"
+
+    if refresh:
+        log("Running in full refresh mode")
+        log(f"DBT will run the following command:\n{run_command+' --full-refresh'}")
+        dbt_client.cli(run_command + " --full-refresh", sync=True)
+        last_mat_date = get_table_max_value(
+            query_project_id, dataset_id, mat_table_id, field_name
+        )
+
+    if last_base_date > last_mat_date:
+        log("Running interval step materialization")
+        log(f"DBT will run the following command:\n{run_command}")
+        while last_base_date > last_mat_date:
+            running = dbt_client.cli(run_command, sync=True)
+            last_mat_date = get_table_max_value(
+                query_project_id,
+                dataset_id,
+                mat_table_id,
+                field_name,
+                wait=running,
+            )
+            log(f"After this step, materialized table last version is: {last_mat_date}")
+            if last_mat_date == last_base_date:
+                log("Materialized table reached base table version!")
+                return True
+    log("Did not run interval step materialization...")
+    return False
+
+
+###############
+#
+# Local file managment
+#
+###############
+
+
 @task
-def get_file_path_and_partitions(dataset_id, table_id, filename, partitions):
-    """Get the full path which to save data locally before upload
+def create_current_date_hour_partition():
+    """Create partitioned directory structure to save data locally based
+    on capture time.
+
+    Returns:
+        dict: "filename" contains the name which to upload the csv, "partitions" contains
+        the partitioned directory path
+    """
+    timezone = constants.TIMEZONE.value
+
+    capture_time = pendulum.now(timezone)
+    date = capture_time.strftime("%Y-%m-%d")
+    hour = capture_time.strftime("%H")
+
+    return {
+        "filename": capture_time.strftime("%Y-%m-%d-%H-%M-%S"),
+        "partitions": f"data={date}/hora={hour}",
+    }
+
+
+@task
+def create_local_partition_path(dataset_id, table_id, filename, partitions):
+    """Get the full path which to save data locally before upload.
 
     Args:
         dataset_id (str): dataset_id on BigQuery
@@ -127,7 +287,7 @@ def get_file_path_and_partitions(dataset_id, table_id, filename, partitions):
 
     file_path = f"{os.getcwd()}/{data_folder}/{{mode}}/{dataset_id}/{table_id}"
     file_path += f"/{partitions}/{filename}.{{filetype}}"
-    log(f"creating file path {file_path}")
+    log(f"Creating file path: {file_path}")
 
     return file_path
 
@@ -172,6 +332,13 @@ def save_treated_local(dataframe, file_path, mode="staging"):
     dataframe.to_csv(_file_path, index=False)
 
     return _file_path
+
+
+###############
+#
+# Extract data
+#
+###############
 
 
 @task
@@ -220,6 +387,13 @@ def get_raw(url, headers=None, kind: str = None):
     # else
     error = f"Requests failed with error {data.status_code}"
     return {"error": error, "timestamp": timestamp.isoformat(), "data": data}
+
+
+###############
+#
+# Load data
+#
+###############
 
 
 @task
