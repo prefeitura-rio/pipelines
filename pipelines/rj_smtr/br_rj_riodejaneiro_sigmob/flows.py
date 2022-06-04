@@ -82,9 +82,7 @@ from pipelines.utils.execute_dbt_model.tasks import (
 
 with Flow(
     "SMTR - DBT execute - SIGMOB",
-    code_owners=[
-        "@your-discord-username",
-    ],
+    code_owners=["@hellcassius#1223", "@fernandascovino#9750"],
 ) as materialize_sigmob:
     dataset_id = Parameter("dataset_id", default="br_rj_riodejaneiro_sigmob")
     backfill = Parameter("backfill", default=False)

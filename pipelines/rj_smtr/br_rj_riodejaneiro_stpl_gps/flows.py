@@ -80,9 +80,7 @@ from pipelines.utils.decorators import Flow
 
 with Flow(
     "SMTR: gps_stpl - Captura",
-    code_owners=[
-        "@hellcassius#1223",
-    ],
+    code_owners=["@hellcassius#1223", "@fernandascovino#9750"],
 ) as stpl_captura:
 
     dataset_id = Parameter("dataset_id")
