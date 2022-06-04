@@ -65,7 +65,7 @@ from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.utils import (
     create_or_append_table,
     bq_project,
-    get_table_max_value
+    get_table_max_value,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_vault_secret
@@ -75,6 +75,7 @@ from pipelines.utils.utils import log, get_vault_secret
 # DBT
 #
 ###############
+
 
 @task
 def get_local_dbt_client(host: str, port: int):
@@ -233,12 +234,12 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
     return False
 
 
-
 ###############
 #
 # Local file managment
 #
 ###############
+
 
 @task
 def create_current_date_hour_partition():
@@ -338,6 +339,7 @@ def save_treated_local(dataframe, file_path, mode="staging"):
 #
 ###############
 
+
 @task
 def get_raw(url, headers=None, kind: str = None):
     """Request data from a url API
@@ -387,6 +389,7 @@ def get_raw(url, headers=None, kind: str = None):
 # Load data
 #
 ###############
+
 
 @task
 def bq_upload(dataset_id, table_id, filepath, raw_filepath=None, partitions=None):
