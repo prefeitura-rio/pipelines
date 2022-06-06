@@ -58,18 +58,17 @@ Flows for br_rj_riodejaneiro_onibus_gps
 ###############################################################################
 
 
-from sys import flags
-from prefect import Parameter
+from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants as emd_constants
-from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks import run_dbt_command
 from pipelines.rj_smtr.tasks import (
     create_current_date_hour_partition,
+    create_local_partition_path,
     get_date_range,
-    get_file_path_and_partitions,
-    get_local_dbt_client,
+    # get_local_dbt_client,
     get_raw,
+    run_dbt_command,
     save_raw_local,
     save_treated_local,
     set_last_run_timestamp,
@@ -77,32 +76,48 @@ from pipelines.rj_smtr.tasks import (
     bq_upload,
 )
 from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.constants import constants
-from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.schedules import every_minute
+from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.schedules import (
+    every_minute,
+    every_hour,
+)
 from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
     pre_treatment_br_rj_riodejaneiro_onibus_gps,
 )
 
-# from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.schedules import every_two_weeks
 from pipelines.utils.decorators import Flow
 from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
 
 with Flow(
     "SMTR - Materializar - br_rj_riodejaneiro_veiculos.gps_sppo",
     code_owners=["@hellcassius#1223", "@fernandascovino#9750"],
-) as materialize_flow:
-    dataset_id = Parameter("dataset_id", "br_rj_riodejaneiro_veiculos")
-    table_id = Parameter("table_id", "gps_sppo")
-
-    dbt_client = get_local_dbt_client(host="localhost", port=3001)
-    # dbt_client = get_k8s_dbt_client(mode='dev')
+) as materialize:
+    dataset_id = Parameter("dataset_id", "br_rj_riodejaneiro_onibus_gps")
+    table_id = Parameter("table_id", "sppo_aux_registros_filtrada")
+    rebuild = Parameter("rebuild", False)
+    # dbt_client = get_local_dbt_client(host="localhost", port=3001)
+    dbt_client = get_k8s_dbt_client(mode="dev")
     date_range = get_date_range(dataset_id, table_id)
-    RUN = run_dbt_command(
-        dbt_client=dbt_client,
-        dataset_id=dataset_id,
-        table_id=table_id,
-        command="run",
-        flags=date_range,
-    )
+    with case(rebuild, True):
+        RUN = run_dbt_command(
+            dbt_client=dbt_client,
+            dataset_id=dataset_id,
+            table_id=table_id,
+            command="run",
+            _vars=date_range,
+            upstream=True,
+            downstream=True,
+            flags="-- full-refresh",
+        )
+    with case(rebuild, False):
+        RUN = run_dbt_command(
+            dbt_client=dbt_client,
+            dataset_id=dataset_id,
+            table_id=table_id,
+            command="run",
+            _vars=date_range,
+            upstream=True,
+            downstream=True,
+        )
     set_last_run_timestamp(dataset_id=dataset_id, table_id=table_id, wait=RUN)
 
 
@@ -119,7 +134,7 @@ with Flow(
 
     file_dict = create_current_date_hour_partition()
 
-    filepath = get_file_path_and_partitions(
+    filepath = create_local_partition_path(
         dataset_id=dataset_id,
         table_id=table_id,
         filename=file_dict["filename"],
@@ -153,7 +168,9 @@ with Flow(
         partitions=file_dict["partitions"],
     )
 
-
+materialize.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+materialize.run_config = KubernetesRun(image=emd_constants.DOCKER_IMAGE.value)
+materialize.schedule = every_hour
 captura_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_sppo.run_config = KubernetesRun(image=emd_constants.DOCKER_IMAGE.value)
 captura_sppo.schedule = every_minute

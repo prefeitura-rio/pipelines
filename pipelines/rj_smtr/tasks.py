@@ -53,6 +53,7 @@ from datetime import datetime, timedelta
 import json
 import os
 from pathlib import Path
+from pytz import timezone
 
 from basedosdados import Storage
 from dbt_client import DbtClient
@@ -104,6 +105,9 @@ def run_dbt_command(  # pylint: disable=too-many-arguments
     table_id: str = None,
     command: str = "run",
     flags: str = None,
+    _vars: str = None,
+    upstream: bool = None,
+    downstream: bool = None,
     wait=None,  # pylint: disable=unused-argument
 ):
     """
@@ -124,9 +128,16 @@ def run_dbt_command(  # pylint: disable=too-many-arguments
     """
     run_command = f"dbt {command}"
     if dataset_id:
-        run_command += f" --select models/{dataset_id}/"
+        run_command += " --select "
+        if upstream:
+            run_command += "+"
+        run_command += f"models/{dataset_id}/"
         if table_id:
             run_command += f"{table_id}.sql"
+        if downstream:
+            run_command += "+"
+    if _vars:
+        run_command += f" --vars {_vars}"
     if flags:
         run_command += f" {flags}"
 
@@ -253,9 +264,9 @@ def create_current_date_hour_partition():
         dict: "filename" contains the name which to upload the csv, "partitions" contains
         the partitioned directory path
     """
-    timezone = constants.TIMEZONE.value
+    tz = constants.TIMEZONE.value  # pylint: disable=C0103
 
-    capture_time = pendulum.now(timezone)
+    capture_time = pendulum.now(tz)
     date = capture_time.strftime("%Y-%m-%d")
     hour = capture_time.strftime("%H")
 
@@ -529,23 +540,55 @@ def upload_logs_to_bq(dataset_id, parent_table_id, timestamp, error):
     retry_delay=timedelta(seconds=constants.RETRY_DELAY.value),
 )
 def get_date_range(dataset_id: str, table_id: str):
+    """
+    Task for generating dict string to be passed for the
+    --vars argument on DBT.
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): model filename on the queries repo.
+        eg: if you have a model defined in the file <filename>.sql,
+        the table_id should be <filename>
+
+    Returns:
+        str: stringfied form of the date_range dict
+    """
     start_ts = get_last_run_timestamp(dataset_id=dataset_id, table_id=table_id)
     if start_ts is None:
         return None
-    end_ts = datetime.now(constants.TIMEZONE.value).strftime("%Y-%m-%dT%H:%M:S")
+    end_ts = datetime.now(timezone(constants.TIMEZONE.value)).strftime(
+        "%Y-%m-%dT%H:%M:%S"
+    )
     date_range = {"date_range_start": start_ts, "date_range_end": end_ts}
-    return f'-- vars "{date_range}"'
+    return f'"{date_range}"'
 
 
 @task
-def set_last_run_timestamp(dataset_id: str, table_id: str, wait=None):
-    rp = RedisPal(constants.REDIS_HOST.value)
+def set_last_run_timestamp(
+    dataset_id: str, table_id: str, wait=None
+):  # pylint: disable=unused-argument
+    """
+    Set the `last_run_timestamp` key for the dataset_id/table_id pair
+    to datetime.now() time. Used after running a materialization to set the
+    stage for the next to come
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): model filename on the queries repo.
+        wait (Any, optional): Used for defining dependencies inside the flow,
+        in general, pass the output of the task which should be run imediately
+        before this. Defaults to None.
+
+    Returns:
+        _type_: _description_
+    """
+    redpal = RedisPal(constants.REDIS_HOST.value)
     update_dict = {
         table_id: {
-            "last_run_timestamp": datetime.now(constants.TIMEZONE.value).strftime(
-                "%Y-%m-%dT%H:%M:S"
-            )
+            "last_run_timestamp": datetime.now(
+                timezone(constants.TIMEZONE.value)
+            ).strftime("%Y-%m-%dT%H:%M:%S")
         }
     }
-    rp.set(dataset_id, update_dict)
+    redpal.set(dataset_id, update_dict)
     return True

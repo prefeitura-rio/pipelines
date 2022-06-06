@@ -29,7 +29,6 @@ General purpose functions for rj_smtr
 # ```
 #
 ###############################################################################
-from datetime import datetime
 from pathlib import Path
 
 import basedosdados as bd
@@ -147,12 +146,27 @@ def get_table_max_value(
 
 
 def get_last_run_timestamp(dataset_id: str, table_id: str):
-    rp = RedisPal(constants.REDIS_HOST.value)
-    runs = rp.get(dataset_id)
+    """
+    Query redis to retrive the time for when the last materialization
+    ran.
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): model filename on the queries repo.
+        eg: if you have a model defined in the file <filename>.sql,
+        the table_id should be <filename>
+
+    Returns:
+        Union[str, None]: _description_
+    """
+    redpal = RedisPal(constants.REDIS_HOST.value)
+    runs = redpal.get(dataset_id)
     if runs is None:
-        rp.set(dataset_id, table_id)
+        redpal.set(dataset_id, {table_id: ""})
     try:
         last_run_timestamp = runs[table_id]["last_run_timestamp"]
+    except KeyError:
+        return None
     except TypeError:
         return None
     return last_run_timestamp
