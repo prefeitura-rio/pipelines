@@ -205,9 +205,7 @@ from
                                         WHEN vuo.ID_N1 <> 0 THEN vuo.ID_N1
                                         WHEN vuo.ID_N0 <> 0 THEN vuo.ID_N0 END
 where
-    ch.dt_inicio BETWEEN '2022-01-01 00:00:00.000'
-    AND GETDATE()
-    and uo.id_instituicao_fk = 3
+    uo.id_instituicao_fk = 3
     and id_categoria in (2)
 group by
     ch.id_chamado,
