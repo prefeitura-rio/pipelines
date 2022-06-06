@@ -58,6 +58,7 @@ from prefect import task
 
 from pipelines.rj_smtr.constants import constants
 from pipelines.utils.utils import log
+from pipelines.rj_smtr.utils import log_critical
 
 
 @task
@@ -126,11 +127,11 @@ def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict, key_column):
         )
         df_treated = df_treated[mask]
         log(f"Shape antes da filtragem: {df.shape}")
-        log(f"Shape após a filtrage: {df_treated.shape}")
+        log(f"Shape após a filtragem: {df_treated.shape}")
         if df_treated.shape[0] == 0:
             error = ValueError("After filtering, the dataframe is empty!")
         df = df_treated
     except Exception:
         error = traceback.format_exc()
-        # log_critical(f"Failed to filter STPL data: \n{err}")
+        log_critical(f"Failed to filter STPL data: \n{error}")
     return {"df": df, "error": error}
