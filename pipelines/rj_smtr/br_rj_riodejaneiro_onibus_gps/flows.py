@@ -64,7 +64,7 @@ from prefect.storage import GCS
 from pipelines.constants import constants as emd_constants
 from pipelines.rj_smtr.tasks import (
     create_current_date_hour_partition,
-    get_file_path_and_partitions,
+    create_local_partition_path,
     get_raw,
     save_raw_local,
     save_treated_local,
@@ -93,7 +93,7 @@ with Flow(
 
     file_dict = create_current_date_hour_partition()
 
-    filepath = get_file_path_and_partitions(
+    filepath = create_local_partition_path(
         dataset_id=dataset_id,
         table_id=table_id,
         filename=file_dict["filename"],
