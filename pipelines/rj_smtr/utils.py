@@ -36,7 +36,6 @@ from basedosdados import Table
 import pandas as pd
 from redis_pal import RedisPal
 
-
 from pipelines.utils.utils import log
 from pipelines.utils.utils import get_vault_secret, send_discord_message
 from pipelines.rj_smtr.constants import constants
