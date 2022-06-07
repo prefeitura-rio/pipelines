@@ -116,7 +116,7 @@ with Flow(
     dataset_id = Parameter(&#34;dataset_id&#34;, default=&#34;br_rj_riodejaneiro_sigmob&#34;)
     backfill = Parameter(&#34;backfill&#34;, default=False)
 
-    dbt_client = get_k8s_dbt_client(mode=&#34;dev&#34;)
+    dbt_client = get_k8s_dbt_client(mode=&#34;prod&#34;)
     # For local development: comment above and uncomment below
     # dbt_client = get_local_dbt_client(host=&#34;localhost&#34;, port=3001)
     RUN = run_dbt_schema(dbt_client=dbt_client, dataset_id=dataset_id, refresh=backfill)
@@ -164,7 +164,7 @@ with Flow(
             flow_name=materialize_sigmob.name,
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             parameters={&#34;dataset_id&#34;: &#34;br_rj_riodejaneiro_sigmob&#34;, &#34;backfill&#34;: False},
-            labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+            labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
             run_name=&#34;SMTR - Materialzar SIGMOB após captura&#34;,
         )
         materialize_run.set_upstream(bq_upload)
