@@ -290,8 +290,6 @@ group by
     chs.dt_alvo_diagnostico,
     cl.dt_real_diagnostico,
     no_justificativa
-order by
-    ch.id_chamado asc
         """,
     },
 }
