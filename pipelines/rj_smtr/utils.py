@@ -40,6 +40,8 @@ from pipelines.utils.utils import log
 from pipelines.utils.utils import get_vault_secret, send_discord_message
 from pipelines.rj_smtr.constants import constants
 
+bd.config.from_file = True
+
 
 def log_critical(message: str, secret_path: str = constants.CRITICAL_SECRET_PATH.value):
     """Logs message to critical discord channel specified
