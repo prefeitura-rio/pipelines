@@ -67,7 +67,6 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.constants import (
 )
 from pipelines.rj_smtr.tasks import (
     bq_upload_from_dict,
-    run_dbt_schema,
     run_dbt_command,
     build_incremental_model,
     # , get_local_dbt_client
@@ -90,8 +89,12 @@ with Flow(
     dbt_client = get_k8s_dbt_client(mode="prod")
     # For local development: comment above and uncomment below
     # dbt_client = get_local_dbt_client(host="localhost", port=3001)
-    RUN = run_dbt_schema(dbt_client=dbt_client, dataset_id=dataset_id, refresh=backfill)
     with case(backfill, True):
+        RUN = run_dbt_command(
+            dbt_client=dbt_client,
+            dataset_id=dataset_id,
+            flags="--full-refresh",
+        )
         INCREMENTAL_RUN = build_incremental_model(
             dbt_client=dbt_client,
             dataset_id=dataset_id,
@@ -110,6 +113,12 @@ with Flow(
             command="test", dbt_client=dbt_client, dataset_id=dataset_id, wait=LAST_RUN
         )
     with case(backfill, False):
+
+        RUN = run_dbt_command(
+            dbt_client=dbt_client,
+            dataset_id=dataset_id,
+        )
+
         TESTS = run_dbt_command(
             command="test", dbt_client=dbt_client, dataset_id=dataset_id, wait=RUN
         )

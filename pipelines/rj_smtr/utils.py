@@ -119,11 +119,12 @@ def bq_project(kind: str = "bigquery_prod"):
     return bd.upload.base.Base().client[kind].project
 
 
-def get_table_max_value(
+def get_table_min_max_value(  # pylint: disable=R0913
     query_project_id: str,
     dataset_id: str,
     table_id: str,
     field_name: str,
+    kind: str,
     wait=None,  # pylint: disable=unused-argument
 ):
     """Query a table to get the maximum value for the chosen field.
@@ -133,10 +134,11 @@ def get_table_max_value(
         dataset_id (str): dataset_id on BigQuery
         table_id (str): table_id on BigQuery
         field_name (str): column name to query
+        kind (str): which value to get. Accepts min and max
     """
     query = f"""
         SELECT
-            max({field_name})
+            {kind}({field_name})
         FROM {query_project_id}.{dataset_id}.{table_id}
     """
     result = bd.read_sql(query=query, billing_project_id=bq_project())

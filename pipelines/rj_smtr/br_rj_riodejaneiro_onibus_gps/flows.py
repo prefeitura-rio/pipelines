@@ -65,6 +65,7 @@ from pipelines.constants import constants as emd_constants
 from pipelines.rj_smtr.tasks import (
     create_current_date_hour_partition,
     create_local_partition_path,
+    fetch_dataset_sha,
     get_date_range,
     # get_local_dbt_client,
     get_raw,
@@ -97,13 +98,16 @@ with Flow(
     # dbt_client = get_local_dbt_client(host="localhost", port=3001)
     dbt_client = get_k8s_dbt_client(mode="dev")
     date_range = get_date_range(dataset_id, table_id)
+    dataset_sha = fetch_dataset_sha(
+        dataset_id=dataset_id,
+    )
     with case(rebuild, True):
         RUN = run_dbt_command(
             dbt_client=dbt_client,
             dataset_id=dataset_id,
             table_id=table_id,
             command="run",
-            _vars=date_range,
+            _vars=[date_range, dataset_sha],
             upstream=True,
             downstream=True,
             flags="-- full-refresh",
@@ -114,7 +118,7 @@ with Flow(
             dataset_id=dataset_id,
             table_id=table_id,
             command="run",
-            _vars=date_range,
+            _vars=[date_range, dataset_sha],
             upstream=True,
             downstream=True,
         )
