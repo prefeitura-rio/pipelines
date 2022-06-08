@@ -67,7 +67,6 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.constants import (
 )
 from pipelines.rj_smtr.tasks import (
     bq_upload_from_dict,
-    run_dbt_schema,
     run_dbt_command,
     build_incremental_model,
     # , get_local_dbt_client
@@ -90,8 +89,12 @@ with Flow(
     dbt_client = get_k8s_dbt_client(mode="prod")
     # For local development: comment above and uncomment below
     # dbt_client = get_local_dbt_client(host="localhost", port=3001)
-    RUN = run_dbt_schema(dbt_client=dbt_client, dataset_id=dataset_id, refresh=backfill)
     with case(backfill, True):
+        RUN = run_dbt_command(
+            dbt_client=dbt_client,
+            dataset_id=dataset_id,
+            flags="--full-refresh",
+        )
         INCREMENTAL_RUN = build_incremental_model(
             dbt_client=dbt_client,
             dataset_id=dataset_id,
@@ -110,6 +113,12 @@ with Flow(
             command="test", dbt_client=dbt_client, dataset_id=dataset_id, wait=LAST_RUN
         )
     with case(backfill, False):
+
+        RUN = run_dbt_command(
+            dbt_client=dbt_client,
+            dataset_id=dataset_id,
+        )
+
         TESTS = run_dbt_command(
             command="test", dbt_client=dbt_client, dataset_id=dataset_id, wait=RUN
         )
@@ -119,9 +128,7 @@ with Flow(
 
 with Flow(
     "SMTR- Captura - SIGMOB",
-    code_owners=[
-        "@your-discord-username",
-    ],
+    code_owners=["@hellcassius#1223", "@fernandascovino#9750"],
 ) as captura_sigmob:
 
     endpoints = Parameter("endpoints", default=sigmob_constants.ENDPOINTS.value)
@@ -147,9 +154,15 @@ with Flow(
     )
 
 materialize_sigmob.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-materialize_sigmob.run_config = KubernetesRun(image=emd_constants.DOCKER_IMAGE.value)
+materialize_sigmob.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
 # materialize_sigmob.schedule = every_day
 
 captura_sigmob.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-captura_sigmob.run_config = KubernetesRun(image=emd_constants.DOCKER_IMAGE.value)
+captura_sigmob.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
 captura_sigmob.schedule = every_day
