@@ -50,6 +50,9 @@ with Flow(
     # Get default parameters #
     dataset_id = Parameter("dataset_id", default=constants.GPS_BRT_DATASET_ID.value)
     table_id = Parameter("table_id", default=constants.GPS_BRT_TREATED_TABLE_ID.value)
+    raw_table_id = Parameter(
+        "raw_table_id", default=constants.GPS_BRT_RAW_TABLE_ID.value
+    )
     rebuild = Parameter("rebuild", False)
 
     # Set dbt client #
@@ -58,7 +61,12 @@ with Flow(
     # dbt_client = get_local_dbt_client(host="localhost", port=3001)
 
     # Set specific run parameters #
-    date_range = get_materialization_date_range(dataset_id, table_id)
+    date_range = get_materialization_date_range(
+        dataset_id=dataset_id,
+        table_id=table_id,
+        raw_table_id=raw_table_id,
+        table_date_column_name="data",
+    )
     dataset_sha = fetch_dataset_sha(
         dataset_id=dataset_id,
     )
@@ -73,7 +81,7 @@ with Flow(
             _vars=[date_range, dataset_sha],
             upstream=True,
             downstream=True,
-            flags="-- full-refresh",
+            flags="--full-refresh",
         )
     with case(rebuild, False):
         RUN = run_dbt_command(
@@ -140,11 +148,11 @@ materialize_brt.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-# materialize.schedule = every_hour
+# materialize_brt.schedule = every_hour
 
 captura_brt.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_brt.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-# captura_sppo.schedule = every_minute
+# captura_brt.schedule = every_minute

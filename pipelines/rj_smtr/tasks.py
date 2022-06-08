@@ -12,7 +12,7 @@ from typing import Union, List, Dict
 
 from pytz import timezone
 
-from basedosdados import Storage
+from basedosdados import Storage, Table
 from dbt_client import DbtClient
 import pandas as pd
 import pendulum
@@ -474,8 +474,8 @@ def upload_logs_to_bq(dataset_id, parent_table_id, timestamp, error):
 def get_materialization_date_range(
     dataset_id: str,
     table_id: str,
+    raw_table_id: str,
     table_date_column_name: str = None,
-    rebuild: bool = False,
 ):
     """
     Task for generating dict with variables to be passed to the
@@ -497,26 +497,25 @@ def get_materialization_date_range(
         dict: containing date_range_start and date_range_end
     """
 
-    if rebuild is True:
-        start_ts = get_table_min_max_value(
-            query_project_id=bq_project(),
-            dataset_id=dataset_id,
-            table_id=table_id,
-            field_name=table_date_column_name,
-            kind="min",
-        )
-
-    else:
-        start_ts = get_last_run_timestamp(dataset_id=dataset_id, table_id=table_id)
+    start_ts = get_last_run_timestamp(dataset_id=dataset_id, table_id=table_id)
 
     if start_ts is None:
-        start_ts = get_table_min_max_value(
-            query_project_id=bq_project(),
-            dataset_id=dataset_id,
-            table_id=table_id,
-            field_name=table_date_column_name,
-            kind="max",
-        )
+        if Table(dataset_id=dataset_id, table_id=table_id).table_exists("prod"):
+            start_ts = get_table_min_max_value(
+                query_project_id=bq_project(),
+                dataset_id=dataset_id,
+                table_id=table_id,
+                field_name=table_date_column_name,
+                kind="max",
+            )
+        else:
+            start_ts = get_table_min_max_value(
+                query_project_id=bq_project(),
+                dataset_id=dataset_id,
+                table_id=raw_table_id,
+                field_name=table_date_column_name,
+                kind="max",
+            )
     end_ts = datetime.now(timezone(constants.TIMEZONE.value)).strftime(
         "%Y-%m-%dT%H:%M:%S"
     )
