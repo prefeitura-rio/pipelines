@@ -62,7 +62,6 @@ from dbt_client import DbtClient
 import pandas as pd
 import pendulum
 from prefect import task
-from redis_pal import RedisPal
 import requests
 
 from pipelines.rj_smtr.constants import constants
@@ -73,7 +72,7 @@ from pipelines.rj_smtr.utils import (
     get_last_run_timestamp,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
-from pipelines.utils.utils import log, get_vault_secret
+from pipelines.utils.utils import log, get_vault_secret, get_redis_client
 
 ###############
 #
@@ -593,7 +592,7 @@ def set_last_run_timestamp(
     Returns:
         _type_: _description_
     """
-    redpal = RedisPal(constants.REDIS_HOST.value)
+    redpal = get_redis_client()
     update_dict = {
         table_id: {
             "last_run_timestamp": datetime.now(
