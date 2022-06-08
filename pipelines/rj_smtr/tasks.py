@@ -49,24 +49,28 @@ Tasks for rj_smtr
 # Abaixo segue um código para exemplificação, que pode ser removido.
 #
 ###############################################################################
+from datetime import datetime, timedelta
 import json
 import os
 from pathlib import Path
-from datetime import timedelta
+from typing import Union, List, Dict
+
+from pytz import timezone
 
 from basedosdados import Storage
 from dbt_client import DbtClient
 import pandas as pd
 import pendulum
 from prefect import task
+from redis_pal import RedisPal
 import requests
 
 from pipelines.rj_smtr.constants import constants
-from pipelines.constants import constants as emd_constants
 from pipelines.rj_smtr.utils import (
     create_or_append_table,
     bq_project,
-    get_table_max_value,
+    get_table_min_max_value,
+    get_last_run_timestamp,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_vault_secret
@@ -102,6 +106,9 @@ def run_dbt_command(  # pylint: disable=too-many-arguments
     table_id: str = None,
     command: str = "run",
     flags: str = None,
+    _vars: Union[dict, List[Dict]] = None,
+    upstream: bool = None,
+    downstream: bool = None,
     wait=None,  # pylint: disable=unused-argument
 ):
     """
@@ -122,45 +129,32 @@ def run_dbt_command(  # pylint: disable=too-many-arguments
     """
     run_command = f"dbt {command}"
     if dataset_id:
-        run_command += f" --select models/{dataset_id}/"
+        run_command += " --select "
+        if upstream:
+            run_command += "+"
+        run_command += f"models/{dataset_id}/"
         if table_id:
             run_command += f"{table_id}.sql"
+        if downstream:
+            run_command += "+"
+    if _vars:
+        log(f"Received vars:\n {_vars}\n type: {type(_vars)}")
+        if isinstance(_vars, list):
+            vars_dict = {}
+            for elem in _vars:
+                log(f"Received variable {elem}. Adding to vars")
+                vars_dict.update(elem)
+            vars_str = f'"{vars_dict}"'
+            run_command += f" --vars {vars_str}"
+        else:
+            vars_str = f'"{_vars}"'
+            run_command += f" --vars {vars_str}"
     if flags:
         run_command += f" {flags}"
 
     log(f"Will run the following command:\n{run_command}")
     dbt_client.cli(run_command, sync=True)
     return log("Finished running dbt command")
-
-
-@task(
-    checkpoint=False,
-    max_retries=emd_constants.TASK_MAX_RETRIES.value,
-    retry_delay=timedelta(seconds=emd_constants.TASK_RETRY_DELAY.value),
-)
-def run_dbt_schema(
-    dbt_client: DbtClient,
-    dataset_id: str,
-    refresh: bool = False,
-    wait=None,  # pylint: disable=unused-argument
-):
-    """Run a whole schema (dataset) worth of models
-
-    Args:
-        dbt_client (DbtClient): Dbt interface of interaction
-        dataset_id (str, optional): Dataset id on BigQuery. Defaults to "br_rj_riodejaneiro_sigmob".
-        refresh (bool, optional): If true, rebuild all models from scratch. Defaults to False.
-
-    Returns:
-        None
-    """
-
-    run_command = f"run --select models/{dataset_id}"
-    if refresh:
-        log(f"Will run the following command:\n{run_command} in full refresh mode")
-        run_command += " --full-refresh"
-    dbt_client.cli(run_command, sync=True)
-    return log(f"Finished running schema {dataset_id}")
 
 
 @task(max_retries=3, retry_delay=timedelta(seconds=10))
@@ -171,6 +165,7 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
     mat_table_id: str,
     field_name: str = "data_versao",
     refresh: bool = False,
+    version_dict: dict = None,
     wait=None,  # pylint: disable=unused-argument
 ):
     """
@@ -193,11 +188,11 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
     """
 
     query_project_id = bq_project()
-    last_mat_date = get_table_max_value(
-        query_project_id, dataset_id, mat_table_id, field_name
+    last_mat_date = get_table_min_max_value(
+        query_project_id, dataset_id, mat_table_id, field_name, "max"
     )
-    last_base_date = get_table_max_value(
-        query_project_id, dataset_id, base_table_id, field_name
+    last_base_date = get_table_min_max_value(
+        query_project_id, dataset_id, base_table_id, field_name, "max"
     )
     log(
         f"""
@@ -205,14 +200,17 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
     Materialized table last version: {last_mat_date}
     """
     )
-    run_command = f"run --select models/{dataset_id}/{mat_table_id}.sql"
+    vars_str = f'"{version_dict}"'
+    run_command = (
+        f"run --select models/{dataset_id}/{mat_table_id}.sql --vars {vars_str}"
+    )
 
     if refresh:
         log("Running in full refresh mode")
         log(f"DBT will run the following command:\n{run_command+' --full-refresh'}")
         dbt_client.cli(run_command + " --full-refresh", sync=True)
-        last_mat_date = get_table_max_value(
-            query_project_id, dataset_id, mat_table_id, field_name
+        last_mat_date = get_table_min_max_value(
+            query_project_id, dataset_id, mat_table_id, field_name, "max"
         )
 
     if last_base_date > last_mat_date:
@@ -220,11 +218,12 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
         log(f"DBT will run the following command:\n{run_command}")
         while last_base_date > last_mat_date:
             running = dbt_client.cli(run_command, sync=True)
-            last_mat_date = get_table_max_value(
+            last_mat_date = get_table_min_max_value(
                 query_project_id,
                 dataset_id,
                 mat_table_id,
                 field_name,
+                "max",
                 wait=running,
             )
             log(f"After this step, materialized table last version is: {last_mat_date}")
@@ -251,9 +250,9 @@ def create_current_date_hour_partition():
         dict: "filename" contains the name which to upload the csv, "partitions" contains
         the partitioned directory path
     """
-    timezone = constants.TIMEZONE.value
+    tz = constants.TIMEZONE.value  # pylint: disable=C0103
 
-    capture_time = pendulum.now(timezone)
+    capture_time = pendulum.now(tz)
     date = capture_time.strftime("%Y-%m-%d")
     hour = capture_time.strftime("%H")
 
@@ -356,6 +355,10 @@ def get_raw(url, headers=None, kind: str = None):
     """
     if kind == "stpl":
         headers = get_vault_secret("stpl_api")["data"]
+    if kind == "sppo":
+        access = get_vault_secret("sppo_api")["data"]
+        key = list(access)[0]
+        url = f"{url}{key}={access[key]}"
     data = None
     error = None
     timestamp = pendulum.now(constants.TIMEZONE.value)
@@ -512,6 +515,109 @@ def upload_logs_to_bq(dataset_id, parent_table_id, timestamp, error):
     # save local
     dataframe.to_csv(filepath, index=False)
     # BD Table object
-    create_or_append_table(dataset_id=dataset_id, table_id=table_id, path=filepath)
-    # delete local file
-    # shutil.rmtree(f"{timestamp}")
+    create_or_append_table(
+        dataset_id=dataset_id, table_id=table_id, path=filepath.parent.parent
+    )
+
+
+@task(
+    checkpoint=False,
+    max_retries=constants.MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.RETRY_DELAY.value),
+)
+def get_date_range(
+    dataset_id: str,
+    table_id: str,
+    table_date_column_name: str = None,
+    rebuild: bool = False,
+):
+    """
+    Task for generating dict with variables to be passed to the
+    --vars argument on DBT.
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): model filename on the queries repo.
+        eg: if you have a model defined in the file <filename>.sql,
+        the table_id should be <filename>
+        table_date_column_name (Optional, str): if it's the first time this
+        is ran, will query the table for the maximum value on this field.
+        If rebuild is true, will query the table for the minimum value
+        on this field.
+        rebuild (Optional, bool): if true, queries the minimum date value on the
+        table and return a date range from that value to the datetime.now() time
+
+    Returns:
+        dict: containing date_range_start and date_range_end
+    """
+
+    if rebuild is True:
+        start_ts = get_table_min_max_value(
+            query_project_id=bq_project(),
+            dataset_id=dataset_id,
+            table_id=table_id,
+            field_name=table_date_column_name,
+            kind="min",
+        )
+
+    else:
+        start_ts = get_last_run_timestamp(dataset_id=dataset_id, table_id=table_id)
+
+    if start_ts is None:
+        start_ts = get_table_min_max_value(
+            query_project_id=bq_project(),
+            dataset_id=dataset_id,
+            table_id=table_id,
+            field_name=table_date_column_name,
+            kind="max",
+        )
+    end_ts = datetime.now(timezone(constants.TIMEZONE.value)).strftime(
+        "%Y-%m-%dT%H:%M:%S"
+    )
+    date_range = {"date_range_start": start_ts, "date_range_end": end_ts}
+    return date_range
+
+
+@task
+def set_last_run_timestamp(
+    dataset_id: str, table_id: str, wait=None
+):  # pylint: disable=unused-argument
+    """
+    Set the `last_run_timestamp` key for the dataset_id/table_id pair
+    to datetime.now() time. Used after running a materialization to set the
+    stage for the next to come
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): model filename on the queries repo.
+        wait (Any, optional): Used for defining dependencies inside the flow,
+        in general, pass the output of the task which should be run imediately
+        before this. Defaults to None.
+
+    Returns:
+        _type_: _description_
+    """
+    redpal = RedisPal(constants.REDIS_HOST.value)
+    update_dict = {
+        table_id: {
+            "last_run_timestamp": datetime.now(
+                timezone(constants.TIMEZONE.value)
+            ).strftime("%Y-%m-%dT%H:%M:%S")
+        }
+    }
+    redpal.set(dataset_id, update_dict)
+    return True
+
+
+@task
+def fetch_dataset_sha(dataset_id: str):
+    """Fetches the SHA of a branch from Github"""
+    url = "https://api.github.com/repos/prefeitura-rio/queries-rj-smtr"
+    url += f"/commits?queries-rj-smtr/rj_smtr/{dataset_id}"
+    response = requests.get(url)
+
+    if response.status_code != 200:
+        return None
+
+    dataset_version = response.json()[0]["sha"]
+    return {"version": dataset_version}

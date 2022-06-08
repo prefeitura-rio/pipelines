@@ -34,7 +34,7 @@ from pathlib import Path
 import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
-
+from redis_pal import RedisPal
 
 from pipelines.utils.utils import log
 from pipelines.utils.utils import get_vault_secret, send_discord_message
@@ -121,11 +121,12 @@ def bq_project(kind: str = "bigquery_prod"):
     return bd.upload.base.Base().client[kind].project
 
 
-def get_table_max_value(
+def get_table_min_max_value(  # pylint: disable=R0913
     query_project_id: str,
     dataset_id: str,
     table_id: str,
     field_name: str,
+    kind: str,
     wait=None,  # pylint: disable=unused-argument
 ):
     """Query a table to get the maximum value for the chosen field.
@@ -135,12 +136,40 @@ def get_table_max_value(
         dataset_id (str): dataset_id on BigQuery
         table_id (str): table_id on BigQuery
         field_name (str): column name to query
+        kind (str): which value to get. Accepts min and max
     """
     query = f"""
         SELECT
-            max({field_name})
+            {kind}({field_name})
         FROM {query_project_id}.{dataset_id}.{table_id}
     """
     result = bd.read_sql(query=query, billing_project_id=bq_project())
 
     return result.iloc[0][0]
+
+
+def get_last_run_timestamp(dataset_id: str, table_id: str):
+    """
+    Query redis to retrive the time for when the last materialization
+    ran.
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): model filename on the queries repo.
+        eg: if you have a model defined in the file <filename>.sql,
+        the table_id should be <filename>
+
+    Returns:
+        Union[str, None]: _description_
+    """
+    redpal = RedisPal(constants.REDIS_HOST.value)
+    runs = redpal.get(dataset_id)
+    if runs is None:
+        redpal.set(dataset_id, {table_id: ""})
+    try:
+        last_run_timestamp = runs[table_id]["last_run_timestamp"]
+    except KeyError:
+        return None
+    except TypeError:
+        return None
+    return last_run_timestamp
