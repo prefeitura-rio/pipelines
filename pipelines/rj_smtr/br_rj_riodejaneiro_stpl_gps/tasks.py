@@ -62,7 +62,7 @@ from pipelines.rj_smtr.utils import log_critical
 
 
 @task
-def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict, key_column):
+def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict):
     """Parse data from status_dict['data'] to DataFrame as partially nested table.
 
     Args:
@@ -73,7 +73,7 @@ def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict, key_column):
         dict: "df" contains the transformed DataFrame from data, "error" contains any caught error
         during execution.
     """
-
+    key_column = "codigo"
     columns = [key_column, "dataHora", "timestamp_captura", "content"]
     data = status_dict["data"]
     timestamp = status_dict["timestamp"]
