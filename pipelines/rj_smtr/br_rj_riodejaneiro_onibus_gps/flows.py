@@ -17,10 +17,10 @@ from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
 
 from pipelines.rj_smtr.constants import constants
 
-# from pipelines.rj_smtr.schedules import (
-#     every_minute,
-#     every_hour,
-# )
+from pipelines.rj_smtr.schedules import (
+    # every_minute,
+    every_hour,
+)
 from pipelines.rj_smtr.tasks import (
     create_current_date_hour_partition,
     create_local_partition_path,
@@ -151,7 +151,7 @@ materialize_sppo.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-# materialize.schedule = every_hour
+materialize_sppo.schedule = every_hour
 
 captura_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_sppo.run_config = KubernetesRun(

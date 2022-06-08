@@ -20,7 +20,7 @@ from pipelines.utils.execute_dbt_model.tasks import (
 
 from pipelines.rj_smtr.constants import constants
 
-# from pipelines.rj_smtr.schedules import every_day
+from pipelines.rj_smtr.schedules import every_day
 from pipelines.rj_smtr.tasks import (
     bq_upload_from_dict,
     build_incremental_model,
@@ -123,7 +123,7 @@ materialize_sigmob.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-# materialize_sigmob.schedule = every_day
+materialize_sigmob.schedule = every_day
 
 
 captura_sigmob.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
