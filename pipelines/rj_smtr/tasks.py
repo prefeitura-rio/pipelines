@@ -615,8 +615,9 @@ def fetch_dataset_sha(dataset_id: str):
     url = "https://api.github.com/repos/prefeitura-rio/queries-rj-smtr"
     url += f"/commits?queries-rj-smtr/rj_smtr/{dataset_id}"
     response = requests.get(url)
+
     if response.status_code != 200:
         return None
-    else:
-        dataset_version = response.json()[0]["sha"]
-        return {"version": dataset_version}
+
+    dataset_version = response.json()[0]["sha"]
+    return {"version": dataset_version}
