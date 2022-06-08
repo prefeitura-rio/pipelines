@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Tasks for br_rj_riodejaneiro_onibus_gps
+Tasks for br_rj_riodejaneiro_brt_gps
 """
 
 from datetime import timedelta
@@ -25,11 +25,9 @@ from pipelines.rj_smtr.utils import log_critical, map_dict_keys, safe_cast
 def pre_treatment_br_rj_riodejaneiro_brt_gps(status_dict: dict):
     """Basic data treatment for brt gps data. Converts unix time to datetime,
     and apply filtering to stale data that may populate the API response.
-
     Args:
         status_dict (dict): dict containing the status of the request made to the
         API. Must contain keys: data, timestamp and error
-
     Returns:
         df: pandas.core.DataFrame containing the treated data.
     """
