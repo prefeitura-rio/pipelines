@@ -35,7 +35,6 @@ from pipelines.rj_smtr.tasks import (
     upload_logs_to_bq,
     bq_upload,
 )
-
 from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
     pre_treatment_br_rj_riodejaneiro_onibus_gps,
 )
