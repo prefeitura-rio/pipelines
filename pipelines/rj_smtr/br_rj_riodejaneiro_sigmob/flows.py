@@ -128,9 +128,7 @@ with Flow(
 
 with Flow(
     "SMTR- Captura - SIGMOB",
-    code_owners=[
-        "@your-discord-username",
-    ],
+    code_owners=["@hellcassius#1223", "@fernandascovino#9750"],
 ) as captura_sigmob:
 
     endpoints = Parameter("endpoints", default=sigmob_constants.ENDPOINTS.value)
@@ -156,9 +154,15 @@ with Flow(
     )
 
 materialize_sigmob.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-materialize_sigmob.run_config = KubernetesRun(image=emd_constants.DOCKER_IMAGE.value)
+materialize_sigmob.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
 # materialize_sigmob.schedule = every_day
 
 captura_sigmob.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-captura_sigmob.run_config = KubernetesRun(image=emd_constants.DOCKER_IMAGE.value)
+captura_sigmob.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
 captura_sigmob.schedule = every_day
