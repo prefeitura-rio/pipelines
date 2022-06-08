@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Flows for br_rj_riodejaneiro_btr_gps
+Flows for br_rj_riodejaneiro_brt_gps
 """
 
 from prefect import Parameter, case

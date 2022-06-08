@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Tasks for br_rj_riodejaneiro_onibus_gps
+Tasks for br_rj_riodejaneiro_brt_gps
 """
 
 from datetime import timedelta
