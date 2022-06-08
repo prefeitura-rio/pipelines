@@ -34,7 +34,6 @@ from pathlib import Path
 import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
-from redis_pal import RedisPal
 
 from pipelines.utils.utils import log
 from pipelines.utils.utils import (

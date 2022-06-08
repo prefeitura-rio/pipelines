@@ -71,7 +71,8 @@ from pipelines.rj_smtr.tasks import (
     build_incremental_model,
     # , get_local_dbt_client
 )
-from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.schedules import every_day
+
+# from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.schedules import every_day
 from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks import request_data
 
 from pipelines.utils.decorators import Flow

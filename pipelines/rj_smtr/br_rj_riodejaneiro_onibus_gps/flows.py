@@ -77,10 +77,11 @@ from pipelines.rj_smtr.tasks import (
     bq_upload,
 )
 from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.constants import constants
-from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.schedules import (
-    # every_minute,
-    every_hour,
-)
+
+# from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.schedules import (
+#     every_minute,
+#     every_hour,
+# )
 from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
     pre_treatment_br_rj_riodejaneiro_onibus_gps,
 )
