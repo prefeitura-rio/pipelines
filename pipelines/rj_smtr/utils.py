@@ -37,7 +37,11 @@ import pandas as pd
 from redis_pal import RedisPal
 
 from pipelines.utils.utils import log
-from pipelines.utils.utils import get_vault_secret, send_discord_message
+from pipelines.utils.utils import (
+    get_vault_secret,
+    send_discord_message,
+    get_redis_client,
+)
 from pipelines.rj_smtr.constants import constants
 
 bd.config.from_file = True
@@ -162,10 +166,10 @@ def get_last_run_timestamp(dataset_id: str, table_id: str):
     Returns:
         Union[str, None]: _description_
     """
-    redpal = RedisPal(constants.REDIS_HOST.value)
-    runs = redpal.get(dataset_id)
+    redis_client = get_redis_client()
+    runs = redis_client.get(dataset_id)
     if runs is None:
-        redpal.set(dataset_id, {table_id: ""})
+        redis_client.set(dataset_id, {table_id: ""})
     try:
         last_run_timestamp = runs[table_id]["last_run_timestamp"]
     except KeyError:
