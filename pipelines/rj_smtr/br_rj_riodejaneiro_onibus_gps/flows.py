@@ -96,7 +96,7 @@ with Flow(
     table_id = Parameter("table_id", "sppo_aux_registros_filtrada")
     rebuild = Parameter("rebuild", False)
     # dbt_client = get_local_dbt_client(host="localhost", port=3001)
-    dbt_client = get_k8s_dbt_client(mode="dev")
+    dbt_client = get_k8s_dbt_client(mode="prod")
     date_range = get_date_range(dataset_id, table_id)
     dataset_sha = fetch_dataset_sha(
         dataset_id=dataset_id,
