@@ -145,6 +145,9 @@ def get_last_run_timestamp(dataset_id: str, table_id: str):
 
 
 def map_dict_keys(data: dict, mapping: dict) -> None:
+    """
+    Map old keys to new keys in a dict.
+    """
     pop_keys = [old_key for old_key in data.keys() if old_key not in mapping.keys()]
     for old_key, new_key in mapping.items():
         data[new_key] = data.pop(old_key)
@@ -154,6 +157,9 @@ def map_dict_keys(data: dict, mapping: dict) -> None:
 
 
 def safe_cast(val, to_type, default=None):
+    """
+    Safe cast value.
+    """
     try:
         return to_type(val)
     except ValueError:
