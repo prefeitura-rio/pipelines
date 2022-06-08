@@ -507,7 +507,7 @@ def get_materialization_date_range(
                 table_id=table_id,
                 field_name=table_date_column_name,
                 kind="max",
-            )
+            ).strftime("%Y-%m-%dT%H:%M:%S")
         else:
             start_ts = get_table_min_max_value(
                 query_project_id=bq_project(),
@@ -515,7 +515,7 @@ def get_materialization_date_range(
                 table_id=raw_table_id,
                 field_name=table_date_column_name,
                 kind="max",
-            )
+            ).strftime("%Y-%m-%dT%H:%M:%S")
     end_ts = datetime.now(timezone(constants.TIMEZONE.value)).strftime(
         "%Y-%m-%dT%H:%M:%S"
     )
@@ -542,7 +542,7 @@ def set_last_run_timestamp(
     Returns:
         _type_: _description_
     """
-    redpal = get_redis_client()
+    redis_client = get_redis_client()
     update_dict = {
         table_id: {
             "last_run_timestamp": datetime.now(
@@ -550,7 +550,7 @@ def set_last_run_timestamp(
             ).strftime("%Y-%m-%dT%H:%M:%S")
         }
     }
-    redpal.set(dataset_id, update_dict)
+    redis_client.set(dataset_id, update_dict)
     return True
 
 

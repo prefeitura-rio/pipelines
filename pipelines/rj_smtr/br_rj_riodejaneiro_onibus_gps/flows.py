@@ -82,6 +82,7 @@ with Flow(
             downstream=True,
             flags="--full-refresh",
         )
+        set_last_run_timestamp(dataset_id=dataset_id, table_id=table_id, wait=RUN)
     with case(rebuild, False):
         RUN = run_dbt_command(
             dbt_client=dbt_client,
@@ -92,8 +93,7 @@ with Flow(
             upstream=True,
             downstream=True,
         )
-
-    set_last_run_timestamp(dataset_id=dataset_id, table_id=table_id, wait=RUN)
+        set_last_run_timestamp(dataset_id=dataset_id, table_id=table_id, wait=RUN)
 
 
 with Flow(
