@@ -78,24 +78,28 @@ Tasks for rj_smtr
 # Abaixo segue um código para exemplificação, que pode ser removido.
 #
 ###############################################################################
+from datetime import datetime, timedelta
 import json
 import os
 from pathlib import Path
-from datetime import timedelta
+from typing import Union, List, Dict
+
+from pytz import timezone
 
 from basedosdados import Storage
 from dbt_client import DbtClient
 import pandas as pd
 import pendulum
 from prefect import task
+from redis_pal import RedisPal
 import requests
 
 from pipelines.rj_smtr.constants import constants
-from pipelines.constants import constants as emd_constants
 from pipelines.rj_smtr.utils import (
     create_or_append_table,
     bq_project,
-    get_table_max_value,
+    get_table_min_max_value,
+    get_last_run_timestamp,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_vault_secret
@@ -131,6 +135,9 @@ def run_dbt_command(  # pylint: disable=too-many-arguments
     table_id: str = None,
     command: str = &#34;run&#34;,
     flags: str = None,
+    _vars: Union[dict, List[Dict]] = None,
+    upstream: bool = None,
+    downstream: bool = None,
     wait=None,  # pylint: disable=unused-argument
 ):
     &#34;&#34;&#34;
@@ -151,45 +158,32 @@ def run_dbt_command(  # pylint: disable=too-many-arguments
     &#34;&#34;&#34;
     run_command = f&#34;dbt {command}&#34;
     if dataset_id:
-        run_command += f&#34; --select models/{dataset_id}/&#34;
+        run_command += &#34; --select &#34;
+        if upstream:
+            run_command += &#34;+&#34;
+        run_command += f&#34;models/{dataset_id}/&#34;
         if table_id:
             run_command += f&#34;{table_id}.sql&#34;
+        if downstream:
+            run_command += &#34;+&#34;
+    if _vars:
+        log(f&#34;Received vars:\n {_vars}\n type: {type(_vars)}&#34;)
+        if isinstance(_vars, list):
+            vars_dict = {}
+            for elem in _vars:
+                log(f&#34;Received variable {elem}. Adding to vars&#34;)
+                vars_dict.update(elem)
+            vars_str = f&#39;&#34;{vars_dict}&#34;&#39;
+            run_command += f&#34; --vars {vars_str}&#34;
+        else:
+            vars_str = f&#39;&#34;{_vars}&#34;&#39;
+            run_command += f&#34; --vars {vars_str}&#34;
     if flags:
         run_command += f&#34; {flags}&#34;
 
     log(f&#34;Will run the following command:\n{run_command}&#34;)
     dbt_client.cli(run_command, sync=True)
     return log(&#34;Finished running dbt command&#34;)
-
-
-@task(
-    checkpoint=False,
-    max_retries=emd_constants.TASK_MAX_RETRIES.value,
-    retry_delay=timedelta(seconds=emd_constants.TASK_RETRY_DELAY.value),
-)
-def run_dbt_schema(
-    dbt_client: DbtClient,
-    dataset_id: str,
-    refresh: bool = False,
-    wait=None,  # pylint: disable=unused-argument
-):
-    &#34;&#34;&#34;Run a whole schema (dataset) worth of models
-
-    Args:
-        dbt_client (DbtClient): Dbt interface of interaction
-        dataset_id (str, optional): Dataset id on BigQuery. Defaults to &#34;br_rj_riodejaneiro_sigmob&#34;.
-        refresh (bool, optional): If true, rebuild all models from scratch. Defaults to False.
-
-    Returns:
-        None
-    &#34;&#34;&#34;
-
-    run_command = f&#34;run --select models/{dataset_id}&#34;
-    if refresh:
-        log(f&#34;Will run the following command:\n{run_command} in full refresh mode&#34;)
-        run_command += &#34; --full-refresh&#34;
-    dbt_client.cli(run_command, sync=True)
-    return log(f&#34;Finished running schema {dataset_id}&#34;)
 
 
 @task(max_retries=3, retry_delay=timedelta(seconds=10))
@@ -200,6 +194,7 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
     mat_table_id: str,
     field_name: str = &#34;data_versao&#34;,
     refresh: bool = False,
+    version_dict: dict = None,
     wait=None,  # pylint: disable=unused-argument
 ):
     &#34;&#34;&#34;
@@ -222,11 +217,11 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
     &#34;&#34;&#34;
 
     query_project_id = bq_project()
-    last_mat_date = get_table_max_value(
-        query_project_id, dataset_id, mat_table_id, field_name
+    last_mat_date = get_table_min_max_value(
+        query_project_id, dataset_id, mat_table_id, field_name, &#34;max&#34;
     )
-    last_base_date = get_table_max_value(
-        query_project_id, dataset_id, base_table_id, field_name
+    last_base_date = get_table_min_max_value(
+        query_project_id, dataset_id, base_table_id, field_name, &#34;max&#34;
     )
     log(
         f&#34;&#34;&#34;
@@ -234,14 +229,17 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
     Materialized table last version: {last_mat_date}
     &#34;&#34;&#34;
     )
-    run_command = f&#34;run --select models/{dataset_id}/{mat_table_id}.sql&#34;
+    vars_str = f&#39;&#34;{version_dict}&#34;&#39;
+    run_command = (
+        f&#34;run --select models/{dataset_id}/{mat_table_id}.sql --vars {vars_str}&#34;
+    )
 
     if refresh:
         log(&#34;Running in full refresh mode&#34;)
         log(f&#34;DBT will run the following command:\n{run_command+&#39; --full-refresh&#39;}&#34;)
         dbt_client.cli(run_command + &#34; --full-refresh&#34;, sync=True)
-        last_mat_date = get_table_max_value(
-            query_project_id, dataset_id, mat_table_id, field_name
+        last_mat_date = get_table_min_max_value(
+            query_project_id, dataset_id, mat_table_id, field_name, &#34;max&#34;
         )
 
     if last_base_date &gt; last_mat_date:
@@ -249,11 +247,12 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
         log(f&#34;DBT will run the following command:\n{run_command}&#34;)
         while last_base_date &gt; last_mat_date:
             running = dbt_client.cli(run_command, sync=True)
-            last_mat_date = get_table_max_value(
+            last_mat_date = get_table_min_max_value(
                 query_project_id,
                 dataset_id,
                 mat_table_id,
                 field_name,
+                &#34;max&#34;,
                 wait=running,
             )
             log(f&#34;After this step, materialized table last version is: {last_mat_date}&#34;)
@@ -280,9 +279,9 @@ def create_current_date_hour_partition():
         dict: &#34;filename&#34; contains the name which to upload the csv, &#34;partitions&#34; contains
         the partitioned directory path
     &#34;&#34;&#34;
-    timezone = constants.TIMEZONE.value
+    tz = constants.TIMEZONE.value  # pylint: disable=C0103
 
-    capture_time = pendulum.now(timezone)
+    capture_time = pendulum.now(tz)
     date = capture_time.strftime(&#34;%Y-%m-%d&#34;)
     hour = capture_time.strftime(&#34;%H&#34;)
 
@@ -385,6 +384,10 @@ def get_raw(url, headers=None, kind: str = None):
     &#34;&#34;&#34;
     if kind == &#34;stpl&#34;:
         headers = get_vault_secret(&#34;stpl_api&#34;)[&#34;data&#34;]
+    if kind == &#34;sppo&#34;:
+        access = get_vault_secret(&#34;sppo_api&#34;)[&#34;data&#34;]
+        key = list(access)[0]
+        url = f&#34;{url}{key}={access[key]}&#34;
     data = None
     error = None
     timestamp = pendulum.now(constants.TIMEZONE.value)
@@ -541,9 +544,112 @@ def upload_logs_to_bq(dataset_id, parent_table_id, timestamp, error):
     # save local
     dataframe.to_csv(filepath, index=False)
     # BD Table object
-    create_or_append_table(dataset_id=dataset_id, table_id=table_id, path=filepath)
-    # delete local file
-    # shutil.rmtree(f&#34;{timestamp}&#34;)</code></pre>
+    create_or_append_table(
+        dataset_id=dataset_id, table_id=table_id, path=filepath.parent.parent
+    )
+
+
+@task(
+    checkpoint=False,
+    max_retries=constants.MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.RETRY_DELAY.value),
+)
+def get_date_range(
+    dataset_id: str,
+    table_id: str,
+    table_date_column_name: str = None,
+    rebuild: bool = False,
+):
+    &#34;&#34;&#34;
+    Task for generating dict with variables to be passed to the
+    --vars argument on DBT.
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): model filename on the queries repo.
+        eg: if you have a model defined in the file &lt;filename&gt;.sql,
+        the table_id should be &lt;filename&gt;
+        table_date_column_name (Optional, str): if it&#39;s the first time this
+        is ran, will query the table for the maximum value on this field.
+        If rebuild is true, will query the table for the minimum value
+        on this field.
+        rebuild (Optional, bool): if true, queries the minimum date value on the
+        table and return a date range from that value to the datetime.now() time
+
+    Returns:
+        dict: containing date_range_start and date_range_end
+    &#34;&#34;&#34;
+
+    if rebuild is True:
+        start_ts = get_table_min_max_value(
+            query_project_id=bq_project(),
+            dataset_id=dataset_id,
+            table_id=table_id,
+            field_name=table_date_column_name,
+            kind=&#34;min&#34;,
+        )
+
+    else:
+        start_ts = get_last_run_timestamp(dataset_id=dataset_id, table_id=table_id)
+
+    if start_ts is None:
+        start_ts = get_table_min_max_value(
+            query_project_id=bq_project(),
+            dataset_id=dataset_id,
+            table_id=table_id,
+            field_name=table_date_column_name,
+            kind=&#34;max&#34;,
+        )
+    end_ts = datetime.now(timezone(constants.TIMEZONE.value)).strftime(
+        &#34;%Y-%m-%dT%H:%M:%S&#34;
+    )
+    date_range = {&#34;date_range_start&#34;: start_ts, &#34;date_range_end&#34;: end_ts}
+    return date_range
+
+
+@task
+def set_last_run_timestamp(
+    dataset_id: str, table_id: str, wait=None
+):  # pylint: disable=unused-argument
+    &#34;&#34;&#34;
+    Set the `last_run_timestamp` key for the dataset_id/table_id pair
+    to datetime.now() time. Used after running a materialization to set the
+    stage for the next to come
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): model filename on the queries repo.
+        wait (Any, optional): Used for defining dependencies inside the flow,
+        in general, pass the output of the task which should be run imediately
+        before this. Defaults to None.
+
+    Returns:
+        _type_: _description_
+    &#34;&#34;&#34;
+    redpal = RedisPal(constants.REDIS_HOST.value)
+    update_dict = {
+        table_id: {
+            &#34;last_run_timestamp&#34;: datetime.now(
+                timezone(constants.TIMEZONE.value)
+            ).strftime(&#34;%Y-%m-%dT%H:%M:%S&#34;)
+        }
+    }
+    redpal.set(dataset_id, update_dict)
+    return True
+
+
+@task
+def fetch_dataset_sha(dataset_id: str):
+    &#34;&#34;&#34;Fetches the SHA of a branch from Github&#34;&#34;&#34;
+    url = &#34;https://api.github.com/repos/prefeitura-rio/queries-rj-smtr&#34;
+    url += f&#34;/commits?queries-rj-smtr/rj_smtr/{dataset_id}&#34;
+    response = requests.get(url)
+
+    if response.status_code != 200:
+        return None
+
+    dataset_version = response.json()[0][&#34;sha&#34;]
+    return {&#34;version&#34;: dataset_version}</code></pre>
 </details>
 </section>
 <section>
@@ -694,7 +800,7 @@ def bq_upload_from_dict(paths: dict, dataset_id: str, partition_levels: int = 1)
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.build_incremental_model"><code class="name flex">
-<span>def <span class="ident">build_incremental_model</span></span>(<span>dbt_client: dbt_client.dbt_client.DbtClient, dataset_id: str, base_table_id: str, mat_table_id: str, field_name: str = 'data_versao', refresh: bool = False, wait=None)</span>
+<span>def <span class="ident">build_incremental_model</span></span>(<span>dbt_client: dbt_client.dbt_client.DbtClient, dataset_id: str, base_table_id: str, mat_table_id: str, field_name: str = 'data_versao', refresh: bool = False, version_dict: dict = None, wait=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Utility task for backfilling table in predetermined steps.
@@ -735,6 +841,7 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
     mat_table_id: str,
     field_name: str = &#34;data_versao&#34;,
     refresh: bool = False,
+    version_dict: dict = None,
     wait=None,  # pylint: disable=unused-argument
 ):
     &#34;&#34;&#34;
@@ -757,11 +864,11 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
     &#34;&#34;&#34;
 
     query_project_id = bq_project()
-    last_mat_date = get_table_max_value(
-        query_project_id, dataset_id, mat_table_id, field_name
+    last_mat_date = get_table_min_max_value(
+        query_project_id, dataset_id, mat_table_id, field_name, &#34;max&#34;
     )
-    last_base_date = get_table_max_value(
-        query_project_id, dataset_id, base_table_id, field_name
+    last_base_date = get_table_min_max_value(
+        query_project_id, dataset_id, base_table_id, field_name, &#34;max&#34;
     )
     log(
         f&#34;&#34;&#34;
@@ -769,14 +876,17 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
     Materialized table last version: {last_mat_date}
     &#34;&#34;&#34;
     )
-    run_command = f&#34;run --select models/{dataset_id}/{mat_table_id}.sql&#34;
+    vars_str = f&#39;&#34;{version_dict}&#34;&#39;
+    run_command = (
+        f&#34;run --select models/{dataset_id}/{mat_table_id}.sql --vars {vars_str}&#34;
+    )
 
     if refresh:
         log(&#34;Running in full refresh mode&#34;)
         log(f&#34;DBT will run the following command:\n{run_command+&#39; --full-refresh&#39;}&#34;)
         dbt_client.cli(run_command + &#34; --full-refresh&#34;, sync=True)
-        last_mat_date = get_table_max_value(
-            query_project_id, dataset_id, mat_table_id, field_name
+        last_mat_date = get_table_min_max_value(
+            query_project_id, dataset_id, mat_table_id, field_name, &#34;max&#34;
         )
 
     if last_base_date &gt; last_mat_date:
@@ -784,11 +894,12 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
         log(f&#34;DBT will run the following command:\n{run_command}&#34;)
         while last_base_date &gt; last_mat_date:
             running = dbt_client.cli(run_command, sync=True)
-            last_mat_date = get_table_max_value(
+            last_mat_date = get_table_min_max_value(
                 query_project_id,
                 dataset_id,
                 mat_table_id,
                 field_name,
+                &#34;max&#34;,
                 wait=running,
             )
             log(f&#34;After this step, materialized table last version is: {last_mat_date}&#34;)
@@ -824,9 +935,9 @@ def create_current_date_hour_partition():
         dict: &#34;filename&#34; contains the name which to upload the csv, &#34;partitions&#34; contains
         the partitioned directory path
     &#34;&#34;&#34;
-    timezone = constants.TIMEZONE.value
+    tz = constants.TIMEZONE.value  # pylint: disable=C0103
 
-    capture_time = pendulum.now(timezone)
+    capture_time = pendulum.now(tz)
     date = capture_time.strftime(&#34;%Y-%m-%d&#34;)
     hour = capture_time.strftime(&#34;%H&#34;)
 
@@ -888,6 +999,120 @@ def create_local_partition_path(dataset_id, table_id, filename, partitions):
     log(f&#34;Creating file path: {file_path}&#34;)
 
     return file_path</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.tasks.fetch_dataset_sha"><code class="name flex">
+<span>def <span class="ident">fetch_dataset_sha</span></span>(<span>dataset_id: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Fetches the SHA of a branch from Github</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def fetch_dataset_sha(dataset_id: str):
+    &#34;&#34;&#34;Fetches the SHA of a branch from Github&#34;&#34;&#34;
+    url = &#34;https://api.github.com/repos/prefeitura-rio/queries-rj-smtr&#34;
+    url += f&#34;/commits?queries-rj-smtr/rj_smtr/{dataset_id}&#34;
+    response = requests.get(url)
+
+    if response.status_code != 200:
+        return None
+
+    dataset_version = response.json()[0][&#34;sha&#34;]
+    return {&#34;version&#34;: dataset_version}</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.tasks.get_date_range"><code class="name flex">
+<span>def <span class="ident">get_date_range</span></span>(<span>dataset_id: str, table_id: str, table_date_column_name: str = None, rebuild: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Task for generating dict with variables to be passed to the
+&ndash;vars argument on DBT.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>dataset_id on BigQuery</dd>
+<dt><strong><code>table_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>model filename on the queries repo.</dd>
+<dt><strong><code>eg</code></strong></dt>
+<dd>if you have a model defined in the file <filename>.sql,</dd>
+<dt>the table_id should be <filename></dt>
+<dt><strong><code>table_date_column_name</code></strong> :&ensp;<code>Optional, str</code></dt>
+<dd>if it's the first time this</dd>
+<dt>is ran, will query the table for the maximum value on this field.</dt>
+<dt>If rebuild is true, will query the table for the minimum value</dt>
+<dt>on this field.</dt>
+<dt><strong><code>rebuild</code></strong> :&ensp;<code>Optional, bool</code></dt>
+<dd>if true, queries the minimum date value on the</dd>
+</dl>
+<p>table and return a date range from that value to the datetime.now() time</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>containing date_range_start and date_range_end</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    checkpoint=False,
+    max_retries=constants.MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.RETRY_DELAY.value),
+)
+def get_date_range(
+    dataset_id: str,
+    table_id: str,
+    table_date_column_name: str = None,
+    rebuild: bool = False,
+):
+    &#34;&#34;&#34;
+    Task for generating dict with variables to be passed to the
+    --vars argument on DBT.
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): model filename on the queries repo.
+        eg: if you have a model defined in the file &lt;filename&gt;.sql,
+        the table_id should be &lt;filename&gt;
+        table_date_column_name (Optional, str): if it&#39;s the first time this
+        is ran, will query the table for the maximum value on this field.
+        If rebuild is true, will query the table for the minimum value
+        on this field.
+        rebuild (Optional, bool): if true, queries the minimum date value on the
+        table and return a date range from that value to the datetime.now() time
+
+    Returns:
+        dict: containing date_range_start and date_range_end
+    &#34;&#34;&#34;
+
+    if rebuild is True:
+        start_ts = get_table_min_max_value(
+            query_project_id=bq_project(),
+            dataset_id=dataset_id,
+            table_id=table_id,
+            field_name=table_date_column_name,
+            kind=&#34;min&#34;,
+        )
+
+    else:
+        start_ts = get_last_run_timestamp(dataset_id=dataset_id, table_id=table_id)
+
+    if start_ts is None:
+        start_ts = get_table_min_max_value(
+            query_project_id=bq_project(),
+            dataset_id=dataset_id,
+            table_id=table_id,
+            field_name=table_date_column_name,
+            kind=&#34;max&#34;,
+        )
+    end_ts = datetime.now(timezone(constants.TIMEZONE.value)).strftime(
+        &#34;%Y-%m-%dT%H:%M:%S&#34;
+    )
+    date_range = {&#34;date_range_start&#34;: start_ts, &#34;date_range_end&#34;: end_ts}
+    return date_range</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.get_local_dbt_client"><code class="name flex">
@@ -967,6 +1192,10 @@ def get_raw(url, headers=None, kind: str = None):
     &#34;&#34;&#34;
     if kind == &#34;stpl&#34;:
         headers = get_vault_secret(&#34;stpl_api&#34;)[&#34;data&#34;]
+    if kind == &#34;sppo&#34;:
+        access = get_vault_secret(&#34;sppo_api&#34;)[&#34;data&#34;]
+        key = list(access)[0]
+        url = f&#34;{url}{key}={access[key]}&#34;
     data = None
     error = None
     timestamp = pendulum.now(constants.TIMEZONE.value)
@@ -997,7 +1226,7 @@ def get_raw(url, headers=None, kind: str = None):
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.run_dbt_command"><code class="name flex">
-<span>def <span class="ident">run_dbt_command</span></span>(<span>dbt_client: dbt_client.dbt_client.DbtClient, dataset_id: str = None, table_id: str = None, command: str = 'run', flags: str = None, wait=None)</span>
+<span>def <span class="ident">run_dbt_command</span></span>(<span>dbt_client: dbt_client.dbt_client.DbtClient, dataset_id: str = None, table_id: str = None, command: str = 'run', flags: str = None, upstream: bool = None, downstream: bool = None, wait=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Runs a dbt command. If passing a dataset_id only, will run the entire dataset.
@@ -1034,6 +1263,9 @@ def run_dbt_command(  # pylint: disable=too-many-arguments
     table_id: str = None,
     command: str = &#34;run&#34;,
     flags: str = None,
+    _vars: Union[dict, List[Dict]] = None,
+    upstream: bool = None,
+    downstream: bool = None,
     wait=None,  # pylint: disable=unused-argument
 ):
     &#34;&#34;&#34;
@@ -1054,65 +1286,32 @@ def run_dbt_command(  # pylint: disable=too-many-arguments
     &#34;&#34;&#34;
     run_command = f&#34;dbt {command}&#34;
     if dataset_id:
-        run_command += f&#34; --select models/{dataset_id}/&#34;
+        run_command += &#34; --select &#34;
+        if upstream:
+            run_command += &#34;+&#34;
+        run_command += f&#34;models/{dataset_id}/&#34;
         if table_id:
             run_command += f&#34;{table_id}.sql&#34;
+        if downstream:
+            run_command += &#34;+&#34;
+    if _vars:
+        log(f&#34;Received vars:\n {_vars}\n type: {type(_vars)}&#34;)
+        if isinstance(_vars, list):
+            vars_dict = {}
+            for elem in _vars:
+                log(f&#34;Received variable {elem}. Adding to vars&#34;)
+                vars_dict.update(elem)
+            vars_str = f&#39;&#34;{vars_dict}&#34;&#39;
+            run_command += f&#34; --vars {vars_str}&#34;
+        else:
+            vars_str = f&#39;&#34;{_vars}&#34;&#39;
+            run_command += f&#34; --vars {vars_str}&#34;
     if flags:
         run_command += f&#34; {flags}&#34;
 
     log(f&#34;Will run the following command:\n{run_command}&#34;)
     dbt_client.cli(run_command, sync=True)
     return log(&#34;Finished running dbt command&#34;)</code></pre>
-</details>
-</dd>
-<dt id="pipelines.rj_smtr.tasks.run_dbt_schema"><code class="name flex">
-<span>def <span class="ident">run_dbt_schema</span></span>(<span>dbt_client: dbt_client.dbt_client.DbtClient, dataset_id: str, refresh: bool = False, wait=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Run a whole schema (dataset) worth of models</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>dbt_client</code></strong> :&ensp;<code>DbtClient</code></dt>
-<dd>Dbt interface of interaction</dd>
-<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>Dataset id on BigQuery. Defaults to "br_rj_riodejaneiro_sigmob".</dd>
-<dt><strong><code>refresh</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>If true, rebuild all models from scratch. Defaults to False.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>None</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task(
-    checkpoint=False,
-    max_retries=emd_constants.TASK_MAX_RETRIES.value,
-    retry_delay=timedelta(seconds=emd_constants.TASK_RETRY_DELAY.value),
-)
-def run_dbt_schema(
-    dbt_client: DbtClient,
-    dataset_id: str,
-    refresh: bool = False,
-    wait=None,  # pylint: disable=unused-argument
-):
-    &#34;&#34;&#34;Run a whole schema (dataset) worth of models
-
-    Args:
-        dbt_client (DbtClient): Dbt interface of interaction
-        dataset_id (str, optional): Dataset id on BigQuery. Defaults to &#34;br_rj_riodejaneiro_sigmob&#34;.
-        refresh (bool, optional): If true, rebuild all models from scratch. Defaults to False.
-
-    Returns:
-        None
-    &#34;&#34;&#34;
-
-    run_command = f&#34;run --select models/{dataset_id}&#34;
-    if refresh:
-        log(f&#34;Will run the following command:\n{run_command} in full refresh mode&#34;)
-        run_command += &#34; --full-refresh&#34;
-    dbt_client.cli(run_command, sync=True)
-    return log(f&#34;Finished running schema {dataset_id}&#34;)</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.save_raw_local"><code class="name flex">
@@ -1205,6 +1404,64 @@ def save_treated_local(dataframe, file_path, mode=&#34;staging&#34;):
     return _file_path</code></pre>
 </details>
 </dd>
+<dt id="pipelines.rj_smtr.tasks.set_last_run_timestamp"><code class="name flex">
+<span>def <span class="ident">set_last_run_timestamp</span></span>(<span>dataset_id: str, table_id: str, wait=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the <code>last_run_timestamp</code> key for the dataset_id/table_id pair
+to datetime.now() time. Used after running a materialization to set the
+stage for the next to come</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>dataset_id on BigQuery</dd>
+<dt><strong><code>table_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>model filename on the queries repo.</dd>
+<dt><strong><code>wait</code></strong> :&ensp;<code>Any</code>, optional</dt>
+<dd>Used for defining dependencies inside the flow,</dd>
+</dl>
+<p>in general, pass the output of the task which should be run imediately
+before this. Defaults to None.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>_type_</code></dt>
+<dd><em>description</em></dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def set_last_run_timestamp(
+    dataset_id: str, table_id: str, wait=None
+):  # pylint: disable=unused-argument
+    &#34;&#34;&#34;
+    Set the `last_run_timestamp` key for the dataset_id/table_id pair
+    to datetime.now() time. Used after running a materialization to set the
+    stage for the next to come
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): model filename on the queries repo.
+        wait (Any, optional): Used for defining dependencies inside the flow,
+        in general, pass the output of the task which should be run imediately
+        before this. Defaults to None.
+
+    Returns:
+        _type_: _description_
+    &#34;&#34;&#34;
+    redpal = RedisPal(constants.REDIS_HOST.value)
+    update_dict = {
+        table_id: {
+            &#34;last_run_timestamp&#34;: datetime.now(
+                timezone(constants.TIMEZONE.value)
+            ).strftime(&#34;%Y-%m-%dT%H:%M:%S&#34;)
+        }
+    }
+    redpal.set(dataset_id, update_dict)
+    return True</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_smtr.tasks.upload_logs_to_bq"><code class="name flex">
 <span>def <span class="ident">upload_logs_to_bq</span></span>(<span>dataset_id, parent_table_id, timestamp, error)</span>
 </code></dt>
@@ -1262,9 +1519,9 @@ def upload_logs_to_bq(dataset_id, parent_table_id, timestamp, error):
     # save local
     dataframe.to_csv(filepath, index=False)
     # BD Table object
-    create_or_append_table(dataset_id=dataset_id, table_id=table_id, path=filepath)
-    # delete local file
-    # shutil.rmtree(f&#34;{timestamp}&#34;)</code></pre>
+    create_or_append_table(
+        dataset_id=dataset_id, table_id=table_id, path=filepath.parent.parent
+    )</code></pre>
 </details>
 </dd>
 </dl>
@@ -1336,12 +1593,14 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.tasks.build_incremental_model" href="#pipelines.rj_smtr.tasks.build_incremental_model">build_incremental_model</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.create_current_date_hour_partition" href="#pipelines.rj_smtr.tasks.create_current_date_hour_partition">create_current_date_hour_partition</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.create_local_partition_path" href="#pipelines.rj_smtr.tasks.create_local_partition_path">create_local_partition_path</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.fetch_dataset_sha" href="#pipelines.rj_smtr.tasks.fetch_dataset_sha">fetch_dataset_sha</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.get_date_range" href="#pipelines.rj_smtr.tasks.get_date_range">get_date_range</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_local_dbt_client" href="#pipelines.rj_smtr.tasks.get_local_dbt_client">get_local_dbt_client</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_raw" href="#pipelines.rj_smtr.tasks.get_raw">get_raw</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.run_dbt_command" href="#pipelines.rj_smtr.tasks.run_dbt_command">run_dbt_command</a></code></li>
-<li><code><a title="pipelines.rj_smtr.tasks.run_dbt_schema" href="#pipelines.rj_smtr.tasks.run_dbt_schema">run_dbt_schema</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.save_raw_local" href="#pipelines.rj_smtr.tasks.save_raw_local">save_raw_local</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.save_treated_local" href="#pipelines.rj_smtr.tasks.save_treated_local">save_treated_local</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.set_last_run_timestamp" href="#pipelines.rj_smtr.tasks.set_last_run_timestamp">set_last_run_timestamp</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.upload_logs_to_bq" href="#pipelines.rj_smtr.tasks.upload_logs_to_bq">upload_logs_to_bq</a></code></li>
 </ul>
 </li>

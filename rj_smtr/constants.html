@@ -69,8 +69,11 @@ class constants(Enum):  # pylint: disable=c0103
     &#34;&#34;&#34;
 
     MAX_TIMEOUT_SECONDS = 60
+    MAX_RETRIES = 3
+    RETRY_DELAY = 10
     STPL_DATASET_ID = &#34;br_rj_riodejaneiro_stpl_gps&#34;
     STPL_TABLE_ID = &#34;registros&#34;
+    REDIS_HOST = &#34;localhost&#34;
     TIMEZONE = &#34;America/Sao_Paulo&#34;
     CRITICAL_SECRET_PATH = &#34;critical_webhook&#34;</code></pre>
 </details>
@@ -100,8 +103,11 @@ class constants(Enum):  # pylint: disable=c0103
     &#34;&#34;&#34;
 
     MAX_TIMEOUT_SECONDS = 60
+    MAX_RETRIES = 3
+    RETRY_DELAY = 10
     STPL_DATASET_ID = &#34;br_rj_riodejaneiro_stpl_gps&#34;
     STPL_TABLE_ID = &#34;registros&#34;
+    REDIS_HOST = &#34;localhost&#34;
     TIMEZONE = &#34;America/Sao_Paulo&#34;
     CRITICAL_SECRET_PATH = &#34;critical_webhook&#34;</code></pre>
 </details>
@@ -115,7 +121,19 @@ class constants(Enum):  # pylint: disable=c0103
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="pipelines.rj_smtr.constants.constants.MAX_RETRIES"><code class="name">var <span class="ident">MAX_RETRIES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="pipelines.rj_smtr.constants.constants.MAX_TIMEOUT_SECONDS"><code class="name">var <span class="ident">MAX_TIMEOUT_SECONDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.REDIS_HOST"><code class="name">var <span class="ident">REDIS_HOST</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.RETRY_DELAY"><code class="name">var <span class="ident">RETRY_DELAY</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -199,7 +217,10 @@ setTimeout(() => input.focus(), 100);
 <h4><code><a title="pipelines.rj_smtr.constants.constants" href="#pipelines.rj_smtr.constants.constants">constants</a></code></h4>
 <ul class="">
 <li><code><a title="pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH">CRITICAL_SECRET_PATH</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.MAX_RETRIES" href="#pipelines.rj_smtr.constants.constants.MAX_RETRIES">MAX_RETRIES</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.MAX_TIMEOUT_SECONDS" href="#pipelines.rj_smtr.constants.constants.MAX_TIMEOUT_SECONDS">MAX_TIMEOUT_SECONDS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.REDIS_HOST" href="#pipelines.rj_smtr.constants.constants.REDIS_HOST">REDIS_HOST</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.RETRY_DELAY" href="#pipelines.rj_smtr.constants.constants.RETRY_DELAY">RETRY_DELAY</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.STPL_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.STPL_DATASET_ID">STPL_DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.STPL_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.STPL_TABLE_ID">STPL_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.TIMEZONE" href="#pipelines.rj_smtr.constants.constants.TIMEZONE">TIMEZONE</a></code></li>

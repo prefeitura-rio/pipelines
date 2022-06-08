@@ -63,7 +63,7 @@ from pathlib import Path
 import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
-
+from redis_pal import RedisPal
 
 from pipelines.utils.utils import log
 from pipelines.utils.utils import get_vault_secret, send_discord_message
@@ -150,11 +150,12 @@ def bq_project(kind: str = &#34;bigquery_prod&#34;):
     return bd.upload.base.Base().client[kind].project
 
 
-def get_table_max_value(
+def get_table_min_max_value(  # pylint: disable=R0913
     query_project_id: str,
     dataset_id: str,
     table_id: str,
     field_name: str,
+    kind: str,
     wait=None,  # pylint: disable=unused-argument
 ):
     &#34;&#34;&#34;Query a table to get the maximum value for the chosen field.
@@ -164,15 +165,43 @@ def get_table_max_value(
         dataset_id (str): dataset_id on BigQuery
         table_id (str): table_id on BigQuery
         field_name (str): column name to query
+        kind (str): which value to get. Accepts min and max
     &#34;&#34;&#34;
     query = f&#34;&#34;&#34;
         SELECT
-            max({field_name})
+            {kind}({field_name})
         FROM {query_project_id}.{dataset_id}.{table_id}
     &#34;&#34;&#34;
     result = bd.read_sql(query=query, billing_project_id=bq_project())
 
-    return result.iloc[0][0]</code></pre>
+    return result.iloc[0][0]
+
+
+def get_last_run_timestamp(dataset_id: str, table_id: str):
+    &#34;&#34;&#34;
+    Query redis to retrive the time for when the last materialization
+    ran.
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): model filename on the queries repo.
+        eg: if you have a model defined in the file &lt;filename&gt;.sql,
+        the table_id should be &lt;filename&gt;
+
+    Returns:
+        Union[str, None]: _description_
+    &#34;&#34;&#34;
+    redpal = RedisPal(constants.REDIS_HOST.value)
+    runs = redpal.get(dataset_id)
+    if runs is None:
+        redpal.set(dataset_id, {table_id: &#34;&#34;})
+    try:
+        last_run_timestamp = runs[table_id][&#34;last_run_timestamp&#34;]
+    except KeyError:
+        return None
+    except TypeError:
+        return None
+    return last_run_timestamp</code></pre>
 </details>
 </section>
 <section>
@@ -293,8 +322,60 @@ Defaults to 'bigquery_prod'.</p>
     dataframe.to_csv(fname, index=False)</code></pre>
 </details>
 </dd>
-<dt id="pipelines.rj_smtr.utils.get_table_max_value"><code class="name flex">
-<span>def <span class="ident">get_table_max_value</span></span>(<span>query_project_id: str, dataset_id: str, table_id: str, field_name: str, wait=None)</span>
+<dt id="pipelines.rj_smtr.utils.get_last_run_timestamp"><code class="name flex">
+<span>def <span class="ident">get_last_run_timestamp</span></span>(<span>dataset_id: str, table_id: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Query redis to retrive the time for when the last materialization
+ran.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>dataset_id on BigQuery</dd>
+<dt><strong><code>table_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>model filename on the queries repo.</dd>
+<dt><strong><code>eg</code></strong></dt>
+<dd>if you have a model defined in the file <filename>.sql,</dd>
+</dl>
+<p>the table_id should be <filename></p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Union[str, None]</code></dt>
+<dd><em>description</em></dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_last_run_timestamp(dataset_id: str, table_id: str):
+    &#34;&#34;&#34;
+    Query redis to retrive the time for when the last materialization
+    ran.
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): model filename on the queries repo.
+        eg: if you have a model defined in the file &lt;filename&gt;.sql,
+        the table_id should be &lt;filename&gt;
+
+    Returns:
+        Union[str, None]: _description_
+    &#34;&#34;&#34;
+    redpal = RedisPal(constants.REDIS_HOST.value)
+    runs = redpal.get(dataset_id)
+    if runs is None:
+        redpal.set(dataset_id, {table_id: &#34;&#34;})
+    try:
+        last_run_timestamp = runs[table_id][&#34;last_run_timestamp&#34;]
+    except KeyError:
+        return None
+    except TypeError:
+        return None
+    return last_run_timestamp</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.utils.get_table_min_max_value"><code class="name flex">
+<span>def <span class="ident">get_table_min_max_value</span></span>(<span>query_project_id: str, dataset_id: str, table_id: str, field_name: str, kind: str, wait=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Query a table to get the maximum value for the chosen field.
@@ -307,16 +388,19 @@ Useful to incrementally materialize tables via DBT</p>
 <dd>table_id on BigQuery</dd>
 <dt><strong><code>field_name</code></strong> :&ensp;<code>str</code></dt>
 <dd>column name to query</dd>
+<dt><strong><code>kind</code></strong> :&ensp;<code>str</code></dt>
+<dd>which value to get. Accepts min and max</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_table_max_value(
+<pre><code class="python">def get_table_min_max_value(  # pylint: disable=R0913
     query_project_id: str,
     dataset_id: str,
     table_id: str,
     field_name: str,
+    kind: str,
     wait=None,  # pylint: disable=unused-argument
 ):
     &#34;&#34;&#34;Query a table to get the maximum value for the chosen field.
@@ -326,10 +410,11 @@ Useful to incrementally materialize tables via DBT</p>
         dataset_id (str): dataset_id on BigQuery
         table_id (str): table_id on BigQuery
         field_name (str): column name to query
+        kind (str): which value to get. Accepts min and max
     &#34;&#34;&#34;
     query = f&#34;&#34;&#34;
         SELECT
-            max({field_name})
+            {kind}({field_name})
         FROM {query_project_id}.{dataset_id}.{table_id}
     &#34;&#34;&#34;
     result = bd.read_sql(query=query, billing_project_id=bq_project())
@@ -434,7 +519,8 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.utils.bq_project" href="#pipelines.rj_smtr.utils.bq_project">bq_project</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.create_or_append_table" href="#pipelines.rj_smtr.utils.create_or_append_table">create_or_append_table</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.generate_df_and_save" href="#pipelines.rj_smtr.utils.generate_df_and_save">generate_df_and_save</a></code></li>
-<li><code><a title="pipelines.rj_smtr.utils.get_table_max_value" href="#pipelines.rj_smtr.utils.get_table_max_value">get_table_max_value</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.get_last_run_timestamp" href="#pipelines.rj_smtr.utils.get_last_run_timestamp">get_last_run_timestamp</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.get_table_min_max_value" href="#pipelines.rj_smtr.utils.get_table_min_max_value">get_table_min_max_value</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.log_critical" href="#pipelines.rj_smtr.utils.log_critical">log_critical</a></code></li>
 </ul>
 </li>
