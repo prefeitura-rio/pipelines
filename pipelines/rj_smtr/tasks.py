@@ -165,7 +165,6 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
     mat_table_id: str,
     field_name: str = "data_versao",
     refresh: bool = False,
-    version_dict: dict = None,
     wait=None,  # pylint: disable=unused-argument
 ):
     """
@@ -200,10 +199,7 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
     Materialized table last version: {last_mat_date}
     """
     )
-    vars_str = f'"{version_dict}"'
-    run_command = (
-        f"run --select models/{dataset_id}/{mat_table_id}.sql --vars {vars_str}"
-    )
+    run_command = f"run --select models/{dataset_id}/{mat_table_id}.sql"
 
     if refresh:
         log("Running in full refresh mode")
