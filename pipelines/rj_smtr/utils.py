@@ -3,32 +3,6 @@
 General purpose functions for rj_smtr
 """
 
-###############################################################################
-#
-# Esse é um arquivo onde podem ser declaratas funções que serão usadas
-# pelos projetos da rj_smtr.
-#
-# Por ser um arquivo opcional, pode ser removido sem prejuízo ao funcionamento
-# do projeto, caos não esteja em uso.
-#
-# Para declarar funções, basta fazer em código Python comum, como abaixo:
-#
-# ```
-# def foo():
-#     """
-#     Function foo
-#     """
-#     print("foo")
-# ```
-#
-# Para usá-las, basta fazer conforme o exemplo abaixo:
-#
-# ```py
-# from pipelines.rj_smtr.utils import foo
-# foo()
-# ```
-#
-###############################################################################
 from pathlib import Path
 
 import basedosdados as bd
@@ -43,6 +17,7 @@ from pipelines.utils.utils import (
 )
 from pipelines.rj_smtr.constants import constants
 
+# Set BD config to run on cloud #
 bd.config.from_file = True
 
 
@@ -81,15 +56,6 @@ def create_or_append_table(dataset_id, table_id, path):
         log("Table already exists in STAGING, appending to it...")
         tb_obj.append(filepath=path, if_exists="replace", timeout=600)
         log("Appended to table on STAGING successfully.")
-
-
-# Removed due to future use of DBT for managing publishing
-# if not tb_obj.table_exists("prod"):
-#     log("Table does not exist in PROD, publishing...")
-#     tb_obj.publish(if_exists="pass")
-#     log("Published table in PROD successfully.")
-# else:
-#     log("Table already published in PROD.")
 
 
 def generate_df_and_save(data: dict, fname: Path):
@@ -176,3 +142,19 @@ def get_last_run_timestamp(dataset_id: str, table_id: str):
     except TypeError:
         return None
     return last_run_timestamp
+
+
+def map_dict_keys(data: dict, mapping: dict) -> None:
+    pop_keys = [old_key for old_key in data.keys() if old_key not in mapping.keys()]
+    for old_key, new_key in mapping.items():
+        data[new_key] = data.pop(old_key)
+    for key in pop_keys:
+        data.pop(key)
+    return data
+
+
+def safe_cast(val, to_type, default=None):
+    try:
+        return to_type(val)
+    except ValueError:
+        return default
