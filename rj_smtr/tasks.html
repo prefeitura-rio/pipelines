@@ -194,7 +194,6 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
     mat_table_id: str,
     field_name: str = &#34;data_versao&#34;,
     refresh: bool = False,
-    version_dict: dict = None,
     wait=None,  # pylint: disable=unused-argument
 ):
     &#34;&#34;&#34;
@@ -229,10 +228,7 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
     Materialized table last version: {last_mat_date}
     &#34;&#34;&#34;
     )
-    vars_str = f&#39;&#34;{version_dict}&#34;&#39;
-    run_command = (
-        f&#34;run --select models/{dataset_id}/{mat_table_id}.sql --vars {vars_str}&#34;
-    )
+    run_command = f&#34;run --select models/{dataset_id}/{mat_table_id}.sql&#34;
 
     if refresh:
         log(&#34;Running in full refresh mode&#34;)
@@ -800,7 +796,7 @@ def bq_upload_from_dict(paths: dict, dataset_id: str, partition_levels: int = 1)
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.build_incremental_model"><code class="name flex">
-<span>def <span class="ident">build_incremental_model</span></span>(<span>dbt_client: dbt_client.dbt_client.DbtClient, dataset_id: str, base_table_id: str, mat_table_id: str, field_name: str = 'data_versao', refresh: bool = False, version_dict: dict = None, wait=None)</span>
+<span>def <span class="ident">build_incremental_model</span></span>(<span>dbt_client: dbt_client.dbt_client.DbtClient, dataset_id: str, base_table_id: str, mat_table_id: str, field_name: str = 'data_versao', refresh: bool = False, wait=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Utility task for backfilling table in predetermined steps.
@@ -841,7 +837,6 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
     mat_table_id: str,
     field_name: str = &#34;data_versao&#34;,
     refresh: bool = False,
-    version_dict: dict = None,
     wait=None,  # pylint: disable=unused-argument
 ):
     &#34;&#34;&#34;
@@ -876,10 +871,7 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
     Materialized table last version: {last_mat_date}
     &#34;&#34;&#34;
     )
-    vars_str = f&#39;&#34;{version_dict}&#34;&#39;
-    run_command = (
-        f&#34;run --select models/{dataset_id}/{mat_table_id}.sql --vars {vars_str}&#34;
-    )
+    run_command = f&#34;run --select models/{dataset_id}/{mat_table_id}.sql&#34;
 
     if refresh:
         log(&#34;Running in full refresh mode&#34;)
