@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Flows for br_rj_riodejaneiro_onibus_gps
+Flows for br_rj_riodejaneiro_btr_gps
 """
 
 from prefect import Parameter, case
@@ -35,22 +35,23 @@ from pipelines.rj_smtr.tasks import (
     upload_logs_to_bq,
     bq_upload,
 )
-from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
-    pre_treatment_br_rj_riodejaneiro_onibus_gps,
+
+from pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks import (
+    pre_treatment_br_rj_riodejaneiro_brt_gps,
 )
 
 # Flows #
 
 with Flow(
-    "SMTR: GPS SPPO - Materialização",
+    "SMTR: GPS BRT - Materialização",
     code_owners=["@hellcassius#1223", "@fernandascovino#9750"],
-) as materialize_sppo:
+) as materialize_brt:
 
     # Get default parameters #
-    dataset_id = Parameter("dataset_id", default=constants.GPS_SPPO_DATASET_ID.value)
-    table_id = Parameter("table_id", default=constants.GPS_SPPO_TREATED_TABLE_ID.value)
+    dataset_id = Parameter("dataset_id", default=constants.GPS_BRT_DATASET_ID.value)
+    table_id = Parameter("table_id", default=constants.GPS_BRT_TREATED_TABLE_ID.value)
     raw_table_id = Parameter(
-        "raw_table_id", default=constants.GPS_SPPO_RAW_TABLE_ID.value
+        "raw_table_id", default=constants.GPS_BRT_RAW_TABLE_ID.value
     )
     rebuild = Parameter("rebuild", False)
 
@@ -97,17 +98,15 @@ with Flow(
 
 
 with Flow(
-    "SMTR: GPS SPPO - Captura",
+    "SMTR: GPS BRT - Captura",
     code_owners=["@hellcassius#1223", "@fernandascovino#9750"],
-) as captura_sppo:
+) as captura_brt:
 
     # Get default parameters #
-    dataset_id = Parameter("dataset_id", default=constants.GPS_SPPO_DATASET_ID.value)
-    table_id = Parameter("table_id", default=constants.GPS_SPPO_RAW_TABLE_ID.value)
-    url = Parameter("url", default=constants.GPS_SPPO_API_BASE_URL.value)
-    secret_path = Parameter(
-        "secret_path", default=constants.GPS_SPPO_API_SECRET_PATH.value
-    )
+    dataset_id = Parameter("dataset_id", default=constants.GPS_BRT_DATASET_ID.value)
+    table_id = Parameter("table_id", default=constants.GPS_BRT_RAW_TABLE_ID.value)
+    url = Parameter("url", default=constants.GPS_BRT_API_BASE_URL.value)
+    # secret_path = Parameter("secret_path", default=constants.GPS_BRT_API_SECRET_PATH.value)
 
     # Run tasks #
     file_dict = create_current_date_hour_partition()
@@ -119,13 +118,11 @@ with Flow(
         partitions=file_dict["partitions"],
     )
 
-    status_dict = get_raw(url=url, source=secret_path)
+    status_dict = get_raw(url=url)
 
     raw_filepath = save_raw_local(data=status_dict["data"], file_path=filepath)
 
-    treated_status = pre_treatment_br_rj_riodejaneiro_onibus_gps(
-        status_dict=status_dict
-    )
+    treated_status = pre_treatment_br_rj_riodejaneiro_brt_gps(status_dict=status_dict)
 
     upload_logs_to_bq(
         dataset_id=dataset_id,
@@ -146,16 +143,16 @@ with Flow(
         partitions=file_dict["partitions"],
     )
 
-materialize_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-materialize_sppo.run_config = KubernetesRun(
+materialize_brt.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+materialize_brt.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-materialize_sppo.schedule = every_hour
+materialize_brt.schedule = every_hour
 
-captura_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-captura_sppo.run_config = KubernetesRun(
+captura_brt.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+captura_brt.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-# captura_sppo.schedule = every_minute
+# captura_brt.schedule = every_minute

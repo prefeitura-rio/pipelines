@@ -4,51 +4,6 @@ Tasks for rj_smtr
 """
 # pylint: disable=W0703
 
-###############################################################################
-#
-# Aqui é onde devem ser definidas as tasks para os flows do projeto.
-# Cada task representa um passo da pipeline. Não é estritamente necessário
-# tratar todas as exceções que podem ocorrer durante a execução de uma task,
-# mas é recomendável, ainda que não vá implicar em  uma quebra no sistema.
-# Mais informações sobre tasks podem ser encontradas na documentação do
-# Prefect: https://docs.prefect.io/core/concepts/tasks.html
-#
-# De modo a manter consistência na codebase, todo o código escrito passará
-# pelo pylint. Todos os warnings e erros devem ser corrigidos.
-#
-# As tasks devem ser definidas como funções comuns ao Python, com o decorador
-# @task acima. É recomendado inserir type hints para as variáveis.
-#
-# Um exemplo de task é o seguinte:
-#
-# -----------------------------------------------------------------------------
-# from prefect import task
-#
-# @task
-# def my_task(param1: str, param2: int) -> str:
-#     """
-#     My task description.
-#     """
-#     return f'{param1} {param2}'
-# -----------------------------------------------------------------------------
-#
-# Você também pode usar pacotes Python arbitrários, como numpy, pandas, etc.
-#
-# -----------------------------------------------------------------------------
-# from prefect import task
-# import numpy as np
-#
-# @task
-# def my_task(a: np.ndarray, b: np.ndarray) -> str:
-#     """
-#     My task description.
-#     """
-#     return np.add(a, b)
-# -----------------------------------------------------------------------------
-#
-# Abaixo segue um código para exemplificação, que pode ser removido.
-#
-###############################################################################
 from datetime import datetime, timedelta
 import json
 import os
@@ -57,7 +12,7 @@ from typing import Union, List, Dict
 
 from pytz import timezone
 
-from basedosdados import Storage
+from basedosdados import Storage, Table
 from dbt_client import DbtClient
 import pandas as pd
 import pendulum
@@ -336,7 +291,7 @@ def save_treated_local(dataframe, file_path, mode="staging"):
 
 
 @task
-def get_raw(url, headers=None, kind: str = None):
+def get_raw(url, headers=None, source: str = None):
     """Request data from a url API
 
     Args:
@@ -348,10 +303,10 @@ def get_raw(url, headers=None, kind: str = None):
         dict: "data" contains the response object from the request, "timestamp" contains
         the run time timestamp, "error" catches errors that may occur during task execution.
     """
-    if kind == "stpl":
-        headers = get_vault_secret("stpl_api")["data"]
-    if kind == "sppo":
-        access = get_vault_secret("sppo_api")["data"]
+    if source == "stpl_api":
+        headers = get_vault_secret(source)["data"]
+    if source == "sppo_api":
+        access = get_vault_secret(source)["data"]
         key = list(access)[0]
         url = f"{url}{key}={access[key]}"
     data = None
@@ -437,10 +392,6 @@ def bq_upload(dataset_id, table_id, filepath, raw_filepath=None, partitions=None
     else:
         create_or_append_table(dataset_id, table_id, filepath)
 
-    # Delete local Files
-    # log(f"Deleting local files: {raw_filepath}, {filepath}")
-    # cleanup_local(filepath, raw_filepath)
-
 
 @task
 def bq_upload_from_dict(paths: dict, dataset_id: str, partition_levels: int = 1):
@@ -520,11 +471,11 @@ def upload_logs_to_bq(dataset_id, parent_table_id, timestamp, error):
     max_retries=constants.MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.RETRY_DELAY.value),
 )
-def get_date_range(
+def get_materialization_date_range(
     dataset_id: str,
     table_id: str,
+    raw_table_id: str,
     table_date_column_name: str = None,
-    rebuild: bool = False,
 ):
     """
     Task for generating dict with variables to be passed to the
@@ -546,26 +497,25 @@ def get_date_range(
         dict: containing date_range_start and date_range_end
     """
 
-    if rebuild is True:
-        start_ts = get_table_min_max_value(
-            query_project_id=bq_project(),
-            dataset_id=dataset_id,
-            table_id=table_id,
-            field_name=table_date_column_name,
-            kind="min",
-        )
-
-    else:
-        start_ts = get_last_run_timestamp(dataset_id=dataset_id, table_id=table_id)
+    start_ts = get_last_run_timestamp(dataset_id=dataset_id, table_id=table_id)
 
     if start_ts is None:
-        start_ts = get_table_min_max_value(
-            query_project_id=bq_project(),
-            dataset_id=dataset_id,
-            table_id=table_id,
-            field_name=table_date_column_name,
-            kind="max",
-        )
+        if Table(dataset_id=dataset_id, table_id=table_id).table_exists("prod"):
+            start_ts = get_table_min_max_value(
+                query_project_id=bq_project(),
+                dataset_id=dataset_id,
+                table_id=table_id,
+                field_name=table_date_column_name,
+                kind="max",
+            ).strftime("%Y-%m-%dT%H:%M:%S")
+        else:
+            start_ts = get_table_min_max_value(
+                query_project_id=bq_project(),
+                dataset_id=dataset_id,
+                table_id=raw_table_id,
+                field_name=table_date_column_name,
+                kind="max",
+            ).strftime("%Y-%m-%dT%H:%M:%S")
     end_ts = datetime.now(timezone(constants.TIMEZONE.value)).strftime(
         "%Y-%m-%dT%H:%M:%S"
     )
@@ -592,7 +542,7 @@ def set_last_run_timestamp(
     Returns:
         _type_: _description_
     """
-    redpal = get_redis_client()
+    redis_client = get_redis_client()
     update_dict = {
         table_id: {
             "last_run_timestamp": datetime.now(
@@ -600,7 +550,7 @@ def set_last_run_timestamp(
             ).strftime("%Y-%m-%dT%H:%M:%S")
         }
     }
-    redpal.set(dataset_id, update_dict)
+    redis_client.set(dataset_id, update_dict)
     return True
 
 
