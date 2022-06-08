@@ -78,7 +78,7 @@ from pipelines.rj_smtr.tasks import (
 )
 from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.constants import constants
 from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.schedules import (
-    every_minute,
+    # every_minute,
     every_hour,
 )
 from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
@@ -173,8 +173,15 @@ with Flow(
     )
 
 materialize.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-materialize.run_config = KubernetesRun(image=emd_constants.DOCKER_IMAGE.value)
+materialize.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
 materialize.schedule = every_hour
+
 captura_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-captura_sppo.run_config = KubernetesRun(image=emd_constants.DOCKER_IMAGE.value)
-captura_sppo.schedule = every_minute
+captura_sppo.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+# captura_sppo.schedule = every_minute
