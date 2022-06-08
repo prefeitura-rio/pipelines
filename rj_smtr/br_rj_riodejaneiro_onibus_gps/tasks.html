@@ -32,61 +32,22 @@
 Tasks for br_rj_riodejaneiro_onibus_gps
 &#34;&#34;&#34;
 
-###############################################################################
-#
-# Aqui é onde devem ser definidas as tasks para os flows do projeto.
-# Cada task representa um passo da pipeline. Não é estritamente necessário
-# tratar todas as exceções que podem ocorrer durante a execução de uma task,
-# mas é recomendável, ainda que não vá implicar em  uma quebra no sistema.
-# Mais informações sobre tasks podem ser encontradas na documentação do
-# Prefect: https://docs.prefect.io/core/concepts/tasks.html
-#
-# De modo a manter consistência na codebase, todo o código escrito passará
-# pelo pylint. Todos os warnings e erros devem ser corrigidos.
-#
-# As tasks devem ser definidas como funções comuns ao Python, com o decorador
-# @task acima. É recomendado inserir type hints para as variáveis.
-#
-# Um exemplo de task é o seguinte:
-#
-# -----------------------------------------------------------------------------
-# from prefect import task
-#
-# @task
-# def my_task(param1: str, param2: int) -&gt; str:
-#     &#34;&#34;&#34;
-#     My task description.
-#     &#34;&#34;&#34;
-#     return f&#39;{param1} {param2}&#39;
-# -----------------------------------------------------------------------------
-#
-# Você também pode usar pacotes Python arbitrários, como numpy, pandas, etc.
-#
-# -----------------------------------------------------------------------------
-# from prefect import task
-# import numpy as np
-#
-# @task
-# def my_task(a: np.ndarray, b: np.ndarray) -&gt; str:
-#     &#34;&#34;&#34;
-#     My task description.
-#     &#34;&#34;&#34;
-#     return np.add(a, b)
-# -----------------------------------------------------------------------------
-#
-# Abaixo segue um código para exemplificação, que pode ser removido.
-#
-###############################################################################
 from datetime import timedelta
 import traceback
-
 import pandas as pd
 import pendulum
 from prefect import task
 
+# EMD Imports #
+
 from pipelines.utils.utils import log
+
+# SMTR Imports #
+
 from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.utils import log_critical
+
+# Tasks #
 
 
 @task

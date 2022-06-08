@@ -33,51 +33,6 @@ Tasks for rj_smtr
 &#34;&#34;&#34;
 # pylint: disable=W0703
 
-###############################################################################
-#
-# Aqui é onde devem ser definidas as tasks para os flows do projeto.
-# Cada task representa um passo da pipeline. Não é estritamente necessário
-# tratar todas as exceções que podem ocorrer durante a execução de uma task,
-# mas é recomendável, ainda que não vá implicar em  uma quebra no sistema.
-# Mais informações sobre tasks podem ser encontradas na documentação do
-# Prefect: https://docs.prefect.io/core/concepts/tasks.html
-#
-# De modo a manter consistência na codebase, todo o código escrito passará
-# pelo pylint. Todos os warnings e erros devem ser corrigidos.
-#
-# As tasks devem ser definidas como funções comuns ao Python, com o decorador
-# @task acima. É recomendado inserir type hints para as variáveis.
-#
-# Um exemplo de task é o seguinte:
-#
-# -----------------------------------------------------------------------------
-# from prefect import task
-#
-# @task
-# def my_task(param1: str, param2: int) -&gt; str:
-#     &#34;&#34;&#34;
-#     My task description.
-#     &#34;&#34;&#34;
-#     return f&#39;{param1} {param2}&#39;
-# -----------------------------------------------------------------------------
-#
-# Você também pode usar pacotes Python arbitrários, como numpy, pandas, etc.
-#
-# -----------------------------------------------------------------------------
-# from prefect import task
-# import numpy as np
-#
-# @task
-# def my_task(a: np.ndarray, b: np.ndarray) -&gt; str:
-#     &#34;&#34;&#34;
-#     My task description.
-#     &#34;&#34;&#34;
-#     return np.add(a, b)
-# -----------------------------------------------------------------------------
-#
-# Abaixo segue um código para exemplificação, que pode ser removido.
-#
-###############################################################################
 from datetime import datetime, timedelta
 import json
 import os
@@ -86,7 +41,7 @@ from typing import Union, List, Dict
 
 from pytz import timezone
 
-from basedosdados import Storage
+from basedosdados import Storage, Table
 from dbt_client import DbtClient
 import pandas as pd
 import pendulum
@@ -365,7 +320,7 @@ def save_treated_local(dataframe, file_path, mode=&#34;staging&#34;):
 
 
 @task
-def get_raw(url, headers=None, kind: str = None):
+def get_raw(url, headers=None, source: str = None):
     &#34;&#34;&#34;Request data from a url API
 
     Args:
@@ -377,10 +332,10 @@ def get_raw(url, headers=None, kind: str = None):
         dict: &#34;data&#34; contains the response object from the request, &#34;timestamp&#34; contains
         the run time timestamp, &#34;error&#34; catches errors that may occur during task execution.
     &#34;&#34;&#34;
-    if kind == &#34;stpl&#34;:
-        headers = get_vault_secret(&#34;stpl_api&#34;)[&#34;data&#34;]
-    if kind == &#34;sppo&#34;:
-        access = get_vault_secret(&#34;sppo_api&#34;)[&#34;data&#34;]
+    if source == &#34;stpl_api&#34;:
+        headers = get_vault_secret(source)[&#34;data&#34;]
+    if source == &#34;sppo_api&#34;:
+        access = get_vault_secret(source)[&#34;data&#34;]
         key = list(access)[0]
         url = f&#34;{url}{key}={access[key]}&#34;
     data = None
@@ -466,10 +421,6 @@ def bq_upload(dataset_id, table_id, filepath, raw_filepath=None, partitions=None
     else:
         create_or_append_table(dataset_id, table_id, filepath)
 
-    # Delete local Files
-    # log(f&#34;Deleting local files: {raw_filepath}, {filepath}&#34;)
-    # cleanup_local(filepath, raw_filepath)
-
 
 @task
 def bq_upload_from_dict(paths: dict, dataset_id: str, partition_levels: int = 1):
@@ -549,11 +500,11 @@ def upload_logs_to_bq(dataset_id, parent_table_id, timestamp, error):
     max_retries=constants.MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.RETRY_DELAY.value),
 )
-def get_date_range(
+def get_materialization_date_range(
     dataset_id: str,
     table_id: str,
+    raw_table_id: str,
     table_date_column_name: str = None,
-    rebuild: bool = False,
 ):
     &#34;&#34;&#34;
     Task for generating dict with variables to be passed to the
@@ -575,26 +526,25 @@ def get_date_range(
         dict: containing date_range_start and date_range_end
     &#34;&#34;&#34;
 
-    if rebuild is True:
-        start_ts = get_table_min_max_value(
-            query_project_id=bq_project(),
-            dataset_id=dataset_id,
-            table_id=table_id,
-            field_name=table_date_column_name,
-            kind=&#34;min&#34;,
-        )
-
-    else:
-        start_ts = get_last_run_timestamp(dataset_id=dataset_id, table_id=table_id)
+    start_ts = get_last_run_timestamp(dataset_id=dataset_id, table_id=table_id)
 
     if start_ts is None:
-        start_ts = get_table_min_max_value(
-            query_project_id=bq_project(),
-            dataset_id=dataset_id,
-            table_id=table_id,
-            field_name=table_date_column_name,
-            kind=&#34;max&#34;,
-        )
+        if Table(dataset_id=dataset_id, table_id=table_id).table_exists(&#34;prod&#34;):
+            start_ts = get_table_min_max_value(
+                query_project_id=bq_project(),
+                dataset_id=dataset_id,
+                table_id=table_id,
+                field_name=table_date_column_name,
+                kind=&#34;max&#34;,
+            ).strftime(&#34;%Y-%m-%dT%H:%M:%S&#34;)
+        else:
+            start_ts = get_table_min_max_value(
+                query_project_id=bq_project(),
+                dataset_id=dataset_id,
+                table_id=raw_table_id,
+                field_name=table_date_column_name,
+                kind=&#34;max&#34;,
+            ).strftime(&#34;%Y-%m-%dT%H:%M:%S&#34;)
     end_ts = datetime.now(timezone(constants.TIMEZONE.value)).strftime(
         &#34;%Y-%m-%dT%H:%M:%S&#34;
     )
@@ -621,7 +571,7 @@ def set_last_run_timestamp(
     Returns:
         _type_: _description_
     &#34;&#34;&#34;
-    redpal = get_redis_client()
+    redis_client = get_redis_client()
     update_dict = {
         table_id: {
             &#34;last_run_timestamp&#34;: datetime.now(
@@ -629,7 +579,7 @@ def set_last_run_timestamp(
             ).strftime(&#34;%Y-%m-%dT%H:%M:%S&#34;)
         }
     }
-    redpal.set(dataset_id, update_dict)
+    redis_client.set(dataset_id, update_dict)
     return True
 
 
@@ -724,11 +674,7 @@ def bq_upload(dataset_id, table_id, filepath, raw_filepath=None, partitions=None
         tb_dir = filepath.split(partitions)[0]
         create_or_append_table(dataset_id, table_id, tb_dir)
     else:
-        create_or_append_table(dataset_id, table_id, filepath)
-
-    # Delete local Files
-    # log(f&#34;Deleting local files: {raw_filepath}, {filepath}&#34;)
-    # cleanup_local(filepath, raw_filepath)</code></pre>
+        create_or_append_table(dataset_id, table_id, filepath)</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.bq_upload_from_dict"><code class="name flex">
@@ -1015,97 +961,6 @@ def fetch_dataset_sha(dataset_id: str):
     return {&#34;version&#34;: dataset_version}</code></pre>
 </details>
 </dd>
-<dt id="pipelines.rj_smtr.tasks.get_date_range"><code class="name flex">
-<span>def <span class="ident">get_date_range</span></span>(<span>dataset_id: str, table_id: str, table_date_column_name: str = None, rebuild: bool = False)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Task for generating dict with variables to be passed to the
-&ndash;vars argument on DBT.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code></dt>
-<dd>dataset_id on BigQuery</dd>
-<dt><strong><code>table_id</code></strong> :&ensp;<code>str</code></dt>
-<dd>model filename on the queries repo.</dd>
-<dt><strong><code>eg</code></strong></dt>
-<dd>if you have a model defined in the file <filename>.sql,</dd>
-<dt>the table_id should be <filename></dt>
-<dt><strong><code>table_date_column_name</code></strong> :&ensp;<code>Optional, str</code></dt>
-<dd>if it's the first time this</dd>
-<dt>is ran, will query the table for the maximum value on this field.</dt>
-<dt>If rebuild is true, will query the table for the minimum value</dt>
-<dt>on this field.</dt>
-<dt><strong><code>rebuild</code></strong> :&ensp;<code>Optional, bool</code></dt>
-<dd>if true, queries the minimum date value on the</dd>
-</dl>
-<p>table and return a date range from that value to the datetime.now() time</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>dict</code></dt>
-<dd>containing date_range_start and date_range_end</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task(
-    checkpoint=False,
-    max_retries=constants.MAX_RETRIES.value,
-    retry_delay=timedelta(seconds=constants.RETRY_DELAY.value),
-)
-def get_date_range(
-    dataset_id: str,
-    table_id: str,
-    table_date_column_name: str = None,
-    rebuild: bool = False,
-):
-    &#34;&#34;&#34;
-    Task for generating dict with variables to be passed to the
-    --vars argument on DBT.
-
-    Args:
-        dataset_id (str): dataset_id on BigQuery
-        table_id (str): model filename on the queries repo.
-        eg: if you have a model defined in the file &lt;filename&gt;.sql,
-        the table_id should be &lt;filename&gt;
-        table_date_column_name (Optional, str): if it&#39;s the first time this
-        is ran, will query the table for the maximum value on this field.
-        If rebuild is true, will query the table for the minimum value
-        on this field.
-        rebuild (Optional, bool): if true, queries the minimum date value on the
-        table and return a date range from that value to the datetime.now() time
-
-    Returns:
-        dict: containing date_range_start and date_range_end
-    &#34;&#34;&#34;
-
-    if rebuild is True:
-        start_ts = get_table_min_max_value(
-            query_project_id=bq_project(),
-            dataset_id=dataset_id,
-            table_id=table_id,
-            field_name=table_date_column_name,
-            kind=&#34;min&#34;,
-        )
-
-    else:
-        start_ts = get_last_run_timestamp(dataset_id=dataset_id, table_id=table_id)
-
-    if start_ts is None:
-        start_ts = get_table_min_max_value(
-            query_project_id=bq_project(),
-            dataset_id=dataset_id,
-            table_id=table_id,
-            field_name=table_date_column_name,
-            kind=&#34;max&#34;,
-        )
-    end_ts = datetime.now(timezone(constants.TIMEZONE.value)).strftime(
-        &#34;%Y-%m-%dT%H:%M:%S&#34;
-    )
-    date_range = {&#34;date_range_start&#34;: start_ts, &#34;date_range_end&#34;: end_ts}
-    return date_range</code></pre>
-</details>
-</dd>
 <dt id="pipelines.rj_smtr.tasks.get_local_dbt_client"><code class="name flex">
 <span>def <span class="ident">get_local_dbt_client</span></span>(<span>host: str, port: int)</span>
 </code></dt>
@@ -1143,8 +998,98 @@ def get_local_dbt_client(host: str, port: int):
     return get_dbt_client(host=host, port=port)</code></pre>
 </details>
 </dd>
+<dt id="pipelines.rj_smtr.tasks.get_materialization_date_range"><code class="name flex">
+<span>def <span class="ident">get_materialization_date_range</span></span>(<span>dataset_id: str, table_id: str, raw_table_id: str, table_date_column_name: str = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Task for generating dict with variables to be passed to the
+&ndash;vars argument on DBT.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>dataset_id on BigQuery</dd>
+<dt><strong><code>table_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>model filename on the queries repo.</dd>
+<dt><strong><code>eg</code></strong></dt>
+<dd>if you have a model defined in the file <filename>.sql,</dd>
+<dt>the table_id should be <filename></dt>
+<dt><strong><code>table_date_column_name</code></strong> :&ensp;<code>Optional, str</code></dt>
+<dd>if it's the first time this</dd>
+<dt>is ran, will query the table for the maximum value on this field.</dt>
+<dt>If rebuild is true, will query the table for the minimum value</dt>
+<dt>on this field.</dt>
+<dt><strong><code>rebuild</code></strong> :&ensp;<code>Optional, bool</code></dt>
+<dd>if true, queries the minimum date value on the</dd>
+</dl>
+<p>table and return a date range from that value to the datetime.now() time</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>containing date_range_start and date_range_end</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    checkpoint=False,
+    max_retries=constants.MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.RETRY_DELAY.value),
+)
+def get_materialization_date_range(
+    dataset_id: str,
+    table_id: str,
+    raw_table_id: str,
+    table_date_column_name: str = None,
+):
+    &#34;&#34;&#34;
+    Task for generating dict with variables to be passed to the
+    --vars argument on DBT.
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): model filename on the queries repo.
+        eg: if you have a model defined in the file &lt;filename&gt;.sql,
+        the table_id should be &lt;filename&gt;
+        table_date_column_name (Optional, str): if it&#39;s the first time this
+        is ran, will query the table for the maximum value on this field.
+        If rebuild is true, will query the table for the minimum value
+        on this field.
+        rebuild (Optional, bool): if true, queries the minimum date value on the
+        table and return a date range from that value to the datetime.now() time
+
+    Returns:
+        dict: containing date_range_start and date_range_end
+    &#34;&#34;&#34;
+
+    start_ts = get_last_run_timestamp(dataset_id=dataset_id, table_id=table_id)
+
+    if start_ts is None:
+        if Table(dataset_id=dataset_id, table_id=table_id).table_exists(&#34;prod&#34;):
+            start_ts = get_table_min_max_value(
+                query_project_id=bq_project(),
+                dataset_id=dataset_id,
+                table_id=table_id,
+                field_name=table_date_column_name,
+                kind=&#34;max&#34;,
+            ).strftime(&#34;%Y-%m-%dT%H:%M:%S&#34;)
+        else:
+            start_ts = get_table_min_max_value(
+                query_project_id=bq_project(),
+                dataset_id=dataset_id,
+                table_id=raw_table_id,
+                field_name=table_date_column_name,
+                kind=&#34;max&#34;,
+            ).strftime(&#34;%Y-%m-%dT%H:%M:%S&#34;)
+    end_ts = datetime.now(timezone(constants.TIMEZONE.value)).strftime(
+        &#34;%Y-%m-%dT%H:%M:%S&#34;
+    )
+    date_range = {&#34;date_range_start&#34;: start_ts, &#34;date_range_end&#34;: end_ts}
+    return date_range</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_smtr.tasks.get_raw"><code class="name flex">
-<span>def <span class="ident">get_raw</span></span>(<span>url, headers=None, kind: str = None)</span>
+<span>def <span class="ident">get_raw</span></span>(<span>url, headers=None, source: str = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Request data from a url API</p>
@@ -1169,7 +1114,7 @@ def get_local_dbt_client(host: str, port: int):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def get_raw(url, headers=None, kind: str = None):
+def get_raw(url, headers=None, source: str = None):
     &#34;&#34;&#34;Request data from a url API
 
     Args:
@@ -1181,10 +1126,10 @@ def get_raw(url, headers=None, kind: str = None):
         dict: &#34;data&#34; contains the response object from the request, &#34;timestamp&#34; contains
         the run time timestamp, &#34;error&#34; catches errors that may occur during task execution.
     &#34;&#34;&#34;
-    if kind == &#34;stpl&#34;:
-        headers = get_vault_secret(&#34;stpl_api&#34;)[&#34;data&#34;]
-    if kind == &#34;sppo&#34;:
-        access = get_vault_secret(&#34;sppo_api&#34;)[&#34;data&#34;]
+    if source == &#34;stpl_api&#34;:
+        headers = get_vault_secret(source)[&#34;data&#34;]
+    if source == &#34;sppo_api&#34;:
+        access = get_vault_secret(source)[&#34;data&#34;]
         key = list(access)[0]
         url = f&#34;{url}{key}={access[key]}&#34;
     data = None
@@ -1441,7 +1386,7 @@ def set_last_run_timestamp(
     Returns:
         _type_: _description_
     &#34;&#34;&#34;
-    redpal = get_redis_client()
+    redis_client = get_redis_client()
     update_dict = {
         table_id: {
             &#34;last_run_timestamp&#34;: datetime.now(
@@ -1449,7 +1394,7 @@ def set_last_run_timestamp(
             ).strftime(&#34;%Y-%m-%dT%H:%M:%S&#34;)
         }
     }
-    redpal.set(dataset_id, update_dict)
+    redis_client.set(dataset_id, update_dict)
     return True</code></pre>
 </details>
 </dd>
@@ -1585,8 +1530,8 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.tasks.create_current_date_hour_partition" href="#pipelines.rj_smtr.tasks.create_current_date_hour_partition">create_current_date_hour_partition</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.create_local_partition_path" href="#pipelines.rj_smtr.tasks.create_local_partition_path">create_local_partition_path</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.fetch_dataset_sha" href="#pipelines.rj_smtr.tasks.fetch_dataset_sha">fetch_dataset_sha</a></code></li>
-<li><code><a title="pipelines.rj_smtr.tasks.get_date_range" href="#pipelines.rj_smtr.tasks.get_date_range">get_date_range</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_local_dbt_client" href="#pipelines.rj_smtr.tasks.get_local_dbt_client">get_local_dbt_client</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.get_materialization_date_range" href="#pipelines.rj_smtr.tasks.get_materialization_date_range">get_materialization_date_range</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_raw" href="#pipelines.rj_smtr.tasks.get_raw">get_raw</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.run_dbt_command" href="#pipelines.rj_smtr.tasks.run_dbt_command">run_dbt_command</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.save_raw_local" href="#pipelines.rj_smtr.tasks.save_raw_local">save_raw_local</a></code></li>

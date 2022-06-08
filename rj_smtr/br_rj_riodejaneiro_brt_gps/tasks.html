@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks API documentation</title>
-<meta name="description" content="Tasks for br_rj_riodejaneiro_stpl_gps" />
+<title>pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks API documentation</title>
+<meta name="description" content="Tasks for br_rj_riodejaneiro_onibus_gps" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,121 +19,97 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks</code></h1>
+<h1 class="title">Module <code>pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks</code></h1>
 </header>
 <section id="section-intro">
-<p>Tasks for br_rj_riodejaneiro_stpl_gps</p>
+<p>Tasks for br_rj_riodejaneiro_onibus_gps</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Tasks for br_rj_riodejaneiro_stpl_gps
+Tasks for br_rj_riodejaneiro_onibus_gps
 &#34;&#34;&#34;
-# pylint: disable=C0103,W0703
-###############################################################################
-#
-# Aqui é onde devem ser definidas as tasks para os flows do projeto.
-# Cada task representa um passo da pipeline. Não é estritamente necessário
-# tratar todas as exceções que podem ocorrer durante a execução de uma task,
-# mas é recomendável, ainda que não vá implicar em  uma quebra no sistema.
-# Mais informações sobre tasks podem ser encontradas na documentação do
-# Prefect: https://docs.prefect.io/core/concepts/tasks.html
-#
-# De modo a manter consistência na codebase, todo o código escrito passará
-# pelo pylint. Todos os warnings e erros devem ser corrigidos.
-#
-# As tasks devem ser definidas como funções comuns ao Python, com o decorador
-# @task acima. É recomendado inserir type hints para as variáveis.
-#
-# Um exemplo de task é o seguinte:
-#
-# -----------------------------------------------------------------------------
-# from prefect import task
-#
-# @task
-# def my_task(param1: str, param2: int) -&gt; str:
-#     &#34;&#34;&#34;
-#     My task description.
-#     &#34;&#34;&#34;
-#     return f&#39;{param1} {param2}&#39;
-# -----------------------------------------------------------------------------
-#
-# Você também pode usar pacotes Python arbitrários, como numpy, pandas, etc.
-#
-# -----------------------------------------------------------------------------
-# from prefect import task
-# import numpy as np
-#
-# @task
-# def my_task(a: np.ndarray, b: np.ndarray) -&gt; str:
-#     &#34;&#34;&#34;
-#     My task description.
-#     &#34;&#34;&#34;
-#     return np.add(a, b)
-# -----------------------------------------------------------------------------
-#
-# Abaixo segue um código para exemplificação, que pode ser removido.
-#
-###############################################################################
+
 from datetime import timedelta
 import traceback
-
 import pandas as pd
 import pendulum
 from prefect import task
 
+# EMD Imports #
+
+from pipelines.utils.utils import log
+
+# SMTR Imports #
 
 from pipelines.rj_smtr.constants import constants
-from pipelines.utils.utils import log
-from pipelines.rj_smtr.utils import log_critical
+from pipelines.rj_smtr.utils import log_critical, map_dict_keys, safe_cast
+
+# Tasks #
 
 
 @task
-def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict):
-    &#34;&#34;&#34;Parse data from status_dict[&#39;data&#39;] to DataFrame as partially nested table.
+def pre_treatment_br_rj_riodejaneiro_brt_gps(status_dict: dict):
+    &#34;&#34;&#34;Basic data treatment for brt gps data. Converts unix time to datetime,
+    and apply filtering to stale data that may populate the API response.
 
     Args:
-        status_dict (dict): Contains data, run time timestamp and any previous error
-        key_column (str): Unique key field from each dict within data
+        status_dict (dict): dict containing the status of the request made to the
+        API. Must contain keys: data, timestamp and error
 
     Returns:
-        dict: &#34;df&#34; contains the transformed DataFrame from data, &#34;error&#34; contains any caught error
-        during execution.
+        df: pandas.core.DataFrame containing the treated data.
     &#34;&#34;&#34;
-    key_column = &#34;codigo&#34;
-    columns = [key_column, &#34;dataHora&#34;, &#34;timestamp_captura&#34;, &#34;content&#34;]
-    data = status_dict[&#34;data&#34;]
-    timestamp = status_dict[&#34;timestamp&#34;]
 
+    # Check previous error
     if status_dict[&#34;error&#34;] is not None:
         return {&#34;df&#34;: pd.DataFrame(), &#34;error&#34;: status_dict[&#34;error&#34;]}
 
     error = None
-    # get tz info from constants
+    data = status_dict[&#34;data&#34;]
     timezone = constants.TIMEZONE.value
+    timestamp = status_dict[&#34;timestamp&#34;]
 
-    data = data.json()[&#34;veiculos&#34;]
+    # Create dataframe sctructure
+    key_column = &#34;id_veiculo&#34;
+    columns = [key_column, &#34;timestamp_gps&#34;, &#34;timestamp_captura&#34;, &#34;content&#34;]
+    df = pd.DataFrame(data.json(), columns=columns)  # pylint: disable=c0103
 
-    # initialize df for nested columns
-    df = pd.DataFrame(columns=columns)
-    timestamp_captura = pd.to_datetime(timestamp)
-    # separate each nested piece in data into a row
-    df[&#34;content&#34;] = list(data)
-    # retrive key field from each nested piece in data
+    # Populate dataframe
+    df[&#34;timestamp_captura&#34;] = pd.to_datetime(timestamp)
+
+    # map_dict_keys change data keys to match project data structure
+    map_keys = {
+        &#34;vei_nro_gestor&#34;: &#34;id_veiculo&#34;,
+        &#34;linha&#34;: &#34;servico&#34;,
+        &#34;latitude&#34;: &#34;latitude&#34;,
+        &#34;longitude&#34;: &#34;longitude&#34;,
+        &#34;comunicacao&#34;: &#34;timestamp_gps&#34;,
+        &#34;velocidade&#34;: &#34;velocidade&#34;,
+        &#34;nomeItinerario&#34;: &#34;sentido&#34;,
+    }
+    df[&#34;content&#34;] = [map_dict_keys(piece, map_keys) for piece in data]
     df[key_column] = [piece[key_column] for piece in data]
-    df[&#34;dataHora&#34;] = [piece[&#34;dataHora&#34;] for piece in data]
-    df[&#34;timestamp_captura&#34;] = timestamp_captura
-    df[&#34;dataHora&#34;] = df[&#34;dataHora&#34;].apply(
-        lambda ms: pd.to_datetime(
-            pendulum.from_timestamp(ms / 1000.0, timezone).isoformat()
-        )
+
+    # Remove timezone and force it to be config timezone
+    log(f&#34;Before converting, timestamp_gps is: \n{df[&#39;timestamp_gps&#39;]}&#34;)
+
+    df[&#34;timestamp_gps&#34;] = df[&#34;content&#34;].apply(
+        lambda x: pd.to_datetime(
+            pendulum.from_timestamp(safe_cast(x[&#34;timestamp_gps&#34;], int, 0))
+            .replace(tzinfo=None)
+            .set(tz=&#34;UTC&#34;)
+            .isoformat()
+        )  # .tz_convert(timezone)
     )
+
+    log(f&#34;After converting the timezone, timestamp_gps is: \n{df[&#39;timestamp_gps&#39;]}&#34;)
 
     # Filter data for 0 &lt;= time diff &lt;= 1min
     try:
-        datahora_col = &#34;dataHora&#34;
+        datahora_col = &#34;timestamp_gps&#34;
         df_treated = df
         try:
             df_treated[datahora_col] = df_treated[datahora_col].apply(
@@ -159,10 +135,13 @@ def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict):
         log(f&#34;Shape após a filtragem: {df_treated.shape}&#34;)
         if df_treated.shape[0] == 0:
             error = ValueError(&#34;After filtering, the dataframe is empty!&#34;)
-        df = df_treated
-    except Exception:
-        error = traceback.format_exc()
-        log_critical(f&#34;Failed to filter STPL data: \n{error}&#34;)
+            log_critical(f&#34;@here\nFailed to filter BRT data: \n{error}&#34;)
+        df = df_treated  # pylint: disable=C0103
+    except Exception:  # pylint: disable = W0703
+        err = traceback.format_exc()
+        log_critical(f&#34;@here\nFailed to filter BRT data: \n{err}&#34;)
+    # log_critical(f&#34;@here\n Got SPPO data at {timestamp} sucessfully&#34;)
+
     return {&#34;df&#34;: df, &#34;error&#34;: error}</code></pre>
 </details>
 </section>
@@ -173,72 +152,87 @@ def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks.pre_treatment_br_rj_riodejaneiro_stpl_gps"><code class="name flex">
-<span>def <span class="ident">pre_treatment_br_rj_riodejaneiro_stpl_gps</span></span>(<span>status_dict)</span>
+<dt id="pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks.pre_treatment_br_rj_riodejaneiro_brt_gps"><code class="name flex">
+<span>def <span class="ident">pre_treatment_br_rj_riodejaneiro_brt_gps</span></span>(<span>status_dict: dict)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Parse data from status_dict['data'] to DataFrame as partially nested table.</p>
+<div class="desc"><p>Basic data treatment for brt gps data. Converts unix time to datetime,
+and apply filtering to stale data that may populate the API response.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>status_dict</code></strong> :&ensp;<code>dict</code></dt>
-<dd>Contains data, run time timestamp and any previous error</dd>
-<dt><strong><code>key_column</code></strong> :&ensp;<code>str</code></dt>
-<dd>Unique key field from each dict within data</dd>
+<dd>dict containing the status of the request made to the</dd>
 </dl>
+<p>API. Must contain keys: data, timestamp and error</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>dict</code></dt>
-<dd>"df" contains the transformed DataFrame from data, "error" contains any caught error</dd>
-</dl>
-<p>during execution.</p></div>
+<dt><code>df</code></dt>
+<dd>pandas.core.DataFrame containing the treated data.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict):
-    &#34;&#34;&#34;Parse data from status_dict[&#39;data&#39;] to DataFrame as partially nested table.
+def pre_treatment_br_rj_riodejaneiro_brt_gps(status_dict: dict):
+    &#34;&#34;&#34;Basic data treatment for brt gps data. Converts unix time to datetime,
+    and apply filtering to stale data that may populate the API response.
 
     Args:
-        status_dict (dict): Contains data, run time timestamp and any previous error
-        key_column (str): Unique key field from each dict within data
+        status_dict (dict): dict containing the status of the request made to the
+        API. Must contain keys: data, timestamp and error
 
     Returns:
-        dict: &#34;df&#34; contains the transformed DataFrame from data, &#34;error&#34; contains any caught error
-        during execution.
+        df: pandas.core.DataFrame containing the treated data.
     &#34;&#34;&#34;
-    key_column = &#34;codigo&#34;
-    columns = [key_column, &#34;dataHora&#34;, &#34;timestamp_captura&#34;, &#34;content&#34;]
-    data = status_dict[&#34;data&#34;]
-    timestamp = status_dict[&#34;timestamp&#34;]
 
+    # Check previous error
     if status_dict[&#34;error&#34;] is not None:
         return {&#34;df&#34;: pd.DataFrame(), &#34;error&#34;: status_dict[&#34;error&#34;]}
 
     error = None
-    # get tz info from constants
+    data = status_dict[&#34;data&#34;]
     timezone = constants.TIMEZONE.value
+    timestamp = status_dict[&#34;timestamp&#34;]
 
-    data = data.json()[&#34;veiculos&#34;]
+    # Create dataframe sctructure
+    key_column = &#34;id_veiculo&#34;
+    columns = [key_column, &#34;timestamp_gps&#34;, &#34;timestamp_captura&#34;, &#34;content&#34;]
+    df = pd.DataFrame(data.json(), columns=columns)  # pylint: disable=c0103
 
-    # initialize df for nested columns
-    df = pd.DataFrame(columns=columns)
-    timestamp_captura = pd.to_datetime(timestamp)
-    # separate each nested piece in data into a row
-    df[&#34;content&#34;] = list(data)
-    # retrive key field from each nested piece in data
+    # Populate dataframe
+    df[&#34;timestamp_captura&#34;] = pd.to_datetime(timestamp)
+
+    # map_dict_keys change data keys to match project data structure
+    map_keys = {
+        &#34;vei_nro_gestor&#34;: &#34;id_veiculo&#34;,
+        &#34;linha&#34;: &#34;servico&#34;,
+        &#34;latitude&#34;: &#34;latitude&#34;,
+        &#34;longitude&#34;: &#34;longitude&#34;,
+        &#34;comunicacao&#34;: &#34;timestamp_gps&#34;,
+        &#34;velocidade&#34;: &#34;velocidade&#34;,
+        &#34;nomeItinerario&#34;: &#34;sentido&#34;,
+    }
+    df[&#34;content&#34;] = [map_dict_keys(piece, map_keys) for piece in data]
     df[key_column] = [piece[key_column] for piece in data]
-    df[&#34;dataHora&#34;] = [piece[&#34;dataHora&#34;] for piece in data]
-    df[&#34;timestamp_captura&#34;] = timestamp_captura
-    df[&#34;dataHora&#34;] = df[&#34;dataHora&#34;].apply(
-        lambda ms: pd.to_datetime(
-            pendulum.from_timestamp(ms / 1000.0, timezone).isoformat()
-        )
+
+    # Remove timezone and force it to be config timezone
+    log(f&#34;Before converting, timestamp_gps is: \n{df[&#39;timestamp_gps&#39;]}&#34;)
+
+    df[&#34;timestamp_gps&#34;] = df[&#34;content&#34;].apply(
+        lambda x: pd.to_datetime(
+            pendulum.from_timestamp(safe_cast(x[&#34;timestamp_gps&#34;], int, 0))
+            .replace(tzinfo=None)
+            .set(tz=&#34;UTC&#34;)
+            .isoformat()
+        )  # .tz_convert(timezone)
     )
+
+    log(f&#34;After converting the timezone, timestamp_gps is: \n{df[&#39;timestamp_gps&#39;]}&#34;)
 
     # Filter data for 0 &lt;= time diff &lt;= 1min
     try:
-        datahora_col = &#34;dataHora&#34;
+        datahora_col = &#34;timestamp_gps&#34;
         df_treated = df
         try:
             df_treated[datahora_col] = df_treated[datahora_col].apply(
@@ -264,10 +258,13 @@ def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict):
         log(f&#34;Shape após a filtragem: {df_treated.shape}&#34;)
         if df_treated.shape[0] == 0:
             error = ValueError(&#34;After filtering, the dataframe is empty!&#34;)
-        df = df_treated
-    except Exception:
-        error = traceback.format_exc()
-        log_critical(f&#34;Failed to filter STPL data: \n{error}&#34;)
+            log_critical(f&#34;@here\nFailed to filter BRT data: \n{error}&#34;)
+        df = df_treated  # pylint: disable=C0103
+    except Exception:  # pylint: disable = W0703
+        err = traceback.format_exc()
+        log_critical(f&#34;@here\nFailed to filter BRT data: \n{err}&#34;)
+    # log_critical(f&#34;@here\n Got SPPO data at {timestamp} sucessfully&#34;)
+
     return {&#34;df&#34;: df, &#34;error&#34;: error}</code></pre>
 </details>
 </dd>
@@ -330,12 +327,12 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps" href="index.html">pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps</a></code></li>
+<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps" href="index.html">pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks.pre_treatment_br_rj_riodejaneiro_stpl_gps" href="#pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks.pre_treatment_br_rj_riodejaneiro_stpl_gps">pre_treatment_br_rj_riodejaneiro_stpl_gps</a></code></li>
+<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks.pre_treatment_br_rj_riodejaneiro_brt_gps" href="#pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks.pre_treatment_br_rj_riodejaneiro_brt_gps">pre_treatment_br_rj_riodejaneiro_brt_gps</a></code></li>
 </ul>
 </li>
 </ul>

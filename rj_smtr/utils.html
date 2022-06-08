@@ -32,32 +32,6 @@
 General purpose functions for rj_smtr
 &#34;&#34;&#34;
 
-###############################################################################
-#
-# Esse é um arquivo onde podem ser declaratas funções que serão usadas
-# pelos projetos da rj_smtr.
-#
-# Por ser um arquivo opcional, pode ser removido sem prejuízo ao funcionamento
-# do projeto, caos não esteja em uso.
-#
-# Para declarar funções, basta fazer em código Python comum, como abaixo:
-#
-# ```
-# def foo():
-#     &#34;&#34;&#34;
-#     Function foo
-#     &#34;&#34;&#34;
-#     print(&#34;foo&#34;)
-# ```
-#
-# Para usá-las, basta fazer conforme o exemplo abaixo:
-#
-# ```py
-# from pipelines.rj_smtr.utils import foo
-# foo()
-# ```
-#
-###############################################################################
 from pathlib import Path
 
 import basedosdados as bd
@@ -72,6 +46,7 @@ from pipelines.utils.utils import (
 )
 from pipelines.rj_smtr.constants import constants
 
+# Set BD config to run on cloud #
 bd.config.from_file = True
 
 
@@ -110,15 +85,6 @@ def create_or_append_table(dataset_id, table_id, path):
         log(&#34;Table already exists in STAGING, appending to it...&#34;)
         tb_obj.append(filepath=path, if_exists=&#34;replace&#34;, timeout=600)
         log(&#34;Appended to table on STAGING successfully.&#34;)
-
-
-# Removed due to future use of DBT for managing publishing
-# if not tb_obj.table_exists(&#34;prod&#34;):
-#     log(&#34;Table does not exist in PROD, publishing...&#34;)
-#     tb_obj.publish(if_exists=&#34;pass&#34;)
-#     log(&#34;Published table in PROD successfully.&#34;)
-# else:
-#     log(&#34;Table already published in PROD.&#34;)
 
 
 def generate_df_and_save(data: dict, fname: Path):
@@ -204,7 +170,29 @@ def get_last_run_timestamp(dataset_id: str, table_id: str):
         return None
     except TypeError:
         return None
-    return last_run_timestamp</code></pre>
+    return last_run_timestamp
+
+
+def map_dict_keys(data: dict, mapping: dict) -&gt; None:
+    &#34;&#34;&#34;
+    Map old keys to new keys in a dict.
+    &#34;&#34;&#34;
+    pop_keys = [old_key for old_key in data.keys() if old_key not in mapping.keys()]
+    for old_key, new_key in mapping.items():
+        data[new_key] = data.pop(old_key)
+    for key in pop_keys:
+        data.pop(key)
+    return data
+
+
+def safe_cast(val, to_type, default=None):
+    &#34;&#34;&#34;
+    Safe cast value.
+    &#34;&#34;&#34;
+    try:
+        return to_type(val)
+    except ValueError:
+        return default</code></pre>
 </details>
 </section>
 <section>
@@ -455,6 +443,46 @@ Useful to incrementally materialize tables via DBT</p>
     return send_discord_message(message=message, webhook_url=url)</code></pre>
 </details>
 </dd>
+<dt id="pipelines.rj_smtr.utils.map_dict_keys"><code class="name flex">
+<span>def <span class="ident">map_dict_keys</span></span>(<span>data: dict, mapping: dict) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Map old keys to new keys in a dict.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def map_dict_keys(data: dict, mapping: dict) -&gt; None:
+    &#34;&#34;&#34;
+    Map old keys to new keys in a dict.
+    &#34;&#34;&#34;
+    pop_keys = [old_key for old_key in data.keys() if old_key not in mapping.keys()]
+    for old_key, new_key in mapping.items():
+        data[new_key] = data.pop(old_key)
+    for key in pop_keys:
+        data.pop(key)
+    return data</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.utils.safe_cast"><code class="name flex">
+<span>def <span class="ident">safe_cast</span></span>(<span>val, to_type, default=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Safe cast value.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def safe_cast(val, to_type, default=None):
+    &#34;&#34;&#34;
+    Safe cast value.
+    &#34;&#34;&#34;
+    try:
+        return to_type(val)
+    except ValueError:
+        return default</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -525,6 +553,8 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.utils.get_last_run_timestamp" href="#pipelines.rj_smtr.utils.get_last_run_timestamp">get_last_run_timestamp</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.get_table_min_max_value" href="#pipelines.rj_smtr.utils.get_table_min_max_value">get_table_min_max_value</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.log_critical" href="#pipelines.rj_smtr.utils.log_critical">log_critical</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.map_dict_keys" href="#pipelines.rj_smtr.utils.map_dict_keys">map_dict_keys</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.safe_cast" href="#pipelines.rj_smtr.utils.safe_cast">safe_cast</a></code></li>
 </ul>
 </li>
 </ul>

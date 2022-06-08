@@ -32,34 +32,6 @@
 Constant values for the rj_smtr projects
 &#34;&#34;&#34;
 
-
-###############################################################################
-#
-# Esse é um arquivo onde podem ser declaratas constantes que serão usadas
-# por todos os projetos do rj_smtr.
-#
-# Por ser um arquivo opcional, pode ser removido sem prejuízo ao funcionamento
-# do projeto, caos não esteja em uso.
-#
-# Para declarar constantes, basta fazer conforme o exemplo abaixo:
-#
-# ```
-# class constants(Enum):
-#     &#34;&#34;&#34;
-#     Constant values for the rj_smtr projects
-#     &#34;&#34;&#34;
-#     FOO = &#34;bar&#34;
-# ```
-#
-# Para usá-las, basta fazer conforme o exemplo abaixo:
-#
-# ```py
-# from pipelines.rj_smtr.constants import constants
-# print(constants.FOO.value)
-# ```
-#
-###############################################################################
-
 from enum import Enum
 
 
@@ -68,13 +40,98 @@ class constants(Enum):  # pylint: disable=c0103
     Constant values for the rj_smtr projects
     &#34;&#34;&#34;
 
+    # DEFAULT TIMEZONE #
+    TIMEZONE = &#34;America/Sao_Paulo&#34;
+
+    # WEBHOOK #
+    CRITICAL_SECRET_PATH = &#34;critical_webhook&#34;
+
+    # RETRY POLICY #
     MAX_TIMEOUT_SECONDS = 60
     MAX_RETRIES = 3
     RETRY_DELAY = 10
-    STPL_DATASET_ID = &#34;br_rj_riodejaneiro_stpl_gps&#34;
-    STPL_TABLE_ID = &#34;registros&#34;
-    TIMEZONE = &#34;America/Sao_Paulo&#34;
-    CRITICAL_SECRET_PATH = &#34;critical_webhook&#34;</code></pre>
+
+    # GPS STPL #
+    GPS_STPL_API_BASE_URL = &#34;http://zn4.m2mcontrol.com.br/api/integracao/veiculos&#34;
+    GPS_STPL_API_SECRET_PATH = &#34;stpl_api&#34;
+
+    GPS_STPL_DATASET_ID = &#34;br_rj_riodejaneiro_stpl_gps&#34;
+    GPS_STPL_RAW_TABLE_ID = &#34;registros&#34;
+    # GPS_STPL_TREATED_TABLE_ID = ...
+
+    # GPS SPPO #
+    GPS_SPPO_API_BASE_URL = (
+        &#34;http://ccomobility.com.br/WebServices/Binder/WSConecta/EnvioInformacoesIplan?&#34;
+    )
+    GPS_SPPO_API_SECRET_PATH = &#34;sppo_api&#34;
+
+    GPS_SPPO_DATASET_ID = &#34;br_rj_riodejaneiro_onibus_gps&#34;
+    GPS_SPPO_RAW_TABLE_ID = &#34;registros&#34;
+    GPS_SPPO_TREATED_TABLE_ID = &#34;sppo_aux_registros_filtrada&#34;
+
+    # GPS BRT #
+    GPS_BRT_API_BASE_URL = (
+        &#34;http://citgisbrj.tacom.srv.br:9977/gtfs-realtime-exporter/findAll/json&#34;
+    )
+    # GPS_BRT_API_SECRET_PATH = &#34;sppo_api&#34;
+
+    GPS_BRT_DATASET_ID = &#34;br_rj_riodejaneiro_brt_gps&#34;
+    GPS_BRT_RAW_TABLE_ID = &#34;registros&#34;
+    GPS_BRT_TREATED_TABLE_ID = &#34;brt_aux_registros_filtrada&#34;
+
+    # SIGMOB (GTFS) #
+    SIGMOB_GET_REQUESTS_TIMEOUT = 60
+    SIGMOB_PAGES_FOR_CSV_FILE = 10
+    TASK_MAX_RETRIES = 3
+    TASK_RETRY_DELAY = 10
+
+    SIGMOB_DATASET_ID = &#34;br_rj_riodejaneiro_sigmob&#34;
+    SIGMOB_ENDPOINTS = {
+        &#34;agency&#34;: {
+            &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_agency.rule?sys=MOB&#34;,
+            &#34;key_column&#34;: &#34;agency_id&#34;,
+        },
+        &#34;calendar&#34;: {
+            &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_calendar.rule?sys=MOB&#34;,
+            &#34;key_column&#34;: &#34;service_id&#34;,
+        },
+        &#34;frota_determinada&#34;: {
+            &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_frota_determinada.rule?sys=MOB&#34;,
+            &#34;key_column&#34;: &#34;route_id&#34;,
+        },
+        &#34;holidays&#34;: {
+            &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_holiday.rule?sys=MOB&#34;,
+            &#34;key_column&#34;: &#34;Data&#34;,
+        },
+        &#34;linhas&#34;: {
+            &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_linhas.rule?sys=MOB&#34;,
+            &#34;key_column&#34;: &#34;linha_id&#34;,
+        },
+        &#34;routes&#34;: {
+            &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_routes.rule?sys=MOB&#34;,
+            &#34;key_column&#34;: &#34;route_id&#34;,
+        },
+        &#34;shapes&#34;: {
+            &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_shapes.rule?sys=MOB&amp;INDICE=0&#34;,
+            &#34;key_column&#34;: &#34;shape_id&#34;,
+        },
+        &#34;stops&#34;: {
+            &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_stops.rule?sys=MOB&amp;INDICE=0&#34;,
+            &#34;key_column&#34;: &#34;stop_id&#34;,
+        },
+        &#34;stop_times&#34;: {
+            &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_stop_times.rule?sys=MOB&#34;,
+            &#34;key_column&#34;: &#34;stop_id&#34;,
+        },
+        &#34;stop_details&#34;: {
+            &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_stops_details.rule?sys=MOB&amp;INDICE=0&#34;,
+            &#34;key_column&#34;: &#34;stop_id&#34;,
+        },
+        &#34;trips&#34;: {
+            &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_trips.rule?sys=MOB&#34;,
+            &#34;key_column&#34;: &#34;trip_id&#34;,
+        },
+    }</code></pre>
 </details>
 </section>
 <section>
@@ -101,13 +158,98 @@ class constants(Enum):  # pylint: disable=c0103
     Constant values for the rj_smtr projects
     &#34;&#34;&#34;
 
+    # DEFAULT TIMEZONE #
+    TIMEZONE = &#34;America/Sao_Paulo&#34;
+
+    # WEBHOOK #
+    CRITICAL_SECRET_PATH = &#34;critical_webhook&#34;
+
+    # RETRY POLICY #
     MAX_TIMEOUT_SECONDS = 60
     MAX_RETRIES = 3
     RETRY_DELAY = 10
-    STPL_DATASET_ID = &#34;br_rj_riodejaneiro_stpl_gps&#34;
-    STPL_TABLE_ID = &#34;registros&#34;
-    TIMEZONE = &#34;America/Sao_Paulo&#34;
-    CRITICAL_SECRET_PATH = &#34;critical_webhook&#34;</code></pre>
+
+    # GPS STPL #
+    GPS_STPL_API_BASE_URL = &#34;http://zn4.m2mcontrol.com.br/api/integracao/veiculos&#34;
+    GPS_STPL_API_SECRET_PATH = &#34;stpl_api&#34;
+
+    GPS_STPL_DATASET_ID = &#34;br_rj_riodejaneiro_stpl_gps&#34;
+    GPS_STPL_RAW_TABLE_ID = &#34;registros&#34;
+    # GPS_STPL_TREATED_TABLE_ID = ...
+
+    # GPS SPPO #
+    GPS_SPPO_API_BASE_URL = (
+        &#34;http://ccomobility.com.br/WebServices/Binder/WSConecta/EnvioInformacoesIplan?&#34;
+    )
+    GPS_SPPO_API_SECRET_PATH = &#34;sppo_api&#34;
+
+    GPS_SPPO_DATASET_ID = &#34;br_rj_riodejaneiro_onibus_gps&#34;
+    GPS_SPPO_RAW_TABLE_ID = &#34;registros&#34;
+    GPS_SPPO_TREATED_TABLE_ID = &#34;sppo_aux_registros_filtrada&#34;
+
+    # GPS BRT #
+    GPS_BRT_API_BASE_URL = (
+        &#34;http://citgisbrj.tacom.srv.br:9977/gtfs-realtime-exporter/findAll/json&#34;
+    )
+    # GPS_BRT_API_SECRET_PATH = &#34;sppo_api&#34;
+
+    GPS_BRT_DATASET_ID = &#34;br_rj_riodejaneiro_brt_gps&#34;
+    GPS_BRT_RAW_TABLE_ID = &#34;registros&#34;
+    GPS_BRT_TREATED_TABLE_ID = &#34;brt_aux_registros_filtrada&#34;
+
+    # SIGMOB (GTFS) #
+    SIGMOB_GET_REQUESTS_TIMEOUT = 60
+    SIGMOB_PAGES_FOR_CSV_FILE = 10
+    TASK_MAX_RETRIES = 3
+    TASK_RETRY_DELAY = 10
+
+    SIGMOB_DATASET_ID = &#34;br_rj_riodejaneiro_sigmob&#34;
+    SIGMOB_ENDPOINTS = {
+        &#34;agency&#34;: {
+            &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_agency.rule?sys=MOB&#34;,
+            &#34;key_column&#34;: &#34;agency_id&#34;,
+        },
+        &#34;calendar&#34;: {
+            &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_calendar.rule?sys=MOB&#34;,
+            &#34;key_column&#34;: &#34;service_id&#34;,
+        },
+        &#34;frota_determinada&#34;: {
+            &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_frota_determinada.rule?sys=MOB&#34;,
+            &#34;key_column&#34;: &#34;route_id&#34;,
+        },
+        &#34;holidays&#34;: {
+            &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_holiday.rule?sys=MOB&#34;,
+            &#34;key_column&#34;: &#34;Data&#34;,
+        },
+        &#34;linhas&#34;: {
+            &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_linhas.rule?sys=MOB&#34;,
+            &#34;key_column&#34;: &#34;linha_id&#34;,
+        },
+        &#34;routes&#34;: {
+            &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_routes.rule?sys=MOB&#34;,
+            &#34;key_column&#34;: &#34;route_id&#34;,
+        },
+        &#34;shapes&#34;: {
+            &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_shapes.rule?sys=MOB&amp;INDICE=0&#34;,
+            &#34;key_column&#34;: &#34;shape_id&#34;,
+        },
+        &#34;stops&#34;: {
+            &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_stops.rule?sys=MOB&amp;INDICE=0&#34;,
+            &#34;key_column&#34;: &#34;stop_id&#34;,
+        },
+        &#34;stop_times&#34;: {
+            &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_stop_times.rule?sys=MOB&#34;,
+            &#34;key_column&#34;: &#34;stop_id&#34;,
+        },
+        &#34;stop_details&#34;: {
+            &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_stops_details.rule?sys=MOB&amp;INDICE=0&#34;,
+            &#34;key_column&#34;: &#34;stop_id&#34;,
+        },
+        &#34;trips&#34;: {
+            &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_trips.rule?sys=MOB&#34;,
+            &#34;key_column&#34;: &#34;trip_id&#34;,
+        },
+    }</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -116,6 +258,58 @@ class constants(Enum):  # pylint: disable=c0103
 <h3>Class variables</h3>
 <dl>
 <dt id="pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH"><code class="name">var <span class="ident">CRITICAL_SECRET_PATH</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.GPS_BRT_API_BASE_URL"><code class="name">var <span class="ident">GPS_BRT_API_BASE_URL</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.GPS_BRT_DATASET_ID"><code class="name">var <span class="ident">GPS_BRT_DATASET_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.GPS_BRT_RAW_TABLE_ID"><code class="name">var <span class="ident">GPS_BRT_RAW_TABLE_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.GPS_BRT_TREATED_TABLE_ID"><code class="name">var <span class="ident">GPS_BRT_TREATED_TABLE_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.GPS_SPPO_API_BASE_URL"><code class="name">var <span class="ident">GPS_SPPO_API_BASE_URL</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.GPS_SPPO_API_SECRET_PATH"><code class="name">var <span class="ident">GPS_SPPO_API_SECRET_PATH</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.GPS_SPPO_DATASET_ID"><code class="name">var <span class="ident">GPS_SPPO_DATASET_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.GPS_SPPO_RAW_TABLE_ID"><code class="name">var <span class="ident">GPS_SPPO_RAW_TABLE_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.GPS_SPPO_TREATED_TABLE_ID"><code class="name">var <span class="ident">GPS_SPPO_TREATED_TABLE_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.GPS_STPL_API_BASE_URL"><code class="name">var <span class="ident">GPS_STPL_API_BASE_URL</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.GPS_STPL_API_SECRET_PATH"><code class="name">var <span class="ident">GPS_STPL_API_SECRET_PATH</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.GPS_STPL_DATASET_ID"><code class="name">var <span class="ident">GPS_STPL_DATASET_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.GPS_STPL_RAW_TABLE_ID"><code class="name">var <span class="ident">GPS_STPL_RAW_TABLE_ID</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -131,11 +325,27 @@ class constants(Enum):  # pylint: disable=c0103
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="pipelines.rj_smtr.constants.constants.STPL_DATASET_ID"><code class="name">var <span class="ident">STPL_DATASET_ID</span></code></dt>
+<dt id="pipelines.rj_smtr.constants.constants.SIGMOB_DATASET_ID"><code class="name">var <span class="ident">SIGMOB_DATASET_ID</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="pipelines.rj_smtr.constants.constants.STPL_TABLE_ID"><code class="name">var <span class="ident">STPL_TABLE_ID</span></code></dt>
+<dt id="pipelines.rj_smtr.constants.constants.SIGMOB_ENDPOINTS"><code class="name">var <span class="ident">SIGMOB_ENDPOINTS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.SIGMOB_GET_REQUESTS_TIMEOUT"><code class="name">var <span class="ident">SIGMOB_GET_REQUESTS_TIMEOUT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.SIGMOB_PAGES_FOR_CSV_FILE"><code class="name">var <span class="ident">SIGMOB_PAGES_FOR_CSV_FILE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.TASK_MAX_RETRIES"><code class="name">var <span class="ident">TASK_MAX_RETRIES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.TASK_RETRY_DELAY"><code class="name">var <span class="ident">TASK_RETRY_DELAY</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -211,11 +421,28 @@ setTimeout(() => input.focus(), 100);
 <h4><code><a title="pipelines.rj_smtr.constants.constants" href="#pipelines.rj_smtr.constants.constants">constants</a></code></h4>
 <ul class="">
 <li><code><a title="pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH">CRITICAL_SECRET_PATH</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_API_BASE_URL" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_API_BASE_URL">GPS_BRT_API_BASE_URL</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_DATASET_ID">GPS_BRT_DATASET_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_RAW_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_RAW_TABLE_ID">GPS_BRT_RAW_TABLE_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_TREATED_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_TREATED_TABLE_ID">GPS_BRT_TREATED_TABLE_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GPS_SPPO_API_BASE_URL" href="#pipelines.rj_smtr.constants.constants.GPS_SPPO_API_BASE_URL">GPS_SPPO_API_BASE_URL</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GPS_SPPO_API_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.GPS_SPPO_API_SECRET_PATH">GPS_SPPO_API_SECRET_PATH</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GPS_SPPO_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.GPS_SPPO_DATASET_ID">GPS_SPPO_DATASET_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GPS_SPPO_RAW_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.GPS_SPPO_RAW_TABLE_ID">GPS_SPPO_RAW_TABLE_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GPS_SPPO_TREATED_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.GPS_SPPO_TREATED_TABLE_ID">GPS_SPPO_TREATED_TABLE_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GPS_STPL_API_BASE_URL" href="#pipelines.rj_smtr.constants.constants.GPS_STPL_API_BASE_URL">GPS_STPL_API_BASE_URL</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GPS_STPL_API_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.GPS_STPL_API_SECRET_PATH">GPS_STPL_API_SECRET_PATH</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GPS_STPL_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.GPS_STPL_DATASET_ID">GPS_STPL_DATASET_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GPS_STPL_RAW_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.GPS_STPL_RAW_TABLE_ID">GPS_STPL_RAW_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.MAX_RETRIES" href="#pipelines.rj_smtr.constants.constants.MAX_RETRIES">MAX_RETRIES</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.MAX_TIMEOUT_SECONDS" href="#pipelines.rj_smtr.constants.constants.MAX_TIMEOUT_SECONDS">MAX_TIMEOUT_SECONDS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.RETRY_DELAY" href="#pipelines.rj_smtr.constants.constants.RETRY_DELAY">RETRY_DELAY</a></code></li>
-<li><code><a title="pipelines.rj_smtr.constants.constants.STPL_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.STPL_DATASET_ID">STPL_DATASET_ID</a></code></li>
-<li><code><a title="pipelines.rj_smtr.constants.constants.STPL_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.STPL_TABLE_ID">STPL_TABLE_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.SIGMOB_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.SIGMOB_DATASET_ID">SIGMOB_DATASET_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.SIGMOB_ENDPOINTS" href="#pipelines.rj_smtr.constants.constants.SIGMOB_ENDPOINTS">SIGMOB_ENDPOINTS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.SIGMOB_GET_REQUESTS_TIMEOUT" href="#pipelines.rj_smtr.constants.constants.SIGMOB_GET_REQUESTS_TIMEOUT">SIGMOB_GET_REQUESTS_TIMEOUT</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.SIGMOB_PAGES_FOR_CSV_FILE" href="#pipelines.rj_smtr.constants.constants.SIGMOB_PAGES_FOR_CSV_FILE">SIGMOB_PAGES_FOR_CSV_FILE</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.TASK_MAX_RETRIES" href="#pipelines.rj_smtr.constants.constants.TASK_MAX_RETRIES">TASK_MAX_RETRIES</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.TASK_RETRY_DELAY" href="#pipelines.rj_smtr.constants.constants.TASK_RETRY_DELAY">TASK_RETRY_DELAY</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.TIMEZONE" href="#pipelines.rj_smtr.constants.constants.TIMEZONE">TIMEZONE</a></code></li>
 </ul>
 </li>
