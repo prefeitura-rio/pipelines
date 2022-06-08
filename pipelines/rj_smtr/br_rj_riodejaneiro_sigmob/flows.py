@@ -165,4 +165,4 @@ captura_sigmob.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-captura_sigmob.schedule = every_day
+# captura_sigmob.schedule = every_day
