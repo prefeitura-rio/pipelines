@@ -49,7 +49,6 @@ def parse_dbt_logs(logs_dict: dict, log_queries: bool = False):
         if event["levelname"] == "DEBUG" and log_queries:
             if "On model" in event["message"]:
                 log(event["message"])
-    return None
 
 
 def create_or_append_table(dataset_id, table_id, path):
