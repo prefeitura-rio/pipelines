@@ -25,6 +25,7 @@ from pipelines.rj_smtr.utils import (
     bq_project,
     get_table_min_max_value,
     get_last_run_timestamp,
+    parse_dbt_logs,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_vault_secret, get_redis_client
@@ -59,6 +60,7 @@ def run_dbt_command(  # pylint: disable=too-many-arguments
     dataset_id: str = None,
     table_id: str = None,
     command: str = "run",
+    exclude: str = None,
     flags: str = None,
     _vars: Union[dict, List[Dict]] = None,
     upstream: bool = None,
@@ -82,15 +84,30 @@ def run_dbt_command(  # pylint: disable=too-many-arguments
         sync (bool, optional): _description_. Defaults to True.
     """
     run_command = f"dbt {command}"
-    if dataset_id:
+    if dataset_id and table_id:
         run_command += " --select "
         if upstream:
             run_command += "+"
         run_command += f"models/{dataset_id}/"
-        if table_id:
-            run_command += f"{table_id}.sql"
+        run_command += f"{table_id}.sql"
         if downstream:
             run_command += "+"
+    elif table_id:
+        run_command += " --select "
+        if upstream:
+            run_command += "+"
+        run_command += f"{table_id}"
+        if downstream:
+            run_command += "+"
+    elif dataset_id:
+        run_command += " --select "
+        if upstream:
+            run_command += "+"
+        run_command += f"models/{dataset_id}/"
+        if downstream:
+            run_command += "+"
+    if exclude:
+        run_command += f" --exclude {exclude}"
     if _vars:
         log(f"Received vars:\n {_vars}\n type: {type(_vars)}")
         if isinstance(_vars, list):
@@ -107,7 +124,12 @@ def run_dbt_command(  # pylint: disable=too-many-arguments
         run_command += f" {flags}"
 
     log(f"Will run the following command:\n{run_command}")
-    dbt_client.cli(run_command, sync=True)
+    logs_dict = dbt_client.cli(
+        run_command,
+        sync=True,
+        logs=True,
+    )
+    parse_dbt_logs(logs_dict, log_queries=True)
     return log("Finished running dbt command")
 
 
@@ -474,6 +496,7 @@ def upload_logs_to_bq(dataset_id, parent_table_id, timestamp, error):
 def get_materialization_date_range(
     dataset_id: str,
     table_id: str,
+    raw_dataset_id: str,
     raw_table_id: str,
     table_date_column_name: str = None,
 ):
@@ -511,7 +534,7 @@ def get_materialization_date_range(
         else:
             start_ts = get_table_min_max_value(
                 query_project_id=bq_project(),
-                dataset_id=dataset_id,
+                dataset_id=raw_dataset_id,
                 table_id=raw_table_id,
                 field_name=table_date_column_name,
                 kind="max",

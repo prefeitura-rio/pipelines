@@ -34,6 +34,24 @@ def log_critical(message: str, secret_path: str = constants.CRITICAL_SECRET_PATH
     return send_discord_message(message=message, webhook_url=url)
 
 
+def parse_dbt_logs(logs_dict: dict, log_queries: bool = False):
+    """Parse dbt returned logs, to print only needed
+    pieces.
+
+    Args:
+        logs_dict (dict): logs dict returned when running a DBT
+        command via DbtClient.cli() with argument logs = True
+    """
+    for event in logs_dict["result"]["logs"]:
+        if event["levelname"] == "INFO" or event["levelname"] == "ERROR":
+            log(f"#####{event['levelname']}#####")
+            log(event["message"])
+        if event["levelname"] == "DEBUG" and log_queries:
+            if "On model" in event["message"]:
+                log(event["message"])
+    return None
+
+
 def create_or_append_table(dataset_id, table_id, path):
     """Conditionally create table or append data to its relative GCS folder.
 

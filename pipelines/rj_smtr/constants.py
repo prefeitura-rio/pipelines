@@ -36,9 +36,10 @@ class constants(Enum):  # pylint: disable=c0103
     )
     GPS_SPPO_API_SECRET_PATH = "sppo_api"
 
-    GPS_SPPO_DATASET_ID = "br_rj_riodejaneiro_onibus_gps"
+    GPS_SPPO_RAW_DATASET_ID = "br_rj_riodejaneiro_onibus_gps"
     GPS_SPPO_RAW_TABLE_ID = "registros"
-    GPS_SPPO_TREATED_TABLE_ID = "sppo_aux_registros_filtrada"
+    GPS_SPPO_DATASET_ID = "br_rj_riodejaneiro_veiculos"
+    GPS_SPPO_TREATED_TABLE_ID = "gps_sppo"
 
     # GPS BRT #
     GPS_BRT_API_BASE_URL = (
@@ -46,9 +47,10 @@ class constants(Enum):  # pylint: disable=c0103
     )
     # GPS_BRT_API_SECRET_PATH = "sppo_api"
 
-    GPS_BRT_DATASET_ID = "br_rj_riodejaneiro_brt_gps"
+    GPS_BRT_DATASET_ID = "br_rj_riodejaneiro_veiculos"
+    GPS_BRT_RAW_DATASET_ID = "br_rj_riodejaneiro_brt_gps"
     GPS_BRT_RAW_TABLE_ID = "registros"
-    GPS_BRT_TREATED_TABLE_ID = "brt_aux_registros_filtrada"
+    GPS_BRT_TREATED_TABLE_ID = "gps_brt"
 
     # SIGMOB (GTFS) #
     SIGMOB_GET_REQUESTS_TIMEOUT = 60
