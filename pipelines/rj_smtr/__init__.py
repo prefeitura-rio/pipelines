@@ -12,3 +12,4 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.flows import *
 from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.flows import *
 from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.flows import *
 from pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.flows import *
+from pipelines.rj_smtr.materialize_to_datario.flows import *
