@@ -65,9 +65,10 @@ class constants(Enum):  # pylint: disable=c0103
     )
     GPS_SPPO_API_SECRET_PATH = &#34;sppo_api&#34;
 
-    GPS_SPPO_DATASET_ID = &#34;br_rj_riodejaneiro_onibus_gps&#34;
+    GPS_SPPO_RAW_DATASET_ID = &#34;br_rj_riodejaneiro_onibus_gps&#34;
     GPS_SPPO_RAW_TABLE_ID = &#34;registros&#34;
-    GPS_SPPO_TREATED_TABLE_ID = &#34;sppo_aux_registros_filtrada&#34;
+    GPS_SPPO_DATASET_ID = &#34;br_rj_riodejaneiro_veiculos&#34;
+    GPS_SPPO_TREATED_TABLE_ID = &#34;gps_sppo&#34;
 
     # GPS BRT #
     GPS_BRT_API_BASE_URL = (
@@ -75,9 +76,10 @@ class constants(Enum):  # pylint: disable=c0103
     )
     # GPS_BRT_API_SECRET_PATH = &#34;sppo_api&#34;
 
-    GPS_BRT_DATASET_ID = &#34;br_rj_riodejaneiro_brt_gps&#34;
+    GPS_BRT_DATASET_ID = &#34;br_rj_riodejaneiro_veiculos&#34;
+    GPS_BRT_RAW_DATASET_ID = &#34;br_rj_riodejaneiro_brt_gps&#34;
     GPS_BRT_RAW_TABLE_ID = &#34;registros&#34;
-    GPS_BRT_TREATED_TABLE_ID = &#34;brt_aux_registros_filtrada&#34;
+    GPS_BRT_TREATED_TABLE_ID = &#34;gps_brt&#34;
 
     # SIGMOB (GTFS) #
     SIGMOB_GET_REQUESTS_TIMEOUT = 60
@@ -183,9 +185,10 @@ class constants(Enum):  # pylint: disable=c0103
     )
     GPS_SPPO_API_SECRET_PATH = &#34;sppo_api&#34;
 
-    GPS_SPPO_DATASET_ID = &#34;br_rj_riodejaneiro_onibus_gps&#34;
+    GPS_SPPO_RAW_DATASET_ID = &#34;br_rj_riodejaneiro_onibus_gps&#34;
     GPS_SPPO_RAW_TABLE_ID = &#34;registros&#34;
-    GPS_SPPO_TREATED_TABLE_ID = &#34;sppo_aux_registros_filtrada&#34;
+    GPS_SPPO_DATASET_ID = &#34;br_rj_riodejaneiro_veiculos&#34;
+    GPS_SPPO_TREATED_TABLE_ID = &#34;gps_sppo&#34;
 
     # GPS BRT #
     GPS_BRT_API_BASE_URL = (
@@ -193,9 +196,10 @@ class constants(Enum):  # pylint: disable=c0103
     )
     # GPS_BRT_API_SECRET_PATH = &#34;sppo_api&#34;
 
-    GPS_BRT_DATASET_ID = &#34;br_rj_riodejaneiro_brt_gps&#34;
+    GPS_BRT_DATASET_ID = &#34;br_rj_riodejaneiro_veiculos&#34;
+    GPS_BRT_RAW_DATASET_ID = &#34;br_rj_riodejaneiro_brt_gps&#34;
     GPS_BRT_RAW_TABLE_ID = &#34;registros&#34;
-    GPS_BRT_TREATED_TABLE_ID = &#34;brt_aux_registros_filtrada&#34;
+    GPS_BRT_TREATED_TABLE_ID = &#34;gps_brt&#34;
 
     # SIGMOB (GTFS) #
     SIGMOB_GET_REQUESTS_TIMEOUT = 60
@@ -269,6 +273,10 @@ class constants(Enum):  # pylint: disable=c0103
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="pipelines.rj_smtr.constants.constants.GPS_BRT_RAW_DATASET_ID"><code class="name">var <span class="ident">GPS_BRT_RAW_DATASET_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="pipelines.rj_smtr.constants.constants.GPS_BRT_RAW_TABLE_ID"><code class="name">var <span class="ident">GPS_BRT_RAW_TABLE_ID</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -286,6 +294,10 @@ class constants(Enum):  # pylint: disable=c0103
 <div class="desc"></div>
 </dd>
 <dt id="pipelines.rj_smtr.constants.constants.GPS_SPPO_DATASET_ID"><code class="name">var <span class="ident">GPS_SPPO_DATASET_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.GPS_SPPO_RAW_DATASET_ID"><code class="name">var <span class="ident">GPS_SPPO_RAW_DATASET_ID</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -423,11 +435,13 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH">CRITICAL_SECRET_PATH</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_API_BASE_URL" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_API_BASE_URL">GPS_BRT_API_BASE_URL</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_DATASET_ID">GPS_BRT_DATASET_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_RAW_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_RAW_DATASET_ID">GPS_BRT_RAW_DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_RAW_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_RAW_TABLE_ID">GPS_BRT_RAW_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_TREATED_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_TREATED_TABLE_ID">GPS_BRT_TREATED_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_SPPO_API_BASE_URL" href="#pipelines.rj_smtr.constants.constants.GPS_SPPO_API_BASE_URL">GPS_SPPO_API_BASE_URL</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_SPPO_API_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.GPS_SPPO_API_SECRET_PATH">GPS_SPPO_API_SECRET_PATH</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_SPPO_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.GPS_SPPO_DATASET_ID">GPS_SPPO_DATASET_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GPS_SPPO_RAW_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.GPS_SPPO_RAW_DATASET_ID">GPS_SPPO_RAW_DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_SPPO_RAW_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.GPS_SPPO_RAW_TABLE_ID">GPS_SPPO_RAW_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_SPPO_TREATED_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.GPS_SPPO_TREATED_TABLE_ID">GPS_SPPO_TREATED_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_STPL_API_BASE_URL" href="#pipelines.rj_smtr.constants.constants.GPS_STPL_API_BASE_URL">GPS_STPL_API_BASE_URL</a></code></li>

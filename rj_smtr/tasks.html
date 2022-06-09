@@ -54,6 +54,7 @@ from pipelines.rj_smtr.utils import (
     bq_project,
     get_table_min_max_value,
     get_last_run_timestamp,
+    parse_dbt_logs,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_vault_secret, get_redis_client
@@ -83,26 +84,23 @@ def get_local_dbt_client(host: str, port: int):
 @task(
     checkpoint=False,
 )
-def run_dbt_command(  # pylint: disable=too-many-arguments
+def run_dbt_model(  # pylint: disable=too-many-arguments
     dbt_client: DbtClient,
-    dataset_id: str = None,
-    table_id: str = None,
-    command: str = &#34;run&#34;,
-    flags: str = None,
-    _vars: Union[dict, List[Dict]] = None,
+    model: str = None,
     upstream: bool = None,
     downstream: bool = None,
+    exclude: str = None,
+    flags: str = None,
+    _vars: Union[dict, List[Dict]] = None,
     wait=None,  # pylint: disable=unused-argument
 ):
     &#34;&#34;&#34;
-    Runs a dbt command. If passing a dataset_id only, will run the entire dataset.
-    If also passing a table_id, will select the dbt model specified at the path:
-    models/&lt;dataset_id&gt;/&lt;table_id&gt;.sql.
+    Runs a dbt command. If passing a dataset_id on model, will run the entire dataset.
+    Otheerwise, if pasing a table_id, will run only the specified table.
 
     Args:
         dbt_client (DbtClient): Dbt interface of interaction
-        dataset_id (str, optional): dataset_id on BigQuery, also folder name on
-        your queries repo. Defaults to None.
+        model (str, optional): dataset_id or table_id on BigQuery. Defaults to None.
         table_id (str, optional): table_id on BigQuery, also .sql file name on your
         models folder. Defaults to None.
         command (str, optional): dbt command to run. Defaults to &#34;run&#34;.
@@ -110,16 +108,20 @@ def run_dbt_command(  # pylint: disable=too-many-arguments
         Should be preceeded by &#34;--&#34; Defaults to None.
         sync (bool, optional): _description_. Defaults to True.
     &#34;&#34;&#34;
-    run_command = f&#34;dbt {command}&#34;
-    if dataset_id:
+    run_command = &#34;dbt run&#34;
+
+    # Set models and upstream/downstream for dbt
+    if model:
         run_command += &#34; --select &#34;
         if upstream:
             run_command += &#34;+&#34;
-        run_command += f&#34;models/{dataset_id}/&#34;
-        if table_id:
-            run_command += f&#34;{table_id}.sql&#34;
+        run_command += f&#34;{model}&#34;
         if downstream:
             run_command += &#34;+&#34;
+
+    if exclude:
+        run_command += f&#34; --exclude {exclude}&#34;
+
     if _vars:
         log(f&#34;Received vars:\n {_vars}\n type: {type(_vars)}&#34;)
         if isinstance(_vars, list):
@@ -136,8 +138,13 @@ def run_dbt_command(  # pylint: disable=too-many-arguments
         run_command += f&#34; {flags}&#34;
 
     log(f&#34;Will run the following command:\n{run_command}&#34;)
-    dbt_client.cli(run_command, sync=True)
-    return log(&#34;Finished running dbt command&#34;)
+    logs_dict = dbt_client.cli(
+        run_command,
+        sync=True,
+        logs=True,
+    )
+    parse_dbt_logs(logs_dict, log_queries=True)
+    return log(&#34;Finished running dbt model&#34;)
 
 
 @task(max_retries=3, retry_delay=timedelta(seconds=10))
@@ -503,6 +510,7 @@ def upload_logs_to_bq(dataset_id, parent_table_id, timestamp, error):
 def get_materialization_date_range(
     dataset_id: str,
     table_id: str,
+    raw_dataset_id: str,
     raw_table_id: str,
     table_date_column_name: str = None,
 ):
@@ -540,7 +548,7 @@ def get_materialization_date_range(
         else:
             start_ts = get_table_min_max_value(
                 query_project_id=bq_project(),
-                dataset_id=dataset_id,
+                dataset_id=raw_dataset_id,
                 table_id=raw_table_id,
                 field_name=table_date_column_name,
                 kind=&#34;max&#34;,
@@ -999,7 +1007,7 @@ def get_local_dbt_client(host: str, port: int):
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.get_materialization_date_range"><code class="name flex">
-<span>def <span class="ident">get_materialization_date_range</span></span>(<span>dataset_id: str, table_id: str, raw_table_id: str, table_date_column_name: str = None)</span>
+<span>def <span class="ident">get_materialization_date_range</span></span>(<span>dataset_id: str, table_id: str, raw_dataset_id: str, raw_table_id: str, table_date_column_name: str = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Task for generating dict with variables to be passed to the
@@ -1039,6 +1047,7 @@ def get_local_dbt_client(host: str, port: int):
 def get_materialization_date_range(
     dataset_id: str,
     table_id: str,
+    raw_dataset_id: str,
     raw_table_id: str,
     table_date_column_name: str = None,
 ):
@@ -1076,7 +1085,7 @@ def get_materialization_date_range(
         else:
             start_ts = get_table_min_max_value(
                 query_project_id=bq_project(),
-                dataset_id=dataset_id,
+                dataset_id=raw_dataset_id,
                 table_id=raw_table_id,
                 field_name=table_date_column_name,
                 kind=&#34;max&#34;,
@@ -1161,20 +1170,18 @@ def get_raw(url, headers=None, source: str = None):
     return {&#34;error&#34;: error, &#34;timestamp&#34;: timestamp.isoformat(), &#34;data&#34;: data}</code></pre>
 </details>
 </dd>
-<dt id="pipelines.rj_smtr.tasks.run_dbt_command"><code class="name flex">
-<span>def <span class="ident">run_dbt_command</span></span>(<span>dbt_client: dbt_client.dbt_client.DbtClient, dataset_id: str = None, table_id: str = None, command: str = 'run', flags: str = None, upstream: bool = None, downstream: bool = None, wait=None)</span>
+<dt id="pipelines.rj_smtr.tasks.run_dbt_model"><code class="name flex">
+<span>def <span class="ident">run_dbt_model</span></span>(<span>dbt_client: dbt_client.dbt_client.DbtClient, model: str = None, upstream: bool = None, downstream: bool = None, exclude: str = None, flags: str = None, wait=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Runs a dbt command. If passing a dataset_id only, will run the entire dataset.
-If also passing a table_id, will select the dbt model specified at the path:
-models/<dataset_id>/<table_id>.sql.</p>
+<div class="desc"><p>Runs a dbt command. If passing a dataset_id on model, will run the entire dataset.
+Otheerwise, if pasing a table_id, will run only the specified table.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>dbt_client</code></strong> :&ensp;<code>DbtClient</code></dt>
 <dd>Dbt interface of interaction</dd>
-<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>dataset_id on BigQuery, also folder name on</dd>
-<dt>your queries repo. Defaults to None.</dt>
+<dt><strong><code>model</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>dataset_id or table_id on BigQuery. Defaults to None.</dd>
 <dt><strong><code>table_id</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>table_id on BigQuery, also .sql file name on your</dd>
 <dt>models folder. Defaults to None.</dt>
@@ -1193,26 +1200,23 @@ models/<dataset_id>/<table_id>.sql.</p>
 <pre><code class="python">@task(
     checkpoint=False,
 )
-def run_dbt_command(  # pylint: disable=too-many-arguments
+def run_dbt_model(  # pylint: disable=too-many-arguments
     dbt_client: DbtClient,
-    dataset_id: str = None,
-    table_id: str = None,
-    command: str = &#34;run&#34;,
-    flags: str = None,
-    _vars: Union[dict, List[Dict]] = None,
+    model: str = None,
     upstream: bool = None,
     downstream: bool = None,
+    exclude: str = None,
+    flags: str = None,
+    _vars: Union[dict, List[Dict]] = None,
     wait=None,  # pylint: disable=unused-argument
 ):
     &#34;&#34;&#34;
-    Runs a dbt command. If passing a dataset_id only, will run the entire dataset.
-    If also passing a table_id, will select the dbt model specified at the path:
-    models/&lt;dataset_id&gt;/&lt;table_id&gt;.sql.
+    Runs a dbt command. If passing a dataset_id on model, will run the entire dataset.
+    Otheerwise, if pasing a table_id, will run only the specified table.
 
     Args:
         dbt_client (DbtClient): Dbt interface of interaction
-        dataset_id (str, optional): dataset_id on BigQuery, also folder name on
-        your queries repo. Defaults to None.
+        model (str, optional): dataset_id or table_id on BigQuery. Defaults to None.
         table_id (str, optional): table_id on BigQuery, also .sql file name on your
         models folder. Defaults to None.
         command (str, optional): dbt command to run. Defaults to &#34;run&#34;.
@@ -1220,16 +1224,20 @@ def run_dbt_command(  # pylint: disable=too-many-arguments
         Should be preceeded by &#34;--&#34; Defaults to None.
         sync (bool, optional): _description_. Defaults to True.
     &#34;&#34;&#34;
-    run_command = f&#34;dbt {command}&#34;
-    if dataset_id:
+    run_command = &#34;dbt run&#34;
+
+    # Set models and upstream/downstream for dbt
+    if model:
         run_command += &#34; --select &#34;
         if upstream:
             run_command += &#34;+&#34;
-        run_command += f&#34;models/{dataset_id}/&#34;
-        if table_id:
-            run_command += f&#34;{table_id}.sql&#34;
+        run_command += f&#34;{model}&#34;
         if downstream:
             run_command += &#34;+&#34;
+
+    if exclude:
+        run_command += f&#34; --exclude {exclude}&#34;
+
     if _vars:
         log(f&#34;Received vars:\n {_vars}\n type: {type(_vars)}&#34;)
         if isinstance(_vars, list):
@@ -1246,8 +1254,13 @@ def run_dbt_command(  # pylint: disable=too-many-arguments
         run_command += f&#34; {flags}&#34;
 
     log(f&#34;Will run the following command:\n{run_command}&#34;)
-    dbt_client.cli(run_command, sync=True)
-    return log(&#34;Finished running dbt command&#34;)</code></pre>
+    logs_dict = dbt_client.cli(
+        run_command,
+        sync=True,
+        logs=True,
+    )
+    parse_dbt_logs(logs_dict, log_queries=True)
+    return log(&#34;Finished running dbt model&#34;)</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.save_raw_local"><code class="name flex">
@@ -1533,7 +1546,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.tasks.get_local_dbt_client" href="#pipelines.rj_smtr.tasks.get_local_dbt_client">get_local_dbt_client</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_materialization_date_range" href="#pipelines.rj_smtr.tasks.get_materialization_date_range">get_materialization_date_range</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_raw" href="#pipelines.rj_smtr.tasks.get_raw">get_raw</a></code></li>
-<li><code><a title="pipelines.rj_smtr.tasks.run_dbt_command" href="#pipelines.rj_smtr.tasks.run_dbt_command">run_dbt_command</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.run_dbt_model" href="#pipelines.rj_smtr.tasks.run_dbt_model">run_dbt_model</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.save_raw_local" href="#pipelines.rj_smtr.tasks.save_raw_local">save_raw_local</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.save_treated_local" href="#pipelines.rj_smtr.tasks.save_treated_local">save_treated_local</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.set_last_run_timestamp" href="#pipelines.rj_smtr.tasks.set_last_run_timestamp">set_last_run_timestamp</a></code></li>
