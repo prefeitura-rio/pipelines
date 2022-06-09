@@ -28,7 +28,7 @@ from pipelines.rj_smtr.tasks import (
     get_materialization_date_range,
     # get_local_dbt_client,
     get_raw,
-    run_dbt_command,
+    run_dbt_model,
     save_raw_local,
     save_treated_local,
     set_last_run_timestamp,
@@ -47,11 +47,14 @@ with Flow(
 ) as materialize_sppo:
 
     # Get default parameters #
-    dataset_id = Parameter("dataset_id", default=constants.GPS_SPPO_DATASET_ID.value)
-    table_id = Parameter("table_id", default=constants.GPS_SPPO_TREATED_TABLE_ID.value)
+    raw_dataset_id = Parameter(
+        "raw_dataset_id", default=constants.GPS_SPPO_RAW_DATASET_ID.value
+    )
     raw_table_id = Parameter(
         "raw_table_id", default=constants.GPS_SPPO_RAW_TABLE_ID.value
     )
+    dataset_id = Parameter("dataset_id", default=constants.GPS_SPPO_DATASET_ID.value)
+    table_id = Parameter("table_id", default=constants.GPS_SPPO_TREATED_TABLE_ID.value)
     rebuild = Parameter("rebuild", False)
 
     # Set dbt client #
@@ -63,6 +66,7 @@ with Flow(
     date_range = get_materialization_date_range(
         dataset_id=dataset_id,
         table_id=table_id,
+        raw_dataset_id=raw_dataset_id,
         raw_table_id=raw_table_id,
         table_date_column_name="data",
     )
@@ -72,26 +76,22 @@ with Flow(
 
     # Run materialization #
     with case(rebuild, True):
-        RUN = run_dbt_command(
+        RUN = run_dbt_model(
             dbt_client=dbt_client,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            command="run",
-            _vars=[date_range, dataset_sha],
+            model=table_id,
             upstream=True,
-            downstream=True,
+            exclude="+data_versao_efetiva",
+            _vars=[date_range, dataset_sha],
             flags="--full-refresh",
         )
         set_last_run_timestamp(dataset_id=dataset_id, table_id=table_id, wait=RUN)
     with case(rebuild, False):
-        RUN = run_dbt_command(
+        RUN = run_dbt_model(
             dbt_client=dbt_client,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            command="run",
+            model=table_id,
+            exclude="+data_versao_efetiva",
             _vars=[date_range, dataset_sha],
             upstream=True,
-            downstream=True,
         )
         set_last_run_timestamp(dataset_id=dataset_id, table_id=table_id, wait=RUN)
 
