@@ -24,7 +24,7 @@ from pipelines.rj_smtr.schedules import every_day
 from pipelines.rj_smtr.tasks import (
     bq_upload_from_dict,
     build_incremental_model,
-    run_dbt_command,
+    run_dbt_model,
     # , get_local_dbt_client
 )
 
@@ -48,9 +48,9 @@ with Flow(
 
     # Run materialization #
     with case(backfill, True):
-        RUN = run_dbt_command(
+        RUN = run_dbt_model(
             dbt_client=dbt_client,
-            dataset_id=dataset_id,
+            model=dataset_id,
             flags="--full-refresh",
         )
         INCREMENTAL_RUN = build_incremental_model(
@@ -60,26 +60,23 @@ with Flow(
             mat_table_id="shapes_geom",
             wait=RUN,
         )
-        LAST_RUN = run_dbt_command(
+        LAST_RUN = run_dbt_model(
             dbt_client=dbt_client,
-            dataset_id=dataset_id,
-            table_id="data_versao_efetiva",
+            model="data_versao_efetiva",
             flags="--full-refresh",
             wait=INCREMENTAL_RUN,
         )
-        TESTS = run_dbt_command(
-            command="test", dbt_client=dbt_client, dataset_id=dataset_id, wait=LAST_RUN
-        )
+        # TESTS = run_dbt_model(
+        #     command="test", dbt_client=dbt_client, model=dataset_id, wait=LAST_RUN
+        # )
     with case(backfill, False):
-
-        RUN = run_dbt_command(
+        RUN = run_dbt_model(
             dbt_client=dbt_client,
-            dataset_id=dataset_id,
+            model=dataset_id,
         )
-
-        TESTS = run_dbt_command(
-            command="test", dbt_client=dbt_client, dataset_id=dataset_id, wait=RUN
-        )
+        # TESTS = run_dbt_model(
+        #     command="test", dbt_client=dbt_client, model=dataset_id, wait=RUN
+        # )
 
     materialize_sigmob.set_dependencies(
         task=LAST_RUN, upstream_tasks=[dbt_client, RUN, INCREMENTAL_RUN]

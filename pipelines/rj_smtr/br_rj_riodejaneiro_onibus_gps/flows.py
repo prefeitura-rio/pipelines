@@ -28,7 +28,7 @@ from pipelines.rj_smtr.tasks import (
     get_materialization_date_range,
     # get_local_dbt_client,
     get_raw,
-    run_dbt_command,
+    run_dbt_model,
     save_raw_local,
     save_treated_local,
     set_last_run_timestamp,
@@ -76,21 +76,19 @@ with Flow(
 
     # Run materialization #
     with case(rebuild, True):
-        RUN = run_dbt_command(
+        RUN = run_dbt_model(
             dbt_client=dbt_client,
-            table_id=table_id,
-            command="run",
+            model=table_id,
+            upstream=True,
             exclude="+data_versao_efetiva",
             _vars=[date_range, dataset_sha],
-            upstream=True,
             flags="--full-refresh",
         )
         set_last_run_timestamp(dataset_id=dataset_id, table_id=table_id, wait=RUN)
     with case(rebuild, False):
-        RUN = run_dbt_command(
+        RUN = run_dbt_model(
             dbt_client=dbt_client,
-            table_id=table_id,
-            command="run",
+            model=table_id,
             exclude="+data_versao_efetiva",
             _vars=[date_range, dataset_sha],
             upstream=True,

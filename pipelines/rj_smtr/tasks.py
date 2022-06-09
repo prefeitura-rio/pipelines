@@ -55,27 +55,23 @@ def get_local_dbt_client(host: str, port: int):
 @task(
     checkpoint=False,
 )
-def run_dbt_command(  # pylint: disable=too-many-arguments
+def run_dbt_model(  # pylint: disable=too-many-arguments
     dbt_client: DbtClient,
-    dataset_id: str = None,
-    table_id: str = None,
-    command: str = "run",
+    model: str = None,
+    upstream: bool = None,
+    downstream: bool = None,
     exclude: str = None,
     flags: str = None,
     _vars: Union[dict, List[Dict]] = None,
-    upstream: bool = None,
-    downstream: bool = None,
     wait=None,  # pylint: disable=unused-argument
 ):
     """
-    Runs a dbt command. If passing a dataset_id only, will run the entire dataset.
-    If also passing a table_id, will select the dbt model specified at the path:
-    models/<dataset_id>/<table_id>.sql.
+    Runs a dbt command. If passing a dataset_id on model, will run the entire dataset.
+    Otheerwise, if pasing a table_id, will run only the specified table.
 
     Args:
         dbt_client (DbtClient): Dbt interface of interaction
-        dataset_id (str, optional): dataset_id on BigQuery, also folder name on
-        your queries repo. Defaults to None.
+        model (str, optional): dataset_id or table_id on BigQuery. Defaults to None.
         table_id (str, optional): table_id on BigQuery, also .sql file name on your
         models folder. Defaults to None.
         command (str, optional): dbt command to run. Defaults to "run".
@@ -83,31 +79,20 @@ def run_dbt_command(  # pylint: disable=too-many-arguments
         Should be preceeded by "--" Defaults to None.
         sync (bool, optional): _description_. Defaults to True.
     """
-    run_command = f"dbt {command}"
-    if dataset_id and table_id:
+    run_command = "dbt run"
+
+    # Set models and upstream/downstream for dbt
+    if model:
         run_command += " --select "
         if upstream:
             run_command += "+"
-        run_command += f"models/{dataset_id}/"
-        run_command += f"{table_id}.sql"
+        run_command += f"{model}"
         if downstream:
             run_command += "+"
-    elif table_id:
-        run_command += " --select "
-        if upstream:
-            run_command += "+"
-        run_command += f"{table_id}"
-        if downstream:
-            run_command += "+"
-    elif dataset_id:
-        run_command += " --select "
-        if upstream:
-            run_command += "+"
-        run_command += f"models/{dataset_id}/"
-        if downstream:
-            run_command += "+"
+
     if exclude:
         run_command += f" --exclude {exclude}"
+
     if _vars:
         log(f"Received vars:\n {_vars}\n type: {type(_vars)}")
         if isinstance(_vars, list):
@@ -130,7 +115,7 @@ def run_dbt_command(  # pylint: disable=too-many-arguments
         logs=True,
     )
     parse_dbt_logs(logs_dict, log_queries=True)
-    return log("Finished running dbt command")
+    return log("Finished running dbt model")
 
 
 @task(max_retries=3, retry_delay=timedelta(seconds=10))
