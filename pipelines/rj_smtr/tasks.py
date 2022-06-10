@@ -551,14 +551,13 @@ def set_last_run_timestamp(
         _type_: _description_
     """
     redis_client = get_redis_client()
-    update_dict = {
-        table_id: {
-            "last_run_timestamp": datetime.now(
-                timezone(constants.TIMEZONE.value)
-            ).strftime("%Y-%m-%dT%H:%M:%S")
-        }
+    key = dataset_id + "." + table_id
+    value = {
+        "last_run_timestamp": datetime.now(timezone(constants.TIMEZONE.value)).strftime(
+            "%Y-%m-%dT%H:%M:%S"
+        )
     }
-    redis_client.set(dataset_id, update_dict)
+    redis_client.set(key, value)
     return True
 
 

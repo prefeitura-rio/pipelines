@@ -149,11 +149,12 @@ def get_last_run_timestamp(dataset_id: str, table_id: str):
         Union[str, None]: _description_
     """
     redis_client = get_redis_client()
-    runs = redis_client.get(dataset_id)
-    if runs is None:
-        redis_client.set(dataset_id, {table_id: ""})
+    key = dataset_id + "." + table_id
+    runs = redis_client.get(key)
+    # if runs is None:
+    #     redis_client.set(key, "")
     try:
-        last_run_timestamp = runs[table_id]["last_run_timestamp"]
+        last_run_timestamp = runs["last_run_timestamp"]
     except KeyError:
         return None
     except TypeError:
