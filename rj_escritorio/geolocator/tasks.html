@@ -67,8 +67,8 @@ def seleciona_enderecos_novos() -&gt; Tuple[pd.DataFrame, bool]:
         no_bairro bairro,
         id_logradouro,
         no_logradouro logradouro,
-        ds_endereco_numero numero_porta,
-        CONCAT(no_logradouro, &#39; &#39;, ds_endereco_numero, &#39;, &#39;, no_bairro,
+        SAFE_CAST(SAFE_CAST(ds_endereco_numero AS INT) AS STRING) numero_porta,
+        CONCAT(no_logradouro, &#39; &#39;, SAFE_CAST(SAFE_CAST(ds_endereco_numero AS INT) AS STRING), &#39;, &#39;, no_bairro,
             &#39;, &#39;, &#39;Rio de Janeiro, RJ, Brasil&#39;) endereco_completo
         FROM `rj-segovi.administracao_servicos_publicos_1746_staging.chamado`
         WHERE no_logradouro IS NOT NULL
@@ -77,7 +77,7 @@ def seleciona_enderecos_novos() -&gt; Tuple[pd.DataFrame, bool]:
 
     SELECT DISTINCT
     ch.endereco_completo, pais, estado, municipio,
-    bairro, id_logradouro, logradouro, numero_porta
+    bairro, id_logradouro, logradouro, ch.numero_porta
     FROM chamados_ontem ch
     LEFT JOIN end_conhecidos ec ON ec.endereco_completo = ch.endereco_completo
     WHERE ec.endereco_completo IS NULL AND ch.endereco_completo IS NOT NULL
@@ -288,8 +288,8 @@ def seleciona_enderecos_novos() -&gt; Tuple[pd.DataFrame, bool]:
         no_bairro bairro,
         id_logradouro,
         no_logradouro logradouro,
-        ds_endereco_numero numero_porta,
-        CONCAT(no_logradouro, &#39; &#39;, ds_endereco_numero, &#39;, &#39;, no_bairro,
+        SAFE_CAST(SAFE_CAST(ds_endereco_numero AS INT) AS STRING) numero_porta,
+        CONCAT(no_logradouro, &#39; &#39;, SAFE_CAST(SAFE_CAST(ds_endereco_numero AS INT) AS STRING), &#39;, &#39;, no_bairro,
             &#39;, &#39;, &#39;Rio de Janeiro, RJ, Brasil&#39;) endereco_completo
         FROM `rj-segovi.administracao_servicos_publicos_1746_staging.chamado`
         WHERE no_logradouro IS NOT NULL
@@ -298,7 +298,7 @@ def seleciona_enderecos_novos() -&gt; Tuple[pd.DataFrame, bool]:
 
     SELECT DISTINCT
     ch.endereco_completo, pais, estado, municipio,
-    bairro, id_logradouro, logradouro, numero_porta
+    bairro, id_logradouro, logradouro, ch.numero_porta
     FROM chamados_ontem ch
     LEFT JOIN end_conhecidos ec ON ec.endereco_completo = ch.endereco_completo
     WHERE ec.endereco_completo IS NULL AND ch.endereco_completo IS NOT NULL
