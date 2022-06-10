@@ -39,7 +39,7 @@ def seleciona_enderecos_novos() -> Tuple[pd.DataFrame, bool]:
         id_logradouro,
         no_logradouro logradouro,
         ds_endereco_numero numero_porta,
-        CONCAT(no_logradouro, ' ', ds_endereco_numero, ', ', no_bairro,
+        CONCAT(no_logradouro, ' ', SAFE_CAST(SAFE_CAST(ds_endereco_numero AS INT) AS STRING), ', ', no_bairro,
             ', ', 'Rio de Janeiro, RJ, Brasil') endereco_completo
         FROM `rj-segovi.administracao_servicos_publicos_1746_staging.chamado`
         WHERE no_logradouro IS NOT NULL
