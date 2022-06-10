@@ -178,11 +178,12 @@ def get_last_run_timestamp(dataset_id: str, table_id: str):
         Union[str, None]: _description_
     &#34;&#34;&#34;
     redis_client = get_redis_client()
-    runs = redis_client.get(dataset_id)
-    if runs is None:
-        redis_client.set(dataset_id, {table_id: &#34;&#34;})
+    key = dataset_id + &#34;.&#34; + table_id
+    runs = redis_client.get(key)
+    # if runs is None:
+    #     redis_client.set(key, &#34;&#34;)
     try:
-        last_run_timestamp = runs[table_id][&#34;last_run_timestamp&#34;]
+        last_run_timestamp = runs[&#34;last_run_timestamp&#34;]
     except KeyError:
         return None
     except TypeError:
@@ -370,11 +371,12 @@ ran.</p>
         Union[str, None]: _description_
     &#34;&#34;&#34;
     redis_client = get_redis_client()
-    runs = redis_client.get(dataset_id)
-    if runs is None:
-        redis_client.set(dataset_id, {table_id: &#34;&#34;})
+    key = dataset_id + &#34;.&#34; + table_id
+    runs = redis_client.get(key)
+    # if runs is None:
+    #     redis_client.set(key, &#34;&#34;)
     try:
-        last_run_timestamp = runs[table_id][&#34;last_run_timestamp&#34;]
+        last_run_timestamp = runs[&#34;last_run_timestamp&#34;]
     except KeyError:
         return None
     except TypeError:

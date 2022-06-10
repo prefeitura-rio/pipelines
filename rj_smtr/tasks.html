@@ -580,14 +580,13 @@ def set_last_run_timestamp(
         _type_: _description_
     &#34;&#34;&#34;
     redis_client = get_redis_client()
-    update_dict = {
-        table_id: {
-            &#34;last_run_timestamp&#34;: datetime.now(
-                timezone(constants.TIMEZONE.value)
-            ).strftime(&#34;%Y-%m-%dT%H:%M:%S&#34;)
-        }
+    key = dataset_id + &#34;.&#34; + table_id
+    value = {
+        &#34;last_run_timestamp&#34;: datetime.now(timezone(constants.TIMEZONE.value)).strftime(
+            &#34;%Y-%m-%dT%H:%M:%S&#34;
+        )
     }
-    redis_client.set(dataset_id, update_dict)
+    redis_client.set(key, value)
     return True
 
 
@@ -1400,14 +1399,13 @@ def set_last_run_timestamp(
         _type_: _description_
     &#34;&#34;&#34;
     redis_client = get_redis_client()
-    update_dict = {
-        table_id: {
-            &#34;last_run_timestamp&#34;: datetime.now(
-                timezone(constants.TIMEZONE.value)
-            ).strftime(&#34;%Y-%m-%dT%H:%M:%S&#34;)
-        }
+    key = dataset_id + &#34;.&#34; + table_id
+    value = {
+        &#34;last_run_timestamp&#34;: datetime.now(timezone(constants.TIMEZONE.value)).strftime(
+            &#34;%Y-%m-%dT%H:%M:%S&#34;
+        )
     }
-    redis_client.set(dataset_id, update_dict)
+    redis_client.set(key, value)
     return True</code></pre>
 </details>
 </dd>
