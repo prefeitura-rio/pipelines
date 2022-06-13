@@ -20,23 +20,23 @@ from pipelines.utils.utils import untuple_clocks as untuple
 
 egp_web_queries = {
     "chance": {
-        "dump_type": "overwrite",
+        "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.VW_CHANCE;",
     },
     "comentario": {
-        "dump_type": "overwrite",
+        "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.VW_Comentario;",
     },
     "indicador": {
-        "dump_type": "overwrite",
+        "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.VW_Indicador;",
     },
     "metas": {
-        "dump_type": "overwrite",
+        "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.VW_Metas;",
     },
     "notameta": {
-        "dump_type": "overwrite",
+        "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.VW_NotaMeta;",
     },
 }
