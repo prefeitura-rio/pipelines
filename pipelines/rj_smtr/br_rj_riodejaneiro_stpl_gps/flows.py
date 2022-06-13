@@ -86,4 +86,4 @@ stpl_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-stpl_captura.schedule = every_minute
+# stpl_captura.schedule = every_minute
