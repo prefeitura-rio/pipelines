@@ -5,15 +5,16 @@ Database dumping flows for segovi project
 
 from copy import deepcopy
 
+from prefect.run_configs import KubernetesRun
+from prefect.storage import GCS
+
 from pipelines.constants import constants
 from pipelines.rj_smfp.dump_db_metas.schedules import egp_web_monthly_update_schedule
 from pipelines.utils.dump_db.flows import dump_sql_flow
 from pipelines.utils.utils import set_default_parameters
-from prefect.run_configs import KubernetesRun
-from prefect.storage import GCS
 
 smfp_egpweb_flow = deepcopy(dump_sql_flow)
-smfp_egpweb_flow.name = "EMD: SMFP-EGPWeb - Ingerir tabelas de banco SQL"
+smfp_egpweb_flow.name = "SMFP: EGPWeb - Ingerir tabelas de banco SQL"
 smfp_egpweb_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 smfp_egpweb_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
