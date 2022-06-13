@@ -31,11 +31,11 @@ egp_web_queries = {
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.VW_Indicador;",
     },
-    "metas": {
+    "meta": {
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.VW_Metas;",
     },
-    "notameta": {
+    "nota_meta": {
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.VW_NotaMeta;",
     },
