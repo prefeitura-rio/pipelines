@@ -14,7 +14,10 @@ import pandas as pd
 import pendulum
 from prefect import task
 
-from pipelines.rj_escritorio.geolocator.utils import geolocator
+from pipelines.rj_escritorio.geolocator.utils import (
+    geolocator,
+    checar_point_pertence_cidade,
+)
 from pipelines.utils.utils import log
 
 
@@ -36,7 +39,7 @@ def seleciona_enderecos_novos() -> Tuple[pd.DataFrame, bool]:
         'RJ' estado,
         'Rio de Janeiro' municipio,
         no_bairro bairro,
-        id_logradouro,
+        LPAD(SAFE_CAST(REGEXP_REPLACE(id_logradouro, r'\.0$', '') AS STRING), 6, '0') id_logradouro,
         no_logradouro logradouro,
         SAFE_CAST(SAFE_CAST(ds_endereco_numero AS INT) AS STRING) numero_porta,
         CONCAT(no_logradouro, ' ', SAFE_CAST(SAFE_CAST(ds_endereco_numero AS INT) AS STRING), ', ', no_bairro,
@@ -58,18 +61,25 @@ def seleciona_enderecos_novos() -> Tuple[pd.DataFrame, bool]:
     )
     possui_enderecos_novos = base_enderecos_novos.shape[0] > 0
 
-    return base_enderecos_novos, possui_enderecos_novos
+    return base_enderecos_novos.drop_duplicates(), possui_enderecos_novos
 
 
 # Geolocalizando
 @task
 def geolocaliza_enderecos(base_enderecos_novos: pd.DataFrame) -> pd.DataFrame:
     """
-    Geolocaliza todos os novos endereços que entraram no dia anterior.
+    Geolocaliza todos os novos endereços que entraram no dia anterior
+    e verifica se pontos pertencem a cidade do Rio de Janeiro.
     """
     start_time = time.time()
     coordenadas = base_enderecos_novos["endereco_completo"].apply(
         lambda x: pd.Series(geolocator(x), index=["lat", "long"])
+    )
+
+    coordenadas[["lat", "long"]] = coordenadas.apply(
+        lambda x: checar_point_pertence_cidade(x.lat, x.long),
+        axis=1,
+        result_type="expand",
     )
 
     log(f"--- {(time.time() - start_time)} seconds ---")
