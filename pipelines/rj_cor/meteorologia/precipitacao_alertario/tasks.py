@@ -142,7 +142,7 @@ def tratar_dados(filename: Union[str, Path]) -> pd.DataFrame:
     dados[float_cols] = dados[float_cols].apply(pd.to_numeric, errors="coerce")
 
     # Altera valores negativos para 0
-    dados[float_cols] = np.where(dados[float_cols] < 0, 0, dados[float_cols])
+    dados[float_cols] = np.where(dados[float_cols] < 0, None, dados[float_cols])
 
     # Elimina linhas em que o id_estacao é igual mantendo a de menor valor nas colunas float
     dados.sort_values(["id_estacao", "data_medicao"] + float_cols, inplace=True)
