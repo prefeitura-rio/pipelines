@@ -52,6 +52,7 @@ def checar_point_pertence_cidade(lat: float, long: float) -> list:
 
     # Se pertence retorna lat, lon. Do contrário retorna nan
     if pertence.iloc[0]:
-        return [lat, long]
+        lat_lon = [lat, long]
     else:
-        return [None, None]
+        lat_lon = [None, None]
+    return lat_lon
