@@ -27,6 +27,7 @@ def seleciona_enderecos_novos() -> Tuple[pd.DataFrame, bool]:
     """
     Seleciona base de endereços chamados que entraram no dia anterior e não estão geolocalizados.
     """
+    # pylint: disable=W1401
     query = """
     WITH
     end_conhecidos AS (
