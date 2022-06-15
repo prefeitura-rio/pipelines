@@ -7,7 +7,6 @@ General purpose functions for the geolocator project
 import requests
 
 from geobr import read_municipality
-import geopandas as gpd
 from shapely.geometry import Point
 
 
@@ -46,7 +45,6 @@ def checar_point_pertence_cidade(lat: float, long: float) -> list:
     point = Point(long, lat)
 
     # Cria polígono com o geometry do Rio de Janeiro
-    rio = gpd.read_file("Limite_do_Município_do_Rio_de_Janeiro.geojson")
     polygon = rio.geometry
 
     # Use polygon.contains(point) to test if point is inside (True) or outside (False) the polygon.
