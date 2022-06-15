@@ -16,7 +16,7 @@ from pipelines.utils.decorators import Flow
 
 from pipelines.rj_smtr.constants import constants
 
-from pipelines.rj_smtr.schedules import every_minute
+# from pipelines.rj_smtr.schedules import every_minute
 from pipelines.rj_smtr.tasks import (
     create_current_date_hour_partition,
     create_local_partition_path,
@@ -86,4 +86,4 @@ stpl_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-stpl_captura.schedule = every_minute
+# stpl_captura.schedule = every_minute
