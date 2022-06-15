@@ -45,7 +45,6 @@ def seleciona_enderecos_novos() -> Tuple[pd.DataFrame, bool]:
         WHERE no_logradouro IS NOT NULL
             AND CAST(dt_inicio AS TIMESTAMP) BETWEEN DATE_ADD(CAST(CURRENT_DATE() AS TIMESTAMP), INTERVAL -1 DAY) AND CURRENT_TIMESTAMP()
         )
-
     SELECT DISTINCT
     ch.endereco_completo, pais, estado, municipio,
     bairro, id_logradouro, logradouro, ch.numero_porta
