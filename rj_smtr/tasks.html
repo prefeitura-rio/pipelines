@@ -562,7 +562,7 @@ def get_materialization_date_range(
 
 @task
 def set_last_run_timestamp(
-    dataset_id: str, table_id: str, wait=None
+    dataset_id: str, table_id: str, timestamp: str, wait=None
 ):  # pylint: disable=unused-argument
     &#34;&#34;&#34;
     Set the `last_run_timestamp` key for the dataset_id/table_id pair
@@ -572,6 +572,7 @@ def set_last_run_timestamp(
     Args:
         dataset_id (str): dataset_id on BigQuery
         table_id (str): model filename on the queries repo.
+        timestamp: Last run timestamp end.
         wait (Any, optional): Used for defining dependencies inside the flow,
         in general, pass the output of the task which should be run imediately
         before this. Defaults to None.
@@ -582,9 +583,7 @@ def set_last_run_timestamp(
     redis_client = get_redis_client()
     key = dataset_id + &#34;.&#34; + table_id
     value = {
-        &#34;last_run_timestamp&#34;: datetime.now(timezone(constants.TIMEZONE.value)).strftime(
-            &#34;%Y-%m-%dT%H:%M:%S&#34;
-        )
+        &#34;last_run_timestamp&#34;: timestamp,
     }
     redis_client.set(key, value)
     return True
@@ -1353,7 +1352,7 @@ def save_treated_local(dataframe, file_path, mode=&#34;staging&#34;):
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.set_last_run_timestamp"><code class="name flex">
-<span>def <span class="ident">set_last_run_timestamp</span></span>(<span>dataset_id: str, table_id: str, wait=None)</span>
+<span>def <span class="ident">set_last_run_timestamp</span></span>(<span>dataset_id: str, table_id: str, timestamp: str, wait=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Set the <code>last_run_timestamp</code> key for the dataset_id/table_id pair
@@ -1365,6 +1364,8 @@ stage for the next to come</p>
 <dd>dataset_id on BigQuery</dd>
 <dt><strong><code>table_id</code></strong> :&ensp;<code>str</code></dt>
 <dd>model filename on the queries repo.</dd>
+<dt><strong><code>timestamp</code></strong></dt>
+<dd>Last run timestamp end.</dd>
 <dt><strong><code>wait</code></strong> :&ensp;<code>Any</code>, optional</dt>
 <dd>Used for defining dependencies inside the flow,</dd>
 </dl>
@@ -1381,7 +1382,7 @@ before this. Defaults to None.</p>
 </summary>
 <pre><code class="python">@task
 def set_last_run_timestamp(
-    dataset_id: str, table_id: str, wait=None
+    dataset_id: str, table_id: str, timestamp: str, wait=None
 ):  # pylint: disable=unused-argument
     &#34;&#34;&#34;
     Set the `last_run_timestamp` key for the dataset_id/table_id pair
@@ -1391,6 +1392,7 @@ def set_last_run_timestamp(
     Args:
         dataset_id (str): dataset_id on BigQuery
         table_id (str): model filename on the queries repo.
+        timestamp: Last run timestamp end.
         wait (Any, optional): Used for defining dependencies inside the flow,
         in general, pass the output of the task which should be run imediately
         before this. Defaults to None.
@@ -1401,9 +1403,7 @@ def set_last_run_timestamp(
     redis_client = get_redis_client()
     key = dataset_id + &#34;.&#34; + table_id
     value = {
-        &#34;last_run_timestamp&#34;: datetime.now(timezone(constants.TIMEZONE.value)).strftime(
-            &#34;%Y-%m-%dT%H:%M:%S&#34;
-        )
+        &#34;last_run_timestamp&#34;: timestamp,
     }
     redis_client.set(key, value)
     return True</code></pre>
