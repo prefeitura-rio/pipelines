@@ -38,17 +38,16 @@ def seleciona_enderecos_novos() -> Tuple[pd.DataFrame, bool]:
         no_bairro bairro,
         id_logradouro,
         no_logradouro logradouro,
-        ds_endereco_numero numero_porta,
-        CONCAT(no_logradouro, ' ', ds_endereco_numero, ', ', no_bairro,
+        SAFE_CAST(SAFE_CAST(ds_endereco_numero AS INT) AS STRING) numero_porta,
+        CONCAT(no_logradouro, ' ', SAFE_CAST(SAFE_CAST(ds_endereco_numero AS INT) AS STRING), ', ', no_bairro,
             ', ', 'Rio de Janeiro, RJ, Brasil') endereco_completo
         FROM `rj-segovi.administracao_servicos_publicos_1746_staging.chamado`
         WHERE no_logradouro IS NOT NULL
             AND CAST(dt_inicio AS TIMESTAMP) BETWEEN DATE_ADD(CAST(CURRENT_DATE() AS TIMESTAMP), INTERVAL -1 DAY) AND CURRENT_TIMESTAMP()
         )
-
     SELECT DISTINCT
     ch.endereco_completo, pais, estado, municipio,
-    bairro, id_logradouro, logradouro, numero_porta
+    bairro, id_logradouro, logradouro, ch.numero_porta
     FROM chamados_ontem ch
     LEFT JOIN end_conhecidos ec ON ec.endereco_completo = ch.endereco_completo
     WHERE ec.endereco_completo IS NULL AND ch.endereco_completo IS NOT NULL
