@@ -87,7 +87,7 @@ with Flow(
         set_last_run_timestamp(
             dataset_id=dataset_id,
             table_id=table_id,
-            timestamp=date_range["date_end"],
+            timestamp=date_range["date_range_end"],
             wait=RUN,
         )
     with case(rebuild, False):
@@ -101,7 +101,7 @@ with Flow(
         set_last_run_timestamp(
             dataset_id=dataset_id,
             table_id=table_id,
-            timestamp=date_range["date_end"],
+            timestamp=date_range["date_range_end"],
             wait=RUN,
         )
 
