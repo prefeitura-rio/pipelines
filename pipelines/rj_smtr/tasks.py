@@ -533,7 +533,7 @@ def get_materialization_date_range(
 
 @task
 def set_last_run_timestamp(
-    dataset_id: str, table_id: str, wait=None
+    dataset_id: str, table_id: str, timestamp: str, wait=None
 ):  # pylint: disable=unused-argument
     """
     Set the `last_run_timestamp` key for the dataset_id/table_id pair
@@ -543,6 +543,7 @@ def set_last_run_timestamp(
     Args:
         dataset_id (str): dataset_id on BigQuery
         table_id (str): model filename on the queries repo.
+        timestamp: Last run timestamp end.
         wait (Any, optional): Used for defining dependencies inside the flow,
         in general, pass the output of the task which should be run imediately
         before this. Defaults to None.
@@ -553,9 +554,7 @@ def set_last_run_timestamp(
     redis_client = get_redis_client()
     key = dataset_id + "." + table_id
     value = {
-        "last_run_timestamp": datetime.now(timezone(constants.TIMEZONE.value)).strftime(
-            "%Y-%m-%dT%H:%M:%S"
-        )
+        "last_run_timestamp": timestamp,
     }
     redis_client.set(key, value)
     return True
