@@ -84,7 +84,12 @@ with Flow(
             _vars=[date_range, dataset_sha],
             flags="--full-refresh",
         )
-        set_last_run_timestamp(dataset_id=dataset_id, table_id=table_id, wait=RUN)
+        set_last_run_timestamp(
+            dataset_id=dataset_id,
+            table_id=table_id,
+            timestamp=date_range["date_range_end"],
+            wait=RUN,
+        )
     with case(rebuild, False):
         RUN = run_dbt_model(
             dbt_client=dbt_client,
@@ -93,7 +98,12 @@ with Flow(
             _vars=[date_range, dataset_sha],
             upstream=True,
         )
-        set_last_run_timestamp(dataset_id=dataset_id, table_id=table_id, wait=RUN)
+        set_last_run_timestamp(
+            dataset_id=dataset_id,
+            table_id=table_id,
+            timestamp=date_range["date_range_end"],
+            wait=RUN,
+        )
 
 
 with Flow(
