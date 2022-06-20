@@ -10,6 +10,7 @@ from prefect.storage import GCS
 # EMD Imports #
 
 from pipelines.constants import constants as emd_constants
+from pipelines.utils.tasks import rename_current_flow_run_now_time, get_now_time
 from pipelines.utils.decorators import Flow
 from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
 
@@ -45,6 +46,10 @@ with Flow(
     "SMTR: GPS SPPO - Materialização",
     code_owners=["@hellcassius#1223", "@fernandascovino#9750"],
 ) as materialize_sppo:
+    # Rename flow run
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix="GPS SPPO - Materialização: ", now_time=get_now_time()
+    )
 
     # Get default parameters #
     raw_dataset_id = Parameter(
@@ -58,7 +63,7 @@ with Flow(
     rebuild = Parameter("rebuild", False)
 
     # Set dbt client #
-    dbt_client = get_k8s_dbt_client(mode="prod")
+    dbt_client = get_k8s_dbt_client(mode="prod", wait=rename_flow_run)
     # Use the command below to get the dbt client in dev mode:
     # dbt_client = get_local_dbt_client(host="localhost", port=3001)
 
@@ -111,6 +116,11 @@ with Flow(
     code_owners=["@hellcassius#1223", "@fernandascovino#9750"],
 ) as captura_sppo:
 
+    # Rename flow run
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix="GPS SPPO - Captura: ", now_time=get_now_time()
+    )
+
     # Get default parameters #
     dataset_id = Parameter("dataset_id", default=constants.GPS_SPPO_DATASET_ID.value)
     table_id = Parameter("table_id", default=constants.GPS_SPPO_RAW_TABLE_ID.value)
@@ -155,6 +165,7 @@ with Flow(
         raw_filepath=raw_filepath,
         partitions=file_dict["partitions"],
     )
+    captura_sppo.set_dependencies(task=file_dict, upstream_tasks=[rename_flow_run])
 
 materialize_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 materialize_sppo.run_config = KubernetesRun(
