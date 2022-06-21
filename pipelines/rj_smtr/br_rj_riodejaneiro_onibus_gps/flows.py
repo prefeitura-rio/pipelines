@@ -43,7 +43,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
 
 with Flow(
     "SMTR: GPS SPPO - Materialização",
-    code_owners=["@hellcassius#1223", "@fernandascovino#9750"],
+    code_owners=["caio", "fernanda"],
 ) as materialize_sppo:
 
     # Get default parameters #
@@ -108,7 +108,7 @@ with Flow(
 
 with Flow(
     "SMTR: GPS SPPO - Captura",
-    code_owners=["@hellcassius#1223", "@fernandascovino#9750"],
+    code_owners=["caio", "fernanda"],
 ) as captura_sppo:
 
     # Get default parameters #

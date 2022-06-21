@@ -42,15 +42,56 @@ class constants(Enum):  # pylint: disable=c0103
     ######################################
     # Other constants
     ######################################
-    # Discord
-    EMD_DISCORD_WEBHOOK_SECRET_PATH = "prefect-discord-webhook"
     # Prefect
     K8S_AGENT_LABEL = "kubernetes"
     GCS_FLOWS_BUCKET = "datario-public"
     PREFECT_DEFAULT_PROJECT = "main"
-    DEFAULT_CODE_OWNERS = ["@pipeliners"]
     # Prefect tasks retry policy
     TASK_MAX_RETRIES = 5
     TASK_RETRY_DELAY = 10  # seconds
     # Telegram
     TELEGRAM_MAX_MESSAGE_LENGTH = 4096
+
+    ######################################
+    # Discord code owners constants
+    ######################################
+    EMD_DISCORD_WEBHOOK_SECRET_PATH = "prefect-discord-webhook"
+    DEFAULT_CODE_OWNERS = ["pipeliners"]
+    OWNERS_DISCORD_MENTIONS = {
+        # Register all code owners, users_id and type
+        #     - possible types: https://docs.discord.club/embedg/reference/mentions
+        #     - how to discover user_id: https://www.remote.tools/remote-work/how-to-find-discord-id
+        #     - types: user, user_nickname, channel, role
+        "pipeliners": {
+            "user_id": "962067746651275304",
+            "type": "role",
+        },
+        "gabriel": {
+            "user_id": "218800040137719809",
+            "type": "user_nickname",
+        },
+        "diego": {
+            "user_id": "272581753829326849",
+            "type": "user_nickname",
+        },
+        "fernanda": {
+            "user_id": "692709168221650954",
+            "type": "user_nickname",
+        },
+        "paty": {
+            "user_id": "821121576455634955",
+            "type": "user_nickname",
+        },
+        "bruno": {
+            "user_id": "183691546942636033",
+            "type": "user_nickname",
+        },
+        "caio": {
+            "user_id": "276427674002522112",
+            "type": "user_nickname",
+        },
+        "anderson": {
+            "user_id": "553786261677015040",
+            "type": "user_nickname",
+        },
+    }
