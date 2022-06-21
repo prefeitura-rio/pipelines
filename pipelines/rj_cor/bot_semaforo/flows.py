@@ -20,8 +20,8 @@ from pipelines.utils.decorators import Flow
 with Flow(
     name="COR: CET semáforos - Telegram Bot",
     code_owners=[
-        "@Anderson#1440",
-        "@Gabriel Gazola Milan#8183",
+        "anderson",
+        "gabriel",
     ],
 ) as cet_telegram_flow:
 

@@ -34,7 +34,7 @@ from pipelines.utils.tasks import (
 with Flow(
     "EMD: escritorio - Geolocalizacao de chamados 1746",
     code_owners=[
-        "@Bloom#5927",
+        "paty",
     ],
 ) as daily_geolocator_flow:
     # [enderecos_conhecidos, enderecos_ontem, chamados_ontem, base_enderecos_atual]

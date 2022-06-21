@@ -151,19 +151,28 @@ def notify_discord_on_failure(
     url = get_vault_secret(secret_path)["data"]["url"]
     flow_run_id = prefect.context.get("flow_run_id")
     code_owners = code_owners or constants.DEFAULT_CODE_OWNERS.value
+    code_owner_dict = constants.OWNERS_DISCORD_MENTIONS.value
     at_code_owners = []
     for code_owner in code_owners:
-        if code_owner.startswith("@"):
-            at_code_owners.append(code_owner)
-        else:
-            at_code_owners.append(f"@{code_owner}")
+        code_owner_id = code_owner_dict[code_owner]["user_id"]
+        code_owner_type = code_owner_dict[code_owner]["type"]
+
+        if code_owner_type == "user":
+            at_code_owners.append(f"    - <@{code_owner_id}>\n")
+        elif code_owner_type == "user_nickname":
+            at_code_owners.append(f"    - <@!{code_owner_id}>\n")
+        elif code_owner_type == "channel":
+            at_code_owners.append(f"    - <#{code_owner_id}>\n")
+        elif code_owner_type == "role":
+            at_code_owners.append(f"    - <@&{code_owner_id}>\n")
+
     message = (
         f":man_facepalming: Flow **{flow.name}** has failed."
         + f'\n  - State message: *"{state.message}"*'
         + "\n  - Link to the failed flow: "
-        + f"https://prefect.dados.rio/flow-run/{flow_run_id}"
-        + "\n  - Extra attention:"
-        + "\n    - ".join(at_code_owners)
+        + f"http://prefect-ui.prefect.svc.cluster.local:8080/flow-run/{flow_run_id}"
+        + "\n  - Extra attention:\n"
+        + "".join(at_code_owners)
     )
     send_discord_message(
         message=message,
