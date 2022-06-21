@@ -63,11 +63,11 @@ class constants(Enum):  # pylint: disable=c0103
         #     - how to discover user_id: https://www.remote.tools/remote-work/how-to-find-discord-id
         #     - types: user, user_nickname, channel, role
         "pipeliners": {
-            "user_id": "865223885031997455",
+            "user_id": "962067746651275304",
             "type": "role",
         },
         "gabriel": {
-            "user_id": "865034571469160458",
+            "user_id": "218800040137719809",
             "type": "user_nickname",
         },
         "diego": {
@@ -75,23 +75,23 @@ class constants(Enum):  # pylint: disable=c0103
             "type": "user_nickname",
         },
         "fernanda": {
-            "user_id": "776914459545436200",
+            "user_id": "692709168221650954",
             "type": "user_nickname",
         },
         "paty": {
-            "user_id": "740986161652301886",
+            "user_id": "821121576455634955",
             "type": "user_nickname",
         },
         "bruno": {
-            "user_id": "467788821527003136",
+            "user_id": "183691546942636033",
             "type": "user_nickname",
         },
         "caio": {
-            "user_id": "467788821527003136",
+            "user_id": "276427674002522112",
             "type": "user_nickname",
         },
         "anderson": {
-            "user_id": "467788821527003136",
+            "user_id": "553786261677015040",
             "type": "user_nickname",
         },
     }
