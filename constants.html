@@ -71,18 +71,59 @@ class constants(Enum):  # pylint: disable=c0103
     ######################################
     # Other constants
     ######################################
-    # Discord
-    EMD_DISCORD_WEBHOOK_SECRET_PATH = &#34;prefect-discord-webhook&#34;
     # Prefect
     K8S_AGENT_LABEL = &#34;kubernetes&#34;
     GCS_FLOWS_BUCKET = &#34;datario-public&#34;
     PREFECT_DEFAULT_PROJECT = &#34;main&#34;
-    DEFAULT_CODE_OWNERS = [&#34;@pipeliners&#34;]
     # Prefect tasks retry policy
     TASK_MAX_RETRIES = 5
     TASK_RETRY_DELAY = 10  # seconds
     # Telegram
-    TELEGRAM_MAX_MESSAGE_LENGTH = 4096</code></pre>
+    TELEGRAM_MAX_MESSAGE_LENGTH = 4096
+
+    ######################################
+    # Discord code owners constants
+    ######################################
+    EMD_DISCORD_WEBHOOK_SECRET_PATH = &#34;prefect-discord-webhook&#34;
+    DEFAULT_CODE_OWNERS = [&#34;pipeliners&#34;]
+    OWNERS_DISCORD_MENTIONS = {
+        # Register all code owners, users_id and type
+        #     - possible types: https://docs.discord.club/embedg/reference/mentions
+        #     - how to discover user_id: https://www.remote.tools/remote-work/how-to-find-discord-id
+        #     - types: user, user_nickname, channel, role
+        &#34;pipeliners&#34;: {
+            &#34;user_id&#34;: &#34;962067746651275304&#34;,
+            &#34;type&#34;: &#34;role&#34;,
+        },
+        &#34;gabriel&#34;: {
+            &#34;user_id&#34;: &#34;218800040137719809&#34;,
+            &#34;type&#34;: &#34;user_nickname&#34;,
+        },
+        &#34;diego&#34;: {
+            &#34;user_id&#34;: &#34;272581753829326849&#34;,
+            &#34;type&#34;: &#34;user_nickname&#34;,
+        },
+        &#34;fernanda&#34;: {
+            &#34;user_id&#34;: &#34;692709168221650954&#34;,
+            &#34;type&#34;: &#34;user_nickname&#34;,
+        },
+        &#34;paty&#34;: {
+            &#34;user_id&#34;: &#34;821121576455634955&#34;,
+            &#34;type&#34;: &#34;user_nickname&#34;,
+        },
+        &#34;bruno&#34;: {
+            &#34;user_id&#34;: &#34;183691546942636033&#34;,
+            &#34;type&#34;: &#34;user_nickname&#34;,
+        },
+        &#34;caio&#34;: {
+            &#34;user_id&#34;: &#34;276427674002522112&#34;,
+            &#34;type&#34;: &#34;user_nickname&#34;,
+        },
+        &#34;anderson&#34;: {
+            &#34;user_id&#34;: &#34;553786261677015040&#34;,
+            &#34;type&#34;: &#34;user_nickname&#34;,
+        },
+    }</code></pre>
 </details>
 </section>
 <section>
@@ -141,18 +182,59 @@ class constants(Enum):  # pylint: disable=c0103
     ######################################
     # Other constants
     ######################################
-    # Discord
-    EMD_DISCORD_WEBHOOK_SECRET_PATH = &#34;prefect-discord-webhook&#34;
     # Prefect
     K8S_AGENT_LABEL = &#34;kubernetes&#34;
     GCS_FLOWS_BUCKET = &#34;datario-public&#34;
     PREFECT_DEFAULT_PROJECT = &#34;main&#34;
-    DEFAULT_CODE_OWNERS = [&#34;@pipeliners&#34;]
     # Prefect tasks retry policy
     TASK_MAX_RETRIES = 5
     TASK_RETRY_DELAY = 10  # seconds
     # Telegram
-    TELEGRAM_MAX_MESSAGE_LENGTH = 4096</code></pre>
+    TELEGRAM_MAX_MESSAGE_LENGTH = 4096
+
+    ######################################
+    # Discord code owners constants
+    ######################################
+    EMD_DISCORD_WEBHOOK_SECRET_PATH = &#34;prefect-discord-webhook&#34;
+    DEFAULT_CODE_OWNERS = [&#34;pipeliners&#34;]
+    OWNERS_DISCORD_MENTIONS = {
+        # Register all code owners, users_id and type
+        #     - possible types: https://docs.discord.club/embedg/reference/mentions
+        #     - how to discover user_id: https://www.remote.tools/remote-work/how-to-find-discord-id
+        #     - types: user, user_nickname, channel, role
+        &#34;pipeliners&#34;: {
+            &#34;user_id&#34;: &#34;962067746651275304&#34;,
+            &#34;type&#34;: &#34;role&#34;,
+        },
+        &#34;gabriel&#34;: {
+            &#34;user_id&#34;: &#34;218800040137719809&#34;,
+            &#34;type&#34;: &#34;user_nickname&#34;,
+        },
+        &#34;diego&#34;: {
+            &#34;user_id&#34;: &#34;272581753829326849&#34;,
+            &#34;type&#34;: &#34;user_nickname&#34;,
+        },
+        &#34;fernanda&#34;: {
+            &#34;user_id&#34;: &#34;692709168221650954&#34;,
+            &#34;type&#34;: &#34;user_nickname&#34;,
+        },
+        &#34;paty&#34;: {
+            &#34;user_id&#34;: &#34;821121576455634955&#34;,
+            &#34;type&#34;: &#34;user_nickname&#34;,
+        },
+        &#34;bruno&#34;: {
+            &#34;user_id&#34;: &#34;183691546942636033&#34;,
+            &#34;type&#34;: &#34;user_nickname&#34;,
+        },
+        &#34;caio&#34;: {
+            &#34;user_id&#34;: &#34;276427674002522112&#34;,
+            &#34;type&#34;: &#34;user_nickname&#34;,
+        },
+        &#34;anderson&#34;: {
+            &#34;user_id&#34;: &#34;553786261677015040&#34;,
+            &#34;type&#34;: &#34;user_nickname&#34;,
+        },
+    }</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -185,6 +267,10 @@ class constants(Enum):  # pylint: disable=c0103
 <div class="desc"></div>
 </dd>
 <dt id="pipelines.constants.constants.K8S_AGENT_LABEL"><code class="name">var <span class="ident">K8S_AGENT_LABEL</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.constants.constants.OWNERS_DISCORD_MENTIONS"><code class="name">var <span class="ident">OWNERS_DISCORD_MENTIONS</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -322,6 +408,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.constants.constants.EMD_DISCORD_WEBHOOK_SECRET_PATH" href="#pipelines.constants.constants.EMD_DISCORD_WEBHOOK_SECRET_PATH">EMD_DISCORD_WEBHOOK_SECRET_PATH</a></code></li>
 <li><code><a title="pipelines.constants.constants.GCS_FLOWS_BUCKET" href="#pipelines.constants.constants.GCS_FLOWS_BUCKET">GCS_FLOWS_BUCKET</a></code></li>
 <li><code><a title="pipelines.constants.constants.K8S_AGENT_LABEL" href="#pipelines.constants.constants.K8S_AGENT_LABEL">K8S_AGENT_LABEL</a></code></li>
+<li><code><a title="pipelines.constants.constants.OWNERS_DISCORD_MENTIONS" href="#pipelines.constants.constants.OWNERS_DISCORD_MENTIONS">OWNERS_DISCORD_MENTIONS</a></code></li>
 <li><code><a title="pipelines.constants.constants.PREFECT_DEFAULT_PROJECT" href="#pipelines.constants.constants.PREFECT_DEFAULT_PROJECT">PREFECT_DEFAULT_PROJECT</a></code></li>
 <li><code><a title="pipelines.constants.constants.RJ_COR_AGENT_LABEL" href="#pipelines.constants.constants.RJ_COR_AGENT_LABEL">RJ_COR_AGENT_LABEL</a></code></li>
 <li><code><a title="pipelines.constants.constants.RJ_DATARIO_AGENT_LABEL" href="#pipelines.constants.constants.RJ_DATARIO_AGENT_LABEL">RJ_DATARIO_AGENT_LABEL</a></code></li>

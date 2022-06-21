@@ -73,7 +73,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks import (
 
 with Flow(
     &#34;SMTR: GPS BRT - Materialização&#34;,
-    code_owners=[&#34;@hellcassius#1223&#34;, &#34;@fernandascovino#9750&#34;],
+    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;],
 ) as materialize_brt:
 
     # Get default parameters #
@@ -138,7 +138,7 @@ with Flow(
 
 with Flow(
     &#34;SMTR: GPS BRT - Captura&#34;,
-    code_owners=[&#34;@hellcassius#1223&#34;, &#34;@fernandascovino#9750&#34;],
+    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;],
 ) as captura_brt:
 
     # Get default parameters #

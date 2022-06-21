@@ -180,19 +180,28 @@ def notify_discord_on_failure(
     url = get_vault_secret(secret_path)[&#34;data&#34;][&#34;url&#34;]
     flow_run_id = prefect.context.get(&#34;flow_run_id&#34;)
     code_owners = code_owners or constants.DEFAULT_CODE_OWNERS.value
+    code_owner_dict = constants.OWNERS_DISCORD_MENTIONS.value
     at_code_owners = []
     for code_owner in code_owners:
-        if code_owner.startswith(&#34;@&#34;):
-            at_code_owners.append(code_owner)
-        else:
-            at_code_owners.append(f&#34;@{code_owner}&#34;)
+        code_owner_id = code_owner_dict[code_owner][&#34;user_id&#34;]
+        code_owner_type = code_owner_dict[code_owner][&#34;type&#34;]
+
+        if code_owner_type == &#34;user&#34;:
+            at_code_owners.append(f&#34;    - &lt;@{code_owner_id}&gt;\n&#34;)
+        elif code_owner_type == &#34;user_nickname&#34;:
+            at_code_owners.append(f&#34;    - &lt;@!{code_owner_id}&gt;\n&#34;)
+        elif code_owner_type == &#34;channel&#34;:
+            at_code_owners.append(f&#34;    - &lt;#{code_owner_id}&gt;\n&#34;)
+        elif code_owner_type == &#34;role&#34;:
+            at_code_owners.append(f&#34;    - &lt;@&amp;{code_owner_id}&gt;\n&#34;)
+
     message = (
         f&#34;:man_facepalming: Flow **{flow.name}** has failed.&#34;
         + f&#39;\n  - State message: *&#34;{state.message}&#34;*&#39;
         + &#34;\n  - Link to the failed flow: &#34;
-        + f&#34;https://prefect.dados.rio/flow-run/{flow_run_id}&#34;
-        + &#34;\n  - Extra attention:&#34;
-        + &#34;\n    - &#34;.join(at_code_owners)
+        + f&#34;https://prefect.dados.rio/flow-run//{flow_run_id}&#34;
+        + &#34;\n  - Extra attention:\n&#34;
+        + &#34;&#34;.join(at_code_owners)
     )
     send_discord_message(
         message=message,
@@ -1101,19 +1110,28 @@ Mode needs to be "prod" or "staging"</p></div>
     url = get_vault_secret(secret_path)[&#34;data&#34;][&#34;url&#34;]
     flow_run_id = prefect.context.get(&#34;flow_run_id&#34;)
     code_owners = code_owners or constants.DEFAULT_CODE_OWNERS.value
+    code_owner_dict = constants.OWNERS_DISCORD_MENTIONS.value
     at_code_owners = []
     for code_owner in code_owners:
-        if code_owner.startswith(&#34;@&#34;):
-            at_code_owners.append(code_owner)
-        else:
-            at_code_owners.append(f&#34;@{code_owner}&#34;)
+        code_owner_id = code_owner_dict[code_owner][&#34;user_id&#34;]
+        code_owner_type = code_owner_dict[code_owner][&#34;type&#34;]
+
+        if code_owner_type == &#34;user&#34;:
+            at_code_owners.append(f&#34;    - &lt;@{code_owner_id}&gt;\n&#34;)
+        elif code_owner_type == &#34;user_nickname&#34;:
+            at_code_owners.append(f&#34;    - &lt;@!{code_owner_id}&gt;\n&#34;)
+        elif code_owner_type == &#34;channel&#34;:
+            at_code_owners.append(f&#34;    - &lt;#{code_owner_id}&gt;\n&#34;)
+        elif code_owner_type == &#34;role&#34;:
+            at_code_owners.append(f&#34;    - &lt;@&amp;{code_owner_id}&gt;\n&#34;)
+
     message = (
         f&#34;:man_facepalming: Flow **{flow.name}** has failed.&#34;
         + f&#39;\n  - State message: *&#34;{state.message}&#34;*&#39;
         + &#34;\n  - Link to the failed flow: &#34;
-        + f&#34;https://prefect.dados.rio/flow-run/{flow_run_id}&#34;
-        + &#34;\n  - Extra attention:&#34;
-        + &#34;\n    - &#34;.join(at_code_owners)
+        + f&#34;https://prefect.dados.rio/flow-run//{flow_run_id}&#34;
+        + &#34;\n  - Extra attention:\n&#34;
+        + &#34;&#34;.join(at_code_owners)
     )
     send_discord_message(
         message=message,

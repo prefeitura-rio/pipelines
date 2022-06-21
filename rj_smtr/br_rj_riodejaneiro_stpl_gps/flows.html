@@ -65,7 +65,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks import (
 
 with Flow(
     &#34;SMTR: GPS STPL - Captura&#34;,
-    code_owners=[&#34;@hellcassius#1223&#34;, &#34;@fernandascovino#9750&#34;],
+    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;],
 ) as stpl_captura:
     # Get default parameters #
     dataset_id = Parameter(&#34;dataset_id&#34;, default=constants.GPS_STPL_DATASET_ID.value)
