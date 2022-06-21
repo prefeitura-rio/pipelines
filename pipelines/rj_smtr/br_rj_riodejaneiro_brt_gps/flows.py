@@ -120,7 +120,7 @@ with Flow(
 
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="GPS BRT - Captura: ", now_time=get_now_time()
+        prefix="SMTR: GPS BRT - Captura - ", now_time=get_now_time()
     )
 
     # Get default parameters #
