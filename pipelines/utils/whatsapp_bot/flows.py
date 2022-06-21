@@ -20,7 +20,7 @@ from pipelines.utils.whatsapp_bot.tasks import (
 with Flow(
     name=utils_constants.FLOW_SEND_WHATSAPP_MESSAGE_NAME.value,
     code_owners=[
-        "@Gabriel Gazola Milan#8183",
+        "gabriel",
     ],
 ) as whatsapp_bot_send_message_flow:
 

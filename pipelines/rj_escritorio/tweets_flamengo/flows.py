@@ -78,7 +78,7 @@ from pipelines.utils.decorators import Flow
 with Flow(
     name="EMD: escritorio - Captura tweets do Flamengo",
     code_owners=[
-        "@pimbel#2426",
+        "diego",
     ],
 ) as tweets_flamengo_flow:
     q = Parameter("keyword")

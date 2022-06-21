@@ -45,7 +45,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks import (
 
 with Flow(
     "SMTR: GPS BRT - Materialização",
-    code_owners=["@hellcassius#1223", "@fernandascovino#9750"],
+    code_owners=["caio", "fernanda"],
 ) as materialize_brt:
 
     # Rename flow run
@@ -115,7 +115,7 @@ with Flow(
 
 with Flow(
     "SMTR: GPS BRT - Captura",
-    code_owners=["@hellcassius#1223", "@fernandascovino#9750"],
+    code_owners=["caio", "fernanda"],
 ) as captura_brt:
 
     # Rename flow run
