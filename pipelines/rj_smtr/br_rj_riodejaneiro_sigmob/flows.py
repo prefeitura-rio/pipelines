@@ -40,7 +40,7 @@ with Flow(
 
     # Rename Flow Run
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SIGMOB MATERIALIZE: ", now_time=get_now_time()
+        prefix="SMTR: SIGMOB - Materialização - ", now_time=get_now_time()
     )
 
     # Get default parameters #
