@@ -48,7 +48,7 @@ with Flow(
 ) as materialize_sppo:
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="GPS SPPO - Materialização: ", now_time=get_now_time()
+        prefix="SMTR: GPS SPPO - Materialização - ", now_time=get_now_time()
     )
 
     # Get default parameters #
