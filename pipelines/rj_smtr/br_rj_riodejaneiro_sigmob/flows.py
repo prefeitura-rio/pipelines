@@ -34,7 +34,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks import request_data
 
 with Flow(
     "SMTR: SIGMOB - Materialização",
-    code_owners=["@hellcassius#1223", "@fernandascovino#9750"],
+    code_owners=["caio", "fernanda"],
 ) as materialize_sigmob:
 
     # Get default parameters #
@@ -85,7 +85,7 @@ with Flow(
 
 with Flow(
     "SMTR: SIGMOB - Captura",
-    code_owners=["@hellcassius#1223", "@fernandascovino#9750"],
+    code_owners=["caio", "fernanda"],
 ) as captura_sigmob:
 
     # Get default parameters #

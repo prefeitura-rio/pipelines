@@ -25,8 +25,8 @@ from pipelines.utils.tasks import (
 with Flow(
     name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
     code_owners=[
-        "@pimbel#2426",
-        "@Gabriel Gazola Milan#8183",
+        "diego",
+        "gabriel",
     ],
 ) as run_dbt_model_flow:
 

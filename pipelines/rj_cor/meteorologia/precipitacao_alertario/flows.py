@@ -30,7 +30,7 @@ from pipelines.utils.tasks import (
 with Flow(
     name="COR: Meteorologia - Precipitacao ALERTARIO",
     code_owners=[
-        "@PatyBC#4954",
+        "paty",
     ],
 ) as cor_meteorologia_precipitacao_alertario:
 
