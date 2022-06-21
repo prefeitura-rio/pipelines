@@ -44,6 +44,7 @@ from pipelines.utils.decorators import Flow
 from pipelines.utils.execute_dbt_model.tasks import (
     get_k8s_dbt_client,
 )
+from pipelines.utils.tasks import rename_current_flow_run_now_time, get_now_time
 
 # SMTR Imports #
 
@@ -66,12 +67,17 @@ with Flow(
     code_owners=[&#34;caio&#34;, &#34;fernanda&#34;],
 ) as materialize_sigmob:
 
+    # Rename Flow Run
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix=&#34;SMTR: SIGMOB - Materialização - &#34;, now_time=get_now_time()
+    )
+
     # Get default parameters #
     dataset_id = Parameter(&#34;dataset_id&#34;, default=constants.SIGMOB_DATASET_ID.value)
     backfill = Parameter(&#34;backfill&#34;, default=False)
 
     # Set dbt client #
-    dbt_client = get_k8s_dbt_client(mode=&#34;prod&#34;)
+    dbt_client = get_k8s_dbt_client(mode=&#34;prod&#34;, wait=rename_flow_run)
     # Use the command below to get the dbt client in dev mode:
     # dbt_client = get_local_dbt_client(host=&#34;localhost&#34;, port=3001)
 
@@ -122,6 +128,11 @@ with Flow(
     dataset_id = Parameter(&#34;dataset_id&#34;, default=constants.SIGMOB_DATASET_ID.value)
     materialize = Parameter(&#34;materialize&#34;, default=True)
 
+    # Rename flow run
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix=&#34;SMTR: SIGMOB - Captura - &#34;, now_time=get_now_time()
+    )
+
     # Run tasks #
     paths_dict = request_data(endpoints=endpoints)
     bq_upload = bq_upload_from_dict(paths=paths_dict, dataset_id=dataset_id)
@@ -142,6 +153,7 @@ with Flow(
         stream_logs=True,
         raise_final_state=True,
     )
+    captura_sigmob.set_dependencies(task=paths_dict, upstream_tasks=[rename_flow_run])
 
 
 materialize_sigmob.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)

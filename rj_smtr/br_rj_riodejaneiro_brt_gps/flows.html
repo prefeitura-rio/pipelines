@@ -41,6 +41,7 @@ from prefect.storage import GCS
 from pipelines.constants import constants as emd_constants
 from pipelines.utils.decorators import Flow
 from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
+from pipelines.utils.tasks import get_now_time, rename_current_flow_run_now_time
 
 # SMTR Imports #
 
@@ -76,6 +77,11 @@ with Flow(
     code_owners=[&#34;caio&#34;, &#34;fernanda&#34;],
 ) as materialize_brt:
 
+    # Rename flow run
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix=&#34;GPS BRT - Materialização: &#34;, now_time=get_now_time()
+    )
+
     # Get default parameters #
     raw_dataset_id = Parameter(
         &#34;raw_dataset_id&#34;, default=constants.GPS_BRT_RAW_DATASET_ID.value
@@ -88,7 +94,7 @@ with Flow(
     rebuild = Parameter(&#34;rebuild&#34;, False)
 
     # Set dbt client #
-    dbt_client = get_k8s_dbt_client(mode=&#34;prod&#34;)
+    dbt_client = get_k8s_dbt_client(mode=&#34;prod&#34;, wait=rename_flow_run)
     # Use the command below to get the dbt client in dev mode:
     # dbt_client = get_local_dbt_client(host=&#34;localhost&#34;, port=3001)
 
@@ -141,6 +147,11 @@ with Flow(
     code_owners=[&#34;caio&#34;, &#34;fernanda&#34;],
 ) as captura_brt:
 
+    # Rename flow run
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix=&#34;SMTR: GPS BRT - Captura - &#34;, now_time=get_now_time()
+    )
+
     # Get default parameters #
     dataset_id = Parameter(&#34;dataset_id&#34;, default=constants.GPS_BRT_DATASET_ID.value)
     table_id = Parameter(&#34;table_id&#34;, default=constants.GPS_BRT_RAW_TABLE_ID.value)
@@ -181,6 +192,7 @@ with Flow(
         raw_filepath=raw_filepath,
         partitions=file_dict[&#34;partitions&#34;],
     )
+    captura_brt.set_dependencies(task=file_dict, upstream_tasks=[rename_flow_run])
 
 materialize_brt.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 materialize_brt.run_config = KubernetesRun(
