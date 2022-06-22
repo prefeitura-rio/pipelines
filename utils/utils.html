@@ -199,7 +199,7 @@ def notify_discord_on_failure(
         f&#34;:man_facepalming: Flow **{flow.name}** has failed.&#34;
         + f&#39;\n  - State message: *&#34;{state.message}&#34;*&#39;
         + &#34;\n  - Link to the failed flow: &#34;
-        + f&#34;https://prefect.dados.rio/flow-run//{flow_run_id}&#34;
+        + f&#34;https://prefect.dados.rio/flow-run/{flow_run_id}&#34;
         + &#34;\n  - Extra attention:\n&#34;
         + &#34;&#34;.join(at_code_owners)
     )
@@ -1129,7 +1129,7 @@ Mode needs to be "prod" or "staging"</p></div>
         f&#34;:man_facepalming: Flow **{flow.name}** has failed.&#34;
         + f&#39;\n  - State message: *&#34;{state.message}&#34;*&#39;
         + &#34;\n  - Link to the failed flow: &#34;
-        + f&#34;https://prefect.dados.rio/flow-run//{flow_run_id}&#34;
+        + f&#34;https://prefect.dados.rio/flow-run/{flow_run_id}&#34;
         + &#34;\n  - Extra attention:\n&#34;
         + &#34;&#34;.join(at_code_owners)
     )
