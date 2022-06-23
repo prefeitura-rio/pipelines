@@ -43,6 +43,7 @@ class constants(Enum):  # pylint: disable=c0103
     GPS_SPPO_RAW_TABLE_ID = "registros"
     GPS_SPPO_DATASET_ID = "br_rj_riodejaneiro_veiculos"
     GPS_SPPO_TREATED_TABLE_ID = "gps_sppo"
+    GPS_SPPO_CAPTURE_DELAY = 10
 
     # GPS BRT #
     GPS_BRT_API_BASE_URL = (

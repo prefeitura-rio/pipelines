@@ -323,7 +323,8 @@ def get_raw(url, headers=None, source: str = None):
         access = get_vault_secret(source)["data"]
         key = list(access)[0]
         url = f"{url}{key}={access[key]}"
-        url += f"&data={timestamp.strftime('%Y-%m-%d%%%d%H:%M:%S')}"
+        url += f"&dataInicial={(timestamp - timedelta(minutes=2)).strftime('%Y-%m-%d%%%d%H:%M:%S')}"
+        url += f"&dataFinal={timestamp.strftime('%Y-%m-%d%%%d%H:%M:%S')}"
         return url
     try:
         data = requests.get(

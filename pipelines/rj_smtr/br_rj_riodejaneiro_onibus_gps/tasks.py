@@ -16,7 +16,7 @@ from pipelines.utils.utils import log
 # SMTR Imports #
 
 from pipelines.rj_smtr.constants import constants
-from pipelines.rj_smtr.utils import log_critical
+from pipelines.rj_smtr.utils import log_critical, sppo_filters
 
 # Tasks #
 
@@ -64,31 +64,55 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(status_dict: dict, version: int 
         )
     )
     log(f"After converting the timezone, datahora is: \n{df['datahora']}")
+    if version == 2:
+        df["datahoraenvio"] = (
+            df["datahoraenvio"]
+            .astype(float)
+            .apply(
+                lambda ms: pd.to_datetime(
+                    pendulum.from_timestamp(ms / 1000.0)
+                    .replace(tzinfo=None)
+                    .set(tz="UTC")
+                    .isoformat()
+                )
+            )
+        )
+        df["datahoraservidor"] = (
+            df["datahoraservidor"]
+            .astype(float)
+            .apply(
+                lambda ms: pd.to_datetime(
+                    pendulum.from_timestamp(ms / 1000.0)
+                    .replace(tzinfo=None)
+                    .set(tz="UTC")
+                    .isoformat()
+                )
+            )
+        )
 
     # Filter data for 0 <= time diff <= 1min
     try:
-        datahora_col = "datahora"
+        datahora_cols = [
+            "datahora",
+            "datahoraenvio",
+            "datahoraservidor",
+            "timestamp_captura",
+        ]
+        # datahora_col = "datahora"
         df_treated = df
-        try:
-            df_treated[datahora_col] = df_treated[datahora_col].apply(
-                lambda x: x.tz_convert(timezone)
-            )
-        except TypeError:
-            df_treated[datahora_col] = df_treated[datahora_col].apply(
-                lambda x: x.tz_localize(timezone)
-            )
-        try:
-            df_treated["timestamp_captura"] = df_treated["timestamp_captura"].apply(
-                lambda x: x.tz_convert(timezone)
-            )
-        except TypeError:
-            df_treated["timestamp_captura"] = df_treated["timestamp_captura"].apply(
-                lambda x: x.tz_localize(timezone)
-            )
-        mask = (df_treated["timestamp_captura"] - df_treated[datahora_col]).apply(
-            lambda x: timedelta(seconds=0) <= x <= timedelta(minutes=1)
-        )
-        df_treated = df_treated[mask]
+        for col in datahora_cols:
+            if col in df_treated.columns.to_list():
+                try:
+                    df_treated[col] = df_treated[col].apply(
+                        lambda x: x.tz_convert(timezone)
+                    )
+                except TypeError:
+                    df_treated[col] = df_treated[col].apply(
+                        lambda x: x.tz_localize(timezone)
+                    )
+
+        # filters
+        df_treated = sppo_filters(df=df_treated)
         log(f"Shape antes da filtragem: {df.shape}")
         log(f"Shape após a filtragem: {df_treated.shape}")
         if df_treated.shape[0] == 0:
