@@ -186,6 +186,9 @@ def safe_cast(val, to_type, default=None):
 
 
 def sppo_filters(df: pd.DataFrame):
+    if "datahoraenvio" not in df.columns.to_list():
+        log("No column named datahoraenvio on data")
+        return df
     sent_received_mask = (df["datahoraenvio"] - df["datahora"]).apply(
         lambda x: timedelta(seconds=0)
         <= x

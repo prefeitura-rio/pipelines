@@ -297,7 +297,7 @@ def save_treated_local(dataframe, file_path, mode="staging"):
 ###############
 
 
-# @task
+@task
 def get_raw(url, headers=None, source: str = None):
     """Request data from a url API
 
@@ -320,6 +320,7 @@ def get_raw(url, headers=None, source: str = None):
     error = None
     timestamp = pendulum.now(constants.TIMEZONE.value)
     if source == "sppo_api_v2":
+        log("Will request data from v2 API")
         access = get_vault_secret(source)["data"]
         key = list(access)[0]
         url = f"{url}{key}={access[key]}"
