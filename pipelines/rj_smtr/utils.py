@@ -185,17 +185,26 @@ def safe_cast(val, to_type, default=None):
         return default
 
 
-def sppo_filters(df: pd.DataFrame):
-    if "datahoraenvio" not in df.columns.to_list():
+def sppo_filters(frame: pd.DataFrame):
+    """Apply filters to dataframe
+
+    Args:
+        df (pd.DataFrame): Containing data captured from sppo
+        api
+
+    Returns:
+        frame: Filtered input
+    """
+    if "datahoraenvio" not in frame.columns.to_list():
         log("No column named datahoraenvio on data")
-        return df
-    sent_received_mask = (df["datahoraenvio"] - df["datahora"]).apply(
+        return frame
+    sent_received_mask = (frame["datahoraenvio"] - frame["datahora"]).apply(
         lambda x: timedelta(seconds=0)
         <= x
         <= timedelta(minutes=constants.GPS_SPPO_CAPTURE_DELAY.value)
     )
-    same_minute_mask = (df["timestamp_captura"] - df["datahoraenvio"]).apply(
+    same_minute_mask = (frame["timestamp_captura"] - frame["datahoraenvio"]).apply(
         lambda x: timedelta(seconds=0) <= x <= timedelta(minutes=1)
     )
-    df = df[sent_received_mask & same_minute_mask]
-    return df
+    frame = frame[sent_received_mask & same_minute_mask]
+    return frame

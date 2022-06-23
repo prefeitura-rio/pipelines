@@ -3,7 +3,6 @@
 Tasks for br_rj_riodejaneiro_onibus_gps
 """
 
-from datetime import timedelta
 import traceback
 import pandas as pd
 import pendulum

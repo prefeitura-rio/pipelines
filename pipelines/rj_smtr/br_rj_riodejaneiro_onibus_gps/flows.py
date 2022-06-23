@@ -181,7 +181,7 @@ with Flow(
     table_id = Parameter("table_id", default=constants.GPS_SPPO_RAW_TABLE_ID.value)
     url = Parameter("url", default=constants.GPS_SPPO_API_BASE_URL_V2.value)
     secret_path = Parameter(
-        "secret_path", default=constants.GPS_SPPO_API_SECRET_PATH_v2.value
+        "secret_path", default=constants.GPS_SPPO_API_SECRET_PATH_V2.value
     )
     version = Parameter("version", default=2)
 
