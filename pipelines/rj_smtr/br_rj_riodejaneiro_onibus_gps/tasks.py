@@ -111,7 +111,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(status_dict: dict, version: int 
                     )
 
         # filters
-        df_treated = sppo_filters(df=df_treated)
+        df_treated = sppo_filters(df=df_treated, version=version)
         log(f"Shape antes da filtragem: {df.shape}")
         log(f"Shape após a filtragem: {df_treated.shape}")
         if df_treated.shape[0] == 0:
