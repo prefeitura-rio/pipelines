@@ -118,7 +118,9 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(status_dict: dict, version: int 
         if df_treated.shape[0] == 0:
             error = ValueError("After filtering, the dataframe is empty!")
             log_critical(f"@here\nFailed to filter SPPO data: \n{error}")
-        df = df_treated  # pylint: disable=C0103
+        df = df_treated.drop(
+            columns=["datahoraenvio", "datahoraservidor"]
+        )  # pylint: disable=C0103
     except Exception:  # pylint: disable = W0703
         err = traceback.format_exc()
         log_critical(f"@here\nFailed to filter SPPO data: \n{err}")
