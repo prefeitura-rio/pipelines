@@ -326,7 +326,6 @@ def get_raw(url, headers=None, source: str = None):
         url = f"{url}{key}={access[key]}"
         url += f"&dataInicial={(timestamp - timedelta(minutes=2)).strftime('%Y-%m-%d%%%d%H:%M:%S')}"
         url += f"&dataFinal={timestamp.strftime('%Y-%m-%d%%%d%H:%M:%S')}"
-        return url
     try:
         data = requests.get(
             url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
