@@ -34,6 +34,9 @@ class constants(Enum):  # pylint: disable=c0103
     GPS_SPPO_API_BASE_URL = (
         "http://ccomobility.com.br/WebServices/Binder/WSConecta/EnvioInformacoesIplan?"
     )
+    GPS_SPPO_API_BASE_URL_V2 = (
+        "http://ccomobility.com.br/WebServices/Binder/wsconecta/EnvioIplan?"
+    )
     GPS_SPPO_API_SECRET_PATH = "sppo_api"
 
     GPS_SPPO_RAW_DATASET_ID = "br_rj_riodejaneiro_onibus_gps"
