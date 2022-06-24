@@ -210,7 +210,7 @@ with Flow(
         status_dict=status_dict, version=version
     )
 
-    upload_logs = upload_logs_to_bq(
+    UPLOAD_LOGS = upload_logs_to_bq(
         dataset_id=dataset_id,
         parent_table_id=table_id,
         timestamp=status_dict["timestamp"],
@@ -221,7 +221,7 @@ with Flow(
         dataframe=treated_status["df"], file_path=filepath
     )
 
-    upload_csv = bq_upload(
+    UPLOAD_CSV = bq_upload(
         dataset_id=dataset_id,
         table_id=table_id,
         filepath=treated_filepath,
@@ -233,7 +233,7 @@ with Flow(
     )
     captura_sppo_v2.set_dependencies(task=file_dict, upstream_tasks=[rename_flow_run])
     captura_sppo_v2.set_dependencies(task=status_dict, upstream_tasks=[filepath])
-    captura_sppo_v2.set_dependencies(task=set_last_run, upstream_tasks=[upload_csv])
+    captura_sppo_v2.set_dependencies(task=set_last_run, upstream_tasks=[UPLOAD_CSV])
 
 materialize_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 materialize_sppo.run_config = KubernetesRun(

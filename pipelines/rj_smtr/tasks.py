@@ -485,8 +485,8 @@ def upload_logs_to_bq(dataset_id, parent_table_id, timestamp, error):
     checkpoint=False,
     max_retries=constants.MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.RETRY_DELAY.value),
-)  # pylint: disable=R0913
-def get_materialization_date_range(
+)
+def get_materialization_date_range(  # pylint: disable=R0913
     dataset_id: str,
     table_id: str,
     raw_dataset_id: str,
