@@ -119,6 +119,7 @@ def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-l
 
         if "interval" in parameters:
             interval = parameters["interval"]
+
         clocks.append(
             IntervalClock(
                 interval=interval,
