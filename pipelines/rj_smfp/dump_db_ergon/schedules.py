@@ -32,10 +32,12 @@ ergon_queries = {
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_CATEGORIAS_",
     },
-    # "empresa": {
-    #     "dump_mode": "overwrite",
-    #     "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_EMPRESAS",
-    # },
+    "empresa": {
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "dump_mode": "overwrite",
+        "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_EMPRESAS",
+    },
     "matricula": {
         "materialize_after_dump": True,
         "materialization_mode": "prod",
@@ -49,11 +51,13 @@ ergon_queries = {
         "dump_mode": "append",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FITA_BANCO",
     },
-    # "folha_empresa": {
-    #     "partition_columns": "MES_ANO",
-    #     "dump_mode": "append",
-    #     "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FOLHAS_EMP",
-    # },
+    "folha_empresa": {
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "partition_columns": "MES_ANO",
+        "dump_mode": "append",
+        "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FOLHAS_EMP",
+    },
     "forma_provimento": {
         "materialize_after_dump": True,
         "materialization_mode": "prod",
@@ -108,10 +112,12 @@ ergon_queries = {
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_REGIMES_JUR_",
     },
-    # "tipo_folha": {
-    #     "dump_mode": "overwrite",
-    #     "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_TIPO_FOLHA",
-    # },
+    "tipo_folha": {
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "dump_mode": "overwrite",
+        "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_TIPO_FOLHA",
+    },
     "tipo_orgao": {
         "materialize_after_dump": True,
         "materialization_mode": "prod",
