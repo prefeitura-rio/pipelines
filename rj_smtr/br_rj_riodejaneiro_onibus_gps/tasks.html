@@ -32,7 +32,6 @@
 Tasks for br_rj_riodejaneiro_onibus_gps
 &#34;&#34;&#34;
 
-from datetime import timedelta
 import traceback
 import pandas as pd
 import pendulum
@@ -46,18 +45,20 @@ from pipelines.utils.utils import log
 
 from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.utils import log_critical
+from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.utils import sppo_filters
 
 # Tasks #
 
 
 @task
-def pre_treatment_br_rj_riodejaneiro_onibus_gps(status_dict: dict):
+def pre_treatment_br_rj_riodejaneiro_onibus_gps(status_dict: dict, version: int = 1):
     &#34;&#34;&#34;Basic data treatment for bus gps data. Converts unix time to datetime,
     and apply filtering to stale data that may populate the API response.
 
     Args:
         status_dict (dict): dict containing the status of the request made to the
         API. Must contain keys: data, timestamp and error
+        version (int, optional): Source API version. Temporary argument for testing
 
     Returns:
         df: pandas.core.DataFrame containing the treated data.
@@ -92,37 +93,56 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(status_dict: dict):
         )
     )
     log(f&#34;After converting the timezone, datahora is: \n{df[&#39;datahora&#39;]}&#34;)
+    if version == 2:
+        df[&#34;datahoraenvio&#34;] = (
+            df[&#34;datahoraenvio&#34;]
+            .astype(float)
+            .apply(
+                lambda ms: pd.to_datetime(
+                    pendulum.from_timestamp(ms / 1000.0)
+                    .replace(tzinfo=None)
+                    .set(tz=&#34;UTC&#34;)
+                    .isoformat()
+                )
+            )
+        )
+        log(f&#34;After converting the timezone, datahoraenvio is: \n{df[&#39;datahoraenvio&#39;]}&#34;)
 
     # Filter data for 0 &lt;= time diff &lt;= 1min
     try:
-        datahora_col = &#34;datahora&#34;
+        datahora_cols = [
+            &#34;datahora&#34;,
+            &#34;datahoraenvio&#34;,
+            &#34;timestamp_captura&#34;,
+        ]
+        # datahora_col = &#34;datahora&#34;
         df_treated = df
-        try:
-            df_treated[datahora_col] = df_treated[datahora_col].apply(
-                lambda x: x.tz_convert(timezone)
-            )
-        except TypeError:
-            df_treated[datahora_col] = df_treated[datahora_col].apply(
-                lambda x: x.tz_localize(timezone)
-            )
-        try:
-            df_treated[&#34;timestamp_captura&#34;] = df_treated[&#34;timestamp_captura&#34;].apply(
-                lambda x: x.tz_convert(timezone)
-            )
-        except TypeError:
-            df_treated[&#34;timestamp_captura&#34;] = df_treated[&#34;timestamp_captura&#34;].apply(
-                lambda x: x.tz_localize(timezone)
-            )
-        mask = (df_treated[&#34;timestamp_captura&#34;] - df_treated[datahora_col]).apply(
-            lambda x: timedelta(seconds=0) &lt;= x &lt;= timedelta(minutes=1)
-        )
-        df_treated = df_treated[mask]
+        for col in datahora_cols:
+            if col in df_treated.columns.to_list():
+                try:
+                    df_treated[col] = df_treated[col].apply(
+                        lambda x: x.tz_convert(timezone)
+                    )
+                    log(f&#34;Converted timezone on column {col}&#34;)
+                except TypeError:
+                    df_treated[col] = df_treated[col].apply(
+                        lambda x: x.tz_localize(timezone)
+                    )
+                    log(f&#34;Localized timezone on column {col}&#34;)
+
+        # filters
+        df_treated = sppo_filters(frame=df_treated, version=version)
         log(f&#34;Shape antes da filtragem: {df.shape}&#34;)
         log(f&#34;Shape após a filtragem: {df_treated.shape}&#34;)
         if df_treated.shape[0] == 0:
             error = ValueError(&#34;After filtering, the dataframe is empty!&#34;)
             log_critical(f&#34;@here\nFailed to filter SPPO data: \n{error}&#34;)
-        df = df_treated  # pylint: disable=C0103
+        if version == 2:
+            df = df_treated.drop(  # pylint: disable=C0103
+                columns=[&#34;datahoraenvio&#34;, &#34;datahoraservidor&#34;]
+            )
+        else:
+            df = df_treated  # pylint: disable=C0103
     except Exception:  # pylint: disable = W0703
         err = traceback.format_exc()
         log_critical(f&#34;@here\nFailed to filter SPPO data: \n{err}&#34;)
@@ -139,7 +159,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(status_dict: dict):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks.pre_treatment_br_rj_riodejaneiro_onibus_gps"><code class="name flex">
-<span>def <span class="ident">pre_treatment_br_rj_riodejaneiro_onibus_gps</span></span>(<span>status_dict: dict)</span>
+<span>def <span class="ident">pre_treatment_br_rj_riodejaneiro_onibus_gps</span></span>(<span>status_dict: dict, version: int = 1)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Basic data treatment for bus gps data. Converts unix time to datetime,
@@ -148,8 +168,10 @@ and apply filtering to stale data that may populate the API response.</p>
 <dl>
 <dt><strong><code>status_dict</code></strong> :&ensp;<code>dict</code></dt>
 <dd>dict containing the status of the request made to the</dd>
+<dt>API. Must contain keys: data, timestamp and error</dt>
+<dt><strong><code>version</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Source API version. Temporary argument for testing</dd>
 </dl>
-<p>API. Must contain keys: data, timestamp and error</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>df</code></dt>
@@ -160,13 +182,14 @@ and apply filtering to stale data that may populate the API response.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def pre_treatment_br_rj_riodejaneiro_onibus_gps(status_dict: dict):
+def pre_treatment_br_rj_riodejaneiro_onibus_gps(status_dict: dict, version: int = 1):
     &#34;&#34;&#34;Basic data treatment for bus gps data. Converts unix time to datetime,
     and apply filtering to stale data that may populate the API response.
 
     Args:
         status_dict (dict): dict containing the status of the request made to the
         API. Must contain keys: data, timestamp and error
+        version (int, optional): Source API version. Temporary argument for testing
 
     Returns:
         df: pandas.core.DataFrame containing the treated data.
@@ -201,37 +224,56 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(status_dict: dict):
         )
     )
     log(f&#34;After converting the timezone, datahora is: \n{df[&#39;datahora&#39;]}&#34;)
+    if version == 2:
+        df[&#34;datahoraenvio&#34;] = (
+            df[&#34;datahoraenvio&#34;]
+            .astype(float)
+            .apply(
+                lambda ms: pd.to_datetime(
+                    pendulum.from_timestamp(ms / 1000.0)
+                    .replace(tzinfo=None)
+                    .set(tz=&#34;UTC&#34;)
+                    .isoformat()
+                )
+            )
+        )
+        log(f&#34;After converting the timezone, datahoraenvio is: \n{df[&#39;datahoraenvio&#39;]}&#34;)
 
     # Filter data for 0 &lt;= time diff &lt;= 1min
     try:
-        datahora_col = &#34;datahora&#34;
+        datahora_cols = [
+            &#34;datahora&#34;,
+            &#34;datahoraenvio&#34;,
+            &#34;timestamp_captura&#34;,
+        ]
+        # datahora_col = &#34;datahora&#34;
         df_treated = df
-        try:
-            df_treated[datahora_col] = df_treated[datahora_col].apply(
-                lambda x: x.tz_convert(timezone)
-            )
-        except TypeError:
-            df_treated[datahora_col] = df_treated[datahora_col].apply(
-                lambda x: x.tz_localize(timezone)
-            )
-        try:
-            df_treated[&#34;timestamp_captura&#34;] = df_treated[&#34;timestamp_captura&#34;].apply(
-                lambda x: x.tz_convert(timezone)
-            )
-        except TypeError:
-            df_treated[&#34;timestamp_captura&#34;] = df_treated[&#34;timestamp_captura&#34;].apply(
-                lambda x: x.tz_localize(timezone)
-            )
-        mask = (df_treated[&#34;timestamp_captura&#34;] - df_treated[datahora_col]).apply(
-            lambda x: timedelta(seconds=0) &lt;= x &lt;= timedelta(minutes=1)
-        )
-        df_treated = df_treated[mask]
+        for col in datahora_cols:
+            if col in df_treated.columns.to_list():
+                try:
+                    df_treated[col] = df_treated[col].apply(
+                        lambda x: x.tz_convert(timezone)
+                    )
+                    log(f&#34;Converted timezone on column {col}&#34;)
+                except TypeError:
+                    df_treated[col] = df_treated[col].apply(
+                        lambda x: x.tz_localize(timezone)
+                    )
+                    log(f&#34;Localized timezone on column {col}&#34;)
+
+        # filters
+        df_treated = sppo_filters(frame=df_treated, version=version)
         log(f&#34;Shape antes da filtragem: {df.shape}&#34;)
         log(f&#34;Shape após a filtragem: {df_treated.shape}&#34;)
         if df_treated.shape[0] == 0:
             error = ValueError(&#34;After filtering, the dataframe is empty!&#34;)
             log_critical(f&#34;@here\nFailed to filter SPPO data: \n{error}&#34;)
-        df = df_treated  # pylint: disable=C0103
+        if version == 2:
+            df = df_treated.drop(  # pylint: disable=C0103
+                columns=[&#34;datahoraenvio&#34;, &#34;datahoraservidor&#34;]
+            )
+        else:
+            df = df_treated  # pylint: disable=C0103
     except Exception:  # pylint: disable = W0703
         err = traceback.format_exc()
         log_critical(f&#34;@here\nFailed to filter SPPO data: \n{err}&#34;)
