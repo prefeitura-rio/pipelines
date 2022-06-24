@@ -61,10 +61,12 @@ ergon_queries = {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
         &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_CATEGORIAS_&#34;,
     },
-    # &#34;empresa&#34;: {
-    #     &#34;dump_mode&#34;: &#34;overwrite&#34;,
-    #     &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_EMPRESAS&#34;,
-    # },
+    &#34;empresa&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_EMPRESAS&#34;,
+    },
     &#34;matricula&#34;: {
         &#34;materialize_after_dump&#34;: True,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
@@ -78,11 +80,13 @@ ergon_queries = {
         &#34;dump_mode&#34;: &#34;append&#34;,
         &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_FITA_BANCO&#34;,
     },
-    # &#34;folha_empresa&#34;: {
-    #     &#34;partition_columns&#34;: &#34;MES_ANO&#34;,
-    #     &#34;dump_mode&#34;: &#34;append&#34;,
-    #     &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_FOLHAS_EMP&#34;,
-    # },
+    &#34;folha_empresa&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;partition_columns&#34;: &#34;MES_ANO&#34;,
+        &#34;dump_mode&#34;: &#34;append&#34;,
+        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_FOLHAS_EMP&#34;,
+    },
     &#34;forma_provimento&#34;: {
         &#34;materialize_after_dump&#34;: True,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
@@ -137,10 +141,12 @@ ergon_queries = {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
         &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_REGIMES_JUR_&#34;,
     },
-    # &#34;tipo_folha&#34;: {
-    #     &#34;dump_mode&#34;: &#34;overwrite&#34;,
-    #     &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_TIPO_FOLHA&#34;,
-    # },
+    &#34;tipo_folha&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_TIPO_FOLHA&#34;,
+    },
     &#34;tipo_orgao&#34;: {
         &#34;materialize_after_dump&#34;: True,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
