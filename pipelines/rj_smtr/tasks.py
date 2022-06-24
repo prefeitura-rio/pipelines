@@ -25,6 +25,7 @@ from pipelines.rj_smtr.utils import (
     bq_project,
     get_table_min_max_value,
     get_last_run_timestamp,
+    get_request_date_range,
     parse_dbt_logs,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
@@ -298,14 +299,14 @@ def save_treated_local(dataframe, file_path, mode="staging"):
 
 
 @task
-def get_raw(url, headers=None, source: str = None):
+def get_raw(url, headers=None, source: str = None, mode: str = "prod"):
     """Request data from a url API
 
     Args:
         url (str): URL to send request to
         headers (dict, optional): Aditional fields to send along the request. Defaults to None.
-        kind (str, optional): Kind of API being captured.
-        Possible values are 'stpl', 'brt' and 'sppo'
+        source (str, optional): Source API being captured.
+        Possible values are 'stpl_api', 'brt_api', 'sppo_api' and 'sppo_api_v2
     Returns:
         dict: "data" contains the response object from the request, "timestamp" contains
         the run time timestamp, "error" catches errors that may occur during task execution.
@@ -319,6 +320,13 @@ def get_raw(url, headers=None, source: str = None):
     data = None
     error = None
     timestamp = pendulum.now(constants.TIMEZONE.value)
+    if source == "sppo_api_v2":
+        access = get_vault_secret(source)["data"]
+        key = list(access)[0]
+        url = f"{url}{key}={access[key]}"
+        date_range = get_request_date_range(source=source, mode=mode)
+        url += f"&dataInicial={date_range['start']}"
+        url += f"&dataFinal={date_range['end']}"
     try:
         data = requests.get(
             url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
@@ -478,12 +486,13 @@ def upload_logs_to_bq(dataset_id, parent_table_id, timestamp, error):
     max_retries=constants.MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.RETRY_DELAY.value),
 )
-def get_materialization_date_range(
+def get_materialization_date_range(  # pylint: disable=R0913
     dataset_id: str,
     table_id: str,
     raw_dataset_id: str,
     raw_table_id: str,
     table_date_column_name: str = None,
+    mode: str = "prod",
 ):
     """
     Task for generating dict with variables to be passed to the
@@ -505,7 +514,9 @@ def get_materialization_date_range(
         dict: containing date_range_start and date_range_end
     """
 
-    start_ts = get_last_run_timestamp(dataset_id=dataset_id, table_id=table_id)
+    start_ts = get_last_run_timestamp(
+        dataset_id=dataset_id, table_id=table_id, mode=mode
+    )
 
     if start_ts is None:
         if Table(dataset_id=dataset_id, table_id=table_id).table_exists("prod"):
@@ -533,7 +544,7 @@ def get_materialization_date_range(
 
 @task
 def set_last_run_timestamp(
-    dataset_id: str, table_id: str, timestamp: str, wait=None
+    dataset_id: str, table_id: str, timestamp: str, mode: str = "prod", wait=None
 ):  # pylint: disable=unused-argument
     """
     Set the `last_run_timestamp` key for the dataset_id/table_id pair
@@ -553,9 +564,34 @@ def set_last_run_timestamp(
     """
     redis_client = get_redis_client()
     key = dataset_id + "." + table_id
+    if mode == "dev":
+        key = f"{mode}.{key}"
     value = {
         "last_run_timestamp": timestamp,
     }
+    redis_client.set(key, value)
+    return True
+
+
+@task
+def set_request_last_run_timestamp(source: str, timestamp: str, mode: str = "prod"):
+    """Set the timestamp on Redis for the last time data was captured
+
+    Args:
+        source (str): Source API for the request
+        timestamp (str): Timestamp value to set on Redis
+        mode (str, optional): Whether to run in prod or dev. Defaults to "prod".
+
+    Returns:
+        bool: Whether timestamp was successfully set
+    """
+    redis_client = get_redis_client()
+    key = source
+    if mode == "dev":
+        key = f"{mode}.{key}"
+    timestamp = timestamp.replace("T", "+")
+    value = {"last_run_timestamp": timestamp}
+    log(f"Setting {key} to {value} on Redis")
     redis_client.set(key, value)
     return True
 
