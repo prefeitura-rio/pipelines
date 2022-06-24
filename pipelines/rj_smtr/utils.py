@@ -189,7 +189,7 @@ def sppo_filters(frame: pd.DataFrame, version: int = 1):
     """Apply filters to dataframe
 
     Args:
-        df (pd.DataFrame): Containing data captured from sppo
+        frame (pd.DataFrame): Containing data captured from sppo
         api
 
     Returns:
@@ -206,8 +206,5 @@ def sppo_filters(frame: pd.DataFrame, version: int = 1):
             <= x
             <= timedelta(minutes=constants.GPS_SPPO_CAPTURE_DELAY.value)
         )
-        same_minute_mask = (frame["timestamp_captura"] - frame["datahoraenvio"]).apply(
-            lambda x: timedelta(seconds=0) <= x <= timedelta(minutes=1)
-        )
-        frame = frame[sent_received_mask & same_minute_mask]
+        frame = frame[sent_received_mask]
     return frame

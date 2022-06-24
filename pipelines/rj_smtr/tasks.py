@@ -320,12 +320,11 @@ def get_raw(url, headers=None, source: str = None):
     error = None
     timestamp = pendulum.now(constants.TIMEZONE.value)
     if source == "sppo_api_v2":
-        log("Will request data from v2 API")
         access = get_vault_secret(source)["data"]
         key = list(access)[0]
         url = f"{url}{key}={access[key]}"
-        url += f"&dataInicial={(timestamp - timedelta(minutes=2)).strftime('%Y-%m-%d%%%d%H:%M:%S')}"
-        url += f"&dataFinal={timestamp.strftime('%Y-%m-%d%%%d%H:%M:%S')}"
+        url += f"&dataInicial={(timestamp - timedelta(minutes=1)).strftime('%Y-%m-%d+%H:%M:%S')}"
+        url += f"&dataFinal={timestamp.strftime('%Y-%m-%d+%H:%M:%S')}"
     try:
         data = requests.get(
             url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value

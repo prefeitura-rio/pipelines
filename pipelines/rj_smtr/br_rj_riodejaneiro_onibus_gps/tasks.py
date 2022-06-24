@@ -76,25 +76,13 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(status_dict: dict, version: int 
                 )
             )
         )
-        df["datahoraservidor"] = (
-            df["datahoraservidor"]
-            .astype(float)
-            .apply(
-                lambda ms: pd.to_datetime(
-                    pendulum.from_timestamp(ms / 1000.0)
-                    .replace(tzinfo=None)
-                    .set(tz="UTC")
-                    .isoformat()
-                )
-            )
-        )
+        log(f"After converting the timezone, datahoraenvio is: \n{df['datahoraenvio']}")
 
     # Filter data for 0 <= time diff <= 1min
     try:
         datahora_cols = [
             "datahora",
             "datahoraenvio",
-            "datahoraservidor",
             "timestamp_captura",
         ]
         # datahora_col = "datahora"
@@ -105,21 +93,26 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(status_dict: dict, version: int 
                     df_treated[col] = df_treated[col].apply(
                         lambda x: x.tz_convert(timezone)
                     )
+                    log(f"Converted timezone on column {col}")
                 except TypeError:
                     df_treated[col] = df_treated[col].apply(
                         lambda x: x.tz_localize(timezone)
                     )
+                    log(f"Localized timezone on column {col}")
 
         # filters
-        df_treated = sppo_filters(df=df_treated, version=version)
+        df_treated = sppo_filters(frame=df_treated, version=version)
         log(f"Shape antes da filtragem: {df.shape}")
         log(f"Shape após a filtragem: {df_treated.shape}")
         if df_treated.shape[0] == 0:
             error = ValueError("After filtering, the dataframe is empty!")
             log_critical(f"@here\nFailed to filter SPPO data: \n{error}")
-        df = df_treated.drop(
-            columns=["datahoraenvio", "datahoraservidor"]
-        )  # pylint: disable=C0103
+        if version == 2:
+            df = df_treated.drop(
+                columns=["datahoraenvio", "datahoraservidor"]
+            )  # pylint: disable=C0103
+        else:
+            df = df_treated  # pylint: disable=C0103
     except Exception:  # pylint: disable = W0703
         err = traceback.format_exc()
         log_critical(f"@here\nFailed to filter SPPO data: \n{err}")
