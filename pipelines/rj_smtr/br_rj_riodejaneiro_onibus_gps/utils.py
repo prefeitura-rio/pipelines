@@ -54,5 +54,4 @@ def sppo_filters(frame: pd.DataFrame, version: int = 1):
             <= x
             <= timedelta(minutes=constants.GPS_SPPO_CAPTURE_DELAY.value)
         )
-        frame = frame[sent_received_mask]
-        return frame
+        return frame[sent_received_mask]
