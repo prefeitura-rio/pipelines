@@ -9,6 +9,7 @@ from pathlib import Path
 import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
+import pendulum
 
 from pipelines.utils.utils import log
 from pipelines.utils.utils import (
@@ -135,7 +136,7 @@ def get_table_min_max_value(  # pylint: disable=R0913
     return result.iloc[0][0]
 
 
-def get_last_run_timestamp(dataset_id: str, table_id: str):
+def get_last_run_timestamp(dataset_id: str, table_id: str, mode: str = "prod"):
     """
     Query redis to retrive the time for when the last materialization
     ran.
@@ -145,12 +146,15 @@ def get_last_run_timestamp(dataset_id: str, table_id: str):
         table_id (str): model filename on the queries repo.
         eg: if you have a model defined in the file <filename>.sql,
         the table_id should be <filename>
+        mode (str):
 
     Returns:
         Union[str, None]: _description_
     """
     redis_client = get_redis_client()
     key = dataset_id + "." + table_id
+    if mode == "dev":
+        key = f"{mode}.{key}"
     runs = redis_client.get(key)
     # if runs is None:
     #     redis_client.set(key, "")
@@ -161,6 +165,38 @@ def get_last_run_timestamp(dataset_id: str, table_id: str):
     except TypeError:
         return None
     return last_run_timestamp
+
+
+def get_request_date_range(source: str, mode: str = "prod"):
+    """Get date range for requesting SPPO data
+
+    Args:
+        source (str): Souce API for the request
+        mode (str, optional): Whethter running in prod or dev. Defaults to "prod".
+
+    Returns:
+        date_range: dict containing formatted strings for the request
+    """
+    redis_client = get_redis_client()
+    key = source
+    if mode == "dev":
+        key = f"{mode}.{source}"
+    runs = redis_client.get(key)
+    try:
+        last_run_timestamp = runs["last_run_timestamp"]
+    except KeyError:
+        last_run_timestamp = (
+            pendulum.now(constants.TIMEZONE.value) - timedelta(minutes=1)
+        ).strftime("%Y-%m-%d+%H:%M:%S")
+    except TypeError:
+        last_run_timestamp = (
+            pendulum.now(constants.TIMEZONE.value) - timedelta(minutes=1)
+        ).strftime("%Y-%m-%d+%H:%M:%S")
+    date_range = {
+        "start": last_run_timestamp,
+        "end": pendulum.now(constants.TIMEZONE.value).strftime("%Y-%m-%d+%H:%M:%S"),
+    }
+    return date_range
 
 
 def map_dict_keys(data: dict, mapping: dict) -> None:
@@ -200,11 +236,10 @@ def sppo_filters(frame: pd.DataFrame, version: int = 1):
             lambda x: timedelta(seconds=0) <= x <= timedelta(minutes=1)
         )
         return frame[same_minute_mask]
-    else:
-        sent_received_mask = (frame["datahoraenvio"] - frame["datahora"]).apply(
-            lambda x: timedelta(seconds=0)
-            <= x
-            <= timedelta(minutes=constants.GPS_SPPO_CAPTURE_DELAY.value)
-        )
-        frame = frame[sent_received_mask]
+    sent_received_mask = (frame["datahoraenvio"] - frame["datahora"]).apply(
+        lambda x: timedelta(seconds=0)
+        <= x
+        <= timedelta(minutes=constants.GPS_SPPO_CAPTURE_DELAY.value)
+    )
+    frame = frame[sent_received_mask]
     return frame

@@ -19,7 +19,7 @@ from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
 from pipelines.rj_smtr.constants import constants
 
 from pipelines.rj_smtr.schedules import (
-    # every_minute,
+    every_minute_dev,
     every_hour,
 )
 from pipelines.rj_smtr.tasks import (
@@ -33,6 +33,7 @@ from pipelines.rj_smtr.tasks import (
     save_raw_local,
     save_treated_local,
     set_last_run_timestamp,
+    set_request_last_run_timestamp,
     upload_logs_to_bq,
     bq_upload,
 )
@@ -183,6 +184,7 @@ with Flow(
     secret_path = Parameter(
         "secret_path", default=constants.GPS_SPPO_API_SECRET_PATH_V2.value
     )
+    mode = Parameter("mode", default="dev")
     version = Parameter("version", default=2)
 
     # Rename flow run
@@ -200,7 +202,7 @@ with Flow(
         partitions=file_dict["partitions"],
     )
 
-    status_dict = get_raw(url=url, source=secret_path)
+    status_dict = get_raw(url=url, source=secret_path, mode=mode)
 
     raw_filepath = save_raw_local(data=status_dict["data"], file_path=filepath)
 
@@ -208,7 +210,7 @@ with Flow(
         status_dict=status_dict, version=version
     )
 
-    upload_logs_to_bq(
+    upload_logs = upload_logs_to_bq(
         dataset_id=dataset_id,
         parent_table_id=table_id,
         timestamp=status_dict["timestamp"],
@@ -219,15 +221,19 @@ with Flow(
         dataframe=treated_status["df"], file_path=filepath
     )
 
-    bq_upload(
+    upload_csv = bq_upload(
         dataset_id=dataset_id,
         table_id=table_id,
         filepath=treated_filepath,
         raw_filepath=raw_filepath,
         partitions=file_dict["partitions"],
     )
+    set_last_run = set_request_last_run_timestamp(  # pylint: disable=C0103
+        source=secret_path, mode=mode, timestamp=status_dict["timestamp"]
+    )
     captura_sppo_v2.set_dependencies(task=file_dict, upstream_tasks=[rename_flow_run])
     captura_sppo_v2.set_dependencies(task=status_dict, upstream_tasks=[filepath])
+    captura_sppo_v2.set_dependencies(task=set_last_run, upstream_tasks=[upload_csv])
 
 materialize_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 materialize_sppo.run_config = KubernetesRun(
@@ -248,4 +254,4 @@ captura_sppo_v2.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-# captura_sppo_v2.schedule = every_minute
+captura_sppo_v2.schedule = every_minute_dev
