@@ -124,7 +124,7 @@ with Flow(
     )
 
     # Get default parameters #
-    dataset_id = Parameter("dataset_id", default=constants.GPS_BRT_DATASET_ID.value)
+    dataset_id = Parameter("dataset_id", default=constants.GPS_BRT_RAW_DATASET_ID.value)
     table_id = Parameter("table_id", default=constants.GPS_BRT_RAW_TABLE_ID.value)
     url = Parameter("url", default=constants.GPS_BRT_API_BASE_URL.value)
     # secret_path = Parameter("secret_path", default=constants.GPS_BRT_API_SECRET_PATH.value)
