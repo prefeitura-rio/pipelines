@@ -219,27 +219,3 @@ def safe_cast(val, to_type, default=None):
         return to_type(val)
     except ValueError:
         return default
-
-
-def sppo_filters(frame: pd.DataFrame, version: int = 1):
-    """Apply filters to dataframe
-
-    Args:
-        frame (pd.DataFrame): Containing data captured from sppo
-        api
-
-    Returns:
-        frame: Filtered input
-    """
-    if version == 1:
-        same_minute_mask = (frame["timestamp_captura"] - frame["datahora"]).apply(
-            lambda x: timedelta(seconds=0) <= x <= timedelta(minutes=1)
-        )
-        return frame[same_minute_mask]
-    sent_received_mask = (frame["datahoraenvio"] - frame["datahora"]).apply(
-        lambda x: timedelta(seconds=0)
-        <= x
-        <= timedelta(minutes=constants.GPS_SPPO_CAPTURE_DELAY.value)
-    )
-    frame = frame[sent_received_mask]
-    return frame

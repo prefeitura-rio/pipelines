@@ -189,7 +189,7 @@ with Flow(
 
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SMTR: GPS SPPO - Captura Nova API - ", now_time=get_now_time()
+        prefix="SMTR: GPS SPPO - Captura API v2 - ", now_time=get_now_time()
     )
 
     # Run tasks #
