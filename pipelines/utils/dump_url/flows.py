@@ -17,8 +17,6 @@ from pipelines.utils.dump_url.tasks import download_url
 from pipelines.utils.decorators import Flow
 from pipelines.utils.tasks import (
     get_current_flow_labels,
-    get_user_and_password,
-    greater_than,
     rename_current_flow_run_dataset_table,
     create_table_and_upload_to_gcs,
 )
@@ -84,26 +82,26 @@ with Flow(
     #
     #####################################
     # this will not conflict with other flows because it's running in a separate container
-    data_path = "/tmp/dump_url/"
-    data_fname = data_path + "data.csv"
-    download_url_task = download_url(
+    DATA_PATH = "/tmp/dump_url/"
+    DATA_FNAME = DATA_PATH + "data.csv"
+    DOWNLOAD_URL_TASK = download_url(
         url=url,
-        data_fname=data_fname,
+        fname=DATA_FNAME,
     )
-    download_url_task.set_upstream(rename_flow_run)
+    DOWNLOAD_URL_TASK.set_upstream(rename_flow_run)
 
     #####################################
     #
     # Tasks section #2 - Create table
     #
     #####################################
-    create_table_and_upload_to_gcs_task = create_table_and_upload_to_gcs(
-        data_path=data_path,
+    CREATE_TABLE_AND_UPLOAD_TO_GCS_TASK = create_table_and_upload_to_gcs(
+        data_path=DATA_PATH,
         dataset_id=dataset_id,
         table_id=table_id,
         dump_mode=dump_mode,
     )
-    create_table_and_upload_to_gcs_task.set_upstream(download_url_task)
+    CREATE_TABLE_AND_UPLOAD_TO_GCS_TASK.set_upstream(DOWNLOAD_URL_TASK)
 
     #####################################
     #

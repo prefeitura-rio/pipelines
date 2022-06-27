@@ -30,9 +30,9 @@ def download_url(url: str, fname: str) -> None:
     """
     filepath = Path(fname)
     filepath.mkdir(parents=True, exist_ok=True)
-    r = requests.get(url, stream=True)
-    with open(fname, "wb") as f:
-        for chunk in r.iter_content(chunk_size=1024):
+    req = requests.get(url, stream=True)
+    with open(fname, "wb") as file:
+        for chunk in req.iter_content(chunk_size=1024):
             if chunk:
-                f.write(chunk)
-                f.flush()
+                file.write(chunk)
+                file.flush()
