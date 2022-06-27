@@ -71,13 +71,13 @@ sme_queries = {
         "partition_columns": "Ano",
         "partition_date_format": "%Y",
         "materialization_mode": "prod",
-        "dump_mode": "overwrite",
+        "dump_mode": "append",
         "execute_query": """
             SELECT
                 *
             FROM GestaoEscolar.dbo.VW_BI_Aluno_Todos_LGPD
         """,
-        "interval": timedelta(days=60),
+        "interval": timedelta(days=180),
     },
     "aluno_turma": {
         "materialize_after_dump": True,
