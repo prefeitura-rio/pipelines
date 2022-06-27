@@ -43,7 +43,10 @@ import pandas as pd
 import pendulum
 from prefect import task
 
-from pipelines.rj_escritorio.geolocator.utils import geolocator
+from pipelines.rj_escritorio.geolocator.utils import (
+    geolocator,
+    checar_point_pertence_cidade,
+)
 from pipelines.utils.utils import log
 
 
@@ -53,6 +56,7 @@ def seleciona_enderecos_novos() -&gt; Tuple[pd.DataFrame, bool]:
     &#34;&#34;&#34;
     Seleciona base de endereços chamados que entraram no dia anterior e não estão geolocalizados.
     &#34;&#34;&#34;
+    # pylint: disable=W1401
     query = &#34;&#34;&#34;
     WITH
     end_conhecidos AS (
@@ -65,7 +69,7 @@ def seleciona_enderecos_novos() -&gt; Tuple[pd.DataFrame, bool]:
         &#39;RJ&#39; estado,
         &#39;Rio de Janeiro&#39; municipio,
         no_bairro bairro,
-        id_logradouro,
+        LPAD(SAFE_CAST(REGEXP_REPLACE(id_logradouro, r&#39;\.0$&#39;, &#39;&#39;) AS STRING), 6, &#39;0&#39;) id_logradouro,
         no_logradouro logradouro,
         SAFE_CAST(SAFE_CAST(ds_endereco_numero AS INT) AS STRING) numero_porta,
         CONCAT(no_logradouro, &#39; &#39;, SAFE_CAST(SAFE_CAST(ds_endereco_numero AS INT) AS STRING), &#39;, &#39;, no_bairro,
@@ -74,6 +78,7 @@ def seleciona_enderecos_novos() -&gt; Tuple[pd.DataFrame, bool]:
         WHERE no_logradouro IS NOT NULL
             AND CAST(dt_inicio AS TIMESTAMP) BETWEEN DATE_ADD(CAST(CURRENT_DATE() AS TIMESTAMP), INTERVAL -1 DAY) AND CURRENT_TIMESTAMP()
         )
+
     SELECT DISTINCT
     ch.endereco_completo, pais, estado, municipio,
     bairro, id_logradouro, logradouro, ch.numero_porta
@@ -86,18 +91,25 @@ def seleciona_enderecos_novos() -&gt; Tuple[pd.DataFrame, bool]:
     )
     possui_enderecos_novos = base_enderecos_novos.shape[0] &gt; 0
 
-    return base_enderecos_novos, possui_enderecos_novos
+    return base_enderecos_novos.drop_duplicates(), possui_enderecos_novos
 
 
 # Geolocalizando
 @task
 def geolocaliza_enderecos(base_enderecos_novos: pd.DataFrame) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
-    Geolocaliza todos os novos endereços que entraram no dia anterior.
+    Geolocaliza todos os novos endereços que entraram no dia anterior
+    e verifica se pontos pertencem a cidade do Rio de Janeiro.
     &#34;&#34;&#34;
     start_time = time.time()
     coordenadas = base_enderecos_novos[&#34;endereco_completo&#34;].apply(
         lambda x: pd.Series(geolocator(x), index=[&#34;lat&#34;, &#34;long&#34;])
+    )
+
+    coordenadas[[&#34;lat&#34;, &#34;long&#34;]] = coordenadas.apply(
+        lambda x: checar_point_pertence_cidade(x.lat, x.long),
+        axis=1,
+        result_type=&#34;expand&#34;,
     )
 
     log(f&#34;--- {(time.time() - start_time)} seconds ---&#34;)
@@ -109,15 +121,6 @@ def geolocaliza_enderecos(base_enderecos_novos: pd.DataFrame) -&gt; pd.DataFrame
         log(&#34;Não foram identificados chamados abertos no dia anterior.&#34;)
 
     return base_enderecos_novos
-
-
-# @task
-# def get_today() -&gt; str:
-#     &#34;&#34;&#34;
-#     Pega o endereço de hoje no formato YYYY-MM-DD
-#     &#34;&#34;&#34;
-#     today = prefect.context.get(&#34;today&#34;)
-#     return today
 
 
 # Adicionando os endereços novos geolocalizados na base de endereços que já possuímos
@@ -233,7 +236,8 @@ def cria_csv(base_enderecos_novos: pd.DataFrame) -&gt; Union[str, Path]:
 <span>def <span class="ident">geolocaliza_enderecos</span></span>(<span>base_enderecos_novos: pandas.core.frame.DataFrame) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Geolocaliza todos os novos endereços que entraram no dia anterior.</p></div>
+<div class="desc"><p>Geolocaliza todos os novos endereços que entraram no dia anterior
+e verifica se pontos pertencem a cidade do Rio de Janeiro.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -241,11 +245,18 @@ def cria_csv(base_enderecos_novos: pd.DataFrame) -&gt; Union[str, Path]:
 <pre><code class="python">@task
 def geolocaliza_enderecos(base_enderecos_novos: pd.DataFrame) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
-    Geolocaliza todos os novos endereços que entraram no dia anterior.
+    Geolocaliza todos os novos endereços que entraram no dia anterior
+    e verifica se pontos pertencem a cidade do Rio de Janeiro.
     &#34;&#34;&#34;
     start_time = time.time()
     coordenadas = base_enderecos_novos[&#34;endereco_completo&#34;].apply(
         lambda x: pd.Series(geolocator(x), index=[&#34;lat&#34;, &#34;long&#34;])
+    )
+
+    coordenadas[[&#34;lat&#34;, &#34;long&#34;]] = coordenadas.apply(
+        lambda x: checar_point_pertence_cidade(x.lat, x.long),
+        axis=1,
+        result_type=&#34;expand&#34;,
     )
 
     log(f&#34;--- {(time.time() - start_time)} seconds ---&#34;)
@@ -273,6 +284,7 @@ def seleciona_enderecos_novos() -&gt; Tuple[pd.DataFrame, bool]:
     &#34;&#34;&#34;
     Seleciona base de endereços chamados que entraram no dia anterior e não estão geolocalizados.
     &#34;&#34;&#34;
+    # pylint: disable=W1401
     query = &#34;&#34;&#34;
     WITH
     end_conhecidos AS (
@@ -285,7 +297,7 @@ def seleciona_enderecos_novos() -&gt; Tuple[pd.DataFrame, bool]:
         &#39;RJ&#39; estado,
         &#39;Rio de Janeiro&#39; municipio,
         no_bairro bairro,
-        id_logradouro,
+        LPAD(SAFE_CAST(REGEXP_REPLACE(id_logradouro, r&#39;\.0$&#39;, &#39;&#39;) AS STRING), 6, &#39;0&#39;) id_logradouro,
         no_logradouro logradouro,
         SAFE_CAST(SAFE_CAST(ds_endereco_numero AS INT) AS STRING) numero_porta,
         CONCAT(no_logradouro, &#39; &#39;, SAFE_CAST(SAFE_CAST(ds_endereco_numero AS INT) AS STRING), &#39;, &#39;, no_bairro,
@@ -294,6 +306,7 @@ def seleciona_enderecos_novos() -&gt; Tuple[pd.DataFrame, bool]:
         WHERE no_logradouro IS NOT NULL
             AND CAST(dt_inicio AS TIMESTAMP) BETWEEN DATE_ADD(CAST(CURRENT_DATE() AS TIMESTAMP), INTERVAL -1 DAY) AND CURRENT_TIMESTAMP()
         )
+
     SELECT DISTINCT
     ch.endereco_completo, pais, estado, municipio,
     bairro, id_logradouro, logradouro, ch.numero_porta
@@ -306,7 +319,7 @@ def seleciona_enderecos_novos() -&gt; Tuple[pd.DataFrame, bool]:
     )
     possui_enderecos_novos = base_enderecos_novos.shape[0] &gt; 0
 
-    return base_enderecos_novos, possui_enderecos_novos</code></pre>
+    return base_enderecos_novos.drop_duplicates(), possui_enderecos_novos</code></pre>
 </details>
 </dd>
 </dl>

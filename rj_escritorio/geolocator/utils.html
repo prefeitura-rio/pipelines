@@ -33,33 +33,10 @@
 General purpose functions for the geolocator project
 &#34;&#34;&#34;
 
-###############################################################################
-#
-# Esse é um arquivo onde podem ser declaratas funções que serão usadas
-# pelo projeto geolocator.
-#
-# Por ser um arquivo opcional, pode ser removido sem prejuízo ao funcionamento
-# do projeto, caos não esteja em uso.
-#
-# Para declarar funções, basta fazer em código Python comum, como abaixo:
-#
-# ```
-# def foo():
-#     &#34;&#34;&#34;
-#     Function foo
-#     &#34;&#34;&#34;
-#     print(&#34;foo&#34;)
-# ```
-#
-# Para usá-las, basta fazer conforme o exemplo abaixo:
-#
-# ```py
-# from pipelines.rj_escritorio.geolocator.utils import foo
-# foo()
-# ```
-#
-###############################################################################
 import requests
+
+from geobr import read_municipality
+from shapely.geometry import Point
 
 
 def geolocator(query_string: str) -&gt; list:
@@ -81,7 +58,33 @@ def geolocator(query_string: str) -&gt; list:
         lat = response.json()[1][0][3][&#34;y&#34;]
         return [lat, long]
     except:  # pylint: disable=bare-except
-        return [None, None]</code></pre>
+        return [None, None]
+
+
+def checar_point_pertence_cidade(lat: float, long: float) -&gt; list:
+    &#34;&#34;&#34;
+    Verifica se o lat/long retornado pela API do Waze pertence ao geometry
+    da cidade do Rio de Janeiro. Se pertencer retorna o lat, lon, se não retorna None.
+    &#34;&#34;&#34;
+
+    # Acessa dados da cidade do Rio de Janeiro
+    rio = read_municipality(code_muni=3304557, year=2020)
+
+    # Cria point com a latitude e longitude
+    point = Point(long, lat)
+
+    # Cria polígono com o geometry do Rio de Janeiro
+    polygon = rio.geometry
+
+    # Use polygon.contains(point) to test if point is inside (True) or outside (False) the polygon.
+    pertence = polygon.contains(point)
+
+    # Se pertence retorna lat, lon. Do contrário retorna nan
+    if pertence.iloc[0]:
+        lat_lon = [lat, long]
+    else:
+        lat_lon = [None, None]
+    return lat_lon</code></pre>
 </details>
 </section>
 <section>
@@ -91,6 +94,42 @@ def geolocator(query_string: str) -&gt; list:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="pipelines.rj_escritorio.geolocator.utils.checar_point_pertence_cidade"><code class="name flex">
+<span>def <span class="ident">checar_point_pertence_cidade</span></span>(<span>lat: float, long: float) ‑> list</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Verifica se o lat/long retornado pela API do Waze pertence ao geometry
+da cidade do Rio de Janeiro. Se pertencer retorna o lat, lon, se não retorna None.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def checar_point_pertence_cidade(lat: float, long: float) -&gt; list:
+    &#34;&#34;&#34;
+    Verifica se o lat/long retornado pela API do Waze pertence ao geometry
+    da cidade do Rio de Janeiro. Se pertencer retorna o lat, lon, se não retorna None.
+    &#34;&#34;&#34;
+
+    # Acessa dados da cidade do Rio de Janeiro
+    rio = read_municipality(code_muni=3304557, year=2020)
+
+    # Cria point com a latitude e longitude
+    point = Point(long, lat)
+
+    # Cria polígono com o geometry do Rio de Janeiro
+    polygon = rio.geometry
+
+    # Use polygon.contains(point) to test if point is inside (True) or outside (False) the polygon.
+    pertence = polygon.contains(point)
+
+    # Se pertence retorna lat, lon. Do contrário retorna nan
+    if pertence.iloc[0]:
+        lat_lon = [lat, long]
+    else:
+        lat_lon = [None, None]
+    return lat_lon</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_escritorio.geolocator.utils.geolocator"><code class="name flex">
 <span>def <span class="ident">geolocator</span></span>(<span>query_string: str) ‑> list</span>
 </code></dt>
@@ -186,6 +225,7 @@ setTimeout(() => input.focus(), 100);
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="pipelines.rj_escritorio.geolocator.utils.checar_point_pertence_cidade" href="#pipelines.rj_escritorio.geolocator.utils.checar_point_pertence_cidade">checar_point_pertence_cidade</a></code></li>
 <li><code><a title="pipelines.rj_escritorio.geolocator.utils.geolocator" href="#pipelines.rj_escritorio.geolocator.utils.geolocator">geolocator</a></code></li>
 </ul>
 </li>
