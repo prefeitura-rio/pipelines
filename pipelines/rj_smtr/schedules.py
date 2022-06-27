@@ -23,6 +23,19 @@ every_minute = Schedule(
         ),
     ]
 )
+every_minute_dev = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(minutes=1),
+            start_date=datetime(
+                2021, 1, 1, 0, 0, 0, tzinfo=timezone(constants.TIMEZONE.value)
+            ),
+            labels=[
+                emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value,
+            ],
+        ),
+    ]
+)
 
 every_hour = Schedule(
     clocks=[

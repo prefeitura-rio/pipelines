@@ -77,6 +77,7 @@ sme_queries = {
                 *
             FROM GestaoEscolar.dbo.VW_BI_Aluno_Todos_LGPD
         """,
+        "interval": timedelta(days=180),
     },
     "aluno_turma": {
         "materialize_after_dump": True,

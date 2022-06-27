@@ -12,6 +12,7 @@ from prefect.storage import GCS
 from pipelines.constants import constants as emd_constants
 from pipelines.utils.decorators import Flow
 from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
+from pipelines.utils.tasks import get_now_time, rename_current_flow_run_now_time
 
 # SMTR Imports #
 
@@ -44,8 +45,13 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks import (
 
 with Flow(
     "SMTR: GPS BRT - Materialização",
-    code_owners=["@hellcassius#1223", "@fernandascovino#9750"],
+    code_owners=["caio", "fernanda"],
 ) as materialize_brt:
+
+    # Rename flow run
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix="GPS BRT - Materialização: ", now_time=get_now_time()
+    )
 
     # Get default parameters #
     raw_dataset_id = Parameter(
@@ -59,7 +65,7 @@ with Flow(
     rebuild = Parameter("rebuild", False)
 
     # Set dbt client #
-    dbt_client = get_k8s_dbt_client(mode="prod")
+    dbt_client = get_k8s_dbt_client(mode="prod", wait=rename_flow_run)
     # Use the command below to get the dbt client in dev mode:
     # dbt_client = get_local_dbt_client(host="localhost", port=3001)
 
@@ -109,11 +115,16 @@ with Flow(
 
 with Flow(
     "SMTR: GPS BRT - Captura",
-    code_owners=["@hellcassius#1223", "@fernandascovino#9750"],
+    code_owners=["caio", "fernanda"],
 ) as captura_brt:
 
+    # Rename flow run
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix="SMTR: GPS BRT - Captura - ", now_time=get_now_time()
+    )
+
     # Get default parameters #
-    dataset_id = Parameter("dataset_id", default=constants.GPS_BRT_DATASET_ID.value)
+    dataset_id = Parameter("dataset_id", default=constants.GPS_BRT_RAW_DATASET_ID.value)
     table_id = Parameter("table_id", default=constants.GPS_BRT_RAW_TABLE_ID.value)
     url = Parameter("url", default=constants.GPS_BRT_API_BASE_URL.value)
     # secret_path = Parameter("secret_path", default=constants.GPS_BRT_API_SECRET_PATH.value)
@@ -152,6 +163,7 @@ with Flow(
         raw_filepath=raw_filepath,
         partitions=file_dict["partitions"],
     )
+    captura_brt.set_dependencies(task=file_dict, upstream_tasks=[rename_flow_run])
 
 materialize_brt.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 materialize_brt.run_config = KubernetesRun(

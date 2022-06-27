@@ -19,7 +19,7 @@ from pipelines.utils.decorators import Flow
 with Flow(
     "EMD: Aniversariante do dia",
     code_owners=[
-        "@Gabriel Gazola Milan#8183",
+        "gabriel",
     ],
 ) as birthday_flow:
 

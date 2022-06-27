@@ -11,6 +11,7 @@ from prefect.storage import GCS
 
 from pipelines.constants import constants as emd_constants
 from pipelines.utils.decorators import Flow
+from pipelines.utils.tasks import rename_current_flow_run_now_time, get_now_time
 
 # SMTR Imports #
 
@@ -36,8 +37,14 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks import (
 
 with Flow(
     "SMTR: GPS STPL - Captura",
-    code_owners=["@hellcassius#1223", "@fernandascovino#9750"],
+    code_owners=["caio", "fernanda"],
 ) as stpl_captura:
+
+    # Rename flow run
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix="SMTR: GPS STPL - Materialização - ", now_time=get_now_time()
+    )
+
     # Get default parameters #
     dataset_id = Parameter("dataset_id", default=constants.GPS_STPL_DATASET_ID.value)
     table_id = Parameter("table_id", default=constants.GPS_STPL_RAW_TABLE_ID.value)
@@ -79,7 +86,7 @@ with Flow(
         raw_filepath=raw_filepath,
         partitions=file_dict["partitions"],
     )
-
+    stpl_captura.set_dependencies(task=file_dict, upstream_tasks=[rename_flow_run])
 
 stpl_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 stpl_captura.run_config = KubernetesRun(

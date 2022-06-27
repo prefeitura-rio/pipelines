@@ -69,7 +69,7 @@ from pipelines.utils.decorators import Flow
 with Flow(
     name="EMD: template - Template Pipeline",
     code_owners=[
-        "@Gabriel Gazola Milan#8183",
+        "gabriel",
     ],
 ) as flow:
     say_hello()

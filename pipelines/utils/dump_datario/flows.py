@@ -26,7 +26,7 @@ from pipelines.utils.dump_datario.tasks import (
 with Flow(
     name=utils_constants.FLOW_DUMP_DATARIO_NAME.value,
     code_owners=[
-        "@pimbel#2426",
+        "diego",
     ],
 ) as dump_datario_flow:
 
