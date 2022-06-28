@@ -325,8 +325,9 @@ def get_raw(url, headers=None, source: str = None, mode: str = "prod"):
         key = list(access)[0]
         url = f"{url}{key}={access[key]}"
         date_range = get_request_date_range(source=source, mode=mode)
-        url += f"&dataInicial={date_range['start']}"
-        url += f"&dataFinal={date_range['end']}"
+        log(f"Will request data between {date_range['start']} and {date_range['end']}")
+        url += f"&dataInicial={date_range['start'].replace('+', ' ')}"
+        url += f"&dataFinal={date_range['end'].replace('+', ' ')}"
     try:
         data = requests.get(
             url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
@@ -336,6 +337,10 @@ def get_raw(url, headers=None, source: str = None, mode: str = "prod"):
     except Exception as err:
         error = f"Unknown exception while trying to fetch data from {url}: {err}"
 
+    if type(data.json()) is dict and "DescricaoErro" in data.json().keys():
+        log(f"Data is {data.json()}\n With type: {type(data.json())}")
+        if error is None:
+            error = data.json()["DescricaoErro"]
     if data is None:
         if error is None:
             error = "Data from API is none!"
@@ -348,7 +353,9 @@ def get_raw(url, headers=None, source: str = None, mode: str = "prod"):
             "error": error,
             "timestamp": timestamp.isoformat(),
         }
-    # else
+    log(
+        f"Data is {data.json()}\n With type: {type(data.json())}\n And keys {data.json().keys()}"
+    )
     error = f"Requests failed with error {data.status_code}"
     return {"error": error, "timestamp": timestamp.isoformat(), "data": data}
 
@@ -589,7 +596,9 @@ def set_request_last_run_timestamp(source: str, timestamp: str, mode: str = "pro
     key = source
     if mode == "dev":
         key = f"{mode}.{key}"
-    timestamp = timestamp.replace("T", "+")
+    # format timestamp to ignore fractions of seconds
+    timestamp = datetime.fromisoformat(timestamp)
+    timestamp = timestamp.strftime("%Y-%m-%d+%H:%M:%S%z")
     value = {"last_run_timestamp": timestamp}
     log(f"Setting {key} to {value} on Redis")
     redis_client.set(key, value)

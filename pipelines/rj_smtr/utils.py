@@ -3,7 +3,7 @@
 General purpose functions for rj_smtr
 """
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import basedosdados as bd
@@ -182,19 +182,23 @@ def get_request_date_range(source: str, mode: str = "prod"):
     if mode == "dev":
         key = f"{mode}.{source}"
     runs = redis_client.get(key)
+    now_timestamp = pendulum.now(constants.TIMEZONE.value)
     try:
-        last_run_timestamp = runs["last_run_timestamp"]
+        last_run_timestamp = datetime.strptime(
+            runs["last_run_timestamp"], "%Y-%m-%d+%H:%M:%S%z"
+        )
     except KeyError:
-        last_run_timestamp = (
-            pendulum.now(constants.TIMEZONE.value) - timedelta(minutes=1)
-        ).strftime("%Y-%m-%d+%H:%M:%S")
+        last_run_timestamp = now_timestamp - timedelta(minutes=1)
     except TypeError:
-        last_run_timestamp = (
-            pendulum.now(constants.TIMEZONE.value) - timedelta(minutes=1)
-        ).strftime("%Y-%m-%d+%H:%M:%S")
+        last_run_timestamp = now_timestamp - timedelta(minutes=1)
+    except ValueError:
+        last_run_timestamp = now_timestamp - timedelta(minutes=1)
+
+    if now_timestamp - last_run_timestamp > timedelta(hours=1):
+        now_timestamp = last_run_timestamp + timedelta(hours=1)
     date_range = {
-        "start": last_run_timestamp,
-        "end": pendulum.now(constants.TIMEZONE.value).strftime("%Y-%m-%d+%H:%M:%S"),
+        "start": last_run_timestamp.strftime("%Y-%m-%d+%H:%M:%S"),
+        "end": now_timestamp.strftime("%Y-%m-%d+%H:%M:%S"),
     }
     return date_range
 
