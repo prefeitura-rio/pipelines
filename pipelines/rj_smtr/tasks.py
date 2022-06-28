@@ -337,7 +337,7 @@ def get_raw(url, headers=None, source: str = None, mode: str = "prod"):
     except Exception as err:
         error = f"Unknown exception while trying to fetch data from {url}: {err}"
 
-    if type(data.json()) is dict and "DescricaoErro" in data.json().keys():
+    if isinstance(data.json(), dict) and "DescricaoErro" in data.json().keys():
         log(f"Data is {data.json()}\n With type: {type(data.json())}")
         if error is None:
             error = data.json()["DescricaoErro"]
