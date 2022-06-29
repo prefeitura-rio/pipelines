@@ -187,11 +187,6 @@ with Flow(
     mode = Parameter("mode", default="dev")
     version = Parameter("version", default=2)
 
-    # Rename flow run
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SMTR: GPS SPPO - Captura API v2 - ", now_time=get_now_time()
-    )
-
     # Run tasks #
     file_dict = create_current_date_hour_partition()
 
@@ -203,6 +198,11 @@ with Flow(
     )
 
     status_dict = get_raw(url=url, source=secret_path, mode=mode)
+
+    # Rename flow run
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix="GPS SPPO: ", now_time=status_dict["timestamp"]
+    )
 
     raw_filepath = save_raw_local(data=status_dict["data"], file_path=filepath)
 
@@ -231,7 +231,6 @@ with Flow(
     set_last_run = set_request_last_run_timestamp(  # pylint: disable=C0103
         source=secret_path, mode=mode, timestamp=status_dict["timestamp"]
     )
-    captura_sppo_v2.set_dependencies(task=file_dict, upstream_tasks=[rename_flow_run])
     captura_sppo_v2.set_dependencies(task=status_dict, upstream_tasks=[filepath])
     captura_sppo_v2.set_dependencies(task=set_last_run, upstream_tasks=[UPLOAD_CSV])
 

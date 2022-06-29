@@ -332,30 +332,20 @@ def get_raw(url, headers=None, source: str = None, mode: str = "prod"):
         data = requests.get(
             url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
         )
-    except requests.exceptions.ReadTimeout as err:
-        error = err
     except Exception as err:
-        error = f"Unknown exception while trying to fetch data from {url}: {err}"
+        log(f"Request failed with error:\n{err}")
+        return {"data": data, "timestamp": timestamp.isoformat(), "error": err}
 
-    if isinstance(data.json(), dict) and "DescricaoErro" in data.json().keys():
-        log(f"Data is {data.json()}\n With type: {type(data.json())}")
-        if error is None:
-            error = data.json()["DescricaoErro"]
-    if data is None:
-        if error is None:
-            error = "Data from API is none!"
-
-    if error:
-        return {"data": data, "timestamp": timestamp.isoformat(), "error": error}
     if data.ok:
+        if isinstance(data.json(), dict) and "DescricaoErro" in data.json().keys():
+            log(f"Data is {data.json()}\n With type: {type(data.json())}")
+            error = data.json()["DescricaoErro"]
         return {
             "data": data,
             "error": error,
             "timestamp": timestamp.isoformat(),
         }
-    log(
-        f"Data is {data.json()}\n With type: {type(data.json())}\n And keys {data.json().keys()}"
-    )
+
     error = f"Requests failed with error {data.status_code}"
     return {"error": error, "timestamp": timestamp.isoformat(), "data": data}
 
