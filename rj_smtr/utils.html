@@ -32,13 +32,11 @@
 General purpose functions for rj_smtr
 &#34;&#34;&#34;
 
-from datetime import timedelta
 from pathlib import Path
 
 import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
-import pendulum
 
 from pipelines.utils.utils import log
 from pipelines.utils.utils import (
@@ -194,38 +192,6 @@ def get_last_run_timestamp(dataset_id: str, table_id: str, mode: str = &#34;prod
     except TypeError:
         return None
     return last_run_timestamp
-
-
-def get_request_date_range(source: str, mode: str = &#34;prod&#34;):
-    &#34;&#34;&#34;Get date range for requesting SPPO data
-
-    Args:
-        source (str): Souce API for the request
-        mode (str, optional): Whethter running in prod or dev. Defaults to &#34;prod&#34;.
-
-    Returns:
-        date_range: dict containing formatted strings for the request
-    &#34;&#34;&#34;
-    redis_client = get_redis_client()
-    key = source
-    if mode == &#34;dev&#34;:
-        key = f&#34;{mode}.{source}&#34;
-    runs = redis_client.get(key)
-    try:
-        last_run_timestamp = runs[&#34;last_run_timestamp&#34;]
-    except KeyError:
-        last_run_timestamp = (
-            pendulum.now(constants.TIMEZONE.value) - timedelta(minutes=1)
-        ).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;)
-    except TypeError:
-        last_run_timestamp = (
-            pendulum.now(constants.TIMEZONE.value) - timedelta(minutes=1)
-        ).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;)
-    date_range = {
-        &#34;start&#34;: last_run_timestamp,
-        &#34;end&#34;: pendulum.now(constants.TIMEZONE.value).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
-    }
-    return date_range
 
 
 def map_dict_keys(data: dict, mapping: dict) -&gt; None:
@@ -423,59 +389,6 @@ mode (str):</p>
     except TypeError:
         return None
     return last_run_timestamp</code></pre>
-</details>
-</dd>
-<dt id="pipelines.rj_smtr.utils.get_request_date_range"><code class="name flex">
-<span>def <span class="ident">get_request_date_range</span></span>(<span>source: str, mode: str = 'prod')</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Get date range for requesting SPPO data</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>source</code></strong> :&ensp;<code>str</code></dt>
-<dd>Souce API for the request</dd>
-<dt><strong><code>mode</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>Whethter running in prod or dev. Defaults to "prod".</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>date_range</code></dt>
-<dd>dict containing formatted strings for the request</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_request_date_range(source: str, mode: str = &#34;prod&#34;):
-    &#34;&#34;&#34;Get date range for requesting SPPO data
-
-    Args:
-        source (str): Souce API for the request
-        mode (str, optional): Whethter running in prod or dev. Defaults to &#34;prod&#34;.
-
-    Returns:
-        date_range: dict containing formatted strings for the request
-    &#34;&#34;&#34;
-    redis_client = get_redis_client()
-    key = source
-    if mode == &#34;dev&#34;:
-        key = f&#34;{mode}.{source}&#34;
-    runs = redis_client.get(key)
-    try:
-        last_run_timestamp = runs[&#34;last_run_timestamp&#34;]
-    except KeyError:
-        last_run_timestamp = (
-            pendulum.now(constants.TIMEZONE.value) - timedelta(minutes=1)
-        ).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;)
-    except TypeError:
-        last_run_timestamp = (
-            pendulum.now(constants.TIMEZONE.value) - timedelta(minutes=1)
-        ).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;)
-    date_range = {
-        &#34;start&#34;: last_run_timestamp,
-        &#34;end&#34;: pendulum.now(constants.TIMEZONE.value).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
-    }
-    return date_range</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.utils.get_table_min_max_value"><code class="name flex">
@@ -697,7 +610,6 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.utils.create_or_append_table" href="#pipelines.rj_smtr.utils.create_or_append_table">create_or_append_table</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.generate_df_and_save" href="#pipelines.rj_smtr.utils.generate_df_and_save">generate_df_and_save</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.get_last_run_timestamp" href="#pipelines.rj_smtr.utils.get_last_run_timestamp">get_last_run_timestamp</a></code></li>
-<li><code><a title="pipelines.rj_smtr.utils.get_request_date_range" href="#pipelines.rj_smtr.utils.get_request_date_range">get_request_date_range</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.get_table_min_max_value" href="#pipelines.rj_smtr.utils.get_table_min_max_value">get_table_min_max_value</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.log_critical" href="#pipelines.rj_smtr.utils.log_critical">log_critical</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.map_dict_keys" href="#pipelines.rj_smtr.utils.map_dict_keys">map_dict_keys</a></code></li>

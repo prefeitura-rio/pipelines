@@ -54,7 +54,6 @@ from pipelines.rj_smtr.utils import (
     bq_project,
     get_table_min_max_value,
     get_last_run_timestamp,
-    get_request_date_range,
     parse_dbt_logs,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
@@ -328,7 +327,11 @@ def save_treated_local(dataframe, file_path, mode=&#34;staging&#34;):
 
 
 @task
-def get_raw(url, headers=None, source: str = None, mode: str = &#34;prod&#34;):
+def get_raw(
+    url,
+    headers=None,
+    source: str = None,
+):
     &#34;&#34;&#34;Request data from a url API
 
     Args:
@@ -353,31 +356,33 @@ def get_raw(url, headers=None, source: str = None, mode: str = &#34;prod&#34;):
         access = get_vault_secret(source)[&#34;data&#34;]
         key = list(access)[0]
         url = f&#34;{url}{key}={access[key]}&#34;
-        date_range = get_request_date_range(source=source, mode=mode)
+        date_range = {
+            &#34;start&#34;: (timestamp - timedelta(minutes=1)).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
+            &#34;end&#34;: timestamp.strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
+        }
+        print(
+            f&#34;Will request data between {date_range[&#39;start&#39;]} and {date_range[&#39;end&#39;]}&#34;
+        )
         url += f&#34;&amp;dataInicial={date_range[&#39;start&#39;]}&#34;
         url += f&#34;&amp;dataFinal={date_range[&#39;end&#39;]}&#34;
     try:
         data = requests.get(
             url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
         )
-    except requests.exceptions.ReadTimeout as err:
-        error = err
     except Exception as err:
-        error = f&#34;Unknown exception while trying to fetch data from {url}: {err}&#34;
+        log(f&#34;Request failed with error:\n{err}&#34;)
+        return {&#34;data&#34;: data, &#34;timestamp&#34;: timestamp.isoformat(), &#34;error&#34;: err}
 
-    if data is None:
-        if error is None:
-            error = &#34;Data from API is none!&#34;
-
-    if error:
-        return {&#34;data&#34;: data, &#34;timestamp&#34;: timestamp.isoformat(), &#34;error&#34;: error}
     if data.ok:
+        if isinstance(data.json(), dict) and &#34;DescricaoErro&#34; in data.json().keys():
+            log(f&#34;Data is {data.json()}\n With type: {type(data.json())}&#34;)
+            error = data.json()[&#34;DescricaoErro&#34;]
         return {
             &#34;data&#34;: data,
             &#34;error&#34;: error,
             &#34;timestamp&#34;: timestamp.isoformat(),
         }
-    # else
+
     error = f&#34;Requests failed with error {data.status_code}&#34;
     return {&#34;error&#34;: error, &#34;timestamp&#34;: timestamp.isoformat(), &#34;data&#34;: data}
 
@@ -598,29 +603,6 @@ def set_last_run_timestamp(
     value = {
         &#34;last_run_timestamp&#34;: timestamp,
     }
-    redis_client.set(key, value)
-    return True
-
-
-@task
-def set_request_last_run_timestamp(source: str, timestamp: str, mode: str = &#34;prod&#34;):
-    &#34;&#34;&#34;Set the timestamp on Redis for the last time data was captured
-
-    Args:
-        source (str): Source API for the request
-        timestamp (str): Timestamp value to set on Redis
-        mode (str, optional): Whether to run in prod or dev. Defaults to &#34;prod&#34;.
-
-    Returns:
-        bool: Whether timestamp was successfully set
-    &#34;&#34;&#34;
-    redis_client = get_redis_client()
-    key = source
-    if mode == &#34;dev&#34;:
-        key = f&#34;{mode}.{key}&#34;
-    timestamp = timestamp.replace(&#34;T&#34;, &#34;+&#34;)
-    value = {&#34;last_run_timestamp&#34;: timestamp}
-    log(f&#34;Setting {key} to {value} on Redis&#34;)
     redis_client.set(key, value)
     return True
 
@@ -1135,7 +1117,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.get_raw"><code class="name flex">
-<span>def <span class="ident">get_raw</span></span>(<span>url, headers=None, source: str = None, mode: str = 'prod')</span>
+<span>def <span class="ident">get_raw</span></span>(<span>url, headers=None, source: str = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Request data from a url API</p>
@@ -1160,7 +1142,11 @@ def get_materialization_date_range(  # pylint: disable=R0913
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def get_raw(url, headers=None, source: str = None, mode: str = &#34;prod&#34;):
+def get_raw(
+    url,
+    headers=None,
+    source: str = None,
+):
     &#34;&#34;&#34;Request data from a url API
 
     Args:
@@ -1185,31 +1171,33 @@ def get_raw(url, headers=None, source: str = None, mode: str = &#34;prod&#34;):
         access = get_vault_secret(source)[&#34;data&#34;]
         key = list(access)[0]
         url = f&#34;{url}{key}={access[key]}&#34;
-        date_range = get_request_date_range(source=source, mode=mode)
+        date_range = {
+            &#34;start&#34;: (timestamp - timedelta(minutes=1)).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
+            &#34;end&#34;: timestamp.strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
+        }
+        print(
+            f&#34;Will request data between {date_range[&#39;start&#39;]} and {date_range[&#39;end&#39;]}&#34;
+        )
         url += f&#34;&amp;dataInicial={date_range[&#39;start&#39;]}&#34;
         url += f&#34;&amp;dataFinal={date_range[&#39;end&#39;]}&#34;
     try:
         data = requests.get(
             url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
         )
-    except requests.exceptions.ReadTimeout as err:
-        error = err
     except Exception as err:
-        error = f&#34;Unknown exception while trying to fetch data from {url}: {err}&#34;
+        log(f&#34;Request failed with error:\n{err}&#34;)
+        return {&#34;data&#34;: data, &#34;timestamp&#34;: timestamp.isoformat(), &#34;error&#34;: err}
 
-    if data is None:
-        if error is None:
-            error = &#34;Data from API is none!&#34;
-
-    if error:
-        return {&#34;data&#34;: data, &#34;timestamp&#34;: timestamp.isoformat(), &#34;error&#34;: error}
     if data.ok:
+        if isinstance(data.json(), dict) and &#34;DescricaoErro&#34; in data.json().keys():
+            log(f&#34;Data is {data.json()}\n With type: {type(data.json())}&#34;)
+            error = data.json()[&#34;DescricaoErro&#34;]
         return {
             &#34;data&#34;: data,
             &#34;error&#34;: error,
             &#34;timestamp&#34;: timestamp.isoformat(),
         }
-    # else
+
     error = f&#34;Requests failed with error {data.status_code}&#34;
     return {&#34;error&#34;: error, &#34;timestamp&#34;: timestamp.isoformat(), &#34;data&#34;: data}</code></pre>
 </details>
@@ -1457,52 +1445,6 @@ def set_last_run_timestamp(
     return True</code></pre>
 </details>
 </dd>
-<dt id="pipelines.rj_smtr.tasks.set_request_last_run_timestamp"><code class="name flex">
-<span>def <span class="ident">set_request_last_run_timestamp</span></span>(<span>source: str, timestamp: str, mode: str = 'prod')</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Set the timestamp on Redis for the last time data was captured</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>source</code></strong> :&ensp;<code>str</code></dt>
-<dd>Source API for the request</dd>
-<dt><strong><code>timestamp</code></strong> :&ensp;<code>str</code></dt>
-<dd>Timestamp value to set on Redis</dd>
-<dt><strong><code>mode</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>Whether to run in prod or dev. Defaults to "prod".</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>bool</code></dt>
-<dd>Whether timestamp was successfully set</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task
-def set_request_last_run_timestamp(source: str, timestamp: str, mode: str = &#34;prod&#34;):
-    &#34;&#34;&#34;Set the timestamp on Redis for the last time data was captured
-
-    Args:
-        source (str): Source API for the request
-        timestamp (str): Timestamp value to set on Redis
-        mode (str, optional): Whether to run in prod or dev. Defaults to &#34;prod&#34;.
-
-    Returns:
-        bool: Whether timestamp was successfully set
-    &#34;&#34;&#34;
-    redis_client = get_redis_client()
-    key = source
-    if mode == &#34;dev&#34;:
-        key = f&#34;{mode}.{key}&#34;
-    timestamp = timestamp.replace(&#34;T&#34;, &#34;+&#34;)
-    value = {&#34;last_run_timestamp&#34;: timestamp}
-    log(f&#34;Setting {key} to {value} on Redis&#34;)
-    redis_client.set(key, value)
-    return True</code></pre>
-</details>
-</dd>
 <dt id="pipelines.rj_smtr.tasks.upload_logs_to_bq"><code class="name flex">
 <span>def <span class="ident">upload_logs_to_bq</span></span>(<span>dataset_id, parent_table_id, timestamp, error)</span>
 </code></dt>
@@ -1642,7 +1584,6 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.tasks.save_raw_local" href="#pipelines.rj_smtr.tasks.save_raw_local">save_raw_local</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.save_treated_local" href="#pipelines.rj_smtr.tasks.save_treated_local">save_treated_local</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.set_last_run_timestamp" href="#pipelines.rj_smtr.tasks.set_last_run_timestamp">set_last_run_timestamp</a></code></li>
-<li><code><a title="pipelines.rj_smtr.tasks.set_request_last_run_timestamp" href="#pipelines.rj_smtr.tasks.set_request_last_run_timestamp">set_request_last_run_timestamp</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.upload_logs_to_bq" href="#pipelines.rj_smtr.tasks.upload_logs_to_bq">upload_logs_to_bq</a></code></li>
 </ul>
 </li>
