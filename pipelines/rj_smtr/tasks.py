@@ -25,7 +25,6 @@ from pipelines.rj_smtr.utils import (
     bq_project,
     get_table_min_max_value,
     get_last_run_timestamp,
-    get_request_date_range,
     parse_dbt_logs,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
@@ -299,7 +298,11 @@ def save_treated_local(dataframe, file_path, mode="staging"):
 
 
 @task
-def get_raw(url, headers=None, source: str = None, mode: str = "prod"):
+def get_raw(
+    url,
+    headers=None,
+    source: str = None,
+):
     """Request data from a url API
 
     Args:
@@ -571,31 +574,6 @@ def set_last_run_timestamp(
     value = {
         "last_run_timestamp": timestamp,
     }
-    redis_client.set(key, value)
-    return True
-
-
-@task
-def set_request_last_run_timestamp(source: str, timestamp: str, mode: str = "prod"):
-    """Set the timestamp on Redis for the last time data was captured
-
-    Args:
-        source (str): Source API for the request
-        timestamp (str): Timestamp value to set on Redis
-        mode (str, optional): Whether to run in prod or dev. Defaults to "prod".
-
-    Returns:
-        bool: Whether timestamp was successfully set
-    """
-    redis_client = get_redis_client()
-    key = source
-    if mode == "dev":
-        key = f"{mode}.{key}"
-    # format timestamp to ignore fractions of seconds
-    timestamp = datetime.fromisoformat(timestamp)
-    timestamp = timestamp.strftime("%Y-%m-%d+%H:%M:%S%z")
-    value = {"last_run_timestamp": timestamp}
-    log(f"Setting {key} to {value} on Redis")
     redis_client.set(key, value)
     return True
 

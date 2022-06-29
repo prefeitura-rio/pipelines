@@ -33,7 +33,6 @@ from pipelines.rj_smtr.tasks import (
     save_raw_local,
     save_treated_local,
     set_last_run_timestamp,
-    set_request_last_run_timestamp,
     upload_logs_to_bq,
     bq_upload,
 )
@@ -184,7 +183,6 @@ with Flow(
     secret_path = Parameter(
         "secret_path", default=constants.GPS_SPPO_API_SECRET_PATH_V2.value
     )
-    mode = Parameter("mode", default="dev")
     version = Parameter("version", default=2)
 
     # Run tasks #
@@ -197,7 +195,7 @@ with Flow(
         partitions=file_dict["partitions"],
     )
 
-    status_dict = get_raw(url=url, source=secret_path, mode=mode)
+    status_dict = get_raw(url=url, source=secret_path)
 
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(

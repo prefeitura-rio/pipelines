@@ -3,13 +3,11 @@
 General purpose functions for rj_smtr
 """
 
-from datetime import datetime, timedelta
 from pathlib import Path
 
 import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
-import pendulum
 
 from pipelines.utils.utils import log
 from pipelines.utils.utils import (
@@ -165,42 +163,6 @@ def get_last_run_timestamp(dataset_id: str, table_id: str, mode: str = "prod"):
     except TypeError:
         return None
     return last_run_timestamp
-
-
-def get_request_date_range(source: str, mode: str = "prod"):
-    """Get date range for requesting SPPO data
-
-    Args:
-        source (str): Souce API for the request
-        mode (str, optional): Whethter running in prod or dev. Defaults to "prod".
-
-    Returns:
-        date_range: dict containing formatted strings for the request
-    """
-    redis_client = get_redis_client()
-    key = source
-    if mode == "dev":
-        key = f"{mode}.{source}"
-    runs = redis_client.get(key)
-    now_timestamp = pendulum.now(constants.TIMEZONE.value)
-    try:
-        last_run_timestamp = datetime.strptime(
-            runs["last_run_timestamp"], "%Y-%m-%d+%H:%M:%S%z"
-        )
-    except KeyError:
-        last_run_timestamp = now_timestamp - timedelta(minutes=1)
-    except TypeError:
-        last_run_timestamp = now_timestamp - timedelta(minutes=1)
-    except ValueError:
-        last_run_timestamp = now_timestamp - timedelta(minutes=1)
-
-    if now_timestamp - last_run_timestamp > timedelta(hours=1):
-        now_timestamp = last_run_timestamp + timedelta(hours=1)
-    date_range = {
-        "start": last_run_timestamp.strftime("%Y-%m-%d+%H:%M:%S"),
-        "end": now_timestamp.strftime("%Y-%m-%d+%H:%M:%S"),
-    }
-    return date_range
 
 
 def map_dict_keys(data: dict, mapping: dict) -> None:
