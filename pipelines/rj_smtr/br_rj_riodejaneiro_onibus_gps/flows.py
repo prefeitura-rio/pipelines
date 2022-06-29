@@ -228,11 +228,7 @@ with Flow(
         raw_filepath=raw_filepath,
         partitions=file_dict["partitions"],
     )
-    set_last_run = set_request_last_run_timestamp(  # pylint: disable=C0103
-        source=secret_path, mode=mode, timestamp=status_dict["timestamp"]
-    )
     captura_sppo_v2.set_dependencies(task=status_dict, upstream_tasks=[filepath])
-    captura_sppo_v2.set_dependencies(task=set_last_run, upstream_tasks=[UPLOAD_CSV])
 
 materialize_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 materialize_sppo.run_config = KubernetesRun(

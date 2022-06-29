@@ -324,10 +324,16 @@ def get_raw(url, headers=None, source: str = None, mode: str = "prod"):
         access = get_vault_secret(source)["data"]
         key = list(access)[0]
         url = f"{url}{key}={access[key]}"
-        date_range = get_request_date_range(source=source, mode=mode)
-        log(f"Will request data between {date_range['start']} and {date_range['end']}")
-        url += f"&dataInicial={date_range['start'].replace('+', ' ')}"
-        url += f"&dataFinal={date_range['end'].replace('+', ' ')}"
+        get_request_date_range
+        date_range = {
+            "start": (timestamp - timedelta(minutes=1)).strftime("%Y-%m-%d+%H:%M:%S"),
+            "end": timestamp.strftime("%Y-%m-%d+%H:%M:%S"),
+        }
+        print(
+            f"Will request data between {date_range['start']} and {date_range['end']}"
+        )
+        url += f"&dataInicial={date_range['start']}"
+        url += f"&dataFinal={date_range['end']}"
     try:
         data = requests.get(
             url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
