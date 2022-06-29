@@ -324,7 +324,6 @@ def get_raw(url, headers=None, source: str = None, mode: str = "prod"):
         access = get_vault_secret(source)["data"]
         key = list(access)[0]
         url = f"{url}{key}={access[key]}"
-        get_request_date_range
         date_range = {
             "start": (timestamp - timedelta(minutes=1)).strftime("%Y-%m-%d+%H:%M:%S"),
             "end": timestamp.strftime("%Y-%m-%d+%H:%M:%S"),
