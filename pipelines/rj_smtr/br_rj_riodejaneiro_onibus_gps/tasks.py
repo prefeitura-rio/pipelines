@@ -5,7 +5,6 @@ Tasks for br_rj_riodejaneiro_onibus_gps
 
 import traceback
 import pandas as pd
-import pendulum
 from prefect import task
 
 # EMD Imports #
@@ -51,72 +50,43 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(status_dict: dict, version: int 
     log(f"Before converting, datahora is: \n{df['datahora']}")
 
     # Remove timezone and force it to be config timezone
-    df["datahora"] = (
-        df["datahora"]
-        .astype(float)
-        .apply(
-            lambda ms: pd.to_datetime(
-                pendulum.from_timestamp(ms / 1000.0)
-                .replace(tzinfo=None)
-                .set(tz="UTC")
-                .isoformat()
-            )
+
+    if version == 1:
+        timestamp_cols = ["datahora"]
+    elif version == 2:
+        timestamp_cols = ["datahora", "datahoraenvio"]
+
+    for col in timestamp_cols:
+        print(f"Before converting, datahora is: \n{df[col].head()}")  # log
+        # Remove timezone and force it to be config timezone
+        df[col] = (
+            pd.to_datetime(df[col].astype(float), unit="ms")
+            .dt.tz_localize(tz="UTC")
+            .dt.tz_convert(timezone)
         )
-    )
-    log(f"After converting the timezone, datahora is: \n{df['datahora']}")
-    if version == 2:
-        df["datahoraenvio"] = (
-            df["datahoraenvio"]
-            .astype(float)
-            .apply(
-                lambda ms: pd.to_datetime(
-                    pendulum.from_timestamp(ms / 1000.0)
-                    .replace(tzinfo=None)
-                    .set(tz="UTC")
-                    .isoformat()
-                )
-            )
-        )
-        log(f"After converting the timezone, datahoraenvio is: \n{df['datahoraenvio']}")
+        log(f"After converting the timezone, datahora is: \n{df[col].head()}")
 
     # Filter data for 0 <= time diff <= 1min
     try:
-        datahora_cols = [
-            "datahora",
-            "datahoraenvio",
-            "timestamp_captura",
-        ]
-        # datahora_col = "datahora"
-        df_treated = df
-        for col in datahora_cols:
-            if col in df_treated.columns.to_list():
-                try:
-                    df_treated[col] = df_treated[col].apply(
-                        lambda x: x.tz_convert(timezone)
-                    )
-                    log(f"Converted timezone on column {col}")
-                except TypeError:
-                    df_treated[col] = df_treated[col].apply(
-                        lambda x: x.tz_localize(timezone)
-                    )
-                    log(f"Localized timezone on column {col}")
-
         # filters
-        df_treated = sppo_filters(frame=df_treated, version=version)
         log(f"Shape antes da filtragem: {df.shape}")
-        log(f"Shape após a filtragem: {df_treated.shape}")
-        if df_treated.shape[0] == 0:
+        df = sppo_filters(frame=df, version=version)  # pylint: disable=C0103
+        log(f"Shape após a filtragem: {df.shape}")
+        if df.shape[0] == 0:
             error = ValueError("After filtering, the dataframe is empty!")
             log_critical(f"@here\nFailed to filter SPPO data: \n{error}")
         if version == 2:
-            df = df_treated.drop(  # pylint: disable=C0103
+            df = df.drop(  # pylint: disable=C0103
                 columns=["datahoraenvio", "datahoraservidor"]
             )
-        else:
-            df = df_treated  # pylint: disable=C0103
     except Exception:  # pylint: disable = W0703
         err = traceback.format_exc()
         log_critical(f"@here\nFailed to filter SPPO data: \n{err}")
     # log_critical(f"@here\n Got SPPO data at {timestamp} sucessfully")
 
-    return {"df": df, "error": error}
+    return {
+        "df": df.drop_duplicates(
+            ["ordem", "latitude", "longitude", "datahora", "timestamp_captura"]
+        ),
+        "error": error,
+    }

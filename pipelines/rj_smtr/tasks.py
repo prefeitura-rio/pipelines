@@ -25,7 +25,6 @@ from pipelines.rj_smtr.utils import (
     bq_project,
     get_table_min_max_value,
     get_last_run_timestamp,
-    get_request_date_range,
     parse_dbt_logs,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
@@ -299,7 +298,11 @@ def save_treated_local(dataframe, file_path, mode="staging"):
 
 
 @task
-def get_raw(url, headers=None, source: str = None, mode: str = "prod"):
+def get_raw(
+    url,
+    headers=None,
+    source: str = None,
+):
     """Request data from a url API
 
     Args:
@@ -324,31 +327,33 @@ def get_raw(url, headers=None, source: str = None, mode: str = "prod"):
         access = get_vault_secret(source)["data"]
         key = list(access)[0]
         url = f"{url}{key}={access[key]}"
-        date_range = get_request_date_range(source=source, mode=mode)
+        date_range = {
+            "start": (timestamp - timedelta(minutes=1)).strftime("%Y-%m-%d+%H:%M:%S"),
+            "end": timestamp.strftime("%Y-%m-%d+%H:%M:%S"),
+        }
+        print(
+            f"Will request data between {date_range['start']} and {date_range['end']}"
+        )
         url += f"&dataInicial={date_range['start']}"
         url += f"&dataFinal={date_range['end']}"
     try:
         data = requests.get(
             url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
         )
-    except requests.exceptions.ReadTimeout as err:
-        error = err
     except Exception as err:
-        error = f"Unknown exception while trying to fetch data from {url}: {err}"
+        log(f"Request failed with error:\n{err}")
+        return {"data": data, "timestamp": timestamp.isoformat(), "error": err}
 
-    if data is None:
-        if error is None:
-            error = "Data from API is none!"
-
-    if error:
-        return {"data": data, "timestamp": timestamp.isoformat(), "error": error}
     if data.ok:
+        if isinstance(data.json(), dict) and "DescricaoErro" in data.json().keys():
+            log(f"Data is {data.json()}\n With type: {type(data.json())}")
+            error = data.json()["DescricaoErro"]
         return {
             "data": data,
             "error": error,
             "timestamp": timestamp.isoformat(),
         }
-    # else
+
     error = f"Requests failed with error {data.status_code}"
     return {"error": error, "timestamp": timestamp.isoformat(), "data": data}
 
@@ -569,29 +574,6 @@ def set_last_run_timestamp(
     value = {
         "last_run_timestamp": timestamp,
     }
-    redis_client.set(key, value)
-    return True
-
-
-@task
-def set_request_last_run_timestamp(source: str, timestamp: str, mode: str = "prod"):
-    """Set the timestamp on Redis for the last time data was captured
-
-    Args:
-        source (str): Source API for the request
-        timestamp (str): Timestamp value to set on Redis
-        mode (str, optional): Whether to run in prod or dev. Defaults to "prod".
-
-    Returns:
-        bool: Whether timestamp was successfully set
-    """
-    redis_client = get_redis_client()
-    key = source
-    if mode == "dev":
-        key = f"{mode}.{key}"
-    timestamp = timestamp.replace("T", "+")
-    value = {"last_run_timestamp": timestamp}
-    log(f"Setting {key} to {value} on Redis")
     redis_client.set(key, value)
     return True
 
