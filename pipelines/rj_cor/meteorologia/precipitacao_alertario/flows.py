@@ -57,17 +57,24 @@ with Flow(
     )
 
     filename, current_time = download()
-    dados = tratar_dados(filename=filename)
-    path = salvar_dados(dados=dados, current_time=current_time)
-
-    # Create table in BigQuery
-    UPLOAD_TABLE = create_table_and_upload_to_gcs(
-        data_path=path,
-        dataset_id=DATASET_ID,
-        table_id=TABLE_ID,
-        dump_mode=DUMP_MODE,
-        wait=path,
+    dados, empty_data = tratar_dados(
+        filename=filename, dataset_id=DATASET_ID, table_id=TABLE_ID
     )
+
+    # If dataframe is empty stop flow
+    with case(empty_data, True):
+        MATERIALIZE_AFTER_DUMP = False
+
+    with case(empty_data, False):
+        path = salvar_dados(dados=dados, current_time=current_time)
+        # Create table in BigQuery
+        UPLOAD_TABLE = create_table_and_upload_to_gcs(
+            data_path=path,
+            dataset_id=DATASET_ID,
+            table_id=TABLE_ID,
+            dump_mode=DUMP_MODE,
+            wait=path,
+        )
 
     # Trigger DBT flow run
     with case(MATERIALIZE_AFTER_DUMP, True):
