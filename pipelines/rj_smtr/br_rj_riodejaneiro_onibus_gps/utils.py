@@ -33,26 +33,25 @@ import pandas as pd
 from pipelines.rj_smtr.constants import constants
 
 
-def sppo_filters(frame: pd.DataFrame, version: int = 1):
+def sppo_filters(df: pd.DataFrame, version: int = 1):
     """Apply filters to dataframe
 
     Args:
-        frame (pd.DataFrame): Containing data captured from sppo
+        df (pd.DataFrame): Containing data captured from sppo
         api
 
     Returns:
-        frame: Filtered input
+        df: Filtered input
     """
     if version == 1:
-        same_minute_mask = (frame["timestamp_captura"] - frame["datahora"]).apply(
-            lambda x: timedelta(seconds=0) <= x <= timedelta(minutes=1)
-        )
-        return frame[same_minute_mask]
-    if version == 2:
-        sent_received_mask = (frame["datahoraenvio"] - frame["datahora"]).apply(
-            lambda x: timedelta(seconds=0)
-            <= x
-            <= timedelta(minutes=constants.GPS_SPPO_CAPTURE_DELAY.value)
-        )
-        return frame[sent_received_mask]
-    return frame
+        filter_col = "timestamp_captura"
+        time_delay = constants.GPS_SPPO_CAPTURE_DELAY_V1.value
+    elif version == 2:
+        filter_col = "datahoraenvio"
+        time_delay = constants.GPS_SPPO_CAPTURE_DELAY_V2.value
+
+    mask = (df[filter_col] - df["datahora"]).apply(
+        lambda x: timedelta(seconds=0) <= x <= timedelta(minutes=time_delay)
+    )
+
+    return df[mask]
