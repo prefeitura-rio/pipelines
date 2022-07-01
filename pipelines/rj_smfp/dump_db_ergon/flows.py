@@ -18,7 +18,7 @@ from pipelines.utils.utils import set_default_parameters
 
 
 dump_ergon_flow = deepcopy(dump_sql_flow)
-dump_ergon_flow.name = "EMD: ergon - Ingerir tabelas de banco SQL"
+dump_ergon_flow.name = "SMFP: ergon - Ingerir tabelas de banco SQL"
 dump_ergon_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_ergon_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
