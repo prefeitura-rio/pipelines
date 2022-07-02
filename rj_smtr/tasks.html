@@ -357,8 +357,8 @@ def get_raw(
         key = list(access)[0]
         url = f&#34;{url}{key}={access[key]}&#34;
         date_range = {
-            &#34;start&#34;: (timestamp - timedelta(minutes=1)).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
-            &#34;end&#34;: timestamp.strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
+            &#34;start&#34;: (timestamp - timedelta(minutes=6)).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
+            &#34;end&#34;: (timestamp - timedelta(minutes=5)).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
         }
         print(
             f&#34;Will request data between {date_range[&#39;start&#39;]} and {date_range[&#39;end&#39;]}&#34;
@@ -1172,8 +1172,8 @@ def get_raw(
         key = list(access)[0]
         url = f&#34;{url}{key}={access[key]}&#34;
         date_range = {
-            &#34;start&#34;: (timestamp - timedelta(minutes=1)).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
-            &#34;end&#34;: timestamp.strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
+            &#34;start&#34;: (timestamp - timedelta(minutes=6)).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
+            &#34;end&#34;: (timestamp - timedelta(minutes=5)).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
         }
         print(
             f&#34;Will request data between {date_range[&#39;start&#39;]} and {date_range[&#39;end&#39;]}&#34;

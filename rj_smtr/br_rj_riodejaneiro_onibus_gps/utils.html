@@ -73,18 +73,17 @@ def sppo_filters(frame: pd.DataFrame, version: int = 1):
         frame: Filtered input
     &#34;&#34;&#34;
     if version == 1:
-        same_minute_mask = (frame[&#34;timestamp_captura&#34;] - frame[&#34;datahora&#34;]).apply(
-            lambda x: timedelta(seconds=0) &lt;= x &lt;= timedelta(minutes=1)
-        )
-        return frame[same_minute_mask]
-    if version == 2:
-        sent_received_mask = (frame[&#34;datahoraenvio&#34;] - frame[&#34;datahora&#34;]).apply(
-            lambda x: timedelta(seconds=0)
-            &lt;= x
-            &lt;= timedelta(minutes=constants.GPS_SPPO_CAPTURE_DELAY.value)
-        )
-        return frame[sent_received_mask]
-    return frame</code></pre>
+        filter_col = &#34;timestamp_captura&#34;
+        time_delay = constants.GPS_SPPO_CAPTURE_DELAY_V1.value
+    elif version == 2:
+        filter_col = &#34;datahoraenvio&#34;
+        time_delay = constants.GPS_SPPO_CAPTURE_DELAY_V2.value
+
+    mask = (frame[filter_col] - frame[&#34;datahora&#34;]).apply(
+        lambda x: timedelta(seconds=0) &lt;= x &lt;= timedelta(minutes=time_delay)
+    )
+
+    return frame[mask]</code></pre>
 </details>
 </section>
 <section>
@@ -125,18 +124,17 @@ def sppo_filters(frame: pd.DataFrame, version: int = 1):
         frame: Filtered input
     &#34;&#34;&#34;
     if version == 1:
-        same_minute_mask = (frame[&#34;timestamp_captura&#34;] - frame[&#34;datahora&#34;]).apply(
-            lambda x: timedelta(seconds=0) &lt;= x &lt;= timedelta(minutes=1)
-        )
-        return frame[same_minute_mask]
-    if version == 2:
-        sent_received_mask = (frame[&#34;datahoraenvio&#34;] - frame[&#34;datahora&#34;]).apply(
-            lambda x: timedelta(seconds=0)
-            &lt;= x
-            &lt;= timedelta(minutes=constants.GPS_SPPO_CAPTURE_DELAY.value)
-        )
-        return frame[sent_received_mask]
-    return frame</code></pre>
+        filter_col = &#34;timestamp_captura&#34;
+        time_delay = constants.GPS_SPPO_CAPTURE_DELAY_V1.value
+    elif version == 2:
+        filter_col = &#34;datahoraenvio&#34;
+        time_delay = constants.GPS_SPPO_CAPTURE_DELAY_V2.value
+
+    mask = (frame[filter_col] - frame[&#34;datahora&#34;]).apply(
+        lambda x: timedelta(seconds=0) &lt;= x &lt;= timedelta(minutes=time_delay)
+    )
+
+    return frame[mask]</code></pre>
 </details>
 </dd>
 </dl>
