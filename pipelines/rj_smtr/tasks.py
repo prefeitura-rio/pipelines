@@ -328,8 +328,8 @@ def get_raw(
         key = list(access)[0]
         url = f"{url}{key}={access[key]}"
         date_range = {
-            "start": (timestamp - timedelta(minutes=1)).strftime("%Y-%m-%d+%H:%M:%S"),
-            "end": timestamp.strftime("%Y-%m-%d+%H:%M:%S"),
+            "start": (timestamp - timedelta(minutes=6)).strftime("%Y-%m-%d+%H:%M:%S"),
+            "end": (timestamp - timedelta(minutes=5)).strftime("%Y-%m-%d+%H:%M:%S"),
         }
         print(
             f"Will request data between {date_range['start']} and {date_range['end']}"
