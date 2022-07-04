@@ -579,6 +579,22 @@ def set_last_run_timestamp(
 
 
 @task
+def delay_now_time(timestamp: str, delay_minutes=6):
+    """Return timestamp string delayed by <delay_minutes>
+
+    Args:
+        timestamp (str): Isoformat timestamp string
+        delay_minutes (int, optional): Minutes to delay timestamp by Defaults to 6.
+
+    Returns:
+        str : timestamp string formatted as "%Y-%m-%dT%H-%M-%S"
+    """
+    ts_obj = datetime.fromisoformat(timestamp)
+    ts_obj = ts_obj - timedelta(minutes=delay_minutes)
+    return ts_obj.strftime("%Y-%m-%dT%H-%M-%S")
+
+
+@task
 def fetch_dataset_sha(dataset_id: str):
     """Fetches the SHA of a branch from Github"""
     url = "https://api.github.com/repos/prefeitura-rio/queries-rj-smtr"
