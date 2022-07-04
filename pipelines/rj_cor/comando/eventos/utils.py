@@ -17,7 +17,7 @@ def get_token():
     return requests.post(host, json=payload).text
 
 
-def get_url(url, parameters={}):
+def get_url(url, parameters={}):  # pylint: disable=W0102
     """Make request to comando's API"""
     token = get_token()
     headers = {"Authorization": token}
