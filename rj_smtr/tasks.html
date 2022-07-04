@@ -608,6 +608,22 @@ def set_last_run_timestamp(
 
 
 @task
+def delay_now_time(timestamp: str, delay_minutes=6):
+    &#34;&#34;&#34;Return timestamp string delayed by &lt;delay_minutes&gt;
+
+    Args:
+        timestamp (str): Isoformat timestamp string
+        delay_minutes (int, optional): Minutes to delay timestamp by Defaults to 6.
+
+    Returns:
+        str : timestamp string formatted as &#34;%Y-%m-%dT%H-%M-%S&#34;
+    &#34;&#34;&#34;
+    ts_obj = datetime.fromisoformat(timestamp)
+    ts_obj = ts_obj - timedelta(minutes=delay_minutes)
+    return ts_obj.strftime(&#34;%Y-%m-%dT%H-%M-%S&#34;)
+
+
+@task
 def fetch_dataset_sha(dataset_id: str):
     &#34;&#34;&#34;Fetches the SHA of a branch from Github&#34;&#34;&#34;
     url = &#34;https://api.github.com/repos/prefeitura-rio/queries-rj-smtr&#34;
@@ -960,6 +976,43 @@ def create_local_partition_path(dataset_id, table_id, filename, partitions):
     log(f&#34;Creating file path: {file_path}&#34;)
 
     return file_path</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.tasks.delay_now_time"><code class="name flex">
+<span>def <span class="ident">delay_now_time</span></span>(<span>timestamp: str, delay_minutes=6)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return timestamp string delayed by <delay_minutes></p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>timestamp</code></strong> :&ensp;<code>str</code></dt>
+<dd>Isoformat timestamp string</dd>
+<dt><strong><code>delay_minutes</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Minutes to delay timestamp by Defaults to 6.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str </code></dt>
+<dd>timestamp string formatted as "%Y-%m-%dT%H-%M-%S"</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def delay_now_time(timestamp: str, delay_minutes=6):
+    &#34;&#34;&#34;Return timestamp string delayed by &lt;delay_minutes&gt;
+
+    Args:
+        timestamp (str): Isoformat timestamp string
+        delay_minutes (int, optional): Minutes to delay timestamp by Defaults to 6.
+
+    Returns:
+        str : timestamp string formatted as &#34;%Y-%m-%dT%H-%M-%S&#34;
+    &#34;&#34;&#34;
+    ts_obj = datetime.fromisoformat(timestamp)
+    ts_obj = ts_obj - timedelta(minutes=delay_minutes)
+    return ts_obj.strftime(&#34;%Y-%m-%dT%H-%M-%S&#34;)</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.fetch_dataset_sha"><code class="name flex">
@@ -1576,6 +1629,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.tasks.build_incremental_model" href="#pipelines.rj_smtr.tasks.build_incremental_model">build_incremental_model</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.create_current_date_hour_partition" href="#pipelines.rj_smtr.tasks.create_current_date_hour_partition">create_current_date_hour_partition</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.create_local_partition_path" href="#pipelines.rj_smtr.tasks.create_local_partition_path">create_local_partition_path</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.delay_now_time" href="#pipelines.rj_smtr.tasks.delay_now_time">delay_now_time</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.fetch_dataset_sha" href="#pipelines.rj_smtr.tasks.fetch_dataset_sha">fetch_dataset_sha</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_local_dbt_client" href="#pipelines.rj_smtr.tasks.get_local_dbt_client">get_local_dbt_client</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_materialization_date_range" href="#pipelines.rj_smtr.tasks.get_materialization_date_range">get_materialization_date_range</a></code></li>
