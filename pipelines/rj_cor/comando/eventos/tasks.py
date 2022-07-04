@@ -6,7 +6,6 @@ Tasks for comando
 import os
 from pathlib import Path
 from typing import Union, Tuple
-import requests
 
 import pandas as pd
 import pendulum
