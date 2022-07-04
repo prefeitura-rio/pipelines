@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=W0102, invalid-name
 """
 Tasks for comando
 """
