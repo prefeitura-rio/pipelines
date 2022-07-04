@@ -19,13 +19,12 @@ from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
 from pipelines.rj_smtr.constants import constants
 
 from pipelines.rj_smtr.schedules import (
-    every_minute,
+    every_minute_dev,
     every_hour,
 )
 from pipelines.rj_smtr.tasks import (
     create_current_date_hour_partition,
     create_local_partition_path,
-    delay_now_time,
     fetch_dataset_sha,
     get_materialization_date_range,
     # get_local_dbt_client,
@@ -115,6 +114,64 @@ with Flow(
 with Flow(
     "SMTR: GPS SPPO - Captura",
     code_owners=["caio", "fernanda"],
+) as captura_sppo:
+
+    # Get default parameters #
+    dataset_id = Parameter(
+        "dataset_id", default=constants.GPS_SPPO_RAW_DATASET_ID.value
+    )
+    table_id = Parameter("table_id", default=constants.GPS_SPPO_RAW_TABLE_ID.value)
+    url = Parameter("url", default=constants.GPS_SPPO_API_BASE_URL.value)
+    secret_path = Parameter(
+        "secret_path", default=constants.GPS_SPPO_API_SECRET_PATH.value
+    )
+
+    # Rename flow run
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix="SMTR: GPS SPPO - Captura - ", now_time=get_now_time()
+    )
+
+    # Run tasks #
+    file_dict = create_current_date_hour_partition()
+
+    filepath = create_local_partition_path(
+        dataset_id=dataset_id,
+        table_id=table_id,
+        filename=file_dict["filename"],
+        partitions=file_dict["partitions"],
+    )
+
+    status_dict = get_raw(url=url, source=secret_path)
+
+    raw_filepath = save_raw_local(data=status_dict["data"], file_path=filepath)
+
+    treated_status = pre_treatment_br_rj_riodejaneiro_onibus_gps(
+        status_dict=status_dict
+    )
+
+    upload_logs_to_bq(
+        dataset_id=dataset_id,
+        parent_table_id=table_id,
+        timestamp=status_dict["timestamp"],
+        error=status_dict["error"],
+    )
+
+    treated_filepath = save_treated_local(
+        dataframe=treated_status["df"], file_path=filepath
+    )
+
+    bq_upload(
+        dataset_id=dataset_id,
+        table_id=table_id,
+        filepath=treated_filepath,
+        raw_filepath=raw_filepath,
+        partitions=file_dict["partitions"],
+    )
+    captura_sppo.set_dependencies(task=file_dict, upstream_tasks=[rename_flow_run])
+
+with Flow(
+    "SMTR: GPS SPPO - Captura",
+    code_owners=["caio", "fernanda"],
 ) as captura_sppo_v2:
 
     # Get default parameters #
@@ -142,7 +199,7 @@ with Flow(
 
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="GPS SPPO: ", now_time=delay_now_time(status_dict["timestamp"])
+        prefix="GPS SPPO: ", now_time=status_dict["timestamp"]
     )
 
     raw_filepath = save_raw_local(data=status_dict["data"], file_path=filepath)
@@ -178,9 +235,16 @@ materialize_sppo.run_config = KubernetesRun(
 )
 materialize_sppo.schedule = every_hour
 
-captura_sppo_v2.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-captura_sppo_v2.run_config = KubernetesRun(
+captura_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+captura_sppo.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-captura_sppo_v2.schedule = every_minute
+# captura_sppo.schedule = every_minute
+
+captura_sppo_v2.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+captura_sppo_v2.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+)
+captura_sppo_v2.schedule = every_minute_dev

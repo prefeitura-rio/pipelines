@@ -328,8 +328,8 @@ def get_raw(
         key = list(access)[0]
         url = f"{url}{key}={access[key]}"
         date_range = {
-            "start": (timestamp - timedelta(minutes=1)).strftime("%Y-%m-%d+%H:%M:%S"),
-            "end": timestamp.strftime("%Y-%m-%d+%H:%M:%S"),
+            "start": (timestamp - timedelta(minutes=6)).strftime("%Y-%m-%d+%H:%M:%S"),
+            "end": (timestamp - timedelta(minutes=5)).strftime("%Y-%m-%d+%H:%M:%S"),
         }
         print(
             f"Will request data between {date_range['start']} and {date_range['end']}"
@@ -576,22 +576,6 @@ def set_last_run_timestamp(
     }
     redis_client.set(key, value)
     return True
-
-
-@task
-def delay_now_time(timestamp: str, delay_minutes=6):
-    """Return timestamp string delayed by <delay_minutes>
-
-    Args:
-        timestamp (str): Isoformat timestamp string
-        delay_minutes (int, optional): Minutes to delay timestamp by Defaults to 6.
-
-    Returns:
-        str : timestamp string formatted as "%Y-%m-%dT%H-%M-%S"
-    """
-    ts_obj = datetime.fromisoformat(timestamp)
-    ts_obj = ts_obj - timedelta(minutes=delay_minutes)
-    return ts_obj.strftime("%Y-%m-%dT%H-%M-%S")
 
 
 @task
