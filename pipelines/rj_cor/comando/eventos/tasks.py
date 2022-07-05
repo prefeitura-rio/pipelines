@@ -90,6 +90,37 @@ def download(date_interval) -> Tuple[pd.DataFrame, str]:
     eventos.name = "eventos"
     atividades_evento.name = "atividades_evento"
 
+    # Fixa colunas e ordem
+    eventos = [
+        [
+            "pop_id",
+            "bairro",
+            "latitude",
+            "inicio",
+            "pop_titulo",
+            "fim",
+            "prazo",
+            "descricao",
+            "informe_id",
+            "gravidade",
+            "evento_id",
+            "longitude",
+            "status",
+        ]
+    ]
+    atividades_evento = [
+        [
+            "orgao",
+            "chegada",
+            "inicio",
+            "nome",
+            "fim",
+            "descricao",
+            "status",
+            "evento_id",
+        ]
+    ]
+
     return eventos, atividades_evento
 
 
