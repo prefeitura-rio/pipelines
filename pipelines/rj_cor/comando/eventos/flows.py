@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0103
 """
-Flows for precipitacao_alertario
+Flows for comando
 """
+
 from datetime import timedelta
 
 from prefect import case, Parameter
@@ -10,89 +12,90 @@ from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 
 from pipelines.constants import constants
-from pipelines.utils.constants import constants as utils_constants
-from pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks import (
+from pipelines.rj_cor.comando.eventos.tasks import (
+    get_and_save_date_redis,
     download,
-    tratar_dados,
     salvar_dados,
 )
-from pipelines.rj_cor.meteorologia.precipitacao_alertario.schedules import (
-    minute_schedule,
+
+from pipelines.rj_cor.comando.eventos.constants import (
+    constants as comando_constants,
 )
+
+# from pipelines.rj_cor.comando.schedules import every_two_weeks
+from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.decorators import Flow
 from pipelines.utils.dump_db.constants import constants as dump_db_constants
 from pipelines.utils.dump_to_gcs.constants import constants as dump_to_gcs_constants
 from pipelines.utils.tasks import (
-    create_table_and_upload_to_gcs,
     get_current_flow_labels,
+    create_table_and_upload_to_gcs,
 )
 
 with Flow(
-    name="COR: Meteorologia - Precipitacao ALERTARIO",
+    "COR: Comando - Eventos e Atividades do Evento",
     code_owners=[
         "paty",
     ],
-) as cor_meteorologia_precipitacao_alertario:
-
-    DATASET_ID = "meio_ambiente_clima"
-    TABLE_ID = "taxa_precipitacao_alertario"
-    DUMP_MODE = "append"
+) as rj_cor_comando_flow:
 
     # Materialization parameters
-    MATERIALIZE_AFTER_DUMP = Parameter(
+    materialize_after_dump = Parameter(
         "materialize_after_dump", default=False, required=False
     )
-    MATERIALIZE_TO_DATARIO = Parameter(
+    materialization_mode = Parameter(
+        "materialization_mode", default="dev", required=False
+    )
+    materialize_to_datario = Parameter(
         "materialize_to_datario", default=False, required=False
     )
-    MATERIALIZATION_MODE = Parameter("mode", default="dev", required=False)
 
     # Dump to GCS after? Should only dump to GCS if materializing to datario
-    DUMP_TO_GCS = Parameter("dump_to_gcs", default=False, required=False)
-
-    MAXIMUM_BYTES_PROCESSED = Parameter(
+    dump_to_gcs = Parameter("dump_to_gcs", default=False, required=False)
+    maximum_bytes_processed = Parameter(
         "maximum_bytes_processed",
         required=False,
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
 
-    filename, current_time = download()
-    dados, empty_data = tratar_dados(
-        filename=filename, dataset_id=DATASET_ID, table_id=TABLE_ID
+    dataset_id = comando_constants.DATASET_ID.value
+    table_id_eventos = comando_constants.TABLE_ID_EVENTOS.value
+    table_id_atividades_eventos = comando_constants.TABLE_ID_ATIVIDADES_EVENTOS.value
+    dump_mode = "append"
+
+    date_interval = get_and_save_date_redis(
+        dataset_id=dataset_id, table_id=table_id_eventos, mode="dev"
+    )
+    eventos, atividade_eventos = download(date_interval)
+    eventos_path = salvar_dados(dfr=eventos, current_time=date_interval["fim"])
+    # atividade_eventos_path = salvar_dados(
+    #    dfr=atividade_eventos,
+    #    current_time=date_interval['fim']
+    # )
+
+    create_table_and_upload_to_gcs(
+        data_path=eventos_path,
+        dataset_id=dataset_id,
+        table_id=table_id_eventos,
+        dump_mode="append",
+        wait=eventos_path,
     )
 
-    # If dataframe is empty stop flow
-    with case(empty_data, True):
-        MATERIALIZE_AFTER_DUMP = False
-
-    with case(empty_data, False):
-        path = salvar_dados(dados=dados, current_time=current_time)
-        # Create table in BigQuery
-        UPLOAD_TABLE = create_table_and_upload_to_gcs(
-            data_path=path,
-            dataset_id=DATASET_ID,
-            table_id=TABLE_ID,
-            dump_mode=DUMP_MODE,
-            wait=path,
-        )
-
-    # Trigger DBT flow run
-    with case(MATERIALIZE_AFTER_DUMP, True):
+    with case(materialize_after_dump, True):
+        # Trigger DBT flow run
         current_flow_labels = get_current_flow_labels()
         materialization_flow = create_flow_run(
             flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
             project_name=constants.PREFECT_DEFAULT_PROJECT.value,
             parameters={
-                "dataset_id": DATASET_ID,
-                "table_id": TABLE_ID,
-                "mode": MATERIALIZATION_MODE,
-                "materialize_to_datario": MATERIALIZE_TO_DATARIO,
+                "dataset_id": dataset_id,
+                "table_id": table_id_eventos,
+                "mode": materialization_mode,
+                "materialize_to_datario": materialize_to_datario,
             },
             labels=current_flow_labels,
-            run_name=f"Materialize {DATASET_ID}.{TABLE_ID}",
+            run_name=f"Materialize {dataset_id}.{table_id_eventos}",
         )
-
-        materialization_flow.set_upstream(UPLOAD_TABLE)
 
         wait_for_materialization = wait_for_flow_run(
             materialization_flow,
@@ -108,21 +111,21 @@ with Flow(
             seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
         )
 
-        with case(DUMP_TO_GCS, True):
+        with case(dump_to_gcs, True):
             # Trigger Dump to GCS flow run with project id as datario
             dump_to_gcs_flow = create_flow_run(
                 flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
                 project_name=constants.PREFECT_DEFAULT_PROJECT.value,
                 parameters={
                     "project_id": "datario",
-                    "dataset_id": DATASET_ID,
-                    "table_id": TABLE_ID,
-                    "maximum_bytes_processed": MAXIMUM_BYTES_PROCESSED,
+                    "dataset_id": dataset_id,
+                    "table_id": table_id_eventos,
+                    "maximum_bytes_processed": maximum_bytes_processed,
                 },
                 labels=[
                     "datario",
                 ],
-                run_name=f"Dump to GCS {DATASET_ID}.{TABLE_ID}",
+                run_name=f"Dump to GCS {dataset_id}.{table_id_eventos}",
             )
             dump_to_gcs_flow.set_upstream(wait_for_materialization)
 
@@ -133,10 +136,6 @@ with Flow(
                 raise_final_state=True,
             )
 
-# para rodar na cloud
-cor_meteorologia_precipitacao_alertario.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-cor_meteorologia_precipitacao_alertario.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value,
-    labels=[constants.RJ_COR_AGENT_LABEL.value],
-)
-cor_meteorologia_precipitacao_alertario.schedule = minute_schedule
+rj_cor_comando_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+rj_cor_comando_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+# flow.schedule = every_two_weeks
