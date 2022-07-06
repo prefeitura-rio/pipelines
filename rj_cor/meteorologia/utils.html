@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_cor.meteorologia.precipitacao_alertario.flows API documentation</title>
-<meta name="description" content="Flows for precipitacao_alertario" />
+<title>pipelines.rj_cor.meteorologia.utils API documentation</title>
+<meta name="description" content="General utilities for meteorologia." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,156 +19,88 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_cor.meteorologia.precipitacao_alertario.flows</code></h1>
+<h1 class="title">Module <code>pipelines.rj_cor.meteorologia.utils</code></h1>
 </header>
 <section id="section-intro">
-<p>Flows for precipitacao_alertario</p>
+<p>General utilities for meteorologia.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
+# pylint: disable=W0106
 &#34;&#34;&#34;
-Flows for precipitacao_alertario
+General utilities for meteorologia.
 &#34;&#34;&#34;
-from datetime import timedelta
+import pandas as pd
 
-from prefect import case, Parameter
-from prefect.run_configs import KubernetesRun
-from prefect.storage import GCS
-from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
-
-from pipelines.constants import constants
-from pipelines.utils.constants import constants as utils_constants
-from pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks import (
-    download,
-    tratar_dados,
-    salvar_dados,
-)
-from pipelines.rj_cor.meteorologia.precipitacao_alertario.schedules import (
-    minute_schedule,
-)
-from pipelines.utils.decorators import Flow
-from pipelines.utils.dump_db.constants import constants as dump_db_constants
-from pipelines.utils.dump_to_gcs.constants import constants as dump_to_gcs_constants
-from pipelines.utils.tasks import (
-    create_table_and_upload_to_gcs,
-    get_current_flow_labels,
+from pipelines.utils.utils import (
+    get_redis_client,
 )
 
-with Flow(
-    name=&#34;COR: Meteorologia - Precipitacao ALERTARIO&#34;,
-    code_owners=[
-        &#34;paty&#34;,
-    ],
-) as cor_meteorologia_precipitacao_alertario:
 
-    DATASET_ID = &#34;meio_ambiente_clima&#34;
-    TABLE_ID = &#34;taxa_precipitacao_alertario&#34;
-    DUMP_MODE = &#34;append&#34;
+def save_updated_rows_on_redis(
+    dfr: pd.DataFrame, dataset_id: str, table_id: str, mode: str = &#34;prod&#34;
+) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Acess redis to get the last time each id_estacao was updated, return
+    updated stations as a DataFrame and save new dates on redis
+    &#34;&#34;&#34;
 
-    # Materialization parameters
-    MATERIALIZE_AFTER_DUMP = Parameter(
-        &#34;materialize_after_dump&#34;, default=False, required=False
-    )
-    MATERIALIZE_TO_DATARIO = Parameter(
-        &#34;materialize_to_datario&#34;, default=False, required=False
-    )
-    MATERIALIZATION_MODE = Parameter(&#34;mode&#34;, default=&#34;dev&#34;, required=False)
+    redis_client = get_redis_client()
 
-    # Dump to GCS after? Should only dump to GCS if materializing to datario
-    DUMP_TO_GCS = Parameter(&#34;dump_to_gcs&#34;, default=False, required=False)
+    key = dataset_id + &#34;.&#34; + table_id
+    if mode == &#34;dev&#34;:
+        key = f&#34;{mode}.{key}&#34;
 
-    MAXIMUM_BYTES_PROCESSED = Parameter(
-        &#34;maximum_bytes_processed&#34;,
-        required=False,
-        default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
-    )
+    # Access all data saved on redis with this key
+    updates = redis_client.hgetall(key)
 
-    filename, current_time = download()
-    dados, empty_data = tratar_dados(
-        filename=filename, dataset_id=DATASET_ID, table_id=TABLE_ID
-    )
+    # Convert data in dictionary in format with id_estacao in key and last updated time as value
+    # Example &gt; {&#34;12&#34;: &#34;2022-06-06 14:45:00&#34;}
+    updates = {k.decode(&#34;utf-8&#34;): v.decode(&#34;utf-8&#34;) for k, v in updates.items()}
 
-    # If dataframe is empty stop flow
-    with case(empty_data, True):
-        MATERIALIZE_AFTER_DUMP = False
+    # Convert dictionary to dfr
+    updates = pd.DataFrame(updates.items(), columns=[&#34;id_estacao&#34;, &#34;last_update&#34;])
 
-    with case(empty_data, False):
-        path = salvar_dados(dados=dados, current_time=current_time)
-        # Create table in BigQuery
-        UPLOAD_TABLE = create_table_and_upload_to_gcs(
-            data_path=path,
-            dataset_id=DATASET_ID,
-            table_id=TABLE_ID,
-            dump_mode=DUMP_MODE,
-            wait=path,
-        )
+    # dfr and updates need to have the same index, in our case id_estacao
+    missing_in_dfr = [
+        i for i in updates.id_estacao.unique() if i not in dfr.id_estacao.unique()
+    ]
+    missing_in_updates = [
+        i for i in dfr.id_estacao.unique() if i not in updates.id_estacao.unique()
+    ]
 
-    # Trigger DBT flow run
-    with case(MATERIALIZE_AFTER_DUMP, True):
-        current_flow_labels = get_current_flow_labels()
-        materialization_flow = create_flow_run(
-            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
-            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters={
-                &#34;dataset_id&#34;: DATASET_ID,
-                &#34;table_id&#34;: TABLE_ID,
-                &#34;mode&#34;: MATERIALIZATION_MODE,
-                &#34;materialize_to_datario&#34;: MATERIALIZE_TO_DATARIO,
-            },
-            labels=current_flow_labels,
-            run_name=f&#34;Materialize {DATASET_ID}.{TABLE_ID}&#34;,
-        )
-
-        materialization_flow.set_upstream(UPLOAD_TABLE)
-
-        wait_for_materialization = wait_for_flow_run(
-            materialization_flow,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
-        )
-
-        wait_for_materialization.max_retries = (
-            dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
-        )
-        wait_for_materialization.retry_delay = timedelta(
-            seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
-        )
-
-        with case(DUMP_TO_GCS, True):
-            # Trigger Dump to GCS flow run with project id as datario
-            dump_to_gcs_flow = create_flow_run(
-                flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
-                project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-                parameters={
-                    &#34;project_id&#34;: &#34;datario&#34;,
-                    &#34;dataset_id&#34;: DATASET_ID,
-                    &#34;table_id&#34;: TABLE_ID,
-                    &#34;maximum_bytes_processed&#34;: MAXIMUM_BYTES_PROCESSED,
-                },
-                labels=[
-                    &#34;datario&#34;,
-                ],
-                run_name=f&#34;Dump to GCS {DATASET_ID}.{TABLE_ID}&#34;,
-            )
-            dump_to_gcs_flow.set_upstream(wait_for_materialization)
-
-            wait_for_dump_to_gcs = wait_for_flow_run(
-                dump_to_gcs_flow,
-                stream_states=True,
-                stream_logs=True,
-                raise_final_state=True,
+    # If id_estacao doesn&#39;t exists on updates we create a fake date for this station on updates
+    if len(missing_in_updates) &gt; 0:
+        for i in missing_in_updates:
+            updates = updates.append(
+                {&#34;id_estacao&#34;: i, &#34;last_update&#34;: &#34;1900-01-01 00:00:00&#34;},
+                ignore_index=True,
             )
 
-# para rodar na cloud
-cor_meteorologia_precipitacao_alertario.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-cor_meteorologia_precipitacao_alertario.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value,
-    labels=[constants.RJ_COR_AGENT_LABEL.value],
-)
-cor_meteorologia_precipitacao_alertario.schedule = minute_schedule</code></pre>
+    # If id_estacao doesn&#39;t exists on dfr we remove this stations from updates
+    if len(missing_in_dfr) &gt; 0:
+        updates = updates[~updates.id_estacao.isin(missing_in_dfr)]
+
+    # Set the index with the id_estacao
+    dfr.set_index(dfr.id_estacao.unique(), inplace=True)
+    updates.set_index(updates.id_estacao.unique(), inplace=True)
+
+    # Keep on dfr only the stations that has a time after the one that is saved on redis
+    dfr = dfr.where(
+        (dfr.id_estacao == updates.id_estacao)
+        &amp; (dfr.data_medicao &gt; updates.last_update)
+    ).dropna(subset=[&#34;id_estacao&#34;])
+
+    # Convert stations with the new updates dates in a dictionary
+    dfr.set_index(&#34;id_estacao&#34;, inplace=True)
+    new_updates = dfr[&#34;data_medicao&#34;].astype(str).to_dict()
+
+    # Save this new information on redis
+    [redis_client.hset(key, k, v) for k, v in new_updates.items()]
+
+    return dfr.reset_index()</code></pre>
 </details>
 </section>
 <section>
@@ -176,6 +108,83 @@ cor_meteorologia_precipitacao_alertario.schedule = minute_schedule</code></pre>
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pipelines.rj_cor.meteorologia.utils.save_updated_rows_on_redis"><code class="name flex">
+<span>def <span class="ident">save_updated_rows_on_redis</span></span>(<span>dfr: pandas.core.frame.DataFrame, dataset_id: str, table_id: str, mode: str = 'prod') ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Acess redis to get the last time each id_estacao was updated, return
+updated stations as a DataFrame and save new dates on redis</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_updated_rows_on_redis(
+    dfr: pd.DataFrame, dataset_id: str, table_id: str, mode: str = &#34;prod&#34;
+) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Acess redis to get the last time each id_estacao was updated, return
+    updated stations as a DataFrame and save new dates on redis
+    &#34;&#34;&#34;
+
+    redis_client = get_redis_client()
+
+    key = dataset_id + &#34;.&#34; + table_id
+    if mode == &#34;dev&#34;:
+        key = f&#34;{mode}.{key}&#34;
+
+    # Access all data saved on redis with this key
+    updates = redis_client.hgetall(key)
+
+    # Convert data in dictionary in format with id_estacao in key and last updated time as value
+    # Example &gt; {&#34;12&#34;: &#34;2022-06-06 14:45:00&#34;}
+    updates = {k.decode(&#34;utf-8&#34;): v.decode(&#34;utf-8&#34;) for k, v in updates.items()}
+
+    # Convert dictionary to dfr
+    updates = pd.DataFrame(updates.items(), columns=[&#34;id_estacao&#34;, &#34;last_update&#34;])
+
+    # dfr and updates need to have the same index, in our case id_estacao
+    missing_in_dfr = [
+        i for i in updates.id_estacao.unique() if i not in dfr.id_estacao.unique()
+    ]
+    missing_in_updates = [
+        i for i in dfr.id_estacao.unique() if i not in updates.id_estacao.unique()
+    ]
+
+    # If id_estacao doesn&#39;t exists on updates we create a fake date for this station on updates
+    if len(missing_in_updates) &gt; 0:
+        for i in missing_in_updates:
+            updates = updates.append(
+                {&#34;id_estacao&#34;: i, &#34;last_update&#34;: &#34;1900-01-01 00:00:00&#34;},
+                ignore_index=True,
+            )
+
+    # If id_estacao doesn&#39;t exists on dfr we remove this stations from updates
+    if len(missing_in_dfr) &gt; 0:
+        updates = updates[~updates.id_estacao.isin(missing_in_dfr)]
+
+    # Set the index with the id_estacao
+    dfr.set_index(dfr.id_estacao.unique(), inplace=True)
+    updates.set_index(updates.id_estacao.unique(), inplace=True)
+
+    # Keep on dfr only the stations that has a time after the one that is saved on redis
+    dfr = dfr.where(
+        (dfr.id_estacao == updates.id_estacao)
+        &amp; (dfr.data_medicao &gt; updates.last_update)
+    ).dropna(subset=[&#34;id_estacao&#34;])
+
+    # Convert stations with the new updates dates in a dictionary
+    dfr.set_index(&#34;id_estacao&#34;, inplace=True)
+    new_updates = dfr[&#34;data_medicao&#34;].astype(str).to_dict()
+
+    # Save this new information on redis
+    [redis_client.hset(key, k, v) for k, v in new_updates.items()]
+
+    return dfr.reset_index()</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -215,7 +224,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../../../../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -234,7 +243,12 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario" href="index.html">pipelines.rj_cor.meteorologia.precipitacao_alertario</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia" href="index.html">pipelines.rj_cor.meteorologia</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pipelines.rj_cor.meteorologia.utils.save_updated_rows_on_redis" href="#pipelines.rj_cor.meteorologia.utils.save_updated_rows_on_redis">save_updated_rows_on_redis</a></code></li>
 </ul>
 </li>
 </ul>
