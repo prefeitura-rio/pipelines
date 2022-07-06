@@ -15,6 +15,7 @@ import pendulum
 from prefect import task
 
 from pipelines.constants import constants
+from pipelines.rj_cor.meteorologia.utils import save_updated_rows_on_redis
 from pipelines.utils.utils import get_vault_secret, log
 
 
@@ -86,8 +87,10 @@ def download() -> Tuple[pd.DataFrame, str]:
     return save_on, current_time
 
 
-@task
-def tratar_dados(filename: Union[str, Path]) -> pd.DataFrame:
+@task(nout=2)
+def tratar_dados(
+    filename: Union[str, Path], dataset_id: str, table_id: str
+) -> Tuple[pd.DataFrame, bool]:
     """
     Renomeia colunas e filtra dados com a hora e minuto do timestamp
     de execução mais próximo à este
@@ -148,6 +151,11 @@ def tratar_dados(filename: Union[str, Path]) -> pd.DataFrame:
     dados.sort_values(["id_estacao", "data_medicao"] + float_cols, inplace=True)
     dados.drop_duplicates(subset=["id_estacao", "data_medicao"], keep="first")
 
+    log(f"uniquesss df >>>, {type(dados.id_estacao.unique()[0])}")
+    dados["id_estacao"] = dados["id_estacao"].astype(str)
+
+    dados = save_updated_rows_on_redis(dados, dataset_id, table_id, mode="dev")
+
     dados["id_estacao"] = dados["id_estacao"].astype(int)
 
     # Fixar ordem das colunas
@@ -163,7 +171,10 @@ def tratar_dados(filename: Union[str, Path]) -> pd.DataFrame:
         ]
     ]
 
-    return dados
+    # If df is empty stop flow
+    empty_data = dados.shape[0] == 0
+
+    return dados, empty_data
 
 
 @task
