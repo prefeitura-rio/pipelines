@@ -242,7 +242,7 @@ tzdata = ["tzdata"]
 
 [[package]]
 name = "basedosdados"
-version = "1.6.4b5"
+version = "1.6.4"
 description = "Organizar e facilitar o acesso a dados brasileiros através de tabelas públicas no BigQuery."
 category = "main"
 optional = false
@@ -3354,7 +3354,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.11"
-content-hash = "639387ef8ff180b632fb27b017a86994755f91b8020f43f96f66ce5a30c1f9b3"
+content-hash = "ee8937c2dc8e337b13c01185d653b57bd4892e824f092320e64b6c33326c1823"
 
 [metadata.files]
 affine = [
@@ -3536,8 +3536,8 @@ backcall = [
     {file = "backports.zoneinfo-0.2.1.tar.gz", hash = "sha256:fadbfe37f74051d024037f223b8e001611eac868b5c5b06144ef4d8b799862f2"},
 ]
 basedosdados = [
-    {file = "basedosdados-1.6.4b5-py3-none-any.whl", hash = "sha256:9db0f8474eaa1ccbca0e339c9521c4b9797cbeec4e49452e40cb55c2bf4b6d47"},
-    {file = "basedosdados-1.6.4b5.tar.gz", hash = "sha256:978e13ec5c1e214fd53b5f2b9003fd02696d9819c56248ea1b137e49a79b3b8d"},
+    {file = "basedosdados-1.6.4-py3-none-any.whl", hash = "sha256:e35b9c61c0cbdbdfd857646176d989051185ee6a3586128745be3207eef3152e"},
+    {file = "basedosdados-1.6.4.tar.gz", hash = "sha256:18001fab597fe657817300d716d7a5c1d12a627308af780771d357ba907cdcd8"},
 ]
 beautifulsoup4 = [
     {file = "beautifulsoup4-4.11.1-py3-none-any.whl", hash = "sha256:58d5c3d29f5a36ffeb94f02f0d786cd53014cf9b3b3951d42e0080d8a9498d30"},
