@@ -44,6 +44,7 @@ import pendulum
 from prefect import task
 
 from pipelines.constants import constants
+from pipelines.rj_cor.meteorologia.utils import save_updated_rows_on_redis
 from pipelines.utils.utils import get_vault_secret, log
 
 
@@ -115,8 +116,10 @@ def download() -&gt; Tuple[pd.DataFrame, str]:
     return save_on, current_time
 
 
-@task
-def tratar_dados(filename: Union[str, Path]) -&gt; pd.DataFrame:
+@task(nout=2)
+def tratar_dados(
+    filename: Union[str, Path], dataset_id: str, table_id: str
+) -&gt; Tuple[pd.DataFrame, bool]:
     &#34;&#34;&#34;
     Renomeia colunas e filtra dados com a hora e minuto do timestamp
     de execução mais próximo à este
@@ -177,6 +180,11 @@ def tratar_dados(filename: Union[str, Path]) -&gt; pd.DataFrame:
     dados.sort_values([&#34;id_estacao&#34;, &#34;data_medicao&#34;] + float_cols, inplace=True)
     dados.drop_duplicates(subset=[&#34;id_estacao&#34;, &#34;data_medicao&#34;], keep=&#34;first&#34;)
 
+    log(f&#34;uniquesss df &gt;&gt;&gt;, {type(dados.id_estacao.unique()[0])}&#34;)
+    dados[&#34;id_estacao&#34;] = dados[&#34;id_estacao&#34;].astype(str)
+
+    dados = save_updated_rows_on_redis(dados, dataset_id, table_id, mode=&#34;dev&#34;)
+
     dados[&#34;id_estacao&#34;] = dados[&#34;id_estacao&#34;].astype(int)
 
     # Fixar ordem das colunas
@@ -192,7 +200,10 @@ def tratar_dados(filename: Union[str, Path]) -&gt; pd.DataFrame:
         ]
     ]
 
-    return dados
+    # If df is empty stop flow
+    empty_data = dados.shape[0] == 0
+
+    return dados, empty_data
 
 
 @task
@@ -339,7 +350,7 @@ def salvar_dados(dados: pd.DataFrame, current_time: str) -&gt; Union[str, Path]:
 </details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.tratar_dados"><code class="name flex">
-<span>def <span class="ident">tratar_dados</span></span>(<span>filename: Union[str, pathlib.Path]) ‑> pandas.core.frame.DataFrame</span>
+<span>def <span class="ident">tratar_dados</span></span>(<span>filename: Union[str, pathlib.Path], dataset_id: str, table_id: str) ‑> Tuple[pandas.core.frame.DataFrame, bool]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Renomeia colunas e filtra dados com a hora e minuto do timestamp
@@ -348,8 +359,10 @@ de execução mais próximo à este</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@task
-def tratar_dados(filename: Union[str, Path]) -&gt; pd.DataFrame:
+<pre><code class="python">@task(nout=2)
+def tratar_dados(
+    filename: Union[str, Path], dataset_id: str, table_id: str
+) -&gt; Tuple[pd.DataFrame, bool]:
     &#34;&#34;&#34;
     Renomeia colunas e filtra dados com a hora e minuto do timestamp
     de execução mais próximo à este
@@ -410,6 +423,11 @@ def tratar_dados(filename: Union[str, Path]) -&gt; pd.DataFrame:
     dados.sort_values([&#34;id_estacao&#34;, &#34;data_medicao&#34;] + float_cols, inplace=True)
     dados.drop_duplicates(subset=[&#34;id_estacao&#34;, &#34;data_medicao&#34;], keep=&#34;first&#34;)
 
+    log(f&#34;uniquesss df &gt;&gt;&gt;, {type(dados.id_estacao.unique()[0])}&#34;)
+    dados[&#34;id_estacao&#34;] = dados[&#34;id_estacao&#34;].astype(str)
+
+    dados = save_updated_rows_on_redis(dados, dataset_id, table_id, mode=&#34;dev&#34;)
+
     dados[&#34;id_estacao&#34;] = dados[&#34;id_estacao&#34;].astype(int)
 
     # Fixar ordem das colunas
@@ -425,7 +443,10 @@ def tratar_dados(filename: Union[str, Path]) -&gt; pd.DataFrame:
         ]
     ]
 
-    return dados</code></pre>
+    # If df is empty stop flow
+    empty_data = dados.shape[0] == 0
+
+    return dados, empty_data</code></pre>
 </details>
 </dd>
 </dl>
