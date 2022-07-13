@@ -13,6 +13,7 @@ from typing import Union, List, Dict
 from pytz import timezone
 
 from basedosdados import Storage, Table
+import basedosdados as bd
 from dbt_client import DbtClient
 import pandas as pd
 import pendulum
@@ -199,7 +200,7 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
 
 
 @task
-def create_current_date_hour_partition():
+def create_current_date_hour_partition(capture_time=None):
     """Create partitioned directory structure to save data locally based
     on capture time.
 
@@ -208,8 +209,8 @@ def create_current_date_hour_partition():
         the partitioned directory path
     """
     tz = constants.TIMEZONE.value  # pylint: disable=C0103
-
-    capture_time = pendulum.now(tz)
+    if capture_time is None:
+        capture_time = pendulum.now(tz)
     date = capture_time.strftime("%Y-%m-%d")
     hour = capture_time.strftime("%H")
 
@@ -295,6 +296,50 @@ def save_treated_local(dataframe, file_path, mode="staging"):
 # Extract data
 #
 ###############
+@task
+def query_logs(
+    dataset_id: str,
+    table_id: str,
+    datetime_filter=pendulum.now(constants.TIMEZONE.value),
+):
+    """Queries capture logs to check for errors
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+        datetime_filter (pendulum.datetime.DateTime, optional):
+        filter passed to query. This task will query the logs table
+        for the last 1 hour before this filter
+
+    Returns:
+        list: containing timestamps for which the capture failed
+
+    """
+    query = f"""
+        SELECT *
+        FROM rj-smtr.{dataset_id}.{table_id}_logs
+        WHERE
+            data = '{datetime_filter.date().isoformat()}'
+        AND
+            timestamp_captura
+            BETWEEN
+            DATETIME_SUB(
+                '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}',
+                INTERVAL 1 HOUR
+            )
+            AND
+            '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
+        AND
+            sucesso is False
+        ORDER BY timestamp_captura
+    """
+    log(f"Will run query:\n{query}")
+    results = bd.read_sql(query=query, billing_project_id=bq_project())[
+        "timestamp_captura"
+    ]
+    if len(results) > 0:
+        return pd.to_datetime(results).to_list()
+    return False
 
 
 @task
@@ -302,6 +347,7 @@ def get_raw(
     url,
     headers=None,
     source: str = None,
+    timestamp=pendulum.now(constants.TIMEZONE.value),
 ):
     """Request data from a url API
 
@@ -322,7 +368,6 @@ def get_raw(
         url = f"{url}{key}={access[key]}"
     data = None
     error = None
-    timestamp = pendulum.now(constants.TIMEZONE.value)
     if source == "sppo_api_v2":
         access = get_vault_secret(source)["data"]
         key = list(access)[0]
