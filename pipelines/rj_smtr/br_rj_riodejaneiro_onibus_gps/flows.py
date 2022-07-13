@@ -238,12 +238,12 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
     recaptura.set_dependencies(task=status_dict, upstream_tasks=[filepath])
     recaptura.set_dependencies(task=LAST_TASK, upstream_tasks=[UPLOAD_CSV])
 
-materialize_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-materialize_sppo.run_config = KubernetesRun(
+recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+recaptura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-materialize_sppo.schedule = every_hour
+recaptura.schedule = every_hour
 
 captura_sppo_v2.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_sppo_v2.run_config = KubernetesRun(
