@@ -204,6 +204,11 @@ def create_current_date_hour_partition(capture_time=None):
     """Create partitioned directory structure to save data locally based
     on capture time.
 
+    Args:
+        capture_time(pendulum.datetime.DateTime, optional):
+            if recapturing data, will create partitions based
+            on the failed timestamps being recaptured
+
     Returns:
         dict: "filename" contains the name which to upload the csv, "partitions" contains
         the partitioned directory path
@@ -225,13 +230,16 @@ def create_local_partition_path(
     dataset_id, table_id, filename=None, partitions=None, file_dict=None
 ):
     """Get the full path which to save data locally before upload.
+    If passing file_dict, should not pass filename and partitions
+    separately.
 
     Args:
         dataset_id (str): dataset_id on BigQuery
         table_id (str): table_id on BigQuery
-        filename (str): Single csv name
-        partitions (str): Partitioned directory structure, ie "ano=2022/mes=03/data=01"
-
+        filename (str, optional): Single csv name
+        partitions (str, optional): Partitioned directory structure, ie "ano=2022/mes=03/data=01"
+        file_dict(dict, optional): containing keys 'filename' and 'partitions',
+        used for running task with map
     Returns:
         str: Final path which to save files
     """
@@ -255,11 +263,15 @@ def create_local_partition_path(
 
 @task
 def save_raw_local(file_path, data=None, status_dict=None, mode="raw"):
-    """Dumps json response from API to .json file
+    """Dumps json response from API to .json file. If passing status_dict
+    should not pass data separately
 
     Args:
-        data (response): Response from API request
         file_path (str): Path which to save raw file
+        data (response, optional): Response from API request
+        status_dict(dict, optional): containing the status of
+        upstream request task. Must contain keys 'data', 'timestamp',
+        'error'
         mode (str, optional): Folder to save locally, later folder which to upload to GCS.
         Defaults to "raw".
 
@@ -276,15 +288,17 @@ def save_raw_local(file_path, data=None, status_dict=None, mode="raw"):
 
 
 @task
-def save_treated_local(file_path, dataframe=None, mode="staging", treated_status=None):
-    """Save treated file locally
+def save_treated_local(file_path, mode="staging", dataframe=None, treated_status=None):
+    """Save treated file locally. Should pass only one of args
+    dataframe or treated_status
 
     Args:
-        dataframe (pandas.core.DataFrame): Data to save as .csv file
-        file_path (_type_): Path which to save .csv files
+        file_path (str): Path which to save .csv files
         mode (str, optional): Directory to save locally, later folder which to upload to GCS.
         Defaults to "staging".
-
+        dataframe (pandas.core.DataFrame, optional): Data to save as .csv file
+        treated_status(dict, optional): used for running task with map.
+        Must contain keys 'df' and 'error'.
     Returns:
         str: Path to the saved file
     """
@@ -361,7 +375,9 @@ def get_raw(
         url (str): URL to send request to
         headers (dict, optional): Aditional fields to send along the request. Defaults to None.
         source (str, optional): Source API being captured.
-        Possible values are 'stpl_api', 'brt_api', 'sppo_api' and 'sppo_api_v2
+        Possible values are 'stpl_api', 'brt_api', 'sppo_api' and 'sppo_api_v2'.
+        timestamp(pendulum.datetime.DateTime, optional): timestamp of the request
+        time. Defaults to the pendulum.now() at the start of task run.
     Returns:
         dict: "data" contains the response object from the request, "timestamp" contains
         the run time timestamp, "error" catches errors that may occur during task execution.
@@ -420,7 +436,9 @@ def get_raw(
 def bq_upload(
     dataset_id, table_id, filepath, raw_filepath=None, partitions=None, file_dict=None
 ):  # pylint: disable=R0913
-    """Upload raw and treated data to GCS and BigQuery
+    """Upload raw and treated data to GCS and BigQuery.
+    If passing arg file_dict, should not pass arg partitions
+    separately.
 
     Args:
         dataset_id (str): dataset_id on BigQuery
@@ -429,6 +447,8 @@ def bq_upload(
         raw_filepath (str, optional): Path to raw .json file. Defaults to None.
         partitions (str, optional): Partitioned directory structure, ie "ano=2022/mes=03/data=01".
         Defaults to None.
+        file_dict(dict, optional): used for running task with map. Must contain keys
+        "filename" and "partitions". Defaults to None
 
     Returns:
         None
@@ -507,13 +527,15 @@ def upload_logs_to_bq(
 ):
     """Upload execution status table to BigQuery.
     Table is uploaded to the same dataset, named {parent_table_id}_logs.
-
+    If passing status_dict, should not pass timestamp and error.
 
     Args:
         dataset_id (str): dataset_id on BigQuery
         parent_table_id (str): Parent table id related to the status table
-        timestamp (str): ISO formatted timestamp string
-        error (str): String associated with error caught during execution
+        timestamp (str, optional): ISO formatted timestamp string
+        error (str, optional): String associated with error caught during execution
+        status_dict(dict, optional): used for running task with map.
+        Must contain keys 'timestamp' and 'error',
 
     Returns:
         None
