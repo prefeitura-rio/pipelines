@@ -212,7 +212,7 @@ def format_partitioned_query(
     # Using the last partition date, get the partitioned query.
     # `aux_name` must be unique and start with a letter, for better compatibility with
     # multiple DBMSs.
-    aux_name = f"a{uuid4().hex}"
+    aux_name = f"a{uuid4().hex}"[:8]
 
     log(
         f"Partitioned DETECTED: {partition_column}, retuning a NEW QUERY "
