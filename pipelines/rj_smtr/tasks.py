@@ -221,7 +221,9 @@ def create_current_date_hour_partition(capture_time=None):
 
 
 @task
-def create_local_partition_path(dataset_id, table_id, filename, partitions):
+def create_local_partition_path(
+    dataset_id, table_id, filename=None, partitions=None, file_dict=None
+):
     """Get the full path which to save data locally before upload.
 
     Args:
@@ -233,7 +235,9 @@ def create_local_partition_path(dataset_id, table_id, filename, partitions):
     Returns:
         str: Final path which to save files
     """
-
+    if file_dict:
+        filename = file_dict["filename"]
+        partitions = file_dict["partitions"]
     # If not specific table_id, use resource one
     # if not table_id:
     #     table_id = context.resources.basedosdados_config["table_id"]
@@ -250,7 +254,7 @@ def create_local_partition_path(dataset_id, table_id, filename, partitions):
 
 
 @task
-def save_raw_local(data, file_path, mode="raw"):
+def save_raw_local(file_path, data=None, status_dict=None, mode="raw"):
     """Dumps json response from API to .json file
 
     Args:
@@ -262,7 +266,8 @@ def save_raw_local(data, file_path, mode="raw"):
     Returns:
         str: Path to the saved file
     """
-
+    if status_dict:
+        data = status_dict["data"]
     _file_path = file_path.format(mode=mode, filetype="json")
     Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
     json.dump(data.json(), Path(_file_path).open("w", encoding="utf-8"))
@@ -271,7 +276,7 @@ def save_raw_local(data, file_path, mode="raw"):
 
 
 @task
-def save_treated_local(dataframe, file_path, mode="staging"):
+def save_treated_local(file_path, dataframe=None, mode="staging", treated_status=None):
     """Save treated file locally
 
     Args:
@@ -283,7 +288,8 @@ def save_treated_local(dataframe, file_path, mode="staging"):
     Returns:
         str: Path to the saved file
     """
-
+    if treated_status:
+        dataframe = treated_status["df"]
     _file_path = file_path.format(mode=mode, filetype="csv")
     Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
     dataframe.to_csv(_file_path, index=False)
@@ -296,7 +302,7 @@ def save_treated_local(dataframe, file_path, mode="staging"):
 # Extract data
 #
 ###############
-@task
+@task(nout=2)
 def query_logs(
     dataset_id: str,
     table_id: str,
@@ -315,20 +321,20 @@ def query_logs(
         list: containing timestamps for which the capture failed
 
     """
+    # AND
+    #         timestamp_captura
+    #         BETWEEN
+    #         DATETIME_SUB(
+    #             '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}',
+    #             INTERVAL 3 HOUR
+    #         )
+    #         AND
+    #         '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
     query = f"""
         SELECT *
         FROM rj-smtr.{dataset_id}.{table_id}_logs
         WHERE
             data = '{datetime_filter.date().isoformat()}'
-        AND
-            timestamp_captura
-            BETWEEN
-            DATETIME_SUB(
-                '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}',
-                INTERVAL 1 HOUR
-            )
-            AND
-            '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
         AND
             sucesso is False
         ORDER BY timestamp_captura
@@ -338,8 +344,8 @@ def query_logs(
         "timestamp_captura"
     ]
     if len(results) > 0:
-        return pd.to_datetime(results).to_list()
-    return False
+        return True, pd.to_datetime(results).to_list()
+    return False, []
 
 
 @task
@@ -411,7 +417,9 @@ def get_raw(
 
 
 @task
-def bq_upload(dataset_id, table_id, filepath, raw_filepath=None, partitions=None):
+def bq_upload(
+    dataset_id, table_id, filepath, raw_filepath=None, partitions=None, file_dict=None
+):  # pylint: disable=R0913
     """Upload raw and treated data to GCS and BigQuery
 
     Args:
@@ -435,7 +443,8 @@ def bq_upload(dataset_id, table_id, filepath, raw_filepath=None, partitions=None
     partitions = {partitions}, type = {type(partitions)}
     """
     )
-
+    if file_dict:
+        partitions = file_dict["partitions"]
     # Upload raw to staging
     if raw_filepath:
         st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
@@ -493,7 +502,9 @@ def bq_upload_from_dict(paths: dict, dataset_id: str, partition_levels: int = 1)
 
 
 @task
-def upload_logs_to_bq(dataset_id, parent_table_id, timestamp, error):
+def upload_logs_to_bq(
+    dataset_id, parent_table_id, timestamp=None, error=None, status_dict=None
+):
     """Upload execution status table to BigQuery.
     Table is uploaded to the same dataset, named {parent_table_id}_logs.
 
@@ -507,7 +518,9 @@ def upload_logs_to_bq(dataset_id, parent_table_id, timestamp, error):
     Returns:
         None
     """
-
+    if status_dict:
+        timestamp = status_dict["timestamp"]
+        error = status_dict["error"]
     table_id = parent_table_id + "_logs"
 
     filepath = Path(

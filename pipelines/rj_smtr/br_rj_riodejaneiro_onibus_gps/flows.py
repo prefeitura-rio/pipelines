@@ -3,7 +3,6 @@
 Flows for br_rj_riodejaneiro_onibus_gps
 """
 
-from typing import List
 from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
@@ -177,6 +176,7 @@ with Flow(
     captura_sppo_v2.set_dependencies(task=status_dict, upstream_tasks=[filepath])
 
 with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as recaptura:
+    # Get default parameters
     dataset_id = Parameter(
         "dataset_id", default=constants.GPS_SPPO_RAW_DATASET_ID.value
     )
@@ -187,49 +187,56 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
     )
     version = Parameter("version", default=2)
 
-    timestamps = query_logs(dataset_id=dataset_id, table_id=table_id)
-    with case(timestamps, False):
+    # Run tasks
+    errors, timestamps = query_logs(dataset_id=dataset_id, table_id=table_id)
+
+    with case(errors, False):
         create_flow_run(
             flow_name=materialize_sppo.name,
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
             run_name=materialize_sppo.name,
         )
-    with case(type(timestamps), List):
+    with case(errors, True):
         file_dict = create_current_date_hour_partition.map(capture_time=timestamps)
         filepath = create_local_partition_path.map(
             dataset_id=unmapped(dataset_id),
             table_id=unmapped(table_id),
-            filename=file_dict["filename"],
-            partitions=file_dict["partitions"],
+            file_dict=file_dict,
         )
         status_dict = get_raw.map(
             url=unmapped(url), source=unmapped(secret_path), timestamp=timestamps
         )
-        raw_filepath = save_raw_local.map(data=status_dict["data"], file_path=filepath)
+        raw_filepath = save_raw_local.map(status_dict=status_dict, file_path=filepath)
         treated_status = pre_treatment_br_rj_riodejaneiro_onibus_gps.map(
-            status_dict=status_dict, version=unmapped(version)
+            status_dict=status_dict, version=unmapped(version), recapture=unmapped(True)
         )
 
         UPLOAD_LOGS = upload_logs_to_bq.map(
             dataset_id=unmapped(dataset_id),
-            parent_table_id=unmapped(table_id),
-            timestamp=status_dict["timestamp"],
-            error=status_dict["error"],
+            parent_table_id=unmapped("registros_test_recaptura"),
+            status_dict=status_dict,
         )
 
         treated_filepath = save_treated_local.map(
-            dataframe=treated_status["df"], file_path=filepath
+            treated_status=treated_status, file_path=filepath
         )
 
         UPLOAD_CSV = bq_upload.map(
             dataset_id=unmapped(dataset_id),
-            table_id=unmapped(table_id),
+            table_id=unmapped("registros_test_recaptura"),
             filepath=treated_filepath,
             raw_filepath=raw_filepath,
-            partitions=file_dict["partitions"],
+            file_dict=file_dict,
         )
-        recaptura.set_dependencies(task=status_dict, upstream_tasks=[filepath])
+        LAST_TASK = create_flow_run(
+            flow_name=materialize_sppo.name,
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+            run_name=materialize_sppo.name,
+        )
+    recaptura.set_dependencies(task=status_dict, upstream_tasks=[filepath])
+    recaptura.set_dependencies(task=LAST_TASK, upstream_tasks=[UPLOAD_CSV])
 
 materialize_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 materialize_sppo.run_config = KubernetesRun(

@@ -33,7 +33,7 @@ import pandas as pd
 from pipelines.rj_smtr.constants import constants
 
 
-def sppo_filters(frame: pd.DataFrame, version: int = 1):
+def sppo_filters(frame: pd.DataFrame, version: int = 1, recapture: bool = False):
     """Apply filters to dataframe
 
     Args:
@@ -49,6 +49,11 @@ def sppo_filters(frame: pd.DataFrame, version: int = 1):
     elif version == 2:
         filter_col = "datahoraenvio"
         time_delay = constants.GPS_SPPO_CAPTURE_DELAY_V2.value
+    if recapture:
+        server_mask = (frame["datahoraenvio"] - frame["datahoraservidor"]) <= timedelta(
+            minutes=constants.GPS_SPPO_RECAPTURE_DELAY_V2.value
+        )
+        frame = frame[server_mask]
 
     mask = (frame[filter_col] - frame["datahora"]).apply(
         lambda x: timedelta(seconds=0) <= x <= timedelta(minutes=time_delay)
