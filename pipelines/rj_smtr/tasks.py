@@ -335,20 +335,20 @@ def query_logs(
         list: containing timestamps for which the capture failed
 
     """
-    # AND
-    #         timestamp_captura
-    #         BETWEEN
-    #         DATETIME_SUB(
-    #             '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}',
-    #             INTERVAL 3 HOUR
-    #         )
-    #         AND
-    #         '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
     query = f"""
         SELECT *
         FROM rj-smtr.{dataset_id}.{table_id}_logs
         WHERE
             data = '{datetime_filter.date().isoformat()}'
+        AND
+            timestamp_captura
+            BETWEEN
+            DATETIME_SUB(
+                '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}',
+                INTERVAL 1 HOUR
+            )
+            AND
+            '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
         AND
             sucesso is False
         ORDER BY timestamp_captura

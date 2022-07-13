@@ -214,7 +214,7 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
 
         UPLOAD_LOGS = upload_logs_to_bq.map(
             dataset_id=unmapped(dataset_id),
-            parent_table_id=unmapped("registros_test_recaptura"),
+            parent_table_id=unmapped(table_id),
             status_dict=status_dict,
         )
 
@@ -224,7 +224,7 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
 
         UPLOAD_CSV = bq_upload.map(
             dataset_id=unmapped(dataset_id),
-            table_id=unmapped("registros_test_recaptura"),
+            table_id=unmapped(table_id),
             filepath=treated_filepath,
             raw_filepath=raw_filepath,
             file_dict=file_dict,
