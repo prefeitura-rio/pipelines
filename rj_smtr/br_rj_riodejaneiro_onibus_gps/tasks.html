@@ -50,7 +50,9 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.utils import sppo_filters
 
 
 @task
-def pre_treatment_br_rj_riodejaneiro_onibus_gps(status_dict: dict, version: int = 1):
+def pre_treatment_br_rj_riodejaneiro_onibus_gps(
+    status_dict: dict, version: int = 1, recapture: bool = False
+):
     &#34;&#34;&#34;Basic data treatment for bus gps data. Converts unix time to datetime,
     and apply filtering to stale data that may populate the API response.
 
@@ -84,22 +86,25 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(status_dict: dict, version: int 
         timestamp_cols = [&#34;datahora&#34;]
     elif version == 2:
         timestamp_cols = [&#34;datahora&#34;, &#34;datahoraenvio&#34;]
-
+    if recapture:
+        timestamp_cols.append(&#34;datahoraservidor&#34;)
     for col in timestamp_cols:
-        print(f&#34;Before converting, datahora is: \n{df[col].head()}&#34;)  # log
+        print(f&#34;Before converting, {col} is: \n{df[col].head()}&#34;)  # log
         # Remove timezone and force it to be config timezone
         df[col] = (
             pd.to_datetime(df[col].astype(float), unit=&#34;ms&#34;)
             .dt.tz_localize(tz=&#34;UTC&#34;)
             .dt.tz_convert(timezone)
         )
-        log(f&#34;After converting the timezone, datahora is: \n{df[col].head()}&#34;)
+        log(f&#34;After converting the timezone, {col} is: \n{df[col].head()}&#34;)
 
     # Filter data for 0 &lt;= time diff &lt;= 1min
     try:
         # filters
         log(f&#34;Shape antes da filtragem: {df.shape}&#34;)
-        df = sppo_filters(frame=df, version=version)  # pylint: disable=C0103
+        df = sppo_filters(  # pylint: disable=C0103
+            frame=df, version=version, recapture=recapture
+        )
         log(f&#34;Shape após a filtragem: {df.shape}&#34;)
         if df.shape[0] == 0:
             error = ValueError(&#34;After filtering, the dataframe is empty!&#34;)
@@ -129,7 +134,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(status_dict: dict, version: int 
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks.pre_treatment_br_rj_riodejaneiro_onibus_gps"><code class="name flex">
-<span>def <span class="ident">pre_treatment_br_rj_riodejaneiro_onibus_gps</span></span>(<span>status_dict: dict, version: int = 1)</span>
+<span>def <span class="ident">pre_treatment_br_rj_riodejaneiro_onibus_gps</span></span>(<span>status_dict: dict, version: int = 1, recapture: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Basic data treatment for bus gps data. Converts unix time to datetime,
@@ -152,7 +157,9 @@ and apply filtering to stale data that may populate the API response.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def pre_treatment_br_rj_riodejaneiro_onibus_gps(status_dict: dict, version: int = 1):
+def pre_treatment_br_rj_riodejaneiro_onibus_gps(
+    status_dict: dict, version: int = 1, recapture: bool = False
+):
     &#34;&#34;&#34;Basic data treatment for bus gps data. Converts unix time to datetime,
     and apply filtering to stale data that may populate the API response.
 
@@ -186,22 +193,25 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(status_dict: dict, version: int 
         timestamp_cols = [&#34;datahora&#34;]
     elif version == 2:
         timestamp_cols = [&#34;datahora&#34;, &#34;datahoraenvio&#34;]
-
+    if recapture:
+        timestamp_cols.append(&#34;datahoraservidor&#34;)
     for col in timestamp_cols:
-        print(f&#34;Before converting, datahora is: \n{df[col].head()}&#34;)  # log
+        print(f&#34;Before converting, {col} is: \n{df[col].head()}&#34;)  # log
         # Remove timezone and force it to be config timezone
         df[col] = (
             pd.to_datetime(df[col].astype(float), unit=&#34;ms&#34;)
             .dt.tz_localize(tz=&#34;UTC&#34;)
             .dt.tz_convert(timezone)
         )
-        log(f&#34;After converting the timezone, datahora is: \n{df[col].head()}&#34;)
+        log(f&#34;After converting the timezone, {col} is: \n{df[col].head()}&#34;)
 
     # Filter data for 0 &lt;= time diff &lt;= 1min
     try:
         # filters
         log(f&#34;Shape antes da filtragem: {df.shape}&#34;)
-        df = sppo_filters(frame=df, version=version)  # pylint: disable=C0103
+        df = sppo_filters(  # pylint: disable=C0103
+            frame=df, version=version, recapture=recapture
+        )
         log(f&#34;Shape após a filtragem: {df.shape}&#34;)
         if df.shape[0] == 0:
             error = ValueError(&#34;After filtering, the dataframe is empty!&#34;)

@@ -62,7 +62,7 @@ import pandas as pd
 from pipelines.rj_smtr.constants import constants
 
 
-def sppo_filters(frame: pd.DataFrame, version: int = 1):
+def sppo_filters(frame: pd.DataFrame, version: int = 1, recapture: bool = False):
     &#34;&#34;&#34;Apply filters to dataframe
 
     Args:
@@ -78,6 +78,11 @@ def sppo_filters(frame: pd.DataFrame, version: int = 1):
     elif version == 2:
         filter_col = &#34;datahoraenvio&#34;
         time_delay = constants.GPS_SPPO_CAPTURE_DELAY_V2.value
+    if recapture:
+        server_mask = (frame[&#34;datahoraenvio&#34;] - frame[&#34;datahoraservidor&#34;]) &lt;= timedelta(
+            minutes=constants.GPS_SPPO_RECAPTURE_DELAY_V2.value
+        )
+        frame = frame[server_mask]
 
     mask = (frame[filter_col] - frame[&#34;datahora&#34;]).apply(
         lambda x: timedelta(seconds=0) &lt;= x &lt;= timedelta(minutes=time_delay)
@@ -94,7 +99,7 @@ def sppo_filters(frame: pd.DataFrame, version: int = 1):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.utils.sppo_filters"><code class="name flex">
-<span>def <span class="ident">sppo_filters</span></span>(<span>frame: pandas.core.frame.DataFrame, version: int = 1)</span>
+<span>def <span class="ident">sppo_filters</span></span>(<span>frame: pandas.core.frame.DataFrame, version: int = 1, recapture: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Apply filters to dataframe</p>
@@ -113,7 +118,7 @@ def sppo_filters(frame: pd.DataFrame, version: int = 1):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def sppo_filters(frame: pd.DataFrame, version: int = 1):
+<pre><code class="python">def sppo_filters(frame: pd.DataFrame, version: int = 1, recapture: bool = False):
     &#34;&#34;&#34;Apply filters to dataframe
 
     Args:
@@ -129,6 +134,11 @@ def sppo_filters(frame: pd.DataFrame, version: int = 1):
     elif version == 2:
         filter_col = &#34;datahoraenvio&#34;
         time_delay = constants.GPS_SPPO_CAPTURE_DELAY_V2.value
+    if recapture:
+        server_mask = (frame[&#34;datahoraenvio&#34;] - frame[&#34;datahoraservidor&#34;]) &lt;= timedelta(
+            minutes=constants.GPS_SPPO_RECAPTURE_DELAY_V2.value
+        )
+        frame = frame[server_mask]
 
     mask = (frame[filter_col] - frame[&#34;datahora&#34;]).apply(
         lambda x: timedelta(seconds=0) &lt;= x &lt;= timedelta(minutes=time_delay)
