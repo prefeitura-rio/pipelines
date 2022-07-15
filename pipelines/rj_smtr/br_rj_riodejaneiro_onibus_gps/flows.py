@@ -6,7 +6,7 @@ Flows for br_rj_riodejaneiro_onibus_gps
 from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
-from prefect.tasks.prefect import create_flow_run
+from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect.utilities.edges import unmapped
 
 
@@ -189,13 +189,22 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
 
     # Run tasks
     errors, timestamps = query_logs(dataset_id=dataset_id, table_id=table_id)
-
+    # Rename flow run
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix="GPS SPPO: ", now_time=get_now_time(), wait=timestamps
+    )
     with case(errors, False):
-        create_flow_run(
+        materialize = create_flow_run(
             flow_name=materialize_sppo.name,
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
             run_name=materialize_sppo.name,
+        )
+        wait_materialize = wait_for_flow_run(
+            materialize,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
         )
     with case(errors, True):
         file_dict = create_current_date_hour_partition.map(capture_time=timestamps)
@@ -229,14 +238,20 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
             raw_filepath=raw_filepath,
             file_dict=file_dict,
         )
-        LAST_TASK = create_flow_run(
+        materialize = create_flow_run(
             flow_name=materialize_sppo.name,
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
             run_name=materialize_sppo.name,
         )
+        wait_materialize = wait_for_flow_run(
+            materialize,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
     recaptura.set_dependencies(task=status_dict, upstream_tasks=[filepath])
-    recaptura.set_dependencies(task=LAST_TASK, upstream_tasks=[UPLOAD_CSV])
+    recaptura.set_dependencies(task=materialize, upstream_tasks=[UPLOAD_CSV])
 
 recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 recaptura.run_config = KubernetesRun(
@@ -244,6 +259,12 @@ recaptura.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 recaptura.schedule = every_hour
+
+materialize_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+materialize_sppo.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
 
 captura_sppo_v2.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_sppo_v2.run_config = KubernetesRun(
