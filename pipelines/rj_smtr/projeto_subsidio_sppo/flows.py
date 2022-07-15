@@ -76,6 +76,7 @@ with Flow(
     code_owners=["caio", "fernanda"],
 ) as planejado_flow:
     pass
+
 with Flow(
     "SMTR - Subsidio SPPO - Materialização",
     code_owners=["caio", "fernanda"],
@@ -103,32 +104,17 @@ with Flow(
     with case(refresh, True):
         FIRST = run_dbt_model(
             dbt_client=dbt_client,
-            model=table_id_planejado,
-            downstream=True,
-            # _vars=[run_date, dataset_sha],
-            flags="--full-refresh",
-        )
-        SECOND = run_dbt_model(
-            dbt_client=dbt_client,
             model=table_id,
             upstream=True,
             _vars=[run_date, dataset_sha],
             flags="--full-refresh",
-            wait=FIRST,
         )
     with case(refresh, False):
         FIRST = run_dbt_model(
             dbt_client=dbt_client,
-            model=table_id_planejado,
-            downstream=True,
-            # _vars=[run_date, dataset_sha],
-        )
-        SECOND = run_dbt_model(
-            dbt_client=dbt_client,
             model=table_id,
             _vars=[run_date, dataset_sha],
             upstream=True,
-            wait=FIRST,
         )
 
 subsidio_flow.schedule = every_day

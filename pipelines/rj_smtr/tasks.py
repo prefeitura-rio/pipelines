@@ -13,6 +13,7 @@ from typing import Union, List, Dict
 from pytz import timezone
 
 from basedosdados import Storage, Table
+import basedosdados as bd
 from dbt_client import DbtClient
 import pandas as pd
 import pendulum
@@ -295,6 +296,31 @@ def save_treated_local(dataframe, file_path, mode="staging"):
 # Extract data
 #
 ###############
+@task
+def query_table_and_save_local(
+    dataset_id: str, table_id: str, project_id=None, date_range: dict = None
+):
+    if not project_id:
+        project_id = bq_project()
+    savepath = Path(
+        f"{dataset_id}/{table_id}/data={datetime.now().date()}/{datetime.now().date()}.csv"
+    )
+    savepath.parent.mkdir(parents=True, exist_ok=True)
+    query = f"""
+    SELECT *
+    FROM {project_id}.{dataset_id}.{table_id}
+    """
+    if date_range:
+        query += f"\nWHERE data between {date_range['start']} and {date_range['end']}"
+    log(f"Will run the following query\n{query}")
+
+    results = bd.read_sql(query=query, billing_project_id=bq_project())
+    return results.to_csv(savepath, index=False)
+
+
+@task(max_retries=3, retry_delay=timedelta(seconds=10))
+def upload_to_storage(dataset_id, table_id, filepath):
+    pass
 
 
 @task
