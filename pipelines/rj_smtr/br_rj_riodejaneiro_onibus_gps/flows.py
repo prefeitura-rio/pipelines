@@ -257,6 +257,12 @@ recaptura.run_config = KubernetesRun(
 )
 recaptura.schedule = every_hour
 
+materialize_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+materialize_sppo.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+
 captura_sppo_v2.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_sppo_v2.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
