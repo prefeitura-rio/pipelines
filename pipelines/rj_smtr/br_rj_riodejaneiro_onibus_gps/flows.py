@@ -189,7 +189,10 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
 
     # Run tasks
     errors, timestamps = query_logs(dataset_id=dataset_id, table_id=table_id)
-
+    # Rename flow run
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix="GPS SPPO: ", now_time=get_now_time(), wait=timestamps
+    )
     with case(errors, False):
         materialize = create_flow_run(
             flow_name=materialize_sppo.name,
