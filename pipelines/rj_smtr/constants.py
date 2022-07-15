@@ -111,3 +111,7 @@ class constants(Enum):  # pylint: disable=c0103
             "key_column": "trip_id",
         },
     }
+    # SUBSIDIO SPPO
+    SUBSIDIO_SPPO_DATASET_ID = "projeto_subsidio_sppo"
+    SUBSIDIO_SPPO_TABLE_ID = "aux_registros_status_trajeto"
+    SUBSIDIO_SPPO_PLANEJADO_TABLE_ID = "viagem_planejada"
