@@ -367,7 +367,7 @@ def get_raw(
     url,
     headers=None,
     source: str = None,
-    timestamp=pendulum.now(constants.TIMEZONE.value),
+    timestamp=None,
 ):
     """Request data from a url API
 
@@ -377,7 +377,7 @@ def get_raw(
         source (str, optional): Source API being captured.
         Possible values are 'stpl_api', 'brt_api', 'sppo_api' and 'sppo_api_v2'.
         timestamp(pendulum.datetime.DateTime, optional): timestamp of the request
-        time. Defaults to the pendulum.now() at the start of task run.
+        time. Defaults to None.
     Returns:
         dict: "data" contains the response object from the request, "timestamp" contains
         the run time timestamp, "error" catches errors that may occur during task execution.
@@ -390,6 +390,8 @@ def get_raw(
         url = f"{url}{key}={access[key]}"
     data = None
     error = None
+    if not timestamp:
+        timestamp = pendulum.now(constants.TIMEZONE.value)
     if source == "sppo_api_v2":
         access = get_vault_secret(source)["data"]
         key = list(access)[0]
@@ -398,11 +400,10 @@ def get_raw(
             "start": (timestamp - timedelta(minutes=6)).strftime("%Y-%m-%d+%H:%M:%S"),
             "end": (timestamp - timedelta(minutes=5)).strftime("%Y-%m-%d+%H:%M:%S"),
         }
-        print(
-            f"Will request data between {date_range['start']} and {date_range['end']}"
-        )
+        log(f"Will request data between {date_range['start']} and {date_range['end']}")
         url += f"&dataInicial={date_range['start']}"
         url += f"&dataFinal={date_range['end']}"
+
     try:
         data = requests.get(
             url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
