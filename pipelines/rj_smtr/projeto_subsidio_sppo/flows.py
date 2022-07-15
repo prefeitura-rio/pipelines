@@ -64,7 +64,12 @@ from prefect.storage import GCS
 from pipelines.constants import constants as emd_constants
 from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.schedules import every_day
-from pipelines.rj_smtr.tasks import fetch_dataset_sha, run_dbt_model
+from pipelines.rj_smtr.tasks import (
+    fetch_dataset_sha,
+    query_table_and_save_local,
+    run_dbt_model,
+    upload_to_storage,
+)
 
 # from pipelines.rj_smtr.projeto_subsidio_sppo.schedules import every_two_weeks
 from pipelines.utils.decorators import Flow
@@ -78,6 +83,25 @@ with Flow(
     pass
 
 with Flow(
+    "SMTR - Subsidio - Salvar no Storage", code_owners=["caio", "fernanda"]
+) as subsidio_dump_gcs:
+    project_id = Parameter("project_id", default=None)
+    dataset_id = Parameter("dataset_id", default="projeto_subsidio_sppo")
+    table_id = Parameter("table_id", default="viagem_completa")
+    date_range = Parameter("date_range", default=None)
+    if_exists = Parameter("if_exists", default="replace")
+
+    filepath = query_table_and_save_local(
+        dataset_id=dataset_id,
+        table_id=table_id,
+        project_id=project_id,
+        date_range=date_range,
+    )
+    upload_to_storage(
+        dataset_id=dataset_id, table_id=table_id, filepath=filepath, if_exists=if_exists
+    )
+
+with Flow(
     "SMTR - Subsidio SPPO - Materialização",
     code_owners=["caio", "fernanda"],
 ) as subsidio_flow:
@@ -88,9 +112,7 @@ with Flow(
         "dataset_id", default=constants.SUBSIDIO_SPPO_DATASET_ID.value
     )
     table_id = Parameter("table_id", default=constants.SUBSIDIO_SPPO_TABLE_ID.value)
-    table_id_planejado = Parameter(
-        "table_id", default=constants.SUBSIDIO_SPPO_PLANEJADO_TABLE_ID.value
-    )
+
     refresh = Parameter("refresh", default=False)
 
     # Set dbt client #

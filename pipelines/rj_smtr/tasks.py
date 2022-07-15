@@ -335,12 +335,16 @@ def query_table_and_save_local(
     log(f"Will run the following query\n{query}")
 
     results = bd.read_sql(query=query, billing_project_id=bq_project())
-    return results.to_csv(savepath, index=False)
+    results.to_csv(savepath, index=False)
+    return savepath
 
 
 @task(max_retries=3, retry_delay=timedelta(seconds=10))
-def upload_to_storage(dataset_id, table_id, filepath):
-    pass
+def upload_to_storage(dataset_id, table_id, filepath, if_exists="replace"):
+    st_obj = Storage(dataset_id=dataset_id, table_id=table_id)
+    log(f"Uploading {filepath} to {st_obj.bucket}/staging/{filepath.parent}")
+    st_obj.upload(path=filepath.parent.parent, if_exists=if_exists)
+    return True
 
 
 @task(nout=2)
