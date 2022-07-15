@@ -29,10 +29,22 @@ General purpose functions for the projeto_subsidio_sppo project
 # ```
 #
 ###############################################################################
-import pandas as pd
 
 
-def melt_by_direction(df, id_vars, value_name="trip_id", var_name="aux"):
+def melt_by_direction(
+    df, id_vars, value_name="trip_id", var_name="aux"
+):  # pylint: disable=C0103
+    """Util function for quadro horário
+
+    Args:
+        df (_type_): _description_
+        id_vars (_type_): _description_
+        value_name (str, optional): _description_. Defaults to "trip_id".
+        var_name (str, optional): _description_. Defaults to "aux".
+
+    Returns:
+        _type_: _description_
+    """
     return (
         df[id_vars + [f"{value_name}_ida", f"{value_name}_volta"]]
         .melt(id_vars, var_name=var_name, value_name=value_name)

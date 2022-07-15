@@ -77,12 +77,6 @@ from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
 
 
 with Flow(
-    "SMTR - Viagens Planejadas Atualização",
-    code_owners=["caio", "fernanda"],
-) as planejado_flow:
-    pass
-
-with Flow(
     "SMTR - Subsidio - Salvar no Storage", code_owners=["caio", "fernanda"]
 ) as subsidio_dump_gcs:
     project_id = Parameter("project_id", default=None)
@@ -104,7 +98,7 @@ with Flow(
 with Flow(
     "SMTR - Subsidio SPPO - Materialização",
     code_owners=["caio", "fernanda"],
-) as subsidio_flow:
+) as subsidio_materialize_flow:
     run_date = Parameter(
         "run_date", default={"run_date": pendulum.now(constants.TIMEZONE.value).date()}
     )
@@ -139,7 +133,11 @@ with Flow(
             upstream=True,
         )
 
-subsidio_flow.schedule = every_day
-subsidio_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-subsidio_flow.run_config = KubernetesRun(image=emd_constants.DOCKER_IMAGE.value)
-# flow.schedule = every_two_weeks
+subsidio_materialize_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+subsidio_materialize_flow.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value
+)
+subsidio_materialize_flow.schedule = every_day
+
+subsidio_dump_gcs.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+subsidio_dump_gcs.run_config = KubernetesRun(image=emd_constants.DOCKER_IMAGE.value)

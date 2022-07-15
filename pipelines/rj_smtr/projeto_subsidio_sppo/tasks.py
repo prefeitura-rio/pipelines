@@ -50,31 +50,48 @@ Tasks for projeto_subsidio_sppo
 ###############################################################################
 
 from datetime import datetime
-from prefect import task
 from io import StringIO, BytesIO
-import pandas as pd
 from pathlib import Path
-import requests
 from zipfile import ZipFile
+
+from prefect import task
+import pandas as pd
+
+import requests
 
 
 from pipelines.rj_smtr.projeto_subsidio_sppo.utils import melt_by_direction
 
 
 @task
-def get_sheets(share_url):
+def get_sheets(share_url: str):
+    """Download google sheets to pandas DataFrame
+
+    Args:
+        share_url (str): share link generated on google drive
+    Returns:
+        pandas.core.DataFrame: sheets content
+    """
     file_id = share_url.split("/")[-2]
     url = f"https://drive.google.com/uc?export=download&id={file_id}"
     data = requests.get(url)
-    df = pd.read_csv(StringIO(data.content.decode("utf-8")))
+    df = pd.read_csv(StringIO(data.content.decode("utf-8")))  # pylint: disable=C0103
     return df
 
 
 @task
-def get_and_extract_gtfs(share_url):
+def get_and_extract_gtfs(share_url: str):
+    """Get gtfs zip file and extract locally
+
+    Args:
+        share_url (str): share link generated on google drive
+
+    Returns:
+        str: path to the directory containing extracted files
+    """
     file_id = share_url.split("/")[-2]
     url = f"https://drive.google.com/uc?export=download&id={file_id}"
-    extract_path = Path(f"gtfs/{datetime.now().date()}/")
+    extract_path = Path(f"gtfs/data={datetime.now().date()}/")
     extract_path.mkdir(parents=True, exist_ok=True)
     content = BytesIO(requests.get(url).content)
     ZipFile(content).extractall(extract_path)
@@ -82,7 +99,16 @@ def get_and_extract_gtfs(share_url):
 
 
 @task
-def get_quadro_horario(df, date):
+def get_quadro_horario(df, date):  # pylint: disable=C0103, W0613
+    """Treatment for quadro_horario csv
+
+    Args:
+        df (pandas.core.DataFrame): data to treat
+        date (str): date
+
+    Returns:
+        pandas.core.DataFrame: treated data
+    """
 
     # corrige nome do servico
     df["servico"] = df["servico"].str.extract(r"([A-Z]+)").fillna("") + df[

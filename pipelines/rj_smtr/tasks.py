@@ -318,8 +318,17 @@ def save_treated_local(file_path, mode="staging", dataframe=None, treated_status
 ###############
 @task
 def query_table_and_save_local(
-    dataset_id: str, table_id: str, project_id=None, date_range: dict = None
+    dataset_id: str, table_id: str, project_id: str = None, date_range: dict = None
 ):
+    """
+    Query logs table to get failed captures timestamps
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+        project_id(str, optional): project in which table lives. Defaults to None
+        date_range(dict, optional): date range which to filter query.
+        Must contain keys 'start' and 'end'. Defaults to None
+    """
     if not project_id:
         project_id = bq_project()
     savepath = Path(
@@ -341,6 +350,17 @@ def query_table_and_save_local(
 
 @task(max_retries=3, retry_delay=timedelta(seconds=10))
 def upload_to_storage(dataset_id, table_id, filepath, if_exists="replace"):
+    """Upload file to storage without creating table on BigQuery
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+        filepath (str, pathlib.Path): path to file for uploading
+        if_exists (str, optional): what to do if file already exists. Defaults to "replace".
+
+    Returns:
+        bool: if upload was successful
+    """
     st_obj = Storage(dataset_id=dataset_id, table_id=table_id)
     log(f"Uploading {filepath} to {st_obj.bucket}/staging/{filepath.parent}")
     st_obj.upload(path=filepath.parent.parent, if_exists=if_exists)
