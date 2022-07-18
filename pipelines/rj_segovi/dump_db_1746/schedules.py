@@ -18,16 +18,9 @@ from pipelines.utils.utils import untuple_clocks as untuple
 # 1746 Schedules
 #
 #####################################
-_1746_queries = {
-    "chamado": {
-        "partition_columns": "dt_inicio",
-        "lower_bound_date": "2021-01-01",
-        "materialize_after_dump": True,
-        "materialization_mode": "dev",
-        "materialize_to_datario": True,
-        "dump_to_gcs": True,
-        "dump_mode": "append",
-        "execute_query": """
+
+
+query_chamdo_1746 = """
 select
     distinct ch.id_chamado,
     CONVERT (
@@ -290,7 +283,48 @@ group by
     chs.dt_alvo_diagnostico,
     cl.dt_real_diagnostico,
     no_justificativa
-        """,
+        """
+
+# TODO: deprecated table
+_1746_queries_deprecated = {
+    "chamado": {
+        "partition_columns": "dt_inicio",
+        "lower_bound_date": "2021-01-01",
+        "materialize_after_dump": True,
+        "materialization_mode": "dev",
+        "materialize_to_datario": True,
+        "dump_to_gcs": True,
+        "dump_mode": "append",
+        "execute_query": query_chamdo_1746,
+    },
+}
+
+_1746_clocks_deprecated = generate_dump_db_schedules(
+    interval=timedelta(days=1),
+    start_date=datetime(2022, 3, 21, 2, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    labels=[
+        constants.RJ_SEGOVI_AGENT_LABEL.value,
+    ],
+    db_database="REPLICA1746",
+    db_host="10.70.1.34",
+    db_port="1433",
+    db_type="sql_server",
+    dataset_id="administracao_servicos_publicos_1746",
+    vault_secret_path="clustersql2",
+    table_parameters=_1746_queries_deprecated,
+)
+
+
+_1746_queries = {
+    "chamado_1746": {
+        "partition_columns": "dt_inicio",
+        "lower_bound_date": "2021-01-01",
+        "materialize_after_dump": True,
+        "materialization_mode": "dev",
+        "materialize_to_datario": True,
+        "dump_to_gcs": True,
+        "dump_mode": "append",
+        "execute_query": query_chamdo_1746,
     },
 }
 _1746_clocks = generate_dump_db_schedules(
@@ -303,9 +337,11 @@ _1746_clocks = generate_dump_db_schedules(
     db_host="10.70.1.34",
     db_port="1433",
     db_type="sql_server",
-    dataset_id="administracao_servicos_publicos_1746",
+    dataset_id="administracao_servicos_publicos",
     vault_secret_path="clustersql2",
     table_parameters=_1746_queries,
 )
 
-_1746_daily_update_schedule = Schedule(clocks=untuple(_1746_clocks))
+_1746_daily_update_schedule = Schedule(
+    clocks=untuple(_1746_clocks + _1746_clocks_deprecated)
+)
