@@ -47,16 +47,9 @@ from pipelines.utils.utils import untuple_clocks as untuple
 # 1746 Schedules
 #
 #####################################
-_1746_queries = {
-    &#34;chamado&#34;: {
-        &#34;partition_columns&#34;: &#34;dt_inicio&#34;,
-        &#34;lower_bound_date&#34;: &#34;2021-01-01&#34;,
-        &#34;materialize_after_dump&#34;: True,
-        &#34;materialization_mode&#34;: &#34;dev&#34;,
-        &#34;materialize_to_datario&#34;: True,
-        &#34;dump_to_gcs&#34;: True,
-        &#34;dump_mode&#34;: &#34;append&#34;,
-        &#34;execute_query&#34;: &#34;&#34;&#34;
+
+
+query_chamdo_1746 = &#34;&#34;&#34;
 select
     distinct ch.id_chamado,
     CONVERT (
@@ -319,7 +312,48 @@ group by
     chs.dt_alvo_diagnostico,
     cl.dt_real_diagnostico,
     no_justificativa
-        &#34;&#34;&#34;,
+        &#34;&#34;&#34;
+
+# TODO: deprecated table
+_1746_queries_deprecated = {
+    &#34;chamado&#34;: {
+        &#34;partition_columns&#34;: &#34;dt_inicio&#34;,
+        &#34;lower_bound_date&#34;: &#34;2021-01-01&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;dev&#34;,
+        &#34;materialize_to_datario&#34;: True,
+        &#34;dump_to_gcs&#34;: True,
+        &#34;dump_mode&#34;: &#34;append&#34;,
+        &#34;execute_query&#34;: query_chamdo_1746,
+    },
+}
+
+_1746_clocks_deprecated = generate_dump_db_schedules(
+    interval=timedelta(days=1),
+    start_date=datetime(2022, 3, 21, 2, 0, tzinfo=pytz.timezone(&#34;America/Sao_Paulo&#34;)),
+    labels=[
+        constants.RJ_SEGOVI_AGENT_LABEL.value,
+    ],
+    db_database=&#34;REPLICA1746&#34;,
+    db_host=&#34;10.70.1.34&#34;,
+    db_port=&#34;1433&#34;,
+    db_type=&#34;sql_server&#34;,
+    dataset_id=&#34;administracao_servicos_publicos_1746&#34;,
+    vault_secret_path=&#34;clustersql2&#34;,
+    table_parameters=_1746_queries_deprecated,
+)
+
+
+_1746_queries = {
+    &#34;chamado_1746&#34;: {
+        &#34;partition_columns&#34;: &#34;dt_inicio&#34;,
+        &#34;lower_bound_date&#34;: &#34;2021-01-01&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;dev&#34;,
+        &#34;materialize_to_datario&#34;: True,
+        &#34;dump_to_gcs&#34;: True,
+        &#34;dump_mode&#34;: &#34;append&#34;,
+        &#34;execute_query&#34;: query_chamdo_1746,
     },
 }
 _1746_clocks = generate_dump_db_schedules(
@@ -332,12 +366,14 @@ _1746_clocks = generate_dump_db_schedules(
     db_host=&#34;10.70.1.34&#34;,
     db_port=&#34;1433&#34;,
     db_type=&#34;sql_server&#34;,
-    dataset_id=&#34;administracao_servicos_publicos_1746&#34;,
+    dataset_id=&#34;administracao_servicos_publicos&#34;,
     vault_secret_path=&#34;clustersql2&#34;,
     table_parameters=_1746_queries,
 )
 
-_1746_daily_update_schedule = Schedule(clocks=untuple(_1746_clocks))</code></pre>
+_1746_daily_update_schedule = Schedule(
+    clocks=untuple(_1746_clocks + _1746_clocks_deprecated)
+)</code></pre>
 </details>
 </section>
 <section>
