@@ -342,6 +342,7 @@ _1746_clocks = generate_dump_db_schedules(
     table_parameters=_1746_queries,
 )
 
+# rmeove deprecated
 _1746_daily_update_schedule = Schedule(
     clocks=untuple(_1746_clocks + _1746_clocks_deprecated)
 )
