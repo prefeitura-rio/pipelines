@@ -20,15 +20,15 @@ from prefect.schedules import Schedule
 egp_web_queries = {
     "chance": {
         "dump_mode": "overwrite",
-        "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.Chance;",
+        "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.VW_Chance;",
     },
     "comentario": {
         "dump_mode": "overwrite",
-        "execute_query": "SELECT * FROM FROM EGPWEB_PRD.dbo.Comentario;",
+        "execute_query": "SELECT * FROM FROM EGPWEB_PRD.dbo.VW_Comentario;",
     },
     "indicador": {
         "dump_mode": "overwrite",
-        "execute_query": "SELECT * FROM FROM EGPWEB_PRD.dbo.Indicador;",
+        "execute_query": "SELECT * FROM FROM EGPWEB_PRD.dbo.VW_Indicador;",
     },
     "meta": {
         "dump_mode": "overwrite",
@@ -36,7 +36,7 @@ egp_web_queries = {
     },
     "nota_meta": {
         "dump_mode": "overwrite",
-        "execute_query": "SELECT * FROM FROM EGPWEB_PRD.dbo.NotaMeta;",
+        "execute_query": "SELECT * FROM FROM EGPWEB_PRD.dbo.VW_NotaMeta;",
     },
 }
 
