@@ -18,6 +18,7 @@ from pipelines.utils.utils import untuple_clocks as untuple
 # SME Schedules
 #
 #####################################
+
 sme_queries = {
     "aluno": {
         "materialize_after_dump": True,
