@@ -12,17 +12,16 @@ from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 
 from pipelines.constants import constants
+
+from pipelines.rj_cor.comando.eventos.constants import (
+    constants as comando_constants,
+)
+from pipelines.rj_cor.comando.eventos.schedules import every_day
 from pipelines.rj_cor.comando.eventos.tasks import (
     get_and_save_date_redis,
     download,
     salvar_dados,
 )
-
-from pipelines.rj_cor.comando.eventos.constants import (
-    constants as comando_constants,
-)
-
-# from pipelines.rj_cor.comando.schedules import every_two_weeks
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.decorators import Flow
 from pipelines.utils.dump_db.constants import constants as dump_db_constants
@@ -46,9 +45,7 @@ with Flow(
     materialization_mode = Parameter(
         "materialization_mode", default="dev", required=False
     )
-    materialize_to_datario = Parameter(
-        "materialize_to_datario", default=False, required=False
-    )
+    materialize_to_datario = Parameter("", default=False, required=False)
 
     # Dump to GCS after? Should only dump to GCS if materializing to datario
     dump_to_gcs = Parameter("dump_to_gcs", default=False, required=False)
@@ -137,5 +134,11 @@ with Flow(
             )
 
 rj_cor_comando_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-rj_cor_comando_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-# flow.schedule = every_two_weeks
+rj_cor_comando_flow.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[
+        constants.RJ_COR_AGENT_LABEL.value,
+    ],
+)
+
+rj_cor_comando_flow.schedule = every_day
