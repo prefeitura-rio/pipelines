@@ -34,12 +34,11 @@ Schedules for the database dump pipeline
 
 from datetime import datetime, timedelta
 
-from prefect.schedules import Schedule
 import pytz
-
 from pipelines.constants import constants
 from pipelines.utils.dump_db.utils import generate_dump_db_schedules
 from pipelines.utils.utils import untuple_clocks as untuple
+from prefect.schedules import Schedule
 
 #####################################
 #
@@ -54,11 +53,11 @@ egp_web_queries = {
     },
     &#34;comentario&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM EGPWEB_PRD.dbo.VW_Comentario;&#34;,
+        &#34;execute_query&#34;: &#34;SELECT * FROM FROM EGPWEB_PRD.dbo.VW_Comentario;&#34;,
     },
     &#34;indicador&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM EGPWEB_PRD.dbo.VW_Indicador;&#34;,
+        &#34;execute_query&#34;: &#34;SELECT * FROM FROM EGPWEB_PRD.dbo.VW_Indicador;&#34;,
     },
     &#34;meta&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
@@ -66,14 +65,14 @@ egp_web_queries = {
     },
     &#34;nota_meta&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM EGPWEB_PRD.dbo.VW_NotaMeta;&#34;,
+        &#34;execute_query&#34;: &#34;SELECT * FROM FROM EGPWEB_PRD.dbo.VW_NotaMeta;&#34;,
     },
 }
 
 
 egp_web_clocks = generate_dump_db_schedules(
     interval=timedelta(days=30),
-    start_date=datetime(2022, 6, 13, 10, 0, tzinfo=pytz.timezone(&#34;America/Sao_Paulo&#34;)),
+    start_date=datetime(2022, 7, 20, 10, 0, tzinfo=pytz.timezone(&#34;America/Sao_Paulo&#34;)),
     labels=[
         constants.RJ_SMFP_AGENT_LABEL.value,
     ],
@@ -81,7 +80,7 @@ egp_web_clocks = generate_dump_db_schedules(
     db_host=&#34;10.2.221.101&#34;,
     db_port=&#34;1433&#34;,
     db_type=&#34;sql_server&#34;,
-    dataset_id=&#34;administracao_metas&#34;,
+    dataset_id=&#34;planejamento_gestao_acordo_resultados&#34;,
     vault_secret_path=&#34;egpweb-prod&#34;,
     table_parameters=egp_web_queries,
 )
