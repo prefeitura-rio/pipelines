@@ -141,4 +141,4 @@ rj_cor_comando_flow.run_config = KubernetesRun(
     ],
 )
 
-# rj_cor_comando_flow.schedule =
+rj_cor_comando_flow.schedule = every_day
