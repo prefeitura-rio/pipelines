@@ -28,7 +28,9 @@ smfp_egpweb_tables = {
 smfp_egpweb_clocks = [
     IntervalClock(
         interval=timedelta(days=30),
-        start_date=datetime(2022, 7, 20, 22, 30, tzinfo=pytz.timezone("America/Sao_Paulo"))
+        start_date=datetime(
+            2022, 7, 20, 22, 30, tzinfo=pytz.timezone("America/Sao_Paulo")
+        )
         + timedelta(minutes=15 * count),
         labels=[
             constants.RJ_SMFP_AGENT_LABEL.value,
