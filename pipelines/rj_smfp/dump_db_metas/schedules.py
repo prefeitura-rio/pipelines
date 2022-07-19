@@ -20,7 +20,7 @@ from prefect.schedules import Schedule
 egp_web_queries = {
     "chance": {
         "dump_mode": "overwrite",
-        "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.VW_Chance;",
+        "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.VW_CHANCE;",
     },
     "comentario": {
         "dump_mode": "overwrite",
