@@ -24,11 +24,11 @@ egp_web_queries = {
     },
     "comentario": {
         "dump_mode": "overwrite",
-        "execute_query": "SELECT * FROM FROM EGPWEB_PRD.dbo.VW_Comentario;",
+        "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.VW_Comentario;",
     },
     "indicador": {
         "dump_mode": "overwrite",
-        "execute_query": "SELECT * FROM FROM EGPWEB_PRD.dbo.VW_Indicador;",
+        "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.VW_Indicador;",
     },
     "meta": {
         "dump_mode": "overwrite",
@@ -36,7 +36,7 @@ egp_web_queries = {
     },
     "nota_meta": {
         "dump_mode": "overwrite",
-        "execute_query": "SELECT * FROM FROM EGPWEB_PRD.dbo.VW_NotaMeta;",
+        "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.VW_NotaMeta;",
     },
 }
 
