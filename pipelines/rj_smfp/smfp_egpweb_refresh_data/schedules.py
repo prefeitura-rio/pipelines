@@ -38,7 +38,7 @@ smfp_egpweb_clocks = [
         parameter_defaults={
             "dataset_id": "planejamento_gestao_acordo_resultados",
             "table_id": table_id,
-            "mode": "dev",
+            "mode": "prod",
         },
     )
     for count, (_, table_id) in enumerate(smfp_egpweb_tables.items())
