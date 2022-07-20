@@ -104,8 +104,6 @@ def download(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
 
     atividades_evento = pd.DataFrame(atividades_evento)
     log(f">>>>>>> atv eventos {atividades_evento.head()}")
-    eventos.name = "eventos"
-    atividades_evento.name = "atividades_evento"
 
     # Fixa colunas e ordem
     eventos = eventos[
@@ -142,7 +140,7 @@ def download(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
 
 
 @task
-def salvar_dados(dfr: pd.DataFrame, current_time: str) -> Union[str, Path]:
+def salvar_dados(dfr: pd.DataFrame, current_time: str, name: str) -> Union[str, Path]:
     """
     Salvar dados tratados em csv para conseguir subir pro GCP
     """
@@ -154,7 +152,7 @@ def salvar_dados(dfr: pd.DataFrame, current_time: str) -> Union[str, Path]:
         f"ano_particao={ano}", f"mes_particao={mes}", f"data_particao={data}"
     )
 
-    base_path = os.path.join(os.getcwd(), "data", "comando", dfr.name)
+    base_path = os.path.join(os.getcwd(), "data", "comando", name)
 
     partition_path = os.path.join(base_path, partitions)
 

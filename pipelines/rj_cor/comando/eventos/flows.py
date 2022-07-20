@@ -83,10 +83,11 @@ with Flow(
     eventos, atividade_eventos = download(
         date_interval=date_interval, wait=current_time
     )
-    eventos_path = salvar_dados(dfr=eventos, current_time=current_time)
+    eventos_path = salvar_dados(dfr=eventos, current_time=current_time, name="eventos")
     # atividade_eventos_path = salvar_dados(
     #    dfr=atividade_eventos,
-    #    current_time=date_interval['fim']
+    #    current_time=date_interval['fim'],
+    #    name='atividade_eventos',
     # )
 
     create_table_and_upload_to_gcs(
