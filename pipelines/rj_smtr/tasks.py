@@ -320,7 +320,7 @@ def save_treated_local(file_path, mode="staging", dataframe=None, treated_status
 def query_logs(
     dataset_id: str,
     table_id: str,
-    datetime_filter=pendulum.now(constants.TIMEZONE.value),
+    datetime_filter=None,
 ):
     """Queries capture logs to check for errors
 
@@ -335,6 +335,10 @@ def query_logs(
         list: containing timestamps for which the capture failed
 
     """
+
+    if not datetime_filter:
+        datetime_filter = pendulum.now(constants.TIMEZONE.value)
+
     query = f"""
         SELECT *
         FROM rj-smtr.{dataset_id}.{table_id}_logs
