@@ -49,7 +49,7 @@ from pipelines.utils.utils import untuple_clocks as untuple
 #####################################
 
 
-query_chamdo_1746 = &#34;&#34;&#34;
+QUERY_CHAMADO_1746 = &#34;&#34;&#34;
 select
     distinct ch.id_chamado,
     CONVERT (
@@ -314,7 +314,6 @@ group by
     no_justificativa
         &#34;&#34;&#34;
 
-# TODO: deprecated table
 _1746_queries_deprecated = {
     &#34;chamado&#34;: {
         &#34;partition_columns&#34;: &#34;dt_inicio&#34;,
@@ -324,7 +323,7 @@ _1746_queries_deprecated = {
         &#34;materialize_to_datario&#34;: True,
         &#34;dump_to_gcs&#34;: True,
         &#34;dump_mode&#34;: &#34;append&#34;,
-        &#34;execute_query&#34;: query_chamdo_1746,
+        &#34;execute_query&#34;: QUERY_CHAMADO_1746,
     },
 }
 
@@ -353,7 +352,7 @@ _1746_queries = {
         &#34;materialize_to_datario&#34;: True,
         &#34;dump_to_gcs&#34;: True,
         &#34;dump_mode&#34;: &#34;append&#34;,
-        &#34;execute_query&#34;: query_chamdo_1746,
+        &#34;execute_query&#34;: QUERY_CHAMADO_1746,
     },
 }
 _1746_clocks = generate_dump_db_schedules(

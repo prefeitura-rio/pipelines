@@ -34,11 +34,12 @@ Schedules for the database dump pipeline
 
 from datetime import datetime, timedelta
 
+from prefect.schedules import Schedule
 import pytz
+
 from pipelines.constants import constants
 from pipelines.utils.dump_db.utils import generate_dump_db_schedules
 from pipelines.utils.utils import untuple_clocks as untuple
-from prefect.schedules import Schedule
 
 #####################################
 #
@@ -53,11 +54,11 @@ egp_web_queries = {
     },
     &#34;comentario&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM FROM EGPWEB_PRD.dbo.VW_Comentario;&#34;,
+        &#34;execute_query&#34;: &#34;SELECT * FROM EGPWEB_PRD.dbo.VW_Comentario;&#34;,
     },
     &#34;indicador&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM FROM EGPWEB_PRD.dbo.VW_Indicador;&#34;,
+        &#34;execute_query&#34;: &#34;SELECT * FROM EGPWEB_PRD.dbo.VW_Indicador;&#34;,
     },
     &#34;meta&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
@@ -65,7 +66,7 @@ egp_web_queries = {
     },
     &#34;nota_meta&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM FROM EGPWEB_PRD.dbo.VW_NotaMeta;&#34;,
+        &#34;execute_query&#34;: &#34;SELECT * FROM EGPWEB_PRD.dbo.VW_NotaMeta;&#34;,
     },
 }
 
