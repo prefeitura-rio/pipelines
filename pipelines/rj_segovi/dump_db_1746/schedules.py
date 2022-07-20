@@ -285,7 +285,6 @@ group by
     no_justificativa
         """
 
-# TODO: deprecated table
 _1746_queries_deprecated = {
     "chamado": {
         "partition_columns": "dt_inicio",
