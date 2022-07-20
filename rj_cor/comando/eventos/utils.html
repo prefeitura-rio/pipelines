@@ -32,7 +32,16 @@
 General purpose functions for the comando project
 &#34;&#34;&#34;
 import requests
+from requests.adapters import HTTPAdapter, Retry
+
 from pipelines.utils.utils import get_vault_secret
+
+
+def build_redis_key(dataset_id: str, table_id: str, mode: str = &#34;prod&#34;):
+    key = dataset_id + &#34;.&#34; + table_id
+    if mode == &#34;dev&#34;:
+        key = f&#34;{mode}.{key}&#34;
+    return key
 
 
 def get_token():
@@ -46,11 +55,17 @@ def get_token():
     return requests.post(host, json=payload).text
 
 
-def get_url(url, parameters={}):  # pylint: disable=W0102
+def get_url(url, parameters: dict = None, token: str = None):  # pylint: disable=W0102
     &#34;&#34;&#34;Make request to comando&#39;s API&#34;&#34;&#34;
-    token = get_token()
+    if not parameters:
+        parameters = {}
+    if not token:
+        token = get_token()
+    s = requests.Session()
+    retries = Retry(total=5, backoff_factor=1.5)
+    s.mount(&#34;http://&#34;, HTTPAdapter(max_retries=retries))
     headers = {&#34;Authorization&#34;: token}
-    return requests.get(url, json=parameters, headers=headers).json()</code></pre>
+    return s.get(url, json=parameters, headers=headers).json()</code></pre>
 </details>
 </section>
 <section>
@@ -60,6 +75,22 @@ def get_url(url, parameters={}):  # pylint: disable=W0102
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="pipelines.rj_cor.comando.eventos.utils.build_redis_key"><code class="name flex">
+<span>def <span class="ident">build_redis_key</span></span>(<span>dataset_id: str, table_id: str, mode: str = 'prod')</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def build_redis_key(dataset_id: str, table_id: str, mode: str = &#34;prod&#34;):
+    key = dataset_id + &#34;.&#34; + table_id
+    if mode == &#34;dev&#34;:
+        key = f&#34;{mode}.{key}&#34;
+    return key</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_cor.comando.eventos.utils.get_token"><code class="name flex">
 <span>def <span class="ident">get_token</span></span>(<span>)</span>
 </code></dt>
@@ -81,7 +112,7 @@ def get_url(url, parameters={}):  # pylint: disable=W0102
 </details>
 </dd>
 <dt id="pipelines.rj_cor.comando.eventos.utils.get_url"><code class="name flex">
-<span>def <span class="ident">get_url</span></span>(<span>url, parameters={})</span>
+<span>def <span class="ident">get_url</span></span>(<span>url, parameters: dict = None, token: str = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Make request to comando's API</p></div>
@@ -89,11 +120,17 @@ def get_url(url, parameters={}):  # pylint: disable=W0102
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_url(url, parameters={}):  # pylint: disable=W0102
+<pre><code class="python">def get_url(url, parameters: dict = None, token: str = None):  # pylint: disable=W0102
     &#34;&#34;&#34;Make request to comando&#39;s API&#34;&#34;&#34;
-    token = get_token()
+    if not parameters:
+        parameters = {}
+    if not token:
+        token = get_token()
+    s = requests.Session()
+    retries = Retry(total=5, backoff_factor=1.5)
+    s.mount(&#34;http://&#34;, HTTPAdapter(max_retries=retries))
     headers = {&#34;Authorization&#34;: token}
-    return requests.get(url, json=parameters, headers=headers).json()</code></pre>
+    return s.get(url, json=parameters, headers=headers).json()</code></pre>
 </details>
 </dd>
 </dl>
@@ -160,6 +197,7 @@ setTimeout(() => input.focus(), 100);
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="pipelines.rj_cor.comando.eventos.utils.build_redis_key" href="#pipelines.rj_cor.comando.eventos.utils.build_redis_key">build_redis_key</a></code></li>
 <li><code><a title="pipelines.rj_cor.comando.eventos.utils.get_token" href="#pipelines.rj_cor.comando.eventos.utils.get_token">get_token</a></code></li>
 <li><code><a title="pipelines.rj_cor.comando.eventos.utils.get_url" href="#pipelines.rj_cor.comando.eventos.utils.get_url">get_url</a></code></li>
 </ul>
