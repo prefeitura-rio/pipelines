@@ -133,8 +133,6 @@ def download(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
 
     atividades_evento = pd.DataFrame(atividades_evento)
     log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; atv eventos {atividades_evento.head()}&#34;)
-    eventos.name = &#34;eventos&#34;
-    atividades_evento.name = &#34;atividades_evento&#34;
 
     # Fixa colunas e ordem
     eventos = eventos[
@@ -171,7 +169,7 @@ def download(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
 
 
 @task
-def salvar_dados(dfr: pd.DataFrame, current_time: str) -&gt; Union[str, Path]:
+def salvar_dados(dfr: pd.DataFrame, current_time: str, name: str) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
     Salvar dados tratados em csv para conseguir subir pro GCP
     &#34;&#34;&#34;
@@ -183,7 +181,7 @@ def salvar_dados(dfr: pd.DataFrame, current_time: str) -&gt; Union[str, Path]:
         f&#34;ano_particao={ano}&#34;, f&#34;mes_particao={mes}&#34;, f&#34;data_particao={data}&#34;
     )
 
-    base_path = os.path.join(os.getcwd(), &#34;data&#34;, &#34;comando&#34;, dfr.name)
+    base_path = os.path.join(os.getcwd(), &#34;data&#34;, &#34;comando&#34;, name)
 
     partition_path = os.path.join(base_path, partitions)
 
@@ -260,8 +258,6 @@ def download(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
 
     atividades_evento = pd.DataFrame(atividades_evento)
     log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; atv eventos {atividades_evento.head()}&#34;)
-    eventos.name = &#34;eventos&#34;
-    atividades_evento.name = &#34;atividades_evento&#34;
 
     # Fixa colunas e ordem
     eventos = eventos[
@@ -351,7 +347,7 @@ def not_none(something: Any) -&gt; bool:
 </details>
 </dd>
 <dt id="pipelines.rj_cor.comando.eventos.tasks.salvar_dados"><code class="name flex">
-<span>def <span class="ident">salvar_dados</span></span>(<span>dfr: pandas.core.frame.DataFrame, current_time: str) ‑> Union[str, pathlib.Path]</span>
+<span>def <span class="ident">salvar_dados</span></span>(<span>dfr: pandas.core.frame.DataFrame, current_time: str, name: str) ‑> Union[str, pathlib.Path]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Salvar dados tratados em csv para conseguir subir pro GCP</p></div>
@@ -360,7 +356,7 @@ def not_none(something: Any) -&gt; bool:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def salvar_dados(dfr: pd.DataFrame, current_time: str) -&gt; Union[str, Path]:
+def salvar_dados(dfr: pd.DataFrame, current_time: str, name: str) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
     Salvar dados tratados em csv para conseguir subir pro GCP
     &#34;&#34;&#34;
@@ -372,7 +368,7 @@ def salvar_dados(dfr: pd.DataFrame, current_time: str) -&gt; Union[str, Path]:
         f&#34;ano_particao={ano}&#34;, f&#34;mes_particao={mes}&#34;, f&#34;data_particao={data}&#34;
     )
 
-    base_path = os.path.join(os.getcwd(), &#34;data&#34;, &#34;comando&#34;, dfr.name)
+    base_path = os.path.join(os.getcwd(), &#34;data&#34;, &#34;comando&#34;, name)
 
     partition_path = os.path.join(base_path, partitions)
 
