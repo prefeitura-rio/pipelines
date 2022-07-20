@@ -349,7 +349,7 @@ def save_treated_local(file_path, mode=&#34;staging&#34;, dataframe=None, treate
 def query_logs(
     dataset_id: str,
     table_id: str,
-    datetime_filter=pendulum.now(constants.TIMEZONE.value),
+    datetime_filter=None,
 ):
     &#34;&#34;&#34;Queries capture logs to check for errors
 
@@ -364,6 +364,10 @@ def query_logs(
         list: containing timestamps for which the capture failed
 
     &#34;&#34;&#34;
+
+    if not datetime_filter:
+        datetime_filter = pendulum.now(constants.TIMEZONE.value)
+
     query = f&#34;&#34;&#34;
         SELECT *
         FROM rj-smtr.{dataset_id}.{table_id}_logs
@@ -1373,7 +1377,7 @@ def get_raw(
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.query_logs"><code class="name flex">
-<span>def <span class="ident">query_logs</span></span>(<span>dataset_id: str, table_id: str, datetime_filter=DateTime(2022, 7, 19, 17, 12, 35, 750425, tzinfo=Timezone('America/Sao_Paulo')))</span>
+<span>def <span class="ident">query_logs</span></span>(<span>dataset_id: str, table_id: str, datetime_filter=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Queries capture logs to check for errors</p>
@@ -1400,7 +1404,7 @@ for the last 1 hour before this filter</p>
 def query_logs(
     dataset_id: str,
     table_id: str,
-    datetime_filter=pendulum.now(constants.TIMEZONE.value),
+    datetime_filter=None,
 ):
     &#34;&#34;&#34;Queries capture logs to check for errors
 
@@ -1415,6 +1419,10 @@ def query_logs(
         list: containing timestamps for which the capture failed
 
     &#34;&#34;&#34;
+
+    if not datetime_filter:
+        datetime_filter = pendulum.now(constants.TIMEZONE.value)
+
     query = f&#34;&#34;&#34;
         SELECT *
         FROM rj-smtr.{dataset_id}.{table_id}_logs
