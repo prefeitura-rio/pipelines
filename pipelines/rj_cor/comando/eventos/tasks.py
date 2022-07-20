@@ -5,61 +5,78 @@ Tasks for comando
 
 import os
 from pathlib import Path
-from typing import Union, Tuple
+from typing import Any, Union, Tuple
 
 import pandas as pd
 import pendulum
 from prefect import task
 
-from pipelines.rj_cor.comando.eventos.utils import get_url
+from pipelines.rj_cor.comando.eventos.utils import get_token, get_url, build_redis_key
 from pipelines.utils.utils import get_redis_client, log
 
 
-@task
-def get_and_save_date_redis(dataset_id: str, table_id: str, mode: str = "prod") -> dict:
+@task(nout=2)
+def get_interval_on_redis(
+    dataset_id: str, table_id: str, mode: str = "prod"
+) -> Union[dict, str]:
     """
-    Acess redis to get the last time each id_estacao was updated, return
-    updated stations as a DataFrame and save new dates on redis
+    Get the interval of data from Redis.
     """
     redis_client = get_redis_client()
 
-    key = "meio_ambiente_clima_staging.taxa_precipitacao_alertario"
+    key = build_redis_key(dataset_id, table_id, mode)
 
-    key = dataset_id + "." + table_id
-    if mode == "dev":
-        key = f"{mode}.{key}"
+    current_time = pendulum.now("America/Sao_Paulo")
 
-    # apagar próxima linha
-    redis_client.set(key, "2022-07-03 16:00:00.0")
+    last_update = redis_client.get(key)
+    if last_update is None:
+        # Set to current_time - 30 days
+        last_update = current_time.subtract(days=30).strftime("%Y-%m-%d %H:%M:%S.0")
 
-    # Access all data saved on redis with this key
-    last_update = redis_client.get(key)  # .decode("utf-8")
+    current_time_str = current_time.strftime("%Y-%m-%d %H:%M:%S.0")
 
-    current_time = pendulum.now("America/Sao_Paulo").strftime(
-        "%Y-%m-%d %H:%M:%S.0"
-    )  # salvar no redis
+    date_interval = {
+        "inicio": last_update,
+        "fim": current_time_str,
+    }
 
-    date_interval = {"inicio": last_update, "fim": current_time}
     log(f">>>>>>> date_interval: {date_interval}")
 
-    # Save current_time on redis
-    redis_client.set(key, current_time)
+    return date_interval, current_time_str
 
-    return date_interval
+
+@task
+def set_last_updated_on_redis(
+    dataset_id: str, table_id: str, mode: str = "prod", current_time: str = None
+) -> None:
+    """
+    Set the last updated time on Redis.
+    """
+    redis_client = get_redis_client()
+
+    key = build_redis_key(dataset_id, table_id, mode)
+
+    if not current_time:
+        current_time = pendulum.now("America/Sao_Paulo").strftime("%Y-%m-%d %H:%M:%S.0")
+
+    redis_client.set(key, current_time)
 
 
 @task(nout=2)
-def download(date_interval) -> Tuple[pd.DataFrame, str]:
+def download(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
     """
     Faz o request dos dados de eventos e das atividades do evento
     """
+
+    auth_token = get_token()
+
     url_eventos = "http://ws.status.rio/statuscomando/v2/listarEventos"
     url_atividades_evento = (
         "http://ws.status.rio/statuscomando/v2/listarAtividadesDoEvento"
     )
 
     # Request Eventos
-    response = get_url(url=url_eventos, parameters=date_interval)
+    response = get_url(url=url_eventos, parameters=date_interval, token=auth_token)
 
     eventos = pd.DataFrame(response["eventos"])
 
@@ -69,7 +86,7 @@ def download(date_interval) -> Tuple[pd.DataFrame, str]:
     log(f">>>>>>> eventos {eventos.head()}")
     eventos["evento_id"] = eventos["evento_id"].astype("int")
 
-    evento_id_list = eventos.evento_id.unique()
+    evento_id_list = eventos["evento_id"].unique()
 
     atividades_evento = []
     problema_ids = []
@@ -91,7 +108,7 @@ def download(date_interval) -> Tuple[pd.DataFrame, str]:
     atividades_evento.name = "atividades_evento"
 
     # Fixa colunas e ordem
-    eventos = [
+    eventos = eventos[
         [
             "pop_id",
             "bairro",
@@ -108,7 +125,7 @@ def download(date_interval) -> Tuple[pd.DataFrame, str]:
             "status",
         ]
     ]
-    atividades_evento = [
+    atividades_evento = atividades_evento[
         [
             "orgao",
             "chegada",
@@ -149,3 +166,8 @@ def salvar_dados(dfr: pd.DataFrame, current_time: str) -> Union[str, Path]:
     dfr.to_csv(df_path, index=False)
     log(f">>>>>>> base_path {base_path}")
     return base_path
+
+
+@task
+def not_none(something: Any) -> bool:
+    return something is not None
