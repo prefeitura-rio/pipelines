@@ -213,15 +213,18 @@ def create_current_date_hour_partition(capture_time=None):
         dict: "filename" contains the name which to upload the csv, "partitions" contains
         the partitioned directory path
     """
-    tz = constants.TIMEZONE.value  # pylint: disable=C0103
     if capture_time is None:
-        capture_time = pendulum.now(tz)
+        capture_time = pendulum.now(constants.TIMEZONE.value).replace(
+            second=0, microsecond=0
+        )
+
     date = capture_time.strftime("%Y-%m-%d")
     hour = capture_time.strftime("%H")
 
     return {
         "filename": capture_time.strftime("%Y-%m-%d-%H-%M-%S"),
         "partitions": f"data={date}/hora={hour}",
+        "timestamp": capture_time,
     }
 
 
@@ -262,14 +265,12 @@ def create_local_partition_path(
 
 
 @task
-def save_raw_local(file_path, data=None, status_dict=None, mode="raw"):
-    """Dumps json response from API to .json file. If passing status_dict
-    should not pass data separately
+def save_raw_local(file_path, status_dict, mode="raw"):
+    """Saves raw data locally.
 
     Args:
         file_path (str): Path which to save raw file
-        data (response, optional): Response from API request
-        status_dict(dict, optional): containing the status of
+        status_dict(dict): containing the status of
         upstream request task. Must contain keys 'data', 'timestamp',
         'error'
         mode (str, optional): Folder to save locally, later folder which to upload to GCS.
@@ -278,35 +279,37 @@ def save_raw_local(file_path, data=None, status_dict=None, mode="raw"):
     Returns:
         str: Path to the saved file
     """
-    if status_dict:
-        data = status_dict["data"]
     _file_path = file_path.format(mode=mode, filetype="json")
     Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
-    json.dump(data.json(), Path(_file_path).open("w", encoding="utf-8"))
+
+    if not status_dict["error"]:
+        json.dump(status_dict["data"], Path(_file_path).open("w", encoding="utf-8"))
+        log(f"Saved data local in: {_file_path}")
 
     return _file_path
 
 
 @task
-def save_treated_local(file_path, mode="staging", dataframe=None, treated_status=None):
-    """Save treated file locally. Should pass only one of args
-    dataframe or treated_status
+def save_treated_local(file_path, status_dict, mode="staging"):
+    """Saves treated data locally.
 
     Args:
-        file_path (str): Path which to save .csv files
-        mode (str, optional): Directory to save locally, later folder which to upload to GCS.
-        Defaults to "staging".
-        dataframe (pandas.core.DataFrame, optional): Data to save as .csv file
-        treated_status(dict, optional): used for running task with map.
-        Must contain keys 'df' and 'error'.
+        file_path (str): Path which to save raw file
+        status_dict(dict): containing the status of
+        upstream request task. Must contain keys 'data', 'timestamp',
+        'error'
+        mode (str, optional): Folder to save locally, later folder which to upload to GCS.
+        Defaults to "raw".
+
     Returns:
         str: Path to the saved file
     """
-    if treated_status:
-        dataframe = treated_status["df"]
     _file_path = file_path.format(mode=mode, filetype="csv")
     Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
-    dataframe.to_csv(_file_path, index=False)
+
+    if not status_dict["error"]:
+        status_dict["df"].to_csv(_file_path, index=False)
+        log(f"Saved data local in: {_file_path}")
 
     return _file_path
 
@@ -337,13 +340,17 @@ def query_logs(
     """
 
     if not datetime_filter:
-        datetime_filter = pendulum.now(constants.TIMEZONE.value)
+        datetime_filter = (
+            pendulum.now(constants.TIMEZONE.value)
+            .replace(second=0, microsecond=0)
+            .isoformat()
+        )
 
     query = f"""
         SELECT *
         FROM rj-smtr.{dataset_id}.{table_id}_logs
         WHERE
-            data = '{datetime_filter.date().isoformat()}'
+            data = '{datetime_filter.date()}'
         AND
             timestamp_captura
             BETWEEN
@@ -368,8 +375,8 @@ def query_logs(
 
 @task
 def get_raw(
-    url,
-    headers=None,
+    url: str,
+    headers: dict = None,
     source: str = None,
     timestamp=None,
 ):
@@ -386,48 +393,53 @@ def get_raw(
         dict: "data" contains the response object from the request, "timestamp" contains
         the run time timestamp, "error" catches errors that may occur during task execution.
     """
-    if source == "stpl_api":
-        headers = get_vault_secret(source)["data"]
-    if source == "sppo_api":
-        access = get_vault_secret(source)["data"]
-        key = list(access)[0]
-        url = f"{url}{key}={access[key]}"
-    data = None
-    error = None
     if not timestamp:
-        timestamp = pendulum.now(constants.TIMEZONE.value)
-    if source == "sppo_api_v2":
-        access = get_vault_secret(source)["data"]
-        key = list(access)[0]
-        url = f"{url}{key}={access[key]}"
-        date_range = {
-            "start": (timestamp - timedelta(minutes=6)).strftime("%Y-%m-%d+%H:%M:%S"),
-            "end": (timestamp - timedelta(minutes=5)).strftime("%Y-%m-%d+%H:%M:%S"),
-        }
-        log(f"Will request data between {date_range['start']} and {date_range['end']}")
-        url += f"&dataInicial={date_range['start']}"
-        url += f"&dataFinal={date_range['end']}"
+        timestamp = pendulum.now(constants.TIMEZONE.value).replace(
+            second=0, microsecond=0
+        )
 
+    # Get secrets from sources
+    if source in ["stpl_api", "sppo_api", "sppo_api_v2"]:
+        headers = get_vault_secret(source)["data"]
+        if source in ["sppo_api", "sppo_api_v2"]:
+            key = list(headers)[0]
+            url = f"{url}{key}={headers[key]}"
+        if source == "sppo_api_v2":
+            date_range = {
+                "start": (timestamp - timedelta(minutes=6)).strftime(
+                    "%Y-%m-%d+%H:%M:%S"
+                ),
+                "end": (timestamp - timedelta(minutes=5)).strftime("%Y-%m-%d+%H:%M:%S"),
+            }
+            log(
+                f"Will request data between {date_range['start']} and {date_range['end']}"
+            )
+            url += f"&dataInicial={date_range['start']}&dataFinal={date_range['end']}"
+
+    # Get data from API
     try:
-        data = requests.get(
+        response = requests.get(
             url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
         )
-    except Exception as err:
-        log(f"Request failed with error:\n{err}")
-        return {"data": data, "timestamp": timestamp.isoformat(), "error": err}
+        error = None
+    except Exception as e:
+        data = None
+        error = e
 
-    if data.ok:
-        if isinstance(data.json(), dict) and "DescricaoErro" in data.json().keys():
-            log(f"Data is {data.json()}\n With type: {type(data.json())}")
+    # Check data results
+    if response.ok:  # status code is less than 400
+        data = response.json()
+        if isinstance(data, dict) and "DescricaoErro" in data.keys():
             error = data.json()["DescricaoErro"]
-        return {
-            "data": data,
-            "error": error,
-            "timestamp": timestamp.isoformat(),
-        }
+            data = None
+    else:
+        error = response.status_code + " - " + response.reason
 
-    error = f"Requests failed with error {data.status_code}"
-    return {"error": error, "timestamp": timestamp.isoformat(), "data": data}
+    # Log error to the UI
+    if error:
+        log(f"Requests failed with error:\n{error}")
+
+    return {"data": data, "timestamp": timestamp, "error": error}
 
 
 ###############
@@ -551,14 +563,14 @@ def upload_logs_to_bq(
     table_id = parent_table_id + "_logs"
 
     filepath = Path(
-        f"{timestamp}/{table_id}/data={pendulum.parse(timestamp).date()}/{table_id}_{timestamp}.csv"
+        f"{timestamp}/{table_id}/data={timestamp.date()}/{table_id}_{timestamp}.csv"
     )
     # create partition directory
     filepath.parent.mkdir(exist_ok=True, parents=True)
     # create dataframe to be uploaded
     dataframe = pd.DataFrame(
         {
-            "timestamp_captura": [pd.to_datetime(timestamp)],
+            "timestamp_captura": [timestamp],
             "sucesso": [error is None],
             "erro": [error],
         }
@@ -664,7 +676,7 @@ def set_last_run_timestamp(
 
 
 @task
-def delay_now_time(timestamp: str, delay_minutes=6):
+def delay_now_time(timestamp, delay_minutes=6):
     """Return timestamp string delayed by <delay_minutes>
 
     Args:
@@ -674,8 +686,7 @@ def delay_now_time(timestamp: str, delay_minutes=6):
     Returns:
         str : timestamp string formatted as "%Y-%m-%dT%H-%M-%S"
     """
-    ts_obj = datetime.fromisoformat(timestamp)
-    ts_obj = ts_obj - timedelta(minutes=delay_minutes)
+    ts_obj = timestamp - timedelta(minutes=delay_minutes)
     return ts_obj.strftime("%Y-%m-%dT%H-%M-%S")
 
 
