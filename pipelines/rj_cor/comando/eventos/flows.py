@@ -18,9 +18,10 @@ from pipelines.rj_cor.comando.eventos.constants import (
 )
 from pipelines.rj_cor.comando.eventos.schedules import every_day
 from pipelines.rj_cor.comando.eventos.tasks import (
-    get_and_save_date_redis,
+    get_interval_on_redis,
     download,
     salvar_dados,
+    not_none,
 )
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.decorators import Flow
@@ -30,6 +31,10 @@ from pipelines.utils.tasks import (
     get_current_flow_labels,
     create_table_and_upload_to_gcs,
 )
+
+# TODO: dar `get` na data no Redis, retornar o interval e o current time. só setar a data se a
+#  pipeline executar com sucesso
+# TODO: implement for atividades_evento
 
 with Flow(
     "COR: Comando - Eventos e Atividades do Evento",
@@ -45,7 +50,9 @@ with Flow(
     materialization_mode = Parameter(
         "materialization_mode", default="dev", required=False
     )
-    materialize_to_datario = Parameter("", default=False, required=False)
+    materialize_to_datario = Parameter(
+        "materialize_to_datario", default=False, required=False
+    )
 
     # Dump to GCS after? Should only dump to GCS if materializing to datario
     dump_to_gcs = Parameter("dump_to_gcs", default=False, required=False)
@@ -55,19 +62,32 @@ with Flow(
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
 
+    # Get date interval from parameters
+    date_interval = Parameter("date_interval", required=False, default=None)
+
     dataset_id = comando_constants.DATASET_ID.value
     table_id_eventos = comando_constants.TABLE_ID_EVENTOS.value
     table_id_atividades_eventos = comando_constants.TABLE_ID_ATIVIDADES_EVENTOS.value
     dump_mode = "append"
 
-    date_interval = get_and_save_date_redis(
-        dataset_id=dataset_id, table_id=table_id_eventos, mode="dev"
+    with case(date_interval, None):
+        date_interval, current_time = get_interval_on_redis(
+            dataset_id=dataset_id,
+            table_id=table_id_eventos,
+            mode="dev",
+        )
+    date_interval_set = not_none(date_interval)
+    with case(date_interval_set, True):
+        current_time = date_interval["fim"]
+
+    eventos, atividade_eventos = download(
+        date_interval=date_interval, wait=current_time
     )
-    eventos, atividade_eventos = download(date_interval)
-    eventos_path = salvar_dados(dfr=eventos, current_time=date_interval["fim"])
+    eventos_path = salvar_dados(dfr=eventos, current_time=current_time, name="eventos")
     # atividade_eventos_path = salvar_dados(
     #    dfr=atividade_eventos,
-    #    current_time=date_interval['fim']
+    #    current_time=date_interval['fim'],
+    #    name='atividade_eventos',
     # )
 
     create_table_and_upload_to_gcs(
