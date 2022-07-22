@@ -5,12 +5,11 @@ Schedules for the database dump pipeline
 
 from datetime import datetime, timedelta
 
-from prefect.schedules import Schedule
 import pytz
-
 from pipelines.constants import constants
 from pipelines.utils.dump_db.utils import generate_dump_db_schedules
 from pipelines.utils.utils import untuple_clocks as untuple
+from prefect.schedules import Schedule
 
 #####################################
 #
@@ -44,7 +43,7 @@ egp_web_queries = {
 
 egp_web_clocks = generate_dump_db_schedules(
     interval=timedelta(days=30),
-    start_date=datetime(2022, 7, 20, 10, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2022, 7, 22, 15, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_SMFP_AGENT_LABEL.value,
     ],
