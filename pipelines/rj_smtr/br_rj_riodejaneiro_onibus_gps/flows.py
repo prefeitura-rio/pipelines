@@ -142,14 +142,16 @@ with Flow(
         partitions=file_dict["partitions"],
     )
 
-    status_dict = get_raw(url=url, source=secret_path)
+    status_dict = get_raw(url=url, source=secret_path, timestamp=file_dict["timestamp"])
 
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="GPS SPPO: ", now_time=delay_now_time(status_dict["timestamp"])
+        prefix="GPS SPPO: ", now_time=delay_now_time(file_dict["timestamp"])
     )
 
-    raw_filepath = save_raw_local(data=status_dict["data"], file_path=filepath)
+    raw_filepath = save_raw_local(
+        status_dict=status_dict, file_path=filepath, mode="raw"
+    )
 
     treated_status = pre_treatment_br_rj_riodejaneiro_onibus_gps(
         status_dict=status_dict, version=version
@@ -158,12 +160,12 @@ with Flow(
     UPLOAD_LOGS = upload_logs_to_bq(
         dataset_id=dataset_id,
         parent_table_id=table_id,
-        timestamp=status_dict["timestamp"],
-        error=status_dict["error"],
+        timestamp=treated_status["timestamp"],
+        error=treated_status["error"],
     )
 
     treated_filepath = save_treated_local(
-        dataframe=treated_status["df"], file_path=filepath
+        status_dict=treated_status, file_path=filepath, mode="treated"
     )
 
     UPLOAD_CSV = bq_upload(
@@ -173,7 +175,10 @@ with Flow(
         raw_filepath=raw_filepath,
         partitions=file_dict["partitions"],
     )
+
     captura_sppo_v2.set_dependencies(task=status_dict, upstream_tasks=[filepath])
+    # TODO: captura_sppo_v2.set_dependencies(task=bq_upload, upstream_tasks=[UPLOAD_LOGS])
+
 
 with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as recaptura:
     # Get default parameters
@@ -224,11 +229,11 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
         UPLOAD_LOGS = upload_logs_to_bq.map(
             dataset_id=unmapped(dataset_id),
             parent_table_id=unmapped(table_id),
-            status_dict=status_dict,
+            status_dict=treated_status,
         )
 
         treated_filepath = save_treated_local.map(
-            treated_status=treated_status, file_path=filepath
+            status_dict=treated_status, file_path=filepath
         )
 
         UPLOAD_CSV = bq_upload.map(
