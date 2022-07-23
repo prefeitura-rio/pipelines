@@ -340,36 +340,62 @@ def query_logs(
     """
 
     if not datetime_filter:
-        datetime_filter = (
-            pendulum.now(constants.TIMEZONE.value)
-            .replace(second=0, microsecond=0)
-            .isoformat()
+        datetime_filter = pendulum.now(constants.TIMEZONE.value).replace(
+            second=0, microsecond=0
         )
 
     query = f"""
-        SELECT *
-        FROM rj-smtr.{dataset_id}.{table_id}_logs
-        WHERE
-            data = '{datetime_filter.date()}'
-        AND
-            timestamp_captura
-            BETWEEN
-            DATETIME_SUB(
-                '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}',
-                INTERVAL 1 HOUR
-            )
-            AND
-            '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
-        AND
-            sucesso is False
-        ORDER BY timestamp_captura
+    with t as (
+    select
+        datetime(timestamp_array) as timestamp_array
+    from
+        unnest(GENERATE_TIMESTAMP_ARRAY(
+            timestamp_sub('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}', interval 1 hour),
+            timestamp('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'),
+            interval 1 minute)
+        ) as timestamp_array
+    where timestamp_array < '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
+    ),
+    logs as (
+        select
+            *,
+            timestamp_trunc(timestamp_captura, minute) as timestamp_array
+        from
+            rj-smtr-dev.{dataset_id}.{table_id}_logs
+        where
+            data = date('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}')
+        and
+            timestamp_captura between
+                datetime_sub('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}', interval 1 hour)
+                and '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
+        order by timestamp_captura
+    )
+    select
+        case
+            when logs.timestamp_captura is not null then logs.timestamp_captura
+            else t.timestamp_array
+        end as timestamp_captura
+    from
+        t
+    left join
+        logs
+    on
+        logs.timestamp_array = t.timestamp_array
+    where
+        logs.sucesso is not True
+    order by
+        timestamp_captura
     """
     log(f"Will run query:\n{query}")
     results = bd.read_sql(query=query, billing_project_id=bq_project())[
         "timestamp_captura"
     ]
     if len(results) > 0:
-        return True, pd.to_datetime(results).to_list()
+        results = (
+            pd.to_datetime(results).dt.tz_localize(constants.TIMEZONE.value).to_list()
+        )
+        log(f"Will recapture data for timestamps:\n{results}")
+        return True, results
     return False, []
 
 
