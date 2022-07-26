@@ -75,9 +75,8 @@ def get_date_interval_from_string(date_interval_text: str) -> Tuple[dict, str]:
 
 
 @task(nout=2)
-def download(
-    date_interval, wait=None
-) -> Tuple[pd.DataFrame, str]:  # pylint: disable=W0613
+# pylint: disable=W0613
+def download(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
     """
     Faz o request dos dados de eventos e das atividades do evento
     """
