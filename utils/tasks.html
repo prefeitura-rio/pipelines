@@ -88,6 +88,18 @@ def get_current_flow_labels() -&gt; List[str]:
 
 
 @task
+def get_current_flow_mode(labels: List[str]) -&gt; str:
+    &#34;&#34;&#34;
+    Get the mode (prod/dev/staging) of the current flow.
+    &#34;&#34;&#34;
+    if labels[0].endswith(&#34;-dev&#34;):
+        return &#34;dev&#34;
+    if labels[0].endswith(&#34;-staging&#34;):
+        return &#34;staging&#34;
+    return &#34;prod&#34;
+
+
+@task
 def greater_than(value, compare_to) -&gt; bool:
     &#34;&#34;&#34;
     Returns True if value is greater than compare_to.
@@ -500,6 +512,27 @@ def get_current_flow_labels() -&gt; List[str]:
     return flow_run_view.labels</code></pre>
 </details>
 </dd>
+<dt id="pipelines.utils.tasks.get_current_flow_mode"><code class="name flex">
+<span>def <span class="ident">get_current_flow_mode</span></span>(<span>labels: List[str]) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the mode (prod/dev/staging) of the current flow.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_current_flow_mode(labels: List[str]) -&gt; str:
+    &#34;&#34;&#34;
+    Get the mode (prod/dev/staging) of the current flow.
+    &#34;&#34;&#34;
+    if labels[0].endswith(&#34;-dev&#34;):
+        return &#34;dev&#34;
+    if labels[0].endswith(&#34;-staging&#34;):
+        return &#34;staging&#34;
+    return &#34;prod&#34;</code></pre>
+</details>
+</dd>
 <dt id="pipelines.utils.tasks.get_now_time"><code class="name flex">
 <span>def <span class="ident">get_now_time</span></span>(<span>)</span>
 </code></dt>
@@ -678,6 +711,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.utils.tasks.check_table_exists" href="#pipelines.utils.tasks.check_table_exists">check_table_exists</a></code></li>
 <li><code><a title="pipelines.utils.tasks.create_table_and_upload_to_gcs" href="#pipelines.utils.tasks.create_table_and_upload_to_gcs">create_table_and_upload_to_gcs</a></code></li>
 <li><code><a title="pipelines.utils.tasks.get_current_flow_labels" href="#pipelines.utils.tasks.get_current_flow_labels">get_current_flow_labels</a></code></li>
+<li><code><a title="pipelines.utils.tasks.get_current_flow_mode" href="#pipelines.utils.tasks.get_current_flow_mode">get_current_flow_mode</a></code></li>
 <li><code><a title="pipelines.utils.tasks.get_now_time" href="#pipelines.utils.tasks.get_now_time">get_now_time</a></code></li>
 <li><code><a title="pipelines.utils.tasks.get_user_and_password" href="#pipelines.utils.tasks.get_user_and_password">get_user_and_password</a></code></li>
 <li><code><a title="pipelines.utils.tasks.greater_than" href="#pipelines.utils.tasks.greater_than">greater_than</a></code></li>
