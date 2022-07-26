@@ -38,6 +38,9 @@ from pipelines.utils.utils import get_vault_secret
 
 
 def build_redis_key(dataset_id: str, table_id: str, mode: str = &#34;prod&#34;):
+    &#34;&#34;&#34;
+    Helper function for building a key where to store the last updated time
+    &#34;&#34;&#34;
     key = dataset_id + &#34;.&#34; + table_id
     if mode == &#34;dev&#34;:
         key = f&#34;{mode}.{key}&#34;
@@ -61,11 +64,11 @@ def get_url(url, parameters: dict = None, token: str = None):  # pylint: disable
         parameters = {}
     if not token:
         token = get_token()
-    s = requests.Session()
+    sess = requests.Session()
     retries = Retry(total=5, backoff_factor=1.5)
-    s.mount(&#34;http://&#34;, HTTPAdapter(max_retries=retries))
+    sess.mount(&#34;http://&#34;, HTTPAdapter(max_retries=retries))
     headers = {&#34;Authorization&#34;: token}
-    return s.get(url, json=parameters, headers=headers).json()</code></pre>
+    return sess.get(url, json=parameters, headers=headers).json()</code></pre>
 </details>
 </section>
 <section>
@@ -79,12 +82,15 @@ def get_url(url, parameters: dict = None, token: str = None):  # pylint: disable
 <span>def <span class="ident">build_redis_key</span></span>(<span>dataset_id: str, table_id: str, mode: str = 'prod')</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Helper function for building a key where to store the last updated time</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def build_redis_key(dataset_id: str, table_id: str, mode: str = &#34;prod&#34;):
+    &#34;&#34;&#34;
+    Helper function for building a key where to store the last updated time
+    &#34;&#34;&#34;
     key = dataset_id + &#34;.&#34; + table_id
     if mode == &#34;dev&#34;:
         key = f&#34;{mode}.{key}&#34;
@@ -126,11 +132,11 @@ def get_url(url, parameters: dict = None, token: str = None):  # pylint: disable
         parameters = {}
     if not token:
         token = get_token()
-    s = requests.Session()
+    sess = requests.Session()
     retries = Retry(total=5, backoff_factor=1.5)
-    s.mount(&#34;http://&#34;, HTTPAdapter(max_retries=retries))
+    sess.mount(&#34;http://&#34;, HTTPAdapter(max_retries=retries))
     headers = {&#34;Authorization&#34;: token}
-    return s.get(url, json=parameters, headers=headers).json()</code></pre>
+    return sess.get(url, json=parameters, headers=headers).json()</code></pre>
 </details>
 </dd>
 </dl>
