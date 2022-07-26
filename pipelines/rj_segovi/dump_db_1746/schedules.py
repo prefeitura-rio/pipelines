@@ -285,35 +285,6 @@ group by
     no_justificativa
         """
 
-_1746_queries_deprecated = {
-    "chamado": {
-        "partition_columns": "dt_inicio",
-        "lower_bound_date": "2021-01-01",
-        "materialize_after_dump": True,
-        "materialization_mode": "dev",
-        "materialize_to_datario": True,
-        "dump_to_gcs": True,
-        "dump_mode": "append",
-        "execute_query": QUERY_CHAMADO_1746,
-    },
-}
-
-_1746_clocks_deprecated = generate_dump_db_schedules(
-    interval=timedelta(days=1),
-    start_date=datetime(2022, 3, 21, 2, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
-    labels=[
-        constants.RJ_SEGOVI_AGENT_LABEL.value,
-    ],
-    db_database="REPLICA1746",
-    db_host="10.70.1.34",
-    db_port="1433",
-    db_type="sql_server",
-    dataset_id="administracao_servicos_publicos_1746",
-    vault_secret_path="clustersql2",
-    table_parameters=_1746_queries_deprecated,
-)
-
-
 _1746_queries = {
     "chamado_1746": {
         "partition_columns": "dt_inicio",
@@ -341,7 +312,4 @@ _1746_clocks = generate_dump_db_schedules(
     table_parameters=_1746_queries,
 )
 
-# rmeove deprecated
-_1746_daily_update_schedule = Schedule(
-    clocks=untuple(_1746_clocks + _1746_clocks_deprecated)
-)
+_1746_daily_update_schedule = Schedule(clocks=untuple(_1746_clocks))
