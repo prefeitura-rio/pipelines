@@ -9,6 +9,9 @@ from pipelines.utils.utils import get_vault_secret
 
 
 def build_redis_key(dataset_id: str, table_id: str, mode: str = "prod"):
+    """
+    Helper function for building a key where to store the last updated time
+    """
     key = dataset_id + "." + table_id
     if mode == "dev":
         key = f"{mode}.{key}"
@@ -32,8 +35,8 @@ def get_url(url, parameters: dict = None, token: str = None):  # pylint: disable
         parameters = {}
     if not token:
         token = get_token()
-    s = requests.Session()
+    sess = requests.Session()
     retries = Retry(total=5, backoff_factor=1.5)
-    s.mount("http://", HTTPAdapter(max_retries=retries))
+    sess.mount("http://", HTTPAdapter(max_retries=retries))
     headers = {"Authorization": token}
-    return s.get(url, json=parameters, headers=headers).json()
+    return sess.get(url, json=parameters, headers=headers).json()

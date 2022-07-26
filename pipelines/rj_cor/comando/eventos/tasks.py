@@ -3,6 +3,7 @@
 Tasks for comando
 """
 
+import json
 import os
 from pathlib import Path
 from typing import Any, Union, Tuple
@@ -10,6 +11,7 @@ from typing import Any, Union, Tuple
 import pandas as pd
 import pendulum
 from prefect import task
+from prefect.triggers import all_successful
 
 from pipelines.rj_cor.comando.eventos.utils import get_token, get_url, build_redis_key
 from pipelines.utils.utils import get_redis_client, log
@@ -18,7 +20,7 @@ from pipelines.utils.utils import get_redis_client, log
 @task(nout=2)
 def get_interval_on_redis(
     dataset_id: str, table_id: str, mode: str = "prod"
-) -> Union[dict, str]:
+) -> Tuple[dict, str]:
     """
     Get the interval of data from Redis.
     """
@@ -45,7 +47,7 @@ def get_interval_on_redis(
     return date_interval, current_time_str
 
 
-@task
+@task(trigger=all_successful)
 def set_last_updated_on_redis(
     dataset_id: str, table_id: str, mode: str = "prod", current_time: str = None
 ) -> None:
@@ -63,7 +65,19 @@ def set_last_updated_on_redis(
 
 
 @task(nout=2)
-def download(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
+def get_date_interval_from_string(date_interval_text: str) -> Tuple[dict, str]:
+    """
+    Get the date interval from a string.
+    """
+    date_interval = json.loads(date_interval_text)
+    current_time = date_interval["fim"]
+    return date_interval, current_time
+
+
+@task(nout=2)
+def download(
+    date_interval, wait=None
+) -> Tuple[pd.DataFrame, str]:  # pylint: disable=W0613
     """
     Faz o request dos dados de eventos e das atividades do evento
     """
@@ -168,4 +182,7 @@ def salvar_dados(dfr: pd.DataFrame, current_time: str, name: str) -> Union[str, 
 
 @task
 def not_none(something: Any) -> bool:
+    """
+    Returns True if something is not None.
+    """
     return something is not None
