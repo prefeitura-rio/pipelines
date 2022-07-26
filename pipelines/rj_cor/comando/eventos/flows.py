@@ -18,10 +18,12 @@ from pipelines.rj_cor.comando.eventos.constants import (
 )
 from pipelines.rj_cor.comando.eventos.schedules import every_day
 from pipelines.rj_cor.comando.eventos.tasks import (
-    get_interval_on_redis,
     download,
-    salvar_dados,
+    get_date_interval_from_string,
+    get_interval_on_redis,
     not_none,
+    salvar_dados,
+    set_last_updated_on_redis,
 )
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.decorators import Flow
@@ -32,16 +34,14 @@ from pipelines.utils.tasks import (
     create_table_and_upload_to_gcs,
 )
 
-# TODO: dar `get` na data no Redis, retornar o interval e o current time. só setar a data se a
-#  pipeline executar com sucesso
-# TODO: implement for atividades_evento
-
 with Flow(
     "COR: Comando - Eventos e Atividades do Evento",
     code_owners=[
         "paty",
     ],
 ) as rj_cor_comando_flow:
+
+    dump_mode = Parameter("dump_mode", default="append", required=False)
 
     # Materialization parameters
     materialize_after_dump = Parameter(
@@ -63,45 +63,70 @@ with Flow(
     )
 
     # Get date interval from parameters
-    date_interval = Parameter("date_interval", required=False, default=None)
+    date_interval_text = Parameter("date_interval", required=False, default=None)
+
+    # Redis interval mode
+    redis_mode = Parameter("redis_mode", default="dev", required=False)
 
     dataset_id = comando_constants.DATASET_ID.value
     table_id_eventos = comando_constants.TABLE_ID_EVENTOS.value
     table_id_atividades_eventos = comando_constants.TABLE_ID_ATIVIDADES_EVENTOS.value
-    dump_mode = "append"
 
-    with case(date_interval, None):
+    with case(date_interval_text, None):
         date_interval, current_time = get_interval_on_redis(
             dataset_id=dataset_id,
             table_id=table_id_eventos,
-            mode="dev",
+            mode=redis_mode,
         )
-    date_interval_set = not_none(date_interval)
+    date_interval_set = not_none(date_interval_text)
     with case(date_interval_set, True):
-        current_time = date_interval["fim"]
+        date_interval, current_time = get_date_interval_from_string(date_interval_text)
 
     eventos, atividade_eventos = download(
         date_interval=date_interval, wait=current_time
     )
-    eventos_path = salvar_dados(dfr=eventos, current_time=current_time, name="eventos")
-    # atividade_eventos_path = salvar_dados(
-    #    dfr=atividade_eventos,
-    #    current_time=date_interval['fim'],
-    #    name='atividade_eventos',
-    # )
+    eventos_path = salvar_dados(
+        dfr=eventos, current_time=date_interval["fim"], name="eventos"
+    )
+    atividade_eventos_path = salvar_dados(
+        dfr=atividade_eventos,
+        current_time=date_interval["fim"],
+        name="atividade_eventos",
+    )
 
-    create_table_and_upload_to_gcs(
+    task_upload_eventos = create_table_and_upload_to_gcs(
         data_path=eventos_path,
         dataset_id=dataset_id,
         table_id=table_id_eventos,
-        dump_mode="append",
+        dump_mode=dump_mode,
         wait=eventos_path,
     )
+
+    task_upload_atividade_eventos = create_table_and_upload_to_gcs(
+        data_path=atividade_eventos_path,
+        dataset_id=dataset_id,
+        table_id=table_id_atividades_eventos,
+        dump_mode=dump_mode,
+        wait=atividade_eventos_path,
+    )
+
+    # Warning: this task won't execute if we provide a date interval
+    # on parameters. The reason this happens is for if we want to
+    # perform backfills, it won't mess with the Redis interval.
+    with case(date_interval_set, False):
+        set_redis_date_task = set_last_updated_on_redis(
+            dataset_id=dataset_id,
+            table_id=table_id_eventos,
+            mode=redis_mode,
+            current_time=current_time,
+        )
+        set_redis_date_task.set_upstream(task_upload_eventos)
+        set_redis_date_task.set_upstream(task_upload_atividade_eventos)
 
     with case(materialize_after_dump, True):
         # Trigger DBT flow run
         current_flow_labels = get_current_flow_labels()
-        materialization_flow = create_flow_run(
+        eventos_materialization_flow = create_flow_run(
             flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
             project_name=constants.PREFECT_DEFAULT_PROJECT.value,
             parameters={
@@ -113,24 +138,52 @@ with Flow(
             labels=current_flow_labels,
             run_name=f"Materialize {dataset_id}.{table_id_eventos}",
         )
+        atividade_eventos_materialization_flow = create_flow_run(
+            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+            parameters={
+                "dataset_id": dataset_id,
+                "table_id": table_id_atividades_eventos,
+                "mode": materialization_mode,
+                "materialize_to_datario": materialize_to_datario,
+            },
+            labels=current_flow_labels,
+            run_name=f"Materialize {dataset_id}.{table_id_atividades_eventos}",
+        )
 
-        wait_for_materialization = wait_for_flow_run(
-            materialization_flow,
+        wait_for_eventos_materialization = wait_for_flow_run(
+            eventos_materialization_flow,
             stream_states=True,
             stream_logs=True,
             raise_final_state=True,
         )
 
-        wait_for_materialization.max_retries = (
+        wait_for_atividade_eventos_materialization = wait_for_flow_run(
+            atividade_eventos_materialization_flow,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+
+        wait_for_eventos_materialization.max_retries = (
             dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
         )
-        wait_for_materialization.retry_delay = timedelta(
+
+        wait_for_atividade_eventos_materialization.max_retries = (
+            dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
+        )
+
+        wait_for_eventos_materialization.retry_delay = timedelta(
+            seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
+        )
+
+        wait_for_atividade_eventos_materialization.retry_delay = timedelta(
             seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
         )
 
         with case(dump_to_gcs, True):
             # Trigger Dump to GCS flow run with project id as datario
-            dump_to_gcs_flow = create_flow_run(
+            dump_eventos_to_gcs_flow = create_flow_run(
                 flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
                 project_name=constants.PREFECT_DEFAULT_PROJECT.value,
                 parameters={
@@ -144,10 +197,35 @@ with Flow(
                 ],
                 run_name=f"Dump to GCS {dataset_id}.{table_id_eventos}",
             )
-            dump_to_gcs_flow.set_upstream(wait_for_materialization)
+            dump_eventos_to_gcs_flow.set_upstream(wait_for_eventos_materialization)
 
-            wait_for_dump_to_gcs = wait_for_flow_run(
-                dump_to_gcs_flow,
+            dump_atividade_eventos_to_gcs_flow = create_flow_run(
+                flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
+                project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                parameters={
+                    "project_id": "datario",
+                    "dataset_id": dataset_id,
+                    "table_id": table_id_atividades_eventos,
+                    "maximum_bytes_processed": maximum_bytes_processed,
+                },
+                labels=[
+                    "datario",
+                ],
+                run_name=f"Dump to GCS {dataset_id}.{table_id_atividades_eventos}",
+            )
+            dump_atividade_eventos_to_gcs_flow.set_upstream(
+                wait_for_atividade_eventos_materialization
+            )
+
+            wait_for_dump_eventos_to_gcs = wait_for_flow_run(
+                dump_eventos_to_gcs_flow,
+                stream_states=True,
+                stream_logs=True,
+                raise_final_state=True,
+            )
+
+            wait_for_dump_atividade_eventos_to_gcs = wait_for_flow_run(
+                dump_atividade_eventos_to_gcs_flow,
                 stream_states=True,
                 stream_logs=True,
                 raise_final_state=True,
