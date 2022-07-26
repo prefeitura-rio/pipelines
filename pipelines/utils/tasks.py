@@ -60,9 +60,12 @@ def get_current_flow_labels() -> List[str]:
 
 @task
 def get_current_flow_mode(labels: List[str]) -> str:
+    """
+    Get the mode (prod/dev/staging) of the current flow.
+    """
     if labels[0].endswith("-dev"):
         return "dev"
-    elif labels[0].endswith("-staging"):
+    if labels[0].endswith("-staging"):
         return "staging"
     return "prod"
 

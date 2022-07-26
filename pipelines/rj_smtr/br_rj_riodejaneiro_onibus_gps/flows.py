@@ -16,8 +16,8 @@ from pipelines.constants import constants as emd_constants
 from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
     get_now_time,
-    get_current_flow_labels,
     get_current_flow_mode,
+    get_current_flow_labels,
 )
 from pipelines.utils.decorators import Flow
 from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
@@ -72,11 +72,11 @@ with Flow(
     table_id = Parameter("table_id", default=constants.GPS_SPPO_TREATED_TABLE_ID.value)
     rebuild = Parameter("rebuild", False)
 
-    labels = get_current_flow_labels()
-    mode = get_current_flow_mode(labels)
+    LABELS = get_current_flow_labels()
+    MODE = get_current_flow_mode(LABELS)
 
     # Set dbt client #
-    dbt_client = get_k8s_dbt_client(mode=mode, wait=rename_flow_run)
+    dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
     # Use the command below to get the dbt client in dev mode:
     # dbt_client = get_local_dbt_client(host="localhost", port=3001)
 
@@ -87,7 +87,7 @@ with Flow(
         raw_dataset_id=raw_dataset_id,
         raw_table_id=raw_table_id,
         table_date_column_name="data",
-        mode=mode,
+        mode=MODE,
     )
     dataset_sha = fetch_dataset_sha(
         dataset_id=dataset_id,
@@ -108,7 +108,7 @@ with Flow(
             table_id=table_id,
             timestamp=date_range["date_range_end"],
             wait=RUN,
-            mode=mode,
+            mode=MODE,
         )
     with case(rebuild, False):
         RUN = run_dbt_model(
@@ -123,7 +123,7 @@ with Flow(
             table_id=table_id,
             timestamp=date_range["date_range_end"],
             wait=RUN,
-            mode=mode,
+            mode=MODE,
         )
 
 
@@ -213,7 +213,7 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
         materialize = create_flow_run(
             flow_name=materialize_sppo.name,
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            labels=labels,
+            labels=LABELS,
             run_name=materialize_sppo.name,
         )
         wait_materialize = wait_for_flow_run(
@@ -257,7 +257,7 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
         materialize = create_flow_run(
             flow_name=materialize_sppo.name,
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            labels=labels,
+            labels=LABELS,
             run_name=materialize_sppo.name,
         )
         wait_materialize = wait_for_flow_run(
