@@ -141,7 +141,7 @@ with Flow(
 
     status_dict = get_raw(url=url)
 
-    raw_filepath = save_raw_local(data=status_dict["data"], file_path=filepath)
+    raw_filepath = save_raw_local(status_dict=status_dict, file_path=filepath)
 
     treated_status = pre_treatment_br_rj_riodejaneiro_brt_gps(status_dict=status_dict)
 
@@ -153,7 +153,7 @@ with Flow(
     )
 
     treated_filepath = save_treated_local(
-        dataframe=treated_status["df"], file_path=filepath
+        status_dict=treated_status, file_path=filepath
     )
 
     bq_upload(
