@@ -59,6 +59,15 @@ def get_current_flow_labels() -> List[str]:
 
 
 @task
+def get_current_flow_mode(labels: List[str]) -> str:
+    if labels[0].endswith("-dev"):
+        return "dev"
+    elif labels[0].endswith("-staging"):
+        return "staging"
+    return "prod"
+
+
+@task
 def greater_than(value, compare_to) -> bool:
     """
     Returns True if value is greater than compare_to.
