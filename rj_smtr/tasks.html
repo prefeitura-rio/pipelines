@@ -449,6 +449,10 @@ def get_raw(
         if isinstance(data.json(), dict) and &#34;DescricaoErro&#34; in data.json().keys():
             log(f&#34;Data is {data.json()}\n With type: {type(data.json())}&#34;)
             error = data.json()[&#34;DescricaoErro&#34;]
+        elif len(data.json()) == 0:
+            error = &#34;Data returned from API is empty.&#34;
+            log(error)
+
         return {
             &#34;data&#34;: data,
             &#34;error&#34;: error,
@@ -1366,6 +1370,10 @@ def get_raw(
         if isinstance(data.json(), dict) and &#34;DescricaoErro&#34; in data.json().keys():
             log(f&#34;Data is {data.json()}\n With type: {type(data.json())}&#34;)
             error = data.json()[&#34;DescricaoErro&#34;]
+        elif len(data.json()) == 0:
+            error = &#34;Data returned from API is empty.&#34;
+            log(error)
+
         return {
             &#34;data&#34;: data,
             &#34;error&#34;: error,
