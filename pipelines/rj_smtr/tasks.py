@@ -420,6 +420,10 @@ def get_raw(
         if isinstance(data.json(), dict) and "DescricaoErro" in data.json().keys():
             log(f"Data is {data.json()}\n With type: {type(data.json())}")
             error = data.json()["DescricaoErro"]
+        elif len(data.json()) == 0:
+            error = "Data returned from API is empty."
+            log(error)
+
         return {
             "data": data,
             "error": error,
