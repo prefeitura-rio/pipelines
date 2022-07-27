@@ -367,14 +367,8 @@ def query_logs(
 
 
 @task
-def get_raw(
-    url,
-    headers=None,
-    source: str = None,
-    timestamp=None,
-):
+def get_raw(url: str, headers: dict = None, timestamp: datetime = None):
     """Request data from a url API
-
     Args:
         url (str): URL to send request to
         headers (dict, optional): Aditional fields to send along the request. Defaults to None.
@@ -386,52 +380,37 @@ def get_raw(
         dict: "data" contains the response object from the request, "timestamp" contains
         the run time timestamp, "error" catches errors that may occur during task execution.
     """
-    if source == "stpl_api":
-        headers = get_vault_secret(source)["data"]
-    if source == "sppo_api":
-        access = get_vault_secret(source)["data"]
-        key = list(access)[0]
-        url = f"{url}{key}={access[key]}"
     data = None
-    error = None
     if not timestamp:
-        timestamp = pendulum.now(constants.TIMEZONE.value)
-    if source == "sppo_api_v2":
-        access = get_vault_secret(source)["data"]
-        key = list(access)[0]
-        url = f"{url}{key}={access[key]}"
-        date_range = {
-            "start": (timestamp - timedelta(minutes=6)).strftime("%Y-%m-%d+%H:%M:%S"),
-            "end": (timestamp - timedelta(minutes=5)).strftime("%Y-%m-%d+%H:%M:%S"),
-        }
-        log(f"Will request data between {date_range['start']} and {date_range['end']}")
-        url += f"&dataInicial={date_range['start']}"
-        url += f"&dataFinal={date_range['end']}"
+        timestamp = pendulum.now(constants.TIMEZONE.value).replace(
+            second=0, microsecond=0
+        )
 
+    # Get data from API
     try:
-        data = requests.get(
+        response = requests.get(
             url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
         )
-    except Exception as err:
-        log(f"Request failed with error:\n{err}")
-        return {"data": data, "timestamp": timestamp.isoformat(), "error": err}
+        error = None
+    except Exception as exp:
+        error = exp
 
-    if data.ok:
-        if isinstance(data.json(), dict) and "DescricaoErro" in data.json().keys():
-            log(f"Data is {data.json()}\n With type: {type(data.json())}")
+    # Check data results
+    if response.ok:  # status code is less than 400
+        data = response.json()
+        if isinstance(data, dict) and "DescricaoErro" in data.keys():
             error = data.json()["DescricaoErro"]
-        elif len(data.json()) == 0:
+        elif len(data) == 0:
             error = "Data returned from API is empty."
             log(error)
 
         return {
-            "data": data,
+            "data": response,
             "error": error,
             "timestamp": timestamp.isoformat(),
         }
 
-    error = f"Requests failed with error {data.status_code}"
-    return {"error": error, "timestamp": timestamp.isoformat(), "data": data}
+    return {"data": response, "timestamp": timestamp, "error": error}
 
 
 ###############

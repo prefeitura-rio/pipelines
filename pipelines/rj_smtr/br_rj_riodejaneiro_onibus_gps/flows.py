@@ -48,6 +48,7 @@ from pipelines.rj_smtr.tasks import (
 )
 from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
     pre_treatment_br_rj_riodejaneiro_onibus_gps,
+    create_api_url_onibus_gps,
 )
 
 # Flows #
@@ -153,7 +154,8 @@ with Flow(
         partitions=file_dict["partitions"],
     )
 
-    status_dict = get_raw(url=url, source=secret_path)
+    url = create_api_url_onibus_gps(url=url, source=secret_path)
+    status_dict = get_raw(url)
 
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
@@ -224,9 +226,10 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
             table_id=unmapped(table_id),
             file_dict=file_dict,
         )
-        status_dict = get_raw.map(
+        url = create_api_url_onibus_gps.map(
             url=unmapped(url), source=unmapped(secret_path), timestamp=timestamps
         )
+        status_dict = get_raw.map(url)
         raw_filepath = save_raw_local.map(status_dict=status_dict, file_path=filepath)
         treated_status = pre_treatment_br_rj_riodejaneiro_onibus_gps.map(
             status_dict=status_dict, version=unmapped(version), recapture=unmapped(True)

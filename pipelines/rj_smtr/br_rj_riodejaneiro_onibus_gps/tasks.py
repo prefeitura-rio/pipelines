@@ -6,10 +6,12 @@ Tasks for br_rj_riodejaneiro_onibus_gps
 import traceback
 import pandas as pd
 from prefect import task
+import pendulum
+from datetime import datetime, timedelta
 
 # EMD Imports #
 
-from pipelines.utils.utils import log
+from pipelines.utils.utils import log, get_vault_secret
 
 # SMTR Imports #
 
@@ -18,6 +20,31 @@ from pipelines.rj_smtr.utils import log_critical
 from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.utils import sppo_filters
 
 # Tasks #
+
+
+@task
+def create_api_url_onibus_gps(url: str, source: str, timestamp: datetime = None):
+    """
+    Generates the complete URL to get data from API.
+    """
+    if not timestamp:
+        timestamp = pendulum.now(constants.TIMEZONE.value).replace(
+            second=0, microsecond=0
+        )
+
+    headers = get_vault_secret(source)["data"]
+    key = list(headers)[0]
+    url = f"{url}{key}={{secret}}"
+
+    if source == "sppo_api_v2":
+        date_range = {
+            "start": (timestamp - timedelta(minutes=6)).strftime("%Y-%m-%d+%H:%M:%S"),
+            "end": (timestamp - timedelta(minutes=5)).strftime("%Y-%m-%d+%H:%M:%S"),
+        }
+        url += f"&dataInicial={date_range['start']}&dataFinal={date_range['end']}"
+
+    log(f"Request data from URL: {url}")
+    return url.format(secret=headers[key])
 
 
 @task
