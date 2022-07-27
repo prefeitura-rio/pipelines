@@ -399,7 +399,7 @@ def get_raw(url: str, headers: dict = None, timestamp: datetime = None):
     if response.ok:  # status code is less than 400
         data = response.json()
         if isinstance(data, dict) and "DescricaoErro" in data.keys():
-            error = data.json()["DescricaoErro"]
+            error = data["DescricaoErro"]
         elif len(data) == 0:
             error = "Data returned from API is empty."
             log(error)
@@ -552,6 +552,9 @@ def upload_logs_to_bq(
     create_or_append_table(
         dataset_id=dataset_id, table_id=table_id, path=filepath.parent.parent
     )
+    if error:
+        raise Exception(f"Pipeline failed with error: {error}")
+    return True
 
 
 @task(
