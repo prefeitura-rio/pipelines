@@ -172,7 +172,7 @@ with Flow(
         dataset_id=dataset_id,
         parent_table_id=table_id,
         timestamp=status_dict["timestamp"],
-        error=status_dict["error"],
+        error=treated_status["error"],
     )
 
     treated_filepath = save_treated_local(
@@ -187,6 +187,7 @@ with Flow(
         partitions=file_dict["partitions"],
     )
     captura_sppo_v2.set_dependencies(task=status_dict, upstream_tasks=[filepath])
+    captura_sppo_v2.set_dependencies(task=UPLOAD_CSV, upstream_tasks=[UPLOAD_LOGS])
 
 with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as recaptura:
     # Get default parameters

@@ -554,7 +554,6 @@ def upload_logs_to_bq(
     )
     if error:
         raise Exception(f"Pipeline failed with error: {error}")
-    return True
 
 
 @task(
