@@ -15,3 +15,4 @@ class constants(Enum):  # pylint: disable=c0103
     DATASET_ID = "administracao_servicos_publicos"
     TABLE_ID_EVENTOS = "eventos"
     TABLE_ID_ATIVIDADES_EVENTOS = "atividades_eventos"
+    TABLE_ID_POPS = "procedimento_operacional_padrao"
