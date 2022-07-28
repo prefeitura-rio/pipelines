@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 from typing import Any, Union, Tuple
+from uuid import uuid4
 
 import pandas as pd
 import pendulum
@@ -14,7 +15,7 @@ from prefect import task
 from prefect.triggers import all_successful
 
 from pipelines.rj_cor.comando.eventos.utils import get_token, get_url, build_redis_key
-from pipelines.utils.utils import get_redis_client, log
+from pipelines.utils.utils import get_redis_client, get_vault_secret, log
 
 
 @task(nout=2)
@@ -80,17 +81,16 @@ def set_last_updated_on_redis(
 
 @task(nout=2)
 # pylint: disable=W0613
-def download(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
+def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
     """
     Faz o request dos dados de eventos e das atividades do evento
     """
 
     auth_token = get_token()
 
-    url_eventos = "http://ws.status.rio/statuscomando/v2/listarEventos"
-    url_atividades_evento = (
-        "http://ws.status.rio/statuscomando/v2/listarAtividadesDoEvento"
-    )
+    url_secret = get_vault_secret("comando")["data"]
+    url_eventos = url_secret["endpoint_eventos"]
+    url_atividades_evento = url_secret["endpoint_atividades_evento"]
 
     # Request Eventos
     response = get_url(url=url_eventos, parameters=date_interval, token=auth_token)
@@ -159,6 +159,24 @@ def download(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
 
 
 @task
+def get_pops() -> pd.DataFrame:
+    """
+    Get the list of POPS from the API
+    """
+    auth_token = get_token()
+
+    url_secret = get_vault_secret("comando")["data"]
+    url = url_secret["endpoint_pops"]
+
+    response = get_url(url=url, token=auth_token)
+
+    pops = pd.DataFrame(response["objeto"])
+    pops["pop_id"] = pops["pop_id"].astype("int")
+
+    return pops
+
+
+@task
 def salvar_dados(dfr: pd.DataFrame, current_time: str, name: str) -> Union[str, Path]:
     """
     Salvar dados tratados em csv para conseguir subir pro GCP
@@ -183,6 +201,17 @@ def salvar_dados(dfr: pd.DataFrame, current_time: str, name: str) -> Union[str, 
     dfr.to_csv(df_path, index=False)
     log(f">>>>>>> base_path {base_path}")
     return base_path
+
+
+@task
+def save_no_partition(dataframe: pd.DataFrame) -> str:
+    """
+    Saves a dataframe to a temporary directory and returns the path to the directory.
+    """
+    path_to_directory = "/tmp/" + str(uuid4().hex) + "/"
+    os.makedirs(path_to_directory, exist_ok=True)
+    dataframe.to_csv(path_to_directory + "dados.csv", index=False)
+    return path_to_directory
 
 
 @task
