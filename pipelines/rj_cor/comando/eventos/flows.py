@@ -270,7 +270,7 @@ with Flow(
         "dataset_id", default=comando_constants.DATASET_ID.value, required=False
     )
     table_id = Parameter(
-        "table_id", default=comando_constants.TABLE_ID_POPS, required=False
+        "table_id", default=comando_constants.TABLE_ID_POPS.value, required=False
     )
 
     pops = get_pops()
