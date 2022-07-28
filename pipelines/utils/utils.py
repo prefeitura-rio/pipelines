@@ -238,6 +238,29 @@ def run_cloud(
     print(f"Please check at: https://prefect.dados.rio/flow-run/{flow_run_id}")
 
 
+def run_registered(
+    flow_id: str,
+    labels: List[str],
+    parameters: Dict[str, Any] = None,
+    run_description: str = "",
+):
+    """
+    Runs an already registered flow on Prefect Server (must have credentials configured).
+    """
+    # Get Prefect Client and submit flow run
+    client = Client()
+    flow_run_id = client.create_flow_run(
+        flow_id=flow_id,
+        run_name=f"SUBMITTED REMOTELY - {run_description}",
+        labels=labels,
+        parameters=parameters,
+    )
+
+    # Print flow run link so user can check it
+    print(f"Run submitted: SUBMITTED REMOTELY - {run_description}")
+    print(f"Please check at: https://prefect.dados.rio/flow-run/{flow_run_id}")
+
+
 def query_to_line(query: str) -> str:
     """
     Converts a query to a line.
