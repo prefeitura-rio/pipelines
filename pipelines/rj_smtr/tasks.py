@@ -410,7 +410,7 @@ def get_raw(url: str, headers: dict = None, timestamp: datetime = None):
             "timestamp": timestamp.isoformat(),
         }
 
-    return {"data": response, "timestamp": timestamp, "error": error}
+    return {"data": response, "timestamp": timestamp.isoformat(), "error": error}
 
 
 ###############
