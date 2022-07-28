@@ -16,7 +16,6 @@ from pipelines.utils.utils import log, get_vault_secret
 # SMTR Imports #
 
 from pipelines.rj_smtr.constants import constants
-from pipelines.rj_smtr.utils import log_critical
 from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.utils import sppo_filters
 
 # Tasks #
