@@ -235,7 +235,7 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
         UPLOAD_LOGS = upload_logs_to_bq.map(
             dataset_id=unmapped(dataset_id),
             parent_table_id=unmapped(table_id),
-            status_dict=status_dict,
+            status_dict=treated_status,
         )
 
         treated_filepath = save_treated_local.map(
@@ -262,6 +262,7 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
             raise_final_state=True,
         )
     recaptura.set_dependencies(task=status_dict, upstream_tasks=[filepath])
+    recaptura.set_dependencies(task=UPLOAD_CSV, upstream_tasks=[UPLOAD_LOGS])
     recaptura.set_dependencies(task=materialize, upstream_tasks=[UPLOAD_CSV])
 
 recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
