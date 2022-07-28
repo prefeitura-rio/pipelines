@@ -17,7 +17,25 @@ every_day = Schedule(
             ],
             parameter_defaults={
                 "materialize_after_dump": False,
-                "materialization_mode": "dev",
+                "materialization_mode": "prod",
+                "materialize_to_datario": False,
+                "dump_to_gcs": False,
+            },
+        ),
+    ]
+)
+
+every_month = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(days=30),
+            start_date=datetime(2022, 1, 1, 12, 40, 0),
+            labels=[
+                constants.RJ_COR_AGENT_LABEL.value,
+            ],
+            parameter_defaults={
+                "materialize_after_dump": False,
+                "materialization_mode": "prod",
                 "materialize_to_datario": False,
                 "dump_to_gcs": False,
             },
