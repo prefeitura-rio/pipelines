@@ -4,10 +4,10 @@ Tasks for br_rj_riodejaneiro_onibus_gps
 """
 
 import traceback
+from datetime import datetime, timedelta
 import pandas as pd
 from prefect import task
 import pendulum
-from datetime import datetime, timedelta
 
 # EMD Imports #
 
@@ -106,15 +106,12 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
         log(f"Shape após a filtragem: {df.shape}")
         if df.shape[0] == 0:
             error = ValueError("After filtering, the dataframe is empty!")
-            log_critical(f"@here\nFailed to filter SPPO data: \n{error}")
         if version == 2:
             df = df.drop(  # pylint: disable=C0103
                 columns=["datahoraenvio", "datahoraservidor"]
             )
     except Exception:  # pylint: disable = W0703
-        err = traceback.format_exc()
-        log_critical(f"@here\nFailed to filter SPPO data: \n{err}")
-    # log_critical(f"@here\n Got SPPO data at {timestamp} sucessfully")
+        error = traceback.format_exc()
 
     return {
         "df": df.drop_duplicates(

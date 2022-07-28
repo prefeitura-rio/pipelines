@@ -29,7 +29,7 @@ from pipelines.rj_smtr.utils import (
     parse_dbt_logs,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
-from pipelines.utils.utils import log, get_vault_secret, get_redis_client
+from pipelines.utils.utils import log, get_redis_client
 
 ###############
 #
