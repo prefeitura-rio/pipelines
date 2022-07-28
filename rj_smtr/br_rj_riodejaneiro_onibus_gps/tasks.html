@@ -33,20 +33,45 @@ Tasks for br_rj_riodejaneiro_onibus_gps
 &#34;&#34;&#34;
 
 import traceback
+from datetime import datetime, timedelta
 import pandas as pd
 from prefect import task
+import pendulum
 
 # EMD Imports #
 
-from pipelines.utils.utils import log
+from pipelines.utils.utils import log, get_vault_secret
 
 # SMTR Imports #
 
 from pipelines.rj_smtr.constants import constants
-from pipelines.rj_smtr.utils import log_critical
-from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.utils import sppo_filters
 
 # Tasks #
+
+
+@task
+def create_api_url_onibus_gps(url: str, source: str, timestamp: datetime = None):
+    &#34;&#34;&#34;
+    Generates the complete URL to get data from API.
+    &#34;&#34;&#34;
+    if not timestamp:
+        timestamp = pendulum.now(constants.TIMEZONE.value).replace(
+            second=0, microsecond=0
+        )
+
+    headers = get_vault_secret(source)[&#34;data&#34;]
+    key = list(headers)[0]
+    url = f&#34;{url}{key}={{secret}}&#34;
+
+    if source == &#34;sppo_api_v2&#34;:
+        date_range = {
+            &#34;start&#34;: (timestamp - timedelta(minutes=6)).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
+            &#34;end&#34;: (timestamp - timedelta(minutes=5)).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
+        }
+        url += f&#34;&amp;dataInicial={date_range[&#39;start&#39;]}&amp;dataFinal={date_range[&#39;end&#39;]}&#34;
+
+    log(f&#34;Request data from URL: {url}&#34;)
+    return url.format(secret=headers[key])
 
 
 @task
@@ -73,7 +98,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
     timezone = constants.TIMEZONE.value
     timestamp = status_dict[&#34;timestamp&#34;]
 
-    log(f&#34;data={data.json()[:50]}&#34;)
+    log(f&#34;Data received to treat: \n{data.json()[:5]}&#34;)
     data = data.json()
     df = pd.DataFrame(data)  # pylint: disable=c0103
     timestamp_captura = pd.to_datetime(timestamp)
@@ -98,31 +123,49 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
         )
         log(f&#34;After converting the timezone, {col} is: \n{df[col].head()}&#34;)
 
-    # Filter data for 0 &lt;= time diff &lt;= 1min
+    # Filter data
     try:
-        # filters
-        log(f&#34;Shape antes da filtragem: {df.shape}&#34;)
-        df = sppo_filters(  # pylint: disable=C0103
-            frame=df, version=version, recapture=recapture
+        log(f&#34;Shape before filtering: {df.shape}&#34;)
+        if version == 1:
+            filter_col = &#34;timestamp_captura&#34;
+            time_delay = constants.GPS_SPPO_CAPTURE_DELAY_V1.value
+        elif version == 2:
+            filter_col = &#34;datahoraenvio&#34;
+            time_delay = constants.GPS_SPPO_CAPTURE_DELAY_V2.value
+        if recapture:
+            server_mask = (df[&#34;datahoraenvio&#34;] - df[&#34;datahoraservidor&#34;]) &lt;= timedelta(
+                minutes=constants.GPS_SPPO_RECAPTURE_DELAY_V2.value
+            )
+            df = df[server_mask]
+
+        mask = (df[filter_col] - df[&#34;datahora&#34;]).apply(
+            lambda x: timedelta(seconds=0) &lt;= x &lt;= timedelta(minutes=time_delay)
         )
-        log(f&#34;Shape após a filtragem: {df.shape}&#34;)
+
+        # Select and drop duplicated data
+        cols = [
+            &#34;ordem&#34;,
+            &#34;latitude&#34;,
+            &#34;longitude&#34;,
+            &#34;datahora&#34;,
+            &#34;velocidade&#34;,
+            &#34;linha&#34;,
+            &#34;timestamp_captura&#34;,
+        ]
+        df = df = df[mask][cols]
+
+        log(f&#34;Shape after filtering: {df.shape}&#34;)
         if df.shape[0] == 0:
             error = ValueError(&#34;After filtering, the dataframe is empty!&#34;)
-            log_critical(f&#34;@here\nFailed to filter SPPO data: \n{error}&#34;)
-        if version == 2:
-            df = df.drop(  # pylint: disable=C0103
-                columns=[&#34;datahoraenvio&#34;, &#34;datahoraservidor&#34;]
-            )
     except Exception:  # pylint: disable = W0703
-        err = traceback.format_exc()
-        log_critical(f&#34;@here\nFailed to filter SPPO data: \n{err}&#34;)
-    # log_critical(f&#34;@here\n Got SPPO data at {timestamp} sucessfully&#34;)
+        error = traceback.format_exc()
 
     return {
         &#34;df&#34;: df.drop_duplicates(
             [&#34;ordem&#34;, &#34;latitude&#34;, &#34;longitude&#34;, &#34;datahora&#34;, &#34;timestamp_captura&#34;]
         ),
         &#34;error&#34;: error,
+        &#34;timestamp&#34;: timestamp,
     }</code></pre>
 </details>
 </section>
@@ -133,6 +176,40 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks.create_api_url_onibus_gps"><code class="name flex">
+<span>def <span class="ident">create_api_url_onibus_gps</span></span>(<span>url: str, source: str, timestamp: datetime.datetime = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generates the complete URL to get data from API.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def create_api_url_onibus_gps(url: str, source: str, timestamp: datetime = None):
+    &#34;&#34;&#34;
+    Generates the complete URL to get data from API.
+    &#34;&#34;&#34;
+    if not timestamp:
+        timestamp = pendulum.now(constants.TIMEZONE.value).replace(
+            second=0, microsecond=0
+        )
+
+    headers = get_vault_secret(source)[&#34;data&#34;]
+    key = list(headers)[0]
+    url = f&#34;{url}{key}={{secret}}&#34;
+
+    if source == &#34;sppo_api_v2&#34;:
+        date_range = {
+            &#34;start&#34;: (timestamp - timedelta(minutes=6)).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
+            &#34;end&#34;: (timestamp - timedelta(minutes=5)).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
+        }
+        url += f&#34;&amp;dataInicial={date_range[&#39;start&#39;]}&amp;dataFinal={date_range[&#39;end&#39;]}&#34;
+
+    log(f&#34;Request data from URL: {url}&#34;)
+    return url.format(secret=headers[key])</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks.pre_treatment_br_rj_riodejaneiro_onibus_gps"><code class="name flex">
 <span>def <span class="ident">pre_treatment_br_rj_riodejaneiro_onibus_gps</span></span>(<span>status_dict: dict, version: int = 1, recapture: bool = False)</span>
 </code></dt>
@@ -180,7 +257,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
     timezone = constants.TIMEZONE.value
     timestamp = status_dict[&#34;timestamp&#34;]
 
-    log(f&#34;data={data.json()[:50]}&#34;)
+    log(f&#34;Data received to treat: \n{data.json()[:5]}&#34;)
     data = data.json()
     df = pd.DataFrame(data)  # pylint: disable=c0103
     timestamp_captura = pd.to_datetime(timestamp)
@@ -205,31 +282,49 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
         )
         log(f&#34;After converting the timezone, {col} is: \n{df[col].head()}&#34;)
 
-    # Filter data for 0 &lt;= time diff &lt;= 1min
+    # Filter data
     try:
-        # filters
-        log(f&#34;Shape antes da filtragem: {df.shape}&#34;)
-        df = sppo_filters(  # pylint: disable=C0103
-            frame=df, version=version, recapture=recapture
+        log(f&#34;Shape before filtering: {df.shape}&#34;)
+        if version == 1:
+            filter_col = &#34;timestamp_captura&#34;
+            time_delay = constants.GPS_SPPO_CAPTURE_DELAY_V1.value
+        elif version == 2:
+            filter_col = &#34;datahoraenvio&#34;
+            time_delay = constants.GPS_SPPO_CAPTURE_DELAY_V2.value
+        if recapture:
+            server_mask = (df[&#34;datahoraenvio&#34;] - df[&#34;datahoraservidor&#34;]) &lt;= timedelta(
+                minutes=constants.GPS_SPPO_RECAPTURE_DELAY_V2.value
+            )
+            df = df[server_mask]
+
+        mask = (df[filter_col] - df[&#34;datahora&#34;]).apply(
+            lambda x: timedelta(seconds=0) &lt;= x &lt;= timedelta(minutes=time_delay)
         )
-        log(f&#34;Shape após a filtragem: {df.shape}&#34;)
+
+        # Select and drop duplicated data
+        cols = [
+            &#34;ordem&#34;,
+            &#34;latitude&#34;,
+            &#34;longitude&#34;,
+            &#34;datahora&#34;,
+            &#34;velocidade&#34;,
+            &#34;linha&#34;,
+            &#34;timestamp_captura&#34;,
+        ]
+        df = df = df[mask][cols]
+
+        log(f&#34;Shape after filtering: {df.shape}&#34;)
         if df.shape[0] == 0:
             error = ValueError(&#34;After filtering, the dataframe is empty!&#34;)
-            log_critical(f&#34;@here\nFailed to filter SPPO data: \n{error}&#34;)
-        if version == 2:
-            df = df.drop(  # pylint: disable=C0103
-                columns=[&#34;datahoraenvio&#34;, &#34;datahoraservidor&#34;]
-            )
     except Exception:  # pylint: disable = W0703
-        err = traceback.format_exc()
-        log_critical(f&#34;@here\nFailed to filter SPPO data: \n{err}&#34;)
-    # log_critical(f&#34;@here\n Got SPPO data at {timestamp} sucessfully&#34;)
+        error = traceback.format_exc()
 
     return {
         &#34;df&#34;: df.drop_duplicates(
             [&#34;ordem&#34;, &#34;latitude&#34;, &#34;longitude&#34;, &#34;datahora&#34;, &#34;timestamp_captura&#34;]
         ),
         &#34;error&#34;: error,
+        &#34;timestamp&#34;: timestamp,
     }</code></pre>
 </details>
 </dd>
@@ -297,6 +392,7 @@ setTimeout(() => input.focus(), 100);
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks.create_api_url_onibus_gps" href="#pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks.create_api_url_onibus_gps">create_api_url_onibus_gps</a></code></li>
 <li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks.pre_treatment_br_rj_riodejaneiro_onibus_gps" href="#pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks.pre_treatment_br_rj_riodejaneiro_onibus_gps">pre_treatment_br_rj_riodejaneiro_onibus_gps</a></code></li>
 </ul>
 </li>

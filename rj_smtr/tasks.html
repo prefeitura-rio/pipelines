@@ -58,7 +58,7 @@ from pipelines.rj_smtr.utils import (
     parse_dbt_logs,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
-from pipelines.utils.utils import log, get_vault_secret, get_redis_client
+from pipelines.utils.utils import log, get_redis_client
 
 ###############
 #
@@ -244,7 +244,7 @@ def create_current_date_hour_partition(capture_time=None):
     &#34;&#34;&#34;
     tz = constants.TIMEZONE.value  # pylint: disable=C0103
     if capture_time is None:
-        capture_time = pendulum.now(tz)
+        capture_time = pendulum.now(tz).replace(second=0, microsecond=0)
     date = capture_time.strftime(&#34;%Y-%m-%d&#34;)
     hour = capture_time.strftime(&#34;%H&#34;)
 
@@ -396,14 +396,8 @@ def query_logs(
 
 
 @task
-def get_raw(
-    url,
-    headers=None,
-    source: str = None,
-    timestamp=None,
-):
+def get_raw(url: str, headers: dict = None, timestamp: datetime = None):
     &#34;&#34;&#34;Request data from a url API
-
     Args:
         url (str): URL to send request to
         headers (dict, optional): Aditional fields to send along the request. Defaults to None.
@@ -415,52 +409,37 @@ def get_raw(
         dict: &#34;data&#34; contains the response object from the request, &#34;timestamp&#34; contains
         the run time timestamp, &#34;error&#34; catches errors that may occur during task execution.
     &#34;&#34;&#34;
-    if source == &#34;stpl_api&#34;:
-        headers = get_vault_secret(source)[&#34;data&#34;]
-    if source == &#34;sppo_api&#34;:
-        access = get_vault_secret(source)[&#34;data&#34;]
-        key = list(access)[0]
-        url = f&#34;{url}{key}={access[key]}&#34;
     data = None
-    error = None
     if not timestamp:
-        timestamp = pendulum.now(constants.TIMEZONE.value)
-    if source == &#34;sppo_api_v2&#34;:
-        access = get_vault_secret(source)[&#34;data&#34;]
-        key = list(access)[0]
-        url = f&#34;{url}{key}={access[key]}&#34;
-        date_range = {
-            &#34;start&#34;: (timestamp - timedelta(minutes=6)).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
-            &#34;end&#34;: (timestamp - timedelta(minutes=5)).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
-        }
-        log(f&#34;Will request data between {date_range[&#39;start&#39;]} and {date_range[&#39;end&#39;]}&#34;)
-        url += f&#34;&amp;dataInicial={date_range[&#39;start&#39;]}&#34;
-        url += f&#34;&amp;dataFinal={date_range[&#39;end&#39;]}&#34;
+        timestamp = pendulum.now(constants.TIMEZONE.value).replace(
+            second=0, microsecond=0
+        )
 
+    # Get data from API
     try:
-        data = requests.get(
+        response = requests.get(
             url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
         )
-    except Exception as err:
-        log(f&#34;Request failed with error:\n{err}&#34;)
-        return {&#34;data&#34;: data, &#34;timestamp&#34;: timestamp.isoformat(), &#34;error&#34;: err}
+        error = None
+    except Exception as exp:
+        error = exp
 
-    if data.ok:
-        if isinstance(data.json(), dict) and &#34;DescricaoErro&#34; in data.json().keys():
-            log(f&#34;Data is {data.json()}\n With type: {type(data.json())}&#34;)
-            error = data.json()[&#34;DescricaoErro&#34;]
-        elif len(data.json()) == 0:
+    # Check data results
+    if response.ok:  # status code is less than 400
+        data = response.json()
+        if isinstance(data, dict) and &#34;DescricaoErro&#34; in data.keys():
+            error = data[&#34;DescricaoErro&#34;]
+        elif len(data) == 0:
             error = &#34;Data returned from API is empty.&#34;
             log(error)
 
         return {
-            &#34;data&#34;: data,
+            &#34;data&#34;: response,
             &#34;error&#34;: error,
             &#34;timestamp&#34;: timestamp.isoformat(),
         }
 
-    error = f&#34;Requests failed with error {data.status_code}&#34;
-    return {&#34;error&#34;: error, &#34;timestamp&#34;: timestamp.isoformat(), &#34;data&#34;: data}
+    return {&#34;data&#34;: response, &#34;timestamp&#34;: timestamp.isoformat(), &#34;error&#34;: error}
 
 
 ###############
@@ -602,6 +581,8 @@ def upload_logs_to_bq(
     create_or_append_table(
         dataset_id=dataset_id, table_id=table_id, path=filepath.parent.parent
     )
+    if error:
+        raise Exception(f&#34;Pipeline failed with error: {error}&#34;)
 
 
 @task(
@@ -1023,7 +1004,7 @@ def create_current_date_hour_partition(capture_time=None):
     &#34;&#34;&#34;
     tz = constants.TIMEZONE.value  # pylint: disable=C0103
     if capture_time is None:
-        capture_time = pendulum.now(tz)
+        capture_time = pendulum.now(tz).replace(second=0, microsecond=0)
     date = capture_time.strftime(&#34;%Y-%m-%d&#34;)
     hour = capture_time.strftime(&#34;%H&#34;)
 
@@ -1290,7 +1271,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.get_raw"><code class="name flex">
-<span>def <span class="ident">get_raw</span></span>(<span>url, headers=None, source: str = None, timestamp=None)</span>
+<span>def <span class="ident">get_raw</span></span>(<span>url: str, headers: dict = None, timestamp: datetime.datetime = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Request data from a url API</p>
@@ -1317,14 +1298,8 @@ time. Defaults to None.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def get_raw(
-    url,
-    headers=None,
-    source: str = None,
-    timestamp=None,
-):
+def get_raw(url: str, headers: dict = None, timestamp: datetime = None):
     &#34;&#34;&#34;Request data from a url API
-
     Args:
         url (str): URL to send request to
         headers (dict, optional): Aditional fields to send along the request. Defaults to None.
@@ -1336,52 +1311,37 @@ def get_raw(
         dict: &#34;data&#34; contains the response object from the request, &#34;timestamp&#34; contains
         the run time timestamp, &#34;error&#34; catches errors that may occur during task execution.
     &#34;&#34;&#34;
-    if source == &#34;stpl_api&#34;:
-        headers = get_vault_secret(source)[&#34;data&#34;]
-    if source == &#34;sppo_api&#34;:
-        access = get_vault_secret(source)[&#34;data&#34;]
-        key = list(access)[0]
-        url = f&#34;{url}{key}={access[key]}&#34;
     data = None
-    error = None
     if not timestamp:
-        timestamp = pendulum.now(constants.TIMEZONE.value)
-    if source == &#34;sppo_api_v2&#34;:
-        access = get_vault_secret(source)[&#34;data&#34;]
-        key = list(access)[0]
-        url = f&#34;{url}{key}={access[key]}&#34;
-        date_range = {
-            &#34;start&#34;: (timestamp - timedelta(minutes=6)).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
-            &#34;end&#34;: (timestamp - timedelta(minutes=5)).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
-        }
-        log(f&#34;Will request data between {date_range[&#39;start&#39;]} and {date_range[&#39;end&#39;]}&#34;)
-        url += f&#34;&amp;dataInicial={date_range[&#39;start&#39;]}&#34;
-        url += f&#34;&amp;dataFinal={date_range[&#39;end&#39;]}&#34;
+        timestamp = pendulum.now(constants.TIMEZONE.value).replace(
+            second=0, microsecond=0
+        )
 
+    # Get data from API
     try:
-        data = requests.get(
+        response = requests.get(
             url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
         )
-    except Exception as err:
-        log(f&#34;Request failed with error:\n{err}&#34;)
-        return {&#34;data&#34;: data, &#34;timestamp&#34;: timestamp.isoformat(), &#34;error&#34;: err}
+        error = None
+    except Exception as exp:
+        error = exp
 
-    if data.ok:
-        if isinstance(data.json(), dict) and &#34;DescricaoErro&#34; in data.json().keys():
-            log(f&#34;Data is {data.json()}\n With type: {type(data.json())}&#34;)
-            error = data.json()[&#34;DescricaoErro&#34;]
-        elif len(data.json()) == 0:
+    # Check data results
+    if response.ok:  # status code is less than 400
+        data = response.json()
+        if isinstance(data, dict) and &#34;DescricaoErro&#34; in data.keys():
+            error = data[&#34;DescricaoErro&#34;]
+        elif len(data) == 0:
             error = &#34;Data returned from API is empty.&#34;
             log(error)
 
         return {
-            &#34;data&#34;: data,
+            &#34;data&#34;: response,
             &#34;error&#34;: error,
             &#34;timestamp&#34;: timestamp.isoformat(),
         }
 
-    error = f&#34;Requests failed with error {data.status_code}&#34;
-    return {&#34;error&#34;: error, &#34;timestamp&#34;: timestamp.isoformat(), &#34;data&#34;: data}</code></pre>
+    return {&#34;data&#34;: response, &#34;timestamp&#34;: timestamp.isoformat(), &#34;error&#34;: error}</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.query_logs"><code class="name flex">
@@ -1784,7 +1744,9 @@ def upload_logs_to_bq(
     # BD Table object
     create_or_append_table(
         dataset_id=dataset_id, table_id=table_id, path=filepath.parent.parent
-    )</code></pre>
+    )
+    if error:
+        raise Exception(f&#34;Pipeline failed with error: {error}&#34;)</code></pre>
 </details>
 </dd>
 </dl>
