@@ -33,7 +33,6 @@ from pipelines.rj_smtr.schedules import (
 from pipelines.rj_smtr.tasks import (
     create_current_date_hour_partition,
     create_local_partition_path,
-    delay_now_time,
     fetch_dataset_sha,
     get_materialization_date_range,
     # get_local_dbt_client,
@@ -48,6 +47,7 @@ from pipelines.rj_smtr.tasks import (
 )
 from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
     pre_treatment_br_rj_riodejaneiro_onibus_gps,
+    create_api_url_onibus_gps,
 )
 
 # Flows #
@@ -153,11 +153,12 @@ with Flow(
         partitions=file_dict["partitions"],
     )
 
-    status_dict = get_raw(url=url, source=secret_path)
+    url = create_api_url_onibus_gps(url=url, source=secret_path)
+    status_dict = get_raw(url)
 
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="GPS SPPO: ", now_time=delay_now_time(status_dict["timestamp"])
+        prefix="GPS SPPO: ", now_time=status_dict["timestamp"]
     )
 
     raw_filepath = save_raw_local(data=status_dict["data"], file_path=filepath)
@@ -170,7 +171,7 @@ with Flow(
         dataset_id=dataset_id,
         parent_table_id=table_id,
         timestamp=status_dict["timestamp"],
-        error=status_dict["error"],
+        error=treated_status["error"],
     )
 
     treated_filepath = save_treated_local(
@@ -185,6 +186,7 @@ with Flow(
         partitions=file_dict["partitions"],
     )
     captura_sppo_v2.set_dependencies(task=status_dict, upstream_tasks=[filepath])
+    captura_sppo_v2.set_dependencies(task=UPLOAD_CSV, upstream_tasks=[UPLOAD_LOGS])
 
 with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as recaptura:
     # Get default parameters
@@ -224,9 +226,10 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
             table_id=unmapped(table_id),
             file_dict=file_dict,
         )
-        status_dict = get_raw.map(
+        url = create_api_url_onibus_gps.map(
             url=unmapped(url), source=unmapped(secret_path), timestamp=timestamps
         )
+        status_dict = get_raw.map(url)
         raw_filepath = save_raw_local.map(status_dict=status_dict, file_path=filepath)
         treated_status = pre_treatment_br_rj_riodejaneiro_onibus_gps.map(
             status_dict=status_dict, version=unmapped(version), recapture=unmapped(True)

@@ -62,7 +62,7 @@ with Flow(
         partitions=file_dict["partitions"],
     )
 
-    status_dict = get_raw(url=url, source=secret_path)
+    status_dict = get_raw(url=url)
 
     raw_filepath = save_raw_local(data=status_dict["data"], file_path=filepath)
 
