@@ -159,7 +159,7 @@ with Flow(
 
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="GPS SPPO: ", now_time=delay_now_time(status_dict["timestamp"])
+        prefix="GPS SPPO: ", now_time=status_dict["timestamp"]
     )
 
     raw_filepath = save_raw_local(data=status_dict["data"], file_path=filepath)
