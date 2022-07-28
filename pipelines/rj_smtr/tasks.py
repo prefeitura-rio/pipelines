@@ -215,7 +215,7 @@ def create_current_date_hour_partition(capture_time=None):
     """
     tz = constants.TIMEZONE.value  # pylint: disable=C0103
     if capture_time is None:
-        capture_time = pendulum.now(tz)
+        capture_time = pendulum.now(tz).replace(second=0, microsecond=0)
     date = capture_time.strftime("%Y-%m-%d")
     hour = capture_time.strftime("%H")
 
