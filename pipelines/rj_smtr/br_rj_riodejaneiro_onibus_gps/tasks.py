@@ -94,4 +94,5 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
             ["ordem", "latitude", "longitude", "datahora", "timestamp_captura"]
         ),
         "error": error,
+        "timestamp": timestamp,
     }
