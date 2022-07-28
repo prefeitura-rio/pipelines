@@ -19,6 +19,7 @@ from pipelines.rj_cor.comando.eventos.constants import (
 from pipelines.rj_cor.comando.eventos.schedules import every_day, every_month
 from pipelines.rj_cor.comando.eventos.tasks import (
     download_eventos,
+    get_atividades_pops,
     get_date_interval,
     get_pops,
     salvar_dados,
@@ -239,7 +240,7 @@ rj_cor_comando_eventos_flow.schedule = every_day
 
 
 with Flow(
-    "COR: Comando - POPs",
+    "COR: Comando - POPs e Atividades dos POPs",
     code_owners=[
         "paty",
     ],
@@ -269,70 +270,138 @@ with Flow(
     dataset_id = Parameter(
         "dataset_id", default=comando_constants.DATASET_ID.value, required=False
     )
-    table_id = Parameter(
-        "table_id", default=comando_constants.TABLE_ID_POPS.value, required=False
+    table_id_pops = Parameter(
+        "table_id_pops", default=comando_constants.TABLE_ID_POPS.value, required=False
+    )
+    table_id_atividades_pops = Parameter(
+        "table_id_atividades_pops",
+        default=comando_constants.TABLE_ID_ATIVIDADES_POPS.value,
+        required=False,
     )
 
     pops = get_pops()
+    atividades_pops = get_atividades_pops(pops=pops)
 
-    path = save_no_partition(dataframe=pops)
+    path_pops = save_no_partition(dataframe=pops)
+    path_atividades_pops = save_no_partition(dataframe=atividades_pops)
 
-    task_upload = create_table_and_upload_to_gcs(
-        data_path=path,
+    task_upload_pops = create_table_and_upload_to_gcs(
+        data_path=path_pops,
         dataset_id=dataset_id,
-        table_id=table_id,
+        table_id=table_id_pops,
+        dump_mode=dump_mode,
+    )
+
+    task_upload_atividades_pops = create_table_and_upload_to_gcs(
+        data_path=path_atividades_pops,
+        dataset_id=dataset_id,
+        table_id=table_id_atividades_pops,
         dump_mode=dump_mode,
     )
 
     with case(materialize_after_dump, True):
         # Trigger DBT flow run
         current_flow_labels = get_current_flow_labels()
-        materialization_flow = create_flow_run(
+
+        materialization_pops_flow = create_flow_run(
             flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
             project_name=constants.PREFECT_DEFAULT_PROJECT.value,
             parameters={
                 "dataset_id": dataset_id,
-                "table_id": table_id,
+                "table_id": table_id_pops,
                 "mode": materialization_mode,
                 "materialize_to_datario": materialize_to_datario,
             },
             labels=current_flow_labels,
-            run_name=f"Materialize {dataset_id}.{table_id}",
+            run_name=f"Materialize {dataset_id}.{table_id_pops}",
         )
+        materialization_pops_flow.set_upstream(task_upload_pops)
 
-        wait_for_materialization = wait_for_flow_run(
-            materialization_flow,
+        materialization_atividades_pops_flow = create_flow_run(
+            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+            parameters={
+                "dataset_id": dataset_id,
+                "table_id": table_id_atividades_pops,
+                "mode": materialization_mode,
+                "materialize_to_datario": materialize_to_datario,
+            },
+            labels=current_flow_labels,
+            run_name=f"Materialize {dataset_id}.{table_id_atividades_pops}",
+        )
+        materialization_atividades_pops_flow.set_upstream(task_upload_atividades_pops)
+
+        wait_for_pops_materialization = wait_for_flow_run(
+            materialization_pops_flow,
             stream_states=True,
             stream_logs=True,
             raise_final_state=True,
         )
-        wait_for_materialization.max_retries = (
+        wait_for_pops_materialization.max_retries = (
             dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
         )
-        wait_for_materialization.retry_delay = timedelta(
+        wait_for_pops_materialization.retry_delay = timedelta(
+            seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
+        )
+
+        wait_for_atividades_pops_materialization = wait_for_flow_run(
+            materialization_atividades_pops_flow,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+        wait_for_atividades_pops_materialization.max_retries = (
+            dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
+        )
+        wait_for_atividades_pops_materialization.retry_delay = timedelta(
             seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
         )
 
         with case(dump_to_gcs, True):
             # Trigger Dump to GCS flow run with project id as datario
-            dump_to_gcs_flow = create_flow_run(
+            dump_pops_to_gcs_flow = create_flow_run(
                 flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
                 project_name=constants.PREFECT_DEFAULT_PROJECT.value,
                 parameters={
                     "project_id": "datario",
                     "dataset_id": dataset_id,
-                    "table_id": table_id,
+                    "table_id": table_id_pops,
                     "maximum_bytes_processed": maximum_bytes_processed,
                 },
                 labels=[
                     "datario",
                 ],
-                run_name=f"Dump to GCS {dataset_id}.{table_id}",
+                run_name=f"Dump to GCS {dataset_id}.{table_id_pops}",
             )
-            dump_to_gcs_flow.set_upstream(wait_for_materialization)
+            dump_pops_to_gcs_flow.set_upstream(wait_for_pops_materialization)
 
-            wait_for_dump_to_gcs = wait_for_flow_run(
-                dump_to_gcs_flow,
+            dump_atividades_pops_to_gcs_flow = create_flow_run(
+                flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
+                project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                parameters={
+                    "project_id": "datario",
+                    "dataset_id": dataset_id,
+                    "table_id": table_id_atividades_pops,
+                    "maximum_bytes_processed": maximum_bytes_processed,
+                },
+                labels=[
+                    "datario",
+                ],
+                run_name=f"Dump to GCS {dataset_id}.{table_id_atividades_pops}",
+            )
+            dump_atividades_pops_to_gcs_flow.set_upstream(
+                wait_for_atividades_pops_materialization
+            )
+
+            wait_for_dump_pops_to_gcs = wait_for_flow_run(
+                dump_pops_to_gcs_flow,
+                stream_states=True,
+                stream_logs=True,
+                raise_final_state=True,
+            )
+
+            wait_for_dump_atividades_pops_to_gcs = wait_for_flow_run(
+                dump_atividades_pops_to_gcs_flow,
                 stream_states=True,
                 stream_logs=True,
                 raise_final_state=True,

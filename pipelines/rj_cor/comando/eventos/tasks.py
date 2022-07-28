@@ -3,6 +3,7 @@
 Tasks for comando
 """
 
+from copy import deepcopy
 import json
 import os
 from pathlib import Path
@@ -163,6 +164,8 @@ def get_pops() -> pd.DataFrame:
     """
     Get the list of POPS from the API
     """
+    log(">>>>>>> Requesting POPS")
+
     auth_token = get_token()
 
     url_secret = get_vault_secret("comando")["data"]
@@ -171,9 +174,48 @@ def get_pops() -> pd.DataFrame:
     response = get_url(url=url, token=auth_token)
 
     pops = pd.DataFrame(response["objeto"])
-    pops["pop_id"] = pops["pop_id"].astype("int")
+    pops["id"] = pops["id"].astype("int")
+
+    log(f">>>>>>> pops\n{pops.head()}")
 
     return pops
+
+
+@task
+def get_atividades_pops(pops: pd.DataFrame) -> pd.DataFrame:
+    """
+    Get the list of POP's activities from API
+    """
+    log(">>>>>>> Requesting POP's activities")
+
+    auth_token = get_token()
+
+    url_secret = get_vault_secret("comando")["data"]
+    url = url_secret["endpoint_atividades_pop"]
+
+    pop_ids = pops["id"].unique()
+
+    atividades_pops = []
+    for pop_id in pop_ids:
+        log(f">>>>>>> Requesting POP's activities for pop_id: {pop_id}")
+        response = get_url(url=url + f"?popId={pop_id}", token=auth_token)
+        row_template = {
+            "pop": response["pop"],
+            "sigla": "",
+            "orgao": "",
+            "acao": "",
+        }
+        for activity in response["atividades"]:
+            row = deepcopy(row_template)
+            row["sigla"] = activity["sigla"]
+            row["orgao"] = activity["orgao"]
+            row["acao"] = activity["acao"]
+            atividades_pops.append(row)
+
+    dataframe = pd.DataFrame(atividades_pops)
+    log(f">>>>>>> atividades_pops\n{dataframe.head()}")
+
+    return dataframe
 
 
 @task
