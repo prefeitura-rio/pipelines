@@ -33,7 +33,6 @@ from pipelines.rj_smtr.schedules import (
 from pipelines.rj_smtr.tasks import (
     create_current_date_hour_partition,
     create_local_partition_path,
-    delay_now_time,
     fetch_dataset_sha,
     get_materialization_date_range,
     # get_local_dbt_client,
