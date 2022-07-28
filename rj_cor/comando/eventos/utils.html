@@ -73,7 +73,8 @@ def get_url(url, parameters: dict = None, token: str = None):  # pylint: disable
         return response.json()
     except Exception as exc:
         log(
-            f&#34;Response was: {response}\n\n\nThis resulted in the following error: {exc}&#34;
+            f&#34;Response was: {response}: {response.text}\n\n\n&#34;
+            + &#34;This resulted in the following error: {exc}&#34;
         )
         raise exc</code></pre>
 </details>
@@ -148,7 +149,8 @@ def get_url(url, parameters: dict = None, token: str = None):  # pylint: disable
         return response.json()
     except Exception as exc:
         log(
-            f&#34;Response was: {response}\n\n\nThis resulted in the following error: {exc}&#34;
+            f&#34;Response was: {response}: {response.text}\n\n\n&#34;
+            + &#34;This resulted in the following error: {exc}&#34;
         )
         raise exc</code></pre>
 </details>
