@@ -267,6 +267,29 @@ def run_cloud(
     print(f&#34;Please check at: https://prefect.dados.rio/flow-run/{flow_run_id}&#34;)
 
 
+def run_registered(
+    flow_id: str,
+    labels: List[str],
+    parameters: Dict[str, Any] = None,
+    run_description: str = &#34;&#34;,
+):
+    &#34;&#34;&#34;
+    Runs an already registered flow on Prefect Server (must have credentials configured).
+    &#34;&#34;&#34;
+    # Get Prefect Client and submit flow run
+    client = Client()
+    flow_run_id = client.create_flow_run(
+        flow_id=flow_id,
+        run_name=f&#34;SUBMITTED REMOTELY - {run_description}&#34;,
+        labels=labels,
+        parameters=parameters,
+    )
+
+    # Print flow run link so user can check it
+    print(f&#34;Run submitted: SUBMITTED REMOTELY - {run_description}&#34;)
+    print(f&#34;Please check at: https://prefect.dados.rio/flow-run/{flow_run_id}&#34;)
+
+
 def query_to_line(query: str) -&gt; str:
     &#34;&#34;&#34;
     Converts a query to a line.
@@ -1271,6 +1294,38 @@ Mode needs to be "prod" or "staging"</p></div>
     return flow.run()</code></pre>
 </details>
 </dd>
+<dt id="pipelines.utils.utils.run_registered"><code class="name flex">
+<span>def <span class="ident">run_registered</span></span>(<span>flow_id: str, labels: List[str], parameters: Dict[str, Any] = None, run_description: str = '')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Runs an already registered flow on Prefect Server (must have credentials configured).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def run_registered(
+    flow_id: str,
+    labels: List[str],
+    parameters: Dict[str, Any] = None,
+    run_description: str = &#34;&#34;,
+):
+    &#34;&#34;&#34;
+    Runs an already registered flow on Prefect Server (must have credentials configured).
+    &#34;&#34;&#34;
+    # Get Prefect Client and submit flow run
+    client = Client()
+    flow_run_id = client.create_flow_run(
+        flow_id=flow_id,
+        run_name=f&#34;SUBMITTED REMOTELY - {run_description}&#34;,
+        labels=labels,
+        parameters=parameters,
+    )
+
+    # Print flow run link so user can check it
+    print(f&#34;Run submitted: SUBMITTED REMOTELY - {run_description}&#34;)
+    print(f&#34;Please check at: https://prefect.dados.rio/flow-run/{flow_run_id}&#34;)</code></pre>
+</details>
+</dd>
 <dt id="pipelines.utils.utils.send_discord_message"><code class="name flex">
 <span>def <span class="ident">send_discord_message</span></span>(<span>message: str, webhook_url: str) ‑> None</span>
 </code></dt>
@@ -1579,6 +1634,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.utils.utils.remove_columns_accents" href="#pipelines.utils.utils.remove_columns_accents">remove_columns_accents</a></code></li>
 <li><code><a title="pipelines.utils.utils.run_cloud" href="#pipelines.utils.utils.run_cloud">run_cloud</a></code></li>
 <li><code><a title="pipelines.utils.utils.run_local" href="#pipelines.utils.utils.run_local">run_local</a></code></li>
+<li><code><a title="pipelines.utils.utils.run_registered" href="#pipelines.utils.utils.run_registered">run_registered</a></code></li>
 <li><code><a title="pipelines.utils.utils.send_discord_message" href="#pipelines.utils.utils.send_discord_message">send_discord_message</a></code></li>
 <li><code><a title="pipelines.utils.utils.send_telegram_message" href="#pipelines.utils.utils.send_telegram_message">send_telegram_message</a></code></li>
 <li><code><a title="pipelines.utils.utils.set_default_parameters" href="#pipelines.utils.utils.set_default_parameters">set_default_parameters</a></code></li>

@@ -125,7 +125,10 @@ def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
     # Request Eventos
     response = get_url(url=url_eventos, parameters=date_interval, token=auth_token)
 
-    eventos = pd.DataFrame(response[&#34;eventos&#34;])
+    if &#34;eventos&#34; in response:
+        eventos = pd.DataFrame(response[&#34;eventos&#34;])
+    else:
+        raise Exception(&#34;No eventos found on this date interval&#34;)
 
     rename_columns = {&#34;id&#34;: &#34;evento_id&#34;, &#34;titulo&#34;: &#34;pop_titulo&#34;}
 
@@ -150,6 +153,7 @@ def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
                 atividades_evento.append(elem)
         else:
             problema_ids.append(i)
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; problema_ids: {problema_ids}&#34;)
 
     atividades_evento = pd.DataFrame(atividades_evento)
     log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; atv eventos {atividades_evento.head()}&#34;)
@@ -325,7 +329,10 @@ def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
     # Request Eventos
     response = get_url(url=url_eventos, parameters=date_interval, token=auth_token)
 
-    eventos = pd.DataFrame(response[&#34;eventos&#34;])
+    if &#34;eventos&#34; in response:
+        eventos = pd.DataFrame(response[&#34;eventos&#34;])
+    else:
+        raise Exception(&#34;No eventos found on this date interval&#34;)
 
     rename_columns = {&#34;id&#34;: &#34;evento_id&#34;, &#34;titulo&#34;: &#34;pop_titulo&#34;}
 
@@ -350,6 +357,7 @@ def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
                 atividades_evento.append(elem)
         else:
             problema_ids.append(i)
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; problema_ids: {problema_ids}&#34;)
 
     atividades_evento = pd.DataFrame(atividades_evento)
     log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; atv eventos {atividades_evento.head()}&#34;)

@@ -34,7 +34,7 @@ General purpose functions for the comando project
 import requests
 from requests.adapters import HTTPAdapter, Retry
 
-from pipelines.utils.utils import get_vault_secret
+from pipelines.utils.utils import get_vault_secret, log
 
 
 def build_redis_key(dataset_id: str, table_id: str, mode: str = &#34;prod&#34;):
@@ -68,7 +68,14 @@ def get_url(url, parameters: dict = None, token: str = None):  # pylint: disable
     retries = Retry(total=5, backoff_factor=1.5)
     sess.mount(&#34;http://&#34;, HTTPAdapter(max_retries=retries))
     headers = {&#34;Authorization&#34;: token}
-    return sess.get(url, json=parameters, headers=headers).json()</code></pre>
+    try:
+        response = sess.get(url, json=parameters, headers=headers)
+        return response.json()
+    except Exception as exc:
+        log(
+            f&#34;Response was: {response}\n\n\nThis resulted in the following error: {exc}&#34;
+        )
+        raise exc</code></pre>
 </details>
 </section>
 <section>
@@ -136,7 +143,14 @@ def get_url(url, parameters: dict = None, token: str = None):  # pylint: disable
     retries = Retry(total=5, backoff_factor=1.5)
     sess.mount(&#34;http://&#34;, HTTPAdapter(max_retries=retries))
     headers = {&#34;Authorization&#34;: token}
-    return sess.get(url, json=parameters, headers=headers).json()</code></pre>
+    try:
+        response = sess.get(url, json=parameters, headers=headers)
+        return response.json()
+    except Exception as exc:
+        log(
+            f&#34;Response was: {response}\n\n\nThis resulted in the following error: {exc}&#34;
+        )
+        raise exc</code></pre>
 </details>
 </dd>
 </dl>

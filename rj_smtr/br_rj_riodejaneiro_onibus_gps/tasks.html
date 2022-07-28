@@ -75,6 +75,7 @@ def create_api_url_onibus_gps(url: str, source: str, timestamp: datetime = None)
 
 
 @task
+# pylint: disable=too-many-locals
 def pre_treatment_br_rj_riodejaneiro_onibus_gps(
     status_dict: dict, version: int = 1, recapture: bool = False
 ):
@@ -136,7 +137,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
             server_mask = (df[&#34;datahoraenvio&#34;] - df[&#34;datahoraservidor&#34;]) &lt;= timedelta(
                 minutes=constants.GPS_SPPO_RECAPTURE_DELAY_V2.value
             )
-            df = df[server_mask]
+            df = df[server_mask]  # pylint: disable=c0103
 
         mask = (df[filter_col] - df[&#34;datahora&#34;]).apply(
             lambda x: timedelta(seconds=0) &lt;= x &lt;= timedelta(minutes=time_delay)
@@ -152,7 +153,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
             &#34;linha&#34;,
             &#34;timestamp_captura&#34;,
         ]
-        df = df = df[mask][cols]
+        df = df = df[mask][cols]  # pylint: disable=c0103
 
         log(f&#34;Shape after filtering: {df.shape}&#34;)
         if df.shape[0] == 0:
@@ -234,6 +235,7 @@ and apply filtering to stale data that may populate the API response.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
+# pylint: disable=too-many-locals
 def pre_treatment_br_rj_riodejaneiro_onibus_gps(
     status_dict: dict, version: int = 1, recapture: bool = False
 ):
@@ -295,7 +297,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
             server_mask = (df[&#34;datahoraenvio&#34;] - df[&#34;datahoraservidor&#34;]) &lt;= timedelta(
                 minutes=constants.GPS_SPPO_RECAPTURE_DELAY_V2.value
             )
-            df = df[server_mask]
+            df = df[server_mask]  # pylint: disable=c0103
 
         mask = (df[filter_col] - df[&#34;datahora&#34;]).apply(
             lambda x: timedelta(seconds=0) &lt;= x &lt;= timedelta(minutes=time_delay)
@@ -311,7 +313,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
             &#34;linha&#34;,
             &#34;timestamp_captura&#34;,
         ]
-        df = df = df[mask][cols]
+        df = df = df[mask][cols]  # pylint: disable=c0103
 
         log(f&#34;Shape after filtering: {df.shape}&#34;)
         if df.shape[0] == 0:
