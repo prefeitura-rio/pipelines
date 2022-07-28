@@ -32,6 +32,7 @@
 Tasks for comando
 &#34;&#34;&#34;
 
+from copy import deepcopy
 import json
 import os
 from pathlib import Path
@@ -192,6 +193,8 @@ def get_pops() -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     Get the list of POPS from the API
     &#34;&#34;&#34;
+    log(&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting POPS&#34;)
+
     auth_token = get_token()
 
     url_secret = get_vault_secret(&#34;comando&#34;)[&#34;data&#34;]
@@ -200,9 +203,48 @@ def get_pops() -&gt; pd.DataFrame:
     response = get_url(url=url, token=auth_token)
 
     pops = pd.DataFrame(response[&#34;objeto&#34;])
-    pops[&#34;pop_id&#34;] = pops[&#34;pop_id&#34;].astype(&#34;int&#34;)
+    pops[&#34;id&#34;] = pops[&#34;id&#34;].astype(&#34;int&#34;)
+
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; pops\n{pops.head()}&#34;)
 
     return pops
+
+
+@task
+def get_atividades_pops(pops: pd.DataFrame) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Get the list of POP&#39;s activities from API
+    &#34;&#34;&#34;
+    log(&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting POP&#39;s activities&#34;)
+
+    auth_token = get_token()
+
+    url_secret = get_vault_secret(&#34;comando&#34;)[&#34;data&#34;]
+    url = url_secret[&#34;endpoint_atividades_pop&#34;]
+
+    pop_ids = pops[&#34;id&#34;].unique()
+
+    atividades_pops = []
+    for pop_id in pop_ids:
+        log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting POP&#39;s activities for pop_id: {pop_id}&#34;)
+        response = get_url(url=url + f&#34;?popId={pop_id}&#34;, token=auth_token)
+        row_template = {
+            &#34;pop&#34;: response[&#34;pop&#34;],
+            &#34;sigla&#34;: &#34;&#34;,
+            &#34;orgao&#34;: &#34;&#34;,
+            &#34;acao&#34;: &#34;&#34;,
+        }
+        for activity in response[&#34;atividades&#34;]:
+            row = deepcopy(row_template)
+            row[&#34;sigla&#34;] = activity[&#34;sigla&#34;]
+            row[&#34;orgao&#34;] = activity[&#34;orgao&#34;]
+            row[&#34;acao&#34;] = activity[&#34;acao&#34;]
+            atividades_pops.append(row)
+
+    dataframe = pd.DataFrame(atividades_pops)
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; atividades_pops\n{dataframe.head()}&#34;)
+
+    return dataframe
 
 
 @task
@@ -346,6 +388,52 @@ def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
     return eventos, atividades_evento</code></pre>
 </details>
 </dd>
+<dt id="pipelines.rj_cor.comando.eventos.tasks.get_atividades_pops"><code class="name flex">
+<span>def <span class="ident">get_atividades_pops</span></span>(<span>pops: pandas.core.frame.DataFrame) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the list of POP's activities from API</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_atividades_pops(pops: pd.DataFrame) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Get the list of POP&#39;s activities from API
+    &#34;&#34;&#34;
+    log(&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting POP&#39;s activities&#34;)
+
+    auth_token = get_token()
+
+    url_secret = get_vault_secret(&#34;comando&#34;)[&#34;data&#34;]
+    url = url_secret[&#34;endpoint_atividades_pop&#34;]
+
+    pop_ids = pops[&#34;id&#34;].unique()
+
+    atividades_pops = []
+    for pop_id in pop_ids:
+        log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting POP&#39;s activities for pop_id: {pop_id}&#34;)
+        response = get_url(url=url + f&#34;?popId={pop_id}&#34;, token=auth_token)
+        row_template = {
+            &#34;pop&#34;: response[&#34;pop&#34;],
+            &#34;sigla&#34;: &#34;&#34;,
+            &#34;orgao&#34;: &#34;&#34;,
+            &#34;acao&#34;: &#34;&#34;,
+        }
+        for activity in response[&#34;atividades&#34;]:
+            row = deepcopy(row_template)
+            row[&#34;sigla&#34;] = activity[&#34;sigla&#34;]
+            row[&#34;orgao&#34;] = activity[&#34;orgao&#34;]
+            row[&#34;acao&#34;] = activity[&#34;acao&#34;]
+            atividades_pops.append(row)
+
+    dataframe = pd.DataFrame(atividades_pops)
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; atividades_pops\n{dataframe.head()}&#34;)
+
+    return dataframe</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_cor.comando.eventos.tasks.get_date_interval"><code class="name flex">
 <span>def <span class="ident">get_date_interval</span></span>(<span>date_interval_text: str, dataset_id: str, table_id: str, mode: str = 'prod') ‑> Tuple[dict, str]</span>
 </code></dt>
@@ -414,6 +502,8 @@ def get_pops() -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     Get the list of POPS from the API
     &#34;&#34;&#34;
+    log(&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting POPS&#34;)
+
     auth_token = get_token()
 
     url_secret = get_vault_secret(&#34;comando&#34;)[&#34;data&#34;]
@@ -422,7 +512,9 @@ def get_pops() -&gt; pd.DataFrame:
     response = get_url(url=url, token=auth_token)
 
     pops = pd.DataFrame(response[&#34;objeto&#34;])
-    pops[&#34;pop_id&#34;] = pops[&#34;pop_id&#34;].astype(&#34;int&#34;)
+    pops[&#34;id&#34;] = pops[&#34;id&#34;].astype(&#34;int&#34;)
+
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; pops\n{pops.head()}&#34;)
 
     return pops</code></pre>
 </details>
@@ -591,6 +683,7 @@ setTimeout(() => input.focus(), 100);
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="pipelines.rj_cor.comando.eventos.tasks.download_eventos" href="#pipelines.rj_cor.comando.eventos.tasks.download_eventos">download_eventos</a></code></li>
+<li><code><a title="pipelines.rj_cor.comando.eventos.tasks.get_atividades_pops" href="#pipelines.rj_cor.comando.eventos.tasks.get_atividades_pops">get_atividades_pops</a></code></li>
 <li><code><a title="pipelines.rj_cor.comando.eventos.tasks.get_date_interval" href="#pipelines.rj_cor.comando.eventos.tasks.get_date_interval">get_date_interval</a></code></li>
 <li><code><a title="pipelines.rj_cor.comando.eventos.tasks.get_pops" href="#pipelines.rj_cor.comando.eventos.tasks.get_pops">get_pops</a></code></li>
 <li><code><a title="pipelines.rj_cor.comando.eventos.tasks.not_none" href="#pipelines.rj_cor.comando.eventos.tasks.not_none">not_none</a></code></li>
