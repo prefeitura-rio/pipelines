@@ -19,8 +19,7 @@ from pipelines.rj_cor.comando.eventos.constants import (
 from pipelines.rj_cor.comando.eventos.schedules import every_day
 from pipelines.rj_cor.comando.eventos.tasks import (
     download,
-    get_date_interval_from_string,
-    get_interval_on_redis,
+    get_date_interval,
     not_none,
     salvar_dados,
     set_last_updated_on_redis,
@@ -72,15 +71,12 @@ with Flow(
     table_id_eventos = comando_constants.TABLE_ID_EVENTOS.value
     table_id_atividades_eventos = comando_constants.TABLE_ID_ATIVIDADES_EVENTOS.value
 
-    with case(date_interval_text, None):
-        date_interval, current_time = get_interval_on_redis(
-            dataset_id=dataset_id,
-            table_id=table_id_eventos,
-            mode=redis_mode,
-        )
-    date_interval_set = not_none(date_interval_text)
-    with case(date_interval_set, True):
-        date_interval, current_time = get_date_interval_from_string(date_interval_text)
+    date_interval, current_time = get_date_interval(
+        date_interval_text=date_interval_text,
+        dataset_id=dataset_id,
+        table_id=table_id_eventos,
+        mode=redis_mode,
+    )
 
     eventos, atividade_eventos = download(
         date_interval=date_interval, wait=current_time
@@ -113,7 +109,7 @@ with Flow(
     # Warning: this task won't execute if we provide a date interval
     # on parameters. The reason this happens is for if we want to
     # perform backfills, it won't mess with the Redis interval.
-    with case(date_interval_set, False):
+    with case(date_interval_text, None):
         set_redis_date_task = set_last_updated_on_redis(
             dataset_id=dataset_id,
             table_id=table_id_eventos,
