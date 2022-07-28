@@ -100,16 +100,18 @@ def download(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
     rename_columns = {"id": "evento_id", "titulo": "pop_titulo"}
 
     eventos.rename(rename_columns, inplace=True, axis=1)
-    log(f">>>>>>> eventos {eventos.head()}")
+    log(f">>>>>>> eventos\n{eventos.head()}")
     eventos["evento_id"] = eventos["evento_id"].astype("int")
 
     evento_id_list = eventos["evento_id"].unique()
+    log(f">>>>>>> evento_id_list: {evento_id_list}")
 
     atividades_evento = []
     problema_ids = []
 
     # Request AtividadesDoEvento
     for i in evento_id_list:
+        log(f">>>>>>> Requesting AtividadesDoEvento for evento_id: {i}")
         response = get_url(url=url_atividades_evento + f"?eventoId={i}")
         if "atividades" in response.keys():
             response = response["atividades"]
