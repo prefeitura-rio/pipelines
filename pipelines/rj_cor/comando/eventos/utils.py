@@ -44,6 +44,7 @@ def get_url(url, parameters: dict = None, token: str = None):  # pylint: disable
         return response.json()
     except Exception as exc:
         log(
-            f"Response was: {response}\n\n\nThis resulted in the following error: {exc}"
+            f"Response was: {response}: {response.text}\n\n\n"
+            + "This resulted in the following error: {exc}"
         )
         raise exc
