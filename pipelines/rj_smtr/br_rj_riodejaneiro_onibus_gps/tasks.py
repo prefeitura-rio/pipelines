@@ -46,6 +46,7 @@ def create_api_url_onibus_gps(url: str, source: str, timestamp: datetime = None)
 
 
 @task
+# pylint: disable=too-many-locals
 def pre_treatment_br_rj_riodejaneiro_onibus_gps(
     status_dict: dict, version: int = 1, recapture: bool = False
 ):
@@ -107,7 +108,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
             server_mask = (df["datahoraenvio"] - df["datahoraservidor"]) <= timedelta(
                 minutes=constants.GPS_SPPO_RECAPTURE_DELAY_V2.value
             )
-            df = df[server_mask]
+            df = df[server_mask]  # pylint: disable=c0103
 
         mask = (df[filter_col] - df["datahora"]).apply(
             lambda x: timedelta(seconds=0) <= x <= timedelta(minutes=time_delay)
@@ -123,7 +124,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
             "linha",
             "timestamp_captura",
         ]
-        df = df = df[mask][cols]
+        df = df = df[mask][cols]  # pylint: disable=c0103
 
         log(f"Shape after filtering: {df.shape}")
         if df.shape[0] == 0:
