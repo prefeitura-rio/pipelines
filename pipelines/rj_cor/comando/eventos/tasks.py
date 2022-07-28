@@ -130,35 +130,40 @@ def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
     log(f">>>>>>> atv eventos {atividades_evento.head()}")
 
     # Fixa colunas e ordem
-    eventos = eventos[
-        [
-            "pop_id",
-            "bairro",
-            "latitude",
-            "inicio",
-            "pop_titulo",
-            "fim",
-            "prazo",
-            "descricao",
-            "informe_id",
-            "gravidade",
-            "evento_id",
-            "longitude",
-            "status",
-        ]
+    eventos_cols = [
+        "pop_id",
+        "bairro",
+        "latitude",
+        "inicio",
+        "pop_titulo",
+        "fim",
+        "prazo",
+        "descricao",
+        "informe_id",
+        "gravidade",
+        "evento_id",
+        "longitude",
+        "status",
     ]
-    atividades_evento = atividades_evento[
-        [
-            "orgao",
-            "chegada",
-            "inicio",
-            "nome",
-            "fim",
-            "descricao",
-            "status",
-            "evento_id",
-        ]
+    for col in eventos_cols:
+        if col not in eventos.columns:
+            eventos[col] = None
+    eventos = eventos[eventos_cols]
+
+    atividades_evento_cols = [
+        "orgao",
+        "chegada",
+        "inicio",
+        "nome",
+        "fim",
+        "descricao",
+        "status",
+        "evento_id",
     ]
+    for col in atividades_evento_cols:
+        if col not in atividades_evento.columns:
+            atividades_evento[col] = None
+    atividades_evento = atividades_evento[atividades_evento_cols]
 
     return eventos, atividades_evento
 
