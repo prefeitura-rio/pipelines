@@ -110,7 +110,7 @@ def set_last_updated_on_redis(
 
 
 @task(nout=2)
-# pylint: disable=W0613
+# pylint: disable=W0613,R0914
 def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
     &#34;&#34;&#34;
     Faz o request dos dados de eventos e das atividades do evento
@@ -319,7 +319,7 @@ def not_none(something: Any) -&gt; bool:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task(nout=2)
-# pylint: disable=W0613
+# pylint: disable=W0613,R0914
 def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
     &#34;&#34;&#34;
     Faz o request dos dados de eventos e das atividades do evento
