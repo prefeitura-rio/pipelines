@@ -20,7 +20,6 @@ from pipelines.rj_cor.comando.eventos.schedules import every_day
 from pipelines.rj_cor.comando.eventos.tasks import (
     download,
     get_date_interval,
-    not_none,
     salvar_dados,
     set_last_updated_on_redis,
 )
