@@ -159,35 +159,40 @@ def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
     log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; atv eventos {atividades_evento.head()}&#34;)
 
     # Fixa colunas e ordem
-    eventos = eventos[
-        [
-            &#34;pop_id&#34;,
-            &#34;bairro&#34;,
-            &#34;latitude&#34;,
-            &#34;inicio&#34;,
-            &#34;pop_titulo&#34;,
-            &#34;fim&#34;,
-            &#34;prazo&#34;,
-            &#34;descricao&#34;,
-            &#34;informe_id&#34;,
-            &#34;gravidade&#34;,
-            &#34;evento_id&#34;,
-            &#34;longitude&#34;,
-            &#34;status&#34;,
-        ]
+    eventos_cols = [
+        &#34;pop_id&#34;,
+        &#34;bairro&#34;,
+        &#34;latitude&#34;,
+        &#34;inicio&#34;,
+        &#34;pop_titulo&#34;,
+        &#34;fim&#34;,
+        &#34;prazo&#34;,
+        &#34;descricao&#34;,
+        &#34;informe_id&#34;,
+        &#34;gravidade&#34;,
+        &#34;evento_id&#34;,
+        &#34;longitude&#34;,
+        &#34;status&#34;,
     ]
-    atividades_evento = atividades_evento[
-        [
-            &#34;orgao&#34;,
-            &#34;chegada&#34;,
-            &#34;inicio&#34;,
-            &#34;nome&#34;,
-            &#34;fim&#34;,
-            &#34;descricao&#34;,
-            &#34;status&#34;,
-            &#34;evento_id&#34;,
-        ]
+    for col in eventos_cols:
+        if col not in eventos.columns:
+            eventos[col] = None
+    eventos = eventos[eventos_cols]
+
+    atividades_evento_cols = [
+        &#34;orgao&#34;,
+        &#34;chegada&#34;,
+        &#34;inicio&#34;,
+        &#34;nome&#34;,
+        &#34;fim&#34;,
+        &#34;descricao&#34;,
+        &#34;status&#34;,
+        &#34;evento_id&#34;,
     ]
+    for col in atividades_evento_cols:
+        if col not in atividades_evento.columns:
+            atividades_evento[col] = None
+    atividades_evento = atividades_evento[atividades_evento_cols]
 
     return eventos, atividades_evento
 
@@ -363,35 +368,40 @@ def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
     log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; atv eventos {atividades_evento.head()}&#34;)
 
     # Fixa colunas e ordem
-    eventos = eventos[
-        [
-            &#34;pop_id&#34;,
-            &#34;bairro&#34;,
-            &#34;latitude&#34;,
-            &#34;inicio&#34;,
-            &#34;pop_titulo&#34;,
-            &#34;fim&#34;,
-            &#34;prazo&#34;,
-            &#34;descricao&#34;,
-            &#34;informe_id&#34;,
-            &#34;gravidade&#34;,
-            &#34;evento_id&#34;,
-            &#34;longitude&#34;,
-            &#34;status&#34;,
-        ]
+    eventos_cols = [
+        &#34;pop_id&#34;,
+        &#34;bairro&#34;,
+        &#34;latitude&#34;,
+        &#34;inicio&#34;,
+        &#34;pop_titulo&#34;,
+        &#34;fim&#34;,
+        &#34;prazo&#34;,
+        &#34;descricao&#34;,
+        &#34;informe_id&#34;,
+        &#34;gravidade&#34;,
+        &#34;evento_id&#34;,
+        &#34;longitude&#34;,
+        &#34;status&#34;,
     ]
-    atividades_evento = atividades_evento[
-        [
-            &#34;orgao&#34;,
-            &#34;chegada&#34;,
-            &#34;inicio&#34;,
-            &#34;nome&#34;,
-            &#34;fim&#34;,
-            &#34;descricao&#34;,
-            &#34;status&#34;,
-            &#34;evento_id&#34;,
-        ]
+    for col in eventos_cols:
+        if col not in eventos.columns:
+            eventos[col] = None
+    eventos = eventos[eventos_cols]
+
+    atividades_evento_cols = [
+        &#34;orgao&#34;,
+        &#34;chegada&#34;,
+        &#34;inicio&#34;,
+        &#34;nome&#34;,
+        &#34;fim&#34;,
+        &#34;descricao&#34;,
+        &#34;status&#34;,
+        &#34;evento_id&#34;,
     ]
+    for col in atividades_evento_cols:
+        if col not in atividades_evento.columns:
+            atividades_evento[col] = None
+    atividades_evento = atividades_evento[atividades_evento_cols]
 
     return eventos, atividades_evento</code></pre>
 </details>
