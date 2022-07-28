@@ -174,7 +174,7 @@ def get_pops() -> pd.DataFrame:
     response = get_url(url=url, token=auth_token)
 
     pops = pd.DataFrame(response["objeto"])
-    pops["pop_id"] = pops["pop_id"].astype("int")
+    pops["id"] = pops["id"].astype("int")
 
     log(f">>>>>>> pops\n{pops.head()}")
 
