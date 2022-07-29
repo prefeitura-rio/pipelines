@@ -5,7 +5,7 @@ General purpose functions for the comando project
 import requests
 from requests.adapters import HTTPAdapter, Retry
 
-from pipelines.utils.utils import get_vault_secret
+from pipelines.utils.utils import get_vault_secret, log
 
 
 def build_redis_key(dataset_id: str, table_id: str, mode: str = "prod"):
@@ -39,4 +39,12 @@ def get_url(url, parameters: dict = None, token: str = None):  # pylint: disable
     retries = Retry(total=5, backoff_factor=1.5)
     sess.mount("http://", HTTPAdapter(max_retries=retries))
     headers = {"Authorization": token}
-    return sess.get(url, json=parameters, headers=headers).json()
+    try:
+        response = sess.get(url, json=parameters, headers=headers)
+        return response.json()
+    except Exception as exc:
+        log(
+            f"Response was: {response}: {response.text}\n\n\n"
+            + "This resulted in the following error: {exc}"
+        )
+        raise exc

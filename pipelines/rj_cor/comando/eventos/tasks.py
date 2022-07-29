@@ -81,7 +81,7 @@ def set_last_updated_on_redis(
 
 
 @task(nout=2)
-# pylint: disable=W0613
+# pylint: disable=W0613,R0914
 def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
     """
     Faz o request dos dados de eventos e das atividades do evento
@@ -96,7 +96,10 @@ def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
     # Request Eventos
     response = get_url(url=url_eventos, parameters=date_interval, token=auth_token)
 
-    eventos = pd.DataFrame(response["eventos"])
+    if "eventos" in response:
+        eventos = pd.DataFrame(response["eventos"])
+    else:
+        raise Exception("No eventos found on this date interval")
 
     rename_columns = {"id": "evento_id", "titulo": "pop_titulo"}
 
@@ -121,40 +124,46 @@ def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
                 atividades_evento.append(elem)
         else:
             problema_ids.append(i)
+    log(f">>>>>>> problema_ids: {problema_ids}")
 
     atividades_evento = pd.DataFrame(atividades_evento)
     log(f">>>>>>> atv eventos {atividades_evento.head()}")
 
     # Fixa colunas e ordem
-    eventos = eventos[
-        [
-            "pop_id",
-            "bairro",
-            "latitude",
-            "inicio",
-            "pop_titulo",
-            "fim",
-            "prazo",
-            "descricao",
-            "informe_id",
-            "gravidade",
-            "evento_id",
-            "longitude",
-            "status",
-        ]
+    eventos_cols = [
+        "pop_id",
+        "bairro",
+        "latitude",
+        "inicio",
+        "pop_titulo",
+        "fim",
+        "prazo",
+        "descricao",
+        "informe_id",
+        "gravidade",
+        "evento_id",
+        "longitude",
+        "status",
     ]
-    atividades_evento = atividades_evento[
-        [
-            "orgao",
-            "chegada",
-            "inicio",
-            "nome",
-            "fim",
-            "descricao",
-            "status",
-            "evento_id",
-        ]
+    for col in eventos_cols:
+        if col not in eventos.columns:
+            eventos[col] = None
+    eventos = eventos[eventos_cols]
+
+    atividades_evento_cols = [
+        "orgao",
+        "chegada",
+        "inicio",
+        "nome",
+        "fim",
+        "descricao",
+        "status",
+        "evento_id",
     ]
+    for col in atividades_evento_cols:
+        if col not in atividades_evento.columns:
+            atividades_evento[col] = None
+    atividades_evento = atividades_evento[atividades_evento_cols]
 
     return eventos, atividades_evento
 
