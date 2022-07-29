@@ -22,7 +22,7 @@ smtr_materialize_to_datario_parameters = {
         "dataset_id": "transporte_rodoviario_municipal",
         "mode": "prod",
     },
-        "viagem_completa": {
+    "viagem_completa": {
         "dataset_id": "transporte_rodoviario_municipal",
         "mode": "prod",
     },
