@@ -47,15 +47,17 @@ def create_api_url_onibus_gps(url: str, source: str, timestamp: datetime = None)
 
 @task
 def pre_treatment_br_rj_riodejaneiro_onibus_gps(
-    status_dict: dict, version: int = 1, recapture: bool = False
+    status_dict: dict, timestamp: datetime, version: int = 1, recapture: bool = False
 ):
     """Basic data treatment for bus gps data. Converts unix time to datetime,
     and apply filtering to stale data that may populate the API response.
 
     Args:
         status_dict (dict): dict containing the status of the request made to the
-        API. Must contain keys: data, timestamp and error
-        version (int, optional): Source API version. Temporary argument for testing
+        API. Must contain keys: data and error
+        version (int, optional): Source API version. Temporary argument
+        for testing
+        timestamp (str): Capture data timestamp.
 
     Returns:
         df: pandas.core.DataFrame containing the treated data.
@@ -67,13 +69,11 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
     error = None
     data = status_dict["data"]
     timezone = constants.TIMEZONE.value
-    timestamp = status_dict["timestamp"]
 
     log(f"Data received to treat: \n{data.json()[:5]}")
     data = data.json()
     df = pd.DataFrame(data)  # pylint: disable=c0103
-    timestamp_captura = pd.to_datetime(timestamp)
-    df["timestamp_captura"] = timestamp_captura
+    df["timestamp_captura"] = timestamp
     log(f"Before converting, datahora is: \n{df['datahora']}")
 
     # Remove timezone and force it to be config timezone
@@ -136,5 +136,4 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
             ["ordem", "latitude", "longitude", "datahora", "timestamp_captura"]
         ),
         "error": error,
-        "timestamp": timestamp,
     }

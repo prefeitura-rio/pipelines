@@ -164,29 +164,29 @@ with Flow(
     raw_filepath = save_raw_local(data=status_dict["data"], file_path=filepath)
 
     treated_status = pre_treatment_br_rj_riodejaneiro_onibus_gps(
-        status_dict=status_dict, version=version
-    )
-
-    UPLOAD_LOGS = upload_logs_to_bq(
-        dataset_id=dataset_id,
-        parent_table_id=table_id,
-        timestamp=status_dict["timestamp"],
-        error=treated_status["error"],
+        status_dict=status_dict, timestamp=file_dict["timestamp"], version=version
     )
 
     treated_filepath = save_treated_local(
         dataframe=treated_status["df"], file_path=filepath
     )
 
-    UPLOAD_CSV = bq_upload(
+    error = bq_upload(
         dataset_id=dataset_id,
         table_id=table_id,
         filepath=treated_filepath,
         raw_filepath=raw_filepath,
         partitions=file_dict["partitions"],
+        status_dict=treated_status,
+    )
+
+    UPLOAD_LOGS = upload_logs_to_bq(
+        dataset_id=dataset_id,
+        parent_table_id=table_id,
+        error=error,
+        timestamp=file_dict["timestamp"],
     )
     captura_sppo_v2.set_dependencies(task=status_dict, upstream_tasks=[filepath])
-    captura_sppo_v2.set_dependencies(task=UPLOAD_CSV, upstream_tasks=[UPLOAD_LOGS])
 
 with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as recaptura:
     # Get default parameters
@@ -199,9 +199,12 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
         "secret_path", default=constants.GPS_SPPO_API_SECRET_PATH_V2.value
     )
     version = Parameter("version", default=2)
+    datetime_filter = Parameter("datetime_filter", default=None)
 
     # Run tasks
-    errors, timestamps = query_logs(dataset_id=dataset_id, table_id=table_id)
+    errors, timestamps = query_logs(
+        dataset_id=dataset_id, table_id=table_id, datetime_filter=datetime_filter
+    )
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
         prefix="GPS SPPO: ", now_time=get_now_time(), wait=timestamps
@@ -232,26 +235,32 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
         status_dict = get_raw.map(url)
         raw_filepath = save_raw_local.map(status_dict=status_dict, file_path=filepath)
         treated_status = pre_treatment_br_rj_riodejaneiro_onibus_gps.map(
-            status_dict=status_dict, version=unmapped(version), recapture=unmapped(True)
-        )
-
-        UPLOAD_LOGS = upload_logs_to_bq.map(
-            dataset_id=unmapped(dataset_id),
-            parent_table_id=unmapped(table_id),
-            status_dict=treated_status,
+            status_dict=status_dict,
+            version=unmapped(version),
+            recapture=unmapped(True),
+            timestamp=timestamps,
         )
 
         treated_filepath = save_treated_local.map(
             treated_status=treated_status, file_path=filepath
         )
 
-        UPLOAD_CSV = bq_upload.map(
+        error = bq_upload.map(
             dataset_id=unmapped(dataset_id),
             table_id=unmapped(table_id),
             filepath=treated_filepath,
             raw_filepath=raw_filepath,
             file_dict=file_dict,
+            status_dict=treated_status,
         )
+
+        UPLOAD_LOGS = upload_logs_to_bq.map(
+            dataset_id=unmapped(dataset_id),
+            parent_table_id=unmapped(table_id),
+            error=error,
+            timestamp=timestamps,
+        )
+
         materialize = create_flow_run(
             flow_name=materialize_sppo.name,
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
@@ -265,8 +274,7 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
             raise_final_state=True,
         )
     recaptura.set_dependencies(task=status_dict, upstream_tasks=[filepath])
-    recaptura.set_dependencies(task=UPLOAD_CSV, upstream_tasks=[UPLOAD_LOGS])
-    recaptura.set_dependencies(task=materialize, upstream_tasks=[UPLOAD_CSV])
+    recaptura.set_dependencies(task=materialize, upstream_tasks=[UPLOAD_LOGS])
 
 recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 recaptura.run_config = KubernetesRun(

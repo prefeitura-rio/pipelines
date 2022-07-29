@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Union, List, Dict
 
 from pytz import timezone
+import traceback
 
 from basedosdados import Storage, Table
 import basedosdados as bd
@@ -213,15 +214,17 @@ def create_current_date_hour_partition(capture_time=None):
         dict: "filename" contains the name which to upload the csv, "partitions" contains
         the partitioned directory path
     """
-    tz = constants.TIMEZONE.value  # pylint: disable=C0103
     if capture_time is None:
-        capture_time = pendulum.now(tz).replace(second=0, microsecond=0)
+        capture_time = datetime.now(tz=constants.TIMEZONE.value).replace(
+            minute=0, second=0, microsecond=0
+        )
     date = capture_time.strftime("%Y-%m-%d")
     hour = capture_time.strftime("%H")
 
     return {
         "filename": capture_time.strftime("%Y-%m-%d-%H-%M-%S"),
         "partitions": f"data={date}/hora={hour}",
+        "timestamp": capture_time,
     }
 
 
@@ -455,7 +458,13 @@ def get_raw(url: str, headers: dict = None, timestamp: datetime = None):
 
 @task
 def bq_upload(
-    dataset_id, table_id, filepath, raw_filepath=None, partitions=None, file_dict=None
+    dataset_id,
+    table_id,
+    filepath,
+    raw_filepath=None,
+    partitions=None,
+    file_dict=None,
+    status_dict=None,
 ):  # pylint: disable=R0913
     """Upload raw and treated data to GCS and BigQuery.
     If passing arg file_dict, should not pass arg partitions
@@ -484,28 +493,41 @@ def bq_upload(
     partitions = {partitions}, type = {type(partitions)}
     """
     )
-    if file_dict:
-        partitions = file_dict["partitions"]
-    # Upload raw to staging
-    if raw_filepath:
-        st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
-        log(
-            f"""Uploading raw file:
-            {raw_filepath}
-            to bucket {st_obj.bucket_name}
-            at {st_obj.bucket_name}/{dataset_id}/{table_id}"""
-        )
-        st_obj.upload(
-            path=raw_filepath, partitions=partitions, mode="raw", if_exists="replace"
-        )
+    if status_dict["error"] is not None:
+        return status_dict["error"]
+    error = None
+    try:
+        if file_dict:
+            partitions = file_dict["partitions"]
+        # Upload raw to staging
+        if raw_filepath:
+            st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
+            log(
+                f"""Uploading raw file to bucket {st_obj.bucket_name} at
+                {st_obj.bucket_name}/{dataset_id}/{table_id}"""
+            )
+            st_obj.upload(
+                path=raw_filepath,
+                partitions=partitions,
+                mode="raw",
+                if_exists="replace",
+            )
 
-    # creates and publish table if it does not exist, append to it otherwise
-    if partitions:
-        # If table is partitioned, get parent directory wherein partitions are stored
-        tb_dir = filepath.split(partitions)[0]
-        create_or_append_table(dataset_id, table_id, tb_dir)
-    else:
-        create_or_append_table(dataset_id, table_id, filepath)
+        # Creates and publish table if it does not exist, append to it otherwise
+        if partitions:
+            # If table is partitioned, get parent directory wherein partitions are stored
+            log(
+                f"""Uploading treated partitions to bucket {st_obj.bucket_name}
+            at {st_obj.bucket_name}/{dataset_id}/{table_id}"""
+            )
+            tb_dir = filepath.split(partitions)[0]
+            create_or_append_table(dataset_id, table_id, tb_dir)
+            # os.system(f'rm -rf {tb_dir}')
+        else:
+            create_or_append_table(dataset_id, table_id, filepath)
+    except Exception:
+        error = traceback.format_exc()
+    return error
 
 
 @task
@@ -562,26 +584,26 @@ def upload_logs_to_bq(
         None
     """
     if status_dict:
-        timestamp = status_dict["timestamp"]
         error = status_dict["error"]
+        log(f"Pipeline failed with error: {error}")
     table_id = parent_table_id + "_logs"
-
+    # Create partition directory
     filepath = Path(
-        f"{timestamp}/{table_id}/data={pendulum.parse(timestamp).date()}/{table_id}_{timestamp}.csv"
+        f"""data/staging/{dataset_id}/{table_id}/data={timestamp.date()}/
+        {table_id}_{timestamp.isoformat()}.csv"""
     )
-    # create partition directory
     filepath.parent.mkdir(exist_ok=True, parents=True)
-    # create dataframe to be uploaded
+    # Create dataframe to be uploaded
     dataframe = pd.DataFrame(
         {
-            "timestamp_captura": [pd.to_datetime(timestamp)],
+            "timestamp_captura": [timestamp],
             "sucesso": [error is None],
             "erro": [error],
         }
     )
-    # save local
+    # Save data local
     dataframe.to_csv(filepath, index=False)
-    # BD Table object
+    # Upload to Storage
     create_or_append_table(
         dataset_id=dataset_id, table_id=table_id, path=filepath.parent.parent
     )
