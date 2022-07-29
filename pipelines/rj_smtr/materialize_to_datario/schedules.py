@@ -22,6 +22,10 @@ smtr_materialize_to_datario_parameters = {
         "dataset_id": "transporte_rodoviario_municipal",
         "mode": "prod",
     },
+        "viagem_onibus": {
+        "dataset_id": "transporte_rodoviario_municipal",
+        "mode": "prod",
+    },
 }
 
 smtr_materialize_to_datario_clocks = generate_execute_dbt_model_schedules(
