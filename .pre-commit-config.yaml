@@ -15,6 +15,6 @@ repos:
         language_version: python3.9
         exclude: 'pipelines\/\{\{cookiecutter\.project_name\}\}.*'
 -   repo: https://github.com/PyCQA/flake8
-    rev: 4.0.1
+    rev: 5.0.2
     hooks:
     - id: flake8
