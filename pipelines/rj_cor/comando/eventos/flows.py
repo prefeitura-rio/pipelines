@@ -80,7 +80,7 @@ with Flow(
         mode=redis_mode,
     )
 
-    eventos, atividade_eventos = download_eventos(
+    eventos, atividade_eventos, problem_ids_atividade = download_eventos(
         date_interval=date_interval, wait=current_time
     )
     eventos_path = salvar_dados(
@@ -117,6 +117,8 @@ with Flow(
             table_id=table_id_eventos,
             mode=redis_mode,
             current_time=current_time,
+            problem_ids_atividade=problem_ids_atividade,
+            # melhoria: adicionar forma de salvar os ids de atividades com problemas no backfill
         )
         set_redis_date_task.set_upstream(task_upload_eventos)
         set_redis_date_task.set_upstream(task_upload_atividade_eventos)
