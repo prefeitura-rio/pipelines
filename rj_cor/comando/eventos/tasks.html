@@ -69,11 +69,11 @@ def get_date_interval(
     log(&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Date interval was not provided&#34;)
     redis_client = get_redis_client()
 
-    key = build_redis_key(dataset_id, table_id, mode)
+    key_last_update = build_redis_key(dataset_id, table_id, &#34;last_update&#34;, mode)
 
     current_time = pendulum.now(&#34;America/Sao_Paulo&#34;)
 
-    last_update = redis_client.get(key)
+    last_update = redis_client.get(key_last_update)
     if last_update is None:
         log(&#34;Last update was not found in Redis, setting it to D-30&#34;)
         # Set to current_time - 30 days
@@ -87,29 +87,35 @@ def get_date_interval(
         &#34;fim&#34;: current_time_str,
     }
 
-    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; date_interval: {date_interval}&#34;)
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; date_interval: {date_interval}&#34;)
 
     return date_interval, current_time_str
 
 
 @task(trigger=all_successful)
 def set_last_updated_on_redis(
-    dataset_id: str, table_id: str, mode: str = &#34;prod&#34;, current_time: str = None
+    dataset_id: str,
+    table_id: str,
+    mode: str = &#34;prod&#34;,
+    current_time: str = None,
+    problem_ids_atividade: str = None,
 ) -&gt; None:
     &#34;&#34;&#34;
     Set the last updated time on Redis.
     &#34;&#34;&#34;
     redis_client = get_redis_client()
 
-    key = build_redis_key(dataset_id, table_id, mode)
-
     if not current_time:
         current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y-%m-%d %H:%M:%S.0&#34;)
 
-    redis_client.set(key, current_time)
+    key_last_update = build_redis_key(dataset_id, table_id, &#34;last_update&#34;, mode)
+    redis_client.set(key_last_update, current_time)
+
+    key_problema_ids = build_redis_key(dataset_id, table_id, &#34;problema_ids&#34;, mode)
+    redis_client.set(key_problema_ids, problem_ids_atividade)
 
 
-@task(nout=2)
+@task(nout=3)
 # pylint: disable=W0613,R0914
 def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
     &#34;&#34;&#34;
@@ -133,27 +139,41 @@ def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
     rename_columns = {&#34;id&#34;: &#34;evento_id&#34;, &#34;titulo&#34;: &#34;pop_titulo&#34;}
 
     eventos.rename(rename_columns, inplace=True, axis=1)
-    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; eventos\n{eventos.head()}&#34;)
+
     eventos[&#34;evento_id&#34;] = eventos[&#34;evento_id&#34;].astype(&#34;int&#34;)
 
     evento_id_list = eventos[&#34;evento_id&#34;].unique()
-    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; evento_id_list: {evento_id_list}&#34;)
 
     atividades_evento = []
-    problema_ids = []
+    problema_ids_atividade = []
+    problema_ids_request = []
 
     # Request AtividadesDoEvento
     for i in evento_id_list:
-        log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting AtividadesDoEvento for evento_id: {i}&#34;)
-        response = get_url(url=url_atividades_evento + f&#34;?eventoId={i}&#34;)
-        if &#34;atividades&#34; in response.keys():
-            response = response[&#34;atividades&#34;]
-            for elem in response:
-                elem[&#34;evento_id&#34;] = i
-                atividades_evento.append(elem)
-        else:
-            problema_ids.append(i)
-    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; problema_ids: {problema_ids}&#34;)
+        # log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting AtividadesDoEvento for evento_id: {i}&#34;)
+        try:
+            response = get_url(
+                url=url_atividades_evento + f&#34;?eventoId={i}&#34;, token=auth_token
+            )
+
+            if &#34;atividades&#34; in response.keys():
+                response = response[&#34;atividades&#34;]
+                for elem in response:
+                    elem[&#34;evento_id&#34;] = i
+                    atividades_evento.append(elem)
+            else:
+                problema_ids_atividade.append(i)
+        except Exception as exc:
+            log(
+                f&#34;Request AtividadesDoEvento for evento_id: {i}&#34;
+                + f&#34;resulted in the following error: {exc}&#34;
+            )
+            problema_ids_request.append(i)
+            raise exc
+    log(f&#34;\n&gt;&gt;&gt;&gt;&gt;&gt;&gt; problema_ids_request: {problema_ids_request}&#34;)
+    log(f&#34;\n&gt;&gt;&gt;&gt;&gt;&gt;&gt; problema_ids_atividade: {problema_ids_atividade}&#34;)
+
+    problema_ids_atividade = problema_ids_atividade + problema_ids_request
 
     atividades_evento = pd.DataFrame(atividades_evento)
     log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; atv eventos {atividades_evento.head()}&#34;)
@@ -173,6 +193,7 @@ def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
         &#34;evento_id&#34;,
         &#34;longitude&#34;,
         &#34;status&#34;,
+        &#34;tipo&#34;,
     ]
     for col in eventos_cols:
         if col not in eventos.columns:
@@ -194,7 +215,7 @@ def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
             atividades_evento[col] = None
     atividades_evento = atividades_evento[atividades_evento_cols]
 
-    return eventos, atividades_evento
+    return eventos, atividades_evento, problema_ids_atividade
 
 
 @task
@@ -318,7 +339,7 @@ def not_none(something: Any) -&gt; bool:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@task(nout=2)
+<pre><code class="python">@task(nout=3)
 # pylint: disable=W0613,R0914
 def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
     &#34;&#34;&#34;
@@ -342,27 +363,41 @@ def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
     rename_columns = {&#34;id&#34;: &#34;evento_id&#34;, &#34;titulo&#34;: &#34;pop_titulo&#34;}
 
     eventos.rename(rename_columns, inplace=True, axis=1)
-    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; eventos\n{eventos.head()}&#34;)
+
     eventos[&#34;evento_id&#34;] = eventos[&#34;evento_id&#34;].astype(&#34;int&#34;)
 
     evento_id_list = eventos[&#34;evento_id&#34;].unique()
-    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; evento_id_list: {evento_id_list}&#34;)
 
     atividades_evento = []
-    problema_ids = []
+    problema_ids_atividade = []
+    problema_ids_request = []
 
     # Request AtividadesDoEvento
     for i in evento_id_list:
-        log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting AtividadesDoEvento for evento_id: {i}&#34;)
-        response = get_url(url=url_atividades_evento + f&#34;?eventoId={i}&#34;)
-        if &#34;atividades&#34; in response.keys():
-            response = response[&#34;atividades&#34;]
-            for elem in response:
-                elem[&#34;evento_id&#34;] = i
-                atividades_evento.append(elem)
-        else:
-            problema_ids.append(i)
-    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; problema_ids: {problema_ids}&#34;)
+        # log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting AtividadesDoEvento for evento_id: {i}&#34;)
+        try:
+            response = get_url(
+                url=url_atividades_evento + f&#34;?eventoId={i}&#34;, token=auth_token
+            )
+
+            if &#34;atividades&#34; in response.keys():
+                response = response[&#34;atividades&#34;]
+                for elem in response:
+                    elem[&#34;evento_id&#34;] = i
+                    atividades_evento.append(elem)
+            else:
+                problema_ids_atividade.append(i)
+        except Exception as exc:
+            log(
+                f&#34;Request AtividadesDoEvento for evento_id: {i}&#34;
+                + f&#34;resulted in the following error: {exc}&#34;
+            )
+            problema_ids_request.append(i)
+            raise exc
+    log(f&#34;\n&gt;&gt;&gt;&gt;&gt;&gt;&gt; problema_ids_request: {problema_ids_request}&#34;)
+    log(f&#34;\n&gt;&gt;&gt;&gt;&gt;&gt;&gt; problema_ids_atividade: {problema_ids_atividade}&#34;)
+
+    problema_ids_atividade = problema_ids_atividade + problema_ids_request
 
     atividades_evento = pd.DataFrame(atividades_evento)
     log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; atv eventos {atividades_evento.head()}&#34;)
@@ -382,6 +417,7 @@ def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
         &#34;evento_id&#34;,
         &#34;longitude&#34;,
         &#34;status&#34;,
+        &#34;tipo&#34;,
     ]
     for col in eventos_cols:
         if col not in eventos.columns:
@@ -403,7 +439,7 @@ def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
             atividades_evento[col] = None
     atividades_evento = atividades_evento[atividades_evento_cols]
 
-    return eventos, atividades_evento</code></pre>
+    return eventos, atividades_evento, problema_ids_atividade</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.comando.eventos.tasks.get_atividades_pops"><code class="name flex">
@@ -483,11 +519,11 @@ def get_date_interval(
     log(&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Date interval was not provided&#34;)
     redis_client = get_redis_client()
 
-    key = build_redis_key(dataset_id, table_id, mode)
+    key_last_update = build_redis_key(dataset_id, table_id, &#34;last_update&#34;, mode)
 
     current_time = pendulum.now(&#34;America/Sao_Paulo&#34;)
 
-    last_update = redis_client.get(key)
+    last_update = redis_client.get(key_last_update)
     if last_update is None:
         log(&#34;Last update was not found in Redis, setting it to D-30&#34;)
         # Set to current_time - 30 days
@@ -501,7 +537,7 @@ def get_date_interval(
         &#34;fim&#34;: current_time_str,
     }
 
-    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; date_interval: {date_interval}&#34;)
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; date_interval: {date_interval}&#34;)
 
     return date_interval, current_time_str</code></pre>
 </details>
@@ -611,7 +647,7 @@ def save_no_partition(dataframe: pd.DataFrame) -&gt; str:
 </details>
 </dd>
 <dt id="pipelines.rj_cor.comando.eventos.tasks.set_last_updated_on_redis"><code class="name flex">
-<span>def <span class="ident">set_last_updated_on_redis</span></span>(<span>dataset_id: str, table_id: str, mode: str = 'prod', current_time: str = None) ‑> None</span>
+<span>def <span class="ident">set_last_updated_on_redis</span></span>(<span>dataset_id: str, table_id: str, mode: str = 'prod', current_time: str = None, problem_ids_atividade: str = None) ‑> None</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Set the last updated time on Redis.</p></div>
@@ -621,19 +657,25 @@ def save_no_partition(dataframe: pd.DataFrame) -&gt; str:
 </summary>
 <pre><code class="python">@task(trigger=all_successful)
 def set_last_updated_on_redis(
-    dataset_id: str, table_id: str, mode: str = &#34;prod&#34;, current_time: str = None
+    dataset_id: str,
+    table_id: str,
+    mode: str = &#34;prod&#34;,
+    current_time: str = None,
+    problem_ids_atividade: str = None,
 ) -&gt; None:
     &#34;&#34;&#34;
     Set the last updated time on Redis.
     &#34;&#34;&#34;
     redis_client = get_redis_client()
 
-    key = build_redis_key(dataset_id, table_id, mode)
-
     if not current_time:
         current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y-%m-%d %H:%M:%S.0&#34;)
 
-    redis_client.set(key, current_time)</code></pre>
+    key_last_update = build_redis_key(dataset_id, table_id, &#34;last_update&#34;, mode)
+    redis_client.set(key_last_update, current_time)
+
+    key_problema_ids = build_redis_key(dataset_id, table_id, &#34;problema_ids&#34;, mode)
+    redis_client.set(key_problema_ids, problem_ids_atividade)</code></pre>
 </details>
 </dd>
 </dl>

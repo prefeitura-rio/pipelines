@@ -31,17 +31,19 @@
 &#34;&#34;&#34;
 General purpose functions for the comando project
 &#34;&#34;&#34;
+# pylint: disable=W0611
+import json
 import requests
 from requests.adapters import HTTPAdapter, Retry
 
 from pipelines.utils.utils import get_vault_secret, log
 
 
-def build_redis_key(dataset_id: str, table_id: str, mode: str = &#34;prod&#34;):
+def build_redis_key(dataset_id: str, table_id: str, name: str, mode: str = &#34;prod&#34;):
     &#34;&#34;&#34;
     Helper function for building a key where to store the last updated time
     &#34;&#34;&#34;
-    key = dataset_id + &#34;.&#34; + table_id
+    key = dataset_id + &#34;.&#34; + table_id + &#34;.&#34; + name
     if mode == &#34;dev&#34;:
         key = f&#34;{mode}.{key}&#34;
     return key
@@ -58,6 +60,7 @@ def get_token():
     return requests.post(host, json=payload).text
 
 
+# pylint: disable=W0703
 def get_url(url, parameters: dict = None, token: str = None):  # pylint: disable=W0102
     &#34;&#34;&#34;Make request to comando&#39;s API&#34;&#34;&#34;
     if not parameters:
@@ -68,15 +71,16 @@ def get_url(url, parameters: dict = None, token: str = None):  # pylint: disable
     retries = Retry(total=5, backoff_factor=1.5)
     sess.mount(&#34;http://&#34;, HTTPAdapter(max_retries=retries))
     headers = {&#34;Authorization&#34;: token}
+
+    log(f&#34;\n\n&gt;&gt;&gt;&gt;&gt;&gt;&gt; headers {headers} \n\n&#34;)
+    log(f&#34;\n\n&gt;&gt;&gt;&gt;&gt;&gt;&gt; parameters {parameters} \n\n&#34;)
     try:
         response = sess.get(url, json=parameters, headers=headers)
-        return response.json()
+        response = response.json()
     except Exception as exc:
-        log(
-            f&#34;Response was: {response}: {response.text}\n\n\n&#34;
-            + &#34;This resulted in the following error: {exc}&#34;
-        )
-        raise exc</code></pre>
+        log(f&#34;This resulted in the following error: {exc}&#34;)
+        response = {&#34;response&#34;: None}
+    return response</code></pre>
 </details>
 </section>
 <section>
@@ -87,7 +91,7 @@ def get_url(url, parameters: dict = None, token: str = None):  # pylint: disable
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pipelines.rj_cor.comando.eventos.utils.build_redis_key"><code class="name flex">
-<span>def <span class="ident">build_redis_key</span></span>(<span>dataset_id: str, table_id: str, mode: str = 'prod')</span>
+<span>def <span class="ident">build_redis_key</span></span>(<span>dataset_id: str, table_id: str, name: str, mode: str = 'prod')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper function for building a key where to store the last updated time</p></div>
@@ -95,11 +99,11 @@ def get_url(url, parameters: dict = None, token: str = None):  # pylint: disable
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def build_redis_key(dataset_id: str, table_id: str, mode: str = &#34;prod&#34;):
+<pre><code class="python">def build_redis_key(dataset_id: str, table_id: str, name: str, mode: str = &#34;prod&#34;):
     &#34;&#34;&#34;
     Helper function for building a key where to store the last updated time
     &#34;&#34;&#34;
-    key = dataset_id + &#34;.&#34; + table_id
+    key = dataset_id + &#34;.&#34; + table_id + &#34;.&#34; + name
     if mode == &#34;dev&#34;:
         key = f&#34;{mode}.{key}&#34;
     return key</code></pre>
@@ -144,15 +148,16 @@ def get_url(url, parameters: dict = None, token: str = None):  # pylint: disable
     retries = Retry(total=5, backoff_factor=1.5)
     sess.mount(&#34;http://&#34;, HTTPAdapter(max_retries=retries))
     headers = {&#34;Authorization&#34;: token}
+
+    log(f&#34;\n\n&gt;&gt;&gt;&gt;&gt;&gt;&gt; headers {headers} \n\n&#34;)
+    log(f&#34;\n\n&gt;&gt;&gt;&gt;&gt;&gt;&gt; parameters {parameters} \n\n&#34;)
     try:
         response = sess.get(url, json=parameters, headers=headers)
-        return response.json()
+        response = response.json()
     except Exception as exc:
-        log(
-            f&#34;Response was: {response}: {response.text}\n\n\n&#34;
-            + &#34;This resulted in the following error: {exc}&#34;
-        )
-        raise exc</code></pre>
+        log(f&#34;This resulted in the following error: {exc}&#34;)
+        response = {&#34;response&#34;: None}
+    return response</code></pre>
 </details>
 </dd>
 </dl>
