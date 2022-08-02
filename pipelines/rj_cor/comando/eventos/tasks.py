@@ -40,11 +40,11 @@ def get_date_interval(
     log(">>>>>>>>>>> Date interval was not provided")
     redis_client = get_redis_client()
 
-    key = build_redis_key(dataset_id, table_id, mode)
+    key_last_update = build_redis_key(dataset_id, table_id, "last_update", mode)
 
     current_time = pendulum.now("America/Sao_Paulo")
 
-    last_update = redis_client.get(key)
+    last_update = redis_client.get(key_last_update)
     if last_update is None:
         log("Last update was not found in Redis, setting it to D-30")
         # Set to current_time - 30 days
@@ -58,29 +58,35 @@ def get_date_interval(
         "fim": current_time_str,
     }
 
-    log(f">>>>>>> date_interval: {date_interval}")
+    log(f">>>>>>>>>>> date_interval: {date_interval}")
 
     return date_interval, current_time_str
 
 
 @task(trigger=all_successful)
 def set_last_updated_on_redis(
-    dataset_id: str, table_id: str, mode: str = "prod", current_time: str = None
+    dataset_id: str,
+    table_id: str,
+    mode: str = "prod",
+    current_time: str = None,
+    problem_ids_atividade: str = None,
 ) -> None:
     """
     Set the last updated time on Redis.
     """
     redis_client = get_redis_client()
 
-    key = build_redis_key(dataset_id, table_id, mode)
-
     if not current_time:
         current_time = pendulum.now("America/Sao_Paulo").strftime("%Y-%m-%d %H:%M:%S.0")
 
-    redis_client.set(key, current_time)
+    key_last_update = build_redis_key(dataset_id, table_id, "last_update", mode)
+    redis_client.set(key_last_update, current_time)
+
+    key_problema_ids = build_redis_key(dataset_id, table_id, "problema_ids", mode)
+    redis_client.set(key_problema_ids, problem_ids_atividade)
 
 
-@task(nout=2)
+@task(nout=3)
 # pylint: disable=W0613,R0914
 def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
     """
@@ -104,27 +110,41 @@ def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
     rename_columns = {"id": "evento_id", "titulo": "pop_titulo"}
 
     eventos.rename(rename_columns, inplace=True, axis=1)
-    log(f">>>>>>> eventos\n{eventos.head()}")
+
     eventos["evento_id"] = eventos["evento_id"].astype("int")
 
     evento_id_list = eventos["evento_id"].unique()
-    log(f">>>>>>> evento_id_list: {evento_id_list}")
 
     atividades_evento = []
-    problema_ids = []
+    problema_ids_atividade = []
+    problema_ids_request = []
 
     # Request AtividadesDoEvento
     for i in evento_id_list:
-        log(f">>>>>>> Requesting AtividadesDoEvento for evento_id: {i}")
-        response = get_url(url=url_atividades_evento + f"?eventoId={i}")
-        if "atividades" in response.keys():
-            response = response["atividades"]
-            for elem in response:
-                elem["evento_id"] = i
-                atividades_evento.append(elem)
-        else:
-            problema_ids.append(i)
-    log(f">>>>>>> problema_ids: {problema_ids}")
+        # log(f">>>>>>> Requesting AtividadesDoEvento for evento_id: {i}")
+        try:
+            response = get_url(
+                url=url_atividades_evento + f"?eventoId={i}", token=auth_token
+            )
+
+            if "atividades" in response.keys():
+                response = response["atividades"]
+                for elem in response:
+                    elem["evento_id"] = i
+                    atividades_evento.append(elem)
+            else:
+                problema_ids_atividade.append(i)
+        except Exception as exc:
+            log(
+                f"Request AtividadesDoEvento for evento_id: {i}"
+                + f"resulted in the following error: {exc}"
+            )
+            problema_ids_request.append(i)
+            raise exc
+    log(f"\n>>>>>>> problema_ids_request: {problema_ids_request}")
+    log(f"\n>>>>>>> problema_ids_atividade: {problema_ids_atividade}")
+
+    problema_ids_atividade = problema_ids_atividade + problema_ids_request
 
     atividades_evento = pd.DataFrame(atividades_evento)
     log(f">>>>>>> atv eventos {atividades_evento.head()}")
@@ -144,6 +164,7 @@ def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
         "evento_id",
         "longitude",
         "status",
+        "tipo",
     ]
     for col in eventos_cols:
         if col not in eventos.columns:
@@ -165,7 +186,7 @@ def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
             atividades_evento[col] = None
     atividades_evento = atividades_evento[atividades_evento_cols]
 
-    return eventos, atividades_evento
+    return eventos, atividades_evento, problema_ids_atividade
 
 
 @task
