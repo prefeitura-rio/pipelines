@@ -30,7 +30,7 @@ def get_token():
     return requests.post(host, json=payload).text
 
 
-# pylint: disable=W0703
+# pylint: disable=W0703,W0611
 def get_url(url, parameters: dict = None, token: str = None):  # pylint: disable=W0102
     """Make request to comando's API"""
     if not parameters:
