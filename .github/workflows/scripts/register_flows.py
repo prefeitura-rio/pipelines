@@ -45,6 +45,7 @@ def build_and_register(  # pylint: disable=too-many-branches
     project_id: str,
     max_retries: int = 5,
     retry_interval: int = 5,
+    flow_name_prefix: str = "",
 ) -> Counter:
     """
     (Adapted from Prefect original code.)
@@ -102,6 +103,7 @@ def build_and_register(  # pylint: disable=too-many-branches
                             serialized_flow=serialized_flow,
                             project_id=project_id,
                             schedule=True,
+                            flow_name_prefix=flow_name_prefix,
                         )
                         break
                     except Exception:  # pylint: disable=broad-except
@@ -276,6 +278,7 @@ def register_serialized_flow(
     project_id: str,
     force: bool = False,
     schedule: bool = True,
+    flow_name_prefix: str = "",
 ) -> Tuple[str, int, bool]:
     """
     (Adapted from Prefect original code.)
@@ -300,7 +303,7 @@ def register_serialized_flow(
     """
     # Get most recent flow id for this flow. This can be removed once
     # the registration graphql routes return more information
-    flow_name = serialized_flow["name"]
+    flow_name = flow_name_prefix + " - " + serialized_flow["name"]
     resp = client.graphql(
         {
             "query": {
@@ -358,6 +361,7 @@ def register_serialized_flow(
 def main(
     project: str = None,
     path: str = None,
+    flow_name_prefix: str = None,
     max_retries: int = 5,
     retry_interval: int = 5,
 ) -> None:
@@ -371,6 +375,9 @@ def main(
         - max_retries (int, optional): The maximum number of retries to attempt.
         - retry_interval (int, optional): The number of seconds to wait between
     """
+
+    if not flow_name_prefix:
+        flow_name_prefix = ""
 
     if not (project and path):
         raise ValueError("Must specify a project and path")
@@ -397,6 +404,7 @@ def main(
             project_id,
             max_retries=max_retries,
             retry_interval=retry_interval,
+            flow_name_prefix=flow_name_prefix,
         )
 
     # Output summary message

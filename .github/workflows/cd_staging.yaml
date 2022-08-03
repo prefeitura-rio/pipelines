@@ -1,0 +1,82 @@
+name: CD - Staging
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - ".github/workflows/cd_staging.yaml"
+      - "pipelines/**/*"
+      - "pyproject.toml"
+      - "Dockerfile"
+
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+  GH_PAT: ${{ secrets.GH_PAT }}
+  GKE_CLUSTER: ${{ secrets.GKE_CLUSTER_NAME }}
+  GKE_ZONE: ${{ secrets.GKE_ZONE }}
+  IMAGE_NAME: ghcr.io/prefeitura-rio/prefect-flows
+  PREFECT__BACKEND: ${{ secrets.PREFECT__BACKEND }}
+  PREFECT__SERVER__HOST: ${{ secrets.PREFECT__SERVER__HOST }}
+  PREFECT__SERVER__PORT: ${{ secrets.PREFECT__SERVER__PORT }}
+  PREFECT__SERVER__PROJECT: ${{ secrets.PREFECT__SERVER__PROJECT__STAGING }}
+
+jobs:
+  build-container:
+    name: Build, publish and register
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Python version
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+
+      - name: Setup Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v0.2.1
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          export_default_credentials: true
+
+      - name: Install Python dependencies for deploying
+        run: |-
+          pip install -r requirements-deploy.txt
+
+      - name: Update image tag in constants
+        run: |-
+          python .github/workflows/scripts/replace_docker_tag.py $IMAGE_NAME $GITHUB_SHA
+
+      - name: Install package locally
+        run: |-
+          pip install .
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v0.2.1
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_ZONE }}
+          credentials: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Build and publish Prefect Agent image
+        run: |
+          docker build -t $IMAGE_NAME:$GITHUB_SHA .
+          docker build -t $IMAGE_NAME:latest .
+          echo $GH_PAT | docker login ghcr.io -u gabriel-milan --password-stdin
+          docker push $IMAGE_NAME:$GITHUB_SHA
+          docker push $IMAGE_NAME:latest
+
+      - name: Install GDAL for osgeo deps
+        run: |
+          curl -sSLo ./GDAL-3.4.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl https://sourceforge.net/projects/gdal-wheels-for-linux/files/GDAL-3.4.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl/download
+          python -m pip install --no-cache-dir ./GDAL-3.4.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl
+
+      - name: Forward port to Apollo
+        run: |-
+          bash -c "kubectl port-forward -n prefect deploy/prefect-apollo 4200:4200 &" && sleep 5
+
+      - name: Register Prefect flows
+        run: |-
+          python .github/workflows/scripts/register_flows.py --project $PREFECT__SERVER__PROJECT --path pipelines/ --flow-name-prefix "STAGING"
