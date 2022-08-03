@@ -3,7 +3,7 @@ name: CD - Staging
 on:
   push:
     branches:
-      - master
+      - staging
     paths:
       - ".github/workflows/cd_staging.yaml"
       - "pipelines/**/*"
