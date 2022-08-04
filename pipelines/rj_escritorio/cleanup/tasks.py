@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Task definitions for the cleanup pipeline.
+"""
 from datetime import datetime, timedelta
 from typing import Dict, List
 
@@ -66,6 +69,7 @@ def delete_flow_run(flow_run_dict: Dict[str, str], client: Client = None) -> Non
     Deletes a flow run from the API.
     """
     flow_run_id = flow_run_dict["id"]
+    log(f">>>>>>>>>> Deleting flow run {flow_run_id}")
     if not client:
         client = Client()
     query = """

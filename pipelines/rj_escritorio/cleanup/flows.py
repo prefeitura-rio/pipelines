@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Flow definitions for the cleanup pipeline.
+"""
 from prefect import Parameter
 
 from pipelines.rj_escritorio.cleanup.tasks import (
