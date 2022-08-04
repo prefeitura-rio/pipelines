@@ -231,6 +231,8 @@ def get_pops() -> pd.DataFrame:
 
     pops = pd.DataFrame(response["objeto"])
     pops["id"] = pops["id"].astype("int")
+    pops = pops.rename({"id": "pop_id", "titulo": "pop_titulo"}, axis=1)
+    pops["pop_titulo"] = pops["pop_titulo"].str.capitalize()
 
     return pops
 
@@ -247,7 +249,7 @@ def get_atividades_pops(pops: pd.DataFrame) -> pd.DataFrame:
     url_secret = get_vault_secret("comando")["data"]
     url = url_secret["endpoint_atividades_pop"]
 
-    pop_ids = pops["id"].unique()
+    pop_ids = pops["pop_id"].unique()
 
     atividades_pops = []
     for pop_id in pop_ids:
@@ -267,6 +269,10 @@ def get_atividades_pops(pops: pd.DataFrame) -> pd.DataFrame:
             atividades_pops.append(row)
 
     dataframe = pd.DataFrame(atividades_pops)
+
+    dataframe = dataframe.rename({"pop": "pop_titulo"}, axis=1)
+    for i in dataframe.columns:
+        dataframe[i] = dataframe[i].str.capitalize()
 
     return dataframe
 
