@@ -95,7 +95,7 @@ def set_last_updated_on_redis(
 
 
 @task(nout=3)
-# pylint: disable=W0613,R0914
+# pylint: disable=W0613,R0914,R0912
 def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
     """
     Faz o request dos dados de eventos e das atividades do evento
