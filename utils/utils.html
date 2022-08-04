@@ -486,6 +486,7 @@ def to_partitions(
     partition_columns: List[str],
     savepath: str,
     data_type: str = &#34;csv&#34;,
+    suffix: str = None,
 ):  # sourcery skip: raise-specific-error
     &#34;&#34;&#34;Save data in to hive patitions schema, given a dataframe and a list of partition columns.
     Args:
@@ -535,7 +536,12 @@ def to_partitions(
             # create folder tree
             filter_save_path = Path(savepath / &#34;/&#34;.join(patitions_values))
             filter_save_path.mkdir(parents=True, exist_ok=True)
-            file_filter_save_path = Path(filter_save_path) / f&#34;data.{data_type}&#34;
+            if suffix is not None:
+                file_filter_save_path = (
+                    Path(filter_save_path) / f&#34;data_{suffix}.{data_type}&#34;
+                )
+            else:
+                file_filter_save_path = Path(filter_save_path) / f&#34;data.{data_type}&#34;
             if data_type == &#34;csv&#34;:
                 # append data to csv
                 df_filter.to_csv(
@@ -1433,7 +1439,7 @@ Mode needs to be "prod" or "staging"</p></div>
 </details>
 </dd>
 <dt id="pipelines.utils.utils.to_partitions"><code class="name flex">
-<span>def <span class="ident">to_partitions</span></span>(<span>data: pandas.core.frame.DataFrame, partition_columns: List[str], savepath: str, data_type: str = 'csv')</span>
+<span>def <span class="ident">to_partitions</span></span>(<span>data: pandas.core.frame.DataFrame, partition_columns: List[str], savepath: str, data_type: str = 'csv', suffix: str = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Save data in to hive patitions schema, given a dataframe and a list of partition columns.</p>
@@ -1467,6 +1473,7 @@ savepath='partitions/'
     partition_columns: List[str],
     savepath: str,
     data_type: str = &#34;csv&#34;,
+    suffix: str = None,
 ):  # sourcery skip: raise-specific-error
     &#34;&#34;&#34;Save data in to hive patitions schema, given a dataframe and a list of partition columns.
     Args:
@@ -1516,7 +1523,12 @@ savepath='partitions/'
             # create folder tree
             filter_save_path = Path(savepath / &#34;/&#34;.join(patitions_values))
             filter_save_path.mkdir(parents=True, exist_ok=True)
-            file_filter_save_path = Path(filter_save_path) / f&#34;data.{data_type}&#34;
+            if suffix is not None:
+                file_filter_save_path = (
+                    Path(filter_save_path) / f&#34;data_{suffix}.{data_type}&#34;
+                )
+            else:
+                file_filter_save_path = Path(filter_save_path) / f&#34;data.{data_type}&#34;
             if data_type == &#34;csv&#34;:
                 # append data to csv
                 df_filter.to_csv(
