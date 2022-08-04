@@ -2,9 +2,9 @@
 """
 Task definitions for the cleanup pipeline.
 """
-from datetime import datetime, timedelta
 from typing import Dict, List
 
+import pendulum
 from prefect import task
 from prefect.client import Client
 
@@ -38,8 +38,9 @@ def get_old_flow_runs(days_old: int, client: Client = None) -> List[Dict[str, st
     }
     ```
     """
-    age = timedelta(days=days_old)
-    maximum_start_time = datetime.utcnow() - age
+    maximum_start_time = (
+        pendulum.now(tz="America/Sao_Paulo").subtract(days=days_old).to_iso8601_string()
+    )
     if not client:
         client = Client()
     query = """
