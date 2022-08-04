@@ -17,12 +17,12 @@ def get_prefect_client() -> Client:
 
 
 @task
-def get_old_flow_runs(age: timedelta, client: Client = None) -> List[Dict[str, str]]:
+def get_old_flow_runs(days_old: int, client: Client = None) -> List[Dict[str, str]]:
     """
     Fetches old flow runs from the API.
 
     Args:
-        age (timedelta): The age of the flow runs to fetch.
+        days_old (int): The age of the flow runs (in days) to fetch.
 
     Returns:
         A list containing one dictionary for every flow we got. The format for the
@@ -35,6 +35,7 @@ def get_old_flow_runs(age: timedelta, client: Client = None) -> List[Dict[str, s
     }
     ```
     """
+    age = timedelta(days=days_old)
     maximum_start_time = datetime.utcnow() - age
     if not client:
         client = Client()
@@ -60,10 +61,11 @@ def get_old_flow_runs(age: timedelta, client: Client = None) -> List[Dict[str, s
 
 
 @task
-def delete_flow_run(flow_run_id: str, client: Client = None) -> None:
+def delete_flow_run(flow_run_dict: Dict[str, str], client: Client = None) -> None:
     """
     Deletes a flow run from the API.
     """
+    flow_run_id = flow_run_dict["id"]
     if not client:
         client = Client()
     query = """
