@@ -643,7 +643,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
     Returns:
         dict: containing date_range_start and date_range_end
     """
-
+    timestr = "%Y-%m-%dT%H:%M:%S"
     start_ts = get_last_run_timestamp(
         dataset_id=dataset_id, table_id=table_id, mode=mode
     )
@@ -656,7 +656,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 table_id=table_id,
                 field_name=table_date_column_name,
                 kind="max",
-            ).strftime("%Y-%m-%dT%H:%M:%S")
+            ).strftime(timestr)
         else:
             start_ts = get_table_min_max_value(
                 query_project_id=bq_project(),
@@ -664,10 +664,13 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 table_id=raw_table_id,
                 field_name=table_date_column_name,
                 kind="max",
-            ).strftime("%Y-%m-%dT%H:%M:%S")
-    end_ts = datetime.now(timezone(constants.TIMEZONE.value)).strftime(
-        "%Y-%m-%dT%H:%M:%S"
+            ).strftime(timestr)
+    start_ts = (datetime.str(start_ts, timestr) - timedelta(minutes=66)).strftime(
+        timestr
     )
+    end_ts = (
+        datetime.now(timezone(constants.TIMEZONE.value)) - timedelta(minutes=66)
+    ).strftime(timestr)
     date_range = {"date_range_start": start_ts, "date_range_end": end_ts}
     return date_range
 

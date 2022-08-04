@@ -28,7 +28,7 @@ from pipelines.rj_smtr.constants import constants
 
 from pipelines.rj_smtr.schedules import (
     every_minute,
-    every_hour,
+    every_hour_minute_six,
 )
 from pipelines.rj_smtr.tasks import (
     create_date_hour_partition,
@@ -204,8 +204,9 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
 
     version = Parameter("version", default=2)
     datetime_filter = Parameter("datetime_filter", default=None)
-
+    # deixar schedule em dev na branch de staging
     # SETUP #
+    LABELS = get_current_flow_labels()
     errors, timestamps = query_logs(
         dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
         table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
@@ -219,18 +220,18 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
     with case(errors, False):
         pass
         # TODO: Testar com materialização
-        # materialize = create_flow_run(
-        #     flow_name=materialize_sppo.name,
-        #     project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-        #     labels=LABELS,
-        #     run_name=materialize_sppo.name,
-        # )
-        # wait_materialize = wait_for_flow_run(
-        #     materialize,
-        #     stream_states=True,
-        #     stream_logs=True,
-        #     raise_final_state=True,
-        # )
+        materialize = create_flow_run(
+            flow_name=materialize_sppo.name,
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            labels=LABELS,
+            run_name=materialize_sppo.name,
+        )
+        wait_materialize = wait_for_flow_run(
+            materialize,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
     with case(errors, True):
         # SETUP #
         partitions = create_date_hour_partition.map(timestamps)
@@ -278,23 +279,23 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
             timestamp=timestamps,
         )
         # TODO: Atrasar materialização para > 65 minutos após ultimo timestamp
-        # materialize = create_flow_run(
-        #     flow_name=materialize_sppo.name,
-        #     project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-        #     labels=LABELS,
-        #     run_name=materialize_sppo.name,
-        # )
-        # wait_materialize = wait_for_flow_run(
-        #     materialize,
-        #     stream_states=True,
-        #     stream_logs=True,
-        #     raise_final_state=True,
-        # )
-    # recaptura.set_dependencies(task=materialize, upstream_tasks=[UPLOAD_LOGS])
+        materialize = create_flow_run(
+            flow_name=materialize_sppo.name,
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            labels=LABELS,
+            run_name=materialize_sppo.name,
+        )
+        wait_materialize = wait_for_flow_run(
+            materialize,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+    recaptura.set_dependencies(task=materialize, upstream_tasks=[UPLOAD_LOGS])
 
 recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 recaptura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-recaptura.schedule = every_hour
+recaptura.schedule = every_hour_minute_six
