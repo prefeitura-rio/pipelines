@@ -1,11 +1,11 @@
-name: CD
+name: CD - Staging
 
 on:
   push:
     branches:
-      - master
+      - staging
     paths:
-      - ".github/workflows/cd.yaml"
+      - ".github/workflows/cd_staging.yaml"
       - "pipelines/**/*"
       - "pyproject.toml"
       - "Dockerfile"
@@ -20,7 +20,7 @@ env:
   PREFECT__BACKEND: ${{ secrets.PREFECT__BACKEND }}
   PREFECT__SERVER__HOST: ${{ secrets.PREFECT__SERVER__HOST }}
   PREFECT__SERVER__PORT: ${{ secrets.PREFECT__SERVER__PORT }}
-  PREFECT__SERVER__PROJECT: ${{ secrets.PREFECT__SERVER__PROJECT }}
+  PREFECT__SERVER__PROJECT: ${{ secrets.PREFECT__SERVER__PROJECT__STAGING }}
 
 jobs:
   build-container:
@@ -79,4 +79,4 @@ jobs:
 
       - name: Register Prefect flows
         run: |-
-          python .github/workflows/scripts/register_flows.py --project $PREFECT__SERVER__PROJECT --path pipelines/ --schedule
+          python .github/workflows/scripts/register_flows.py --project $PREFECT__SERVER__PROJECT --path pipelines/ --flow-name-prefix "STAGING" --no-schedule

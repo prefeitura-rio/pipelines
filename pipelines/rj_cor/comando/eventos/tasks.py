@@ -16,7 +16,7 @@ from prefect import task
 from prefect.triggers import all_successful
 
 from pipelines.rj_cor.comando.eventos.utils import get_token, get_url, build_redis_key
-from pipelines.utils.utils import get_redis_client, get_vault_secret, log
+from pipelines.utils.utils import get_redis_client, get_vault_secret, log, to_partitions
 
 
 @task(nout=2)
@@ -83,11 +83,19 @@ def set_last_updated_on_redis(
     redis_client.set(key_last_update, current_time)
 
     key_problema_ids = build_redis_key(dataset_id, table_id, "problema_ids", mode)
-    redis_client.set(key_problema_ids, problem_ids_atividade)
+
+    problem_ids_atividade_antigos = redis_client.get(key_problema_ids)
+
+    if problem_ids_atividade_antigos is not None:
+        problem_ids_atividade = problem_ids_atividade + list(
+            problem_ids_atividade_antigos
+        )
+
+    redis_client.set(key_problema_ids, list(set(problem_ids_atividade)))
 
 
 @task(nout=3)
-# pylint: disable=W0613,R0914
+# pylint: disable=W0613,R0914,R0912
 def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
     """
     Faz o request dos dados de eventos e das atividades do evento
@@ -147,21 +155,20 @@ def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
     problema_ids_atividade = problema_ids_atividade + problema_ids_request
 
     atividades_evento = pd.DataFrame(atividades_evento)
-    log(f">>>>>>> atv eventos {atividades_evento.head()}")
+    atividades_evento.rename({"orgao": "sigla"}, inplace=True, axis=1)
 
     # Fixa colunas e ordem
     eventos_cols = [
         "pop_id",
+        "informe_id",
+        "evento_id",
         "bairro",
-        "latitude",
         "inicio",
-        "pop_titulo",
         "fim",
         "prazo",
         "descricao",
-        "informe_id",
         "gravidade",
-        "evento_id",
+        "latitude",
         "longitude",
         "status",
         "tipo",
@@ -172,19 +179,38 @@ def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
     eventos = eventos[eventos_cols]
 
     atividades_evento_cols = [
-        "orgao",
+        "evento_id",
+        "sigla",
         "chegada",
         "inicio",
-        "nome",
         "fim",
         "descricao",
         "status",
-        "evento_id",
     ]
     for col in atividades_evento_cols:
         if col not in atividades_evento.columns:
             atividades_evento[col] = None
     atividades_evento = atividades_evento[atividades_evento_cols]
+
+    eventos_categorical_cols = [
+        "bairro",
+        "prazo",
+        "descricao",
+        "gravidade",
+        "status",
+        "tipo",
+    ]
+    for i in eventos_categorical_cols:
+        eventos[i] = eventos[i].str.capitalize()
+
+    atividade_evento_categorical_cols = ["sigla", "descricao", "status"]
+    for i in atividade_evento_categorical_cols:
+        atividades_evento[i] = atividades_evento[i].str.capitalize()
+
+    eventos[["inicio", "fim"]] = eventos[["inicio", "fim"]].fillna("1970-01-01")
+    atividades_evento[["chegada", "inicio", "fim"]] = atividades_evento[
+        ["chegada", "inicio", "fim"]
+    ].fillna("1970-01-01")
 
     return eventos, atividades_evento, problema_ids_atividade
 
@@ -205,8 +231,6 @@ def get_pops() -> pd.DataFrame:
 
     pops = pd.DataFrame(response["objeto"])
     pops["id"] = pops["id"].astype("int")
-
-    log(f">>>>>>> pops\n{pops.head()}")
 
     return pops
 
@@ -243,7 +267,6 @@ def get_atividades_pops(pops: pd.DataFrame) -> pd.DataFrame:
             atividades_pops.append(row)
 
     dataframe = pd.DataFrame(atividades_pops)
-    log(f">>>>>>> atividades_pops\n{dataframe.head()}")
 
     return dataframe
 
@@ -254,25 +277,23 @@ def salvar_dados(dfr: pd.DataFrame, current_time: str, name: str) -> Union[str, 
     Salvar dados tratados em csv para conseguir subir pro GCP
     """
 
-    ano = current_time[:4]
-    mes = str(int(current_time[5:7]))
-    data = str(current_time[:10])
-    partitions = os.path.join(
-        f"ano_particao={ano}", f"mes_particao={mes}", f"data_particao={data}"
+    dfr["ano_particao"] = pd.to_datetime(dfr["inicio"]).dt.year
+    dfr["mes_particao"] = pd.to_datetime(dfr["inicio"]).dt.month
+    dfr["data_particao"] = pd.to_datetime(dfr["inicio"]).dt.date
+    dfr["ano_particao"] = dfr["ano_particao"].astype("int")
+    dfr["mes_particao"] = dfr["mes_particao"].astype("int")
+
+    partitions_path = Path(os.getcwd(), "data", "comando", name)
+    if not os.path.exists(partitions_path):
+        os.makedirs(partitions_path)
+
+    to_partitions(
+        dfr,
+        partition_columns=["ano_particao", "mes_particao", "data_particao"],
+        savepath=partitions_path,
+        suffix=current_time,
     )
-
-    base_path = os.path.join(os.getcwd(), "data", "comando", name)
-
-    partition_path = os.path.join(base_path, partitions)
-
-    if not os.path.exists(partition_path):
-        os.makedirs(partition_path)
-
-    df_path = os.path.join(partition_path, f"dados_{current_time}.csv")
-
-    dfr.to_csv(df_path, index=False)
-    log(f">>>>>>> base_path {base_path}")
-    return base_path
+    return partitions_path
 
 
 @task
