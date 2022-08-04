@@ -5,10 +5,10 @@ Tasks for br_rj_riodejaneiro_onibus_gps
 
 import traceback
 from datetime import datetime, timedelta
+from typing import Dict
 import pandas as pd
 from prefect import task
 import pendulum
-from typing import Dict
 
 # EMD Imports #
 
@@ -130,7 +130,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
             "timestamp_captura",
         ]
         df = df[mask][cols]  # pylint: disable=c0103
-        df = df.drop_duplicates(
+        df = df.drop_duplicates(  # pylint: disable=c0103
             ["ordem", "latitude", "longitude", "datahora", "timestamp_captura"]
         )
 

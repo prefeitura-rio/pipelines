@@ -10,8 +10,9 @@ import os
 from pathlib import Path
 from typing import Union, List, Dict
 
-from pytz import timezone
 import traceback
+from pytz import timezone
+
 
 from basedosdados import Storage, Table
 import basedosdados as bd

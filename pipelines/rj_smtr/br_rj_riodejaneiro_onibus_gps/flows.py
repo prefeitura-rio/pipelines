@@ -54,7 +54,6 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
 
 # Flows #
 
-# TODO: Atrasar materialização para > 65 minutos após ultimo timestamp
 with Flow(
     "SMTR: GPS SPPO - Materialização",
     code_owners=["caio", "fernanda"],
@@ -218,8 +217,6 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
     )
 
     with case(errors, False):
-        pass
-        # TODO: Testar com materialização
         materialize = create_flow_run(
             flow_name=materialize_sppo.name,
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
@@ -278,7 +275,6 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
             error=error,
             timestamp=timestamps,
         )
-        # TODO: Atrasar materialização para > 65 minutos após ultimo timestamp
         materialize = create_flow_run(
             flow_name=materialize_sppo.name,
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
