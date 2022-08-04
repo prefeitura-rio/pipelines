@@ -43,8 +43,6 @@ def get_url(url, parameters: dict = None, token: str = None):  # pylint: disable
     sess.mount("http://", HTTPAdapter(max_retries=retries))
     headers = {"Authorization": token}
 
-    log(f"\n\n>>>>>>> headers {headers} \n\n")
-    log(f"\n\n>>>>>>> parameters {parameters} \n\n")
     try:
         response = sess.get(url, json=parameters, headers=headers)
         response = response.json()

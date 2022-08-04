@@ -45,6 +45,7 @@ def build_and_register(  # pylint: disable=too-many-branches
     project_id: str,
     max_retries: int = 5,
     retry_interval: int = 5,
+    schedule: bool = True,
 ) -> Counter:
     """
     (Adapted from Prefect original code.)
@@ -67,6 +68,7 @@ def build_and_register(  # pylint: disable=too-many-branches
     for flow in flows:
         storage = flow.storage if isinstance(flow, prefect.Flow) else None
         storage_to_flows[storage].append(flow)
+        flow.name = flow.name
 
     # Register each flow, building storage as needed.
     # Stats on success/fail/skip rates are kept for later display
@@ -101,7 +103,7 @@ def build_and_register(  # pylint: disable=too-many-branches
                             client=client,
                             serialized_flow=serialized_flow,
                             project_id=project_id,
-                            schedule=True,
+                            schedule=schedule,
                         )
                         break
                     except Exception:  # pylint: disable=broad-except
@@ -360,6 +362,7 @@ def main(
     path: str = None,
     max_retries: int = 5,
     retry_interval: int = 5,
+    schedule: bool = True,
 ) -> None:
     """
     A helper for registering Prefect flows. The original implementation does not
@@ -397,6 +400,7 @@ def main(
             project_id,
             max_retries=max_retries,
             retry_interval=retry_interval,
+            schedule=schedule,
         )
 
     # Output summary message

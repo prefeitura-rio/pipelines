@@ -457,6 +457,7 @@ def to_partitions(
     partition_columns: List[str],
     savepath: str,
     data_type: str = "csv",
+    suffix: str = None,
 ):  # sourcery skip: raise-specific-error
     """Save data in to hive patitions schema, given a dataframe and a list of partition columns.
     Args:
@@ -506,7 +507,12 @@ def to_partitions(
             # create folder tree
             filter_save_path = Path(savepath / "/".join(patitions_values))
             filter_save_path.mkdir(parents=True, exist_ok=True)
-            file_filter_save_path = Path(filter_save_path) / f"data.{data_type}"
+            if suffix is not None:
+                file_filter_save_path = (
+                    Path(filter_save_path) / f"data_{suffix}.{data_type}"
+                )
+            else:
+                file_filter_save_path = Path(filter_save_path) / f"data.{data_type}"
             if data_type == "csv":
                 # append data to csv
                 df_filter.to_csv(
