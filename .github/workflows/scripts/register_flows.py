@@ -45,7 +45,6 @@ def build_and_register(  # pylint: disable=too-many-branches
     project_id: str,
     max_retries: int = 5,
     retry_interval: int = 5,
-    flow_name_prefix: str = "",
     schedule: bool = True,
 ) -> Counter:
     """
@@ -69,7 +68,7 @@ def build_and_register(  # pylint: disable=too-many-branches
     for flow in flows:
         storage = flow.storage if isinstance(flow, prefect.Flow) else None
         storage_to_flows[storage].append(flow)
-        flow.name = flow_name_prefix + " - " + flow.name
+        flow.name = flow.name
 
     # Register each flow, building storage as needed.
     # Stats on success/fail/skip rates are kept for later display
@@ -361,7 +360,6 @@ def register_serialized_flow(
 def main(
     project: str = None,
     path: str = None,
-    flow_name_prefix: str = None,
     max_retries: int = 5,
     retry_interval: int = 5,
     schedule: bool = True,
@@ -376,9 +374,6 @@ def main(
         - max_retries (int, optional): The maximum number of retries to attempt.
         - retry_interval (int, optional): The number of seconds to wait between
     """
-
-    if not flow_name_prefix:
-        flow_name_prefix = ""
 
     if not (project and path):
         raise ValueError("Must specify a project and path")
@@ -405,7 +400,6 @@ def main(
             project_id,
             max_retries=max_retries,
             retry_interval=retry_interval,
-            flow_name_prefix=flow_name_prefix,
             schedule=schedule,
         )
 
