@@ -3,6 +3,9 @@ pull_request_rules:
     conditions:
       - -conflict # skip PRs with conflicts
       - -draft # filter-out GH draft PRs
+      - -closed
+      - -merged
+      - "#commits-behind>0"
     actions:
       update:
   - name: Warn author on conflicts
@@ -14,3 +17,20 @@ pull_request_rules:
       label:
         add:
           - conflict
+  - name: Automatic merge to staging when there's nothing wrong with it
+    conditions:
+      - -conflict
+      - -draft
+      - -closed
+      - -merged
+      - base=staging
+      - check-success~=^ubuntu
+      - check-success~=^Lint
+      - check-success~=^GitGuardian
+      - check-success~=^WIP
+      - check-success~=^pre-commit.ci
+      - "#approved-reviews-by>0"
+      - "#commits-behind=0"
+    actions:
+        merge:
+            method: merge
