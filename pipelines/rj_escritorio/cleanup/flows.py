@@ -3,12 +3,15 @@
 Flow definitions for the cleanup pipeline.
 """
 from prefect import Parameter
+from prefect.run_configs import KubernetesRun
+from prefect.storage import GCS
 
 from pipelines.rj_escritorio.cleanup.tasks import (
     delete_flow_run,
     get_old_flow_runs,
     get_prefect_client,
 )
+from pipelines.constants import constants
 from pipelines.utils.decorators import Flow
 
 with Flow(
@@ -29,3 +32,9 @@ with Flow(
 
     # Delete the old flow runs
     delete_flow_run.map(old_flow_runs)
+
+database_cleanup_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+database_cleanup_flow.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value],
+)
