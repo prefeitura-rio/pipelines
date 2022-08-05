@@ -117,11 +117,11 @@ def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-l
                 "materialization_mode"
             ]
 
-        newInterval = parameters["interval"] if "interval" in parameters else interval
+        new_interval = parameters["interval"] if "interval" in parameters else interval
 
         clocks.append(
             IntervalClock(
-                interval=newInterval,
+                interval=new_interval,
                 start_date=start_date
                 + timedelta(minutes=runs_interval_minutes * count),
                 labels=labels,
