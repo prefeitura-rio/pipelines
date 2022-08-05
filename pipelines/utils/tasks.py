@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import List, Union, Any
 
 import basedosdados as bd
+import pandas as pd
 import pendulum
 import prefect
 from prefect import task
@@ -279,3 +280,21 @@ def check_table_exists(
     exists = tb.table_exists(mode="staging")
     log(f"Table {dataset_id}.{table_id} exists in staging: {exists}")
     return exists
+
+
+@task(checkpoint=False)
+def to_json_dataframe(dataframe: pd.DataFrame, key_column: str) -> pd.DataFrame:
+    """
+    Manipulates a dataframe by keeping key_column and moving every other column
+    data to a "content" column in JSON format. Example:
+
+    - Input dataframe: pd.DataFrame({"key": ["a", "b", "c"], "col1": [1, 2, 3], "col2": [4, 5, 6]})
+    - Output dataframe: pd.DataFrame({
+        "key": ["a", "b", "c"],
+        "content": [{"col1": 1, "col2": 4}, {"col1": 2, "col2": 5}, {"col1": 3, "col2": 6}]
+    })
+    """
+    dataframe["content"] = dataframe.drop(columns=[key_column]).to_dict(
+        orient="records"
+    )
+    return dataframe[["key", "content"]]
