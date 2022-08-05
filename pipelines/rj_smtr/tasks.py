@@ -211,7 +211,7 @@ def get_current_timestamp(
     if not timestamp:
         timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
     if truncate_minute:
-        return timestamp.replace(minute=0, second=0, microsecond=0)
+        return timestamp.replace(second=0, microsecond=0)
     return timestamp
 
 
@@ -666,7 +666,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 field_name=table_date_column_name,
                 kind="max",
             ).strftime(timestr)
-    start_ts = (datetime.str(start_ts, timestr) - timedelta(minutes=66)).strftime(
+    start_ts = (datetime.strptime(start_ts, timestr) - timedelta(minutes=66)).strftime(
         timestr
     )
     end_ts = (
