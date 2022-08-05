@@ -217,14 +217,14 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
     )
 
     with case(errors, False):
-        materialize = create_flow_run(
+        materialize_no_errors = create_flow_run(
             flow_name=materialize_sppo.name,
-            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            project_name="staging",
             labels=LABELS,
             run_name=materialize_sppo.name,
         )
         wait_materialize = wait_for_flow_run(
-            materialize,
+            materialize_no_errors,
             stream_states=True,
             stream_logs=True,
             raise_final_state=True,
@@ -277,7 +277,7 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
         )
         materialize = create_flow_run(
             flow_name=materialize_sppo.name,
-            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            project_name="staging",
             labels=LABELS,
             run_name=materialize_sppo.name,
         )
