@@ -116,13 +116,11 @@ def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-l
             parameter_defaults["materialization_mode"] = parameters[
                 "materialization_mode"
             ]
-
-        if "interval" in parameters:
-            interval = parameters["interval"]
+        newInterval = parameters["interval"] if "interval" in parameters else interval
 
         clocks.append(
             IntervalClock(
-                interval=interval,
+                interval=newInterval,
                 start_date=start_date
                 + timedelta(minutes=runs_interval_minutes * count),
                 labels=labels,
