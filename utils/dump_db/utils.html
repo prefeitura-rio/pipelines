@@ -145,13 +145,11 @@ def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-l
             parameter_defaults[&#34;materialization_mode&#34;] = parameters[
                 &#34;materialization_mode&#34;
             ]
-
-        if &#34;interval&#34; in parameters:
-            interval = parameters[&#34;interval&#34;]
+        newInterval = parameters[&#34;interval&#34;] if &#34;interval&#34; in parameters else interval
 
         clocks.append(
             IntervalClock(
-                interval=interval,
+                interval=newInterval,
                 start_date=start_date
                 + timedelta(minutes=runs_interval_minutes * count),
                 labels=labels,
@@ -274,13 +272,11 @@ Creates the query without accents.</p></div>
             parameter_defaults[&#34;materialization_mode&#34;] = parameters[
                 &#34;materialization_mode&#34;
             ]
-
-        if &#34;interval&#34; in parameters:
-            interval = parameters[&#34;interval&#34;]
+        newInterval = parameters[&#34;interval&#34;] if &#34;interval&#34; in parameters else interval
 
         clocks.append(
             IntervalClock(
-                interval=interval,
+                interval=newInterval,
                 start_date=start_date
                 + timedelta(minutes=runs_interval_minutes * count),
                 labels=labels,
