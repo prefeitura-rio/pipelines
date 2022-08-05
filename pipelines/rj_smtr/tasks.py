@@ -10,7 +10,9 @@ import os
 from pathlib import Path
 from typing import Union, List, Dict
 
+import traceback
 from pytz import timezone
+
 
 from basedosdados import Storage, Table
 import basedosdados as bd
@@ -200,6 +202,36 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
 
 
 @task
+def get_current_timestamp(
+    timestamp: datetime = None, truncate_minute: bool = True
+) -> datetime:
+    """
+    Get current timestamp for flow run.
+    """
+    if not timestamp:
+        timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
+    if truncate_minute:
+        return timestamp.replace(minute=0, second=0, microsecond=0)
+    return timestamp
+
+
+@task
+def create_date_hour_partition(timestamp: datetime) -> str:
+    """
+    Get date hour Hive partition structure from timestamp.
+    """
+    return f"data={timestamp.strftime('%Y-%m-%d')}/hora={timestamp.strftime('%H')}"
+
+
+@task
+def parse_timestamp_to_string(timestamp: datetime, pattern="%Y-%m-%d-%H-%M-%S") -> str:
+    """
+    Parse timestamp to string pattern.
+    """
+    return timestamp.strftime(pattern)
+
+
+@task
 def create_current_date_hour_partition(capture_time=None):
     """Create partitioned directory structure to save data locally based
     on capture time.
@@ -213,101 +245,87 @@ def create_current_date_hour_partition(capture_time=None):
         dict: "filename" contains the name which to upload the csv, "partitions" contains
         the partitioned directory path
     """
-    tz = constants.TIMEZONE.value  # pylint: disable=C0103
     if capture_time is None:
-        capture_time = pendulum.now(tz).replace(second=0, microsecond=0)
+        capture_time = datetime.now(tz=constants.TIMEZONE.value).replace(
+            minute=0, second=0, microsecond=0
+        )
     date = capture_time.strftime("%Y-%m-%d")
     hour = capture_time.strftime("%H")
 
     return {
         "filename": capture_time.strftime("%Y-%m-%d-%H-%M-%S"),
         "partitions": f"data={date}/hora={hour}",
+        "timestamp": capture_time,
     }
 
 
 @task
 def create_local_partition_path(
-    dataset_id, table_id, filename=None, partitions=None, file_dict=None
-):
-    """Get the full path which to save data locally before upload.
-    If passing file_dict, should not pass filename and partitions
-    separately.
+    dataset_id: str, table_id: str, filename: str, partitions: str = None
+) -> str:
+    """
+    Create the full path sctructure which to save data locally before
+    upload.
 
     Args:
         dataset_id (str): dataset_id on BigQuery
         table_id (str): table_id on BigQuery
         filename (str, optional): Single csv name
         partitions (str, optional): Partitioned directory structure, ie "ano=2022/mes=03/data=01"
-        file_dict(dict, optional): containing keys 'filename' and 'partitions',
-        used for running task with map
     Returns:
-        str: Final path which to save files
+        str: String path having `mode` and `filetype` to be replaced afterwards,
+    either to save raw or staging files.
     """
-    if file_dict:
-        filename = file_dict["filename"]
-        partitions = file_dict["partitions"]
-    # If not specific table_id, use resource one
-    # if not table_id:
-    #     table_id = context.resources.basedosdados_config["table_id"]
-    # dataset_id = context.resources.basedosdados_config["dataset_id"]
-
-    # Get data folder from environment variable
     data_folder = os.getenv("DATA_FOLDER", "data")
-
     file_path = f"{os.getcwd()}/{data_folder}/{{mode}}/{dataset_id}/{table_id}"
     file_path += f"/{partitions}/{filename}.{{filetype}}"
     log(f"Creating file path: {file_path}")
-
     return file_path
 
 
 @task
-def save_raw_local(file_path, data=None, status_dict=None, mode="raw"):
-    """Dumps json response from API to .json file. If passing status_dict
-    should not pass data separately
+def save_raw_local(file_path: str, status: dict, mode: str = "raw") -> str:
+    """
+    Saves json response from API to .json file.
 
     Args:
         file_path (str): Path which to save raw file
-        data (response, optional): Response from API request
-        status_dict(dict, optional): containing the status of
-        upstream request task. Must contain keys 'data', 'timestamp',
-        'error'
+        status (dict): Must contain keys
+          * `data`: json returned from API
+          * `error`: error catched from API request
         mode (str, optional): Folder to save locally, later folder which to upload to GCS.
-        Defaults to "raw".
 
     Returns:
         str: Path to the saved file
     """
-    if status_dict:
-        data = status_dict["data"]
     _file_path = file_path.format(mode=mode, filetype="json")
     Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
-    json.dump(data.json(), Path(_file_path).open("w", encoding="utf-8"))
-
+    if status["error"] is None:
+        json.dump(status["data"], Path(_file_path).open("w", encoding="utf-8"))
+        log(f"Raw data saved to: {_file_path}")
     return _file_path
 
 
 @task
-def save_treated_local(file_path, mode="staging", dataframe=None, treated_status=None):
-    """Save treated file locally. Should pass only one of args
-    dataframe or treated_status
+def save_treated_local(file_path: str, status: dict, mode: str = "staging") -> str:
+    """
+    Save treated file to CSV.
 
     Args:
-        file_path (str): Path which to save .csv files
-        mode (str, optional): Directory to save locally, later folder which to upload to GCS.
-        Defaults to "staging".
-        dataframe (pandas.core.DataFrame, optional): Data to save as .csv file
-        treated_status(dict, optional): used for running task with map.
-        Must contain keys 'df' and 'error'.
+        file_path (str): Path which to save treated file
+        status (dict): Must contain keys
+          * `data`: dataframe returned from treatement
+          * `error`: error catched from data treatement
+        mode (str, optional): Folder to save locally, later folder which to upload to GCS.
+
     Returns:
         str: Path to the saved file
     """
-    if treated_status:
-        dataframe = treated_status["df"]
     _file_path = file_path.format(mode=mode, filetype="csv")
     Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
-    dataframe.to_csv(_file_path, index=False)
-
+    if status["error"] is None:
+        status["data"].to_csv(_file_path, index=False)
+        log(f"Treated data saved to: {_file_path}")
     return _file_path
 
 
@@ -322,69 +340,97 @@ def query_logs(
     table_id: str,
     datetime_filter=None,
 ):
-    """Queries capture logs to check for errors
+    """
+    Queries capture logs to check for errors
 
     Args:
         dataset_id (str): dataset_id on BigQuery
         table_id (str): table_id on BigQuery
         datetime_filter (pendulum.datetime.DateTime, optional):
         filter passed to query. This task will query the logs table
-        for the last 1 hour before this filter
+        for the last 1 day before datetime_filter
 
     Returns:
         list: containing timestamps for which the capture failed
-
     """
 
     if not datetime_filter:
-        datetime_filter = pendulum.now(constants.TIMEZONE.value)
+        datetime_filter = pendulum.now(constants.TIMEZONE.value).replace(
+            second=0, microsecond=0
+        )
 
     query = f"""
-        SELECT *
-        FROM rj-smtr.{dataset_id}.{table_id}_logs
-        WHERE
-            data = '{datetime_filter.date().isoformat()}'
-        AND
-            timestamp_captura
-            BETWEEN
-            DATETIME_SUB(
-                '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}',
-                INTERVAL 1 HOUR
-            )
-            AND
-            '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
-        AND
-            sucesso is False
-        ORDER BY timestamp_captura
+    with t as (
+    select
+        datetime(timestamp_array) as timestamp_array
+    from
+        unnest(GENERATE_TIMESTAMP_ARRAY(
+            timestamp_sub('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}', interval 1 day),
+            timestamp('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'),
+            interval 1 minute)
+        ) as timestamp_array
+    where timestamp_array < '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
+    ),
+    logs as (
+        select
+            *,
+            timestamp_trunc(timestamp_captura, minute) as timestamp_array
+        from
+            rj-smtr.{dataset_id}.{table_id}_logs
+        where
+            data between
+                date(datetime_sub('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}',
+                interval 1 day))
+                and date('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}')
+        and
+            timestamp_captura between
+                datetime_sub('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}', interval 1 day)
+                and '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
+        order by timestamp_captura
+    )
+    select
+        case
+            when logs.timestamp_captura is not null then logs.timestamp_captura
+            else t.timestamp_array
+        end as timestamp_captura
+    from
+        t
+    left join
+        logs
+    on
+        logs.timestamp_array = t.timestamp_array
+    where
+        logs.sucesso is not True
+    order by
+        timestamp_captura
     """
-    log(f"Will run query:\n{query}")
+    log(f"Run query to check logs:\n{query}")
     results = bd.read_sql(query=query, billing_project_id=bq_project())[
         "timestamp_captura"
     ]
     if len(results) > 0:
-        return True, pd.to_datetime(results).to_list()
+        results = (
+            pd.to_datetime(results).dt.tz_localize(constants.TIMEZONE.value).to_list()
+        )
+        log(f"Recapture data for the following {len(results)} timestamps:\n{results}")
+        return True, results
     return False, []
 
 
 @task
-def get_raw(url: str, headers: dict = None, timestamp: datetime = None):
-    """Request data from a url API
+def get_raw(url: str, headers: dict = None) -> Dict:
+    """
+    Request data from a url API.
+
     Args:
         url (str): URL to send request to
-        headers (dict, optional): Aditional fields to send along the request. Defaults to None.
-        source (str, optional): Source API being captured.
-        Possible values are 'stpl_api', 'brt_api', 'sppo_api' and 'sppo_api_v2'.
-        timestamp(pendulum.datetime.DateTime, optional): timestamp of the request
-        time. Defaults to None.
+        headers (dict, optional): Aditional fields to send along the request.
     Returns:
-        dict: "data" contains the response object from the request, "timestamp" contains
-        the run time timestamp, "error" catches errors that may occur during task execution.
+        dict: Conatining keys
+          * `data`: json returned from API
+          * `error`: error catched from API request
     """
     data = None
-    if not timestamp:
-        timestamp = pendulum.now(constants.TIMEZONE.value).replace(
-            second=0, microsecond=0
-        )
 
     # Get data from API
     try:
@@ -394,23 +440,20 @@ def get_raw(url: str, headers: dict = None, timestamp: datetime = None):
         error = None
     except Exception as exp:
         error = exp
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+        return {"data": None, "error": error}
 
     # Check data results
     if response.ok:  # status code is less than 400
         data = response.json()
         if isinstance(data, dict) and "DescricaoErro" in data.keys():
             error = data["DescricaoErro"]
+            log(f"[CATCHED] Task failed with error: \n{error}", level="error")
         elif len(data) == 0:
             error = "Data returned from API is empty."
-            log(error)
+            log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
-        return {
-            "data": response,
-            "error": error,
-            "timestamp": timestamp.isoformat(),
-        }
-
-    return {"data": response, "timestamp": timestamp.isoformat(), "error": error}
+    return {"data": data, "error": error}
 
 
 ###############
@@ -422,11 +465,15 @@ def get_raw(url: str, headers: dict = None, timestamp: datetime = None):
 
 @task
 def bq_upload(
-    dataset_id, table_id, filepath, raw_filepath=None, partitions=None, file_dict=None
+    dataset_id: str,
+    table_id: str,
+    filepath: str,
+    raw_filepath: str = None,
+    partitions: str = None,
+    status: dict = None,
 ):  # pylint: disable=R0913
-    """Upload raw and treated data to GCS and BigQuery.
-    If passing arg file_dict, should not pass arg partitions
-    separately.
+    """
+    Upload raw and treated data to GCS and BigQuery.
 
     Args:
         dataset_id (str): dataset_id on BigQuery
@@ -435,8 +482,8 @@ def bq_upload(
         raw_filepath (str, optional): Path to raw .json file. Defaults to None.
         partitions (str, optional): Partitioned directory structure, ie "ano=2022/mes=03/data=01".
         Defaults to None.
-        file_dict(dict, optional): used for running task with map. Must contain keys
-        "filename" and "partitions". Defaults to None
+        status (dict, optional): Dict containing `error` key from
+        upstream tasks.
 
     Returns:
         None
@@ -451,28 +498,42 @@ def bq_upload(
     partitions = {partitions}, type = {type(partitions)}
     """
     )
-    if file_dict:
-        partitions = file_dict["partitions"]
-    # Upload raw to staging
-    if raw_filepath:
-        st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
-        log(
-            f"""Uploading raw file:
-            {raw_filepath}
-            to bucket {st_obj.bucket_name}
-            at {st_obj.bucket_name}/{dataset_id}/{table_id}"""
-        )
-        st_obj.upload(
-            path=raw_filepath, partitions=partitions, mode="raw", if_exists="replace"
-        )
+    if status["error"] is not None:
+        return status["error"]
 
-    # creates and publish table if it does not exist, append to it otherwise
-    if partitions:
-        # If table is partitioned, get parent directory wherein partitions are stored
-        tb_dir = filepath.split(partitions)[0]
-        create_or_append_table(dataset_id, table_id, tb_dir)
-    else:
-        create_or_append_table(dataset_id, table_id, filepath)
+    error = None
+    try:
+        # Upload raw to staging
+        if raw_filepath:
+            st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
+            log(
+                f"""Uploading raw file to bucket {st_obj.bucket_name} at
+                {st_obj.bucket_name}/{dataset_id}/{table_id}"""
+            )
+            st_obj.upload(
+                path=raw_filepath,
+                partitions=partitions,
+                mode="raw",
+                if_exists="replace",
+            )
+
+        # Creates and publish table if it does not exist, append to it otherwise
+        if partitions:
+            # If table is partitioned, get parent directory wherein partitions are stored
+            log(
+                f"""Uploading treated partitions to bucket {st_obj.bucket_name}
+            at {st_obj.bucket_name}/{dataset_id}/{table_id}"""
+            )
+            tb_dir = filepath.split(partitions)[0]
+            create_or_append_table(dataset_id, table_id, tb_dir)
+            # os.system(f'rm -rf {tb_dir}')
+        else:
+            create_or_append_table(dataset_id, table_id, filepath)
+    except Exception:
+        error = traceback.format_exc()
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+
+    return error
 
 
 @task
@@ -511,48 +572,43 @@ def bq_upload_from_dict(paths: dict, dataset_id: str, partition_levels: int = 1)
 
 @task
 def upload_logs_to_bq(
-    dataset_id, parent_table_id, timestamp=None, error=None, status_dict=None
+    dataset_id: str, parent_table_id: str, timestamp: str, error: str = None
 ):
-    """Upload execution status table to BigQuery.
+    """
+    Upload execution status table to BigQuery.
     Table is uploaded to the same dataset, named {parent_table_id}_logs.
     If passing status_dict, should not pass timestamp and error.
 
     Args:
         dataset_id (str): dataset_id on BigQuery
         parent_table_id (str): Parent table id related to the status table
-        timestamp (str, optional): ISO formatted timestamp string
+        timestamp (str): ISO formatted timestamp string
         error (str, optional): String associated with error caught during execution
-        status_dict(dict, optional): used for running task with map.
-        Must contain keys 'timestamp' and 'error',
-
     Returns:
         None
     """
-    if status_dict:
-        timestamp = status_dict["timestamp"]
-        error = status_dict["error"]
     table_id = parent_table_id + "_logs"
-
+    # Create partition directory
+    filename = f"{table_id}_{timestamp.isoformat()}"
     filepath = Path(
-        f"{timestamp}/{table_id}/data={pendulum.parse(timestamp).date()}/{table_id}_{timestamp}.csv"
+        f"""data/staging/{dataset_id}/{table_id}/data={timestamp.date()}/{filename}.csv"""
     )
-    # create partition directory
     filepath.parent.mkdir(exist_ok=True, parents=True)
-    # create dataframe to be uploaded
+    # Create dataframe to be uploaded
     dataframe = pd.DataFrame(
         {
-            "timestamp_captura": [pd.to_datetime(timestamp)],
+            "timestamp_captura": [timestamp],
             "sucesso": [error is None],
             "erro": [error],
         }
     )
-    # save local
+    # Save data local
     dataframe.to_csv(filepath, index=False)
-    # BD Table object
+    # Upload to Storage
     create_or_append_table(
         dataset_id=dataset_id, table_id=table_id, path=filepath.parent.parent
     )
-    if error:
+    if error is not None:
         raise Exception(f"Pipeline failed with error: {error}")
 
 
@@ -588,7 +644,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
     Returns:
         dict: containing date_range_start and date_range_end
     """
-
+    timestr = "%Y-%m-%dT%H:%M:%S"
     start_ts = get_last_run_timestamp(
         dataset_id=dataset_id, table_id=table_id, mode=mode
     )
@@ -601,7 +657,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 table_id=table_id,
                 field_name=table_date_column_name,
                 kind="max",
-            ).strftime("%Y-%m-%dT%H:%M:%S")
+            ).strftime(timestr)
         else:
             start_ts = get_table_min_max_value(
                 query_project_id=bq_project(),
@@ -609,10 +665,13 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 table_id=raw_table_id,
                 field_name=table_date_column_name,
                 kind="max",
-            ).strftime("%Y-%m-%dT%H:%M:%S")
-    end_ts = datetime.now(timezone(constants.TIMEZONE.value)).strftime(
-        "%Y-%m-%dT%H:%M:%S"
+            ).strftime(timestr)
+    start_ts = (datetime.str(start_ts, timestr) - timedelta(minutes=66)).strftime(
+        timestr
     )
+    end_ts = (
+        datetime.now(timezone(constants.TIMEZONE.value)) - timedelta(minutes=66)
+    ).strftime(timestr)
     date_range = {"date_range_start": start_ts, "date_range_end": end_ts}
     return date_range
 
