@@ -110,18 +110,24 @@ def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
     # Request Eventos
     response = get_url(url=url_eventos, parameters=date_interval, token=auth_token)
 
-    if "eventos" in response:
+    if "eventos" in response and len(response["eventos"]) > 0:
         eventos = pd.DataFrame(response["eventos"])
+    elif ("eventos" in response) and (len(response["eventos"])) == 0:
+        raise Exception("No events found on this date interval")
     else:
-        raise Exception("No eventos found on this date interval")
+        raise Exception(f"{response}")
 
-    rename_columns = {"id": "evento_id", "titulo": "pop_titulo"}
+    rename_columns = {
+        "id": "id_evento",
+        "titulo": "pop_titulo",
+        "pop_id": "id_pop",
+        "inicio": "data_inicio",
+        "fim": "data_fim",
+    }
 
     eventos.rename(rename_columns, inplace=True, axis=1)
-
-    eventos["evento_id"] = eventos["evento_id"].astype("int")
-
-    evento_id_list = eventos["evento_id"].unique()
+    eventos["id_evento"] = eventos["id_evento"].astype("int")
+    evento_id_list = eventos["id_evento"].unique()
 
     atividades_evento = []
     problema_ids_atividade = []
@@ -129,22 +135,21 @@ def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
 
     # Request AtividadesDoEvento
     for i in evento_id_list:
-        # log(f">>>>>>> Requesting AtividadesDoEvento for evento_id: {i}")
+        # log(f">>>>>>> Requesting AtividadesDoEvento for id_evento: {i}")
         try:
             response = get_url(
                 url=url_atividades_evento + f"?eventoId={i}", token=auth_token
             )
-
             if "atividades" in response.keys():
                 response = response["atividades"]
                 for elem in response:
-                    elem["evento_id"] = i
+                    elem["id_evento"] = i
                     atividades_evento.append(elem)
             else:
                 problema_ids_atividade.append(i)
         except Exception as exc:
             log(
-                f"Request AtividadesDoEvento for evento_id: {i}"
+                f"Request AtividadesDoEvento for id_evento: {i}"
                 + f"resulted in the following error: {exc}"
             )
             problema_ids_request.append(i)
@@ -155,16 +160,26 @@ def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
     problema_ids_atividade = problema_ids_atividade + problema_ids_request
 
     atividades_evento = pd.DataFrame(atividades_evento)
-    atividades_evento.rename({"orgao": "sigla"}, inplace=True, axis=1)
+    atividades_evento.rename(
+        {
+            "orgao": "sigla",
+            "titulo": "pop_titulo",
+            "evento_id": "id_evento",
+            "pop_id": "id_pop",
+            "inicio": "data_inicio",
+            "fim": "data_fim",
+            "chegada": "data_chegada",
+        },
+        inplace=True,
+        axis=1,
+    )
 
-    # Fixa colunas e ordem
     eventos_cols = [
-        "pop_id",
-        "informe_id",
-        "evento_id",
+        "id_pop",
+        "id_evento",
         "bairro",
-        "inicio",
-        "fim",
+        "data_inicio",
+        "data_fim",
         "prazo",
         "descricao",
         "gravidade",
@@ -176,21 +191,19 @@ def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
     for col in eventos_cols:
         if col not in eventos.columns:
             eventos[col] = None
-    eventos = eventos[eventos_cols]
 
     atividades_evento_cols = [
-        "evento_id",
+        "id_evento",
         "sigla",
-        "chegada",
-        "inicio",
-        "fim",
+        "data_chegada",
+        "data_inicio",
+        "data_fim",
         "descricao",
         "status",
     ]
     for col in atividades_evento_cols:
         if col not in atividades_evento.columns:
             atividades_evento[col] = None
-    atividades_evento = atividades_evento[atividades_evento_cols]
 
     eventos_categorical_cols = [
         "bairro",
@@ -207,11 +220,16 @@ def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
     for i in atividade_evento_categorical_cols:
         atividades_evento[i] = atividades_evento[i].str.capitalize()
 
-    eventos[["inicio", "fim"]] = eventos[["inicio", "fim"]].fillna("1970-01-01")
-    atividades_evento[["chegada", "inicio", "fim"]] = atividades_evento[
-        ["chegada", "inicio", "fim"]
+    eventos_datas_cols = ["data_inicio", "data_fim"]
+    atividades_eventos_datas_cols = ["data_chegada", "data_inicio", "data_fim"]
+    eventos[eventos_datas_cols] = eventos[eventos_datas_cols].fillna("1970-01-01")
+    atividades_evento[atividades_eventos_datas_cols] = atividades_evento[
+        atividades_eventos_datas_cols
     ].fillna("1970-01-01")
 
+    # Fixa colunas e ordem
+    eventos = eventos[eventos_cols].drop_duplicates()
+    atividades_evento = atividades_evento[atividades_evento_cols].drop_duplicates()
     return eventos, atividades_evento, problema_ids_atividade
 
 
@@ -231,10 +249,10 @@ def get_pops() -> pd.DataFrame:
 
     pops = pd.DataFrame(response["objeto"])
     pops["id"] = pops["id"].astype("int")
-    pops = pops.rename({"id": "pop_id", "titulo": "pop_titulo"}, axis=1)
+    pops = pops.rename({"id": "id_pop", "titulo": "pop_titulo"}, axis=1)
     pops["pop_titulo"] = pops["pop_titulo"].str.capitalize()
 
-    return pops
+    return pops[["id_pop", "pop_titulo"]]
 
 
 @task
@@ -249,14 +267,15 @@ def get_atividades_pops(pops: pd.DataFrame) -> pd.DataFrame:
     url_secret = get_vault_secret("comando")["data"]
     url = url_secret["endpoint_atividades_pop"]
 
-    pop_ids = pops["pop_id"].unique()
+    pop_ids = pops["id_pop"].unique()
 
     atividades_pops = []
     for pop_id in pop_ids:
         log(f">>>>>>> Requesting POP's activities for pop_id: {pop_id}")
         response = get_url(url=url + f"?popId={pop_id}", token=auth_token)
         row_template = {
-            "pop": response["pop"],
+            "pop_titulo": response["pop"],
+            "id_pop": pop_id,
             "sigla": "",
             "orgao": "",
             "acao": "",
@@ -270,11 +289,10 @@ def get_atividades_pops(pops: pd.DataFrame) -> pd.DataFrame:
 
     dataframe = pd.DataFrame(atividades_pops)
 
-    dataframe = dataframe.rename({"pop": "pop_titulo"}, axis=1)
-    for i in dataframe.columns:
+    for i in ["sigla", "orgao", "acao"]:
         dataframe[i] = dataframe[i].str.capitalize()
 
-    return dataframe
+    return dataframe[["id_pop", "sigla", "orgao", "acao"]]
 
 
 @task
@@ -283,9 +301,9 @@ def salvar_dados(dfr: pd.DataFrame, current_time: str, name: str) -> Union[str, 
     Salvar dados tratados em csv para conseguir subir pro GCP
     """
 
-    dfr["ano_particao"] = pd.to_datetime(dfr["inicio"]).dt.year
-    dfr["mes_particao"] = pd.to_datetime(dfr["inicio"]).dt.month
-    dfr["data_particao"] = pd.to_datetime(dfr["inicio"]).dt.date
+    dfr["ano_particao"] = pd.to_datetime(dfr["data_inicio"]).dt.year
+    dfr["mes_particao"] = pd.to_datetime(dfr["data_inicio"]).dt.month
+    dfr["data_particao"] = pd.to_datetime(dfr["data_inicio"]).dt.date
     dfr["ano_particao"] = dfr["ano_particao"].astype("int")
     dfr["mes_particao"] = dfr["mes_particao"].astype("int")
 
