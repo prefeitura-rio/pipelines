@@ -288,6 +288,7 @@ def to_json_dataframe(
     csv_path: Union[str, Path] = None,
     key_column: str = None,
     read_csv_kwargs: dict = None,
+    save_to: Union[str, Path] = None,
 ) -> pd.DataFrame:
     """
     Manipulates a dataframe by keeping key_column and moving every other column
@@ -308,4 +309,7 @@ def to_json_dataframe(
     dataframe["content"] = dataframe.drop(columns=[key_column]).to_dict(
         orient="records"
     )
-    return dataframe[["key", "content"]]
+    dataframe = dataframe[["key", "content"]]
+    if save_to:
+        dataframe.to_csv(save_to, index=False)
+    return dataframe
