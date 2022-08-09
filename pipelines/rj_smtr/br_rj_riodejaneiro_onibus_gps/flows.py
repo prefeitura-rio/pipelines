@@ -212,7 +212,7 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
     )
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="GPS SPPO: ", now_time=get_now_time(), wait=timestamps
+        prefix="GPS SPPO Recapturas: ", now_time=get_now_time(), wait=timestamps
     )
 
     with case(errors, False):
@@ -273,6 +273,7 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
             parent_table_id=unmapped(constants.GPS_SPPO_RAW_TABLE_ID.value),
             error=error,
             timestamp=timestamps,
+            recapture=unmapped(True),
         )
         materialize = create_flow_run(
             flow_name=materialize_sppo.name,
