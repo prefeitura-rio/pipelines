@@ -572,7 +572,11 @@ def bq_upload_from_dict(paths: dict, dataset_id: str, partition_levels: int = 1)
 
 @task
 def upload_logs_to_bq(
-    dataset_id: str, parent_table_id: str, timestamp: str, error: str = None
+    dataset_id: str,
+    parent_table_id: str,
+    timestamp: str,
+    error: str = None,
+    recapture: bool = False,
 ):
     """
     Upload execution status table to BigQuery.
@@ -595,13 +599,33 @@ def upload_logs_to_bq(
     )
     filepath.parent.mkdir(exist_ok=True, parents=True)
     # Create dataframe to be uploaded
-    dataframe = pd.DataFrame(
-        {
-            "timestamp_captura": [timestamp],
-            "sucesso": [error is None],
-            "erro": [error],
-        }
-    )
+    if recapture is True:
+        # if the recapture is succeeded, update the column erro
+        if error is None:
+            dataframe = pd.DataFrame(
+                {
+                    "timestamp_captura": [timestamp],
+                    "sucesso": [True],
+                    "erro": ["[recapturado] erro descohecido"],
+                }
+            )
+        # if any iteration of the recapture fails, upload logs with error
+        else:
+            dataframe = pd.DataFrame(
+                {
+                    "timestamp_captura": [timestamp],
+                    "sucesso": [error is None],
+                    "erro": [f"[recapturado] {error}"],
+                }
+            )
+    else:
+        dataframe = pd.DataFrame(
+            {
+                "timestamp_captura": [timestamp],
+                "sucesso": [error is None],
+                "erro": [error],
+            }
+        )
     # Save data local
     dataframe.to_csv(filepath, index=False)
     # Upload to Storage
@@ -648,7 +672,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
     start_ts = get_last_run_timestamp(
         dataset_id=dataset_id, table_id=table_id, mode=mode
     )
-
+    # if there's no timestamp set on redis, get max timestamp on source table
     if start_ts is None:
         if Table(dataset_id=dataset_id, table_id=table_id).table_exists("prod"):
             start_ts = get_table_min_max_value(
@@ -666,12 +690,17 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 field_name=table_date_column_name,
                 kind="max",
             ).strftime(timestr)
-    start_ts = (datetime.strptime(start_ts, timestr) - timedelta(minutes=66)).strftime(
-        timestr
-    )
     end_ts = (
-        datetime.now(timezone(constants.TIMEZONE.value)) - timedelta(minutes=66)
-    ).strftime(timestr)
+        (datetime.strptime(start_ts, timestr))
+        .replace(minute=0, second=0, microsecond=0)
+        .strftime(timestr)
+    )
+    start_ts = (
+        (datetime.strptime(start_ts, timestr) - timedelta(minutes=60))
+        .replace(minute=0, second=0, microsecond=0)
+        .strftime(timestr)
+    )
+
     date_range = {"date_range_start": start_ts, "date_range_end": end_ts}
     return date_range
 
