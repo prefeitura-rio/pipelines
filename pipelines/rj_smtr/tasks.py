@@ -682,13 +682,14 @@ def get_materialization_date_range(  # pylint: disable=R0913
         dict: containing date_range_start and date_range_end
     """
     timestr = "%Y-%m-%dT%H:%M:%S"
-    start_ts = get_last_run_timestamp(
+    # get start from redis
+    last_run = get_last_run_timestamp(
         dataset_id=dataset_id, table_id=table_id, mode=mode
     )
     # if there's no timestamp set on redis, get max timestamp on source table
-    if start_ts is None:
+    if last_run is None:
         if Table(dataset_id=dataset_id, table_id=table_id).table_exists("prod"):
-            start_ts = get_table_min_max_value(
+            last_run = get_table_min_max_value(
                 query_project_id=bq_project(),
                 dataset_id=dataset_id,
                 table_id=table_id,
@@ -696,20 +697,22 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 kind="max",
             ).strftime(timestr)
         else:
-            start_ts = get_table_min_max_value(
+            last_run = get_table_min_max_value(
                 query_project_id=bq_project(),
                 dataset_id=raw_dataset_id,
                 table_id=raw_table_id,
                 field_name=table_date_column_name,
                 kind="max",
             ).strftime(timestr)
-    end_ts = (
-        (datetime.strptime(start_ts, timestr))
+    # set start to last run hour (H)
+    start_ts = (
+        (datetime.strptime(last_run, timestr))
         .replace(minute=0, second=0, microsecond=0)
         .strftime(timestr)
     )
-    start_ts = (
-        (datetime.strptime(start_ts, timestr) - timedelta(minutes=60))
+    # set end to H+60
+    end_ts = (
+        (datetime.strptime(last_run, timestr) + timedelta(minutes=60))
         .replace(minute=0, second=0, microsecond=0)
         .strftime(timestr)
     )
