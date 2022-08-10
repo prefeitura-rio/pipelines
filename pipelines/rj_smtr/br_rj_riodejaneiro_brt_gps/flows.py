@@ -120,7 +120,6 @@ materialize_brt.run_config = KubernetesRun(
 materialize_brt.schedule = every_hour
 
 
-# TODO: Rever funcoes e parametros do codigo
 # with Flow(
 #     "SMTR: GPS BRT - Captura",
 #     code_owners=["caio", "fernanda"],
