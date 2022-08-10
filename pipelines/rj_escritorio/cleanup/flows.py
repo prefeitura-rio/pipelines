@@ -6,6 +6,7 @@ from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
+from pipelines.rj_escritorio.cleanup.schedules import daily_at_3am
 from pipelines.rj_escritorio.cleanup.tasks import (
     delete_flow_run,
     get_old_flow_runs,
@@ -38,3 +39,4 @@ database_cleanup_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value],
 )
+database_cleanup_flow.schedule = daily_at_3am
