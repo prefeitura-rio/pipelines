@@ -8,11 +8,8 @@ from datetime import datetime, timedelta
 import json
 import os
 from pathlib import Path
-from typing import Union, List, Dict
-
 import traceback
-from pytz import timezone
-
+from typing import Union, List, Dict
 
 from basedosdados import Storage, Table
 import basedosdados as bd
@@ -20,6 +17,7 @@ from dbt_client import DbtClient
 import pandas as pd
 import pendulum
 from prefect import task
+from pytz import timezone
 import requests
 
 from pipelines.rj_smtr.constants import constants
