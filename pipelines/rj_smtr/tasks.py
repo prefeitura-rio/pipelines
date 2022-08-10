@@ -682,6 +682,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
         dict: containing date_range_start and date_range_end
     """
     timestr = "%Y-%m-%dT%H:%M:%S"
+    # get start from redis
     start_ts = get_last_run_timestamp(
         dataset_id=dataset_id, table_id=table_id, mode=mode
     )
@@ -703,13 +704,15 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 field_name=table_date_column_name,
                 kind="max",
             ).strftime(timestr)
+    # set end to H+60
     end_ts = (
-        (datetime.strptime(start_ts, timestr))
+        (datetime.strptime(start_ts, timestr) + timedelta(minutes=60))
         .replace(minute=0, second=0, microsecond=0)
         .strftime(timestr)
     )
+    # set start to full hour and parse to str
     start_ts = (
-        (datetime.strptime(start_ts, timestr) - timedelta(minutes=60))
+        (datetime.strptime(start_ts, timestr))
         .replace(minute=0, second=0, microsecond=0)
         .strftime(timestr)
     )
