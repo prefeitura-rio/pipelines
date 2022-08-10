@@ -73,10 +73,20 @@ jobs:
           curl -sSLo ./GDAL-3.4.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl https://sourceforge.net/projects/gdal-wheels-for-linux/files/GDAL-3.4.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl/download
           python -m pip install --no-cache-dir ./GDAL-3.4.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl
 
+      - name: Get changed files for code tree analysis
+        id: files
+        uses: Ana06/get-changed-files@v2.1.0
+
+      - name: Perform code tree analysis
+        id: code-tree-analysis
+        continue-on-error: true
+        run: |
+          python .github/workflows/scripts/code_tree_analysis.py "${{ steps.files.outputs.all }}" --write-to-file
+
       - name: Forward port to Apollo
         run: |-
           bash -c "kubectl port-forward -n prefect deploy/prefect-apollo 4200:4200 &" && sleep 5
 
       - name: Register Prefect flows
         run: |-
-          python .github/workflows/scripts/register_flows.py --project $PREFECT__SERVER__PROJECT --path pipelines/ --schedule
+          python .github/workflows/scripts/register_flows.py --project $PREFECT__SERVER__PROJECT --path pipelines/ --schedule --filter-affected-flows
