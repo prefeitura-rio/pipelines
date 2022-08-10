@@ -28,6 +28,7 @@ from pipelines.rj_smtr.utils import (
     bq_project,
     get_table_min_max_value,
     get_last_run_timestamp,
+    log_critical,
     parse_dbt_logs,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
@@ -413,6 +414,21 @@ def query_logs(
             pd.to_datetime(results).dt.tz_localize(constants.TIMEZONE.value).to_list()
         )
         log(f"Recapture data for the following {len(results)} timestamps:\n{results}")
+        if len(results) > 40:
+            message = f"""
+            [SPPO - Recaptures]
+            Encontradas {len(results)} timestamps para serem recapturadas.
+            Essa run processará as seguintes:
+            #####
+            {results[:40]}
+            #####
+            Sobraram as seguintes para serem recapturadas na próxima run:
+            #####
+            {results[40:]}
+            #####
+            """
+            log_critical(message)
+            results = results[:40]
         return True, results
     return False, []
 
@@ -448,9 +464,6 @@ def get_raw(url: str, headers: dict = None) -> Dict:
         data = response.json()
         if isinstance(data, dict) and "DescricaoErro" in data.keys():
             error = data["DescricaoErro"]
-            log(f"[CATCHED] Task failed with error: \n{error}", level="error")
-        elif len(data) == 0:
-            error = "Data returned from API is empty."
             log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return {"data": data, "error": error}
