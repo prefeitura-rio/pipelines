@@ -14,6 +14,6 @@ class constants(Enum):  # pylint: disable=c0103
     PATH_BASE_ENDERECOS = "/tmp/base_enderecos.csv"
     DATASET_ID = "administracao_servicos_publicos"
     TABLE_ID_EVENTOS = "eventos"
-    TABLE_ID_ATIVIDADES_EVENTOS = "atividades_eventos"
+    TABLE_ID_ATIVIDADES_EVENTOS = "eventos_atividades"
     TABLE_ID_POPS = "procedimento_operacional_padrao"
     TABLE_ID_ATIVIDADES_POPS = "atividades_orgaos_responsaveis_pop"
