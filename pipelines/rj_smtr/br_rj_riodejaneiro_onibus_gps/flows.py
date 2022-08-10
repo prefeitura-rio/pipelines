@@ -27,7 +27,7 @@ from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
 from pipelines.rj_smtr.constants import constants
 
 from pipelines.rj_smtr.schedules import (
-    every_minute_dev,
+    every_minute,
     every_hour_minute_six,
 )
 from pipelines.rj_smtr.tasks import (
@@ -131,7 +131,7 @@ with Flow(
 materialize_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 materialize_sppo.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
 
@@ -194,16 +194,15 @@ with Flow(
 captura_sppo_v2.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_sppo_v2.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-captura_sppo_v2.schedule = every_minute_dev
+captura_sppo_v2.schedule = every_minute
 
 
 with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as recaptura:
 
     version = Parameter("version", default=2)
     datetime_filter = Parameter("datetime_filter", default=None)
-    # deixar schedule em dev na branch de staging
     # SETUP #
     LABELS = get_current_flow_labels()
     errors, timestamps = query_logs(
@@ -213,13 +212,13 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
     )
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="GPS SPPO: ", now_time=get_now_time(), wait=timestamps
+        prefix="GPS SPPO Recapturas: ", now_time=get_now_time(), wait=timestamps
     )
 
     with case(errors, False):
         materialize_no_errors = create_flow_run(
             flow_name=materialize_sppo.name,
-            project_name="staging",
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=LABELS,
             run_name=materialize_sppo.name,
         )
@@ -274,10 +273,11 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
             parent_table_id=unmapped(constants.GPS_SPPO_RAW_TABLE_ID.value),
             error=error,
             timestamp=timestamps,
+            recapture=unmapped(True),
         )
         materialize = create_flow_run(
             flow_name=materialize_sppo.name,
-            project_name="staging",
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=LABELS,
             run_name=materialize_sppo.name,
         )
@@ -292,6 +292,6 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
 recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 recaptura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 recaptura.schedule = every_hour_minute_six

@@ -28,6 +28,7 @@ from pipelines.rj_smtr.utils import (
     bq_project,
     get_table_min_max_value,
     get_last_run_timestamp,
+    log_critical,
     parse_dbt_logs,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
@@ -413,6 +414,21 @@ def query_logs(
             pd.to_datetime(results).dt.tz_localize(constants.TIMEZONE.value).to_list()
         )
         log(f"Recapture data for the following {len(results)} timestamps:\n{results}")
+        if len(results) > 40:
+            message = f"""
+            [SPPO - Recaptures]
+            Encontradas {len(results)} timestamps para serem recapturadas.
+            Essa run processará as seguintes:
+            #####
+            {results[:40]}
+            #####
+            Sobraram as seguintes para serem recapturadas na próxima run:
+            #####
+            {results[40:]}
+            #####
+            """
+            log_critical(message)
+            results = results[:40]
         return True, results
     return False, []
 
@@ -448,9 +464,6 @@ def get_raw(url: str, headers: dict = None) -> Dict:
         data = response.json()
         if isinstance(data, dict) and "DescricaoErro" in data.keys():
             error = data["DescricaoErro"]
-            log(f"[CATCHED] Task failed with error: \n{error}", level="error")
-        elif len(data) == 0:
-            error = "Data returned from API is empty."
             log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return {"data": data, "error": error}
@@ -572,7 +585,11 @@ def bq_upload_from_dict(paths: dict, dataset_id: str, partition_levels: int = 1)
 
 @task
 def upload_logs_to_bq(
-    dataset_id: str, parent_table_id: str, timestamp: str, error: str = None
+    dataset_id: str,
+    parent_table_id: str,
+    timestamp: str,
+    error: str = None,
+    recapture: bool = False,
 ):
     """
     Upload execution status table to BigQuery.
@@ -595,13 +612,33 @@ def upload_logs_to_bq(
     )
     filepath.parent.mkdir(exist_ok=True, parents=True)
     # Create dataframe to be uploaded
-    dataframe = pd.DataFrame(
-        {
-            "timestamp_captura": [timestamp],
-            "sucesso": [error is None],
-            "erro": [error],
-        }
-    )
+    if recapture is True:
+        # if the recapture is succeeded, update the column erro
+        if error is None:
+            dataframe = pd.DataFrame(
+                {
+                    "timestamp_captura": [timestamp],
+                    "sucesso": [True],
+                    "erro": ["[recapturado]"],
+                }
+            )
+        # if any iteration of the recapture fails, upload logs with error
+        else:
+            dataframe = pd.DataFrame(
+                {
+                    "timestamp_captura": [timestamp],
+                    "sucesso": [error is None],
+                    "erro": [f"[recapturado] {error}"],
+                }
+            )
+    else:
+        dataframe = pd.DataFrame(
+            {
+                "timestamp_captura": [timestamp],
+                "sucesso": [error is None],
+                "erro": [error],
+            }
+        )
     # Save data local
     dataframe.to_csv(filepath, index=False)
     # Upload to Storage
@@ -648,7 +685,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
     start_ts = get_last_run_timestamp(
         dataset_id=dataset_id, table_id=table_id, mode=mode
     )
-
+    # if there's no timestamp set on redis, get max timestamp on source table
     if start_ts is None:
         if Table(dataset_id=dataset_id, table_id=table_id).table_exists("prod"):
             start_ts = get_table_min_max_value(
@@ -666,12 +703,17 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 field_name=table_date_column_name,
                 kind="max",
             ).strftime(timestr)
-    start_ts = (datetime.strptime(start_ts, timestr) - timedelta(minutes=66)).strftime(
-        timestr
-    )
     end_ts = (
-        datetime.now(timezone(constants.TIMEZONE.value)) - timedelta(minutes=66)
-    ).strftime(timestr)
+        (datetime.strptime(start_ts, timestr))
+        .replace(minute=0, second=0, microsecond=0)
+        .strftime(timestr)
+    )
+    start_ts = (
+        (datetime.strptime(start_ts, timestr) - timedelta(minutes=60))
+        .replace(minute=0, second=0, microsecond=0)
+        .strftime(timestr)
+    )
+
     date_range = {"date_range_start": start_ts, "date_range_end": end_ts}
     return date_range
 
