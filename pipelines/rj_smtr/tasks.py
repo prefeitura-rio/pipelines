@@ -619,7 +619,7 @@ def upload_logs_to_bq(
                 {
                     "timestamp_captura": [timestamp],
                     "sucesso": [True],
-                    "erro": ["[recapturado] erro descohecido"],
+                    "erro": ["[recapturado]"],
                 }
             )
         # if any iteration of the recapture fails, upload logs with error
