@@ -34,6 +34,7 @@ Tasks for br_rj_riodejaneiro_onibus_gps
 
 import traceback
 from datetime import datetime, timedelta
+from typing import Dict
 import pandas as pd
 from prefect import task
 import pendulum
@@ -50,10 +51,18 @@ from pipelines.rj_smtr.constants import constants
 
 
 @task
-def create_api_url_onibus_gps(url: str, source: str, timestamp: datetime = None):
+def create_api_url_onibus_gps(version: str, timestamp: datetime = None) -&gt; str:
     &#34;&#34;&#34;
     Generates the complete URL to get data from API.
     &#34;&#34;&#34;
+
+    if version == 2:
+        url = constants.GPS_SPPO_API_BASE_URL_V2.value
+        source = constants.GPS_SPPO_API_SECRET_PATH_V2.value
+    if version == 1:
+        url = constants.GPS_SPPO_API_BASE_URL.value
+        source = constants.GPS_SPPO_API_SECRET_PATH.value
+
     if not timestamp:
         timestamp = pendulum.now(constants.TIMEZONE.value).replace(
             second=0, microsecond=0
@@ -77,37 +86,34 @@ def create_api_url_onibus_gps(url: str, source: str, timestamp: datetime = None)
 @task
 # pylint: disable=too-many-locals
 def pre_treatment_br_rj_riodejaneiro_onibus_gps(
-    status_dict: dict, version: int = 1, recapture: bool = False
-):
+    status: dict, timestamp: datetime, version: int = 1, recapture: bool = False
+) -&gt; Dict:
     &#34;&#34;&#34;Basic data treatment for bus gps data. Converts unix time to datetime,
     and apply filtering to stale data that may populate the API response.
 
     Args:
         status_dict (dict): dict containing the status of the request made to the
-        API. Must contain keys: data, timestamp and error
-        version (int, optional): Source API version. Temporary argument for testing
+        API. Must contain keys: data and error
+        version (int, optional): Source API version. Temporary argument
+        for testing
+        timestamp (str): Capture data timestamp.
 
     Returns:
         df: pandas.core.DataFrame containing the treated data.
     &#34;&#34;&#34;
 
-    if status_dict[&#34;error&#34;] is not None:
-        return {&#34;df&#34;: pd.DataFrame(), &#34;error&#34;: status_dict[&#34;error&#34;]}
+    if status[&#34;error&#34;] is not None:
+        return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
 
     error = None
-    data = status_dict[&#34;data&#34;]
     timezone = constants.TIMEZONE.value
-    timestamp = status_dict[&#34;timestamp&#34;]
 
-    log(f&#34;Data received to treat: \n{data.json()[:5]}&#34;)
-    data = data.json()
-    df = pd.DataFrame(data)  # pylint: disable=c0103
-    timestamp_captura = pd.to_datetime(timestamp)
-    df[&#34;timestamp_captura&#34;] = timestamp_captura
+    log(f&#34;Data received to treat: \n{status[&#39;data&#39;][:5]}&#34;)
+    df = pd.DataFrame(status[&#34;data&#34;])  # pylint: disable=c0103
+    df[&#34;timestamp_captura&#34;] = timestamp
     log(f&#34;Before converting, datahora is: \n{df[&#39;datahora&#39;]}&#34;)
 
     # Remove timezone and force it to be config timezone
-
     if version == 1:
         timestamp_cols = [&#34;datahora&#34;]
     elif version == 2:
@@ -116,7 +122,6 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
         timestamp_cols.append(&#34;datahoraservidor&#34;)
     for col in timestamp_cols:
         print(f&#34;Before converting, {col} is: \n{df[col].head()}&#34;)  # log
-        # Remove timezone and force it to be config timezone
         df[col] = (
             pd.to_datetime(df[col].astype(float), unit=&#34;ms&#34;)
             .dt.tz_localize(tz=&#34;UTC&#34;)
@@ -153,21 +158,20 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
             &#34;linha&#34;,
             &#34;timestamp_captura&#34;,
         ]
-        df = df = df[mask][cols]  # pylint: disable=c0103
+        df = df[mask][cols]  # pylint: disable=c0103
+        df = df.drop_duplicates(  # pylint: disable=c0103
+            [&#34;ordem&#34;, &#34;latitude&#34;, &#34;longitude&#34;, &#34;datahora&#34;, &#34;timestamp_captura&#34;]
+        )
 
         log(f&#34;Shape after filtering: {df.shape}&#34;)
         if df.shape[0] == 0:
             error = ValueError(&#34;After filtering, the dataframe is empty!&#34;)
+            log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
     except Exception:  # pylint: disable = W0703
         error = traceback.format_exc()
+        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
 
-    return {
-        &#34;df&#34;: df.drop_duplicates(
-            [&#34;ordem&#34;, &#34;latitude&#34;, &#34;longitude&#34;, &#34;datahora&#34;, &#34;timestamp_captura&#34;]
-        ),
-        &#34;error&#34;: error,
-        &#34;timestamp&#34;: timestamp,
-    }</code></pre>
+    return {&#34;data&#34;: df, &#34;error&#34;: error}</code></pre>
 </details>
 </section>
 <section>
@@ -178,7 +182,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks.create_api_url_onibus_gps"><code class="name flex">
-<span>def <span class="ident">create_api_url_onibus_gps</span></span>(<span>url: str, source: str, timestamp: datetime.datetime = None)</span>
+<span>def <span class="ident">create_api_url_onibus_gps</span></span>(<span>version: str, timestamp: datetime.datetime = None) ‑> str</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Generates the complete URL to get data from API.</p></div>
@@ -187,10 +191,18 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def create_api_url_onibus_gps(url: str, source: str, timestamp: datetime = None):
+def create_api_url_onibus_gps(version: str, timestamp: datetime = None) -&gt; str:
     &#34;&#34;&#34;
     Generates the complete URL to get data from API.
     &#34;&#34;&#34;
+
+    if version == 2:
+        url = constants.GPS_SPPO_API_BASE_URL_V2.value
+        source = constants.GPS_SPPO_API_SECRET_PATH_V2.value
+    if version == 1:
+        url = constants.GPS_SPPO_API_BASE_URL.value
+        source = constants.GPS_SPPO_API_SECRET_PATH.value
+
     if not timestamp:
         timestamp = pendulum.now(constants.TIMEZONE.value).replace(
             second=0, microsecond=0
@@ -212,7 +224,7 @@ def create_api_url_onibus_gps(url: str, source: str, timestamp: datetime = None)
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks.pre_treatment_br_rj_riodejaneiro_onibus_gps"><code class="name flex">
-<span>def <span class="ident">pre_treatment_br_rj_riodejaneiro_onibus_gps</span></span>(<span>status_dict: dict, version: int = 1, recapture: bool = False)</span>
+<span>def <span class="ident">pre_treatment_br_rj_riodejaneiro_onibus_gps</span></span>(<span>status: dict, timestamp: datetime.datetime, version: int = 1, recapture: bool = False) ‑> Dict</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Basic data treatment for bus gps data. Converts unix time to datetime,
@@ -221,9 +233,12 @@ and apply filtering to stale data that may populate the API response.</p>
 <dl>
 <dt><strong><code>status_dict</code></strong> :&ensp;<code>dict</code></dt>
 <dd>dict containing the status of the request made to the</dd>
-<dt>API. Must contain keys: data, timestamp and error</dt>
+<dt>API. Must contain keys: data and error</dt>
 <dt><strong><code>version</code></strong> :&ensp;<code>int</code>, optional</dt>
-<dd>Source API version. Temporary argument for testing</dd>
+<dd>Source API version. Temporary argument</dd>
+<dt>for testing</dt>
+<dt><strong><code>timestamp</code></strong> :&ensp;<code>str</code></dt>
+<dd>Capture data timestamp.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -237,37 +252,34 @@ and apply filtering to stale data that may populate the API response.</p>
 <pre><code class="python">@task
 # pylint: disable=too-many-locals
 def pre_treatment_br_rj_riodejaneiro_onibus_gps(
-    status_dict: dict, version: int = 1, recapture: bool = False
-):
+    status: dict, timestamp: datetime, version: int = 1, recapture: bool = False
+) -&gt; Dict:
     &#34;&#34;&#34;Basic data treatment for bus gps data. Converts unix time to datetime,
     and apply filtering to stale data that may populate the API response.
 
     Args:
         status_dict (dict): dict containing the status of the request made to the
-        API. Must contain keys: data, timestamp and error
-        version (int, optional): Source API version. Temporary argument for testing
+        API. Must contain keys: data and error
+        version (int, optional): Source API version. Temporary argument
+        for testing
+        timestamp (str): Capture data timestamp.
 
     Returns:
         df: pandas.core.DataFrame containing the treated data.
     &#34;&#34;&#34;
 
-    if status_dict[&#34;error&#34;] is not None:
-        return {&#34;df&#34;: pd.DataFrame(), &#34;error&#34;: status_dict[&#34;error&#34;]}
+    if status[&#34;error&#34;] is not None:
+        return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
 
     error = None
-    data = status_dict[&#34;data&#34;]
     timezone = constants.TIMEZONE.value
-    timestamp = status_dict[&#34;timestamp&#34;]
 
-    log(f&#34;Data received to treat: \n{data.json()[:5]}&#34;)
-    data = data.json()
-    df = pd.DataFrame(data)  # pylint: disable=c0103
-    timestamp_captura = pd.to_datetime(timestamp)
-    df[&#34;timestamp_captura&#34;] = timestamp_captura
+    log(f&#34;Data received to treat: \n{status[&#39;data&#39;][:5]}&#34;)
+    df = pd.DataFrame(status[&#34;data&#34;])  # pylint: disable=c0103
+    df[&#34;timestamp_captura&#34;] = timestamp
     log(f&#34;Before converting, datahora is: \n{df[&#39;datahora&#39;]}&#34;)
 
     # Remove timezone and force it to be config timezone
-
     if version == 1:
         timestamp_cols = [&#34;datahora&#34;]
     elif version == 2:
@@ -276,7 +288,6 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
         timestamp_cols.append(&#34;datahoraservidor&#34;)
     for col in timestamp_cols:
         print(f&#34;Before converting, {col} is: \n{df[col].head()}&#34;)  # log
-        # Remove timezone and force it to be config timezone
         df[col] = (
             pd.to_datetime(df[col].astype(float), unit=&#34;ms&#34;)
             .dt.tz_localize(tz=&#34;UTC&#34;)
@@ -313,21 +324,20 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
             &#34;linha&#34;,
             &#34;timestamp_captura&#34;,
         ]
-        df = df = df[mask][cols]  # pylint: disable=c0103
+        df = df[mask][cols]  # pylint: disable=c0103
+        df = df.drop_duplicates(  # pylint: disable=c0103
+            [&#34;ordem&#34;, &#34;latitude&#34;, &#34;longitude&#34;, &#34;datahora&#34;, &#34;timestamp_captura&#34;]
+        )
 
         log(f&#34;Shape after filtering: {df.shape}&#34;)
         if df.shape[0] == 0:
             error = ValueError(&#34;After filtering, the dataframe is empty!&#34;)
+            log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
     except Exception:  # pylint: disable = W0703
         error = traceback.format_exc()
+        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
 
-    return {
-        &#34;df&#34;: df.drop_duplicates(
-            [&#34;ordem&#34;, &#34;latitude&#34;, &#34;longitude&#34;, &#34;datahora&#34;, &#34;timestamp_captura&#34;]
-        ),
-        &#34;error&#34;: error,
-        &#34;timestamp&#34;: timestamp,
-    }</code></pre>
+    return {&#34;data&#34;: df, &#34;error&#34;: error}</code></pre>
 </details>
 </dd>
 </dl>

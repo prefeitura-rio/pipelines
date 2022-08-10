@@ -32,96 +32,96 @@
 Flows for br_rj_riodejaneiro_stpl_gps
 &#34;&#34;&#34;
 
-from prefect import Parameter
-from prefect.run_configs import KubernetesRun
-from prefect.storage import GCS
+# from prefect import Parameter
+# from prefect.run_configs import KubernetesRun
+# from prefect.storage import GCS
 
-# EMD Imports #
+# # EMD Imports #
 
-from pipelines.constants import constants as emd_constants
-from pipelines.utils.decorators import Flow
-from pipelines.utils.tasks import rename_current_flow_run_now_time, get_now_time
+# from pipelines.constants import constants as emd_constants
+# from pipelines.utils.decorators import Flow
+# from pipelines.utils.tasks import rename_current_flow_run_now_time, get_now_time
 
-# SMTR Imports #
+# # SMTR Imports #
 
-from pipelines.rj_smtr.constants import constants
+# from pipelines.rj_smtr.constants import constants
 
 # from pipelines.rj_smtr.schedules import every_minute
-from pipelines.rj_smtr.tasks import (
-    create_current_date_hour_partition,
-    create_local_partition_path,
-    get_raw,
-    save_raw_local,
-    save_treated_local,
-    upload_logs_to_bq,
-    bq_upload,
-)
+# from pipelines.rj_smtr.tasks import (
+#     create_current_date_hour_partition,
+#     create_local_partition_path,
+#     get_raw,
+#     save_raw_local,
+#     save_treated_local,
+#     upload_logs_to_bq,
+#     bq_upload,
+# )
 
-from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks import (
-    pre_treatment_br_rj_riodejaneiro_stpl_gps,
-)
+# from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks import (
+#     pre_treatment_br_rj_riodejaneiro_stpl_gps,
+# )
 
 
-# Flows #
+# # Flows #
 
-with Flow(
-    &#34;SMTR: GPS STPL - Captura&#34;,
-    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;],
-) as stpl_captura:
+# with Flow(
+#     &#34;SMTR: GPS STPL - Captura&#34;,
+#     code_owners=[&#34;caio&#34;, &#34;fernanda&#34;],
+# ) as stpl_captura:
 
-    # Rename flow run
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix=&#34;SMTR: GPS STPL - Materialização - &#34;, now_time=get_now_time()
-    )
+#     # Rename flow run
+#     rename_flow_run = rename_current_flow_run_now_time(
+#         prefix=&#34;SMTR: GPS STPL - Materialização - &#34;, now_time=get_now_time()
+#     )
 
-    # Get default parameters #
-    dataset_id = Parameter(&#34;dataset_id&#34;, default=constants.GPS_STPL_DATASET_ID.value)
-    table_id = Parameter(&#34;table_id&#34;, default=constants.GPS_STPL_RAW_TABLE_ID.value)
-    url = Parameter(&#34;url&#34;, default=constants.GPS_STPL_API_BASE_URL.value)
-    secret_path = Parameter(
-        &#34;secret_path&#34;, default=constants.GPS_STPL_API_SECRET_PATH.value
-    )
+#     # Get default parameters #
+#     dataset_id = Parameter(&#34;dataset_id&#34;, default=constants.GPS_STPL_DATASET_ID.value)
+#     table_id = Parameter(&#34;table_id&#34;, default=constants.GPS_STPL_RAW_TABLE_ID.value)
+#     url = Parameter(&#34;url&#34;, default=constants.GPS_STPL_API_BASE_URL.value)
+#     secret_path = Parameter(
+#         &#34;secret_path&#34;, default=constants.GPS_STPL_API_SECRET_PATH.value
+#     )
 
-    file_dict = create_current_date_hour_partition()
+#     file_dict = create_current_date_hour_partition()
 
-    filepath = create_local_partition_path(
-        dataset_id=dataset_id,
-        table_id=table_id,
-        filename=file_dict[&#34;filename&#34;],
-        partitions=file_dict[&#34;partitions&#34;],
-    )
+#     filepath = create_local_partition_path(
+#         dataset_id=dataset_id,
+#         table_id=table_id,
+#         filename=file_dict[&#34;filename&#34;],
+#         partitions=file_dict[&#34;partitions&#34;],
+#     )
 
-    status_dict = get_raw(url=url)
+#     status_dict = get_raw(url=url)
 
-    raw_filepath = save_raw_local(data=status_dict[&#34;data&#34;], file_path=filepath)
+#     raw_filepath = save_raw_local(data=status_dict[&#34;data&#34;], file_path=filepath)
 
-    treated_status = pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict=status_dict)
+#     treated_status = pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict=status_dict)
 
-    upload_logs_to_bq(
-        dataset_id=dataset_id,
-        parent_table_id=table_id,
-        timestamp=status_dict[&#34;timestamp&#34;],
-        error=status_dict[&#34;error&#34;],
-    )
+#     upload_logs_to_bq(
+#         dataset_id=dataset_id,
+#         parent_table_id=table_id,
+#         timestamp=status_dict[&#34;timestamp&#34;],
+#         error=status_dict[&#34;error&#34;],
+#     )
 
-    treated_filepath = save_treated_local(
-        dataframe=treated_status[&#34;df&#34;], file_path=filepath
-    )
+#     treated_filepath = save_treated_local(
+#         dataframe=treated_status[&#34;df&#34;], file_path=filepath
+#     )
 
-    bq_upload(
-        dataset_id=dataset_id,
-        table_id=table_id,
-        filepath=treated_filepath,
-        raw_filepath=raw_filepath,
-        partitions=file_dict[&#34;partitions&#34;],
-    )
-    stpl_captura.set_dependencies(task=file_dict, upstream_tasks=[rename_flow_run])
+#     bq_upload(
+#         dataset_id=dataset_id,
+#         table_id=table_id,
+#         filepath=treated_filepath,
+#         raw_filepath=raw_filepath,
+#         partitions=file_dict[&#34;partitions&#34;],
+#     )
+#     stpl_captura.set_dependencies(task=file_dict, upstream_tasks=[rename_flow_run])
 
-stpl_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-stpl_captura.run_config = KubernetesRun(
-    image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
-)
+# stpl_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+# stpl_captura.run_config = KubernetesRun(
+#     image=emd_constants.DOCKER_IMAGE.value,
+#     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+# )
 # stpl_captura.schedule = every_minute</code></pre>
 </details>
 </section>

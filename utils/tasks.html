@@ -39,6 +39,7 @@ from pathlib import Path
 from typing import List, Union, Any
 
 import basedosdados as bd
+import pandas as pd
 import pendulum
 import prefect
 from prefect import task
@@ -307,7 +308,40 @@ def check_table_exists(
     tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
     exists = tb.table_exists(mode=&#34;staging&#34;)
     log(f&#34;Table {dataset_id}.{table_id} exists in staging: {exists}&#34;)
-    return exists</code></pre>
+    return exists
+
+
+@task(checkpoint=False)
+def to_json_dataframe(
+    dataframe: pd.DataFrame = None,
+    csv_path: Union[str, Path] = None,
+    key_column: str = None,
+    read_csv_kwargs: dict = None,
+    save_to: Union[str, Path] = None,
+) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Manipulates a dataframe by keeping key_column and moving every other column
+    data to a &#34;content&#34; column in JSON format. Example:
+
+    - Input dataframe: pd.DataFrame({&#34;key&#34;: [&#34;a&#34;, &#34;b&#34;, &#34;c&#34;], &#34;col1&#34;: [1, 2, 3], &#34;col2&#34;: [4, 5, 6]})
+    - Output dataframe: pd.DataFrame({
+        &#34;key&#34;: [&#34;a&#34;, &#34;b&#34;, &#34;c&#34;],
+        &#34;content&#34;: [{&#34;col1&#34;: 1, &#34;col2&#34;: 4}, {&#34;col1&#34;: 2, &#34;col2&#34;: 5}, {&#34;col1&#34;: 3, &#34;col2&#34;: 6}]
+    })
+    &#34;&#34;&#34;
+    if not key_column:
+        raise ValueError(&#34;key_column is required&#34;)
+    if not dataframe and not csv_path:
+        raise ValueError(&#34;dataframe or dataframe_path is required&#34;)
+    if csv_path:
+        dataframe = pd.read_csv(csv_path, **read_csv_kwargs)
+    dataframe[&#34;content&#34;] = dataframe.drop(columns=[key_column]).to_dict(
+        orient=&#34;records&#34;
+    )
+    dataframe = dataframe[[&#34;key&#34;, &#34;content&#34;]]
+    if save_to:
+        dataframe.to_csv(save_to, index=False)
+    return dataframe</code></pre>
 </details>
 </section>
 <section>
@@ -644,6 +678,56 @@ def rename_current_flow_run_now_time(prefix: str, now_time=None, wait=None) -&gt
     return client.set_flow_run_name(flow_run_id, f&#34;{prefix}{now_time}&#34;)</code></pre>
 </details>
 </dd>
+<dt id="pipelines.utils.tasks.to_json_dataframe"><code class="name flex">
+<span>def <span class="ident">to_json_dataframe</span></span>(<span>dataframe: pandas.core.frame.DataFrame = None, csv_path: Union[str, pathlib.Path] = None, key_column: str = None, read_csv_kwargs: dict = None, save_to: Union[str, pathlib.Path] = None) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Manipulates a dataframe by keeping key_column and moving every other column
+data to a "content" column in JSON format. Example:</p>
+<ul>
+<li>Input dataframe: pd.DataFrame({"key": ["a", "b", "c"], "col1": [1, 2, 3], "col2": [4, 5, 6]})</li>
+<li>Output dataframe: pd.DataFrame({
+"key": ["a", "b", "c"],
+"content": [{"col1": 1, "col2": 4}, {"col1": 2, "col2": 5}, {"col1": 3, "col2": 6}]
+})</li>
+</ul></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(checkpoint=False)
+def to_json_dataframe(
+    dataframe: pd.DataFrame = None,
+    csv_path: Union[str, Path] = None,
+    key_column: str = None,
+    read_csv_kwargs: dict = None,
+    save_to: Union[str, Path] = None,
+) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Manipulates a dataframe by keeping key_column and moving every other column
+    data to a &#34;content&#34; column in JSON format. Example:
+
+    - Input dataframe: pd.DataFrame({&#34;key&#34;: [&#34;a&#34;, &#34;b&#34;, &#34;c&#34;], &#34;col1&#34;: [1, 2, 3], &#34;col2&#34;: [4, 5, 6]})
+    - Output dataframe: pd.DataFrame({
+        &#34;key&#34;: [&#34;a&#34;, &#34;b&#34;, &#34;c&#34;],
+        &#34;content&#34;: [{&#34;col1&#34;: 1, &#34;col2&#34;: 4}, {&#34;col1&#34;: 2, &#34;col2&#34;: 5}, {&#34;col1&#34;: 3, &#34;col2&#34;: 6}]
+    })
+    &#34;&#34;&#34;
+    if not key_column:
+        raise ValueError(&#34;key_column is required&#34;)
+    if not dataframe and not csv_path:
+        raise ValueError(&#34;dataframe or dataframe_path is required&#34;)
+    if csv_path:
+        dataframe = pd.read_csv(csv_path, **read_csv_kwargs)
+    dataframe[&#34;content&#34;] = dataframe.drop(columns=[key_column]).to_dict(
+        orient=&#34;records&#34;
+    )
+    dataframe = dataframe[[&#34;key&#34;, &#34;content&#34;]]
+    if save_to:
+        dataframe.to_csv(save_to, index=False)
+    return dataframe</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -718,6 +802,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.utils.tasks.log_task" href="#pipelines.utils.tasks.log_task">log_task</a></code></li>
 <li><code><a title="pipelines.utils.tasks.rename_current_flow_run_dataset_table" href="#pipelines.utils.tasks.rename_current_flow_run_dataset_table">rename_current_flow_run_dataset_table</a></code></li>
 <li><code><a title="pipelines.utils.tasks.rename_current_flow_run_now_time" href="#pipelines.utils.tasks.rename_current_flow_run_now_time">rename_current_flow_run_now_time</a></code></li>
+<li><code><a title="pipelines.utils.tasks.to_json_dataframe" href="#pipelines.utils.tasks.to_json_dataframe">to_json_dataframe</a></code></li>
 </ul>
 </li>
 </ul>

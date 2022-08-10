@@ -39,7 +39,9 @@ import os
 from pathlib import Path
 from typing import Union, List, Dict
 
+import traceback
 from pytz import timezone
+
 
 from basedosdados import Storage, Table
 import basedosdados as bd
@@ -55,6 +57,7 @@ from pipelines.rj_smtr.utils import (
     bq_project,
     get_table_min_max_value,
     get_last_run_timestamp,
+    log_critical,
     parse_dbt_logs,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
@@ -229,6 +232,36 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
 
 
 @task
+def get_current_timestamp(
+    timestamp: datetime = None, truncate_minute: bool = True
+) -&gt; datetime:
+    &#34;&#34;&#34;
+    Get current timestamp for flow run.
+    &#34;&#34;&#34;
+    if not timestamp:
+        timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
+    if truncate_minute:
+        return timestamp.replace(second=0, microsecond=0)
+    return timestamp
+
+
+@task
+def create_date_hour_partition(timestamp: datetime) -&gt; str:
+    &#34;&#34;&#34;
+    Get date hour Hive partition structure from timestamp.
+    &#34;&#34;&#34;
+    return f&#34;data={timestamp.strftime(&#39;%Y-%m-%d&#39;)}/hora={timestamp.strftime(&#39;%H&#39;)}&#34;
+
+
+@task
+def parse_timestamp_to_string(timestamp: datetime, pattern=&#34;%Y-%m-%d-%H-%M-%S&#34;) -&gt; str:
+    &#34;&#34;&#34;
+    Parse timestamp to string pattern.
+    &#34;&#34;&#34;
+    return timestamp.strftime(pattern)
+
+
+@task
 def create_current_date_hour_partition(capture_time=None):
     &#34;&#34;&#34;Create partitioned directory structure to save data locally based
     on capture time.
@@ -242,101 +275,87 @@ def create_current_date_hour_partition(capture_time=None):
         dict: &#34;filename&#34; contains the name which to upload the csv, &#34;partitions&#34; contains
         the partitioned directory path
     &#34;&#34;&#34;
-    tz = constants.TIMEZONE.value  # pylint: disable=C0103
     if capture_time is None:
-        capture_time = pendulum.now(tz).replace(second=0, microsecond=0)
+        capture_time = datetime.now(tz=constants.TIMEZONE.value).replace(
+            minute=0, second=0, microsecond=0
+        )
     date = capture_time.strftime(&#34;%Y-%m-%d&#34;)
     hour = capture_time.strftime(&#34;%H&#34;)
 
     return {
         &#34;filename&#34;: capture_time.strftime(&#34;%Y-%m-%d-%H-%M-%S&#34;),
         &#34;partitions&#34;: f&#34;data={date}/hora={hour}&#34;,
+        &#34;timestamp&#34;: capture_time,
     }
 
 
 @task
 def create_local_partition_path(
-    dataset_id, table_id, filename=None, partitions=None, file_dict=None
-):
-    &#34;&#34;&#34;Get the full path which to save data locally before upload.
-    If passing file_dict, should not pass filename and partitions
-    separately.
+    dataset_id: str, table_id: str, filename: str, partitions: str = None
+) -&gt; str:
+    &#34;&#34;&#34;
+    Create the full path sctructure which to save data locally before
+    upload.
 
     Args:
         dataset_id (str): dataset_id on BigQuery
         table_id (str): table_id on BigQuery
         filename (str, optional): Single csv name
         partitions (str, optional): Partitioned directory structure, ie &#34;ano=2022/mes=03/data=01&#34;
-        file_dict(dict, optional): containing keys &#39;filename&#39; and &#39;partitions&#39;,
-        used for running task with map
     Returns:
-        str: Final path which to save files
+        str: String path having `mode` and `filetype` to be replaced afterwards,
+    either to save raw or staging files.
     &#34;&#34;&#34;
-    if file_dict:
-        filename = file_dict[&#34;filename&#34;]
-        partitions = file_dict[&#34;partitions&#34;]
-    # If not specific table_id, use resource one
-    # if not table_id:
-    #     table_id = context.resources.basedosdados_config[&#34;table_id&#34;]
-    # dataset_id = context.resources.basedosdados_config[&#34;dataset_id&#34;]
-
-    # Get data folder from environment variable
     data_folder = os.getenv(&#34;DATA_FOLDER&#34;, &#34;data&#34;)
-
     file_path = f&#34;{os.getcwd()}/{data_folder}/{{mode}}/{dataset_id}/{table_id}&#34;
     file_path += f&#34;/{partitions}/{filename}.{{filetype}}&#34;
     log(f&#34;Creating file path: {file_path}&#34;)
-
     return file_path
 
 
 @task
-def save_raw_local(file_path, data=None, status_dict=None, mode=&#34;raw&#34;):
-    &#34;&#34;&#34;Dumps json response from API to .json file. If passing status_dict
-    should not pass data separately
+def save_raw_local(file_path: str, status: dict, mode: str = &#34;raw&#34;) -&gt; str:
+    &#34;&#34;&#34;
+    Saves json response from API to .json file.
 
     Args:
         file_path (str): Path which to save raw file
-        data (response, optional): Response from API request
-        status_dict(dict, optional): containing the status of
-        upstream request task. Must contain keys &#39;data&#39;, &#39;timestamp&#39;,
-        &#39;error&#39;
+        status (dict): Must contain keys
+          * `data`: json returned from API
+          * `error`: error catched from API request
         mode (str, optional): Folder to save locally, later folder which to upload to GCS.
-        Defaults to &#34;raw&#34;.
 
     Returns:
         str: Path to the saved file
     &#34;&#34;&#34;
-    if status_dict:
-        data = status_dict[&#34;data&#34;]
     _file_path = file_path.format(mode=mode, filetype=&#34;json&#34;)
     Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
-    json.dump(data.json(), Path(_file_path).open(&#34;w&#34;, encoding=&#34;utf-8&#34;))
-
+    if status[&#34;error&#34;] is None:
+        json.dump(status[&#34;data&#34;], Path(_file_path).open(&#34;w&#34;, encoding=&#34;utf-8&#34;))
+        log(f&#34;Raw data saved to: {_file_path}&#34;)
     return _file_path
 
 
 @task
-def save_treated_local(file_path, mode=&#34;staging&#34;, dataframe=None, treated_status=None):
-    &#34;&#34;&#34;Save treated file locally. Should pass only one of args
-    dataframe or treated_status
+def save_treated_local(file_path: str, status: dict, mode: str = &#34;staging&#34;) -&gt; str:
+    &#34;&#34;&#34;
+    Save treated file to CSV.
 
     Args:
-        file_path (str): Path which to save .csv files
-        mode (str, optional): Directory to save locally, later folder which to upload to GCS.
-        Defaults to &#34;staging&#34;.
-        dataframe (pandas.core.DataFrame, optional): Data to save as .csv file
-        treated_status(dict, optional): used for running task with map.
-        Must contain keys &#39;df&#39; and &#39;error&#39;.
+        file_path (str): Path which to save treated file
+        status (dict): Must contain keys
+          * `data`: dataframe returned from treatement
+          * `error`: error catched from data treatement
+        mode (str, optional): Folder to save locally, later folder which to upload to GCS.
+
     Returns:
         str: Path to the saved file
     &#34;&#34;&#34;
-    if treated_status:
-        dataframe = treated_status[&#34;df&#34;]
     _file_path = file_path.format(mode=mode, filetype=&#34;csv&#34;)
     Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
-    dataframe.to_csv(_file_path, index=False)
-
+    if status[&#34;error&#34;] is None:
+        status[&#34;data&#34;].to_csv(_file_path, index=False)
+        log(f&#34;Treated data saved to: {_file_path}&#34;)
     return _file_path
 
 
@@ -351,69 +370,112 @@ def query_logs(
     table_id: str,
     datetime_filter=None,
 ):
-    &#34;&#34;&#34;Queries capture logs to check for errors
+    &#34;&#34;&#34;
+    Queries capture logs to check for errors
 
     Args:
         dataset_id (str): dataset_id on BigQuery
         table_id (str): table_id on BigQuery
         datetime_filter (pendulum.datetime.DateTime, optional):
         filter passed to query. This task will query the logs table
-        for the last 1 hour before this filter
+        for the last 1 day before datetime_filter
 
     Returns:
         list: containing timestamps for which the capture failed
-
     &#34;&#34;&#34;
 
     if not datetime_filter:
-        datetime_filter = pendulum.now(constants.TIMEZONE.value)
+        datetime_filter = pendulum.now(constants.TIMEZONE.value).replace(
+            second=0, microsecond=0
+        )
 
     query = f&#34;&#34;&#34;
-        SELECT *
-        FROM rj-smtr.{dataset_id}.{table_id}_logs
-        WHERE
-            data = &#39;{datetime_filter.date().isoformat()}&#39;
-        AND
-            timestamp_captura
-            BETWEEN
-            DATETIME_SUB(
-                &#39;{datetime_filter.strftime(&#39;%Y-%m-%d %H:%M:%S&#39;)}&#39;,
-                INTERVAL 1 HOUR
-            )
-            AND
-            &#39;{datetime_filter.strftime(&#39;%Y-%m-%d %H:%M:%S&#39;)}&#39;
-        AND
-            sucesso is False
-        ORDER BY timestamp_captura
+    with t as (
+    select
+        datetime(timestamp_array) as timestamp_array
+    from
+        unnest(GENERATE_TIMESTAMP_ARRAY(
+            timestamp_sub(&#39;{datetime_filter.strftime(&#39;%Y-%m-%d %H:%M:%S&#39;)}&#39;, interval 1 day),
+            timestamp(&#39;{datetime_filter.strftime(&#39;%Y-%m-%d %H:%M:%S&#39;)}&#39;),
+            interval 1 minute)
+        ) as timestamp_array
+    where timestamp_array &lt; &#39;{datetime_filter.strftime(&#39;%Y-%m-%d %H:%M:%S&#39;)}&#39;
+    ),
+    logs as (
+        select
+            *,
+            timestamp_trunc(timestamp_captura, minute) as timestamp_array
+        from
+            rj-smtr.{dataset_id}.{table_id}_logs
+        where
+            data between
+                date(datetime_sub(&#39;{datetime_filter.strftime(&#39;%Y-%m-%d %H:%M:%S&#39;)}&#39;,
+                interval 1 day))
+                and date(&#39;{datetime_filter.strftime(&#39;%Y-%m-%d %H:%M:%S&#39;)}&#39;)
+        and
+            timestamp_captura between
+                datetime_sub(&#39;{datetime_filter.strftime(&#39;%Y-%m-%d %H:%M:%S&#39;)}&#39;, interval 1 day)
+                and &#39;{datetime_filter.strftime(&#39;%Y-%m-%d %H:%M:%S&#39;)}&#39;
+        order by timestamp_captura
+    )
+    select
+        case
+            when logs.timestamp_captura is not null then logs.timestamp_captura
+            else t.timestamp_array
+        end as timestamp_captura
+    from
+        t
+    left join
+        logs
+    on
+        logs.timestamp_array = t.timestamp_array
+    where
+        logs.sucesso is not True
+    order by
+        timestamp_captura
     &#34;&#34;&#34;
-    log(f&#34;Will run query:\n{query}&#34;)
+    log(f&#34;Run query to check logs:\n{query}&#34;)
     results = bd.read_sql(query=query, billing_project_id=bq_project())[
         &#34;timestamp_captura&#34;
     ]
     if len(results) &gt; 0:
-        return True, pd.to_datetime(results).to_list()
+        results = (
+            pd.to_datetime(results).dt.tz_localize(constants.TIMEZONE.value).to_list()
+        )
+        log(f&#34;Recapture data for the following {len(results)} timestamps:\n{results}&#34;)
+        if len(results) &gt; 40:
+            message = f&#34;&#34;&#34;
+            [SPPO - Recaptures]
+            Encontradas {len(results)} timestamps para serem recapturadas.
+            Essa run processará as seguintes:
+            #####
+            {results[:40]}
+            #####
+            Sobraram as seguintes para serem recapturadas na próxima run:
+            #####
+            {results[40:]}
+            #####
+            &#34;&#34;&#34;
+            log_critical(message)
+            results = results[:40]
+        return True, results
     return False, []
 
 
 @task
-def get_raw(url: str, headers: dict = None, timestamp: datetime = None):
-    &#34;&#34;&#34;Request data from a url API
+def get_raw(url: str, headers: dict = None) -&gt; Dict:
+    &#34;&#34;&#34;
+    Request data from a url API.
+
     Args:
         url (str): URL to send request to
-        headers (dict, optional): Aditional fields to send along the request. Defaults to None.
-        source (str, optional): Source API being captured.
-        Possible values are &#39;stpl_api&#39;, &#39;brt_api&#39;, &#39;sppo_api&#39; and &#39;sppo_api_v2&#39;.
-        timestamp(pendulum.datetime.DateTime, optional): timestamp of the request
-        time. Defaults to None.
+        headers (dict, optional): Aditional fields to send along the request.
     Returns:
-        dict: &#34;data&#34; contains the response object from the request, &#34;timestamp&#34; contains
-        the run time timestamp, &#34;error&#34; catches errors that may occur during task execution.
+        dict: Conatining keys
+          * `data`: json returned from API
+          * `error`: error catched from API request
     &#34;&#34;&#34;
     data = None
-    if not timestamp:
-        timestamp = pendulum.now(constants.TIMEZONE.value).replace(
-            second=0, microsecond=0
-        )
 
     # Get data from API
     try:
@@ -423,23 +485,17 @@ def get_raw(url: str, headers: dict = None, timestamp: datetime = None):
         error = None
     except Exception as exp:
         error = exp
+        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+        return {&#34;data&#34;: None, &#34;error&#34;: error}
 
     # Check data results
     if response.ok:  # status code is less than 400
         data = response.json()
         if isinstance(data, dict) and &#34;DescricaoErro&#34; in data.keys():
             error = data[&#34;DescricaoErro&#34;]
-        elif len(data) == 0:
-            error = &#34;Data returned from API is empty.&#34;
-            log(error)
+            log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
 
-        return {
-            &#34;data&#34;: response,
-            &#34;error&#34;: error,
-            &#34;timestamp&#34;: timestamp.isoformat(),
-        }
-
-    return {&#34;data&#34;: response, &#34;timestamp&#34;: timestamp.isoformat(), &#34;error&#34;: error}
+    return {&#34;data&#34;: data, &#34;error&#34;: error}
 
 
 ###############
@@ -451,11 +507,15 @@ def get_raw(url: str, headers: dict = None, timestamp: datetime = None):
 
 @task
 def bq_upload(
-    dataset_id, table_id, filepath, raw_filepath=None, partitions=None, file_dict=None
+    dataset_id: str,
+    table_id: str,
+    filepath: str,
+    raw_filepath: str = None,
+    partitions: str = None,
+    status: dict = None,
 ):  # pylint: disable=R0913
-    &#34;&#34;&#34;Upload raw and treated data to GCS and BigQuery.
-    If passing arg file_dict, should not pass arg partitions
-    separately.
+    &#34;&#34;&#34;
+    Upload raw and treated data to GCS and BigQuery.
 
     Args:
         dataset_id (str): dataset_id on BigQuery
@@ -464,8 +524,8 @@ def bq_upload(
         raw_filepath (str, optional): Path to raw .json file. Defaults to None.
         partitions (str, optional): Partitioned directory structure, ie &#34;ano=2022/mes=03/data=01&#34;.
         Defaults to None.
-        file_dict(dict, optional): used for running task with map. Must contain keys
-        &#34;filename&#34; and &#34;partitions&#34;. Defaults to None
+        status (dict, optional): Dict containing `error` key from
+        upstream tasks.
 
     Returns:
         None
@@ -480,28 +540,42 @@ def bq_upload(
     partitions = {partitions}, type = {type(partitions)}
     &#34;&#34;&#34;
     )
-    if file_dict:
-        partitions = file_dict[&#34;partitions&#34;]
-    # Upload raw to staging
-    if raw_filepath:
-        st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
-        log(
-            f&#34;&#34;&#34;Uploading raw file:
-            {raw_filepath}
-            to bucket {st_obj.bucket_name}
-            at {st_obj.bucket_name}/{dataset_id}/{table_id}&#34;&#34;&#34;
-        )
-        st_obj.upload(
-            path=raw_filepath, partitions=partitions, mode=&#34;raw&#34;, if_exists=&#34;replace&#34;
-        )
+    if status[&#34;error&#34;] is not None:
+        return status[&#34;error&#34;]
 
-    # creates and publish table if it does not exist, append to it otherwise
-    if partitions:
-        # If table is partitioned, get parent directory wherein partitions are stored
-        tb_dir = filepath.split(partitions)[0]
-        create_or_append_table(dataset_id, table_id, tb_dir)
-    else:
-        create_or_append_table(dataset_id, table_id, filepath)
+    error = None
+    try:
+        # Upload raw to staging
+        if raw_filepath:
+            st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
+            log(
+                f&#34;&#34;&#34;Uploading raw file to bucket {st_obj.bucket_name} at
+                {st_obj.bucket_name}/{dataset_id}/{table_id}&#34;&#34;&#34;
+            )
+            st_obj.upload(
+                path=raw_filepath,
+                partitions=partitions,
+                mode=&#34;raw&#34;,
+                if_exists=&#34;replace&#34;,
+            )
+
+        # Creates and publish table if it does not exist, append to it otherwise
+        if partitions:
+            # If table is partitioned, get parent directory wherein partitions are stored
+            log(
+                f&#34;&#34;&#34;Uploading treated partitions to bucket {st_obj.bucket_name}
+            at {st_obj.bucket_name}/{dataset_id}/{table_id}&#34;&#34;&#34;
+            )
+            tb_dir = filepath.split(partitions)[0]
+            create_or_append_table(dataset_id, table_id, tb_dir)
+            # os.system(f&#39;rm -rf {tb_dir}&#39;)
+        else:
+            create_or_append_table(dataset_id, table_id, filepath)
+    except Exception:
+        error = traceback.format_exc()
+        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+
+    return error
 
 
 @task
@@ -540,48 +614,67 @@ def bq_upload_from_dict(paths: dict, dataset_id: str, partition_levels: int = 1)
 
 @task
 def upload_logs_to_bq(
-    dataset_id, parent_table_id, timestamp=None, error=None, status_dict=None
+    dataset_id: str,
+    parent_table_id: str,
+    timestamp: str,
+    error: str = None,
+    recapture: bool = False,
 ):
-    &#34;&#34;&#34;Upload execution status table to BigQuery.
+    &#34;&#34;&#34;
+    Upload execution status table to BigQuery.
     Table is uploaded to the same dataset, named {parent_table_id}_logs.
     If passing status_dict, should not pass timestamp and error.
 
     Args:
         dataset_id (str): dataset_id on BigQuery
         parent_table_id (str): Parent table id related to the status table
-        timestamp (str, optional): ISO formatted timestamp string
+        timestamp (str): ISO formatted timestamp string
         error (str, optional): String associated with error caught during execution
-        status_dict(dict, optional): used for running task with map.
-        Must contain keys &#39;timestamp&#39; and &#39;error&#39;,
-
     Returns:
         None
     &#34;&#34;&#34;
-    if status_dict:
-        timestamp = status_dict[&#34;timestamp&#34;]
-        error = status_dict[&#34;error&#34;]
     table_id = parent_table_id + &#34;_logs&#34;
-
+    # Create partition directory
+    filename = f&#34;{table_id}_{timestamp.isoformat()}&#34;
     filepath = Path(
-        f&#34;{timestamp}/{table_id}/data={pendulum.parse(timestamp).date()}/{table_id}_{timestamp}.csv&#34;
+        f&#34;&#34;&#34;data/staging/{dataset_id}/{table_id}/data={timestamp.date()}/{filename}.csv&#34;&#34;&#34;
     )
-    # create partition directory
     filepath.parent.mkdir(exist_ok=True, parents=True)
-    # create dataframe to be uploaded
-    dataframe = pd.DataFrame(
-        {
-            &#34;timestamp_captura&#34;: [pd.to_datetime(timestamp)],
-            &#34;sucesso&#34;: [error is None],
-            &#34;erro&#34;: [error],
-        }
-    )
-    # save local
+    # Create dataframe to be uploaded
+    if recapture is True:
+        # if the recapture is succeeded, update the column erro
+        if error is None:
+            dataframe = pd.DataFrame(
+                {
+                    &#34;timestamp_captura&#34;: [timestamp],
+                    &#34;sucesso&#34;: [True],
+                    &#34;erro&#34;: [&#34;[recapturado]&#34;],
+                }
+            )
+        # if any iteration of the recapture fails, upload logs with error
+        else:
+            dataframe = pd.DataFrame(
+                {
+                    &#34;timestamp_captura&#34;: [timestamp],
+                    &#34;sucesso&#34;: [error is None],
+                    &#34;erro&#34;: [f&#34;[recapturado] {error}&#34;],
+                }
+            )
+    else:
+        dataframe = pd.DataFrame(
+            {
+                &#34;timestamp_captura&#34;: [timestamp],
+                &#34;sucesso&#34;: [error is None],
+                &#34;erro&#34;: [error],
+            }
+        )
+    # Save data local
     dataframe.to_csv(filepath, index=False)
-    # BD Table object
+    # Upload to Storage
     create_or_append_table(
         dataset_id=dataset_id, table_id=table_id, path=filepath.parent.parent
     )
-    if error:
+    if error is not None:
         raise Exception(f&#34;Pipeline failed with error: {error}&#34;)
 
 
@@ -617,11 +710,11 @@ def get_materialization_date_range(  # pylint: disable=R0913
     Returns:
         dict: containing date_range_start and date_range_end
     &#34;&#34;&#34;
-
+    timestr = &#34;%Y-%m-%dT%H:%M:%S&#34;
     start_ts = get_last_run_timestamp(
         dataset_id=dataset_id, table_id=table_id, mode=mode
     )
-
+    # if there&#39;s no timestamp set on redis, get max timestamp on source table
     if start_ts is None:
         if Table(dataset_id=dataset_id, table_id=table_id).table_exists(&#34;prod&#34;):
             start_ts = get_table_min_max_value(
@@ -630,7 +723,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 table_id=table_id,
                 field_name=table_date_column_name,
                 kind=&#34;max&#34;,
-            ).strftime(&#34;%Y-%m-%dT%H:%M:%S&#34;)
+            ).strftime(timestr)
         else:
             start_ts = get_table_min_max_value(
                 query_project_id=bq_project(),
@@ -638,10 +731,18 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 table_id=raw_table_id,
                 field_name=table_date_column_name,
                 kind=&#34;max&#34;,
-            ).strftime(&#34;%Y-%m-%dT%H:%M:%S&#34;)
-    end_ts = datetime.now(timezone(constants.TIMEZONE.value)).strftime(
-        &#34;%Y-%m-%dT%H:%M:%S&#34;
+            ).strftime(timestr)
+    end_ts = (
+        (datetime.strptime(start_ts, timestr))
+        .replace(minute=0, second=0, microsecond=0)
+        .strftime(timestr)
     )
+    start_ts = (
+        (datetime.strptime(start_ts, timestr) - timedelta(minutes=60))
+        .replace(minute=0, second=0, microsecond=0)
+        .strftime(timestr)
+    )
+
     date_range = {&#34;date_range_start&#34;: start_ts, &#34;date_range_end&#34;: end_ts}
     return date_range
 
@@ -715,12 +816,10 @@ def fetch_dataset_sha(dataset_id: str):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pipelines.rj_smtr.tasks.bq_upload"><code class="name flex">
-<span>def <span class="ident">bq_upload</span></span>(<span>dataset_id, table_id, filepath, raw_filepath=None, partitions=None, file_dict=None)</span>
+<span>def <span class="ident">bq_upload</span></span>(<span>dataset_id: str, table_id: str, filepath: str, raw_filepath: str = None, partitions: str = None, status: dict = None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Upload raw and treated data to GCS and BigQuery.
-If passing arg file_dict, should not pass arg partitions
-separately.</p>
+<div class="desc"><p>Upload raw and treated data to GCS and BigQuery.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code></dt>
@@ -733,10 +832,11 @@ separately.</p>
 <dd>Path to raw .json file. Defaults to None.</dd>
 <dt><strong><code>partitions</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>Partitioned directory structure, ie "ano=2022/mes=03/data=01".</dd>
+<dt>Defaults to None.</dt>
+<dt><strong><code>status</code></strong> :&ensp;<code>dict</code>, optional</dt>
+<dd>Dict containing <code>error</code> key from</dd>
 </dl>
-<p>Defaults to None.
-file_dict(dict, optional): used for running task with map. Must contain keys
-"filename" and "partitions". Defaults to None</p>
+<p>upstream tasks.</p>
 <h2 id="returns">Returns</h2>
 <p>None</p></div>
 <details class="source">
@@ -745,11 +845,15 @@ file_dict(dict, optional): used for running task with map. Must contain keys
 </summary>
 <pre><code class="python">@task
 def bq_upload(
-    dataset_id, table_id, filepath, raw_filepath=None, partitions=None, file_dict=None
+    dataset_id: str,
+    table_id: str,
+    filepath: str,
+    raw_filepath: str = None,
+    partitions: str = None,
+    status: dict = None,
 ):  # pylint: disable=R0913
-    &#34;&#34;&#34;Upload raw and treated data to GCS and BigQuery.
-    If passing arg file_dict, should not pass arg partitions
-    separately.
+    &#34;&#34;&#34;
+    Upload raw and treated data to GCS and BigQuery.
 
     Args:
         dataset_id (str): dataset_id on BigQuery
@@ -758,8 +862,8 @@ def bq_upload(
         raw_filepath (str, optional): Path to raw .json file. Defaults to None.
         partitions (str, optional): Partitioned directory structure, ie &#34;ano=2022/mes=03/data=01&#34;.
         Defaults to None.
-        file_dict(dict, optional): used for running task with map. Must contain keys
-        &#34;filename&#34; and &#34;partitions&#34;. Defaults to None
+        status (dict, optional): Dict containing `error` key from
+        upstream tasks.
 
     Returns:
         None
@@ -774,28 +878,42 @@ def bq_upload(
     partitions = {partitions}, type = {type(partitions)}
     &#34;&#34;&#34;
     )
-    if file_dict:
-        partitions = file_dict[&#34;partitions&#34;]
-    # Upload raw to staging
-    if raw_filepath:
-        st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
-        log(
-            f&#34;&#34;&#34;Uploading raw file:
-            {raw_filepath}
-            to bucket {st_obj.bucket_name}
-            at {st_obj.bucket_name}/{dataset_id}/{table_id}&#34;&#34;&#34;
-        )
-        st_obj.upload(
-            path=raw_filepath, partitions=partitions, mode=&#34;raw&#34;, if_exists=&#34;replace&#34;
-        )
+    if status[&#34;error&#34;] is not None:
+        return status[&#34;error&#34;]
 
-    # creates and publish table if it does not exist, append to it otherwise
-    if partitions:
-        # If table is partitioned, get parent directory wherein partitions are stored
-        tb_dir = filepath.split(partitions)[0]
-        create_or_append_table(dataset_id, table_id, tb_dir)
-    else:
-        create_or_append_table(dataset_id, table_id, filepath)</code></pre>
+    error = None
+    try:
+        # Upload raw to staging
+        if raw_filepath:
+            st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
+            log(
+                f&#34;&#34;&#34;Uploading raw file to bucket {st_obj.bucket_name} at
+                {st_obj.bucket_name}/{dataset_id}/{table_id}&#34;&#34;&#34;
+            )
+            st_obj.upload(
+                path=raw_filepath,
+                partitions=partitions,
+                mode=&#34;raw&#34;,
+                if_exists=&#34;replace&#34;,
+            )
+
+        # Creates and publish table if it does not exist, append to it otherwise
+        if partitions:
+            # If table is partitioned, get parent directory wherein partitions are stored
+            log(
+                f&#34;&#34;&#34;Uploading treated partitions to bucket {st_obj.bucket_name}
+            at {st_obj.bucket_name}/{dataset_id}/{table_id}&#34;&#34;&#34;
+            )
+            tb_dir = filepath.split(partitions)[0]
+            create_or_append_table(dataset_id, table_id, tb_dir)
+            # os.system(f&#39;rm -rf {tb_dir}&#39;)
+        else:
+            create_or_append_table(dataset_id, table_id, filepath)
+    except Exception:
+        error = traceback.format_exc()
+        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+
+    return error</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.bq_upload_from_dict"><code class="name flex">
@@ -1002,25 +1120,43 @@ def create_current_date_hour_partition(capture_time=None):
         dict: &#34;filename&#34; contains the name which to upload the csv, &#34;partitions&#34; contains
         the partitioned directory path
     &#34;&#34;&#34;
-    tz = constants.TIMEZONE.value  # pylint: disable=C0103
     if capture_time is None:
-        capture_time = pendulum.now(tz).replace(second=0, microsecond=0)
+        capture_time = datetime.now(tz=constants.TIMEZONE.value).replace(
+            minute=0, second=0, microsecond=0
+        )
     date = capture_time.strftime(&#34;%Y-%m-%d&#34;)
     hour = capture_time.strftime(&#34;%H&#34;)
 
     return {
         &#34;filename&#34;: capture_time.strftime(&#34;%Y-%m-%d-%H-%M-%S&#34;),
         &#34;partitions&#34;: f&#34;data={date}/hora={hour}&#34;,
+        &#34;timestamp&#34;: capture_time,
     }</code></pre>
 </details>
 </dd>
-<dt id="pipelines.rj_smtr.tasks.create_local_partition_path"><code class="name flex">
-<span>def <span class="ident">create_local_partition_path</span></span>(<span>dataset_id, table_id, filename=None, partitions=None, file_dict=None)</span>
+<dt id="pipelines.rj_smtr.tasks.create_date_hour_partition"><code class="name flex">
+<span>def <span class="ident">create_date_hour_partition</span></span>(<span>timestamp: datetime.datetime) ‑> str</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Get the full path which to save data locally before upload.
-If passing file_dict, should not pass filename and partitions
-separately.</p>
+<div class="desc"><p>Get date hour Hive partition structure from timestamp.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def create_date_hour_partition(timestamp: datetime) -&gt; str:
+    &#34;&#34;&#34;
+    Get date hour Hive partition structure from timestamp.
+    &#34;&#34;&#34;
+    return f&#34;data={timestamp.strftime(&#39;%Y-%m-%d&#39;)}/hora={timestamp.strftime(&#39;%H&#39;)}&#34;</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.tasks.create_local_partition_path"><code class="name flex">
+<span>def <span class="ident">create_local_partition_path</span></span>(<span>dataset_id: str, table_id: str, filename: str, partitions: str = None) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create the full path sctructure which to save data locally before
+upload.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code></dt>
@@ -1032,50 +1168,37 @@ separately.</p>
 <dt><strong><code>partitions</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>Partitioned directory structure, ie "ano=2022/mes=03/data=01"</dd>
 </dl>
-<p>file_dict(dict, optional): containing keys 'filename' and 'partitions',
-used for running task with map</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>str</code></dt>
-<dd>Final path which to save files</dd>
-</dl></div>
+<dd>String path having <code>mode</code> and <code>filetype</code> to be replaced afterwards,</dd>
+</dl>
+<p>either to save raw or staging files.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
 def create_local_partition_path(
-    dataset_id, table_id, filename=None, partitions=None, file_dict=None
-):
-    &#34;&#34;&#34;Get the full path which to save data locally before upload.
-    If passing file_dict, should not pass filename and partitions
-    separately.
+    dataset_id: str, table_id: str, filename: str, partitions: str = None
+) -&gt; str:
+    &#34;&#34;&#34;
+    Create the full path sctructure which to save data locally before
+    upload.
 
     Args:
         dataset_id (str): dataset_id on BigQuery
         table_id (str): table_id on BigQuery
         filename (str, optional): Single csv name
         partitions (str, optional): Partitioned directory structure, ie &#34;ano=2022/mes=03/data=01&#34;
-        file_dict(dict, optional): containing keys &#39;filename&#39; and &#39;partitions&#39;,
-        used for running task with map
     Returns:
-        str: Final path which to save files
+        str: String path having `mode` and `filetype` to be replaced afterwards,
+    either to save raw or staging files.
     &#34;&#34;&#34;
-    if file_dict:
-        filename = file_dict[&#34;filename&#34;]
-        partitions = file_dict[&#34;partitions&#34;]
-    # If not specific table_id, use resource one
-    # if not table_id:
-    #     table_id = context.resources.basedosdados_config[&#34;table_id&#34;]
-    # dataset_id = context.resources.basedosdados_config[&#34;dataset_id&#34;]
-
-    # Get data folder from environment variable
     data_folder = os.getenv(&#34;DATA_FOLDER&#34;, &#34;data&#34;)
-
     file_path = f&#34;{os.getcwd()}/{data_folder}/{{mode}}/{dataset_id}/{table_id}&#34;
     file_path += f&#34;/{partitions}/{filename}.{{filetype}}&#34;
     log(f&#34;Creating file path: {file_path}&#34;)
-
     return file_path</code></pre>
 </details>
 </dd>
@@ -1137,6 +1260,29 @@ def fetch_dataset_sha(dataset_id: str):
 
     dataset_version = response.json()[0][&#34;sha&#34;]
     return {&#34;version&#34;: dataset_version}</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.tasks.get_current_timestamp"><code class="name flex">
+<span>def <span class="ident">get_current_timestamp</span></span>(<span>timestamp: datetime.datetime = None, truncate_minute: bool = True) ‑> datetime.datetime</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get current timestamp for flow run.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_current_timestamp(
+    timestamp: datetime = None, truncate_minute: bool = True
+) -&gt; datetime:
+    &#34;&#34;&#34;
+    Get current timestamp for flow run.
+    &#34;&#34;&#34;
+    if not timestamp:
+        timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
+    if truncate_minute:
+        return timestamp.replace(second=0, microsecond=0)
+    return timestamp</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.get_local_dbt_client"><code class="name flex">
@@ -1241,11 +1387,11 @@ def get_materialization_date_range(  # pylint: disable=R0913
     Returns:
         dict: containing date_range_start and date_range_end
     &#34;&#34;&#34;
-
+    timestr = &#34;%Y-%m-%dT%H:%M:%S&#34;
     start_ts = get_last_run_timestamp(
         dataset_id=dataset_id, table_id=table_id, mode=mode
     )
-
+    # if there&#39;s no timestamp set on redis, get max timestamp on source table
     if start_ts is None:
         if Table(dataset_id=dataset_id, table_id=table_id).table_exists(&#34;prod&#34;):
             start_ts = get_table_min_max_value(
@@ -1254,7 +1400,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 table_id=table_id,
                 field_name=table_date_column_name,
                 kind=&#34;max&#34;,
-            ).strftime(&#34;%Y-%m-%dT%H:%M:%S&#34;)
+            ).strftime(timestr)
         else:
             start_ts = get_table_min_max_value(
                 query_project_id=bq_project(),
@@ -1262,60 +1408,59 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 table_id=raw_table_id,
                 field_name=table_date_column_name,
                 kind=&#34;max&#34;,
-            ).strftime(&#34;%Y-%m-%dT%H:%M:%S&#34;)
-    end_ts = datetime.now(timezone(constants.TIMEZONE.value)).strftime(
-        &#34;%Y-%m-%dT%H:%M:%S&#34;
+            ).strftime(timestr)
+    end_ts = (
+        (datetime.strptime(start_ts, timestr))
+        .replace(minute=0, second=0, microsecond=0)
+        .strftime(timestr)
     )
+    start_ts = (
+        (datetime.strptime(start_ts, timestr) - timedelta(minutes=60))
+        .replace(minute=0, second=0, microsecond=0)
+        .strftime(timestr)
+    )
+
     date_range = {&#34;date_range_start&#34;: start_ts, &#34;date_range_end&#34;: end_ts}
     return date_range</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.get_raw"><code class="name flex">
-<span>def <span class="ident">get_raw</span></span>(<span>url: str, headers: dict = None, timestamp: datetime.datetime = None)</span>
+<span>def <span class="ident">get_raw</span></span>(<span>url: str, headers: dict = None) ‑> Dict</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request data from a url API</p>
+<div class="desc"><p>Request data from a url API.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>url</code></strong> :&ensp;<code>str</code></dt>
 <dd>URL to send request to</dd>
 <dt><strong><code>headers</code></strong> :&ensp;<code>dict</code>, optional</dt>
-<dd>Aditional fields to send along the request. Defaults to None.</dd>
-<dt><strong><code>source</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>Source API being captured.</dd>
+<dd>Aditional fields to send along the request.</dd>
 </dl>
-<p>Possible values are 'stpl_api', 'brt_api', 'sppo_api' and 'sppo_api_v2'.
-timestamp(pendulum.datetime.DateTime, optional): timestamp of the request
-time. Defaults to None.</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>dict</code></dt>
-<dd>"data" contains the response object from the request, "timestamp" contains</dd>
-</dl>
-<p>the run time timestamp, "error" catches errors that may occur during task execution.</p></div>
+<dd>Conatining keys
+* <code>data</code>: json returned from API
+* <code>error</code>: error catched from API request</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def get_raw(url: str, headers: dict = None, timestamp: datetime = None):
-    &#34;&#34;&#34;Request data from a url API
+def get_raw(url: str, headers: dict = None) -&gt; Dict:
+    &#34;&#34;&#34;
+    Request data from a url API.
+
     Args:
         url (str): URL to send request to
-        headers (dict, optional): Aditional fields to send along the request. Defaults to None.
-        source (str, optional): Source API being captured.
-        Possible values are &#39;stpl_api&#39;, &#39;brt_api&#39;, &#39;sppo_api&#39; and &#39;sppo_api_v2&#39;.
-        timestamp(pendulum.datetime.DateTime, optional): timestamp of the request
-        time. Defaults to None.
+        headers (dict, optional): Aditional fields to send along the request.
     Returns:
-        dict: &#34;data&#34; contains the response object from the request, &#34;timestamp&#34; contains
-        the run time timestamp, &#34;error&#34; catches errors that may occur during task execution.
+        dict: Conatining keys
+          * `data`: json returned from API
+          * `error`: error catched from API request
     &#34;&#34;&#34;
     data = None
-    if not timestamp:
-        timestamp = pendulum.now(constants.TIMEZONE.value).replace(
-            second=0, microsecond=0
-        )
 
     # Get data from API
     try:
@@ -1325,23 +1470,34 @@ def get_raw(url: str, headers: dict = None, timestamp: datetime = None):
         error = None
     except Exception as exp:
         error = exp
+        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+        return {&#34;data&#34;: None, &#34;error&#34;: error}
 
     # Check data results
     if response.ok:  # status code is less than 400
         data = response.json()
         if isinstance(data, dict) and &#34;DescricaoErro&#34; in data.keys():
             error = data[&#34;DescricaoErro&#34;]
-        elif len(data) == 0:
-            error = &#34;Data returned from API is empty.&#34;
-            log(error)
+            log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
 
-        return {
-            &#34;data&#34;: response,
-            &#34;error&#34;: error,
-            &#34;timestamp&#34;: timestamp.isoformat(),
-        }
-
-    return {&#34;data&#34;: response, &#34;timestamp&#34;: timestamp.isoformat(), &#34;error&#34;: error}</code></pre>
+    return {&#34;data&#34;: data, &#34;error&#34;: error}</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.tasks.parse_timestamp_to_string"><code class="name flex">
+<span>def <span class="ident">parse_timestamp_to_string</span></span>(<span>timestamp: datetime.datetime, pattern='%Y-%m-%d-%H-%M-%S') ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Parse timestamp to string pattern.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def parse_timestamp_to_string(timestamp: datetime, pattern=&#34;%Y-%m-%d-%H-%M-%S&#34;) -&gt; str:
+    &#34;&#34;&#34;
+    Parse timestamp to string pattern.
+    &#34;&#34;&#34;
+    return timestamp.strftime(pattern)</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.query_logs"><code class="name flex">
@@ -1358,7 +1514,7 @@ def get_raw(url: str, headers: dict = None, timestamp: datetime = None):
 </dl>
 <p>datetime_filter (pendulum.datetime.DateTime, optional):
 filter passed to query. This task will query the logs table
-for the last 1 hour before this filter</p>
+for the last 1 day before datetime_filter</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>list</code></dt>
@@ -1374,47 +1530,95 @@ def query_logs(
     table_id: str,
     datetime_filter=None,
 ):
-    &#34;&#34;&#34;Queries capture logs to check for errors
+    &#34;&#34;&#34;
+    Queries capture logs to check for errors
 
     Args:
         dataset_id (str): dataset_id on BigQuery
         table_id (str): table_id on BigQuery
         datetime_filter (pendulum.datetime.DateTime, optional):
         filter passed to query. This task will query the logs table
-        for the last 1 hour before this filter
+        for the last 1 day before datetime_filter
 
     Returns:
         list: containing timestamps for which the capture failed
-
     &#34;&#34;&#34;
 
     if not datetime_filter:
-        datetime_filter = pendulum.now(constants.TIMEZONE.value)
+        datetime_filter = pendulum.now(constants.TIMEZONE.value).replace(
+            second=0, microsecond=0
+        )
 
     query = f&#34;&#34;&#34;
-        SELECT *
-        FROM rj-smtr.{dataset_id}.{table_id}_logs
-        WHERE
-            data = &#39;{datetime_filter.date().isoformat()}&#39;
-        AND
-            timestamp_captura
-            BETWEEN
-            DATETIME_SUB(
-                &#39;{datetime_filter.strftime(&#39;%Y-%m-%d %H:%M:%S&#39;)}&#39;,
-                INTERVAL 1 HOUR
-            )
-            AND
-            &#39;{datetime_filter.strftime(&#39;%Y-%m-%d %H:%M:%S&#39;)}&#39;
-        AND
-            sucesso is False
-        ORDER BY timestamp_captura
+    with t as (
+    select
+        datetime(timestamp_array) as timestamp_array
+    from
+        unnest(GENERATE_TIMESTAMP_ARRAY(
+            timestamp_sub(&#39;{datetime_filter.strftime(&#39;%Y-%m-%d %H:%M:%S&#39;)}&#39;, interval 1 day),
+            timestamp(&#39;{datetime_filter.strftime(&#39;%Y-%m-%d %H:%M:%S&#39;)}&#39;),
+            interval 1 minute)
+        ) as timestamp_array
+    where timestamp_array &lt; &#39;{datetime_filter.strftime(&#39;%Y-%m-%d %H:%M:%S&#39;)}&#39;
+    ),
+    logs as (
+        select
+            *,
+            timestamp_trunc(timestamp_captura, minute) as timestamp_array
+        from
+            rj-smtr.{dataset_id}.{table_id}_logs
+        where
+            data between
+                date(datetime_sub(&#39;{datetime_filter.strftime(&#39;%Y-%m-%d %H:%M:%S&#39;)}&#39;,
+                interval 1 day))
+                and date(&#39;{datetime_filter.strftime(&#39;%Y-%m-%d %H:%M:%S&#39;)}&#39;)
+        and
+            timestamp_captura between
+                datetime_sub(&#39;{datetime_filter.strftime(&#39;%Y-%m-%d %H:%M:%S&#39;)}&#39;, interval 1 day)
+                and &#39;{datetime_filter.strftime(&#39;%Y-%m-%d %H:%M:%S&#39;)}&#39;
+        order by timestamp_captura
+    )
+    select
+        case
+            when logs.timestamp_captura is not null then logs.timestamp_captura
+            else t.timestamp_array
+        end as timestamp_captura
+    from
+        t
+    left join
+        logs
+    on
+        logs.timestamp_array = t.timestamp_array
+    where
+        logs.sucesso is not True
+    order by
+        timestamp_captura
     &#34;&#34;&#34;
-    log(f&#34;Will run query:\n{query}&#34;)
+    log(f&#34;Run query to check logs:\n{query}&#34;)
     results = bd.read_sql(query=query, billing_project_id=bq_project())[
         &#34;timestamp_captura&#34;
     ]
     if len(results) &gt; 0:
-        return True, pd.to_datetime(results).to_list()
+        results = (
+            pd.to_datetime(results).dt.tz_localize(constants.TIMEZONE.value).to_list()
+        )
+        log(f&#34;Recapture data for the following {len(results)} timestamps:\n{results}&#34;)
+        if len(results) &gt; 40:
+            message = f&#34;&#34;&#34;
+            [SPPO - Recaptures]
+            Encontradas {len(results)} timestamps para serem recapturadas.
+            Essa run processará as seguintes:
+            #####
+            {results[:40]}
+            #####
+            Sobraram as seguintes para serem recapturadas na próxima run:
+            #####
+            {results[40:]}
+            #####
+            &#34;&#34;&#34;
+            log_critical(message)
+            results = results[:40]
+        return True, results
     return False, []</code></pre>
 </details>
 </dd>
@@ -1512,24 +1716,21 @@ def run_dbt_model(  # pylint: disable=too-many-arguments
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.save_raw_local"><code class="name flex">
-<span>def <span class="ident">save_raw_local</span></span>(<span>file_path, data=None, status_dict=None, mode='raw')</span>
+<span>def <span class="ident">save_raw_local</span></span>(<span>file_path: str, status: dict, mode: str = 'raw') ‑> str</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Dumps json response from API to .json file. If passing status_dict
-should not pass data separately</p>
+<div class="desc"><p>Saves json response from API to .json file.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>file_path</code></strong> :&ensp;<code>str</code></dt>
 <dd>Path which to save raw file</dd>
-<dt><strong><code>data</code></strong> :&ensp;<code>response</code>, optional</dt>
-<dd>Response from API request</dd>
-<dt>status_dict(dict, optional): containing the status of</dt>
-<dt>upstream request task. Must contain keys 'data', 'timestamp',</dt>
-<dt>'error'</dt>
+<dt><strong><code>status</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Must contain keys
+* <code>data</code>: json returned from API
+* <code>error</code>: error catched from API request</dd>
 <dt><strong><code>mode</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>Folder to save locally, later folder which to upload to GCS.</dd>
 </dl>
-<p>Defaults to "raw".</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>str</code></dt>
@@ -1540,49 +1741,44 @@ should not pass data separately</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def save_raw_local(file_path, data=None, status_dict=None, mode=&#34;raw&#34;):
-    &#34;&#34;&#34;Dumps json response from API to .json file. If passing status_dict
-    should not pass data separately
+def save_raw_local(file_path: str, status: dict, mode: str = &#34;raw&#34;) -&gt; str:
+    &#34;&#34;&#34;
+    Saves json response from API to .json file.
 
     Args:
         file_path (str): Path which to save raw file
-        data (response, optional): Response from API request
-        status_dict(dict, optional): containing the status of
-        upstream request task. Must contain keys &#39;data&#39;, &#39;timestamp&#39;,
-        &#39;error&#39;
+        status (dict): Must contain keys
+          * `data`: json returned from API
+          * `error`: error catched from API request
         mode (str, optional): Folder to save locally, later folder which to upload to GCS.
-        Defaults to &#34;raw&#34;.
 
     Returns:
         str: Path to the saved file
     &#34;&#34;&#34;
-    if status_dict:
-        data = status_dict[&#34;data&#34;]
     _file_path = file_path.format(mode=mode, filetype=&#34;json&#34;)
     Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
-    json.dump(data.json(), Path(_file_path).open(&#34;w&#34;, encoding=&#34;utf-8&#34;))
-
+    if status[&#34;error&#34;] is None:
+        json.dump(status[&#34;data&#34;], Path(_file_path).open(&#34;w&#34;, encoding=&#34;utf-8&#34;))
+        log(f&#34;Raw data saved to: {_file_path}&#34;)
     return _file_path</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.save_treated_local"><code class="name flex">
-<span>def <span class="ident">save_treated_local</span></span>(<span>file_path, mode='staging', dataframe=None, treated_status=None)</span>
+<span>def <span class="ident">save_treated_local</span></span>(<span>file_path: str, status: dict, mode: str = 'staging') ‑> str</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Save treated file locally. Should pass only one of args
-dataframe or treated_status</p>
+<div class="desc"><p>Save treated file to CSV.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>file_path</code></strong> :&ensp;<code>str</code></dt>
-<dd>Path which to save .csv files</dd>
+<dd>Path which to save treated file</dd>
+<dt><strong><code>status</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Must contain keys
+* <code>data</code>: dataframe returned from treatement
+* <code>error</code>: error catched from data treatement</dd>
 <dt><strong><code>mode</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>Directory to save locally, later folder which to upload to GCS.</dd>
-<dt>Defaults to "staging".</dt>
-<dt><strong><code>dataframe</code></strong> :&ensp;<code>pandas.core.DataFrame</code>, optional</dt>
-<dd>Data to save as .csv file</dd>
+<dd>Folder to save locally, later folder which to upload to GCS.</dd>
 </dl>
-<p>treated_status(dict, optional): used for running task with map.
-Must contain keys 'df' and 'error'.</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>str</code></dt>
@@ -1593,26 +1789,25 @@ Must contain keys 'df' and 'error'.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def save_treated_local(file_path, mode=&#34;staging&#34;, dataframe=None, treated_status=None):
-    &#34;&#34;&#34;Save treated file locally. Should pass only one of args
-    dataframe or treated_status
+def save_treated_local(file_path: str, status: dict, mode: str = &#34;staging&#34;) -&gt; str:
+    &#34;&#34;&#34;
+    Save treated file to CSV.
 
     Args:
-        file_path (str): Path which to save .csv files
-        mode (str, optional): Directory to save locally, later folder which to upload to GCS.
-        Defaults to &#34;staging&#34;.
-        dataframe (pandas.core.DataFrame, optional): Data to save as .csv file
-        treated_status(dict, optional): used for running task with map.
-        Must contain keys &#39;df&#39; and &#39;error&#39;.
+        file_path (str): Path which to save treated file
+        status (dict): Must contain keys
+          * `data`: dataframe returned from treatement
+          * `error`: error catched from data treatement
+        mode (str, optional): Folder to save locally, later folder which to upload to GCS.
+
     Returns:
         str: Path to the saved file
     &#34;&#34;&#34;
-    if treated_status:
-        dataframe = treated_status[&#34;df&#34;]
     _file_path = file_path.format(mode=mode, filetype=&#34;csv&#34;)
     Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
-    dataframe.to_csv(_file_path, index=False)
-
+    if status[&#34;error&#34;] is None:
+        status[&#34;data&#34;].to_csv(_file_path, index=False)
+        log(f&#34;Treated data saved to: {_file_path}&#34;)
     return _file_path</code></pre>
 </details>
 </dd>
@@ -1677,7 +1872,7 @@ def set_last_run_timestamp(
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.upload_logs_to_bq"><code class="name flex">
-<span>def <span class="ident">upload_logs_to_bq</span></span>(<span>dataset_id, parent_table_id, timestamp=None, error=None, status_dict=None)</span>
+<span>def <span class="ident">upload_logs_to_bq</span></span>(<span>dataset_id: str, parent_table_id: str, timestamp: str, error: str = None, recapture: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Upload execution status table to BigQuery.
@@ -1689,13 +1884,11 @@ If passing status_dict, should not pass timestamp and error.</p>
 <dd>dataset_id on BigQuery</dd>
 <dt><strong><code>parent_table_id</code></strong> :&ensp;<code>str</code></dt>
 <dd>Parent table id related to the status table</dd>
-<dt><strong><code>timestamp</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dt><strong><code>timestamp</code></strong> :&ensp;<code>str</code></dt>
 <dd>ISO formatted timestamp string</dd>
 <dt><strong><code>error</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>String associated with error caught during execution</dd>
 </dl>
-<p>status_dict(dict, optional): used for running task with map.
-Must contain keys 'timestamp' and 'error',</p>
 <h2 id="returns">Returns</h2>
 <p>None</p></div>
 <details class="source">
@@ -1704,48 +1897,67 @@ Must contain keys 'timestamp' and 'error',</p>
 </summary>
 <pre><code class="python">@task
 def upload_logs_to_bq(
-    dataset_id, parent_table_id, timestamp=None, error=None, status_dict=None
+    dataset_id: str,
+    parent_table_id: str,
+    timestamp: str,
+    error: str = None,
+    recapture: bool = False,
 ):
-    &#34;&#34;&#34;Upload execution status table to BigQuery.
+    &#34;&#34;&#34;
+    Upload execution status table to BigQuery.
     Table is uploaded to the same dataset, named {parent_table_id}_logs.
     If passing status_dict, should not pass timestamp and error.
 
     Args:
         dataset_id (str): dataset_id on BigQuery
         parent_table_id (str): Parent table id related to the status table
-        timestamp (str, optional): ISO formatted timestamp string
+        timestamp (str): ISO formatted timestamp string
         error (str, optional): String associated with error caught during execution
-        status_dict(dict, optional): used for running task with map.
-        Must contain keys &#39;timestamp&#39; and &#39;error&#39;,
-
     Returns:
         None
     &#34;&#34;&#34;
-    if status_dict:
-        timestamp = status_dict[&#34;timestamp&#34;]
-        error = status_dict[&#34;error&#34;]
     table_id = parent_table_id + &#34;_logs&#34;
-
+    # Create partition directory
+    filename = f&#34;{table_id}_{timestamp.isoformat()}&#34;
     filepath = Path(
-        f&#34;{timestamp}/{table_id}/data={pendulum.parse(timestamp).date()}/{table_id}_{timestamp}.csv&#34;
+        f&#34;&#34;&#34;data/staging/{dataset_id}/{table_id}/data={timestamp.date()}/{filename}.csv&#34;&#34;&#34;
     )
-    # create partition directory
     filepath.parent.mkdir(exist_ok=True, parents=True)
-    # create dataframe to be uploaded
-    dataframe = pd.DataFrame(
-        {
-            &#34;timestamp_captura&#34;: [pd.to_datetime(timestamp)],
-            &#34;sucesso&#34;: [error is None],
-            &#34;erro&#34;: [error],
-        }
-    )
-    # save local
+    # Create dataframe to be uploaded
+    if recapture is True:
+        # if the recapture is succeeded, update the column erro
+        if error is None:
+            dataframe = pd.DataFrame(
+                {
+                    &#34;timestamp_captura&#34;: [timestamp],
+                    &#34;sucesso&#34;: [True],
+                    &#34;erro&#34;: [&#34;[recapturado]&#34;],
+                }
+            )
+        # if any iteration of the recapture fails, upload logs with error
+        else:
+            dataframe = pd.DataFrame(
+                {
+                    &#34;timestamp_captura&#34;: [timestamp],
+                    &#34;sucesso&#34;: [error is None],
+                    &#34;erro&#34;: [f&#34;[recapturado] {error}&#34;],
+                }
+            )
+    else:
+        dataframe = pd.DataFrame(
+            {
+                &#34;timestamp_captura&#34;: [timestamp],
+                &#34;sucesso&#34;: [error is None],
+                &#34;erro&#34;: [error],
+            }
+        )
+    # Save data local
     dataframe.to_csv(filepath, index=False)
-    # BD Table object
+    # Upload to Storage
     create_or_append_table(
         dataset_id=dataset_id, table_id=table_id, path=filepath.parent.parent
     )
-    if error:
+    if error is not None:
         raise Exception(f&#34;Pipeline failed with error: {error}&#34;)</code></pre>
 </details>
 </dd>
@@ -1817,12 +2029,15 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.tasks.bq_upload_from_dict" href="#pipelines.rj_smtr.tasks.bq_upload_from_dict">bq_upload_from_dict</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.build_incremental_model" href="#pipelines.rj_smtr.tasks.build_incremental_model">build_incremental_model</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.create_current_date_hour_partition" href="#pipelines.rj_smtr.tasks.create_current_date_hour_partition">create_current_date_hour_partition</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.create_date_hour_partition" href="#pipelines.rj_smtr.tasks.create_date_hour_partition">create_date_hour_partition</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.create_local_partition_path" href="#pipelines.rj_smtr.tasks.create_local_partition_path">create_local_partition_path</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.delay_now_time" href="#pipelines.rj_smtr.tasks.delay_now_time">delay_now_time</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.fetch_dataset_sha" href="#pipelines.rj_smtr.tasks.fetch_dataset_sha">fetch_dataset_sha</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.get_current_timestamp" href="#pipelines.rj_smtr.tasks.get_current_timestamp">get_current_timestamp</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_local_dbt_client" href="#pipelines.rj_smtr.tasks.get_local_dbt_client">get_local_dbt_client</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_materialization_date_range" href="#pipelines.rj_smtr.tasks.get_materialization_date_range">get_materialization_date_range</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_raw" href="#pipelines.rj_smtr.tasks.get_raw">get_raw</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.parse_timestamp_to_string" href="#pipelines.rj_smtr.tasks.parse_timestamp_to_string">parse_timestamp_to_string</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.query_logs" href="#pipelines.rj_smtr.tasks.query_logs">query_logs</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.run_dbt_model" href="#pipelines.rj_smtr.tasks.run_dbt_model">run_dbt_model</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.save_raw_local" href="#pipelines.rj_smtr.tasks.save_raw_local">save_raw_local</a></code></li>

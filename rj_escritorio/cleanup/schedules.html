@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>pipelines.rj_escritorio.cleanup.schedules API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Schedules for the daily cleanup flow." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,6 +22,41 @@
 <h1 class="title">Module <code>pipelines.rj_escritorio.cleanup.schedules</code></h1>
 </header>
 <section id="section-intro">
+<p>Schedules for the daily cleanup flow.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># -*- coding: utf-8 -*-
+&#34;&#34;&#34;
+Schedules for the daily cleanup flow.
+&#34;&#34;&#34;
+
+from datetime import timedelta, datetime
+
+from prefect.schedules import Schedule
+from prefect.schedules.clocks import IntervalClock
+import pytz
+
+from pipelines.constants import constants
+
+daily_at_3am = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(days=1),
+            start_date=datetime(
+                2021, 1, 1, 3, tzinfo=pytz.timezone(&#34;America/Sao_Paulo&#34;)
+            ),
+            labels=[
+                constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
+            ],
+            parameter_defaults={
+                &#34;days_old&#34;: &#34;30&#34;,
+            },
+        ),
+    ]
+)</code></pre>
+</details>
 </section>
 <section>
 </section>
