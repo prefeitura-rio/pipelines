@@ -370,10 +370,18 @@ def human_readable(
 ###############
 
 
-def dataframe_to_csv(dataframe: pd.DataFrame, path: Union[str, Path]) -> None:
+def dataframe_to_csv(
+    dataframe: pd.DataFrame,
+    path: Union[str, Path],
+    build_json_dataframe: bool = False,
+    dataframe_key_column: str = None,
+) -> None:
     """
     Writes a dataframe to CSV file.
     """
+    if build_json_dataframe:
+        dataframe = to_json_dataframe(dataframe, key_column=dataframe_key_column)
+
     # Remove filename from path
     path = Path(path)
     # Create directory if it doesn't exist
@@ -383,12 +391,20 @@ def dataframe_to_csv(dataframe: pd.DataFrame, path: Union[str, Path]) -> None:
     dataframe.to_csv(path, index=False, encoding="utf-8")
 
 
-def dataframe_to_parquet(dataframe: pd.DataFrame, path: Union[str, Path]):
+def dataframe_to_parquet(
+    dataframe: pd.DataFrame,
+    path: Union[str, Path],
+    build_json_dataframe: bool = False,
+    dataframe_key_column: str = None,
+):
     """
     Writes a dataframe to Parquet file with Schema as STRING.
     """
     # Code adapted from
     # https://stackoverflow.com/a/70817689/9944075
+
+    if build_json_dataframe:
+        dataframe = to_json_dataframe(dataframe, key_column=dataframe_key_column)
 
     # If the file already exists, we:
     # - Load it
@@ -452,12 +468,15 @@ def remove_columns_accents(dataframe: pd.DataFrame) -> list:
     )
 
 
+# pylint: disable=R0913
 def to_partitions(
     data: pd.DataFrame,
     partition_columns: List[str],
     savepath: str,
     data_type: str = "csv",
     suffix: str = None,
+    build_json_dataframe: bool = False,
+    dataframe_key_column: str = None,
 ):  # sourcery skip: raise-specific-error
     """Save data in to hive patitions schema, given a dataframe and a list of partition columns.
     Args:
@@ -513,6 +532,12 @@ def to_partitions(
                 )
             else:
                 file_filter_save_path = Path(filter_save_path) / f"data.{data_type}"
+
+            if build_json_dataframe:
+                df_filter = to_json_dataframe(
+                    df_filter, key_column=dataframe_key_column
+                )
+
             if data_type == "csv":
                 # append data to csv
                 df_filter.to_csv(
@@ -529,6 +554,40 @@ def to_partitions(
         raise BaseException("Data need to be a pandas DataFrame")
 
 
+def to_json_dataframe(
+    dataframe: pd.DataFrame = None,
+    csv_path: Union[str, Path] = None,
+    key_column: str = None,
+    read_csv_kwargs: dict = None,
+    save_to: Union[str, Path] = None,
+) -> pd.DataFrame:
+    """
+    Manipulates a dataframe by keeping key_column and moving every other column
+    data to a "content" column in JSON format. Example:
+
+    - Input dataframe: pd.DataFrame({"key": ["a", "b", "c"], "col1": [1, 2, 3], "col2": [4, 5, 6]})
+    - Output dataframe: pd.DataFrame({
+        "key": ["a", "b", "c"],
+        "content": [{"col1": 1, "col2": 4}, {"col1": 2, "col2": 5}, {"col1": 3, "col2": 6}]
+    })
+    """
+    if dataframe is None and not csv_path:
+        raise ValueError("dataframe or dataframe_path is required")
+    if csv_path:
+        dataframe = pd.read_csv(csv_path, **read_csv_kwargs)
+    if key_column:
+        dataframe["content"] = dataframe.drop(columns=[key_column]).to_dict(
+            orient="records"
+        )
+        dataframe = dataframe[["key", "content"]]
+    else:
+        dataframe["content"] = dataframe.to_dict(orient="records")
+        dataframe = dataframe[["content"]]
+    if save_to:
+        dataframe.to_csv(save_to, index=False)
+    return dataframe
+
+
 ###############
 #
 # Storage utils
@@ -536,7 +595,9 @@ def to_partitions(
 ###############
 
 
-def get_credentials_from_env(mode: str = "prod") -> service_account.Credentials:
+def get_credentials_from_env(
+    mode: str = "prod", scopes: List[str] = None
+) -> service_account.Credentials:
     """
     Gets credentials from env vars
     """
@@ -546,8 +607,12 @@ def get_credentials_from_env(mode: str = "prod") -> service_account.Credentials:
     if env == "":
         raise ValueError(f"BASEDOSDADOS_CREDENTIALS_{mode.upper()} env var not set!")
     info: dict = json.loads(base64.b64decode(env))
-
-    return service_account.Credentials.from_service_account_info(info)
+    cred: service_account.Credentials = (
+        service_account.Credentials.from_service_account_info(info)
+    )
+    if scopes:
+        cred = cred.with_scopes(scopes)
+    return cred
 
 
 def get_storage_blobs(dataset_id: str, table_id: str) -> list:
@@ -651,3 +716,25 @@ def dump_header_to_file(data_path: Union[str, Path], data_type: str = "csv"):
     log(f"Wrote {data_type.upper()} header at {save_header_file_path}")
 
     return save_header_path
+
+
+def parse_date_columns(
+    dataframe: pd.DataFrame, partition_date_column: str
+) -> Tuple[pd.DataFrame, List[str]]:
+    """
+    Parses the date columns to the partition format.
+    """
+    ano_col = "ano_particao"
+    mes_col = "mes_particao"
+    data_col = "data_particao"
+    cols = [ano_col, mes_col, data_col]
+    for col in cols:
+        if col in dataframe.columns:
+            raise ValueError(f"Column {col} already exists, please review your model.")
+    dataframe[partition_date_column] = dataframe[partition_date_column].astype(str)
+    dataframe[data_col] = pd.to_datetime(dataframe[partition_date_column])
+    dataframe[ano_col] = dataframe[data_col].dt.year
+    dataframe[mes_col] = dataframe[data_col].dt.month
+    dataframe[data_col] = dataframe[data_col].dt.date
+
+    return dataframe, [ano_col, mes_col, data_col]
