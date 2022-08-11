@@ -86,6 +86,7 @@ def download_url(url: str, fname: str, gdrive_url: bool = False) -> None:
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
+# pylint: disable=R0913
 def dump_files(
     file_path: str,
     partition_columns: List[str],

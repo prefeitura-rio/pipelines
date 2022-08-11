@@ -12,8 +12,11 @@ from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.dump_db.constants import constants as dump_db_constants
+from pipelines.utils.dump_db.tasks import (
+    parse_comma_separated_string_to_list,
+)
 from pipelines.utils.dump_to_gcs.constants import constants as dump_to_gcs_constants
-from pipelines.utils.dump_url.tasks import download_url
+from pipelines.utils.dump_url.tasks import download_url, dump_files
 from pipelines.utils.decorators import Flow
 from pipelines.utils.tasks import (
     get_current_flow_labels,
@@ -38,6 +41,9 @@ with Flow(
     # URL parameters
     url = Parameter("url")
     gdrive_url = Parameter("gdrive_url", default=False, required=False)
+
+    # Table parameters
+    partition_columns = Parameter("partition_columns", required=False, default="")
 
     # Materialization parameters
     materialize_after_dump = Parameter(
@@ -65,7 +71,9 @@ with Flow(
     batch_data_type = Parameter("batch_data_type", default="csv")  # csv or parquet
 
     # JSON dataframe parameters
-    dataframe_key_column = Parameter("dataframe_key_column")
+    dataframe_key_column = Parameter(
+        "dataframe_key_column", default=None, required=False
+    )
     build_json_dataframe = Parameter(
         "build_json_dataframe", default=False, required=False
     )
@@ -88,8 +96,8 @@ with Flow(
     # Tasks section #1 - Get data
     #
     #####################################
-    # this will not conflict with other flows because it's running in a separate container
     DATA_PATH = "/tmp/dump_url/"
+    DUMP_DATA_PATH = "/tmp/dump_url_chunks/"
     DATA_FNAME = DATA_PATH + "data.csv"
     DOWNLOAD_URL_TASK = download_url(
         url=url,
@@ -98,7 +106,16 @@ with Flow(
     )
     DOWNLOAD_URL_TASK.set_upstream(rename_flow_run)
 
-    # TODO: add task to dump chunks
+    partition_columns = parse_comma_separated_string_to_list(text=partition_columns)
+
+    DUMP_CHUNKS_TASK = dump_files(
+        file_path=DATA_FNAME,
+        partition_columns=partition_columns,
+        save_path=DUMP_DATA_PATH,
+        build_json_dataframe=build_json_dataframe,
+        dataframe_key_column=dataframe_key_column,
+    )
+    DUMP_CHUNKS_TASK.set_upstream(DOWNLOAD_URL_TASK)
 
     #####################################
     #
@@ -112,6 +129,7 @@ with Flow(
         dump_mode=dump_mode,
     )
     CREATE_TABLE_AND_UPLOAD_TO_GCS_TASK.set_upstream(DOWNLOAD_URL_TASK)
+    CREATE_TABLE_AND_UPLOAD_TO_GCS_TASK.set_upstream(DUMP_CHUNKS_TASK)
 
     #####################################
     #

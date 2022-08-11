@@ -468,6 +468,7 @@ def remove_columns_accents(dataframe: pd.DataFrame) -> list:
     )
 
 
+# pylint: disable=R0913
 def to_partitions(
     data: pd.DataFrame,
     partition_columns: List[str],

@@ -15,6 +15,7 @@ from pipelines.utils.utils import (
 )
 
 
+# pylint: disable=R0913
 def handle_dataframe_chunk(
     dataframe: pd.DataFrame,
     save_path: str,

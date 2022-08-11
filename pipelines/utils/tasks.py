@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import List, Union, Any
 
 import basedosdados as bd
-import pandas as pd
 import pendulum
 import prefect
 from prefect import task
