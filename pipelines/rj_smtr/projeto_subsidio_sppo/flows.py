@@ -3,7 +3,7 @@
 Flows for projeto_subsidio_sppo
 """
 
-from prefect import Parameter
+from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
@@ -35,9 +35,12 @@ from pipelines.rj_smtr.schedules import (
 
 with Flow("SMTR - Subsídio SPPO", code_owners=["caio", "fernanda"]) as subsidio_sppo:
     # Get default parameters #
-    run_date = Parameter("run_date", default=get_now_day())
+    run_date = Parameter("run_date", default=None)
     LABELS = get_current_flow_labels()
     MODE = get_current_flow_mode(LABELS)
+
+    with case(run_date, None):
+        run_date = get_now_day()
 
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
