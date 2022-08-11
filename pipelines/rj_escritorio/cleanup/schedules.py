@@ -22,7 +22,7 @@ daily_at_3am = Schedule(
                 constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
             ],
             parameter_defaults={
-                "days_old": "30",
+                "days_old": 30,
             },
         ),
     ]
