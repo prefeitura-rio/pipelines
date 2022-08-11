@@ -123,7 +123,7 @@ with Flow(
     #
     #####################################
     CREATE_TABLE_AND_UPLOAD_TO_GCS_TASK = create_table_and_upload_to_gcs(
-        data_path=DATA_PATH,
+        data_path=DUMP_DATA_PATH,
         dataset_id=dataset_id,
         table_id=table_id,
         dump_mode=dump_mode,
