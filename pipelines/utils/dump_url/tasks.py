@@ -2,18 +2,24 @@
 """
 General purpose tasks for dumping data from URLs.
 """
-from datetime import timedelta
+from datetime import datetime, timedelta
 import io
 from pathlib import Path
+from typing import List
 
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
+import pandas as pd
 from prefect import task
 import requests
 
 from pipelines.constants import constants
-from pipelines.utils.utils import get_credentials_from_env, log
+from pipelines.utils.dump_url.utils import handle_dataframe_chunk
+from pipelines.utils.utils import (
+    get_credentials_from_env,
+    log,
+)
 
 
 @task(
@@ -73,3 +79,23 @@ def download_url(url: str, fname: str, gdrive_url: bool = False) -> None:
         except HttpError as error:
             log(f"HTTPError: {error}", "error")
             raise error
+
+
+@task(
+    checkpoint=False,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def dump_files(file_path: str, partition_columns=List, save_path: str = ".") -> None:
+    event_id = datetime.now().strftime("%Y%m%d-%H%M%S")
+    chunksize = 10 ** 6
+    for idx, chunk in enumerate(pd.read_csv(Path(file_path), chunksize=chunksize)):
+        if idx % 100 == 0:
+            log(f"Dumping batch {idx} with size {chunksize}")
+        handle_dataframe_chunk(
+            dataframe=chunk,
+            save_path=save_path,
+            partition_columns=partition_columns,
+            eventid=event_id,
+            idx=idx,
+        )
