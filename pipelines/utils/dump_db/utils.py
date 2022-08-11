@@ -4,7 +4,7 @@ Utilities for the Database Dump flows.
 """
 
 from datetime import datetime, timedelta
-from typing import List, Tuple, Union
+from typing import List, Union
 
 import pandas as pd
 
@@ -30,28 +30,6 @@ def extract_last_partition_date(partitions_dict: dict, date_format: str):
         except ValueError:
             log(f"Partition {partition} is not a date")
     return last_partition_date
-
-
-def parse_date_columns(
-    dataframe: pd.DataFrame, partition_date_column: str
-) -> Tuple[pd.DataFrame, List[str]]:
-    """
-    Parses the date columns to the partition format.
-    """
-    ano_col = "ano_particao"
-    mes_col = "mes_particao"
-    data_col = "data_particao"
-    cols = [ano_col, mes_col, data_col]
-    for col in cols:
-        if col in dataframe.columns:
-            raise ValueError(f"Column {col} already exists, please review your model.")
-    dataframe[partition_date_column] = dataframe[partition_date_column].astype(str)
-    dataframe[data_col] = pd.to_datetime(dataframe[partition_date_column])
-    dataframe[ano_col] = dataframe[data_col].dt.year
-    dataframe[mes_col] = dataframe[data_col].dt.month
-    dataframe[data_col] = dataframe[data_col].dt.date
-
-    return dataframe, [ano_col, mes_col, data_col]
 
 
 def build_query_new_columns(table_columns: List[str]) -> List[str]:
