@@ -120,7 +120,7 @@ def dump_files(
     file_path: str,
     partition_columns: List[str],
     save_path: str = &#34;.&#34;,
-    chunksize: int = 10**6,
+    chunksize: int = 10 ** 6,
     build_json_dataframe: bool = False,
     dataframe_key_column: str = None,
 ) -&gt; None:
@@ -129,8 +129,7 @@ def dump_files(
     &#34;&#34;&#34;
     event_id = datetime.now().strftime(&#34;%Y%m%d-%H%M%S&#34;)
     for idx, chunk in enumerate(pd.read_csv(Path(file_path), chunksize=chunksize)):
-        if idx % 100 == 0:
-            log(f&#34;Dumping batch {idx} with size {chunksize}&#34;)
+        log(f&#34;Dumping batch {idx} with size {chunksize}&#34;)
         handle_dataframe_chunk(
             dataframe=chunk,
             save_path=save_path,
@@ -246,7 +245,7 @@ def dump_files(
     file_path: str,
     partition_columns: List[str],
     save_path: str = &#34;.&#34;,
-    chunksize: int = 10**6,
+    chunksize: int = 10 ** 6,
     build_json_dataframe: bool = False,
     dataframe_key_column: str = None,
 ) -&gt; None:
@@ -255,8 +254,7 @@ def dump_files(
     &#34;&#34;&#34;
     event_id = datetime.now().strftime(&#34;%Y%m%d-%H%M%S&#34;)
     for idx, chunk in enumerate(pd.read_csv(Path(file_path), chunksize=chunksize)):
-        if idx % 100 == 0:
-            log(f&#34;Dumping batch {idx} with size {chunksize}&#34;)
+        log(f&#34;Dumping batch {idx} with size {chunksize}&#34;)
         handle_dataframe_chunk(
             dataframe=chunk,
             save_path=save_path,
