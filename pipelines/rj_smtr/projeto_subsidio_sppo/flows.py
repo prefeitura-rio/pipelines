@@ -3,13 +3,13 @@
 Flows for projeto_subsidio_sppo
 """
 
-from prefect import Parameter, case
+from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 # EMD Imports #
 
-from pipelines.constants import emd_constants
+from pipelines.constants import constants as emd_constants
 from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
     get_now_day,
