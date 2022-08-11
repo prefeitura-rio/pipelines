@@ -280,36 +280,3 @@ def check_table_exists(
     exists = tb.table_exists(mode="staging")
     log(f"Table {dataset_id}.{table_id} exists in staging: {exists}")
     return exists
-
-
-@task(checkpoint=False)
-def to_json_dataframe(
-    dataframe: pd.DataFrame = None,
-    csv_path: Union[str, Path] = None,
-    key_column: str = None,
-    read_csv_kwargs: dict = None,
-    save_to: Union[str, Path] = None,
-) -> pd.DataFrame:
-    """
-    Manipulates a dataframe by keeping key_column and moving every other column
-    data to a "content" column in JSON format. Example:
-
-    - Input dataframe: pd.DataFrame({"key": ["a", "b", "c"], "col1": [1, 2, 3], "col2": [4, 5, 6]})
-    - Output dataframe: pd.DataFrame({
-        "key": ["a", "b", "c"],
-        "content": [{"col1": 1, "col2": 4}, {"col1": 2, "col2": 5}, {"col1": 3, "col2": 6}]
-    })
-    """
-    if not key_column:
-        raise ValueError("key_column is required")
-    if not dataframe and not csv_path:
-        raise ValueError("dataframe or dataframe_path is required")
-    if csv_path:
-        dataframe = pd.read_csv(csv_path, **read_csv_kwargs)
-    dataframe["content"] = dataframe.drop(columns=[key_column]).to_dict(
-        orient="records"
-    )
-    dataframe = dataframe[["key", "content"]]
-    if save_to:
-        dataframe.to_csv(save_to, index=False)
-    return dataframe

@@ -18,9 +18,11 @@ from pipelines.utils.utils import (
 def handle_dataframe_chunk(
     dataframe: pd.DataFrame,
     save_path: str,
-    partition_columns: List,
-    event_id=str,
-    idx=int,
+    partition_columns: List[str],
+    event_id: str,
+    idx: int,
+    build_json_dataframe: bool = False,
+    dataframe_key_column: str = None,
 ):
     """
     Handles a chunk of dataframe.
@@ -58,6 +60,13 @@ def handle_dataframe_chunk(
             partition_columns=partitions,
             savepath=save_path,
             data_type="csv",
+            build_json_dataframe=build_json_dataframe,
+            dataframe_key_column=dataframe_key_column,
         )
     else:
-        dataframe_to_csv(dataframe, save_path / f"{event_id}-{idx}.csv")
+        dataframe_to_csv(
+            dataframe,
+            save_path / f"{event_id}-{idx}.csv",
+            build_json_dataframe=build_json_dataframe,
+            dataframe_key_column=dataframe_key_column,
+        )

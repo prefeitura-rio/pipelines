@@ -4,7 +4,7 @@ Utilities for the Database Dump flows.
 """
 
 from datetime import datetime, timedelta
-from typing import List, Tuple, Union
+from typing import List, Union
 
 import pandas as pd
 

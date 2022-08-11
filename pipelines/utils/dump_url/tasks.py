@@ -86,9 +86,18 @@ def download_url(url: str, fname: str, gdrive_url: bool = False) -> None:
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def dump_files(file_path: str, partition_columns=List, save_path: str = ".") -> None:
+def dump_files(
+    file_path: str,
+    partition_columns: List[str],
+    save_path: str = ".",
+    chunksize: int = 10**6,
+    build_json_dataframe: bool = False,
+    dataframe_key_column: str = None,
+) -> None:
+    """
+    Dump files according to chunk size
+    """
     event_id = datetime.now().strftime("%Y%m%d-%H%M%S")
-    chunksize = 10**6
     for idx, chunk in enumerate(pd.read_csv(Path(file_path), chunksize=chunksize)):
         if idx % 100 == 0:
             log(f"Dumping batch {idx} with size {chunksize}")
@@ -96,6 +105,8 @@ def dump_files(file_path: str, partition_columns=List, save_path: str = ".") -> 
             dataframe=chunk,
             save_path=save_path,
             partition_columns=partition_columns,
-            eventid=event_id,
+            event_id=event_id,
             idx=idx,
+            build_json_dataframe=build_json_dataframe,
+            dataframe_key_column=dataframe_key_column,
         )

@@ -370,10 +370,18 @@ def human_readable(
 ###############
 
 
-def dataframe_to_csv(dataframe: pd.DataFrame, path: Union[str, Path]) -> None:
+def dataframe_to_csv(
+    dataframe: pd.DataFrame,
+    path: Union[str, Path],
+    build_json_dataframe: bool = False,
+    dataframe_key_column: str = None,
+) -> None:
     """
     Writes a dataframe to CSV file.
     """
+    if build_json_dataframe:
+        dataframe = to_json_dataframe(dataframe, key_column=dataframe_key_column)
+
     # Remove filename from path
     path = Path(path)
     # Create directory if it doesn't exist
@@ -383,12 +391,20 @@ def dataframe_to_csv(dataframe: pd.DataFrame, path: Union[str, Path]) -> None:
     dataframe.to_csv(path, index=False, encoding="utf-8")
 
 
-def dataframe_to_parquet(dataframe: pd.DataFrame, path: Union[str, Path]):
+def dataframe_to_parquet(
+    dataframe: pd.DataFrame,
+    path: Union[str, Path],
+    build_json_dataframe: bool = False,
+    dataframe_key_column: str = None,
+):
     """
     Writes a dataframe to Parquet file with Schema as STRING.
     """
     # Code adapted from
     # https://stackoverflow.com/a/70817689/9944075
+
+    if build_json_dataframe:
+        dataframe = to_json_dataframe(dataframe, key_column=dataframe_key_column)
 
     # If the file already exists, we:
     # - Load it
@@ -458,6 +474,8 @@ def to_partitions(
     savepath: str,
     data_type: str = "csv",
     suffix: str = None,
+    build_json_dataframe: bool = False,
+    dataframe_key_column: str = None,
 ):  # sourcery skip: raise-specific-error
     """Save data in to hive patitions schema, given a dataframe and a list of partition columns.
     Args:
@@ -513,6 +531,12 @@ def to_partitions(
                 )
             else:
                 file_filter_save_path = Path(filter_save_path) / f"data.{data_type}"
+
+            if build_json_dataframe:
+                df_filter = to_json_dataframe(
+                    df_filter, key_column=dataframe_key_column
+                )
+
             if data_type == "csv":
                 # append data to csv
                 df_filter.to_csv(
@@ -527,6 +551,40 @@ def to_partitions(
                 raise ValueError(f"Invalid data type: {data_type}")
     else:
         raise BaseException("Data need to be a pandas DataFrame")
+
+
+def to_json_dataframe(
+    dataframe: pd.DataFrame = None,
+    csv_path: Union[str, Path] = None,
+    key_column: str = None,
+    read_csv_kwargs: dict = None,
+    save_to: Union[str, Path] = None,
+) -> pd.DataFrame:
+    """
+    Manipulates a dataframe by keeping key_column and moving every other column
+    data to a "content" column in JSON format. Example:
+
+    - Input dataframe: pd.DataFrame({"key": ["a", "b", "c"], "col1": [1, 2, 3], "col2": [4, 5, 6]})
+    - Output dataframe: pd.DataFrame({
+        "key": ["a", "b", "c"],
+        "content": [{"col1": 1, "col2": 4}, {"col1": 2, "col2": 5}, {"col1": 3, "col2": 6}]
+    })
+    """
+    if dataframe is None and not csv_path:
+        raise ValueError("dataframe or dataframe_path is required")
+    if csv_path:
+        dataframe = pd.read_csv(csv_path, **read_csv_kwargs)
+    if key_column:
+        dataframe["content"] = dataframe.drop(columns=[key_column]).to_dict(
+            orient="records"
+        )
+        dataframe = dataframe[["key", "content"]]
+    else:
+        dataframe["content"] = dataframe.to_dict(orient="records")
+        dataframe = dataframe[["content"]]
+    if save_to:
+        dataframe.to_csv(save_to, index=False)
+    return dataframe
 
 
 ###############

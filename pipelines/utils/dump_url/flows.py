@@ -19,7 +19,6 @@ from pipelines.utils.tasks import (
     get_current_flow_labels,
     rename_current_flow_run_dataset_table,
     create_table_and_upload_to_gcs,
-    to_json_dataframe,
 )
 
 with Flow(
@@ -99,13 +98,7 @@ with Flow(
     )
     DOWNLOAD_URL_TASK.set_upstream(rename_flow_run)
 
-    with case(build_json_dataframe, True):
-        BUILD_JSON_DATAFRAME_TASK = to_json_dataframe(
-            csv_path=DATA_FNAME,
-            key_column=dataframe_key_column,
-            save_to=DATA_FNAME,
-        )
-        BUILD_JSON_DATAFRAME_TASK.set_upstream(DOWNLOAD_URL_TASK)
+    # TODO: add task to dump chunks
 
     #####################################
     #
@@ -119,7 +112,6 @@ with Flow(
         dump_mode=dump_mode,
     )
     CREATE_TABLE_AND_UPLOAD_TO_GCS_TASK.set_upstream(DOWNLOAD_URL_TASK)
-    CREATE_TABLE_AND_UPLOAD_TO_GCS_TASK.set_upstream(BUILD_JSON_DATAFRAME_TASK)
 
     #####################################
     #
