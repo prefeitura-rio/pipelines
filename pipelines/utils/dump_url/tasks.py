@@ -88,7 +88,7 @@ def download_url(url: str, fname: str, gdrive_url: bool = False) -> None:
 )
 def dump_files(file_path: str, partition_columns=List, save_path: str = ".") -> None:
     event_id = datetime.now().strftime("%Y%m%d-%H%M%S")
-    chunksize = 10 ** 6
+    chunksize = 10**6
     for idx, chunk in enumerate(pd.read_csv(Path(file_path), chunksize=chunksize)):
         if idx % 100 == 0:
             log(f"Dumping batch {idx} with size {chunksize}")
