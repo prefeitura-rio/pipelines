@@ -399,10 +399,18 @@ def human_readable(
 ###############
 
 
-def dataframe_to_csv(dataframe: pd.DataFrame, path: Union[str, Path]) -&gt; None:
+def dataframe_to_csv(
+    dataframe: pd.DataFrame,
+    path: Union[str, Path],
+    build_json_dataframe: bool = False,
+    dataframe_key_column: str = None,
+) -&gt; None:
     &#34;&#34;&#34;
     Writes a dataframe to CSV file.
     &#34;&#34;&#34;
+    if build_json_dataframe:
+        dataframe = to_json_dataframe(dataframe, key_column=dataframe_key_column)
+
     # Remove filename from path
     path = Path(path)
     # Create directory if it doesn&#39;t exist
@@ -412,12 +420,20 @@ def dataframe_to_csv(dataframe: pd.DataFrame, path: Union[str, Path]) -&gt; None
     dataframe.to_csv(path, index=False, encoding=&#34;utf-8&#34;)
 
 
-def dataframe_to_parquet(dataframe: pd.DataFrame, path: Union[str, Path]):
+def dataframe_to_parquet(
+    dataframe: pd.DataFrame,
+    path: Union[str, Path],
+    build_json_dataframe: bool = False,
+    dataframe_key_column: str = None,
+):
     &#34;&#34;&#34;
     Writes a dataframe to Parquet file with Schema as STRING.
     &#34;&#34;&#34;
     # Code adapted from
     # https://stackoverflow.com/a/70817689/9944075
+
+    if build_json_dataframe:
+        dataframe = to_json_dataframe(dataframe, key_column=dataframe_key_column)
 
     # If the file already exists, we:
     # - Load it
@@ -481,12 +497,15 @@ def remove_columns_accents(dataframe: pd.DataFrame) -&gt; list:
     )
 
 
+# pylint: disable=R0913
 def to_partitions(
     data: pd.DataFrame,
     partition_columns: List[str],
     savepath: str,
     data_type: str = &#34;csv&#34;,
     suffix: str = None,
+    build_json_dataframe: bool = False,
+    dataframe_key_column: str = None,
 ):  # sourcery skip: raise-specific-error
     &#34;&#34;&#34;Save data in to hive patitions schema, given a dataframe and a list of partition columns.
     Args:
@@ -542,6 +561,12 @@ def to_partitions(
                 )
             else:
                 file_filter_save_path = Path(filter_save_path) / f&#34;data.{data_type}&#34;
+
+            if build_json_dataframe:
+                df_filter = to_json_dataframe(
+                    df_filter, key_column=dataframe_key_column
+                )
+
             if data_type == &#34;csv&#34;:
                 # append data to csv
                 df_filter.to_csv(
@@ -558,6 +583,40 @@ def to_partitions(
         raise BaseException(&#34;Data need to be a pandas DataFrame&#34;)
 
 
+def to_json_dataframe(
+    dataframe: pd.DataFrame = None,
+    csv_path: Union[str, Path] = None,
+    key_column: str = None,
+    read_csv_kwargs: dict = None,
+    save_to: Union[str, Path] = None,
+) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Manipulates a dataframe by keeping key_column and moving every other column
+    data to a &#34;content&#34; column in JSON format. Example:
+
+    - Input dataframe: pd.DataFrame({&#34;key&#34;: [&#34;a&#34;, &#34;b&#34;, &#34;c&#34;], &#34;col1&#34;: [1, 2, 3], &#34;col2&#34;: [4, 5, 6]})
+    - Output dataframe: pd.DataFrame({
+        &#34;key&#34;: [&#34;a&#34;, &#34;b&#34;, &#34;c&#34;],
+        &#34;content&#34;: [{&#34;col1&#34;: 1, &#34;col2&#34;: 4}, {&#34;col1&#34;: 2, &#34;col2&#34;: 5}, {&#34;col1&#34;: 3, &#34;col2&#34;: 6}]
+    })
+    &#34;&#34;&#34;
+    if dataframe is None and not csv_path:
+        raise ValueError(&#34;dataframe or dataframe_path is required&#34;)
+    if csv_path:
+        dataframe = pd.read_csv(csv_path, **read_csv_kwargs)
+    if key_column:
+        dataframe[&#34;content&#34;] = dataframe.drop(columns=[key_column]).to_dict(
+            orient=&#34;records&#34;
+        )
+        dataframe = dataframe[[&#34;key&#34;, &#34;content&#34;]]
+    else:
+        dataframe[&#34;content&#34;] = dataframe.to_dict(orient=&#34;records&#34;)
+        dataframe = dataframe[[&#34;content&#34;]]
+    if save_to:
+        dataframe.to_csv(save_to, index=False)
+    return dataframe
+
+
 ###############
 #
 # Storage utils
@@ -565,7 +624,9 @@ def to_partitions(
 ###############
 
 
-def get_credentials_from_env(mode: str = &#34;prod&#34;) -&gt; service_account.Credentials:
+def get_credentials_from_env(
+    mode: str = &#34;prod&#34;, scopes: List[str] = None
+) -&gt; service_account.Credentials:
     &#34;&#34;&#34;
     Gets credentials from env vars
     &#34;&#34;&#34;
@@ -575,8 +636,12 @@ def get_credentials_from_env(mode: str = &#34;prod&#34;) -&gt; service_account.C
     if env == &#34;&#34;:
         raise ValueError(f&#34;BASEDOSDADOS_CREDENTIALS_{mode.upper()} env var not set!&#34;)
     info: dict = json.loads(base64.b64decode(env))
-
-    return service_account.Credentials.from_service_account_info(info)
+    cred: service_account.Credentials = (
+        service_account.Credentials.from_service_account_info(info)
+    )
+    if scopes:
+        cred = cred.with_scopes(scopes)
+    return cred
 
 
 def get_storage_blobs(dataset_id: str, table_id: str) -&gt; list:
@@ -679,7 +744,29 @@ def dump_header_to_file(data_path: Union[str, Path], data_type: str = &#34;csv&#
 
     log(f&#34;Wrote {data_type.upper()} header at {save_header_file_path}&#34;)
 
-    return save_header_path</code></pre>
+    return save_header_path
+
+
+def parse_date_columns(
+    dataframe: pd.DataFrame, partition_date_column: str
+) -&gt; Tuple[pd.DataFrame, List[str]]:
+    &#34;&#34;&#34;
+    Parses the date columns to the partition format.
+    &#34;&#34;&#34;
+    ano_col = &#34;ano_particao&#34;
+    mes_col = &#34;mes_particao&#34;
+    data_col = &#34;data_particao&#34;
+    cols = [ano_col, mes_col, data_col]
+    for col in cols:
+        if col in dataframe.columns:
+            raise ValueError(f&#34;Column {col} already exists, please review your model.&#34;)
+    dataframe[partition_date_column] = dataframe[partition_date_column].astype(str)
+    dataframe[data_col] = pd.to_datetime(dataframe[partition_date_column])
+    dataframe[ano_col] = dataframe[data_col].dt.year
+    dataframe[mes_col] = dataframe[data_col].dt.month
+    dataframe[data_col] = dataframe[data_col].dt.date
+
+    return dataframe, [ano_col, mes_col, data_col]</code></pre>
 </details>
 </section>
 <section>
@@ -741,7 +828,7 @@ def dump_header_to_file(data_path: Union[str, Path], data_type: str = &#34;csv&#
 </details>
 </dd>
 <dt id="pipelines.utils.utils.dataframe_to_csv"><code class="name flex">
-<span>def <span class="ident">dataframe_to_csv</span></span>(<span>dataframe: pandas.core.frame.DataFrame, path: Union[str, pathlib.Path]) ‑> None</span>
+<span>def <span class="ident">dataframe_to_csv</span></span>(<span>dataframe: pandas.core.frame.DataFrame, path: Union[str, pathlib.Path], build_json_dataframe: bool = False, dataframe_key_column: str = None) ‑> None</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Writes a dataframe to CSV file.</p></div>
@@ -749,10 +836,18 @@ def dump_header_to_file(data_path: Union[str, Path], data_type: str = &#34;csv&#
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def dataframe_to_csv(dataframe: pd.DataFrame, path: Union[str, Path]) -&gt; None:
+<pre><code class="python">def dataframe_to_csv(
+    dataframe: pd.DataFrame,
+    path: Union[str, Path],
+    build_json_dataframe: bool = False,
+    dataframe_key_column: str = None,
+) -&gt; None:
     &#34;&#34;&#34;
     Writes a dataframe to CSV file.
     &#34;&#34;&#34;
+    if build_json_dataframe:
+        dataframe = to_json_dataframe(dataframe, key_column=dataframe_key_column)
+
     # Remove filename from path
     path = Path(path)
     # Create directory if it doesn&#39;t exist
@@ -763,7 +858,7 @@ def dump_header_to_file(data_path: Union[str, Path], data_type: str = &#34;csv&#
 </details>
 </dd>
 <dt id="pipelines.utils.utils.dataframe_to_parquet"><code class="name flex">
-<span>def <span class="ident">dataframe_to_parquet</span></span>(<span>dataframe: pandas.core.frame.DataFrame, path: Union[str, pathlib.Path])</span>
+<span>def <span class="ident">dataframe_to_parquet</span></span>(<span>dataframe: pandas.core.frame.DataFrame, path: Union[str, pathlib.Path], build_json_dataframe: bool = False, dataframe_key_column: str = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Writes a dataframe to Parquet file with Schema as STRING.</p></div>
@@ -771,12 +866,20 @@ def dump_header_to_file(data_path: Union[str, Path], data_type: str = &#34;csv&#
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def dataframe_to_parquet(dataframe: pd.DataFrame, path: Union[str, Path]):
+<pre><code class="python">def dataframe_to_parquet(
+    dataframe: pd.DataFrame,
+    path: Union[str, Path],
+    build_json_dataframe: bool = False,
+    dataframe_key_column: str = None,
+):
     &#34;&#34;&#34;
     Writes a dataframe to Parquet file with Schema as STRING.
     &#34;&#34;&#34;
     # Code adapted from
     # https://stackoverflow.com/a/70817689/9944075
+
+    if build_json_dataframe:
+        dataframe = to_json_dataframe(dataframe, key_column=dataframe_key_column)
 
     # If the file already exists, we:
     # - Load it
@@ -898,7 +1001,7 @@ def dump_header_to_file(data_path: Union[str, Path], data_type: str = &#34;csv&#
 </details>
 </dd>
 <dt id="pipelines.utils.utils.get_credentials_from_env"><code class="name flex">
-<span>def <span class="ident">get_credentials_from_env</span></span>(<span>mode: str = 'prod') ‑> google.oauth2.service_account.Credentials</span>
+<span>def <span class="ident">get_credentials_from_env</span></span>(<span>mode: str = 'prod', scopes: List[str] = None) ‑> google.oauth2.service_account.Credentials</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Gets credentials from env vars</p></div>
@@ -906,7 +1009,9 @@ def dump_header_to_file(data_path: Union[str, Path], data_type: str = &#34;csv&#
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_credentials_from_env(mode: str = &#34;prod&#34;) -&gt; service_account.Credentials:
+<pre><code class="python">def get_credentials_from_env(
+    mode: str = &#34;prod&#34;, scopes: List[str] = None
+) -&gt; service_account.Credentials:
     &#34;&#34;&#34;
     Gets credentials from env vars
     &#34;&#34;&#34;
@@ -916,8 +1021,12 @@ def dump_header_to_file(data_path: Union[str, Path], data_type: str = &#34;csv&#
     if env == &#34;&#34;:
         raise ValueError(f&#34;BASEDOSDADOS_CREDENTIALS_{mode.upper()} env var not set!&#34;)
     info: dict = json.loads(base64.b64decode(env))
-
-    return service_account.Credentials.from_service_account_info(info)</code></pre>
+    cred: service_account.Credentials = (
+        service_account.Credentials.from_service_account_info(info)
+    )
+    if scopes:
+        cred = cred.with_scopes(scopes)
+    return cred</code></pre>
 </details>
 </dd>
 <dt id="pipelines.utils.utils.get_redis_client"><code class="name flex">
@@ -1166,6 +1275,37 @@ Mode needs to be "prod" or "staging"</p></div>
         message=message,
         webhook_url=url,
     )</code></pre>
+</details>
+</dd>
+<dt id="pipelines.utils.utils.parse_date_columns"><code class="name flex">
+<span>def <span class="ident">parse_date_columns</span></span>(<span>dataframe: pandas.core.frame.DataFrame, partition_date_column: str) ‑> Tuple[pandas.core.frame.DataFrame, List[str]]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Parses the date columns to the partition format.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def parse_date_columns(
+    dataframe: pd.DataFrame, partition_date_column: str
+) -&gt; Tuple[pd.DataFrame, List[str]]:
+    &#34;&#34;&#34;
+    Parses the date columns to the partition format.
+    &#34;&#34;&#34;
+    ano_col = &#34;ano_particao&#34;
+    mes_col = &#34;mes_particao&#34;
+    data_col = &#34;data_particao&#34;
+    cols = [ano_col, mes_col, data_col]
+    for col in cols:
+        if col in dataframe.columns:
+            raise ValueError(f&#34;Column {col} already exists, please review your model.&#34;)
+    dataframe[partition_date_column] = dataframe[partition_date_column].astype(str)
+    dataframe[data_col] = pd.to_datetime(dataframe[partition_date_column])
+    dataframe[ano_col] = dataframe[data_col].dt.year
+    dataframe[mes_col] = dataframe[data_col].dt.month
+    dataframe[data_col] = dataframe[data_col].dt.date
+
+    return dataframe, [ano_col, mes_col, data_col]</code></pre>
 </details>
 </dd>
 <dt id="pipelines.utils.utils.parser_blobs_to_partition_dict"><code class="name flex">
@@ -1438,8 +1578,59 @@ Mode needs to be "prod" or "staging"</p></div>
     ]</code></pre>
 </details>
 </dd>
+<dt id="pipelines.utils.utils.to_json_dataframe"><code class="name flex">
+<span>def <span class="ident">to_json_dataframe</span></span>(<span>dataframe: pandas.core.frame.DataFrame = None, csv_path: Union[str, pathlib.Path] = None, key_column: str = None, read_csv_kwargs: dict = None, save_to: Union[str, pathlib.Path] = None) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Manipulates a dataframe by keeping key_column and moving every other column
+data to a "content" column in JSON format. Example:</p>
+<ul>
+<li>Input dataframe: pd.DataFrame({"key": ["a", "b", "c"], "col1": [1, 2, 3], "col2": [4, 5, 6]})</li>
+<li>Output dataframe: pd.DataFrame({
+"key": ["a", "b", "c"],
+"content": [{"col1": 1, "col2": 4}, {"col1": 2, "col2": 5}, {"col1": 3, "col2": 6}]
+})</li>
+</ul></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_json_dataframe(
+    dataframe: pd.DataFrame = None,
+    csv_path: Union[str, Path] = None,
+    key_column: str = None,
+    read_csv_kwargs: dict = None,
+    save_to: Union[str, Path] = None,
+) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Manipulates a dataframe by keeping key_column and moving every other column
+    data to a &#34;content&#34; column in JSON format. Example:
+
+    - Input dataframe: pd.DataFrame({&#34;key&#34;: [&#34;a&#34;, &#34;b&#34;, &#34;c&#34;], &#34;col1&#34;: [1, 2, 3], &#34;col2&#34;: [4, 5, 6]})
+    - Output dataframe: pd.DataFrame({
+        &#34;key&#34;: [&#34;a&#34;, &#34;b&#34;, &#34;c&#34;],
+        &#34;content&#34;: [{&#34;col1&#34;: 1, &#34;col2&#34;: 4}, {&#34;col1&#34;: 2, &#34;col2&#34;: 5}, {&#34;col1&#34;: 3, &#34;col2&#34;: 6}]
+    })
+    &#34;&#34;&#34;
+    if dataframe is None and not csv_path:
+        raise ValueError(&#34;dataframe or dataframe_path is required&#34;)
+    if csv_path:
+        dataframe = pd.read_csv(csv_path, **read_csv_kwargs)
+    if key_column:
+        dataframe[&#34;content&#34;] = dataframe.drop(columns=[key_column]).to_dict(
+            orient=&#34;records&#34;
+        )
+        dataframe = dataframe[[&#34;key&#34;, &#34;content&#34;]]
+    else:
+        dataframe[&#34;content&#34;] = dataframe.to_dict(orient=&#34;records&#34;)
+        dataframe = dataframe[[&#34;content&#34;]]
+    if save_to:
+        dataframe.to_csv(save_to, index=False)
+    return dataframe</code></pre>
+</details>
+</dd>
 <dt id="pipelines.utils.utils.to_partitions"><code class="name flex">
-<span>def <span class="ident">to_partitions</span></span>(<span>data: pandas.core.frame.DataFrame, partition_columns: List[str], savepath: str, data_type: str = 'csv', suffix: str = None)</span>
+<span>def <span class="ident">to_partitions</span></span>(<span>data: pandas.core.frame.DataFrame, partition_columns: List[str], savepath: str, data_type: str = 'csv', suffix: str = None, build_json_dataframe: bool = False, dataframe_key_column: str = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Save data in to hive patitions schema, given a dataframe and a list of partition columns.</p>
@@ -1474,6 +1665,8 @@ savepath='partitions/'
     savepath: str,
     data_type: str = &#34;csv&#34;,
     suffix: str = None,
+    build_json_dataframe: bool = False,
+    dataframe_key_column: str = None,
 ):  # sourcery skip: raise-specific-error
     &#34;&#34;&#34;Save data in to hive patitions schema, given a dataframe and a list of partition columns.
     Args:
@@ -1529,6 +1722,12 @@ savepath='partitions/'
                 )
             else:
                 file_filter_save_path = Path(filter_save_path) / f&#34;data.{data_type}&#34;
+
+            if build_json_dataframe:
+                df_filter = to_json_dataframe(
+                    df_filter, key_column=dataframe_key_column
+                )
+
             if data_type == &#34;csv&#34;:
                 # append data to csv
                 df_filter.to_csv(
@@ -1641,6 +1840,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.utils.utils.list_blobs_with_prefix" href="#pipelines.utils.utils.list_blobs_with_prefix">list_blobs_with_prefix</a></code></li>
 <li><code><a title="pipelines.utils.utils.log" href="#pipelines.utils.utils.log">log</a></code></li>
 <li><code><a title="pipelines.utils.utils.notify_discord_on_failure" href="#pipelines.utils.utils.notify_discord_on_failure">notify_discord_on_failure</a></code></li>
+<li><code><a title="pipelines.utils.utils.parse_date_columns" href="#pipelines.utils.utils.parse_date_columns">parse_date_columns</a></code></li>
 <li><code><a title="pipelines.utils.utils.parser_blobs_to_partition_dict" href="#pipelines.utils.utils.parser_blobs_to_partition_dict">parser_blobs_to_partition_dict</a></code></li>
 <li><code><a title="pipelines.utils.utils.query_to_line" href="#pipelines.utils.utils.query_to_line">query_to_line</a></code></li>
 <li><code><a title="pipelines.utils.utils.remove_columns_accents" href="#pipelines.utils.utils.remove_columns_accents">remove_columns_accents</a></code></li>
@@ -1651,6 +1851,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.utils.utils.send_telegram_message" href="#pipelines.utils.utils.send_telegram_message">send_telegram_message</a></code></li>
 <li><code><a title="pipelines.utils.utils.set_default_parameters" href="#pipelines.utils.utils.set_default_parameters">set_default_parameters</a></code></li>
 <li><code><a title="pipelines.utils.utils.smart_split" href="#pipelines.utils.utils.smart_split">smart_split</a></code></li>
+<li><code><a title="pipelines.utils.utils.to_json_dataframe" href="#pipelines.utils.utils.to_json_dataframe">to_json_dataframe</a></code></li>
 <li><code><a title="pipelines.utils.utils.to_partitions" href="#pipelines.utils.utils.to_partitions">to_partitions</a></code></li>
 <li><code><a title="pipelines.utils.utils.untuple_clocks" href="#pipelines.utils.utils.untuple_clocks">untuple_clocks</a></code></li>
 </ul>

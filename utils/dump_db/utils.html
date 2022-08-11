@@ -33,7 +33,7 @@ Utilities for the Database Dump flows.
 &#34;&#34;&#34;
 
 from datetime import datetime, timedelta
-from typing import List, Tuple, Union
+from typing import List, Union
 
 import pandas as pd
 
@@ -59,28 +59,6 @@ def extract_last_partition_date(partitions_dict: dict, date_format: str):
         except ValueError:
             log(f&#34;Partition {partition} is not a date&#34;)
     return last_partition_date
-
-
-def parse_date_columns(
-    dataframe: pd.DataFrame, partition_date_column: str
-) -&gt; Tuple[pd.DataFrame, List[str]]:
-    &#34;&#34;&#34;
-    Parses the date columns to the partition format.
-    &#34;&#34;&#34;
-    ano_col = &#34;ano_particao&#34;
-    mes_col = &#34;mes_particao&#34;
-    data_col = &#34;data_particao&#34;
-    cols = [ano_col, mes_col, data_col]
-    for col in cols:
-        if col in dataframe.columns:
-            raise ValueError(f&#34;Column {col} already exists, please review your model.&#34;)
-    dataframe[partition_date_column] = dataframe[partition_date_column].astype(str)
-    dataframe[data_col] = pd.to_datetime(dataframe[partition_date_column])
-    dataframe[ano_col] = dataframe[data_col].dt.year
-    dataframe[mes_col] = dataframe[data_col].dt.month
-    dataframe[data_col] = dataframe[data_col].dt.date
-
-    return dataframe, [ano_col, mes_col, data_col]
 
 
 def build_query_new_columns(table_columns: List[str]) -&gt; List[str]:
@@ -288,37 +266,6 @@ Creates the query without accents.</p></div>
     return clocks</code></pre>
 </details>
 </dd>
-<dt id="pipelines.utils.dump_db.utils.parse_date_columns"><code class="name flex">
-<span>def <span class="ident">parse_date_columns</span></span>(<span>dataframe: pandas.core.frame.DataFrame, partition_date_column: str) ‑> Tuple[pandas.core.frame.DataFrame, List[str]]</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Parses the date columns to the partition format.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def parse_date_columns(
-    dataframe: pd.DataFrame, partition_date_column: str
-) -&gt; Tuple[pd.DataFrame, List[str]]:
-    &#34;&#34;&#34;
-    Parses the date columns to the partition format.
-    &#34;&#34;&#34;
-    ano_col = &#34;ano_particao&#34;
-    mes_col = &#34;mes_particao&#34;
-    data_col = &#34;data_particao&#34;
-    cols = [ano_col, mes_col, data_col]
-    for col in cols:
-        if col in dataframe.columns:
-            raise ValueError(f&#34;Column {col} already exists, please review your model.&#34;)
-    dataframe[partition_date_column] = dataframe[partition_date_column].astype(str)
-    dataframe[data_col] = pd.to_datetime(dataframe[partition_date_column])
-    dataframe[ano_col] = dataframe[data_col].dt.year
-    dataframe[mes_col] = dataframe[data_col].dt.month
-    dataframe[data_col] = dataframe[data_col].dt.date
-
-    return dataframe, [ano_col, mes_col, data_col]</code></pre>
-</details>
-</dd>
 </dl>
 </section>
 <section>
@@ -386,7 +333,6 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.utils.dump_db.utils.build_query_new_columns" href="#pipelines.utils.dump_db.utils.build_query_new_columns">build_query_new_columns</a></code></li>
 <li><code><a title="pipelines.utils.dump_db.utils.extract_last_partition_date" href="#pipelines.utils.dump_db.utils.extract_last_partition_date">extract_last_partition_date</a></code></li>
 <li><code><a title="pipelines.utils.dump_db.utils.generate_dump_db_schedules" href="#pipelines.utils.dump_db.utils.generate_dump_db_schedules">generate_dump_db_schedules</a></code></li>
-<li><code><a title="pipelines.utils.dump_db.utils.parse_date_columns" href="#pipelines.utils.dump_db.utils.parse_date_columns">parse_date_columns</a></code></li>
 </ul>
 </li>
 </ul>
