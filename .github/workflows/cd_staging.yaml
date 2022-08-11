@@ -1,9 +1,9 @@
 name: CD - Staging
 
 on:
-  push:
+  pull_request:
     branches:
-      - staging/**
+      - master
     paths:
       - ".github/workflows/cd_staging.yaml"
       - "pipelines/**/*"
@@ -24,6 +24,7 @@ env:
 
 jobs:
   build-container:
+    if: startsWith(github.head_ref, 'staging/')
     name: Build, publish and register
     runs-on: ubuntu-latest
     steps:
