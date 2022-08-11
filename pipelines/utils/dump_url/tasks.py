@@ -41,7 +41,7 @@ def download_url(url: str, fname: str, gdrive_url: bool = False) -> None:
         None.
     """
     filepath = Path(fname)
-    filepath.mkdir(parents=True, exist_ok=True)
+    filepath.parent.mkdir(parents=True, exist_ok=True)
     if not gdrive_url:
         log(">>>>> URL is not a Google Drive URL, downloading directly")
         req = requests.get(url, stream=True)
