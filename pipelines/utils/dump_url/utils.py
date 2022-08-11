@@ -2,6 +2,7 @@
 """
 General purpose tasks for dumping data from URLs.
 """
+from pathlib import Path
 from typing import List
 
 import pandas as pd
@@ -67,7 +68,7 @@ def handle_dataframe_chunk(
     else:
         dataframe_to_csv(
             dataframe,
-            save_path / f"{event_id}-{idx}.csv",
+            Path(save_path) / f"{event_id}-{idx}.csv",
             build_json_dataframe=build_json_dataframe,
             dataframe_key_column=dataframe_key_column,
         )
