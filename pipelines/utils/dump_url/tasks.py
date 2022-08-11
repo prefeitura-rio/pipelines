@@ -5,7 +5,6 @@ General purpose tasks for dumping data from URLs.
 from datetime import timedelta
 import io
 from pathlib import Path
-from urllib.error import HTTPError
 
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -22,6 +21,7 @@ from pipelines.utils.utils import get_credentials_from_env, log
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
+# pylint: disable=R0914
 def download_url(url: str, fname: str, gdrive_url: bool = False) -> None:
     """
     Downloads a file from a URL and saves it to a local file.
@@ -63,13 +63,13 @@ def download_url(url: str, fname: str, gdrive_url: bool = False) -> None:
         )
         try:
             service = build("drive", "v3", credentials=creds)
-            request = service.files().get_media(fileId=file_id)
-            fh = io.FileIO(fname, mode="wb")
+            request = service.files().get_media(fileId=file_id)  # pylint: disable=E1101
+            fh = io.FileIO(fname, mode="wb")  # pylint: disable=C0103
             downloader = MediaIoBaseDownload(fh, request)
             done = False
             while done is False:
                 status, done = downloader.next_chunk()
                 log(f"Downloading file... {int(status.progress() * 100)}%.")
-        except HTTPError as error:
+        except HttpError as error:
             log(f"HTTPError: {error}", "error")
             raise error
