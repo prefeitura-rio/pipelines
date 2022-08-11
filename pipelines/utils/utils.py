@@ -536,7 +536,9 @@ def to_partitions(
 ###############
 
 
-def get_credentials_from_env(mode: str = "prod") -> service_account.Credentials:
+def get_credentials_from_env(
+    mode: str = "prod", scopes: List[str] = None
+) -> service_account.Credentials:
     """
     Gets credentials from env vars
     """
@@ -546,8 +548,12 @@ def get_credentials_from_env(mode: str = "prod") -> service_account.Credentials:
     if env == "":
         raise ValueError(f"BASEDOSDADOS_CREDENTIALS_{mode.upper()} env var not set!")
     info: dict = json.loads(base64.b64decode(env))
-
-    return service_account.Credentials.from_service_account_info(info)
+    cred: service_account.Credentials = (
+        service_account.Credentials.from_service_account_info(info)
+    )
+    if scopes:
+        cred = cred.with_scopes(scopes)
+    return cred
 
 
 def get_storage_blobs(dataset_id: str, table_id: str) -> list:

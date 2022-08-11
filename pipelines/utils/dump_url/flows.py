@@ -38,6 +38,7 @@ with Flow(
 
     # URL parameters
     url = Parameter("url")
+    gdrive_url = Parameter("gdrive_url", default=False, required=False)
 
     # Materialization parameters
     materialize_after_dump = Parameter(
@@ -94,6 +95,7 @@ with Flow(
     DOWNLOAD_URL_TASK = download_url(
         url=url,
         fname=DATA_FNAME,
+        gdrive_url=gdrive_url,
     )
     DOWNLOAD_URL_TASK.set_upstream(rename_flow_run)
 
