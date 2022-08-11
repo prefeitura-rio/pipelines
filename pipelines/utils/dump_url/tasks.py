@@ -40,10 +40,10 @@ def download_url(url: str, fname: str, gdrive_url: bool = False) -> None:
     Returns:
         None.
     """
+    filepath = Path(fname)
+    filepath.mkdir(parents=True, exist_ok=True)
     if not gdrive_url:
         log(">>>>> URL is not a Google Drive URL, downloading directly")
-        filepath = Path(fname)
-        filepath.mkdir(parents=True, exist_ok=True)
         req = requests.get(url, stream=True)
         with open(fname, "wb") as file:
             for chunk in req.iter_content(chunk_size=1024):
