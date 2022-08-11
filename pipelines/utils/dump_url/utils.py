@@ -34,17 +34,20 @@ def handle_dataframe_chunk(
     else:
         partition_column = partition_columns[0]
 
-    if not partition_column:
-        log("NO partition column specified! Writing unique files")
-    else:
-        log(f"Partition column: {partition_column} FOUND!! Write to partitioned files")
-
     dataframe.columns = remove_columns_accents(dataframe)
 
     old_columns = dataframe.columns.tolist()
     dataframe.columns = remove_columns_accents(dataframe)
     new_columns_dict = dict(zip(old_columns, dataframe.columns.tolist()))
     if idx == 0:
+        if partition_column:
+            log(
+                f"Partition column: {partition_column} FOUND!! Write to partitioned files"
+            )
+
+        else:
+            log("NO partition column specified! Writing unique files")
+
         log(f"New columns without accents: {new_columns_dict}")
 
     dataframe = clean_dataframe(dataframe)
@@ -67,8 +70,8 @@ def handle_dataframe_chunk(
         )
     else:
         dataframe_to_csv(
-            dataframe,
-            Path(save_path) / f"{event_id}-{idx}.csv",
+            dataframe=dataframe,
+            path=Path(save_path) / f"{event_id}-{idx}.csv",
             build_json_dataframe=build_json_dataframe,
             dataframe_key_column=dataframe_key_column,
         )
