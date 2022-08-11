@@ -111,3 +111,6 @@ class constants(Enum):  # pylint: disable=c0103
             "key_column": "trip_id",
         },
     }
+
+    # SUBSIDIO SPPO #
+    SUBSIDIO_SPPO_DATASET_ID = "projeto_subsidio_sppo"
