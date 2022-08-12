@@ -41,8 +41,11 @@ with Flow(
     LABELS = get_current_flow_labels()
     MODE = get_current_flow_mode(LABELS)
 
-    with case(run_date, None):
+    with case(run_date is None, True):
         run_date = get_now_day()
+
+    with case(run_date is None, False):
+        run_date = run_date
 
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
