@@ -29,15 +29,19 @@ General purpose functions for the br_rj_riodejaneiro_rdo project
 # ```
 #
 ###############################################################################
-from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.implicit_ftp import ImplicitFTP_TLS
+from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.implicit_ftp import ImplicitFtpTls
 from pipelines.utils.utils import get_vault_secret
 from pipelines.rj_smtr.constants import constants
 
 
 def connect_ftp():
-    # TODO: usar get_vault_secret
+    """Connect to FTP
+
+    Returns:
+        ImplicitFTP_TLS: ftp client
+    """
     ftp_data = get_vault_secret(constants.RDO_SECRET_PATH.value)["data"]
-    ftp_client = ImplicitFTP_TLS()
+    ftp_client = ImplicitFtpTls()
     ftp_client.connect(host=ftp_data["host"], port=990)
     ftp_client.login(user=ftp_data["username"], passwd=ftp_data["pwd"])
     ftp_client.prot_p()
@@ -45,6 +49,16 @@ def connect_ftp():
 
 
 def build_table_id(mode: str, report_type: str):
+    """Build table_id based on which table is the target
+    of current flow run
+
+    Args:
+        mode (str): SPPO or STPL
+        report_type (str): RHO or RDO
+
+    Returns:
+        str: table_id
+    """
     if mode == "SPPO":
         if report_type == "RDO":
             table_id = constants.SPPO_RDO_TABLE_ID.value

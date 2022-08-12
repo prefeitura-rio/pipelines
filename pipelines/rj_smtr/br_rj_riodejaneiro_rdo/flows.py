@@ -57,8 +57,8 @@ Flows for br_rj_riodejaneiro_rdo
 #
 ###############################################################################
 
-from copy import deepcopy
-from prefect import Parameter, case
+# from copy import deepcopy
+from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants as emd_constants

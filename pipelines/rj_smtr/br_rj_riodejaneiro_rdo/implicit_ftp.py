@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0114
 import ftplib
 import ssl
 
 
-class ImplicitFTP_TLS(ftplib.FTP_TLS):
+class ImplicitFtpTls(ftplib.FTP_TLS):
     """FTP_TLS subclass that automatically wraps sockets in SSL to support implicit FTPS."""
 
     def __init__(self, *args, **kwargs):

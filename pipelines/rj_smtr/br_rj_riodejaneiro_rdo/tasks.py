@@ -49,12 +49,14 @@ Tasks for br_rj_riodejaneiro_rdo
 #
 ###############################################################################
 from datetime import datetime, timedelta
-from dateutil import parser
 import re
 import os
+from pathlib import Path
+from dateutil import parser
+
 
 import pandas as pd
-from pathlib import Path
+
 import pendulum
 from prefect import task
 
@@ -72,7 +74,7 @@ def get_file_paths_from_ftp(transport_mode: str, report_type: str):
     Search for files inside previous interval (days) from current date,
     get filename and partitions (from filename) on FTP client.
     """
-    # ftp_allowed_paths =   # TODO: add allowed paths to constants
+
     execution_time = pendulum.now(constants.TIMEZONE.value)
     # Define interval for date search
     now = execution_time + timedelta(hours=11, minutes=30)
@@ -89,7 +91,7 @@ def get_file_paths_from_ftp(transport_mode: str, report_type: str):
     }
     # Get files modified inside interval
     for filename, file_mtime in files_updated_times.items():
-        if file_mtime >= min_timestamp and file_mtime < max_timestamp:
+        if min_timestamp <= file_mtime < max_timestamp:
             if filename[:3] == report_type:
                 log(
                     f"""
@@ -158,12 +160,24 @@ def pre_treatment_br_rj_riodejaneiro_rdo(
     file_info: dict,
     divide_columns_by: int = 100,
 ):
+    """Adds header, capture_time and standardize columns
+
+    Args:
+        file_info (dict): information for the files found in the current run
+        divide_columns_by (int, optional): value which to divide numeric columns.
+        Defaults to 100.
+
+    Returns:
+        dict: updated file_info with treated filepath
+    """
     config = rdo_constants.RDO_PRE_TREATMENT_CONFIG.value[file_info["transport_mode"]][
         file_info["report_type"]
     ]
     # context.log.info(f"Config for ETL: {config}")
     # Load data
-    df = pd.read_csv(file_info["raw_path"], header=None, delimiter=";", index_col=False)
+    df = pd.read_csv(  # pylint: disable=C0103
+        file_info["raw_path"], header=None, delimiter=";", index_col=False
+    )  # pylint: disable=C0103
     log(f"Load csv from raw file:\n{df.head(5)}")
     # Set column names for those already in the file
     df.columns = config["reindex_columns"][: len(df.columns)]
@@ -181,7 +195,7 @@ def pre_treatment_br_rj_riodejaneiro_rdo(
     #         else i
     #         for i, col in enumerate(config["reindex_columns"])
     #     ]
-    #     df = df[list(config["reindex_columns"][col] for col in ordered)]
+    #     df = df[list(config["reindex_columns"][col] for col in ordered)] # pylint: disable=C0103
     # else:
     df = df[config["reindex_columns"]]
     # Add timestamp column
