@@ -6,6 +6,7 @@ Flows for projeto_subsidio_sppo
 from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
+from prefect.tasks.control_flow import merge
 
 # EMD Imports #
 
@@ -36,16 +37,18 @@ from pipelines.rj_smtr.schedules import (
 with Flow(
     "SMTR - Subsídio SPPO - Viagens", code_owners=["caio", "fernanda"]
 ) as subsidio_sppo_viagens:
-    # Get default parameters #
-    run_date = Parameter("run_date", default=None)
+    # Get run parameters #
+    run_date = Parameter("run_date", default=False)
+
+    with case(run_date, False):
+        default_date = get_now_day()
+    with case(run_date, not False):
+        param_date = run_date
+
+    run_date = merge(default_date, param_date)
+
     LABELS = get_current_flow_labels()
     MODE = get_current_flow_mode(LABELS)
-
-    with case(run_date is None, True):
-        run_date = get_now_day()
-
-    with case(run_date is None, False):
-        run_date = run_date
 
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
