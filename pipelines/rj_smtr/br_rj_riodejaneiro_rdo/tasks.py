@@ -121,7 +121,6 @@ def download_and_save_local_from_ftp(file_info: dict):
     """
     # table_id: str, kind: str, rho: bool = False, rdo: bool = True
     dataset_id = constants.RDO_DATASET_ID.value
-    ftp_data = constants.FTP_DATA.value
     base_path = (
         f'{os.getcwd()}/{os.getenv("DATA_FOLDER", "data")}/{{bucket_mode}}/{dataset_id}'
     )
@@ -140,11 +139,7 @@ def download_and_save_local_from_ftp(file_info: dict):
     )
     Path(file_info["raw_path"]).parent.mkdir(parents=True, exist_ok=True)
     # Get data from FTP - TODO: create get_raw() error alike
-    ftp_client = connect_ftp(
-        ftp_data["host"],
-        ftp_data["username"],
-        ftp_data["pwd"],  # TODO: add ftp_data to constants
-    )
+    ftp_client = connect_ftp()
     ftp_client.retrbinary(
         "RETR " + file_info["ftp_path"],
         open(file_info["raw_path"], "wb").write,

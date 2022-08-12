@@ -111,3 +111,11 @@ class constants(Enum):  # pylint: disable=c0103
             "key_column": "trip_id",
         },
     }
+    # RDO/RHO
+    FTP_ALLOWED_PATHS = ["SPPO", "STPL"]
+    RDO_SECRET_PATH = "rdo"
+    RDO_DATASET_ID = "br_rj_riodejaneiro_rdo"
+    SPPO_RDO_TABLE_ID = "rdo_registros_sppo"
+    SPPO_RHO_TABLE_ID = "rho_registros_sppo"
+    STPL_RDO_TABLE_ID = "rdo_registros_stpl"
+    STPL_RHO_TABLE_ID = "rho_registros_stpl"
