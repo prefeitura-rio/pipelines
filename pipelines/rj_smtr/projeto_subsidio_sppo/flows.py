@@ -86,14 +86,14 @@ with Flow(
     "SMTR - Subsídio SPPO - Planejado", code_owners=["caio", "fernanda"]
 ) as subsidio_sppo_planejado:
     # Get default parameters #
-    shapes_date = Parameter("shapes_date", default="2022-08-01")
-    frequencies_date = Parameter("frequencies_date", default="2022-08-01")
+    shapes_version = Parameter("shapes_version", default="2022-08-01")
+    frequencies_version = Parameter("frequencies_version", default="2022-08-01")
     LABELS = get_current_flow_labels()
     MODE = get_current_flow_mode(LABELS)
 
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="Subsídio SPPO - Planejado: ", now_time=frequencies_date
+        prefix="Subsídio SPPO - Planejado: ", now_time=frequencies_version
     )
 
     # Set dbt client #
@@ -113,8 +113,8 @@ with Flow(
         upstream=True,
         exclude="br_rj_riodejaneiro_sigmob",
         _vars=[
-            {"shapes_date": shapes_date},
-            {"frequencies_date": frequencies_date},
+            {"shapes_version": shapes_version},
+            {"frequencies_version": frequencies_version},
             dataset_sha,
         ],
     )
