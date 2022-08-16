@@ -43,6 +43,7 @@ from pipelines.utils.execute_dbt_model.utils import (
     get_dbt_client,
 )
 from pipelines.constants import constants
+from pipelines.utils.utils import log
 
 
 @task(
@@ -78,8 +79,10 @@ def run_dbt_model(
     &#34;&#34;&#34;
     Run a DBT model.
     &#34;&#34;&#34;
+    run_command = f&#34;run --models {dataset_id}.{table_id}&#34;
+    log(f&#34;Running DBT command: {run_command}&#34;)
     dbt_client.cli(
-        f&#34;run --models {dataset_id}.{table_id}&#34;,
+        run_command,
         sync=sync,
     )
 
@@ -167,8 +170,10 @@ def run_dbt_model(
     &#34;&#34;&#34;
     Run a DBT model.
     &#34;&#34;&#34;
+    run_command = f&#34;run --models {dataset_id}.{table_id}&#34;
+    log(f&#34;Running DBT command: {run_command}&#34;)
     dbt_client.cli(
-        f&#34;run --models {dataset_id}.{table_id}&#34;,
+        run_command,
         sync=sync,
     )</code></pre>
 </details>
