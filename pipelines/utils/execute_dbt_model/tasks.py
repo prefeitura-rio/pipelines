@@ -51,7 +51,7 @@ def run_dbt_model(
     Run a DBT model.
     """
     run_command = f"run --models {dataset_id}.{table_id}"
-    log(f"Running DBT command: {run_command}")
+    log(f"Running the followinf command:\n{run_command}")
     dbt_client.cli(
         run_command,
         sync=sync,
