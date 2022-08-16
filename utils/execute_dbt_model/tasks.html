@@ -80,7 +80,7 @@ def run_dbt_model(
     Run a DBT model.
     &#34;&#34;&#34;
     run_command = f&#34;run --models {dataset_id}.{table_id}&#34;
-    log(f&#34;Running DBT command: {run_command}&#34;)
+    log(f&#34;Running the followinf command:\n{run_command}&#34;)
     dbt_client.cli(
         run_command,
         sync=sync,
@@ -171,7 +171,7 @@ def run_dbt_model(
     Run a DBT model.
     &#34;&#34;&#34;
     run_command = f&#34;run --models {dataset_id}.{table_id}&#34;
-    log(f&#34;Running DBT command: {run_command}&#34;)
+    log(f&#34;Running the followinf command:\n{run_command}&#34;)
     dbt_client.cli(
         run_command,
         sync=sync,
