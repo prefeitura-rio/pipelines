@@ -69,7 +69,9 @@ from pipelines.utils.utils import log
 
 
 @task
-def get_file_paths_from_ftp(transport_mode: str, report_type: str):
+def get_file_paths_from_ftp(
+    transport_mode: str, report_type: str, wait=None
+):  # pylint: disable=W0613
     """
     Search for files inside previous interval (days) from current date,
     get filename and partitions (from filename) on FTP client.
@@ -142,10 +144,11 @@ def download_and_save_local_from_ftp(file_info: dict):
     Path(file_info["raw_path"]).parent.mkdir(parents=True, exist_ok=True)
     # Get data from FTP - TODO: create get_raw() error alike
     ftp_client = connect_ftp()
-    ftp_client.retrbinary(
-        "RETR " + file_info["ftp_path"],
-        open(file_info["raw_path"], "wb").write,
-    )
+    with open(file_info["raw_path"], "wb") as raw_file:
+        ftp_client.retrbinary(
+            "RETR " + file_info["ftp_path"],
+            raw_file.write,
+        )
     ftp_client.quit()
     # Get timestamp of download time
     file_info["timestamp_captura"] = pendulum.now(constants.TIMEZONE.value).isoformat()

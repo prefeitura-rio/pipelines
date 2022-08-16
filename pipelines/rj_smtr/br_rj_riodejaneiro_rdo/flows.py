@@ -68,22 +68,29 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.tasks import (
     pre_treatment_br_rj_riodejaneiro_rdo,
 )
 from pipelines.rj_smtr.constants import constants
-from pipelines.rj_smtr.tasks import bq_upload
+from pipelines.rj_smtr.tasks import bq_upload, get_current_timestamp
+from pipelines.rj_smtr.schedules import ftp_schedule
 
 # from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.schedules import every_two_weeks
 from pipelines.utils.decorators import Flow
+from pipelines.utils.tasks import rename_current_flow_run_now_time
 
 with Flow(
-    "SMTR - Captura RDO - SPPO",
+    "SMTR - Captura FTPS",
     code_owners=["caio", "fernanda"],
-) as captura_sppo_rho:
+) as captura_ftp:
     transport_mode = Parameter("transport_mode", "SPPO")
     report_type = Parameter("report_type", "RHO")
     table_id = Parameter("table_id", constants.SPPO_RDO_TABLE_ID.value)
 
+    rename_run = rename_current_flow_run_now_time(
+        prefix=f"Captura FTPS - {transport_mode}-{report_type} ",
+        now_time=get_current_timestamp(),
+        wait=None,
+    )
     # Parse FTPS
     file_info = get_file_paths_from_ftp(
-        transport_mode=transport_mode, report_type=report_type
+        transport_mode=transport_mode, report_type=report_type, wait=rename_run
     )
     updated_info = download_and_save_local_from_ftp(file_info=file_info)
     treated_info = pre_treatment_br_rj_riodejaneiro_rdo(file_info=updated_info)
@@ -96,12 +103,12 @@ with Flow(
     )
 
 
-captura_sppo_rho.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-captura_sppo_rho.run_config = KubernetesRun(
+captura_ftp.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+captura_ftp.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
-# flow.schedule = every_two_weeks
+captura_ftp.schedule = ftp_schedule
 
 # captura_sppo_rho = deepcopy(captura_sppo_rdo)
 # captura_sppo_rho.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
