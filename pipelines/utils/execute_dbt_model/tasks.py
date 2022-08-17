@@ -14,6 +14,7 @@ from pipelines.utils.execute_dbt_model.utils import (
     get_dbt_client,
 )
 from pipelines.constants import constants
+from pipelines.utils.utils import log
 
 
 @task(
@@ -49,8 +50,10 @@ def run_dbt_model(
     """
     Run a DBT model.
     """
+    run_command = f"run --models {dataset_id}.{table_id}"
+    log(f"Running the followinf command:\n{run_command}")
     dbt_client.cli(
-        f"run --models {dataset_id}.{table_id}",
+        run_command,
         sync=sync,
     )
 
