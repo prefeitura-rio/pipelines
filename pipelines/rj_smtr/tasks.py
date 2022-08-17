@@ -203,22 +203,23 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
 @task
 def get_current_timestamp(
     timestamp: datetime = None, truncate_minute: bool = True
-) -> datetime:
+) -> str:
     """
     Get current timestamp for flow run.
     """
     if not timestamp:
         timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
     if truncate_minute:
-        return timestamp.replace(second=0, microsecond=0)
-    return timestamp
+        return timestamp.replace(second=0, microsecond=0).isoformat()
+    return timestamp.isoformat()
 
 
 @task
-def create_date_hour_partition(timestamp: datetime) -> str:
+def create_date_hour_partition(timestamp_str: str) -> str:
     """
     Get date hour Hive partition structure from timestamp.
     """
+    timestamp = datetime.fromisoformat(timestamp_str)
     return f"data={timestamp.strftime('%Y-%m-%d')}/hora={timestamp.strftime('%H')}"
 
 
@@ -391,7 +392,8 @@ def query_logs(
         case
             when logs.timestamp_captura is not null then logs.timestamp_captura
             else t.timestamp_array
-        end as timestamp_captura
+        end as timestamp_captura,
+        logs.erro
     from
         t
     left join
@@ -404,30 +406,43 @@ def query_logs(
         timestamp_captura
     """
     log(f"Run query to check logs:\n{query}")
-    results = bd.read_sql(query=query, billing_project_id=bq_project())[
-        "timestamp_captura"
-    ]
+    results: pd.DataFrame = bd.read_sql(query=query, billing_project_id=bq_project())
+    log(f"{results}")
     if len(results) > 0:
-        results = (
-            pd.to_datetime(results).dt.tz_localize(constants.TIMEZONE.value).to_list()
+        results["timestamp_captura"] = (
+            pd.to_datetime(results["timestamp_captura"])
+            .dt.tz_localize(constants.TIMEZONE.value)
+            .astype(str)
         )
-        log(f"Recapture data for the following {len(results)} timestamps:\n{results}")
+        message = f"""
+        [SPPO - Recaptures]
+        Encontradas {len(results)} timestamps para serem recapturadas.
+        Esta run processará as seguintes:
+        {results.to_string()}
+        """
+        log(message)
+        # log_critical(message=message)
         if len(results) > 40:
             message = f"""
+            @here
             [SPPO - Recaptures]
             Encontradas {len(results)} timestamps para serem recapturadas.
-            Essa run processará as seguintes:
+            Esta run processará as seguintes:
             #####
-            {results[:40]}
+            {results[:40].to_string()}
             #####
             Sobraram as seguintes para serem recapturadas na próxima run:
             #####
-            {results[40:]}
+            {results[40:].to_string()}
             #####
             """
-            log_critical(message)
+            # log_critical(message)
             results = results[:40]
-        return True, results
+        results.rename(
+            columns={"timestamp_captura": "timestamp", "erro": "error"}, inplace=True
+        )
+        results["recapture"] = True
+        return True, results.to_dict(orient="records")
     return False, []
 
 

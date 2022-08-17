@@ -38,7 +38,7 @@ from pipelines.rj_smtr.tasks import (
     get_materialization_date_range,
     # get_local_dbt_client,
     get_raw,
-    parse_timestamp_to_string,
+    # parse_timestamp_to_string,
     query_logs,
     run_dbt_model,
     save_raw_local,
@@ -142,8 +142,14 @@ with Flow(
 
     version = Parameter("version", default=2)
 
+    # RECAPTURE PARAMETERS
+    timestamp = Parameter("timestamp", default=None)
+    recapture = Parameter("recapture", default=False)
+    previous_error = Parameter("previous_error", default=None)
+
     # SETUP #
-    timestamp = get_current_timestamp()
+    with case(timestamp, None):
+        timestamp = get_current_timestamp()
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix="GPS SPPO: ", now_time=timestamp
@@ -151,12 +157,12 @@ with Flow(
 
     partitions = create_date_hour_partition(timestamp)
 
-    filename = parse_timestamp_to_string(timestamp)
+    # filename = parse_timestamp_to_string(timestamp)  # porquê do pattern escolhido?
 
     filepath = create_local_partition_path(
         dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
         table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
-        filename=filename,
+        filename=timestamp,
         partitions=partitions,
     )
 
@@ -183,13 +189,21 @@ with Flow(
         partitions=partitions,
         status=treated_status,
     )
+    with case(error, None):
+        upload_logs_to_bq(
+            dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
+            parent_table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
+            error=previous_error,
+            timestamp=timestamp,
+        )
+    with case(error, not None):
+        upload_logs_to_bq(
+            dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
+            parent_table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
+            error=error,
+            timestamp=timestamp,
+        )
 
-    upload_logs_to_bq(
-        dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
-        parent_table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
-        error=error,
-        timestamp=timestamp,
-    )
 
 captura_sppo_v2.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_sppo_v2.run_config = KubernetesRun(
@@ -205,14 +219,16 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
     datetime_filter = Parameter("datetime_filter", default=None)
     # SETUP #
     LABELS = get_current_flow_labels()
-    errors, timestamps = query_logs(
+    errors, recapture_parameters = query_logs(
         dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
         table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
         datetime_filter=datetime_filter,
     )
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="GPS SPPO Recapturas: ", now_time=get_now_time(), wait=timestamps
+        prefix="GPS SPPO Recapturas: ",
+        now_time=get_now_time(),
+        wait=recapture_parameters,
     )
 
     with case(errors, False):
@@ -229,51 +245,18 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
             raise_final_state=True,
         )
     with case(errors, True):
-        # SETUP #
-        partitions = create_date_hour_partition.map(timestamps)
-        filename = parse_timestamp_to_string.map(timestamps)
-
-        filepath = create_local_partition_path.map(
-            dataset_id=unmapped(constants.GPS_SPPO_RAW_DATASET_ID.value),
-            table_id=unmapped(constants.GPS_SPPO_RAW_TABLE_ID.value),
-            filename=filename,
-            partitions=partitions,
+        recaptura_runs = create_flow_run.map(
+            flow_name=unmapped(captura_sppo_v2.name),
+            project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+            labels=unmapped(LABELS),
+            run_name=unmapped(captura_sppo_v2.name),
+            parameters=recapture_parameters,
         )
-
-        url = create_api_url_onibus_gps.map(
-            version=unmapped(version), timestamp=timestamps
-        )
-
-        # EXTRACT #
-        raw_status = get_raw.map(url)
-
-        raw_filepath = save_raw_local.map(status=raw_status, file_path=filepath)
-
-        # # CLEAN #
-        trated_status = pre_treatment_br_rj_riodejaneiro_onibus_gps.map(
-            status=raw_status, timestamp=timestamps, version=unmapped(version)
-        )
-
-        treated_filepath = save_treated_local.map(
-            status=trated_status, file_path=filepath
-        )
-
-        # # LOAD #
-        error = bq_upload.map(
-            dataset_id=unmapped(constants.GPS_SPPO_RAW_DATASET_ID.value),
-            table_id=unmapped(constants.GPS_SPPO_RAW_TABLE_ID.value),
-            filepath=treated_filepath,
-            raw_filepath=raw_filepath,
-            partitions=partitions,
-            status=trated_status,
-        )
-
-        UPLOAD_LOGS = upload_logs_to_bq.map(
-            dataset_id=unmapped(constants.GPS_SPPO_RAW_DATASET_ID.value),
-            parent_table_id=unmapped(constants.GPS_SPPO_RAW_TABLE_ID.value),
-            error=error,
-            timestamp=timestamps,
-            recapture=unmapped(True),
+        wait_for_recapturas = wait_for_flow_run.map(
+            recaptura_runs,
+            stream_states=unmapped(True),
+            stream_logs=unmapped(True),
+            raise_final_state=unmapped(True),
         )
         materialize = create_flow_run(
             flow_name=materialize_sppo.name,
@@ -281,17 +264,13 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
             labels=LABELS,
             run_name=materialize_sppo.name,
         )
-        wait_materialize = wait_for_flow_run(
-            materialize,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
+        wait_for_materialize = wait_for_flow_run(
+            materialize, stream_states=True, stream_logs=True, raise_final_state=True
         )
-    recaptura.set_dependencies(task=materialize, upstream_tasks=[UPLOAD_LOGS])
-
+    materialize.set_upstream(wait_for_recapturas)
 recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 recaptura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 recaptura.schedule = every_hour_minute_six
