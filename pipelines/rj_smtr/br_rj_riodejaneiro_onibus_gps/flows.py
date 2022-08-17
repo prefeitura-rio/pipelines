@@ -7,6 +7,7 @@ from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
+from prefect.tasks.control_flow import merge
 from prefect.utilities.edges import unmapped
 
 
@@ -143,13 +144,17 @@ with Flow(
     version = Parameter("version", default=2)
 
     # RECAPTURE PARAMETERS
-    timestamp = Parameter("timestamp", default=None)
+    datetime_filter = Parameter("timestamp", default=None)
     recapture = Parameter("recapture", default=False)
     previous_error = Parameter("previous_error", default=None)
 
     # SETUP #
-    with case(timestamp, None):
-        timestamp = get_current_timestamp()
+    with case(datetime_filter, None):
+        timestamp_now = get_current_timestamp()
+    with case(datetime_filter, None):
+        timestamp_default = datetime_filter
+
+    timestamp = merge(timestamp_default, timestamp_now)
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix="GPS SPPO: ", now_time=timestamp
@@ -195,6 +200,7 @@ with Flow(
             parent_table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
             error=previous_error,
             timestamp=timestamp,
+            recapture=recapture,
         )
     with case(error, not None):
         upload_logs_to_bq(
@@ -202,6 +208,7 @@ with Flow(
             parent_table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
             error=error,
             timestamp=timestamp,
+            recapture=recapture,
         )
 
 

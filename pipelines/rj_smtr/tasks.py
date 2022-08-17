@@ -622,9 +622,10 @@ def upload_logs_to_bq(
     """
     table_id = parent_table_id + "_logs"
     # Create partition directory
-    filename = f"{table_id}_{timestamp.isoformat()}"
+    filename = f"{table_id}_{timestamp}"
+    partitions = f"data={datetime.fromisoformat(timestamp).date()}"
     filepath = Path(
-        f"""data/staging/{dataset_id}/{table_id}/data={timestamp.date()}/{filename}.csv"""
+        f"""data/staging/{dataset_id}/{table_id}/{partitions}/{filename}.csv"""
     )
     filepath.parent.mkdir(exist_ok=True, parents=True)
     # Create dataframe to be uploaded
@@ -661,7 +662,7 @@ def upload_logs_to_bq(
     create_or_append_table(
         dataset_id=dataset_id, table_id=table_id, path=filepath.parent.parent
     )
-    if error is not None:
+    if error is not None and recapture is False:
         raise Exception(f"Pipeline failed with error: {error}")
 
 
