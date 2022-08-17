@@ -338,26 +338,29 @@ def save_treated_local(file_path: str, status: dict, mode: str = "staging") -> s
 def query_logs(
     dataset_id: str,
     table_id: str,
-    datetime_filter=None,
-):
+    datetime_filter: str = None,
+) -> dict:
     """
     Queries capture logs to check for errors
 
     Args:
         dataset_id (str): dataset_id on BigQuery
         table_id (str): table_id on BigQuery
-        datetime_filter (pendulum.datetime.DateTime, optional):
-        filter passed to query. This task will query the logs table
-        for the last 1 day before datetime_filter
+        datetime_filter (str, optional):
+        ISO formatted datetime string filter passed to query.
+        This task will query the logs table for the last 1 day before datetime_filter
 
     Returns:
-        list: containing timestamps for which the capture failed
+        dict: containing the recapture parameters, 'timestamp', 'error' and
+        'recapture'
     """
 
     if not datetime_filter:
         datetime_filter = pendulum.now(constants.TIMEZONE.value).replace(
             second=0, microsecond=0
         )
+    else:
+        datetime_filter = datetime.fromisoformat(datetime_filter)
 
     query = f"""
     with t as (
@@ -443,7 +446,7 @@ def query_logs(
         )
         results["recapture"] = True
         return True, results.to_dict(orient="records")
-    return False, []
+    return False, {}
 
 
 @task
