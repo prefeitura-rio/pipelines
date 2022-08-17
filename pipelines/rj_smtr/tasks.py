@@ -628,6 +628,7 @@ def upload_logs_to_bq(
         f"""data/staging/{dataset_id}/{table_id}/{partitions}/{filename}.csv"""
     )
     filepath.parent.mkdir(exist_ok=True, parents=True)
+    log(f"Received error {error}")
     # Create dataframe to be uploaded
     if recapture is True:
         # if the recapture is succeeded, update the column erro
@@ -639,6 +640,7 @@ def upload_logs_to_bq(
                     "erro": ["[recapturado]"],
                 }
             )
+            log(f"Recapturing {timestamp} with no previous error")
         # if any iteration of the recapture fails, upload logs with error
         else:
             dataframe = pd.DataFrame(
@@ -648,6 +650,7 @@ def upload_logs_to_bq(
                     "erro": [f"[recapturado] {error}"],
                 }
             )
+            log(f"Recapturing {timestamp} with previous error:\n{error}")
     else:
         dataframe = pd.DataFrame(
             {

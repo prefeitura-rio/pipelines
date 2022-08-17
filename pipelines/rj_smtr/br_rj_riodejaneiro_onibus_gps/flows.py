@@ -216,6 +216,10 @@ captura_sppo_v2.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_sppo_v2.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    cpu_limit=0.3,
+    cpu_request=0.1,
+    memory_limit="128Mi",
+    memory_request="64Mi",
 )
 captura_sppo_v2.schedule = every_minute
 
