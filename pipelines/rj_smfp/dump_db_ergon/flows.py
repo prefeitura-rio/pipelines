@@ -39,4 +39,4 @@ dump_ergon_flow = set_default_parameters(
     dump_ergon_flow, default_parameters=ergon_default_parameters
 )
 
-dump_ergon_flow.schedule = ergon_monthly_update_schedule
+# dump_ergon_flow.schedule = ergon_monthly_update_schedule

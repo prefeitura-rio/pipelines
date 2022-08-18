@@ -39,4 +39,4 @@ dump_sme_flow = set_default_parameters(
     dump_sme_flow, default_parameters=sme_default_parameters
 )
 
-dump_sme_flow.schedule = sme_educacao_basica_daily_update_schedule
+# dump_sme_flow.schedule = sme_educacao_basica_daily_update_schedule

@@ -21,4 +21,4 @@ dump_dados_mestres_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value],
 )
-dump_dados_mestres_flow.schedule = dados_mestresmonthly_update_schedule
+# dump_dados_mestres_flow.schedule = dados_mestresmonthly_update_schedule
