@@ -35,4 +35,4 @@ smfp_egpweb_flow = set_default_parameters(
     smfp_egpweb_flow, default_parameters=egpweb_default_parameters
 )
 
-smfp_egpweb_flow.schedule = egp_web_monthly_update_schedule
+# smfp_egpweb_flow.schedule = egp_web_monthly_update_schedule
