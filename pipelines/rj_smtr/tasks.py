@@ -26,7 +26,7 @@ from pipelines.rj_smtr.utils import (
     bq_project,
     get_table_min_max_value,
     get_last_run_timestamp,
-    # log_critical,
+    log_critical,
     parse_dbt_logs,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
@@ -409,7 +409,7 @@ def query_logs(
         timestamp_captura
     """
     log(f"Run query to check logs:\n{query}")
-    results: pd.DataFrame = bd.read_sql(query=query, billing_project_id=bq_project())
+    results = bd.read_sql(query=query, billing_project_id=bq_project())
     log(f"{results}")
     if len(results) > 0:
         results["timestamp_captura"] = (
@@ -424,7 +424,7 @@ def query_logs(
         {results.to_string()}
         """
         log(message)
-        # log_critical(message=message)
+        log_critical(message=message)
         if len(results) > 40:
             message = f"""
             @here
@@ -439,7 +439,7 @@ def query_logs(
             {results[40:].to_string()}
             #####
             """
-            # log_critical(message)
+            log_critical(message)
             results = results[:40]
         results.rename(
             columns={"timestamp_captura": "timestamp", "erro": "error"}, inplace=True
