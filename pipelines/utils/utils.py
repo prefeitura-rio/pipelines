@@ -679,8 +679,13 @@ def dump_header_to_file(data_path: Union[str, Path], data_type: str = "csv"):
     # Grab first `data_type` file found
     found: bool = False
     file: str = None
+    log(f"DUMP HEADER DATA PATH: {path}")
     for subdir, _, filenames in walk(str(path)):
+        log(f"SUBDIR: {subdir}")
+        log(f"FILENAMES: {filenames}")
+        log(f"DATA TYPE: {data_type}")        
         for fname in filenames:
+            log(f"FNAME: {fname}")
             if fname.endswith(f".{data_type}"):
                 file = join(subdir, fname)
                 log(f"Found {data_type.upper()} file: {file}")
@@ -688,9 +693,11 @@ def dump_header_to_file(data_path: Union[str, Path], data_type: str = "csv"):
                 break
         if found:
             break
-
+    log("FOUND: ", found)
+    
     save_header_path = f"data/{uuid4()}"
     # discover if it's a partitioned table
+    log(f"DISCOVERED FILE: {file}")
     if partition_folders := [folder for folder in file.split("/") if "=" in folder]:
         partition_path = "/".join(partition_folders)
         save_header_file_path = Path(
