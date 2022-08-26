@@ -43,7 +43,7 @@ with Flow(
     dump_mode = Parameter("dump_mode", default="append", required=False)
     output_column_name = Parameter("output_column_name", default=None, required=False)
     save_dataframe_path = Parameter(
-        "save_dataframe_path", default="/tmp/predictions.csv", required=False
+        "save_dataframe_path", default="/tmp/", required=False
     )
     include_timestamp = Parameter("include_timestamp", default=False, required=False)
     timestamp = Parameter("timestamp", default=None, required=False)
