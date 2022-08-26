@@ -708,8 +708,13 @@ def dump_header_to_file(data_path: Union[str, Path], data_type: str = &#34;csv&#
     # Grab first `data_type` file found
     found: bool = False
     file: str = None
+    log(f&#34;DUMP HEADER DATA PATH: {path}&#34;)
     for subdir, _, filenames in walk(str(path)):
+        log(f&#34;SUBDIR: {subdir}&#34;)
+        log(f&#34;FILENAMES: {filenames}&#34;)
+        log(f&#34;DATA TYPE: {data_type}&#34;)        
         for fname in filenames:
+            log(f&#34;FNAME: {fname}&#34;)
             if fname.endswith(f&#34;.{data_type}&#34;):
                 file = join(subdir, fname)
                 log(f&#34;Found {data_type.upper()} file: {file}&#34;)
@@ -717,9 +722,11 @@ def dump_header_to_file(data_path: Union[str, Path], data_type: str = &#34;csv&#
                 break
         if found:
             break
-
+    log(&#34;FOUND: &#34;, found)
+    
     save_header_path = f&#34;data/{uuid4()}&#34;
     # discover if it&#39;s a partitioned table
+    log(f&#34;DISCOVERED FILE: {file}&#34;)
     if partition_folders := [folder for folder in file.split(&#34;/&#34;) if &#34;=&#34; in folder]:
         partition_path = &#34;/&#34;.join(partition_folders)
         save_header_file_path = Path(
@@ -961,8 +968,13 @@ def parse_date_columns(
     # Grab first `data_type` file found
     found: bool = False
     file: str = None
+    log(f&#34;DUMP HEADER DATA PATH: {path}&#34;)
     for subdir, _, filenames in walk(str(path)):
+        log(f&#34;SUBDIR: {subdir}&#34;)
+        log(f&#34;FILENAMES: {filenames}&#34;)
+        log(f&#34;DATA TYPE: {data_type}&#34;)        
         for fname in filenames:
+            log(f&#34;FNAME: {fname}&#34;)
             if fname.endswith(f&#34;.{data_type}&#34;):
                 file = join(subdir, fname)
                 log(f&#34;Found {data_type.upper()} file: {file}&#34;)
@@ -970,9 +982,11 @@ def parse_date_columns(
                 break
         if found:
             break
-
+    log(&#34;FOUND: &#34;, found)
+    
     save_header_path = f&#34;data/{uuid4()}&#34;
     # discover if it&#39;s a partitioned table
+    log(f&#34;DISCOVERED FILE: {file}&#34;)
     if partition_folders := [folder for folder in file.split(&#34;/&#34;) if &#34;=&#34; in folder]:
         partition_path = &#34;/&#34;.join(partition_folders)
         save_header_file_path = Path(
