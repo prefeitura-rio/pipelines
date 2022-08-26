@@ -42,9 +42,9 @@ def predict(data: Dict[str, List[Any]], model: mlflow.pyfunc.PyFuncModel) -> nda
     Uses an MLflow model to predict using the data in the dataframe.
     """
     # From pandas-split to dataframe
-    df = pd.DataFrame(data=data["data"], columns=data["columns"])
+    dataframe = pd.DataFrame(data=data["data"], columns=data["columns"])
     # Predict
-    predictions = model.predict(df)
+    predictions = model.predict(dataframe)
     return list(predictions)
 
 
@@ -59,19 +59,19 @@ def generate_dataframe_from_predictions(
     """
     Generate a dataframe from the predictions.
     """
-    df = pd.DataFrame(data=predictions, columns=[output_column_name])
+    dataframe = pd.DataFrame(data=predictions, columns=[output_column_name])
     if include_timestamp:
         if not timestamp:
             timestamp = pendulum.now(
                 tz=constants.DEFAULT_TIMEZONE.value
             ).to_datetime_string()
-        df["timestamp"] = timestamp
+        dataframe["timestamp"] = timestamp
     if save_path:
         if not isinstance(save_path, Path):
             save_path = Path(save_path)
         save_path.parent.mkdir(parents=True, exist_ok=True)
-        df.to_csv(save_path, index=False)
-    return df
+        dataframe.to_csv(save_path, index=False)
+    return dataframe
 
 
 @task(checkpoint=False)

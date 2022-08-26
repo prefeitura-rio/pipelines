@@ -14,6 +14,9 @@ from pipelines.constants import constants
 
 @task(checkpoint=False)
 def get_current_timestamp() -> str:
+    """
+    Get current timestamp.
+    """
     return pendulum.now(tz=constants.DEFAULT_TIMEZONE.value).to_datetime_string()
 
 

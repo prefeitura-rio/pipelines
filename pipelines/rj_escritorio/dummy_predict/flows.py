@@ -3,7 +3,7 @@
 Predict flow example usage.
 """
 
-from prefect import case, Parameter
+from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
