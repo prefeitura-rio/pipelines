@@ -9,7 +9,10 @@ from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 
 from pipelines.constants import constants
-from pipelines.rj_escritorio.dummy_predict.tasks import get_dummy_input_data
+from pipelines.rj_escritorio.dummy_predict.tasks import (
+    get_current_timestamp,
+    get_dummy_input_data,
+)
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.decorators import Flow
 from pipelines.utils.predict_flow.tasks import (
@@ -46,6 +49,7 @@ with Flow(
     # It must match the same structure as the data you've used for
     # training the model
     input_data = get_dummy_input_data()
+    flow_start_timestamp = get_current_timestamp()
 
     # Prepare dataframe for prediction (this is just a way of wrapping
     # the dataframe to JSON format, but it's mandatory)
@@ -70,6 +74,8 @@ with Flow(
             "dump_mode": dump_mode,
             "output_column_name": "prediction",
             "save_dataframe_path": "/tmp/predictions.csv",
+            "include_timestamp": True,
+            "timestamp": flow_start_timestamp,
         },
         labels=current_flow_labels,
         run_name=f"Predict {dataset_id}.{table_id}",

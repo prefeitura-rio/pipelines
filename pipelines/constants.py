@@ -42,6 +42,8 @@ class constants(Enum):  # pylint: disable=c0103
     ######################################
     # Other constants
     ######################################
+    # Timezone
+    DEFAULT_TIMEZONE = "America/Sao_Paulo"
     # Prefect
     K8S_AGENT_LABEL = "kubernetes"
     GCS_FLOWS_BUCKET = "datario-public"

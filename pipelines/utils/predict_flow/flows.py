@@ -45,6 +45,8 @@ with Flow(
     save_dataframe_path = Parameter(
         "save_dataframe_path", default="/tmp/predictions.csv", required=False
     )
+    include_timestamp = Parameter("include_timestamp", default=False, required=False)
+    timestamp = Parameter("timestamp", default=None, required=False)
 
     # Get model from MLflow model registry (either model version or stage must be provided)
     model = get_model(
@@ -63,6 +65,8 @@ with Flow(
     result_df = generate_dataframe_from_predictions(
         predictions=predictions,
         output_column_name=output_column_name,
+        include_timestamp=include_timestamp,
+        timestamp=timestamp,
         save_path=save_dataframe_path,
     )
 

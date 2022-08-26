@@ -6,7 +6,15 @@ Tasks for the predict flow example usage.
 from random import random
 
 import pandas as pd
+import pendulum
 from prefect import task
+
+from pipelines.constants import constants
+
+
+@task(checkpoint=False)
+def get_current_timestamp() -> str:
+    return pendulum.now(tz=constants.DEFAULT_TIMEZONE.value).to_datetime_string()
 
 
 @task(checkpoint=False)

@@ -10,6 +10,7 @@ import mlflow
 import mlflow.pyfunc
 from numpy import ndarray
 import pandas as pd
+import pendulum
 from prefect import task
 
 from pipelines.constants import constants
@@ -51,12 +52,20 @@ def predict(data: Dict[str, List[Any]], model: mlflow.pyfunc.PyFuncModel) -> nda
 def generate_dataframe_from_predictions(
     predictions: List[Any],
     output_column_name: str,
+    include_timestamp: bool = False,
+    timestamp: str = None,
     save_path: Union[str, Path] = None,
 ) -> pd.DataFrame:
     """
     Generate a dataframe from the predictions.
     """
     df = pd.DataFrame(data=predictions, columns=[output_column_name])
+    if include_timestamp:
+        if not timestamp:
+            timestamp = pendulum.now(
+                tz=constants.DEFAULT_TIMEZONE.value
+            ).to_datetime_string()
+        df["timestamp"] = timestamp
     if save_path:
         if not isinstance(save_path, Path):
             save_path = Path(save_path)
