@@ -73,7 +73,7 @@ with Flow(
             "table_id": table_id,
             "dump_mode": dump_mode,
             "output_column_name": "prediction",
-            "save_dataframe_path": "/tmp/",
+            "save_dataframe_path": "/tmp/data",
             "include_timestamp": True,
             "timestamp": flow_start_timestamp,
         },
