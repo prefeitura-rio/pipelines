@@ -7,6 +7,7 @@ from prefect import case, Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
+from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.decorators import Flow
 from pipelines.utils.predict_flow.tasks import (
@@ -73,3 +74,8 @@ with Flow(
             table_id=table_id,
             dump_mode=dump_mode,
         )
+
+predict_with_mlflow_model_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+predict_with_mlflow_model_flow.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value
+)
