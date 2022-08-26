@@ -71,6 +71,8 @@ class constants(Enum):  # pylint: disable=c0103
     ######################################
     # Other constants
     ######################################
+    # Timezone
+    DEFAULT_TIMEZONE = &#34;America/Sao_Paulo&#34;
     # Prefect
     K8S_AGENT_LABEL = &#34;kubernetes&#34;
     GCS_FLOWS_BUCKET = &#34;datario-public&#34;
@@ -80,6 +82,8 @@ class constants(Enum):  # pylint: disable=c0103
     TASK_RETRY_DELAY = 10  # seconds
     # Telegram
     TELEGRAM_MAX_MESSAGE_LENGTH = 4096
+    # MLflow
+    MLFLOW_TRACKING_URI = &#34;http://mlflow-tracking-server.mlflow.svc.cluster.local:5000&#34;
 
     ######################################
     # Discord code owners constants
@@ -182,6 +186,8 @@ class constants(Enum):  # pylint: disable=c0103
     ######################################
     # Other constants
     ######################################
+    # Timezone
+    DEFAULT_TIMEZONE = &#34;America/Sao_Paulo&#34;
     # Prefect
     K8S_AGENT_LABEL = &#34;kubernetes&#34;
     GCS_FLOWS_BUCKET = &#34;datario-public&#34;
@@ -191,6 +197,8 @@ class constants(Enum):  # pylint: disable=c0103
     TASK_RETRY_DELAY = 10  # seconds
     # Telegram
     TELEGRAM_MAX_MESSAGE_LENGTH = 4096
+    # MLflow
+    MLFLOW_TRACKING_URI = &#34;http://mlflow-tracking-server.mlflow.svc.cluster.local:5000&#34;
 
     ######################################
     # Discord code owners constants
@@ -246,6 +254,10 @@ class constants(Enum):  # pylint: disable=c0103
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="pipelines.constants.constants.DEFAULT_TIMEZONE"><code class="name">var <span class="ident">DEFAULT_TIMEZONE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="pipelines.constants.constants.DOCKER_IMAGE"><code class="name">var <span class="ident">DOCKER_IMAGE</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -267,6 +279,10 @@ class constants(Enum):  # pylint: disable=c0103
 <div class="desc"></div>
 </dd>
 <dt id="pipelines.constants.constants.K8S_AGENT_LABEL"><code class="name">var <span class="ident">K8S_AGENT_LABEL</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.constants.constants.MLFLOW_TRACKING_URI"><code class="name">var <span class="ident">MLFLOW_TRACKING_URI</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -402,12 +418,14 @@ setTimeout(() => input.focus(), 100);
 <h4><code><a title="pipelines.constants.constants" href="#pipelines.constants.constants">constants</a></code></h4>
 <ul class="">
 <li><code><a title="pipelines.constants.constants.DEFAULT_CODE_OWNERS" href="#pipelines.constants.constants.DEFAULT_CODE_OWNERS">DEFAULT_CODE_OWNERS</a></code></li>
+<li><code><a title="pipelines.constants.constants.DEFAULT_TIMEZONE" href="#pipelines.constants.constants.DEFAULT_TIMEZONE">DEFAULT_TIMEZONE</a></code></li>
 <li><code><a title="pipelines.constants.constants.DOCKER_IMAGE" href="#pipelines.constants.constants.DOCKER_IMAGE">DOCKER_IMAGE</a></code></li>
 <li><code><a title="pipelines.constants.constants.DOCKER_IMAGE_NAME" href="#pipelines.constants.constants.DOCKER_IMAGE_NAME">DOCKER_IMAGE_NAME</a></code></li>
 <li><code><a title="pipelines.constants.constants.DOCKER_TAG" href="#pipelines.constants.constants.DOCKER_TAG">DOCKER_TAG</a></code></li>
 <li><code><a title="pipelines.constants.constants.EMD_DISCORD_WEBHOOK_SECRET_PATH" href="#pipelines.constants.constants.EMD_DISCORD_WEBHOOK_SECRET_PATH">EMD_DISCORD_WEBHOOK_SECRET_PATH</a></code></li>
 <li><code><a title="pipelines.constants.constants.GCS_FLOWS_BUCKET" href="#pipelines.constants.constants.GCS_FLOWS_BUCKET">GCS_FLOWS_BUCKET</a></code></li>
 <li><code><a title="pipelines.constants.constants.K8S_AGENT_LABEL" href="#pipelines.constants.constants.K8S_AGENT_LABEL">K8S_AGENT_LABEL</a></code></li>
+<li><code><a title="pipelines.constants.constants.MLFLOW_TRACKING_URI" href="#pipelines.constants.constants.MLFLOW_TRACKING_URI">MLFLOW_TRACKING_URI</a></code></li>
 <li><code><a title="pipelines.constants.constants.OWNERS_DISCORD_MENTIONS" href="#pipelines.constants.constants.OWNERS_DISCORD_MENTIONS">OWNERS_DISCORD_MENTIONS</a></code></li>
 <li><code><a title="pipelines.constants.constants.PREFECT_DEFAULT_PROJECT" href="#pipelines.constants.constants.PREFECT_DEFAULT_PROJECT">PREFECT_DEFAULT_PROJECT</a></code></li>
 <li><code><a title="pipelines.constants.constants.RJ_COR_AGENT_LABEL" href="#pipelines.constants.constants.RJ_COR_AGENT_LABEL">RJ_COR_AGENT_LABEL</a></code></li>

@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_smfp.dump_db_ergon.flows API documentation</title>
-<meta name="description" content="Database dumping flows for segovi project" />
+<title>pipelines.rj_escritorio.dummy_predict.flows API documentation</title>
+<meta name="description" content="Predict flow example usage." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,56 +19,109 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_smfp.dump_db_ergon.flows</code></h1>
+<h1 class="title">Module <code>pipelines.rj_escritorio.dummy_predict.flows</code></h1>
 </header>
 <section id="section-intro">
-<p>Database dumping flows for segovi project</p>
+<p>Predict flow example usage.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Database dumping flows for segovi project
+Predict flow example usage.
 &#34;&#34;&#34;
 
-from copy import deepcopy
-
+from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
+from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 
 from pipelines.constants import constants
+from pipelines.rj_escritorio.dummy_predict.tasks import (
+    get_current_timestamp,
+    get_dummy_input_data,
+)
+from pipelines.utils.constants import constants as utils_constants
+from pipelines.utils.decorators import Flow
+from pipelines.utils.predict_flow.tasks import (
+    prepare_dataframe_for_prediction,
+)
+from pipelines.utils.tasks import get_current_flow_labels
 
-# from pipelines.rj_smfp.dump_db_ergon.schedules import (
-#     ergon_monthly_update_schedule,
-# )
-from pipelines.utils.dump_db.flows import dump_sql_flow
-from pipelines.utils.utils import set_default_parameters
-
-
-dump_ergon_flow = deepcopy(dump_sql_flow)
-dump_ergon_flow.name = &#34;SMFP: ergon - Ingerir tabelas de banco SQL&#34;
-dump_ergon_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-dump_ergon_flow.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value,
-    labels=[
-        constants.RJ_SMFP_AGENT_LABEL.value,
+with Flow(
+    name=&#34;EMD: escritorio - Exemplo de flow para predição com modelo&#34;,
+    code_owners=[
+        &#34;gabriel&#34;,
     ],
-)
+) as dummy_predict_example_flow:
 
-ergon_default_parameters = {
-    &#34;db_database&#34;: &#34;P01.PCRJ&#34;,
-    &#34;db_host&#34;: &#34;10.70.6.22&#34;,
-    &#34;db_port&#34;: &#34;1521&#34;,
-    &#34;db_type&#34;: &#34;oracle&#34;,
-    &#34;vault_secret_path&#34;: &#34;ergon-hom&#34;,
-    &#34;dataset_id&#34;: &#34;administracao_recursos_humanos_folha_salarial&#34;,
-}
-dump_ergon_flow = set_default_parameters(
-    dump_ergon_flow, default_parameters=ergon_default_parameters
-)
+    ###########################
+    #     Your parameters     #
+    ###########################
+    dataset_id = Parameter(&#34;dataset_id&#34;)
+    table_id = Parameter(&#34;table_id&#34;)
+    dump_mode = Parameter(&#34;dump_mode&#34;, default=&#34;append&#34;, required=False)
 
-# dump_ergon_flow.schedule = ergon_monthly_update_schedule</code></pre>
+    ###########################
+    #  Prediction parameters  #
+    ###########################
+    # You can check available parameters in the prediction flow definition
+    # pipelines/utils/predict_flow/flows.py
+    tracking_server_uri = Parameter(&#34;tracking_server_uri&#34;, default=None, required=False)
+    model_name = Parameter(&#34;model_name&#34;)
+    model_version_or_stage = Parameter(
+        &#34;model_version_or_stage&#34;, default=&#34;Production&#34;, required=False
+    )
+
+    # Fetch any data you want to use for prediction (pd.DataFrame)
+    # It must match the same structure as the data you&#39;ve used for
+    # training the model
+    input_data = get_dummy_input_data()
+    flow_start_timestamp = get_current_timestamp()
+
+    # Prepare dataframe for prediction (this is just a way of wrapping
+    # the dataframe to JSON format, but it&#39;s mandatory)
+    data_for_prediction = prepare_dataframe_for_prediction(
+        dataframe=input_data,
+    )
+
+    # Call the prediction flow
+    current_flow_labels = get_current_flow_labels()
+    # Trigger DBT flow run
+    prediction_flow = create_flow_run(
+        flow_name=utils_constants.FLOW_PREDICT_NAME.value,
+        project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+        parameters={
+            &#34;tracking_server_uri&#34;: tracking_server_uri,
+            &#34;model_name&#34;: model_name,
+            &#34;model_version_or_stage&#34;: model_version_or_stage,
+            &#34;input_data&#34;: data_for_prediction,
+            &#34;output_type&#34;: &#34;bigquery&#34;,
+            &#34;dataset_id&#34;: dataset_id,
+            &#34;table_id&#34;: table_id,
+            &#34;dump_mode&#34;: dump_mode,
+            &#34;output_column_name&#34;: &#34;prediction&#34;,
+            &#34;save_dataframe_path&#34;: &#34;/tmp/predictions.csv&#34;,
+            &#34;include_timestamp&#34;: True,
+            &#34;timestamp&#34;: flow_start_timestamp,
+        },
+        labels=current_flow_labels,
+        run_name=f&#34;Predict {dataset_id}.{table_id}&#34;,
+    )
+
+    wait_for_materialization = wait_for_flow_run(
+        prediction_flow,
+        stream_states=True,
+        stream_logs=True,
+        raise_final_state=True,
+    )
+
+
+dummy_predict_example_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+dummy_predict_example_flow.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value
+)</code></pre>
 </details>
 </section>
 <section>
@@ -134,7 +187,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines.rj_smfp.dump_db_ergon" href="index.html">pipelines.rj_smfp.dump_db_ergon</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.dummy_predict" href="index.html">pipelines.rj_escritorio.dummy_predict</a></code></li>
 </ul>
 </li>
 </ul>
