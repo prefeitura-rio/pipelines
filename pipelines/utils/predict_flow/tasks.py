@@ -63,3 +63,11 @@ def generate_dataframe_from_predictions(
         save_path.parent.mkdir(parents=True, exist_ok=True)
         df.to_csv(save_path, index=False)
     return df
+
+
+@task(checkpoint=False)
+def prepare_dataframe_for_prediction(dataframe: pd.DataFrame) -> Dict[str, List[Any]]:
+    """
+    Use pandas split
+    """
+    return dataframe.to_dict(orient="split")
