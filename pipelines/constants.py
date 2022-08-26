@@ -51,6 +51,8 @@ class constants(Enum):  # pylint: disable=c0103
     TASK_RETRY_DELAY = 10  # seconds
     # Telegram
     TELEGRAM_MAX_MESSAGE_LENGTH = 4096
+    # MLflow
+    MLFLOW_TRACKING_URI = "http://mlflow-tracking-server.mlflow.svc.cluster.local:5000"
 
     ######################################
     # Discord code owners constants
