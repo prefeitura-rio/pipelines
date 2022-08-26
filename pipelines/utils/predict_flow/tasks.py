@@ -69,8 +69,6 @@ def generate_dataframe_from_predictions(
     if save_path:
         if not isinstance(save_path, Path):
             save_path = Path(save_path)
-        # save_path.mkdir(parents=True, exist_ok=True)
-        # dataframe.to_csv(save_path / "data.csv", index=False)
         dataframe_to_csv(dataframe=dataframe, path = save_path / "data.csv")
     return dataframe
 
