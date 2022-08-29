@@ -724,18 +724,25 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 field_name=table_date_column_name,
                 kind="max",
             ).strftime(timestr)
+    last_run = datetime.strptime(last_run, timestr)
+    now_ts = pendulum.now(constants.TIMEZONE.value)
     # set start to last run hour (H)
-    start_ts = (
-        (datetime.strptime(last_run, timestr))
-        .replace(minute=0, second=0, microsecond=0)
-        .strftime(timestr)
-    )
-    # set end to H+60
-    end_ts = (
-        (datetime.strptime(last_run, timestr) + timedelta(minutes=60))
-        .replace(minute=0, second=0, microsecond=0)
-        .strftime(timestr)
-    )
+    start_ts = (last_run).replace(minute=0, second=0, microsecond=0).strftime(timestr)
+    # if some materialization run failed, range is from last_run
+    # up to the previous hour from now
+    if now_ts - last_run > timedelta(hours=2):
+        end_ts = (
+            (now_ts - timedelta(hours=1))
+            .replace(minute=0, second=0, microsecond=0)
+            .strftime(timestr)
+        )
+    else:
+        # set end to H+60
+        end_ts = (
+            (last_run + timedelta(minutes=60))
+            .replace(minute=0, second=0, microsecond=0)
+            .strftime(timestr)
+        )
 
     date_range = {"date_range_start": start_ts, "date_range_end": end_ts}
     return date_range
