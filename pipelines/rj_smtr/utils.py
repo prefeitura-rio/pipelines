@@ -3,11 +3,13 @@
 General purpose functions for rj_smtr
 """
 
+from ftplib import FTP
 from pathlib import Path
 
 import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
+from pipelines.rj_smtr.implicit_ftp import ImplicitFtpTls
 
 from pipelines.utils.utils import log
 from pipelines.utils.utils import (
@@ -175,6 +177,27 @@ def map_dict_keys(data: dict, mapping: dict) -> None:
     for key in pop_keys:
         data.pop(key)
     return data
+
+
+def connect_ftp(
+    secret_path: str = constants.FTPS_SECRET_PATH.value, secure: bool = True
+):
+    """Connect to FTP
+
+    Returns:
+        ImplicitFTP_TLS: ftp client
+    """
+
+    ftp_data = get_vault_secret(secret_path)["data"]
+    if secure:
+        ftp_client = ImplicitFtpTls()
+    else:
+        ftp_client = FTP()
+    ftp_client.connect(host=ftp_data["host"], port=int(ftp_data["port"]))
+    ftp_client.login(user=ftp_data["username"], passwd=ftp_data["pwd"])
+    if secure:
+        ftp_client.prot_p()
+    return ftp_client
 
 
 def safe_cast(val, to_type, default=None):
