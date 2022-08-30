@@ -11,6 +11,12 @@ import pytz
 
 from pipelines.constants import constants
 
+PARAMETER_DEFAULTS = {
+    "secret_path": "systems-bot",
+    "sheet_id": "1xuQOo0Z9uwPVwVvmNhwpgFndKGD9c2tttX2nPR5FOVM",
+    "sheet_name": "sistemas_prioritarios_2",
+}
+
 systems_telegram_bot_schedule = Schedule(
     clocks=[
         IntervalClock(
@@ -21,9 +27,7 @@ systems_telegram_bot_schedule = Schedule(
             labels=[
                 constants.RJ_COR_AGENT_LABEL.value,
             ],
-            parameter_defaults={
-                "secret_path": "cet-bot",
-            },
+            parameter_defaults=PARAMETER_DEFAULTS,
         ),
         IntervalClock(
             interval=timedelta(days=1),
@@ -33,9 +37,7 @@ systems_telegram_bot_schedule = Schedule(
             labels=[
                 constants.RJ_COR_AGENT_LABEL.value,
             ],
-            parameter_defaults={
-                "secret_path": "cet-bot",
-            },
+            parameter_defaults=PARAMETER_DEFAULTS,
         ),
         IntervalClock(
             interval=timedelta(days=1),
@@ -45,9 +47,7 @@ systems_telegram_bot_schedule = Schedule(
             labels=[
                 constants.RJ_COR_AGENT_LABEL.value,
             ],
-            parameter_defaults={
-                "secret_path": "cet-bot",
-            },
+            parameter_defaults=PARAMETER_DEFAULTS,
         ),
     ],
 )

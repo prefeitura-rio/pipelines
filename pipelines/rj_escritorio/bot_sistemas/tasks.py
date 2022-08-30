@@ -8,6 +8,7 @@ from datetime import datetime
 from jinja2 import Environment
 import pandas as pd
 from prefect import task
+import telegram
 
 from pipelines.constants import constants
 from pipelines.utils.utils import (
@@ -111,4 +112,9 @@ def split_and_send_messages(token: str, group_id: str, message: str) -> None:
 
     for msg in messages:
         if msg != "":
-            send_telegram_message(message=msg, token=token, chat_id=group_id)
+            send_telegram_message(
+                message=msg,
+                token=token,
+                chat_id=group_id,
+                parse_mode=telegram.ParseMode.MARKDOWN_V2,
+            )
