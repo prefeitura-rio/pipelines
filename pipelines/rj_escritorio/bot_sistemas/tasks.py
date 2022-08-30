@@ -9,6 +9,7 @@ from jinja2 import Environment
 import pandas as pd
 from prefect import task
 import telegram
+from telegram.utils.helpers import escape_markdown
 
 from pipelines.constants import constants
 from pipelines.utils.utils import (
@@ -112,6 +113,7 @@ def split_and_send_messages(token: str, group_id: str, message: str) -> None:
 
     for msg in messages:
         if msg != "":
+            msg = escape_markdown(msg, version=2)
             send_telegram_message(
                 message=msg,
                 token=token,
