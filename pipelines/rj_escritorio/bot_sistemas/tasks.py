@@ -4,7 +4,6 @@ Tasks for the Systems Bot flow.
 """
 
 from datetime import datetime
-from typing import List
 
 from jinja2 import Environment
 import pandas as pd
@@ -98,12 +97,6 @@ def build_message(data: list) -> str:
         )
     )
 
-    return smart_split(
-        text=msg,
-        max_length=constants.TELEGRAM_MAX_MESSAGE_LENGTH.value,
-        separator="\n",
-    )
-
 
 @task(checkpoint=False)
 def split_and_send_messages(token: str, group_id: str, message: str) -> None:
@@ -116,6 +109,6 @@ def split_and_send_messages(token: str, group_id: str, message: str) -> None:
         separator="\n",
     )
 
-    for message in messages:
-        if message != "":
-            send_telegram_message(message=message, token=token, chat_id=group_id)
+    for msg in messages:
+        if msg != "":
+            send_telegram_message(message=msg, token=token, chat_id=group_id)
