@@ -688,8 +688,7 @@ def dump_header_to_file(data_path: Union[str, Path], data_type: str = "csv"):
                 break
         if found:
             break
-    
-    
+
     save_header_path = f"data/{uuid4()}"
     # discover if it's a partitioned table
     if partition_folders := [folder for folder in file.split("/") if "=" in folder]:
