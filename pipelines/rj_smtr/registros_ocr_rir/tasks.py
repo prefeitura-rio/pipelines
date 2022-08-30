@@ -95,7 +95,7 @@ def get_files_from_ftp(dump: bool = False, execution_time: str = None):
         }
         if not dump:
             for file, created_time in files.items():
-                if execution_time - created_time < timedelta(minutes=5):
+                if execution_time == created_time:
                     file_info.append(
                         {
                             "filename": file,
@@ -151,7 +151,7 @@ def download_and_save_local(file_info: list):
 
 
 @task
-def pre_treatment_ocrs(file_info: list):
+def pre_treatment_ocr(file_info: list):
     """Standardize columns
 
     Args:
@@ -166,6 +166,7 @@ def pre_treatment_ocrs(file_info: list):
     standard_cols = dict(primary_cols, **secondary_cols)
     log(f"Standard columns are:{standard_cols}")
     for info in file_info:
+        log(f'open file {info["filepath"]}')
         data = pd.read_csv(info["filepath"], sep=";")
         log(
             f"""
@@ -175,11 +176,11 @@ def pre_treatment_ocrs(file_info: list):
         {data.columns.to_list()}
             """
         )
-        data["datahora"] = pd.to_datetime(data["DATA"] + "" + data["HORA"])
+        data["datahora"] = pd.to_datetime(data["DATA"] + " " + data["HORA"])
         log(f"Created column datahora as:\n{data['datahora']}")
         for col, new_col in secondary_cols.items():
             if col not in data.columns:
-                log("Add empty column {col} to data")
+                log(f"Add empty column {col} to data")
                 data[new_col] = ""
         data = data.rename(columns=standard_cols)[list(standard_cols.values())]
         data.to_csv(info["filepath"], index=False)

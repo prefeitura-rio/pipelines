@@ -67,7 +67,7 @@ from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.registros_ocr_rir.tasks import (
     get_files_from_ftp,
     download_and_save_local,
-    pre_treatment_ocrs,
+    pre_treatment_ocr,
 )
 from pipelines.rj_smtr.tasks import bq_upload
 
@@ -88,7 +88,7 @@ with Flow(
         files = download_and_save_local(
             file_info=status["file_info"],
         )
-        table_dir = pre_treatment_ocrs(file_info=files)
+        table_dir = pre_treatment_ocr(file_info=files)
         bq_upload(
             dataset_id=constants.RIR_DATASET_ID.value,
             table_id=constants.RIR_TABLE_ID.value,
