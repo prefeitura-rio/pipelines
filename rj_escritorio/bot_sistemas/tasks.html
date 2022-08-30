@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.utils.predict_flow.tasks API documentation</title>
-<meta name="description" content="Tasks for the predict flow." />
+<title>pipelines.rj_escritorio.bot_sistemas.tasks API documentation</title>
+<meta name="description" content="Tasks for the Systems Bot flow." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,95 +19,136 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.utils.predict_flow.tasks</code></h1>
+<h1 class="title">Module <code>pipelines.rj_escritorio.bot_sistemas.tasks</code></h1>
 </header>
 <section id="section-intro">
-<p>Tasks for the predict flow.</p>
+<p>Tasks for the Systems Bot flow.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Tasks for the predict flow.
+Tasks for the Systems Bot flow.
 &#34;&#34;&#34;
 
-from pathlib import Path
-from typing import Any, Dict, List, Union
+from datetime import datetime
 
-import mlflow
-import mlflow.pyfunc
-from numpy import ndarray
+from jinja2 import Environment
 import pandas as pd
-import pendulum
 from prefect import task
+import telegram
+from telegram.utils.helpers import escape_markdown
 
 from pipelines.constants import constants
-from pipelines.utils.utils import dataframe_to_csv, log
+from pipelines.utils.utils import (
+    send_telegram_message,
+    smart_split,
+)
 
 
 @task(checkpoint=False)
-def get_model(
-    model_name: str,
-    model_version_or_stage: str,
-    tracking_server_uri: str = None,
-):
+def get_data(sheet_id: str, sheet_name: str) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
-    Get model from MLflow model registry.
+    Fetches data from Google Drive
     &#34;&#34;&#34;
-    if not tracking_server_uri:
-        tracking_server_uri = constants.MLFLOW_TRACKING_URI.value
-    mlflow.set_tracking_uri(tracking_server_uri)
-    model_uri = f&#34;models:/{model_name}/{model_version_or_stage}&#34;
-    log(f&#34;Tracking server URI: {tracking_server_uri}&#34;)
-    log(f&#34;Model URI: {model_uri}&#34;)
-    model = mlflow.pyfunc.load_model(model_uri=model_uri)
-    return model
-
-
-@task(checkpoint=False)
-def predict(data: Dict[str, List[Any]], model: mlflow.pyfunc.PyFuncModel) -&gt; ndarray:
-    &#34;&#34;&#34;
-    Uses an MLflow model to predict using the data in the dataframe.
-    &#34;&#34;&#34;
-    # From pandas-split to dataframe
-    dataframe = pd.DataFrame(data=data[&#34;data&#34;], columns=data[&#34;columns&#34;])
-    # Predict
-    predictions = model.predict(dataframe)
-    return list(predictions)
-
-
-@task(checkpoint=False)
-def generate_dataframe_from_predictions(
-    predictions: List[Any],
-    output_column_name: str,
-    include_timestamp: bool = False,
-    timestamp: str = None,
-    save_path: Union[str, Path] = None,
-) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    Generate a dataframe from the predictions.
-    &#34;&#34;&#34;
-    dataframe = pd.DataFrame(data=predictions, columns=[output_column_name])
-    if include_timestamp:
-        if not timestamp:
-            timestamp = pendulum.now(
-                tz=constants.DEFAULT_TIMEZONE.value
-            ).to_datetime_string()
-        dataframe[&#34;timestamp&#34;] = timestamp
-    if save_path:
-        if not isinstance(save_path, Path):
-            save_path = Path(save_path)
-        dataframe_to_csv(dataframe=dataframe, path=save_path / &#34;data.csv&#34;)
+    url = &#34;https://docs.google.com/spreadsheets/d/&#34;
+    url += f&#34;{sheet_id}/gviz/tq?tqx=out:csv&amp;sheet={sheet_name}&#34;
+    dataframe = pd.read_csv(url)
     return dataframe
 
 
 @task(checkpoint=False)
-def prepare_dataframe_for_prediction(dataframe: pd.DataFrame) -&gt; Dict[str, List[Any]]:
+def preprocess_data(dataframe: pd.DataFrame) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
-    Use pandas split
+    Preprocesses data
     &#34;&#34;&#34;
-    return dataframe.to_dict(orient=&#34;split&#34;)</code></pre>
+    dataframe[&#34;dt_critica_dt&#34;] = dataframe[&#34;dt_critica&#34;].apply(
+        lambda x: datetime.strptime(x, &#34;%d/%m/%Y&#34;) if isinstance(x, str) else None
+    )
+    dataframe[&#34;dt_iplan_dt&#34;] = dataframe[&#34;dt_iplan&#34;].apply(
+        lambda x: datetime.strptime(x, &#34;%d/%m/%Y&#34;) if isinstance(x, str) else None
+    )
+    dataframe[&#34;texto&#34;] = dataframe.apply(
+        lambda x: f&#34;{x[&#39;dt_critica&#39;]}, {x[&#39;nome&#39;]} | {x[&#39;nome_fantasia&#39;]}&#34;, 1
+    )
+    return dataframe.sort_values(by=&#34;dt_critica_dt&#34;)[
+        [&#34;fase&#34;, &#34;status&#34;, &#34;texto&#34;]
+    ].to_dict(&#34;records&#34;)
+
+
+@task(checkpoint=False)
+def build_message(data: list) -&gt; str:
+    &#34;&#34;&#34;
+    Builds the message
+    &#34;&#34;&#34;
+    msg = &#34;&#34;&#34;
+    {% macro printconds(data, status, fase) -%}
+
+        {% for d in data -%}
+        {% if (d.status == status) and (d.fase == fase) -%}
+        - {{d.texto}}
+        {% endif %}
+        {%- endfor %}
+    {% endmacro -%}
+
+
+    Status dos Sistemas
+
+    {% for f in  fases-%}
+    *{{f}} - até {{prazos[f]}}*
+
+    {% for s in  statuses-%}
+    *{{s}}*
+        {{ printconds(data, s, f) }}
+    {%- endfor %}
+    {%- endfor %}
+    &#34;&#34;&#34;
+    statuses = [
+        &#34;Não Iniciado&#34;,
+        &#34;Em Andamento&#34;,
+        &#34;Funcionamento Parcial&#34;,
+        &#34;Funcionamento Pleno&#34;,
+    ]
+    fases = [&#34;Fase 1&#34;, &#34;Fase 2&#34;, &#34;Fase 3&#34;, &#34;Fase 4&#34;]
+    prazos = {
+        &#34;Fase 1&#34;: &#34;05/09&#34;,
+        &#34;Fase 2&#34;: &#34;26/09&#34;,
+        &#34;Fase 3&#34;: &#34;10/10&#34;,
+        &#34;Fase 4&#34;: &#34;07/11&#34;,
+    }
+    return (
+        Environment()
+        .from_string(msg)
+        .render(
+            data=data,
+            statuses=statuses,
+            fases=fases,
+            prazos=prazos,
+        )
+    )
+
+
+@task(checkpoint=False)
+def split_and_send_messages(token: str, group_id: str, message: str) -&gt; None:
+    &#34;&#34;&#34;
+    Sends the alerts to the Telegram group.
+    &#34;&#34;&#34;
+    messages = smart_split(
+        text=message,
+        max_length=constants.TELEGRAM_MAX_MESSAGE_LENGTH.value,
+        separator=&#34;\n&#34;,
+    )
+
+    for msg in messages:
+        if msg != &#34;&#34;:
+            msg = escape_markdown(msg, version=2)
+            send_telegram_message(
+                message=msg,
+                token=token,
+                chat_id=group_id,
+                parse_mode=telegram.ParseMode.MARKDOWN_V2,
+            )</code></pre>
 </details>
 </section>
 <section>
@@ -117,104 +158,144 @@ def prepare_dataframe_for_prediction(dataframe: pd.DataFrame) -&gt; Dict[str, Li
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="pipelines.utils.predict_flow.tasks.generate_dataframe_from_predictions"><code class="name flex">
-<span>def <span class="ident">generate_dataframe_from_predictions</span></span>(<span>predictions: List[Any], output_column_name: str, include_timestamp: bool = False, timestamp: str = None, save_path: Union[str, pathlib.Path] = None) ‑> pandas.core.frame.DataFrame</span>
+<dt id="pipelines.rj_escritorio.bot_sistemas.tasks.build_message"><code class="name flex">
+<span>def <span class="ident">build_message</span></span>(<span>data: list) ‑> str</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Generate a dataframe from the predictions.</p></div>
+<div class="desc"><p>Builds the message</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task(checkpoint=False)
-def generate_dataframe_from_predictions(
-    predictions: List[Any],
-    output_column_name: str,
-    include_timestamp: bool = False,
-    timestamp: str = None,
-    save_path: Union[str, Path] = None,
-) -&gt; pd.DataFrame:
+def build_message(data: list) -&gt; str:
     &#34;&#34;&#34;
-    Generate a dataframe from the predictions.
+    Builds the message
     &#34;&#34;&#34;
-    dataframe = pd.DataFrame(data=predictions, columns=[output_column_name])
-    if include_timestamp:
-        if not timestamp:
-            timestamp = pendulum.now(
-                tz=constants.DEFAULT_TIMEZONE.value
-            ).to_datetime_string()
-        dataframe[&#34;timestamp&#34;] = timestamp
-    if save_path:
-        if not isinstance(save_path, Path):
-            save_path = Path(save_path)
-        dataframe_to_csv(dataframe=dataframe, path=save_path / &#34;data.csv&#34;)
+    msg = &#34;&#34;&#34;
+    {% macro printconds(data, status, fase) -%}
+
+        {% for d in data -%}
+        {% if (d.status == status) and (d.fase == fase) -%}
+        - {{d.texto}}
+        {% endif %}
+        {%- endfor %}
+    {% endmacro -%}
+
+
+    Status dos Sistemas
+
+    {% for f in  fases-%}
+    *{{f}} - até {{prazos[f]}}*
+
+    {% for s in  statuses-%}
+    *{{s}}*
+        {{ printconds(data, s, f) }}
+    {%- endfor %}
+    {%- endfor %}
+    &#34;&#34;&#34;
+    statuses = [
+        &#34;Não Iniciado&#34;,
+        &#34;Em Andamento&#34;,
+        &#34;Funcionamento Parcial&#34;,
+        &#34;Funcionamento Pleno&#34;,
+    ]
+    fases = [&#34;Fase 1&#34;, &#34;Fase 2&#34;, &#34;Fase 3&#34;, &#34;Fase 4&#34;]
+    prazos = {
+        &#34;Fase 1&#34;: &#34;05/09&#34;,
+        &#34;Fase 2&#34;: &#34;26/09&#34;,
+        &#34;Fase 3&#34;: &#34;10/10&#34;,
+        &#34;Fase 4&#34;: &#34;07/11&#34;,
+    }
+    return (
+        Environment()
+        .from_string(msg)
+        .render(
+            data=data,
+            statuses=statuses,
+            fases=fases,
+            prazos=prazos,
+        )
+    )</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_escritorio.bot_sistemas.tasks.get_data"><code class="name flex">
+<span>def <span class="ident">get_data</span></span>(<span>sheet_id: str, sheet_name: str) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Fetches data from Google Drive</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(checkpoint=False)
+def get_data(sheet_id: str, sheet_name: str) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Fetches data from Google Drive
+    &#34;&#34;&#34;
+    url = &#34;https://docs.google.com/spreadsheets/d/&#34;
+    url += f&#34;{sheet_id}/gviz/tq?tqx=out:csv&amp;sheet={sheet_name}&#34;
+    dataframe = pd.read_csv(url)
     return dataframe</code></pre>
 </details>
 </dd>
-<dt id="pipelines.utils.predict_flow.tasks.get_model"><code class="name flex">
-<span>def <span class="ident">get_model</span></span>(<span>model_name: str, model_version_or_stage: str, tracking_server_uri: str = None)</span>
+<dt id="pipelines.rj_escritorio.bot_sistemas.tasks.preprocess_data"><code class="name flex">
+<span>def <span class="ident">preprocess_data</span></span>(<span>dataframe: pandas.core.frame.DataFrame) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Get model from MLflow model registry.</p></div>
+<div class="desc"><p>Preprocesses data</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task(checkpoint=False)
-def get_model(
-    model_name: str,
-    model_version_or_stage: str,
-    tracking_server_uri: str = None,
-):
+def preprocess_data(dataframe: pd.DataFrame) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
-    Get model from MLflow model registry.
+    Preprocesses data
     &#34;&#34;&#34;
-    if not tracking_server_uri:
-        tracking_server_uri = constants.MLFLOW_TRACKING_URI.value
-    mlflow.set_tracking_uri(tracking_server_uri)
-    model_uri = f&#34;models:/{model_name}/{model_version_or_stage}&#34;
-    log(f&#34;Tracking server URI: {tracking_server_uri}&#34;)
-    log(f&#34;Model URI: {model_uri}&#34;)
-    model = mlflow.pyfunc.load_model(model_uri=model_uri)
-    return model</code></pre>
+    dataframe[&#34;dt_critica_dt&#34;] = dataframe[&#34;dt_critica&#34;].apply(
+        lambda x: datetime.strptime(x, &#34;%d/%m/%Y&#34;) if isinstance(x, str) else None
+    )
+    dataframe[&#34;dt_iplan_dt&#34;] = dataframe[&#34;dt_iplan&#34;].apply(
+        lambda x: datetime.strptime(x, &#34;%d/%m/%Y&#34;) if isinstance(x, str) else None
+    )
+    dataframe[&#34;texto&#34;] = dataframe.apply(
+        lambda x: f&#34;{x[&#39;dt_critica&#39;]}, {x[&#39;nome&#39;]} | {x[&#39;nome_fantasia&#39;]}&#34;, 1
+    )
+    return dataframe.sort_values(by=&#34;dt_critica_dt&#34;)[
+        [&#34;fase&#34;, &#34;status&#34;, &#34;texto&#34;]
+    ].to_dict(&#34;records&#34;)</code></pre>
 </details>
 </dd>
-<dt id="pipelines.utils.predict_flow.tasks.predict"><code class="name flex">
-<span>def <span class="ident">predict</span></span>(<span>data: Dict[str, List[Any]], model: mlflow.pyfunc.PyFuncModel) ‑> numpy.ndarray</span>
+<dt id="pipelines.rj_escritorio.bot_sistemas.tasks.split_and_send_messages"><code class="name flex">
+<span>def <span class="ident">split_and_send_messages</span></span>(<span>token: str, group_id: str, message: str) ‑> None</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Uses an MLflow model to predict using the data in the dataframe.</p></div>
+<div class="desc"><p>Sends the alerts to the Telegram group.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task(checkpoint=False)
-def predict(data: Dict[str, List[Any]], model: mlflow.pyfunc.PyFuncModel) -&gt; ndarray:
+def split_and_send_messages(token: str, group_id: str, message: str) -&gt; None:
     &#34;&#34;&#34;
-    Uses an MLflow model to predict using the data in the dataframe.
+    Sends the alerts to the Telegram group.
     &#34;&#34;&#34;
-    # From pandas-split to dataframe
-    dataframe = pd.DataFrame(data=data[&#34;data&#34;], columns=data[&#34;columns&#34;])
-    # Predict
-    predictions = model.predict(dataframe)
-    return list(predictions)</code></pre>
-</details>
-</dd>
-<dt id="pipelines.utils.predict_flow.tasks.prepare_dataframe_for_prediction"><code class="name flex">
-<span>def <span class="ident">prepare_dataframe_for_prediction</span></span>(<span>dataframe: pandas.core.frame.DataFrame) ‑> Dict[str, List[Any]]</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Use pandas split</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task(checkpoint=False)
-def prepare_dataframe_for_prediction(dataframe: pd.DataFrame) -&gt; Dict[str, List[Any]]:
-    &#34;&#34;&#34;
-    Use pandas split
-    &#34;&#34;&#34;
-    return dataframe.to_dict(orient=&#34;split&#34;)</code></pre>
+    messages = smart_split(
+        text=message,
+        max_length=constants.TELEGRAM_MAX_MESSAGE_LENGTH.value,
+        separator=&#34;\n&#34;,
+    )
+
+    for msg in messages:
+        if msg != &#34;&#34;:
+            msg = escape_markdown(msg, version=2)
+            send_telegram_message(
+                message=msg,
+                token=token,
+                chat_id=group_id,
+                parse_mode=telegram.ParseMode.MARKDOWN_V2,
+            )</code></pre>
 </details>
 </dd>
 </dl>
@@ -276,15 +357,15 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines.utils.predict_flow" href="index.html">pipelines.utils.predict_flow</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.bot_sistemas" href="index.html">pipelines.rj_escritorio.bot_sistemas</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="pipelines.utils.predict_flow.tasks.generate_dataframe_from_predictions" href="#pipelines.utils.predict_flow.tasks.generate_dataframe_from_predictions">generate_dataframe_from_predictions</a></code></li>
-<li><code><a title="pipelines.utils.predict_flow.tasks.get_model" href="#pipelines.utils.predict_flow.tasks.get_model">get_model</a></code></li>
-<li><code><a title="pipelines.utils.predict_flow.tasks.predict" href="#pipelines.utils.predict_flow.tasks.predict">predict</a></code></li>
-<li><code><a title="pipelines.utils.predict_flow.tasks.prepare_dataframe_for_prediction" href="#pipelines.utils.predict_flow.tasks.prepare_dataframe_for_prediction">prepare_dataframe_for_prediction</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.bot_sistemas.tasks.build_message" href="#pipelines.rj_escritorio.bot_sistemas.tasks.build_message">build_message</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.bot_sistemas.tasks.get_data" href="#pipelines.rj_escritorio.bot_sistemas.tasks.get_data">get_data</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.bot_sistemas.tasks.preprocess_data" href="#pipelines.rj_escritorio.bot_sistemas.tasks.preprocess_data">preprocess_data</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.bot_sistemas.tasks.split_and_send_messages" href="#pipelines.rj_escritorio.bot_sistemas.tasks.split_and_send_messages">split_and_send_messages</a></code></li>
 </ul>
 </li>
 </ul>

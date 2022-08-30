@@ -717,8 +717,7 @@ def dump_header_to_file(data_path: Union[str, Path], data_type: str = &#34;csv&#
                 break
         if found:
             break
-    
-    
+
     save_header_path = f&#34;data/{uuid4()}&#34;
     # discover if it&#39;s a partitioned table
     if partition_folders := [folder for folder in file.split(&#34;/&#34;) if &#34;=&#34; in folder]:
@@ -971,8 +970,7 @@ def parse_date_columns(
                 break
         if found:
             break
-    
-    
+
     save_header_path = f&#34;data/{uuid4()}&#34;
     # discover if it&#39;s a partitioned table
     if partition_folders := [folder for folder in file.split(&#34;/&#34;) if &#34;=&#34; in folder]:
