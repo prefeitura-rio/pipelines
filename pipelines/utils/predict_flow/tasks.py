@@ -14,7 +14,7 @@ import pendulum
 from prefect import task
 
 from pipelines.constants import constants
-from pipelines.utils.utils import dataframe_to_csv,log
+from pipelines.utils.utils import dataframe_to_csv, log
 
 
 @task(checkpoint=False)
@@ -69,7 +69,7 @@ def generate_dataframe_from_predictions(
     if save_path:
         if not isinstance(save_path, Path):
             save_path = Path(save_path)
-        dataframe_to_csv(dataframe=dataframe, path = save_path / "data.csv")
+        dataframe_to_csv(dataframe=dataframe, path=save_path / "data.csv")
     return dataframe
 
 
