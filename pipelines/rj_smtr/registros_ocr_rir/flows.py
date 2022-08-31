@@ -70,7 +70,7 @@ from pipelines.rj_smtr.registros_ocr_rir.tasks import (
 )
 from pipelines.rj_smtr.tasks import bq_upload, get_current_timestamp
 
-from pipelines.rj_smtr.schedules import every_minute_dev
+from pipelines.rj_smtr.schedules import every_minute
 from pipelines.utils.decorators import Flow
 from pipelines.utils.tasks import rename_current_flow_run_now_time
 
@@ -104,5 +104,8 @@ with Flow(
             )
 
 captura_ocr.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-captura_ocr.run_config = KubernetesRun(image=emd_constants.DOCKER_IMAGE.value)
-captura_ocr.schedule = every_minute_dev
+captura_ocr.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=emd_constants.RJ_SMTR_AGENT_LABEL.value,
+)
+captura_ocr.schedule = every_minute
