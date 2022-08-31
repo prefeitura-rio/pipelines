@@ -58,6 +58,7 @@ Flows for monitoramento_rock_in_rio
 ###############################################################################
 
 
+from turtle import update
 from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
@@ -90,12 +91,12 @@ with Flow(
         files = download_and_save_local(
             file_info=status["file_info"],
         )
-        skip_upload, table_dir = pre_treatment_ocr(file_info=files)
-        with case(skip_upload, False):
+        updated_status = pre_treatment_ocr(file_info=files)
+        with case(updated_status["skip_upload"], False):
             bq_upload(
                 dataset_id=constants.RIR_DATASET_ID.value,
                 table_id=constants.RIR_TABLE_ID.value,
-                filepath=table_dir,
+                filepath=updated_status["table_dir"],
             )
 
 captura_ocr.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)

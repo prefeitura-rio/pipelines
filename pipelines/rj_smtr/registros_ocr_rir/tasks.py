@@ -197,4 +197,4 @@ def pre_treatment_ocr(file_info: list):
 
     table_dir = f"{constants.RIR_DATASET_ID.value}/{constants.RIR_TABLE_ID.value}"
 
-    return skip_upload, table_dir
+    return {"skip_upload": skip_upload, "table_dir": table_dir}
