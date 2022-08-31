@@ -31,7 +31,7 @@ with Flow(
     dump = Parameter("dump", default=False)
     execution_time = Parameter("execution_time", default=None)
     rename_flow = rename_current_flow_run_now_time(
-        prefix="Captura FTP - OCR RIR: ", now_time=get_current_timestamp()
+        prefix="OCR RIR: ", now_time=get_current_timestamp()
     )
     # Pipeline
     status = get_files_from_ftp(
