@@ -48,7 +48,7 @@ Tasks for monitoramento_RIR
 # Abaixo segue um código para exemplificação, que pode ser removido.
 #
 ###############################################################################
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 import pandas as pd
 import pendulum
