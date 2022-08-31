@@ -71,7 +71,7 @@ from pipelines.rj_smtr.registros_ocr_rir.tasks import (
 )
 from pipelines.rj_smtr.tasks import bq_upload
 
-# from pipelines.rj_smtr.monitoramento_rock_in_rio.schedules import every_two_weeks
+from pipelines.rj_smtr.schedules import every_minute_dev
 from pipelines.utils.decorators import Flow
 
 with Flow(
@@ -81,20 +81,23 @@ with Flow(
         "fernanda",
     ],
 ) as captura_ocr:
+    # SETUP
     dump = Parameter("dump", default=False)
     execution_time = Parameter("execution_time", default=None)
+    # Pipeline
     status = get_files_from_ftp(dump=dump, execution_time=execution_time)
     with case(status["capture"], True):
         files = download_and_save_local(
             file_info=status["file_info"],
         )
-        table_dir = pre_treatment_ocr(file_info=files)
-        bq_upload(
-            dataset_id=constants.RIR_DATASET_ID.value,
-            table_id=constants.RIR_TABLE_ID.value,
-            filepath=table_dir,
-        )
+        skip_upload, table_dir = pre_treatment_ocr(file_info=files)
+        with case(skip_upload, False):
+            bq_upload(
+                dataset_id=constants.RIR_DATASET_ID.value,
+                table_id=constants.RIR_TABLE_ID.value,
+                filepath=table_dir,
+            )
 
 captura_ocr.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_ocr.run_config = KubernetesRun(image=emd_constants.DOCKER_IMAGE.value)
-# flow.schedule = every_two_weeks
+captura_ocr.schedule = every_minute_dev

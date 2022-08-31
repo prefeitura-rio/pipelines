@@ -108,7 +108,7 @@ def get_files_from_ftp(dump: bool = False, execution_time: str = None):
                 {
                     "filename": file,
                     "created_time": created_time,
-                    "partitions": f"data={created_time.day}/hora={created_time.hour}",
+                    "partitions": f"data={created_time.date()}/hora={created_time.hour}",
                 }
                 for file, created_time in files.items()
                 if created_time >= start_date
@@ -165,6 +165,8 @@ def pre_treatment_ocr(file_info: list):
     secondary_cols = constants.RIR_OCR_SECONDARY_COLUMNS.value
     standard_cols = dict(primary_cols, **secondary_cols)
     log(f"Standard columns are:{standard_cols}")
+    # Initialize variable for skipping next task
+    skip_upload = True
     for info in file_info:
         log(f'open file {info["filepath"]}')
         data = pd.read_csv(info["filepath"], sep=";")
@@ -176,6 +178,12 @@ def pre_treatment_ocr(file_info: list):
         {data.columns.to_list()}
             """
         )
+        # if data is empty, we don't upload an empty file
+        if data.empty:
+            # delete the empty file
+            log("Data was empty, deleting it...")
+            Path(info["filepath"]).unlink(missing_ok=True)
+            continue
         data["datahora"] = pd.to_datetime(data["DATA"] + " " + data["HORA"])
         log(f"Created column datahora as:\n{data['datahora']}")
         for col, new_col in secondary_cols.items():
@@ -184,6 +192,9 @@ def pre_treatment_ocr(file_info: list):
                 data[new_col] = ""
         data = data.rename(columns=standard_cols)[list(standard_cols.values())]
         data.to_csv(info["filepath"], index=False)
+        # if non-empty data was written to a file, then upload it
+        skip_upload = False
+
     table_dir = f"{constants.RIR_DATASET_ID.value}/{constants.RIR_TABLE_ID.value}"
 
-    return table_dir
+    return skip_upload, table_dir
