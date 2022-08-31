@@ -48,7 +48,7 @@ Tasks for monitoramento_RIR
 # Abaixo segue um código para exemplificação, que pode ser removido.
 #
 ###############################################################################
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 import pandas as pd
 import pendulum
@@ -60,7 +60,9 @@ from pipelines.utils.utils import log
 
 
 @task
-def get_files_from_ftp(dump: bool = False, execution_time: str = None):
+def get_files_from_ftp(
+    dump: bool = False, execution_time: str = None, wait=None
+):  # pylint: disable=W0613
     """Search FTP for files created in the same minute as the
     capture time.
 
@@ -69,17 +71,19 @@ def get_files_from_ftp(dump: bool = False, execution_time: str = None):
         Defaults to False.
         execution_time (str, optional): optionally, search for a file created
         at a given minute. Defaults to None.
+        wait (optional): used to create an upstream dependency with a previous
+        task
 
     Returns:
         dict: 'capture' is a flag for skipping tasks if no files were found,
         'file_info' is the info for processing the captured file
     """
     if execution_time:
-        execution_time = datetime.fromisoformat(execution_time)
+        execution_time = datetime.fromisoformat(execution_time) - timedelta(minutes=1)
     else:
         execution_time = pendulum.now(constants.TIMEZONE.value).replace(
             tzinfo=None, second=0, microsecond=0
-        )
+        ) - timedelta(minutes=1)
     start_date = datetime.fromisoformat(constants.RIR_START_DATE.value)
     file_info = []
     try:
@@ -91,7 +95,7 @@ def get_files_from_ftp(dump: bool = False, execution_time: str = None):
                 file.split(".")[0].split("_")[1], "%Y%m%d%H%M%S"
             ).replace(second=0, microsecond=0)
             for file, info in ftp_client.mlsd()
-            if file.startswith("ocrs")
+            if file.startswith("ocr")
         }
         if not dump:
             for file, created_time in files.items():

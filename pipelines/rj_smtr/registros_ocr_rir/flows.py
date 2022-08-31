@@ -68,13 +68,14 @@ from pipelines.rj_smtr.registros_ocr_rir.tasks import (
     download_and_save_local,
     pre_treatment_ocr,
 )
-from pipelines.rj_smtr.tasks import bq_upload
+from pipelines.rj_smtr.tasks import bq_upload, get_current_timestamp
 
 from pipelines.rj_smtr.schedules import every_minute_dev
 from pipelines.utils.decorators import Flow
+from pipelines.utils.tasks import rename_current_flow_run_now_time
 
 with Flow(
-    "SMTR - Captura FTP - CET OCR",
+    "SMTR - Captura FTP - OCR RIR",
     code_owners=[
         "caio",
         "fernanda",
@@ -83,8 +84,13 @@ with Flow(
     # SETUP
     dump = Parameter("dump", default=False)
     execution_time = Parameter("execution_time", default=None)
+    rename_flow = rename_current_flow_run_now_time(
+        prefix="Captura FTP - OCR RIR: ", now_time=get_current_timestamp()
+    )
     # Pipeline
-    status = get_files_from_ftp(dump=dump, execution_time=execution_time)
+    status = get_files_from_ftp(
+        dump=dump, execution_time=execution_time, wait=rename_flow
+    )
     with case(status["capture"], True):
         files = download_and_save_local(
             file_info=status["file_info"],
