@@ -111,14 +111,6 @@ class constants(Enum):  # pylint: disable=c0103
             "key_column": "trip_id",
         },
     }
-    # RDO/RHO
-    FTP_ALLOWED_PATHS = ["SPPO", "STPL"]
-    FTPS_SECRET_PATH = "smtr_rdo_ftps"
-    RDO_DATASET_ID = "br_rj_riodejaneiro_rdo"
-    SPPO_RDO_TABLE_ID = "rdo_registros_sppo"
-    SPPO_RHO_TABLE_ID = "rho_registros_sppo"
-    STPL_RDO_TABLE_ID = "rdo_registros_stpl"
-    STPL_RHO_TABLE_ID = "rho_registros_stpl"
     # ROCK IN RIO
     RIR_DATASET_ID = "dashboards"
     RIR_TABLE_ID = "registros_ocr_rir"
