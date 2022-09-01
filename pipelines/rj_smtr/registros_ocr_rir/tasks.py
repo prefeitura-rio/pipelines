@@ -79,7 +79,7 @@ def get_files_from_ftp(
         Captura falhou com erro:
         {error}
         """
-        log_critical(message)(error)
+        log_critical(message)
     # add flag para skipar proximas tasks se não tiver arquivo
     return {"capture": bool(file_info), "file_info": file_info}
 
