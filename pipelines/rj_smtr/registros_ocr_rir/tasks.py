@@ -18,19 +18,23 @@ def get_files_from_ftp(
     dump: bool = False, execution_time: str = None, wait=None
 ):  # pylint: disable=W0613
     """Search FTP for files created in the same minute as the
-    capture time.
+        capture time.
 
-    Args:
-        dump (bool, optional): if True will dump all files found on the FTP.
-        Defaults to False.
-        execution_time (str, optional): optionally, search for a file created
-        at a given minute. Defaults to None.
-        wait (optional): used to create an upstream dependency with a previous
-        task.
+        Args:
+            dump (bool, optional): if True will dump all files found on the FTP.
+            Defaults to False.
+            execution_time (str, optional): optionally, search for a file created
+            at a given minute. Defaults to None.
+            wait (optional): used to create an upstream dependency with a previous
+    <<<<<<< HEAD
+            task.
+    =======
+            task
+    >>>>>>> 27ef357f13ff332e10389b10b7ee712991f27599
 
-    Returns:
-        dict: 'capture' is a flag for skipping tasks if no files were found,
-        'file_info' is the info for processing the captured file
+        Returns:
+            dict: 'capture' is a flag for skipping tasks if no files were found,
+            'file_info' is the info for processing the captured file
     """
     if execution_time:
         execution_time = datetime.fromisoformat(execution_time) - timedelta(minutes=1)
