@@ -509,9 +509,8 @@ def bq_upload(
     partitions = {partitions}, type = {type(partitions)}
     """
     )
-    if status:
-        if status["error"] is not None:
-            return status["error"]
+    if status["error"] is not None:
+        return status["error"]
 
     error = None
     try:

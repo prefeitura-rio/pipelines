@@ -47,6 +47,7 @@ with Flow(
                 dataset_id=constants.RIR_DATASET_ID.value,
                 table_id=constants.RIR_TABLE_ID.value,
                 filepath=updated_status["table_dir"],
+                status={"error": None},
             )
 
 captura_ocr.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
