@@ -114,3 +114,23 @@ class constants(Enum):  # pylint: disable=c0103
 
     # SUBSIDIO SPPO #
     SUBSIDIO_SPPO_DATASET_ID = "projeto_subsidio_sppo"
+
+    # RDO
+    FTPS_SECRET_PATH = "smtr_rdo_ftps"
+
+    # ROCK IN RIO
+    RIR_DATASET_ID = "dashboards"
+    RIR_TABLE_ID = "registros_ocr_rir"
+    RIR_START_DATE = "2022-08-30 12:00:00"
+    RIR_SECRET_PATH = "smtr_rir_ftp"
+    RIR_OCR_PRIMARY_COLUMNS = {
+        "CodCET": "codigo_cet",
+        "Placa": "placa",
+        "UF": "uf",
+        "LOCAL": "local",
+        "datahora": "datahora",
+    }
+    RIR_OCR_SECONDARY_COLUMNS = {
+        "RiR": "flag_rir",
+        "Apoio": "flag_apoio",
+    }
