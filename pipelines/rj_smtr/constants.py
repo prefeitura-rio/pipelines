@@ -111,6 +111,9 @@ class constants(Enum):  # pylint: disable=c0103
             "key_column": "trip_id",
         },
     }
+    # RDO
+    FTPS_SECRET_PATH = "smtr_rdo_ftps"
+
     # ROCK IN RIO
     RIR_DATASET_ID = "dashboards"
     RIR_TABLE_ID = "registros_ocr_rir"
