@@ -26,7 +26,7 @@ def get_files_from_ftp(
         execution_time (str, optional): optionally, search for a file created
         at a given minute. Defaults to None.
         wait (optional): used to create an upstream dependency with a previous
-        task
+        task.
 
     Returns:
         dict: 'capture' is a flag for skipping tasks if no files were found,
@@ -102,6 +102,7 @@ def download_and_save_local(file_info: list):
     for info in file_info:
         filepath = f"{dataset_id}/{table_id}/{info['partitions']}/{info['filename']}"
         Path(filepath).parent.mkdir(exist_ok=True, parents=True)
+        # write file to <filepath>
         with open(filepath, "wb") as file:
             ftp_client.retrbinary(
                 "RETR " + info["filename"],
