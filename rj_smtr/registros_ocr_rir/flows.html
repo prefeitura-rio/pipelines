@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_smtr API documentation</title>
-<meta name="description" content="Prefect flows for rj_smtr project" />
+<title>pipelines.rj_smtr.registros_ocr_rir.flows API documentation</title>
+<meta name="description" content="Flows for registros_ocr_rir" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,88 +19,75 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_smtr</code></h1>
+<h1 class="title">Module <code>pipelines.rj_smtr.registros_ocr_rir.flows</code></h1>
 </header>
 <section id="section-intro">
-<p>Prefect flows for rj_smtr project</p>
+<p>Flows for registros_ocr_rir</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Prefect flows for rj_smtr project
+Flows for registros_ocr_rir
 &#34;&#34;&#34;
-###############################################################################
-# Automatically managed, please do not touch
-###############################################################################
-from pipelines.rj_smtr.flows import *
 
-# from pipelines.rj_smtr.example.flows import *
-# from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.flows import *
-from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.flows import *
-from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.flows import *
-from pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.flows import *
-from pipelines.rj_smtr.materialize_to_datario.flows import *
-from pipelines.rj_smtr.registros_ocr_rir.flows import *</code></pre>
+from prefect import Parameter, case
+from prefect.run_configs import KubernetesRun
+from prefect.storage import GCS
+from pipelines.constants import constants as emd_constants
+
+from pipelines.rj_smtr.constants import constants
+from pipelines.rj_smtr.registros_ocr_rir.tasks import (
+    get_files_from_ftp,
+    download_and_save_local,
+    pre_treatment_ocr,
+)
+from pipelines.rj_smtr.tasks import bq_upload, get_current_timestamp
+
+from pipelines.rj_smtr.schedules import every_minute
+from pipelines.utils.decorators import Flow
+from pipelines.utils.tasks import rename_current_flow_run_now_time
+
+with Flow(
+    &#34;SMTR - Captura FTP - OCR RIR&#34;,
+    code_owners=[
+        &#34;caio&#34;,
+        &#34;fernanda&#34;,
+    ],
+) as captura_ocr:
+    # SETUP
+    dump = Parameter(&#34;dump&#34;, default=False)
+    execution_time = Parameter(&#34;execution_time&#34;, default=None)
+    rename_flow = rename_current_flow_run_now_time(
+        prefix=&#34;OCR RIR: &#34;, now_time=get_current_timestamp()
+    )
+    # Pipeline
+    status = get_files_from_ftp(
+        dump=dump, execution_time=execution_time, wait=rename_flow
+    )
+    with case(status[&#34;capture&#34;], True):
+        files = download_and_save_local(
+            file_info=status[&#34;file_info&#34;],
+        )
+        updated_status = pre_treatment_ocr(file_info=files)
+        with case(updated_status[&#34;skip_upload&#34;], False):
+            bq_upload(
+                dataset_id=constants.RIR_DATASET_ID.value,
+                table_id=constants.RIR_TABLE_ID.value,
+                filepath=updated_status[&#34;table_dir&#34;],
+                status={&#34;error&#34;: None},
+            )
+
+captura_ocr.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+captura_ocr.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=emd_constants.RJ_SMTR_AGENT_LABEL.value,
+)
+captura_ocr.schedule = every_minute</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
-<dl>
-<dt><code class="name"><a title="pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps" href="br_rj_riodejaneiro_brt_gps/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps" href="br_rj_riodejaneiro_onibus_gps/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.br_rj_riodejaneiro_sigmob" href="br_rj_riodejaneiro_sigmob/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_sigmob</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps" href="br_rj_riodejaneiro_stpl_gps/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.constants" href="constants.html">pipelines.rj_smtr.constants</a></code></dt>
-<dd>
-<div class="desc"><p>Constant values for the rj_smtr projects</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.example" href="example/index.html">pipelines.rj_smtr.example</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.flows" href="flows.html">pipelines.rj_smtr.flows</a></code></dt>
-<dd>
-<div class="desc"><p>Flows for rj_smtr</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.implicit_ftp" href="implicit_ftp.html">pipelines.rj_smtr.implicit_ftp</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.materialize_to_datario" href="materialize_to_datario/index.html">pipelines.rj_smtr.materialize_to_datario</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.registros_ocr_rir" href="registros_ocr_rir/index.html">pipelines.rj_smtr.registros_ocr_rir</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.schedules" href="schedules.html">pipelines.rj_smtr.schedules</a></code></dt>
-<dd>
-<div class="desc"><p>Schedules for rj_smtr</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.tasks" href="tasks.html">pipelines.rj_smtr.tasks</a></code></dt>
-<dd>
-<div class="desc"><p>Tasks for rj_smtr</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.utils" href="utils.html">pipelines.rj_smtr.utils</a></code></dt>
-<dd>
-<div class="desc"><p>General purpose functions for rj_smtr</p></div>
-</dd>
-</dl>
 </section>
 <section>
 </section>
@@ -144,7 +131,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -163,24 +150,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines" href="../index.html">pipelines</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps" href="br_rj_riodejaneiro_brt_gps/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps</a></code></li>
-<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps" href="br_rj_riodejaneiro_onibus_gps/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps</a></code></li>
-<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_sigmob" href="br_rj_riodejaneiro_sigmob/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_sigmob</a></code></li>
-<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps" href="br_rj_riodejaneiro_stpl_gps/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps</a></code></li>
-<li><code><a title="pipelines.rj_smtr.constants" href="constants.html">pipelines.rj_smtr.constants</a></code></li>
-<li><code><a title="pipelines.rj_smtr.example" href="example/index.html">pipelines.rj_smtr.example</a></code></li>
-<li><code><a title="pipelines.rj_smtr.flows" href="flows.html">pipelines.rj_smtr.flows</a></code></li>
-<li><code><a title="pipelines.rj_smtr.implicit_ftp" href="implicit_ftp.html">pipelines.rj_smtr.implicit_ftp</a></code></li>
-<li><code><a title="pipelines.rj_smtr.materialize_to_datario" href="materialize_to_datario/index.html">pipelines.rj_smtr.materialize_to_datario</a></code></li>
-<li><code><a title="pipelines.rj_smtr.registros_ocr_rir" href="registros_ocr_rir/index.html">pipelines.rj_smtr.registros_ocr_rir</a></code></li>
-<li><code><a title="pipelines.rj_smtr.schedules" href="schedules.html">pipelines.rj_smtr.schedules</a></code></li>
-<li><code><a title="pipelines.rj_smtr.tasks" href="tasks.html">pipelines.rj_smtr.tasks</a></code></li>
-<li><code><a title="pipelines.rj_smtr.utils" href="utils.html">pipelines.rj_smtr.utils</a></code></li>
+<li><code><a title="pipelines.rj_smtr.registros_ocr_rir" href="index.html">pipelines.rj_smtr.registros_ocr_rir</a></code></li>
 </ul>
 </li>
 </ul>

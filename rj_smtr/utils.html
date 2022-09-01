@@ -32,11 +32,13 @@
 General purpose functions for rj_smtr
 &#34;&#34;&#34;
 
+from ftplib import FTP
 from pathlib import Path
 
 import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
+from pipelines.rj_smtr.implicit_ftp import ImplicitFtpTls
 
 from pipelines.utils.utils import log
 from pipelines.utils.utils import (
@@ -206,6 +208,27 @@ def map_dict_keys(data: dict, mapping: dict) -&gt; None:
     return data
 
 
+def connect_ftp(
+    secret_path: str = constants.FTPS_SECRET_PATH.value, secure: bool = True
+):
+    &#34;&#34;&#34;Connect to FTP
+
+    Returns:
+        ImplicitFTP_TLS: ftp client
+    &#34;&#34;&#34;
+
+    ftp_data = get_vault_secret(secret_path)[&#34;data&#34;]
+    if secure:
+        ftp_client = ImplicitFtpTls()
+    else:
+        ftp_client = FTP()
+    ftp_client.connect(host=ftp_data[&#34;host&#34;], port=int(ftp_data[&#34;port&#34;]))
+    ftp_client.login(user=ftp_data[&#34;username&#34;], passwd=ftp_data[&#34;pwd&#34;])
+    if secure:
+        ftp_client.prot_p()
+    return ftp_client
+
+
 def safe_cast(val, to_type, default=None):
     &#34;&#34;&#34;
     Safe cast value.
@@ -256,6 +279,41 @@ Defaults to 'bigquery_prod'.</p>
         str: the requested project_id
     &#34;&#34;&#34;
     return bd.upload.base.Base().client[kind].project</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.utils.connect_ftp"><code class="name flex">
+<span>def <span class="ident">connect_ftp</span></span>(<span>secret_path: str = 'smtr_rdo_ftps', secure: bool = True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Connect to FTP</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>ImplicitFTP_TLS</code></dt>
+<dd>ftp client</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def connect_ftp(
+    secret_path: str = constants.FTPS_SECRET_PATH.value, secure: bool = True
+):
+    &#34;&#34;&#34;Connect to FTP
+
+    Returns:
+        ImplicitFTP_TLS: ftp client
+    &#34;&#34;&#34;
+
+    ftp_data = get_vault_secret(secret_path)[&#34;data&#34;]
+    if secure:
+        ftp_client = ImplicitFtpTls()
+    else:
+        ftp_client = FTP()
+    ftp_client.connect(host=ftp_data[&#34;host&#34;], port=int(ftp_data[&#34;port&#34;]))
+    ftp_client.login(user=ftp_data[&#34;username&#34;], passwd=ftp_data[&#34;pwd&#34;])
+    if secure:
+        ftp_client.prot_p()
+    return ftp_client</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.utils.create_or_append_table"><code class="name flex">
@@ -607,6 +665,7 @@ setTimeout(() => input.focus(), 100);
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="pipelines.rj_smtr.utils.bq_project" href="#pipelines.rj_smtr.utils.bq_project">bq_project</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.connect_ftp" href="#pipelines.rj_smtr.utils.connect_ftp">connect_ftp</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.create_or_append_table" href="#pipelines.rj_smtr.utils.create_or_append_table">create_or_append_table</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.generate_df_and_save" href="#pipelines.rj_smtr.utils.generate_df_and_save">generate_df_and_save</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.get_last_run_timestamp" href="#pipelines.rj_smtr.utils.get_last_run_timestamp">get_last_run_timestamp</a></code></li>

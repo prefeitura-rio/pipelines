@@ -139,6 +139,25 @@ class constants(Enum):  # pylint: disable=c0103
             &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_trips.rule?sys=MOB&#34;,
             &#34;key_column&#34;: &#34;trip_id&#34;,
         },
+    }
+    # RDO
+    FTPS_SECRET_PATH = &#34;smtr_rdo_ftps&#34;
+
+    # ROCK IN RIO
+    RIR_DATASET_ID = &#34;dashboards&#34;
+    RIR_TABLE_ID = &#34;registros_ocr_rir&#34;
+    RIR_START_DATE = &#34;2022-08-30 12:00:00&#34;
+    RIR_SECRET_PATH = &#34;smtr_rir_ftp&#34;
+    RIR_OCR_PRIMARY_COLUMNS = {
+        &#34;CodCET&#34;: &#34;codigo_cet&#34;,
+        &#34;Placa&#34;: &#34;placa&#34;,
+        &#34;UF&#34;: &#34;uf&#34;,
+        &#34;LOCAL&#34;: &#34;local&#34;,
+        &#34;datahora&#34;: &#34;datahora&#34;,
+    }
+    RIR_OCR_SECONDARY_COLUMNS = {
+        &#34;RiR&#34;: &#34;flag_rir&#34;,
+        &#34;Apoio&#34;: &#34;flag_apoio&#34;,
     }</code></pre>
 </details>
 </section>
@@ -265,6 +284,25 @@ class constants(Enum):  # pylint: disable=c0103
             &#34;url&#34;: &#34;http://jeap.rio.rj.gov.br/MOB/get_trips.rule?sys=MOB&#34;,
             &#34;key_column&#34;: &#34;trip_id&#34;,
         },
+    }
+    # RDO
+    FTPS_SECRET_PATH = &#34;smtr_rdo_ftps&#34;
+
+    # ROCK IN RIO
+    RIR_DATASET_ID = &#34;dashboards&#34;
+    RIR_TABLE_ID = &#34;registros_ocr_rir&#34;
+    RIR_START_DATE = &#34;2022-08-30 12:00:00&#34;
+    RIR_SECRET_PATH = &#34;smtr_rir_ftp&#34;
+    RIR_OCR_PRIMARY_COLUMNS = {
+        &#34;CodCET&#34;: &#34;codigo_cet&#34;,
+        &#34;Placa&#34;: &#34;placa&#34;,
+        &#34;UF&#34;: &#34;uf&#34;,
+        &#34;LOCAL&#34;: &#34;local&#34;,
+        &#34;datahora&#34;: &#34;datahora&#34;,
+    }
+    RIR_OCR_SECONDARY_COLUMNS = {
+        &#34;RiR&#34;: &#34;flag_rir&#34;,
+        &#34;Apoio&#34;: &#34;flag_apoio&#34;,
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -274,6 +312,10 @@ class constants(Enum):  # pylint: disable=c0103
 <h3>Class variables</h3>
 <dl>
 <dt id="pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH"><code class="name">var <span class="ident">CRITICAL_SECRET_PATH</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.FTPS_SECRET_PATH"><code class="name">var <span class="ident">FTPS_SECRET_PATH</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -366,6 +408,30 @@ class constants(Enum):  # pylint: disable=c0103
 <div class="desc"></div>
 </dd>
 <dt id="pipelines.rj_smtr.constants.constants.RETRY_DELAY"><code class="name">var <span class="ident">RETRY_DELAY</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.RIR_DATASET_ID"><code class="name">var <span class="ident">RIR_DATASET_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.RIR_OCR_PRIMARY_COLUMNS"><code class="name">var <span class="ident">RIR_OCR_PRIMARY_COLUMNS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.RIR_OCR_SECONDARY_COLUMNS"><code class="name">var <span class="ident">RIR_OCR_SECONDARY_COLUMNS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.RIR_SECRET_PATH"><code class="name">var <span class="ident">RIR_SECRET_PATH</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.RIR_START_DATE"><code class="name">var <span class="ident">RIR_START_DATE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.RIR_TABLE_ID"><code class="name">var <span class="ident">RIR_TABLE_ID</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -465,6 +531,7 @@ setTimeout(() => input.focus(), 100);
 <h4><code><a title="pipelines.rj_smtr.constants.constants" href="#pipelines.rj_smtr.constants.constants">constants</a></code></h4>
 <ul class="">
 <li><code><a title="pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH">CRITICAL_SECRET_PATH</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.FTPS_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.FTPS_SECRET_PATH">FTPS_SECRET_PATH</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_API_BASE_URL" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_API_BASE_URL">GPS_BRT_API_BASE_URL</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_DATASET_ID">GPS_BRT_DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_RAW_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_RAW_DATASET_ID">GPS_BRT_RAW_DATASET_ID</a></code></li>
@@ -488,6 +555,12 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.constants.constants.MAX_RETRIES" href="#pipelines.rj_smtr.constants.constants.MAX_RETRIES">MAX_RETRIES</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.MAX_TIMEOUT_SECONDS" href="#pipelines.rj_smtr.constants.constants.MAX_TIMEOUT_SECONDS">MAX_TIMEOUT_SECONDS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.RETRY_DELAY" href="#pipelines.rj_smtr.constants.constants.RETRY_DELAY">RETRY_DELAY</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.RIR_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.RIR_DATASET_ID">RIR_DATASET_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.RIR_OCR_PRIMARY_COLUMNS" href="#pipelines.rj_smtr.constants.constants.RIR_OCR_PRIMARY_COLUMNS">RIR_OCR_PRIMARY_COLUMNS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.RIR_OCR_SECONDARY_COLUMNS" href="#pipelines.rj_smtr.constants.constants.RIR_OCR_SECONDARY_COLUMNS">RIR_OCR_SECONDARY_COLUMNS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.RIR_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.RIR_SECRET_PATH">RIR_SECRET_PATH</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.RIR_START_DATE" href="#pipelines.rj_smtr.constants.constants.RIR_START_DATE">RIR_START_DATE</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.RIR_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.RIR_TABLE_ID">RIR_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SIGMOB_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.SIGMOB_DATASET_ID">SIGMOB_DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SIGMOB_ENDPOINTS" href="#pipelines.rj_smtr.constants.constants.SIGMOB_ENDPOINTS">SIGMOB_ENDPOINTS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SIGMOB_GET_REQUESTS_TIMEOUT" href="#pipelines.rj_smtr.constants.constants.SIGMOB_GET_REQUESTS_TIMEOUT">SIGMOB_GET_REQUESTS_TIMEOUT</a></code></li>
