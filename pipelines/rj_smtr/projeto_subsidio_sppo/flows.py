@@ -29,7 +29,7 @@ from pipelines.rj_smtr.tasks import (
     run_dbt_model,
 )
 from pipelines.rj_smtr.schedules import (
-    every_day_hour_six_dev,
+    every_day_hour_six,
 )
 
 # Flows #
@@ -77,9 +77,9 @@ with Flow(
 subsidio_sppo_viagens.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 subsidio_sppo_viagens.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-subsidio_sppo_viagens.schedule = every_day_hour_six_dev
+# subsidio_sppo_viagens.schedule = every_day_hour_six
 
 
 with Flow(
@@ -122,6 +122,5 @@ with Flow(
 subsidio_sppo_planejado.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 subsidio_sppo_planejado.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-# subsidio_sppo_planejado.schedule = every_day_hour_six_dev
