@@ -15,7 +15,7 @@ from pipelines.utils.execute_dbt_model.utils import (
     parse_dbt_logs,
 )
 from pipelines.constants import constants
-from pipelines.utils.utils import log
+from pipelines.utils.utils import get_vault_secret, log
 
 
 @task(
@@ -77,11 +77,9 @@ def run_dbt_model(
         run_command += f" --exclude {exclude}"
 
     if _vars:
-        log(f"Received vars:\n {_vars}\n type: {type(_vars)}")
         if isinstance(_vars, list):
             vars_dict = {}
             for elem in _vars:
-                log(f"Received variable {elem}. Adding to vars")
                 vars_dict.update(elem)
             vars_str = f'"{vars_dict}"'
             run_command += f" --vars {vars_str}"
@@ -119,3 +117,29 @@ def is_valid_dictionary(dictionary: Dict[Any, Any]) -> Dict[str, Any]:
     if not all(isinstance(key, str) for key in dictionary.keys()):
         raise ValueError("The dictionary keys are not strings.")
     return dictionary
+
+
+@task
+def model_parameters_from_secrets(dictionary: Dict[str, str]) -> Dict[str, Any]:
+    """
+    Gets model parameters from Vault secrets.
+
+    Args:
+        dictionary (Dict[str, str]): Dictionary with the parameter name as key and the secret path
+        as value. The secret must contain a single key called "value" with the parameter value.
+
+    Returns:
+        Dict[str, Any]: Dictionary with the parameter name as key and the secret value as value.
+    """
+    return {
+        key: get_vault_secret(value)["data"]["value"]
+        for key, value in dictionary.items()
+    }
+
+
+@task
+def merge_dictionaries(dict1: Dict[str, Any], dict2: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Merge dictionaries.
+    """
+    return {**dict1, **dict2}

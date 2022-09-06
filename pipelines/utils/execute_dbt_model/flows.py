@@ -15,6 +15,8 @@ from pipelines.utils.execute_dbt_model.tasks import (
     get_k8s_dbt_client,
     is_running_at_datario,
     is_valid_dictionary,
+    merge_dictionaries,
+    model_parameters_from_secrets,
     run_dbt_model,
 )
 from pipelines.utils.tasks import (
@@ -44,6 +46,9 @@ with Flow(
         "materialize_to_datario", default=False, required=False
     )
     dbt_model_parameters = Parameter("dbt_model_parameters", default={}, required=False)
+    dbt_model_secret_parameters = Parameter(
+        "dbt_model_secret_parameters", default={}, required=False
+    )
 
     #####################################
     #
@@ -58,7 +63,15 @@ with Flow(
     dbt_client = get_k8s_dbt_client(mode=mode, wait=rename_flow_run)
 
     # Parse model parameters
-    model_parameters = is_valid_dictionary(dbt_model_parameters)
+    public_model_parameters = is_valid_dictionary(dbt_model_parameters)
+
+    # Get secret model parameters
+    secret_model_parameters = model_parameters_from_secrets(dbt_model_secret_parameters)
+
+    # Merge parameters
+    model_parameters = merge_dictionaries(
+        dict1=public_model_parameters, dict2=secret_model_parameters
+    )
 
     # Run DBT model
     materialize_this = run_dbt_model(  # pylint: disable=invalid-name
