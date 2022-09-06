@@ -7,4 +7,5 @@ from pipelines.utils.dump_db.flows import *
 from pipelines.utils.dump_to_gcs.flows import *
 from pipelines.utils.dump_url.flows import *
 from pipelines.utils.execute_dbt_model.flows import *
+from pipelines.utils.predict_flow.flows import *
 from pipelines.utils.whatsapp_bot.flows import *
