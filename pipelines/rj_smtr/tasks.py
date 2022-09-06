@@ -409,6 +409,7 @@ def query_logs(
         timestamp_captura
     """
     log(f"Run query to check logs:\n{query}")
+    # run query
     results = bd.read_sql(query=query, billing_project_id=bq_project())
     log(f"{results}")
     if len(results) > 0:
