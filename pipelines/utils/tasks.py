@@ -7,7 +7,7 @@ Helper tasks that could fit any pipeline.
 from datetime import timedelta
 
 from pathlib import Path
-from typing import Dict, List, Union, Any
+from typing import List, Union, Any
 
 import basedosdados as bd
 import pendulum
@@ -65,7 +65,7 @@ def get_current_flow_mode(labels: List[str]) -> str:
     """
     if labels[0].endswith("-dev"):
         return "dev"
-    elif labels[0].endswith("-staging"):
+    if labels[0].endswith("-staging"):
         return "staging"
     return "prod"
 

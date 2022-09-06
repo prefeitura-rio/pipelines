@@ -9,7 +9,7 @@ import json
 import os
 from pathlib import Path
 import traceback
-from typing import Union, List, Dict
+from typing import Dict
 
 from basedosdados import Storage, Table
 import basedosdados as bd
@@ -28,7 +28,7 @@ from pipelines.rj_smtr.utils import (
     get_last_run_timestamp,
     log_critical,
 )
-from pipelines.utils.execute_dbt_model.utils import get_dbt_client, parse_dbt_logs
+from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client
 
 ###############
