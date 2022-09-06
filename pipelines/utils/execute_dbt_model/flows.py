@@ -14,6 +14,7 @@ from pipelines.utils.decorators import Flow
 from pipelines.utils.execute_dbt_model.tasks import (
     get_k8s_dbt_client,
     is_running_at_datario,
+    is_valid_dictionary,
     run_dbt_model,
 )
 from pipelines.utils.tasks import (
@@ -28,15 +29,21 @@ with Flow(
         "diego",
         "gabriel",
     ],
-) as run_dbt_model_flow:
+) as utils_run_dbt_model_flow:
 
     # Parameters
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
+    dbt_model = Parameter("dbt_model", default=None, required=False)
+    upstream = Parameter("upstream", default=None, required=False)
+    downstream = Parameter("downstream", default=None, required=False)
+    exclude = Parameter("exclude", default=None, required=False)
+    flags = Parameter("flags", default=None, required=False)
     mode = Parameter("mode", default="dev", required=False)
     materialize_to_datario = Parameter(
         "materialize_to_datario", default=False, required=False
     )
+    dbt_model_parameters = Parameter("dbt_model_parameters", default={}, required=False)
 
     #####################################
     #
@@ -50,11 +57,20 @@ with Flow(
     # Get DBT client
     dbt_client = get_k8s_dbt_client(mode=mode, wait=rename_flow_run)
 
+    # Parse model parameters
+    model_parameters = is_valid_dictionary(dbt_model_parameters)
+
     # Run DBT model
     materialize_this = run_dbt_model(  # pylint: disable=invalid-name
         dbt_client=dbt_client,
         dataset_id=dataset_id,
         table_id=table_id,
+        model=dbt_model,
+        upstream=upstream,
+        downstream=downstream,
+        exclude=exclude,
+        flags=flags,
+        _vars=model_parameters,
         sync=True,
     )
 
@@ -92,5 +108,5 @@ with Flow(
                 raise_final_state=True,
             )
 
-run_dbt_model_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-run_dbt_model_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+utils_run_dbt_model_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+utils_run_dbt_model_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
