@@ -8,3 +8,4 @@ from pipelines.rj_cor.meteorologia.precipitacao_alertario.flows import *
 from pipelines.rj_cor.meteorologia.satelite.flows import *
 from pipelines.rj_cor.meteorologia.precipitacao_websirene.flows import *
 from pipelines.rj_cor.comando.eventos.flows import *
+from pipelines.rj_cor.meteorologia.refletividade_horizontal_radar.flows import *
