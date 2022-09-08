@@ -1,9 +1,9 @@
-name: CD - Staging
+name: Register flows (staging)
 
 on:
-  push:
+  pull_request:
     branches:
-      - staging/**
+      - master
     paths:
       - ".github/workflows/cd_staging.yaml"
       - "pipelines/**/*"
@@ -17,14 +17,16 @@ env:
   GKE_CLUSTER: ${{ secrets.GKE_CLUSTER_NAME }}
   GKE_ZONE: ${{ secrets.GKE_ZONE }}
   IMAGE_NAME: ghcr.io/prefeitura-rio/prefect-flows
-  PREFECT__BACKEND: ${{ secrets.PREFECT__BACKEND }}
-  PREFECT__SERVER__HOST: ${{ secrets.PREFECT__SERVER__HOST }}
-  PREFECT__SERVER__PORT: ${{ secrets.PREFECT__SERVER__PORT }}
+  PREFECT__BACKEND: cloud
+  PREFECT__CLOUD__API: https://prefect.dados.rio/api
+  PREFECT__CLOUD__PORT: 443
   PREFECT__SERVER__PROJECT: ${{ secrets.PREFECT__SERVER__PROJECT__STAGING }}
+  PREFECT_AUTH_TOML: ${{ secrets.PREFECT_AUTH_TOML }}
 
 jobs:
   build-container:
-    name: Build, publish and register
+    if: startsWith(github.head_ref, 'staging/')
+    name: Register flows (staging)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -53,21 +55,6 @@ jobs:
         run: |-
           pip install .
 
-      - name: Get GKE credentials
-        uses: google-github-actions/get-gke-credentials@v0.2.1
-        with:
-          cluster_name: ${{ env.GKE_CLUSTER }}
-          location: ${{ env.GKE_ZONE }}
-          credentials: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Build and publish Prefect Agent image
-        run: |
-          docker build -t $IMAGE_NAME:$GITHUB_SHA .
-          docker build -t $IMAGE_NAME:latest .
-          echo $GH_PAT | docker login ghcr.io -u gabriel-milan --password-stdin
-          docker push $IMAGE_NAME:$GITHUB_SHA
-          docker push $IMAGE_NAME:latest
-
       - name: Install GDAL for osgeo deps
         run: |
           curl -sSLo ./GDAL-3.4.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl https://sourceforge.net/projects/gdal-wheels-for-linux/files/GDAL-3.4.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl/download
@@ -83,9 +70,18 @@ jobs:
         run: |
           python .github/workflows/scripts/code_tree_analysis.py "${{ steps.files.outputs.all }}" --write-to-file
 
-      - name: Forward port to Apollo
+      - name: Write auth.toml
         run: |-
-          bash -c "kubectl port-forward -n prefect deploy/prefect-apollo 4200:4200 &" && sleep 5
+          mkdir -p $HOME/.prefect
+          echo $PREFECT_AUTH_TOML | base64 --decode > $HOME/.prefect/auth.toml
+
+      - name: Wait for Docker image to be available
+        uses: lewagon/wait-on-check-action@v1.1.2
+        with:
+          ref: ${{ github.ref }}
+          check-name: 'Build Docker image'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          verbose: true
 
       - name: Register Prefect flows
         run: |-
