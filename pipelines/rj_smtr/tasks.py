@@ -726,7 +726,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 kind="max",
             ).strftime(timestr)
     last_run = datetime.strptime(last_run, timestr)
-    now_ts = pendulum.now(constants.TIMEZONE.value)
+    now_ts = pendulum.now(constants.TIMEZONE.value).replace(tzinfo=None)
     # set start to last run hour (H)
     start_ts = (last_run).replace(minute=0, second=0, microsecond=0).strftime(timestr)
     # if some materialization run failed, range is from last_run
