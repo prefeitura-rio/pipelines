@@ -38,7 +38,7 @@ import json
 import os
 from pathlib import Path
 import traceback
-from typing import Union, List, Dict
+from typing import Dict
 
 from basedosdados import Storage, Table
 import basedosdados as bd
@@ -56,7 +56,6 @@ from pipelines.rj_smtr.utils import (
     get_table_min_max_value,
     get_last_run_timestamp,
     log_critical,
-    parse_dbt_logs,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client
@@ -81,72 +80,6 @@ def get_local_dbt_client(host: str, port: int):
         DbtClient: object used to run DBT commands.
     &#34;&#34;&#34;
     return get_dbt_client(host=host, port=port)
-
-
-@task(
-    checkpoint=False,
-)
-def run_dbt_model(  # pylint: disable=too-many-arguments
-    dbt_client: DbtClient,
-    model: str = None,
-    upstream: bool = None,
-    downstream: bool = None,
-    exclude: str = None,
-    flags: str = None,
-    _vars: Union[dict, List[Dict]] = None,
-    wait=None,  # pylint: disable=unused-argument
-):
-    &#34;&#34;&#34;
-    Runs a dbt command. If passing a dataset_id on model, will run the entire dataset.
-    Otheerwise, if pasing a table_id, will run only the specified table.
-
-    Args:
-        dbt_client (DbtClient): Dbt interface of interaction
-        model (str, optional): dataset_id or table_id on BigQuery. Defaults to None.
-        table_id (str, optional): table_id on BigQuery, also .sql file name on your
-        models folder. Defaults to None.
-        command (str, optional): dbt command to run. Defaults to &#34;run&#34;.
-        flags (str, optional): flags allowed to the specific command.
-        Should be preceeded by &#34;--&#34; Defaults to None.
-        sync (bool, optional): _description_. Defaults to True.
-    &#34;&#34;&#34;
-    run_command = &#34;dbt run&#34;
-
-    # Set models and upstream/downstream for dbt
-    if model:
-        run_command += &#34; --select &#34;
-        if upstream:
-            run_command += &#34;+&#34;
-        run_command += f&#34;{model}&#34;
-        if downstream:
-            run_command += &#34;+&#34;
-
-    if exclude:
-        run_command += f&#34; --exclude {exclude}&#34;
-
-    if _vars:
-        log(f&#34;Received vars:\n {_vars}\n type: {type(_vars)}&#34;)
-        if isinstance(_vars, list):
-            vars_dict = {}
-            for elem in _vars:
-                log(f&#34;Received variable {elem}. Adding to vars&#34;)
-                vars_dict.update(elem)
-            vars_str = f&#39;&#34;{vars_dict}&#34;&#39;
-            run_command += f&#34; --vars {vars_str}&#34;
-        else:
-            vars_str = f&#39;&#34;{_vars}&#34;&#39;
-            run_command += f&#34; --vars {vars_str}&#34;
-    if flags:
-        run_command += f&#34; {flags}&#34;
-
-    log(f&#34;Will run the following command:\n{run_command}&#34;)
-    logs_dict = dbt_client.cli(
-        run_command,
-        sync=True,
-        logs=True,
-    )
-    parse_dbt_logs(logs_dict, log_queries=True)
-    return log(&#34;Finished running dbt model&#34;)
 
 
 @task(max_retries=3, retry_delay=timedelta(seconds=10))
@@ -1626,99 +1559,6 @@ def query_logs(
     return False, []</code></pre>
 </details>
 </dd>
-<dt id="pipelines.rj_smtr.tasks.run_dbt_model"><code class="name flex">
-<span>def <span class="ident">run_dbt_model</span></span>(<span>dbt_client: dbt_client.dbt_client.DbtClient, model: str = None, upstream: bool = None, downstream: bool = None, exclude: str = None, flags: str = None, wait=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Runs a dbt command. If passing a dataset_id on model, will run the entire dataset.
-Otheerwise, if pasing a table_id, will run only the specified table.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>dbt_client</code></strong> :&ensp;<code>DbtClient</code></dt>
-<dd>Dbt interface of interaction</dd>
-<dt><strong><code>model</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>dataset_id or table_id on BigQuery. Defaults to None.</dd>
-<dt><strong><code>table_id</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>table_id on BigQuery, also .sql file name on your</dd>
-<dt>models folder. Defaults to None.</dt>
-<dt><strong><code>command</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>dbt command to run. Defaults to "run".</dd>
-<dt><strong><code>flags</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>flags allowed to the specific command.</dd>
-<dt>Should be preceeded by "&ndash;" Defaults to None.</dt>
-<dt><strong><code>sync</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd><em>description</em>. Defaults to True.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task(
-    checkpoint=False,
-)
-def run_dbt_model(  # pylint: disable=too-many-arguments
-    dbt_client: DbtClient,
-    model: str = None,
-    upstream: bool = None,
-    downstream: bool = None,
-    exclude: str = None,
-    flags: str = None,
-    _vars: Union[dict, List[Dict]] = None,
-    wait=None,  # pylint: disable=unused-argument
-):
-    &#34;&#34;&#34;
-    Runs a dbt command. If passing a dataset_id on model, will run the entire dataset.
-    Otheerwise, if pasing a table_id, will run only the specified table.
-
-    Args:
-        dbt_client (DbtClient): Dbt interface of interaction
-        model (str, optional): dataset_id or table_id on BigQuery. Defaults to None.
-        table_id (str, optional): table_id on BigQuery, also .sql file name on your
-        models folder. Defaults to None.
-        command (str, optional): dbt command to run. Defaults to &#34;run&#34;.
-        flags (str, optional): flags allowed to the specific command.
-        Should be preceeded by &#34;--&#34; Defaults to None.
-        sync (bool, optional): _description_. Defaults to True.
-    &#34;&#34;&#34;
-    run_command = &#34;dbt run&#34;
-
-    # Set models and upstream/downstream for dbt
-    if model:
-        run_command += &#34; --select &#34;
-        if upstream:
-            run_command += &#34;+&#34;
-        run_command += f&#34;{model}&#34;
-        if downstream:
-            run_command += &#34;+&#34;
-
-    if exclude:
-        run_command += f&#34; --exclude {exclude}&#34;
-
-    if _vars:
-        log(f&#34;Received vars:\n {_vars}\n type: {type(_vars)}&#34;)
-        if isinstance(_vars, list):
-            vars_dict = {}
-            for elem in _vars:
-                log(f&#34;Received variable {elem}. Adding to vars&#34;)
-                vars_dict.update(elem)
-            vars_str = f&#39;&#34;{vars_dict}&#34;&#39;
-            run_command += f&#34; --vars {vars_str}&#34;
-        else:
-            vars_str = f&#39;&#34;{_vars}&#34;&#39;
-            run_command += f&#34; --vars {vars_str}&#34;
-    if flags:
-        run_command += f&#34; {flags}&#34;
-
-    log(f&#34;Will run the following command:\n{run_command}&#34;)
-    logs_dict = dbt_client.cli(
-        run_command,
-        sync=True,
-        logs=True,
-    )
-    parse_dbt_logs(logs_dict, log_queries=True)
-    return log(&#34;Finished running dbt model&#34;)</code></pre>
-</details>
-</dd>
 <dt id="pipelines.rj_smtr.tasks.save_raw_local"><code class="name flex">
 <span>def <span class="ident">save_raw_local</span></span>(<span>file_path: str, status: dict, mode: str = 'raw') ‑> str</span>
 </code></dt>
@@ -2043,7 +1883,6 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.tasks.get_raw" href="#pipelines.rj_smtr.tasks.get_raw">get_raw</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.parse_timestamp_to_string" href="#pipelines.rj_smtr.tasks.parse_timestamp_to_string">parse_timestamp_to_string</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.query_logs" href="#pipelines.rj_smtr.tasks.query_logs">query_logs</a></code></li>
-<li><code><a title="pipelines.rj_smtr.tasks.run_dbt_model" href="#pipelines.rj_smtr.tasks.run_dbt_model">run_dbt_model</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.save_raw_local" href="#pipelines.rj_smtr.tasks.save_raw_local">save_raw_local</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.save_treated_local" href="#pipelines.rj_smtr.tasks.save_treated_local">save_treated_local</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.set_last_run_timestamp" href="#pipelines.rj_smtr.tasks.set_last_run_timestamp">set_last_run_timestamp</a></code></li>

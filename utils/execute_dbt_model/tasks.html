@@ -34,16 +34,17 @@ Tasks related to DBT flows.
 # pylint: disable=unused-argument
 
 from datetime import timedelta
-from typing import List
+from typing import Any, Dict, List, Union
 
 from dbt_client import DbtClient
 from prefect import task
 
 from pipelines.utils.execute_dbt_model.utils import (
     get_dbt_client,
+    parse_dbt_logs,
 )
 from pipelines.constants import constants
-from pipelines.utils.utils import log
+from pipelines.utils.utils import get_vault_secret, log
 
 
 @task(
@@ -70,21 +71,61 @@ def get_k8s_dbt_client(
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
+# pylint: disable=too-many-arguments
 def run_dbt_model(
     dbt_client: DbtClient,
-    dataset_id: str,
-    table_id: str,
+    dataset_id: str = None,
+    table_id: str = None,
+    model: str = None,
+    upstream: bool = None,
+    downstream: bool = None,
+    exclude: str = None,
+    flags: str = None,
+    _vars: Union[dict, List[Dict]] = None,
     sync: bool = True,
+    wait=None,  # pylint: disable=unused-argument
 ):
     &#34;&#34;&#34;
     Run a DBT model.
     &#34;&#34;&#34;
-    run_command = f&#34;run --models {dataset_id}.{table_id}&#34;
-    log(f&#34;Running the followinf command:\n{run_command}&#34;)
-    dbt_client.cli(
+    run_command = &#34;dbt run&#34;
+
+    if (dataset_id and table_id) and not model:
+        model = f&#34;{dataset_id}.{table_id}&#34;
+
+    # Set models and upstream/downstream for dbt
+    if model:
+        run_command += &#34; --select &#34;
+        if upstream:
+            run_command += &#34;+&#34;
+        run_command += f&#34;{model}&#34;
+        if downstream:
+            run_command += &#34;+&#34;
+
+    if exclude:
+        run_command += f&#34; --exclude {exclude}&#34;
+
+    if _vars:
+        if isinstance(_vars, list):
+            vars_dict = {}
+            for elem in _vars:
+                vars_dict.update(elem)
+            vars_str = f&#39;&#34;{vars_dict}&#34;&#39;
+            run_command += f&#34; --vars {vars_str}&#34;
+        else:
+            vars_str = f&#39;&#34;{_vars}&#34;&#39;
+            run_command += f&#34; --vars {vars_str}&#34;
+    if flags:
+        run_command += f&#34; {flags}&#34;
+
+    log(f&#34;Will run the following command:\n{run_command}&#34;)
+    logs_dict = dbt_client.cli(
         run_command,
         sync=sync,
+        logs=True,
     )
+    parse_dbt_logs(logs_dict, log_queries=True)
+    return log(&#34;Finished running dbt model&#34;)
 
 
 @task(checkpoint=False)
@@ -92,7 +133,45 @@ def is_running_at_datario(current_flow_labels: List[str]) -&gt; bool:
     &#34;&#34;&#34;
     Check if the current flow is running at datario agent.
     &#34;&#34;&#34;
-    return &#34;datario&#34; in current_flow_labels</code></pre>
+    return &#34;datario&#34; in current_flow_labels
+
+
+@task
+def is_valid_dictionary(dictionary: Dict[Any, Any]) -&gt; Dict[str, Any]:
+    &#34;&#34;&#34;
+    Checks whether the dictionary is in the format Dict[str, str].
+    &#34;&#34;&#34;
+    if not isinstance(dictionary, dict):
+        raise ValueError(&#34;The dictionary is not a dictionary.&#34;)
+    if not all(isinstance(key, str) for key in dictionary.keys()):
+        raise ValueError(&#34;The dictionary keys are not strings.&#34;)
+    return dictionary
+
+
+@task
+def model_parameters_from_secrets(dictionary: Dict[str, str]) -&gt; Dict[str, Any]:
+    &#34;&#34;&#34;
+    Gets model parameters from Vault secrets.
+
+    Args:
+        dictionary (Dict[str, str]): Dictionary with the parameter name as key and the secret path
+        as value. The secret must contain a single key called &#34;value&#34; with the parameter value.
+
+    Returns:
+        Dict[str, Any]: Dictionary with the parameter name as key and the secret value as value.
+    &#34;&#34;&#34;
+    return {
+        key: get_vault_secret(value)[&#34;data&#34;][&#34;value&#34;]
+        for key, value in dictionary.items()
+    }
+
+
+@task
+def merge_dictionaries(dict1: Dict[str, Any], dict2: Dict[str, Any]) -&gt; Dict[str, Any]:
+    &#34;&#34;&#34;
+    Merge dictionaries.
+    &#34;&#34;&#34;
+    return {**dict1, **dict2}</code></pre>
 </details>
 </section>
 <section>
@@ -147,8 +226,84 @@ def is_running_at_datario(current_flow_labels: List[str]) -&gt; bool:
     return &#34;datario&#34; in current_flow_labels</code></pre>
 </details>
 </dd>
+<dt id="pipelines.utils.execute_dbt_model.tasks.is_valid_dictionary"><code class="name flex">
+<span>def <span class="ident">is_valid_dictionary</span></span>(<span>dictionary: Dict[Any, Any]) ‑> Dict[str, Any]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Checks whether the dictionary is in the format Dict[str, str].</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def is_valid_dictionary(dictionary: Dict[Any, Any]) -&gt; Dict[str, Any]:
+    &#34;&#34;&#34;
+    Checks whether the dictionary is in the format Dict[str, str].
+    &#34;&#34;&#34;
+    if not isinstance(dictionary, dict):
+        raise ValueError(&#34;The dictionary is not a dictionary.&#34;)
+    if not all(isinstance(key, str) for key in dictionary.keys()):
+        raise ValueError(&#34;The dictionary keys are not strings.&#34;)
+    return dictionary</code></pre>
+</details>
+</dd>
+<dt id="pipelines.utils.execute_dbt_model.tasks.merge_dictionaries"><code class="name flex">
+<span>def <span class="ident">merge_dictionaries</span></span>(<span>dict1: Dict[str, Any], dict2: Dict[str, Any]) ‑> Dict[str, Any]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Merge dictionaries.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def merge_dictionaries(dict1: Dict[str, Any], dict2: Dict[str, Any]) -&gt; Dict[str, Any]:
+    &#34;&#34;&#34;
+    Merge dictionaries.
+    &#34;&#34;&#34;
+    return {**dict1, **dict2}</code></pre>
+</details>
+</dd>
+<dt id="pipelines.utils.execute_dbt_model.tasks.model_parameters_from_secrets"><code class="name flex">
+<span>def <span class="ident">model_parameters_from_secrets</span></span>(<span>dictionary: Dict[str, str]) ‑> Dict[str, Any]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Gets model parameters from Vault secrets.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dictionary</code></strong> :&ensp;<code>Dict[str, str]</code></dt>
+<dd>Dictionary with the parameter name as key and the secret path</dd>
+</dl>
+<p>as value. The secret must contain a single key called "value" with the parameter value.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Dict[str, Any]</code></dt>
+<dd>Dictionary with the parameter name as key and the secret value as value.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def model_parameters_from_secrets(dictionary: Dict[str, str]) -&gt; Dict[str, Any]:
+    &#34;&#34;&#34;
+    Gets model parameters from Vault secrets.
+
+    Args:
+        dictionary (Dict[str, str]): Dictionary with the parameter name as key and the secret path
+        as value. The secret must contain a single key called &#34;value&#34; with the parameter value.
+
+    Returns:
+        Dict[str, Any]: Dictionary with the parameter name as key and the secret value as value.
+    &#34;&#34;&#34;
+    return {
+        key: get_vault_secret(value)[&#34;data&#34;][&#34;value&#34;]
+        for key, value in dictionary.items()
+    }</code></pre>
+</details>
+</dd>
 <dt id="pipelines.utils.execute_dbt_model.tasks.run_dbt_model"><code class="name flex">
-<span>def <span class="ident">run_dbt_model</span></span>(<span>dbt_client: dbt_client.dbt_client.DbtClient, dataset_id: str, table_id: str, sync: bool = True)</span>
+<span>def <span class="ident">run_dbt_model</span></span>(<span>dbt_client: dbt_client.dbt_client.DbtClient, dataset_id: str = None, table_id: str = None, model: str = None, upstream: bool = None, downstream: bool = None, exclude: str = None, flags: str = None, sync: bool = True, wait=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Run a DBT model.</p></div>
@@ -161,21 +316,61 @@ def is_running_at_datario(current_flow_labels: List[str]) -&gt; bool:
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
+# pylint: disable=too-many-arguments
 def run_dbt_model(
     dbt_client: DbtClient,
-    dataset_id: str,
-    table_id: str,
+    dataset_id: str = None,
+    table_id: str = None,
+    model: str = None,
+    upstream: bool = None,
+    downstream: bool = None,
+    exclude: str = None,
+    flags: str = None,
+    _vars: Union[dict, List[Dict]] = None,
     sync: bool = True,
+    wait=None,  # pylint: disable=unused-argument
 ):
     &#34;&#34;&#34;
     Run a DBT model.
     &#34;&#34;&#34;
-    run_command = f&#34;run --models {dataset_id}.{table_id}&#34;
-    log(f&#34;Running the followinf command:\n{run_command}&#34;)
-    dbt_client.cli(
+    run_command = &#34;dbt run&#34;
+
+    if (dataset_id and table_id) and not model:
+        model = f&#34;{dataset_id}.{table_id}&#34;
+
+    # Set models and upstream/downstream for dbt
+    if model:
+        run_command += &#34; --select &#34;
+        if upstream:
+            run_command += &#34;+&#34;
+        run_command += f&#34;{model}&#34;
+        if downstream:
+            run_command += &#34;+&#34;
+
+    if exclude:
+        run_command += f&#34; --exclude {exclude}&#34;
+
+    if _vars:
+        if isinstance(_vars, list):
+            vars_dict = {}
+            for elem in _vars:
+                vars_dict.update(elem)
+            vars_str = f&#39;&#34;{vars_dict}&#34;&#39;
+            run_command += f&#34; --vars {vars_str}&#34;
+        else:
+            vars_str = f&#39;&#34;{_vars}&#34;&#39;
+            run_command += f&#34; --vars {vars_str}&#34;
+    if flags:
+        run_command += f&#34; {flags}&#34;
+
+    log(f&#34;Will run the following command:\n{run_command}&#34;)
+    logs_dict = dbt_client.cli(
         run_command,
         sync=sync,
-    )</code></pre>
+        logs=True,
+    )
+    parse_dbt_logs(logs_dict, log_queries=True)
+    return log(&#34;Finished running dbt model&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -244,6 +439,9 @@ setTimeout(() => input.focus(), 100);
 <ul class="">
 <li><code><a title="pipelines.utils.execute_dbt_model.tasks.get_k8s_dbt_client" href="#pipelines.utils.execute_dbt_model.tasks.get_k8s_dbt_client">get_k8s_dbt_client</a></code></li>
 <li><code><a title="pipelines.utils.execute_dbt_model.tasks.is_running_at_datario" href="#pipelines.utils.execute_dbt_model.tasks.is_running_at_datario">is_running_at_datario</a></code></li>
+<li><code><a title="pipelines.utils.execute_dbt_model.tasks.is_valid_dictionary" href="#pipelines.utils.execute_dbt_model.tasks.is_valid_dictionary">is_valid_dictionary</a></code></li>
+<li><code><a title="pipelines.utils.execute_dbt_model.tasks.merge_dictionaries" href="#pipelines.utils.execute_dbt_model.tasks.merge_dictionaries">merge_dictionaries</a></code></li>
+<li><code><a title="pipelines.utils.execute_dbt_model.tasks.model_parameters_from_secrets" href="#pipelines.utils.execute_dbt_model.tasks.model_parameters_from_secrets">model_parameters_from_secrets</a></code></li>
 <li><code><a title="pipelines.utils.execute_dbt_model.tasks.run_dbt_model" href="#pipelines.utils.execute_dbt_model.tasks.run_dbt_model">run_dbt_model</a></code></li>
 </ul>
 </li>

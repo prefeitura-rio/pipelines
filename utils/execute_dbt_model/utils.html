@@ -37,6 +37,8 @@ from typing import List
 from dbt_client import DbtClient
 from prefect.schedules.clocks import IntervalClock
 
+from pipelines.utils.utils import log
+
 
 def get_dbt_client(
     host: str = &#34;dbt-rpc&#34;,
@@ -87,7 +89,24 @@ def generate_execute_dbt_model_schedules(  # pylint: disable=too-many-arguments,
                 parameter_defaults=parameter_defaults,
             )
         )
-    return clocks</code></pre>
+    return clocks
+
+
+def parse_dbt_logs(logs_dict: dict, log_queries: bool = False):
+    &#34;&#34;&#34;Parse dbt returned logs, to print only needed
+    pieces.
+
+    Args:
+        logs_dict (dict): logs dict returned when running a DBT
+        command via DbtClient.cli() with argument logs = True
+    &#34;&#34;&#34;
+    for event in logs_dict[&#34;result&#34;][&#34;logs&#34;]:
+        if event[&#34;levelname&#34;] == &#34;INFO&#34; or event[&#34;levelname&#34;] == &#34;ERROR&#34;:
+            log(f&#34;#####{event[&#39;levelname&#39;]}#####&#34;)
+            log(event[&#34;message&#34;])
+        if event[&#34;levelname&#34;] == &#34;DEBUG&#34; and log_queries:
+            if &#34;On model&#34; in event[&#34;message&#34;]:
+                log(event[&#34;message&#34;])</code></pre>
 </details>
 </section>
 <section>
@@ -178,6 +197,39 @@ def generate_execute_dbt_model_schedules(  # pylint: disable=too-many-arguments,
     )</code></pre>
 </details>
 </dd>
+<dt id="pipelines.utils.execute_dbt_model.utils.parse_dbt_logs"><code class="name flex">
+<span>def <span class="ident">parse_dbt_logs</span></span>(<span>logs_dict: dict, log_queries: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Parse dbt returned logs, to print only needed
+pieces.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>logs_dict</code></strong> :&ensp;<code>dict</code></dt>
+<dd>logs dict returned when running a DBT</dd>
+</dl>
+<p>command via DbtClient.cli() with argument logs = True</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def parse_dbt_logs(logs_dict: dict, log_queries: bool = False):
+    &#34;&#34;&#34;Parse dbt returned logs, to print only needed
+    pieces.
+
+    Args:
+        logs_dict (dict): logs dict returned when running a DBT
+        command via DbtClient.cli() with argument logs = True
+    &#34;&#34;&#34;
+    for event in logs_dict[&#34;result&#34;][&#34;logs&#34;]:
+        if event[&#34;levelname&#34;] == &#34;INFO&#34; or event[&#34;levelname&#34;] == &#34;ERROR&#34;:
+            log(f&#34;#####{event[&#39;levelname&#39;]}#####&#34;)
+            log(event[&#34;message&#34;])
+        if event[&#34;levelname&#34;] == &#34;DEBUG&#34; and log_queries:
+            if &#34;On model&#34; in event[&#34;message&#34;]:
+                log(event[&#34;message&#34;])</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -244,6 +296,7 @@ setTimeout(() => input.focus(), 100);
 <ul class="">
 <li><code><a title="pipelines.utils.execute_dbt_model.utils.generate_execute_dbt_model_schedules" href="#pipelines.utils.execute_dbt_model.utils.generate_execute_dbt_model_schedules">generate_execute_dbt_model_schedules</a></code></li>
 <li><code><a title="pipelines.utils.execute_dbt_model.utils.get_dbt_client" href="#pipelines.utils.execute_dbt_model.utils.get_dbt_client">get_dbt_client</a></code></li>
+<li><code><a title="pipelines.utils.execute_dbt_model.utils.parse_dbt_logs" href="#pipelines.utils.execute_dbt_model.utils.parse_dbt_logs">parse_dbt_logs</a></code></li>
 </ul>
 </li>
 </ul>

@@ -65,23 +65,6 @@ def log_critical(message: str, secret_path: str = constants.CRITICAL_SECRET_PATH
     return send_discord_message(message=message, webhook_url=url)
 
 
-def parse_dbt_logs(logs_dict: dict, log_queries: bool = False):
-    &#34;&#34;&#34;Parse dbt returned logs, to print only needed
-    pieces.
-
-    Args:
-        logs_dict (dict): logs dict returned when running a DBT
-        command via DbtClient.cli() with argument logs = True
-    &#34;&#34;&#34;
-    for event in logs_dict[&#34;result&#34;][&#34;logs&#34;]:
-        if event[&#34;levelname&#34;] == &#34;INFO&#34; or event[&#34;levelname&#34;] == &#34;ERROR&#34;:
-            log(f&#34;#####{event[&#39;levelname&#39;]}#####&#34;)
-            log(event[&#34;message&#34;])
-        if event[&#34;levelname&#34;] == &#34;DEBUG&#34; and log_queries:
-            if &#34;On model&#34; in event[&#34;message&#34;]:
-                log(event[&#34;message&#34;])
-
-
 def create_or_append_table(dataset_id, table_id, path):
     &#34;&#34;&#34;Conditionally create table or append data to its relative GCS folder.
 
@@ -548,39 +531,6 @@ Useful to incrementally materialize tables via DBT</p>
     return data</code></pre>
 </details>
 </dd>
-<dt id="pipelines.rj_smtr.utils.parse_dbt_logs"><code class="name flex">
-<span>def <span class="ident">parse_dbt_logs</span></span>(<span>logs_dict: dict, log_queries: bool = False)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Parse dbt returned logs, to print only needed
-pieces.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>logs_dict</code></strong> :&ensp;<code>dict</code></dt>
-<dd>logs dict returned when running a DBT</dd>
-</dl>
-<p>command via DbtClient.cli() with argument logs = True</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def parse_dbt_logs(logs_dict: dict, log_queries: bool = False):
-    &#34;&#34;&#34;Parse dbt returned logs, to print only needed
-    pieces.
-
-    Args:
-        logs_dict (dict): logs dict returned when running a DBT
-        command via DbtClient.cli() with argument logs = True
-    &#34;&#34;&#34;
-    for event in logs_dict[&#34;result&#34;][&#34;logs&#34;]:
-        if event[&#34;levelname&#34;] == &#34;INFO&#34; or event[&#34;levelname&#34;] == &#34;ERROR&#34;:
-            log(f&#34;#####{event[&#39;levelname&#39;]}#####&#34;)
-            log(event[&#34;message&#34;])
-        if event[&#34;levelname&#34;] == &#34;DEBUG&#34; and log_queries:
-            if &#34;On model&#34; in event[&#34;message&#34;]:
-                log(event[&#34;message&#34;])</code></pre>
-</details>
-</dd>
 <dt id="pipelines.rj_smtr.utils.safe_cast"><code class="name flex">
 <span>def <span class="ident">safe_cast</span></span>(<span>val, to_type, default=None)</span>
 </code></dt>
@@ -672,7 +622,6 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.utils.get_table_min_max_value" href="#pipelines.rj_smtr.utils.get_table_min_max_value">get_table_min_max_value</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.log_critical" href="#pipelines.rj_smtr.utils.log_critical">log_critical</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.map_dict_keys" href="#pipelines.rj_smtr.utils.map_dict_keys">map_dict_keys</a></code></li>
-<li><code><a title="pipelines.rj_smtr.utils.parse_dbt_logs" href="#pipelines.rj_smtr.utils.parse_dbt_logs">parse_dbt_logs</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.safe_cast" href="#pipelines.rj_smtr.utils.safe_cast">safe_cast</a></code></li>
 </ul>
 </li>
