@@ -9,7 +9,7 @@ import json
 import os
 from pathlib import Path
 import traceback
-from typing import Union, List, Dict
+from typing import Dict
 
 from basedosdados import Storage, Table
 import basedosdados as bd
@@ -27,7 +27,6 @@ from pipelines.rj_smtr.utils import (
     get_table_min_max_value,
     get_last_run_timestamp,
     log_critical,
-    parse_dbt_logs,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client
@@ -52,72 +51,6 @@ def get_local_dbt_client(host: str, port: int):
         DbtClient: object used to run DBT commands.
     """
     return get_dbt_client(host=host, port=port)
-
-
-@task(
-    checkpoint=False,
-)
-def run_dbt_model(  # pylint: disable=too-many-arguments
-    dbt_client: DbtClient,
-    model: str = None,
-    upstream: bool = None,
-    downstream: bool = None,
-    exclude: str = None,
-    flags: str = None,
-    _vars: Union[dict, List[Dict]] = None,
-    wait=None,  # pylint: disable=unused-argument
-):
-    """
-    Runs a dbt command. If passing a dataset_id on model, will run the entire dataset.
-    Otheerwise, if pasing a table_id, will run only the specified table.
-
-    Args:
-        dbt_client (DbtClient): Dbt interface of interaction
-        model (str, optional): dataset_id or table_id on BigQuery. Defaults to None.
-        table_id (str, optional): table_id on BigQuery, also .sql file name on your
-        models folder. Defaults to None.
-        command (str, optional): dbt command to run. Defaults to "run".
-        flags (str, optional): flags allowed to the specific command.
-        Should be preceeded by "--" Defaults to None.
-        sync (bool, optional): _description_. Defaults to True.
-    """
-    run_command = "dbt run"
-
-    # Set models and upstream/downstream for dbt
-    if model:
-        run_command += " --select "
-        if upstream:
-            run_command += "+"
-        run_command += f"{model}"
-        if downstream:
-            run_command += "+"
-
-    if exclude:
-        run_command += f" --exclude {exclude}"
-
-    if _vars:
-        log(f"Received vars:\n {_vars}\n type: {type(_vars)}")
-        if isinstance(_vars, list):
-            vars_dict = {}
-            for elem in _vars:
-                log(f"Received variable {elem}. Adding to vars")
-                vars_dict.update(elem)
-            vars_str = f'"{vars_dict}"'
-            run_command += f" --vars {vars_str}"
-        else:
-            vars_str = f'"{_vars}"'
-            run_command += f" --vars {vars_str}"
-    if flags:
-        run_command += f" {flags}"
-
-    log(f"Will run the following command:\n{run_command}")
-    logs_dict = dbt_client.cli(
-        run_command,
-        sync=True,
-        logs=True,
-    )
-    parse_dbt_logs(logs_dict, log_queries=True)
-    return log("Finished running dbt model")
 
 
 @task(max_retries=3, retry_delay=timedelta(seconds=10))

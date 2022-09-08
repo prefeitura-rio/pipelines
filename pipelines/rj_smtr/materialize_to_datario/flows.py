@@ -13,9 +13,9 @@ from pipelines.constants import constants
 from pipelines.rj_smtr.materialize_to_datario.schedules import (
     smtr_materialize_to_datario_daily_schedule,
 )
-from pipelines.utils.execute_dbt_model.flows import run_dbt_model_flow
+from pipelines.utils.execute_dbt_model.flows import utils_run_dbt_model_flow
 
-materialize_smtr_flow = deepcopy(run_dbt_model_flow)
+materialize_smtr_flow = deepcopy(utils_run_dbt_model_flow)
 materialize_smtr_flow.name = "SMTR: Materializar dados para publicação no `datario`"
 materialize_smtr_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 materialize_smtr_flow.run_config = KubernetesRun(
