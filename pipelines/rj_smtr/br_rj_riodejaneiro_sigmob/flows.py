@@ -25,11 +25,10 @@ from pipelines.rj_smtr.schedules import every_day
 from pipelines.rj_smtr.tasks import (
     bq_upload_from_dict,
     build_incremental_model,
-    run_dbt_model,
     # , get_local_dbt_client
 )
-
 from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks import request_data
+from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
 # Flows #
 
