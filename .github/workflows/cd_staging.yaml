@@ -78,7 +78,7 @@ jobs:
       - name: Wait for Docker image to be available
         uses: lewagon/wait-on-check-action@v1.1.2
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           check-name: 'Build Docker image'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           verbose: true
