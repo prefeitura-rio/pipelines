@@ -40,7 +40,6 @@ from pipelines.rj_smtr.tasks import (
     get_raw,
     parse_timestamp_to_string,
     query_logs,
-    run_dbt_model,
     save_raw_local,
     save_treated_local,
     set_last_run_timestamp,
@@ -51,6 +50,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
     pre_treatment_br_rj_riodejaneiro_onibus_gps,
     create_api_url_onibus_gps,
 )
+from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
 # Flows #
 
