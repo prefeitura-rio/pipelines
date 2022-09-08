@@ -9,7 +9,7 @@ import json
 import os
 from pathlib import Path
 import traceback
-from typing import Union, List, Dict
+from typing import Any, Union, List, Dict
 
 from basedosdados import Storage, Table
 import basedosdados as bd
@@ -425,27 +425,27 @@ def query_logs(
         {results.to_string()}
         """
         log(message)
-        log_critical(message=message)
-        if len(results) > 40:
+        if len(results) > 60:
             message = f"""
             @here
             [SPPO - Recaptures]
             Encontradas {len(results)} timestamps para serem recapturadas.
             Esta run processará as seguintes:
             #####
-            {results[:40].to_string()}
+            {results[:60].to_string()}
             #####
             Sobraram as seguintes para serem recapturadas na próxima run:
             #####
-            {results[40:].to_string()}
+            {results[60:].to_string()}
             #####
             """
-            log_critical(message)
-            results = results[:40]
+            log(message)
+            results = results[:60]
         results.rename(
             columns={"timestamp_captura": "timestamp", "erro": "error"}, inplace=True
         )
         results["recapture"] = True
+        log_critical(message)
         return True, results.to_dict(orient="records")
     return False, {}
 
@@ -808,3 +808,20 @@ def fetch_dataset_sha(dataset_id: str):
 
     dataset_version = response.json()[0]["sha"]
     return {"version": dataset_version}
+
+
+# FLOW CONTROL
+@task
+def get_bool(arg: Any):
+    """Get the boolean value (True-ish/False-ish) for
+    the given arg. Useful to match True/False values
+    inside prefect case statement
+
+    Args:
+        arg (Any): any given value to be "converted"
+        to boolean
+
+    Returns:
+        bool: python boolean evaluation of the arg
+    """
+    return bool(arg)

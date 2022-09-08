@@ -22,7 +22,7 @@ from pipelines.rj_smtr.constants import constants
 
 
 @task
-def create_api_url_onibus_gps(version: str, timestamp: datetime = None) -> str:
+def create_api_url_onibus_gps(version: str, timestamp: str = None) -> str:
     """
     Generates the complete URL to get data from API.
     """
@@ -38,6 +38,8 @@ def create_api_url_onibus_gps(version: str, timestamp: datetime = None) -> str:
         timestamp = pendulum.now(constants.TIMEZONE.value).replace(
             second=0, microsecond=0
         )
+    else:
+        timestamp = datetime.fromisoformat(timestamp)
 
     headers = get_vault_secret(source)["data"]
     key = list(headers)[0]
@@ -82,7 +84,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
     log(f"Data received to treat: \n{status['data'][:5]}")
     if status["data"] == []:
         log("Data is empty, skipping treatment...")
-        return {"data": pd.DataFrame(), "error": "Empty response from API"}
+        return {"data": pd.DataFrame(), "error": status["error"]}
     df = pd.DataFrame(status["data"])  # pylint: disable=c0103
     df["timestamp_captura"] = timestamp
     log(f"Before converting, datahora is: \n{df['datahora']}")

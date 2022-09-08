@@ -39,6 +39,7 @@ from pipelines.rj_smtr.tasks import (
     get_materialization_date_range,
     # get_local_dbt_client,
     get_raw,
+    get_bool,
     # parse_timestamp_to_string,
     query_logs,
     run_dbt_model,
@@ -144,14 +145,14 @@ with Flow(
     version = Parameter("version", default=2)
 
     # RECAPTURE PARAMETERS
-    datetime_filter = Parameter("timestamp", default=None)
+    datetime_filter = Parameter("datetime_filter", default=None)
     recapture = Parameter("recapture", default=False)
     previous_error = Parameter("previous_error", default=None)
 
     # SETUP #
-    with case(datetime_filter, None):
+    with case(get_bool(datetime_filter), False):
         timestamp_now = get_current_timestamp()
-    with case(datetime_filter, None):
+    with case(get_bool(datetime_filter), True):
         timestamp_default = datetime_filter
 
     timestamp = merge(timestamp_default, timestamp_now)
@@ -171,7 +172,7 @@ with Flow(
         partitions=partitions,
     )
 
-    url = create_api_url_onibus_gps(version=version)
+    url = create_api_url_onibus_gps(version=version, timestamp=timestamp)
 
     # EXTRACT #
     raw_status = get_raw(url)
@@ -194,7 +195,7 @@ with Flow(
         partitions=partitions,
         status=treated_status,
     )
-    with case(error, None):
+    with case(get_bool(error), False):
         upload_logs_to_bq(
             dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
             parent_table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
@@ -202,7 +203,7 @@ with Flow(
             timestamp=timestamp,
             recapture=recapture,
         )
-    with case(error, not None):
+    with case(get_bool(error), True):
         upload_logs_to_bq(
             dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
             parent_table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
