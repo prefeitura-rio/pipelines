@@ -55,6 +55,7 @@ sme_queries = {
         &#34;dump_to_gcs&#34;: False,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;dbt_model_secret_parameters&#34;: {&#34;hash_seed&#34;: &#34;hash_seed&#34;},
         &#34;execute_query&#34;: &#34;&#34;&#34;
             SELECT
                 Ano,
@@ -102,6 +103,7 @@ sme_queries = {
         &#34;partition_date_format&#34;: &#34;%Y&#34;,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_mode&#34;: &#34;append&#34;,
+        &#34;dbt_model_secret_parameters&#34;: {&#34;hash_seed&#34;: &#34;hash_seed&#34;},
         &#34;execute_query&#34;: &#34;&#34;&#34;
             SELECT
                 *
@@ -131,6 +133,7 @@ sme_queries = {
         &#34;partition_date_format&#34;: &#34;%Y&#34;,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_mode&#34;: &#34;append&#34;,
+        &#34;dbt_model_secret_parameters&#34;: {&#34;hash_seed&#34;: &#34;hash_seed&#34;},
         &#34;execute_query&#34;: &#34;SELECT * FROM GestaoEscolar.dbo.VW_BI_Avaliacao&#34;,
     },
     &#34;coc&#34;: {  # essa tabela utiliza a view coc0 pois contem o coc 0 e de 1 a 5
@@ -214,6 +217,7 @@ sme_queries = {
         &#34;dump_to_gcs&#34;: False,  # exceeds minimum (2022-05-31 -&gt; 20,41GB)
         &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_mode&#34;: &#34;append&#34;,
+        &#34;dbt_model_secret_parameters&#34;: {&#34;hash_seed&#34;: &#34;hash_seed&#34;},
         &#34;execute_query&#34;: &#34;&#34;&#34;
             SELECT
                 esc_id AS esc_id,
@@ -243,6 +247,7 @@ sme_queries = {
         &#34;dump_to_gcs&#34;: False,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_mode&#34;: &#34;append&#34;,
+        &#34;dbt_model_secret_parameters&#34;: {&#34;hash_seed&#34;: &#34;hash_seed&#34;},
         &#34;execute_query&#34;: &#34;SELECT * FROM GestaoEscolar.dbo.VW_BI_Movimentacao_lgpd&#34;,
     },
     &#34;turma&#34;: {

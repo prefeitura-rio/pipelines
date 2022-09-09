@@ -123,7 +123,13 @@ def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-l
             parameter_defaults[&#34;materialization_mode&#34;] = parameters[
                 &#34;materialization_mode&#34;
             ]
-
+        if &#34;dbt_model_secret_parameters&#34; in parameters:
+            parameter_defaults[&#34;dbt_model_secret_parameters&#34;] = parameters[
+                &#34;dbt_model_secret_parameters&#34;
+            ]
+            
+            
+            
         new_interval = parameters[&#34;interval&#34;] if &#34;interval&#34; in parameters else interval
 
         clocks.append(
@@ -251,7 +257,13 @@ Creates the query without accents.</p></div>
             parameter_defaults[&#34;materialization_mode&#34;] = parameters[
                 &#34;materialization_mode&#34;
             ]
-
+        if &#34;dbt_model_secret_parameters&#34; in parameters:
+            parameter_defaults[&#34;dbt_model_secret_parameters&#34;] = parameters[
+                &#34;dbt_model_secret_parameters&#34;
+            ]
+            
+            
+            
         new_interval = parameters[&#34;interval&#34;] if &#34;interval&#34; in parameters else interval
 
         clocks.append(
