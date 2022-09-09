@@ -72,8 +72,11 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
     Returns:
         df: pandas.core.DataFrame containing the treated data.
     """
-
     if status["error"] is not None:
+        return {"data": pd.DataFrame(), "error": status["error"]}
+
+    if status["data"] == []:
+        log("Data is empty, skipping treatment...")
         return {"data": pd.DataFrame(), "error": status["error"]}
 
     error = None
