@@ -26,6 +26,7 @@ sme_queries = {
         "dump_to_gcs": False,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
+        "dbt_model_secret_parameters": {"hash_seed": "hash_seed"},
         "execute_query": """
             SELECT
                 Ano,
@@ -73,6 +74,7 @@ sme_queries = {
         "partition_date_format": "%Y",
         "materialization_mode": "prod",
         "dump_mode": "append",
+        "dbt_model_secret_parameters": {"hash_seed": "hash_seed"},
         "execute_query": """
             SELECT
                 *
@@ -102,6 +104,7 @@ sme_queries = {
         "partition_date_format": "%Y",
         "materialization_mode": "prod",
         "dump_mode": "append",
+        "dbt_model_secret_parameters": {"hash_seed": "hash_seed"},
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Avaliacao",
     },
     "coc": {  # essa tabela utiliza a view coc0 pois contem o coc 0 e de 1 a 5
@@ -185,6 +188,7 @@ sme_queries = {
         "dump_to_gcs": False,  # exceeds minimum (2022-05-31 -> 20,41GB)
         "materialization_mode": "prod",
         "dump_mode": "append",
+        "dbt_model_secret_parameters": {"hash_seed": "hash_seed"},
         "execute_query": """
             SELECT
                 esc_id AS esc_id,
@@ -214,6 +218,7 @@ sme_queries = {
         "dump_to_gcs": False,
         "materialization_mode": "prod",
         "dump_mode": "append",
+        "dbt_model_secret_parameters": {"hash_seed": "hash_seed"},
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Movimentacao_lgpd",
     },
     "turma": {
