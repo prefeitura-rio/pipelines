@@ -9,7 +9,7 @@ import json
 import os
 from pathlib import Path
 import traceback
-from typing import Any, Union, List, Dict
+from typing import Any, Dict
 
 
 from basedosdados import Storage, Table
