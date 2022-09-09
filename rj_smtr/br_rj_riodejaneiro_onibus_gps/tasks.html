@@ -101,8 +101,11 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
     Returns:
         df: pandas.core.DataFrame containing the treated data.
     &#34;&#34;&#34;
-
     if status[&#34;error&#34;] is not None:
+        return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
+
+    if status[&#34;data&#34;] == []:
+        log(&#34;Data is empty, skipping treatment...&#34;)
         return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
 
     error = None
@@ -267,8 +270,11 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
     Returns:
         df: pandas.core.DataFrame containing the treated data.
     &#34;&#34;&#34;
-
     if status[&#34;error&#34;] is not None:
+        return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
+
+    if status[&#34;data&#34;] == []:
+        log(&#34;Data is empty, skipping treatment...&#34;)
         return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
 
     error = None
