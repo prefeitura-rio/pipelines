@@ -98,7 +98,7 @@ def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-l
             parameter_defaults["dbt_model_secret_parameters"] = parameters[
                 "dbt_model_secret_parameters"
             ]
-                        
+
         new_interval = parameters["interval"] if "interval" in parameters else interval
 
         clocks.append(
