@@ -195,22 +195,14 @@ with Flow(
         partitions=partitions,
         status=treated_status,
     )
-    with case(get_bool(error), False):
-        upload_logs_to_bq(
-            dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
-            parent_table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
-            error=previous_error,
-            timestamp=timestamp,
-            recapture=recapture,
-        )
-    with case(get_bool(error), True):
-        upload_logs_to_bq(
-            dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
-            parent_table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
-            error=error,
-            timestamp=timestamp,
-            recapture=recapture,
-        )
+    upload_logs_to_bq(
+        dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
+        parent_table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
+        error=error,
+        previous_error=previous_error,
+        timestamp=timestamp,
+        recapture=recapture,
+    )
 
 
 captura_sppo_v2.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
