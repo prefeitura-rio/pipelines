@@ -11,7 +11,7 @@ from prefect import task
 
 # EMD Imports #
 
-from pipelines.utils.utils import log
+from pipelines.utils.utils import get_vault_secret, log
 
 # SMTR Imports #
 
@@ -22,7 +22,22 @@ from pipelines.rj_smtr.utils import log_critical, map_dict_keys, safe_cast
 
 
 @task
-def pre_treatment_br_rj_riodejaneiro_brt_gps(status_dict: dict):
+def create_api_url_brt_gps(secret_path: str = constants.GPS_BRT_SECRET_PATH.value):
+    """Create the url to request data from
+
+    Args:
+        secret_path (str, optional): secret path to the url.
+
+    Returns:
+        _str: url to request
+    """
+    url = get_vault_secret(secret_path=secret_path)["data"]["url"]
+    log(f"Request data from {url}")
+    return url
+
+
+@task
+def pre_treatment_br_rj_riodejaneiro_brt_gps(status_dict: dict, timestamp):
     """Basic data treatment for brt gps data. Converts unix time to datetime,
     and apply filtering to stale data that may populate the API response.
 
@@ -41,12 +56,11 @@ def pre_treatment_br_rj_riodejaneiro_brt_gps(status_dict: dict):
     error = None
     data = status_dict["data"]
     timezone = constants.TIMEZONE.value
-    timestamp = status_dict["timestamp"]
-
+    log(f"Data received to treat:\n{data[:25]}")
     # Create dataframe sctructure
     key_column = "id_veiculo"
     columns = [key_column, "timestamp_gps", "timestamp_captura", "content"]
-    df = pd.DataFrame(data.json(), columns=columns)  # pylint: disable=c0103
+    df = pd.DataFrame(data, columns=columns)  # pylint: disable=c0103
 
     # Populate dataframe
     df["timestamp_captura"] = pd.to_datetime(timestamp)
@@ -113,4 +127,4 @@ def pre_treatment_br_rj_riodejaneiro_brt_gps(status_dict: dict):
         log_critical(f"@here\nFailed to filter BRT data: \n{err}")
     # log_critical(f"@here\n Got SPPO data at {timestamp} sucessfully")
 
-    return {"df": df, "error": error}
+    return {"data": df, "error": error}

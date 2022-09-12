@@ -48,9 +48,7 @@ class constants(Enum):  # pylint: disable=c0103
     GPS_SPPO_CAPTURE_DELAY_V2 = 60
     GPS_SPPO_RECAPTURE_DELAY_V2 = 6
     # GPS BRT #
-    GPS_BRT_API_BASE_URL = (
-        "http://citgisbrj.tacom.srv.br:9977/gtfs-realtime-exporter/findAll/json"
-    )
+    GPS_BRT_SECRET_PATH = "brt_api"
     # GPS_BRT_API_SECRET_PATH = "sppo_api"
 
     GPS_BRT_DATASET_ID = "br_rj_riodejaneiro_veiculos"
