@@ -154,7 +154,7 @@ with Flow(
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
     # TREAT
     treated_status = pre_treatment_br_rj_riodejaneiro_brt_gps(
-        status_dict=raw_status, timestamp=timestamp
+        status=raw_status, timestamp=timestamp
     )
 
     treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
