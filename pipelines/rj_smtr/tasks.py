@@ -609,6 +609,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
     raw_table_id: str,
     table_date_column_name: str = None,
     mode: str = "prod",
+    delay_hours: int = 0,
 ):
     """
     Task for generating dict with variables to be passed to the
@@ -625,6 +626,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
         on this field.
         rebuild (Optional, bool): if true, queries the minimum date value on the
         table and return a date range from that value to the datetime.now() time
+        delay(Optional, int): hours delayed from now time for materialization range
 
     Returns:
         dict: containing date_range_start and date_range_end
@@ -653,14 +655,16 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 kind="max",
             ).strftime(timestr)
     last_run = datetime.strptime(last_run, timestr)
-    now_ts = pendulum.now(constants.TIMEZONE.value).replace(tzinfo=None)
+    now_ts = pendulum.now(constants.TIMEZONE.value).replace(
+        tzinfo=None, minute=0, second=0, microsecond=0
+    )
     # set start to last run hour (H)
     start_ts = (last_run).replace(minute=0, second=0, microsecond=0).strftime(timestr)
     # if some materialization run failed, range is from last_run
     # up to the previous hour from now
-    if now_ts - last_run > timedelta(hours=2):
+    if now_ts - last_run > timedelta(hours=delay_hours + 1):
         end_ts = (
-            (now_ts - timedelta(hours=1))
+            (now_ts - timedelta(hours=delay_hours))
             .replace(minute=0, second=0, microsecond=0)
             .strftime(timestr)
         )

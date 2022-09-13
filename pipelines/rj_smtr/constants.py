@@ -47,6 +47,7 @@ class constants(Enum):  # pylint: disable=c0103
     GPS_SPPO_CAPTURE_DELAY_V1 = 1
     GPS_SPPO_CAPTURE_DELAY_V2 = 60
     GPS_SPPO_RECAPTURE_DELAY_V2 = 6
+    GPS_SPPO_MATERIALIZE_DELAY_HOURS = 1
     # GPS BRT #
     GPS_BRT_API_BASE_URL = (
         "http://citgisbrj.tacom.srv.br:9977/gtfs-realtime-exporter/findAll/json"
@@ -57,6 +58,7 @@ class constants(Enum):  # pylint: disable=c0103
     GPS_BRT_RAW_DATASET_ID = "br_rj_riodejaneiro_brt_gps"
     GPS_BRT_RAW_TABLE_ID = "registros"
     GPS_BRT_TREATED_TABLE_ID = "gps_brt"
+    GPS_BRT_MATERIALIZE_DELAY_HOURS = 0
 
     # SIGMOB (GTFS) #
     SIGMOB_GET_REQUESTS_TIMEOUT = 60

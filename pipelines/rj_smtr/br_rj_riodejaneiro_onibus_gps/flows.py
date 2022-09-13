@@ -40,7 +40,6 @@ from pipelines.rj_smtr.tasks import (
     # get_local_dbt_client,
     get_raw,
     get_bool,
-    # parse_timestamp_to_string,
     query_logs,
     save_raw_local,
     save_treated_local,
@@ -92,6 +91,7 @@ with Flow(
         raw_table_id=raw_table_id,
         table_date_column_name="data",
         mode=MODE,
+        delay_hours=constants.GPS_SPPO_MATERIALIZE_DELAY_HOURS.value,
     )
     dataset_sha = fetch_dataset_sha(
         dataset_id=dataset_id,

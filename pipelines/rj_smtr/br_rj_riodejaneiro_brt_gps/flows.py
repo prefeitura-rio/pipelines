@@ -76,6 +76,7 @@ with Flow(
         raw_dataset_id=raw_dataset_id,
         raw_table_id=raw_table_id,
         table_date_column_name="data",
+        delay_hours=constants.GPS_BRT_MATERIALIZE_DELAY_HOURS.value,
     )
     dataset_sha = fetch_dataset_sha(
         dataset_id=dataset_id,
