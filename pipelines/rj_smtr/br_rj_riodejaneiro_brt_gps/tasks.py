@@ -66,33 +66,23 @@ def pre_treatment_br_rj_riodejaneiro_brt_gps(status: dict, timestamp):
     columns = [key_column, "timestamp_gps", "timestamp_captura", "content"]
     df = pd.DataFrame(columns=columns)  # pylint: disable=c0103
 
-    # Populate dataframe
-
     # map_dict_keys change data keys to match project data structure
-    map_keys = {
-        "vei_nro_gestor": "id_veiculo",
-        "linha": "servico",
-        "latitude": "latitude",
-        "longitude": "longitude",
-        "comunicacao": "timestamp_gps",
-        "velocidade": "velocidade",
-        "nomeItinerario": "sentido",
-    }
-    df["content"] = [map_dict_keys(piece, map_keys) for piece in data]
+    df["content"] = [
+        map_dict_keys(piece, constants.GPS_BRT_MAPPING_KEYS.value) for piece in data
+    ]
     df[key_column] = [piece[key_column] for piece in data]
     df["timestamp_gps"] = [piece["timestamp_gps"] for piece in data]
     df["timestamp_captura"] = timestamp
     log(f"timestamp captura is:\n{df['timestamp_captura']}")
+
     # Remove timezone and force it to be config timezone
     log(f"Before converting, timestamp_gps is: \n{df['timestamp_gps']}")
-
     df["timestamp_gps"] = (
         pd.to_datetime(df["timestamp_gps"], unit="s")
         .dt.tz_localize("UTC")
         .dt.tz_convert(timezone)
     )
     log(f"After converting the timezone, timestamp_gps is: \n{df['timestamp_gps']}")
-    # log(f"df is {df}")
 
     # Filter data for 0 <= time diff <= 1min
     try:

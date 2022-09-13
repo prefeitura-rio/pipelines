@@ -49,12 +49,21 @@ class constants(Enum):  # pylint: disable=c0103
     GPS_SPPO_RECAPTURE_DELAY_V2 = 6
     # GPS BRT #
     GPS_BRT_SECRET_PATH = "brt_api"
-    # GPS_BRT_API_SECRET_PATH = "sppo_api"
-
     GPS_BRT_DATASET_ID = "br_rj_riodejaneiro_veiculos"
     GPS_BRT_RAW_DATASET_ID = "br_rj_riodejaneiro_brt_gps"
     GPS_BRT_RAW_TABLE_ID = "registros"
     GPS_BRT_TREATED_TABLE_ID = "gps_brt"
+    GPS_BRT_MAPPING_KEYS = {
+        "vei_nro_gestor": "id_veiculo",
+        "linha": "servico",
+        "latitude": "latitude",
+        "longitude": "longitude",
+        "comunicacao": "timestamp_gps",
+        "velocidade": "velocidade",
+        "nomeItinerario": "sentido",
+        "nomeLinha": "vista",
+        "inicio_viagem": "timestamp_inicio_viagem",
+    }
 
     # SIGMOB (GTFS) #
     SIGMOB_GET_REQUESTS_TIMEOUT = 60
