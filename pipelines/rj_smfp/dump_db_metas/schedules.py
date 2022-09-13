@@ -43,7 +43,7 @@ egp_web_queries = {
 
 egp_web_clocks = generate_dump_db_schedules(
     interval=timedelta(days=7),
-    start_date=datetime(2022, 8, 18, 0, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2022, 9, 14, 0, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_SMFP_AGENT_LABEL.value,
     ],
@@ -56,4 +56,4 @@ egp_web_clocks = generate_dump_db_schedules(
     table_parameters=egp_web_queries,
 )
 
-egp_web_monthly_update_schedule = Schedule(clocks=untuple(egp_web_clocks))
+egp_web_weekly_update_schedule = Schedule(clocks=untuple(egp_web_clocks))
