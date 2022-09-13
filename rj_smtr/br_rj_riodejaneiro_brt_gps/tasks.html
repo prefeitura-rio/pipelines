@@ -35,23 +35,37 @@ Tasks for br_rj_riodejaneiro_brt_gps
 from datetime import timedelta
 import traceback
 import pandas as pd
-import pendulum
 from prefect import task
 
 # EMD Imports #
 
-from pipelines.utils.utils import log
+from pipelines.utils.utils import get_vault_secret, log
 
 # SMTR Imports #
 
 from pipelines.rj_smtr.constants import constants
-from pipelines.rj_smtr.utils import log_critical, map_dict_keys, safe_cast
+from pipelines.rj_smtr.utils import log_critical, map_dict_keys
 
 # Tasks #
 
 
 @task
-def pre_treatment_br_rj_riodejaneiro_brt_gps(status_dict: dict):
+def create_api_url_brt_gps(secret_path: str = constants.GPS_BRT_SECRET_PATH.value):
+    &#34;&#34;&#34;Create the url to request data from
+
+    Args:
+        secret_path (str, optional): secret path to the url.
+
+    Returns:
+        _str: url to request
+    &#34;&#34;&#34;
+    url = get_vault_secret(secret_path=secret_path)[&#34;data&#34;][&#34;url&#34;]
+    log(f&#34;Request data from {url}&#34;)
+    return url
+
+
+@task
+def pre_treatment_br_rj_riodejaneiro_brt_gps(status: dict, timestamp):
     &#34;&#34;&#34;Basic data treatment for brt gps data. Converts unix time to datetime,
     and apply filtering to stale data that may populate the API response.
 
@@ -64,85 +78,56 @@ def pre_treatment_br_rj_riodejaneiro_brt_gps(status_dict: dict):
     &#34;&#34;&#34;
 
     # Check previous error
-    if status_dict[&#34;error&#34;] is not None:
-        return {&#34;df&#34;: pd.DataFrame(), &#34;error&#34;: status_dict[&#34;error&#34;]}
+    if status[&#34;error&#34;] is not None:
+        return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
 
     error = None
-    data = status_dict[&#34;data&#34;]
+    data = status[&#34;data&#34;]
     timezone = constants.TIMEZONE.value
-    timestamp = status_dict[&#34;timestamp&#34;]
-
+    log(
+        f&#34;&#34;&#34;
+    Received inputs:
+    - timestamp:\n{timestamp}
+    - data:\n{data[:10]}&#34;&#34;&#34;
+    )
     # Create dataframe sctructure
     key_column = &#34;id_veiculo&#34;
     columns = [key_column, &#34;timestamp_gps&#34;, &#34;timestamp_captura&#34;, &#34;content&#34;]
-    df = pd.DataFrame(data.json(), columns=columns)  # pylint: disable=c0103
-
-    # Populate dataframe
-    df[&#34;timestamp_captura&#34;] = pd.to_datetime(timestamp)
+    df = pd.DataFrame(columns=columns)  # pylint: disable=c0103
 
     # map_dict_keys change data keys to match project data structure
-    map_keys = {
-        &#34;vei_nro_gestor&#34;: &#34;id_veiculo&#34;,
-        &#34;linha&#34;: &#34;servico&#34;,
-        &#34;latitude&#34;: &#34;latitude&#34;,
-        &#34;longitude&#34;: &#34;longitude&#34;,
-        &#34;comunicacao&#34;: &#34;timestamp_gps&#34;,
-        &#34;velocidade&#34;: &#34;velocidade&#34;,
-        &#34;nomeItinerario&#34;: &#34;sentido&#34;,
-    }
-    df[&#34;content&#34;] = [map_dict_keys(piece, map_keys) for piece in data]
+    df[&#34;content&#34;] = [
+        map_dict_keys(piece, constants.GPS_BRT_MAPPING_KEYS.value) for piece in data
+    ]
     df[key_column] = [piece[key_column] for piece in data]
+    df[&#34;timestamp_gps&#34;] = [piece[&#34;timestamp_gps&#34;] for piece in data]
+    df[&#34;timestamp_captura&#34;] = timestamp
+    log(f&#34;timestamp captura is:\n{df[&#39;timestamp_captura&#39;]}&#34;)
 
     # Remove timezone and force it to be config timezone
     log(f&#34;Before converting, timestamp_gps is: \n{df[&#39;timestamp_gps&#39;]}&#34;)
-
-    df[&#34;timestamp_gps&#34;] = df[&#34;content&#34;].apply(
-        lambda x: pd.to_datetime(
-            pendulum.from_timestamp(safe_cast(x[&#34;timestamp_gps&#34;], int, 0))
-            .replace(tzinfo=None)
-            .set(tz=&#34;UTC&#34;)
-            .isoformat()
-        )  # .tz_convert(timezone)
+    df[&#34;timestamp_gps&#34;] = (
+        pd.to_datetime(df[&#34;timestamp_gps&#34;], unit=&#34;s&#34;)
+        .dt.tz_localize(&#34;UTC&#34;)
+        .dt.tz_convert(timezone)
     )
-
     log(f&#34;After converting the timezone, timestamp_gps is: \n{df[&#39;timestamp_gps&#39;]}&#34;)
 
     # Filter data for 0 &lt;= time diff &lt;= 1min
     try:
-        datahora_col = &#34;timestamp_gps&#34;
-        df_treated = df
-        try:
-            df_treated[datahora_col] = df_treated[datahora_col].apply(
-                lambda x: x.tz_convert(timezone)
-            )
-        except TypeError:
-            df_treated[datahora_col] = df_treated[datahora_col].apply(
-                lambda x: x.tz_localize(timezone)
-            )
-        try:
-            df_treated[&#34;timestamp_captura&#34;] = df_treated[&#34;timestamp_captura&#34;].apply(
-                lambda x: x.tz_convert(timezone)
-            )
-        except TypeError:
-            df_treated[&#34;timestamp_captura&#34;] = df_treated[&#34;timestamp_captura&#34;].apply(
-                lambda x: x.tz_localize(timezone)
-            )
-        mask = (df_treated[&#34;timestamp_captura&#34;] - df_treated[datahora_col]).apply(
-            lambda x: timedelta(seconds=0) &lt;= x &lt;= timedelta(minutes=1)
-        )
-        df_treated = df_treated[mask]
         log(f&#34;Shape antes da filtragem: {df.shape}&#34;)
-        log(f&#34;Shape após a filtragem: {df_treated.shape}&#34;)
-        if df_treated.shape[0] == 0:
+
+        mask = (df[&#34;timestamp_captura&#34;] - df[&#34;timestamp_gps&#34;]) &lt;= timedelta(minutes=1)
+        df = df[mask]  # pylint: disable=C0103
+        log(f&#34;Shape após a filtragem: {df.shape}&#34;)
+        if df.shape[0] == 0:
             error = ValueError(&#34;After filtering, the dataframe is empty!&#34;)
             log_critical(f&#34;@here\nFailed to filter BRT data: \n{error}&#34;)
-        df = df_treated  # pylint: disable=C0103
     except Exception:  # pylint: disable = W0703
         err = traceback.format_exc()
         log_critical(f&#34;@here\nFailed to filter BRT data: \n{err}&#34;)
-    # log_critical(f&#34;@here\n Got SPPO data at {timestamp} sucessfully&#34;)
 
-    return {&#34;df&#34;: df, &#34;error&#34;: error}</code></pre>
+    return {&#34;data&#34;: df, &#34;error&#34;: error}</code></pre>
 </details>
 </section>
 <section>
@@ -152,8 +137,42 @@ def pre_treatment_br_rj_riodejaneiro_brt_gps(status_dict: dict):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks.create_api_url_brt_gps"><code class="name flex">
+<span>def <span class="ident">create_api_url_brt_gps</span></span>(<span>secret_path: str = 'brt_api')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create the url to request data from</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>secret_path</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>secret path to the url.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>_str</code></dt>
+<dd>url to request</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def create_api_url_brt_gps(secret_path: str = constants.GPS_BRT_SECRET_PATH.value):
+    &#34;&#34;&#34;Create the url to request data from
+
+    Args:
+        secret_path (str, optional): secret path to the url.
+
+    Returns:
+        _str: url to request
+    &#34;&#34;&#34;
+    url = get_vault_secret(secret_path=secret_path)[&#34;data&#34;][&#34;url&#34;]
+    log(f&#34;Request data from {url}&#34;)
+    return url</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks.pre_treatment_br_rj_riodejaneiro_brt_gps"><code class="name flex">
-<span>def <span class="ident">pre_treatment_br_rj_riodejaneiro_brt_gps</span></span>(<span>status_dict: dict)</span>
+<span>def <span class="ident">pre_treatment_br_rj_riodejaneiro_brt_gps</span></span>(<span>status: dict, timestamp)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Basic data treatment for brt gps data. Converts unix time to datetime,
@@ -174,7 +193,7 @@ and apply filtering to stale data that may populate the API response.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def pre_treatment_br_rj_riodejaneiro_brt_gps(status_dict: dict):
+def pre_treatment_br_rj_riodejaneiro_brt_gps(status: dict, timestamp):
     &#34;&#34;&#34;Basic data treatment for brt gps data. Converts unix time to datetime,
     and apply filtering to stale data that may populate the API response.
 
@@ -187,85 +206,56 @@ def pre_treatment_br_rj_riodejaneiro_brt_gps(status_dict: dict):
     &#34;&#34;&#34;
 
     # Check previous error
-    if status_dict[&#34;error&#34;] is not None:
-        return {&#34;df&#34;: pd.DataFrame(), &#34;error&#34;: status_dict[&#34;error&#34;]}
+    if status[&#34;error&#34;] is not None:
+        return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
 
     error = None
-    data = status_dict[&#34;data&#34;]
+    data = status[&#34;data&#34;]
     timezone = constants.TIMEZONE.value
-    timestamp = status_dict[&#34;timestamp&#34;]
-
+    log(
+        f&#34;&#34;&#34;
+    Received inputs:
+    - timestamp:\n{timestamp}
+    - data:\n{data[:10]}&#34;&#34;&#34;
+    )
     # Create dataframe sctructure
     key_column = &#34;id_veiculo&#34;
     columns = [key_column, &#34;timestamp_gps&#34;, &#34;timestamp_captura&#34;, &#34;content&#34;]
-    df = pd.DataFrame(data.json(), columns=columns)  # pylint: disable=c0103
-
-    # Populate dataframe
-    df[&#34;timestamp_captura&#34;] = pd.to_datetime(timestamp)
+    df = pd.DataFrame(columns=columns)  # pylint: disable=c0103
 
     # map_dict_keys change data keys to match project data structure
-    map_keys = {
-        &#34;vei_nro_gestor&#34;: &#34;id_veiculo&#34;,
-        &#34;linha&#34;: &#34;servico&#34;,
-        &#34;latitude&#34;: &#34;latitude&#34;,
-        &#34;longitude&#34;: &#34;longitude&#34;,
-        &#34;comunicacao&#34;: &#34;timestamp_gps&#34;,
-        &#34;velocidade&#34;: &#34;velocidade&#34;,
-        &#34;nomeItinerario&#34;: &#34;sentido&#34;,
-    }
-    df[&#34;content&#34;] = [map_dict_keys(piece, map_keys) for piece in data]
+    df[&#34;content&#34;] = [
+        map_dict_keys(piece, constants.GPS_BRT_MAPPING_KEYS.value) for piece in data
+    ]
     df[key_column] = [piece[key_column] for piece in data]
+    df[&#34;timestamp_gps&#34;] = [piece[&#34;timestamp_gps&#34;] for piece in data]
+    df[&#34;timestamp_captura&#34;] = timestamp
+    log(f&#34;timestamp captura is:\n{df[&#39;timestamp_captura&#39;]}&#34;)
 
     # Remove timezone and force it to be config timezone
     log(f&#34;Before converting, timestamp_gps is: \n{df[&#39;timestamp_gps&#39;]}&#34;)
-
-    df[&#34;timestamp_gps&#34;] = df[&#34;content&#34;].apply(
-        lambda x: pd.to_datetime(
-            pendulum.from_timestamp(safe_cast(x[&#34;timestamp_gps&#34;], int, 0))
-            .replace(tzinfo=None)
-            .set(tz=&#34;UTC&#34;)
-            .isoformat()
-        )  # .tz_convert(timezone)
+    df[&#34;timestamp_gps&#34;] = (
+        pd.to_datetime(df[&#34;timestamp_gps&#34;], unit=&#34;s&#34;)
+        .dt.tz_localize(&#34;UTC&#34;)
+        .dt.tz_convert(timezone)
     )
-
     log(f&#34;After converting the timezone, timestamp_gps is: \n{df[&#39;timestamp_gps&#39;]}&#34;)
 
     # Filter data for 0 &lt;= time diff &lt;= 1min
     try:
-        datahora_col = &#34;timestamp_gps&#34;
-        df_treated = df
-        try:
-            df_treated[datahora_col] = df_treated[datahora_col].apply(
-                lambda x: x.tz_convert(timezone)
-            )
-        except TypeError:
-            df_treated[datahora_col] = df_treated[datahora_col].apply(
-                lambda x: x.tz_localize(timezone)
-            )
-        try:
-            df_treated[&#34;timestamp_captura&#34;] = df_treated[&#34;timestamp_captura&#34;].apply(
-                lambda x: x.tz_convert(timezone)
-            )
-        except TypeError:
-            df_treated[&#34;timestamp_captura&#34;] = df_treated[&#34;timestamp_captura&#34;].apply(
-                lambda x: x.tz_localize(timezone)
-            )
-        mask = (df_treated[&#34;timestamp_captura&#34;] - df_treated[datahora_col]).apply(
-            lambda x: timedelta(seconds=0) &lt;= x &lt;= timedelta(minutes=1)
-        )
-        df_treated = df_treated[mask]
         log(f&#34;Shape antes da filtragem: {df.shape}&#34;)
-        log(f&#34;Shape após a filtragem: {df_treated.shape}&#34;)
-        if df_treated.shape[0] == 0:
+
+        mask = (df[&#34;timestamp_captura&#34;] - df[&#34;timestamp_gps&#34;]) &lt;= timedelta(minutes=1)
+        df = df[mask]  # pylint: disable=C0103
+        log(f&#34;Shape após a filtragem: {df.shape}&#34;)
+        if df.shape[0] == 0:
             error = ValueError(&#34;After filtering, the dataframe is empty!&#34;)
             log_critical(f&#34;@here\nFailed to filter BRT data: \n{error}&#34;)
-        df = df_treated  # pylint: disable=C0103
     except Exception:  # pylint: disable = W0703
         err = traceback.format_exc()
         log_critical(f&#34;@here\nFailed to filter BRT data: \n{err}&#34;)
-    # log_critical(f&#34;@here\n Got SPPO data at {timestamp} sucessfully&#34;)
 
-    return {&#34;df&#34;: df, &#34;error&#34;: error}</code></pre>
+    return {&#34;data&#34;: df, &#34;error&#34;: error}</code></pre>
 </details>
 </dd>
 </dl>
@@ -332,6 +322,7 @@ setTimeout(() => input.focus(), 100);
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks.create_api_url_brt_gps" href="#pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks.create_api_url_brt_gps">create_api_url_brt_gps</a></code></li>
 <li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks.pre_treatment_br_rj_riodejaneiro_brt_gps" href="#pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks.pre_treatment_br_rj_riodejaneiro_brt_gps">pre_treatment_br_rj_riodejaneiro_brt_gps</a></code></li>
 </ul>
 </li>

@@ -77,15 +77,22 @@ class constants(Enum):  # pylint: disable=c0103
     GPS_SPPO_CAPTURE_DELAY_V2 = 60
     GPS_SPPO_RECAPTURE_DELAY_V2 = 6
     # GPS BRT #
-    GPS_BRT_API_BASE_URL = (
-        &#34;http://citgisbrj.tacom.srv.br:9977/gtfs-realtime-exporter/findAll/json&#34;
-    )
-    # GPS_BRT_API_SECRET_PATH = &#34;sppo_api&#34;
-
+    GPS_BRT_SECRET_PATH = &#34;brt_api&#34;
     GPS_BRT_DATASET_ID = &#34;br_rj_riodejaneiro_veiculos&#34;
     GPS_BRT_RAW_DATASET_ID = &#34;br_rj_riodejaneiro_brt_gps&#34;
     GPS_BRT_RAW_TABLE_ID = &#34;registros&#34;
     GPS_BRT_TREATED_TABLE_ID = &#34;gps_brt&#34;
+    GPS_BRT_MAPPING_KEYS = {
+        &#34;vei_nro_gestor&#34;: &#34;id_veiculo&#34;,
+        &#34;linha&#34;: &#34;servico&#34;,
+        &#34;latitude&#34;: &#34;latitude&#34;,
+        &#34;longitude&#34;: &#34;longitude&#34;,
+        &#34;comunicacao&#34;: &#34;timestamp_gps&#34;,
+        &#34;velocidade&#34;: &#34;velocidade&#34;,
+        &#34;nomeItinerario&#34;: &#34;sentido&#34;,
+        &#34;nomeLinha&#34;: &#34;vista&#34;,
+        &#34;inicio_viagem&#34;: &#34;timestamp_inicio_viagem&#34;,
+    }
 
     # SIGMOB (GTFS) #
     SIGMOB_GET_REQUESTS_TIMEOUT = 60
@@ -222,15 +229,22 @@ class constants(Enum):  # pylint: disable=c0103
     GPS_SPPO_CAPTURE_DELAY_V2 = 60
     GPS_SPPO_RECAPTURE_DELAY_V2 = 6
     # GPS BRT #
-    GPS_BRT_API_BASE_URL = (
-        &#34;http://citgisbrj.tacom.srv.br:9977/gtfs-realtime-exporter/findAll/json&#34;
-    )
-    # GPS_BRT_API_SECRET_PATH = &#34;sppo_api&#34;
-
+    GPS_BRT_SECRET_PATH = &#34;brt_api&#34;
     GPS_BRT_DATASET_ID = &#34;br_rj_riodejaneiro_veiculos&#34;
     GPS_BRT_RAW_DATASET_ID = &#34;br_rj_riodejaneiro_brt_gps&#34;
     GPS_BRT_RAW_TABLE_ID = &#34;registros&#34;
     GPS_BRT_TREATED_TABLE_ID = &#34;gps_brt&#34;
+    GPS_BRT_MAPPING_KEYS = {
+        &#34;vei_nro_gestor&#34;: &#34;id_veiculo&#34;,
+        &#34;linha&#34;: &#34;servico&#34;,
+        &#34;latitude&#34;: &#34;latitude&#34;,
+        &#34;longitude&#34;: &#34;longitude&#34;,
+        &#34;comunicacao&#34;: &#34;timestamp_gps&#34;,
+        &#34;velocidade&#34;: &#34;velocidade&#34;,
+        &#34;nomeItinerario&#34;: &#34;sentido&#34;,
+        &#34;nomeLinha&#34;: &#34;vista&#34;,
+        &#34;inicio_viagem&#34;: &#34;timestamp_inicio_viagem&#34;,
+    }
 
     # SIGMOB (GTFS) #
     SIGMOB_GET_REQUESTS_TIMEOUT = 60
@@ -319,11 +333,11 @@ class constants(Enum):  # pylint: disable=c0103
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="pipelines.rj_smtr.constants.constants.GPS_BRT_API_BASE_URL"><code class="name">var <span class="ident">GPS_BRT_API_BASE_URL</span></code></dt>
+<dt id="pipelines.rj_smtr.constants.constants.GPS_BRT_DATASET_ID"><code class="name">var <span class="ident">GPS_BRT_DATASET_ID</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="pipelines.rj_smtr.constants.constants.GPS_BRT_DATASET_ID"><code class="name">var <span class="ident">GPS_BRT_DATASET_ID</span></code></dt>
+<dt id="pipelines.rj_smtr.constants.constants.GPS_BRT_MAPPING_KEYS"><code class="name">var <span class="ident">GPS_BRT_MAPPING_KEYS</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -332,6 +346,10 @@ class constants(Enum):  # pylint: disable=c0103
 <div class="desc"></div>
 </dd>
 <dt id="pipelines.rj_smtr.constants.constants.GPS_BRT_RAW_TABLE_ID"><code class="name">var <span class="ident">GPS_BRT_RAW_TABLE_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.GPS_BRT_SECRET_PATH"><code class="name">var <span class="ident">GPS_BRT_SECRET_PATH</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -532,10 +550,11 @@ setTimeout(() => input.focus(), 100);
 <ul class="">
 <li><code><a title="pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH">CRITICAL_SECRET_PATH</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.FTPS_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.FTPS_SECRET_PATH">FTPS_SECRET_PATH</a></code></li>
-<li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_API_BASE_URL" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_API_BASE_URL">GPS_BRT_API_BASE_URL</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_DATASET_ID">GPS_BRT_DATASET_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_MAPPING_KEYS" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_MAPPING_KEYS">GPS_BRT_MAPPING_KEYS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_RAW_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_RAW_DATASET_ID">GPS_BRT_RAW_DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_RAW_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_RAW_TABLE_ID">GPS_BRT_RAW_TABLE_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_SECRET_PATH">GPS_BRT_SECRET_PATH</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_TREATED_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_TREATED_TABLE_ID">GPS_BRT_TREATED_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_SPPO_API_BASE_URL" href="#pipelines.rj_smtr.constants.constants.GPS_SPPO_API_BASE_URL">GPS_SPPO_API_BASE_URL</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_SPPO_API_BASE_URL_V2" href="#pipelines.rj_smtr.constants.constants.GPS_SPPO_API_BASE_URL_V2">GPS_SPPO_API_BASE_URL_V2</a></code></li>
