@@ -19,27 +19,30 @@ from pipelines.utils.tasks import get_now_time, rename_current_flow_run_now_time
 from pipelines.rj_smtr.constants import constants
 
 from pipelines.rj_smtr.schedules import (
-    # every_minute,
+    every_minute,
     every_hour,
 )
 from pipelines.rj_smtr.tasks import (
-    # create_current_date_hour_partition,
-    # create_local_partition_path,
+    create_date_hour_partition,
+    create_local_partition_path,
     fetch_dataset_sha,
+    get_current_timestamp,
     get_materialization_date_range,
     # get_local_dbt_client,
-    # get_raw,
-    # save_raw_local,
-    # save_treated_local,
+    get_raw,
+    parse_timestamp_to_string,
+    save_raw_local,
+    save_treated_local,
     set_last_run_timestamp,
-    # upload_logs_to_bq,
-    # bq_upload,
+    upload_logs_to_bq,
+    bq_upload,
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
-# from pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks import (
-#     pre_treatment_br_rj_riodejaneiro_brt_gps,
-# )
+from pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks import (
+    create_api_url_brt_gps,
+    pre_treatment_br_rj_riodejaneiro_brt_gps,
+)
 
 # Flows #
 
@@ -120,61 +123,61 @@ materialize_brt.run_config = KubernetesRun(
 materialize_brt.schedule = every_hour
 
 
-# with Flow(
-#     "SMTR: GPS BRT - Captura",
-#     code_owners=["caio", "fernanda"],
-# ) as captura_brt:
+with Flow(
+    "SMTR: GPS BRT - Captura",
+    code_owners=["caio", "fernanda"],
+) as captura_brt:
 
-#     # Rename flow run
-#     rename_flow_run = rename_current_flow_run_now_time(
-#         prefix="SMTR: GPS BRT - Captura - ", now_time=get_now_time()
-#     )
+    timestamp = get_current_timestamp()
 
-#     # Get default parameters #
-#     dataset_id = Parameter("dataset_id", default=constants.GPS_BRT_RAW_DATASET_ID.value)
-#     table_id = Parameter("table_id", default=constants.GPS_BRT_RAW_TABLE_ID.value)
-#     url = Parameter("url", default=constants.GPS_BRT_API_BASE_URL.value)
-#     # secret_path = Parameter("secret_path", default=constants.GPS_BRT_API_SECRET_PATH.value)
+    # Rename flow run
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix="SMTR: GPS BRT - Captura - ", now_time=timestamp
+    )
 
-#     # Run tasks #
-#     file_dict = create_current_date_hour_partition()
+    # SETUP LOCAL #
+    partitions = create_date_hour_partition(timestamp)
 
-#     filepath = create_local_partition_path(
-#         dataset_id=dataset_id,
-#         table_id=table_id,
-#         filename=file_dict["filename"],
-#         partitions=file_dict["partitions"],
-#     )
+    filename = parse_timestamp_to_string(timestamp)
 
-#     status_dict = get_raw(url=url)
+    filepath = create_local_partition_path(
+        dataset_id=constants.GPS_BRT_RAW_DATASET_ID.value,
+        table_id=constants.GPS_BRT_RAW_TABLE_ID.value,
+        filename=filename,
+        partitions=partitions,
+    )
+    # EXTRACT
+    url = create_api_url_brt_gps()
 
-#     raw_filepath = save_raw_local(data=status_dict["data"], file_path=filepath)
+    raw_status = get_raw(url=url)
 
-#     treated_status = pre_treatment_br_rj_riodejaneiro_brt_gps(status_dict=status_dict)
+    raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
+    # TREAT
+    treated_status = pre_treatment_br_rj_riodejaneiro_brt_gps(
+        status=raw_status, timestamp=timestamp
+    )
 
-#     upload_logs_to_bq(
-#         dataset_id=dataset_id,
-#         parent_table_id=table_id,
-#         timestamp=status_dict["timestamp"],
-#         error=status_dict["error"],
-#     )
+    treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
+    # LOAD
+    error = bq_upload(
+        dataset_id=constants.GPS_BRT_RAW_DATASET_ID.value,
+        table_id=constants.GPS_BRT_RAW_TABLE_ID.value,
+        filepath=treated_filepath,
+        raw_filepath=raw_filepath,
+        partitions=partitions,
+        status=treated_status,
+    )
+    upload_logs_to_bq(
+        dataset_id=constants.GPS_BRT_RAW_DATASET_ID.value,
+        parent_table_id=constants.GPS_BRT_RAW_TABLE_ID.value,
+        timestamp=timestamp,
+        error=error,
+    )
+    captura_brt.set_dependencies(task=partitions, upstream_tasks=[rename_flow_run])
 
-#     treated_filepath = save_treated_local(
-#         dataframe=treated_status["df"], file_path=filepath
-#     )
-
-#     bq_upload(
-#         dataset_id=dataset_id,
-#         table_id=table_id,
-#         filepath=treated_filepath,
-#         raw_filepath=raw_filepath,
-#         partitions=file_dict["partitions"],
-#     )
-#     captura_brt.set_dependencies(task=file_dict, upstream_tasks=[rename_flow_run])
-
-# captura_brt.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-# captura_brt.run_config = KubernetesRun(
-#     image=emd_constants.DOCKER_IMAGE.value,
-#     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
-# )
-# captura_brt.schedule = every_minute
+captura_brt.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+captura_brt.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+captura_brt.schedule = every_minute
