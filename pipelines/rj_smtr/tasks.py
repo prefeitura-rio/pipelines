@@ -593,7 +593,7 @@ def upload_logs_to_bq(  # pylint: disable=R0913
     create_or_append_table(
         dataset_id=dataset_id, table_id=table_id, path=filepath.parent.parent
     )
-    if error is not None and recapture is False:
+    if error is not None:
         raise Exception(f"Pipeline failed with error: {error}")
 
 

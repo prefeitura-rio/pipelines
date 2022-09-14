@@ -163,8 +163,6 @@ with Flow(
 
     partitions = create_date_hour_partition(timestamp)
 
-    # filename = parse_timestamp_to_string(timestamp)  # porquê do pattern escolhido?
-
     filepath = create_local_partition_path(
         dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
         table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
