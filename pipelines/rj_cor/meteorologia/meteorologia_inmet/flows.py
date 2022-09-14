@@ -36,7 +36,7 @@ with Flow(
 ) as cor_meteorologia_meteorologia_inmet:
 
     DATASET_ID = "meio_ambiente_clima"
-    TABLE_ID = "meteorologia_inmet"
+    TABLE_ID = "meteorologia_inmet_temp"
     DUMP_MODE = "append"
 
     # Materialization parameters
@@ -85,6 +85,7 @@ with Flow(
                 "table_id": TABLE_ID,
                 "mode": MATERIALIZATION_MODE,
                 "materialize_to_datario": MATERIALIZE_TO_DATARIO,
+                # "dbt_model_parameters": {"actual_run": data}
             },
             labels=current_flow_labels,
             run_name=f"Materialize {DATASET_ID}.{TABLE_ID}",
