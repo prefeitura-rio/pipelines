@@ -236,7 +236,7 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
     with case(errors, False):
         materialize_no_errors = create_flow_run(
             flow_name=materialize_sppo.name,
-            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            project_name="staging",
             labels=LABELS,
             run_name=materialize_sppo.name,
         )
@@ -249,7 +249,7 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
     with case(errors, True):
         recaptura_runs = create_flow_run.map(
             flow_name=unmapped(captura_sppo_v2.name),
-            project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+            project_name=unmapped("staging"),
             labels=unmapped(LABELS),
             run_name=unmapped(captura_sppo_v2.name),
             parameters=recapture_parameters,
@@ -262,7 +262,7 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
         )
         materialize = create_flow_run(
             flow_name=materialize_sppo.name,
-            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            project_name="staging",
             labels=LABELS,
             run_name=materialize_sppo.name,
         )
@@ -273,7 +273,7 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
 recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 recaptura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
     memory_limit="256Mi",
     memory_request="64Mi",
     cpu_limit="50m",
