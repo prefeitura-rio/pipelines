@@ -85,9 +85,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
     timezone = constants.TIMEZONE.value
 
     log(f"Data received to treat: \n{status['data'][:5]}")
-    if status["data"] == []:
-        log("Data is empty, skipping treatment...")
-        return {"data": pd.DataFrame(), "error": status["error"]}
+
     df = pd.DataFrame(status["data"])  # pylint: disable=c0103
     df["timestamp_captura"] = timestamp
     log(f"Before converting, datahora is: \n{df['datahora']}")
