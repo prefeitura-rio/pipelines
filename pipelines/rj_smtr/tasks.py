@@ -645,7 +645,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 table_id=table_id,
                 field_name=table_date_column_name,
                 kind="max",
-            ).strftime(timestr)
+            )
         else:
             last_run = get_table_min_max_value(
                 query_project_id=bq_project(),
@@ -653,28 +653,22 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 table_id=raw_table_id,
                 field_name=table_date_column_name,
                 kind="max",
-            ).strftime(timestr)
-    last_run = datetime.strptime(last_run, timestr)
+            )
+    else:
+        last_run = last_run.strptime(last_run, timestr)
+
+    # set start to last run hour (H)
+    start_ts = last_run.replace(minute=0, second=0, microsecond=0).strftime(timestr)
+
+    # set end to now - delay
     now_ts = pendulum.now(constants.TIMEZONE.value).replace(
         tzinfo=None, minute=0, second=0, microsecond=0
     )
-    # set start to last run hour (H)
-    start_ts = (last_run).replace(minute=0, second=0, microsecond=0).strftime(timestr)
-    # if some materialization run failed, range is from last_run
-    # up to the previous hour from now
-    if now_ts - last_run > timedelta(hours=delay_hours + 1):
-        end_ts = (
-            (now_ts - timedelta(hours=delay_hours))
-            .replace(minute=0, second=0, microsecond=0)
-            .strftime(timestr)
-        )
-    else:
-        # set end to H+60
-        end_ts = (
-            (last_run + timedelta(minutes=60))
-            .replace(minute=0, second=0, microsecond=0)
-            .strftime(timestr)
-        )
+    end_ts = (
+        (now_ts - timedelta(hours=delay_hours))
+        .replace(minute=0, second=0, microsecond=0)
+        .strftime(timestr)
+    )
 
     date_range = {"date_range_start": start_ts, "date_range_end": end_ts}
     return date_range
