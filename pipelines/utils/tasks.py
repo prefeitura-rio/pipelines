@@ -71,6 +71,15 @@ def get_current_flow_mode(labels: List[str]) -> str:
 
 
 @task
+def get_bool(value: Any):
+    """get boolean evaluation for the value
+    Returns:
+        bool: evaluation for the value
+    """
+    return bool(value)
+
+
+@task
 def greater_than(value, compare_to) -> bool:
     """
     Returns True if value is greater than compare_to.

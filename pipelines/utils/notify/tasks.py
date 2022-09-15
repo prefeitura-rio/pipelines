@@ -189,12 +189,3 @@ def post_to_discord_from_secret(message: str, webhook_secret_path: str):
     """
     webhook_url = get_vault_secret(webhook_secret_path)["url"]
     return send_discord_message(message=message, webhook_url=webhook_url)
-
-
-@task
-def get_bool(value: Any):
-    """get boolean evaluation for the value
-    Returns:
-        bool: evaluation for the value
-    """
-    return bool(value)
