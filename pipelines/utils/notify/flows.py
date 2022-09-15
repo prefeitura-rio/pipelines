@@ -67,7 +67,7 @@ from pipelines.utils.notify.tasks import (
     post_to_discord_from_secret,
     query_flow_runs_by_state,
 )
-from pipelines.utils.notify.tasks import get_bool
+from pipelines.utils.tasks import get_bool
 
 from pipelines.utils.notify.schedules import smtr_every_fifteen_minutes
 from pipelines.utils.decorators import Flow
