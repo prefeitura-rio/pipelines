@@ -44,6 +44,7 @@ class CustomFlow(Flow):
         terminal_state_handler: Optional[
             Callable[["Flow", State, Set[State]], Optional[State]]
         ] = None,
+        secret_path: str = constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value,
         code_owners: Optional[List[str]] = None,
     ):
         super().__init__(
@@ -59,7 +60,7 @@ class CustomFlow(Flow):
             state_handlers=state_handlers,
             on_failure=partial(
                 notify_discord_on_failure,
-                secret_path=constants.EMD_DISCORD_WEBHOOK_SECRET_PATH.value,
+                secret_path=secret_path,
                 code_owners=code_owners,
             ),
             validate=validate,
