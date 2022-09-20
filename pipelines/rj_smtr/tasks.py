@@ -519,6 +519,7 @@ def upload_logs_to_bq(
     parent_table_id: str,
     timestamp: str,
     error: str = None,
+    previous_error: str = None,
     recapture: bool = False,
 ):
     """
@@ -542,26 +543,18 @@ def upload_logs_to_bq(
     )
     filepath.parent.mkdir(exist_ok=True, parents=True)
     # Create dataframe to be uploaded
-    if recapture is True:
+    if not error and recapture is True:
         # if the recapture is succeeded, update the column erro
-        if error is None:
-            dataframe = pd.DataFrame(
-                {
-                    "timestamp_captura": [timestamp],
-                    "sucesso": [True],
-                    "erro": ["[recapturado]"],
-                }
-            )
-        # if any iteration of the recapture fails, upload logs with error
-        else:
-            dataframe = pd.DataFrame(
-                {
-                    "timestamp_captura": [timestamp],
-                    "sucesso": [error is None],
-                    "erro": [f"[recapturado] {error}"],
-                }
-            )
+        dataframe = pd.DataFrame(
+            {
+                "timestamp_captura": [timestamp],
+                "sucesso": [True],
+                "erro": [f"[recapturado]{previous_error}"],
+            }
+        )
+        log(f"Recapturing {timestamp} with previous error:\n{error}")
     else:
+        # not recapturing or error during flow execution
         dataframe = pd.DataFrame(
             {
                 "timestamp_captura": [timestamp],
