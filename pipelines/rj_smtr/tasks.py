@@ -266,7 +266,7 @@ def save_treated_local(file_path: str, status: dict, mode: str = "staging") -> s
 # Extract data
 #
 ###############
-@task(nout=2)
+@task(nout=3)
 def query_logs(
     dataset_id: str, table_id: str, datetime_filter=None, max_recaptures: int = 60
 ):
@@ -322,7 +322,8 @@ def query_logs(
         case
             when logs.timestamp_captura is not null then logs.timestamp_captura
             else t.timestamp_array
-        end as timestamp_captura
+        end as timestamp_captura,
+        logs.erro
     from
         t
     left join
@@ -358,8 +359,7 @@ def query_logs(
             """
             log_critical(message)
             results = results[:max_recaptures]
-        results.rename(columns={"timestamp_captura": "timestamp", "erro": "error"})
-        return True, results.to_dict(orient="records")
+        return True, results["timestamp_captura"].to_list(), results["erro"].to_list()
     return False, []
 
 
@@ -461,17 +461,12 @@ def bq_upload(
             )
 
         # Creates and publish table if it does not exist, append to it otherwise
-        if partitions:
-            # If table is partitioned, get parent directory wherein partitions are stored
-            log(
-                f"""Uploading treated partitions to bucket {st_obj.bucket_name}
-            at {st_obj.bucket_name}/{dataset_id}/{table_id}"""
-            )
-            tb_dir = filepath.split(partitions)[0]
-            create_or_append_table(dataset_id, table_id, tb_dir)
-            # os.system(f'rm -rf {tb_dir}')
-        else:
-            create_or_append_table(dataset_id, table_id, filepath)
+        create_or_append_table(
+            dataset_id=dataset_id,
+            table_id=table_id,
+            path=filepath,
+            partitions=partitions,
+        )
     except Exception:
         error = traceback.format_exc()
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
@@ -538,8 +533,9 @@ def upload_logs_to_bq(
     table_id = parent_table_id + "_logs"
     # Create partition directory
     filename = f"{table_id}_{timestamp.isoformat()}"
+    partition = f"data={timestamp.date()}"
     filepath = Path(
-        f"""data/staging/{dataset_id}/{table_id}/data={timestamp.date()}/{filename}.csv"""
+        f"""data/staging/{dataset_id}/{table_id}/{partition}/{filename}.csv"""
     )
     filepath.parent.mkdir(exist_ok=True, parents=True)
     # Create dataframe to be uploaded
@@ -566,7 +562,7 @@ def upload_logs_to_bq(
     dataframe.to_csv(filepath, index=False)
     # Upload to Storage
     create_or_append_table(
-        dataset_id=dataset_id, table_id=table_id, path=filepath.parent.parent
+        dataset_id=dataset_id, table_id=table_id, path=filepath, partitions=partition
     )
     if error is not None:
         raise Exception(f"Pipeline failed with error: {error}")
