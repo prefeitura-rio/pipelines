@@ -90,6 +90,7 @@ with Flow(
         raw_table_id=raw_table_id,
         table_date_column_name="data",
         mode=MODE,
+        delay_hours=constants.GPS_SPPO_MATERIALIZE_DELAY_HOURS.value,
     )
     dataset_sha = fetch_dataset_sha(
         dataset_id=dataset_id,
@@ -160,7 +161,7 @@ with Flow(
         partitions=partitions,
     )
 
-    url = create_api_url_onibus_gps(version=version)
+    url = create_api_url_onibus_gps(version=version, timestamp=timestamp)
 
     # EXTRACT #
     raw_status = get_raw(url)
@@ -205,14 +206,14 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
     datetime_filter = Parameter("datetime_filter", default=None)
     # SETUP #
     LABELS = get_current_flow_labels()
-    errors, timestamps = query_logs(
+    errors, recapture_params = query_logs(
         dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
         table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
         datetime_filter=datetime_filter,
     )
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="GPS SPPO Recapturas: ", now_time=get_now_time(), wait=timestamps
+        prefix="GPS SPPO Recapturas: ", now_time=get_now_time(), wait=recapture_params
     )
 
     with case(errors, False):
@@ -230,8 +231,8 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
         )
     with case(errors, True):
         # SETUP #
-        partitions = create_date_hour_partition.map(timestamps)
-        filename = parse_timestamp_to_string.map(timestamps)
+        partitions = create_date_hour_partition.map(recapture_params["timestamp"])
+        filename = parse_timestamp_to_string.map(recapture_params["timestamp"])
 
         filepath = create_local_partition_path.map(
             dataset_id=unmapped(constants.GPS_SPPO_RAW_DATASET_ID.value),
@@ -241,7 +242,7 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
         )
 
         url = create_api_url_onibus_gps.map(
-            version=unmapped(version), timestamp=timestamps
+            version=unmapped(version), timestamp=recapture_params["timestamp"]
         )
 
         # EXTRACT #
@@ -251,7 +252,9 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
 
         # # CLEAN #
         trated_status = pre_treatment_br_rj_riodejaneiro_onibus_gps.map(
-            status=raw_status, timestamp=timestamps, version=unmapped(version)
+            status=raw_status,
+            timestamp=recapture_params["timestamp"],
+            version=unmapped(version),
         )
 
         treated_filepath = save_treated_local.map(
@@ -272,7 +275,8 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
             dataset_id=unmapped(constants.GPS_SPPO_RAW_DATASET_ID.value),
             parent_table_id=unmapped(constants.GPS_SPPO_RAW_TABLE_ID.value),
             error=error,
-            timestamp=timestamps,
+            previous_eror=recapture_params["error"],
+            timestamp=recapture_params["timestamp"],
             recapture=unmapped(True),
         )
         materialize = create_flow_run(

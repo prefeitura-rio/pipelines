@@ -268,9 +268,7 @@ def save_treated_local(file_path: str, status: dict, mode: str = "staging") -> s
 ###############
 @task(nout=2)
 def query_logs(
-    dataset_id: str,
-    table_id: str,
-    datetime_filter=None,
+    dataset_id: str, table_id: str, datetime_filter=None, max_recaptures: int = 60
 ):
     """
     Queries capture logs to check for errors
@@ -337,30 +335,31 @@ def query_logs(
         timestamp_captura
     """
     log(f"Run query to check logs:\n{query}")
-    results = bd.read_sql(query=query, billing_project_id=bq_project())[
-        "timestamp_captura"
-    ]
+    results = bd.read_sql(query=query, billing_project_id=bq_project())
     if len(results) > 0:
-        results = (
-            pd.to_datetime(results).dt.tz_localize(constants.TIMEZONE.value).to_list()
+        results["timestamp_captura"] = (
+            pd.to_datetime(results["timestamp_captura"])
+            .dt.tz_localize(constants.TIMEZONE.value)
+            .to_list()
         )
         log(f"Recapture data for the following {len(results)} timestamps:\n{results}")
-        if len(results) > 40:
+        if len(results) > max_recaptures:
             message = f"""
             [SPPO - Recaptures]
             Encontradas {len(results)} timestamps para serem recapturadas.
             Essa run processará as seguintes:
             #####
-            {results[:40]}
+            {results[:max_recaptures]}
             #####
             Sobraram as seguintes para serem recapturadas na próxima run:
             #####
-            {results[40:]}
+            {results[max_recaptures:]}
             #####
             """
             log_critical(message)
-            results = results[:40]
-        return True, results
+            results = results[:max_recaptures]
+        results.rename(columns={"timestamp_captura": "timestamp", "erro": "error"})
+        return True, results.to_dict(orient="records")
     return False, []
 
 
@@ -592,11 +591,11 @@ def get_materialization_date_range(  # pylint: disable=R0913
     raw_table_id: str,
     table_date_column_name: str = None,
     mode: str = "prod",
+    delay_hours: int = 0,
 ):
     """
     Task for generating dict with variables to be passed to the
     --vars argument on DBT.
-
     Args:
         dataset_id (str): dataset_id on BigQuery
         table_id (str): model filename on the queries repo.
@@ -608,7 +607,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
         on this field.
         rebuild (Optional, bool): if true, queries the minimum date value on the
         table and return a date range from that value to the datetime.now() time
-
+        delay(Optional, int): hours delayed from now time for materialization range
     Returns:
         dict: containing date_range_start and date_range_end
     """
@@ -626,7 +625,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 table_id=table_id,
                 field_name=table_date_column_name,
                 kind="max",
-            ).strftime(timestr)
+            )
         else:
             last_run = get_table_min_max_value(
                 query_project_id=bq_project(),
@@ -634,20 +633,22 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 table_id=raw_table_id,
                 field_name=table_date_column_name,
                 kind="max",
-            ).strftime(timestr)
-    # set start to last run hour (H)
-    start_ts = (
-        (datetime.strptime(last_run, timestr))
-        .replace(minute=0, second=0, microsecond=0)
-        .strftime(timestr)
-    )
-    # set end to H+60
-    end_ts = (
-        (datetime.strptime(last_run, timestr) + timedelta(minutes=60))
-        .replace(minute=0, second=0, microsecond=0)
-        .strftime(timestr)
-    )
+            )
+    else:
+        last_run = datetime.strptime(last_run, timestr)
 
+    # set start to last run hour (H)
+    start_ts = last_run.replace(minute=0, second=0, microsecond=0).strftime(timestr)
+
+    # set end to now - delay
+    now_ts = pendulum.now(constants.TIMEZONE.value).replace(
+        tzinfo=None, minute=0, second=0, microsecond=0
+    )
+    end_ts = (
+        (now_ts - timedelta(hours=delay_hours))
+        .replace(minute=0, second=0, microsecond=0)
+        .strftime(timestr)
+    )
     date_range = {"date_range_start": start_ts, "date_range_end": end_ts}
     return date_range
 
