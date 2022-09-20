@@ -487,6 +487,8 @@ if __name__ == "__main__":
         dependent_files.update(graph.successors(declaration))
     if "pipelines/flows.py" in dependent_files:
         dependent_files.remove("pipelines/flows.py")
+    for file_ in changed_files:
+        dependent_files.add(file_)
     print("These files depend on the exported declarations:")
     for file_ in dependent_files:
         print(f"\t- {file_}")
