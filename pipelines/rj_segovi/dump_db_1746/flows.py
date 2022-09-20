@@ -10,7 +10,7 @@ from prefect.storage import GCS
 
 from pipelines.constants import constants
 
-# from pipelines.rj_segovi.dump_db_1746.schedules import _1746_daily_update_schedule
+from pipelines.rj_segovi.dump_db_1746.schedules import _1746_daily_update_schedule
 from pipelines.utils.dump_db.flows import dump_sql_flow
 from pipelines.utils.utils import set_default_parameters
 
@@ -38,4 +38,4 @@ dump_1746_flow = set_default_parameters(
     dump_1746_flow, default_parameters=_1746_default_parameters
 )
 
-# dump_1746_flow.schedule = _1746_daily_update_schedule
+dump_1746_flow.schedule = _1746_daily_update_schedule
