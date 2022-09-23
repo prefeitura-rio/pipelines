@@ -65,7 +65,9 @@ def log_critical(message: str, secret_path: str = constants.CRITICAL_SECRET_PATH
     return send_discord_message(message=message, webhook_url=url)
 
 
-def create_or_append_table(dataset_id, table_id, path):
+def create_or_append_table(
+    dataset_id: str, table_id: str, path: str, partitions: str = None
+):
     &#34;&#34;&#34;Conditionally create table or append data to its relative GCS folder.
 
     Args:
@@ -76,8 +78,9 @@ def create_or_append_table(dataset_id, table_id, path):
     tb_obj = Table(table_id=table_id, dataset_id=dataset_id)
     if not tb_obj.table_exists(&#34;staging&#34;):
         log(&#34;Table does not exist in STAGING, creating table...&#34;)
+        dirpath = path.split(partitions)[0]
         tb_obj.create(
-            path=path,
+            path=dirpath,
             if_table_exists=&#34;pass&#34;,
             if_storage_data_exists=&#34;replace&#34;,
             if_table_config_exists=&#34;replace&#34;,
@@ -85,7 +88,9 @@ def create_or_append_table(dataset_id, table_id, path):
         log(&#34;Table created in STAGING&#34;)
     else:
         log(&#34;Table already exists in STAGING, appending to it...&#34;)
-        tb_obj.append(filepath=path, if_exists=&#34;replace&#34;, timeout=600)
+        tb_obj.append(
+            filepath=path, if_exists=&#34;replace&#34;, timeout=600, partitions=partitions
+        )
         log(&#34;Appended to table on STAGING successfully.&#34;)
 
 
@@ -297,7 +302,7 @@ Defaults to 'bigquery_prod'.</p>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.utils.create_or_append_table"><code class="name flex">
-<span>def <span class="ident">create_or_append_table</span></span>(<span>dataset_id, table_id, path)</span>
+<span>def <span class="ident">create_or_append_table</span></span>(<span>dataset_id: str, table_id: str, path: str, partitions: str = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Conditionally create table or append data to its relative GCS folder.</p>
@@ -314,7 +319,9 @@ Defaults to 'bigquery_prod'.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def create_or_append_table(dataset_id, table_id, path):
+<pre><code class="python">def create_or_append_table(
+    dataset_id: str, table_id: str, path: str, partitions: str = None
+):
     &#34;&#34;&#34;Conditionally create table or append data to its relative GCS folder.
 
     Args:
@@ -325,8 +332,9 @@ Defaults to 'bigquery_prod'.</p>
     tb_obj = Table(table_id=table_id, dataset_id=dataset_id)
     if not tb_obj.table_exists(&#34;staging&#34;):
         log(&#34;Table does not exist in STAGING, creating table...&#34;)
+        dirpath = path.split(partitions)[0]
         tb_obj.create(
-            path=path,
+            path=dirpath,
             if_table_exists=&#34;pass&#34;,
             if_storage_data_exists=&#34;replace&#34;,
             if_table_config_exists=&#34;replace&#34;,
@@ -334,7 +342,9 @@ Defaults to 'bigquery_prod'.</p>
         log(&#34;Table created in STAGING&#34;)
     else:
         log(&#34;Table already exists in STAGING, appending to it...&#34;)
-        tb_obj.append(filepath=path, if_exists=&#34;replace&#34;, timeout=600)
+        tb_obj.append(
+            filepath=path, if_exists=&#34;replace&#34;, timeout=600, partitions=partitions
+        )
         log(&#34;Appended to table on STAGING successfully.&#34;)</code></pre>
 </details>
 </dd>

@@ -76,6 +76,7 @@ class constants(Enum):  # pylint: disable=c0103
     GPS_SPPO_CAPTURE_DELAY_V1 = 1
     GPS_SPPO_CAPTURE_DELAY_V2 = 60
     GPS_SPPO_RECAPTURE_DELAY_V2 = 6
+    GPS_SPPO_MATERIALIZE_DELAY_HOURS = 1
     # GPS BRT #
     GPS_BRT_SECRET_PATH = &#34;brt_api&#34;
     GPS_BRT_DATASET_ID = &#34;br_rj_riodejaneiro_veiculos&#34;
@@ -93,6 +94,7 @@ class constants(Enum):  # pylint: disable=c0103
         &#34;nomeLinha&#34;: &#34;vista&#34;,
         &#34;inicio_viagem&#34;: &#34;timestamp_inicio_viagem&#34;,
     }
+    GPS_BRT_MATERIALIZE_DELAY_HOURS = 0
 
     # SIGMOB (GTFS) #
     SIGMOB_GET_REQUESTS_TIMEOUT = 60
@@ -228,6 +230,7 @@ class constants(Enum):  # pylint: disable=c0103
     GPS_SPPO_CAPTURE_DELAY_V1 = 1
     GPS_SPPO_CAPTURE_DELAY_V2 = 60
     GPS_SPPO_RECAPTURE_DELAY_V2 = 6
+    GPS_SPPO_MATERIALIZE_DELAY_HOURS = 1
     # GPS BRT #
     GPS_BRT_SECRET_PATH = &#34;brt_api&#34;
     GPS_BRT_DATASET_ID = &#34;br_rj_riodejaneiro_veiculos&#34;
@@ -245,6 +248,7 @@ class constants(Enum):  # pylint: disable=c0103
         &#34;nomeLinha&#34;: &#34;vista&#34;,
         &#34;inicio_viagem&#34;: &#34;timestamp_inicio_viagem&#34;,
     }
+    GPS_BRT_MATERIALIZE_DELAY_HOURS = 0
 
     # SIGMOB (GTFS) #
     SIGMOB_GET_REQUESTS_TIMEOUT = 60
@@ -341,6 +345,10 @@ class constants(Enum):  # pylint: disable=c0103
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="pipelines.rj_smtr.constants.constants.GPS_BRT_MATERIALIZE_DELAY_HOURS"><code class="name">var <span class="ident">GPS_BRT_MATERIALIZE_DELAY_HOURS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="pipelines.rj_smtr.constants.constants.GPS_BRT_RAW_DATASET_ID"><code class="name">var <span class="ident">GPS_BRT_RAW_DATASET_ID</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -382,6 +390,10 @@ class constants(Enum):  # pylint: disable=c0103
 <div class="desc"></div>
 </dd>
 <dt id="pipelines.rj_smtr.constants.constants.GPS_SPPO_DATASET_ID"><code class="name">var <span class="ident">GPS_SPPO_DATASET_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.GPS_SPPO_MATERIALIZE_DELAY_HOURS"><code class="name">var <span class="ident">GPS_SPPO_MATERIALIZE_DELAY_HOURS</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -552,6 +564,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.constants.constants.FTPS_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.FTPS_SECRET_PATH">FTPS_SECRET_PATH</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_DATASET_ID">GPS_BRT_DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_MAPPING_KEYS" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_MAPPING_KEYS">GPS_BRT_MAPPING_KEYS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_MATERIALIZE_DELAY_HOURS" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_MATERIALIZE_DELAY_HOURS">GPS_BRT_MATERIALIZE_DELAY_HOURS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_RAW_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_RAW_DATASET_ID">GPS_BRT_RAW_DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_RAW_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_RAW_TABLE_ID">GPS_BRT_RAW_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_SECRET_PATH">GPS_BRT_SECRET_PATH</a></code></li>
@@ -563,6 +576,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_SPPO_CAPTURE_DELAY_V1" href="#pipelines.rj_smtr.constants.constants.GPS_SPPO_CAPTURE_DELAY_V1">GPS_SPPO_CAPTURE_DELAY_V1</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_SPPO_CAPTURE_DELAY_V2" href="#pipelines.rj_smtr.constants.constants.GPS_SPPO_CAPTURE_DELAY_V2">GPS_SPPO_CAPTURE_DELAY_V2</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_SPPO_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.GPS_SPPO_DATASET_ID">GPS_SPPO_DATASET_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GPS_SPPO_MATERIALIZE_DELAY_HOURS" href="#pipelines.rj_smtr.constants.constants.GPS_SPPO_MATERIALIZE_DELAY_HOURS">GPS_SPPO_MATERIALIZE_DELAY_HOURS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_SPPO_RAW_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.GPS_SPPO_RAW_DATASET_ID">GPS_SPPO_RAW_DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_SPPO_RAW_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.GPS_SPPO_RAW_TABLE_ID">GPS_SPPO_RAW_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_SPPO_RECAPTURE_DELAY_V2" href="#pipelines.rj_smtr.constants.constants.GPS_SPPO_RECAPTURE_DELAY_V2">GPS_SPPO_RECAPTURE_DELAY_V2</a></code></li>
