@@ -90,6 +90,7 @@ with Flow(
         raw_table_id=raw_table_id,
         table_date_column_name="data",
         mode=MODE,
+        delay_hours=constants.GPS_SPPO_MATERIALIZE_DELAY_HOURS.value,
     )
     dataset_sha = fetch_dataset_sha(
         dataset_id=dataset_id,
@@ -160,7 +161,7 @@ with Flow(
         partitions=partitions,
     )
 
-    url = create_api_url_onibus_gps(version=version)
+    url = create_api_url_onibus_gps(version=version, timestamp=timestamp)
 
     # EXTRACT #
     raw_status = get_raw(url)
@@ -203,9 +204,11 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
 
     version = Parameter("version", default=2)
     datetime_filter = Parameter("datetime_filter", default=None)
+    materialize = Parameter("materialize", default=True)
     # SETUP #
     LABELS = get_current_flow_labels()
-    errors, timestamps = query_logs(
+
+    errors, timestamps, previous_errors = query_logs(
         dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
         table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
         datetime_filter=datetime_filter,
@@ -214,20 +217,20 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
     rename_flow_run = rename_current_flow_run_now_time(
         prefix="GPS SPPO Recapturas: ", now_time=get_now_time(), wait=timestamps
     )
-
     with case(errors, False):
-        materialize_no_errors = create_flow_run(
-            flow_name=materialize_sppo.name,
-            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            labels=LABELS,
-            run_name=materialize_sppo.name,
-        )
-        wait_materialize = wait_for_flow_run(
-            materialize_no_errors,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
-        )
+        with case(materialize, True):
+            materialize_no_error = create_flow_run(
+                flow_name=materialize_sppo.name,
+                project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+                labels=LABELS,
+                run_name=materialize_sppo.name,
+            )
+            wait_materialize_no_error = wait_for_flow_run(
+                materialize_no_error,
+                stream_states=True,
+                stream_logs=True,
+                raise_final_state=True,
+            )
     with case(errors, True):
         # SETUP #
         partitions = create_date_hour_partition.map(timestamps)
@@ -251,7 +254,9 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
 
         # # CLEAN #
         trated_status = pre_treatment_br_rj_riodejaneiro_onibus_gps.map(
-            status=raw_status, timestamp=timestamps, version=unmapped(version)
+            status=raw_status,
+            timestamp=timestamps,
+            version=unmapped(version),
         )
 
         treated_filepath = save_treated_local.map(
@@ -272,22 +277,27 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
             dataset_id=unmapped(constants.GPS_SPPO_RAW_DATASET_ID.value),
             parent_table_id=unmapped(constants.GPS_SPPO_RAW_TABLE_ID.value),
             error=error,
+            previous_error=previous_errors,
             timestamp=timestamps,
             recapture=unmapped(True),
         )
-        materialize = create_flow_run(
-            flow_name=materialize_sppo.name,
-            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            labels=LABELS,
-            run_name=materialize_sppo.name,
-        )
-        wait_materialize = wait_for_flow_run(
-            materialize,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
-        )
-    recaptura.set_dependencies(task=materialize, upstream_tasks=[UPLOAD_LOGS])
+        with case(materialize, True):
+            run_materialize = create_flow_run(
+                flow_name=materialize_sppo.name,
+                project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+                labels=LABELS,
+                run_name=materialize_sppo.name,
+            )
+            wait_materialize = wait_for_flow_run(
+                run_materialize,
+                stream_states=True,
+                stream_logs=True,
+                raise_final_state=True,
+            )
+    recaptura.set_dependencies(
+        task=run_materialize,
+        upstream_tasks=[UPLOAD_LOGS],
+    )
 
 recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 recaptura.run_config = KubernetesRun(
