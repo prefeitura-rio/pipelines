@@ -12,7 +12,12 @@ from prefect.storage import GCS
 from pipelines.constants import constants as emd_constants
 from pipelines.utils.decorators import Flow
 from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
-from pipelines.utils.tasks import get_now_time, rename_current_flow_run_now_time
+from pipelines.utils.tasks import (
+    get_now_time,
+    rename_current_flow_run_now_time,
+    get_current_flow_mode,
+    get_current_flow_labels,
+)
 
 # SMTR Imports #
 
@@ -67,8 +72,11 @@ with Flow(
     table_id = Parameter("table_id", default=constants.GPS_BRT_TREATED_TABLE_ID.value)
     rebuild = Parameter("rebuild", False)
 
+    LABELS = get_current_flow_labels()
+    MODE = get_current_flow_mode(LABELS)
+
     # Set dbt client #
-    dbt_client = get_k8s_dbt_client(mode="prod", wait=rename_flow_run)
+    dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
     # Use the command below to get the dbt client in dev mode:
     # dbt_client = get_local_dbt_client(host="localhost", port=3001)
 
@@ -79,6 +87,8 @@ with Flow(
         raw_dataset_id=raw_dataset_id,
         raw_table_id=raw_table_id,
         table_date_column_name="data",
+        mode=MODE,
+        delay_hours=constants.GPS_BRT_MATERIALIZE_DELAY_HOURS.value,
     )
     dataset_sha = fetch_dataset_sha(
         dataset_id=dataset_id,
@@ -99,6 +109,7 @@ with Flow(
             table_id=table_id,
             timestamp=date_range["date_range_end"],
             wait=RUN,
+            mode=MODE,
         )
     with case(rebuild, False):
         RUN = run_dbt_model(
@@ -113,6 +124,7 @@ with Flow(
             table_id=table_id,
             timestamp=date_range["date_range_end"],
             wait=RUN,
+            mode=MODE,
         )
 
 materialize_brt.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
