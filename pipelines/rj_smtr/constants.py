@@ -47,6 +47,7 @@ class constants(Enum):  # pylint: disable=c0103
     GPS_SPPO_CAPTURE_DELAY_V1 = 1
     GPS_SPPO_CAPTURE_DELAY_V2 = 60
     GPS_SPPO_RECAPTURE_DELAY_V2 = 6
+    GPS_SPPO_MATERIALIZE_DELAY_HOURS = 1
     # GPS BRT #
     GPS_BRT_SECRET_PATH = "brt_api"
     GPS_BRT_DATASET_ID = "br_rj_riodejaneiro_veiculos"
@@ -64,6 +65,7 @@ class constants(Enum):  # pylint: disable=c0103
         "nomeLinha": "vista",
         "inicio_viagem": "timestamp_inicio_viagem",
     }
+    GPS_BRT_MATERIALIZE_DELAY_HOURS = 0
 
     # SIGMOB (GTFS) #
     SIGMOB_GET_REQUESTS_TIMEOUT = 60

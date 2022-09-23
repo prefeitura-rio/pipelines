@@ -266,11 +266,9 @@ def save_treated_local(file_path: str, status: dict, mode: str = "staging") -> s
 # Extract data
 #
 ###############
-@task(nout=2)
+@task(nout=3)
 def query_logs(
-    dataset_id: str,
-    table_id: str,
-    datetime_filter=None,
+    dataset_id: str, table_id: str, datetime_filter=None, max_recaptures: int = 60
 ):
     """
     Queries capture logs to check for errors
@@ -324,7 +322,8 @@ def query_logs(
         case
             when logs.timestamp_captura is not null then logs.timestamp_captura
             else t.timestamp_array
-        end as timestamp_captura
+        end as timestamp_captura,
+        logs.erro
     from
         t
     left join
@@ -337,30 +336,30 @@ def query_logs(
         timestamp_captura
     """
     log(f"Run query to check logs:\n{query}")
-    results = bd.read_sql(query=query, billing_project_id=bq_project())[
-        "timestamp_captura"
-    ]
+    results = bd.read_sql(query=query, billing_project_id=bq_project())
     if len(results) > 0:
-        results = (
-            pd.to_datetime(results).dt.tz_localize(constants.TIMEZONE.value).to_list()
+        results["timestamp_captura"] = (
+            pd.to_datetime(results["timestamp_captura"])
+            .dt.tz_localize(constants.TIMEZONE.value)
+            .to_list()
         )
         log(f"Recapture data for the following {len(results)} timestamps:\n{results}")
-        if len(results) > 40:
+        if len(results) > max_recaptures:
             message = f"""
             [SPPO - Recaptures]
             Encontradas {len(results)} timestamps para serem recapturadas.
             Essa run processará as seguintes:
             #####
-            {results[:40]}
+            {results[:max_recaptures]}
             #####
             Sobraram as seguintes para serem recapturadas na próxima run:
             #####
-            {results[40:]}
+            {results[max_recaptures:]}
             #####
             """
             log_critical(message)
-            results = results[:40]
-        return True, results
+            results = results[:max_recaptures]
+        return True, results["timestamp_captura"].to_list(), results["erro"].to_list()
     return False, []
 
 
@@ -463,17 +462,12 @@ def bq_upload(
             )
 
         # Creates and publish table if it does not exist, append to it otherwise
-        if partitions:
-            # If table is partitioned, get parent directory wherein partitions are stored
-            log(
-                f"""Uploading treated partitions to bucket {st_obj.bucket_name}
-            at {st_obj.bucket_name}/{dataset_id}/{table_id}"""
-            )
-            tb_dir = filepath.split(partitions)[0]
-            create_or_append_table(dataset_id, table_id, tb_dir)
-            # os.system(f'rm -rf {tb_dir}')
-        else:
-            create_or_append_table(dataset_id, table_id, filepath)
+        create_or_append_table(
+            dataset_id=dataset_id,
+            table_id=table_id,
+            path=filepath,
+            partitions=partitions,
+        )
     except Exception:
         error = traceback.format_exc()
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
@@ -521,6 +515,7 @@ def upload_logs_to_bq(
     parent_table_id: str,
     timestamp: str,
     error: str = None,
+    previous_error: str = None,
     recapture: bool = False,
 ):
     """
@@ -539,31 +534,24 @@ def upload_logs_to_bq(
     table_id = parent_table_id + "_logs"
     # Create partition directory
     filename = f"{table_id}_{timestamp.isoformat()}"
+    partition = f"data={timestamp.date()}"
     filepath = Path(
-        f"""data/staging/{dataset_id}/{table_id}/data={timestamp.date()}/{filename}.csv"""
+        f"""data/staging/{dataset_id}/{table_id}/{partition}/{filename}.csv"""
     )
     filepath.parent.mkdir(exist_ok=True, parents=True)
     # Create dataframe to be uploaded
-    if recapture is True:
+    if not error and recapture is True:
         # if the recapture is succeeded, update the column erro
-        if error is None:
-            dataframe = pd.DataFrame(
-                {
-                    "timestamp_captura": [timestamp],
-                    "sucesso": [True],
-                    "erro": ["[recapturado]"],
-                }
-            )
-        # if any iteration of the recapture fails, upload logs with error
-        else:
-            dataframe = pd.DataFrame(
-                {
-                    "timestamp_captura": [timestamp],
-                    "sucesso": [error is None],
-                    "erro": [f"[recapturado] {error}"],
-                }
-            )
+        dataframe = pd.DataFrame(
+            {
+                "timestamp_captura": [timestamp],
+                "sucesso": [True],
+                "erro": [f"[recapturado]{previous_error}"],
+            }
+        )
+        log(f"Recapturing {timestamp} with previous error:\n{error}")
     else:
+        # not recapturing or error during flow execution
         dataframe = pd.DataFrame(
             {
                 "timestamp_captura": [timestamp],
@@ -575,7 +563,7 @@ def upload_logs_to_bq(
     dataframe.to_csv(filepath, index=False)
     # Upload to Storage
     create_or_append_table(
-        dataset_id=dataset_id, table_id=table_id, path=filepath.parent.parent
+        dataset_id=dataset_id, table_id=table_id, path=filepath, partitions=partition
     )
     if error is not None:
         raise Exception(f"Pipeline failed with error: {error}")
@@ -593,11 +581,11 @@ def get_materialization_date_range(  # pylint: disable=R0913
     raw_table_id: str,
     table_date_column_name: str = None,
     mode: str = "prod",
+    delay_hours: int = 0,
 ):
     """
     Task for generating dict with variables to be passed to the
     --vars argument on DBT.
-
     Args:
         dataset_id (str): dataset_id on BigQuery
         table_id (str): model filename on the queries repo.
@@ -609,7 +597,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
         on this field.
         rebuild (Optional, bool): if true, queries the minimum date value on the
         table and return a date range from that value to the datetime.now() time
-
+        delay(Optional, int): hours delayed from now time for materialization range
     Returns:
         dict: containing date_range_start and date_range_end
     """
@@ -627,7 +615,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 table_id=table_id,
                 field_name=table_date_column_name,
                 kind="max",
-            ).strftime(timestr)
+            )
         else:
             last_run = get_table_min_max_value(
                 query_project_id=bq_project(),
@@ -635,20 +623,22 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 table_id=raw_table_id,
                 field_name=table_date_column_name,
                 kind="max",
-            ).strftime(timestr)
-    # set start to last run hour (H)
-    start_ts = (
-        (datetime.strptime(last_run, timestr))
-        .replace(minute=0, second=0, microsecond=0)
-        .strftime(timestr)
-    )
-    # set end to H+60
-    end_ts = (
-        (datetime.strptime(last_run, timestr) + timedelta(minutes=60))
-        .replace(minute=0, second=0, microsecond=0)
-        .strftime(timestr)
-    )
+            )
+    else:
+        last_run = datetime.strptime(last_run, timestr)
 
+    # set start to last run hour (H)
+    start_ts = last_run.replace(minute=0, second=0, microsecond=0).strftime(timestr)
+
+    # set end to now - delay
+    now_ts = pendulum.now(constants.TIMEZONE.value).replace(
+        tzinfo=None, minute=0, second=0, microsecond=0
+    )
+    end_ts = (
+        (now_ts - timedelta(hours=delay_hours))
+        .replace(minute=0, second=0, microsecond=0)
+        .strftime(timestr)
+    )
     date_range = {"date_range_start": start_ts, "date_range_end": end_ts}
     return date_range
 

@@ -36,7 +36,9 @@ def log_critical(message: str, secret_path: str = constants.CRITICAL_SECRET_PATH
     return send_discord_message(message=message, webhook_url=url)
 
 
-def create_or_append_table(dataset_id, table_id, path):
+def create_or_append_table(
+    dataset_id: str, table_id: str, path: str, partitions: str = None
+):
     """Conditionally create table or append data to its relative GCS folder.
 
     Args:
@@ -47,8 +49,9 @@ def create_or_append_table(dataset_id, table_id, path):
     tb_obj = Table(table_id=table_id, dataset_id=dataset_id)
     if not tb_obj.table_exists("staging"):
         log("Table does not exist in STAGING, creating table...")
+        dirpath = path.split(partitions)[0]
         tb_obj.create(
-            path=path,
+            path=dirpath,
             if_table_exists="pass",
             if_storage_data_exists="replace",
             if_table_config_exists="replace",
@@ -56,7 +59,9 @@ def create_or_append_table(dataset_id, table_id, path):
         log("Table created in STAGING")
     else:
         log("Table already exists in STAGING, appending to it...")
-        tb_obj.append(filepath=path, if_exists="replace", timeout=600)
+        tb_obj.append(
+            filepath=path, if_exists="replace", timeout=600, partitions=partitions
+        )
         log("Appended to table on STAGING successfully.")
 
 
