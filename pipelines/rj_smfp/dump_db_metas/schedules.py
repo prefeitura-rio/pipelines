@@ -33,6 +33,7 @@ egp_web_queries = {
     "meta": {
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.VW_Metas;",
+        "materialize_after_dump": True,
         "materialize_to_datario": True,
     },
     "nota_meta": {
