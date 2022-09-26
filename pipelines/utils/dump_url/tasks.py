@@ -10,6 +10,7 @@ from typing import List
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
+import gspread
 import pandas as pd
 from prefect import task
 import requests
@@ -28,21 +29,61 @@ from pipelines.utils.utils import (
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 # pylint: disable=R0914
-def download_url(url: str, fname: str, gdrive_url: bool = False) -> None:
+def download_url(
+    url: str,
+    fname: str,
+    mode: str = "direct",
+    gsheets_sheet_order: int = -1,
+    gsheets_sheet_name: str = None,
+) -> None:
     """
     Downloads a file from a URL and saves it to a local file.
     Try to do it without using lots of RAM.
+    It is not optimized for Google Sheets downloads.
 
     Args:
         url: URL to download from.
         fname: Name of the file to save to.
-
+        mode: Type or URL that is being passed.
+            `direct`-> common URL to download directly;
+            `google_drive`-> Google Drive URL;
+            `google_sheet`-> Google Sheet URL.
+        gsheets_sheet_order: Worksheet index, in the case you want to select it by index. \
+            Worksheet indexes start from zero.
+        gsheets_sheet_name: Worksheet name, in the case you want to select it by name.
+        
     Returns:
         None.
     """
     filepath = Path(fname)
     filepath.parent.mkdir(parents=True, exist_ok=True)
-    if not gdrive_url:
+    if mode == "google_sheet":
+        url_prefix = "https://docs.google.com/spreadsheets/d/"
+        if not url.startswith(url_prefix):
+            raise ValueError(
+                "URL must start with https://docs.google.com/spreadsheets/d/" f"Invalid URL: {url}"
+            )
+        log(">>>>> URL is a Google Sheets URL, downloading directly")
+        credentials = get_credentials_from_env(
+            scopes=[
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive",
+            ]
+        )
+        gc = gspread.authorize(credentials)
+        sheet = gc.open_by_url(url)
+        if gsheets_sheet_order != -1:
+            worksheet = sheet.get_worksheet(gsheets_sheet_order)
+        elif gsheets_sheet_name:
+            worksheet = sheet.worksheet(gsheets_sheet_name)
+        else:
+            raise ValueError(
+                "Sheet order or sheet name must be informed. \
+                Please set values to `gsheets_sheet_order` or `gsheets_sheet_name` parameters"
+            )
+        df = pd.DataFrame(worksheet.get_values())
+        df.to_csv(filepath, index=False)
+    elif mode == "google_drive":
         log(">>>>> URL is not a Google Drive URL, downloading directly")
         req = requests.get(url, stream=True)
         with open(fname, "wb") as file:
@@ -59,14 +100,11 @@ def download_url(url: str, fname: str, gdrive_url: bool = False) -> None:
         url_prefix = "https://drive.google.com/file/d/"
         if not url.startswith(url_prefix):
             raise ValueError(
-                "URL must start with https://drive.google.com/file/d/."
-                f"Invalid URL: {url}"
+                "URL must start with https://drive.google.com/file/d/." f"Invalid URL: {url}"
             )
         file_id = url.removeprefix(url_prefix).split("/")[0]
         log(f">>>>> FILE_ID: {file_id}")
-        creds = get_credentials_from_env(
-            scopes=["https://www.googleapis.com/auth/drive"]
-        )
+        creds = get_credentials_from_env(scopes=["https://www.googleapis.com/auth/drive"])
         try:
             service = build("drive", "v3", credentials=creds)
             request = service.files().get_media(fileId=file_id)  # pylint: disable=E1101
@@ -91,7 +129,7 @@ def dump_files(
     file_path: str,
     partition_columns: List[str],
     save_path: str = ".",
-    chunksize: int = 10**6,
+    chunksize: int = 10 ** 6,
     build_json_dataframe: bool = False,
     dataframe_key_column: str = None,
 ) -> None:
