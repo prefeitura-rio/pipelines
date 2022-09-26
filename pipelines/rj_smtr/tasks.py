@@ -509,7 +509,7 @@ def bq_upload_from_dict(paths: dict, dataset_id: str, partition_levels: int = 1)
 
 
 @task
-def upload_logs_to_bq(
+def upload_logs_to_bq(  # pylint: disable=R0913
     dataset_id: str,
     parent_table_id: str,
     timestamp: str,
