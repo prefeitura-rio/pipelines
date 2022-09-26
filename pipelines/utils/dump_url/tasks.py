@@ -35,7 +35,7 @@ def download_url(
     mode: str = "direct",
     gsheets_sheet_order: int = -1,
     gsheets_sheet_name: str = None,
-) -> None: 
+) -> None:
     """
     Downloads a file from a URL and saves it to a local file.
     Try to do it without using lots of RAM.
@@ -55,7 +55,7 @@ def download_url(
     """
     filepath = Path(fname)
     filepath.parent.mkdir(parents=True, exist_ok=True)
-    if mode == "google_drive":
+    if mode == "google_sheet":
         url_prefix = "https://docs.google.com/spreadsheets/d/"
         if not url.startswith(url_prefix):
             raise ValueError(
