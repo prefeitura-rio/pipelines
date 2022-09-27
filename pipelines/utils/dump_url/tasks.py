@@ -70,8 +70,8 @@ def download_url(
                 "https://www.googleapis.com/auth/drive",
             ]
         )
-        gc = gspread.authorize(credentials)
-        sheet = gc.open_by_url(url)
+        gspread_client = gspread.authorize(credentials)
+        sheet = gspread_client.open_by_url(url)
         if gsheets_sheet_order != -1:
             worksheet = sheet.get_worksheet(gsheets_sheet_order)
         elif gsheets_sheet_name:
@@ -81,8 +81,8 @@ def download_url(
                 "Sheet order or sheet name must be informed. \
                 Please set values to `gsheets_sheet_order` or `gsheets_sheet_name` parameters"
             )
-        df = pd.DataFrame(worksheet.get_values())
-        df.to_csv(filepath, index=False)
+        dataframe = pd.DataFrame(worksheet.get_values())
+        dataframe.to_csv(filepath, index=False)
     elif url_type == "google_drive":
         log(">>>>> URL is not a Google Drive URL, downloading directly")
         req = requests.get(url, stream=True)
