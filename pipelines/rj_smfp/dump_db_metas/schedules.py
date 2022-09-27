@@ -21,14 +21,17 @@ egp_web_queries = {
     "chance": {
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.VW_CHANCE;",
+        "materialize_after_dump": True,
     },
     "comentario": {
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.VW_Comentario;",
+        "materialize_after_dump": True,
     },
     "indicador": {
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.VW_Indicador;",
+        "materialize_after_dump": True,
     },
     "meta": {
         "dump_mode": "overwrite",
@@ -39,6 +42,7 @@ egp_web_queries = {
     "nota_meta": {
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.VW_NotaMeta;",
+        "materialize_after_dump": True,
     },
 }
 
