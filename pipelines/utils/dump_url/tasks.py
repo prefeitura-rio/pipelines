@@ -32,7 +32,7 @@ from pipelines.utils.utils import (
 def download_url(
     url: str,
     fname: str,
-    mode: str = "direct",
+    url_type: str = "direct",
     gsheets_sheet_order: int = -1,
     gsheets_sheet_name: str = None,
 ) -> None:
@@ -44,7 +44,7 @@ def download_url(
     Args:
         url: URL to download from.
         fname: Name of the file to save to.
-        mode: Type or URL that is being passed.
+        url_type: Type or URL that is being passed.
             `direct`-> common URL to download directly;
             `google_drive`-> Google Drive URL;
             `google_sheet`-> Google Sheet URL.
@@ -57,12 +57,11 @@ def download_url(
     """
     filepath = Path(fname)
     filepath.parent.mkdir(parents=True, exist_ok=True)
-    if mode == "google_sheet":
+    if url_type == "google_sheet":
         url_prefix = "https://docs.google.com/spreadsheets/d/"
         if not url.startswith(url_prefix):
             raise ValueError(
-                "URL must start with https://docs.google.com/spreadsheets/d/"
-                f"Invalid URL: {url}"
+                "URL must start with https://docs.google.com/spreadsheets/d/" f"Invalid URL: {url}"
             )
         log(">>>>> URL is a Google Sheets URL, downloading directly")
         credentials = get_credentials_from_env(
@@ -84,7 +83,7 @@ def download_url(
             )
         df = pd.DataFrame(worksheet.get_values())
         df.to_csv(filepath, index=False)
-    elif mode == "google_drive":
+    elif url_type == "google_drive":
         log(">>>>> URL is not a Google Drive URL, downloading directly")
         req = requests.get(url, stream=True)
         with open(fname, "wb") as file:
@@ -101,18 +100,15 @@ def download_url(
         url_prefix = "https://drive.google.com/file/d/"
         if not url.startswith(url_prefix):
             raise ValueError(
-                "URL must start with https://drive.google.com/file/d/."
-                f"Invalid URL: {url}"
+                "URL must start with https://drive.google.com/file/d/." f"Invalid URL: {url}"
             )
         file_id = url.removeprefix(url_prefix).split("/")[0]
         log(f">>>>> FILE_ID: {file_id}")
-        creds = get_credentials_from_env(
-            scopes=["https://www.googleapis.com/auth/drive"]
-        )
+        creds = get_credentials_from_env(scopes=["https://www.googleapis.com/auth/drive"])
         try:
             service = build("drive", "v3", credentials=creds)
             request = service.files().get_media(fileId=file_id)  # pylint: disable=E1101
-            fh = io.FileIO(fname, mode="wb")  # pylint: disable=C0103
+            fh = io.FileIO(fname, url_type="wb")  # pylint: disable=C0103
             downloader = MediaIoBaseDownload(fh, request)
             done = False
             while done is False:
@@ -133,7 +129,7 @@ def dump_files(
     file_path: str,
     partition_columns: List[str],
     save_path: str = ".",
-    chunksize: int = 10**6,
+    chunksize: int = 10 ** 6,
     build_json_dataframe: bool = False,
     dataframe_key_column: str = None,
 ) -> None:
