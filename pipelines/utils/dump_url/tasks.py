@@ -86,9 +86,10 @@ def download_url(
                 Please set values to `gsheets_sheet_order` or `gsheets_sheet_name` parameters"
             )
         dataframe = pd.DataFrame(worksheet.get_values())
-        dataframe.columns = remove_columns_accents(dataframe)
         log(f">>>>> Dataframe shape: {dataframe.shape}")
         log(f">>>>> Dataframe columns: {dataframe.columns}")
+        dataframe.columns = remove_columns_accents(dataframe)
+        log(f">>>>> Dataframe columns after treatment: {dataframe.columns}")
         dataframe.to_csv(filepath, index=False)
     elif url_type == "direct":
         log(">>>>> URL is not a Google Drive URL, downloading directly")
