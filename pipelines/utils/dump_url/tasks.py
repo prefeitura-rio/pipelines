@@ -36,7 +36,7 @@ def download_url(
     url: str,
     fname: str,
     url_type: str = "direct",
-    gsheets_sheet_order: int = -1,
+    gsheets_sheet_order: int = 0,
     gsheets_sheet_name: str = None,
 ) -> None:
     """
@@ -64,8 +64,7 @@ def download_url(
         url_prefix = "https://docs.google.com/spreadsheets/d/"
         if not url.startswith(url_prefix):
             raise ValueError(
-                "URL must start with https://docs.google.com/spreadsheets/d/"
-                f"Invalid URL: {url}"
+                "URL must start with https://docs.google.com/spreadsheets/d/" f"Invalid URL: {url}"
             )
         log(">>>>> URL is a Google Sheets URL, downloading directly")
         credentials = get_credentials_from_env(
@@ -76,16 +75,20 @@ def download_url(
         )
         gspread_client = gspread.authorize(credentials)
         sheet = gspread_client.open_by_url(url)
-        if gsheets_sheet_order != -1:
-            worksheet = sheet.get_worksheet(gsheets_sheet_order)
-        elif gsheets_sheet_name:
+        if gsheets_sheet_name:
             worksheet = sheet.worksheet(gsheets_sheet_name)
+        # elif gsheets_sheet_order != -1:
+        #     worksheet = sheet.get_worksheet(gsheets_sheet_order)
         else:
-            raise ValueError(
-                "Sheet order or sheet name must be informed. \
-                Please set values to `gsheets_sheet_order` or `gsheets_sheet_name` parameters"
-            )
+            worksheet = sheet.get_worksheet(gsheets_sheet_order)
+            # raise ValueError(
+            #     "Sheet order or sheet name must be informed. \
+            #     Please set values to `gsheets_sheet_order` or `gsheets_sheet_name` parameters"
+            # )
         dataframe = pd.DataFrame(worksheet.get_values())
+        new_header = dataframe.iloc[0]  # grab the first row for the header
+        dataframe = dataframe[1:]  # take the data less the header row
+        dataframe.columns = new_header  # set the header row as the df header
         log(f">>>>> Dataframe shape: {dataframe.shape}")
         log(f">>>>> Dataframe columns: {dataframe.columns}")
         dataframe.columns = remove_columns_accents(dataframe)
@@ -108,14 +111,11 @@ def download_url(
         url_prefix = "https://drive.google.com/file/d/"
         if not url.startswith(url_prefix):
             raise ValueError(
-                "URL must start with https://drive.google.com/file/d/."
-                f"Invalid URL: {url}"
+                "URL must start with https://drive.google.com/file/d/." f"Invalid URL: {url}"
             )
         file_id = url.removeprefix(url_prefix).split("/")[0]
         log(f">>>>> FILE_ID: {file_id}")
-        creds = get_credentials_from_env(
-            scopes=["https://www.googleapis.com/auth/drive"]
-        )
+        creds = get_credentials_from_env(scopes=["https://www.googleapis.com/auth/drive"])
         try:
             service = build("drive", "v3", credentials=creds)
             request = service.files().get_media(fileId=file_id)  # pylint: disable=E1101
@@ -142,7 +142,7 @@ def dump_files(
     file_path: str,
     partition_columns: List[str],
     save_path: str = ".",
-    chunksize: int = 10**6,
+    chunksize: int = 10 ** 6,
     build_json_dataframe: bool = False,
     dataframe_key_column: str = None,
 ) -> None:
