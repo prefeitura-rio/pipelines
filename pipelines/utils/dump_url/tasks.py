@@ -16,6 +16,9 @@ from prefect import task
 import requests
 
 from pipelines.constants import constants
+from pipelines.utils.utils import (
+    remove_columns_accents,
+)
 from pipelines.utils.dump_url.utils import handle_dataframe_chunk
 from pipelines.utils.utils import (
     get_credentials_from_env,
@@ -28,7 +31,7 @@ from pipelines.utils.utils import (
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-# pylint: disable=R0914
+# pylint: disable=R0912,R0914
 def download_url(
     url: str,
     fname: str,
@@ -83,6 +86,7 @@ def download_url(
                 Please set values to `gsheets_sheet_order` or `gsheets_sheet_name` parameters"
             )
         dataframe = pd.DataFrame(worksheet.get_values())
+        dataframe.columns = remove_columns_accents(dataframe)
         log(f">>>>> Dataframe shape: {dataframe.shape}")
         log(f">>>>> Dataframe columns: {dataframe.columns}")
         dataframe.to_csv(filepath, index=False)
