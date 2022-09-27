@@ -40,7 +40,9 @@ with Flow(
 
     # URL parameters
     url = Parameter("url")
-    gdrive_url = Parameter("gdrive_url", default=False, required=False)
+    url_type = Parameter("url_type", default="direct", required=False)
+    gsheets_sheet_order = Parameter("gsheets_sheet_order", default=0, required=False)
+    gsheets_sheet_name = Parameter("gsheets_sheet_name", default=None, required=False)
 
     # Table parameters
     partition_columns = Parameter("partition_columns", required=False, default="")
@@ -102,7 +104,9 @@ with Flow(
     DOWNLOAD_URL_TASK = download_url(
         url=url,
         fname=DATA_FNAME,
-        gdrive_url=gdrive_url,
+        url_type=url_type,
+        gsheets_sheet_order=gsheets_sheet_order,
+        gsheets_sheet_name=gsheets_sheet_name,
     )
     DOWNLOAD_URL_TASK.set_upstream(rename_flow_run)
 
