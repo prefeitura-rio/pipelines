@@ -485,6 +485,8 @@ def remove_columns_accents(dataframe: pd.DataFrame) -&gt; list:
     &#34;&#34;&#34;
     Remove accents from dataframe columns.
     &#34;&#34;&#34;
+    columns = [str(column) for column in dataframe.columns]
+    dataframe.columns = columns
     return list(
         dataframe.columns.str.normalize(&#34;NFKD&#34;)
         .str.encode(&#34;ascii&#34;, errors=&#34;ignore&#34;)
@@ -1364,6 +1366,8 @@ Mode needs to be "prod" or "staging"</p></div>
     &#34;&#34;&#34;
     Remove accents from dataframe columns.
     &#34;&#34;&#34;
+    columns = [str(column) for column in dataframe.columns]
+    dataframe.columns = columns
     return list(
         dataframe.columns.str.normalize(&#34;NFKD&#34;)
         .str.encode(&#34;ascii&#34;, errors=&#34;ignore&#34;)
