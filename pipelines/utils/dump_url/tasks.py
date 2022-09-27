@@ -31,7 +31,7 @@ from pipelines.utils.utils import (
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-# pylint: disable=R0912,R0914
+# pylint: disable=R0912,R0914,R0915
 def download_url(
     url: str,
     fname: str,
