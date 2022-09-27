@@ -10,11 +10,15 @@ from typing import List
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
+import gspread
 import pandas as pd
 from prefect import task
 import requests
 
 from pipelines.constants import constants
+from pipelines.utils.utils import (
+    remove_columns_accents,
+)
 from pipelines.utils.dump_url.utils import handle_dataframe_chunk
 from pipelines.utils.utils import (
     get_credentials_from_env,
@@ -27,22 +31,71 @@ from pipelines.utils.utils import (
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-# pylint: disable=R0914
-def download_url(url: str, fname: str, gdrive_url: bool = False) -> None:
+# pylint: disable=R0912,R0914,R0915
+def download_url(
+    url: str,
+    fname: str,
+    url_type: str = "direct",
+    gsheets_sheet_order: int = 0,
+    gsheets_sheet_name: str = None,
+) -> None:
     """
     Downloads a file from a URL and saves it to a local file.
     Try to do it without using lots of RAM.
+    It is not optimized for Google Sheets downloads.
 
     Args:
         url: URL to download from.
         fname: Name of the file to save to.
+        url_type: Type or URL that is being passed.
+            `direct`-> common URL to download directly;
+            `google_drive`-> Google Drive URL;
+            `google_sheet`-> Google Sheet URL.
+        gsheets_sheet_order: Worksheet index, in the case you want to select it by index. \
+            Worksheet indexes start from zero.
+        gsheets_sheet_name: Worksheet name, in the case you want to select it by name.
 
     Returns:
         None.
     """
     filepath = Path(fname)
     filepath.parent.mkdir(parents=True, exist_ok=True)
-    if not gdrive_url:
+    if url_type == "google_sheet":
+        url_prefix = "https://docs.google.com/spreadsheets/d/"
+        if not url.startswith(url_prefix):
+            raise ValueError(
+                "URL must start with https://docs.google.com/spreadsheets/d/"
+                f"Invalid URL: {url}"
+            )
+        log(">>>>> URL is a Google Sheets URL, downloading directly")
+        credentials = get_credentials_from_env(
+            scopes=[
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive",
+            ]
+        )
+        gspread_client = gspread.authorize(credentials)
+        sheet = gspread_client.open_by_url(url)
+        if gsheets_sheet_name:
+            worksheet = sheet.worksheet(gsheets_sheet_name)
+        # elif gsheets_sheet_order != -1:
+        #     worksheet = sheet.get_worksheet(gsheets_sheet_order)
+        else:
+            worksheet = sheet.get_worksheet(gsheets_sheet_order)
+            # raise ValueError(
+            #     "Sheet order or sheet name must be informed. \
+            #     Please set values to `gsheets_sheet_order` or `gsheets_sheet_name` parameters"
+            # )
+        dataframe = pd.DataFrame(worksheet.get_values())
+        new_header = dataframe.iloc[0]  # grab the first row for the header
+        dataframe = dataframe[1:]  # take the data less the header row
+        dataframe.columns = new_header  # set the header row as the df header
+        log(f">>>>> Dataframe shape: {dataframe.shape}")
+        log(f">>>>> Dataframe columns: {dataframe.columns}")
+        dataframe.columns = remove_columns_accents(dataframe)
+        log(f">>>>> Dataframe columns after treatment: {dataframe.columns}")
+        dataframe.to_csv(filepath, index=False)
+    elif url_type == "direct":
         log(">>>>> URL is not a Google Drive URL, downloading directly")
         req = requests.get(url, stream=True)
         with open(fname, "wb") as file:
@@ -50,7 +103,7 @@ def download_url(url: str, fname: str, gdrive_url: bool = False) -> None:
                 if chunk:
                     file.write(chunk)
                     file.flush()
-    else:
+    elif url_type == "google_drive":
         log(">>>>> URL is a Google Drive URL, downloading from Google Drive")
         # URL is in format
         # https://drive.google.com/file/d/<FILE_ID>/...
@@ -79,6 +132,8 @@ def download_url(url: str, fname: str, gdrive_url: bool = False) -> None:
         except HttpError as error:
             log(f"HTTPError: {error}", "error")
             raise error
+    else:
+        raise ValueError("Invalid URL type. Please set values to `url_type` parameter")
 
 
 @task(
