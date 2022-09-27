@@ -84,7 +84,7 @@ def download_url(
             )
         dataframe = pd.DataFrame(worksheet.get_values())
         dataframe.to_csv(filepath, index=False)
-    elif url_type == "google_drive":
+    elif url_type == "direct":
         log(">>>>> URL is not a Google Drive URL, downloading directly")
         req = requests.get(url, stream=True)
         with open(fname, "wb") as file:
@@ -92,7 +92,7 @@ def download_url(
                 if chunk:
                     file.write(chunk)
                     file.flush()
-    else:
+    elif url_type == "google_drive":
         log(">>>>> URL is a Google Drive URL, downloading from Google Drive")
         # URL is in format
         # https://drive.google.com/file/d/<FILE_ID>/...
@@ -112,7 +112,7 @@ def download_url(
         try:
             service = build("drive", "v3", credentials=creds)
             request = service.files().get_media(fileId=file_id)  # pylint: disable=E1101
-            fh = io.FileIO(fname, url_type="wb")  # pylint: disable=C0103
+            fh = io.FileIO(fname, mode="wb")  # pylint: disable=C0103
             downloader = MediaIoBaseDownload(fh, request)
             done = False
             while done is False:
@@ -121,6 +121,8 @@ def download_url(
         except HttpError as error:
             log(f"HTTPError: {error}", "error")
             raise error
+    else:
+        raise ValueError("Invalid URL type. Please set values to `url_type` parameter")
 
 
 @task(
