@@ -48,9 +48,15 @@ with Flow(
     partition_columns = Parameter("partition_columns", required=False, default="")
 
     # Materialization parameters
-    materialize_after_dump = Parameter("materialize_after_dump", default=False, required=False)
-    materialization_mode = Parameter("materialization_mode", default="dev", required=False)
-    materialize_to_datario = Parameter("materialize_to_datario", default=False, required=False)
+    materialize_after_dump = Parameter(
+        "materialize_after_dump", default=False, required=False
+    )
+    materialization_mode = Parameter(
+        "materialization_mode", default="dev", required=False
+    )
+    materialize_to_datario = Parameter(
+        "materialize_to_datario", default=False, required=False
+    )
 
     # Dump to GCS after? Should only dump to GCS if materializing to datario
     dump_to_gcs = Parameter("dump_to_gcs", default=False, required=False)
@@ -67,8 +73,12 @@ with Flow(
     batch_data_type = Parameter("batch_data_type", default="csv")  # csv or parquet
 
     # JSON dataframe parameters
-    dataframe_key_column = Parameter("dataframe_key_column", default=None, required=False)
-    build_json_dataframe = Parameter("build_json_dataframe", default=False, required=False)
+    dataframe_key_column = Parameter(
+        "dataframe_key_column", default=None, required=False
+    )
+    build_json_dataframe = Parameter(
+        "build_json_dataframe", default=False, required=False
+    )
 
     #####################################
     #
