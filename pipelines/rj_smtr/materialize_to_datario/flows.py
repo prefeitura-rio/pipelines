@@ -33,7 +33,7 @@ smtr_materialize_to_datario_viagem_sppo_flow.run_config = KubernetesRun(
     ],
 )
 
-publish_viagem_sppo_default_parameters = {
+smtr_materialize_to_datario_viagem_sppo_parameters = {
     "dataset_id": "transporte_rodoviario_municipal",
     "table_id": "viagem_onibus",
     "mode": "prod",
@@ -41,7 +41,7 @@ publish_viagem_sppo_default_parameters = {
 
 smtr_materialize_to_datario_viagem_sppo_flow = set_default_parameters(
     smtr_materialize_to_datario_viagem_sppo_flow,
-    default_parameters=publish_viagem_sppo_default_parameters,
+    default_parameters=smtr_materialize_to_datario_viagem_sppo_parameters,
 )
 
 # # DAILY SCHEDULED DATA #
