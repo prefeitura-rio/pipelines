@@ -50,14 +50,17 @@ egp_web_queries = {
     &#34;chance&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
         &#34;execute_query&#34;: &#34;SELECT * FROM EGPWEB_PRD.dbo.VW_CHANCE;&#34;,
+        &#34;materialize_after_dump&#34;: True,
     },
     &#34;comentario&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
         &#34;execute_query&#34;: &#34;SELECT * FROM EGPWEB_PRD.dbo.VW_Comentario;&#34;,
+        &#34;materialize_after_dump&#34;: True,
     },
     &#34;indicador&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
         &#34;execute_query&#34;: &#34;SELECT * FROM EGPWEB_PRD.dbo.VW_Indicador;&#34;,
+        &#34;materialize_after_dump&#34;: True,
     },
     &#34;meta&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
@@ -68,6 +71,7 @@ egp_web_queries = {
     &#34;nota_meta&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
         &#34;execute_query&#34;: &#34;SELECT * FROM EGPWEB_PRD.dbo.VW_NotaMeta;&#34;,
+        &#34;materialize_after_dump&#34;: True,
     },
 }
 
