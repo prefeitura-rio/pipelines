@@ -466,6 +466,7 @@ def remove_columns_accents(dataframe: pd.DataFrame) -> list:
         .str.replace("\v", "_")
         .str.replace("\f", "_")
         .str.replace("\r", "_")
+        .str.replace("#\n", "")
         .str.replace("#", "")
         .str.replace("?", "")
         .str.replace("!", "")
