@@ -4,7 +4,7 @@ General purpose tasks for dumping data from URLs.
 """
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import List, Union
+from typing import List
 
 import pandas as pd
 from prefect.schedules.clocks import IntervalClock
@@ -43,9 +43,7 @@ def handle_dataframe_chunk(
     new_columns_dict = dict(zip(old_columns, dataframe.columns.tolist()))
     if idx == 0:
         if partition_column:
-            log(
-                f"Partition column: {partition_column} FOUND!! Write to partitioned files"
-            )
+            log(f"Partition column: {partition_column} FOUND!! Write to partitioned files")
 
         else:
             log("NO partition column specified! Writing unique files")
@@ -114,25 +112,17 @@ def generate_dump_url_schedules(  # pylint: disable=too-many-arguments,too-many-
             # "execute_query": query_to_line(parameters["execute_query"]),
         }
         if "gsheets_sheet_order" in parameters:
-            parameter_defaults["gsheets_sheet_order"] = parameters[
-                "gsheets_sheet_order"
-            ]
+            parameter_defaults["gsheets_sheet_order"] = parameters["gsheets_sheet_order"]
         if "gsheets_sheet_name" in parameters:
             parameter_defaults["gsheets_sheet_name"] = parameters["gsheets_sheet_name"]
         if "partition_columns" in parameters:
             parameter_defaults["partition_columns"] = parameters["partition_columns"]
         if "materialize_after_dump" in parameters:
-            parameter_defaults["materialize_after_dump"] = parameters[
-                "materialize_after_dump"
-            ]
+            parameter_defaults["materialize_after_dump"] = parameters["materialize_after_dump"]
         if "materialization_mode" in parameters:
-            parameter_defaults["materialization_mode"] = parameters[
-                "materialization_mode"
-            ]
+            parameter_defaults["materialization_mode"] = parameters["materialization_mode"]
         if "materialize_to_datario" in parameters:
-            parameter_defaults["materialize_to_datario"] = parameters[
-                "materialize_to_datario"
-            ]
+            parameter_defaults["materialize_to_datario"] = parameters["materialize_to_datario"]
         # if "dbt_model_secret_parameters" in parameters:
         #     parameter_defaults["dbt_model_secret_parameters"] = parameters[
         #         "dbt_model_secret_parameters"
@@ -149,8 +139,7 @@ def generate_dump_url_schedules(  # pylint: disable=too-many-arguments,too-many-
         clocks.append(
             IntervalClock(
                 interval=new_interval,
-                start_date=start_date
-                + timedelta(minutes=runs_interval_minutes * count),
+                start_date=start_date + timedelta(minutes=runs_interval_minutes * count),
                 labels=labels,
                 parameter_defaults=parameter_defaults,
             )
