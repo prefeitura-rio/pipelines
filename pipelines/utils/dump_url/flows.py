@@ -40,7 +40,7 @@ with Flow(
 
     # URL parameters
     url = Parameter("url")
-    url_type = Parameter("url_type", default="direct", required=False)
+    url_type = Parameter("url_type", default="direct", required=True)
     gsheets_sheet_order = Parameter("gsheets_sheet_order", default=0, required=False)
     gsheets_sheet_name = Parameter("gsheets_sheet_name", default=None, required=False)
 
