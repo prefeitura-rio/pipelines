@@ -10,6 +10,7 @@ import logging
 from os import getenv, walk
 from os.path import join
 from pathlib import Path
+import re
 from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
 
@@ -456,7 +457,6 @@ def remove_columns_accents(dataframe: pd.DataFrame) -> list:
         .str.encode("ascii", errors="ignore")
         .str.decode("utf-8")
         .str.replace(" ", "_")
-        .str.replace(".", "")
         .str.replace("/", "_")
         .str.replace("-", "_")
         .str.replace("\a", "_")
@@ -466,13 +466,8 @@ def remove_columns_accents(dataframe: pd.DataFrame) -> list:
         .str.replace("\v", "_")
         .str.replace("\f", "_")
         .str.replace("\r", "_")
-        .str.replace("#\n", "")
-        .str.replace("#", "")
-        .str.replace("?", "")
-        .str.replace("!", "")
         .str.replace("(", "_")
         .str.replace(")", "_")
-        .str.replace(",", "")
         .str.lower()
         .map(lambda x: remove_int_columns(x))
     )
@@ -740,4 +735,5 @@ def remove_int_columns(column: str) -> str:
         int(column)
         return f"_{column}"
     except:
-        return column
+        non_alpha_removed = re.sub(r"[\W]+", "", column)
+        return non_alpha_removed
