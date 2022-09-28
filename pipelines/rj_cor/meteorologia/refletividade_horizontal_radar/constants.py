@@ -11,5 +11,5 @@ class constants(Enum):  # pylint: disable=c0103
     Constant values for the comando project
     """
 
-    DATASET_ID = "meio_ambiente_clima"
+    DATASET_ID = "clima_radar"
     TABLE_ID = "refletividade_horizontal_radar"
