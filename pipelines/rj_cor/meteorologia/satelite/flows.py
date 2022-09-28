@@ -34,10 +34,6 @@ with Flow(
 
     ano, mes, dia, hora, dia_juliano = slice_data(current_time=CURRENT_TIME)
 
-    # Para taxa de precipitação
-    VARIAVEL_RR = "RRQPEF"
-    DATASET_ID_RR = "meio_ambiente_clima"
-    TABLE_ID_RR = "taxa_precipitacao_satelite"
     DUMP_MODE = "append"
 
     # Materialization parameters
@@ -48,6 +44,11 @@ with Flow(
         "materialize_to_datario", default=False, required=False
     )
     MATERIALIZATION_MODE = Parameter("mode", default="dev", required=False)
+
+    # Para taxa de precipitação
+    VARIAVEL_RR = "RRQPEF"
+    DATASET_ID_RR = "meio_ambiente_clima"
+    TABLE_ID_RR = "taxa_precipitacao_satelite"
 
     # Flow da taxa de precipitação
     filename_rr = download(
@@ -84,6 +85,27 @@ with Flow(
         table_id=TABLE_ID_TPW,
         dump_mode=DUMP_MODE,
         wait=path_tpw,
+    )
+
+    # para clean_ir_longwave_window (band 13) CMIPF
+    # Para quantidade de água precipitável
+    VARIAVEL_cmip = "CMIPF"
+    DATASET_ID_cmip = "clima_satelite"
+    TABLE_ID_cmip = "clean_ir_longwave_window_goes_16"
+
+    filename_cmip = download(
+        variavel=VARIAVEL_cmip, ano=ano, dia_juliano=dia_juliano, hora=hora, band="13"
+    )
+
+    info_cmip = tratar_dados(filename=filename_cmip)
+    path_cmip = salvar_parquet(info=info_cmip)
+
+    UPLOAD_TABLE_cmip = create_table_and_upload_to_gcs(
+        data_path=path_cmip,
+        dataset_id=DATASET_ID_cmip,
+        table_id=TABLE_ID_cmip,
+        dump_mode=DUMP_MODE,
+        wait=path_cmip,
     )
 
     # Trigger DBT flow run
@@ -131,6 +153,29 @@ with Flow(
 
         wait_for_materialization_tpw = wait_for_flow_run(
             materialization_flow_tpw,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+
+        # Materializar CMIP
+        materialization_flow_cmip = create_flow_run(
+            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+            parameters={
+                "dataset_id": DATASET_ID_cmip,
+                "table_id": TABLE_ID_cmip,
+                "mode": MATERIALIZATION_MODE,
+                "materialize_to_datario": MATERIALIZE_TO_DATARIO,
+            },
+            labels=current_flow_labels,
+            run_name=f"Materialize {DATASET_ID_cmip}.{TABLE_ID_cmip}",
+        )
+
+        materialization_flow_cmip.set_upstream(UPLOAD_TABLE_cmip)
+
+        wait_for_materialization_cmip = wait_for_flow_run(
+            materialization_flow_cmip,
             stream_states=True,
             stream_logs=True,
             raise_final_state=True,

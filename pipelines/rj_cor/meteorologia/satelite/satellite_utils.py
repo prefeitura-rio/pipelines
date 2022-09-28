@@ -313,7 +313,7 @@ def get_info(path: str) -> Tuple[dict, str]:
     if variable == "CMI":
         # Search for the GOES-16 channel in the file name
         product_caracteristics["band"] = int(
-            (path[path.find("M3C" or "M4C") + 3 : path.find("_G16")])
+            (path[path.find("M6C") + 3 : path.find("_G16")])
         )
     else:
         product_caracteristics["band"] = np.nan
@@ -537,13 +537,22 @@ def main(path: Union[str, Path]):
     # Região da cidade do Rio de Janeiro
     # lat_max, lon_min = (-22.802842397418548, -43.81200531887697)
     # lat_min, lon_max = (-23.073487725280266, -43.11300020870994)
+    # Região da cidade do Rio de Janeiro meteorologista
+    lat_max, lon_max = (
+        -21.699774257353113,
+        -42.35676996062447,
+    )  # canto superior direito
+    lat_min, lon_min = (
+        -23.801876626302175,
+        -45.05290312102409,
+    )  # canto inferior esquerdo
     # Estado do RJ
-    lat_max, lon_max = (-20.69080839963545, -40.28483671464648)
-    lat_min, lon_min = (-23.801876626302175, -45.05290312102409)
+    # lat_max, lon_max = (-20.69080839963545, -40.28483671464648)
+    # lat_min, lon_min = (-23.801876626302175, -45.05290312102409)
     extent = [lon_min, lat_min, lon_max, lat_max]
 
-    # Choose the image resolution (the higher the number the faster the processing is)
-    resolution = 5
+    # Choose the image resolution (the higher the number the faster the processing is) antes 5
+    resolution = 3
 
     # Get information from the image file
     product_caracteristics, datetime_save = get_info(path)

@@ -5,6 +5,7 @@ Tasks for emd
 
 import datetime as dt
 import os
+import re
 from pathlib import Path
 from typing import Tuple, Union
 
@@ -44,7 +45,9 @@ def slice_data(current_time: str) -> Tuple[str, str, str, str, str]:
 
 
 @task(max_retries=10, retry_delay=dt.timedelta(seconds=60))
-def download(variavel: str, ano: str, dia_juliano: str, hora: str) -> Union[str, Path]:
+def download(
+    variavel: str, ano: str, dia_juliano: str, hora: str, band: str = None
+) -> Union[str, Path]:
     """
     Acessa o S3 e faz o download do primeiro arquivo da data-hora especificada
     """
@@ -57,8 +60,12 @@ def download(variavel: str, ano: str, dia_juliano: str, hora: str) -> Union[str,
         file = np.sort(
             np.array(
                 s3_fs.find(f"noaa-goes16/ABI-L2-{variavel}/{ano}/{dia_juliano}/{hora}/")
+                # s3_fs.find(f"noaa-goes16/ABI-L2-CMIPF/2022/270/10/OR_ABI-L2-CMIPF-M6C13_G16_s20222701010208_e20222701019528_c20222701020005.nc")
             )
-        )[0]
+        )
+        if variavel == "CMIPF":
+            # para capturar banda 13
+            file = [f for f in file if bool(re.search("C" + band, f))][0]
         origem = "aws"
     except IndexError:
         bucket_name = "gcp-public-data-goes-16"
