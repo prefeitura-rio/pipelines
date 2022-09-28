@@ -31,10 +31,12 @@
 &#34;&#34;&#34;
 General purpose tasks for dumping data from URLs.
 &#34;&#34;&#34;
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List
 
 import pandas as pd
+from prefect.schedules.clocks import IntervalClock
 from pipelines.utils.utils import (
     log,
     remove_columns_accents,
@@ -103,7 +105,86 @@ def handle_dataframe_chunk(
             path=Path(save_path) / f&#34;{event_id}-{idx}.csv&#34;,
             build_json_dataframe=build_json_dataframe,
             dataframe_key_column=dataframe_key_column,
-        )</code></pre>
+        )
+
+
+def generate_dump_url_schedules(  # pylint: disable=too-many-arguments,too-many-locals
+    interval: timedelta,
+    start_date: datetime,
+    labels: List[str],
+    # db_database: str,
+    # db_host: str,
+    # db_port: Union[str, int],
+    # db_type: str,
+    dataset_id: str,
+    # vault_secret_path: str,
+    table_parameters: dict,
+    batch_data_type: str = &#34;csv&#34;,
+    runs_interval_minutes: int = 15,
+) -&gt; List[IntervalClock]:
+    &#34;&#34;&#34;
+    Generates multiple schedules for url dumping.
+    &#34;&#34;&#34;
+    # db_port = str(db_port)
+    clocks = []
+    for count, (table_id, parameters) in enumerate(table_parameters.items()):
+        parameter_defaults = {
+            &#34;batch_data_type&#34;: batch_data_type,
+            &#34;url&#34;: parameters[&#34;url&#34;],
+            &#34;url_type&#34;: parameters[&#34;url_type&#34;],
+            &#34;dataset_id&#34;: dataset_id,
+            &#34;table_id&#34;: table_id,
+            &#34;dump_mode&#34;: parameters[&#34;dump_mode&#34;],
+            # &#34;vault_secret_path&#34;: vault_secret_path,
+            # &#34;db_database&#34;: db_database,
+            # &#34;db_host&#34;: db_host,
+            # &#34;db_port&#34;: db_port,
+            # &#34;db_type&#34;: db_type,
+            # &#34;execute_query&#34;: query_to_line(parameters[&#34;execute_query&#34;]),
+        }
+        if &#34;gsheets_sheet_order&#34; in parameters:
+            parameter_defaults[&#34;gsheets_sheet_order&#34;] = parameters[
+                &#34;gsheets_sheet_order&#34;
+            ]
+        if &#34;gsheets_sheet_name&#34; in parameters:
+            parameter_defaults[&#34;gsheets_sheet_name&#34;] = parameters[&#34;gsheets_sheet_name&#34;]
+        if &#34;partition_columns&#34; in parameters:
+            parameter_defaults[&#34;partition_columns&#34;] = parameters[&#34;partition_columns&#34;]
+        if &#34;materialize_after_dump&#34; in parameters:
+            parameter_defaults[&#34;materialize_after_dump&#34;] = parameters[
+                &#34;materialize_after_dump&#34;
+            ]
+        if &#34;materialization_mode&#34; in parameters:
+            parameter_defaults[&#34;materialization_mode&#34;] = parameters[
+                &#34;materialization_mode&#34;
+            ]
+        if &#34;materialize_to_datario&#34; in parameters:
+            parameter_defaults[&#34;materialize_to_datario&#34;] = parameters[
+                &#34;materialize_to_datario&#34;
+            ]
+        # if &#34;dbt_model_secret_parameters&#34; in parameters:
+        #     parameter_defaults[&#34;dbt_model_secret_parameters&#34;] = parameters[
+        #         &#34;dbt_model_secret_parameters&#34;
+        #     ]
+        # if &#34;partition_date_format&#34; in parameters:
+        #     parameter_defaults[&#34;partition_date_format&#34;] = parameters[
+        #         &#34;partition_date_format&#34;
+        #     ]
+        # if &#34;lower_bound_date&#34; in parameters:
+        #     parameter_defaults[&#34;lower_bound_date&#34;] = parameters[&#34;lower_bound_date&#34;]
+
+        new_interval = parameters[&#34;interval&#34;] if &#34;interval&#34; in parameters else interval
+
+        clocks.append(
+            IntervalClock(
+                interval=new_interval,
+                start_date=start_date
+                + timedelta(minutes=runs_interval_minutes * count),
+                labels=labels,
+                parameter_defaults=parameter_defaults,
+            )
+        )
+    return clocks</code></pre>
 </details>
 </section>
 <section>
@@ -113,6 +194,94 @@ def handle_dataframe_chunk(
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="pipelines.utils.dump_url.utils.generate_dump_url_schedules"><code class="name flex">
+<span>def <span class="ident">generate_dump_url_schedules</span></span>(<span>interval: datetime.timedelta, start_date: datetime.datetime, labels: List[str], dataset_id: str, table_parameters: dict, batch_data_type: str = 'csv', runs_interval_minutes: int = 15) ‑> List[prefect.schedules.clocks.IntervalClock]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generates multiple schedules for url dumping.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def generate_dump_url_schedules(  # pylint: disable=too-many-arguments,too-many-locals
+    interval: timedelta,
+    start_date: datetime,
+    labels: List[str],
+    # db_database: str,
+    # db_host: str,
+    # db_port: Union[str, int],
+    # db_type: str,
+    dataset_id: str,
+    # vault_secret_path: str,
+    table_parameters: dict,
+    batch_data_type: str = &#34;csv&#34;,
+    runs_interval_minutes: int = 15,
+) -&gt; List[IntervalClock]:
+    &#34;&#34;&#34;
+    Generates multiple schedules for url dumping.
+    &#34;&#34;&#34;
+    # db_port = str(db_port)
+    clocks = []
+    for count, (table_id, parameters) in enumerate(table_parameters.items()):
+        parameter_defaults = {
+            &#34;batch_data_type&#34;: batch_data_type,
+            &#34;url&#34;: parameters[&#34;url&#34;],
+            &#34;url_type&#34;: parameters[&#34;url_type&#34;],
+            &#34;dataset_id&#34;: dataset_id,
+            &#34;table_id&#34;: table_id,
+            &#34;dump_mode&#34;: parameters[&#34;dump_mode&#34;],
+            # &#34;vault_secret_path&#34;: vault_secret_path,
+            # &#34;db_database&#34;: db_database,
+            # &#34;db_host&#34;: db_host,
+            # &#34;db_port&#34;: db_port,
+            # &#34;db_type&#34;: db_type,
+            # &#34;execute_query&#34;: query_to_line(parameters[&#34;execute_query&#34;]),
+        }
+        if &#34;gsheets_sheet_order&#34; in parameters:
+            parameter_defaults[&#34;gsheets_sheet_order&#34;] = parameters[
+                &#34;gsheets_sheet_order&#34;
+            ]
+        if &#34;gsheets_sheet_name&#34; in parameters:
+            parameter_defaults[&#34;gsheets_sheet_name&#34;] = parameters[&#34;gsheets_sheet_name&#34;]
+        if &#34;partition_columns&#34; in parameters:
+            parameter_defaults[&#34;partition_columns&#34;] = parameters[&#34;partition_columns&#34;]
+        if &#34;materialize_after_dump&#34; in parameters:
+            parameter_defaults[&#34;materialize_after_dump&#34;] = parameters[
+                &#34;materialize_after_dump&#34;
+            ]
+        if &#34;materialization_mode&#34; in parameters:
+            parameter_defaults[&#34;materialization_mode&#34;] = parameters[
+                &#34;materialization_mode&#34;
+            ]
+        if &#34;materialize_to_datario&#34; in parameters:
+            parameter_defaults[&#34;materialize_to_datario&#34;] = parameters[
+                &#34;materialize_to_datario&#34;
+            ]
+        # if &#34;dbt_model_secret_parameters&#34; in parameters:
+        #     parameter_defaults[&#34;dbt_model_secret_parameters&#34;] = parameters[
+        #         &#34;dbt_model_secret_parameters&#34;
+        #     ]
+        # if &#34;partition_date_format&#34; in parameters:
+        #     parameter_defaults[&#34;partition_date_format&#34;] = parameters[
+        #         &#34;partition_date_format&#34;
+        #     ]
+        # if &#34;lower_bound_date&#34; in parameters:
+        #     parameter_defaults[&#34;lower_bound_date&#34;] = parameters[&#34;lower_bound_date&#34;]
+
+        new_interval = parameters[&#34;interval&#34;] if &#34;interval&#34; in parameters else interval
+
+        clocks.append(
+            IntervalClock(
+                interval=new_interval,
+                start_date=start_date
+                + timedelta(minutes=runs_interval_minutes * count),
+                labels=labels,
+                parameter_defaults=parameter_defaults,
+            )
+        )
+    return clocks</code></pre>
+</details>
+</dd>
 <dt id="pipelines.utils.dump_url.utils.handle_dataframe_chunk"><code class="name flex">
 <span>def <span class="ident">handle_dataframe_chunk</span></span>(<span>dataframe: pandas.core.frame.DataFrame, save_path: str, partition_columns: List[str], event_id: str, idx: int, build_json_dataframe: bool = False, dataframe_key_column: str = None)</span>
 </code></dt>
@@ -246,6 +415,7 @@ setTimeout(() => input.focus(), 100);
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="pipelines.utils.dump_url.utils.generate_dump_url_schedules" href="#pipelines.utils.dump_url.utils.generate_dump_url_schedules">generate_dump_url_schedules</a></code></li>
 <li><code><a title="pipelines.utils.dump_url.utils.handle_dataframe_chunk" href="#pipelines.utils.dump_url.utils.handle_dataframe_chunk">handle_dataframe_chunk</a></code></li>
 </ul>
 </li>

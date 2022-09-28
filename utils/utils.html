@@ -39,6 +39,7 @@ import logging
 from os import getenv, walk
 from os.path import join
 from pathlib import Path
+import re
 from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
 
@@ -491,11 +492,19 @@ def remove_columns_accents(dataframe: pd.DataFrame) -&gt; list:
         dataframe.columns.str.normalize(&#34;NFKD&#34;)
         .str.encode(&#34;ascii&#34;, errors=&#34;ignore&#34;)
         .str.decode(&#34;utf-8&#34;)
+        .map(lambda x: x.strip())
         .str.replace(&#34; &#34;, &#34;_&#34;)
-        .str.replace(&#34;.&#34;, &#34;&#34;)
         .str.replace(&#34;/&#34;, &#34;_&#34;)
         .str.replace(&#34;-&#34;, &#34;_&#34;)
+        .str.replace(&#34;\a&#34;, &#34;_&#34;)
+        .str.replace(&#34;\b&#34;, &#34;_&#34;)
+        .str.replace(&#34;\n&#34;, &#34;_&#34;)
+        .str.replace(&#34;\t&#34;, &#34;_&#34;)
+        .str.replace(&#34;\v&#34;, &#34;_&#34;)
+        .str.replace(&#34;\f&#34;, &#34;_&#34;)
+        .str.replace(&#34;\r&#34;, &#34;_&#34;)
         .str.lower()
+        .map(final_column_treatment)
     )
 
 
@@ -768,7 +777,20 @@ def parse_date_columns(
     dataframe[mes_col] = dataframe[data_col].dt.month
     dataframe[data_col] = dataframe[data_col].dt.date
 
-    return dataframe, [ano_col, mes_col, data_col]</code></pre>
+    return dataframe, [ano_col, mes_col, data_col]
+
+
+def final_column_treatment(column: str) -&gt; str:
+    &#34;&#34;&#34;
+    Adds an underline before column name if it only has numbers or remove all non alpha numeric
+    characters besides underlines (&#34;_&#34;).
+    &#34;&#34;&#34;
+    try:
+        int(column)
+        return f&#34;_{column}&#34;
+    except ValueError:  # pylint: disable=bare-except
+        non_alpha_removed = re.sub(r&#34;[\W]+&#34;, &#34;&#34;, column)
+        return non_alpha_removed</code></pre>
 </details>
 </section>
 <section>
@@ -1000,6 +1022,29 @@ def parse_date_columns(
     log(f&#34;Wrote {data_type.upper()} header at {save_header_file_path}&#34;)
 
     return save_header_path</code></pre>
+</details>
+</dd>
+<dt id="pipelines.utils.utils.final_column_treatment"><code class="name flex">
+<span>def <span class="ident">final_column_treatment</span></span>(<span>column: str) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Adds an underline before column name if it only has numbers or remove all non alpha numeric
+characters besides underlines ("_").</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def final_column_treatment(column: str) -&gt; str:
+    &#34;&#34;&#34;
+    Adds an underline before column name if it only has numbers or remove all non alpha numeric
+    characters besides underlines (&#34;_&#34;).
+    &#34;&#34;&#34;
+    try:
+        int(column)
+        return f&#34;_{column}&#34;
+    except ValueError:  # pylint: disable=bare-except
+        non_alpha_removed = re.sub(r&#34;[\W]+&#34;, &#34;&#34;, column)
+        return non_alpha_removed</code></pre>
 </details>
 </dd>
 <dt id="pipelines.utils.utils.get_credentials_from_env"><code class="name flex">
@@ -1372,11 +1417,19 @@ Mode needs to be "prod" or "staging"</p></div>
         dataframe.columns.str.normalize(&#34;NFKD&#34;)
         .str.encode(&#34;ascii&#34;, errors=&#34;ignore&#34;)
         .str.decode(&#34;utf-8&#34;)
+        .map(lambda x: x.strip())
         .str.replace(&#34; &#34;, &#34;_&#34;)
-        .str.replace(&#34;.&#34;, &#34;&#34;)
         .str.replace(&#34;/&#34;, &#34;_&#34;)
         .str.replace(&#34;-&#34;, &#34;_&#34;)
+        .str.replace(&#34;\a&#34;, &#34;_&#34;)
+        .str.replace(&#34;\b&#34;, &#34;_&#34;)
+        .str.replace(&#34;\n&#34;, &#34;_&#34;)
+        .str.replace(&#34;\t&#34;, &#34;_&#34;)
+        .str.replace(&#34;\v&#34;, &#34;_&#34;)
+        .str.replace(&#34;\f&#34;, &#34;_&#34;)
+        .str.replace(&#34;\r&#34;, &#34;_&#34;)
         .str.lower()
+        .map(final_column_treatment)
     )</code></pre>
 </details>
 </dd>
@@ -1834,6 +1887,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.utils.utils.dataframe_to_parquet" href="#pipelines.utils.utils.dataframe_to_parquet">dataframe_to_parquet</a></code></li>
 <li><code><a title="pipelines.utils.utils.determine_whether_to_execute_or_not" href="#pipelines.utils.utils.determine_whether_to_execute_or_not">determine_whether_to_execute_or_not</a></code></li>
 <li><code><a title="pipelines.utils.utils.dump_header_to_file" href="#pipelines.utils.utils.dump_header_to_file">dump_header_to_file</a></code></li>
+<li><code><a title="pipelines.utils.utils.final_column_treatment" href="#pipelines.utils.utils.final_column_treatment">final_column_treatment</a></code></li>
 <li><code><a title="pipelines.utils.utils.get_credentials_from_env" href="#pipelines.utils.utils.get_credentials_from_env">get_credentials_from_env</a></code></li>
 <li><code><a title="pipelines.utils.utils.get_redis_client" href="#pipelines.utils.utils.get_redis_client">get_redis_client</a></code></li>
 <li><code><a title="pipelines.utils.utils.get_storage_blobs" href="#pipelines.utils.utils.get_storage_blobs">get_storage_blobs</a></code></li>
