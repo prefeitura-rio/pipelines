@@ -75,7 +75,9 @@ def determine_whether_to_execute_or_not(
     Returns:
         True if the cron expression should trigger, False otherwise.
     """
-    cron_expression_iterator = croniter.croniter(cron_expression, datetime_last_execution)
+    cron_expression_iterator = croniter.croniter(
+        cron_expression, datetime_last_execution
+    )
     next_cron_expression_time = cron_expression_iterator.get_next(datetime)
     if next_cron_expression_time <= datetime_now:
         return True
@@ -179,7 +181,9 @@ def notify_discord_on_failure(
     )
 
 
-def set_default_parameters(flow: prefect.Flow, default_parameters: dict) -> prefect.Flow:
+def set_default_parameters(
+    flow: prefect.Flow, default_parameters: dict
+) -> prefect.Flow:
     """
     Sets default parameters for a flow.
     """
@@ -431,7 +435,10 @@ def clean_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
         if dataframe[col].dtype == object:
             try:
                 dataframe[col] = (
-                    dataframe[col].astype(str).str.replace("\x00", "").replace("None", np.nan)
+                    dataframe[col]
+                    .astype(str)
+                    .str.replace("\x00", "")
+                    .replace("None", np.nan)
                 )
             except Exception as exc:
                 print(
@@ -514,12 +521,15 @@ def to_partitions(
 
         for filter_combination in unique_combinations:
             patitions_values = [
-                f"{partition}={value}" for partition, value in filter_combination.items()
+                f"{partition}={value}"
+                for partition, value in filter_combination.items()
             ]
 
             # get filtered data
             df_filter = data.loc[
-                data[filter_combination.keys()].isin(filter_combination.values()).all(axis=1),
+                data[filter_combination.keys()]
+                .isin(filter_combination.values())
+                .all(axis=1),
                 :,
             ]
             df_filter = df_filter.drop(columns=partition_columns).reset_index(drop=True)
@@ -528,12 +538,16 @@ def to_partitions(
             filter_save_path = Path(savepath / "/".join(patitions_values))
             filter_save_path.mkdir(parents=True, exist_ok=True)
             if suffix is not None:
-                file_filter_save_path = Path(filter_save_path) / f"data_{suffix}.{data_type}"
+                file_filter_save_path = (
+                    Path(filter_save_path) / f"data_{suffix}.{data_type}"
+                )
             else:
                 file_filter_save_path = Path(filter_save_path) / f"data.{data_type}"
 
             if build_json_dataframe:
-                df_filter = to_json_dataframe(df_filter, key_column=dataframe_key_column)
+                df_filter = to_json_dataframe(
+                    df_filter, key_column=dataframe_key_column
+                )
 
             if data_type == "csv":
                 # append data to csv
@@ -573,7 +587,9 @@ def to_json_dataframe(
     if csv_path:
         dataframe = pd.read_csv(csv_path, **read_csv_kwargs)
     if key_column:
-        dataframe["content"] = dataframe.drop(columns=[key_column]).to_dict(orient="records")
+        dataframe["content"] = dataframe.drop(columns=[key_column]).to_dict(
+            orient="records"
+        )
         dataframe = dataframe[["key", "content"]]
     else:
         dataframe["content"] = dataframe.to_dict(orient="records")
@@ -602,7 +618,9 @@ def get_credentials_from_env(
     if env == "":
         raise ValueError(f"BASEDOSDADOS_CREDENTIALS_{mode.upper()} env var not set!")
     info: dict = json.loads(base64.b64decode(env))
-    cred: service_account.Credentials = service_account.Credentials.from_service_account_info(info)
+    cred: service_account.Credentials = (
+        service_account.Credentials.from_service_account_info(info)
+    )
     if scopes:
         cred = cred.with_scopes(scopes)
     return cred
@@ -621,7 +639,9 @@ def get_storage_blobs(dataset_id: str, table_id: str) -> list:
     )
 
 
-def list_blobs_with_prefix(bucket_name: str, prefix: str, mode: str = "prod") -> List[Blob]:
+def list_blobs_with_prefix(
+    bucket_name: str, prefix: str, mode: str = "prod"
+) -> List[Blob]:
     """
     Lists all the blobs in the bucket that begin with the prefix.
     This can be used to list all blobs in a "folder", e.g. "public/".
@@ -684,7 +704,9 @@ def dump_header_to_file(data_path: Union[str, Path], data_type: str = "csv"):
     # discover if it's a partitioned table
     if partition_folders := [folder for folder in file.split("/") if "=" in folder]:
         partition_path = "/".join(partition_folders)
-        save_header_file_path = Path(f"{save_header_path}/{partition_path}/header.{data_type}")
+        save_header_file_path = Path(
+            f"{save_header_path}/{partition_path}/header.{data_type}"
+        )
         log(f"Found partition path: {save_header_file_path}")
 
     else:
