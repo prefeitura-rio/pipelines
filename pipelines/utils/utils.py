@@ -470,7 +470,7 @@ def remove_columns_accents(dataframe: pd.DataFrame) -> list:
         .str.replace("(", "_")
         .str.replace(")", "_")
         .str.lower()
-        .map(lambda x: remove_int_columns(x))
+        .map(lambda x: final_column_treatment(x))
     )
 
 
@@ -731,7 +731,7 @@ def parse_date_columns(
     return dataframe, [ano_col, mes_col, data_col]
 
 
-def remove_int_columns(column: str) -> str:
+def final_column_treatment(column: str) -> str:
     try:
         int(column)
         return f"_{column}"
