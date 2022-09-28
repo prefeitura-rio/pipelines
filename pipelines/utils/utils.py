@@ -10,6 +10,7 @@ import logging
 from os import getenv, walk
 from os.path import join
 from pathlib import Path
+import re
 from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
 
@@ -462,11 +463,19 @@ def remove_columns_accents(dataframe: pd.DataFrame) -> list:
         dataframe.columns.str.normalize("NFKD")
         .str.encode("ascii", errors="ignore")
         .str.decode("utf-8")
+        .map(lambda x: x.strip())
         .str.replace(" ", "_")
-        .str.replace(".", "")
         .str.replace("/", "_")
         .str.replace("-", "_")
+        .str.replace("\a", "_")
+        .str.replace("\b", "_")
+        .str.replace("\n", "_")
+        .str.replace("\t", "_")
+        .str.replace("\v", "_")
+        .str.replace("\f", "_")
+        .str.replace("\r", "_")
         .str.lower()
+        .map(final_column_treatment)
     )
 
 
@@ -740,3 +749,16 @@ def parse_date_columns(
     dataframe[data_col] = dataframe[data_col].dt.date
 
     return dataframe, [ano_col, mes_col, data_col]
+
+
+def final_column_treatment(column: str) -> str:
+    """
+    Adds an underline before column name if it only has numbers or remove all non alpha numeric
+    characters besides underlines ("_").
+    """
+    try:
+        int(column)
+        return f"_{column}"
+    except ValueError:  # pylint: disable=bare-except
+        non_alpha_removed = re.sub(r"[\W]+", "", column)
+        return non_alpha_removed
