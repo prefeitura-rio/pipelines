@@ -67,8 +67,7 @@ def download_url(  # pylint: disable=too-many-arguments
         url_prefix = "https://docs.google.com/spreadsheets/d/"
         if not url.startswith(url_prefix):
             raise ValueError(
-                "URL must start with https://docs.google.com/spreadsheets/d/"
-                f"Invalid URL: {url}"
+                "URL must start with https://docs.google.com/spreadsheets/d/" f"Invalid URL: {url}"
             )
         log(">>>>> URL is a Google Sheets URL, downloading directly")
         credentials = get_credentials_from_env(
@@ -83,7 +82,7 @@ def download_url(  # pylint: disable=too-many-arguments
             worksheet = sheet.worksheet(gsheets_sheet_name)
         else:
             worksheet = sheet.get_worksheet(gsheets_sheet_order)
-        if gsheets_sheet_range:
+        if gsheets_sheet_range:  # if range is informed, get range from worksheet
             dataframe = pd.DataFrame(worksheet.batch_get((gsheets_sheet_range,))[0])
         else:
             dataframe = pd.DataFrame(worksheet.get_values())
@@ -112,14 +111,11 @@ def download_url(  # pylint: disable=too-many-arguments
         url_prefix = "https://drive.google.com/file/d/"
         if not url.startswith(url_prefix):
             raise ValueError(
-                "URL must start with https://drive.google.com/file/d/."
-                f"Invalid URL: {url}"
+                "URL must start with https://drive.google.com/file/d/." f"Invalid URL: {url}"
             )
         file_id = url.removeprefix(url_prefix).split("/")[0]
         log(f">>>>> FILE_ID: {file_id}")
-        creds = get_credentials_from_env(
-            scopes=["https://www.googleapis.com/auth/drive"]
-        )
+        creds = get_credentials_from_env(scopes=["https://www.googleapis.com/auth/drive"])
         try:
             service = build("drive", "v3", credentials=creds)
             request = service.files().get_media(fileId=file_id)  # pylint: disable=E1101
@@ -146,7 +142,7 @@ def dump_files(
     file_path: str,
     partition_columns: List[str],
     save_path: str = ".",
-    chunksize: int = 10**6,
+    chunksize: int = 10 ** 6,
     build_json_dataframe: bool = False,
     dataframe_key_column: str = None,
 ) -> None:
