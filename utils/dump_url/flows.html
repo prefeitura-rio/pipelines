@@ -137,6 +137,7 @@ with Flow(
         url_type=url_type,
         gsheets_sheet_order=gsheets_sheet_order,
         gsheets_sheet_name=gsheets_sheet_name,
+        gsheets_sheet_range=gsheets_sheet_range,
     )
     DOWNLOAD_URL_TASK.set_upstream(rename_flow_run)
 
