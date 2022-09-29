@@ -48,6 +48,7 @@ gsheets_urls = {
             /edit#gid=118781852",
         "url_type": "google_sheet",
         "gsheets_sheet_name": "Relação MetaPE-AR2022",
+        "gsheets_sheet_range": "A2:I1000",
         "materialize_after_dump": True,
     },
 }
@@ -55,7 +56,7 @@ gsheets_urls = {
 
 gsheets_clocks = generate_dump_url_schedules(
     interval=timedelta(days=1),
-    start_date=datetime(2022, 9, 28, 14, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2022, 9, 29, 14, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_SMFP_AGENT_LABEL.value,
     ],
