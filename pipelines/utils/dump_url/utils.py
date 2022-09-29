@@ -119,6 +119,10 @@ def generate_dump_url_schedules(  # pylint: disable=too-many-arguments,too-many-
             ]
         if "gsheets_sheet_name" in parameters:
             parameter_defaults["gsheets_sheet_name"] = parameters["gsheets_sheet_name"]
+        if "gsheets_sheet_range" in parameters:
+            parameter_defaults["gsheets_sheet_range"] = parameters[
+                "gsheets_sheet_range"
+            ]
         if "partition_columns" in parameters:
             parameter_defaults["partition_columns"] = parameters["partition_columns"]
         if "materialize_after_dump" in parameters:

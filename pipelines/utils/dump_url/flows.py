@@ -43,6 +43,7 @@ with Flow(
     url_type = Parameter("url_type", default="direct", required=True)
     gsheets_sheet_order = Parameter("gsheets_sheet_order", default=0, required=False)
     gsheets_sheet_name = Parameter("gsheets_sheet_name", default=None, required=False)
+    gsheets_sheet_range = Parameter("gsheets_sheet_range", default=None, required=False)
 
     # Table parameters
     partition_columns = Parameter("partition_columns", required=False, default="")
