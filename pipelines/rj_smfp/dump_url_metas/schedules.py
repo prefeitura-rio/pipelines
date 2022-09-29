@@ -48,6 +48,7 @@ gsheets_urls = {
             /edit#gid=118781852",
         "url_type": "google_sheet",
         "gsheets_sheet_name": "Relação MetaPE-AR2022",
+        "gsheets_sheet_range": "A1:I1000",
         "materialize_after_dump": True,
     },
 }
