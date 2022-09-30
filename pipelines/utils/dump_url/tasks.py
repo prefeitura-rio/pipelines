@@ -32,12 +32,13 @@ from pipelines.utils.utils import (
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 # pylint: disable=R0912,R0914,R0915
-def download_url(
+def download_url(  # pylint: disable=too-many-arguments
     url: str,
     fname: str,
     url_type: str = "direct",
     gsheets_sheet_order: int = 0,
     gsheets_sheet_name: str = None,
+    gsheets_sheet_range: str = None,
 ) -> None:
     """
     Downloads a file from a URL and saves it to a local file.
@@ -54,6 +55,8 @@ def download_url(
         gsheets_sheet_order: Worksheet index, in the case you want to select it by index. \
             Worksheet indexes start from zero.
         gsheets_sheet_name: Worksheet name, in the case you want to select it by name.
+        gsheets_sheet_range: Range in selected worksheet to get data from. Defaults to entire \
+            worksheet.
 
     Returns:
         None.
@@ -78,15 +81,12 @@ def download_url(
         sheet = gspread_client.open_by_url(url)
         if gsheets_sheet_name:
             worksheet = sheet.worksheet(gsheets_sheet_name)
-        # elif gsheets_sheet_order != -1:
-        #     worksheet = sheet.get_worksheet(gsheets_sheet_order)
         else:
             worksheet = sheet.get_worksheet(gsheets_sheet_order)
-            # raise ValueError(
-            #     "Sheet order or sheet name must be informed. \
-            #     Please set values to `gsheets_sheet_order` or `gsheets_sheet_name` parameters"
-            # )
-        dataframe = pd.DataFrame(worksheet.get_values())
+        if gsheets_sheet_range:  # if range is informed, get range from worksheet
+            dataframe = pd.DataFrame(worksheet.batch_get((gsheets_sheet_range,))[0])
+        else:
+            dataframe = pd.DataFrame(worksheet.get_values())
         new_header = dataframe.iloc[0]  # grab the first row for the header
         dataframe = dataframe[1:]  # take the data less the header row
         dataframe.columns = new_header  # set the header row as the df header
