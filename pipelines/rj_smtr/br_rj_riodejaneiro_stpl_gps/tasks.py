@@ -57,9 +57,24 @@ from prefect import task
 
 
 from pipelines.rj_smtr.constants import constants
-from pipelines.utils.utils import log
+from pipelines.utils.utils import get_vault_secret, log
 from pipelines.rj_smtr.utils import log_critical
 
+
+@task
+def get_stpl_headers(secret_path=constants.GPS_STPL_API_SECRET_PATH.value):
+    """
+    Get STPL API headers.
+
+    Parameters:
+    secret_path : str
+        Path to the secret in Vault.
+
+    Returns:
+    API headers with token.
+    """
+    headers = get_vault_secret(secret_path)['data']
+    return headers
 
 @task
 def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict):
