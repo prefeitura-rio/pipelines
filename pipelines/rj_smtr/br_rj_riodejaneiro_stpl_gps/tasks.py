@@ -77,7 +77,7 @@ def get_stpl_headers(secret_path=constants.GPS_STPL_API_SECRET_PATH.value):
     return headers
 
 @task
-def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict):
+def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict, timestamp):
     """Parse data from status_dict['data'] to DataFrame as partially nested table.
 
     Args:
@@ -90,8 +90,7 @@ def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict):
     """
     key_column = "codigo"
     columns = [key_column, "dataHora", "timestamp_captura", "content"]
-    data = status_dict["data"]
-    timestamp = status_dict["timestamp"]
+    data = status_dict["data"]['veiculos']
 
     if status_dict["error"] is not None:
         return {"df": pd.DataFrame(), "error": status_dict["error"]}
@@ -99,8 +98,6 @@ def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict):
     error = None
     # get tz info from constants
     timezone = constants.TIMEZONE.value
-
-    data = data.json()["veiculos"]
 
     # initialize df for nested columns
     df = pd.DataFrame(columns=columns)
@@ -149,4 +146,4 @@ def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict):
     except Exception:
         error = traceback.format_exc()
         log_critical(f"Failed to filter STPL data: \n{error}")
-    return {"df": df, "error": error}
+    return {"data": df, "error": error}
