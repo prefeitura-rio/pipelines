@@ -101,6 +101,7 @@ def get_raw(
                 for action in recurso["actions"]:
                     row = {
                         "id_recurso": recurso["protocol"],
+                        "status_recurso": recurso["baseStatus"],
                         "data_recurso": action["createdDate"],
                     }
                     # recupera dados de viagem informados no recurso
