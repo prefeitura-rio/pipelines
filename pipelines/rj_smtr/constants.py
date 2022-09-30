@@ -120,6 +120,13 @@ class constants(Enum):  # pylint: disable=c0103
             "key_column": "trip_id",
         },
     }
+
+    # SUBSIDIO SPPO #
+    SUBSIDIO_SPPO_DATASET_ID = "projeto_subsidio_sppo"
+    SUBSIDIO_SPPO_RECURSO_TABLE_ID = "recursos_filtrada"
+    SUBSIDIO_SPPO_RECURSO_API_BASE_URL = "https://api.movidesk.com/public/v1/tickets?"
+    SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH = "sppo_subsidio_recursos_api"
+
     # RDO
     FTPS_SECRET_PATH = "smtr_rdo_ftps"
 
