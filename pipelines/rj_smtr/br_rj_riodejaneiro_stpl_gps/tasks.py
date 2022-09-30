@@ -73,8 +73,9 @@ def get_stpl_headers(secret_path=constants.GPS_STPL_API_SECRET_PATH.value):
     Returns:
     API headers with token.
     """
-    headers = get_vault_secret(secret_path)['data']
+    headers = get_vault_secret(secret_path)["data"]
     return headers
+
 
 @task
 def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict, timestamp):
@@ -90,7 +91,7 @@ def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict, timestamp):
     """
     key_column = "codigo"
     columns = [key_column, "dataHora", "timestamp_captura", "content"]
-    data = status_dict["data"]['veiculos']
+    data = status_dict["data"]["veiculos"]
 
     if status_dict["error"] is not None:
         return {"df": pd.DataFrame(), "error": status_dict["error"]}

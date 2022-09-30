@@ -45,7 +45,9 @@ with Flow(
 ) as captura_stpl:
 
     # DEFAULT PARAMETERS #
-    dataset_id = Parameter("dataset_id", default=constants.GPS_STPL_RAW_DATASET_ID.value)
+    dataset_id = Parameter(
+        "dataset_id", default=constants.GPS_STPL_RAW_DATASET_ID.value
+    )
     table_id = Parameter("table_id", default=constants.GPS_STPL_RAW_TABLE_ID.value)
     url = Parameter("url", default=constants.GPS_STPL_API_BASE_URL.value)
     secret_path = Parameter(
