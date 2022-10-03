@@ -104,7 +104,7 @@ def get_raw(
                 # busca acoes do recurso
                 for action in recurso["actions"]:
                     row = {
-                        "data_recurso": a["createdDate"],
+                        "data_recurso": action["createdDate"],
                     }
                 # recupera dados de viagem informados no recurso
                 row.update(
