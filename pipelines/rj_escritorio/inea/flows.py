@@ -2,7 +2,7 @@
 """
 Flows for INEA.
 """
-from prefect.run_configs import DockerRun
+from prefect.run_configs import LocalRun
 from prefect.storage import GCS
 
 from pipelines.constants import constants
@@ -18,6 +18,4 @@ with Flow(
     print_environment_variables()
 
 inea_test_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-inea_test_flow.run_config = DockerRun(
-    image=constants.DOCKER_IMAGE.value, labels=[constants.INEA_AGENT_LABEL.value]
-)
+inea_test_flow.run_config = LocalRun(labels=[constants.INEA_AGENT_LABEL.value])
