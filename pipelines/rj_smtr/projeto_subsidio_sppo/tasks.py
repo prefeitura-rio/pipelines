@@ -59,7 +59,7 @@ def create_api_url_recursos(
     params = {
         "select": "id,protocol,createdDate,baseStatus,servicefull",
         "filter": f"({filters}) and ({status})",
-        "expand": "actions($select=id,description,htmlDescription,createdDate)",
+        "expand": "actions($select=id,description,htmlDescription,createdDate),customFieldValues($expand=items)",
         "orderby": "createdDate%20desc",
         "top": top,
         "skip": skip,
@@ -100,24 +100,21 @@ def get_raw(
                 # busca acoes do recurso
                 for action in recurso["actions"]:
                     row = {
-                        "id_recurso": recurso["protocol"],
-                        "status_recurso": recurso["baseStatus"],
-                        "data_recurso": action["createdDate"],
+                        "data_recurso": a['createdDate'],
                     }
-                    # recupera dados de viagem informados no recurso
-                    if action["description"][:16] == "Dados informados":
-                        for field, col in custom_fields.items():
-                            try:
-                                row.update(
-                                    {
-                                        col: action["description"]
-                                        .split(field)[1]
-                                        .split("\n\xa0\n")[0]
-                                    }
-                                )
-                            except Exception as error:
-                                # TODO: check if need this break
-                                return {"data": pd.DataFrame(), "error": error}
+                # recupera dados de viagem informados no recurso
+                row.update({
+                        "id_recurso": recurso['protocol'],
+                        "status_recurso": recurso["baseStatus"],
+                        "id_veiculo":recurso['customFieldValues'][7]['value'],
+                        "data":recurso['customFieldValues'][1]['value'],
+                        "datetime_partida":recurso['customFieldValues'][2]['value'],
+                        "datetime_chegada":recurso['customFieldValues'][3]['value'],
+                        "servico":recurso['customFieldValues'][5]['value'],
+                        "tipo_servico":recurso['customFieldValues'][6]["items"][0]['customFieldItem'],
+                        "sentido":recurso['customFieldValues'][8]["items"][0]['customFieldItem']
+                    })
+
                 # salva apenas ultimo dado de viagem informado no recurso
                 df = df.append(row, ignore_index=True)
         # itera os proximos recursos do periodo
