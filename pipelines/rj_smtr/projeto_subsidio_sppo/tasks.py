@@ -44,6 +44,8 @@ def create_api_url_recursos(
     )
 
     url = constants.SUBSIDIO_SPPO_RECURSO_API_BASE_URL.value
+    log("URL Base: ", url)
+
     token = get_vault_secret(constants.SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH.value)[
         "data"
     ]["token"]
@@ -52,9 +54,10 @@ def create_api_url_recursos(
     status = " or ".join(
         [f"baseStatus eq '{s}'" for s in ["New", "InAttendance", "Resolved"]]
     )
-    st = date_range_start
-    et = date_range_end
-    filters = f"category eq 'Recurso' and createdDate ge {st} and createdDate lt {et}"
+    dt = date_range_start
+    de = date_range_end
+
+    filters = f"category eq 'Recurso' and createdDate ge {dt} and createdDate lt {de}"
 
     params = {
         "select": "id,protocol,createdDate,baseStatus,servicefull",
@@ -64,6 +67,7 @@ def create_api_url_recursos(
         "top": top,
         "skip": skip,
     }
+    log("URL Parameters: ", params)
 
     for k, v in params.items():
         url += f"&${k}={v}"
@@ -270,7 +274,7 @@ def pre_treatment_subsidio_sppo_recursos(status: dict, timestamp: datetime) -> D
     df = df[df["datetime_partida"] <= df["data_recurso"]]
 
     df["data"] = pd.to_datetime(df["data"]).dt.strftime("%Y-%m-%d")
-    df["sentido"] = df["sentido"].str.extract(r"(^[VIC])")
+    df["sentido"] = df["sentido"].map({"Ida": "I", "Volta": "V", "Circular": "C"})
 
     # verifica linha e servico informados
     for col in ["servico_recurso", "linha_recurso"]:
