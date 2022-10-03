@@ -62,7 +62,7 @@ def create_api_url_recursos(
     params = {
         "select": "id,protocol,createdDate,baseStatus,servicefull",
         "filter": f"({filters}) and ({status})",
-        "expand": "actions($select=id,description,htmlDescription,createdDate),customFieldValues($expand=items)",
+        "expand": "actions($select=id,createdDate),customFieldValues($expand=items)",
         "orderby": "createdDate%20desc",
         "top": top,
         "skip": skip,
