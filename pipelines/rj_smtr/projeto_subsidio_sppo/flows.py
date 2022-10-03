@@ -26,7 +26,6 @@ from pipelines.rj_smtr.tasks import (
     create_local_partition_path,
     get_current_timestamp,
     # get_local_dbt_client,
-    get_raw,
     parse_timestamp_to_string,
     save_raw_local,
     save_treated_local,
@@ -39,6 +38,7 @@ from pipelines.rj_smtr.tasks import (
 # )
 
 from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import (
+    get_raw,
     pre_treatment_subsidio_sppo_recursos,
 )
 
