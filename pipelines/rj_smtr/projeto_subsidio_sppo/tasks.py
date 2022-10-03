@@ -18,16 +18,6 @@ from pipelines.rj_smtr.constants import constants
 
 # Tasks #
 
-custom_fields = {
-    "Serviço:\n": "servico_recurso",
-    "Linha:\n": "linha_recurso",
-    "Número de ordem, se aplicável:\n": "id_veiculo",
-    "Hora de Início da Viagem, se aplicável:\n": "datetime_partida",
-    "Hora do fim da viagem, se aplicável:\n": "datetime_chegada",
-    "Dia da Viagem:\n": "data",
-    "Direção do Serviço:\n": "sentido",
-}
-
 
 @task
 def create_api_url_recursos(
