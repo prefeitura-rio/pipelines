@@ -100,20 +100,26 @@ def get_raw(
                 # busca acoes do recurso
                 for action in recurso["actions"]:
                     row = {
-                        "data_recurso": a['createdDate'],
+                        "data_recurso": a["createdDate"],
                     }
                 # recupera dados de viagem informados no recurso
-                row.update({
-                        "id_recurso": recurso['protocol'],
+                row.update(
+                    {
+                        "id_recurso": recurso["protocol"],
                         "status_recurso": recurso["baseStatus"],
-                        "id_veiculo":recurso['customFieldValues'][7]['value'],
-                        "data":recurso['customFieldValues'][1]['value'],
-                        "datetime_partida":recurso['customFieldValues'][2]['value'],
-                        "datetime_chegada":recurso['customFieldValues'][3]['value'],
-                        "servico":recurso['customFieldValues'][5]['value'],
-                        "tipo_servico":recurso['customFieldValues'][6]["items"][0]['customFieldItem'],
-                        "sentido":recurso['customFieldValues'][8]["items"][0]['customFieldItem']
-                    })
+                        "id_veiculo": recurso["customFieldValues"][7]["value"],
+                        "data": recurso["customFieldValues"][1]["value"],
+                        "datetime_partida": recurso["customFieldValues"][2]["value"],
+                        "datetime_chegada": recurso["customFieldValues"][3]["value"],
+                        "servico": recurso["customFieldValues"][5]["value"],
+                        "tipo_servico": recurso["customFieldValues"][6]["items"][0][
+                            "customFieldItem"
+                        ],
+                        "sentido": recurso["customFieldValues"][8]["items"][0][
+                            "customFieldItem"
+                        ],
+                    }
+                )
 
                 # salva apenas ultimo dado de viagem informado no recurso
                 df = df.append(row, ignore_index=True)
