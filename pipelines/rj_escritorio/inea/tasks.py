@@ -2,7 +2,7 @@
 """
 Tasks for INEA.
 """
-from os import environ
+from os import environ, getenv
 from pathlib import Path
 from typing import List
 
@@ -36,10 +36,12 @@ def fetch_vol_files(date: str, output_directory: str = "/var/escritoriodedados/t
     # Creating temporary directory
     output_directory_path = Path(output_directory)
     output_directory_path.mkdir(parents=True, exist_ok=True)
+    # Get SSH password from env
+    ssh_password = getenv("INEA_SSH_PASSWORD")
     # Open SSH client
     ssh_client = SSHClient()
     ssh_client.load_system_host_keys()
-    ssh_client.connect(hostname="a9921", username="root")
+    ssh_client.connect(hostname="a9921", username="root", password=ssh_password)
     # Open SCP client
     scp = SCPClient(ssh_client.get_transport())
     # Fetch VOL files
