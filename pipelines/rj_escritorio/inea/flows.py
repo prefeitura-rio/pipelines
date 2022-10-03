@@ -19,7 +19,7 @@ with Flow(
     date = Parameter("date")
     FETCH_TASK = fetch_vol_files(date=date)
     CONVERT_TASK = convert_vol_files()
-    CONVERT_TASK.set_upstream(FETCH_TASK)
+    CONVERT_TASK.set_upstream(FETCH_TASK)  # pylint: disable=no-member
 
 inea_test_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 inea_test_flow.run_config = LocalRun(labels=[constants.INEA_AGENT_LABEL.value])
