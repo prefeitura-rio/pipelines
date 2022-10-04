@@ -657,6 +657,39 @@ def list_blobs_with_prefix(
     return list(blobs)
 
 
+def upload_files_to_storage(
+    bucket_name: str,
+    prefix: str,
+    local_path: Union[str, Path] = None,
+    files_list: List[str] = None,
+    mode: str = "prod",
+):
+    """
+    Uploads all files from `local_path` to `bucket_name` with `prefix`.
+    Mode needs to be "prod" or "staging"
+    """
+    # Either local_path or files_list must be provided
+    if local_path is None and files_list is None:
+        raise ValueError("Either local_path or files_list must be provided")
+
+    # If local_path is provided, get all files from it
+    if local_path is not None:
+        files_list: List[Path] = list(Path(local_path).glob("**/*"))
+
+    # Assert all items in files_list are Path objects
+    files_list: List[Path] = [Path(f) for f in files_list]
+
+    credentials = get_credentials_from_env(mode=mode)
+    storage_client = storage.Client(credentials=credentials)
+
+    bucket = storage_client.bucket(bucket_name)
+
+    for file in files_list:
+        if file.is_file():
+            blob = bucket.blob(f"{prefix}/{file.name}")
+            blob.upload_from_filename(file)
+
+
 def parser_blobs_to_partition_dict(blobs: list) -> dict:
     """
     Extracts the partition information from the blobs.
