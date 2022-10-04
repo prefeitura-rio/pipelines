@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=R0914
 """
 Tasks for comando
 """
@@ -277,13 +278,15 @@ def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -> pd.DataFrame:
     for pop_id in pop_ids:
         log(f">>>>>>> Requesting POP's activities for pop_id: {pop_id}")
         response = get_url(url=url + f"?popId={pop_id}", token=auth_token)
-        t = 0
-        if "error" in response.keys() and t <= 5:
-            log(f">>>>>>> Requesting POP's activities for pop_id: {pop_id} Time: {t+1}")
+        tentativa = 0
+        if "error" in response.keys() and tentativa <= 5:
+            log(
+                f">>>>>>> Requesting POP's activities for pop_id: {pop_id} Time: {tentativa+1}"
+            )
             response = get_url(url=url + f"?popId={pop_id}", token=auth_token)
-            t += 1
+            tentativa += 1
             time.sleep(60)
-        elif "error" in response.keys() and t > 5:
+        elif "error" in response.keys() and tentativa > 5:
             continue
 
         row_template = {
