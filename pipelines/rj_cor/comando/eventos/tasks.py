@@ -271,22 +271,21 @@ def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -> pd.DataFrame:
 
     pop_ids = pops["id_pop"].unique()
 
-    # Checar pop_ids não salvos no redis
-    pop_ids = [i for i in pop_ids if i not in redis_pops]
-
     atividades_pops = []
     for pop_id in pop_ids:
         log(f">>>>>>> Requesting POP's activities for pop_id: {pop_id}")
         response = get_url(url=url + f"?popId={pop_id}", token=auth_token)
+
         tentativa = 0
-        if "error" in response.keys() and tentativa <= 5:
+        while "error" in response.keys() and tentativa <= 5:
             log(
                 f">>>>>>> Requesting POP's activities for pop_id: {pop_id} Time: {tentativa+1}"
             )
+            time.sleep(60)
             response = get_url(url=url + f"?popId={pop_id}", token=auth_token)
             tentativa += 1
-            time.sleep(60)
-        elif "error" in response.keys() and tentativa > 5:
+
+        if "error" in response.keys() and tentativa > 5:
             continue
 
         row_template = {
@@ -308,9 +307,27 @@ def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -> pd.DataFrame:
     for i in ["sigla", "orgao", "acao"]:
         dataframe[i] = dataframe[i].str.capitalize()
 
-    update_pops_redis = dataframe["id_pop"].unique()
+    dataframe["key"] = (
+        dataframe["id_pop"].astype(str)
+        + "_"
+        + dataframe["sigla"]
+        + "_"
+        + dataframe["acao"]
+    )
+    update_pops_redis = dataframe["key"].unique()
 
-    return dataframe[["id_pop", "sigla", "orgao", "acao"]], update_pops_redis
+    # Checar pop_ids não salvos no redis
+    update_pops_redis = [i for i in update_pops_redis if i not in redis_pops]
+
+    if len(update_pops_redis) < 1:
+        update_pops_redis = None
+        dataframe = pd.DataFrame()
+    else:
+        # mantém apenas esses pop_ids no dataframe
+        dataframe = dataframe[dataframe["key"].isin(update_pops_redis)]
+        dataframe = dataframe[["id_pop", "sigla", "orgao", "acao"]]
+
+    return dataframe, update_pops_redis
 
 
 @task

@@ -29,7 +29,7 @@ def get_on_redis(
     return files_on_redis
 
 
-@task()
+@task(trigger=all_successful)
 def save_on_redis(
     dataset_id: str, table_id: str, mode: str = "prod", files: list = [], wait=None
 ) -> None:

@@ -22,6 +22,7 @@ from pipelines.rj_cor.comando.eventos.tasks import (
     get_atividades_pops,
     get_date_interval,
     get_pops,
+    not_none,
     salvar_dados,
     save_no_partition,
     set_last_updated_on_redis,
@@ -290,9 +291,9 @@ with Flow(
     atividades_pops, update_pops_redis = get_atividades_pops(
         pops=pops, redis_pops=redis_pops
     )
+    has_update = not_none(update_pops_redis)
 
     path_pops = save_no_partition(dataframe=pops)
-    path_atividades_pops = save_no_partition(dataframe=atividades_pops, append=True)
 
     task_upload_pops = create_table_and_upload_to_gcs(
         data_path=path_pops,
@@ -301,20 +302,23 @@ with Flow(
         dump_mode=dump_mode,
     )
 
-    task_upload_atividades_pops = create_table_and_upload_to_gcs(
-        data_path=path_atividades_pops,
-        dataset_id=dataset_id,
-        table_id=table_id_atividades_pops,
-        dump_mode="append",
-    )
+    with case(has_update, True):
+        path_atividades_pops = save_no_partition(dataframe=atividades_pops, append=True)
 
-    save_on_redis(
-        dataset_id,
-        table_id_atividades_pops,
-        "dev",
-        update_pops_redis,
-        wait=task_upload_atividades_pops,
-    )
+        task_upload_atividades_pops = create_table_and_upload_to_gcs(
+            data_path=path_atividades_pops,
+            dataset_id=dataset_id,
+            table_id=table_id_atividades_pops,
+            dump_mode="append",
+        )
+
+        save_on_redis(
+            dataset_id,
+            table_id_atividades_pops,
+            "dev",
+            update_pops_redis,
+            wait=task_upload_atividades_pops,
+        )
 
     with case(materialize_after_dump, True):
         # Trigger DBT flow run
