@@ -10,14 +10,22 @@ from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.rj_cor.meteorologia.satelite.tasks import (
+    checa_update,
     get_dates,
     slice_data,
     download,
     tratar_dados,
     salvar_parquet,
 )
+from pipelines.rj_cor.tasks import (
+    get_on_redis,
+    save_on_redis,
+)
 from pipelines.rj_cor.meteorologia.satelite.schedules import hour_schedule
+
 from pipelines.utils.decorators import Flow
+
+# from prefect import Flow
 from pipelines.utils.tasks import (
     create_table_and_upload_to_gcs,
     get_current_flow_labels,
@@ -25,9 +33,9 @@ from pipelines.utils.tasks import (
 
 with Flow(
     name="COR: Meteorologia - Satelite GOES 16",
-    code_owners=[
-        "paty",
-    ],
+    # code_owners=[
+    #     "paty",
+    # ],
 ) as cor_meteorologia_goes16:
 
     CURRENT_TIME = get_dates()
@@ -93,20 +101,36 @@ with Flow(
     DATASET_ID_cmip = "clima_satelite"
     TABLE_ID_cmip = "clean_ir_longwave_window_goes_16"
 
-    filename_cmip = download(
-        variavel=VARIAVEL_cmip, ano=ano, dia_juliano=dia_juliano, hora=hora, band="13"
+    redis_files_cmip = get_on_redis(DATASET_ID_cmip, TABLE_ID_cmip, mode="dev")
+    filename_cmip, redis_files_cmip_updated = download(
+        variavel=VARIAVEL_cmip,
+        ano=ano,
+        dia_juliano=dia_juliano,
+        hora=hora,
+        band="13",
+        redis_files=redis_files_cmip,
+        wait=redis_files_cmip,
     )
+    update = checa_update(redis_files_cmip, redis_files_cmip_updated)
+    with case(update, True):
+        info_cmip = tratar_dados(filename=filename_cmip)
+        path_cmip = salvar_parquet(info=info_cmip, file_path=filename_cmip)
 
-    info_cmip = tratar_dados(filename=filename_cmip)
-    path_cmip = salvar_parquet(info=info_cmip)
+        UPLOAD_TABLE_cmip = create_table_and_upload_to_gcs(
+            data_path=path_cmip,
+            dataset_id=DATASET_ID_cmip,
+            table_id=TABLE_ID_cmip,
+            dump_mode=DUMP_MODE,
+            wait=path_cmip,
+        )
 
-    UPLOAD_TABLE_cmip = create_table_and_upload_to_gcs(
-        data_path=path_cmip,
-        dataset_id=DATASET_ID_cmip,
-        table_id=TABLE_ID_cmip,
-        dump_mode=DUMP_MODE,
-        wait=path_cmip,
-    )
+        save_on_redis(
+            DATASET_ID_cmip,
+            TABLE_ID_cmip,
+            "dev",
+            redis_files_cmip_updated,
+            wait=path_cmip,
+        )
 
     # Trigger DBT flow run
     with case(MATERIALIZE_AFTER_DUMP, True):

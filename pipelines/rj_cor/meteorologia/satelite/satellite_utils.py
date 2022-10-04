@@ -463,7 +463,7 @@ def treat_data(
     return data
 
 
-def save_parquet(variable: str, datetime_save: str) -> Union[str, Path]:
+def save_parquet(variable: str, datetime_save: str, file_path: str) -> Union[str, Path]:
     """
     Save data in parquet
     """
@@ -503,25 +503,22 @@ def save_parquet(variable: str, datetime_save: str) -> Union[str, Path]:
         )
     )
 
-    # cria pasta se ela não existe
-    base_path = os.path.join(os.getcwd(), "data", "satelite", variable, "output")
-
-    parquet_path = os.path.join(base_path, partitions)
+    # cria pasta de partições se elas não existem
+    output_path = os.path.join(os.getcwd(), "data", "satelite", variable, "output")
+    parquet_path = os.path.join(output_path, partitions)
 
     if not os.path.exists(parquet_path):
         os.makedirs(parquet_path)
 
     # Fixa ordem das colunas
-    print(">>>>>", ["longitude", "latitude", variable.lower()])
     data = data[["longitude", "latitude", variable.lower()]]
 
-    # salva em parquet
-    log(f"Saving on base_path {base_path}")
-    filename = os.path.join(parquet_path, "dados.csv")
-    data.to_csv(filename, index=False)
-    # filename = os.path.join(parquet_path, 'dados.parquet')
-    # data.to_parquet(filename, index=False)
-    return base_path
+    # salva em csv
+    log(f"Saving on output_path {output_path}")
+    filename = file_path.split("/")[-1].replace(".nc", "")
+    file_path = os.path.join(parquet_path, f"{filename}.csv")
+    data.to_csv(file_path, index=False)
+    return output_path
 
 
 def main(path: Union[str, Path]):
