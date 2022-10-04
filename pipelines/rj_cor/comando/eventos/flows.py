@@ -26,6 +26,10 @@ from pipelines.rj_cor.comando.eventos.tasks import (
     save_no_partition,
     set_last_updated_on_redis,
 )
+from pipelines.rj_cor.tasks import (
+    get_on_redis,
+    save_on_redis,
+)
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.decorators import Flow
 from pipelines.utils.dump_db.constants import constants as dump_db_constants
@@ -282,10 +286,13 @@ with Flow(
     )
 
     pops = get_pops()
-    atividades_pops = get_atividades_pops(pops=pops)
+    redis_pops = get_on_redis(dataset_id, table_id_atividades_pops, mode="dev")
+    atividades_pops, update_pops_redis = get_atividades_pops(
+        pops=pops, redis_pops=redis_pops
+    )
 
     path_pops = save_no_partition(dataframe=pops)
-    path_atividades_pops = save_no_partition(dataframe=atividades_pops)
+    path_atividades_pops = save_no_partition(dataframe=atividades_pops, append=True)
 
     task_upload_pops = create_table_and_upload_to_gcs(
         data_path=path_pops,
@@ -299,6 +306,14 @@ with Flow(
         dataset_id=dataset_id,
         table_id=table_id_atividades_pops,
         dump_mode=dump_mode,
+    )
+
+    save_on_redis(
+        dataset_id,
+        table_id_atividades_pops,
+        "dev",
+        update_pops_redis,
+        wait=task_upload_atividades_pops,
     )
 
     with case(materialize_after_dump, True):

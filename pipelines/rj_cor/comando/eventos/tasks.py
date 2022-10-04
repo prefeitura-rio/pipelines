@@ -7,6 +7,7 @@ from copy import deepcopy
 import json
 import os
 from pathlib import Path
+import time
 from typing import Any, Union, Tuple
 from uuid import uuid4
 
@@ -255,8 +256,8 @@ def get_pops() -> pd.DataFrame:
     return pops[["id_pop", "pop_titulo"]]
 
 
-@task
-def get_atividades_pops(pops: pd.DataFrame) -> pd.DataFrame:
+@task(nout=2)
+def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -> pd.DataFrame:
     """
     Get the list of POP's activities from API
     """
@@ -269,10 +270,22 @@ def get_atividades_pops(pops: pd.DataFrame) -> pd.DataFrame:
 
     pop_ids = pops["id_pop"].unique()
 
+    # Checar pop_ids não salvos no redis
+    pop_ids = [i for i in pop_ids if i not in redis_pops]
+
     atividades_pops = []
     for pop_id in pop_ids:
         log(f">>>>>>> Requesting POP's activities for pop_id: {pop_id}")
         response = get_url(url=url + f"?popId={pop_id}", token=auth_token)
+        t = 0
+        if "error" in response.keys() and t <= 5:
+            log(f">>>>>>> Requesting POP's activities for pop_id: {pop_id} Time: {t+1}")
+            response = get_url(url=url + f"?popId={pop_id}", token=auth_token)
+            t += 1
+            time.sleep(60)
+        elif "error" in response.keys() and t > 5:
+            continue
+
         row_template = {
             "pop_titulo": response["pop"],
             "id_pop": pop_id,
@@ -292,7 +305,9 @@ def get_atividades_pops(pops: pd.DataFrame) -> pd.DataFrame:
     for i in ["sigla", "orgao", "acao"]:
         dataframe[i] = dataframe[i].str.capitalize()
 
-    return dataframe[["id_pop", "sigla", "orgao", "acao"]]
+    update_pops_redis = dataframe["id_pop"].unique()
+
+    return dataframe[["id_pop", "sigla", "orgao", "acao"]], update_pops_redis
 
 
 @task
@@ -321,13 +336,17 @@ def salvar_dados(dfr: pd.DataFrame, current_time: str, name: str) -> Union[str, 
 
 
 @task
-def save_no_partition(dataframe: pd.DataFrame) -> str:
+def save_no_partition(dataframe: pd.DataFrame, append: bool = False) -> str:
     """
     Saves a dataframe to a temporary directory and returns the path to the directory.
     """
     path_to_directory = "/tmp/" + str(uuid4().hex) + "/"
     os.makedirs(path_to_directory, exist_ok=True)
-    dataframe.to_csv(path_to_directory + "dados.csv", index=False)
+    if append:
+        current_time = pendulum.now("America/Sao_Paulo").strftime("%Y-%m-%d %H:%M:%S")
+        dataframe.to_csv(path_to_directory + f"dados_{current_time}.csv", index=False)
+    else:
+        dataframe.to_csv(path_to_directory + "dados.csv", index=False)
     return path_to_directory
 
 
