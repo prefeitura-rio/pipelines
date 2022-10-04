@@ -99,7 +99,7 @@ def upload_files_to_gcs(
     Upload files to GCS
     """
     # Assert all items in files_list are Path objects
-    files_list: List[Path] = [Path(f) for f in files_list]
+    files_list: List[Path] = [Path(f) for f in converted_files]
 
     credentials = get_credentials_from_env(mode=mode)
     storage_client = storage.Client(credentials=credentials)
