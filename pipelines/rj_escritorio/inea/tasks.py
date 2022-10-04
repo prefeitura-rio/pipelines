@@ -65,10 +65,11 @@ def convert_vol_files(
     # List all files in the output directory
     output_directory_path = Path(output_directory)
     files = output_directory_path.glob("*.vol")
+    total_files = len(list(files))
 
     # Log each file and then delete it
-    for file in files:
-        log(f"Converting {file} to NetCDF...")
+    for i, file in enumerate(list(files)):
+        log(f"Converting file {i}/{total_files} ({file}) to NetCDF...")
         # Run volconvert
         child = pexpect.spawn(
             f'/opt/edge/bin/volconvert {file} "NetCDF.'
@@ -100,13 +101,17 @@ def upload_files_to_gcs(
     """
     # Assert all items in files_list are Path objects
     files_list: List[Path] = [Path(f) for f in converted_files]
+    total_files = len(files_list)
 
     credentials = get_credentials_from_env(mode=mode)
     storage_client = storage.Client(credentials=credentials)
 
     bucket = storage_client.bucket(bucket_name)
 
-    for file in files_list:
+    for i, file in enumerate(files_list):
         if file.is_file():
+            log(f"Uploading file {i}/{total_files} ({file}) to GCS...")
             blob = bucket.blob(f"{prefix}/{file.name}")
             blob.upload_from_filename(file)
+            log(f"File {file} uploaded to GCS.")
+            file.unlink()
