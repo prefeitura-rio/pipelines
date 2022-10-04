@@ -19,7 +19,7 @@ from pipelines.rj_smtr.constants import constants
 # Tasks #
 
 
-@task
+# @task
 def create_api_url_recursos(
     date_range_start, date_range_end, skip, top=1000
 ) -> Dict:  # pylint: disable=E501
@@ -34,7 +34,7 @@ def create_api_url_recursos(
     )
 
     url = constants.SUBSIDIO_SPPO_RECURSO_API_BASE_URL.value
-    log("URL Base: ", url)
+    log(f"URL Base: {url}")
 
     token = get_vault_secret(constants.SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH.value)[
         "data"
@@ -57,7 +57,7 @@ def create_api_url_recursos(
         "top": top,
         "skip": skip,
     }
-    log("URL Parameters: ", params)
+    log(f"URL Parameters: {params}")
 
     for k, v in params.items():
         url += f"&${k}={v}"
@@ -126,7 +126,7 @@ def get_raw(
 
     # print(df.head())
     if len(df) == 0:
-        return {"data": list(), "erro": "Empty data"}
+        return {"data": list(), "error": "Empty data"}
     return {"data": df.set_index("id_recurso", drop=True), "error": None}
 
 
@@ -221,7 +221,7 @@ def routes_type_cross_validation(df) -> pd.DataFrame:
     )
 
 
-# @task
+@task
 def pre_treatment_subsidio_sppo_recursos(status: dict, timestamp: datetime) -> Dict:
     """
     Treat recursos requested from movidesk api.

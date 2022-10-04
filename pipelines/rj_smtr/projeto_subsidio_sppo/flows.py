@@ -49,8 +49,8 @@ with Flow(
 ) as subsidio_sppo_recursos:
 
     # Get run parameters #
-    date_range_start = Parameter("date_range_start", default=False)
-    date_range_end = Parameter("date_range_end", default=False)
+    date_range_start = Parameter("date_range_start", default="2022-10-03 00:00:00")
+    date_range_end = Parameter("date_range_end", default="2022-10-04 00:00:00")
 
     # SETUP #
     timestamp = get_current_timestamp()
