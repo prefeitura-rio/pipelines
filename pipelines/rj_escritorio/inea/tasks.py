@@ -6,12 +6,13 @@ from os import environ, getenv
 from pathlib import Path
 from typing import List
 
+from google.cloud import storage
 from paramiko import SSHClient
 import pexpect
 from prefect import task
 from scp import SCPClient
 
-from pipelines.utils.utils import log, upload_files_to_storage
+from pipelines.utils.utils import log, get_credentials_from_env
 
 
 @task
@@ -97,9 +98,15 @@ def upload_files_to_gcs(
     """
     Upload files to GCS
     """
-    upload_files_to_storage(
-        bucket_name=bucket_name,
-        prefix=prefix,
-        files_list=converted_files,
-        mode=mode,
-    )
+    # Assert all items in files_list are Path objects
+    files_list: List[Path] = [Path(f) for f in files_list]
+
+    credentials = get_credentials_from_env(mode=mode)
+    storage_client = storage.Client(credentials=credentials)
+
+    bucket = storage_client.bucket(bucket_name)
+
+    for file in files_list:
+        if file.is_file():
+            blob = bucket.blob(f"{prefix}/{file.name}")
+            blob.upload_from_filename(file)
