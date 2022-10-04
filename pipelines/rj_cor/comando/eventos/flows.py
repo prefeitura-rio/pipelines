@@ -16,7 +16,7 @@ from pipelines.constants import constants
 from pipelines.rj_cor.comando.eventos.constants import (
     constants as comando_constants,
 )
-from pipelines.rj_cor.comando.eventos.schedules import every_day, every_month
+from pipelines.rj_cor.comando.eventos.schedules import every_hour, every_month
 from pipelines.rj_cor.comando.eventos.tasks import (
     download_eventos,
     get_atividades_pops,
@@ -238,7 +238,7 @@ rj_cor_comando_eventos_flow.run_config = KubernetesRun(
         constants.RJ_COR_AGENT_LABEL.value,
     ],
 )
-rj_cor_comando_eventos_flow.schedule = every_day
+rj_cor_comando_eventos_flow.schedule = every_hour
 
 
 with Flow(
