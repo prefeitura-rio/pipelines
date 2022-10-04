@@ -305,7 +305,7 @@ with Flow(
         data_path=path_atividades_pops,
         dataset_id=dataset_id,
         table_id=table_id_atividades_pops,
-        dump_mode=dump_mode,
+        dump_mode="append",
     )
 
     save_on_redis(
