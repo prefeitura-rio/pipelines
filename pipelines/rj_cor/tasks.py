@@ -20,7 +20,7 @@ def get_on_redis(
     """
     Set the last updated time on Redis.
     """
-    redis_client = get_redis_client(host="127.0.0.1")
+    redis_client = get_redis_client()
     key = build_redis_key(dataset_id, table_id, "files", mode)
     files_on_redis = redis_client.get(key)
     files_on_redis = [] if files_on_redis is None else files_on_redis
@@ -36,7 +36,7 @@ def save_on_redis(
     """
     Set the last updated time on Redis.
     """
-    redis_client = get_redis_client(host="127.0.0.1")
+    redis_client = get_redis_client()
     key = build_redis_key(dataset_id, table_id, "files", mode)
     files = list(set(files))
     print(">>>> save on redis files ", files)
