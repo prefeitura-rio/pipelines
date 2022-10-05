@@ -34,9 +34,10 @@ def create_api_url_recursos(date_range_start, date_range_end, skip=0, top=1000) 
 
     url += f"token={token}"
 
-    status = " or ".join(
-        [f"baseStatus eq '{s}'" for s in ["New", "InAttendance", "Resolved"]]
+    baseStatus = " or ".join(
+        [f"baseStatus eq '{s}'" for s in ["New", "InAttendance", "Resolved", "Closed"]]
     )
+    status = "status ne 'Resolvido Automaticamente'"
 
     start = pd.to_datetime(date_range_start, utc=True).strftime("%Y-%m-%dT%H:%M:%S.%MZ")
     end = pd.to_datetime(date_range_end, utc=True).strftime("%Y-%m-%dT%H:%M:%S.%MZ")
@@ -47,7 +48,7 @@ def create_api_url_recursos(date_range_start, date_range_end, skip=0, top=1000) 
 
     params = {
         "select": "id,protocol,createdDate,baseStatus,serviceSecondLevel,customFieldValues",
-        "filter": f"({category} and {dates} and {service}) and ({status})",
+        "filter": f"({category} and {dates} and {service} and {status}) and ({baseStatus})",
         "expand": "customFieldValues($expand=items)",
         "orderby": "createdDate%20desc",
         "top": top,
@@ -135,7 +136,7 @@ def get_custom_fields(custom_fields: List) -> Dict:
     row = {}
     for field in custom_fields:
 
-        if field["customFieldId"] in custom_fields.keys():
+        if field["customFieldId"] in map_field.keys():
             # dropdown field
             if field["items"]:
                 row.update(
