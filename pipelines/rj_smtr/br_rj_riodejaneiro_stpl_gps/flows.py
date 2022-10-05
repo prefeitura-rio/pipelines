@@ -40,7 +40,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks import (
 
 
 with Flow(
-    "SMTR: GPS STPL-Captura",
+    "SMTR: GPS STPL - Captura",
     code_owners=["caio", "fernanda"],
 ) as captura_stpl:
 
@@ -100,13 +100,13 @@ with Flow(
     )
     # FLOW
     # ? Congelado para evitar o TriggerFailed, permitindo testar as demais tasks
-    # captura_stpl.set_dependencies(task=partitions, upstream_tasks=[rename_flow_run])
+    captura_stpl.set_dependencies(task=partitions, upstream_tasks=[rename_flow_run])
 
 
 captura_stpl.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_stpl.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 # Seguindo o padrão de captura adotado pelo BRT
 captura_stpl.schedule = every_minute
