@@ -70,7 +70,8 @@ def convert_vol_files(
     log(f"Found {total_files} files to convert.")
 
     # Log each file and then delete it
-    for i, file in enumerate(list(files)):
+    i = 0
+    for file in files:
         log(f"Converting file {i+1}/{total_files} ({file}) to NetCDF...")
         # Run volconvert
         child = pexpect.spawn(
@@ -89,6 +90,7 @@ def convert_vol_files(
         child.expect(pexpect.EOF)
         # Delete the VOL file
         file.unlink()
+        i += 1
 
     # Return the list of converted files
     return converted_files
