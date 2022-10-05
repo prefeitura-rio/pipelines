@@ -73,6 +73,7 @@ def get_stpl_headers(secret_path=constants.GPS_STPL_API_SECRET_PATH.value):
     Returns:
     API headers with token.
     """
+    # trigger cd
     headers = get_vault_secret(secret_path)["data"]
     return headers
 
