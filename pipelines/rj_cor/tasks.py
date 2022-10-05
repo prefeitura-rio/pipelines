@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# # pylint: disable=R0914,W0613,W0102
 """
 Common  Tasks for rj-cor
 """
