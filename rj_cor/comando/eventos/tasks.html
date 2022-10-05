@@ -28,6 +28,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
+# pylint: disable=R0914,W0613,W0102
 &#34;&#34;&#34;
 Tasks for comando
 &#34;&#34;&#34;
@@ -36,6 +37,7 @@ from copy import deepcopy
 import json
 import os
 from pathlib import Path
+import time
 from typing import Any, Union, Tuple
 from uuid import uuid4
 
@@ -284,8 +286,8 @@ def get_pops() -&gt; pd.DataFrame:
     return pops[[&#34;id_pop&#34;, &#34;pop_titulo&#34;]]
 
 
-@task
-def get_atividades_pops(pops: pd.DataFrame) -&gt; pd.DataFrame:
+@task(nout=2)
+def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     Get the list of POP&#39;s activities from API
     &#34;&#34;&#34;
@@ -302,6 +304,19 @@ def get_atividades_pops(pops: pd.DataFrame) -&gt; pd.DataFrame:
     for pop_id in pop_ids:
         log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting POP&#39;s activities for pop_id: {pop_id}&#34;)
         response = get_url(url=url + f&#34;?popId={pop_id}&#34;, token=auth_token)
+
+        tentativa = 0
+        while &#34;error&#34; in response.keys() and tentativa &lt;= 5:
+            log(
+                f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting POP&#39;s activities for pop_id: {pop_id} Time: {tentativa+1}&#34;
+            )
+            time.sleep(60)
+            response = get_url(url=url + f&#34;?popId={pop_id}&#34;, token=auth_token)
+            tentativa += 1
+
+        if &#34;error&#34; in response.keys() and tentativa &gt; 5:
+            continue
+
         row_template = {
             &#34;pop_titulo&#34;: response[&#34;pop&#34;],
             &#34;id_pop&#34;: pop_id,
@@ -321,7 +336,27 @@ def get_atividades_pops(pops: pd.DataFrame) -&gt; pd.DataFrame:
     for i in [&#34;sigla&#34;, &#34;orgao&#34;, &#34;acao&#34;]:
         dataframe[i] = dataframe[i].str.capitalize()
 
-    return dataframe[[&#34;id_pop&#34;, &#34;sigla&#34;, &#34;orgao&#34;, &#34;acao&#34;]]
+    dataframe[&#34;key&#34;] = (
+        dataframe[&#34;id_pop&#34;].astype(str)
+        + &#34;_&#34;
+        + dataframe[&#34;sigla&#34;]
+        + &#34;_&#34;
+        + dataframe[&#34;acao&#34;]
+    )
+    update_pops_redis = dataframe[&#34;key&#34;].unique()
+
+    # Checar pop_ids não salvos no redis
+    update_pops_redis = [i for i in update_pops_redis if i not in redis_pops]
+
+    if len(update_pops_redis) &lt; 1:
+        update_pops_redis = None
+        dataframe = pd.DataFrame()
+    else:
+        # mantém apenas esses pop_ids no dataframe
+        dataframe = dataframe[dataframe[&#34;key&#34;].isin(update_pops_redis)]
+        dataframe = dataframe[[&#34;id_pop&#34;, &#34;sigla&#34;, &#34;orgao&#34;, &#34;acao&#34;]]
+
+    return dataframe, update_pops_redis
 
 
 @task
@@ -350,13 +385,17 @@ def salvar_dados(dfr: pd.DataFrame, current_time: str, name: str) -&gt; Union[st
 
 
 @task
-def save_no_partition(dataframe: pd.DataFrame) -&gt; str:
+def save_no_partition(dataframe: pd.DataFrame, append: bool = False) -&gt; str:
     &#34;&#34;&#34;
     Saves a dataframe to a temporary directory and returns the path to the directory.
     &#34;&#34;&#34;
     path_to_directory = &#34;/tmp/&#34; + str(uuid4().hex) + &#34;/&#34;
     os.makedirs(path_to_directory, exist_ok=True)
-    dataframe.to_csv(path_to_directory + &#34;dados.csv&#34;, index=False)
+    if append:
+        current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+        dataframe.to_csv(path_to_directory + f&#34;dados_{current_time}.csv&#34;, index=False)
+    else:
+        dataframe.to_csv(path_to_directory + &#34;dados.csv&#34;, index=False)
     return path_to_directory
 
 
@@ -524,7 +563,7 @@ def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
 </details>
 </dd>
 <dt id="pipelines.rj_cor.comando.eventos.tasks.get_atividades_pops"><code class="name flex">
-<span>def <span class="ident">get_atividades_pops</span></span>(<span>pops: pandas.core.frame.DataFrame) ‑> pandas.core.frame.DataFrame</span>
+<span>def <span class="ident">get_atividades_pops</span></span>(<span>pops: pandas.core.frame.DataFrame, redis_pops: list) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get the list of POP's activities from API</p></div>
@@ -532,8 +571,8 @@ def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@task
-def get_atividades_pops(pops: pd.DataFrame) -&gt; pd.DataFrame:
+<pre><code class="python">@task(nout=2)
+def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     Get the list of POP&#39;s activities from API
     &#34;&#34;&#34;
@@ -550,6 +589,19 @@ def get_atividades_pops(pops: pd.DataFrame) -&gt; pd.DataFrame:
     for pop_id in pop_ids:
         log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting POP&#39;s activities for pop_id: {pop_id}&#34;)
         response = get_url(url=url + f&#34;?popId={pop_id}&#34;, token=auth_token)
+
+        tentativa = 0
+        while &#34;error&#34; in response.keys() and tentativa &lt;= 5:
+            log(
+                f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting POP&#39;s activities for pop_id: {pop_id} Time: {tentativa+1}&#34;
+            )
+            time.sleep(60)
+            response = get_url(url=url + f&#34;?popId={pop_id}&#34;, token=auth_token)
+            tentativa += 1
+
+        if &#34;error&#34; in response.keys() and tentativa &gt; 5:
+            continue
+
         row_template = {
             &#34;pop_titulo&#34;: response[&#34;pop&#34;],
             &#34;id_pop&#34;: pop_id,
@@ -569,7 +621,27 @@ def get_atividades_pops(pops: pd.DataFrame) -&gt; pd.DataFrame:
     for i in [&#34;sigla&#34;, &#34;orgao&#34;, &#34;acao&#34;]:
         dataframe[i] = dataframe[i].str.capitalize()
 
-    return dataframe[[&#34;id_pop&#34;, &#34;sigla&#34;, &#34;orgao&#34;, &#34;acao&#34;]]</code></pre>
+    dataframe[&#34;key&#34;] = (
+        dataframe[&#34;id_pop&#34;].astype(str)
+        + &#34;_&#34;
+        + dataframe[&#34;sigla&#34;]
+        + &#34;_&#34;
+        + dataframe[&#34;acao&#34;]
+    )
+    update_pops_redis = dataframe[&#34;key&#34;].unique()
+
+    # Checar pop_ids não salvos no redis
+    update_pops_redis = [i for i in update_pops_redis if i not in redis_pops]
+
+    if len(update_pops_redis) &lt; 1:
+        update_pops_redis = None
+        dataframe = pd.DataFrame()
+    else:
+        # mantém apenas esses pop_ids no dataframe
+        dataframe = dataframe[dataframe[&#34;key&#34;].isin(update_pops_redis)]
+        dataframe = dataframe[[&#34;id_pop&#34;, &#34;sigla&#34;, &#34;orgao&#34;, &#34;acao&#34;]]
+
+    return dataframe, update_pops_redis</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.comando.eventos.tasks.get_date_interval"><code class="name flex">
@@ -709,7 +781,7 @@ def salvar_dados(dfr: pd.DataFrame, current_time: str, name: str) -&gt; Union[st
 </details>
 </dd>
 <dt id="pipelines.rj_cor.comando.eventos.tasks.save_no_partition"><code class="name flex">
-<span>def <span class="ident">save_no_partition</span></span>(<span>dataframe: pandas.core.frame.DataFrame) ‑> str</span>
+<span>def <span class="ident">save_no_partition</span></span>(<span>dataframe: pandas.core.frame.DataFrame, append: bool = False) ‑> str</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Saves a dataframe to a temporary directory and returns the path to the directory.</p></div>
@@ -718,13 +790,17 @@ def salvar_dados(dfr: pd.DataFrame, current_time: str, name: str) -&gt; Union[st
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def save_no_partition(dataframe: pd.DataFrame) -&gt; str:
+def save_no_partition(dataframe: pd.DataFrame, append: bool = False) -&gt; str:
     &#34;&#34;&#34;
     Saves a dataframe to a temporary directory and returns the path to the directory.
     &#34;&#34;&#34;
     path_to_directory = &#34;/tmp/&#34; + str(uuid4().hex) + &#34;/&#34;
     os.makedirs(path_to_directory, exist_ok=True)
-    dataframe.to_csv(path_to_directory + &#34;dados.csv&#34;, index=False)
+    if append:
+        current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+        dataframe.to_csv(path_to_directory + f&#34;dados_{current_time}.csv&#34;, index=False)
+    else:
+        dataframe.to_csv(path_to_directory + &#34;dados.csv&#34;, index=False)
     return path_to_directory</code></pre>
 </details>
 </dd>

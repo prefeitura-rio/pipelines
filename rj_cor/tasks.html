@@ -4,8 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_cor.comando.eventos.schedules API documentation</title>
-<meta name="description" content="Schedules for the COR pipeline" />
+<title>pipelines.rj_cor.tasks API documentation</title>
+<meta name="description" content="Common
+Tasks for rj-cor" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,52 +20,60 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_cor.comando.eventos.schedules</code></h1>
+<h1 class="title">Module <code>pipelines.rj_cor.tasks</code></h1>
 </header>
 <section id="section-intro">
-<p>Schedules for the COR pipeline</p>
+<p>Common
+Tasks for rj-cor</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
+# # pylint: disable=R0914,W0613,W0102
 &#34;&#34;&#34;
-Schedules for the COR pipeline
+Common  Tasks for rj-cor
 &#34;&#34;&#34;
-from datetime import timedelta, datetime
-from prefect.schedules import Schedule
-from prefect.schedules.clocks import IntervalClock
-from pipelines.constants import constants
 
-every_hour = Schedule(
-    clocks=[
-        IntervalClock(
-            interval=timedelta(hours=1),
-            start_date=datetime(2022, 7, 19, 12, 50, 0),
-            labels=[
-                constants.RJ_COR_AGENT_LABEL.value,
-            ],
-        ),
-    ]
-)
+from prefect import task
+from prefect.triggers import all_successful
 
-every_month = Schedule(
-    clocks=[
-        IntervalClock(
-            interval=timedelta(days=30),
-            start_date=datetime(2022, 1, 1, 12, 40, 0),
-            labels=[
-                constants.RJ_COR_AGENT_LABEL.value,
-            ],
-            parameter_defaults={
-                &#34;materialize_after_dump&#34;: True,
-                &#34;materialization_mode&#34;: &#34;prod&#34;,
-                &#34;materialize_to_datario&#34;: True,
-                &#34;dump_to_gcs&#34;: True,
-            },
-        ),
-    ]
-)</code></pre>
+from pipelines.rj_cor.utils import build_redis_key
+from pipelines.utils.utils import get_redis_client
+
+
+@task
+def get_on_redis(
+    dataset_id: str,
+    table_id: str,
+    mode: str = &#34;prod&#34;,
+    wait=None,
+) -&gt; list:
+    &#34;&#34;&#34;
+    Set the last updated time on Redis.
+    &#34;&#34;&#34;
+    redis_client = get_redis_client()
+    key = build_redis_key(dataset_id, table_id, &#34;files&#34;, mode)
+    files_on_redis = redis_client.get(key)
+    files_on_redis = [] if files_on_redis is None else files_on_redis
+    files_on_redis = list(set(files_on_redis))
+    files_on_redis.sort()
+    return files_on_redis
+
+
+@task(trigger=all_successful)
+def save_on_redis(
+    dataset_id: str, table_id: str, mode: str = &#34;prod&#34;, files: list = [], wait=None
+) -&gt; None:
+    &#34;&#34;&#34;
+    Set the last updated time on Redis.
+    &#34;&#34;&#34;
+    redis_client = get_redis_client()
+    key = build_redis_key(dataset_id, table_id, &#34;files&#34;, mode)
+    files = list(set(files))
+    print(&#34;&gt;&gt;&gt;&gt; save on redis files &#34;, files)
+    files.sort()
+    redis_client.set(key, files)</code></pre>
 </details>
 </section>
 <section>
@@ -72,6 +81,61 @@ every_month = Schedule(
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pipelines.rj_cor.tasks.get_on_redis"><code class="name flex">
+<span>def <span class="ident">get_on_redis</span></span>(<span>dataset_id: str, table_id: str, mode: str = 'prod', wait=None) ‑> list</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the last updated time on Redis.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_on_redis(
+    dataset_id: str,
+    table_id: str,
+    mode: str = &#34;prod&#34;,
+    wait=None,
+) -&gt; list:
+    &#34;&#34;&#34;
+    Set the last updated time on Redis.
+    &#34;&#34;&#34;
+    redis_client = get_redis_client()
+    key = build_redis_key(dataset_id, table_id, &#34;files&#34;, mode)
+    files_on_redis = redis_client.get(key)
+    files_on_redis = [] if files_on_redis is None else files_on_redis
+    files_on_redis = list(set(files_on_redis))
+    files_on_redis.sort()
+    return files_on_redis</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.tasks.save_on_redis"><code class="name flex">
+<span>def <span class="ident">save_on_redis</span></span>(<span>dataset_id: str, table_id: str, mode: str = 'prod', files: list = [], wait=None) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the last updated time on Redis.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(trigger=all_successful)
+def save_on_redis(
+    dataset_id: str, table_id: str, mode: str = &#34;prod&#34;, files: list = [], wait=None
+) -&gt; None:
+    &#34;&#34;&#34;
+    Set the last updated time on Redis.
+    &#34;&#34;&#34;
+    redis_client = get_redis_client()
+    key = build_redis_key(dataset_id, table_id, &#34;files&#34;, mode)
+    files = list(set(files))
+    print(&#34;&gt;&gt;&gt;&gt; save on redis files &#34;, files)
+    files.sort()
+    redis_client.set(key, files)</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -111,7 +175,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../../../../doc-search.html#' + encodeURIComponent(query);
+const url = '../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -130,7 +194,13 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines.rj_cor.comando.eventos" href="index.html">pipelines.rj_cor.comando.eventos</a></code></li>
+<li><code><a title="pipelines.rj_cor" href="index.html">pipelines.rj_cor</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pipelines.rj_cor.tasks.get_on_redis" href="#pipelines.rj_cor.tasks.get_on_redis">get_on_redis</a></code></li>
+<li><code><a title="pipelines.rj_cor.tasks.save_on_redis" href="#pipelines.rj_cor.tasks.save_on_redis">save_on_redis</a></code></li>
 </ul>
 </li>
 </ul>
