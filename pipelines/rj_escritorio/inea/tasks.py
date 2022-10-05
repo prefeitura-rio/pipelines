@@ -67,6 +67,7 @@ def convert_vol_files(
     output_directory_path = Path(output_directory)
     files = output_directory_path.glob("*.vol")
     total_files = len(list(files))
+    log(f"Found {total_files} files to convert.")
 
     # Log each file and then delete it
     for i, file in enumerate(list(files)):
