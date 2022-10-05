@@ -58,7 +58,7 @@ with Flow(
     timestamp = get_current_timestamp()
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SMTR: GPS STPL - Captura - ", now_time=timestamp
+        prefix="GPS STPL: ", now_time=timestamp
     )
 
     partitions = create_date_hour_partition(timestamp)
