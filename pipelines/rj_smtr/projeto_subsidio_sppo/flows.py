@@ -3,10 +3,9 @@
 Flows for projeto_subsidio_sppo
 """
 
-from prefect import Parameter, case
+from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
-from prefect.tasks.control_flow import merge
 
 # EMD Imports #
 
@@ -38,7 +37,7 @@ from pipelines.rj_smtr.tasks import (
 # )
 
 from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import (
-    get_raw,
+    get_raw_recursos,
     pre_treatment_subsidio_sppo_recursos,
 )
 
@@ -71,7 +70,7 @@ with Flow(
     )
 
     # EXTRACT #
-    raw_status = get_raw(date_range_start, date_range_end)
+    raw_status = get_raw_recursos(date_range_start, date_range_end)
 
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
 

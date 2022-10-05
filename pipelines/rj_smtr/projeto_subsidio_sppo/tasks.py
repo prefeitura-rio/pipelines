@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+"""
+Tasks for projeto_subsidio_sppo
+"""
 
-import datetime
+# pylint: disable=too-many-arguments,broad-except
+
+# import datetime
+from typing import Dict, List
+import time
 import requests
 import pandas as pd
-import numpy as np
-import time
-from typing import Dict
 from prefect import task
 
 # EMD Imports #
@@ -19,210 +23,137 @@ from pipelines.rj_smtr.constants import constants
 # Tasks #
 
 
-# @task
-def create_api_url_recursos(
-    date_range_start, date_range_end, skip, top=1000
-) -> Dict:  # pylint: disable=E501
+def create_api_url_recursos(date_range_start, date_range_end, skip=0, top=1000) -> Dict:
     """
     Returns movidesk URL to get the requests over date range.
     """
-    date_range_start = pd.to_datetime(date_range_start, utc=True).strftime(
-        "%Y-%m-%dT%H:%M:%S.%MZ"
-    )
-    date_range_end = pd.to_datetime(date_range_end, utc=True).strftime(
-        "%Y-%m-%dT%H:%M:%S.%MZ"
-    )
-
     url = constants.SUBSIDIO_SPPO_RECURSO_API_BASE_URL.value
-    log(f"URL Base: {url}")
-
     token = get_vault_secret(constants.SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH.value)[
         "data"
     ]["token"]
+
     url += f"token={token}"
 
     status = " or ".join(
         [f"baseStatus eq '{s}'" for s in ["New", "InAttendance", "Resolved"]]
     )
-    dt = date_range_start
-    de = date_range_end
 
-    filters = f"category eq 'Recurso' and createdDate ge {dt} and createdDate lt {de}"
+    start = pd.to_datetime(date_range_start, utc=True).strftime("%Y-%m-%dT%H:%M:%S.%MZ")
+    end = pd.to_datetime(date_range_end, utc=True).strftime("%Y-%m-%dT%H:%M:%S.%MZ")
+
+    category = "category eq 'Recurso'"
+    dates = f"createdDate ge {start} and createdDate lt {end}"
+    service = "serviceFirstLevel eq 'Viagem Individual - Recurso Viagens Subsídio'"
 
     params = {
-        "select": "id,protocol,createdDate,baseStatus,servicefull",
-        "filter": f"({filters}) and ({status})",
-        "expand": "actions($select=id,createdDate),customFieldValues($expand=items)",
+        "select": "id,protocol,createdDate,baseStatus,serviceSecondLevel,customFieldValues",
+        "filter": f"({category} and {dates} and {service}) and ({status})",
+        "expand": "customFieldValues($expand=items)",
         "orderby": "createdDate%20desc",
         "top": top,
         "skip": skip,
     }
+
     log(f"URL Parameters: {params}")
 
-    for k, v in params.items():
-        url += f"&${k}={v}"
+    for param, value in params.items():
+        url += f"&${param}={value}"
 
     return url
 
 
+def request_data(url: str, headers: dict = None) -> Dict:
+    """
+    Return response json and error.
+    """
+    data = None
+
+    # Get data from API
+    try:
+        response = requests.get(
+            url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
+        )
+        error = None
+    except Exception as exp:
+        error = exp
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+        return {"data": None, "error": error}
+
+    # Check data results
+    if response.ok:  # status code is less than 400
+        data = response.json()
+
+    return {"data": data, "error": error}
+
+
 @task
-def get_raw(
-    date_range_start: datetime, date_range_end: datetime, top: int = 1000
+def get_raw_recursos(
+    date_range_start: str, date_range_end: str, skip: int = 0, top: int = 1000
 ) -> Dict:
     """
     Returns a dataframe with all recurso data from movidesk api until date.
     """
-    exit = False
-    skip = 0
-    df = pd.DataFrame()
+    all_records = False
+    data = {}
 
-    while not exit:
-        # captura recursos da api
-        try:
-            url = create_api_url_recursos(date_range_start, date_range_end, skip)
-            r = requests.get(url)
-            r = r.json()
-        except Exception as error:
-            return {"data": pd.DataFrame(), "error": error}  # TODO: add retry policy
+    while not all_records:
+        url = create_api_url_recursos(date_range_start, date_range_end, skip)
+        status = request_data(url)
 
-        for recurso in r:
-            # filtra recurso de viagem individual
-            if recurso["serviceFull"] == [
-                "SPPO",
-                "Viagem Individual - Recurso Viagens Subsídio",
-            ]:
-                # busca acoes do recurso
-                for action in recurso["actions"]:
-                    row = {
-                        "data_recurso": action["createdDate"],
-                    }
-                # recupera dados de viagem informados no recurso
-                row.update(
-                    {
-                        "id_recurso": recurso["protocol"],
-                        "status_recurso": recurso["baseStatus"],
-                        "id_veiculo": recurso["customFieldValues"][7]["value"],
-                        "data": recurso["customFieldValues"][1]["value"],
-                        "datetime_partida": recurso["customFieldValues"][2]["value"],
-                        "datetime_chegada": recurso["customFieldValues"][3]["value"],
-                        "servico": recurso["customFieldValues"][5]["value"],
-                        "tipo_servico": recurso["customFieldValues"][6]["items"][0][
-                            "customFieldItem"
-                        ],
-                        "sentido": recurso["customFieldValues"][8]["items"][0][
-                            "customFieldItem"
-                        ],
-                    }
-                )
+        if status["error"] is not None:
+            return {"data": None, "error": status["error"]}
 
-                # salva apenas ultimo dado de viagem informado no recurso
-                df = df.append(row, ignore_index=True)
+        data.update(status)
+
         # itera os proximos recursos do periodo
-        if len(r) == top:
+        if len(status["data"]) == top:
             skip += top
             time.sleep(6)
         else:
-            exit = True
+            all_records = True
 
-    # print(df.head())
-    if len(df) == 0:
-        return {"data": list(), "error": "Empty data"}
-    return {"data": df.set_index("id_recurso", drop=True), "error": None}
+    if len(status["data"]) == 0:
+        return {"data": status["data"], "error": "Empty data"}
 
-
-# linha_recurso ja nao tem espaco, esta em uppercase
-def split_servico(x):
-
-    tipo_servico = ["A", "N", "V", "P", "R", "E", "D", "B", "C", "F", "G"]
-    variacao_servico = ["A", "B", "C", "D"]
-
-    if len(x) == 0:
-        # print("1:", x)
-        return "", ""
-    # servico nao inicia com S
-    if x[0] != "S":
-        # print("2:", x[0])
-        return "", ""
-    # tipo servico invalido
-    if x[1] not in tipo_servico:
-        # print("3:", x[1])
-        return "", ""
-    if len(x) == 2:
-        # print("4:", x)
-        return x, ""
-    # variacao servico invalida
-    if x[2] not in variacao_servico:
-        # print("5:", x[2])
-        return "", ""
-    if len(x) == 3:
-        # print("6:", x)
-        return x[:2], x[2]
-    # padrao nao identificado
-    return "", ""
+    return {"data": status["data"], "error": None}
 
 
-def routes_type_cross_validation(df) -> pd.DataFrame:
+def get_custom_fields(custom_fields: List) -> Dict:
     """
-    Validate linha and servico informed with patterns for route names.
+    Return customFields dict.
     """
-    # selecionando linha_recurso no formato esperado
-    df["linha"] = df["linha_recurso"].str.upper().str.replace(" ", "")
+    map_field = {
+        111867: "data",
+        111868: "hora_partida",
+        111869: "hora_chegada",
+        111871: "servico",
+        111873: "id_veiculo",
+        111872: "tipo_servico",
+        111901: "sentido",
+    }
 
-    # padroniza servico informado
-    df["tipo_servico"] = (
-        "S" + df["servico_recurso"].str.extract(r"(^[a-zA-Z])")
-    ).replace("SA", "")
+    row = {}
+    for field in custom_fields:
 
-    # extrai o numero da linha_recurso
-    df["numero_linha_recurso"] = df["linha"].str.extract(r"(LECD)").fillna("") + df[
-        "linha_recurso"
-    ].str.extract(r"(\d+)")
-    # filtra numero de linha valida (ate 4 digitos)
-    df["aux"] = df["linha_recurso"].str.extract(r"(\d+)")
-    df = df[(df["aux"].str.len() >= 2) & (df["aux"].str.len() <= 4)].drop(columns="aux")
+        if field["customFieldId"] in custom_fields.keys():
+            # dropdown field
+            if field["items"]:
+                row.update(
+                    {
+                        map_field[field["customFieldId"]]: field["items"][0][
+                            "customFieldItem"
+                        ]
+                    }
+                )
+            # other fields
+            else:
+                row.update({map_field[field["customFieldId"]]: field["value"]})
 
-    # extrai servico da linha informada (caso tenha)
-    df["servico_linha_recurso"] = (
-        df["linha"]
-        .str.split("-")
-        .str[0]
-        .str.replace("LECD", "")
-        .str.extract(r"([a-zA-Z]+)")
-    )
-    # caso nao tenha servico na linha (e nao seja LECD), usa o tipo servico informado
-    df["servico_linha_recurso"] = df["servico_linha_recurso"].fillna(df["tipo_servico"])
-    # remove variacao das lecds (so aceito se for regular)
-    df.loc[
-        df["numero_linha_recurso"].str.startswith("LECD"),
-        "servico_linha_recurso",
-    ] = ""
-
-    # verifica servico e variacao compostos na linha_recurso
-    df["servico_linha_recurso"], df["variacao_servico_linha_recurso"] = zip(
-        *df["servico_linha_recurso"].fillna("").apply(lambda x: split_servico(x))
-    )
-
-    # filtra servicos validos
-    df = df[df["servico_linha_recurso"] == df["tipo_servico"]]
-    df["servico"] = (
-        df["tipo_servico"]
-        + df["variacao_servico_linha_recurso"]
-        + df["numero_linha_recurso"]
-    )
-
-    return df.drop(
-        columns=[
-            "linha",
-            "tipo_servico",
-            "variacao_servico_linha_recurso",
-            "numero_linha_recurso",
-            "servico_linha_recurso",
-        ]
-    )
+    return row
 
 
 @task
-def pre_treatment_subsidio_sppo_recursos(status: dict, timestamp: datetime) -> Dict:
+def pre_treatment_subsidio_sppo_recursos(status: dict, timestamp: str) -> Dict:
     """
     Treat recursos requested from movidesk api.
     """
@@ -233,42 +164,32 @@ def pre_treatment_subsidio_sppo_recursos(status: dict, timestamp: datetime) -> D
         # log("Data is empty, skipping treatment...")
         return {"data": pd.DataFrame(), "error": status["error"]}
 
-    df = status["data"]
+    data = pd.DataFrame()
+    for item in status["data"]:
+        row = {
+            "modo": item["serviceSecondLevel"],
+            "id_recurso": item["id"],
+            "protocolo": item["protocol"],
+            "status": item["baseStatus"],
+            "data_recurso": item["createdDate"],
+        }
+        row.update(get_custom_fields(item["customFieldValues"]))
+        data = data.append(row, ignore_index=True)
+
+    data["timestamp_captura"] = timestamp
 
     # filtrando não nulos
-    df = df.dropna()
+    data = data.dropna()
 
-    # seleciona número de ordem no formato esperado
-    df = df[df["id_veiculo"].str.match(pat=r"(^\d{5})")]
-
-    # selecionando data no formato esperado
-    df = df[df["data"].str.match(pat=r"(^\d{2}/\d{2}/\d{4}$)")]
-
-    # seleciona datetime_chegada e datetime_partida no formato esperado
-    df = df[df["datetime_partida"].str.match(pat=r"(^\d{2}:\d{2}$)")]
-    df = df[df["datetime_chegada"].str.match(pat=r"(^\d{2}:\d{2}$)")]
-
-    # validando data inicio < data fim e aplicando data type à colunas
-    df["datetime_chegada"] = pd.to_datetime(
-        df["data"].str.cat(df["datetime_chegada"], sep=" ")
-    ).dt.strftime("%Y-%m-%d %H:%M:%S")
-    df["datetime_partida"] = pd.to_datetime(
-        df["data"].str.cat(df["datetime_partida"], sep=" ")
-    ).dt.strftime("%Y-%m-%d %H:%M:%S")
-    df["data_recurso"] = pd.to_datetime(df["data_recurso"]).dt.strftime(
-        "%Y-%m-%d %H:%M:%S"
+    # converte datas
+    data["data_recurso"] = (
+        pd.to_datetime(data["data_recurso"])
+        .dt.tz_localize(tz="America/Sao_Paulo")
+        .map(lambda x: x.isoformat())
     )
+    data["data"] = pd.to_datetime(data["data"]).dt.strftime("%Y-%m-%d")
 
-    # verifica se a data de partida é valida
-    df = df[df["datetime_partida"] < df["datetime_chegada"]]
-    df = df[df["datetime_partida"] <= df["data_recurso"]]
+    # remove caracteres de campo aberto que quebram o schema
+    data["servico"] = data["servico"].str.replace("\xa0", " ").str.replace("\n", "")
 
-    df["data"] = pd.to_datetime(df["data"]).dt.strftime("%Y-%m-%d")
-    df["sentido"] = df["sentido"].map({"Ida": "I", "Volta": "V", "Circular": "C"})
-
-    # verifica linha e servico informados
-    for col in ["servico_recurso", "linha_recurso"]:
-        df[col] = df[col].str.replace("\xa0", " ").str.replace("\n", "")
-    df = routes_type_cross_validation(df)
-
-    return {"data": df, "error": None}
+    return {"data": data, "error": None}
