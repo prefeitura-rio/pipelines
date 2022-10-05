@@ -24,6 +24,8 @@ with Flow(
     bucket_name = Parameter("bucket_name")
     prefix = Parameter("prefix")
     mode = Parameter("mode", default="prod", required=False)
+    radar = Parameter("radar")
+    product = Parameter("product")
     FETCH_TASK = fetch_vol_files(date=date)
     CONVERTED_FILES = convert_vol_files()
     CONVERTED_FILES.set_upstream(FETCH_TASK)  # pylint: disable=no-member
@@ -32,6 +34,8 @@ with Flow(
         bucket_name=bucket_name,
         prefix=prefix,
         mode=mode,
+        radar=radar,
+        product=product,
     )
 
 

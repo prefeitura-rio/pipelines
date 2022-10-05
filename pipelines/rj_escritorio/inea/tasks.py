@@ -2,6 +2,7 @@
 """
 Tasks for INEA.
 """
+from datetime import datetime
 from os import environ, getenv
 from pathlib import Path
 from typing import List
@@ -69,7 +70,7 @@ def convert_vol_files(
 
     # Log each file and then delete it
     for i, file in enumerate(list(files)):
-        log(f"Converting file {i}/{total_files} ({file}) to NetCDF...")
+        log(f"Converting file {i+1}/{total_files} ({file}) to NetCDF...")
         # Run volconvert
         child = pexpect.spawn(
             f'/opt/edge/bin/volconvert {file} "NetCDF.'
@@ -93,8 +94,14 @@ def convert_vol_files(
 
 
 @task
+# pylint: disable=too-many-arguments, too-many-locals
 def upload_files_to_gcs(
-    converted_files: List[str], bucket_name: str, prefix: str, mode="prod"
+    converted_files: List[str],
+    bucket_name: str,
+    prefix: str,
+    radar: str,
+    product: str,
+    mode="prod",
 ):
     """
     Upload files to GCS
@@ -110,8 +117,16 @@ def upload_files_to_gcs(
 
     for i, file in enumerate(files_list):
         if file.is_file():
-            log(f"Uploading file {i}/{total_files} ({file}) to GCS...")
-            blob = bucket.blob(f"{prefix}/{file.name}")
+            # Converted file path is in the format:
+            # /var/opt/edge/.../YYYYMMDD/<filename>.nc.gz
+            # We need to get the datetime for the file
+            date_str = file.parent.name
+            date = datetime.strptime(date_str, "%Y%m%d")
+            blob_name = f"{prefix}/radar={radar}/produto={product}/data_particao={date}/{file.name}"
+            blob_name = blob_name.replace("//", "/")
+            log(f"Uploading file {i+1}/{total_files} ({file}) to GCS...")
+            log(f"Blob name will be {blob_name}")
+            blob = bucket.blob(blob_name)
             blob.upload_from_filename(file)
             log(f"File {file} uploaded to GCS.")
             file.unlink()
