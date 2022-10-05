@@ -124,7 +124,7 @@ def upload_files_to_gcs(
             # /var/opt/edge/.../YYYYMMDD/<filename>.nc.gz
             # We need to get the datetime for the file
             date_str = file.parent.name
-            date = datetime.strptime(date_str, "%Y%m%d")
+            date = datetime.strptime(date_str, "%Y%m%d").strftime("%Y-%m-%d")
             blob_name = f"{prefix}/radar={radar}/produto={product}/data_particao={date}/{file.name}"
             blob_name = blob_name.replace("//", "/")
             log(f"Uploading file {i+1}/{total_files} ({file}) to GCS...")
