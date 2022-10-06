@@ -86,12 +86,29 @@ from prefect import task
 
 
 from pipelines.rj_smtr.constants import constants
-from pipelines.utils.utils import log
+from pipelines.utils.utils import get_vault_secret, log
 from pipelines.rj_smtr.utils import log_critical
 
 
 @task
-def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict):
+def get_stpl_headers(secret_path=constants.GPS_STPL_API_SECRET_PATH.value):
+    &#34;&#34;&#34;
+    Get STPL API headers.
+
+    Parameters:
+    secret_path : str
+        Path to the secret in Vault.
+
+    Returns:
+    API headers with token.
+    &#34;&#34;&#34;
+    # trigger cd
+    headers = get_vault_secret(secret_path)[&#34;data&#34;]
+    return headers
+
+
+@task
+def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict, timestamp):
     &#34;&#34;&#34;Parse data from status_dict[&#39;data&#39;] to DataFrame as partially nested table.
 
     Args:
@@ -104,17 +121,14 @@ def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict):
     &#34;&#34;&#34;
     key_column = &#34;codigo&#34;
     columns = [key_column, &#34;dataHora&#34;, &#34;timestamp_captura&#34;, &#34;content&#34;]
-    data = status_dict[&#34;data&#34;]
-    timestamp = status_dict[&#34;timestamp&#34;]
+    data = status_dict[&#34;data&#34;][&#34;veiculos&#34;]
 
     if status_dict[&#34;error&#34;] is not None:
-        return {&#34;df&#34;: pd.DataFrame(), &#34;error&#34;: status_dict[&#34;error&#34;]}
+        return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status_dict[&#34;error&#34;]}
 
     error = None
     # get tz info from constants
     timezone = constants.TIMEZONE.value
-
-    data = data.json()[&#34;veiculos&#34;]
 
     # initialize df for nested columns
     df = pd.DataFrame(columns=columns)
@@ -163,7 +177,7 @@ def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict):
     except Exception:
         error = traceback.format_exc()
         log_critical(f&#34;Failed to filter STPL data: \n{error}&#34;)
-    return {&#34;df&#34;: df, &#34;error&#34;: error}</code></pre>
+    return {&#34;data&#34;: df, &#34;error&#34;: error}</code></pre>
 </details>
 </section>
 <section>
@@ -173,8 +187,39 @@ def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks.get_stpl_headers"><code class="name flex">
+<span>def <span class="ident">get_stpl_headers</span></span>(<span>secret_path='stpl_api')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get STPL API headers.</p>
+<p>Parameters:
+secret_path : str
+Path to the secret in Vault.</p>
+<p>Returns:
+API headers with token.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_stpl_headers(secret_path=constants.GPS_STPL_API_SECRET_PATH.value):
+    &#34;&#34;&#34;
+    Get STPL API headers.
+
+    Parameters:
+    secret_path : str
+        Path to the secret in Vault.
+
+    Returns:
+    API headers with token.
+    &#34;&#34;&#34;
+    # trigger cd
+    headers = get_vault_secret(secret_path)[&#34;data&#34;]
+    return headers</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks.pre_treatment_br_rj_riodejaneiro_stpl_gps"><code class="name flex">
-<span>def <span class="ident">pre_treatment_br_rj_riodejaneiro_stpl_gps</span></span>(<span>status_dict)</span>
+<span>def <span class="ident">pre_treatment_br_rj_riodejaneiro_stpl_gps</span></span>(<span>status_dict, timestamp)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Parse data from status_dict['data'] to DataFrame as partially nested table.</p>
@@ -196,7 +241,7 @@ def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict):
+def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict, timestamp):
     &#34;&#34;&#34;Parse data from status_dict[&#39;data&#39;] to DataFrame as partially nested table.
 
     Args:
@@ -209,17 +254,14 @@ def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict):
     &#34;&#34;&#34;
     key_column = &#34;codigo&#34;
     columns = [key_column, &#34;dataHora&#34;, &#34;timestamp_captura&#34;, &#34;content&#34;]
-    data = status_dict[&#34;data&#34;]
-    timestamp = status_dict[&#34;timestamp&#34;]
+    data = status_dict[&#34;data&#34;][&#34;veiculos&#34;]
 
     if status_dict[&#34;error&#34;] is not None:
-        return {&#34;df&#34;: pd.DataFrame(), &#34;error&#34;: status_dict[&#34;error&#34;]}
+        return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status_dict[&#34;error&#34;]}
 
     error = None
     # get tz info from constants
     timezone = constants.TIMEZONE.value
-
-    data = data.json()[&#34;veiculos&#34;]
 
     # initialize df for nested columns
     df = pd.DataFrame(columns=columns)
@@ -268,7 +310,7 @@ def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict):
     except Exception:
         error = traceback.format_exc()
         log_critical(f&#34;Failed to filter STPL data: \n{error}&#34;)
-    return {&#34;df&#34;: df, &#34;error&#34;: error}</code></pre>
+    return {&#34;data&#34;: df, &#34;error&#34;: error}</code></pre>
 </details>
 </dd>
 </dl>
@@ -335,6 +377,7 @@ setTimeout(() => input.focus(), 100);
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks.get_stpl_headers" href="#pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks.get_stpl_headers">get_stpl_headers</a></code></li>
 <li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks.pre_treatment_br_rj_riodejaneiro_stpl_gps" href="#pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks.pre_treatment_br_rj_riodejaneiro_stpl_gps">pre_treatment_br_rj_riodejaneiro_stpl_gps</a></code></li>
 </ul>
 </li>

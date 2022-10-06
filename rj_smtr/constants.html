@@ -55,9 +55,10 @@ class constants(Enum):  # pylint: disable=c0103
     GPS_STPL_API_BASE_URL = &#34;http://zn4.m2mcontrol.com.br/api/integracao/veiculos&#34;
     GPS_STPL_API_SECRET_PATH = &#34;stpl_api&#34;
 
-    GPS_STPL_DATASET_ID = &#34;br_rj_riodejaneiro_stpl_gps&#34;
+    GPS_STPL_DATASET_ID = &#34;br_rj_riodejaneiro_veiculos&#34;
+    GPS_STPL_RAW_DATASET_ID = &#34;br_rj_riodejaneiro_stpl_gps&#34;
     GPS_STPL_RAW_TABLE_ID = &#34;registros&#34;
-    # GPS_STPL_TREATED_TABLE_ID = ...
+    GPS_STPL_TREATED_TABLE_ID = &#34;gps_stpl&#34;
 
     # GPS SPPO #
     GPS_SPPO_API_BASE_URL = (
@@ -209,9 +210,10 @@ class constants(Enum):  # pylint: disable=c0103
     GPS_STPL_API_BASE_URL = &#34;http://zn4.m2mcontrol.com.br/api/integracao/veiculos&#34;
     GPS_STPL_API_SECRET_PATH = &#34;stpl_api&#34;
 
-    GPS_STPL_DATASET_ID = &#34;br_rj_riodejaneiro_stpl_gps&#34;
+    GPS_STPL_DATASET_ID = &#34;br_rj_riodejaneiro_veiculos&#34;
+    GPS_STPL_RAW_DATASET_ID = &#34;br_rj_riodejaneiro_stpl_gps&#34;
     GPS_STPL_RAW_TABLE_ID = &#34;registros&#34;
-    # GPS_STPL_TREATED_TABLE_ID = ...
+    GPS_STPL_TREATED_TABLE_ID = &#34;gps_stpl&#34;
 
     # GPS SPPO #
     GPS_SPPO_API_BASE_URL = (
@@ -425,7 +427,15 @@ class constants(Enum):  # pylint: disable=c0103
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="pipelines.rj_smtr.constants.constants.GPS_STPL_RAW_DATASET_ID"><code class="name">var <span class="ident">GPS_STPL_RAW_DATASET_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="pipelines.rj_smtr.constants.constants.GPS_STPL_RAW_TABLE_ID"><code class="name">var <span class="ident">GPS_STPL_RAW_TABLE_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.GPS_STPL_TREATED_TABLE_ID"><code class="name">var <span class="ident">GPS_STPL_TREATED_TABLE_ID</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -584,7 +594,9 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_STPL_API_BASE_URL" href="#pipelines.rj_smtr.constants.constants.GPS_STPL_API_BASE_URL">GPS_STPL_API_BASE_URL</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_STPL_API_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.GPS_STPL_API_SECRET_PATH">GPS_STPL_API_SECRET_PATH</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_STPL_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.GPS_STPL_DATASET_ID">GPS_STPL_DATASET_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GPS_STPL_RAW_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.GPS_STPL_RAW_DATASET_ID">GPS_STPL_RAW_DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_STPL_RAW_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.GPS_STPL_RAW_TABLE_ID">GPS_STPL_RAW_TABLE_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GPS_STPL_TREATED_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.GPS_STPL_TREATED_TABLE_ID">GPS_STPL_TREATED_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.MAX_RETRIES" href="#pipelines.rj_smtr.constants.constants.MAX_RETRIES">MAX_RETRIES</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.MAX_TIMEOUT_SECONDS" href="#pipelines.rj_smtr.constants.constants.MAX_TIMEOUT_SECONDS">MAX_TIMEOUT_SECONDS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.RETRY_DELAY" href="#pipelines.rj_smtr.constants.constants.RETRY_DELAY">RETRY_DELAY</a></code></li>
