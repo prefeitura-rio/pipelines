@@ -27,8 +27,15 @@ with Flow(
     radar = Parameter("radar")
     product = Parameter("product")
     output_format = Parameter("output_format", default="NetCDF", required=False)
+    convert_params = Parameter(
+        "convert_params",
+        default="-f=Whole -k=CFext -r=Short -p=Radar -M=All -z",
+        required=False,
+    )
     FETCH_TASK = fetch_vol_files(date=date)
-    CONVERTED_FILES = convert_vol_files(output_format=output_format)
+    CONVERTED_FILES = convert_vol_files(
+        output_format=output_format, convert_params=convert_params
+    )
     CONVERTED_FILES.set_upstream(FETCH_TASK)  # pylint: disable=no-member
     upload_files_to_gcs(
         converted_files=CONVERTED_FILES,

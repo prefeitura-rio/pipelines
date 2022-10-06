@@ -57,6 +57,7 @@ def fetch_vol_files(date: str, output_directory: str = "/var/escritoriodedados/t
 def convert_vol_files(
     output_directory: str = "/var/escritoriodedados/temp/",
     output_format: str = "NetCDF",
+    convert_params: str = "-f=Whole -k=CFext -r=Short -p=Radar -M=All -z",
 ) -> List[str]:
     """
     Convert VOL files to NetCDF using the `volconvert` CLI tool.
@@ -77,7 +78,9 @@ def convert_vol_files(
         # Run volconvert
         child = pexpect.spawn(
             f'/opt/edge/bin/volconvert {file} "{output_format}.'
-            + '{-f=Whole -k=CFext -r=Short -p=Radar -M=All -z}"'
+            + "{"
+            + convert_params
+            + '}"'
         )
         try:
             # Look for the "OutFiles:..." row and get only that row
