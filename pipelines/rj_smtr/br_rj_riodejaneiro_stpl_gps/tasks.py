@@ -95,7 +95,7 @@ def pre_treatment_br_rj_riodejaneiro_stpl_gps(status_dict, timestamp):
     data = status_dict["data"]["veiculos"]
 
     if status_dict["error"] is not None:
-        return {"df": pd.DataFrame(), "error": status_dict["error"]}
+        return {"data": pd.DataFrame(), "error": status_dict["error"]}
 
     error = None
     # get tz info from constants
