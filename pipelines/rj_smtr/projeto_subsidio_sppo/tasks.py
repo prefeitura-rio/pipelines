@@ -3,7 +3,7 @@
 Tasks for projeto_subsidio_sppo
 """
 
-# pylint: disable=too-many-arguments,broad-except
+# pylint: disable=too-many-arguments,broad-except,too-many-locals
 
 # import datetime
 from typing import Dict, List
@@ -32,9 +32,7 @@ def create_api_url_recursos(date_range_start, date_range_end, skip=0, top=1000) 
         "data"
     ]["token"]
 
-    url += f"token={token}"
-
-    baseStatus = " or ".join(
+    base_status = " or ".join(
         [f"baseStatus eq '{s}'" for s in ["New", "InAttendance", "Resolved", "Closed"]]
     )
     status = "status ne 'Resolvido Automaticamente'"
@@ -48,7 +46,7 @@ def create_api_url_recursos(date_range_start, date_range_end, skip=0, top=1000) 
 
     params = {
         "select": "id,protocol,createdDate,baseStatus,serviceSecondLevel,customFieldValues",
-        "filter": f"({category} and {dates} and {service} and {status}) and ({baseStatus})",
+        "filter": f"({category} and {dates} and {service} and {status}) and ({base_status})",
         "expand": "customFieldValues($expand=items)",
         "orderby": "createdDate%20desc",
         "top": top,
@@ -56,6 +54,8 @@ def create_api_url_recursos(date_range_start, date_range_end, skip=0, top=1000) 
     }
 
     log(f"URL Parameters: {params}")
+
+    url += f"token={token}"
 
     for param, value in params.items():
         url += f"&${param}={value}"
@@ -136,7 +136,7 @@ def get_custom_fields(custom_fields: List) -> Dict:
     row = {}
     for field in custom_fields:
 
-        if field["customFieldId"] in map_field.keys():
+        if field["customFieldId"] in map_field:
             # dropdown field
             if field["items"]:
                 row.update(
