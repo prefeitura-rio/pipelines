@@ -95,7 +95,7 @@ def get_raw_recursos(
     Returns a dataframe with all recurso data from movidesk api until date.
     """
     all_records = False
-    status = {"data": {}, "error": None}
+    status = {"data": [], "error": None}
 
     while not all_records:
         url = create_api_url_recursos(date_range_start, date_range_end, skip)
