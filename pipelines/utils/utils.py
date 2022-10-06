@@ -26,6 +26,9 @@ import prefect
 from prefect.client import Client
 from prefect.engine.state import State
 from prefect.run_configs import KubernetesRun
+from prefect.utilities.graphql import (
+    with_args,
+)
 from redis_pal import RedisPal
 import requests
 import telegram
@@ -240,16 +243,39 @@ def run_cloud(
 
 
 def run_registered(
-    flow_id: str,
+    flow_name: str,
     labels: List[str],
     parameters: Dict[str, Any] = None,
     run_description: str = "",
-):
+) -> str:
     """
     Runs an already registered flow on Prefect Server (must have credentials configured).
     """
     # Get Prefect Client and submit flow run
     client = Client()
+    flow_result = client.graphql(
+        {
+            "query": {
+                with_args(
+                    "flow",
+                    {
+                        "where": {
+                            "_and": [
+                                {"name": {"_eq": flow_name}},
+                                {"archived": {"_eq": False}},
+                            ]
+                        }
+                    },
+                ): {"id"}
+            }
+        }
+    )
+    flows_found = flow_result.data.flow
+    if len(flows_found) == 0:
+        raise ValueError(f"Flow {flow_name} not found.")
+    if len(flows_found) > 1:
+        raise ValueError(f"More than one flow found for {flow_name}.")
+    flow_id = flow_result["data"]["flow"][0]["id"]
     flow_run_id = client.create_flow_run(
         flow_id=flow_id,
         run_name=f"SUBMITTED REMOTELY - {run_description}",
@@ -260,6 +286,8 @@ def run_registered(
     # Print flow run link so user can check it
     print(f"Run submitted: SUBMITTED REMOTELY - {run_description}")
     print(f"Please check at: https://prefect.dados.rio/flow-run/{flow_run_id}")
+
+    return flow_run_id
 
 
 def query_to_line(query: str) -> str:
