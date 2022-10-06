@@ -15,6 +15,8 @@ from uuid import uuid4
 import pandas as pd
 import pendulum
 from prefect import task
+from prefect.engine.signals import ENDRUN
+from prefect.engine.state import Skipped
 from prefect.triggers import all_successful
 
 from pipelines.rj_cor.comando.eventos.utils import get_token, get_url, build_redis_key
@@ -115,7 +117,9 @@ def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
     if "eventos" in response and len(response["eventos"]) > 0:
         eventos = pd.DataFrame(response["eventos"])
     elif ("eventos" in response) and (len(response["eventos"])) == 0:
-        raise Exception("No events found on this date interval")
+        log("No events found on this date interval")
+        skip = Skipped("No events found on this date interval")
+        raise ENDRUN(state=skip)
     else:
         raise Exception(f"{response}")
 
