@@ -76,12 +76,14 @@ def convert_vol_files(
     for file in files:
         log(f"Converting file {i+1}/{total_files} ({file}) to NetCDF...")
         # Run volconvert
-        child = pexpect.spawn(
+        command = (
             f'/opt/edge/bin/volconvert {file} "{output_format}.'
             + "{"
             + convert_params
             + '}"'
         )
+        log(f"Running command: {command}")
+        child = pexpect.spawn(command)
         try:
             # Look for the "OutFiles:..." row and get only that row
             child.expect("OutFiles:(.*)\n")
@@ -142,3 +144,14 @@ def upload_files_to_gcs(
             blob.upload_from_filename(file)
             log(f"File {file} uploaded to GCS.")
             file.unlink()
+
+
+@task
+def execute_shell_command(command: str):
+    """
+    Executes a shell command and logs output
+    """
+    log(f"Executing command: {command}")
+    child = pexpect.spawn(command)
+    child.expect(pexpect.EOF)
+    log(child.before.decode("utf-8"))

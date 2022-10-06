@@ -9,6 +9,7 @@ from prefect.storage import GCS
 from pipelines.constants import constants
 from pipelines.rj_escritorio.inea.tasks import (
     convert_vol_files,
+    execute_shell_command,
     fetch_vol_files,
     upload_files_to_gcs,
 )
@@ -49,3 +50,18 @@ with Flow(
 
 inea_test_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 inea_test_flow.run_config = LocalRun(labels=[constants.INEA_AGENT_LABEL.value])
+
+
+with Flow(
+    "INEA: Executar comando no terminal",
+    code_owners=[
+        "gabriel",
+    ],
+) as inea_execute_shell_command_flow:
+    command = Parameter("command")
+    execute_shell_command(command=command)
+
+inea_execute_shell_command_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+inea_execute_shell_command_flow.run_config = LocalRun(
+    labels=[constants.INEA_AGENT_LABEL.value]
+)
