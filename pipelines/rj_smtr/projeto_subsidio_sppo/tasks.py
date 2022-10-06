@@ -95,28 +95,28 @@ def get_raw_recursos(
     Returns a dataframe with all recurso data from movidesk api until date.
     """
     all_records = False
-    data = {}
+    status = {"data": {}, "error": None}
 
     while not all_records:
         url = create_api_url_recursos(date_range_start, date_range_end, skip)
-        status = request_data(url)
+        current_status = request_data(url)
 
-        if status["error"] is not None:
-            return {"data": None, "error": status["error"]}
+        if current_status["error"] is not None:
+            return {"data": None, "error": current_status["error"]}
 
-        data.update(status)
+        status["data"] += current_status["data"]
 
         # itera os proximos recursos do periodo
-        if len(status["data"]) == top:
+        if len(current_status["data"]) == top:
             skip += top
             time.sleep(6)
         else:
             all_records = True
 
     if len(status["data"]) == 0:
-        return {"data": status["data"], "error": "Empty data"}
+        status["error"] = "Empty data"
 
-    return {"data": status["data"], "error": None}
+    return status
 
 
 def get_custom_fields(custom_fields: List) -> Dict:
@@ -124,7 +124,7 @@ def get_custom_fields(custom_fields: List) -> Dict:
     Return customFields dict.
     """
     map_field = {
-        111867: "data",
+        111867: "data_viagem",
         111868: "hora_partida",
         111869: "hora_chegada",
         111871: "servico",
@@ -188,7 +188,7 @@ def pre_treatment_subsidio_sppo_recursos(status: dict, timestamp: str) -> Dict:
         .dt.tz_localize(tz="America/Sao_Paulo")
         .map(lambda x: x.isoformat())
     )
-    data["data"] = pd.to_datetime(data["data"]).dt.strftime("%Y-%m-%d")
+    data["data_viagem"] = pd.to_datetime(data["data_viagem"]).dt.strftime("%Y-%m-%d")
 
     # remove caracteres de campo aberto que quebram o schema
     data["servico"] = data["servico"].str.replace("\xa0", " ").str.replace("\n", "")
