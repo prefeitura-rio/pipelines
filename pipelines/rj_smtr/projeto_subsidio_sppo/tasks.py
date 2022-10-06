@@ -45,7 +45,7 @@ def create_api_url_recursos(date_range_start, date_range_end, skip=0, top=1000) 
     service = "serviceFirstLevel eq 'Viagem Individual - Recurso Viagens Subsídio'"
 
     params = {
-        "select": "id,protocol,createdDate,baseStatus,serviceSecondLevel,customFieldValues",
+        "select": "id,protocol,createdDate,status,serviceSecondLevel,customFieldValues",
         "filter": f"({category} and {dates} and {service} and {status}) and ({base_status})",
         "expand": "customFieldValues($expand=items)",
         "orderby": "createdDate%20desc",
@@ -171,7 +171,7 @@ def pre_treatment_subsidio_sppo_recursos(status: dict, timestamp: str) -> Dict:
             "modo": item["serviceSecondLevel"],
             "id_recurso": item["id"],
             "protocolo": item["protocol"],
-            "status": item["baseStatus"],
+            "status": item["status"],
             "data_recurso": item["createdDate"],
         }
         row.update(get_custom_fields(item["customFieldValues"]))
