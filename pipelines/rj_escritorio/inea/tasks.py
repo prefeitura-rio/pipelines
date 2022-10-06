@@ -79,16 +79,21 @@ def convert_vol_files(
             f'/opt/edge/bin/volconvert {file} "{output_format}.'
             + '{-f=Whole -k=CFext -r=Short -p=Radar -M=All -z}"'
         )
-        # Look for the "OutFiles:..." row and get only that row
-        child.expect("OutFiles:(.*)\n")
-        # Get the output file name
-        converted_file = child.match.group(1).decode("utf-8").strip()
-        # Add the file to the list
-        converted_files.append(converted_file)
-        # Log the output file name
-        log(f"Output file: {converted_file}")
-        # Go to the end of the command log
-        child.expect(pexpect.EOF)
+        try:
+            # Look for the "OutFiles:..." row and get only that row
+            child.expect("OutFiles:(.*)\n")
+            # Get the output file name
+            converted_file = child.match.group(1).decode("utf-8").strip()
+            # Add the file to the list
+            converted_files.append(converted_file)
+            # Log the output file name
+            log(f"Output file: {converted_file}")
+            # Go to the end of the command log
+            child.expect(pexpect.EOF)
+        except Exception as exc:
+            # Log the error
+            log(child.before.decode("utf-8"))
+            raise exc
         # Delete the VOL file
         file.unlink()
         i += 1
