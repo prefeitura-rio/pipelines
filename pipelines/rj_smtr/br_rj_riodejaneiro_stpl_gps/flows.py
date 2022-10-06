@@ -19,7 +19,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks import get_stpl_headers
 from pipelines.rj_smtr.constants import constants
 
 from pipelines.rj_smtr.schedules import (
-    every_minute_dev,
+    every_minute,
     # every_hour,
 )
 from pipelines.rj_smtr.tasks import (
@@ -106,7 +106,7 @@ with Flow(
 captura_stpl.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_stpl.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 # Seguindo o padrão de captura adotado pelo BRT
-captura_stpl.schedule = every_minute_dev
+captura_stpl.schedule = every_minute
