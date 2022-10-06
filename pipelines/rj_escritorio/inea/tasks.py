@@ -74,7 +74,7 @@ def convert_vol_files(
     # Log each file and then delete it
     i = 0
     for file in files:
-        log(f"Converting file {i+1}/{total_files} ({file}) to NetCDF...")
+        log(f"Converting file {i+1}/{total_files} ({file}) to {output_format}...")
         # Run volconvert
         command = (
             f'/opt/edge/bin/volconvert {file} "{output_format}.'
@@ -85,10 +85,13 @@ def convert_vol_files(
         log(f"Running command: {command}")
         child = pexpect.spawn(command)
         try:
+            log(f"before expect {str(child)}")
             # Look for the "OutFiles:..." row and get only that row
             child.expect("OutFiles:(.*)\n")
             # Get the output file name
+            log(f"after expect {str(child)}")
             converted_file = child.match.group(1).decode("utf-8").strip()
+            log(f"after match.group expect {str(child)}")
             # Add the file to the list
             converted_files.append(converted_file)
             # Log the output file name
