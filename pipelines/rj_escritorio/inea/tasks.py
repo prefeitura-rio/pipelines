@@ -41,6 +41,7 @@ def fetch_vol_files(date: str, output_directory: str = "/var/escritoriodedados/t
     # Creating temporary directory
     output_directory_path = Path(output_directory) / date
     output_directory_path.mkdir(parents=True, exist_ok=True)
+    log(f"Temporary directory created: {output_directory_path}")
     # Get SSH password from env
     ssh_password = getenv("INEA_SSH_PASSWORD")
     # Open SSH client
@@ -51,11 +52,12 @@ def fetch_vol_files(date: str, output_directory: str = "/var/escritoriodedados/t
     scp = SCPClient(ssh_client.get_transport(), sanitize=lambda x: x)
     # Fetch VOL files
     fname = f"/var/opt/edge/vols/9921GUA{date}*.vol"
-    scp.get(fname, recursive=True, local_path=output_directory)
+    scp.get(fname, recursive=True, local_path=str(output_directory))
     # Close connection
     scp.close()
     # Return list of downloaded files
     downloaded_files = [str(f) for f in output_directory_path.glob("*.vol")]
+    log(f"Downloaded files: {downloaded_files}")
     log(f"Found {len(downloaded_files)} files to convert.")
     return downloaded_files
 
