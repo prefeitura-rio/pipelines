@@ -2,7 +2,7 @@
 """
 Tasks for INEA.
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 from os import environ, getenv
 from pathlib import Path
 from typing import List
@@ -26,7 +26,10 @@ def print_environment_variables():
         log(f"{key}={value}")
 
 
-@task
+@task(
+    max_retries=2,
+    retry_delay=timedelta(seconds=30),
+)
 def fetch_vol_files(date: str, output_directory: str = "/var/escritoriodedados/temp/"):
     """
     Fetch files from INEA server
@@ -51,71 +54,60 @@ def fetch_vol_files(date: str, output_directory: str = "/var/escritoriodedados/t
     scp.get(fname, recursive=True, local_path=output_directory)
     # Close connection
     scp.close()
-    # Return path to files
-    return str(output_directory_path)
+    # Return list of downloaded files
+    downloaded_files = [str(f) for f in output_directory_path.glob("*.vol")]
+    log(f"Found {len(downloaded_files)} files to convert.")
+    return downloaded_files
 
 
 @task
-def convert_vol_files(
-    output_directory: str = "/var/escritoriodedados/temp/",
+def convert_vol_file(
+    downloaded_file: str,
     output_format: str = "NetCDF",
     convert_params: str = "-f=Whole -k=CFext -r=Short -p=Radar -M=All -z",
 ) -> List[str]:
     """
     Convert VOL files to NetCDF using the `volconvert` CLI tool.
     """
-    # Start a list for converted files
-    converted_files = []
-
-    # List all files in the output directory
-    output_directory_path = Path(output_directory)
-    files: List[Path] = list(output_directory_path.glob("*.vol"))
-    total_files = len(files)
-    log(f"Found {total_files} files to convert.")
-
-    # Log each file and then delete it
-    i = 0
-    for file in files:
-        log(f"Converting file {i+1}/{total_files} ({file}) to {output_format}...")
-        # Run volconvert
-        command = (
-            f'/opt/edge/bin/volconvert {file} "{output_format}.'
-            + "{"
-            + convert_params
-            + '}"'
-        )
-        log(f"Running command: {command}")
-        child = pexpect.spawn(command)
-        try:
-            log(f"before expect {str(child)}")
-            # Look for the "OutFiles:..." row and get only that row
-            child.expect("OutFiles:(.*)\n")
-            # Get the output file name
-            log(f"after expect {str(child)}")
-            converted_file = child.match.group(1).decode("utf-8").strip()
-            log(f"after match.group expect {str(child)}")
-            # Add the file to the list
-            converted_files.append(converted_file)
-            # Log the output file name
-            log(f"Output file: {converted_file}")
-            # Go to the end of the command log
-            child.expect(pexpect.EOF)
-        except Exception as exc:
-            # Log the error
-            log(child.before.decode("utf-8"))
-            raise exc
-        # Delete the VOL file
-        file.unlink()
-        i += 1
-
-    # Return the list of converted files
-    return converted_files
+    # Run volconvert
+    log(f"Converting file {downloaded_file} to {output_format}...")
+    command = (
+        f'/opt/edge/bin/volconvert {downloaded_file} "{output_format}.'
+        + "{"
+        + convert_params
+        + '}"'
+    )
+    log(f"Running command: {command}")
+    child = pexpect.spawn(command)
+    try:
+        log(f"before expect {str(child)}")
+        # Look for the "OutFiles:..." row and get only that row
+        child.expect("OutFiles:(.*)\n")
+        # Get the output file name
+        log(f"after expect {str(child)}")
+        converted_file = child.match.group(1).decode("utf-8").strip()
+        log(f"after match.group expect {str(child)}")
+        # Log the output file name
+        log(f"Output file: {converted_file}")
+        # Go to the end of the command log
+        child.expect(pexpect.EOF)
+    except Exception as exc:
+        # Log the error
+        log(child.before.decode("utf-8"))
+        raise exc
+    # Delete the VOL file
+    Path(downloaded_file).unlink()
+    # Return the name of the converted file
+    return converted_file
 
 
-@task
+@task(
+    max_retries=3,
+    retry_delay=timedelta(seconds=30),
+)
 # pylint: disable=too-many-arguments, too-many-locals
-def upload_files_to_gcs(
-    converted_files: List[str],
+def upload_file_to_gcs(
+    converted_file: str,
     bucket_name: str,
     prefix: str,
     radar: str,
@@ -125,30 +117,28 @@ def upload_files_to_gcs(
     """
     Upload files to GCS
     """
-    # Assert all items in files_list are Path objects
-    files_list: List[Path] = [Path(f) for f in converted_files]
-    total_files = len(files_list)
-
     credentials = get_credentials_from_env(mode=mode)
     storage_client = storage.Client(credentials=credentials)
 
     bucket = storage_client.bucket(bucket_name)
 
-    for i, file in enumerate(files_list):
-        if file.is_file():
-            # Converted file path is in the format:
-            # /var/opt/edge/.../YYYYMMDD/<filename>.nc.gz
-            # We need to get the datetime for the file
-            date_str = file.parent.name
-            date = datetime.strptime(date_str, "%Y%m%d").strftime("%Y-%m-%d")
-            blob_name = f"{prefix}/radar={radar}/produto={product}/data_particao={date}/{file.name}"
-            blob_name = blob_name.replace("//", "/")
-            log(f"Uploading file {i+1}/{total_files} ({file}) to GCS...")
-            log(f"Blob name will be {blob_name}")
-            blob = bucket.blob(blob_name)
-            blob.upload_from_filename(file)
-            log(f"File {file} uploaded to GCS.")
-            file.unlink()
+    file = Path(converted_file)
+    if file.is_file():
+        # Converted file path is in the format:
+        # /var/opt/edge/.../YYYYMMDD/<filename>.nc.gz
+        # We need to get the datetime for the file
+        date_str = file.parent.name
+        date = datetime.strptime(date_str, "%Y%m%d").strftime("%Y-%m-%d")
+        blob_name = (
+            f"{prefix}/radar={radar}/produto={product}/data_particao={date}/{file.name}"
+        )
+        blob_name = blob_name.replace("//", "/")
+        log(f"Uploading file {file} to GCS...")
+        log(f"Blob name will be {blob_name}")
+        blob = bucket.blob(blob_name)
+        blob.upload_from_filename(file)
+        log(f"File {file} uploaded to GCS.")
+        file.unlink()
 
 
 @task

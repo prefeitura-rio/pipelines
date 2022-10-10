@@ -5,13 +5,14 @@ Flows for INEA.
 from prefect import Parameter
 from prefect.run_configs import LocalRun
 from prefect.storage import GCS
+from prefect.utilities.edges import unmapped
 
 from pipelines.constants import constants
 from pipelines.rj_escritorio.inea.tasks import (
-    convert_vol_files,
+    convert_vol_file,
     execute_shell_command,
     fetch_vol_files,
-    upload_files_to_gcs,
+    upload_file_to_gcs,
 )
 from pipelines.utils.decorators import Flow
 
@@ -33,20 +34,19 @@ with Flow(
         default="-f=Whole -k=CFext -r=Short -p=Radar -M=All -z",
         required=False,
     )
-    output_directory = fetch_vol_files(date=date)  # pylint: disable=invalid-name
-    converted_files = convert_vol_files(
-        output_directory=output_directory,
-        output_format=output_format,
-        convert_params=convert_params,
+    downloaded_files = fetch_vol_files(date=date)
+    converted_files = convert_vol_file.map(
+        downloaded_file=downloaded_files,
+        output_format=unmapped(output_format),
+        convert_params=unmapped(convert_params),
     )
-    converted_files.set_upstream(output_directory)  # pylint: disable=no-member
-    upload_files_to_gcs(
-        converted_files=converted_files,
-        bucket_name=bucket_name,
-        prefix=prefix,
-        mode=mode,
-        radar=radar,
-        product=product,
+    upload_file_to_gcs.map(
+        converted_file=converted_files,
+        bucket_name=unmapped(bucket_name),
+        prefix=unmapped(prefix),
+        mode=unmapped(mode),
+        radar=unmapped(radar),
+        product=unmapped(product),
     )
 
 
