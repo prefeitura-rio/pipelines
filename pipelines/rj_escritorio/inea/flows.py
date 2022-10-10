@@ -33,13 +33,15 @@ with Flow(
         default="-f=Whole -k=CFext -r=Short -p=Radar -M=All -z",
         required=False,
     )
-    FETCH_TASK = fetch_vol_files(date=date)
-    CONVERTED_FILES = convert_vol_files(
-        output_format=output_format, convert_params=convert_params
+    output_directory = fetch_vol_files(date=date)
+    converted_files = convert_vol_files(
+        output_directory=output_directory,
+        output_format=output_format,
+        convert_params=convert_params,
     )
-    CONVERTED_FILES.set_upstream(FETCH_TASK)  # pylint: disable=no-member
+    converted_files.set_upstream(output_directory)  # pylint: disable=no-member
     upload_files_to_gcs(
-        converted_files=CONVERTED_FILES,
+        converted_files=converted_files,
         bucket_name=bucket_name,
         prefix=prefix,
         mode=mode,

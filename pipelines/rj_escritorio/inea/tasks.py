@@ -36,7 +36,7 @@ def fetch_vol_files(date: str, output_directory: str = "/var/escritoriodedados/t
     """
     log("Fetching files from INEA server...")
     # Creating temporary directory
-    output_directory_path = Path(output_directory)
+    output_directory_path = Path(output_directory) / date
     output_directory_path.mkdir(parents=True, exist_ok=True)
     # Get SSH password from env
     ssh_password = getenv("INEA_SSH_PASSWORD")
@@ -51,6 +51,8 @@ def fetch_vol_files(date: str, output_directory: str = "/var/escritoriodedados/t
     scp.get(fname, recursive=True, local_path=output_directory)
     # Close connection
     scp.close()
+    # Return path to files
+    return str(output_directory_path)
 
 
 @task
