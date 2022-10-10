@@ -33,7 +33,7 @@ with Flow(
         default="-f=Whole -k=CFext -r=Short -p=Radar -M=All -z",
         required=False,
     )
-    output_directory = fetch_vol_files(date=date)
+    output_directory = fetch_vol_files(date=date)  # pylint: disable=invalid-name
     converted_files = convert_vol_files(
         output_directory=output_directory,
         output_format=output_format,
