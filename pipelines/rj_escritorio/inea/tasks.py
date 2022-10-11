@@ -191,6 +191,8 @@ def upload_file_to_gcs(
     radar: str,
     product: str,
     mode="prod",
+    task_mode="partitioned",
+    unlink: bool = True,
 ):
     """
     Upload files to GCS
@@ -202,21 +204,25 @@ def upload_file_to_gcs(
 
     file = Path(converted_file)
     if file.is_file():
-        # Converted file path is in the format:
-        # /var/opt/edge/.../YYYYMMDD/<filename>.nc.gz
-        # We need to get the datetime for the file
-        date_str = file.parent.name
-        date = datetime.strptime(date_str, "%Y%m%d").strftime("%Y-%m-%d")
-        blob_name = (
-            f"{prefix}/radar={radar}/produto={product}/data_particao={date}/{file.name}"
-        )
-        blob_name = blob_name.replace("//", "/")
+        if task_mode == "partitioned":
+            # Converted file path is in the format:
+            # /var/opt/edge/.../YYYYMMDD/<filename>.nc.gz
+            # We need to get the datetime for the file
+            date_str = file.parent.name
+            date = datetime.strptime(date_str, "%Y%m%d").strftime("%Y-%m-%d")
+            blob_name = f"{prefix}/radar={radar}/produto={product}/data_particao={date}/{file.name}"
+            blob_name = blob_name.replace("//", "/")
+        elif task_mode == "raw":
+            blob_name = f"{prefix}/{file.name}"
+        else:
+            raise ValueError(f"Invalid task_mode: {task_mode}")
         log(f"Uploading file {file} to GCS...")
         log(f"Blob name will be {blob_name}")
         blob = bucket.blob(blob_name)
         blob.upload_from_filename(file)
         log(f"File {file} uploaded to GCS.")
-        file.unlink()
+        if unlink:
+            file.unlink()
 
 
 @task

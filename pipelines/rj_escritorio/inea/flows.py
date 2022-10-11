@@ -70,3 +70,29 @@ inea_execute_shell_command_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 inea_execute_shell_command_flow.run_config = LocalRun(
     labels=[constants.INEA_AGENT_LABEL.value]
 )
+
+with Flow(
+    "INEA: Fazer upload de arquivo para o GCS",
+    code_owners=[
+        "gabriel",
+    ],
+) as inea_upload_file_to_gcs_flow:
+    filename = Parameter("filename")
+    bucket_name = Parameter("bucket_name")
+    prefix = Parameter("prefix")
+    mode = Parameter("mode", default="prod", required=False)
+    upload_file_to_gcs(
+        converted_file=filename,
+        bucket_name=bucket_name,
+        prefix=prefix,
+        radar=None,
+        product=None,
+        mode="prod",
+        task_mode="raw",
+        unlink=False,
+    )
+
+inea_upload_file_to_gcs_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+inea_upload_file_to_gcs_flow.run_config = LocalRun(
+    labels=[constants.INEA_AGENT_LABEL.value]
+)
