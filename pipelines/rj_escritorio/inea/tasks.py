@@ -55,7 +55,7 @@ def build_regex_expression(
     for char in greater_than:
         expression += f"[{char}-9]"
     # Adds anything after greater than expression
-    expression += ".*"
+    expression += "*"
     # Adds file extension
     expression += f"{file_extension}"
     log(f"Regex expression: {expression}")
