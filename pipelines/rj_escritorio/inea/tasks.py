@@ -7,6 +7,7 @@ from os import environ, getenv
 from pathlib import Path
 import subprocess
 from typing import Callable, List
+from uuid import uuid4
 
 from google.cloud import storage
 from paramiko import SSHClient
@@ -101,7 +102,10 @@ def fetch_vol_files(
 
     log("Fetching files from INEA server...")
     # Creating temporary directory
-    output_directory_path = Path(output_directory) / date
+    if date:
+        output_directory_path = Path(output_directory) / date
+    else:
+        output_directory_path = Path(output_directory) / f"regex-{uuid4()}"
     output_directory_path.mkdir(parents=True, exist_ok=True)
     log(f"Temporary directory created: {output_directory_path}")
     # Get SSH password from env
