@@ -31,7 +31,6 @@ def print_environment_variables():
 @task
 def build_regex_expression(
     greater_than: str,
-    working_directory: str = "/var/opt/edge/vols",
     filename_prefix: str = "9921GUA",
     file_extension: str = "vol",
 ):
@@ -50,14 +49,8 @@ def build_regex_expression(
         assert (
             char in "0123456789"
         ), f"{char} is not numeric. greater_than must be numeric only."
-    # Add trailing slash
-    working_directory = (
-        f"{working_directory}/"
-        if not working_directory.endswith("/")
-        else working_directory
-    )
     # Build initial expression
-    expression = f"{working_directory}{filename_prefix}"
+    expression = filename_prefix
     # Adds greater than expression
     for char in greater_than:
         expression += f"[{char}-9]"
