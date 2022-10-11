@@ -123,8 +123,8 @@ class constants(Enum):  # pylint: disable=c0103
     }
 
     # RDO/RHO
-    FTP_ALLOWED_PATHS = ["SPPO", "STPL"]
-    FTPS_SECRET_PATH = "smtr_rdo_ftps"
+    RDO_FTP_ALLOWED_PATHS = ["SPPO", "STPL"]
+    RDO_FTPS_SECRET_PATH = "smtr_rdo_ftps"
     RDO_DATASET_ID = "br_rj_riodejaneiro_rdo"
     SPPO_RDO_TABLE_ID = "rdo_registros_sppo"
     SPPO_RHO_TABLE_ID = "rho_registros_sppo"

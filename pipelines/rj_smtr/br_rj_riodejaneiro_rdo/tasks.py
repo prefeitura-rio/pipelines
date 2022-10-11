@@ -64,7 +64,8 @@ from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.constants import (
     constants as rdo_constants,
 )
-from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.utils import build_table_id, connect_ftp
+from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.utils import build_table_id
+from pipelines.rj_smtr.utils import connect_ftp
 from pipelines.utils.utils import log
 
 

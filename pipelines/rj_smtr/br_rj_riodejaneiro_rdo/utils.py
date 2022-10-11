@@ -32,23 +32,8 @@ General purpose functions for the br_rj_riodejaneiro_rdo project
 from datetime import timedelta
 from prefect.schedules.clocks import IntervalClock
 from pipelines.constants import constants as emd_constants
-from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.implicit_ftp import ImplicitFtpTls
 from pipelines.utils.utils import get_vault_secret
 from pipelines.rj_smtr.constants import constants
-
-
-def connect_ftp():
-    """Connect to FTP
-
-    Returns:
-        ImplicitFTP_TLS: ftp client
-    """
-    ftp_data = get_vault_secret(constants.FTPS_SECRET_PATH.value)["data"]
-    ftp_client = ImplicitFtpTls()
-    ftp_client.connect(host=ftp_data["host"], port=int(ftp_data["port"]))
-    ftp_client.login(user=ftp_data["username"], passwd=ftp_data["pwd"])
-    ftp_client.prot_p()
-    return ftp_client
 
 
 def build_table_id(mode: str, report_type: str):

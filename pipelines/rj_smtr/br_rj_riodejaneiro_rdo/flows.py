@@ -81,10 +81,10 @@ with Flow(
 ) as captura_ftp:
     transport_mode = Parameter("transport_mode", "SPPO")
     report_type = Parameter("report_type", "RHO")
-    table_id = Parameter("table_id", constants.SPPO_RDO_TABLE_ID.value)
+    table_id = Parameter("table_id", constants.SPPO_RHO_TABLE_ID.value)
 
     rename_run = rename_current_flow_run_now_time(
-        prefix=f"Captura FTPS - {transport_mode}-{report_type} ",
+        prefix=f"Captura FTP - {transport_mode}-{report_type} ",
         now_time=get_current_timestamp(),
         wait=None,
     )
