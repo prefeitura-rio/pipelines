@@ -61,7 +61,7 @@ siscob_queries = {
                 TP_MEDICAO_D,
                 DT_INI_MEDICAO,
                 DT_FIM_MEDICAO,
-                VL_FINAL NUMERIC(12,2)
+                VL_FINAL
             from dbo.fuSEGOVI_Medicoes();
             """,
     },
