@@ -128,7 +128,6 @@ siscob_queries = {
     },
 }
 
-# TODO: review
 siscob_clocks = generate_dump_db_schedules(
     interval=timedelta(days=7),
     start_date=datetime(2022, 10, 2, 0, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
