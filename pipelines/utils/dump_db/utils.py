@@ -78,8 +78,10 @@ def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-l
             "execute_query": query_to_line(parameters["execute_query"]),
         }
 
-        # Add remaining parameters
-        parameter_defaults.update(parameters)
+        # Add remaining parameters if value is not None
+        for key, value in parameters.items():
+            if value is not None:
+                parameter_defaults[key] = value
 
         new_interval = parameters["interval"] if "interval" in parameters else interval
 
