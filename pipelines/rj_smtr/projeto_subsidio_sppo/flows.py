@@ -7,10 +7,18 @@ from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.control_flow import merge
+from prefect.utilities.edges import unmapped
+
 
 # EMD Imports #
 
 from pipelines.constants import constants as emd_constants
+from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import (
+    get_date_range,
+    get_max_complete_date,
+    get_run_params,
+    query_max_planned_date,
+)
 from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
     get_now_day,
@@ -24,16 +32,71 @@ from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
 
 from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.tasks import (
+    bq_upload,
     fetch_dataset_sha,
+    get_bool,
+    query_and_save_csv_by_date,
+    set_last_run_timestamp,
     # get_local_dbt_client,
-    run_dbt_model,
 )
+from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 from pipelines.rj_smtr.schedules import (
     every_day_hour_six,
 )
 
 # Flows #
+with Flow("SMTR - Subsidio Sensor") as subsidio_sensor:
 
+    LABELS = get_current_flow_labels()
+    MODE = get_current_flow_mode(LABELS)
+    dbt_client = get_k8s_dbt_client(mode=MODE)
+    # Use the command below to get the dbt client in dev mode:
+    # dbt_client = get_local_dbt_client(host="localhost", port=3001)
+    dataset_id = Parameter(
+        "dataset_id", default=constants.SUBSIDIO_SPPO_DATASET_ID.value
+    )
+    table_id = Parameter(
+        "complete_trips_table_id",
+        default=constants.SUBSIDIO_SPPO_COMPLETED_TABLE_ID.value,
+    )
+    # SETUP RUN DATES
+    max_complete_date = get_max_complete_date()
+    max_planned_date = query_max_planned_date(last_run_date=max_complete_date)
+
+    date_range = get_date_range(
+        max_planned_date=max_planned_date, max_complete_date=max_complete_date
+    )
+    dataset_sha = fetch_dataset_sha(dataset_id)
+
+    with case(get_bool(date_range), True):
+        run_params = get_run_params(date_range=date_range, dataset_sha=dataset_sha)
+        # RUN MODEL AND SET TS ON REDIS
+        RUN = run_dbt_model.map(
+            dbt_client=unmapped(dbt_client),
+            model=unmapped(dataset_id),
+            upstream=unmapped(False),
+            exclude=unmapped("+viagem_planejada"),
+            _vars=run_params,
+        )
+        SET_LAST = set_last_run_timestamp(
+            dataset_id=dataset_id,
+            table_id=table_id,
+            timestamp=date_range[-1],
+            wait=RUN,
+        )
+        # SAVE CSV SNAPSHOT AND UPLOAD
+        local_paths, partitions = query_and_save_csv_by_date.map(
+            dataset_id=unmapped(dataset_id),
+            table_id=unmapped(table_id),
+            date_filter=date_range,
+        )
+        final_status = bq_upload(
+            dataset_id=unmapped(dataset_id),
+            table_id=unmapped(table_id),
+            filepath=local_paths,
+            partitions=partitions,
+            status=unmapped({"error": None}),
+        )
 with Flow(
     "SMTR - Subsídio SPPO - Viagens", code_owners=["caio", "fernanda"]
 ) as subsidio_sppo_viagens:
@@ -79,7 +142,7 @@ subsidio_sppo_viagens.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-# subsidio_sppo_viagens.schedule = every_day_hour_six
+subsidio_sppo_viagens.schedule = every_day_hour_six
 
 
 with Flow(

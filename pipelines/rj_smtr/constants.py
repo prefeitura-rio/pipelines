@@ -124,6 +124,8 @@ class constants(Enum):  # pylint: disable=c0103
 
     # SUBSIDIO SPPO #
     SUBSIDIO_SPPO_DATASET_ID = "projeto_subsidio_sppo"
+    SUBSIDIO_SPPO_COMPLETED_TABLE_ID = "viagem_completa"
+    SUBSIDIO_SPPO_PLANNED_TABLE_ID = "viagem_planejada"
 
     # RDO
     FTPS_SECRET_PATH = "smtr_rdo_ftps"

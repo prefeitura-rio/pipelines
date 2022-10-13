@@ -9,7 +9,7 @@ import json
 import os
 from pathlib import Path
 import traceback
-from typing import Dict
+from typing import Any, Dict
 
 from basedosdados import Storage, Table
 import basedosdados as bd
@@ -399,6 +399,46 @@ def get_raw(url: str, headers: dict = None) -> Dict:
     return {"data": data, "error": error}
 
 
+@task(nout=2)
+def query_and_save_csv_by_date(  # pylint: disable=too-many-arguments
+    dataset_id: str,
+    table_id: str,
+    project_id: str = "rj-smtr",
+    mode: str = "prod",
+    date_filter: str = None,
+    wait=None,  # pylint: disable=unused-argument
+):
+    """_summary_
+
+    Args:
+        dataset_id (str): _description_
+        table_id (str): _description_
+        project_id (str, optional): BigQuery project_id. Defaults to "rj-smtr".
+        mode (str, optional): selects project which to query against. Accepted modes are
+        prod, dev. Defaults to "prod".
+        date_filter (str, optional): date string formatted as %Y-%m-%d. Defaults to None.
+
+    Returns:
+        str, str: filepath and partitions
+    """
+    if mode == "dev":
+        project_id += "-dev"
+    query = f"""
+    SELECT
+        *
+    FROM {project_id}.{dataset_id}.{table_id}
+    WHERE data = '{date_filter}'
+    """
+    log(f"Running query:\n{query}")
+    results = bd.read_sql(query=query, billing_project_id=project_id)
+    path = Path(
+        f"data/staging/{dataset_id}/{table_id}/data={date_filter}/{date_filter}.csv"
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    results.to_csv(path, index=False)
+    return path.as_posix(), f"data={date_filter}"
+
+
 ###############
 #
 # Load data
@@ -701,3 +741,13 @@ def fetch_dataset_sha(dataset_id: str):
 
     dataset_version = response.json()[0]["sha"]
     return {"version": dataset_version}
+
+
+@task
+def get_bool(value: Any):
+    """get bool eval for value
+
+    Args:
+        value (Any): _description_
+    """
+    return bool(value)

@@ -102,7 +102,8 @@ def get_table_min_max_value(  # pylint: disable=R0913
     dataset_id: str,
     table_id: str,
     field_name: str,
-    kind: str,
+    kind: str = "MAX",
+    base_value=None,
     wait=None,  # pylint: disable=unused-argument
 ):
     """Query a table to get the maximum value for the chosen field.
@@ -113,12 +114,17 @@ def get_table_min_max_value(  # pylint: disable=R0913
         table_id (str): table_id on BigQuery
         field_name (str): column name to query
         kind (str): which value to get. Accepts min and max
+        base_value(Any): value for the chosen field to be greater than
+        or equal to. Useful for avoiding querying the entire table.
     """
     query = f"""
         SELECT
             {kind}({field_name})
         FROM {query_project_id}.{dataset_id}.{table_id}
     """
+    if base_value:
+        query += f"WHERE {field_name}>={base_value}"
+
     result = bd.read_sql(query=query, billing_project_id=bq_project())
 
     return result.iloc[0][0]
