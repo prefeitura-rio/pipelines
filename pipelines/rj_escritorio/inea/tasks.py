@@ -8,7 +8,6 @@ from os import environ, getenv
 from pathlib import Path
 import subprocess
 from typing import Callable, List
-from uuid import uuid4
 
 from google.cloud import storage
 from paramiko import SSHClient
@@ -17,6 +16,10 @@ from prefect import task
 from scp import SCPClient
 
 from pipelines.utils.utils import log, get_credentials_from_env
+
+# TODO:
+# - Listar todos os VOLs no remoto
+# - Criar filtro para os VOLs que serão baixados (por data)
 
 
 @task
@@ -29,47 +32,13 @@ def print_environment_variables():
         log(f"{key}={value}")
 
 
-@task
-def build_regex_expression(
-    greater_than: str,
-    filename_prefix: str = "9921GUA",
-    file_extension: str = "vol",
-):
-    """
-    Builds the regex expression for including only the files that we want to
-    download. The format is the following:
-
-    <working_directory>/<filename_prefix><greater_than>.<file_extension>
-
-    `greater_than` must be numeric only.
-    """
-    if greater_than is None:
-        return ""
-    # Assert that greater_than is numeric
-    for char in greater_than:
-        assert (
-            char in "0123456789"
-        ), f"{char} is not numeric. greater_than must be numeric only."
-    # Build initial expression
-    expression = filename_prefix
-    # Adds greater than expression
-    for char in greater_than:
-        expression += f"[{char}-9]"
-    # Adds anything after greater than expression
-    expression += "*"
-    # Adds file extension
-    expression += f"{file_extension}"
-    log(f"Regex expression: {expression}")
-    return expression
-
-
 @task(
     max_retries=2,
     retry_delay=timedelta(seconds=30),
 )
 def fetch_vol_files(
-    date: str,
-    regex_expression: str = "",
+    date: str = None,
+    greater_than: str = None,
     output_directory: str = "/var/escritoriodedados/temp/",
 ):
     """
@@ -77,48 +46,46 @@ def fetch_vol_files(
 
     Args:
         date (str): Date of the files to be fetched (e.g. 20220125)
+        greater_than (str): Fetch files with a date greater than this one
+        output_directory (str): Directory where the files will be saved
     """
 
-    def run_shell_command(command: str, stdout_callback: Callable = log) -> int:
-        popen = subprocess.Popen(
-            command, shell=True, stdout=subprocess.PIPE, universal_newlines=True
-        )
-        for stdout_line in iter(popen.stdout.readline, ""):
-            stdout_callback(stdout_line)
-        popen.stdout.close()
-        return_code = popen.wait()
-        if return_code:
-            raise subprocess.CalledProcessError(return_code, command)
-        return return_code
-
     # Either date or regex_expression must be provided
-    assert date or regex_expression, "Either date or regex_expression must be provided."
+    assert date or greater_than, "Either date or greater_than must be provided."
 
-    log("Fetching files from INEA server...")
     # Creating temporary directory
     if date:
         output_directory_path = Path(output_directory) / date
     else:
-        output_directory_path = Path(output_directory) / f"regex-{uuid4()}"
+        output_directory_path = Path(output_directory) / f"greaterthan-{greater_than}"
     output_directory_path.mkdir(parents=True, exist_ok=True)
     log(f"Temporary directory created: {output_directory_path}")
+
     # Get SSH password from env
     ssh_password = getenv("INEA_SSH_PASSWORD")
+
     # Open SSH client
     ssh_client = SSHClient()
     ssh_client.load_system_host_keys()
     ssh_client.connect(hostname="a9921", username="root", password=ssh_password)
+
     # List remote files
     log("Listing remote files...")
     if date:
         _, stdout, _ = ssh_client.exec_command(
             f"find /var/opt/edge/vols -name '9921GUA{date}*.vol'"
         )
+        remote_files = stdout.read().decode("utf-8").splitlines()
     else:
         _, stdout, _ = ssh_client.exec_command(
-            f"find /var/opt/edge/vols -name '{regex_expression}'"
+            "find /var/opt/edge/vols -name '9921GUA*.vol'"
         )
-    remote_files = stdout.read().decode("utf-8").splitlines()
+        all_files = stdout.read().decode("utf-8").splitlines()
+        remote_files = [
+            file
+            for file in all_files
+            if file.split("/")[-1][: len(greater_than + 7)] >= f"9921GUA{greater_than}"
+        ]
     log(f"Found {len(remote_files)} files.")
     log(f"Remote files: {remote_files}")
     raise ValueError("Test")

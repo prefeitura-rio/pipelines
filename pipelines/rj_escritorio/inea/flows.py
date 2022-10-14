@@ -9,7 +9,6 @@ from prefect.utilities.edges import unmapped
 
 from pipelines.constants import constants
 from pipelines.rj_escritorio.inea.tasks import (
-    build_regex_expression,
     convert_vol_file,
     execute_shell_command,
     fetch_vol_files,
@@ -36,8 +35,7 @@ with Flow(
         required=False,
     )
     greater_than = Parameter("greater_than", default=None, required=False)
-    regex_expression = build_regex_expression(greater_than=greater_than)
-    downloaded_files = fetch_vol_files(date=date, regex_expression=regex_expression)
+    downloaded_files = fetch_vol_files(date=date, greater_than=greater_than)
     converted_files = convert_vol_file.map(
         downloaded_file=downloaded_files,
         output_format=unmapped(output_format),
