@@ -223,12 +223,18 @@ def upload_file_to_gcs(
 
 
 @task
-def execute_shell_command(command: str):
+def execute_shell_command(command: str, stdout_callback: Callable = log):
     """
     Executes a shell command and logs output
     """
-    log(f"Executing command: {command}")
-    child = pexpect.spawn(command, timeout=None)
-    log("Waiting for command to finish...")
-    child.expect(pexpect.EOF, timeout=None)
-    log(child.before.decode("utf-8"))
+    popen = subprocess.Popen(
+        command, shell=True, stdout=subprocess.PIPE, universal_newlines=True
+    )
+    for stdout_line in iter(popen.stdout.readline, ""):
+        stdout_callback(stdout_line)
+    popen.stdout.close()
+    return_code = popen.wait()
+    if return_code:
+        log(f"Command {command} failed with return code {return_code}", "error")
+    else:
+        log(f"Command {command} executed successfully")
