@@ -228,6 +228,7 @@ def execute_shell_command(command: str):
     Executes a shell command and logs output
     """
     log(f"Executing command: {command}")
-    child = pexpect.spawn(command)
-    child.expect(pexpect.EOF)
+    child = pexpect.spawn(command, timeout=None)
+    log("Waiting for command to finish...")
+    child.expect(pexpect.EOF, timeout=None)
     log(child.before.decode("utf-8"))
