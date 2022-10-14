@@ -7,7 +7,7 @@ from functools import partial
 from os import environ, getenv
 from pathlib import Path
 import subprocess
-from typing import Callable, List
+from typing import Callable, List, Tuple
 
 from google.cloud import storage
 from paramiko import SSHClient
@@ -16,10 +16,6 @@ from prefect import task
 from scp import SCPClient
 
 from pipelines.utils.utils import log, get_credentials_from_env
-
-# TODO:
-# - Listar todos os VOLs no remoto
-# - Criar filtro para os VOLs que serão baixados (por data)
 
 
 @task
@@ -33,16 +29,17 @@ def print_environment_variables():
 
 
 @task(
+    nout=2,
     max_retries=2,
-    retry_delay=timedelta(seconds=30),
+    retry_delay=timedelta(seconds=10),
 )
-def fetch_vol_files(
+def list_vol_files(
     date: str = None,
     greater_than: str = None,
     output_directory: str = "/var/escritoriodedados/temp/",
-):
+) -> Tuple[List[str], str]:
     """
-    Fetch files from INEA server
+    List files from INEA server
 
     Args:
         date (str): Date of the files to be fetched (e.g. 20220125)
@@ -88,19 +85,43 @@ def fetch_vol_files(
         ]
     log(f"Found {len(remote_files)} files.")
     log(f"Remote files: {remote_files}")
-    raise ValueError("Test")
+    return remote_files, output_directory_path
+
+
+@task(
+    max_retries=2,
+    retry_delay=timedelta(seconds=30),
+)
+def fetch_vol_file(
+    remote_file: str,
+    output_directory: str = "/var/escritoriodedados/temp/",
+):
+    """
+    Fetch files from INEA server
+
+    Args:
+        remote_file (str): Remote file to be fetched
+        output_directory (str): Directory where the files will be saved
+    """
+    # Get SSH password from env
+    ssh_password = getenv("INEA_SSH_PASSWORD")
+
+    # Open SSH client
+    ssh_client = SSHClient()
+    ssh_client.load_system_host_keys()
+    ssh_client.connect(hostname="a9921", username="root", password=ssh_password)
+
     # Open SCP client
     scp = SCPClient(ssh_client.get_transport(), sanitize=lambda x: x)
-    # Fetch VOL files
-    fname = f"/var/opt/edge/vols/9921GUA{date}*.vol"
-    scp.get(fname, recursive=True, local_path=str(output_directory))
+
+    # Fetch VOL file
+    scp.get(remote_file, local_path=str(output_directory))
+
     # Close connection
     scp.close()
-    # Return list of downloaded files
-    downloaded_files = [str(f) for f in output_directory_path.glob("*.vol")]
-    log(f"Downloaded files: {downloaded_files}")
-    log(f"Found {len(downloaded_files)} files to convert.")
-    return downloaded_files
+
+    # Return local file path
+    return Path(output_directory) / remote_file.split("/")[-1]
 
 
 @task

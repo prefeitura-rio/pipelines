@@ -11,7 +11,8 @@ from pipelines.constants import constants
 from pipelines.rj_escritorio.inea.tasks import (
     convert_vol_file,
     execute_shell_command,
-    fetch_vol_files,
+    fetch_vol_file,
+    list_vol_files,
     upload_file_to_gcs,
 )
 from pipelines.utils.decorators import Flow
@@ -35,7 +36,12 @@ with Flow(
         required=False,
     )
     greater_than = Parameter("greater_than", default=None, required=False)
-    downloaded_files = fetch_vol_files(date=date, greater_than=greater_than)
+    remote_files, output_directory = list_vol_files(
+        date=date, greater_than=greater_than
+    )
+    downloaded_files = fetch_vol_file.map(
+        remote_file=remote_files, output_directory=unmapped(output_directory)
+    )
     converted_files = convert_vol_file.map(
         downloaded_file=downloaded_files,
         output_format=unmapped(output_format),
