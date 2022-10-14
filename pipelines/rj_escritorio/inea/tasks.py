@@ -84,7 +84,7 @@ def fetch_vol_files(
         remote_files = [
             file
             for file in all_files
-            if file.split("/")[-1][: len(greater_than + 7)] >= f"9921GUA{greater_than}"
+            if file.split("/")[-1][: len(greater_than) + 7] >= f"9921GUA{greater_than}"
         ]
     log(f"Found {len(remote_files)} files.")
     log(f"Remote files: {remote_files}")
