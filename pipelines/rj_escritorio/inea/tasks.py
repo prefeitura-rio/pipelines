@@ -3,6 +3,7 @@
 Tasks for INEA.
 """
 from datetime import datetime, timedelta
+from functools import partial
 from os import environ, getenv
 from pathlib import Path
 import subprocess
@@ -223,15 +224,25 @@ def upload_file_to_gcs(
 
 
 @task
-def execute_shell_command(command: str, stdout_callback: Callable = log):
+def execute_shell_command(
+    command: str,
+    stdout_callback: Callable = log,
+    stderr_callback: Callable = partial(log, level="error"),
+):
     """
     Executes a shell command and logs output
     """
     popen = subprocess.Popen(
-        command, shell=True, stdout=subprocess.PIPE, universal_newlines=True
+        command,
+        shell=True,
+        stdout=subprocess.PIPE,
+        universal_newlines=True,
+        stderr=subprocess.PIPE,
     )
     for stdout_line in iter(popen.stdout.readline, ""):
         stdout_callback(stdout_line)
+    for stderr_line in iter(popen.stderr.readline, ""):
+        stderr_callback(stderr_line)
     popen.stdout.close()
     return_code = popen.wait()
     if return_code:
