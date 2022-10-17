@@ -8,6 +8,7 @@ from prefect.storage import GCS
 from prefect.utilities.edges import unmapped
 
 from pipelines.constants import constants
+from pipelines.rj_escritorio.inea.schedules import every_5_minutes
 from pipelines.rj_escritorio.inea.tasks import (
     convert_vol_file,
     execute_shell_command,
@@ -18,11 +19,11 @@ from pipelines.rj_escritorio.inea.tasks import (
 from pipelines.utils.decorators import Flow
 
 with Flow(
-    "INEA: Teste",
+    "INEA: Captura dados de radar",
     code_owners=[
         "gabriel",
     ],
-) as inea_test_flow:
+) as inea_radar_flow:
     date = Parameter("date", default=None, required=False)
     bucket_name = Parameter("bucket_name")
     prefix = Parameter("prefix")
@@ -64,8 +65,9 @@ with Flow(
     )
 
 
-inea_test_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-inea_test_flow.run_config = LocalRun(labels=[constants.INEA_AGENT_LABEL.value])
+inea_radar_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+inea_radar_flow.run_config = LocalRun(labels=[constants.INEA_AGENT_LABEL.value])
+inea_radar_flow.schedule = every_5_minutes
 
 
 with Flow(
