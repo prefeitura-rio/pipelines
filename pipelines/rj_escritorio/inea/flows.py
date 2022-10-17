@@ -37,7 +37,14 @@ with Flow(
     )
     greater_than = Parameter("greater_than", default=None, required=False)
     remote_files, output_directory = list_vol_files(
-        date=date, greater_than=greater_than
+        date=date,
+        greater_than=greater_than,
+        bucket_name=bucket_name,
+        prefix=prefix,
+        radar=radar,
+        product=product,
+        mode=mode,
+        output_format=output_format,
     )
     downloaded_files = fetch_vol_file.map(
         remote_file=remote_files, output_directory=unmapped(output_directory)
