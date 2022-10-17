@@ -15,7 +15,7 @@ import pexpect
 from prefect import task
 from scp import SCPClient
 
-from pipelines.utils.utils import log, get_credentials_from_env
+from pipelines.utils.utils import get_credentials_from_env, list_blobs_with_prefix, log
 
 
 @task
@@ -34,8 +34,14 @@ def print_environment_variables():
     retry_delay=timedelta(seconds=10),
 )
 def list_vol_files(
+    bucket_name: str,
+    prefix: str,
+    radar: str,
+    product: str,
     date: str = None,
     greater_than: str = None,
+    mode: str = "prod",
+    output_format: str = "NetCDF",
     output_directory: str = "/var/escritoriodedados/temp/",
 ) -> Tuple[List[str], str]:
     """
@@ -47,8 +53,48 @@ def list_vol_files(
         output_directory (str): Directory where the files will be saved
     """
 
-    # Either date or regex_expression must be provided
-    assert date or greater_than, "Either date or greater_than must be provided."
+    # If none of `date` or `greater_than` are provided, find blob with the latest date
+    if date is None and greater_than is None:
+        # First, we build the search prefix
+        search_prefix = f"{prefix}/radar={radar}/produto={product}"
+        # Then, we add the current date partition
+        current_date = datetime.now()
+        current_date_str = current_date.strftime("%Y-%m-%d")
+        today_blobs = list_blobs_with_prefix(
+            bucket_name=bucket_name,
+            prefix=f"{search_prefix}/data_particao={current_date_str}",
+            mode=mode,
+        )
+        # Next, we get past day blobs
+        past_date = current_date - timedelta(days=1)
+        past_date_str = past_date.strftime("%Y-%m-%d")
+        past_blobs = list_blobs_with_prefix(
+            bucket_name=bucket_name,
+            prefix=f"{search_prefix}/data_particao={past_date_str}",
+            mode=mode,
+        )
+        # Then, we merge the two lists
+        blobs = today_blobs + past_blobs
+        # Now, we sort it by `blob.name`
+        blobs.sort(key=lambda blob: blob.name)
+        # Finally, we get the latest blob
+        latest_blob = blobs[-1]
+        # And we get the greater_than from its name (differs for every output_format)
+        if output_format == "NetCDF":
+            # Format of the name is 9921GUA-20221017-070010-PPIVol-0000.nc.gz
+            # We need to join 20221017 and 070010
+            greater_than = (
+                latest_blob.name.split("-")[1] + latest_blob.name.split("-")[2]
+            )
+        elif output_format == "HDF5":
+            # Format of the name is 9921GUA-PPIVol-20220930-121010-0004.hdf
+            # We need to join 20220930 and 121010
+            greater_than = (
+                latest_blob.name.split("-")[2] + latest_blob.name.split("-")[3]
+            )
+        log(f"Latest blob date: {greater_than}")
+
+    raise ValueError("Not implemented yet")
 
     # Creating temporary directory
     if date:
