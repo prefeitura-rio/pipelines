@@ -91,17 +91,13 @@ def list_vol_files(
         if output_format == "NetCDF":
             # Format of the name is 9921GUA-20221017-070010-PPIVol-0000.nc.gz
             # We need to join 20221017 and 070010
-            greater_than = (
-                latest_blob.name.split("/")[-1].split("-")[1]
-                + latest_blob.name.split("-")[2]
-            )
+            fname = latest_blob.name.split("/")[-1]
+            greater_than = fname.split("-")[1] + fname.split("-")[2]
         elif output_format == "HDF5":
             # Format of the name is 9921GUA-PPIVol-20220930-121010-0004.hdf
             # We need to join 20220930 and 121010
-            greater_than = (
-                latest_blob.name.split("/")[-1].split("-")[2]
-                + latest_blob.name.split("-")[3]
-            )
+            fname = latest_blob.name.split("/")[-1]
+            greater_than = fname.split("-")[2] + fname.split("-")[3]
         log(f"Latest blob date: {greater_than}")
 
     raise ValueError("Not implemented yet")
