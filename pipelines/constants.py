@@ -20,6 +20,8 @@ class constants(Enum):  # pylint: disable=c0103
     DOCKER_IMAGE = f"{DOCKER_IMAGE_NAME}:{DOCKER_TAG}"
     # Prefect agents AUTO_FIND=M9w=k-b_
 
+    INEA_AGENT_LABEL = "inea"
+
     RJ_DATARIO_AGENT_LABEL = "datario"
     RJ_DATARIO_DEV_AGENT_LABEL = "datario-dev"
 
