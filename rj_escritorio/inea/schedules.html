@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_escritorio API documentation</title>
-<meta name="description" content="Prefect flows for emd project" />
+<title>pipelines.rj_escritorio.inea.schedules API documentation</title>
+<meta name="description" content="Schedules for the INEA flows." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,82 +19,50 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_escritorio</code></h1>
+<h1 class="title">Module <code>pipelines.rj_escritorio.inea.schedules</code></h1>
 </header>
 <section id="section-intro">
-<p>Prefect flows for emd project</p>
+<p>Schedules for the INEA flows.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Prefect flows for emd project
+Schedules for the INEA flows.
 &#34;&#34;&#34;
-###############################################################################
-# Automatically managed, please do not touch
-###############################################################################
-from pipelines.rj_escritorio.bot_sistemas.flows import *
-from pipelines.rj_escritorio.dados_mestres_dump_datario.flows import *
-from pipelines.rj_escritorio.dummy_predict.flows import *
-from pipelines.rj_escritorio.template_pipeline.flows import *
-from pipelines.rj_escritorio.tweets_flamengo.flows import *
-from pipelines.rj_escritorio.birthdays.flows import *
-from pipelines.rj_escritorio.cleanup.flows import *
-from pipelines.rj_escritorio.waze.flows import *
-from pipelines.rj_escritorio.geolocator.flows import *
-from pipelines.rj_escritorio.inea.flows import *
-from pipelines.rj_escritorio.seconserva_buracos_refresh_data.flows import *</code></pre>
+
+from datetime import timedelta, datetime
+
+from prefect.schedules import Schedule
+from prefect.schedules.clocks import IntervalClock
+import pytz
+
+from pipelines.constants import constants
+
+every_5_minutes = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(minutes=5),
+            start_date=datetime(2021, 1, 1, tzinfo=pytz.timezone(&#34;America/Sao_Paulo&#34;)),
+            labels=[
+                constants.INEA_AGENT_LABEL.value,
+            ],
+            parameter_defaults={
+                &#34;bucket_name&#34;: &#34;rj-escritorio-dev&#34;,
+                &#34;convert_params&#34;: &#34;-f=Whole -k=CFext -r=Short -p=Radar -M=All -z&#34;,
+                &#34;mode&#34;: &#34;prod&#34;,
+                &#34;output_format&#34;: &#34;NetCDF&#34;,
+                &#34;prefix&#34;: &#34;raw/meio_ambiente_clima/inea_radar&#34;,
+                &#34;product&#34;: &#34;ppi&#34;,
+                &#34;radar&#34;: &#34;gua&#34;,
+            },
+        ),
+    ]
+)</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
-<dl>
-<dt><code class="name"><a title="pipelines.rj_escritorio.birthdays" href="birthdays/index.html">pipelines.rj_escritorio.birthdays</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.bot_sistemas" href="bot_sistemas/index.html">pipelines.rj_escritorio.bot_sistemas</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.cleanup" href="cleanup/index.html">pipelines.rj_escritorio.cleanup</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.dados_mestres_dump_datario" href="dados_mestres_dump_datario/index.html">pipelines.rj_escritorio.dados_mestres_dump_datario</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.dummy_predict" href="dummy_predict/index.html">pipelines.rj_escritorio.dummy_predict</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.geolocator" href="geolocator/index.html">pipelines.rj_escritorio.geolocator</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.inea" href="inea/index.html">pipelines.rj_escritorio.inea</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.seconserva_buracos_refresh_data" href="seconserva_buracos_refresh_data/index.html">pipelines.rj_escritorio.seconserva_buracos_refresh_data</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.template_pipeline" href="template_pipeline/index.html">pipelines.rj_escritorio.template_pipeline</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.tweets_flamengo" href="tweets_flamengo/index.html">pipelines.rj_escritorio.tweets_flamengo</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.waze" href="waze/index.html">pipelines.rj_escritorio.waze</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 </section>
 <section>
 </section>
@@ -138,7 +106,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -157,22 +125,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines" href="../index.html">pipelines</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="pipelines.rj_escritorio.birthdays" href="birthdays/index.html">pipelines.rj_escritorio.birthdays</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.bot_sistemas" href="bot_sistemas/index.html">pipelines.rj_escritorio.bot_sistemas</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.cleanup" href="cleanup/index.html">pipelines.rj_escritorio.cleanup</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.dados_mestres_dump_datario" href="dados_mestres_dump_datario/index.html">pipelines.rj_escritorio.dados_mestres_dump_datario</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.dummy_predict" href="dummy_predict/index.html">pipelines.rj_escritorio.dummy_predict</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.geolocator" href="geolocator/index.html">pipelines.rj_escritorio.geolocator</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.inea" href="inea/index.html">pipelines.rj_escritorio.inea</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.seconserva_buracos_refresh_data" href="seconserva_buracos_refresh_data/index.html">pipelines.rj_escritorio.seconserva_buracos_refresh_data</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.template_pipeline" href="template_pipeline/index.html">pipelines.rj_escritorio.template_pipeline</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.tweets_flamengo" href="tweets_flamengo/index.html">pipelines.rj_escritorio.tweets_flamengo</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.waze" href="waze/index.html">pipelines.rj_escritorio.waze</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.inea" href="index.html">pipelines.rj_escritorio.inea</a></code></li>
 </ul>
 </li>
 </ul>
