@@ -100,8 +100,6 @@ def list_vol_files(
             greater_than = fname.split("-")[2] + fname.split("-")[3]
         log(f"Latest blob date: {greater_than}")
 
-    raise ValueError("Not implemented yet")
-
     # Creating temporary directory
     if date:
         output_directory_path = Path(output_directory) / date
