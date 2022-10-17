@@ -33,6 +33,7 @@ def print_environment_variables():
     max_retries=2,
     retry_delay=timedelta(seconds=10),
 )
+# pylint: disable=too-many-arguments,too-many-locals
 def list_vol_files(
     bucket_name: str,
     prefix: str,
@@ -270,6 +271,7 @@ def execute_shell_command(
     """
     Executes a shell command and logs output
     """
+    # pylint: disable=consider-using-with
     popen = subprocess.Popen(
         command,
         shell=True,
