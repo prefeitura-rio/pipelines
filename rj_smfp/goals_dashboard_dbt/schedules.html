@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_smfp API documentation</title>
-<meta name="description" content="Prefect flows for rj_smfp project" />
+<title>pipelines.rj_smfp.goals_dashboard_dbt.schedules API documentation</title>
+<meta name="description" content="Schedules for the database dump pipeline" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,46 +19,74 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_smfp</code></h1>
+<h1 class="title">Module <code>pipelines.rj_smfp.goals_dashboard_dbt.schedules</code></h1>
 </header>
 <section id="section-intro">
-<p>Prefect flows for rj_smfp project</p>
+<p>Schedules for the database dump pipeline</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Prefect flows for rj_smfp project
+Schedules for the database dump pipeline
 &#34;&#34;&#34;
 
-from pipelines.rj_smfp.dump_db_ergon.flows import *
-from pipelines.rj_smfp.dump_db_metas.flows import *
-from pipelines.rj_smfp.dump_url_metas.flows import *
+from datetime import datetime, timedelta
 
-# from pipelines.rj_smfp.smfp_egpweb_refresh_data.flows import *</code></pre>
+from prefect.schedules import Schedule
+from prefect.schedules.clocks import IntervalClock
+import pytz
+
+from pipelines.constants import constants
+from pipelines.utils.utils import untuple_clocks as untuple
+
+#####################################
+#
+# SMFP Dashboard de Metas Schedules
+#
+#####################################
+
+smfp_dashboard_metas_tables = {
+    &#34;ar_detalhes&#34;: &#34;ar_detalhes&#34;,
+    &#34;ar_valores&#34;: &#34;ar_valores&#34;,
+    &#34;orgaos&#34;: &#34;orgaos&#34;,
+    &#34;pe_detalhes&#34;: &#34;pe_detalhes&#34;,
+    &#34;pe_numerico&#34;: &#34;pe_numerico&#34;,
+    &#34;pe_porcentagem&#34;: &#34;pe_porcentagem&#34;,
+    &#34;pe_ranking&#34;: &#34;pe_ranking&#34;,
+    &#34;pe_textual&#34;: &#34;pe_textual&#34;,
+    &#34;todos_detalhes&#34;: &#34;todos_detalhes&#34;,
+    &#34;todos_numerico&#34;: &#34;todos_numerico&#34;,
+    &#34;todos_percentual&#34;: &#34;todos_percentual&#34;,
+    &#34;todos_ranking&#34;: &#34;todos_ranking&#34;,
+    &#34;todos_textual&#34;: &#34;todos_textual&#34;,
+}
+
+smfp_dashboard_metas_clocks = [
+    IntervalClock(
+        interval=timedelta(days=1),
+        start_date=datetime(
+            2022, 10, 17, 17, 0, tzinfo=pytz.timezone(&#34;America/Sao_Paulo&#34;)
+        )
+        + timedelta(minutes=3 * count),
+        labels=[
+            constants.RJ_SMFP_AGENT_LABEL.value,
+        ],
+        parameter_defaults={
+            &#34;dataset_id&#34;: &#34;planejamento_gestao_dashboard_metas&#34;,
+            &#34;table_id&#34;: table_id,
+            &#34;mode&#34;: &#34;prod&#34;,
+        },
+    )
+    for count, (_, table_id) in enumerate(smfp_dashboard_metas_tables.items())
+]
+smfp_dashboard_metas_daily_update_schedule = Schedule(
+    clocks=untuple(smfp_dashboard_metas_clocks)
+)</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
-<dl>
-<dt><code class="name"><a title="pipelines.rj_smfp.dump_db_ergon" href="dump_db_ergon/index.html">pipelines.rj_smfp.dump_db_ergon</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smfp.dump_db_metas" href="dump_db_metas/index.html">pipelines.rj_smfp.dump_db_metas</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smfp.dump_url_metas" href="dump_url_metas/index.html">pipelines.rj_smfp.dump_url_metas</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smfp.goals_dashboard_dbt" href="goals_dashboard_dbt/index.html">pipelines.rj_smfp.goals_dashboard_dbt</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 </section>
 <section>
 </section>
@@ -102,7 +130,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -121,15 +149,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines" href="../index.html">pipelines</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="pipelines.rj_smfp.dump_db_ergon" href="dump_db_ergon/index.html">pipelines.rj_smfp.dump_db_ergon</a></code></li>
-<li><code><a title="pipelines.rj_smfp.dump_db_metas" href="dump_db_metas/index.html">pipelines.rj_smfp.dump_db_metas</a></code></li>
-<li><code><a title="pipelines.rj_smfp.dump_url_metas" href="dump_url_metas/index.html">pipelines.rj_smfp.dump_url_metas</a></code></li>
-<li><code><a title="pipelines.rj_smfp.goals_dashboard_dbt" href="goals_dashboard_dbt/index.html">pipelines.rj_smfp.goals_dashboard_dbt</a></code></li>
+<li><code><a title="pipelines.rj_smfp.goals_dashboard_dbt" href="index.html">pipelines.rj_smfp.goals_dashboard_dbt</a></code></li>
 </ul>
 </li>
 </ul>
