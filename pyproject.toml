@@ -39,6 +39,7 @@ geopandas = ">=0.7.0,<0.8.0" # This version range is due to `geobr` package
 google-api-python-client = "^2.56.0"
 mlflow = {extras = ["extras"], version = "^1.28.0"}
 gspread = "^5.5.0"
+scp = "^0.14.4"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.12.2"
