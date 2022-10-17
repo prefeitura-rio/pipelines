@@ -10,6 +10,7 @@ import logging
 from os import getenv, walk
 from os.path import join
 from pathlib import Path
+import re
 from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
 
@@ -25,6 +26,9 @@ import prefect
 from prefect.client import Client
 from prefect.engine.state import State
 from prefect.run_configs import KubernetesRun
+from prefect.utilities.graphql import (
+    with_args,
+)
 from redis_pal import RedisPal
 import requests
 import telegram
@@ -239,16 +243,39 @@ def run_cloud(
 
 
 def run_registered(
-    flow_id: str,
+    flow_name: str,
     labels: List[str],
     parameters: Dict[str, Any] = None,
     run_description: str = "",
-):
+) -> str:
     """
     Runs an already registered flow on Prefect Server (must have credentials configured).
     """
     # Get Prefect Client and submit flow run
     client = Client()
+    flow_result = client.graphql(
+        {
+            "query": {
+                with_args(
+                    "flow",
+                    {
+                        "where": {
+                            "_and": [
+                                {"name": {"_eq": flow_name}},
+                                {"archived": {"_eq": False}},
+                            ]
+                        }
+                    },
+                ): {"id"}
+            }
+        }
+    )
+    flows_found = flow_result.data.flow
+    if len(flows_found) == 0:
+        raise ValueError(f"Flow {flow_name} not found.")
+    if len(flows_found) > 1:
+        raise ValueError(f"More than one flow found for {flow_name}.")
+    flow_id = flow_result["data"]["flow"][0]["id"]
     flow_run_id = client.create_flow_run(
         flow_id=flow_id,
         run_name=f"SUBMITTED REMOTELY - {run_description}",
@@ -259,6 +286,8 @@ def run_registered(
     # Print flow run link so user can check it
     print(f"Run submitted: SUBMITTED REMOTELY - {run_description}")
     print(f"Please check at: https://prefect.dados.rio/flow-run/{flow_run_id}")
+
+    return flow_run_id
 
 
 def query_to_line(query: str) -> str:
@@ -462,11 +491,19 @@ def remove_columns_accents(dataframe: pd.DataFrame) -> list:
         dataframe.columns.str.normalize("NFKD")
         .str.encode("ascii", errors="ignore")
         .str.decode("utf-8")
+        .map(lambda x: x.strip())
         .str.replace(" ", "_")
-        .str.replace(".", "")
         .str.replace("/", "_")
         .str.replace("-", "_")
+        .str.replace("\a", "_")
+        .str.replace("\b", "_")
+        .str.replace("\n", "_")
+        .str.replace("\t", "_")
+        .str.replace("\v", "_")
+        .str.replace("\f", "_")
+        .str.replace("\r", "_")
         .str.lower()
+        .map(final_column_treatment)
     )
 
 
@@ -648,6 +685,39 @@ def list_blobs_with_prefix(
     return list(blobs)
 
 
+def upload_files_to_storage(
+    bucket_name: str,
+    prefix: str,
+    local_path: Union[str, Path] = None,
+    files_list: List[str] = None,
+    mode: str = "prod",
+):
+    """
+    Uploads all files from `local_path` to `bucket_name` with `prefix`.
+    Mode needs to be "prod" or "staging"
+    """
+    # Either local_path or files_list must be provided
+    if local_path is None and files_list is None:
+        raise ValueError("Either local_path or files_list must be provided")
+
+    # If local_path is provided, get all files from it
+    if local_path is not None:
+        files_list: List[Path] = list(Path(local_path).glob("**/*"))
+
+    # Assert all items in files_list are Path objects
+    files_list: List[Path] = [Path(f) for f in files_list]
+
+    credentials = get_credentials_from_env(mode=mode)
+    storage_client = storage.Client(credentials=credentials)
+
+    bucket = storage_client.bucket(bucket_name)
+
+    for file in files_list:
+        if file.is_file():
+            blob = bucket.blob(f"{prefix}/{file.name}")
+            blob.upload_from_filename(file)
+
+
 def parser_blobs_to_partition_dict(blobs: list) -> dict:
     """
     Extracts the partition information from the blobs.
@@ -740,3 +810,16 @@ def parse_date_columns(
     dataframe[data_col] = dataframe[data_col].dt.date
 
     return dataframe, [ano_col, mes_col, data_col]
+
+
+def final_column_treatment(column: str) -> str:
+    """
+    Adds an underline before column name if it only has numbers or remove all non alpha numeric
+    characters besides underlines ("_").
+    """
+    try:
+        int(column)
+        return f"_{column}"
+    except ValueError:  # pylint: disable=bare-except
+        non_alpha_removed = re.sub(r"[\W]+", "", column)
+        return non_alpha_removed

@@ -78,26 +78,10 @@ def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-l
             "execute_query": query_to_line(parameters["execute_query"]),
         }
 
-        if "partition_columns" in parameters:
-            parameter_defaults["partition_columns"] = parameters["partition_columns"]
-        if "partition_date_format" in parameters:
-            parameter_defaults["partition_date_format"] = parameters[
-                "partition_date_format"
-            ]
-        if "lower_bound_date" in parameters:
-            parameter_defaults["lower_bound_date"] = parameters["lower_bound_date"]
-        if "materialize_after_dump" in parameters:
-            parameter_defaults["materialize_after_dump"] = parameters[
-                "materialize_after_dump"
-            ]
-        if "materialization_mode" in parameters:
-            parameter_defaults["materialization_mode"] = parameters[
-                "materialization_mode"
-            ]
-        if "dbt_model_secret_parameters" in parameters:
-            parameter_defaults["dbt_model_secret_parameters"] = parameters[
-                "dbt_model_secret_parameters"
-            ]
+        # Add remaining parameters if value is not None
+        for key, value in parameters.items():
+            if value is not None:
+                parameter_defaults[key] = value
 
         new_interval = parameters["interval"] if "interval" in parameters else interval
 

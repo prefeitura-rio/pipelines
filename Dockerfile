@@ -4,7 +4,7 @@ ARG PYTHON_VERSION=3.9-slim
 # Get Oracle Instant Client
 FROM curlimages/curl:7.81.0 as curl-step
 ARG ORACLE_INSTANT_CLIENT_URL=https://download.oracle.com/otn_software/linux/instantclient/215000/instantclient-basic-linux.x64-21.5.0.0.0dbru.zip
-ARG GDAL_WHEELS_URL=https://sourceforge.net/projects/gdal-wheels-for-linux/files/GDAL-3.4.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl/download
+ARG GDAL_WHEELS_URL=https://prefeitura-rio.github.io/storage/GDAL-3.4.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl
 RUN curl -sSLo /tmp/instantclient.zip $ORACLE_INSTANT_CLIENT_URL && \
     curl -sSLo /tmp/GDAL-3.4.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl $GDAL_WHEELS_URL
 
