@@ -16,7 +16,7 @@ from pipelines.rj_smtr.registros_ocr_rir.tasks import (
 )
 from pipelines.rj_smtr.tasks import bq_upload, get_current_timestamp
 
-from pipelines.rj_smtr.schedules import every_minute
+# from pipelines.rj_smtr.schedules import every_minute
 from pipelines.utils.decorators import Flow
 from pipelines.utils.tasks import rename_current_flow_run_now_time
 
