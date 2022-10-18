@@ -1,4 +1,4 @@
-# Pipelines 
+# Pipelines
 
 Este repositório contém fluxos de captura e subida de dados no datalake
 da Prefeitura do Rio de Janeiro. O repositório é gerido pelo Escritório
