@@ -3,7 +3,7 @@
 Tasks for projeto_subsidio_sppo
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from typing import List
 
 from prefect import task
@@ -39,7 +39,7 @@ def query_max_planned_date(
         base_value=last_run_date,
     )
     log(f"Planned trips max date is: {planned_mdate}")
-    if not isinstance(planned_mdate, datetime):
+    if not isinstance(planned_mdate, date):
         planned_mdate = datetime.strptime(planned_mdate, "%Y-%m-%d")
     return planned_mdate
 

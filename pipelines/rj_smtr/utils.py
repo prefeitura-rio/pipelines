@@ -49,7 +49,7 @@ def create_or_append_table(
     tb_obj = Table(table_id=table_id, dataset_id=dataset_id)
     if not tb_obj.table_exists("staging"):
         log("Table does not exist in STAGING, creating table...")
-        dirpath = path.split(partitions)[0]
+        dirpath = path.split(table_id)[0] + table_id
         tb_obj.create(
             path=dirpath,
             if_table_exists="pass",
@@ -123,7 +123,7 @@ def get_table_min_max_value(  # pylint: disable=R0913
         FROM {query_project_id}.{dataset_id}.{table_id}
     """
     if base_value:
-        query += f"WHERE {field_name}>={base_value}"
+        query += f"WHERE {field_name}>='{base_value}'"
 
     result = bd.read_sql(query=query, billing_project_id=bq_project())
 

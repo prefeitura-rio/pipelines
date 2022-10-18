@@ -9,7 +9,7 @@ import json
 import os
 from pathlib import Path
 import traceback
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from basedosdados import Storage, Table
 import basedosdados as bd
@@ -405,7 +405,7 @@ def query_and_save_csv_by_date(  # pylint: disable=too-many-arguments
     table_id: str,
     project_id: str = "rj-smtr",
     mode: str = "prod",
-    date_filter: str = None,
+    date_range: List = None,
     wait=None,  # pylint: disable=unused-argument
 ):
     """_summary_
@@ -423,20 +423,26 @@ def query_and_save_csv_by_date(  # pylint: disable=too-many-arguments
     """
     if mode == "dev":
         project_id += "-dev"
-    query = f"""
-    SELECT
-        *
-    FROM {project_id}.{dataset_id}.{table_id}
-    WHERE data = '{date_filter}'
-    """
-    log(f"Running query:\n{query}")
-    results = bd.read_sql(query=query, billing_project_id=project_id)
-    path = Path(
-        f"data/staging/{dataset_id}/{table_id}/data={date_filter}/{date_filter}.csv"
-    )
-    path.parent.mkdir(parents=True, exist_ok=True)
-    results.to_csv(path, index=False)
-    return path.as_posix(), f"data={date_filter}"
+    paths = []
+    partitions = []
+    for param in date_range:
+        query = f"""
+        SELECT
+            *
+        FROM {project_id}.{dataset_id}.{table_id}
+        WHERE data = '{param['run_date']}'
+        """
+        log(f"Running query:\n{query}")
+        results = bd.read_sql(query=query, billing_project_id=project_id)
+        path = Path(
+            f"data/staging/{dataset_id}/{table_id}/data={param['run_date']}/{param['run_date']}.csv"
+        )
+        path.parent.mkdir(parents=True, exist_ok=True)
+        results.to_csv(path, index=False)
+        # Append to both results lists
+        paths.append(path.as_posix())
+        partitions.append(f"data={param['run_date']}")
+    return paths, partitions
 
 
 ###############

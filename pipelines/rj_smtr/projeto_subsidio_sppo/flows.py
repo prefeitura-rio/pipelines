@@ -47,11 +47,6 @@ from pipelines.rj_smtr.schedules import (
 # Flows #
 with Flow("SMTR - Subsidio Sensor") as subsidio_sensor:
 
-    LABELS = get_current_flow_labels()
-    MODE = get_current_flow_mode(LABELS)
-    dbt_client = get_k8s_dbt_client(mode=MODE)
-    # Use the command below to get the dbt client in dev mode:
-    # dbt_client = get_local_dbt_client(host="localhost", port=3001)
     dataset_id = Parameter(
         "dataset_id", default=constants.SUBSIDIO_SPPO_DATASET_ID.value
     )
@@ -59,9 +54,17 @@ with Flow("SMTR - Subsidio Sensor") as subsidio_sensor:
         "complete_trips_table_id",
         default=constants.SUBSIDIO_SPPO_COMPLETED_TABLE_ID.value,
     )
+    mode = Parameter("mode", default="dev")
+    LABELS = get_current_flow_labels()
+    MODE = get_current_flow_mode(LABELS)
+    dbt_client = get_k8s_dbt_client(mode=MODE)
+    # Use the command below to get the dbt client in dev mode:
+    # dbt_client = get_local_dbt_client(host="localhost", port=3001)
     # SETUP RUN DATES
-    max_complete_date = get_max_complete_date()
-    max_planned_date = query_max_planned_date(last_run_date=max_complete_date)
+    max_complete_date = get_max_complete_date(mode=MODE)
+    max_planned_date = query_max_planned_date(
+        last_run_date=max_complete_date, mode=MODE
+    )
 
     date_range = get_date_range(
         max_planned_date=max_planned_date, max_complete_date=max_complete_date
@@ -71,32 +74,41 @@ with Flow("SMTR - Subsidio Sensor") as subsidio_sensor:
     with case(get_bool(date_range), True):
         run_params = get_run_params(date_range=date_range, dataset_sha=dataset_sha)
         # RUN MODEL AND SET TS ON REDIS
-        RUN = run_dbt_model.map(
-            dbt_client=unmapped(dbt_client),
-            model=unmapped(dataset_id),
-            upstream=unmapped(False),
-            exclude=unmapped("+viagem_planejada"),
-            _vars=run_params,
-        )
+        # RUN = run_dbt_model.map(
+        #     dbt_client=unmapped(dbt_client),
+        #     model=unmapped(dataset_id),
+        #     upstream=unmapped(False),
+        #     exclude=unmapped("+viagem_planejada viagem_completa+"),
+        #     _vars=run_params,
+        # )
         SET_LAST = set_last_run_timestamp(
             dataset_id=dataset_id,
             table_id=table_id,
             timestamp=date_range[-1],
-            wait=RUN,
+            # wait=RUN,
         )
         # SAVE CSV SNAPSHOT AND UPLOAD
-        local_paths, partitions = query_and_save_csv_by_date.map(
-            dataset_id=unmapped(dataset_id),
-            table_id=unmapped(table_id),
-            date_filter=date_range,
+        local_paths, partitions = query_and_save_csv_by_date(
+            dataset_id=dataset_id,
+            table_id=table_id,
+            mode=MODE,
+            date_range=date_range,
         )
-        final_status = bq_upload(
+        final_status = bq_upload.map(
             dataset_id=unmapped(dataset_id),
             table_id=unmapped(table_id),
             filepath=local_paths,
             partitions=partitions,
             status=unmapped({"error": None}),
         )
+
+subsidio_sensor.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+subsidio_sensor.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+subsidio_sensor.schedule = every_day_hour_six
+
 with Flow(
     "SMTR - Subsídio SPPO - Viagens", code_owners=["caio", "fernanda"]
 ) as subsidio_sppo_viagens:
@@ -142,7 +154,7 @@ subsidio_sppo_viagens.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-subsidio_sppo_viagens.schedule = every_day_hour_six
+# subsidio_sppo_viagens.schedule = every_day_hour_six
 
 
 with Flow(
