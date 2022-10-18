@@ -1,4 +1,6 @@
 # user defined
+.replit
+replit.nix
 **/data/
 test_local.py
 pylint.txt
