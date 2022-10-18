@@ -15,42 +15,62 @@ from prefect import task
 import s3fs
 
 from pipelines.rj_cor.meteorologia.satelite.satellite_utils import (
+    extract_julian_day_and_hour_from_filename,
     main,
-    save_parquet,
+    save_data_in_file,
     get_blob_with_prefix,
     download_blob,
 )
+from pipelines.utils.utils import log
 
 
 @task()
-def get_dates() -> str:
+def get_dates(current_time) -> str:
     """
-    Task para obter o dia atual
+    Task para obter o dia atual caso nenhuma data tenha sido passada
     """
-    current_time = pendulum.now("UTC").to_datetime_string()
+    if current_time is None:
+        current_time = pendulum.now("UTC").to_datetime_string()
     return current_time
 
 
-@task(nout=5)
-def slice_data(current_time: str) -> Tuple[str, str, str, str, str]:
+@task(nout=1)
+def slice_data(current_time: str, ref_filename: str = None) -> dict:
     """
-    slice data em ano. mês, dia, hora e dia juliano
+    slice data to separate in year, julian_day, month, day and hour in UTC
     """
-    ano = current_time[:4]
-    mes = current_time[5:7]
-    dia = current_time[8:10]
-    hora = current_time[11:13]
-    dia_juliano = dt.datetime.strptime(current_time, "%Y-%m-%d %H:%M:%S").strftime("%j")
-    return ano, mes, dia, hora, dia_juliano
+    if ref_filename is not None:
+        year, julian_day, hour_utc = extract_julian_day_and_hour_from_filename(
+            ref_filename
+        )
+        month = None
+        day = None
+    else:
+        year = current_time[:4]
+        month = current_time[5:7]
+        day = current_time[8:10]
+        hour_utc = current_time[11:13]
+        julian_day = dt.datetime.strptime(current_time, "%Y-%m-%d %H:%M:%S").strftime(
+            "%j"
+        )
+
+    date_hour_info = {
+        "year": str(year),
+        "julian_day": str(julian_day),
+        "month": str(month),
+        "day": str(day),
+        "hour_utc": str(hour_utc),
+    }
+
+    return date_hour_info
 
 
 @task(nout=2, max_retries=10, retry_delay=dt.timedelta(seconds=60))
 def download(
     variavel: str,
-    ano: str,
-    dia_juliano: str,
-    hora: str,
+    date_hour_info: dict,
     band: str = None,
+    ref_filename: str = None,
     redis_files: list = [],
     wait=None,
 ) -> Union[str, Path]:
@@ -58,26 +78,32 @@ def download(
     Acessa o S3 e faz o download do primeiro arquivo da data-hora especificada
     """
 
+    year = date_hour_info["year"]
+    julian_day = date_hour_info["julian_day"]
+    hour_utc = date_hour_info["hour_utc"]
+
     try:
         # Use the anonymous credentials to access public data
         s3_fs = s3fs.S3FileSystem(anon=True)
 
         # Get all files of GOES-16 data (multiband format) at this hour
-        files = np.sort(
+        path_files = np.sort(
             np.array(
-                s3_fs.find(f"noaa-goes16/ABI-L2-{variavel}/{ano}/{dia_juliano}/{hora}/")
+                s3_fs.find(
+                    f"noaa-goes16/ABI-L2-{variavel}/{year}/{julian_day}/{hour_utc}/"
+                )
                 # s3_fs.find(f"noaa-goes16/ABI-L2-CMIPF/2022/270/10/OR_ABI-L2-CMIPF-M6C13_G16_s20222701010208_e20222701019528_c20222701020005.nc")
             )
         )
         # Mantém apenas arquivos de determinada banda
         if variavel == "CMIPF":
             # para capturar banda 13
-            files = [f for f in files if bool(re.search("C" + band, f))]
+            path_files = [f for f in path_files if bool(re.search("C" + band, f))]
         origem = "aws"
     except IndexError:
         bucket_name = "gcp-public-data-goes-16"
-        partition_file = f"ABI-L2-{variavel}/{ano}/{dia_juliano}/{hora}/"
-        files = get_blob_with_prefix(
+        partition_file = f"ABI-L2-{variavel}/{year}/{julian_day}/{hour_utc}/"
+        path_files = get_blob_with_prefix(
             bucket_name=bucket_name, prefix=partition_file, mode="prod"
         )
         origem = "gcp"
@@ -86,31 +112,36 @@ def download(
 
     if not os.path.exists(base_path):
         os.makedirs(base_path)
-    print(">>>>>>>>>>>>>>> basepath", base_path)
 
     # Seleciona primeiro arquivo que não tem o nome salvo no redis
-    print(
-        ">>>>>>>>>>>>>>> files", files
-    )  # OR_ABI-L2-CMIPF-M6C13_G16_s20222711500209_e20222711509528_c20222711510012.nc
-    print(">>>>>>>>>>>>>>> redis_files", redis_files)
-    files.sort()
-    for file in files:
-        filename = file.split("/")[-1]
+    log(f"[DEBUG]: available files on API: {path_files}")
+    log(f"[DEBUG]: filenames already saved on redis_files: {redis_files}")
+
+    # keep only ref_filename if it exists
+    if ref_filename is not None:
+        # extract this part of the name s20222911230206_e20222911239514_c
+        r = re.compile(f".*{ref_filename}")
+        path_files = list(filter(r.match, path_files))
+
+    # keep the first file if it is not on redis
+    path_files.sort()
+    for path_file in path_files:
+        filename = path_file.split("/")[-1]
         if filename not in redis_files:
             redis_files.append(filename)
-            filename = os.path.join(base_path, filename)
-            download_file = file
-            print(">>>>>>>>>>>>>>> append redis_files", redis_files)
+            path_filename = os.path.join(base_path, filename)
+            download_file = path_file
+            log(f"[DEBUG]: filename to be append on redis_files: {redis_files}")
             break
 
     # Faz download da aws ou da gcp
     if origem == "aws":
-        s3_fs.get(download_file, filename)
+        s3_fs.get(download_file, path_filename)
     else:
         download_blob(
             bucket_name=bucket_name,
             source_blob_name=download_file,
-            destination_file_name=filename,
+            destination_file_name=path_filename,
             mode="prod",
         )
 
@@ -118,30 +149,30 @@ def download(
     redis_files.sort()
     redis_files = redis_files[-20:]
 
-    return filename, redis_files
+    return path_filename, redis_files
 
 
 @task
 def tratar_dados(filename: str) -> dict:
     """
-    Converte coordenadas X, Y para latlon e recorta área da América Latina
+    Converte coordenadas X, Y para latlon e recorta área
     """
-    print("\n>>>> Started with file: ", filename)
+    log(f"\n>>>> Started treating file: {filename}")
     grid, goes16_extent, info = main(filename)
     del grid, goes16_extent
     return info
 
 
 @task
-def salvar_parquet(info: dict, file_path: str) -> Union[str, Path]:
+def save_data(info: dict, file_path: str) -> Union[str, Path]:
     """
-    Converter dados de tif para parquet
+    Convert tif data to csv
     """
-    # print('\n>>>> Started with info: ', ingoes16_extentfo)
+
     variable = info["variable"]
     datetime_save = info["datetime_save"]
     print(f"Saving {variable} in parquet")
-    output_path = save_parquet(variable, datetime_save, file_path)
+    output_path = save_data_in_file(variable, datetime_save, file_path)
     return output_path
 
 
