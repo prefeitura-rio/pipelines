@@ -55,4 +55,4 @@ captura_ocr.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-captura_ocr.schedule = every_minute
+# captura_ocr.schedule = every_minute
