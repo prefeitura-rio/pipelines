@@ -28,12 +28,13 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
-# pylint: disable=R0914,W0613,W0102
+# pylint: disable=R0914,W0613,W0102,W0613,R0912,R0915
 &#34;&#34;&#34;
 Tasks for comando
 &#34;&#34;&#34;
 
 from copy import deepcopy
+from datetime import timedelta
 import json
 import os
 from pathlib import Path
@@ -127,8 +128,11 @@ def set_last_updated_on_redis(
     redis_client.set(key_problema_ids, list(set(problem_ids_atividade)))
 
 
-@task(nout=3)
-# pylint: disable=W0613,R0914,R0912,R0915
+@task(
+    nout=3,
+    max_retries=3,
+    retry_delay=timedelta(seconds=60),
+)
 def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
     &#34;&#34;&#34;
     Faz o request dos dados de eventos e das atividades do evento
@@ -427,8 +431,11 @@ def not_none(something: Any) -&gt; bool:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@task(nout=3)
-# pylint: disable=W0613,R0914,R0912,R0915
+<pre><code class="python">@task(
+    nout=3,
+    max_retries=3,
+    retry_delay=timedelta(seconds=60),
+)
 def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
     &#34;&#34;&#34;
     Faz o request dos dados de eventos e das atividades do evento
