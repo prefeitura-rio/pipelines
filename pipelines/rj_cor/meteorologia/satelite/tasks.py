@@ -80,7 +80,7 @@ def download(
 
     year = date_hour_info["year"]
     julian_day = date_hour_info["julian_day"]
-    hour_utc = date_hour_info["hour_utc"]
+    hour_utc = date_hour_info["hour_utc"][:2]
 
     try:
         # Use the anonymous credentials to access public data
@@ -114,20 +114,25 @@ def download(
         os.makedirs(base_path)
 
     # Seleciona primeiro arquivo que não tem o nome salvo no redis
-    log(f"[DEBUG]: available files on API: {path_files}")
-    log(f"[DEBUG]: filenames already saved on redis_files: {redis_files}")
+    log(f"\n\n[DEBUG]: available files on API: {path_files}")
+    log(f"\n\n[DEBUG]: filenames already saved on redis_files: {redis_files}")
+    log(f"\n\n[DEBUG]: ref_filename: {ref_filename}")
 
     # keep only ref_filename if it exists
     if ref_filename is not None:
-        # extract this part of the name s20222911230206_e20222911239514_c
-        r = re.compile(f".*{ref_filename}")
+        # extract this part of the name s_20222911230206_e20222911239514
+        ref_date = ref_filename[ref_filename.find("_s") + 1 : ref_filename.find("_e")]
+        log(f"\n\n[DEBUG]: ref_date: {ref_date}")
+        r = re.compile(f".*{ref_date}")
         path_files = list(filter(r.match, path_files))
+        log(f"\n\n[DEBUG]: path_files: {path_files}")
 
     # keep the first file if it is not on redis
     path_files.sort()
     for path_file in path_files:
         filename = path_file.split("/")[-1]
         if filename not in redis_files:
+            log("\n\n[DEBUG]: file not in redis")
             redis_files.append(filename)
             path_filename = os.path.join(base_path, filename)
             download_file = path_file

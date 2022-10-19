@@ -56,7 +56,6 @@ with Flow(
     dump_mode = "append"
     ref_filename = Parameter("ref_filename", default=None, required=False)
     current_time = Parameter("current_time", default=None, required=False)
-
     current_time = get_dates(current_time)
 
     date_hour_info = slice_data(current_time=current_time, ref_filename=ref_filename)
@@ -115,6 +114,7 @@ with Flow(
         variavel=variavel_tpw,
         date_hour_info=date_hour_info,
         redis_files=redis_files_tpw,
+        ref_filename=ref_filename,
         wait=redis_files_tpw,
     )
 
@@ -156,6 +156,7 @@ with Flow(
         date_hour_info=date_hour_info,
         band="13",
         redis_files=redis_files_cmip,
+        ref_filename=ref_filename,
         wait=redis_files_cmip,
     )
 
