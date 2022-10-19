@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=R0914,W0613,W0102
+# pylint: disable=R0914,W0613,W0102,W0613,R0912,R0915
 """
 Tasks for comando
 """
 
 from copy import deepcopy
+from datetime import timedelta
 import json
 import os
 from pathlib import Path
@@ -98,8 +99,11 @@ def set_last_updated_on_redis(
     redis_client.set(key_problema_ids, list(set(problem_ids_atividade)))
 
 
-@task(nout=3)
-# pylint: disable=W0613,R0914,R0912,R0915
+@task(
+    nout=3,
+    max_retries=3,
+    retry_delay=timedelta(seconds=60),
+)
 def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
     """
     Faz o request dos dados de eventos e das atividades do evento
