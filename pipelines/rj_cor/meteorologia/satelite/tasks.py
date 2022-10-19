@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=W0102, W0613, R0913, R0914
 """
 Tasks for emd
 """
@@ -7,7 +8,7 @@ import datetime as dt
 import os
 import re
 from pathlib import Path
-from typing import Tuple, Union
+from typing import Union
 
 import numpy as np
 import pendulum
@@ -183,4 +184,5 @@ def save_data(info: dict, file_path: str) -> Union[str, Path]:
 
 @task
 def checa_update(arg_1, arg_2):
+    """Check if there is any difference between two arguments"""
     return arg_1 == arg_2
