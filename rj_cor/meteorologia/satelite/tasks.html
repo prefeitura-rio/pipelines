@@ -28,14 +28,16 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
+# pylint: disable=W0102, W0613, R0913, R0914
 &#34;&#34;&#34;
 Tasks for emd
 &#34;&#34;&#34;
 
 import datetime as dt
 import os
+import re
 from pathlib import Path
-from typing import Tuple, Union
+from typing import Union
 
 import numpy as np
 import pendulum
@@ -43,56 +45,95 @@ from prefect import task
 import s3fs
 
 from pipelines.rj_cor.meteorologia.satelite.satellite_utils import (
+    extract_julian_day_and_hour_from_filename,
     main,
-    save_parquet,
+    save_data_in_file,
     get_blob_with_prefix,
     download_blob,
 )
+from pipelines.utils.utils import log
 
 
 @task()
-def get_dates() -&gt; str:
+def get_dates(current_time) -&gt; str:
     &#34;&#34;&#34;
-    Task para obter o dia atual
+    Task para obter o dia atual caso nenhuma data tenha sido passada
     &#34;&#34;&#34;
-    current_time = pendulum.now(&#34;UTC&#34;).to_datetime_string()
+    if current_time is None:
+        current_time = pendulum.now(&#34;UTC&#34;).to_datetime_string()
     return current_time
 
 
-@task(nout=5)
-def slice_data(current_time: str) -&gt; Tuple[str, str, str, str, str]:
+@task(nout=1)
+def slice_data(current_time: str, ref_filename: str = None) -&gt; dict:
     &#34;&#34;&#34;
-    slice data em ano. mês, dia, hora e dia juliano
+    slice data to separate in year, julian_day, month, day and hour in UTC
     &#34;&#34;&#34;
-    ano = current_time[:4]
-    mes = current_time[5:7]
-    dia = current_time[8:10]
-    hora = current_time[11:13]
-    dia_juliano = dt.datetime.strptime(current_time, &#34;%Y-%m-%d %H:%M:%S&#34;).strftime(&#34;%j&#34;)
-    return ano, mes, dia, hora, dia_juliano
+    if ref_filename is not None:
+        year, julian_day, hour_utc = extract_julian_day_and_hour_from_filename(
+            ref_filename
+        )
+        month = None
+        day = None
+    else:
+        year = current_time[:4]
+        month = current_time[5:7]
+        day = current_time[8:10]
+        hour_utc = current_time[11:13]
+        julian_day = dt.datetime.strptime(current_time, &#34;%Y-%m-%d %H:%M:%S&#34;).strftime(
+            &#34;%j&#34;
+        )
+
+    date_hour_info = {
+        &#34;year&#34;: str(year),
+        &#34;julian_day&#34;: str(julian_day),
+        &#34;month&#34;: str(month),
+        &#34;day&#34;: str(day),
+        &#34;hour_utc&#34;: str(hour_utc),
+    }
+
+    return date_hour_info
 
 
-@task(max_retries=10, retry_delay=dt.timedelta(seconds=60))
-def download(variavel: str, ano: str, dia_juliano: str, hora: str) -&gt; Union[str, Path]:
+@task(nout=2, max_retries=10, retry_delay=dt.timedelta(seconds=60))
+def download(
+    variavel: str,
+    date_hour_info: dict,
+    band: str = None,
+    ref_filename: str = None,
+    redis_files: list = [],
+    wait=None,
+) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
     Acessa o S3 e faz o download do primeiro arquivo da data-hora especificada
     &#34;&#34;&#34;
+
+    year = date_hour_info[&#34;year&#34;]
+    julian_day = date_hour_info[&#34;julian_day&#34;]
+    hour_utc = date_hour_info[&#34;hour_utc&#34;][:2]
 
     try:
         # Use the anonymous credentials to access public data
         s3_fs = s3fs.S3FileSystem(anon=True)
 
-        # Get first file of GOES-16 data (multiband format) at this time
-        file = np.sort(
+        # Get all files of GOES-16 data (multiband format) at this hour
+        path_files = np.sort(
             np.array(
-                s3_fs.find(f&#34;noaa-goes16/ABI-L2-{variavel}/{ano}/{dia_juliano}/{hora}/&#34;)
+                s3_fs.find(
+                    f&#34;noaa-goes16/ABI-L2-{variavel}/{year}/{julian_day}/{hour_utc}/&#34;
+                )
+                # s3_fs.find(f&#34;noaa-goes16/ABI-L2-CMIPF/2022/270/10/OR_ABI-L2-CMIPF-M6C13_G16_s20222701010208_e20222701019528_c20222701020005.nc&#34;)
             )
-        )[0]
+        )
+        # Mantém apenas arquivos de determinada banda
+        if variavel == &#34;CMIPF&#34;:
+            # para capturar banda 13
+            path_files = [f for f in path_files if bool(re.search(&#34;C&#34; + band, f))]
         origem = &#34;aws&#34;
     except IndexError:
         bucket_name = &#34;gcp-public-data-goes-16&#34;
-        partition_file = f&#34;ABI-L2-{variavel}/{ano}/{dia_juliano}/{hora}/&#34;
-        file = get_blob_with_prefix(
+        partition_file = f&#34;ABI-L2-{variavel}/{year}/{julian_day}/{hour_utc}/&#34;
+        path_files = get_blob_with_prefix(
             bucket_name=bucket_name, prefix=partition_file, mode=&#34;prod&#34;
         )
         origem = &#34;gcp&#34;
@@ -101,43 +142,79 @@ def download(variavel: str, ano: str, dia_juliano: str, hora: str) -&gt; Union[s
 
     if not os.path.exists(base_path):
         os.makedirs(base_path)
-    print(&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; basepath&#34;, base_path)
 
-    filename = os.path.join(base_path, file.split(&#34;/&#34;)[-1])
+    # Seleciona primeiro arquivo que não tem o nome salvo no redis
+    log(f&#34;\n\n[DEBUG]: available files on API: {path_files}&#34;)
+    log(f&#34;\n\n[DEBUG]: filenames already saved on redis_files: {redis_files}&#34;)
+    log(f&#34;\n\n[DEBUG]: ref_filename: {ref_filename}&#34;)
+
+    # keep only ref_filename if it exists
+    if ref_filename is not None:
+        # extract this part of the name s_20222911230206_e20222911239514
+        ref_date = ref_filename[ref_filename.find(&#34;_s&#34;) + 1 : ref_filename.find(&#34;_e&#34;)]
+        log(f&#34;\n\n[DEBUG]: ref_date: {ref_date}&#34;)
+        match_text = re.compile(f&#34;.*{ref_date}&#34;)
+        path_files = list(filter(match_text.match, path_files))
+        log(f&#34;\n\n[DEBUG]: path_files: {path_files}&#34;)
+
+    # keep the first file if it is not on redis
+    path_files.sort()
+    for path_file in path_files:
+        filename = path_file.split(&#34;/&#34;)[-1]
+        if filename not in redis_files:
+            log(&#34;\n\n[DEBUG]: file not in redis&#34;)
+            redis_files.append(filename)
+            path_filename = os.path.join(base_path, filename)
+            download_file = path_file
+            log(f&#34;[DEBUG]: filename to be append on redis_files: {redis_files}&#34;)
+            break
+
+    # Faz download da aws ou da gcp
     if origem == &#34;aws&#34;:
-        s3_fs.get(file, filename)
+        s3_fs.get(download_file, path_filename)
     else:
         download_blob(
             bucket_name=bucket_name,
-            source_blob_name=file,
-            destination_file_name=filename,
+            source_blob_name=download_file,
+            destination_file_name=path_filename,
             mode=&#34;prod&#34;,
         )
-    return filename
+
+    # Mantém últimos 20 arquivos salvos no redis
+    redis_files.sort()
+    redis_files = redis_files[-20:]
+
+    return path_filename, redis_files
 
 
 @task
 def tratar_dados(filename: str) -&gt; dict:
     &#34;&#34;&#34;
-    Converte coordenadas X, Y para latlon e recorta área da América Latina
+    Converte coordenadas X, Y para latlon e recorta área
     &#34;&#34;&#34;
-    print(&#34;\n&gt;&gt;&gt;&gt; Started with file: &#34;, filename)
+    log(f&#34;\n&gt;&gt;&gt;&gt; Started treating file: {filename}&#34;)
     grid, goes16_extent, info = main(filename)
     del grid, goes16_extent
     return info
 
 
 @task
-def salvar_parquet(info: dict) -&gt; Union[str, Path]:
+def save_data(info: dict, file_path: str) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
-    Converter dados de tif para parquet
+    Convert tif data to csv
     &#34;&#34;&#34;
-    # print(&#39;\n&gt;&gt;&gt;&gt; Started with info: &#39;, ingoes16_extentfo)
+
     variable = info[&#34;variable&#34;]
     datetime_save = info[&#34;datetime_save&#34;]
     print(f&#34;Saving {variable} in parquet&#34;)
-    filename = save_parquet(variable, datetime_save)
-    return filename</code></pre>
+    output_path = save_data_in_file(variable, datetime_save, file_path)
+    return output_path
+
+
+@task
+def checa_update(arg_1, arg_2):
+    &#34;&#34;&#34;Check if there is any difference between two arguments&#34;&#34;&#34;
+    return arg_1 == arg_2</code></pre>
 </details>
 </section>
 <section>
@@ -147,8 +224,23 @@ def salvar_parquet(info: dict) -&gt; Union[str, Path]:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="pipelines.rj_cor.meteorologia.satelite.tasks.checa_update"><code class="name flex">
+<span>def <span class="ident">checa_update</span></span>(<span>arg_1, arg_2)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check if there is any difference between two arguments</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def checa_update(arg_1, arg_2):
+    &#34;&#34;&#34;Check if there is any difference between two arguments&#34;&#34;&#34;
+    return arg_1 == arg_2</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.tasks.download"><code class="name flex">
-<span>def <span class="ident">download</span></span>(<span>variavel: str, ano: str, dia_juliano: str, hora: str) ‑> Union[str, pathlib.Path]</span>
+<span>def <span class="ident">download</span></span>(<span>variavel: str, date_hour_info: dict, band: str = None, ref_filename: str = None, redis_files: list = [], wait=None) ‑> Union[str, pathlib.Path]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Acessa o S3 e faz o download do primeiro arquivo da data-hora especificada</p></div>
@@ -156,27 +248,45 @@ def salvar_parquet(info: dict) -&gt; Union[str, Path]:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@task(max_retries=10, retry_delay=dt.timedelta(seconds=60))
-def download(variavel: str, ano: str, dia_juliano: str, hora: str) -&gt; Union[str, Path]:
+<pre><code class="python">@task(nout=2, max_retries=10, retry_delay=dt.timedelta(seconds=60))
+def download(
+    variavel: str,
+    date_hour_info: dict,
+    band: str = None,
+    ref_filename: str = None,
+    redis_files: list = [],
+    wait=None,
+) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
     Acessa o S3 e faz o download do primeiro arquivo da data-hora especificada
     &#34;&#34;&#34;
+
+    year = date_hour_info[&#34;year&#34;]
+    julian_day = date_hour_info[&#34;julian_day&#34;]
+    hour_utc = date_hour_info[&#34;hour_utc&#34;][:2]
 
     try:
         # Use the anonymous credentials to access public data
         s3_fs = s3fs.S3FileSystem(anon=True)
 
-        # Get first file of GOES-16 data (multiband format) at this time
-        file = np.sort(
+        # Get all files of GOES-16 data (multiband format) at this hour
+        path_files = np.sort(
             np.array(
-                s3_fs.find(f&#34;noaa-goes16/ABI-L2-{variavel}/{ano}/{dia_juliano}/{hora}/&#34;)
+                s3_fs.find(
+                    f&#34;noaa-goes16/ABI-L2-{variavel}/{year}/{julian_day}/{hour_utc}/&#34;
+                )
+                # s3_fs.find(f&#34;noaa-goes16/ABI-L2-CMIPF/2022/270/10/OR_ABI-L2-CMIPF-M6C13_G16_s20222701010208_e20222701019528_c20222701020005.nc&#34;)
             )
-        )[0]
+        )
+        # Mantém apenas arquivos de determinada banda
+        if variavel == &#34;CMIPF&#34;:
+            # para capturar banda 13
+            path_files = [f for f in path_files if bool(re.search(&#34;C&#34; + band, f))]
         origem = &#34;aws&#34;
     except IndexError:
         bucket_name = &#34;gcp-public-data-goes-16&#34;
-        partition_file = f&#34;ABI-L2-{variavel}/{ano}/{dia_juliano}/{hora}/&#34;
-        file = get_blob_with_prefix(
+        partition_file = f&#34;ABI-L2-{variavel}/{year}/{julian_day}/{hour_utc}/&#34;
+        path_files = get_blob_with_prefix(
             bucket_name=bucket_name, prefix=partition_file, mode=&#34;prod&#34;
         )
         origem = &#34;gcp&#34;
@@ -185,88 +295,137 @@ def download(variavel: str, ano: str, dia_juliano: str, hora: str) -&gt; Union[s
 
     if not os.path.exists(base_path):
         os.makedirs(base_path)
-    print(&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; basepath&#34;, base_path)
 
-    filename = os.path.join(base_path, file.split(&#34;/&#34;)[-1])
+    # Seleciona primeiro arquivo que não tem o nome salvo no redis
+    log(f&#34;\n\n[DEBUG]: available files on API: {path_files}&#34;)
+    log(f&#34;\n\n[DEBUG]: filenames already saved on redis_files: {redis_files}&#34;)
+    log(f&#34;\n\n[DEBUG]: ref_filename: {ref_filename}&#34;)
+
+    # keep only ref_filename if it exists
+    if ref_filename is not None:
+        # extract this part of the name s_20222911230206_e20222911239514
+        ref_date = ref_filename[ref_filename.find(&#34;_s&#34;) + 1 : ref_filename.find(&#34;_e&#34;)]
+        log(f&#34;\n\n[DEBUG]: ref_date: {ref_date}&#34;)
+        match_text = re.compile(f&#34;.*{ref_date}&#34;)
+        path_files = list(filter(match_text.match, path_files))
+        log(f&#34;\n\n[DEBUG]: path_files: {path_files}&#34;)
+
+    # keep the first file if it is not on redis
+    path_files.sort()
+    for path_file in path_files:
+        filename = path_file.split(&#34;/&#34;)[-1]
+        if filename not in redis_files:
+            log(&#34;\n\n[DEBUG]: file not in redis&#34;)
+            redis_files.append(filename)
+            path_filename = os.path.join(base_path, filename)
+            download_file = path_file
+            log(f&#34;[DEBUG]: filename to be append on redis_files: {redis_files}&#34;)
+            break
+
+    # Faz download da aws ou da gcp
     if origem == &#34;aws&#34;:
-        s3_fs.get(file, filename)
+        s3_fs.get(download_file, path_filename)
     else:
         download_blob(
             bucket_name=bucket_name,
-            source_blob_name=file,
-            destination_file_name=filename,
+            source_blob_name=download_file,
+            destination_file_name=path_filename,
             mode=&#34;prod&#34;,
         )
-    return filename</code></pre>
+
+    # Mantém últimos 20 arquivos salvos no redis
+    redis_files.sort()
+    redis_files = redis_files[-20:]
+
+    return path_filename, redis_files</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.tasks.get_dates"><code class="name flex">
-<span>def <span class="ident">get_dates</span></span>(<span>) ‑> str</span>
+<span>def <span class="ident">get_dates</span></span>(<span>current_time) ‑> str</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Task para obter o dia atual</p></div>
+<div class="desc"><p>Task para obter o dia atual caso nenhuma data tenha sido passada</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task()
-def get_dates() -&gt; str:
+def get_dates(current_time) -&gt; str:
     &#34;&#34;&#34;
-    Task para obter o dia atual
+    Task para obter o dia atual caso nenhuma data tenha sido passada
     &#34;&#34;&#34;
-    current_time = pendulum.now(&#34;UTC&#34;).to_datetime_string()
+    if current_time is None:
+        current_time = pendulum.now(&#34;UTC&#34;).to_datetime_string()
     return current_time</code></pre>
 </details>
 </dd>
-<dt id="pipelines.rj_cor.meteorologia.satelite.tasks.salvar_parquet"><code class="name flex">
-<span>def <span class="ident">salvar_parquet</span></span>(<span>info: dict) ‑> Union[str, pathlib.Path]</span>
+<dt id="pipelines.rj_cor.meteorologia.satelite.tasks.save_data"><code class="name flex">
+<span>def <span class="ident">save_data</span></span>(<span>info: dict, file_path: str) ‑> Union[str, pathlib.Path]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Converter dados de tif para parquet</p></div>
+<div class="desc"><p>Convert tif data to csv</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def salvar_parquet(info: dict) -&gt; Union[str, Path]:
+def save_data(info: dict, file_path: str) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
-    Converter dados de tif para parquet
+    Convert tif data to csv
     &#34;&#34;&#34;
-    # print(&#39;\n&gt;&gt;&gt;&gt; Started with info: &#39;, ingoes16_extentfo)
+
     variable = info[&#34;variable&#34;]
     datetime_save = info[&#34;datetime_save&#34;]
     print(f&#34;Saving {variable} in parquet&#34;)
-    filename = save_parquet(variable, datetime_save)
-    return filename</code></pre>
+    output_path = save_data_in_file(variable, datetime_save, file_path)
+    return output_path</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.tasks.slice_data"><code class="name flex">
-<span>def <span class="ident">slice_data</span></span>(<span>current_time: str) ‑> Tuple[str, str, str, str, str]</span>
+<span>def <span class="ident">slice_data</span></span>(<span>current_time: str, ref_filename: str = None) ‑> dict</span>
 </code></dt>
 <dd>
-<div class="desc"><p>slice data em ano. mês, dia, hora e dia juliano</p></div>
+<div class="desc"><p>slice data to separate in year, julian_day, month, day and hour in UTC</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@task(nout=5)
-def slice_data(current_time: str) -&gt; Tuple[str, str, str, str, str]:
+<pre><code class="python">@task(nout=1)
+def slice_data(current_time: str, ref_filename: str = None) -&gt; dict:
     &#34;&#34;&#34;
-    slice data em ano. mês, dia, hora e dia juliano
+    slice data to separate in year, julian_day, month, day and hour in UTC
     &#34;&#34;&#34;
-    ano = current_time[:4]
-    mes = current_time[5:7]
-    dia = current_time[8:10]
-    hora = current_time[11:13]
-    dia_juliano = dt.datetime.strptime(current_time, &#34;%Y-%m-%d %H:%M:%S&#34;).strftime(&#34;%j&#34;)
-    return ano, mes, dia, hora, dia_juliano</code></pre>
+    if ref_filename is not None:
+        year, julian_day, hour_utc = extract_julian_day_and_hour_from_filename(
+            ref_filename
+        )
+        month = None
+        day = None
+    else:
+        year = current_time[:4]
+        month = current_time[5:7]
+        day = current_time[8:10]
+        hour_utc = current_time[11:13]
+        julian_day = dt.datetime.strptime(current_time, &#34;%Y-%m-%d %H:%M:%S&#34;).strftime(
+            &#34;%j&#34;
+        )
+
+    date_hour_info = {
+        &#34;year&#34;: str(year),
+        &#34;julian_day&#34;: str(julian_day),
+        &#34;month&#34;: str(month),
+        &#34;day&#34;: str(day),
+        &#34;hour_utc&#34;: str(hour_utc),
+    }
+
+    return date_hour_info</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.tasks.tratar_dados"><code class="name flex">
 <span>def <span class="ident">tratar_dados</span></span>(<span>filename: str) ‑> dict</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Converte coordenadas X, Y para latlon e recorta área da América Latina</p></div>
+<div class="desc"><p>Converte coordenadas X, Y para latlon e recorta área</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -274,9 +433,9 @@ def slice_data(current_time: str) -&gt; Tuple[str, str, str, str, str]:
 <pre><code class="python">@task
 def tratar_dados(filename: str) -&gt; dict:
     &#34;&#34;&#34;
-    Converte coordenadas X, Y para latlon e recorta área da América Latina
+    Converte coordenadas X, Y para latlon e recorta área
     &#34;&#34;&#34;
-    print(&#34;\n&gt;&gt;&gt;&gt; Started with file: &#34;, filename)
+    log(f&#34;\n&gt;&gt;&gt;&gt; Started treating file: {filename}&#34;)
     grid, goes16_extent, info = main(filename)
     del grid, goes16_extent
     return info</code></pre>
@@ -345,10 +504,11 @@ setTimeout(() => input.focus(), 100);
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
+<ul class="two-column">
+<li><code><a title="pipelines.rj_cor.meteorologia.satelite.tasks.checa_update" href="#pipelines.rj_cor.meteorologia.satelite.tasks.checa_update">checa_update</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.satelite.tasks.download" href="#pipelines.rj_cor.meteorologia.satelite.tasks.download">download</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.satelite.tasks.get_dates" href="#pipelines.rj_cor.meteorologia.satelite.tasks.get_dates">get_dates</a></code></li>
-<li><code><a title="pipelines.rj_cor.meteorologia.satelite.tasks.salvar_parquet" href="#pipelines.rj_cor.meteorologia.satelite.tasks.salvar_parquet">salvar_parquet</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.satelite.tasks.save_data" href="#pipelines.rj_cor.meteorologia.satelite.tasks.save_data">save_data</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.satelite.tasks.slice_data" href="#pipelines.rj_cor.meteorologia.satelite.tasks.slice_data">slice_data</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.satelite.tasks.tratar_dados" href="#pipelines.rj_cor.meteorologia.satelite.tasks.tratar_dados">tratar_dados</a></code></li>
 </ul>
