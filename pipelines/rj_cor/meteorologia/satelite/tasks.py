@@ -123,8 +123,8 @@ def download(
         # extract this part of the name s_20222911230206_e20222911239514
         ref_date = ref_filename[ref_filename.find("_s") + 1 : ref_filename.find("_e")]
         log(f"\n\n[DEBUG]: ref_date: {ref_date}")
-        r = re.compile(f".*{ref_date}")
-        path_files = list(filter(r.match, path_files))
+        match_text = re.compile(f".*{ref_date}")
+        path_files = list(filter(match_text.match, path_files))
         log(f"\n\n[DEBUG]: path_files: {path_files}")
 
     # keep the first file if it is not on redis
