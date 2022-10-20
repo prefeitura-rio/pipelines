@@ -24,11 +24,11 @@ formacao_gsheets_flow.run_config = KubernetesRun(
     ],
 )
 
-smfp_gsheets_default_parameters = {
+formacao_gsheets_flow_parameters = {
     "dataset_id": "test_formacao",
 }
 formacao_gsheets_flow = set_default_parameters(
-    formacao_gsheets_flow, default_parameters=smfp_gsheets_default_parameters
+    formacao_gsheets_flow, default_parameters=formacao_gsheets_flow_parameters
 )
 
 formacao_gsheets_flow.schedule = gsheets_one_minute_update_schedule
