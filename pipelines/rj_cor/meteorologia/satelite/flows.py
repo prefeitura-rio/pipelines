@@ -3,7 +3,7 @@
 """
 Flows for emd
 """
-from prefect import case, Parameter
+from prefect import case, Flow, Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
@@ -29,7 +29,6 @@ from pipelines.rj_cor.meteorologia.satelite.schedules import hour_schedule
 
 # from pipelines.utils.decorators import Flow
 
-from prefect import Flow
 from pipelines.utils.tasks import (
     create_table_and_upload_to_gcs,
     get_current_flow_labels,
