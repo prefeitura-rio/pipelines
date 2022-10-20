@@ -1,0 +1,41 @@
+# -*- coding: utf-8 -*-
+"""
+Schedules for the database dump pipeline
+"""
+
+from datetime import datetime, timedelta
+
+import pytz
+from prefect.schedules import Schedule
+from pipelines.constants import constants
+from pipelines.utils.dump_url.utils import generate_dump_url_schedules
+from pipelines.utils.utils import untuple_clocks as untuple
+
+#####################################
+#
+# EGPWeb Schedules
+#
+#####################################
+
+gsheets_urls = {
+    "test_table": {
+        "dump_mode": "overwrite",
+        "url": "https://docs.google.com/spreadsheets/d/1lWbNoBSPDLi7nhZvt1G3vEYBWF460Su8PKALXvQJH5w\
+            /edit#gid=917050709",
+        "url_type": "google_sheet",
+        "gsheets_sheet_name": "METAS CONSOLIDADO",
+    },
+}
+
+
+gsheets_clocks = generate_dump_url_schedules(
+    interval=timedelta(minutes=1),
+    start_date=datetime(2022, 10, 21, 15, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    labels=[
+        constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
+    ],
+    dataset_id="test_dataset_formacao",
+    table_parameters=gsheets_urls,
+)
+
+gsheets_one_minute_update_schedule = Schedule(clocks=untuple(gsheets_clocks))

@@ -8,6 +8,7 @@ Imports all flows for every project so we can register all of them.
 ###############################################################################
 from pipelines.datario import *
 from pipelines.formacao.formacao_paty.flows import *
+from pipelines.formacao.formacao_pre_definido.flows import *
 from pipelines.rj_cor import *
 from pipelines.rj_escritorio import *
 from pipelines.rj_segovi import *
