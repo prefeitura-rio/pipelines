@@ -27,9 +27,9 @@ from pipelines.rj_cor.tasks import (
 )
 from pipelines.rj_cor.meteorologia.satelite.schedules import hour_schedule
 
-from pipelines.utils.decorators import Flow
+# from pipelines.utils.decorators import Flow
 
-# from prefect import Flow
+from prefect import Flow
 from pipelines.utils.tasks import (
     create_table_and_upload_to_gcs,
     get_current_flow_labels,
