@@ -7,7 +7,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 from pipelines.constants import constants
-from pipelines.formacao.formacao_paty.tasks import (    
+from pipelines.formacao.formacao_paty.tasks import (
     download_data,
     parse_data,
     save_report,
