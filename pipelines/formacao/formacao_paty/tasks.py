@@ -40,9 +40,9 @@ def parse_data(data: str) -> pd.DataFrame:
     Returns:
         pd.DataFrame: DataFrame do Pandas.
     """
-    df = pd.read_csv(StringIO(data))
+    dfr = pd.read_csv(StringIO(data))
     log("Dados convertidos em DataFrame com sucesso!")
-    return df
+    return dfr
 
 
 @task
