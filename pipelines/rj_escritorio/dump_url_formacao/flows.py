@@ -28,6 +28,12 @@ formacao_gsheets_flow.run_config = KubernetesRun(
 
 formacao_gsheets_flow_parameters = {
     "dataset_id": "test_formacao",
+    "dump_mode": "overwrite",
+    "url": "https://docs.google.com/spreadsheets/d/1uF-Gt5AyZmxCQQEaebvWF4ddRHeVuL6ANuoaY_-uAXE\
+        /edit#gid=0",
+    "url_type": "google_sheet",
+    "gsheets_sheet_name": "sheet_1",
+    "table_id": "test_table",
 }
 formacao_gsheets_flow = set_default_parameters(
     formacao_gsheets_flow, default_parameters=formacao_gsheets_flow_parameters

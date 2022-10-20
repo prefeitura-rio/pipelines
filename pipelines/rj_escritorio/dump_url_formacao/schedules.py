@@ -17,20 +17,21 @@ from pipelines.utils.utils import untuple_clocks as untuple
 #
 #####################################
 
+
 gsheets_urls = {
     "test_table": {
         "dump_mode": "overwrite",
-        "url": "https://docs.google.com/spreadsheets/d/1lWbNoBSPDLi7nhZvt1G3vEYBWF460Su8PKALXvQJH5w\
-            /edit#gid=917050709",
+        "url": "https://docs.google.com/spreadsheets/d/1uF-Gt5AyZmxCQQEaebvWF4ddRHeVuL6ANuoaY_-uAXE\
+            /edit#gid=0",
         "url_type": "google_sheet",
-        "gsheets_sheet_name": "METAS CONSOLIDADO",
+        "gsheets_sheet_name": "sheet_1",
     },
 }
 
 
 gsheets_clocks = generate_dump_url_schedules(
-    interval=timedelta(minutes=1),
-    start_date=datetime(2022, 10, 21, 15, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    interval=timedelta(days=1),
+    start_date=datetime(2022, 10, 20, 10, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
     ],
