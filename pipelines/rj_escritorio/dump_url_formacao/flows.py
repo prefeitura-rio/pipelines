@@ -13,7 +13,7 @@ from pipelines.constants import constants
 from pipelines.rj_escritorio.dump_url_formacao.schedules import (
     gsheets_one_minute_update_schedule,
 )
-from pipelines.utils.dump_url.flows import dump_url_flow
+from pipelines.utils.dump_url_formacao.flows import dump_url_flow
 from pipelines.utils.utils import set_default_parameters
 
 formacao_gsheets_flow = deepcopy(dump_url_flow)
