@@ -15,11 +15,12 @@ from pipelines.formacao.flow_do_zero.tasks import (
 
 from pipelines.utils.decorators import Flow
 
-with Flow("EMD: formacao - Exemplo de flow do Prefect - aula",
-        code_owners=[
+with Flow(
+    "EMD: formacao - Exemplo de flow do Prefect - aula",
+    code_owners=[
         "paty",
     ],
-  ) as formacao_exemplo_flow:
+) as formacao_exemplo_flow:
 
     # Parâmetros
     n_users = Parameter("n_users", default=10)
