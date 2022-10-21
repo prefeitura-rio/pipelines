@@ -10,7 +10,7 @@ from pipelines.constants import constants
 from pipelines.utils.decorators import Flow
 
 
-from pipelines.pipelines-Roberta.aula4.tasks import (
+from pipelines.pipelines_Roberta.aula4.tasks import (
     download_data,
     parse_data,
     save_report,

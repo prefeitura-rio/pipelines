@@ -4,12 +4,11 @@ Tasks for the example flow
 """
 from io import StringIO
 
+import os
 import pandas as pd
 from prefect import task
 import requests
-import os
 from matplotlib import pyplot as plt
-import numpy as np
 
 from pipelines.utils.utils import log
 
@@ -43,9 +42,9 @@ def parse_data(data: str) -> pd.DataFrame:
     Returns:
         pd.DataFrame: DataFrame do Pandas.
     """
-    df = pd.read_csv(StringIO(data))
+    dfr = pd.read_csv(StringIO(data))
     log("Dados convertidos em DataFrame com sucesso!")
-    return df
+    return dfr
 
 
 @task
