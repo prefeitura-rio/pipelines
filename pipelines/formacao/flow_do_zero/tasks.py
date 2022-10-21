@@ -11,6 +11,7 @@ import requests
 
 from pipelines.utils.utils import log
 
+
 @task
 def download_data(n_users: int) -> str:
     """
@@ -28,6 +29,7 @@ def download_data(n_users: int) -> str:
     log("Dados baixados com sucesso!")
     return response.text
 
+
 @task
 def parse_data(data: str) -> pd.DataFrame:
     """
@@ -42,6 +44,7 @@ def parse_data(data: str) -> pd.DataFrame:
     dfr = pd.read_csv(StringIO(data))
     log("Dados convertidos em DataFrame com sucesso!")
     return dfr
+
 
 @task
 def save_report(dataframe: pd.DataFrame) -> None:
