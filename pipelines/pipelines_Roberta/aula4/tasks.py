@@ -70,7 +70,7 @@ def format_phone(dataframe: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: DataFrame do Pandas.
     """
-    dic = {"-": "", "\(": "", "\)": ""}
+    dic = {"-": "", r"(": "", r")": ""}
     dataframe["phone"] = dataframe["phone"].replace(dic, regex=True)
     return dataframe
 
