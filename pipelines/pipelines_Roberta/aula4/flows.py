@@ -37,4 +37,4 @@ formacao_flow_aula4.run_config = KubernetesRun(
 image=constants.DOCKER_IMAGE.value,
 labels=[constants.RJ_COR_AGENT_LABEL.value],
 )
-formacao_exemplo_flow.schedule = None
+formacao_flow_aula4.schedule = None
