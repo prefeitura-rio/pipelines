@@ -80,4 +80,4 @@ def save_report(dataframe: pd.DataFrame) -> None:
     """
     dataframe.to_csv("/tmp/report.csv", index=False)
     log("Dados salvos em report.csv com sucesso!")
-    return '/tmp'
+    return "/tmp"
