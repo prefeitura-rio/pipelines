@@ -7,7 +7,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 from pipelines.constants import constants
-from pipelines.formacao.exemplo.tasks import download_data, parse_data, save_report
+from pipelines.aula_04.pipeline.tasks import download_data, parse_data, save_report
 from pipelines.utils.decorators import Flow
 
 from pipelines.utils.tasks import create_table_and_upload_to_gcs
