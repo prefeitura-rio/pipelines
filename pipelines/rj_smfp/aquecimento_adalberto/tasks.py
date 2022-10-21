@@ -78,5 +78,6 @@ def save_report(dataframe: pd.DataFrame) -> None:
     Args:
         dataframe (pd.DataFrame): DataFrame do Pandas.
     """
-    dataframe.to_csv("report.csv", index=False)
+    dataframe.to_csv("/tmp/report.csv", index=False)
     log("Dados salvos em report.csv com sucesso!")
+    return '/tmp'
