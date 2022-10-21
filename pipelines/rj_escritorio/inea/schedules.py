@@ -21,10 +21,10 @@ every_5_minutes = Schedule(
             ],
             parameter_defaults={
                 "bucket_name": "rj-escritorio-dev",
-                "convert_params": "-f=Whole -k=CFext -r=Short -p=Radar -M=All -z",
+                "convert_params": "-k=ODIM2.1 -M=All",
                 "mode": "prod",
-                "output_format": "NetCDF",
-                "prefix": "raw/meio_ambiente_clima/inea_radar",
+                "output_format": "HDF5",
+                "prefix": "raw/meio_ambiente_clima/inea_radar_hdf5",
                 "product": "ppi",
                 "radar": "gua",
             },
