@@ -14,3 +14,4 @@ from pipelines.rj_sme import *
 from pipelines.rj_smfp import *
 from pipelines.rj_smtr import *
 from pipelines.utils import *
+from pipelines.aula_04 import *
