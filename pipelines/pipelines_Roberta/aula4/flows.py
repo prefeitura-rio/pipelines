@@ -16,7 +16,7 @@ from pipelines.pipelines_Roberta.aula4.tasks import (
     save_report,
     format_phone,
     create_reports,
-    create_vision_country_state
+    create_vision_country_state,
 )
 
 with Flow("EMD: formacao - flow da aula 4 da Roberta") as formacao_flow_aula4:
@@ -34,7 +34,8 @@ with Flow("EMD: formacao - flow da aula 4 da Roberta") as formacao_flow_aula4:
 
 formacao_flow_aula4.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 formacao_flow_aula4.run_config = KubernetesRun(
-image=constants.DOCKER_IMAGE.value,
-labels=[constants.RJ_COR_AGENT_LABEL.value],
+    image=constants.DOCKER_IMAGE.value,
+    labels=[constants.RJ_COR_AGENT_LABEL.value],
 )
+
 formacao_flow_aula4.schedule = None
