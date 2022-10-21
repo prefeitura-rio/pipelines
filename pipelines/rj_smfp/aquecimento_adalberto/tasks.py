@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+"""
+Tasks do Adalberto
+"""
 from io import StringIO
 
 import pandas as pd
@@ -24,6 +28,7 @@ def download_data(n_users: int) -> str:
     log("Dados baixados com sucesso!")
     return response.text
 
+
 @task
 def parse_data(data: str) -> pd.DataFrame:
     """
@@ -35,27 +40,35 @@ def parse_data(data: str) -> pd.DataFrame:
     Returns:
         pd.DataFrame: DataFrame do Pandas.
     """
-    df = pd.read_csv(StringIO(data))
+    dataframe = pd.read_csv(StringIO(data))
     log("Dados convertidos em DataFrame com sucesso!")
-    return df
+    return dataframe
+
 
 @task
-def format_phone_field(df, colname):
+def format_phone_field(dataframe, colname):
+    """
+    Format phones
+    """
 
-    if colname in df.columns:
-        
-        def formatPhone(x):
-            x = ''.join(c for c in x if c.isdigit())   # Removendo os caracters não numéricos
-            x = x.zfill(8)   # Completando com zeros a esquerda caso tenha menos de 7 numeros
-            x = x[-8:]   # pegando os 7 números da direita para a esquerda
-            x = x[:4] + '-' + x[4:]
-            return x   # retorno da função
+    if colname in dataframe.columns:
 
-        df[colname] = df[colname].apply(formatPhone) # Aplicando a função na coluna do dataframe
-        
+        def format_phone(phoneno):
+            # Removendo os caracters não numéricos
+            phoneno = "".join(c for c in phoneno if c.isdigit())
+            # Completando com zeros a esquerda caso tenha menos de 7 numeros
+            phoneno = phoneno.zfill(8)
+            phoneno = phoneno[-8:]  # pegando os 7 números da direita para a esquerda
+            phoneno = phoneno[:4] + "-" + phoneno[4:]
+            return phoneno  # retorno da função
+
+        # Aplicando a função na coluna do dataframe
+        dataframe[colname] = dataframe[colname].apply(format_phone)
+
     else:
         log("Variavel nao existe!")
-    return df	
+    return dataframe
+
 
 @task
 def save_report(dataframe: pd.DataFrame) -> None:
