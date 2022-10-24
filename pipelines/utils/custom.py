@@ -18,7 +18,7 @@ from prefect.schedules import Schedule
 from prefect.storage import Storage
 
 from pipelines.constants import constants
-from pipelines.utils.utils import notify_discord_on_failure
+from pipelines.utils.utils import notify_discord_on_failure, skip_if_running_handler
 
 
 class CustomFlow(Flow):
@@ -27,7 +27,7 @@ class CustomFlow(Flow):
     notify people when a FlowRun fails.
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(  # pylint: disable=too-many-arguments, too-many-locals
         self,
         name: str,
         schedule: Schedule = None,
@@ -45,7 +45,12 @@ class CustomFlow(Flow):
             Callable[["Flow", State, Set[State]], Optional[State]]
         ] = None,
         code_owners: Optional[List[str]] = None,
+        skip_if_running: bool = False,
     ):
+        if skip_if_running:
+            if state_handlers is None:
+                state_handlers = []
+            state_handlers.append(skip_if_running_handler)
         super().__init__(
             name=name,
             schedule=schedule,
