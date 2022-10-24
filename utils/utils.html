@@ -218,23 +218,23 @@ def skip_if_running_handler(obj, old_state: State, new_state: State) -&gt; State
     &#34;&#34;&#34;
     State handler that will skip a flow run if another instance of the flow is already running.
 
-    Extracted from Prefect Discourse:
+    Adapted from Prefect Discourse:
     https://tinyurl.com/4hn5uz2w
     &#34;&#34;&#34;
     if new_state.is_running():
         client = Client()
         query = &#34;&#34;&#34;
             query($flow_id: uuid) {
-              flow_run(
-                where: {_and: [{flow_id: {_eq: $flow_id}},
-                {state: {_eq: &#34;Running&#34;}}]}
-                limit: 1
-                offset: 1
-              ) {
-                name
-                state
-                start_time
-              }
+                flow_run(
+                    where: {
+                        _and: [
+                            {state: {_eq: &#34;Running&#34;}},
+                            {flow_id: {_eq: $flow_id}}
+                        ]
+                    }
+                ) {
+                    id
+                }
             }
         &#34;&#34;&#34;
         # pylint: disable=no-member
@@ -311,6 +311,7 @@ def run_cloud(
 
 def run_registered(
     flow_name: str,
+    flow_project: str,
     labels: List[str],
     parameters: Dict[str, Any] = None,
     run_description: str = &#34;&#34;,
@@ -330,10 +331,13 @@ def run_registered(
                             &#34;_and&#34;: [
                                 {&#34;name&#34;: {&#34;_eq&#34;: flow_name}},
                                 {&#34;archived&#34;: {&#34;_eq&#34;: False}},
+                                {&#34;project&#34;: {&#34;name&#34;: {&#34;_eq&#34;: flow_project}}},
                             ]
                         }
                     },
-                ): {&#34;id&#34;}
+                ): {
+                    &#34;id&#34;,
+                }
             }
         }
     )
@@ -1597,7 +1601,7 @@ Mode needs to be "prod" or "staging"</p></div>
 </details>
 </dd>
 <dt id="pipelines.utils.utils.run_registered"><code class="name flex">
-<span>def <span class="ident">run_registered</span></span>(<span>flow_name: str, labels: List[str], parameters: Dict[str, Any] = None, run_description: str = '') ‑> str</span>
+<span>def <span class="ident">run_registered</span></span>(<span>flow_name: str, flow_project: str, labels: List[str], parameters: Dict[str, Any] = None, run_description: str = '') ‑> str</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Runs an already registered flow on Prefect Server (must have credentials configured).</p></div>
@@ -1607,6 +1611,7 @@ Mode needs to be "prod" or "staging"</p></div>
 </summary>
 <pre><code class="python">def run_registered(
     flow_name: str,
+    flow_project: str,
     labels: List[str],
     parameters: Dict[str, Any] = None,
     run_description: str = &#34;&#34;,
@@ -1626,10 +1631,13 @@ Mode needs to be "prod" or "staging"</p></div>
                             &#34;_and&#34;: [
                                 {&#34;name&#34;: {&#34;_eq&#34;: flow_name}},
                                 {&#34;archived&#34;: {&#34;_eq&#34;: False}},
+                                {&#34;project&#34;: {&#34;name&#34;: {&#34;_eq&#34;: flow_project}}},
                             ]
                         }
                     },
-                ): {&#34;id&#34;}
+                ): {
+                    &#34;id&#34;,
+                }
             }
         }
     )
@@ -1727,7 +1735,7 @@ Mode needs to be "prod" or "staging"</p></div>
 </code></dt>
 <dd>
 <div class="desc"><p>State handler that will skip a flow run if another instance of the flow is already running.</p>
-<p>Extracted from Prefect Discourse:
+<p>Adapted from Prefect Discourse:
 <a href="https://tinyurl.com/4hn5uz2w">https://tinyurl.com/4hn5uz2w</a></p></div>
 <details class="source">
 <summary>
@@ -1737,23 +1745,23 @@ Mode needs to be "prod" or "staging"</p></div>
     &#34;&#34;&#34;
     State handler that will skip a flow run if another instance of the flow is already running.
 
-    Extracted from Prefect Discourse:
+    Adapted from Prefect Discourse:
     https://tinyurl.com/4hn5uz2w
     &#34;&#34;&#34;
     if new_state.is_running():
         client = Client()
         query = &#34;&#34;&#34;
             query($flow_id: uuid) {
-              flow_run(
-                where: {_and: [{flow_id: {_eq: $flow_id}},
-                {state: {_eq: &#34;Running&#34;}}]}
-                limit: 1
-                offset: 1
-              ) {
-                name
-                state
-                start_time
-              }
+                flow_run(
+                    where: {
+                        _and: [
+                            {state: {_eq: &#34;Running&#34;}},
+                            {flow_id: {_eq: $flow_id}}
+                        ]
+                    }
+                ) {
+                    id
+                }
             }
         &#34;&#34;&#34;
         # pylint: disable=no-member
