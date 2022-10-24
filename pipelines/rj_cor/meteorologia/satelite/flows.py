@@ -14,7 +14,7 @@ from pipelines.rj_cor.meteorologia.satelite.constants import (
 )
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.rj_cor.meteorologia.satelite.tasks import (
-    checa_update,
+    # checa_update,
     get_dates,
     slice_data,
     download,
@@ -75,31 +75,31 @@ with Flow(
         wait=redis_files_rr,
     )
 
-    # Check if there is new files on API
-    update_rr = checa_update(redis_files_rr, redis_files_rr_updated)
+    # # Check if there is new files on API
+    # update_rr = checa_update(redis_files_rr, redis_files_rr_updated)
 
-    # Start data treatment if there are new files
-    with case(update_rr, True):
-        info_rr = tratar_dados(filename=filename_rr)
-        path_rr = save_data(info=info_rr, file_path=filename_rr)
+    # # Start data treatment if there are new files
+    # with case(update_rr, False):
+    info_rr = tratar_dados(filename=filename_rr)
+    path_rr = save_data(info=info_rr, file_path=filename_rr)
 
-        # Create table in BigQuery
-        upload_table_rr = create_table_and_upload_to_gcs(
-            data_path=path_rr,
-            dataset_id=dataset_id,
-            table_id=table_id_rr,
-            dump_mode=dump_mode,
-            wait=path_rr,
-        )
+    # Create table in BigQuery
+    upload_table_rr = create_table_and_upload_to_gcs(
+        data_path=path_rr,
+        dataset_id=dataset_id,
+        table_id=table_id_rr,
+        dump_mode=dump_mode,
+        wait=path_rr,
+    )
 
-        # Save new filenames on redis
-        save_on_redis(
-            dataset_id,
-            table_id_rr,
-            "prod",
-            redis_files_rr_updated,
-            wait=path_rr,
-        )
+    # Save new filenames on redis
+    save_on_redis(
+        dataset_id,
+        table_id_rr,
+        "prod",
+        redis_files_rr_updated,
+        wait=path_rr,
+    )
 
     # Para quantidade de água precipitável
     variavel_tpw = satelite_constants.VARIAVEL_TPW.value
@@ -117,30 +117,30 @@ with Flow(
         wait=redis_files_tpw,
     )
 
-    # Check if there is new files on API
-    update_tpw = checa_update(redis_files_tpw, redis_files_tpw_updated)
+    # # Check if there is new files on API
+    # update_tpw = checa_update(redis_files_tpw, redis_files_tpw_updated)
 
-    # Start data treatment if there are new files
-    with case(update_tpw, True):
-        info_tpw = tratar_dados(filename=filename_tpw)
-        path_tpw = save_data(info=info_tpw, file_path=filename_tpw)
+    # # Start data treatment if there are new files
+    # with case(update_tpw, False):
+    info_tpw = tratar_dados(filename=filename_tpw)
+    path_tpw = save_data(info=info_tpw, file_path=filename_tpw)
 
-        upload_table_tpw = create_table_and_upload_to_gcs(
-            data_path=path_tpw,
-            dataset_id=dataset_id,
-            table_id=table_id_tpw,
-            dump_mode=dump_mode,
-            wait=path_tpw,
-        )
+    upload_table_tpw = create_table_and_upload_to_gcs(
+        data_path=path_tpw,
+        dataset_id=dataset_id,
+        table_id=table_id_tpw,
+        dump_mode=dump_mode,
+        wait=path_tpw,
+    )
 
-        # Save new filenames on redis
-        save_on_redis(
-            dataset_id,
-            table_id_tpw,
-            "prod",
-            redis_files_tpw_updated,
-            wait=path_tpw,
-        )
+    # Save new filenames on redis
+    save_on_redis(
+        dataset_id,
+        table_id_tpw,
+        "prod",
+        redis_files_tpw_updated,
+        wait=path_tpw,
+    )
 
     # Para clean_ir_longwave_window (band 13) CMIPF
     variavel_cmip = satelite_constants.VARIAVEL_cmip.value
@@ -159,31 +159,31 @@ with Flow(
         wait=redis_files_cmip,
     )
 
-    # Check if there is new files on API
-    update_cmip = checa_update(redis_files_cmip, redis_files_cmip_updated)
+    # # Check if there is new files on API
+    # update_cmip = checa_update(redis_files_cmip, redis_files_cmip_updated)
 
-    # Start data treatment if there are new files
-    with case(update_cmip, True):
-        info_cmip = tratar_dados(filename=filename_cmip)
-        path_cmip = save_data(info=info_cmip, file_path=filename_cmip)
+    # # Start data treatment if there are new files
+    # with case(update_cmip, False):
+    info_cmip = tratar_dados(filename=filename_cmip)
+    path_cmip = save_data(info=info_cmip, file_path=filename_cmip)
 
-        # Create table in BigQuery
-        upload_table_cmip = create_table_and_upload_to_gcs(
-            data_path=path_cmip,
-            dataset_id=dataset_id,
-            table_id=table_id_cmip,
-            dump_mode=dump_mode,
-            wait=path_cmip,
-        )
+    # Create table in BigQuery
+    upload_table_cmip = create_table_and_upload_to_gcs(
+        data_path=path_cmip,
+        dataset_id=dataset_id,
+        table_id=table_id_cmip,
+        dump_mode=dump_mode,
+        wait=path_cmip,
+    )
 
-        # Save new filenames on redis
-        save_on_redis(
-            dataset_id,
-            table_id_cmip,
-            "prod",
-            redis_files_cmip_updated,
-            wait=path_cmip,
-        )
+    # Save new filenames on redis
+    save_on_redis(
+        dataset_id,
+        table_id_cmip,
+        "prod",
+        redis_files_cmip_updated,
+        wait=path_cmip,
+    )
 
     # Trigger DBT flow run
     with case(materialize_after_dump, True):

@@ -13,6 +13,8 @@ from typing import Union
 import numpy as np
 import pendulum
 from prefect import task
+from prefect.engine.signals import ENDRUN
+from prefect.engine.state import Skipped
 import s3fs
 
 from pipelines.rj_cor.meteorologia.satelite.satellite_utils import (
@@ -118,6 +120,11 @@ def download(
     log(f"\n\n[DEBUG]: available files on API: {path_files}")
     log(f"\n\n[DEBUG]: filenames already saved on redis_files: {redis_files}")
     log(f"\n\n[DEBUG]: ref_filename: {ref_filename}")
+
+    if len(path_files) == 0:
+        log("No available files on API")
+        skip = Skipped("No available files on API")
+        raise ENDRUN(state=skip)
 
     # keep only ref_filename if it exists
     if ref_filename is not None:
