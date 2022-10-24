@@ -2,6 +2,8 @@
 """
 Flows for INEA.
 """
+from copy import deepcopy
+
 from prefect import Parameter
 from prefect.run_configs import LocalRun
 from prefect.storage import GCS
@@ -70,6 +72,13 @@ inea_radar_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 inea_radar_flow.run_config = LocalRun(labels=[constants.INEA_AGENT_LABEL.value])
 inea_radar_flow.schedule = every_5_minutes
 
+inea_backfill_radar_flow = deepcopy(inea_radar_flow)
+inea_backfill_radar_flow.name = "INEA: Captura dados de radar (backfill)"
+inea_backfill_radar_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+inea_backfill_radar_flow.run_config = LocalRun(
+    labels=[constants.INEA_AGENT_LABEL.value]
+)
+inea_backfill_radar_flow.schedule = None
 
 with Flow(
     "INEA: Executar comando no terminal",
