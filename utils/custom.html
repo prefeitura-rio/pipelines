@@ -47,7 +47,7 @@ from prefect.schedules import Schedule
 from prefect.storage import Storage
 
 from pipelines.constants import constants
-from pipelines.utils.utils import notify_discord_on_failure
+from pipelines.utils.utils import notify_discord_on_failure, skip_if_running_handler
 
 
 class CustomFlow(Flow):
@@ -56,7 +56,7 @@ class CustomFlow(Flow):
     notify people when a FlowRun fails.
     &#34;&#34;&#34;
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(  # pylint: disable=too-many-arguments, too-many-locals
         self,
         name: str,
         schedule: Schedule = None,
@@ -74,7 +74,12 @@ class CustomFlow(Flow):
             Callable[[&#34;Flow&#34;, State, Set[State]], Optional[State]]
         ] = None,
         code_owners: Optional[List[str]] = None,
+        skip_if_running: bool = False,
     ):
+        if skip_if_running:
+            if state_handlers is None:
+                state_handlers = []
+            state_handlers.append(skip_if_running_handler)
         super().__init__(
             name=name,
             schedule=schedule,
@@ -108,7 +113,7 @@ class CustomFlow(Flow):
 <dl>
 <dt id="pipelines.utils.custom.CustomFlow"><code class="flex name class">
 <span>class <span class="ident">CustomFlow</span></span>
-<span>(</span><span>name: str, schedule: prefect.schedules.schedules.Schedule = None, executor: prefect.executors.base.Executor = None, environment: prefect.environments.execution.base.Environment = None, run_config: prefect.run_configs.base.RunConfig = None, storage: prefect.storage.base.Storage = None, tasks: Iterable[prefect.core.task.Task] = None, edges: Iterable[prefect.core.edge.Edge] = None, reference_tasks: Iterable[prefect.core.task.Task] = None, state_handlers: List[Callable] = None, validate: bool = None, result: Optional[prefect.engine.result.base.Result] = None, terminal_state_handler: Optional[Callable[[ForwardRef('Flow'), prefect.engine.state.State, Set[prefect.engine.state.State]], Optional[prefect.engine.state.State]]] = None, code_owners: Optional[List[str]] = None)</span>
+<span>(</span><span>name: str, schedule: prefect.schedules.schedules.Schedule = None, executor: prefect.executors.base.Executor = None, environment: prefect.environments.execution.base.Environment = None, run_config: prefect.run_configs.base.RunConfig = None, storage: prefect.storage.base.Storage = None, tasks: Iterable[prefect.core.task.Task] = None, edges: Iterable[prefect.core.edge.Edge] = None, reference_tasks: Iterable[prefect.core.task.Task] = None, state_handlers: List[Callable] = None, validate: bool = None, result: Optional[prefect.engine.result.base.Result] = None, terminal_state_handler: Optional[Callable[[ForwardRef('Flow'), prefect.engine.state.State, Set[prefect.engine.state.State]], Optional[prefect.engine.state.State]]] = None, code_owners: Optional[List[str]] = None, skip_if_running: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A custom Flow class that implements code ownership in order to make it easier to
@@ -123,7 +128,7 @@ notify people when a FlowRun fails.</p></div>
     notify people when a FlowRun fails.
     &#34;&#34;&#34;
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(  # pylint: disable=too-many-arguments, too-many-locals
         self,
         name: str,
         schedule: Schedule = None,
@@ -141,7 +146,12 @@ notify people when a FlowRun fails.</p></div>
             Callable[[&#34;Flow&#34;, State, Set[State]], Optional[State]]
         ] = None,
         code_owners: Optional[List[str]] = None,
+        skip_if_running: bool = False,
     ):
+        if skip_if_running:
+            if state_handlers is None:
+                state_handlers = []
+            state_handlers.append(skip_if_running_handler)
         super().__init__(
             name=name,
             schedule=schedule,

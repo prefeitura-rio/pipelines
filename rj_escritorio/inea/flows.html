@@ -52,6 +52,7 @@ with Flow(
     code_owners=[
         &#34;gabriel&#34;,
     ],
+    skip_if_running=True,
 ) as inea_radar_flow:
     date = Parameter(&#34;date&#34;, default=None, required=False)
     bucket_name = Parameter(&#34;bucket_name&#34;)
