@@ -184,6 +184,7 @@ def notify_discord_on_failure(
     )
 
 
+# pylint: disable=unused-argument
 def skip_if_running_handler(obj, old_state: State, new_state: State) -> State:
     """
     State handler that will skip a flow run if another instance of the flow is already running.
@@ -207,8 +208,10 @@ def skip_if_running_handler(obj, old_state: State, new_state: State) -> State:
               }
             }
         """
+        # pylint: disable=no-member
         response = client.graphql(
-            query=query, variables=dict(flow_id=prefect.context.flow_id)
+            query=query,
+            variables=dict(flow_id=prefect.context.flow_id),
         )
         active_flow_runs = response["data"]["flow_run"]
         if active_flow_runs:
