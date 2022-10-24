@@ -157,6 +157,7 @@ def converte_timezone(datetime_save: str) -&gt; str:
     Recebe o formato de data hora em &#39;YYYYMMDD HHmm&#39; no UTC e
     retorna no mesmo formato no horário São Paulo
     &#34;&#34;&#34;
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; {datetime_save}&#34;)
     datahora = pendulum.from_format(datetime_save, &#34;YYYYMMDD HHmm&#34;)
     datahora = datahora.in_tz(&#34;America/Sao_Paulo&#34;)
     return datahora.format(&#34;YYYYMMDD HHmm&#34;)
@@ -218,7 +219,9 @@ def get_info(path: str) -&gt; Tuple[dict, str]:
     year, julian_day, hour_utc = extract_julian_day_and_hour_from_filename(path)
 
     date_save = convert_julian_to_conventional_day(year, julian_day)
-
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;date_save {date_save}&#34;)
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; hour_utc {hour_utc}&#34;)
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;julian_day  {julian_day}&#34;)
     datetime_save = str(date_save) + &#34; &#34; + str(hour_utc)
 
     # Converte data/hora de UTC para horário de São Paulo
@@ -718,6 +721,7 @@ retorna no mesmo formato no horário São Paulo</p></div>
     Recebe o formato de data hora em &#39;YYYYMMDD HHmm&#39; no UTC e
     retorna no mesmo formato no horário São Paulo
     &#34;&#34;&#34;
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; {datetime_save}&#34;)
     datahora = pendulum.from_format(datetime_save, &#34;YYYYMMDD HHmm&#34;)
     datahora = datahora.in_tz(&#34;America/Sao_Paulo&#34;)
     return datahora.format(&#34;YYYYMMDD HHmm&#34;)</code></pre>
@@ -886,7 +890,9 @@ Mode needs to be "prod" or "staging"</p></div>
     year, julian_day, hour_utc = extract_julian_day_and_hour_from_filename(path)
 
     date_save = convert_julian_to_conventional_day(year, julian_day)
-
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;date_save {date_save}&#34;)
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; hour_utc {hour_utc}&#34;)
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;julian_day  {julian_day}&#34;)
     datetime_save = str(date_save) + &#34; &#34; + str(hour_utc)
 
     # Converte data/hora de UTC para horário de São Paulo
