@@ -37,9 +37,7 @@ smfp_dashboard_metas_tables = {
 smfp_dashboard_metas_clocks = [
     IntervalClock(
         interval=timedelta(days=1),
-        start_date=datetime(
-            2022, 10, 17, 17, 0, tzinfo=pytz.timezone("America/Sao_Paulo")
-        )
+        start_date=datetime(2021, 10, 24, 15, 30, tzinfo=pytz.timezone("America/Sao_Paulo"))
         + timedelta(minutes=3 * count),
         labels=[
             constants.RJ_SMFP_AGENT_LABEL.value,
@@ -52,6 +50,4 @@ smfp_dashboard_metas_clocks = [
     )
     for count, (_, table_id) in enumerate(smfp_dashboard_metas_tables.items())
 ]
-smfp_dashboard_metas_daily_update_schedule = Schedule(
-    clocks=untuple(smfp_dashboard_metas_clocks)
-)
+smfp_dashboard_metas_daily_update_schedule = Schedule(clocks=untuple(smfp_dashboard_metas_clocks))
