@@ -128,6 +128,7 @@ def converte_timezone(datetime_save: str) -> str:
     Recebe o formato de data hora em 'YYYYMMDD HHmm' no UTC e
     retorna no mesmo formato no horário São Paulo
     """
+    log(f">>>>>>> {datetime_save}")
     datahora = pendulum.from_format(datetime_save, "YYYYMMDD HHmm")
     datahora = datahora.in_tz("America/Sao_Paulo")
     return datahora.format("YYYYMMDD HHmm")
@@ -189,7 +190,9 @@ def get_info(path: str) -> Tuple[dict, str]:
     year, julian_day, hour_utc = extract_julian_day_and_hour_from_filename(path)
 
     date_save = convert_julian_to_conventional_day(year, julian_day)
-
+    log(f">>>>>>>>>date_save {date_save}")
+    log(f">>>>>>>>> hour_utc {hour_utc}")
+    log(f">>>>>>>>>julian_day  {julian_day}")
     datetime_save = str(date_save) + " " + str(hour_utc)
 
     # Converte data/hora de UTC para horário de São Paulo
