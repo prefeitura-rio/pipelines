@@ -3,7 +3,7 @@
 """
 Flows for emd
 """
-from prefect import case, Flow, Parameter
+from prefect import case, Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
@@ -14,7 +14,6 @@ from pipelines.rj_cor.meteorologia.satelite.constants import (
 )
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.rj_cor.meteorologia.satelite.tasks import (
-    # checa_update,
     get_dates,
     slice_data,
     download,
@@ -27,7 +26,7 @@ from pipelines.rj_cor.tasks import (
 )
 from pipelines.rj_cor.meteorologia.satelite.schedules import hour_schedule
 
-# from pipelines.utils.decorators import Flow
+from pipelines.utils.decorators import Flow
 
 from pipelines.utils.tasks import (
     create_table_and_upload_to_gcs,
@@ -35,10 +34,10 @@ from pipelines.utils.tasks import (
 )
 
 with Flow(
-    name="COR: Meteorologia - Satelite GOES 16"
-    # code_owners=[
-    #     "paty",
-    # ],
+    name="COR: Meteorologia - Satelite GOES 16",
+    code_owners=[
+        "paty",
+    ],
 ) as cor_meteorologia_goes16:
 
     # Materialization parameters
@@ -75,11 +74,7 @@ with Flow(
         wait=redis_files_rr,
     )
 
-    # # Check if there is new files on API
-    # update_rr = checa_update(redis_files_rr, redis_files_rr_updated)
-
-    # # Start data treatment if there are new files
-    # with case(update_rr, False):
+    # Start data treatment if there are new files
     info_rr = tratar_dados(filename=filename_rr)
     path_rr = save_data(info=info_rr, file_path=filename_rr)
 
@@ -117,11 +112,7 @@ with Flow(
         wait=redis_files_tpw,
     )
 
-    # # Check if there is new files on API
-    # update_tpw = checa_update(redis_files_tpw, redis_files_tpw_updated)
-
-    # # Start data treatment if there are new files
-    # with case(update_tpw, False):
+    # Start data treatment if there are new files
     info_tpw = tratar_dados(filename=filename_tpw)
     path_tpw = save_data(info=info_tpw, file_path=filename_tpw)
 
@@ -159,11 +150,7 @@ with Flow(
         wait=redis_files_cmip,
     )
 
-    # # Check if there is new files on API
-    # update_cmip = checa_update(redis_files_cmip, redis_files_cmip_updated)
-
-    # # Start data treatment if there are new files
-    # with case(update_cmip, False):
+    # Start data treatment if there are new files
     info_cmip = tratar_dados(filename=filename_cmip)
     path_cmip = save_data(info=info_cmip, file_path=filename_cmip)
 
