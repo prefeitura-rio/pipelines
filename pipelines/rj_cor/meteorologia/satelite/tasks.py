@@ -13,6 +13,8 @@ from typing import Union
 import numpy as np
 import pendulum
 from prefect import task
+from prefect.engine.signals import ENDRUN
+from prefect.engine.state import Skipped
 import s3fs
 
 from pipelines.rj_cor.meteorologia.satelite.satellite_utils import (
@@ -109,6 +111,12 @@ def download(
         )
         origem = "gcp"
 
+    # Skip task if there is no file on API
+    if len(path_files) == 0:
+        log("No available files on API")
+        skip = Skipped("No available files on API")
+        raise ENDRUN(state=skip)
+
     base_path = os.path.join(os.getcwd(), "data", "satelite", variavel[:-1], "input")
 
     if not os.path.exists(base_path):
@@ -151,10 +159,6 @@ def download(
             mode="prod",
         )
 
-    # Mantém últimos 20 arquivos salvos no redis
-    redis_files.sort()
-    redis_files = redis_files[-20:]
-
     return path_filename, redis_files
 
 
@@ -180,9 +184,3 @@ def save_data(info: dict, file_path: str) -> Union[str, Path]:
     print(f"Saving {variable} in parquet")
     output_path = save_data_in_file(variable, datetime_save, file_path)
     return output_path
-
-
-@task
-def checa_update(arg_1, arg_2):
-    """Check if there is any difference between two arguments"""
-    return arg_1 == arg_2
