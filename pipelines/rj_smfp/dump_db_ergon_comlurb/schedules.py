@@ -211,7 +211,6 @@ ergon_queries = {
             FROM ERGON.DEPENDENTES
         """,
     },
-
     "funcionario_evento": {
         "materialize_after_dump": False,
         "materialization_mode": "prod",
@@ -328,7 +327,6 @@ ergon_queries = {
             FROM ERGON.EVENTO_FUNC
         """
     },
-
     "ficha_financeira": {
         "materialize_after_dump": False,
         "materialization_mode": "prod",
@@ -354,7 +352,6 @@ ergon_queries = {
             FROM ERGON.FICHAS_FINANCEIRAS
         """
     },
-
     "fita_banco": {
         "materialize_after_dump": False,
         "materialization_mode": "prod",
@@ -444,7 +441,6 @@ ergon_queries = {
             FROM ERGON.FITABANCO
         """
     },
-
     "frequencia": {
         "materialize_after_dump": False,
         "materialization_mode": "prod",
@@ -519,8 +515,6 @@ ergon_queries = {
             FROM ERGON.FREQUENCIAS
         """
     },
-    
-    
     "funcionario": {
         "materialize_after_dump": False,
         "materialization_mode": "prod",
@@ -725,8 +719,6 @@ ergon_queries = {
             FROM ERGON.FUNCIONARIOS
         """
     },
-    
-    
     "setor_h": {
         "materialize_after_dump": False,
         "materialization_mode": "prod",
@@ -736,8 +728,6 @@ ergon_queries = {
             FROM ERGON.HSETOR_
         """
     },
-    
-    
     "licenca_afastamento": {
         "materialize_after_dump": False,
         "materialization_mode": "prod",
@@ -827,8 +817,6 @@ ergon_queries = {
             FROM ERGON.LIC_AFAST
         """
     },
-    
-    
     "setor": {
         "materialize_after_dump": False,
         "materialization_mode": "prod",
@@ -881,7 +869,6 @@ ergon_queries = {
             FROM ERGON.SETORES_ERGON
         """
     },
-
     "vantagem": {
         "materialize_after_dump": False,
         "materialization_mode": "prod",
@@ -957,7 +944,6 @@ ergon_queries = {
             FROM ERGON.VANTAGENS
         """
     },
-
     "vinculo": {
         "materialize_after_dump": False,
         "materialization_mode": "prod",
@@ -1116,8 +1102,6 @@ ergon_queries = {
             FROM ERGON.VINCULOS
         """
     },
-
-
 }
 
 
