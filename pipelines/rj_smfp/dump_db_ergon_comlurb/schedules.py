@@ -98,7 +98,7 @@ ergon_queries = {
                 PONTLEI,
                 DT_INICIO_CONTR_VAGA,
                 ID_REG
-            FROM ERGON.CARGOS_;
+            FROM ERGON.CARGOS_
         """,
     },
     "dependente": {
@@ -208,7 +208,7 @@ ergon_queries = {
                 FLEX_CAMPO_45,
                 ID_REG,
                 PONTARQS
-            FROM ERGON.DEPENDENTES;
+            FROM ERGON.DEPENDENTES
         """,
     },
 
@@ -325,7 +325,7 @@ ergon_queries = {
                 FLEX_CAMPO_80, 
                 ID_INGRESSO, 
                 PONTPROC 
-            FROM ERGON.EVENTO_FUNC;
+            FROM ERGON.EVENTO_FUNC
         """
     },
 
@@ -351,7 +351,7 @@ ergon_queries = {
                 CORRECAO, 
                 EXECUCAO, 
                 EMP_CODIGO 
-            FROM ERGON.FICHAS_FINANCEIRAS;
+            FROM ERGON.FICHAS_FINANCEIRAS
         """
     },
 
@@ -441,7 +441,7 @@ ergon_queries = {
                 BANCO_REP, 
                 AGENCIA_REP, 
                 CONTA_REP 
-            FROM ERGON.FITABANCO;
+            FROM ERGON.FITABANCO
         """
     },
 
@@ -516,7 +516,7 @@ ergon_queries = {
                 FLEX_CAMPO_49, 
                 FLEX_CAMPO_50, 
                 PONTPROC 
-            FROM ERGON.FREQUENCIAS;
+            FROM ERGON.FREQUENCIAS
         """
     },
     
@@ -722,7 +722,7 @@ ergon_queries = {
                 CIDNASC_COD, 
                 NOME_BUSCA, 
                 PONTARQS 
-            FROM ERGON.FUNCIONARIOS;
+            FROM ERGON.FUNCIONARIOS
         """
     },
     
@@ -733,7 +733,7 @@ ergon_queries = {
         "dump_mode": "overwrite",
         "execute_query": """
             SELECT * 
-            FROM ERGON.HSETOR_;
+            FROM ERGON.HSETOR_
         """
     },
     
@@ -824,7 +824,7 @@ ergon_queries = {
                 FLEX_CAMPO_63, 
                 FLEX_CAMPO_64, 
                 FLEX_CAMPO_65 
-            FROM ERGON.LIC_AFAST;
+            FROM ERGON.LIC_AFAST
         """
     },
     
@@ -878,7 +878,7 @@ ergon_queries = {
                 FLEX_CAMPO_24, 
                 FLEX_CAMPO_25, 
                 PONTPROC 
-            FROM .SETORES_ERGON;
+            FROM ERGON.SETORES_ERGON
         """
     },
 
@@ -954,7 +954,7 @@ ergon_queries = {
                 FLEX_CAMPO_29, 
                 FLEX_CAMPO_30, 
                 PONTPROC 
-            FROM ERGON.VANTAGENS;
+            FROM ERGON.VANTAGENS
         """
     },
 
@@ -1113,7 +1113,7 @@ ergon_queries = {
                 MATRICULA2, 
                 PONTPROC, 
                 PONTARQS 
-            FROM ERGON.VINCULOS;
+            FROM ERGON.VINCULOS
         """
     },
 
