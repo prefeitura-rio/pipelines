@@ -25,7 +25,7 @@ ergon_queries = {
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
-            SELECT 
+            SELECT
                 cargo,
                 nome,
                 categoria,
@@ -98,8 +98,8 @@ ergon_queries = {
                 pontlei,
                 dt_inicio_contr_vaga,
                 id_reg
-            FROM   ergon.cargos_; 
-        """
+            FROM   ergon.cargos_;
+        """,
     },
 }
 
