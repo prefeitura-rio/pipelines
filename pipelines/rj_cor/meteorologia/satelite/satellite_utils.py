@@ -571,8 +571,9 @@ def save_data_in_file(
     data = data[["longitude", "latitude", variable.lower()]]
 
     # salva em csv
-    log(f"Saving on output_path {output_path}")
     filename = file_path.split("/")[-1].replace(".nc", "")
+    log(f"Saving {filename} on {parquet_path}")
+    log(f"Data_save: {date_save}, time_save: {time_save}")
     file_path = os.path.join(parquet_path, f"{filename}.csv")
     data.to_csv(file_path, index=False)
     return output_path
