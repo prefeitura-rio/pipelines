@@ -1,4 +1,4 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Example flow
 """
@@ -20,10 +20,10 @@ with Flow("EMD: formacao - Exemplo de flow do Prefect CHLL") as formacao_exemplo
     dataframe = parse_data(data)
     path = save_report(dataframe)
     create_table_and_upload_to_gcs(
-        data_path = path, 
-        dataset_id = 'teste_claurenti', 
-        table_id = 'teste_claurenti', 
-        dump_mode = 'overwrite'
+        data_path=path,
+        dataset_id="teste_claurenti",
+        table_id="teste_claurenti",
+        dump_mode="overwrite",
     )
 
 formacao_exemplo_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
