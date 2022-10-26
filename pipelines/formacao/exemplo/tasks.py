@@ -1,4 +1,4 @@
-# -*_ coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
     Tasks for example flow
 """
@@ -48,24 +48,26 @@ def gerar_df(data: str) -> pd.DataFrame:
     return df
 
 
-
 @task
 def format_phone_number(df, column_name):
     """
     Formata o número de telefone
 
      Args:
-        dataframe (pd.DataFrame): DataFrame do Pandas, column 
+        dataframe (pd.DataFrame): DataFrame do Pandas, column
     """
+
     def get_number(number):
-        """ remover caracteres não numericos"""
-        return re.sub(r'[^0-9]', '', number)
+        """remover caracteres não numericos"""
+        return re.sub(r"[^0-9]", "", number)
+
     df[column_name] = df[column_name].apply(get_number)
 
     def format_number(number):
-        """ formata o numero de telefone"""
-        return f'{number[:2]} {number[2:]}'
+        """formata o numero de telefone"""
+        return f"{number[:2]} {number[2:]}"
+
     df[column_name] = df[column_name].apply(format_number)
     log("Dados formatados com sucesso!")
     df.to_csv("/tmp/report.csv", index=False)
-    return  "/tmp/report.csv"
+    return "/tmp/report.csv"
