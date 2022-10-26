@@ -41,7 +41,7 @@ def parse_data(data: str) -> pd.DataFrame:
         pd.DataFrame: DataFrame do Pandas.
     """
     dfr = pd.read_csv(StringIO(data))
-    dfr.columns = [columns.replace('.', '_' ) for columns in dfr.columns]
+    dfr.columns = [columns.replace(".", "_") for columns in dfr.columns]
     log("Dados convertidos em DataFrame com sucesso!")
     return dfr
 
