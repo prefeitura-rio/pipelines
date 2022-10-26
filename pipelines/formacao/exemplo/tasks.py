@@ -42,9 +42,10 @@ def gerar_df(data: str) -> pd.DataFrame:
     Returns:
         pd.DataFrame: DataFrame do Pandas.
     """
-    df = pd.read_csv(StringIO(data))
+    data = pd.read_csv(StringIO(data))
+    data.columns = [col.replace(".", "_") for col in data.columns]
     log("Dados convertidos em DataFrame com sucesso!")
-    return df
+    return data
 
 
 @task

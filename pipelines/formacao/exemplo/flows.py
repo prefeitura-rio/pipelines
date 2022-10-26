@@ -11,8 +11,8 @@ from pipelines.constants import constants
 from pipelines.formacao.exemplo.tasks import (
     download_data,
     format_phone_number,
-    gerar_df,
     format_phone_number,
+    gerar_df,
 )
 
 from pipelines.utils.decorators import Flow
