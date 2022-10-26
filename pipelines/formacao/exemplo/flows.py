@@ -26,7 +26,7 @@ with Flow("EMD: formacao - Exemplo de flow do Prefect da Stella") as formacao_ex
                                    table_id='teste_stella', dump_mode='overwrite')
 
 formacao_example_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-formacao_example_flow.run_config = KubernetesRun(
+formacao_example_flow.run_config = KubernetsRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_COR_AGENT_LABEL.value],
 )
