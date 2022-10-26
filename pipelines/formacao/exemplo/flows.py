@@ -16,11 +16,9 @@ from pipelines.formacao.exemplo.tasks import (
     download_data,
     format_phone_number,
     gerar_df,
-    salvar_df_transformado,
-    format_phone_number,
-    total_users,
-    total_users_country,
+    format_phone_number
 )
+
 from pipelines.utils.decorators import Flow
 from pipelines.utils.tasks import create_table_and_upload_to_gcs
 
