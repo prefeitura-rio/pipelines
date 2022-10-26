@@ -2,16 +2,15 @@
 """
     Tasks for example flow
 """
-
 from io import StringIO
-
-from io import StringIO
-import pandas as pd
-from prefect import task
-import requests
 import re
-from utils import log
-import matplotlib.pyplot as plt
+
+import requests
+import pandas as pd
+
+from prefect import task
+
+from pipelines.utils.utils import log
 
 
 @task
