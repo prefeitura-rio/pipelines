@@ -18,7 +18,9 @@ from pipelines.formacao.exemplo.tasks import (
 from pipelines.utils.decorators import Flow
 from pipelines.utils.tasks import create_table_and_upload_to_gcs
 
-with Flow("EMD: formacao - Exemplo de flow do Prefect") as formacao_example_flow:
+with Flow(
+    "EMD: formacao - Exemplo de flow do Prefect da Stella"
+) as formacao_example_flow:
     # Definindo os parâmetros do flow
     n_users = Parameter("n_users", default=10)
 
