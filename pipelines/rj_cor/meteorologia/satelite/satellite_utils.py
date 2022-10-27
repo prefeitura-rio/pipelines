@@ -144,7 +144,7 @@ def extract_julian_day_and_hour_from_filename(filename: str):
     Returns
     year (int): 2022 (20222901900203)
     julian_day (int): 290 (20222901900203)
-    hour_utc (int): 19 (20222901900203)
+    hour_utc (str): 1900 (20222901900203)
     """
     # Search for the Scan start in the file name
     start = filename[filename.find("_s") + 2 : filename.find("_e")]
@@ -154,7 +154,7 @@ def extract_julian_day_and_hour_from_filename(filename: str):
     julian_day = int(start[4:7])
 
     # Time (UTC) as string
-    hour_utc = int(start[7:11])
+    hour_utc = start[7:11]
 
     # Time of the start of the Scan
     # time = start[7:9] + ":" + start[9:11] + ":" + start[11:13] + " UTC"
