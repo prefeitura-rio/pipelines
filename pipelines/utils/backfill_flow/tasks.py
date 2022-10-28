@@ -18,7 +18,7 @@ def create_timestamp_parameters(
     start: pendulum.DateTime,
     end: pendulum.DateTime,
     interval: pendulum.Duration,
-    format: str = "YYYY-MM-DD",
+    datetime_format: str = "YYYY-MM-DD",
     reverse: bool = False,
 ):
     """
@@ -28,7 +28,7 @@ def create_timestamp_parameters(
         start: The start of the range of timestamps to generate
         end: The end of the range of timestamps to generate
         interval: The interval between timestamps
-        format: The format to use for the timestamps
+        datetime_format: The format to use for the timestamps
         reverse: Whether to reverse the order of the timestamps
 
     Returns:
@@ -39,8 +39,8 @@ def create_timestamp_parameters(
         this_end = start + interval
         parameters.append(
             {
-                "start": start.format(format),
-                "end": this_end.format(format),
+                "start": start.format(datetime_format),
+                "end": this_end.format(datetime_format),
             }
         )
         start = this_end
@@ -50,6 +50,7 @@ def create_timestamp_parameters(
 
 
 @task
+# pylint: disable=too-many-arguments
 def launch_flow(
     flow_name: str,
     parameter: Dict[str, Any],

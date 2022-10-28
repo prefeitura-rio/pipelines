@@ -3,7 +3,7 @@
 Backfill flow definition
 """
 
-from prefect import case, Parameter
+from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.utilities.edges import unmapped
