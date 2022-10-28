@@ -103,7 +103,7 @@ def generate_dump_url_schedules(  # pylint: disable=too-many-arguments,too-many-
             "batch_data_type": batch_data_type,
             "url": parameters["url"],
             "url_type": parameters["url_type"],
-            "dataset_id": dataset_id,
+            "dataset_id": dataset_id if dataset_id != "" else parameters["dataset_id"],
             "table_id": table_id,
             "dump_mode": parameters["dump_mode"],
             # "vault_secret_path": vault_secret_path,
