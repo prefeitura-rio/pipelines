@@ -54,6 +54,7 @@ gsheets_urls = {
         &#34;url_type&#34;: &#34;google_sheet&#34;,
         &#34;gsheets_sheet_name&#34;: &#34;METAS CONSOLIDADO&#34;,
         &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;planejamento_gestao_dashboard_metas&#34;,
     },
     &#34;metas_acordo_resultados_planilha&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
@@ -62,6 +63,7 @@ gsheets_urls = {
         &#34;url_type&#34;: &#34;google_sheet&#34;,
         &#34;gsheets_sheet_name&#34;: &#34;METAS_AR&#34;,
         &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;planejamento_gestao_dashboard_metas&#34;,
     },
     &#34;orgaos&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
@@ -70,6 +72,7 @@ gsheets_urls = {
         &#34;url_type&#34;: &#34;google_sheet&#34;,
         &#34;gsheets_sheet_name&#34;: &#34;Lista Órgãos&#34;,
         &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;planejamento_gestao_dashboard_metas&#34;,
     },
     &#34;relacao_metas&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
@@ -79,6 +82,61 @@ gsheets_urls = {
         &#34;gsheets_sheet_name&#34;: &#34;Relação MetaPE-AR2022&#34;,
         &#34;gsheets_sheet_range&#34;: &#34;A2:I1000&#34;,
         &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;planejamento_gestao_dashboard_metas&#34;,
+    },
+    &#34;formato_acordo&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1Ax2kG7JtmBLcEKkdSFBKLvtvyYzARKzl-1wS6pCB0gs\
+            /edit#gid=51595081&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;BASE_FORMATO_ACORDOS&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;planejamento_gestao_acordo_resultados&#34;,
+    },
+    &#34;acordo_resultado&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1PmVw9a_6-6D3MHskvLiV4z6PVJQYKaWYUPXFyHf88i8\
+            /edit#gid=51595081&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;BASE_ACORDOS&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;planejamento_gestao_acordo_resultados&#34;,
+    },
+    &#34;meta_desdobrada&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1cEXVsFA1ngSDypr7-bSvxgJbklCXP-fMJomGQTexoic\
+            /edit#gid=721056876&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;METAS_AR&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;planejamento_gestao_acordo_resultados&#34;,
+    },
+    &#34;recurso&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1chlhi4sCS8oeRnaS_rWEiaH53nT08lBpt3DI4UvhOuM\
+            /edit#gid=1835916672&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;Recursos&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;planejamento_gestao_acordo_resultados&#34;,
+    },
+    &#34;auditoria&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1WoaZLxqnSokfE4_XpYpy1T-GYCx7qNPiaQv8U485hOw\
+            /edit#gid=1835916672&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;Auditorias&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;planejamento_gestao_acordo_resultados&#34;,
+    },
+    &#34;avaliacao_meta&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/15WvSoNgLJlOCmlT881XqFw_tenjBPHyw0cGzR8eHzi4\
+            /edit#gid=322217634&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;Cores&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;planejamento_gestao_acordo_resultados&#34;,
     },
 }
 
@@ -89,8 +147,8 @@ gsheets_clocks = generate_dump_url_schedules(
     labels=[
         constants.RJ_SMFP_AGENT_LABEL.value,
     ],
-    dataset_id=&#34;planejamento_gestao_dashboard_metas&#34;,
     table_parameters=gsheets_urls,
+    dataset_id=&#34;&#34;,
 )
 
 gsheets_daily_update_schedule = Schedule(clocks=untuple(gsheets_clocks))</code></pre>
