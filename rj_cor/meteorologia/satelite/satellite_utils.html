@@ -173,7 +173,7 @@ def extract_julian_day_and_hour_from_filename(filename: str):
     Returns
     year (int): 2022 (20222901900203)
     julian_day (int): 290 (20222901900203)
-    hour_utc (int): 19 (20222901900203)
+    hour_utc (str): 1900 (20222901900203)
     &#34;&#34;&#34;
     # Search for the Scan start in the file name
     start = filename[filename.find(&#34;_s&#34;) + 2 : filename.find(&#34;_e&#34;)]
@@ -183,7 +183,7 @@ def extract_julian_day_and_hour_from_filename(filename: str):
     julian_day = int(start[4:7])
 
     # Time (UTC) as string
-    hour_utc = int(start[7:11])
+    hour_utc = start[7:11]
 
     # Time of the start of the Scan
     # time = start[7:9] + &#34;:&#34; + start[9:11] + &#34;:&#34; + start[11:13] + &#34; UTC&#34;
@@ -600,8 +600,9 @@ def save_data_in_file(
     data = data[[&#34;longitude&#34;, &#34;latitude&#34;, variable.lower()]]
 
     # salva em csv
-    log(f&#34;Saving on output_path {output_path}&#34;)
     filename = file_path.split(&#34;/&#34;)[-1].replace(&#34;.nc&#34;, &#34;&#34;)
+    log(f&#34;Saving {filename} on {parquet_path}&#34;)
+    log(f&#34;Data_save: {date_save}, time_save: {time_save}&#34;)
     file_path = os.path.join(parquet_path, f&#34;{filename}.csv&#34;)
     data.to_csv(file_path, index=False)
     return output_path
@@ -787,7 +788,7 @@ filename (str): 'OR_ABI-L2-TPWF-M6_G16_s20222901900203_e20222901909511_c20222901
 <p>Returns
 year (int): 2022 (20222901900203)
 julian_day (int): 290 (20222901900203)
-hour_utc (int): 19 (20222901900203)</p></div>
+hour_utc (str): 1900 (20222901900203)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -802,7 +803,7 @@ hour_utc (int): 19 (20222901900203)</p></div>
     Returns
     year (int): 2022 (20222901900203)
     julian_day (int): 290 (20222901900203)
-    hour_utc (int): 19 (20222901900203)
+    hour_utc (str): 1900 (20222901900203)
     &#34;&#34;&#34;
     # Search for the Scan start in the file name
     start = filename[filename.find(&#34;_s&#34;) + 2 : filename.find(&#34;_e&#34;)]
@@ -812,7 +813,7 @@ hour_utc (int): 19 (20222901900203)</p></div>
     julian_day = int(start[4:7])
 
     # Time (UTC) as string
-    hour_utc = int(start[7:11])
+    hour_utc = start[7:11]
 
     # Time of the start of the Scan
     # time = start[7:9] + &#34;:&#34; + start[9:11] + &#34;:&#34; + start[11:13] + &#34; UTC&#34;
@@ -1267,8 +1268,9 @@ Mode needs to be "prod" or "staging"</p></div>
     data = data[[&#34;longitude&#34;, &#34;latitude&#34;, variable.lower()]]
 
     # salva em csv
-    log(f&#34;Saving on output_path {output_path}&#34;)
     filename = file_path.split(&#34;/&#34;)[-1].replace(&#34;.nc&#34;, &#34;&#34;)
+    log(f&#34;Saving {filename} on {parquet_path}&#34;)
+    log(f&#34;Data_save: {date_save}, time_save: {time_save}&#34;)
     file_path = os.path.join(parquet_path, f&#34;{filename}.csv&#34;)
     data.to_csv(file_path, index=False)
     return output_path</code></pre>

@@ -167,15 +167,22 @@ def download(
 
     # keep the first file if it is not on redis
     path_files.sort()
+    download_file = None
     for path_file in path_files:
         filename = path_file.split(&#34;/&#34;)[-1]
         if filename not in redis_files:
-            log(&#34;\n\n[DEBUG]: file not in redis&#34;)
+            log(f&#34;\n\n[DEBUG]: {filename} not in redis&#34;)
             redis_files.append(filename)
             path_filename = os.path.join(base_path, filename)
             download_file = path_file
             log(f&#34;[DEBUG]: filename to be append on redis_files: {redis_files}&#34;)
             break
+
+    # Skip task if there is no new file
+    if download_file is None:
+        log(&#34;No new available files&#34;)
+        skip = Skipped(&#34;No new available files&#34;)
+        raise ENDRUN(state=skip)
 
     # Faz download da aws ou da gcp
     if origem == &#34;aws&#34;:
@@ -301,15 +308,22 @@ def download(
 
     # keep the first file if it is not on redis
     path_files.sort()
+    download_file = None
     for path_file in path_files:
         filename = path_file.split(&#34;/&#34;)[-1]
         if filename not in redis_files:
-            log(&#34;\n\n[DEBUG]: file not in redis&#34;)
+            log(f&#34;\n\n[DEBUG]: {filename} not in redis&#34;)
             redis_files.append(filename)
             path_filename = os.path.join(base_path, filename)
             download_file = path_file
             log(f&#34;[DEBUG]: filename to be append on redis_files: {redis_files}&#34;)
             break
+
+    # Skip task if there is no new file
+    if download_file is None:
+        log(&#34;No new available files&#34;)
+        skip = Skipped(&#34;No new available files&#34;)
+        raise ENDRUN(state=skip)
 
     # Faz download da aws ou da gcp
     if origem == &#34;aws&#34;:
