@@ -25,6 +25,7 @@ gsheets_urls = {
         "url_type": "google_sheet",
         "gsheets_sheet_name": "METAS CONSOLIDADO",
         "materialize_after_dump": True,
+        "dataset_id": "planejamento_gestao_dashboard_metas",
     },
     "metas_acordo_resultados_planilha": {
         "dump_mode": "overwrite",
@@ -33,6 +34,7 @@ gsheets_urls = {
         "url_type": "google_sheet",
         "gsheets_sheet_name": "METAS_AR",
         "materialize_after_dump": True,
+        "dataset_id": "planejamento_gestao_dashboard_metas",
     },
     "orgaos": {
         "dump_mode": "overwrite",
@@ -41,6 +43,7 @@ gsheets_urls = {
         "url_type": "google_sheet",
         "gsheets_sheet_name": "Lista Órgãos",
         "materialize_after_dump": True,
+        "dataset_id": "planejamento_gestao_dashboard_metas",
     },
     "relacao_metas": {
         "dump_mode": "overwrite",
@@ -50,7 +53,62 @@ gsheets_urls = {
         "gsheets_sheet_name": "Relação MetaPE-AR2022",
         "gsheets_sheet_range": "A2:I1000",
         "materialize_after_dump": True,
+        "dataset_id": "planejamento_gestao_dashboard_metas",
     },
+    "formato_acordo": {
+        "dump_mode": "overwrite",
+        "url": "https://docs.google.com/spreadsheets/d/1Ax2kG7JtmBLcEKkdSFBKLvtvyYzARKzl-1wS6pCB0gs\
+            /edit#gid=51595081",
+        "url_type": "google_sheet",
+        "gsheets_sheet_name": "BASE_FORMATO_ACORDOS",
+        "materialize_after_dump": True,
+        "dataset_id": "planejamento_gestao_acordo_resultados",
+    },
+    "acordo_resultado": {
+        "dump_mode": "overwrite",
+        "url": "https://docs.google.com/spreadsheets/d/1PmVw9a_6-6D3MHskvLiV4z6PVJQYKaWYUPXFyHf88i8\
+            /edit#gid=51595081",
+        "url_type": "google_sheet",
+        "gsheets_sheet_name": "BASE_ACORDOS",
+        "materialize_after_dump": True,
+        "dataset_id": "planejamento_gestao_acordo_resultados",
+    },
+    "meta_desdobrada": {
+        "dump_mode": "overwrite",
+        "url": "https://docs.google.com/spreadsheets/d/1cEXVsFA1ngSDypr7-bSvxgJbklCXP-fMJomGQTexoic\
+            /edit#gid=721056876",
+        "url_type": "google_sheet",
+        "gsheets_sheet_name": "METAS_AR",
+        "materialize_after_dump": True,
+        "dataset_id": "planejamento_gestao_acordo_resultados",
+    },
+    "recurso": {
+        "dump_mode": "overwrite",
+        "url": "https://docs.google.com/spreadsheets/d/1chlhi4sCS8oeRnaS_rWEiaH53nT08lBpt3DI4UvhOuM\
+            /edit#gid=1835916672",
+        "url_type": "google_sheet",
+        "gsheets_sheet_name": "Recursos",
+        "materialize_after_dump": True,
+        "dataset_id": "planejamento_gestao_acordo_resultados",
+    },
+    "auditoria": {
+        "dump_mode": "overwrite",
+        "url": "https://docs.google.com/spreadsheets/d/1WoaZLxqnSokfE4_XpYpy1T-GYCx7qNPiaQv8U485hOw\
+            /edit#gid=1835916672",
+        "url_type": "google_sheet",
+        "gsheets_sheet_name": "Auditorias",
+        "materialize_after_dump": True,
+        "dataset_id": "planejamento_gestao_acordo_resultados",
+    },
+    "avaliacao_meta": {
+        "dump_mode": "overwrite",
+        "url": "https://docs.google.com/spreadsheets/d/15WvSoNgLJlOCmlT881XqFw_tenjBPHyw0cGzR8eHzi4\
+            /edit#gid=322217634",
+        "url_type": "google_sheet",
+        "gsheets_sheet_name": "Cores",
+        "materialize_after_dump": True,
+        "dataset_id": "planejamento_gestao_acordo_resultados",
+    },    
 }
 
 
@@ -60,7 +118,6 @@ gsheets_clocks = generate_dump_url_schedules(
     labels=[
         constants.RJ_SMFP_AGENT_LABEL.value,
     ],
-    dataset_id="planejamento_gestao_dashboard_metas",
     table_parameters=gsheets_urls,
 )
 
