@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0302
 """
 Schedules for the database dump pipeline
 """
