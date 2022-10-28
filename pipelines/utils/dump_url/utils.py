@@ -43,9 +43,7 @@ def handle_dataframe_chunk(
     new_columns_dict = dict(zip(old_columns, dataframe.columns.tolist()))
     if idx == 0:
         if partition_column:
-            log(
-                f"Partition column: {partition_column} FOUND!! Write to partitioned files"
-            )
+            log(f"Partition column: {partition_column} FOUND!! Write to partitioned files")
 
         else:
             log("NO partition column specified! Writing unique files")
@@ -103,7 +101,7 @@ def generate_dump_url_schedules(  # pylint: disable=too-many-arguments,too-many-
             "batch_data_type": batch_data_type,
             "url": parameters["url"],
             "url_type": parameters["url_type"],
-            "dataset_id": dataset_id,
+            "dataset_id": dataset_id if dataset_id else parameters["dataset_id"],
             "table_id": table_id,
             "dump_mode": parameters["dump_mode"],
             # "vault_secret_path": vault_secret_path,
@@ -114,29 +112,19 @@ def generate_dump_url_schedules(  # pylint: disable=too-many-arguments,too-many-
             # "execute_query": query_to_line(parameters["execute_query"]),
         }
         if "gsheets_sheet_order" in parameters:
-            parameter_defaults["gsheets_sheet_order"] = parameters[
-                "gsheets_sheet_order"
-            ]
+            parameter_defaults["gsheets_sheet_order"] = parameters["gsheets_sheet_order"]
         if "gsheets_sheet_name" in parameters:
             parameter_defaults["gsheets_sheet_name"] = parameters["gsheets_sheet_name"]
         if "gsheets_sheet_range" in parameters:
-            parameter_defaults["gsheets_sheet_range"] = parameters[
-                "gsheets_sheet_range"
-            ]
+            parameter_defaults["gsheets_sheet_range"] = parameters["gsheets_sheet_range"]
         if "partition_columns" in parameters:
             parameter_defaults["partition_columns"] = parameters["partition_columns"]
         if "materialize_after_dump" in parameters:
-            parameter_defaults["materialize_after_dump"] = parameters[
-                "materialize_after_dump"
-            ]
+            parameter_defaults["materialize_after_dump"] = parameters["materialize_after_dump"]
         if "materialization_mode" in parameters:
-            parameter_defaults["materialization_mode"] = parameters[
-                "materialization_mode"
-            ]
+            parameter_defaults["materialization_mode"] = parameters["materialization_mode"]
         if "materialize_to_datario" in parameters:
-            parameter_defaults["materialize_to_datario"] = parameters[
-                "materialize_to_datario"
-            ]
+            parameter_defaults["materialize_to_datario"] = parameters["materialize_to_datario"]
         # if "dbt_model_secret_parameters" in parameters:
         #     parameter_defaults["dbt_model_secret_parameters"] = parameters[
         #         "dbt_model_secret_parameters"
@@ -153,8 +141,7 @@ def generate_dump_url_schedules(  # pylint: disable=too-many-arguments,too-many-
         clocks.append(
             IntervalClock(
                 interval=new_interval,
-                start_date=start_date
-                + timedelta(minutes=runs_interval_minutes * count),
+                start_date=start_date + timedelta(minutes=runs_interval_minutes * count),
                 labels=labels,
                 parameter_defaults=parameter_defaults,
             )
