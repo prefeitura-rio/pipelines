@@ -108,7 +108,7 @@ gsheets_urls = {
         "gsheets_sheet_name": "Cores",
         "materialize_after_dump": True,
         "dataset_id": "planejamento_gestao_acordo_resultados",
-    },    
+    },
 }
 
 
