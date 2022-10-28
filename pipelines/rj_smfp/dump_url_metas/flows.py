@@ -24,9 +24,7 @@ smfp_gsheets_flow.run_config = KubernetesRun(
     ],
 )
 
-smfp_gsheets_default_parameters = {
-    "dataset_id": "planejamento_gestao_dashboard_metas",
-}
+smfp_gsheets_default_parameters = {}
 smfp_gsheets_flow = set_default_parameters(
     smfp_gsheets_flow, default_parameters=smfp_gsheets_default_parameters
 )
