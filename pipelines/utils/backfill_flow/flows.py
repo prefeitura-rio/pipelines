@@ -78,3 +78,6 @@ with Flow(
         datetime_end_param=unmapped(datetime_end_param),
         fetch_flow_run_info_sleep_time=unmapped(fetch_flow_run_info_sleep_time),
     )
+
+backfill_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+backfill_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
