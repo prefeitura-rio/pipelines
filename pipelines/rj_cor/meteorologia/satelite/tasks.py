@@ -138,15 +138,22 @@ def download(
 
     # keep the first file if it is not on redis
     path_files.sort()
+    download_file = None
     for path_file in path_files:
         filename = path_file.split("/")[-1]
         if filename not in redis_files:
-            log("\n\n[DEBUG]: file not in redis")
+            log(f"\n\n[DEBUG]: {filename} not in redis")
             redis_files.append(filename)
             path_filename = os.path.join(base_path, filename)
             download_file = path_file
             log(f"[DEBUG]: filename to be append on redis_files: {redis_files}")
             break
+
+    # Skip task if there is no new file
+    if download_file is None:
+        log("No new available files")
+        skip = Skipped("No new available files")
+        raise ENDRUN(state=skip)
 
     # Faz download da aws ou da gcp
     if origem == "aws":
