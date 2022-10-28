@@ -62,7 +62,7 @@ with Flow(
         start=backfill_start_datetime,
         end=backfill_end_datetime,
         interval=backfill_interval_duration,
-        format=datetime_format,
+        datetime_format=datetime_format,
         reverse=reverse,
     )
 
