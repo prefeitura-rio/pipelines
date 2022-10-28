@@ -24,7 +24,7 @@ with Flow(
     code_owners=[
         "gabriel",
     ],
-) as backfill_flow:
+) as backfill_flow_definition:
 
     # Parameters
     agent_label = Parameter("agent_label")
@@ -79,5 +79,5 @@ with Flow(
         fetch_flow_run_info_sleep_time=unmapped(fetch_flow_run_info_sleep_time),
     )
 
-backfill_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-backfill_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+backfill_flow_definition.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+backfill_flow_definition.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
