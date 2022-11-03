@@ -8,13 +8,13 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 from pipelines.pipelines_nuno.aula_4.tasks import (
-    getTimestamp,
-    getCaminhoSaida,
-    getData,
-    escreveResultado,
-    transformaCelulares,
-    gravaEstatisticas,
-    plotaIdades
+    get_time_stamp,
+    get_caminho_saida,
+    get_data,
+    escreve_resultado,
+    transforma_celulares,
+    grava_estatisticas,
+    plota_idades
 )
 
 from pipelines.constants import constants
@@ -27,22 +27,22 @@ with Flow(
     ],
 ) as aula_4_flow:
 
-    timestampArquivo = getTimestamp()
-    myCaminho = getCaminhoSaida()
+    timestampArquivo = get_time_stamp()
+    my_caminho = get_caminho_saida()
 
     numero_usuarios = Parameter("numero_usuarios", default=10)
-    dataframeOriginal = getData(numero_usuarios)
+    dataframeOriginal = get_data(numero_usuarios)
 
     #formata os numeros de celular e de telefone fixo
-    DataframeTratada = transformaCelulares(dataframeOriginal,'cell')
-    DataframeTratada = transformaCelulares(dataframeOriginal,'phone')
+    DataframeTratada = transforma_celulares(dataframeOriginal,'cell')
+    DataframeTratada = transforma_celulares(dataframeOriginal,'phone')
 
     #Grava em arquivo CSV
-    escreveResultado(DataframeTratada, timestampArquivo)
-    plotaIdades(DataframeTratada,timestampArquivo)
+    escreve_resultado(DataframeTratada, timestampArquivo)
+    plota_idades(DataframeTratada,timestampArquivo)
 
     #Imprime os calculos de porcentagem
-    print(gravaEstatisticas(DataframeTratada, timestampArquivo))
+    print(grava_estatisticas(DataframeTratada, timestampArquivo))
 
 aula_4_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 aula_4_flow.run_config = KubernetesRun(

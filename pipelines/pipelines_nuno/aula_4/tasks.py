@@ -2,99 +2,94 @@
 """
 Tasks para o exercicio de esquenta (SME)
 """
-
-import pandas as pd
 import time
-#import re
-import matplotlib.pyplot as plt
-#import numpy as np
 import os
+import pandas as pd
+import matplotlib.pyplot as plt
 from prefect import task
-#import requests
-
-from pipelines.utils.utils import log
-#from utils import log
 from utils import limpaNumero
 from utils import criaCaminho
+from pipelines.utils.utils import log
 
 #seta algumas variáveis úteis
 #timestampArquivo = time.strftime("%Y%m%d-%H%M%S")
 #caminhoSaida = '.\\Saida'
 
 @task
-def getTimestamp():
+def get_time_stamp():
     return time.strftime("%Y%m%d-%H%M%S")
 
 @task
-def getCaminhoSaida():
-    caminhoSaida = '.\\Saida'
-    criaCaminho(caminhoSaida)
-    return caminhoSaida
+def get_caminho_saida():
+    caminho_saida = '.\\Saida'
+    criaCaminho(caminho_saida)
+    return caminho_saida
 
 #Objetivo: Buscar um número determinado de linhas da API Randomuser em formato CSV
 #Parametro: número de linhas a retornar no dataframe
 #Retorno: Pandas dataframe
 @task
-def getData(linhas):
+def get_data(linhas):
     log("Buscando dados da API")
     linhas +=1 #para compensar o header
     url = "https://randomuser.me/api/?format=csv&nat=us,br,ca,fr,au&results="+str(linhas)
     #le da API e coloca na codificação UTF-8
-    meuDataframe = pd.read_csv(url, encoding='utf-8')
-    return meuDataframe
+    meu_dataframe = pd.read_csv(url, encoding='utf-8')
+    return meu_dataframe
 
 #Objetivo: Escrever arquivo com dados da API Randomuser
 #Parametro: Pandas dataframe
 #Retorno: nenhum
 @task
-def escreveResultado(meuDataframe,timestampArquivo):
+def escreve_resultado(meu_dataframe,timestamp_arquivo):
     log("Escrevendo no arquivo de saída")
     #grava um arquivo diferente a cada execução
-    meuDataframe.to_csv('.\\Saida\\'+timestampArquivo+".csv",sep=";",encoding='ansi')
+    meu_dataframe.to_csv('.\\Saida\\'+timestamp_arquivo+".csv",sep=";",encoding='ansi')
 
 #Objetivo: Converter numeros de celular
 #Parametro: Pandas dataframe
 #Retorno: Pandas dataframe
 @task
-def transformaCelulares(meuDataframe, coluna):
+def transforma_celulares(meu_dataframe, coluna):
     log("Transforma números de celular")
-    meuDataframe[coluna] = meuDataframe[coluna].apply(limpaNumero)
-    return meuDataframe
+    meu_dataframe[coluna] = meu_dataframe[coluna].apply(limpaNumero)
+    return meu_dataframe
 
 #Objetivo: Imprimir percentual de pessoas por pais e por genero
 #Parametro: Dataframe
 #Retorno: nenhum
 @task
-def gravaEstatisticas(meuDataframe, timestampArquivo):
+def grava_estatisticas(meu_dataframe, timestamp_arquivo):
     log("Grava estatísticas no arquivo")
     #calcula as porcentagens e formata a saída
-    porcentagemPaises = ((meuDataframe['location.country'].value_counts()/meuDataframe['location.country'].count())*100).map('{:,.2f}%'.format)
-    porcentagemGeneros = ((meuDataframe['gender'].value_counts()/meuDataframe['gender'].count())*100).map('{:,.2f}%'.format)
+    porcentagem_paises = ((meu_dataframe['location.country'].value_counts()/meu_dataframe['location.country'].count())*100).map('{:,.2f}%'.format)
+    porcentagem_generos = ((meu_dataframe['gender'].value_counts()/meu_dataframe['gender'].count())*100).map('{:,.2f}%'.format)
     #imprime os resultados no terminal para controle
     print("Distribuicao percentual por pais")
-    print(porcentagemPaises)
+    print(porcentagem_paises)
     print("\nDistribuicao percentual por genero")
-    print(porcentagemGeneros)
+    print(porcentagem_generos)
     #grava resultados em arquivo
-    f = open('.\\Saida\\'+timestampArquivo+'.txt', "a")
-    f.write(str(porcentagemPaises))
-    f.write(str(porcentagemGeneros))
-    f.close()
+    arquivo = open('.\\Saida\\'+timestamp_arquivo+'.txt', "a")
+    arquivo.write(str(porcentagem_paises))
+    arquivo.write(str(porcentagem_generos))
+    arquivo.close()
 
 #Objetivo: Exibir grafico de distribuição das idades
 #Parametro: Dataframe
 #Retorno: nenhum
 @task
-def plotaIdades(meuDataframe,timestampArquivo):
+def plota_idades(meu_dataframe,timestamp_arquivo):
     log("Criando gráfico de idades")
-    x = meuDataframe['dob.age']
-    y = meuDataframe['dob.age'].value_counts
-    plt.hist(x,100)
-    plt.savefig('.\\Saida\\'+timestampArquivo+".png")
+    valores_x = meu_dataframe['dob.age']
+    #y = meu_dataframe['dob.age'].value_counts
+    plt.hist(valores_x,100)
+    plt.savefig('.\\Saida\\'+timestamp_arquivo+".png")
 
 @task
-def criaPasta(caminhoSaida):
+def cria_pasta(caminho_saida):
     log("Cria pasta de sáida, caso ela não exista")
-    existe = os.path.exists(caminhoSaida)
+    existe = os.path.exists(caminho_saida)
     if not existe:
-        os.makedirs(caminhoSaida)
+        os.makedirs(caminho_saida)
+      
