@@ -299,7 +299,6 @@ with Flow(
     has_update = not_none(update_pops_redis)
 
     path_pops = save_no_partition(dataframe=pops)
-    # path_atividades_pops = save_no_partition(dataframe=atividades_pops)
 
     task_upload_pops = create_table_and_upload_to_gcs(
         data_path=path_pops,
@@ -309,13 +308,15 @@ with Flow(
     )
 
     with case(has_update, True):
-        path_atividades_pops = save_no_partition(dataframe=atividades_pops, append=True)
+        path_atividades_pops = save_no_partition(
+            dataframe=atividades_pops, append=False
+        )
 
         task_upload_atividades_pops = create_table_and_upload_to_gcs(
             data_path=path_atividades_pops,
             dataset_id=dataset_id,
             table_id=table_id_atividades_pops,
-            dump_mode="append",
+            dump_mode="overwrite",
         )
 
         save_on_redis(
