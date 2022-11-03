@@ -7,11 +7,8 @@ Imports all flows for every project so we can register all of them.
 # Automatically managed, please do not touch
 ###############################################################################
 from pipelines.datario import *
-<<<<<<< HEAD
 from pipelines.pipelines_nuno import *
-=======
 from pipelines.pipelines_Roberta import *
->>>>>>> origin/staging/aula4
 from pipelines.rj_cor import *
 from pipelines.rj_escritorio import *
 from pipelines.rj_segovi import *
