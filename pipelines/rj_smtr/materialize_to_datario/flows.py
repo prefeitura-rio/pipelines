@@ -29,7 +29,7 @@ smtr_materialize_to_datario_viagem_sppo_flow.storage = GCS(
 smtr_materialize_to_datario_viagem_sppo_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[
-        constants.RJ_DATARIO_DEV_AGENT_LABEL.value,  # TEST
+        constants.RJ_DATARIO_AGENT_LABEL.value,
     ],
 )
 
@@ -55,7 +55,7 @@ smtr_materialize_to_datario_daily_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.
 smtr_materialize_to_datario_daily_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[
-        constants.RJ_DATARIO_DEV_AGENT_LABEL.value,  # TEST
+        constants.RJ_DATARIO_AGENT_LABEL.value,
     ],
 )
 smtr_materialize_to_datario_daily_flow.schedule = (
