@@ -13,6 +13,9 @@ class constants(Enum):  # pylint: disable=c0103
 
     FLOW_EXECUTE_DBT_MODEL_NAME = "EMD: template - Executa DBT model"
     FLOW_DUMP_DB_NAME = "EMD: template - Ingerir tabela de banco SQL"
+    FLOW_DUMP_DB_FORMACAO_NAME = (
+        "EMD: template_formacao - Exemplo de ingerir tabela de banco SQL para formacao"
+    )
     FLOW_DUMP_DATARIO_NAME = "EMD: template - Ingerir tabela do data.rio"
     FLOW_DUMP_TO_GCS_NAME = "EMD: template - Ingerir tabela zipada para GCS"
     FLOW_DUMP_URL_NAME = "EMD: template - Ingerir tabela de URL"
