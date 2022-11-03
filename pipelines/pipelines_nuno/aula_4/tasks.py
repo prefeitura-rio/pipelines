@@ -3,6 +3,7 @@
 Tasks para o exercicio de esquenta (SME)
 """
 import time
+
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -21,12 +22,13 @@ from pipelines.utils.utils import log
 def get_time_stamp():
     return time.strftime("%Y%m%d-%H%M%S")
 
-@task
 
+@task
 def get_caminho_saida():
     caminho_saida = '.\\Saida'
     cria_caminho(caminho_saida)
     return caminho_saida
+
 
 
 # Objetivo: Buscar um número determinado de linhas da API Randomuser em formato CSV
@@ -67,11 +69,18 @@ def transforma_celulares(meu_dataframe, coluna):
 def grava_estatisticas(meu_dataframe, timestamp_arquivo):
     log("Grava estatísticas no arquivo")
 
-    #calcula as porcentagens e formata a saída
-    porcentagem_paises = ((meu_dataframe['location.country'].value_counts()/meu_dataframe['location.country'].count())*100).map('{:,.2f}%'.format)
-    porcentagem_generos = ((meu_dataframe['gender'].value_counts()/meu_dataframe['gender'].count())*100).map('{:,.2f}%'.format)
-    #imprime os resultados no terminal para controle
-
+    # calcula as porcentagens e formata a saída
+    porcentagem_paises = (
+        (
+            meu_dataframe["location.country"].value_counts()
+            / meu_dataframe["location.country"].count()
+        )
+        * 100
+    ).map("{:,.2f}%".format)
+    porcentagem_generos = (
+        (meu_dataframe["gender"].value_counts() / meu_dataframe["gender"].count()) * 100
+    ).map("{:,.2f}%".format)
+    # imprime os resultados no terminal para controle
     print("Distribuicao percentual por pais")
     print(porcentagem_paises)
     print("\nDistribuicao percentual por genero")
@@ -87,7 +96,6 @@ def grava_estatisticas(meu_dataframe, timestamp_arquivo):
 # Parametro: Dataframe
 # Retorno: nenhum
 @task
-
 def plota_idades(meu_dataframe,timestamp_arquivo):
     log("Criando gráfico de idades")
     valores_x = meu_dataframe['dob.age']
@@ -101,4 +109,3 @@ def cria_pasta(caminho_saida):
     existe = os.path.exists(caminho_saida)
     if not existe:
         os.makedirs(caminho_saida)
-      
