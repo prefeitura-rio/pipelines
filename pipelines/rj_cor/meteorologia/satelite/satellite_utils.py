@@ -128,6 +128,7 @@ def converte_timezone(datetime_save: str) -> str:
     Recebe o formato de data hora em 'YYYYMMDD HHmm' no UTC e
     retorna no mesmo formato no horário São Paulo
     """
+    log(f">>>>>>> {datetime_save}")
     datahora = pendulum.from_format(datetime_save, "YYYYMMDD HHmm")
     datahora = datahora.in_tz("America/Sao_Paulo")
     return datahora.format("YYYYMMDD HHmm")
@@ -143,7 +144,7 @@ def extract_julian_day_and_hour_from_filename(filename: str):
     Returns
     year (int): 2022 (20222901900203)
     julian_day (int): 290 (20222901900203)
-    hour_utc (int): 19 (20222901900203)
+    hour_utc (str): 1900 (20222901900203)
     """
     # Search for the Scan start in the file name
     start = filename[filename.find("_s") + 2 : filename.find("_e")]
@@ -153,7 +154,7 @@ def extract_julian_day_and_hour_from_filename(filename: str):
     julian_day = int(start[4:7])
 
     # Time (UTC) as string
-    hour_utc = int(start[7:11])
+    hour_utc = start[7:11]
 
     # Time of the start of the Scan
     # time = start[7:9] + ":" + start[9:11] + ":" + start[11:13] + " UTC"
@@ -189,7 +190,9 @@ def get_info(path: str) -> Tuple[dict, str]:
     year, julian_day, hour_utc = extract_julian_day_and_hour_from_filename(path)
 
     date_save = convert_julian_to_conventional_day(year, julian_day)
-
+    log(f">>>>>>>>>date_save {date_save}")
+    log(f">>>>>>>>> hour_utc {hour_utc}")
+    log(f">>>>>>>>>julian_day  {julian_day}")
     datetime_save = str(date_save) + " " + str(hour_utc)
 
     # Converte data/hora de UTC para horário de São Paulo
@@ -568,8 +571,9 @@ def save_data_in_file(
     data = data[["longitude", "latitude", variable.lower()]]
 
     # salva em csv
-    log(f"Saving on output_path {output_path}")
     filename = file_path.split("/")[-1].replace(".nc", "")
+    log(f"Saving {filename} on {parquet_path}")
+    log(f"Data_save: {date_save}, time_save: {time_save}")
     file_path = os.path.join(parquet_path, f"{filename}.csv")
     data.to_csv(file_path, index=False)
     return output_path

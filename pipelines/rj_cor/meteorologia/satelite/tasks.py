@@ -13,6 +13,8 @@ from typing import Union
 import numpy as np
 import pendulum
 from prefect import task
+from prefect.engine.signals import ENDRUN
+from prefect.engine.state import Skipped
 import s3fs
 
 from pipelines.rj_cor.meteorologia.satelite.satellite_utils import (
@@ -109,6 +111,12 @@ def download(
         )
         origem = "gcp"
 
+    # Skip task if there is no file on API
+    if len(path_files) == 0:
+        log("No available files on API")
+        skip = Skipped("No available files on API")
+        raise ENDRUN(state=skip)
+
     base_path = os.path.join(os.getcwd(), "data", "satelite", variavel[:-1], "input")
 
     if not os.path.exists(base_path):
@@ -130,15 +138,22 @@ def download(
 
     # keep the first file if it is not on redis
     path_files.sort()
+    download_file = None
     for path_file in path_files:
         filename = path_file.split("/")[-1]
         if filename not in redis_files:
-            log("\n\n[DEBUG]: file not in redis")
+            log(f"\n\n[DEBUG]: {filename} not in redis")
             redis_files.append(filename)
             path_filename = os.path.join(base_path, filename)
             download_file = path_file
             log(f"[DEBUG]: filename to be append on redis_files: {redis_files}")
             break
+
+    # Skip task if there is no new file
+    if download_file is None:
+        log("No new available files")
+        skip = Skipped("No new available files")
+        raise ENDRUN(state=skip)
 
     # Faz download da aws ou da gcp
     if origem == "aws":
@@ -150,10 +165,6 @@ def download(
             destination_file_name=path_filename,
             mode="prod",
         )
-
-    # Mantém últimos 20 arquivos salvos no redis
-    redis_files.sort()
-    redis_files = redis_files[-20:]
 
     return path_filename, redis_files
 
@@ -180,9 +191,3 @@ def save_data(info: dict, file_path: str) -> Union[str, Path]:
     print(f"Saving {variable} in parquet")
     output_path = save_data_in_file(variable, datetime_save, file_path)
     return output_path
-
-
-@task
-def checa_update(arg_1, arg_2):
-    """Check if there is any difference between two arguments"""
-    return arg_1 == arg_2
