@@ -10,7 +10,9 @@ from prefect.storage import GCS
 
 from pipelines.constants import constants
 
-from pipelines.rj_seop.dump_url_monitor_verde.schedules import gsheets_daily_update_schedule
+from pipelines.rj_seop.dump_url_monitor_verde.schedules import (
+    gsheets_daily_update_schedule,
+)
 from pipelines.utils.dump_url.flows import dump_url_flow
 from pipelines.utils.utils import set_default_parameters
 

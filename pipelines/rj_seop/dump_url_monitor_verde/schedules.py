@@ -22,7 +22,7 @@ gsheets_urls = {
         "dump_mode": "overwrite",
         "url": "https://drive.google.com/file/d/1PKBRaivrKNilRc4dBs-tZk03I6UHfdp8/view?usp=share_link",
         "url_type": "google_drive",
-        "materialize_after_dump": False
+        "materialize_after_dump": False,
     }
 }
 
