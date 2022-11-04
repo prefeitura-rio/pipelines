@@ -73,6 +73,7 @@ def list_vol_files(
     mode: str = &#34;prod&#34;,
     output_format: str = &#34;NetCDF&#34;,
     output_directory: str = &#34;/var/escritoriodedados/temp/&#34;,
+    vols_remote_directory: str = &#34;/var/opt/edge/vols&#34;,
 ) -&gt; Tuple[List[str], str]:
     &#34;&#34;&#34;
     List files from INEA server
@@ -150,12 +151,12 @@ def list_vol_files(
     log(&#34;Listing remote files...&#34;)
     if date:
         _, stdout, _ = ssh_client.exec_command(
-            f&#34;find /var/opt/edge/vols -name &#39;9921GUA{date}*.vol&#39;&#34;
+            f&#34;find {vols_remote_directory} -name &#39;9921GUA{date}*.vol&#39;&#34;
         )
         remote_files = stdout.read().decode(&#34;utf-8&#34;).splitlines()
     else:
         _, stdout, _ = ssh_client.exec_command(
-            &#34;find /var/opt/edge/vols -name &#39;9921GUA*.vol&#39;&#34;
+            f&#34;find {vols_remote_directory} -name &#39;9921GUA*.vol&#39;&#34;
         )
         all_files = stdout.read().decode(&#34;utf-8&#34;).splitlines()
         remote_files = [
@@ -468,7 +469,7 @@ def fetch_vol_file(
 </details>
 </dd>
 <dt id="pipelines.rj_escritorio.inea.tasks.list_vol_files"><code class="name flex">
-<span>def <span class="ident">list_vol_files</span></span>(<span>bucket_name: str, prefix: str, radar: str, product: str, date: str = None, greater_than: str = None, mode: str = 'prod', output_format: str = 'NetCDF', output_directory: str = '/var/escritoriodedados/temp/') ‑> Tuple[List[str], str]</span>
+<span>def <span class="ident">list_vol_files</span></span>(<span>bucket_name: str, prefix: str, radar: str, product: str, date: str = None, greater_than: str = None, mode: str = 'prod', output_format: str = 'NetCDF', output_directory: str = '/var/escritoriodedados/temp/', vols_remote_directory: str = '/var/opt/edge/vols') ‑> Tuple[List[str], str]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>List files from INEA server</p>
@@ -501,6 +502,7 @@ def list_vol_files(
     mode: str = &#34;prod&#34;,
     output_format: str = &#34;NetCDF&#34;,
     output_directory: str = &#34;/var/escritoriodedados/temp/&#34;,
+    vols_remote_directory: str = &#34;/var/opt/edge/vols&#34;,
 ) -&gt; Tuple[List[str], str]:
     &#34;&#34;&#34;
     List files from INEA server
@@ -578,12 +580,12 @@ def list_vol_files(
     log(&#34;Listing remote files...&#34;)
     if date:
         _, stdout, _ = ssh_client.exec_command(
-            f&#34;find /var/opt/edge/vols -name &#39;9921GUA{date}*.vol&#39;&#34;
+            f&#34;find {vols_remote_directory} -name &#39;9921GUA{date}*.vol&#39;&#34;
         )
         remote_files = stdout.read().decode(&#34;utf-8&#34;).splitlines()
     else:
         _, stdout, _ = ssh_client.exec_command(
-            &#34;find /var/opt/edge/vols -name &#39;9921GUA*.vol&#39;&#34;
+            f&#34;find {vols_remote_directory} -name &#39;9921GUA*.vol&#39;&#34;
         )
         all_files = stdout.read().decode(&#34;utf-8&#34;).splitlines()
         remote_files = [
