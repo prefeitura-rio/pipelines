@@ -12,6 +12,7 @@ from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks import (
+    get_scheduled_start_time,
     tratar_dados,
     salvar_dados,
 )
@@ -55,6 +56,7 @@ with Flow(
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
 
+    get_scheduled_start_time()
     dados, empty_data, current_time = tratar_dados(
         dataset_id=DATASET_ID, table_id=TABLE_ID
     )
