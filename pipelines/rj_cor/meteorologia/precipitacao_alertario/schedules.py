@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0103
 """
 Schedules for precipitacao_alertario
 Rodar a cada 5 minutos

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0103
 """
 Tasks for precipitacao_alertario
 """
@@ -9,22 +10,15 @@ from typing import Union, Tuple
 
 import numpy as np
 import pandas as pd
-import pandas_read_xml as pdx
 import pendulum
 from prefect import task
-from prefect import context
+import pandas_read_xml as pdx
+
+# from prefect import context
 
 from pipelines.constants import constants
 from pipelines.rj_cor.meteorologia.utils import save_updated_rows_on_redis
 from pipelines.utils.utils import log
-
-
-@task
-def get_scheduled_start_time():
-    """Get scheduled time"""
-    scheduled_start_time = context.get("scheduled_start_time")
-    log(f"[DEBUG] scheduled_start_time {scheduled_start_time}")
-    return scheduled_start_time
 
 
 @task(
