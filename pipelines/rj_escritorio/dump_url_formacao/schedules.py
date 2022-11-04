@@ -19,12 +19,20 @@ from pipelines.utils.utils import untuple_clocks as untuple
 
 
 gsheets_urls = {
-    "test_table": {
+    "test_table_1": {
         "dump_mode": "overwrite",
         "url": "https://docs.google.com/spreadsheets/d/1uF-Gt5AyZmxCQQEaebvWF4ddRHeVuL6ANuoaY_-uAXE\
             /edit#gid=0",
         "url_type": "google_sheet",
         "gsheets_sheet_name": "sheet_1",
+    },
+    "test_table_2": {
+        "dump_mode": "overwrite",
+        "url": "https://docs.google.com/spreadsheets/d/1uF-Gt5AyZmxCQQEaebvWF4ddRHeVuL6ANuoaY_-uAXE\
+            /edit#gid=0",
+        "url_type": "google_sheet",
+        "gsheets_sheet_name": "sheet_2",
+        "gsheets_sheet_range": "B3:D7",
     },
 }
 
