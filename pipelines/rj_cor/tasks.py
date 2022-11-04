@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# # pylint: disable=R0914,W0613,W0102
+# pylint: disable=R0914,W0613,W0102,R0913
 """
 Common  Tasks for rj-cor
 """
@@ -32,7 +32,12 @@ def get_on_redis(
 
 @task(trigger=all_successful)
 def save_on_redis(
-    dataset_id: str, table_id: str, mode: str = "prod", files: list = [], wait=None
+    dataset_id: str,
+    table_id: str,
+    mode: str = "prod",
+    files: list = [],
+    keep_last: int = 50,
+    wait=None,
 ) -> None:
     """
     Set the last updated time on Redis.
@@ -42,4 +47,5 @@ def save_on_redis(
     files = list(set(files))
     print(">>>> save on redis files ", files)
     files.sort()
+    files = files[-keep_last:]
     redis_client.set(key, files)

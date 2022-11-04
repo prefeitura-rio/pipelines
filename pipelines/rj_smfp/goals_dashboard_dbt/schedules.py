@@ -38,7 +38,7 @@ smfp_dashboard_metas_clocks = [
     IntervalClock(
         interval=timedelta(days=1),
         start_date=datetime(
-            2022, 10, 17, 17, 0, tzinfo=pytz.timezone("America/Sao_Paulo")
+            2021, 10, 24, 16, 0, tzinfo=pytz.timezone("America/Sao_Paulo")
         )
         + timedelta(minutes=3 * count),
         labels=[
