@@ -14,7 +14,7 @@ from pipelines.pipelines_nuno.aula_4.tasks import (
     escreve_resultado,
     transforma_celulares,
     grava_estatisticas,
-    plota_idades
+    plota_idades,
 )
 
 from pipelines.constants import constants
@@ -33,15 +33,15 @@ with Flow(
     numero_usuarios = Parameter("numero_usuarios", default=10)
     dataframe_original = get_data(numero_usuarios)
 
-    #formata os numeros de celular e de telefone fixo
-    dataframe_tratada = transforma_celulares(dataframe_original,'cell')
-    dataframe_tratada = transforma_celulares(dataframe_original,'phone')
+    # formata os numeros de celular e de telefone fixo
+    dataframe_tratada = transforma_celulares(dataframe_original, "cell")
+    dataframe_tratada = transforma_celulares(dataframe_original, "phone")
 
-    #Grava em arquivo CSV
+    # Grava em arquivo CSV
     escreve_resultado(dataframe_tratada, timestamp_arquivo)
-    plota_idades(dataframe_tratada,timestamp_arquivo)
+    plota_idades(dataframe_tratada, timestamp_arquivo)
 
-    #Imprime os calculos de porcentagem
+    # Imprime os calculos de porcentagem
     print(grava_estatisticas(dataframe_tratada, timestamp_arquivo))
 
 aula_4_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
