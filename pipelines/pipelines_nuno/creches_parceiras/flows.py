@@ -33,7 +33,7 @@ sme_default_parameters = {
     "db_port": "1433",
     "db_type": "sql_server",
     "vault_secret_path": "clustersqlsme",
-    "dataset_id": "educacao_basica",
+    "dataset_id": "educacao_basica_staging",
 }
 dump_sme_flow = set_default_parameters(
     dump_sme_flow, default_parameters=sme_default_parameters
