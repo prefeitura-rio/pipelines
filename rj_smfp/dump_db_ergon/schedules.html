@@ -165,6 +165,12 @@ ergon_queries = {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
         &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_VINCULOS&#34;,
     },
+    &#34;fichas_financeiras&#34;: {
+      &#34;materialize_after_dump&#34;: True,
+      &#34;materialization_mode&#34;: &#34;prod&#34;,
+      &#34;dump_mode&#34;: &#34;overwrite&#34;,
+      &#34;execute_query&#34;: &#34;SELECT * FROM ergon.fichas_financeiras limit 1000&#34;,
+  },
 }
 
 
