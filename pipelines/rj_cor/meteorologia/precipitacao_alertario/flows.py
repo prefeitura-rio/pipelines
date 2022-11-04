@@ -12,7 +12,6 @@ from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks import (
-    download,
     tratar_dados,
     salvar_dados,
 )
@@ -34,7 +33,7 @@ with Flow(
     ],
 ) as cor_meteorologia_precipitacao_alertario:
 
-    DATASET_ID = "meio_ambiente_clima"
+    DATASET_ID = "clima_pluviometro"
     TABLE_ID = "taxa_precipitacao_alertario"
     DUMP_MODE = "append"
 
@@ -56,9 +55,8 @@ with Flow(
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
 
-    filename, current_time = download()
-    dados, empty_data = tratar_dados(
-        filename=filename, dataset_id=DATASET_ID, table_id=TABLE_ID
+    dados, empty_data, current_time = tratar_dados(
+        dataset_id=DATASET_ID, table_id=TABLE_ID
     )
 
     # If dataframe is empty stop flow
