@@ -80,7 +80,7 @@ def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-l
 
         # Add remaining parameters if value is not None
         for key, value in parameters.items():
-            if value is not None and key not in ['interval']:
+            if value is not None and key not in ["interval"]:
                 parameter_defaults[key] = value
 
         new_interval = parameters["interval"] if "interval" in parameters else interval
