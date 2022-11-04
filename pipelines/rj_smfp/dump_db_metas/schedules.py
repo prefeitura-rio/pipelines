@@ -44,8 +44,12 @@ egp_web_queries = {
         "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.VW_NotaMeta;",
         "materialize_after_dump": True,
     },
+    "regra": {
+        "dump_mode": "overwrite",
+        "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.VW_RegraMeta;",
+        "materialize_after_dump": True,
+    },
 }
-
 
 egp_web_clocks = generate_dump_db_schedules(
     interval=timedelta(days=7),
