@@ -18,7 +18,6 @@ from pipelines.utils.utils import log
 # timestampArquivo = time.strftime("%Y%m%d-%H%M%S")
 # caminhoSaida = '.\\Saida'
 
-
 @task
 def get_time_stamp():
   return time.strftime("%Y%m%d-%H%M%S")
