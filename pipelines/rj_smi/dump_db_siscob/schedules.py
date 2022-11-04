@@ -20,35 +20,37 @@ from pipelines.utils.utils import untuple_clocks as untuple
 #####################################
 
 siscob_queries = {
-    # "obra": {
-    #     "materialize_after_dump": True,
-    #     "materialization_mode": "prod",
-    #     "dump_mode": "overwrite",
-    #     "execute_query": """
-    #         Select
-    #             CD_OBRA,
-    #             DS_TITULO,
-    #             ORGAO_CONTRATANTE,
-    #             ORGAO_EXECUTOR,
-    #             NR_PROCESSO,
-    #             OBJETO,
-    #             NM_FAVORECIDO,
-    #             CNPJ,
-    #             NR_LICITACAO,
-    #             MODALIDADE,
-    #             DT_ASS_CONTRATO,
-    #             DT_INICIO_OBRA,
-    #             DT_TERMINO_PREVISTO,
-    #             DT_TERMINO_ATUAL,
-    #             NR_CONTRATO,
-    #             AA_EXERCICIO,
-    #             SITUACAO,
-    #             VL_ORCADO_C_BDI,
-    #             VL_CONTRATADO,
-    #             VL_VIGENTE,
-    #             PC_MEDIDO
-    #         from dbo.fuSEGOVI_Dados_da_Obra();""",
-    # },
+    "obra": {
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "dump_mode": "overwrite",
+        "execute_query": """
+            Select 	
+                CD_OBRA,
+                DS_TITULO,
+                ORGAO_CONTRATANTE,
+                ORGAO_EXECUTOR,
+                NR_PROCESSO,
+                OBJETO,
+                NM_FAVORECIDO,
+                CNPJ,
+                NR_LICITACAO,
+                MODALIDADE,
+                DT_ASS_CONTRATO,
+                DT_INICIO_OBRA,
+                DT_TERMINO_PREVISTO,
+                DT_TERMINO_ATUAL,
+                NR_CONTRATO,
+                AA_EXERCICIO,
+                SITUACAO,
+                VL_ORCADO_C_BDI,
+                VL_CONTRATADO,
+                VL_VIGENTE,
+                PC_MEDIDO,
+                PRAZO_INICIAL
+            from dbo.fuSEGOVI_Dados_da_Obra();
+            """,
+    },
     "medicao": {
         "materialize_after_dump": True,
         "materialization_mode": "prod",
@@ -124,6 +126,22 @@ siscob_queries = {
                 DT_VALIDADE,
                 DS_OBSERVACAO
             from dbo.fuSEGOVI_Alteração_de_Cronograma();
+            """,
+    },
+    "programa_fonte": {
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "dump_mode": "overwrite",
+        "execute_query": """
+            Select 	
+                CD_OBRA,
+                CD_PRG_TRAB,
+                PROGRAMA_TRABALHO,
+                CD_FONTE_RECURSO,
+                FONTE_RECURSO,
+                CD_NATUREZA_DSP,
+                NATUREZA_DESPESA
+            from dbo.fuSEGOVI_Programa_Fonte();
             """,
     },
 }
