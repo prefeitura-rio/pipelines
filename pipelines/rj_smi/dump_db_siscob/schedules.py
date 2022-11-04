@@ -25,7 +25,7 @@ siscob_queries = {
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
-            Select 	
+            Select
                 CD_OBRA,
                 DS_TITULO,
                 ORGAO_CONTRATANTE,
@@ -133,7 +133,7 @@ siscob_queries = {
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
-            Select 	
+            Select
                 CD_OBRA,
                 CD_PRG_TRAB,
                 PROGRAMA_TRABALHO,
