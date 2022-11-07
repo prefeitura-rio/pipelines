@@ -109,7 +109,7 @@ def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-l
 
         # Add remaining parameters if value is not None
         for key, value in parameters.items():
-            if value is not None:
+            if value is not None and key not in [&#34;interval&#34;]:
                 parameter_defaults[key] = value
 
         new_interval = parameters[&#34;interval&#34;] if &#34;interval&#34; in parameters else interval
@@ -225,7 +225,7 @@ Creates the query without accents.</p></div>
 
         # Add remaining parameters if value is not None
         for key, value in parameters.items():
-            if value is not None:
+            if value is not None and key not in [&#34;interval&#34;]:
                 parameter_defaults[key] = value
 
         new_interval = parameters[&#34;interval&#34;] if &#34;interval&#34; in parameters else interval
