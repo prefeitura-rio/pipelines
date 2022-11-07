@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines API documentation</title>
-<meta name="description" content="Pipelines for all data projects on the Rio de Janeiro City Hall." />
+<title>pipelines.rj_smi.dump_db_siscob.schedules API documentation</title>
+<meta name="description" content="Schedules for the database dump pipeline" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,68 +19,181 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Package <code>pipelines</code></h1>
+<h1 class="title">Module <code>pipelines.rj_smi.dump_db_siscob.schedules</code></h1>
 </header>
 <section id="section-intro">
-<p>Pipelines for all data projects on the Rio de Janeiro City Hall.</p>
+<p>Schedules for the database dump pipeline</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Pipelines for all data projects on the Rio de Janeiro City Hall.
-&#34;&#34;&#34;</code></pre>
+Schedules for the database dump pipeline
+&#34;&#34;&#34;
+
+from datetime import timedelta, datetime
+
+from prefect.schedules import Schedule
+import pytz
+
+from pipelines.constants import constants
+from pipelines.utils.dump_db.utils import generate_dump_db_schedules
+from pipelines.utils.utils import untuple_clocks as untuple
+
+
+#####################################
+#
+# SISCOB Schedules
+#
+#####################################
+
+siscob_queries = {
+    &#34;obra&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;
+            Select
+                CD_OBRA,
+                DS_TITULO,
+                ORGAO_CONTRATANTE,
+                ORGAO_EXECUTOR,
+                NR_PROCESSO,
+                OBJETO,
+                NM_FAVORECIDO,
+                CNPJ,
+                NR_LICITACAO,
+                MODALIDADE,
+                DT_ASS_CONTRATO,
+                DT_INICIO_OBRA,
+                DT_TERMINO_PREVISTO,
+                DT_TERMINO_ATUAL,
+                NR_CONTRATO,
+                AA_EXERCICIO,
+                SITUACAO,
+                VL_ORCADO_C_BDI,
+                VL_CONTRATADO,
+                VL_VIGENTE,
+                PC_MEDIDO,
+                PRAZO_INICIAL
+            from dbo.fuSEGOVI_Dados_da_Obra();
+            &#34;&#34;&#34;,
+    },
+    &#34;medicao&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;
+            Select
+                CD_OBRA,
+                NR_MEDICAO,
+                CD_ETAPA,
+                TP_MEDICAO_D,
+                DT_INI_MEDICAO,
+                DT_FIM_MEDICAO,
+                VL_FINAL
+            from dbo.fuSEGOVI_Medicoes();
+            &#34;&#34;&#34;,
+    },
+    &#34;termo_aditivo&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;
+            Select
+                CD_OBRA,
+                NR_DO_TERMO,
+                TP_ACERTO,
+                DT_DO,
+                DT_AUTORIZACAO,
+                VL_ACERTO
+            from dbo.fuSEGOVI_Termos_Aditivos();
+            &#34;&#34;&#34;,
+    },
+    &#34;cronograma_financeiro&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;
+            Select
+                CD_OBRA,
+                ETAPA,
+                DT_INICIO_ETAPA,
+                DT_FIM_ETAPA,
+                PC_PERCENTUAL,
+                VL_ESTIMADO
+            from dbo.fuSEGOVI_Cronograma_Financeiro();
+            &#34;&#34;&#34;,
+    },
+    &#34;localizacao&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;
+            Select
+                CD_OBRA,
+                ENDERECO,
+                NM_BAIRRO,
+                NM_RA,
+                NM_AP
+            from dbo.fuSEGOVI_Localizacoes_obra();
+            &#34;&#34;&#34;,
+    },
+    &#34;cronograma_alteracao&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;
+            Select
+                CD_OBRA,
+                NR_PROCESSO,
+                TP_ALTERACAO,
+                DT_PUBL_DO,
+                CD_ETAPA,
+                NR_PRAZO,
+                DT_VALIDADE,
+                DS_OBSERVACAO
+            from dbo.fuSEGOVI_Alteração_de_Cronograma();
+            &#34;&#34;&#34;,
+    },
+    &#34;programa_fonte&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;
+            Select
+                CD_OBRA,
+                CD_PRG_TRAB,
+                PROGRAMA_TRABALHO,
+                CD_FONTE_RECURSO,
+                FONTE_RECURSO,
+                CD_NATUREZA_DSP,
+                NATUREZA_DESPESA
+            from dbo.fuSEGOVI_Programa_Fonte();
+            &#34;&#34;&#34;,
+    },
+}
+
+siscob_clocks = generate_dump_db_schedules(
+    interval=timedelta(days=7),
+    start_date=datetime(2022, 10, 2, 0, 0, tzinfo=pytz.timezone(&#34;America/Sao_Paulo&#34;)),
+    labels=[
+        constants.RJ_SMI_AGENT_LABEL.value,
+    ],
+    db_database=&#34;SISCOB200&#34;,
+    db_host=&#34;10.70.1.34&#34;,
+    db_port=&#34;1433&#34;,
+    db_type=&#34;sql_server&#34;,
+    dataset_id=&#34;infraestrutura_siscob_obras&#34;,
+    vault_secret_path=&#34;siscob&#34;,
+    table_parameters=siscob_queries,
+)
+
+siscob_update_schedule = Schedule(clocks=untuple(siscob_clocks))</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
-<dl>
-<dt><code class="name"><a title="pipelines.constants" href="constants.html">pipelines.constants</a></code></dt>
-<dd>
-<div class="desc"><p>Constants for all flows</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.datario" href="datario/index.html">pipelines.datario</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for datario project</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.flows" href="flows.html">pipelines.flows</a></code></dt>
-<dd>
-<div class="desc"><p>Imports all flows for every project so we can register all of them.</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_cor" href="rj_cor/index.html">pipelines.rj_cor</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for cor project</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio" href="rj_escritorio/index.html">pipelines.rj_escritorio</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for emd project</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_segovi" href="rj_segovi/index.html">pipelines.rj_segovi</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for segovi project</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_sme" href="rj_sme/index.html">pipelines.rj_sme</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for sme project</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smfp" href="rj_smfp/index.html">pipelines.rj_smfp</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for rj_smfp project</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smi" href="rj_smi/index.html">pipelines.rj_smi</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for rj_smi project</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr" href="rj_smtr/index.html">pipelines.rj_smtr</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for rj_smtr project</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.utils" href="utils/index.html">pipelines.utils</a></code></dt>
-<dd>
-<div class="desc"><p>Helper flows that could fit any pipeline.</p></div>
-</dd>
-</dl>
 </section>
 <section>
 </section>
@@ -124,7 +237,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -141,19 +254,9 @@ setTimeout(() => input.focus(), 100);
 <ul></ul>
 </div>
 <ul id="index">
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines.constants" href="constants.html">pipelines.constants</a></code></li>
-<li><code><a title="pipelines.datario" href="datario/index.html">pipelines.datario</a></code></li>
-<li><code><a title="pipelines.flows" href="flows.html">pipelines.flows</a></code></li>
-<li><code><a title="pipelines.rj_cor" href="rj_cor/index.html">pipelines.rj_cor</a></code></li>
-<li><code><a title="pipelines.rj_escritorio" href="rj_escritorio/index.html">pipelines.rj_escritorio</a></code></li>
-<li><code><a title="pipelines.rj_segovi" href="rj_segovi/index.html">pipelines.rj_segovi</a></code></li>
-<li><code><a title="pipelines.rj_sme" href="rj_sme/index.html">pipelines.rj_sme</a></code></li>
-<li><code><a title="pipelines.rj_smfp" href="rj_smfp/index.html">pipelines.rj_smfp</a></code></li>
-<li><code><a title="pipelines.rj_smi" href="rj_smi/index.html">pipelines.rj_smi</a></code></li>
-<li><code><a title="pipelines.rj_smtr" href="rj_smtr/index.html">pipelines.rj_smtr</a></code></li>
-<li><code><a title="pipelines.utils" href="utils/index.html">pipelines.utils</a></code></li>
+<li><code><a title="pipelines.rj_smi.dump_db_siscob" href="index.html">pipelines.rj_smi.dump_db_siscob</a></code></li>
 </ul>
 </li>
 </ul>
