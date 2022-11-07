@@ -36,7 +36,7 @@ gsheets_urls = {
     "sici": {
         "dump_mode": "overwrite",
         "url": "https://drive.google.com/file/d/1OMh3gClqA1KkIIBznAry29NR-UD__Z-b/view?usp=share_link",
-                "url_type": "google_drive",
+        "url_type": "google_drive",
         "materialize_after_dump": False,
         "dataset_id": "adm_processorio_sicop",
     },
@@ -47,7 +47,6 @@ gsheets_urls = {
         "materialize_after_dump": False,
         "dataset_id": "adm_processorio_sicop",
     },
-
 }
 
 
