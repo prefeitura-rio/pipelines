@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" 
+"""
 Database dumping flows for segovi processorio sicop
 """
 
