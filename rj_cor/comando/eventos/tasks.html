@@ -397,6 +397,12 @@ def save_no_partition(dataframe: pd.DataFrame, append: bool = False) -&gt; str:
     &#34;&#34;&#34;
     Saves a dataframe to a temporary directory and returns the path to the directory.
     &#34;&#34;&#34;
+
+    if &#34;sigla&#34; in dataframe.columns:
+        dataframe = dataframe.sort_values([&#34;id_pop&#34;, &#34;sigla&#34;, &#34;acao&#34;])
+    else:
+        dataframe = dataframe.sort_values(&#34;id_pop&#34;)
+
     path_to_directory = &#34;/tmp/&#34; + str(uuid4().hex) + &#34;/&#34;
     os.makedirs(path_to_directory, exist_ok=True)
     if append:
@@ -807,6 +813,12 @@ def save_no_partition(dataframe: pd.DataFrame, append: bool = False) -&gt; str:
     &#34;&#34;&#34;
     Saves a dataframe to a temporary directory and returns the path to the directory.
     &#34;&#34;&#34;
+
+    if &#34;sigla&#34; in dataframe.columns:
+        dataframe = dataframe.sort_values([&#34;id_pop&#34;, &#34;sigla&#34;, &#34;acao&#34;])
+    else:
+        dataframe = dataframe.sort_values(&#34;id_pop&#34;)
+
     path_to_directory = &#34;/tmp/&#34; + str(uuid4().hex) + &#34;/&#34;
     os.makedirs(path_to_directory, exist_ok=True)
     if append:
