@@ -33,7 +33,8 @@ segovi_processorio_sicop_default_parameters = {
     "dataset_id": "adm_processorio_sicop",
 }
 segovi_processorio_sicop_flow = set_default_parameters(
-    segovi_processorio_sicop_gsheets_flow, default_parameters=segovi_processorio_sicop_default_parameters
+    segovi_processorio_sicop_gsheets_flow,
+    default_parameters=segovi_processorio_sicop_default_parameters,
 )
 
 segovi_processorio_sicop_flow.schedule = gsheets_daily_update_schedule
