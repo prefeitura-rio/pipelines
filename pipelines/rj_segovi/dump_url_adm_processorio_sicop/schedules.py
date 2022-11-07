@@ -28,22 +28,26 @@ gsheets_urls = {
     },
     "assunto": {
         "dump_mode": "overwrite",
-        "url": "https://drive.google.com/file/d/1JCZhr8_Zww3jzF6xSzWG9WZcdLot0ZrS/view?usp=share_link": "google_drive",
+        "url": "https://drive.google.com/file/d/1JCZhr8_Zww3jzF6xSzWG9WZcdLot0ZrS/view?usp=share_link",
+        "url_type": "google_drive",
         "materialize_after_dump": False,
         "dataset_id": "adm_processorio_sicop",
     },
     "sici": {
         "dump_mode": "overwrite",
         "url": "https://drive.google.com/file/d/1OMh3gClqA1KkIIBznAry29NR-UD__Z-b/view?usp=share_link",
+                "url_type": "google_drive",
         "materialize_after_dump": False,
         "dataset_id": "adm_processorio_sicop",
     },
-     "codigo_sicop": {
+    "codigo_sicop": {
         "dump_mode": "overwrite",
         "url": "https://drive.google.com/file/d/1aQl9NNVeUCrAvXPP4e6zaFEp-YUDCPdX/view?usp=share_link",
+        "url_type": "google_drive",
         "materialize_after_dump": False,
         "dataset_id": "adm_processorio_sicop",
     },
+
 }
 
 
