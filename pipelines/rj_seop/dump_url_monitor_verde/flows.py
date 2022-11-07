@@ -17,7 +17,7 @@ from pipelines.utils.dump_url.flows import dump_url_flow
 from pipelines.utils.utils import set_default_parameters
 
 seop_gsheets_flow = deepcopy(dump_url_flow)
-seop_gsheets_flow.name = "SEOP: Google Sheets - Monitor Verde"
+seop_gsheets_flow.name = "SEOP: Monitor Verde - Ingerir CSV do Google Drive"
 seop_gsheets_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 seop_gsheets_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
