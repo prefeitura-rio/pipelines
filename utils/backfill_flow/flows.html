@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.utils.constants API documentation</title>
-<meta name="description" content="Constants for utils." />
+<title>pipelines.utils.backfill_flow.flows API documentation</title>
+<meta name="description" content="Backfill flow definition" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,35 +19,97 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.utils.constants</code></h1>
+<h1 class="title">Module <code>pipelines.utils.backfill_flow.flows</code></h1>
 </header>
 <section id="section-intro">
-<p>Constants for utils.</p>
+<p>Backfill flow definition</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Constants for utils.
+Backfill flow definition
 &#34;&#34;&#34;
 
-from enum import Enum
+from prefect import Parameter
+from prefect.run_configs import KubernetesRun
+from prefect.storage import GCS
+from prefect.utilities.edges import unmapped
+
+from pipelines.constants import constants
+from pipelines.utils.backfill_flow.tasks import (
+    create_timestamp_parameters,
+    launch_flow,
+    parse_datetime,
+    parse_duration,
+)
+from pipelines.utils.constants import constants as utils_constants
+from pipelines.utils.decorators import Flow
 
 
-class constants(Enum):  # pylint: disable=c0103
-    &#34;&#34;&#34;
-    Constants for utils.
-    &#34;&#34;&#34;
+with Flow(
+    name=utils_constants.FLOW_BACKFILL_NAME.value,
+    code_owners=[
+        &#34;gabriel&#34;,
+    ],
+) as backfill_flow_definition:
 
-    FLOW_BACKFILL_NAME = &#34;EMD: backfill - Faz o backfill de flows genéricos&#34;
-    FLOW_EXECUTE_DBT_MODEL_NAME = &#34;EMD: template - Executa DBT model&#34;
-    FLOW_DUMP_DB_NAME = &#34;EMD: template - Ingerir tabela de banco SQL&#34;
-    FLOW_DUMP_DATARIO_NAME = &#34;EMD: template - Ingerir tabela do data.rio&#34;
-    FLOW_DUMP_TO_GCS_NAME = &#34;EMD: template - Ingerir tabela zipada para GCS&#34;
-    FLOW_DUMP_URL_NAME = &#34;EMD: template - Ingerir tabela de URL&#34;
-    FLOW_PREDICT_NAME = &#34;EMD: template - Faz predição com modelo do MLflow&#34;
-    FLOW_SEND_WHATSAPP_MESSAGE_NAME = &#34;EMD: template - Enviar mensagem via Whatsapp Bot&#34;</code></pre>
+    # Parameters
+    agent_label = Parameter(&#34;agent_label&#34;)
+    backfill_end = Parameter(&#34;backfill_end&#34;)
+    backfill_interval = Parameter(&#34;backfill_interval&#34;, default={&#34;days&#34;: 1})
+    backfill_start = Parameter(&#34;backfill_start&#34;)
+    datetime_end_param = Parameter(&#34;datetime_end_param&#34;, default=None, required=False)
+    datetime_format = Parameter(&#34;datetime_format&#34;, default=&#34;YYYYMMDD&#34;)
+    datetime_start_param = Parameter(
+        &#34;datetime_start_param&#34;, default=None, required=False
+    )
+    fetch_flow_run_info_sleep_time = Parameter(
+        &#34;fetch_flow_run_info_sleep_time&#34;,
+        default=30,
+    )
+    flow_name = Parameter(&#34;flow_name&#34;)
+    flow_project = Parameter(&#34;flow_project&#34;, default=&#34;main&#34;)
+    help_name = Parameter(&#34;help_name&#34;, default=None, required=False)
+    parameter_defaults = Parameter(&#34;parameter_defaults&#34;, default=None, required=False)
+    reverse = Parameter(&#34;reverse&#34;, default=True)
+
+    # Parse inputs
+    backfill_start_datetime = parse_datetime(
+        datetime_string=backfill_start,
+    )
+    backfill_end_datetime = parse_datetime(
+        datetime_string=backfill_end,
+    )
+    backfill_interval_duration = parse_duration(
+        duration_dict=backfill_interval,
+    )
+
+    # Create timestamp parameters
+    timestamp_parameters = create_timestamp_parameters(
+        start=backfill_start_datetime,
+        end=backfill_end_datetime,
+        interval=backfill_interval_duration,
+        datetime_format=datetime_format,
+        reverse=reverse,
+    )
+
+    # Launch runs
+    launch_flow.map(
+        flow_name=unmapped(flow_name),
+        parameter=timestamp_parameters,
+        agent_label=unmapped(agent_label),
+        flow_project=unmapped(flow_project),
+        parameter_defaults=unmapped(parameter_defaults),
+        help_name=unmapped(help_name),
+        datetime_start_param=unmapped(datetime_start_param),
+        datetime_end_param=unmapped(datetime_end_param),
+        fetch_flow_run_info_sleep_time=unmapped(fetch_flow_run_info_sleep_time),
+    )
+
+backfill_flow_definition.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+backfill_flow_definition.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)</code></pre>
 </details>
 </section>
 <section>
@@ -57,73 +119,6 @@ class constants(Enum):  # pylint: disable=c0103
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-classes">Classes</h2>
-<dl>
-<dt id="pipelines.utils.constants.constants"><code class="flex name class">
-<span>class <span class="ident">constants</span></span>
-<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Constants for utils.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class constants(Enum):  # pylint: disable=c0103
-    &#34;&#34;&#34;
-    Constants for utils.
-    &#34;&#34;&#34;
-
-    FLOW_BACKFILL_NAME = &#34;EMD: backfill - Faz o backfill de flows genéricos&#34;
-    FLOW_EXECUTE_DBT_MODEL_NAME = &#34;EMD: template - Executa DBT model&#34;
-    FLOW_DUMP_DB_NAME = &#34;EMD: template - Ingerir tabela de banco SQL&#34;
-    FLOW_DUMP_DATARIO_NAME = &#34;EMD: template - Ingerir tabela do data.rio&#34;
-    FLOW_DUMP_TO_GCS_NAME = &#34;EMD: template - Ingerir tabela zipada para GCS&#34;
-    FLOW_DUMP_URL_NAME = &#34;EMD: template - Ingerir tabela de URL&#34;
-    FLOW_PREDICT_NAME = &#34;EMD: template - Faz predição com modelo do MLflow&#34;
-    FLOW_SEND_WHATSAPP_MESSAGE_NAME = &#34;EMD: template - Enviar mensagem via Whatsapp Bot&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>enum.Enum</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="pipelines.utils.constants.constants.FLOW_BACKFILL_NAME"><code class="name">var <span class="ident">FLOW_BACKFILL_NAME</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="pipelines.utils.constants.constants.FLOW_DUMP_DATARIO_NAME"><code class="name">var <span class="ident">FLOW_DUMP_DATARIO_NAME</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="pipelines.utils.constants.constants.FLOW_DUMP_DB_NAME"><code class="name">var <span class="ident">FLOW_DUMP_DB_NAME</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="pipelines.utils.constants.constants.FLOW_DUMP_TO_GCS_NAME"><code class="name">var <span class="ident">FLOW_DUMP_TO_GCS_NAME</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="pipelines.utils.constants.constants.FLOW_DUMP_URL_NAME"><code class="name">var <span class="ident">FLOW_DUMP_URL_NAME</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="pipelines.utils.constants.constants.FLOW_EXECUTE_DBT_MODEL_NAME"><code class="name">var <span class="ident">FLOW_EXECUTE_DBT_MODEL_NAME</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="pipelines.utils.constants.constants.FLOW_PREDICT_NAME"><code class="name">var <span class="ident">FLOW_PREDICT_NAME</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="pipelines.utils.constants.constants.FLOW_SEND_WHATSAPP_MESSAGE_NAME"><code class="name">var <span class="ident">FLOW_SEND_WHATSAPP_MESSAGE_NAME</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-</dd>
-</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -161,7 +156,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -180,24 +175,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines.utils" href="index.html">pipelines.utils</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-classes">Classes</a></h3>
-<ul>
-<li>
-<h4><code><a title="pipelines.utils.constants.constants" href="#pipelines.utils.constants.constants">constants</a></code></h4>
-<ul class="">
-<li><code><a title="pipelines.utils.constants.constants.FLOW_BACKFILL_NAME" href="#pipelines.utils.constants.constants.FLOW_BACKFILL_NAME">FLOW_BACKFILL_NAME</a></code></li>
-<li><code><a title="pipelines.utils.constants.constants.FLOW_DUMP_DATARIO_NAME" href="#pipelines.utils.constants.constants.FLOW_DUMP_DATARIO_NAME">FLOW_DUMP_DATARIO_NAME</a></code></li>
-<li><code><a title="pipelines.utils.constants.constants.FLOW_DUMP_DB_NAME" href="#pipelines.utils.constants.constants.FLOW_DUMP_DB_NAME">FLOW_DUMP_DB_NAME</a></code></li>
-<li><code><a title="pipelines.utils.constants.constants.FLOW_DUMP_TO_GCS_NAME" href="#pipelines.utils.constants.constants.FLOW_DUMP_TO_GCS_NAME">FLOW_DUMP_TO_GCS_NAME</a></code></li>
-<li><code><a title="pipelines.utils.constants.constants.FLOW_DUMP_URL_NAME" href="#pipelines.utils.constants.constants.FLOW_DUMP_URL_NAME">FLOW_DUMP_URL_NAME</a></code></li>
-<li><code><a title="pipelines.utils.constants.constants.FLOW_EXECUTE_DBT_MODEL_NAME" href="#pipelines.utils.constants.constants.FLOW_EXECUTE_DBT_MODEL_NAME">FLOW_EXECUTE_DBT_MODEL_NAME</a></code></li>
-<li><code><a title="pipelines.utils.constants.constants.FLOW_PREDICT_NAME" href="#pipelines.utils.constants.constants.FLOW_PREDICT_NAME">FLOW_PREDICT_NAME</a></code></li>
-<li><code><a title="pipelines.utils.constants.constants.FLOW_SEND_WHATSAPP_MESSAGE_NAME" href="#pipelines.utils.constants.constants.FLOW_SEND_WHATSAPP_MESSAGE_NAME">FLOW_SEND_WHATSAPP_MESSAGE_NAME</a></code></li>
-</ul>
-</li>
+<li><code><a title="pipelines.utils.backfill_flow" href="index.html">pipelines.utils.backfill_flow</a></code></li>
 </ul>
 </li>
 </ul>

@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>pipelines.utils.backfill_flow.tasks API documentation</title>
+<meta name="description" content="Tasks for the backfill flow" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pipelines.utils.backfill_flow.tasks</code></h1>
+</header>
+<section id="section-intro">
+<p>Tasks for the backfill flow</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># -*- coding: utf-8 -*-
+&#34;&#34;&#34;
+Tasks for the backfill flow
+&#34;&#34;&#34;
+
+from time import sleep
+from typing import Any, Dict
+
+import pendulum
+from prefect import Client, task
+from prefect.engine.state import State
+
+from pipelines.utils.utils import log, run_registered
+
+
+@task
+def create_timestamp_parameters(
+    start: pendulum.DateTime,
+    end: pendulum.DateTime,
+    interval: pendulum.Duration,
+    datetime_format: str = &#34;YYYY-MM-DD&#34;,
+    reverse: bool = False,
+):
+    &#34;&#34;&#34;
+    Create a list of parameters for a flow that takes timestamp parameters.
+
+    Args:
+        start: The start of the range of timestamps to generate
+        end: The end of the range of timestamps to generate
+        interval: The interval between timestamps
+        datetime_format: The format to use for the timestamps
+        reverse: Whether to reverse the order of the timestamps
+
+    Returns:
+        A list of parameters for a flow that takes timestamp parameters
+    &#34;&#34;&#34;
+    parameters = []
+    while start &lt; end:
+        this_end = start + interval
+        parameters.append(
+            {
+                &#34;start&#34;: start.format(datetime_format),
+                &#34;end&#34;: this_end.format(datetime_format),
+            }
+        )
+        start = this_end
+    if reverse:
+        parameters.reverse()
+    return parameters
+
+
+@task
+# pylint: disable=too-many-arguments
+def launch_flow(
+    flow_name: str,
+    parameter: Dict[str, Any],
+    agent_label: str,
+    flow_project: str = &#34;main&#34;,
+    parameter_defaults: Dict[str, Any] = None,
+    help_name: str = None,
+    datetime_start_param: str = None,
+    datetime_end_param: str = None,
+    fetch_flow_run_info_sleep_time: int = 30,
+    prefect_client: Client = None,
+):
+    &#34;&#34;&#34;
+    Launch a flow with the given parameters.
+
+    Args:
+        flow_name: The name of the flow to launch
+        parameter: The backfill parameters to use when launching the flow
+        agent_label: The agent label to use when launching the flow
+        flow_project: The project to use when launching the flow
+        parameter_defaults: The default parameters to use when launching the flow
+        help_name: A help name to use when setting the flow run name
+        datetime_start_param: The name of the start datetime parameter
+        datetime_end_param: The name of the end datetime parameter
+        fetch_flow_run_info_sleep_time: The time to sleep between fetching flow run info
+        prefect_client: The Prefect client to use
+
+    Returns:
+        None
+    &#34;&#34;&#34;
+
+    if parameter_defaults is None:
+        parameter_defaults = {}
+
+    if help_name is None:
+        help_name = flow_name
+
+    if prefect_client is None:
+        prefect_client = Client()
+
+    if datetime_start_param:
+        parameter_defaults[datetime_start_param] = parameter[&#34;start&#34;]
+
+    if datetime_end_param:
+        parameter_defaults[datetime_end_param] = parameter[&#34;end&#34;]
+
+    log(f&#34;Launching run for window {parameter[&#39;start&#39;]} to {parameter[&#39;end&#39;]}&#34;)
+
+    flow_run_id = run_registered(
+        flow_name=flow_name,
+        flow_project=flow_project,
+        labels=[agent_label],
+        parameters=parameter_defaults,
+        run_description=f&#34;Backfill - {help_name} - {parameter[&#39;start&#39;]} to {parameter[&#39;end&#39;]}&#34;,
+    )
+
+    state: State = prefect_client.get_flow_run_info(flow_run_id=flow_run_id).state
+
+    while not state.is_finished():
+        sleep(fetch_flow_run_info_sleep_time)
+        state = prefect_client.get_flow_run_info(flow_run_id=flow_run_id).state
+
+    if state.is_successful():
+        log(f&#34;Run for window {parameter[&#39;start&#39;]} to {parameter[&#39;end&#39;]} succeeded&#34;)
+    else:
+        log(
+            f&#34;Run for window {parameter[&#39;start&#39;]} to {parameter[&#39;end&#39;]} failed&#34;,
+            level=&#34;error&#34;,
+        )
+        raise Exception(
+            f&#34;Run for window {parameter[&#39;start&#39;]} to {parameter[&#39;end&#39;]} failed&#34;
+        )
+
+
+@task
+def parse_datetime(
+    datetime_string: str,
+    timezone: str = &#34;America/Sao_Paulo&#34;,
+) -&gt; pendulum.DateTime:
+    &#34;&#34;&#34;
+    Parse a datetime string.
+
+    Args:
+        datetime_string: The datetime string to parse
+        timezone: The timezone to use
+
+    Returns:
+        The parsed datetime
+    &#34;&#34;&#34;
+    return pendulum.parse(datetime_string, strict=False, tz=timezone)
+
+
+@task
+def parse_duration(
+    duration_dict: Dict[str, int],
+) -&gt; pendulum.Duration:
+    &#34;&#34;&#34;
+    Parse a duration dictionary.
+
+    Args:
+        duration_dict: The duration dictionary to parse
+
+    Returns:
+        The parsed duration
+    &#34;&#34;&#34;
+    return pendulum.duration(**duration_dict)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pipelines.utils.backfill_flow.tasks.create_timestamp_parameters"><code class="name flex">
+<span>def <span class="ident">create_timestamp_parameters</span></span>(<span>start: pendulum.datetime.DateTime, end: pendulum.datetime.DateTime, interval: pendulum.duration.Duration, datetime_format: str = 'YYYY-MM-DD', reverse: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create a list of parameters for a flow that takes timestamp parameters.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>start</code></strong></dt>
+<dd>The start of the range of timestamps to generate</dd>
+<dt><strong><code>end</code></strong></dt>
+<dd>The end of the range of timestamps to generate</dd>
+<dt><strong><code>interval</code></strong></dt>
+<dd>The interval between timestamps</dd>
+<dt><strong><code>datetime_format</code></strong></dt>
+<dd>The format to use for the timestamps</dd>
+<dt><strong><code>reverse</code></strong></dt>
+<dd>Whether to reverse the order of the timestamps</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A list of parameters for a flow that takes timestamp parameters</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def create_timestamp_parameters(
+    start: pendulum.DateTime,
+    end: pendulum.DateTime,
+    interval: pendulum.Duration,
+    datetime_format: str = &#34;YYYY-MM-DD&#34;,
+    reverse: bool = False,
+):
+    &#34;&#34;&#34;
+    Create a list of parameters for a flow that takes timestamp parameters.
+
+    Args:
+        start: The start of the range of timestamps to generate
+        end: The end of the range of timestamps to generate
+        interval: The interval between timestamps
+        datetime_format: The format to use for the timestamps
+        reverse: Whether to reverse the order of the timestamps
+
+    Returns:
+        A list of parameters for a flow that takes timestamp parameters
+    &#34;&#34;&#34;
+    parameters = []
+    while start &lt; end:
+        this_end = start + interval
+        parameters.append(
+            {
+                &#34;start&#34;: start.format(datetime_format),
+                &#34;end&#34;: this_end.format(datetime_format),
+            }
+        )
+        start = this_end
+    if reverse:
+        parameters.reverse()
+    return parameters</code></pre>
+</details>
+</dd>
+<dt id="pipelines.utils.backfill_flow.tasks.launch_flow"><code class="name flex">
+<span>def <span class="ident">launch_flow</span></span>(<span>flow_name: str, parameter: Dict[str, Any], agent_label: str, flow_project: str = 'main', parameter_defaults: Dict[str, Any] = None, help_name: str = None, datetime_start_param: str = None, datetime_end_param: str = None, fetch_flow_run_info_sleep_time: int = 30, prefect_client: prefect.client.client.Client = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Launch a flow with the given parameters.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>flow_name</code></strong></dt>
+<dd>The name of the flow to launch</dd>
+<dt><strong><code>parameter</code></strong></dt>
+<dd>The backfill parameters to use when launching the flow</dd>
+<dt><strong><code>agent_label</code></strong></dt>
+<dd>The agent label to use when launching the flow</dd>
+<dt><strong><code>flow_project</code></strong></dt>
+<dd>The project to use when launching the flow</dd>
+<dt><strong><code>parameter_defaults</code></strong></dt>
+<dd>The default parameters to use when launching the flow</dd>
+<dt><strong><code>help_name</code></strong></dt>
+<dd>A help name to use when setting the flow run name</dd>
+<dt><strong><code>datetime_start_param</code></strong></dt>
+<dd>The name of the start datetime parameter</dd>
+<dt><strong><code>datetime_end_param</code></strong></dt>
+<dd>The name of the end datetime parameter</dd>
+<dt><strong><code>fetch_flow_run_info_sleep_time</code></strong></dt>
+<dd>The time to sleep between fetching flow run info</dd>
+<dt><strong><code>prefect_client</code></strong></dt>
+<dd>The Prefect client to use</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+# pylint: disable=too-many-arguments
+def launch_flow(
+    flow_name: str,
+    parameter: Dict[str, Any],
+    agent_label: str,
+    flow_project: str = &#34;main&#34;,
+    parameter_defaults: Dict[str, Any] = None,
+    help_name: str = None,
+    datetime_start_param: str = None,
+    datetime_end_param: str = None,
+    fetch_flow_run_info_sleep_time: int = 30,
+    prefect_client: Client = None,
+):
+    &#34;&#34;&#34;
+    Launch a flow with the given parameters.
+
+    Args:
+        flow_name: The name of the flow to launch
+        parameter: The backfill parameters to use when launching the flow
+        agent_label: The agent label to use when launching the flow
+        flow_project: The project to use when launching the flow
+        parameter_defaults: The default parameters to use when launching the flow
+        help_name: A help name to use when setting the flow run name
+        datetime_start_param: The name of the start datetime parameter
+        datetime_end_param: The name of the end datetime parameter
+        fetch_flow_run_info_sleep_time: The time to sleep between fetching flow run info
+        prefect_client: The Prefect client to use
+
+    Returns:
+        None
+    &#34;&#34;&#34;
+
+    if parameter_defaults is None:
+        parameter_defaults = {}
+
+    if help_name is None:
+        help_name = flow_name
+
+    if prefect_client is None:
+        prefect_client = Client()
+
+    if datetime_start_param:
+        parameter_defaults[datetime_start_param] = parameter[&#34;start&#34;]
+
+    if datetime_end_param:
+        parameter_defaults[datetime_end_param] = parameter[&#34;end&#34;]
+
+    log(f&#34;Launching run for window {parameter[&#39;start&#39;]} to {parameter[&#39;end&#39;]}&#34;)
+
+    flow_run_id = run_registered(
+        flow_name=flow_name,
+        flow_project=flow_project,
+        labels=[agent_label],
+        parameters=parameter_defaults,
+        run_description=f&#34;Backfill - {help_name} - {parameter[&#39;start&#39;]} to {parameter[&#39;end&#39;]}&#34;,
+    )
+
+    state: State = prefect_client.get_flow_run_info(flow_run_id=flow_run_id).state
+
+    while not state.is_finished():
+        sleep(fetch_flow_run_info_sleep_time)
+        state = prefect_client.get_flow_run_info(flow_run_id=flow_run_id).state
+
+    if state.is_successful():
+        log(f&#34;Run for window {parameter[&#39;start&#39;]} to {parameter[&#39;end&#39;]} succeeded&#34;)
+    else:
+        log(
+            f&#34;Run for window {parameter[&#39;start&#39;]} to {parameter[&#39;end&#39;]} failed&#34;,
+            level=&#34;error&#34;,
+        )
+        raise Exception(
+            f&#34;Run for window {parameter[&#39;start&#39;]} to {parameter[&#39;end&#39;]} failed&#34;
+        )</code></pre>
+</details>
+</dd>
+<dt id="pipelines.utils.backfill_flow.tasks.parse_datetime"><code class="name flex">
+<span>def <span class="ident">parse_datetime</span></span>(<span>datetime_string: str, timezone: str = 'America/Sao_Paulo') ‑> pendulum.datetime.DateTime</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Parse a datetime string.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>datetime_string</code></strong></dt>
+<dd>The datetime string to parse</dd>
+<dt><strong><code>timezone</code></strong></dt>
+<dd>The timezone to use</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The parsed datetime</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def parse_datetime(
+    datetime_string: str,
+    timezone: str = &#34;America/Sao_Paulo&#34;,
+) -&gt; pendulum.DateTime:
+    &#34;&#34;&#34;
+    Parse a datetime string.
+
+    Args:
+        datetime_string: The datetime string to parse
+        timezone: The timezone to use
+
+    Returns:
+        The parsed datetime
+    &#34;&#34;&#34;
+    return pendulum.parse(datetime_string, strict=False, tz=timezone)</code></pre>
+</details>
+</dd>
+<dt id="pipelines.utils.backfill_flow.tasks.parse_duration"><code class="name flex">
+<span>def <span class="ident">parse_duration</span></span>(<span>duration_dict: Dict[str, int]) ‑> pendulum.duration.Duration</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Parse a duration dictionary.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>duration_dict</code></strong></dt>
+<dd>The duration dictionary to parse</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The parsed duration</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def parse_duration(
+    duration_dict: Dict[str, int],
+) -&gt; pendulum.Duration:
+    &#34;&#34;&#34;
+    Parse a duration dictionary.
+
+    Args:
+        duration_dict: The duration dictionary to parse
+
+    Returns:
+        The parsed duration
+    &#34;&#34;&#34;
+    return pendulum.duration(**duration_dict)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<form>
+<input id="lunr-search" name="q" placeholder="🔎 Search ..." aria-label="Search"
+disabled minlength="2">
+</form>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.css" integrity="sha512-j1u8eUJ4f23xPPxwOrLUPQaCD2dwzNqqmDDcWS4deWsMv2ohLqmXXuP3hU7g8TyzbMSakP/mMqoNBYWj8AEIFg==" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.js" integrity="sha512-plGUER9JkeEWPPqQBE4sdLqBoQug5Ap+BCGMc7bJ8BXkm+VVj6QzkpBz5Yv2yPkkq+cqg9IpkBaGCas6uDbW8g==" crossorigin></script>
+<style>
+.modal-dialog iframe {
+width: 100vw;
+height: calc(100vh - 80px);
+}
+@media screen and (min-width: 700px) {
+.modal-dialog iframe {
+width: 70vw;
+height: 80vh;
+}
+}
+.modal-dialog .tingle-modal-box {width: auto;}
+.modal-dialog .tingle-modal-box__content {padding: 0;}
+</style>
+<script>
+const input = document.getElementById('lunr-search');
+input.disabled = false;
+input.form.addEventListener('submit', (ev) => {
+ev.preventDefault();
+const url = new URL(window.location);
+url.searchParams.set('q', input.value);
+history.replaceState({}, null, url.toString());
+search(input.value);
+});
+const query = new URL(window.location).searchParams.get('q');
+if (query)
+search(query);
+function search(query) {
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
+new tingle.modal({
+cssClass: ['modal-dialog'],
+onClose: () => {
+const url = new URL(window.location);
+url.searchParams.delete('q');
+history.replaceState({}, null, url.toString());
+setTimeout(() => input.focus(), 100);
+}
+}).setContent('<iframe src="' + url + '"></iframe>').open();
+}
+</script>
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pipelines.utils.backfill_flow" href="index.html">pipelines.utils.backfill_flow</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pipelines.utils.backfill_flow.tasks.create_timestamp_parameters" href="#pipelines.utils.backfill_flow.tasks.create_timestamp_parameters">create_timestamp_parameters</a></code></li>
+<li><code><a title="pipelines.utils.backfill_flow.tasks.launch_flow" href="#pipelines.utils.backfill_flow.tasks.launch_flow">launch_flow</a></code></li>
+<li><code><a title="pipelines.utils.backfill_flow.tasks.parse_datetime" href="#pipelines.utils.backfill_flow.tasks.parse_datetime">parse_datetime</a></code></li>
+<li><code><a title="pipelines.utils.backfill_flow.tasks.parse_duration" href="#pipelines.utils.backfill_flow.tasks.parse_duration">parse_duration</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
