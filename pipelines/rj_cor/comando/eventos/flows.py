@@ -156,6 +156,11 @@ with Flow(
             run_name=f"Materialize {dataset_id}.{table_id_atividades_eventos}",
         )
 
+        eventos_materialization_flow.set_upstream(task_upload_eventos)
+        atividade_eventos_materialization_flow.set_upstream(
+            task_upload_atividade_eventos
+        )
+
         wait_for_eventos_materialization = wait_for_flow_run(
             eventos_materialization_flow,
             stream_states=True,
@@ -303,13 +308,15 @@ with Flow(
     )
 
     with case(has_update, True):
-        path_atividades_pops = save_no_partition(dataframe=atividades_pops, append=True)
+        path_atividades_pops = save_no_partition(
+            dataframe=atividades_pops, append=False
+        )
 
         task_upload_atividades_pops = create_table_and_upload_to_gcs(
             data_path=path_atividades_pops,
             dataset_id=dataset_id,
             table_id=table_id_atividades_pops,
-            dump_mode="append",
+            dump_mode="overwrite",
         )
 
         save_on_redis(
