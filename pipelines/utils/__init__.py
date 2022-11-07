@@ -2,6 +2,7 @@
 """
 Helper flows that could fit any pipeline.
 """
+from pipelines.utils.backfill_flow.flows import *
 from pipelines.utils.dump_datario.flows import *
 from pipelines.utils.dump_db.flows import *
 from pipelines.utils.dump_to_gcs.flows import *
