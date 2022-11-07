@@ -41,6 +41,8 @@ class constants(Enum):  # pylint: disable=c0103
 
     RJ_SMS_AGENT_LABEL = "rj-sms"
 
+    RJ_SMI_AGENT_LABEL = "rj-smi"
+
     RJ_SECONSERVA_AGENT_LABEL = "rj-seconserva"
 
     ######################################
