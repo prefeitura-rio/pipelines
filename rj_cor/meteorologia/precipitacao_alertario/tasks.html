@@ -28,137 +28,71 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
+# pylint: disable=C0103
 &#34;&#34;&#34;
 Tasks for precipitacao_alertario
 &#34;&#34;&#34;
 from datetime import timedelta
-import ftplib
 import os
 from pathlib import Path
-import socket
 from typing import Union, Tuple
 
 import numpy as np
 import pandas as pd
 import pendulum
 from prefect import task
+import pandas_read_xml as pdx
+
+# from prefect import context
 
 from pipelines.constants import constants
 from pipelines.rj_cor.meteorologia.utils import save_updated_rows_on_redis
-from pipelines.utils.utils import get_vault_secret, log
+from pipelines.utils.utils import log
 
 
 @task(
-    nout=2,
+    nout=3,
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def download() -&gt; Tuple[pd.DataFrame, str]:
-    &#34;&#34;&#34;
-    Faz o request e salva dados localmente
-    &#34;&#34;&#34;
-
-    # Acessar FTP Riomidia
-    dirname = &#34;/alertario/&#34;
-    filename = &#34;EstacoesMapa.txt&#34;
-
-    # Acessar username e password
-    dicionario = get_vault_secret(&#34;riomidia&#34;)
-    host = dicionario[&#34;data&#34;][&#34;host&#34;]
-    username = dicionario[&#34;data&#34;][&#34;username&#34;]
-    password = dicionario[&#34;data&#34;][&#34;password&#34;]
-
-    # Cria pasta para salvar arquivo de download
-    base_path = os.path.join(os.getcwd(), &#34;data&#34;, &#34;precipitacao_alertario&#34;, &#34;input&#34;)
-
-    if not os.path.exists(base_path):
-        os.makedirs(base_path)
-
-    save_on = os.path.join(base_path, filename)
-
-    try:
-        ftp = ftplib.FTP(host)
-    except (socket.error, socket.gaierror):
-        log(f&#34;ERROR: cannot reach {host}&#34;)
-        raise
-    log(f&#34;*** Connected to host {host}&#34;)
-
-    try:
-        ftp.login(username, password)
-    except ftplib.error_perm:
-        log(&#34;ERROR: cannot login&#34;)
-        ftp.quit()
-        raise
-    log(&#34;*** Logged in successfully&#34;)
-
-    try:
-        ftp.cwd(dirname)
-    except ftplib.error_perm:
-        log(f&#34;ERROR: cannot CD to {dirname}&#34;)
-        ftp.quit()
-        raise
-    log(f&#34;*** Changed to folder: {dirname}&#34;)
-
-    try:
-        with open(save_on, &#34;wb&#34;) as file:
-            log(&#34;Getting &#34; + filename)
-            ftp.retrbinary(&#34;RETR &#34; + filename, file.write)
-        log(f&#34;File downloaded to {save_on}&#34;)
-    except ftplib.error_perm:
-        log(f&#34;ERROR: cannot read file {filename}&#34;)
-        raise
-
-    ftp.quit()
-
-    # Hora atual no formato YYYYMMDDHHmm para criar partições
-    current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y%m%d%H%M&#34;)
-
-    return save_on, current_time
-
-
-@task(nout=2)
-def tratar_dados(
-    filename: Union[str, Path], dataset_id: str, table_id: str
-) -&gt; Tuple[pd.DataFrame, bool]:
+def tratar_dados(dataset_id: str, table_id: str) -&gt; Tuple[pd.DataFrame, bool]:
     &#34;&#34;&#34;
     Renomeia colunas e filtra dados com a hora e minuto do timestamp
     de execução mais próximo à este
     &#34;&#34;&#34;
 
-    colunas = [
-        &#34;id_estacao&#34;,
-        &#34;estacao&#34;,
-        &#34;localizacao&#34;,
-        &#34;data_medicao&#34;,
-        &#34;latitude&#34;,
-        &#34;longitude&#34;,
-        &#34;acumulado_chuva_15_min&#34;,
-        &#34;acumulado_chuva_1_h&#34;,
-        &#34;acumulado_chuva_4_h&#34;,
-        &#34;acumulado_chuva_24_h&#34;,
-        &#34;acumulado_chuva_96_h&#34;,
-        &#34;acumulado_chuva_mes&#34;,
+    # Hora atual no formato YYYYMMDDHHmm para criar partições
+    current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y%m%d%H%M&#34;)
+
+    url = &#34;http://alertario.rio.rj.gov.br/upload/xml/Chuvas.xml&#34;
+    dados = pdx.read_xml(url, [&#34;estacoes&#34;])
+    dados = pdx.fully_flatten(dados)
+
+    drop_cols = [
+        &#34;@hora&#34;,
+        &#34;estacao|@nome&#34;,
+        &#34;estacao|@type&#34;,
+        &#34;estacao|localizacao|@bacia&#34;,
+        &#34;estacao|localizacao|@latitude&#34;,
+        &#34;estacao|localizacao|@longitude&#34;,
     ]
+    rename_cols = {
+        &#34;estacao|@id&#34;: &#34;id_estacao&#34;,
+        &#34;estacao|chuvas|@h01&#34;: &#34;acumulado_chuva_1_h&#34;,
+        &#34;estacao|chuvas|@h04&#34;: &#34;acumulado_chuva_4_h&#34;,
+        &#34;estacao|chuvas|@h24&#34;: &#34;acumulado_chuva_24_h&#34;,
+        &#34;estacao|chuvas|@h96&#34;: &#34;acumulado_chuva_96_h&#34;,
+        &#34;estacao|chuvas|@hora&#34;: &#34;data_medicao_utc&#34;,
+        &#34;estacao|chuvas|@m15&#34;: &#34;acumulado_chuva_15_min&#34;,
+        &#34;estacao|chuvas|@mes&#34;: &#34;acumulado_chuva_mes&#34;,
+    }
 
-    dados = pd.read_csv(filename, skiprows=1, sep=&#34;;&#34;, names=colunas, decimal=&#34;,&#34;)
+    dados = pdx.fully_flatten(dados).drop(drop_cols, axis=1).rename(rename_cols, axis=1)
+    log(f&#34;\n[DEBUG]: df.head() {dados.head()}&#34;)
 
-    # Adequando formato de data
-    dados[&#34;data_medicao&#34;] = pd.to_datetime(
-        dados[&#34;data_medicao&#34;], format=&#34;%H:%M - %d/%m/%Y&#34;
-    )
-
-    # Ordenação de variáveis
-    cols_order = [
-        &#34;data_medicao&#34;,
-        &#34;id_estacao&#34;,
-        &#34;acumulado_chuva_15_min&#34;,
-        &#34;acumulado_chuva_1_h&#34;,
-        &#34;acumulado_chuva_4_h&#34;,
-        &#34;acumulado_chuva_24_h&#34;,
-        &#34;acumulado_chuva_96_h&#34;,
-    ]
-
-    dados = dados[cols_order]
+    # Converte de UTC para horário São Paulo
+    dados[&#34;data_medicao_utc&#34;] = pd.to_datetime(dados[&#34;data_medicao_utc&#34;])
+    dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao_utc&#34;].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
 
     # Alterando valores ND, &#39;-&#39; e np.nan para NULL
     dados.replace([&#34;ND&#34;, &#34;-&#34;, np.nan], [None, None, None], inplace=True)
@@ -173,7 +107,7 @@ def tratar_dados(
     ]
     dados[float_cols] = dados[float_cols].apply(pd.to_numeric, errors=&#34;coerce&#34;)
 
-    # Altera valores negativos para 0
+    # Altera valores negativos para None
     dados[float_cols] = np.where(dados[float_cols] &lt; 0, None, dados[float_cols])
 
     # Elimina linhas em que o id_estacao é igual mantendo a de menor valor nas colunas float
@@ -202,8 +136,9 @@ def tratar_dados(
 
     # If df is empty stop flow
     empty_data = dados.shape[0] == 0
+    log(f&#34;[DEBUG]: dataframe is empty: {empty_data}&#34;)
 
-    return dados, empty_data
+    return dados, empty_data, current_time
 
 
 @task
@@ -238,83 +173,6 @@ def salvar_dados(dados: pd.DataFrame, current_time: str) -&gt; Union[str, Path]:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.download"><code class="name flex">
-<span>def <span class="ident">download</span></span>(<span>) ‑> Tuple[pandas.core.frame.DataFrame, str]</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Faz o request e salva dados localmente</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task(
-    nout=2,
-    max_retries=constants.TASK_MAX_RETRIES.value,
-    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
-)
-def download() -&gt; Tuple[pd.DataFrame, str]:
-    &#34;&#34;&#34;
-    Faz o request e salva dados localmente
-    &#34;&#34;&#34;
-
-    # Acessar FTP Riomidia
-    dirname = &#34;/alertario/&#34;
-    filename = &#34;EstacoesMapa.txt&#34;
-
-    # Acessar username e password
-    dicionario = get_vault_secret(&#34;riomidia&#34;)
-    host = dicionario[&#34;data&#34;][&#34;host&#34;]
-    username = dicionario[&#34;data&#34;][&#34;username&#34;]
-    password = dicionario[&#34;data&#34;][&#34;password&#34;]
-
-    # Cria pasta para salvar arquivo de download
-    base_path = os.path.join(os.getcwd(), &#34;data&#34;, &#34;precipitacao_alertario&#34;, &#34;input&#34;)
-
-    if not os.path.exists(base_path):
-        os.makedirs(base_path)
-
-    save_on = os.path.join(base_path, filename)
-
-    try:
-        ftp = ftplib.FTP(host)
-    except (socket.error, socket.gaierror):
-        log(f&#34;ERROR: cannot reach {host}&#34;)
-        raise
-    log(f&#34;*** Connected to host {host}&#34;)
-
-    try:
-        ftp.login(username, password)
-    except ftplib.error_perm:
-        log(&#34;ERROR: cannot login&#34;)
-        ftp.quit()
-        raise
-    log(&#34;*** Logged in successfully&#34;)
-
-    try:
-        ftp.cwd(dirname)
-    except ftplib.error_perm:
-        log(f&#34;ERROR: cannot CD to {dirname}&#34;)
-        ftp.quit()
-        raise
-    log(f&#34;*** Changed to folder: {dirname}&#34;)
-
-    try:
-        with open(save_on, &#34;wb&#34;) as file:
-            log(&#34;Getting &#34; + filename)
-            ftp.retrbinary(&#34;RETR &#34; + filename, file.write)
-        log(f&#34;File downloaded to {save_on}&#34;)
-    except ftplib.error_perm:
-        log(f&#34;ERROR: cannot read file {filename}&#34;)
-        raise
-
-    ftp.quit()
-
-    # Hora atual no formato YYYYMMDDHHmm para criar partições
-    current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y%m%d%H%M&#34;)
-
-    return save_on, current_time</code></pre>
-</details>
-</dd>
 <dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.salvar_dados"><code class="name flex">
 <span>def <span class="ident">salvar_dados</span></span>(<span>dados: pandas.core.frame.DataFrame, current_time: str) ‑> Union[str, pathlib.Path]</span>
 </code></dt>
@@ -350,7 +208,7 @@ def salvar_dados(dados: pd.DataFrame, current_time: str) -&gt; Union[str, Path]:
 </details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.tratar_dados"><code class="name flex">
-<span>def <span class="ident">tratar_dados</span></span>(<span>filename: Union[str, pathlib.Path], dataset_id: str, table_id: str) ‑> Tuple[pandas.core.frame.DataFrame, bool]</span>
+<span>def <span class="ident">tratar_dados</span></span>(<span>dataset_id: str, table_id: str) ‑> Tuple[pandas.core.frame.DataFrame, bool]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Renomeia colunas e filtra dados com a hora e minuto do timestamp
@@ -359,49 +217,49 @@ de execução mais próximo à este</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@task(nout=2)
-def tratar_dados(
-    filename: Union[str, Path], dataset_id: str, table_id: str
-) -&gt; Tuple[pd.DataFrame, bool]:
+<pre><code class="python">@task(
+    nout=3,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def tratar_dados(dataset_id: str, table_id: str) -&gt; Tuple[pd.DataFrame, bool]:
     &#34;&#34;&#34;
     Renomeia colunas e filtra dados com a hora e minuto do timestamp
     de execução mais próximo à este
     &#34;&#34;&#34;
 
-    colunas = [
-        &#34;id_estacao&#34;,
-        &#34;estacao&#34;,
-        &#34;localizacao&#34;,
-        &#34;data_medicao&#34;,
-        &#34;latitude&#34;,
-        &#34;longitude&#34;,
-        &#34;acumulado_chuva_15_min&#34;,
-        &#34;acumulado_chuva_1_h&#34;,
-        &#34;acumulado_chuva_4_h&#34;,
-        &#34;acumulado_chuva_24_h&#34;,
-        &#34;acumulado_chuva_96_h&#34;,
-        &#34;acumulado_chuva_mes&#34;,
+    # Hora atual no formato YYYYMMDDHHmm para criar partições
+    current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y%m%d%H%M&#34;)
+
+    url = &#34;http://alertario.rio.rj.gov.br/upload/xml/Chuvas.xml&#34;
+    dados = pdx.read_xml(url, [&#34;estacoes&#34;])
+    dados = pdx.fully_flatten(dados)
+
+    drop_cols = [
+        &#34;@hora&#34;,
+        &#34;estacao|@nome&#34;,
+        &#34;estacao|@type&#34;,
+        &#34;estacao|localizacao|@bacia&#34;,
+        &#34;estacao|localizacao|@latitude&#34;,
+        &#34;estacao|localizacao|@longitude&#34;,
     ]
+    rename_cols = {
+        &#34;estacao|@id&#34;: &#34;id_estacao&#34;,
+        &#34;estacao|chuvas|@h01&#34;: &#34;acumulado_chuva_1_h&#34;,
+        &#34;estacao|chuvas|@h04&#34;: &#34;acumulado_chuva_4_h&#34;,
+        &#34;estacao|chuvas|@h24&#34;: &#34;acumulado_chuva_24_h&#34;,
+        &#34;estacao|chuvas|@h96&#34;: &#34;acumulado_chuva_96_h&#34;,
+        &#34;estacao|chuvas|@hora&#34;: &#34;data_medicao_utc&#34;,
+        &#34;estacao|chuvas|@m15&#34;: &#34;acumulado_chuva_15_min&#34;,
+        &#34;estacao|chuvas|@mes&#34;: &#34;acumulado_chuva_mes&#34;,
+    }
 
-    dados = pd.read_csv(filename, skiprows=1, sep=&#34;;&#34;, names=colunas, decimal=&#34;,&#34;)
+    dados = pdx.fully_flatten(dados).drop(drop_cols, axis=1).rename(rename_cols, axis=1)
+    log(f&#34;\n[DEBUG]: df.head() {dados.head()}&#34;)
 
-    # Adequando formato de data
-    dados[&#34;data_medicao&#34;] = pd.to_datetime(
-        dados[&#34;data_medicao&#34;], format=&#34;%H:%M - %d/%m/%Y&#34;
-    )
-
-    # Ordenação de variáveis
-    cols_order = [
-        &#34;data_medicao&#34;,
-        &#34;id_estacao&#34;,
-        &#34;acumulado_chuva_15_min&#34;,
-        &#34;acumulado_chuva_1_h&#34;,
-        &#34;acumulado_chuva_4_h&#34;,
-        &#34;acumulado_chuva_24_h&#34;,
-        &#34;acumulado_chuva_96_h&#34;,
-    ]
-
-    dados = dados[cols_order]
+    # Converte de UTC para horário São Paulo
+    dados[&#34;data_medicao_utc&#34;] = pd.to_datetime(dados[&#34;data_medicao_utc&#34;])
+    dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao_utc&#34;].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
 
     # Alterando valores ND, &#39;-&#39; e np.nan para NULL
     dados.replace([&#34;ND&#34;, &#34;-&#34;, np.nan], [None, None, None], inplace=True)
@@ -416,7 +274,7 @@ def tratar_dados(
     ]
     dados[float_cols] = dados[float_cols].apply(pd.to_numeric, errors=&#34;coerce&#34;)
 
-    # Altera valores negativos para 0
+    # Altera valores negativos para None
     dados[float_cols] = np.where(dados[float_cols] &lt; 0, None, dados[float_cols])
 
     # Elimina linhas em que o id_estacao é igual mantendo a de menor valor nas colunas float
@@ -445,8 +303,9 @@ def tratar_dados(
 
     # If df is empty stop flow
     empty_data = dados.shape[0] == 0
+    log(f&#34;[DEBUG]: dataframe is empty: {empty_data}&#34;)
 
-    return dados, empty_data</code></pre>
+    return dados, empty_data, current_time</code></pre>
 </details>
 </dd>
 </dl>
@@ -513,7 +372,6 @@ setTimeout(() => input.focus(), 100);
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.download" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.download">download</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.salvar_dados" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.salvar_dados">salvar_dados</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.tratar_dados" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.tratar_dados">tratar_dados</a></code></li>
 </ul>
