@@ -29,11 +29,11 @@ dump_ergon_flow.run_config = KubernetesRun(
 
 ergon_default_parameters = {
     "db_database": "P01.PCRJ",
-    "db_host": "10.70.6.22",
-    "db_port": "1521",
+    "db_host": "10.70.6.21",
+    "db_port": "1526",
     "db_type": "oracle",
-    "vault_secret_path": "ergon-hom",
-    "dataset_id": "administracao_recursos_humanos_folha_salarial",
+    "vault_secret_path": "ergon-prod",
+    "dataset_id": "recursos_humanos_ergon",
 }
 dump_ergon_flow = set_default_parameters(
     dump_ergon_flow, default_parameters=ergon_default_parameters
