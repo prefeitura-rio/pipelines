@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Database dumping flows for segovi processorio sicop
+Database dumping flows for segovi processorio sicop 
 """
 
 from copy import deepcopy
@@ -17,7 +17,7 @@ from pipelines.utils.utils import set_default_parameters
 
 segovi_processorio_sicop_gsheets_flow = deepcopy(dump_url_flow)
 segovi_processorio_sicop_gsheets_flow.name = (
-    "SEGOVI: Processo.rio|SICOP - Ingerir tabelas do Google Drive"
+    "SEGOVI: Processo.rio-SICOP - Ingerir tabelas do Google Drive"
 )
 segovi_processorio_sicop_gsheets_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 segovi_processorio_sicop_gsheets_flow.run_config = KubernetesRun(
