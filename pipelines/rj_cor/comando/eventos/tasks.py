@@ -368,6 +368,12 @@ def save_no_partition(dataframe: pd.DataFrame, append: bool = False) -> str:
     """
     Saves a dataframe to a temporary directory and returns the path to the directory.
     """
+
+    if "sigla" in dataframe.columns:
+        dataframe = dataframe.sort_values(["id_pop", "sigla", "acao"])
+    else:
+        dataframe = dataframe.sort_values("id_pop")
+
     path_to_directory = "/tmp/" + str(uuid4().hex) + "/"
     os.makedirs(path_to_directory, exist_ok=True)
     if append:
