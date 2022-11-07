@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_smfp.dump_db_ergon.schedules API documentation</title>
-<meta name="description" content="Schedules for the database dump pipeline" />
+<title>pipelines.rj_escritorio.logs.flows API documentation</title>
+<meta name="description" content="Flow definition for daily logs materialization." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,177 +19,50 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_smfp.dump_db_ergon.schedules</code></h1>
+<h1 class="title">Module <code>pipelines.rj_escritorio.logs.flows</code></h1>
 </header>
 <section id="section-intro">
-<p>Schedules for the database dump pipeline</p>
+<p>Flow definition for daily logs materialization.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Schedules for the database dump pipeline
+Flow definition for daily logs materialization.
 &#34;&#34;&#34;
 
-from datetime import timedelta, datetime
+from copy import deepcopy
 
-from prefect.schedules import Schedule
-import pytz
+from prefect.run_configs import KubernetesRun
+from prefect.storage import GCS
 
 from pipelines.constants import constants
-from pipelines.utils.dump_db.utils import generate_dump_db_schedules
-from pipelines.utils.utils import untuple_clocks as untuple
 
+from pipelines.rj_escritorio.logs.schedules import daily_at_4am
+from pipelines.utils.execute_dbt_model.flows import utils_run_dbt_model_flow
+from pipelines.utils.utils import set_default_parameters
 
-#####################################
-#
-# Ergon Schedules
-#
-#####################################
-
-ergon_queries = {
-    &#34;cargo&#34;: {
-        &#34;materialize_after_dump&#34;: True,
-        &#34;materialization_mode&#34;: &#34;prod&#34;,
-        &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_CARGOS_&#34;,
-    },
-    &#34;categoria&#34;: {
-        &#34;materialize_after_dump&#34;: True,
-        &#34;materialization_mode&#34;: &#34;prod&#34;,
-        &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_CATEGORIAS_&#34;,
-    },
-    &#34;empresa&#34;: {
-        &#34;materialize_after_dump&#34;: True,
-        &#34;materialization_mode&#34;: &#34;prod&#34;,
-        &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_EMPRESAS&#34;,
-    },
-    &#34;matricula&#34;: {
-        &#34;materialize_after_dump&#34;: True,
-        &#34;materialization_mode&#34;: &#34;prod&#34;,
-        &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_ERG_MATRICULAS&#34;,
-    },
-    &#34;fita_banco&#34;: {
-        &#34;materialize_after_dump&#34;: True,
-        &#34;materialization_mode&#34;: &#34;prod&#34;,
-        &#34;partition_columns&#34;: &#34;MES_ANO&#34;,
-        &#34;dump_mode&#34;: &#34;append&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_FITA_BANCO&#34;,
-    },
-    &#34;folha_empresa&#34;: {
-        &#34;materialize_after_dump&#34;: True,
-        &#34;materialization_mode&#34;: &#34;prod&#34;,
-        &#34;partition_columns&#34;: &#34;MES_ANO&#34;,
-        &#34;dump_mode&#34;: &#34;append&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_FOLHAS_EMP&#34;,
-    },
-    &#34;forma_provimento&#34;: {
-        &#34;materialize_after_dump&#34;: True,
-        &#34;materialization_mode&#34;: &#34;prod&#34;,
-        &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_FORMAS_PROV_&#34;,
-    },
-    &#34;funcionario&#34;: {
-        &#34;materialize_after_dump&#34;: True,
-        &#34;materialization_mode&#34;: &#34;prod&#34;,
-        &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_FUNCIONARIOS&#34;,
-    },
-    &#34;horario_trabalho&#34;: {
-        &#34;materialize_after_dump&#34;: True,
-        &#34;materialization_mode&#34;: &#34;prod&#34;,
-        &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_HORARIO_TRAB_&#34;,
-    },
-    &#34;setor&#34;: {
-        &#34;materialize_after_dump&#34;: True,
-        &#34;materialization_mode&#34;: &#34;prod&#34;,
-        &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_HSETOR_&#34;,
-    },
-    &#34;jornada&#34;: {
-        &#34;materialize_after_dump&#34;: True,
-        &#34;materialization_mode&#34;: &#34;prod&#34;,
-        &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_JORNADAS_&#34;,
-    },
-    &#34;orgaos_externos&#34;: {
-        &#34;materialize_after_dump&#34;: True,
-        &#34;materialization_mode&#34;: &#34;prod&#34;,
-        &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_ORGAOS_EXTERNOS&#34;,
-    },
-    &#34;orgaos_regime_juridico&#34;: {
-        &#34;materialize_after_dump&#34;: True,
-        &#34;materialization_mode&#34;: &#34;prod&#34;,
-        &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_ORGAOS_REGIMES_JUR_&#34;,
-    },
-    &#34;provimento&#34;: {
-        &#34;materialize_after_dump&#34;: True,
-        &#34;materialization_mode&#34;: &#34;prod&#34;,
-        &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_PROVIMENTOS_EV&#34;,
-    },
-    &#34;regime_juridico&#34;: {
-        &#34;materialize_after_dump&#34;: True,
-        &#34;materialization_mode&#34;: &#34;prod&#34;,
-        &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_REGIMES_JUR_&#34;,
-    },
-    &#34;tipo_folha&#34;: {
-        &#34;materialize_after_dump&#34;: True,
-        &#34;materialization_mode&#34;: &#34;prod&#34;,
-        &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_TIPO_FOLHA&#34;,
-    },
-    &#34;tipo_orgao&#34;: {
-        &#34;materialize_after_dump&#34;: True,
-        &#34;materialization_mode&#34;: &#34;prod&#34;,
-        &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_TIPO_ORGAO&#34;,
-    },
-    &#34;tipo_vinculo&#34;: {
-        &#34;materialize_after_dump&#34;: True,
-        &#34;materialization_mode&#34;: &#34;prod&#34;,
-        &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_TIPO_VINC_&#34;,
-    },
-    &#34;vinculo&#34;: {
-        &#34;materialize_after_dump&#34;: True,
-        &#34;materialization_mode&#34;: &#34;prod&#34;,
-        &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_VINCULOS&#34;,
-    },
-    &#34;fichas_financeiras&#34;: {
-        &#34;materialize_after_dump&#34;: True,
-        &#34;materialization_mode&#34;: &#34;prod&#34;,
-        &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;execute_query&#34;: &#34;SELECT * FROM ergon.fichas_financeiras limit 1000&#34;,
-    },
-}
-
-
-ergon_clocks = generate_dump_db_schedules(
-    interval=timedelta(days=30),
-    start_date=datetime(2022, 7, 12, 17, 0, tzinfo=pytz.timezone(&#34;America/Sao_Paulo&#34;)),
+materialize_logs_flow = deepcopy(utils_run_dbt_model_flow)
+materialize_logs_flow.name = &#34;EMD: logs - Materialize logs&#34;
+materialize_logs_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+materialize_logs_flow.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
     labels=[
-        constants.RJ_SMFP_AGENT_LABEL.value,
+        constants.RJ_SEGOVI_AGENT_LABEL.value,
     ],
-    db_database=&#34;P01.PCRJ&#34;,
-    db_host=&#34;10.70.6.22&#34;,
-    db_port=&#34;1521&#34;,
-    db_type=&#34;oracle&#34;,
-    dataset_id=&#34;administracao_recursos_humanos_ergon&#34;,
-    vault_secret_path=&#34;ergon-hom&#34;,
-    table_parameters=ergon_queries,
 )
 
-ergon_monthly_update_schedule = Schedule(clocks=untuple(ergon_clocks))</code></pre>
+materialize_logs_flow_default_parameters = {
+    &#34;dataset_id&#34;: &#34;logs_bq&#34;,
+    &#34;table_id&#34;: &#34;queries_all_projects_materialized&#34;,
+    &#34;mode&#34;: &#34;prod&#34;,
+}
+materialize_logs_flow = set_default_parameters(
+    materialize_logs_flow, default_parameters=materialize_logs_flow_default_parameters
+)
+
+materialize_logs_flow.schedule = daily_at_4am</code></pre>
 </details>
 </section>
 <section>
@@ -255,7 +128,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines.rj_smfp.dump_db_ergon" href="index.html">pipelines.rj_smfp.dump_db_ergon</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.logs" href="index.html">pipelines.rj_escritorio.logs</a></code></li>
 </ul>
 </li>
 </ul>
