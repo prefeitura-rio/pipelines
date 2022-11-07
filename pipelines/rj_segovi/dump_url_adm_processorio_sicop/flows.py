@@ -9,7 +9,9 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 from pipelines.constants import constants
-from pipelines.rj_segovi.dump_url_adm_processorio_sicop.schedules import gsheets_daily_update_schedule
+from pipelines.rj_segovi.dump_url_adm_processorio_sicop.schedules import (
+    gsheets_daily_update_schedule,
+)
 from pipelines.utils.dump_url.flows import dump_url_flow
 from pipelines.utils.utils import set_default_parameters
 
