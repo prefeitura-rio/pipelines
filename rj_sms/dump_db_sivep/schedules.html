@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_smfp API documentation</title>
-<meta name="description" content="Prefect flows for rj_smfp project" />
+<title>pipelines.rj_sms.dump_db_sivep.schedules API documentation</title>
+<meta name="description" content="Schedules for the database dump pipeline" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,55 +19,60 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_smfp</code></h1>
+<h1 class="title">Module <code>pipelines.rj_sms.dump_db_sivep.schedules</code></h1>
 </header>
 <section id="section-intro">
-<p>Prefect flows for rj_smfp project</p>
+<p>Schedules for the database dump pipeline</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Prefect flows for rj_smfp project
+Schedules for the database dump pipeline
 &#34;&#34;&#34;
 
-from pipelines.rj_smfp.dump_db_ergon.flows import *
-from pipelines.rj_smfp.dump_db_ergon_comlurb.flows import *
-from pipelines.rj_smfp.dump_db_metas.flows import *
-from pipelines.rj_smfp.dump_inadimplente.flows import *
-from pipelines.rj_smfp.dump_url_metas.flows import *
-from pipelines.rj_smfp.goals_dashboard_dbt.flows import *</code></pre>
+from datetime import datetime, timedelta
+
+import pytz
+from prefect.schedules import Schedule
+from pipelines.constants import constants
+from pipelines.utils.dump_db.utils import generate_dump_db_schedules
+from pipelines.utils.utils import untuple_clocks as untuple
+
+#####################################
+#
+# EGPWeb Schedules
+#
+#####################################
+
+sms_web_queries = {
+    &#34;sms_covid.srag&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;SELECT * FROM gtsinan.vw_sivep_escritoriodados;&#34;,
+        &#34;materialize_after_dump&#34;: False,
+    }
+}
+
+sms_web_clocks = generate_dump_db_schedules(
+    interval=timedelta(days=1),
+    start_date=datetime(2022, 9, 14, 15, 0, tzinfo=pytz.timezone(&#34;America/Sao_Paulo&#34;)),
+    labels=[
+        constants.RJ_SMS_AGENT_LABEL.value,
+    ],
+    db_database=&#34;gtsinan&#34;,
+    db_host=&#34;10.50.74.94&#34;,
+    db_port=&#34;3306&#34;,
+    db_type=&#34;mysql&#34;,
+    dataset_id=&#34;sms_covid&#34;,
+    vault_secret_path=&#34;formacao-sivep&#34;,
+    table_parameters=sms_web_queries,
+)
+
+sms_web_weekly_update_schedule = Schedule(clocks=untuple(sms_web_clocks))</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
-<dl>
-<dt><code class="name"><a title="pipelines.rj_smfp.dump_db_ergon" href="dump_db_ergon/index.html">pipelines.rj_smfp.dump_db_ergon</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smfp.dump_db_ergon_comlurb" href="dump_db_ergon_comlurb/index.html">pipelines.rj_smfp.dump_db_ergon_comlurb</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smfp.dump_db_metas" href="dump_db_metas/index.html">pipelines.rj_smfp.dump_db_metas</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smfp.dump_inadimplente" href="dump_inadimplente/index.html">pipelines.rj_smfp.dump_inadimplente</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smfp.dump_url_metas" href="dump_url_metas/index.html">pipelines.rj_smfp.dump_url_metas</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smfp.goals_dashboard_dbt" href="goals_dashboard_dbt/index.html">pipelines.rj_smfp.goals_dashboard_dbt</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 </section>
 <section>
 </section>
@@ -111,7 +116,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -130,17 +135,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines" href="../index.html">pipelines</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="pipelines.rj_smfp.dump_db_ergon" href="dump_db_ergon/index.html">pipelines.rj_smfp.dump_db_ergon</a></code></li>
-<li><code><a title="pipelines.rj_smfp.dump_db_ergon_comlurb" href="dump_db_ergon_comlurb/index.html">pipelines.rj_smfp.dump_db_ergon_comlurb</a></code></li>
-<li><code><a title="pipelines.rj_smfp.dump_db_metas" href="dump_db_metas/index.html">pipelines.rj_smfp.dump_db_metas</a></code></li>
-<li><code><a title="pipelines.rj_smfp.dump_inadimplente" href="dump_inadimplente/index.html">pipelines.rj_smfp.dump_inadimplente</a></code></li>
-<li><code><a title="pipelines.rj_smfp.dump_url_metas" href="dump_url_metas/index.html">pipelines.rj_smfp.dump_url_metas</a></code></li>
-<li><code><a title="pipelines.rj_smfp.goals_dashboard_dbt" href="goals_dashboard_dbt/index.html">pipelines.rj_smfp.goals_dashboard_dbt</a></code></li>
+<li><code><a title="pipelines.rj_sms.dump_db_sivep" href="index.html">pipelines.rj_sms.dump_db_sivep</a></code></li>
 </ul>
 </li>
 </ul>
