@@ -18,7 +18,7 @@ from pipelines.utils.utils import untuple_clocks as untuple
 #####################################
 
 sms_web_queries = {
-    "sms_covid.srag": {
+    "srag": {
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM gtsinan.vw_sivep_escritoriodados;",
         "materialize_after_dump": False,
@@ -33,7 +33,7 @@ sms_web_clocks = generate_dump_db_schedules(
     ],
     db_database="gtsinan",
     db_host="10.50.74.94",
-    db_port="3306",
+    db_port=3306,
     db_type="mysql",
     dataset_id="sms_covid",
     vault_secret_path="formacao-sivep",
