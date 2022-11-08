@@ -27,7 +27,7 @@ sms_sivep_flow.run_config = KubernetesRun(
 sms_default_parameters = {
     "db_database": "gtsinan",
     "db_host": "10.50.74.94",
-    "db_port": "3306",
+    "db_port": 3306,
     "db_type": "mysql",
     "vault_secret_path": "formacao-sivep",
     "dataset_id": "sms_covid",
