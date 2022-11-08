@@ -1,6 +1,8 @@
 """
 Dumping data from SISCOP FTP to BigQuery
 """
+# pylint: disable=E1101
+
 from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS

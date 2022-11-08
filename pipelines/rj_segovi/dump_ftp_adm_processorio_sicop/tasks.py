@@ -1,22 +1,30 @@
+"""
+Tasks to dump data from a SISCOP FTP to BigQuery
+"""
+# pylint: disable=E0702,E1137,E1136,E1101
+
 from pathlib import Path
 
 import pandas as pd
 from prefect import task
 
 from pipelines.utils.ftp.client import FTPClient
-from pipelines.utils.utils import get_vault_secret, log, to_partitions
 from pipelines.utils.utils import (
     log,
     get_storage_blobs,
     to_partitions,
     parse_date_columns,
     parser_blobs_to_partition_dict,
+    get_vault_secret,
 )
 from pipelines.utils.dump_db.utils import extract_last_partition_date
 
 
 @task(nout=3)
 def get_download_files(pattern, dataset_id, table_id, date_format):
+    """
+    Get files to download from FTP
+    """
     blobs = get_storage_blobs(dataset_id, table_id)
 
     # extract only partitioned folders
@@ -86,14 +94,16 @@ def get_download_files(pattern, dataset_id, table_id, date_format):
             "informacao_complementar": 256,
         }
     else:
-        raise("Pattern not found")
+        raise "Pattern not found"
 
     return client, files, widths_columns
 
 
 @task
 def download_files(client, files, save_path):
-
+    """
+    Download files from FTP
+    """
     save_path = Path(save_path)
     save_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -115,6 +125,9 @@ def download_files(client, files, save_path):
 
 @task
 def parse_save_dataframe(files, save_path, widths_columns):
+    """
+    Parse and save files from FTP
+    """
     table_columns = list(widths_columns.keys())
     widths_columns = list(widths_columns.values())
 
@@ -122,32 +135,32 @@ def parse_save_dataframe(files, save_path, widths_columns):
     save_path.parent.mkdir(parents=True, exist_ok=True)
 
     for file in files:
-        df = pd.read_fwf(
+        dataframe = pd.read_fwf(
             file,
             encoding="cp1251",
             widths=widths_columns,
             header=None,
         )
-        df.columns = table_columns
+        dataframe.columns = table_columns
 
-        for col in df.columns:
-            df[col] = df[col].astype(str).str.replace(";", "")
+        for col in dataframe.columns:
+            dataframe[col] = dataframe[col].astype(str).str.replace(";", "")
 
         file_original_name = file.split("/")[-1]
 
         data_hora = file.split("_")[1] + file.split("_")[2].replace(".TXT", "")
-        df.insert(0, "data_arquivo", data_hora)
-        df["data_arquivo"] = pd.to_datetime(df["data_arquivo"])
+        dataframe.insert(0, "data_arquivo", data_hora)
+        dataframe["data_arquivo"] = pd.to_datetime(dataframe["data_arquivo"])
 
-        df, date_partition_columns = parse_date_columns(
-            dataframe=df, partition_date_column="data_arquivo"
+        dataframe, date_partition_columns = parse_date_columns(
+            dataframe=dataframe, partition_date_column="data_arquivo"
         )
 
         path_save_csv_file = save_path / file_original_name.lower().replace(
             "txt", "csv"
         )
         to_partitions(
-            data=df,
+            data=dataframe,
             partition_columns=date_partition_columns,
             savepath=save_path,
             data_type="csv",
