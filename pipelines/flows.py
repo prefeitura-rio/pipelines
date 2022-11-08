@@ -8,7 +8,6 @@ Imports all flows for every project so we can register all of them.
 ###############################################################################
 from pipelines.datario import *
 from pipelines.pipelines_nuno import *
-from pipelines.pipelines_Roberta import *
 from pipelines.rj_cor import *
 from pipelines.rj_escritorio import *
 from pipelines.rj_segovi import *
