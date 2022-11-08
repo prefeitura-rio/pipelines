@@ -1,5 +1,5 @@
 """
-Dumping data from URLs
+Dumping data from SISCOP FTP to BigQuery
 """
 from prefect import Parameter
 from prefect.run_configs import KubernetesRun
