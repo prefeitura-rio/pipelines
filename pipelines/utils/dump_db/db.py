@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 import cx_Oracle
+import psycopg2
 import pymssql
 import pymysql.cursors
 
@@ -313,5 +314,87 @@ class Oracle(Database):
     def fetch_all(self) -> List[List]:
         """
         Fetches all rows from the Oracle.
+        """
+        return [list(item) for item in self._cursor.fetchall()]
+
+
+class Postgres(Database):
+    def __init__(
+        self,
+        hostname: str,
+        user: str,
+        password: str,
+        database: str,
+        port: int = 5432,
+    ) -> None:
+
+        super().__init__(
+            hostname=hostname,
+            user=user,
+            password=password,
+            database=database,
+            port=port,
+        )
+
+    def connect(self):
+        """
+        Connect to the Postgresql DB.
+        """
+        # pylint: disable=E1101
+        return psycopg2.connect(
+            host=self._hostname,
+            port=self._port,
+            user=self._user,
+            password=self._password,
+            database=self._database,
+        )
+
+    def get_cursor(self):
+        """
+        Returns a cursor for Postgres
+        """
+        return self._connection.cursor()
+
+    def execute_query(self, query: str, values=None) -> None:
+        """Executes query against db
+
+        Args:
+            query (str): query to execute
+            values(): values to pass to the execute method.
+            It can be formatted as a dict, list or tuple.
+            See the docs (https://www.psycopg.org/docs/usage.html#passing-parameters-to-sql-queries)
+            for further information
+
+        Returns:
+            None
+        """
+        if not values:
+            self._cursor.execute(query)
+        else:
+            self._cursor.execute(query, values)
+
+    def commit(self):
+        """Commit changes made to database.
+
+        Returns:
+            None
+        """
+        self._connection.commit()
+
+    def get_columns(self) -> List[str]:
+        """
+        Get column names from the Postgres
+        """
+        return [column[0] for column in self._cursor.description]
+
+    def fetch_batch(self, batch_size: int) -> List[List]:
+        """
+        Fetches a batch of rows from the Postgres.
+        """
+        return [list(item) for item in self._cursor.fetchmany(batch_size)]
+
+    def fetch_all(self) -> List[List]:
+        """
+        Fetches all rows from the Postgres.
         """
         return [list(item) for item in self._cursor.fetchall()]

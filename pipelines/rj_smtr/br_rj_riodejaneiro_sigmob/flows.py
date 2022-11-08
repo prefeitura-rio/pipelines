@@ -27,7 +27,11 @@ from pipelines.rj_smtr.tasks import (
     build_incremental_model,
     # , get_local_dbt_client
 )
-from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks import request_data
+from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.tasks import (
+    insert_into_db,
+    request_data,
+    request_paginated_endpoint,
+)
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
 # Flows #
@@ -86,6 +90,12 @@ with Flow(
     materialize_sigmob.set_dependencies(
         task=LAST_RUN, upstream_tasks=[dbt_client, RUN, INCREMENTAL_RUN]
     )
+materialize_sigmob.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+materialize_sigmob.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+materialize_sigmob.schedule = every_day
 
 
 with Flow(
@@ -98,10 +108,10 @@ with Flow(
     dataset_id = Parameter("dataset_id", default=constants.SIGMOB_DATASET_ID.value)
     materialize = Parameter("materialize", default=True)
 
-    # Rename flow run
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SMTR: SIGMOB - Captura - ", now_time=get_now_time()
-    )
+    # # Rename flow run
+    # rename_flow_run = rename_current_flow_run_now_time(
+    #     prefix="SMTR: SIGMOB - Captura - ", now_time=get_now_time()
+    # )
 
     # Run tasks #
     paths_dict = request_data(endpoints=endpoints)
@@ -123,20 +133,21 @@ with Flow(
         stream_logs=True,
         raise_final_state=True,
     )
-    captura_sigmob.set_dependencies(task=paths_dict, upstream_tasks=[rename_flow_run])
-
-
-materialize_sigmob.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-materialize_sigmob.run_config = KubernetesRun(
-    image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
-)
-materialize_sigmob.schedule = every_day
-
-
+    # captura_sigmob.set_dependencies(task=paths_dict, upstream_tasks=[rename_flow_run])
 captura_sigmob.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_sigmob.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 # captura_sigmob.schedule = every_day
+
+with Flow("SMTR: Update SIGMOB DB") as update_stops_db:
+    data = request_paginated_endpoint(constants.SIGMOB_STOPS_ENDPOINT.value)
+    insert_into_db(secret_path=constants.SIGMOB_DB_SECRET_PATH.value, data=data)
+
+update_stops_db.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+update_stops_db.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+update_stops_db.schedule = every_day

@@ -75,6 +75,10 @@ class constants(Enum):  # pylint: disable=c0103
     TASK_RETRY_DELAY = 10
 
     SIGMOB_DATASET_ID = "br_rj_riodejaneiro_sigmob"
+    SIGMOB_DB_SECRET_PATH = "sigmob_v2_db"
+    SIGMOB_STOPS_ENDPOINT = (
+        "http://jeap.rio.rj.gov.br/MOB/get_stops.rule?sys=MOB&INDICE=0"
+    )
     SIGMOB_ENDPOINTS = {
         "agency": {
             "url": "http://jeap.rio.rj.gov.br/MOB/get_agency.rule?sys=MOB",
