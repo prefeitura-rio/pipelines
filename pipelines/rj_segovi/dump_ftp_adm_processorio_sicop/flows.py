@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Dumping data from SISCOP FTP to BigQuery
 """

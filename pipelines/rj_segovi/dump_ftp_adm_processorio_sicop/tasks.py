@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from pathlib import Path
 
 import pandas as pd
@@ -86,7 +87,7 @@ def get_download_files(pattern, dataset_id, table_id, date_format):
             "informacao_complementar": 256,
         }
     else:
-        raise("Pattern not found")
+        raise ("Pattern not found")
 
     return client, files, widths_columns
 
