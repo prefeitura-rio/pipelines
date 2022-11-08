@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Database dumping flows 
+Database dumping flows
 """
 
 from datetime import timedelta
