@@ -40,7 +40,8 @@ from pipelines.constants import constants
 from pipelines.rj_cor.bot_semaforo.tasks import (
     get_token_and_group_id,
 )
-from pipelines.rj_escritorio.bot_sistemas.schedules import systems_telegram_bot_schedule
+
+# from pipelines.rj_escritorio.bot_sistemas.schedules import systems_telegram_bot_schedule
 from pipelines.rj_escritorio.bot_sistemas.tasks import (
     build_message,
     get_data,
@@ -80,7 +81,7 @@ systems_telegram_bot_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_ESCRITORIO_AGENT_LABEL.value],
 )
-systems_telegram_bot_flow.schedule = systems_telegram_bot_schedule</code></pre>
+# systems_telegram_bot_flow.schedule = systems_telegram_bot_schedule</code></pre>
 </details>
 </section>
 <section>
