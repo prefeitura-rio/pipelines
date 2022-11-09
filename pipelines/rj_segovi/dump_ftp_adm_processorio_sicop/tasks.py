@@ -85,6 +85,7 @@ def download_files(client, files, save_path):
                 f"already exists: {file_path}",
             )
         files_to_parse.append(file_path)
+    log(f"files_to_parse: {files_to_parse}")
     return files_to_parse
 
 

@@ -57,11 +57,11 @@ with Flow(
     )
 
     files_to_parse = download_files(
-        client=client, files=files_to_download, save_path="./ftp/raw/"
+        client=client, files=files_to_download, save_path="/tmp/ftp/raw/"
     )
 
     save_path = parse_save_dataframe(
-        files=files_to_parse, save_path="./data/", pattern=pattern
+        files=files_to_parse, save_path="/tmp/ftp/data/", pattern=pattern
     )
 
     create_table_and_upload_to_gcs(
