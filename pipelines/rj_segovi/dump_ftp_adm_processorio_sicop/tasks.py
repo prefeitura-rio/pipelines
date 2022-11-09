@@ -70,6 +70,7 @@ def download_files(client, files, save_path):
 
     save_path = Path(save_path)
     save_path.parent.mkdir(parents=True, exist_ok=True)
+    log(f"save_path exists: {save_path.exists()} : {save_path}")
 
     client.connect()
     files_to_parse = []
