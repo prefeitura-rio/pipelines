@@ -2,7 +2,7 @@
 """
 Tasks to dump data from a SICOP FTP to BigQuery
 """
-# pylint: disable=E0702,E1137,E1136,E1101
+# pylint: disable=E0702,E1137,E1136,E1101,C0207,W0613
 from pathlib import Path
 
 import pandas as pd
@@ -63,9 +63,9 @@ def get_files_to_download(client, pattern, dataset_id, table_id, date_format):
         date.replace("-", "") for date in storage_partitions_dict["data_particao"]
     ]
     files_to_download = files
-    for pattern in storage_pattern_files:
+    for partition_pattern in storage_pattern_files:
         for file in files:
-            if pattern == file.split("_")[1]:
+            if partition_pattern == file.split("_")[1]:
                 files_to_download.remove(file)
 
     log(f"files to download: {files_to_download}")
@@ -88,7 +88,6 @@ def download_files(client, files, save_path):
     files_to_parse = []
     for file in files:
         file_path = save_path / file
-        file_path
         if not file_path.exists():
             client.download(remote_path=file, local_path=file_path)
             log(
@@ -186,9 +185,6 @@ def parse_save_dataframe(files, save_path, pattern):
                 dataframe=dataframe, partition_date_column="data_arquivo"
             )
 
-            path_save_csv_file = save_path / file_original_name.lower().replace(
-                "txt", "csv"
-            )
             to_partitions(
                 data=dataframe,
                 partition_columns=date_partition_columns,
