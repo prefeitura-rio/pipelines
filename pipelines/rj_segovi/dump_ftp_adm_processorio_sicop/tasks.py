@@ -78,11 +78,11 @@ def download_files(client, files, save_path):
         file_path
         if not file_path.exists():
             client.download(remote_path=file, local_path=file_path)
-            print(
+            log(
                 f"downloaded: {file_path}",
             )
         else:
-            print(
+            log(
                 f"already exists: {file_path}",
             )
         files_to_parse.append(file_path)
@@ -160,9 +160,11 @@ def parse_save_dataframe(files, save_path, pattern):
         for col in dataframe.columns:
             dataframe[col] = dataframe[col].astype(str).str.replace(";", "")
 
-        file_original_name = file.split("/")[-1]
+        file_original_name = str(file).split("/")[-1]
 
-        data_hora = file.split("_")[1] + file.split("_")[2].replace(".TXT", "")
+        data_hora = file_original_name.split("_")[1] + file_original_name.split("_")[
+            2
+        ].replace(".TXT", "")
         dataframe.insert(0, "data_arquivo", data_hora)
         dataframe["data_arquivo"] = pd.to_datetime(dataframe["data_arquivo"])
 
@@ -179,6 +181,6 @@ def parse_save_dataframe(files, save_path, pattern):
             savepath=save_path,
             data_type="csv",
         )
-        print(f"saved parsed: {path_save_csv_file}")
+        log(f"saved parsed: {path_save_csv_file}")
 
     return save_path
