@@ -177,7 +177,7 @@ def parse_save_dataframe(files, save_path, pattern):
             dataframe, date_partition_columns = parse_date_columns(
                 dataframe=dataframe, partition_date_column="data_arquivo"
             )
-
+            log(f"dataframe: {dataframe.head()}")
             to_partitions(
                 data=dataframe,
                 partition_columns=date_partition_columns,
