@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Dumping data from SICOP FTP to BigQuery 
+Dumping data from SICOP FTP to BigQuery
 """
 # pylint: disable=E1101
 
