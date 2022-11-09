@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Schedules for the SEGOVI sicop pipeline
+Schedules for the SEGOVI SICOP pipeline
 """
 from datetime import timedelta, datetime
 from prefect.schedules import Schedule
