@@ -43,25 +43,17 @@ def get_files_to_download(client, pattern, dataset_id, table_id, date_format):
     """
     Get files to download FTP and GCS
     """
-    blobs = get_storage_blobs(dataset_id, table_id)
-
-    # extract only partitioned folders
-    storage_partitions_dict = parser_blobs_to_partition_dict(blobs)
-    # get last partition date
-    last_partition_date = extract_last_partition_date(
-        storage_partitions_dict, date_format=date_format
-    )
-
-    log(f"Last partition date: {last_partition_date}")
-    log(f"storage_partitions_dict: {storage_partitions_dict}")
 
     client.connect()
     files = client.list_files(path=".", pattern=pattern)
     log(f"files: {files}")
 
+    blobs = get_storage_blobs(dataset_id, table_id)
+    storage_partitions_dict = parser_blobs_to_partition_dict(blobs)
     storage_pattern_files = [
         date.replace("-", "") for date in storage_partitions_dict["data_particao"]
     ]
+
     files_to_download = files
     for partition_pattern in storage_pattern_files:
         for file in files:
