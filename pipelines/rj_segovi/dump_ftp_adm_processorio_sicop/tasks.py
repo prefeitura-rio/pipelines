@@ -17,7 +17,6 @@ from pipelines.utils.utils import (
     parser_blobs_to_partition_dict,
     get_vault_secret,
 )
-from pipelines.utils.dump_db.utils import extract_last_partition_date
 
 
 @task
