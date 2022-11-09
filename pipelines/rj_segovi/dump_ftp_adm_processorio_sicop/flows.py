@@ -61,8 +61,7 @@ with Flow(
     )
 
     save_path = parse_save_dataframe(
-        files=files_to_parse,
-        save_path="./data/",
+        files=files_to_parse, save_path="./data/", pattern=pattern
     )
 
     create_table_and_upload_to_gcs(
