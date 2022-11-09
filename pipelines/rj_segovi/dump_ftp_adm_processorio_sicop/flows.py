@@ -4,7 +4,7 @@ Dumping data from SICOP FTP to BigQuery
 """
 # pylint: disable=E1101
 
-from prefect import Parameter
+from prefect import case, Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
@@ -48,7 +48,7 @@ with Flow(
 
     client = get_ftp_client(wait=pattern)
 
-    files_to_download = get_files_to_download(
+    files_to_download, download_data = get_files_to_download(
         client=client,
         pattern=pattern,
         dataset_id=dataset_id,
@@ -56,20 +56,21 @@ with Flow(
         date_format='"%Y-%m-%d"',
     )
 
-    files_to_parse = download_files(
-        client=client, files=files_to_download, save_path="/tmp/ftp/raw"
-    )
+    with case(download_data, True):
+        files_to_parse = download_files(
+            client=client, files=files_to_download, save_path="/tmp/ftp/raw"
+        )
 
-    save_path = parse_save_dataframe(
-        files=files_to_parse, save_path="/tmp/ftp/data", pattern=pattern
-    )
+        save_path = parse_save_dataframe(
+            files=files_to_parse, save_path="/tmp/ftp/data", pattern=pattern
+        )
 
-    create_table_and_upload_to_gcs(
-        data_path=save_path,
-        dataset_id=dataset_id,
-        table_id=table_id,
-        dump_mode="append",
-    )
+        create_table_and_upload_to_gcs(
+            data_path=save_path,
+            dataset_id=dataset_id,
+            table_id=table_id,
+            dump_mode="append",
+        )
 
 dump_ftp_sicop.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_ftp_sicop.run_config = KubernetesRun(

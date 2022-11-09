@@ -59,7 +59,20 @@ def get_files_to_download(client, pattern, dataset_id, table_id, date_format):
     files = client.list_files(path=".", pattern=pattern)
     log(f"files: {files}")
 
-    return files
+    storage_pattern_files = [
+        date.replace("-", "") for date in storage_partitions_dict["data_particao"]
+    ]
+    files_to_download = files
+    for pattern in storage_pattern_files:
+        for file in files:
+            if pattern == file.split("_")[1]:
+                files_to_download.remove(file)
+
+    log(f"files to download: {files_to_download}")
+
+    download_data = files_to_download != []
+
+    return files_to_download, download_data
 
 
 @task
