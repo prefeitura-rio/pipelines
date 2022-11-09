@@ -16,11 +16,11 @@ from pipelines.rj_sme.dump_db_educacao_basica.schedules import (
 from pipelines.utils.dump_db.flows import dump_sql_flow
 from pipelines.utils.utils import set_default_parameters
 
-dump_sme_flow = deepcopy(dump_sql_flow)
-dump_sme_flow.name = "SME: educacao_basica - Creches Parceiras"
-dump_sme_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+dump_sme_creches_flow = deepcopy(dump_sql_flow)
+dump_sme_creches_flow.name = "SME: educacao_basica - Creches Parceiras"
+dump_sme_creches_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 
-dump_sme_flow.run_config = KubernetesRun(
+dump_sme_creches_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[
         constants.RJ_SME_AGENT_LABEL.value,
@@ -35,8 +35,8 @@ sme_default_parameters = {
     "vault_secret_path": "clustersqlsme",
     "dataset_id": "educacao_basica_staging",
 }
-dump_sme_flow = set_default_parameters(
-    dump_sme_flow, default_parameters=sme_default_parameters
+dump_sme_creches_flow = set_default_parameters(
+    dump_sme_creches_flow, default_parameters=sme_default_parameters
 )
 
-dump_sme_flow.schedule = sme_educacao_basica_daily_update_schedule
+dump_sme_creches_flow.schedule = sme_educacao_basica_daily_update_schedule
