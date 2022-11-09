@@ -69,13 +69,13 @@ def download_files(client, files, save_path):
     """
 
     save_path = Path(save_path)
-    save_path.parent.mkdir(parents=True, exist_ok=True)
-    log(f"save_path exists: {save_path.exists()} : {save_path}")
+    save_path.mkdir(parents=True, exist_ok=True)
 
     client.connect()
     files_to_parse = []
     for file in files:
         file_path = save_path / file
+        file_path
         if not file_path.exists():
             client.download(remote_path=file, local_path=file_path)
             print(
@@ -97,7 +97,7 @@ def parse_save_dataframe(files, save_path, pattern):
     """
 
     save_path = Path(save_path)
-    save_path.parent.mkdir(parents=True, exist_ok=True)
+    save_path.mkdir(parents=True, exist_ok=True)
 
     if pattern == "ARQ2001":
         columns = {
