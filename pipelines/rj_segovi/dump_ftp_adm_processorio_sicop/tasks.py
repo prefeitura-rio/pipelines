@@ -38,7 +38,7 @@ def get_ftp_client(wait=None):
     )
 
 
-@task
+@task(nout=2)
 def get_files_to_download(client, pattern, dataset_id, table_id, date_format):
     """
     Get files to download FTP and GCS
