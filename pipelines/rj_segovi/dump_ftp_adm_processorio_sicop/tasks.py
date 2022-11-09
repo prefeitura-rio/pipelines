@@ -1,8 +1,8 @@
+# -*- coding: utf-8 -*-
 """
 Tasks to dump data from a SISCOP FTP to BigQuery
 """
 # pylint: disable=E0702,E1137,E1136,E1101
-
 from pathlib import Path
 
 import pandas as pd
