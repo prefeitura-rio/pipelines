@@ -44,7 +44,7 @@ dados_mestres_tables = {
         "materialize_after_dump": False,
         "materialize_to_datario": False,
         "dump_to_gcs": False,
-        "materialization_mode": "dev"
+        "materialization_mode": "dev",
     },
     "edificacoes": {
         "url": "https://services5.arcgis.com/mgrvZxGU0bSJbVld/arcgis/rest/services/Quadras_Lotes_Edificacoes/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson",
@@ -54,8 +54,8 @@ dados_mestres_tables = {
         "materialize_to_datario": False,
         "dump_to_gcs": False,
         "materialization_mode": "dev",
-        "interval": timedelta(days = 500)
-    }
+        "interval": timedelta(days=500),
+    },
 }
 
 
