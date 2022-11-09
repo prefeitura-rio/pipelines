@@ -37,10 +37,12 @@ def get_download_files(pattern, dataset_id, table_id, date_format):
     log(f"Last partition date: {last_partition_date}")
     log(f"blobs: {blobs}")
 
-    siscob_secret = get_vault_secret("sicop")["data"]
-    hostname = siscob_secret["hostname"]
-    username = siscob_secret["username"]
-    password = siscob_secret["password"]
+    siscob_secret = get_vault_secret("sicop")
+    hostname = siscob_secret["data"]["hostname"]
+    username = siscob_secret["data"]["username"]
+    password = siscob_secret["data"]["password"]
+
+    log(f"hostname: {hostname}")
 
     client = FTPClient(
         hostname=hostname,
@@ -48,7 +50,9 @@ def get_download_files(pattern, dataset_id, table_id, date_format):
         password=password,
     )
     client.connect()
+    log("client: connected")
     files = client.list_files(path=".", pattern=pattern)
+    log(f"files: {files}")
 
     if pattern == "ARQ2001":
         widths_columns = {
