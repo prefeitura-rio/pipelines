@@ -35,9 +35,10 @@ def generate_dump_datario_schedules(  # pylint: disable=too-many-arguments,too-m
             parameter_defaults["materialization_mode"] = parameters[
                 "materialization_mode"
             ]
+        new_interval = parameters["interval"] if "interval" in parameters else interval
         clocks.append(
             IntervalClock(
-                interval=interval,
+                interval=new_interval,
                 start_date=start_date
                 + timedelta(minutes=runs_interval_minutes * count),
                 labels=labels,

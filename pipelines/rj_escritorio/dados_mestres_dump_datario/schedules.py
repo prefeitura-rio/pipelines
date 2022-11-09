@@ -18,7 +18,7 @@ from pipelines.utils.dump_datario.utils import generate_dump_datario_schedules
 #
 #####################################
 
-dados_mestrestables = {
+dados_mestres_tables = {
     "bairro": {
         "url": "https://opendata.arcgis.com/datasets/dc94b29fc3594a5bb4d297bee0c9a3f2_3.geojson",
         "dataset_id": "dados_mestres",
@@ -37,14 +37,33 @@ dados_mestrestables = {
         "dump_to_gcs": True,
         "materialization_mode": "dev",
     },
+    "zoneamento_urbano": {
+        "url": "https://pgeo3.rio.rj.gov.br/arcgis/rest/services/Urbanismo/LBB_Zoneamento_Urbano/MapServer/0/query?outFields=*&where=1%3D1&f=geojson",
+        "dataset_id": "dados_mestres",
+        "dump_mode": "overwrite",
+        "materialize_after_dump": False,
+        "materialize_to_datario": False,
+        "dump_to_gcs": False,
+        "materialization_mode": "dev"
+    },
+    "edificacoes": {
+        "url": "https://services5.arcgis.com/mgrvZxGU0bSJbVld/arcgis/rest/services/Quadras_Lotes_Edificacoes/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson",
+        "dataset_id": "dados_mestres",
+        "dump_mode": "overwrite",
+        "materialize_after_dump": False,
+        "materialize_to_datario": False,
+        "dump_to_gcs": False,
+        "materialization_mode": "dev",
+        "interval": timedelta(days = 500)
+    }
 }
 
 
 dados_mestresclocks = generate_dump_datario_schedules(
-    interval=timedelta(days=7),
-    start_date=datetime(2022, 3, 21, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    interval=timedelta(days=30),
+    start_date=datetime(2022, 11, 9, 18, 10, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value],
-    table_parameters=dados_mestrestables,
+    table_parameters=dados_mestres_tables,
     runs_interval_minutes=15,
 )
 
