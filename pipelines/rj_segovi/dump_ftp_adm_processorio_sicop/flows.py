@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Dumping data from SISCOP FTP to BigQuery
+Dumping data from sicop FTP to BigQuery
 """
 # pylint: disable=E1101
 
@@ -29,13 +29,11 @@ with Flow(
     code_owners=[
         "diego",
     ],
-) as dump_ftp_siscop:
+) as dump_ftp_sicop:
     pattern = Parameter(
         "pattern", default="ARQ2001", required=True
     )  # ARQ2001 or ARQ2296
-    dataset_id = Parameter(
-        "dataset_id", default="adm_processorio_siscop", required=True
-    )
+    dataset_id = Parameter("dataset_id", default="adm_processorio_sicop", required=True)
     table_id = Parameter("table_id", default="arq2001", required=True)
 
     #####################################
@@ -74,22 +72,22 @@ with Flow(
     )
     create_table_and_upload_to_gcs.set_upstream(save_path)
 
-dump_ftp_siscop.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-dump_ftp_siscop.run_config = KubernetesRun(
+dump_ftp_sicop.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+dump_ftp_sicop.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[
         constants.RJ_SEGOVI_AGENT_LABEL.value,
     ],
 )
 
-dump_ftp_siscop_default_parameters = {
+dump_ftp_sicop_default_parameters = {
     "pattern": "ARQ2001",
-    "dataset_id": "adm_processorio_siscop",
+    "dataset_id": "adm_processorio_sicop",
     "table_id": "arq2001",
 }
 
-dump_ftp_siscop = set_default_parameters(
-    dump_ftp_siscop, default_parameters=dump_ftp_siscop_default_parameters
+dump_ftp_sicop = set_default_parameters(
+    dump_ftp_sicop, default_parameters=dump_ftp_sicop_default_parameters
 )
 
-dump_ftp_siscop.schedule = every_week_schedule
+dump_ftp_sicop.schedule = every_week_schedule

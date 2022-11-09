@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Tasks to dump data from a SISCOP FTP to BigQuery
+Tasks to dump data from a sicop FTP to BigQuery
 """
 # pylint: disable=E0702,E1137,E1136,E1101
 from pathlib import Path
@@ -37,7 +37,7 @@ def get_download_files(pattern, dataset_id, table_id, date_format):
     log(f"Last partition date: {last_partition_date}")
     log(f"blobs: {blobs}")
 
-    siscob_secret = get_vault_secret("siscop")["data"]
+    siscob_secret = get_vault_secret("sicop")["data"]
     hostname = siscob_secret["hostname"]
     username = siscob_secret["username"]
     password = siscob_secret["password"]

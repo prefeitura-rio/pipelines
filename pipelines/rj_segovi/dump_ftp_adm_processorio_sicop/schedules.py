@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Schedules for the SEGOVI SISCOP pipeline
+Schedules for the SEGOVI sicop pipeline
 """
 from datetime import timedelta, datetime
 from prefect.schedules import Schedule
@@ -17,7 +17,7 @@ every_week_schedule = Schedule(
             ],
             parameter_defaults={
                 "pattern": "ARQ2001",
-                "dataset_id": "adm_processorio_siscop",
+                "dataset_id": "adm_processorio_sicop",
                 "table_id": "arq2001",
             },
         ),
@@ -29,7 +29,7 @@ every_week_schedule = Schedule(
             ],
             parameter_defaults={
                 "pattern": "ARQ2296",
-                "dataset_id": "adm_processorio_siscop",
+                "dataset_id": "adm_processorio_sicop",
                 "table_id": "arq2296",
             },
         ),
