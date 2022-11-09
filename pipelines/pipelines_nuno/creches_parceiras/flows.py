@@ -10,7 +10,7 @@ from prefect.storage import GCS
 
 from pipelines.constants import constants
 
-from pipelines.rj_sme.dump_db_educacao_basica.schedules import (
+from pipelines.pipelines_nuno.creches_parceiras.schedules import (
     sme_educacao_basica_daily_update_schedule,
 )
 from pipelines.utils.dump_db.flows import dump_sql_flow
