@@ -52,6 +52,7 @@ def get_files_to_download(client, pattern, dataset_id, table_id, date_format):
     storage_pattern_files = [
         date.replace("-", "") for date in storage_partitions_dict["data_particao"]
     ]
+    log(f"storage_pattern_files: {storage_pattern_files}")
 
     files_to_download = files
     for partition_pattern in storage_pattern_files:
