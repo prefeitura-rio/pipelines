@@ -53,7 +53,7 @@ def get_files_to_download(client, pattern, dataset_id, table_id, date_format):
     )
 
     log(f"Last partition date: {last_partition_date}")
-    log(f"blobs: {blobs}")
+    log(f"storage_partitions_dict: {storage_partitions_dict}")
 
     client.connect()
     files = client.list_files(path=".", pattern=pattern)
@@ -105,9 +105,9 @@ def parse_save_dataframe(files, save_path, pattern):
             "codigo_sici": 7,
             "numero_processo": 15,
             "tipo_processo": 12,
-            "numero_documento_ident": 15,
-            "tipo_documento_ident": 3,
-            "descricao_tipo_documento_ident": 31,
+            "numero_documento_identidade": 15,
+            "tipo_documento_identidade": 3,
+            "descricao_tipo_documento_identidade": 31,
             "requerente": 51,
             "data_processo": 11,
             "codigo_assunto": 6,
@@ -137,7 +137,7 @@ def parse_save_dataframe(files, save_path, pattern):
             "dias_parados": 6,
             "matricula_digitador": 8,
             "opcao": 1,
-            "descricao_relat": 16,
+            "descricao_relatorio": 16,
             "filler": 3,
             "orgao_responsavel": 8,
             "informacao_complementar": 256,
