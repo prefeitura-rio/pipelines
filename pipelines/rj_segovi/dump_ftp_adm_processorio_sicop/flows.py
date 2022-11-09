@@ -46,7 +46,7 @@ with Flow(
         prefix="Dump: ", dataset_id=dataset_id, table_id=table_id, wait=table_id
     )
 
-    client = get_ftp_client()
+    client = get_ftp_client(wait=pattern)
 
     files_to_download = get_files_to_download(
         pattern=pattern,
