@@ -49,6 +49,7 @@ with Flow(
     client = get_ftp_client(wait=pattern)
 
     files_to_download = get_files_to_download(
+        client=client,
         pattern=pattern,
         dataset_id=dataset_id,
         table_id=table_id,
