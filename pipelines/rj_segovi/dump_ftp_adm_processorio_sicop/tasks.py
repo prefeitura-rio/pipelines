@@ -149,38 +149,41 @@ def parse_save_dataframe(files, save_path, pattern):
     widths_columns = list(columns.values())
 
     for file in files:
-        dataframe = pd.read_fwf(
-            file,
-            encoding="cp1251",
-            widths=widths_columns,
-            header=None,
-        )
-        dataframe.columns = table_columns
+        if file.stat().st_size != 0:
+            dataframe = pd.read_fwf(
+                file,
+                encoding="cp1251",
+                widths=widths_columns,
+                header=None,
+            )
+            dataframe.columns = table_columns
 
-        for col in dataframe.columns:
-            dataframe[col] = dataframe[col].astype(str).str.replace(";", "")
+            for col in dataframe.columns:
+                dataframe[col] = dataframe[col].astype(str).str.replace(";", "")
 
-        file_original_name = str(file).split("/")[-1]
+            file_original_name = str(file).split("/")[-1]
 
-        data_hora = file_original_name.split("_")[1] + file_original_name.split("_")[
-            2
-        ].replace(".TXT", "")
-        dataframe.insert(0, "data_arquivo", data_hora)
-        dataframe["data_arquivo"] = pd.to_datetime(dataframe["data_arquivo"])
+            data_hora = file_original_name.split("_")[1] + file_original_name.split(
+                "_"
+            )[2].replace(".TXT", "")
+            dataframe.insert(0, "data_arquivo", data_hora)
+            dataframe["data_arquivo"] = pd.to_datetime(dataframe["data_arquivo"])
 
-        dataframe, date_partition_columns = parse_date_columns(
-            dataframe=dataframe, partition_date_column="data_arquivo"
-        )
+            dataframe, date_partition_columns = parse_date_columns(
+                dataframe=dataframe, partition_date_column="data_arquivo"
+            )
 
-        path_save_csv_file = save_path / file_original_name.lower().replace(
-            "txt", "csv"
-        )
-        to_partitions(
-            data=dataframe,
-            partition_columns=date_partition_columns,
-            savepath=save_path,
-            data_type="csv",
-        )
-        log(f"saved parsed: {path_save_csv_file}")
+            path_save_csv_file = save_path / file_original_name.lower().replace(
+                "txt", "csv"
+            )
+            to_partitions(
+                data=dataframe,
+                partition_columns=date_partition_columns,
+                savepath=save_path,
+                data_type="csv",
+            )
+            log(f"parsed and saved: {file}")
+        else:
+            log(f"File has no data : {file}")
 
     return save_path
