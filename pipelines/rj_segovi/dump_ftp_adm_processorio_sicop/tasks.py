@@ -55,10 +55,10 @@ def get_files_to_download(client, pattern, dataset_id, table_id, date_format):
     ]
     log(f"storage_pattern_files: {storage_pattern_files}")
 
-    files_to_download = files
-    for partition_pattern in storage_pattern_files:
-        for file in files:
-            if partition_pattern == file.split("_")[1]:
+    files_to_download = files.copy()
+    for file in files:
+        for pattern in storage_pattern_files:
+            if pattern == file.split("_")[1]:
                 files_to_download.remove(file)
 
     log(f"files to download: {files_to_download}")
