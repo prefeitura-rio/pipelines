@@ -10,7 +10,8 @@ from prefect.storage import GCS
 
 from pipelines.constants import constants
 from pipelines.rj_segovi.dump_ftp_adm_processorio_sicop.tasks import (
-    get_download_files,
+    get_ftp_client,
+    get_files_to_download,
     download_files,
     parse_save_dataframe,
 )
@@ -45,7 +46,9 @@ with Flow(
         prefix="Dump: ", dataset_id=dataset_id, table_id=table_id, wait=table_id
     )
 
-    client, files_to_download, widths_columns = get_download_files(
+    client = get_ftp_client()
+
+    files_to_download = get_files_to_download(
         pattern=pattern,
         dataset_id=dataset_id,
         table_id=table_id,
@@ -55,14 +58,11 @@ with Flow(
     files_to_parse = download_files(
         client=client, files=files_to_download, save_path="./ftp/raw/"
     )
-    files_to_parse.set_upstream(client)
 
     save_path = parse_save_dataframe(
         files=files_to_parse,
         save_path="./data/",
-        widths_columns=widths_columns,
     )
-    parse_save_dataframe.set_upstream(files_to_parse)
 
     create_table_and_upload_to_gcs(
         data_path=save_path,
@@ -70,7 +70,6 @@ with Flow(
         table_id=table_id,
         dump_mode="append",
     )
-    create_table_and_upload_to_gcs.set_upstream(save_path)
 
 dump_ftp_sicop.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_ftp_sicop.run_config = KubernetesRun(

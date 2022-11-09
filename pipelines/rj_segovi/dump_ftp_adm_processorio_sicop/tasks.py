@@ -20,10 +20,28 @@ from pipelines.utils.utils import (
 from pipelines.utils.dump_db.utils import extract_last_partition_date
 
 
-@task(nout=3)
-def get_download_files(pattern, dataset_id, table_id, date_format):
+@task
+def get_ftp_client(wait=None):
     """
-    Get files to download from FTP
+    Get FTP client
+    """
+
+    siscob_secret = get_vault_secret("sicop")
+    hostname = siscob_secret["data"]["hostname"]
+    username = siscob_secret["data"]["username"]
+    password = siscob_secret["data"]["password"]
+
+    return FTPClient(
+        hostname=hostname,
+        username=username,
+        password=password,
+    )
+
+
+@task
+def get_files_to_download(client, pattern, dataset_id, table_id, date_format):
+    """
+    Get files to download FTP and GCS
     """
     blobs = get_storage_blobs(dataset_id, table_id)
 
@@ -37,25 +55,50 @@ def get_download_files(pattern, dataset_id, table_id, date_format):
     log(f"Last partition date: {last_partition_date}")
     log(f"blobs: {blobs}")
 
-    siscob_secret = get_vault_secret("sicop")
-    hostname = siscob_secret["data"]["hostname"]
-    username = siscob_secret["data"]["username"]
-    password = siscob_secret["data"]["password"]
-
-    log(f"hostname: {hostname}")
-
-    client = FTPClient(
-        hostname=hostname,
-        username=username,
-        password=password,
-    )
     client.connect()
-    log("client: connected")
     files = client.list_files(path=".", pattern=pattern)
     log(f"files: {files}")
 
+    return files
+
+
+@task
+def download_files(client, files, save_path):
+    """
+    Download files from FTP
+    """
+
+    save_path = Path(save_path)
+    save_path.parent.mkdir(parents=True, exist_ok=True)
+
+    client.connect()
+    files_to_parse = []
+    for file in files:
+        file_path = save_path / file
+        if not file_path.exists():
+            client.download(remote_path=file, local_path=file_path)
+            print(
+                f"downloaded: {file_path}",
+            )
+        else:
+            print(
+                f"already exists: {file_path}",
+            )
+        files_to_parse.append(file_path)
+    return files_to_parse
+
+
+@task
+def parse_save_dataframe(files, save_path, pattern):
+    """
+    Parse and save files from FTP
+    """
+
+    save_path = Path(save_path)
+    save_path.parent.mkdir(parents=True, exist_ok=True)
+
     if pattern == "ARQ2001":
-        widths_columns = {
+        columns = {
             "orgao_transcritor": 9,
             "codigo_sici": 7,
             "numero_processo": 15,
@@ -73,7 +116,7 @@ def get_download_files(pattern, dataset_id, table_id, date_format):
             "prazo_cadastro": 26,
         }
     elif pattern == "ARQ2296":
-        widths_columns = {
+        columns = {
             "codigo_orgao": 8,
             "codigo_sici": 6,
             "tipo_documento": 2,
@@ -100,43 +143,8 @@ def get_download_files(pattern, dataset_id, table_id, date_format):
     else:
         raise "Pattern not found"
 
-    return client, files, widths_columns
-
-
-@task
-def download_files(client, files, save_path):
-    """
-    Download files from FTP
-    """
-    save_path = Path(save_path)
-    save_path.parent.mkdir(parents=True, exist_ok=True)
-
-    files_to_parse = []
-    for file in files:
-        file_path = save_path / file
-        if not file_path.exists():
-            client.download(remote_path=file, local_path=file_path)
-            print(
-                f"downloaded: {file_path}",
-            )
-        else:
-            print(
-                f"already exists: {file_path}",
-            )
-        files_to_parse.append(file_path)
-    return files_to_parse
-
-
-@task
-def parse_save_dataframe(files, save_path, widths_columns):
-    """
-    Parse and save files from FTP
-    """
-    table_columns = list(widths_columns.keys())
-    widths_columns = list(widths_columns.values())
-
-    save_path = Path(save_path)
-    save_path.parent.mkdir(parents=True, exist_ok=True)
+    table_columns = list(columns.keys())
+    widths_columns = list(columns.values())
 
     for file in files:
         dataframe = pd.read_fwf(
