@@ -50,7 +50,8 @@ def get_files_to_download(client, pattern, dataset_id, table_id, date_format):
     blobs = get_storage_blobs(dataset_id, table_id)
     storage_partitions_dict = parser_blobs_to_partition_dict(blobs)
     storage_pattern_files = [
-        date.replace("-", "") for date in storage_partitions_dict["data_particao"]
+        date.replace("-", "")
+        for date in storage_partitions_dict.get("website") or [None]
     ]
     log(f"storage_pattern_files: {storage_pattern_files}")
 
