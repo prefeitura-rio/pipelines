@@ -53,12 +53,15 @@ with Flow(
 
     # Parameters
     days_old = Parameter(&#34;days_old&#34;, default=60, required=False)
+    skip_running = Parameter(&#34;skip_running&#34;, default=True, required=False)
 
     # Get the Prefect client
     client = get_prefect_client()
 
     # Get the old flow runs
-    old_flow_runs = get_old_flow_runs(days_old=days_old, client=client)
+    old_flow_runs = get_old_flow_runs(
+        days_old=days_old, client=client, skip_running=skip_running
+    )
 
     # Delete the old flow runs
     delete_flow_run.map(old_flow_runs)

@@ -49,12 +49,16 @@ def get_prefect_client() -&gt; Client:
 
 
 @task
-def get_old_flow_runs(days_old: int, client: Client = None) -&gt; List[Dict[str, str]]:
+def get_old_flow_runs(
+    days_old: int, client: Client = None, skip_running: bool = True
+) -&gt; List[Dict[str, str]]:
     &#34;&#34;&#34;
     Fetches old flow runs from the API.
 
     Args:
         days_old (int): The age of the flow runs (in days) to fetch.
+        client (Client, optional): The prefect client. Defaults to None.
+        skip_running (bool, optional): Whether to skip running flow runs. Defaults to True.
 
     Returns:
         A list containing one dictionary for every flow we got. The format for the
@@ -78,6 +82,12 @@ def get_old_flow_runs(days_old: int, client: Client = None) -&gt; List[Dict[str,
                 where: {
                     _and: [
                         {start_time: {_lte: $maximum_start_time}},
+    &#34;&#34;&#34;
+    if skip_running:
+        query += &#34;&#34;&#34;
+                        {state: {_neq: &#34;Running&#34;}},
+        &#34;&#34;&#34;
+    query += &#34;&#34;&#34;
                     ]
                 }
             ) {
@@ -162,7 +172,7 @@ def delete_flow_run(flow_run_dict: Dict[str, str], client: Client = None) -&gt; 
 </details>
 </dd>
 <dt id="pipelines.rj_escritorio.cleanup.tasks.get_old_flow_runs"><code class="name flex">
-<span>def <span class="ident">get_old_flow_runs</span></span>(<span>days_old: int, client: prefect.client.client.Client = None) ‑> List[Dict[str, str]]</span>
+<span>def <span class="ident">get_old_flow_runs</span></span>(<span>days_old: int, client: prefect.client.client.Client = None, skip_running: bool = True) ‑> List[Dict[str, str]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Fetches old flow runs from the API.</p>
@@ -170,6 +180,10 @@ def delete_flow_run(flow_run_dict: Dict[str, str], client: Client = None) -&gt; 
 <dl>
 <dt><strong><code>days_old</code></strong> :&ensp;<code>int</code></dt>
 <dd>The age of the flow runs (in days) to fetch.</dd>
+<dt><strong><code>client</code></strong> :&ensp;<code>Client</code>, optional</dt>
+<dd>The prefect client. Defaults to None.</dd>
+<dt><strong><code>skip_running</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether to skip running flow runs. Defaults to True.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <p>A list containing one dictionary for every flow we got. The format for the
@@ -185,12 +199,16 @@ dictionary is the following:</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def get_old_flow_runs(days_old: int, client: Client = None) -&gt; List[Dict[str, str]]:
+def get_old_flow_runs(
+    days_old: int, client: Client = None, skip_running: bool = True
+) -&gt; List[Dict[str, str]]:
     &#34;&#34;&#34;
     Fetches old flow runs from the API.
 
     Args:
         days_old (int): The age of the flow runs (in days) to fetch.
+        client (Client, optional): The prefect client. Defaults to None.
+        skip_running (bool, optional): Whether to skip running flow runs. Defaults to True.
 
     Returns:
         A list containing one dictionary for every flow we got. The format for the
@@ -214,6 +232,12 @@ def get_old_flow_runs(days_old: int, client: Client = None) -&gt; List[Dict[str,
                 where: {
                     _and: [
                         {start_time: {_lte: $maximum_start_time}},
+    &#34;&#34;&#34;
+    if skip_running:
+        query += &#34;&#34;&#34;
+                        {state: {_neq: &#34;Running&#34;}},
+        &#34;&#34;&#34;
+    query += &#34;&#34;&#34;
                     ]
                 }
             ) {
