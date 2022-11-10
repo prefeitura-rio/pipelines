@@ -20,12 +20,16 @@ def get_prefect_client() -> Client:
 
 
 @task
-def get_old_flow_runs(days_old: int, client: Client = None) -> List[Dict[str, str]]:
+def get_old_flow_runs(
+    days_old: int, client: Client = None, skip_running: bool = True
+) -> List[Dict[str, str]]:
     """
     Fetches old flow runs from the API.
 
     Args:
         days_old (int): The age of the flow runs (in days) to fetch.
+        client (Client, optional): The prefect client. Defaults to None.
+        skip_running (bool, optional): Whether to skip running flow runs. Defaults to True.
 
     Returns:
         A list containing one dictionary for every flow we got. The format for the
@@ -49,6 +53,12 @@ def get_old_flow_runs(days_old: int, client: Client = None) -> List[Dict[str, st
                 where: {
                     _and: [
                         {start_time: {_lte: $maximum_start_time}},
+    """
+    if skip_running:
+        query += """
+                        {state: {_neq: "Running"}},
+        """
+    query += """
                     ]
                 }
             ) {
