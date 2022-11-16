@@ -14,18 +14,14 @@ from pipelines.utils.utils import log
 @task
 def download_data() -> str:
     """
-    Baixa dados da planilha google
-    https://docs.google.com/spreadsheets/u/1/d/e/2PACX-1vQd3-V6K_hOcrVySYJKk0tevS9TCI0MpwQ5W7IY-_fIUUR4uZ0JVttqmaHeA9Pm-BJsAXUmjTvLZaDt/pubhtml?widget=true&headers=false#gid=1343658906
-    e retorna um texto em formato CSV.
-
-    Args:
-        n_users (int): número de usuários a serem baixados.
+    Baixa dados da planilha google e retorna um texto em formato CSV.
 
     Returns:
         str: texto em formato CSV.
     """
     response = requests.get(
-        "https://docs.google.com/spreadsheets/u/1/d/e/2PACX-1vQd3-V6K_hOcrVySYJKk0tevS9TCI0MpwQ5W7IY-_fIUUR4uZ0JVttqmaHeA9Pm-BJsAXUmjTvLZaDt/pubhtml?widget=true&headers=false#gid=1343658906"
+        "https://docs.google.com/spreadsheets/u/1/d/e/2PACX-1vQd3-V6K_hOcrVySYJKk0tevS9TCI0MpwQ5W7IY-_fIUUR4uZ0JVttqmaHeA9Pm-BJsAXUmjTvLZaDt/pubhtml?widget=true&headers=false#gid=1343658906",
+        timeout=5,
     )
     log("Dados baixados com sucesso!")
     return response.text
@@ -42,9 +38,9 @@ def parse_data(data: str) -> pd.DataFrame:
     Returns:
         pd.DataFrame: DataFrame do Pandas.
     """
-    df = phone_n_formatter(pd.read_csv(StringIO(data)))
+    dataframe = pd.read_csv(StringIO(data))
     log("Dados convertidos em DataFrame com sucesso!")
-    return df
+    return dataframe
 
 
 @task
