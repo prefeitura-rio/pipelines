@@ -20,7 +20,8 @@ def download_data() -> str:
         str: texto em formato CSV.
     """
     response = requests.get(
-        "https://docs.google.com/spreadsheets/u/1/d/e/2PACX-1vQd3-V6K_hOcrVySYJKk0tevS9TCI0MpwQ5W7IY-_fIUUR4uZ0JVttqmaHeA9Pm-BJsAXUmjTvLZaDt/pubhtml?widget=true&headers=false#gid=1343658906",
+        "https://docs.google.com/spreadsheets/u/1/d/e/2PACX-1vQd3-V6K_hOcrVySYJKk0tevS9TCI0MpwQ5W7IY-_fIUUR\
+        4uZ0JVttqmaHeA9Pm-BJsAXUmjTvLZaDt/pubhtml?widget=true&headers=false#gid=1343658906",
         timeout=5,
     )
     log("Dados baixados com sucesso!")
