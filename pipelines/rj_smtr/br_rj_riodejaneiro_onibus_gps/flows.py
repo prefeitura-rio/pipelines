@@ -49,10 +49,74 @@ from pipelines.rj_smtr.tasks import (
 from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
     pre_treatment_br_rj_riodejaneiro_onibus_gps,
     create_api_url_onibus_gps,
+    create_api_url_onibus_realocacao,
+    pre_treatment_br_rj_riodejaneiro_onibus_realocacao,
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
 # Flows #
+
+with Flow(
+    "SMTR: GPS SPPO - Realocação (captura)",
+    code_owners=["rodrigo", "fernanda"],
+) as realocacao_sppo:
+    # TODO: criar funcao que retorna todos os ranges para rodar
+    date_range = Parameter("date_range", default=None)
+
+    # SETUP #
+    timestamp = get_current_timestamp()
+
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix="GPS SPPO - Realocação: ", now_time=timestamp
+    )
+
+    partitions = create_date_hour_partition(timestamp)
+
+    filename = parse_timestamp_to_string(timestamp)
+
+    filepath = create_local_partition_path(
+        dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
+        table_id=constants.REALOCACAO_SPPO_RAW_TABLE_ID.value,
+        filename=filename,
+        partitions=partitions,
+    )
+
+    url = create_api_url_onibus_realocacao.map(date_range=date_range)
+
+    # EXTRACT #
+    raw_status = get_raw(url)
+
+    raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
+
+    # CLEAN #
+    treated_status = pre_treatment_br_rj_riodejaneiro_onibus_realocacao.map(
+        status=unmapped(raw_status), date_range=date_range
+    )
+
+    treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
+
+    # LOAD #
+    error = bq_upload(
+        dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
+        table_id=constants.REALOCACAO_SPPO_RAW_TABLE_ID.value,
+        filepath=treated_filepath,
+        raw_filepath=raw_filepath,
+        partitions=partitions,
+        status=treated_status,
+    )
+
+    upload_logs_to_bq(
+        dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
+        parent_table_id=constants.REALOCACAO_SPPO_RAW_TABLE_ID.value,
+        error=error,
+        timestamp=timestamp,
+    )
+
+realocacao_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+realocacao_sppo.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+)
 
 with Flow(
     "SMTR: GPS SPPO - Materialização",
@@ -132,7 +196,7 @@ with Flow(
 materialize_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 materialize_sppo.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 
 
@@ -195,9 +259,9 @@ with Flow(
 captura_sppo_v2.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_sppo_v2.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
-captura_sppo_v2.schedule = every_minute
+# captura_sppo_v2.schedule = every_minute
 
 
 with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as recaptura:
@@ -218,6 +282,8 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
         prefix="GPS SPPO Recapturas: ", now_time=get_now_time(), wait=timestamps
     )
     with case(errors, False):
+        # TODO: adicionar etapa de realocação - se sucesso, entao materializa
+
         with case(materialize, True):
             materialize_no_error = create_flow_run(
                 flow_name=materialize_sppo.name,
@@ -302,6 +368,6 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
 recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 recaptura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
-recaptura.schedule = every_hour_minute_six
+# recaptura.schedule = every_hour_minute_six

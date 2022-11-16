@@ -22,6 +22,88 @@ from pipelines.rj_smtr.constants import constants
 
 
 @task
+# pylint: disable=line-too-long
+def create_api_url_onibus_realocacao(
+    date_range: Dict = None, source: str = None
+) -> str:
+    """
+    start_date: datahora mínima do sinal de GPS avaliado
+    end_date: datahora máxima do sinal de GPS avaliado
+    """
+
+    # Configura parametros da URL
+
+    url = "http://ccomobility.com.br/WebServices/Binder/wsconecta/EnvioViagensRetroativasSMTR?"
+
+    headers = get_vault_secret(source)["data"]
+    key = list(headers)[0]
+    url = f"{url}{key}={{secret}}"
+
+    start = date_range["date_range_start"].strftime("%Y-%m-%d+%H:%M:%S")
+    end = date_range["date_range_end"].strftime("%Y-%m-%d+%H:%M:%S")
+
+    url += f"&dataInicial={start}&dataFinal={end}"
+
+    log(f"Request data from URL: {url}")
+    return url.format(secret=headers[key])
+
+
+@task
+def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
+    status: dict, date_range: dict = None
+) -> Dict:
+
+    if status["error"] is not None:
+        return {"data": pd.DataFrame(), "error": status["error"]}
+
+    if status["data"] == []:
+        log("Data is empty, skipping treatment...")
+        return {"data": pd.DataFrame(), "error": status["error"]}
+
+    # error = None
+    # timezone = constants.TIMEZONE.value
+
+    log(f"Data received to treat: \n{status['data'][:5]}")
+    df = pd.DataFrame(status["data"])  # pylint: disable=c0103
+    # df["timestamp_captura"] = timestamp
+    df["timestamp_captura"] = datetime.datetime.now().isoformat()
+    # log(f"Before converting, datahora is: \n{df['datahora']}")
+
+    # Ajusta tipos de data
+    dt_cols = ["dataEntrada", "dataOperacao", "dataSaida"]
+    for col in dt_cols:
+        df[col] = pd.to_datetime(df[col])
+
+    # Ajusta tempo máximo da realocação
+    df.loc[df.dataSaida == "1971-01-01 00:00:00", "dataSaida"] = date_range[
+        "date_range_end"
+    ]
+
+    # TODO: separar os filtros num dicionario
+
+    # Filtra realocações válidas
+    df = df[
+        (df.dataOperacao - df.dataEntrada <= datetime.timedelta(minutes=60))
+        & (df.dataEntrada <= df.dataSaida)
+        & (df.dataEntrada <= df.dataOperacao)
+    ]
+
+    # Renomeia colunas
+    cols = {
+        "veiculo": "id_veiculo",
+        "dataOperacao": "datetime_operacao",
+        "linha": "servico",
+        "dataEntrada": "datetime_entrada",
+        "dataSaida": "datetime_saida",
+        "dataProcessado": "timestamp_processamento",
+    }
+
+    df = df.rename(columns=cols)
+
+    return df.drop_duplicates()
+
+
+@task
 def create_api_url_onibus_gps(version: str, timestamp: datetime = None) -> str:
     """
     Generates the complete URL to get data from API.
