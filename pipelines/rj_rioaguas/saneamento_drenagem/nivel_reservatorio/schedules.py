@@ -33,7 +33,7 @@ gsheets_clocks = generate_dump_url_schedules(
     labels=[
         constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
     ],
-    dataset_id="saneamento_drenagem.nivel_reservatorio",
+    dataset_id="saneamento_drenagem",
     table_parameters=gsheets_urls,
 )
 
