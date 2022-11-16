@@ -136,27 +136,27 @@ ergon_queries = {
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_VINCULOS",
     },
-    "fichas_financeiras": {
-        "materialize_after_dump": True,
-        "materialization_mode": "prod",
-        "dump_mode": "overwrite",
-        "execute_query": "SELECT * FROM ergon.fichas_financeiras limit 1000",
-    },
+    # "fichas_financeiras": {
+    #     "materialize_after_dump": True,
+    #     "materialization_mode": "prod",
+    #     "dump_mode": "overwrite",
+    #     "execute_query": "SELECT * FROM ergon.fichas_financeiras limit 1000",
+    # },
 }
 
 
 ergon_clocks = generate_dump_db_schedules(
     interval=timedelta(days=30),
-    start_date=datetime(2022, 7, 12, 17, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2022, 11, 9, 10, 30, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_SMFP_AGENT_LABEL.value,
     ],
     db_database="P01.PCRJ",
-    db_host="10.70.6.22",
-    db_port="1521",
+    db_host="10.70.6.21",
+    db_port="1526",
     db_type="oracle",
-    dataset_id="administracao_recursos_humanos_ergon",
-    vault_secret_path="ergon-hom",
+    dataset_id="recursos_humanos_ergon",
+    vault_secret_path="ergon-prod",
     table_parameters=ergon_queries,
 )
 
