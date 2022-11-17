@@ -41,6 +41,4 @@ example_dbt_clocks = [
     )
     for count, (_, table_id) in enumerate(example_dbt_tables.items())
 ]
-example_dbt_tables_schedule = Schedule(
-    clocks=untuple(example_dbt_clocks)
-)
+example_dbt_tables_schedule = Schedule(clocks=untuple(example_dbt_clocks))
