@@ -16,9 +16,7 @@ from pipelines.utils.execute_dbt_model.flows import utils_run_dbt_model_flow
 from pipelines.utils.utils import set_default_parameters
 
 dbt_example_formacao_infra = deepcopy(utils_run_dbt_model_flow)
-dbt_example_formacao_infra.name = (
-    "EMD: Exemplo Formação DBT - Materializar tabelas"
-)
+dbt_example_formacao_infra.name = "EMD: Exemplo Formação DBT - Materializar tabelas"
 dbt_example_formacao_infra.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dbt_example_formacao_infra.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value
