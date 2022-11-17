@@ -187,6 +187,7 @@ class MySql(Database):
             password: The password of the database.
             database: The database name.
         """
+        port = port if type(port) == int else int(port)
         super().__init__(
             hostname,
             port,
