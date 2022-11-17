@@ -6,6 +6,7 @@ Tasks for the example flow
 from io import StringIO
 
 import pandas as pd
+from pathlib import Path
 from prefect import task
 import requests
 
@@ -54,5 +55,7 @@ def save_report(dataframe: pd.DataFrame) -> None:
     Args:
         dataframe (pd.DataFrame): DataFrame do Pandas.
     """
-    dataframe.to_csv("report.csv", index=False)
+    save_path = Path("temp", "report.csv")
+    dataframe.to_csv(save_path, index=False)
     log("Dados salvos em report.csv com sucesso!")
+    return save_path
