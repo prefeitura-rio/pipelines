@@ -4,6 +4,7 @@ Tasks for the example flow
 """
 
 from io import StringIO
+import os
 
 from pathlib import Path
 import pandas as pd
@@ -56,6 +57,8 @@ def save_report(dataframe: pd.DataFrame) -> None:
         dataframe (pd.DataFrame): DataFrame do Pandas.
     """
     save_path = Path("temp", "report.csv")
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
     dataframe.to_csv(save_path, index=False)
     log("Dados salvos em report.csv com sucesso!")
     return save_path
