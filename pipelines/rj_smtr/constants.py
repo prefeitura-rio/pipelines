@@ -140,3 +140,5 @@ class constants(Enum):  # pylint: disable=c0103
         "RiR": "flag_rir",
         "Apoio": "flag_apoio",
     }
+    # PROJETO QRCODE EXEMPLO
+    DEFAULT_VEHICLE = 123456
