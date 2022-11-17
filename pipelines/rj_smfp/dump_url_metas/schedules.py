@@ -109,6 +109,16 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "dataset_id": "planejamento_gestao_acordo_resultados",
     },
+    "metas_acordo_resultados_ordenacao": {
+        "dump_mode": "overwrite",
+        "url": "https://docs.google.com/spreadsheets/d/1s9-PY6ayAYbtOY8_jUCvaMZSPP5xGdgNkERxS5QQCsw\
+            /edit#gid=118781852",
+        "url_type": "google_sheet",
+        "gsheets_sheet_name": "Metas AR 2022",
+        "gsheets_sheet_range": "A2:F1000",
+        "materialize_after_dump": True,
+        "dataset_id": "planejamento_gestao_dashboard_metas",
+    },
 }
 
 
