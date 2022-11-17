@@ -164,6 +164,17 @@ def list_vol_files(
             for file in all_files
             if file.split(&#34;/&#34;)[-1][: len(greater_than) + 7] &gt;= f&#34;9921GUA{greater_than}&#34;
         ]
+
+    # Filter files with same filename
+    filenames = set()
+    filtered_remote_files = []
+    for file in remote_files:
+        filename = file.split(&#34;/&#34;)[-1]
+        if filename not in filenames:
+            filtered_remote_files.append(file)
+            filenames.add(filename)
+    remote_files = filtered_remote_files
+
     log(f&#34;Found {len(remote_files)} files.&#34;)
     log(f&#34;Remote files: {remote_files}&#34;)
     return remote_files, output_directory_path
@@ -593,6 +604,17 @@ def list_vol_files(
             for file in all_files
             if file.split(&#34;/&#34;)[-1][: len(greater_than) + 7] &gt;= f&#34;9921GUA{greater_than}&#34;
         ]
+
+    # Filter files with same filename
+    filenames = set()
+    filtered_remote_files = []
+    for file in remote_files:
+        filename = file.split(&#34;/&#34;)[-1]
+        if filename not in filenames:
+            filtered_remote_files.append(file)
+            filenames.add(filename)
+    remote_files = filtered_remote_files
+
     log(f&#34;Found {len(remote_files)} files.&#34;)
     log(f&#34;Remote files: {remote_files}&#34;)
     return remote_files, output_directory_path</code></pre>
