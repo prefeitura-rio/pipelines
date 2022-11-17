@@ -46,6 +46,7 @@ def parse_data(data: str) -> pd.DataFrame:
     """
     dfr = pd.read_csv(StringIO(data))
     log("Dados convertidos em DataFrame com sucesso!")
+    log(f">>>>> {dfr.columns}")
     return dfr
 
 
