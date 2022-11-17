@@ -5,8 +5,8 @@ Tasks for the example flow
 
 from io import StringIO
 
-import pandas as pd
 from pathlib import Path
+import pandas as pd
 from prefect import task
 import requests
 
