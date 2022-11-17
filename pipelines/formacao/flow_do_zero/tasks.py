@@ -57,9 +57,14 @@ def save_report(dataframe: pd.DataFrame) -> None:
     Args:
         dataframe (pd.DataFrame): DataFrame do Pandas.
     """
-    save_path = Path("temp", "report.csv")
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
+
+    temp_path = os.path.join(os.getcwd(), "temp")
+
+    if not os.path.exists(temp_path):
+        os.makedirs(temp_path)
+
+    save_path = Path(temp_path, "report.csv")
     dataframe.to_csv(save_path, index=False)
+
     log("Dados salvos em report.csv com sucesso!")
     return save_path
