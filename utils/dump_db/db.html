@@ -215,6 +215,7 @@ class MySql(Database):
             password: The password of the database.
             database: The database name.
         &#34;&#34;&#34;
+        port = port if type(port) == int else int(port)
         super().__init__(
             hostname,
             port,
@@ -616,6 +617,7 @@ def get_cursor(self):
             password: The password of the database.
             database: The database name.
         &#34;&#34;&#34;
+        port = port if type(port) == int else int(port)
         super().__init__(
             hostname,
             port,
