@@ -36,7 +36,7 @@ example_dbt_clocks = [
         parameter_defaults={
             "dataset_id": "test_formacao",
             "table_id": table_id,
-            "mode": "prod",
+            "mode": "dev",
         },
     )
     for count, (_, table_id) in enumerate(example_dbt_tables.items())
