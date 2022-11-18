@@ -10,7 +10,7 @@ from prefect.storage import GCS
 
 from pipelines.constants import constants
 
-from pipelines.rj_escritorio.dump_db_formacao.schedules import (
+from pipelines.formacao.flow_pre_definido.schedules import (
     gsheets_one_minute_update_schedule,
 )
 from pipelines.utils.dump_url.flows import dump_url_flow  # alterado
