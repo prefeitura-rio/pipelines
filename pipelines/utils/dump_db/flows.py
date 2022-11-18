@@ -89,9 +89,7 @@ with Flow(
     table_id = Parameter("table_id")
     dump_mode = Parameter("dump_mode", default="append")  # overwrite or append
     batch_data_type = Parameter("batch_data_type", default="csv")  # csv or parquet
-    dbt_model_secret_parameters = Parameter(
-        "dbt_model_secret_parameters", default={"hash_seed": "hash_seed"}
-    )
+    dbt_model_secret_parameters = Parameter("dbt_model_secret_parameters")
     #####################################
     #
     # Rename flow run
