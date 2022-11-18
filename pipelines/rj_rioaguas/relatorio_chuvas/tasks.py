@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 git s# -*- coding: utf-8 -*-
 """
 Tasks para pipeline de dados de nível da Lagoa Rodrigo de Freitas.
@@ -16,7 +17,7 @@ from pipelines.rj_rioaguas.utils import login
 def download_file(download_url):
     '''
     Função para download de tabela com os dados.
-    
+
     Args:
     download_url (str): URL onde a tabela está localizada.
     '''
@@ -47,4 +48,3 @@ def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
     # dados.to_csv(filename, index=False)
     dados.to_csv(r"{}".format(filename), index=False)
     return base_path
-  
