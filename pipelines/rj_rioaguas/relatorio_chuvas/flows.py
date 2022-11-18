@@ -26,7 +26,7 @@ with Flow(
     # Tasks
     dados = download_file(download_url)
     salvar_dados(dados)
-  
+
 rioaguas_nivel_LRF.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 rioaguas_nivel_LRF.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
