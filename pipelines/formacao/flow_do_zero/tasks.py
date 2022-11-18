@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0103
 """
 Tasks for the example flow
 """
 
 from io import StringIO
+import os
+from pathlib import Path
 
 import pandas as pd
 from prefect import task
@@ -43,6 +46,7 @@ def parse_data(data: str) -> pd.DataFrame:
     """
     dfr = pd.read_csv(StringIO(data))
     log("Dados convertidos em DataFrame com sucesso!")
+    dfr.columns = [i.replace(".", "_") for i in dfr.columns]
     return dfr
 
 
@@ -54,5 +58,10 @@ def save_report(dataframe: pd.DataFrame) -> None:
     Args:
         dataframe (pd.DataFrame): DataFrame do Pandas.
     """
-    dataframe.to_csv("report.csv", index=False)
+    save_path = os.path.join(os.getcwd(), "temp")
+
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+
+    dataframe.to_csv(Path(save_path, "report.csv"), index=False)
     log("Dados salvos em report.csv com sucesso!")
