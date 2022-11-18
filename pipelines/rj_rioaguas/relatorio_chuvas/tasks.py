@@ -14,6 +14,7 @@ from prefect import task
 from pipelines.utils.utils import get_vault_secret, log
 from pipelines.rj_rioaguas.utils import login
 
+
 @task
 def download_file(download_url):
     '''
@@ -35,13 +36,14 @@ def download_file(download_url):
     dfr = pd.read_html(str(table))[0]
     return dfr
 
+
 @task
 def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
     """
     Salvar dados em csv.
     """
     base_path = Path(os.getcwd())
-    #partition_path = Path(base_path, partitions)
+    # partition_path = Path(base_path, partitions)
     # if not os.path.exists(partition_path):
     #     os.makedirs(partition_path)
     filename = str(base_path / "nivel.csv")

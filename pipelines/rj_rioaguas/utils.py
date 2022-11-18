@@ -5,6 +5,7 @@ Utils Gerais da Rio-Águas.
 
 import requests
 
+
 def login(url, user, password):
     """
     Função para fazer login no website.
