@@ -5,9 +5,10 @@ Fonte: Squitter.
 """
 # pylint: disable=C0327
 
-from prefect import Flow, Parameter
+from prefect import Parameter
 
-from tasks import download_file, salvar_dados
+from pipelines.utils.decorators import Flow
+from pipelines.rj_rioaguas.relatorio_chuvas.tasks import download_file, salvar_dados
 
 with Flow(
     "RIOAGUAS: Relatorio de Chuvas - Nivel LRF",

@@ -10,6 +10,7 @@ import os
 import pandas as pd
 
 from bs4 import BeautifulSoup
+from prefect import task
 from pipelines.utils.utils import get_vault_secret, log
 from pipelines.rj_rioaguas.utils import login
 

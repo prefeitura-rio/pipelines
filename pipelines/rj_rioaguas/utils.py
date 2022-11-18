@@ -3,11 +3,7 @@
 Utils Gerais da Rio-Águas.
 """
 
-import json
 import requests
-
-import prefect
-
 
 def login(url, user, password):
     """
@@ -37,6 +33,6 @@ def login(url, user, password):
         "next": "/",
     }
 
-    res = client.post(url, data=payload, headers=dict(Referer=url))
+    client.post(url, data=payload, headers=dict(Referer=url))
 
     return client
