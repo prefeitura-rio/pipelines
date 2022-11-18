@@ -21,7 +21,8 @@ inadimplente_queries = {
     "perfil_inadimplente": {
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM DBINAD.IPTU.IPTU;",
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
     }
 }
 
