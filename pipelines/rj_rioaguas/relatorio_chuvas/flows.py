@@ -7,6 +7,10 @@ Fonte: Squitter.
 
 from prefect import Parameter
 
+from prefect.run_configs import KubernetesRun
+from prefect.storage import GCS
+
+from pipelines.constants import constants
 from pipelines.utils.decorators import Flow
 from pipelines.rj_rioaguas.relatorio_chuvas.tasks import download_file, salvar_dados
 
@@ -22,3 +26,12 @@ with Flow(
     # Tasks
     dados = download_file(download_url)
     salvar_dados(dados)
+  
+rioaguas_nivel_LRF.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+rioaguas_nivel_LRF.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[
+        constants.RJ_RIOAGUAS_AGENT_LABEL.value,
+    ],
+)
+rioaguas_nivel_LRF.schedule = None
