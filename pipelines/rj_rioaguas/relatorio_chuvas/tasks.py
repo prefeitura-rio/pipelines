@@ -33,8 +33,8 @@ def download_file(download_url):
     session = login(url, user, password)
     # download_url = "http://horus.squitter.com.br/dados/meteorologicos/292/"
     page = session.get(download_url)
-    soup = BeautifulSoup(page.text, 'html.parser')
-    table = soup.find_all('table')
+    soup = BeautifulSoup(page.text, "html.parser")
+    table = soup.find_all("table")
     dfr = pd.read_html(str(table))[0]
     return dfr
 
