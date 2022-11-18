@@ -4,6 +4,8 @@
 Tasks para pipeline de dados de nível da Lagoa Rodrigo de Freitas.
 Fonte: Squitter.
 """
+# pylint: disable= C0327
+
 from pathlib import Path
 from typing import Union
 import os
@@ -17,12 +19,12 @@ from pipelines.rj_rioaguas.utils import login
 
 @task
 def download_file(download_url):
-    '''
+    """
     Função para download de tabela com os dados.
 
     Args:
     download_url (str): URL onde a tabela está localizada.
-    '''
+    """
     # Acessar username e password
     dicionario = get_vault_secret("rioaguas_nivel_lagoa_squitter")
     url = dicionario["data"]["url"]
