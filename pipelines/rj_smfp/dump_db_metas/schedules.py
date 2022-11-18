@@ -44,12 +44,16 @@ egp_web_queries = {
         "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.VW_NotaMeta;",
         "materialize_after_dump": True,
     },
+    "regra": {
+        "dump_mode": "overwrite",
+        "execute_query": "SELECT * FROM EGPWEB_PRD.dbo.VW_RegraMeta;",
+        "materialize_after_dump": True,
+    },
 }
-
 
 egp_web_clocks = generate_dump_db_schedules(
     interval=timedelta(days=7),
-    start_date=datetime(2022, 9, 14, 0, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2022, 11, 7, 17, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_SMFP_AGENT_LABEL.value,
     ],

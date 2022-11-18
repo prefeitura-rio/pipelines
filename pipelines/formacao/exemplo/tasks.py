@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''tasks'''
+"""tasks"""
 from io import StringIO
 import requests
 
@@ -8,21 +8,25 @@ from prefect import task
 from pipelines.formacao.utils import log
 from pipelines.formacao.utils import df_formatnum
 
+
 @task
-def download_data (n_users : int) -> str:
-    '''Funcao que recebe o numero de usuarios randomicos a serem gerados 
+def download_data(n_users: int) -> str:
+    """Funcao que recebe o numero de usuarios randomicos a serem gerados
     e retorna uma string
-    
+
     Args:
         n: Número de usuários aleatórios.
 
     Returns:
         str: Texto em formato CSV
-    '''
-    
-    response = requests.get("https://randomuser.me/api/?results="+str(n_users)+"&format=csv")
-   
+    """
+
+    response = requests.get(
+        "https://randomuser.me/api/?results=" + str(n_users) + "&format=csv"
+    )
+
     return response.text
+
 
 @task
 def to_dataframe(data) -> pd.DataFrame:
@@ -32,12 +36,13 @@ def to_dataframe(data) -> pd.DataFrame:
 
     Args:
         data (str): Dados em CSV formato Byte.
-    
-    Returns:    
+
+    Returns:
         pd.DataFrame: DataFrame do Pandas.
     """
     dframe = pd.read_csv(StringIO(data))
     return df_formatnum(dframe)
+
 
 @task
 def save_report(dataframe: pd.DataFrame) -> None:
@@ -46,10 +51,9 @@ def save_report(dataframe: pd.DataFrame) -> None:
 
     Args:
         dataframe (pd.DataFrame): DataFrame do Pandas.
-    
-    Returns:    
+
+    Returns:
         None
     """
     dataframe.to_csv("report.csv", index=False)
     log("Dados salvos em report.csv com sucesso!")
-  
