@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable= line-too-long
 
 from io import StringIO
 from pathlib import Path
@@ -20,8 +21,7 @@ def download_data() -> str:
         str: texto em formato CSV.
     """
     response = requests.get(
-        "https://docs.google.com/spreadsheets/d/\
-        1zM0N_PonkALEK3YD2A4DF9W10Cm2n99_IiySm8zygqk/edit#gid=1343658906",
+        "https://docs.google.com/spreadsheets/d/1zM0N_PonkALEK3YD2A4DF9W10Cm2n99_IiySm8zygqk/edit#gid=1343658906",
         timeout=5,
     )
     log("Dados baixados com sucesso!")

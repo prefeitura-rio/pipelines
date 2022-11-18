@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# pylint: disable= line-too-long
+
 """
 Database dumping flows for nivel_reservatorio project
 """
@@ -32,8 +34,7 @@ nivel_gsheets_flow.run_config = KubernetesRun(
 nivel_gsheets_flow_parameters = {
     "dataset_id": "saneamento_drenagem",
     "dump_mode": "overwrite",
-    "url": "https://docs.google.com/spreadsheets/d/\
-    1zM0N_PonkALEK3YD2A4DF9W10Cm2n99_IiySm8zygqk/edit#gid=1343658906",
+    "url": "https://docs.google.com/spreadsheets/d/1zM0N_PonkALEK3YD2A4DF9W10Cm2n99_IiySm8zygqk/edit#gid=1343658906",
     "url_type": "google_sheet",
     "gsheets_sheet_name": "Reservatórios",
     "table_id": "nivel_reservatorio",
