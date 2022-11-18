@@ -23,6 +23,7 @@ daily_at_3am = Schedule(
             ],
             parameter_defaults={
                 "days_old": 30,
+                "skip_running": True,
             },
         ),
     ]

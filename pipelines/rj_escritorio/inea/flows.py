@@ -2,6 +2,8 @@
 """
 Flows for INEA.
 """
+from copy import deepcopy
+
 from prefect import Parameter
 from prefect.run_configs import LocalRun
 from prefect.storage import GCS
@@ -23,6 +25,7 @@ with Flow(
     code_owners=[
         "gabriel",
     ],
+    skip_if_running=True,
 ) as inea_radar_flow:
     date = Parameter("date", default=None, required=False)
     bucket_name = Parameter("bucket_name")
@@ -37,6 +40,9 @@ with Flow(
         required=False,
     )
     greater_than = Parameter("greater_than", default=None, required=False)
+    vols_remote_directory = Parameter(
+        "vols_remote_directory", default="/var/opt/edge/vols", required=False
+    )
     remote_files, output_directory = list_vol_files(
         date=date,
         greater_than=greater_than,
@@ -46,6 +52,7 @@ with Flow(
         product=product,
         mode=mode,
         output_format=output_format,
+        vols_remote_directory=vols_remote_directory,
     )
     downloaded_files = fetch_vol_file.map(
         remote_file=remote_files, output_directory=unmapped(output_directory)
@@ -69,6 +76,13 @@ inea_radar_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 inea_radar_flow.run_config = LocalRun(labels=[constants.INEA_AGENT_LABEL.value])
 inea_radar_flow.schedule = every_5_minutes
 
+inea_backfill_radar_flow = deepcopy(inea_radar_flow)
+inea_backfill_radar_flow.name = "INEA: Captura dados de radar (backfill)"
+inea_backfill_radar_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+inea_backfill_radar_flow.run_config = LocalRun(
+    labels=[constants.INEA_AGENT_LABEL.value]
+)
+inea_backfill_radar_flow.schedule = None
 
 with Flow(
     "INEA: Executar comando no terminal",

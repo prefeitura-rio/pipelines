@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=R0914,W0613,W0102
+# pylint: disable=R0914,W0613,W0102,W0613,R0912,R0915
 """
 Tasks for comando
 """
 
 from copy import deepcopy
+from datetime import timedelta
 import json
 import os
 from pathlib import Path
@@ -98,8 +99,11 @@ def set_last_updated_on_redis(
     redis_client.set(key_problema_ids, list(set(problem_ids_atividade)))
 
 
-@task(nout=3)
-# pylint: disable=W0613,R0914,R0912,R0915
+@task(
+    nout=3,
+    max_retries=3,
+    retry_delay=timedelta(seconds=60),
+)
 def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
     """
     Faz o request dos dados de eventos e das atividades do evento
@@ -364,6 +368,12 @@ def save_no_partition(dataframe: pd.DataFrame, append: bool = False) -> str:
     """
     Saves a dataframe to a temporary directory and returns the path to the directory.
     """
+
+    if "sigla" in dataframe.columns:
+        dataframe = dataframe.sort_values(["id_pop", "sigla", "acao"])
+    else:
+        dataframe = dataframe.sort_values("id_pop")
+
     path_to_directory = "/tmp/" + str(uuid4().hex) + "/"
     os.makedirs(path_to_directory, exist_ok=True)
     if append:

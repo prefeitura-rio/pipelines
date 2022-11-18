@@ -44,6 +44,7 @@ def list_vol_files(
     mode: str = "prod",
     output_format: str = "NetCDF",
     output_directory: str = "/var/escritoriodedados/temp/",
+    vols_remote_directory: str = "/var/opt/edge/vols",
 ) -> Tuple[List[str], str]:
     """
     List files from INEA server
@@ -121,12 +122,12 @@ def list_vol_files(
     log("Listing remote files...")
     if date:
         _, stdout, _ = ssh_client.exec_command(
-            f"find /var/opt/edge/vols -name '9921GUA{date}*.vol'"
+            f"find {vols_remote_directory} -name '9921GUA{date}*.vol'"
         )
         remote_files = stdout.read().decode("utf-8").splitlines()
     else:
         _, stdout, _ = ssh_client.exec_command(
-            "find /var/opt/edge/vols -name '9921GUA*.vol'"
+            f"find {vols_remote_directory} -name '9921GUA*.vol'"
         )
         all_files = stdout.read().decode("utf-8").splitlines()
         remote_files = [
@@ -134,6 +135,17 @@ def list_vol_files(
             for file in all_files
             if file.split("/")[-1][: len(greater_than) + 7] >= f"9921GUA{greater_than}"
         ]
+
+    # Filter files with same filename
+    filenames = set()
+    filtered_remote_files = []
+    for file in remote_files:
+        filename = file.split("/")[-1]
+        if filename not in filenames:
+            filtered_remote_files.append(file)
+            filenames.add(filename)
+    remote_files = filtered_remote_files
+
     log(f"Found {len(remote_files)} files.")
     log(f"Remote files: {remote_files}")
     return remote_files, output_directory_path

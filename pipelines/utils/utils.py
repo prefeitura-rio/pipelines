@@ -24,7 +24,7 @@ import numpy as np
 import pandas as pd
 import prefect
 from prefect.client import Client
-from prefect.engine.state import State
+from prefect.engine.state import Skipped, State
 from prefect.run_configs import KubernetesRun
 from prefect.utilities.graphql import (
     with_args,
@@ -184,6 +184,44 @@ def notify_discord_on_failure(
     )
 
 
+# pylint: disable=unused-argument
+def skip_if_running_handler(obj, old_state: State, new_state: State) -> State:
+    """
+    State handler that will skip a flow run if another instance of the flow is already running.
+
+    Adapted from Prefect Discourse:
+    https://tinyurl.com/4hn5uz2w
+    """
+    if new_state.is_running():
+        client = Client()
+        query = """
+            query($flow_id: uuid) {
+                flow_run(
+                    where: {
+                        _and: [
+                            {state: {_eq: "Running"}},
+                            {flow_id: {_eq: $flow_id}}
+                        ]
+                    }
+                ) {
+                    id
+                }
+            }
+        """
+        # pylint: disable=no-member
+        response = client.graphql(
+            query=query,
+            variables=dict(flow_id=prefect.context.flow_id),
+        )
+        active_flow_runs = response["data"]["flow_run"]
+        if active_flow_runs:
+            logger = prefect.context.get("logger")
+            message = "Skipping this flow run since there are already some flow runs in progress"
+            logger.info(message)
+            return Skipped(message)
+    return new_state
+
+
 def set_default_parameters(
     flow: prefect.Flow, default_parameters: dict
 ) -> prefect.Flow:
@@ -244,6 +282,7 @@ def run_cloud(
 
 def run_registered(
     flow_name: str,
+    flow_project: str,
     labels: List[str],
     parameters: Dict[str, Any] = None,
     run_description: str = "",
@@ -263,10 +302,13 @@ def run_registered(
                             "_and": [
                                 {"name": {"_eq": flow_name}},
                                 {"archived": {"_eq": False}},
+                                {"project": {"name": {"_eq": flow_project}}},
                             ]
                         }
                     },
-                ): {"id"}
+                ): {
+                    "id",
+                }
             }
         }
     )

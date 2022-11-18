@@ -128,9 +128,58 @@ def converte_timezone(datetime_save: str) -> str:
     Recebe o formato de data hora em 'YYYYMMDD HHmm' no UTC e
     retorna no mesmo formato no horário São Paulo
     """
+    log(f">>>>>>> {datetime_save}")
     datahora = pendulum.from_format(datetime_save, "YYYYMMDD HHmm")
     datahora = datahora.in_tz("America/Sao_Paulo")
     return datahora.format("YYYYMMDD HHmm")
+
+
+def extract_julian_day_and_hour_from_filename(filename: str):
+    """
+    Extract julian day and hour from satelite filename
+
+    Parameters
+    filename (str): 'OR_ABI-L2-TPWF-M6_G16_s20222901900203_e20222901909511_c20222901911473.nc'
+
+    Returns
+    year (int): 2022 (20222901900203)
+    julian_day (int): 290 (20222901900203)
+    hour_utc (str): 1900 (20222901900203)
+    """
+    # Search for the Scan start in the file name
+    start = filename[filename.find("_s") + 2 : filename.find("_e")]
+    # Get year
+    year = int(start[0:4])
+    # Get julian day
+    julian_day = int(start[4:7])
+
+    # Time (UTC) as string
+    hour_utc = start[7:11]
+
+    # Time of the start of the Scan
+    # time = start[7:9] + ":" + start[9:11] + ":" + start[11:13] + " UTC"
+
+    return year, julian_day, hour_utc
+
+
+def convert_julian_to_conventional_day(year: int, julian_day: int):
+    """Convert julian day to conventional
+
+    Parameters
+    year (int): 2022 (20222901900203)
+    julian_day (int): 290 (20222901900203)
+
+    Returns
+    date_save (str): 19 (20222901900203)"""
+
+    # Subtracting 1 because the year starts at day "0"
+    julian_day = julian_day - 1
+    dayconventional = datetime.datetime(year, 1, 1) + datetime.timedelta(julian_day)
+
+    # Format the date according to the strftime directives
+    date_save = dayconventional.strftime("%Y%m%d")
+
+    return date_save
 
 
 def get_info(path: str) -> Tuple[dict, str]:
@@ -138,25 +187,13 @@ def get_info(path: str) -> Tuple[dict, str]:
     # Getting Information From the File Name  (Time, Date,
     # Product Type, Variable and Defining the CMAP)
     """
-    # Search for the Scan start in the file name
-    start = path[path.find("_s") + 2 : path.find("_e")]
-    # Converting from julian day to dd-mm-yyyy
-    year = int(start[0:4])
-    # Subtract 1 because the year starts at "0"
-    dayjulian = int(start[4:7]) - 1
-    # Convert from julian to conventional
-    dayconventional = datetime.datetime(year, 1, 1) + datetime.timedelta(dayjulian)
-    # Format the date according to the strftime directives
-    # date = dayconventional.strftime('%d-%b-%Y')
-    # Time of the start of the Scan
-    # time = start[7:9] + ":" + start[9:11] + ":" + start[11:13] + " UTC"
+    year, julian_day, hour_utc = extract_julian_day_and_hour_from_filename(path)
 
-    # Date as string
-    date_save = dayconventional.strftime("%Y%m%d")
-
-    # Time (UTC) as string
-    time_save = start[7:11]
-    datetime_save = str(date_save) + " " + time_save
+    date_save = convert_julian_to_conventional_day(year, julian_day)
+    log(f">>>>>>>>>date_save {date_save}")
+    log(f">>>>>>>>> hour_utc {hour_utc}")
+    log(f">>>>>>>>>julian_day  {julian_day}")
+    datetime_save = str(date_save) + " " + str(hour_utc)
 
     # Converte data/hora de UTC para horário de São Paulo
     datetime_save = converte_timezone(datetime_save=datetime_save)
@@ -181,6 +218,7 @@ def get_info(path: str) -> Tuple[dict, str]:
         "vmin": -50,
         "vmax": 50,
         "cmap": "jet",
+        "resolution": 3,
     }
     # CMIPC - Cloud and Moisture Imagery: 'CMI'
     product_caracteristics["CMIPC"] = {
@@ -188,6 +226,7 @@ def get_info(path: str) -> Tuple[dict, str]:
         "vmin": -50,
         "vmax": 50,
         "cmap": "jet",
+        "resolution": 3,
     }
     # CMIPM - Cloud and Moisture Imagery: 'CMI'
     product_caracteristics["CMIPM"] = {
@@ -195,6 +234,7 @@ def get_info(path: str) -> Tuple[dict, str]:
         "vmin": -50,
         "vmax": 50,
         "cmap": "jet",
+        "resolution": 1,
     }
     # ACHAF - Cloud Top Height: 'HT'
     product_caracteristics["ACHAF"] = {
@@ -202,6 +242,7 @@ def get_info(path: str) -> Tuple[dict, str]:
         "vmin": 0,
         "vmax": 15000,
         "cmap": "rainbow",
+        "resolution": 3,
     }
     # ACHTF - Cloud Top Temperature: 'TEMP'
     product_caracteristics["ACHATF"] = {
@@ -209,6 +250,7 @@ def get_info(path: str) -> Tuple[dict, str]:
         "vmin": 180,
         "vmax": 300,
         "cmap": "jet",
+        "resolution": 3,
     }
     # ACMF - Clear Sky Masks: 'BCM'
     product_caracteristics["ACMF"] = {
@@ -216,6 +258,7 @@ def get_info(path: str) -> Tuple[dict, str]:
         "vmin": 0,
         "vmax": 1,
         "cmap": "gray",
+        "resolution": 3,
     }
     # ACTPF - Cloud Top Phase: 'Phase'
     product_caracteristics["ACTPF"] = {
@@ -223,6 +266,7 @@ def get_info(path: str) -> Tuple[dict, str]:
         "vmin": 0,
         "vmax": 5,
         "cmap": "jet",
+        "resolution": 3,
     }
     # ADPF - Aerosol Detection: 'Smoke'
     product_caracteristics["ADPF"] = {
@@ -230,6 +274,7 @@ def get_info(path: str) -> Tuple[dict, str]:
         "vmin": 0,
         "vmax": 255,
         "cmap": "jet",
+        "resolution": 3,
     }
     # AODF - Aerosol Optical Depth: 'AOD'
     product_caracteristics["AODF"] = {
@@ -237,6 +282,7 @@ def get_info(path: str) -> Tuple[dict, str]:
         "vmin": 0,
         "vmax": 2,
         "cmap": "rainbow",
+        "resolution": 3,
     }
     # CODF - Cloud Optical Depth: 'COD'
     product_caracteristics["CODF"] = {
@@ -244,6 +290,7 @@ def get_info(path: str) -> Tuple[dict, str]:
         "vmin": 0,
         "vmax": 100,
         "cmap": "jet",
+        "resolution": 3,
     }
     # CPSF - Cloud Particle Size: 'PSD'
     product_caracteristics["CPSF"] = {
@@ -251,6 +298,7 @@ def get_info(path: str) -> Tuple[dict, str]:
         "vmin": 0,
         "vmax": 80,
         "cmap": "rainbow",
+        "resolution": 3,
     }
     # CTPF - Cloud Top Pressure: 'PRES'
     product_caracteristics["CTPF"] = {
@@ -258,6 +306,7 @@ def get_info(path: str) -> Tuple[dict, str]:
         "vmin": 0,
         "vmax": 1100,
         "cmap": "rainbow",
+        "resolution": 3,
     }
     # DSIF - Derived Stability Indices: 'CAPE', 'KI', 'LI', 'SI', 'TT'
     product_caracteristics["DSIF"] = {
@@ -265,6 +314,7 @@ def get_info(path: str) -> Tuple[dict, str]:
         "vmin": 0,
         "vmax": 1000,
         "cmap": "jet",
+        "resolution": 3,
     }
     # FDCF - Fire-Hot Spot Characterization: 'Area', 'Mask', 'Power', 'Temp'
     product_caracteristics["FDCF"] = {
@@ -272,6 +322,7 @@ def get_info(path: str) -> Tuple[dict, str]:
         "vmin": 0,
         "vmax": 255,
         "cmap": "jet",
+        "resolution": 3,
     }
     # LSTF - Land Surface (Skin) Temperature: 'LST'
     product_caracteristics["LSTF"] = {
@@ -279,6 +330,7 @@ def get_info(path: str) -> Tuple[dict, str]:
         "vmin": 213,
         "vmax": 330,
         "cmap": "jet",
+        "resolution": 3,
     }
     # RRQPEF - Rainfall Rate - Quantitative Prediction Estimate: 'RRQPE'
     product_caracteristics["RRQPEF"] = {
@@ -286,6 +338,7 @@ def get_info(path: str) -> Tuple[dict, str]:
         "vmin": 0,
         "vmax": 50,
         "cmap": "jet",
+        "resolution": 3,
     }
     # SSTF - Sea Surface (Skin) Temperature: 'SST'
     product_caracteristics["SSTF"] = {
@@ -293,6 +346,7 @@ def get_info(path: str) -> Tuple[dict, str]:
         "vmin": 268,
         "vmax": 308,
         "cmap": "jet",
+        "resolution": 3,
     }
     # TPWF - Total Precipitable Water: 'TPW'
     product_caracteristics["TPWF"] = {
@@ -300,6 +354,7 @@ def get_info(path: str) -> Tuple[dict, str]:
         "vmin": 0,
         "vmax": 60,
         "cmap": "jet",
+        "resolution": 3,
     }
 
     # variable = product_caracteristics[product]['variable']
@@ -313,7 +368,7 @@ def get_info(path: str) -> Tuple[dict, str]:
     if variable == "CMI":
         # Search for the GOES-16 channel in the file name
         product_caracteristics["band"] = int(
-            (path[path.find("M3C" or "M4C") + 3 : path.find("_G16")])
+            (path[path.find("M6C") + 3 : path.find("_G16")])
         )
     else:
         product_caracteristics["band"] = np.nan
@@ -463,7 +518,9 @@ def treat_data(
     return data
 
 
-def save_parquet(variable: str, datetime_save: str) -> Union[str, Path]:
+def save_data_in_file(
+    variable: str, datetime_save: str, file_path: str
+) -> Union[str, Path]:
     """
     Save data in parquet
     """
@@ -503,25 +560,23 @@ def save_parquet(variable: str, datetime_save: str) -> Union[str, Path]:
         )
     )
 
-    # cria pasta se ela não existe
-    base_path = os.path.join(os.getcwd(), "data", "satelite", variable, "output")
-
-    parquet_path = os.path.join(base_path, partitions)
+    # cria pasta de partições se elas não existem
+    output_path = os.path.join(os.getcwd(), "data", "satelite", variable, "output")
+    parquet_path = os.path.join(output_path, partitions)
 
     if not os.path.exists(parquet_path):
         os.makedirs(parquet_path)
 
     # Fixa ordem das colunas
-    print(">>>>>", ["longitude", "latitude", variable.lower()])
     data = data[["longitude", "latitude", variable.lower()]]
 
-    # salva em parquet
-    log(f"Saving on base_path {base_path}")
-    filename = os.path.join(parquet_path, "dados.csv")
-    data.to_csv(filename, index=False)
-    # filename = os.path.join(parquet_path, 'dados.parquet')
-    # data.to_parquet(filename, index=False)
-    return base_path
+    # salva em csv
+    filename = file_path.split("/")[-1].replace(".nc", "")
+    log(f"Saving {filename} on {parquet_path}")
+    log(f"Data_save: {date_save}, time_save: {time_save}")
+    file_path = os.path.join(parquet_path, f"{filename}.csv")
+    data.to_csv(file_path, index=False)
+    return output_path
 
 
 def main(path: Union[str, Path]):
@@ -537,17 +592,26 @@ def main(path: Union[str, Path]):
     # Região da cidade do Rio de Janeiro
     # lat_max, lon_min = (-22.802842397418548, -43.81200531887697)
     # lat_min, lon_max = (-23.073487725280266, -43.11300020870994)
+    # Região da cidade do Rio de Janeiro meteorologista
+    lat_max, lon_max = (
+        -21.699774257353113,
+        -42.35676996062447,
+    )  # canto superior direito
+    lat_min, lon_min = (
+        -23.801876626302175,
+        -45.05290312102409,
+    )  # canto inferior esquerdo
     # Estado do RJ
-    lat_max, lon_max = (-20.69080839963545, -40.28483671464648)
-    lat_min, lon_min = (-23.801876626302175, -45.05290312102409)
+    # lat_max, lon_max = (-20.69080839963545, -40.28483671464648)
+    # lat_min, lon_min = (-23.801876626302175, -45.05290312102409)
     extent = [lon_min, lat_min, lon_max, lat_max]
-
-    # Choose the image resolution (the higher the number the faster the processing is)
-    resolution = 5
 
     # Get information from the image file
     product_caracteristics, datetime_save = get_info(path)
     # product, variable, vmin, vmax, cmap, band
+
+    # Choose the image resolution (the higher the number the faster the processing is)
+    resolution = product_caracteristics["resolution"]
 
     # Call the remap function to convert x, y to lon, lat and save geotiff
     grid, goes16_extent = remap_g16(
