@@ -38,7 +38,7 @@ gsheets_clocks = generate_dump_url_schedules(
     labels=[
         constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
     ],
-    dataset_id="test_dataset_formacao",
+    dataset_id="test_formacao",
     table_parameters=gsheets_urls,
 )
 
