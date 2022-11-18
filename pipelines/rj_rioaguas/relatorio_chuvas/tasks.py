@@ -1,4 +1,4 @@
-git s# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Tasks para pipeline de dados de nível da Lagoa Rodrigo de Freitas.
 Fonte: Squitter.
