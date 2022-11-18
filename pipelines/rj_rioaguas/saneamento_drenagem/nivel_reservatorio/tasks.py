@@ -14,7 +14,7 @@ from pipelines.utils.utils import log
 @task
 def download_data() -> str:
     """
-    Baixa dados da planilha google e retorna um texto em formato CSV.
+    Baixa dados da planilha google e retorna um texto em formato CSV..
 
     Returns:
         str: texto em formato CSV.
