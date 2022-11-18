@@ -22,7 +22,7 @@ from pipelines.utils.utils import untuple_clocks as untuple
 gsheets_urls = {
     "test_table": {
         "dump_mode": "overwrite",
-        "url": "https://docs.google.com/spreadsheets/d/1zM0N_PonkALEK3YD2A4DF9W10Cm2n99_IiySm8zygqk/edit#gid=1343658906",
+        "url": "https://docs.google.com/spreadsheets/d/1zM0N_PonkALEK3YD2A4DF9W10Cm2n99_IiySm8zygqk/edit#gid=1343658906",  # noqa
         "url_type": "google_sheet",
         "gsheets_sheet_name": "Reservatórios",
     },
