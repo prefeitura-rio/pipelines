@@ -105,7 +105,7 @@ class constants(Enum):  # pylint: disable=c0103
             "type": "user_nickname",
         },
         "rodrigo": {
-            "user_id": "276427674002522112",  # TODO: trocar p rodrigo
+            "user_id": "21031636163804545094",
             "type": "user_nickname",
         },
     }
