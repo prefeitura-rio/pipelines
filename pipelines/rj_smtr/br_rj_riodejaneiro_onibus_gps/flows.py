@@ -56,7 +56,7 @@ with Flow(
     "SMTR: GPS SPPO - Realocação (captura)",
     code_owners=["rodrigo", "fernanda"],
 ) as realocacao_sppo:
- 
+
     # SETUP #
 
     # Get default parameters #
@@ -67,7 +67,9 @@ with Flow(
         "raw_table_id", default=constants.REALOCACAO_SPPO_RAW_TABLE_ID.value
     )
     dataset_id = Parameter("dataset_id", default=constants.GPS_SPPO_DATASET_ID.value)
-    table_id = Parameter("table_id", default=constants.REALOCACAO_SPPO_TREATED_TABLE_ID.value)
+    table_id = Parameter(
+        "table_id", default=constants.REALOCACAO_SPPO_TREATED_TABLE_ID.value
+    )
     rebuild = Parameter("rebuild", False)
 
     LABELS = get_current_flow_labels()
