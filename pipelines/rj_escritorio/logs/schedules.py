@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Schedules for the daily cleanup flow.
+Schedules for daily logs materialization.
 """
 
 from datetime import timedelta, datetime
@@ -11,19 +11,18 @@ import pytz
 
 from pipelines.constants import constants
 
-daily_at_3am = Schedule(
+daily_at_4am = Schedule(
     clocks=[
         IntervalClock(
-            interval=timedelta(days=1),
+            interval=timedelta(days=1),  # daily
             start_date=datetime(
-                2021, 1, 1, 3, tzinfo=pytz.timezone("America/Sao_Paulo")
+                2021, 1, 1, 4, tzinfo=pytz.timezone("America/Sao_Paulo")  # 4am
             ),
             labels=[
-                constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
+                constants.RJ_DATARIO_AGENT_LABEL.value,
             ],
             parameter_defaults={
-                "days_old": 30,
-                "skip_running": True,
+                "secret_path": "birthday_webhook",
             },
         ),
     ]
