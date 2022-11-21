@@ -69,9 +69,9 @@ def run_local_backfill(
     interval = int(backfill_parameters["interval"])
     interval_period = backfill_parameters["interval_period"]
 
-    if interval_period not in ("hours", "days", "weeks"):
+    if interval_period not in ("minutes", "hours", "days", "weeks"):
         log(
-            "interval_period only accepts hours, days, weeks. Change the code if necessary"
+            "interval_period only accepts minutes, hours, days, weeks. Change the code if necessary"
         )
         return
 
@@ -80,9 +80,11 @@ def run_local_backfill(
 
     while start_date < end_date:
         # Run flow
-        parameters["CURRENT_TIME"] = end_date.to_datetime_string()
+        parameters["current_time"] = end_date.to_datetime_string()
         flow.run(parameters=parameters)
         # Update end_date backwards
+        if interval_period == "minutes":
+            end_date = end_date.subtract(minutes=interval)
         if interval_period == "hours":
             end_date = end_date.subtract(hours=interval)
         elif interval_period == "days":
@@ -134,7 +136,7 @@ def run_local_missing(
 
     while len(date_list):
         # Run flow
-        parameters["CURRENT_TIME"] = date_list[0]
+        parameters["current_time"] = date_list[0]
         flow.run(parameters=parameters)
         # Update end_date backwards
         date_list.pop(0)

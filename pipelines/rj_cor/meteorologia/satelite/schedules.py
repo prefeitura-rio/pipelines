@@ -12,7 +12,7 @@ hour_schedule = Schedule(
     clocks=[
         IntervalClock(
             interval=timedelta(minutes=5),
-            start_date=datetime(2021, 1, 1, 0, 12, 0),
+            start_date=datetime(2021, 1, 1, 0, 4, 0),
             labels=[
                 constants.RJ_COR_AGENT_LABEL.value,
             ],
