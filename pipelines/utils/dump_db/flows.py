@@ -36,8 +36,8 @@ from pipelines.utils.dump_to_gcs.constants import constants as dump_to_gcs_const
 with Flow(
     name=utils_constants.FLOW_DUMP_DB_NAME.value,
     code_owners=[
-        "@pimbel#2426",
-        "@Gabriel Gazola Milan#8183",
+        "diego",
+        "gabriel",
     ],
 ) as dump_sql_flow:
 
@@ -89,7 +89,7 @@ with Flow(
     table_id = Parameter("table_id")
     dump_mode = Parameter("dump_mode", default="append")  # overwrite or append
     batch_data_type = Parameter("batch_data_type", default="csv")  # csv or parquet
-
+    dbt_model_secret_parameters = Parameter("dbt_model_secret_parameters")
     #####################################
     #
     # Rename flow run
@@ -189,6 +189,7 @@ with Flow(
                     "table_id": table_id,
                     "mode": materialization_mode,
                     "materialize_to_datario": materialize_to_datario,
+                    "dbt_model_secret_parameters": dbt_model_secret_parameters,
                 },
                 labels=current_flow_labels,
                 run_name=f"Materialize {dataset_id}.{table_id}",
@@ -240,8 +241,8 @@ dump_sql_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 with Flow(
     name="EMD: template - Executar query SQL",
     code_owners=[
-        "@pimbel#2426",
-        "@Gabriel Gazola Milan#8183",
+        "diego",
+        "gabriel",
     ],
 ) as run_sql_flow:
     #####################################

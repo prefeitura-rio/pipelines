@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0103
 """
 Flows for emd
 """
@@ -8,16 +9,25 @@ from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 
 from pipelines.constants import constants
+from pipelines.rj_cor.meteorologia.satelite.constants import (
+    constants as satelite_constants,
+)
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.rj_cor.meteorologia.satelite.tasks import (
     get_dates,
     slice_data,
     download,
     tratar_dados,
-    salvar_parquet,
+    save_data,
+)
+from pipelines.rj_cor.tasks import (
+    get_on_redis,
+    save_on_redis,
 )
 from pipelines.rj_cor.meteorologia.satelite.schedules import hour_schedule
+
 from pipelines.utils.decorators import Flow
+
 from pipelines.utils.tasks import (
     create_table_and_upload_to_gcs,
     get_current_flow_labels,
@@ -26,68 +36,144 @@ from pipelines.utils.tasks import (
 with Flow(
     name="COR: Meteorologia - Satelite GOES 16",
     code_owners=[
-        "@PatyBC#4954",
+        "paty",
     ],
 ) as cor_meteorologia_goes16:
 
-    CURRENT_TIME = get_dates()
-
-    ano, mes, dia, hora, dia_juliano = slice_data(current_time=CURRENT_TIME)
-
-    # Para taxa de precipitação
-    VARIAVEL_RR = "RRQPEF"
-    DATASET_ID_RR = "meio_ambiente_clima"
-    TABLE_ID_RR = "taxa_precipitacao_satelite"
-    DUMP_MODE = "append"
-
     # Materialization parameters
-    MATERIALIZE_AFTER_DUMP = Parameter(
+    materialize_after_dump = Parameter(
         "materialize_after_dump", default=False, required=False
     )
-    MATERIALIZE_TO_DATARIO = Parameter(
+    materialize_to_datario = Parameter(
         "materialize_to_datario", default=False, required=False
     )
-    MATERIALIZATION_MODE = Parameter("mode", default="dev", required=False)
+    materialization_mode = Parameter("mode", default="dev", required=False)
 
-    # Flow da taxa de precipitação
-    filename_rr = download(
-        variavel=VARIAVEL_RR, ano=ano, dia_juliano=dia_juliano, hora=hora
+    # Other parameters
+    dataset_id = satelite_constants.DATASET_ID.value
+    dump_mode = "append"
+    ref_filename = Parameter("ref_filename", default=None, required=False)
+    current_time = Parameter("current_time", default=None, required=False)
+    current_time = get_dates(current_time)
+
+    date_hour_info = slice_data(current_time=current_time, ref_filename=ref_filename)
+
+    # Para taxa de precipitação
+    variavel_rr = satelite_constants.VARIAVEL_RR.value
+    table_id_rr = satelite_constants.TABLE_ID_RR.value
+
+    # Get filenames that were already treated on redis
+    redis_files_rr = get_on_redis(dataset_id, table_id_rr, mode="prod")
+
+    # Download raw data from API
+    filename_rr, redis_files_rr_updated = download(
+        variavel=variavel_rr,
+        date_hour_info=date_hour_info,
+        redis_files=redis_files_rr,
+        ref_filename=ref_filename,
+        wait=redis_files_rr,
     )
 
+    # Start data treatment if there are new files
     info_rr = tratar_dados(filename=filename_rr)
-    path_rr = salvar_parquet(info=info_rr)
+    path_rr = save_data(info=info_rr, file_path=filename_rr)
 
     # Create table in BigQuery
-    UPLOAD_TABLE_RR = create_table_and_upload_to_gcs(
+    upload_table_rr = create_table_and_upload_to_gcs(
         data_path=path_rr,
-        dataset_id=DATASET_ID_RR,
-        table_id=TABLE_ID_RR,
-        dump_mode=DUMP_MODE,
+        dataset_id=dataset_id,
+        table_id=table_id_rr,
+        dump_mode=dump_mode,
+        wait=path_rr,
+    )
+
+    # Save new filenames on redis
+    save_on_redis(
+        dataset_id,
+        table_id_rr,
+        "prod",
+        redis_files_rr_updated,
         wait=path_rr,
     )
 
     # Para quantidade de água precipitável
-    VARIAVEL_TPW = "TPWF"
-    DATASET_ID_TPW = "meio_ambiente_clima"
-    TABLE_ID_TPW = "quantidade_agua_precipitavel_satelite"
+    variavel_tpw = satelite_constants.VARIAVEL_TPW.value
+    table_id_tpw = satelite_constants.TABLE_ID_TPW.value
 
-    filename_tpw = download(
-        variavel=VARIAVEL_TPW, ano=ano, dia_juliano=dia_juliano, hora=hora
+    # Get filenames that were already treated on redis
+    redis_files_tpw = get_on_redis(dataset_id, table_id_tpw, mode="prod")
+
+    # Download raw data from API
+    filename_tpw, redis_files_tpw_updated = download(
+        variavel=variavel_tpw,
+        date_hour_info=date_hour_info,
+        redis_files=redis_files_tpw,
+        ref_filename=ref_filename,
+        wait=redis_files_tpw,
     )
 
+    # Start data treatment if there are new files
     info_tpw = tratar_dados(filename=filename_tpw)
-    path_tpw = salvar_parquet(info=info_tpw)
+    path_tpw = save_data(info=info_tpw, file_path=filename_tpw)
 
-    UPLOAD_TABLE_TPW = create_table_and_upload_to_gcs(
+    upload_table_tpw = create_table_and_upload_to_gcs(
         data_path=path_tpw,
-        dataset_id=DATASET_ID_TPW,
-        table_id=TABLE_ID_TPW,
-        dump_mode=DUMP_MODE,
+        dataset_id=dataset_id,
+        table_id=table_id_tpw,
+        dump_mode=dump_mode,
         wait=path_tpw,
     )
 
+    # Save new filenames on redis
+    save_on_redis(
+        dataset_id,
+        table_id_tpw,
+        "prod",
+        redis_files_tpw_updated,
+        wait=path_tpw,
+    )
+
+    # Para clean_ir_longwave_window (band 13) CMIPF
+    variavel_cmip = satelite_constants.VARIAVEL_cmip.value
+    table_id_cmip = satelite_constants.TABLE_ID_cmip.value
+
+    # Get filenames that were already treated on redis
+    redis_files_cmip = get_on_redis(dataset_id, table_id_cmip, mode="prod")
+
+    # Download raw data from API
+    filename_cmip, redis_files_cmip_updated = download(
+        variavel=variavel_cmip,
+        date_hour_info=date_hour_info,
+        band="13",
+        redis_files=redis_files_cmip,
+        ref_filename=ref_filename,
+        wait=redis_files_cmip,
+    )
+
+    # Start data treatment if there are new files
+    info_cmip = tratar_dados(filename=filename_cmip)
+    path_cmip = save_data(info=info_cmip, file_path=filename_cmip)
+
+    # Create table in BigQuery
+    upload_table_cmip = create_table_and_upload_to_gcs(
+        data_path=path_cmip,
+        dataset_id=dataset_id,
+        table_id=table_id_cmip,
+        dump_mode=dump_mode,
+        wait=path_cmip,
+    )
+
+    # Save new filenames on redis
+    save_on_redis(
+        dataset_id,
+        table_id_cmip,
+        "prod",
+        redis_files_cmip_updated,
+        wait=path_cmip,
+    )
+
     # Trigger DBT flow run
-    with case(MATERIALIZE_AFTER_DUMP, True):
+    with case(materialize_after_dump, True):
         current_flow_labels = get_current_flow_labels()
 
         # Materializar RR
@@ -95,16 +181,16 @@ with Flow(
             flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
             project_name=constants.PREFECT_DEFAULT_PROJECT.value,
             parameters={
-                "dataset_id": DATASET_ID_RR,
-                "table_id": TABLE_ID_RR,
-                "mode": MATERIALIZATION_MODE,
-                "materialize_to_datario": MATERIALIZE_TO_DATARIO,
+                "dataset_id": dataset_id,
+                "table_id": table_id_rr,
+                "mode": materialization_mode,
+                "materialize_to_datario": materialize_to_datario,
             },
             labels=current_flow_labels,
-            run_name=f"Materialize {DATASET_ID_RR}.{TABLE_ID_RR}",
+            run_name=f"Materialize {dataset_id}.{table_id_rr}",
         )
 
-        materialization_flow_rr.set_upstream(UPLOAD_TABLE_RR)
+        materialization_flow_rr.set_upstream(upload_table_rr)
 
         wait_for_materialization_rr = wait_for_flow_run(
             materialization_flow_rr,
@@ -118,19 +204,42 @@ with Flow(
             flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
             project_name=constants.PREFECT_DEFAULT_PROJECT.value,
             parameters={
-                "dataset_id": DATASET_ID_TPW,
-                "table_id": TABLE_ID_TPW,
-                "mode": MATERIALIZATION_MODE,
-                "materialize_to_datario": MATERIALIZE_TO_DATARIO,
+                "dataset_id": dataset_id,
+                "table_id": table_id_tpw,
+                "mode": materialization_mode,
+                "materialize_to_datario": materialize_to_datario,
             },
             labels=current_flow_labels,
-            run_name=f"Materialize {DATASET_ID_TPW}.{TABLE_ID_TPW}",
+            run_name=f"Materialize {dataset_id}.{table_id_tpw}",
         )
 
-        materialization_flow_tpw.set_upstream(UPLOAD_TABLE_TPW)
+        materialization_flow_tpw.set_upstream(upload_table_tpw)
 
         wait_for_materialization_tpw = wait_for_flow_run(
             materialization_flow_tpw,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+
+        # Materializar CMIP
+        materialization_flow_cmip = create_flow_run(
+            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+            parameters={
+                "dataset_id": dataset_id,
+                "table_id": table_id_cmip,
+                "mode": materialization_mode,
+                "materialize_to_datario": materialize_to_datario,
+            },
+            labels=current_flow_labels,
+            run_name=f"Materialize {dataset_id}.{table_id_cmip}",
+        )
+
+        materialization_flow_cmip.set_upstream(upload_table_cmip)
+
+        wait_for_materialization_cmip = wait_for_flow_run(
+            materialization_flow_cmip,
             stream_states=True,
             stream_logs=True,
             raise_final_state=True,

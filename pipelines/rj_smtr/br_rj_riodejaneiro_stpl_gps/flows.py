@@ -3,131 +3,110 @@
 Flows for br_rj_riodejaneiro_stpl_gps
 """
 
-###############################################################################
-#
-# Aqui é onde devem ser definidos os flows do projeto.
-# Cada flow representa uma sequência de passos que serão executados
-# em ordem.
-#
-# Mais informações sobre flows podem ser encontradas na documentação do
-# Prefect: https://docs.prefect.io/core/concepts/flows.html
-#
-# De modo a manter consistência na codebase, todo o código escrito passará
-# pelo pylint. Todos os warnings e erros devem ser corrigidos.
-#
-# Existem diversas maneiras de declarar flows. No entanto, a maneira mais
-# conveniente e recomendada pela documentação é usar a API funcional.
-# Em essência, isso implica simplesmente na chamada de funções, passando
-# os parâmetros necessários para a execução em cada uma delas.
-#
-# Também, após a definição de um flow, para o adequado funcionamento, é
-# mandatório configurar alguns parâmetros dele, os quais são:
-# - storage: onde esse flow está armazenado. No caso, o storage é o
-#   próprio módulo Python que contém o flow. Sendo assim, deve-se
-#   configurar o storage como o pipelines.rj_smtr
-# - run_config: para o caso de execução em cluster Kubernetes, que é
-#   provavelmente o caso, é necessário configurar o run_config com a
-#   imagem Docker que será usada para executar o flow. Assim sendo,
-#   basta usar constants.DOCKER_IMAGE.value, que é automaticamente
-#   gerado.
-# - schedule (opcional): para o caso de execução em intervalos regulares,
-#   deve-se utilizar algum dos schedules definidos em schedules.py
-#
-# Um exemplo de flow, considerando todos os pontos acima, é o seguinte:
-#
-# -----------------------------------------------------------------------------
-# from prefect import task
-# from prefect import Flow
-# from prefect.run_configs import KubernetesRun
-# from prefect.storage import GCS
-# from pipelines.constants import constants
-# from my_tasks import my_task, another_task
-# from my_schedules import some_schedule
-#
-# with Flow("my_flow") as flow:
-#     a = my_task(param1=1, param2=2)
-#     b = another_task(a, param3=3)
-#
-# flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-# flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-# flow.schedule = some_schedule
-# -----------------------------------------------------------------------------
-#
-# Abaixo segue um código para exemplificação, que pode ser removido.
-#
-###############################################################################
-
-
 from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
-from pipelines.constants import constants
+
+# EMD Imports #
+
+from pipelines.constants import constants as emd_constants
+from pipelines.utils.decorators import Flow
+from pipelines.utils.tasks import rename_current_flow_run_now_time
+from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks import get_stpl_headers
+
+# SMTR Imports #
+
+from pipelines.rj_smtr.constants import constants
+
+from pipelines.rj_smtr.schedules import (
+    every_minute,
+    # every_hour,
+)
 from pipelines.rj_smtr.tasks import (
-    create_current_date_hour_partition,
-    get_file_path_and_partitions,
+    create_date_hour_partition,
+    create_local_partition_path,
+    get_current_timestamp,
     get_raw,
+    parse_timestamp_to_string,
     save_raw_local,
     save_treated_local,
     upload_logs_to_bq,
     bq_upload,
 )
+
 from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks import (
     pre_treatment_br_rj_riodejaneiro_stpl_gps,
 )
 
-# from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.schedules import every_minute
-from pipelines.utils.decorators import Flow
 
 with Flow(
-    "SMTR: gps_stpl - Captura",
-    code_owners=[
-        "@hellcassius#1223",
-    ],
-) as stpl_captura:
+    "SMTR: GPS STPL - Captura",
+    code_owners=["caio", "fernanda"],
+) as captura_stpl:
 
-    dataset_id = Parameter("dataset_id")
-    table_id = Parameter("table_id")
-    url = Parameter("url")
-    key_column = Parameter("key_column")
-    kind = Parameter("kind")
-
-    file_dict = create_current_date_hour_partition()
-
-    filepath = get_file_path_and_partitions(
-        dataset_id=dataset_id,
-        table_id=table_id,
-        filename=file_dict["filename"],
-        partitions=file_dict["partitions"],
+    # DEFAULT PARAMETERS #
+    dataset_id = Parameter(
+        "dataset_id", default=constants.GPS_STPL_RAW_DATASET_ID.value
+    )
+    table_id = Parameter("table_id", default=constants.GPS_STPL_RAW_TABLE_ID.value)
+    url = Parameter("url", default=constants.GPS_STPL_API_BASE_URL.value)
+    secret_path = Parameter(
+        "secret_path", default=constants.GPS_STPL_API_SECRET_PATH.value
     )
 
-    status_dict = get_raw(url=url, kind=kind)
+    # SETUP #
+    timestamp = get_current_timestamp()
 
-    raw_filepath = save_raw_local(data=status_dict["data"], file_path=filepath)
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix="SMTR: GPS STPL - Captura - ", now_time=timestamp
+    )
 
+    partitions = create_date_hour_partition(timestamp)
+
+    filename = parse_timestamp_to_string(timestamp)
+
+    filepath = create_local_partition_path(
+        dataset_id=constants.GPS_STPL_RAW_DATASET_ID.value,
+        table_id=constants.GPS_STPL_RAW_TABLE_ID.value,
+        filename=filename,
+        partitions=partitions,
+    )
+
+    raw_status = get_raw(url=url, headers=get_stpl_headers())
+
+    raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
+
+    # TREAT
     treated_status = pre_treatment_br_rj_riodejaneiro_stpl_gps(
-        status_dict=status_dict, key_column=key_column
+        status_dict=raw_status, timestamp=timestamp
     )
 
-    upload_logs_to_bq(
-        dataset_id=dataset_id,
-        parent_table_id=table_id,
-        timestamp=status_dict["timestamp"],
-        error=status_dict["error"],
-    )
+    treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
 
-    treated_filepath = save_treated_local(
-        dataframe=treated_status["df"], file_path=filepath
-    )
-
-    bq_upload(
+    # LOAD
+    error = bq_upload(
         dataset_id=dataset_id,
         table_id=table_id,
         filepath=treated_filepath,
         raw_filepath=raw_filepath,
-        partitions=file_dict["partitions"],
+        partitions=partitions,
+        status=treated_status,
     )
+    upload_logs_to_bq(
+        dataset_id=dataset_id,
+        parent_table_id=table_id,
+        timestamp=timestamp,
+        error=error,
+    )
+    # FLOW
+    # ? Congelado para evitar o TriggerFailed, permitindo testar as demais tasks
+    captura_stpl.set_dependencies(task=partitions, upstream_tasks=[rename_flow_run])
 
 
-stpl_captura.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-stpl_captura.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-# stpl_captura.schedule = every_minute
+captura_stpl.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+captura_stpl.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+# Seguindo o padrão de captura adotado pelo BRT
+captura_stpl.schedule = every_minute

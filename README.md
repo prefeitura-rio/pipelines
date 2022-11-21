@@ -5,6 +5,7 @@ da Prefeitura do Rio de Janeiro. O repositório é gerido pelo Escritório
 Municipal de Dados (EMD) e alimentado de forma colaborativa com as equipes de
 dados e tecnologia das Secretarias.
 
+
 > 💜 Todo o código é desenvolvido em Python utilizando o software livre [Prefect](https://prefect.io/).
 
 ## Configuração de ambiente para desenvolvimento
@@ -156,11 +157,24 @@ run_local(flow, parameters = {"param": "val"})
 
 ```
 GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials.json  # Credenciais do Google Cloud
-PREFECT__BACKEND=server
-PREFECT__SERVER__HOST=http://prefect-apollo.prefect.svc.cluster.local
-PREFECT__SERVER__PORT=4200
-VAULT_ADDRESS=http://vault.vault.svc.cluster.local:8200/
+PREFECT__BACKEND=cloud
+PREFECT__SERVER__HOST=https://prefect.dados.rio/api
+PREFECT__SERVER__PORT=443
+VAULT_ADDRESS=https://vault.dados.rio/
 VAULT_TOKEN=<token> # Valor do token do órgão para o qual você está desenvolvendo. Caso não saiba o token, entre em contato.
+```
+
+- `source .env`
+
+- Também, garanta que o arquivo `$HOME/.prefect/auth.toml` exista e tenha um conteúdo semelhante a:
+
+```toml
+# This file is auto-generated and should not be manually edited
+# Update the Prefect config or use the CLI to login instead
+
+["prefect.dados.rio"]
+api_key = "<sua-api-key>"
+tenant_id = "<tenant-id>"
 ```
 
 - Em seguida, tenha certeza que você já tem acesso à UI do Prefect, tanto para realizar a submissão da run, como para

@@ -1,4 +1,6 @@
 # user defined
+.replit
+replit.nix
 **/data/
 test_local.py
 pylint.txt
@@ -136,3 +138,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Backfill stuff
+backfill.csv
+REVIEW.md

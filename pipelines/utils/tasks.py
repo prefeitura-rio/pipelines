@@ -59,6 +59,18 @@ def get_current_flow_labels() -> List[str]:
 
 
 @task
+def get_current_flow_mode(labels: List[str]) -> str:
+    """
+    Get the mode (prod/dev/staging) of the current flow.
+    """
+    if labels[0].endswith("-dev"):
+        return "dev"
+    if labels[0].endswith("-staging"):
+        return "staging"
+    return "prod"
+
+
+@task
 def greater_than(value, compare_to) -> bool:
     """
     Returns True if value is greater than compare_to.
@@ -154,7 +166,7 @@ def create_table_and_upload_to_gcs(
             )
         else:
             # the header is needed to create a table when dosen't exist
-            log("MODE APPEND: Table DOSEN'T EXISTS\n" "Start to CREATE HEADER file")
+            log("MODE APPEND: Table DOSEN'T EXISTS\nStart to CREATE HEADER file")
             header_path = dump_header_to_file(data_path=data_path)
             log("MODE APPEND: Created HEADER file:\n" f"{header_path}")
 
@@ -204,7 +216,7 @@ def create_table_and_upload_to_gcs(
 
         # the header is needed to create a table when dosen't exist
         # in overwrite mode the header is always created
-        log("MODE OVERWRITE: Table DOSEN'T EXISTS\n" "Start to CREATE HEADER file")
+        log("MODE OVERWRITE: Table DOSEN'T EXISTS\nStart to CREATE HEADER file")
         header_path = dump_header_to_file(data_path=data_path)
         log("MODE OVERWRITE: Created HEADER file:\n" f"{header_path}")
 

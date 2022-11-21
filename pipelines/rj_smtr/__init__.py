@@ -7,6 +7,9 @@ Prefect flows for rj_smtr project
 ###############################################################################
 from pipelines.rj_smtr.flows import *
 
-# from pipelines.rj_smtr.example.flows import *
 from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.flows import *
 from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.flows import *
+from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.flows import *
+from pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.flows import *
+from pipelines.rj_smtr.materialize_to_datario.flows import *
+from pipelines.rj_smtr.registros_ocr_rir.flows import *

@@ -4,7 +4,7 @@ Utilities for the Database Dump flows.
 """
 
 from datetime import datetime, timedelta
-from typing import List, Tuple, Union
+from typing import List, Union
 
 import pandas as pd
 
@@ -30,28 +30,6 @@ def extract_last_partition_date(partitions_dict: dict, date_format: str):
         except ValueError:
             log(f"Partition {partition} is not a date")
     return last_partition_date
-
-
-def parse_date_columns(
-    dataframe: pd.DataFrame, partition_date_column: str
-) -> Tuple[pd.DataFrame, List[str]]:
-    """
-    Parses the date columns to the partition format.
-    """
-    ano_col = "ano_particao"
-    mes_col = "mes_particao"
-    data_col = "data_particao"
-    cols = [ano_col, mes_col, data_col]
-    for col in cols:
-        if col in dataframe.columns:
-            raise ValueError(f"Column {col} already exists, please review your model.")
-    dataframe[partition_date_column] = dataframe[partition_date_column].astype(str)
-    dataframe[data_col] = pd.to_datetime(dataframe[partition_date_column])
-    dataframe[ano_col] = dataframe[data_col].dt.year
-    dataframe[mes_col] = dataframe[data_col].dt.month
-    dataframe[data_col] = dataframe[data_col].dt.date
-
-    return dataframe, [ano_col, mes_col, data_col]
 
 
 def build_query_new_columns(table_columns: List[str]) -> List[str]:
@@ -100,26 +78,16 @@ def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-l
             "execute_query": query_to_line(parameters["execute_query"]),
         }
 
-        if "partition_columns" in parameters:
-            parameter_defaults["partition_columns"] = parameters["partition_columns"]
-        if "partition_date_format" in parameters:
-            parameter_defaults["partition_date_format"] = parameters[
-                "partition_date_format"
-            ]
-        if "lower_bound_date" in parameters:
-            parameter_defaults["lower_bound_date"] = parameters["lower_bound_date"]
-        if "materialize_after_dump" in parameters:
-            parameter_defaults["materialize_after_dump"] = parameters[
-                "materialize_after_dump"
-            ]
-        if "materialization_mode" in parameters:
-            parameter_defaults["materialization_mode"] = parameters[
-                "materialization_mode"
-            ]
+        # Add remaining parameters if value is not None
+        for key, value in parameters.items():
+            if value is not None and key not in ["interval"]:
+                parameter_defaults[key] = value
+
+        new_interval = parameters["interval"] if "interval" in parameters else interval
 
         clocks.append(
             IntervalClock(
-                interval=interval,
+                interval=new_interval,
                 start_date=start_date
                 + timedelta(minutes=runs_interval_minutes * count),
                 labels=labels,

@@ -19,7 +19,6 @@ from pipelines.utils.dump_db.db import (
 )
 from pipelines.utils.dump_db.utils import (
     extract_last_partition_date,
-    parse_date_columns,
     build_query_new_columns,
 )
 from pipelines.utils.elasticsearch_metrics.utils import (
@@ -30,6 +29,7 @@ from pipelines.utils.utils import (
     batch_to_dataframe,
     dataframe_to_csv,
     dataframe_to_parquet,
+    parse_date_columns,
     clean_dataframe,
     to_partitions,
     parser_blobs_to_partition_dict,
@@ -212,7 +212,7 @@ def format_partitioned_query(
     # Using the last partition date, get the partitioned query.
     # `aux_name` must be unique and start with a letter, for better compatibility with
     # multiple DBMSs.
-    aux_name = f"a{uuid4().hex}"
+    aux_name = f"a{uuid4().hex}"[:8]
 
     log(
         f"Partitioned DETECTED: {partition_column}, retuning a NEW QUERY "

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Database dumping flows
+Database dumping flows.
 """
 
 from copy import deepcopy
@@ -10,6 +10,7 @@ from prefect.storage import GCS
 
 from pipelines.constants import constants
 from pipelines.utils.dump_datario.flows import dump_datario_flow
+
 from pipelines.rj_escritorio.dados_mestres_dump_datario.schedules import (
     dados_mestresmonthly_update_schedule,
 )
