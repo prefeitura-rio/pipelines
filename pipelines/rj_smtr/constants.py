@@ -51,6 +51,7 @@ class constants(Enum):  # pylint: disable=c0103
     GPS_SPPO_MATERIALIZE_DELAY_HOURS = 1
 
     REALOCACAO_SPPO_RAW_TABLE_ID = "realocacao"
+    REALOCACAO_SPPO_TREATED_TABLE_ID = "realocacao_sppo"
 
     # GPS BRT #
     GPS_BRT_SECRET_PATH = "brt_api"

@@ -56,14 +56,43 @@ with Flow(
     "SMTR: GPS SPPO - Realocação (captura)",
     code_owners=["rodrigo", "fernanda"],
 ) as realocacao_sppo:
-    # TODO: criar funcao que retorna todos os ranges para rodar
-    date_range = Parameter("date_range", default=None)
-
+ 
     # SETUP #
+
+    # Get default parameters #
+    raw_dataset_id = Parameter(
+        "raw_dataset_id", default=constants.GPS_SPPO_RAW_DATASET_ID.value
+    )
+    raw_table_id = Parameter(
+        "raw_table_id", default=constants.REALOCACAO_SPPO_RAW_TABLE_ID.value
+    )
+    dataset_id = Parameter("dataset_id", default=constants.GPS_SPPO_DATASET_ID.value)
+    table_id = Parameter("table_id", default=constants.REALOCACAO_SPPO_TREATED_TABLE_ID.value)
+    rebuild = Parameter("rebuild", False)
+
+    LABELS = get_current_flow_labels()
+    MODE = get_current_flow_mode(LABELS)
+
     timestamp = get_current_timestamp()
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix="GPS SPPO - Realocação: ", now_time=timestamp
+    )
+
+    # Set dbt client #
+    dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
+    # Use the command below to get the dbt client in dev mode:
+    # dbt_client = get_local_dbt_client(host="localhost", port=3001)
+
+    # Set specific run parameters #
+    date_range = get_materialization_date_range(
+        dataset_id=dataset_id,
+        table_id=table_id,
+        raw_dataset_id=raw_dataset_id,
+        raw_table_id=raw_table_id,
+        table_date_column_name="data",
+        mode=MODE,
+        delay_hours=constants.GPS_SPPO_MATERIALIZE_DELAY_HOURS.value,
     )
 
     partitions = create_date_hour_partition(timestamp)
