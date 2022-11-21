@@ -24,7 +24,7 @@ from pipelines.rj_smtr.constants import constants
 @task
 # pylint: disable=line-too-long
 def create_api_url_onibus_realocacao(
-    date_range: Dict = None, source: str = None
+    date_range: Dict = None, secret_path: str = constants.REALOCACAO_SECRET_PATH.value
 ) -> str:
     """
     start_date: datahora mínima do sinal de GPS avaliado
@@ -35,7 +35,7 @@ def create_api_url_onibus_realocacao(
 
     url = "http://ccomobility.com.br/WebServices/Binder/wsconecta/EnvioViagensRetroativasSMTR?"
 
-    headers = get_vault_secret(source)["data"]
+    headers = get_vault_secret(secret_path)["data"]
     key = list(headers)[0]
     url = f"{url}{key}={{secret}}"
 
