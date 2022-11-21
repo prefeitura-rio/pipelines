@@ -86,15 +86,18 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
         df_realocacao[col] = pd.to_datetime(df_realocacao[col])
 
     # Ajusta tempo máximo da realocação
-    df_realocacao.loc[df_realocacao.dataSaida == "1971-01-01 00:00:00", "dataSaida"] = date_range[
-        "date_range_end"
-    ]
+    df_realocacao.loc[
+        df_realocacao.dataSaida == "1971-01-01 00:00:00", "dataSaida"
+    ] = date_range["date_range_end"]
 
     # TODO: separar os filtros num dicionario
 
     # Filtra realocações válidas
     df_realocacao = df_realocacao[
-        (df_realocacao.dataOperacao - df_realocacao.dataEntrada <= datetime.timedelta(minutes=60))
+        (
+            df_realocacao.dataOperacao - df_realocacao.dataEntrada
+            <= datetime.timedelta(minutes=60)
+        )
         & (df_realocacao.dataEntrada <= df_realocacao.dataSaida)
         & (df_realocacao.dataEntrada <= df_realocacao.dataOperacao)
     ]
@@ -206,9 +209,9 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
             filter_col = "datahoraenvio"
             time_delay = constants.GPS_SPPO_CAPTURE_DELAY_V2.value
         if recapture:
-            server_mask = (df_gps["datahoraenvio"] - df_gps["datahoraservidor"]) <= timedelta(
-                minutes=constants.GPS_SPPO_RECAPTURE_DELAY_V2.value
-            )
+            server_mask = (
+                df_gps["datahoraenvio"] - df_gps["datahoraservidor"]
+            ) <= timedelta(minutes=constants.GPS_SPPO_RECAPTURE_DELAY_V2.value)
             df_gps = df_gps[server_mask]  # pylint: disable=c0103
 
         mask = (df_gps[filter_col] - df_gps["datahora"]).apply(
