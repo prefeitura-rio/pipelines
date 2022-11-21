@@ -53,7 +53,7 @@ class constants(Enum):  # pylint: disable=c0103
     # REALOCAÇÃO #
     REALOCACAO_SPPO_RAW_TABLE_ID = "realocacao"
     REALOCACAO_SPPO_TREATED_TABLE_ID = "realocacao_sppo"
-    REALOCACAO_SECRET_PATH = "realocacao_api"
+    REALOCACAO_SECRET_PATH = "realocacao_api" #TODO: Criar no vault
 
     # GPS BRT #
     GPS_BRT_SECRET_PATH = "brt_api"
