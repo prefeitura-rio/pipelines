@@ -16,9 +16,9 @@ every_week_schedule = Schedule(
                 constants.RJ_SEGOVI_AGENT_LABEL.value,
             ],
             parameter_defaults={
-                "pattern": "ARQ2001",
+                "pattern": "processo",
                 "dataset_id": "adm_processorio_sicop",
-                "table_id": "arq2001",
+                "table_id": "processo",
             },
         ),
         IntervalClock(
@@ -28,9 +28,9 @@ every_week_schedule = Schedule(
                 constants.RJ_SEGOVI_AGENT_LABEL.value,
             ],
             parameter_defaults={
-                "pattern": "ARQ2296",
+                "pattern": "expediente",
                 "dataset_id": "adm_processorio_sicop",
-                "table_id": "arq2296",
+                "table_id": "expediente",
             },
         ),
     ]
