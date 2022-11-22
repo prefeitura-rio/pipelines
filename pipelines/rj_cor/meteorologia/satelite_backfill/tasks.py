@@ -3,23 +3,22 @@
 Tasks for backfill pipeline.
 """
 
+import os
 import shutil
 from prefect import task
 
 
 @task
 def delete_files(
-    path_rr: str,
-    path_tpw: str,
-    path_cmip: str,
+    path: str,
     wait=None,  # pylint: disable=unused-argument
 ):
     """
     Deletar tanto os arquivos raw, quanto os temporários e de output
     """
-    shutil.rmtree(path_rr)
-    shutil.rmtree(path_tpw)
-    shutil.rmtree(path_cmip)
+    if os.path.exists(path):
+        shutil.rmtree(path)
+
     # filename_temp = filename.replace("output", "temp").replace(".csv", ".tif")
     # files = [filename, filename_temp, input_filename]
 

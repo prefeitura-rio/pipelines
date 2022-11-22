@@ -123,8 +123,8 @@ def download(
         os.makedirs(base_path)
 
     # Seleciona primeiro arquivo que não tem o nome salvo no redis
-    log(f"\n\n[DEBUG]: available files on API: {path_files}")
-    log(f"\n\n[DEBUG]: filenames already saved on redis_files: {redis_files}")
+    # log(f"\n\n[DEBUG]: available files on API: {path_files}")
+    # log(f"\n\n[DEBUG]: filenames already saved on redis_files: {redis_files}")
     log(f"\n\n[DEBUG]: ref_filename: {ref_filename}")
 
     # keep only ref_filename if it exists
@@ -146,7 +146,7 @@ def download(
             redis_files.append(filename)
             path_filename = os.path.join(base_path, filename)
             download_file = path_file
-            log(f"[DEBUG]: filename to be append on redis_files: {redis_files}")
+            # log(f"[DEBUG]: filename to be append on redis_files: {redis_files}")
             break
 
     # Skip task if there is no new file

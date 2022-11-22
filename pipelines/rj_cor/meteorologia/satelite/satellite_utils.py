@@ -129,10 +129,11 @@ def converte_timezone(datetime_save: str) -> str:
     Recebe o formato de data hora em 'YYYYMMDD HHmm' no UTC e
     retorna no mesmo formato no horário São Paulo
     """
-    log(f">>>>>>> {datetime_save}")
-    datahora = pendulum.from_format(datetime_save, "YYYYMMDD HHmm")
+    log(f">>>>>>> datetime_save {datetime_save}")
+    datahora = pendulum.from_format(datetime_save, "YYYYMMDD HHmmss")
+    log(f">>>>>>> datahora {datahora}")
     datahora = datahora.in_tz("America/Sao_Paulo")
-    return datahora.format("YYYYMMDD HHmm")
+    return datahora.format("YYYYMMDD HHmmss")
 
 
 def extract_julian_day_and_hour_from_filename(filename: str):
@@ -155,7 +156,7 @@ def extract_julian_day_and_hour_from_filename(filename: str):
     julian_day = int(start[4:7])
 
     # Time (UTC) as string
-    hour_utc = start[7:11]
+    hour_utc = start[7:13]
 
     # Time of the start of the Scan
     # time = start[7:9] + ":" + start[9:11] + ":" + start[11:13] + " UTC"
@@ -433,7 +434,7 @@ def remap_g16(
         f"ano_particao={year}",
         f"mes_particao={month}",
         f"data_particao={data}",
-        f"hora={time_save}",
+        f"hora_particao={time_save}",
     )
 
     tif_path = os.path.join(
@@ -536,7 +537,7 @@ def save_data_in_file(
         f"ano_particao={year}",
         f"mes_particao={month}",
         f"data_particao={date}",
-        f"hora={time_save}",
+        f"hora_particao={time_save}",
     )
 
     tif_data = os.path.join(
@@ -568,8 +569,12 @@ def save_data_in_file(
     if not os.path.exists(parquet_path):
         os.makedirs(parquet_path)
 
+    data["horario"] = pendulum.from_format(
+        datetime_save, "YYYYMMDD HHmmss"
+    ).to_time_string()
+    log(f">>>>> data head {data.head()}")
     # Fixa ordem das colunas
-    data = data[["longitude", "latitude", variable.lower()]]
+    data = data[["longitude", "latitude", "horario", variable.lower()]]
 
     # salva em csv
     filename = file_path.split("/")[-1].replace(".nc", "")

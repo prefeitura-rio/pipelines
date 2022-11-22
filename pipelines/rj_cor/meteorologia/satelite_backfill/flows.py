@@ -59,12 +59,18 @@ with Flow(
 
     date_hour_info = slice_data(current_time=current_time, ref_filename=ref_filename)
 
+    delete_folder = delete_files(
+        "/home/patricia/Documentos/escritorio_dados/prefeitura-rio/pipelines/data/satelite/"
+    )
+
     # Para taxa de precipitação
     variavel_rr = satelite_constants.VARIAVEL_RR.value
     table_id_rr = satelite_constants.TABLE_ID_RR.value
 
     # Get filenames that were already treated on redis
     redis_files_rr = get_on_redis(dataset_id, table_id_rr, mode="prod")
+
+    redis_files_rr.set_upstream(delete_folder)
 
     # Download raw data from API
     filename_rr, redis_files_rr_updated = download(
@@ -105,6 +111,8 @@ with Flow(
     # Get filenames that were already treated on redis
     redis_files_tpw = get_on_redis(dataset_id, table_id_tpw, mode="prod")
 
+    redis_files_tpw.set_upstream(delete_folder)
+
     # Download raw data from API
     filename_tpw, redis_files_tpw_updated = download(
         variavel=variavel_tpw,
@@ -142,6 +150,8 @@ with Flow(
 
     # Get filenames that were already treated on redis
     redis_files_cmip = get_on_redis(dataset_id, table_id_cmip, mode="prod")
+
+    redis_files_cmip.set_upstream(delete_folder)
 
     # Download raw data from API
     filename_cmip, redis_files_cmip_updated = download(
@@ -248,8 +258,6 @@ with Flow(
             stream_logs=True,
             raise_final_state=True,
         )
-
-    delete_files(path_rr, path_tpw, path_cmip)
 
     # VARIAVEL_RR = "RRQPEF"
     # DATASET_ID_RR = "meio_ambiente_clima"
