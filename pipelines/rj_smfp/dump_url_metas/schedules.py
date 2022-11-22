@@ -119,6 +119,15 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "dataset_id": "planejamento_gestao_dashboard_metas",
     },
+    "estimativa_premiacao": {
+        "dump_mode": "overwrite",
+        "url": "https://docs.google.com/spreadsheets/d/1ikQC5tQKXCTmOfoi6B5Nxbb7OKs1Ubs9zNTYT0bwbCI\
+            /edit#gid=322217634",
+        "url_type": "google_sheet",
+        "gsheets_sheet_name": "Estimativa Premiação",
+        "materialize_after_dump": True,
+        "dataset_id": "planejamento_gestao_acordo_resultados",
+    },
 }
 
 
