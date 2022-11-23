@@ -111,14 +111,20 @@ with Flow(
     secret_path = Parameter(&#34;vault_secret_path&#34;)
 
     # Data file parameters
-    batch_size = Parameter(&#34;batch_size&#34;, default=50000)
+    batch_size = Parameter(&#34;batch_size&#34;, default=50000, required=False)
 
     # BigQuery parameters
     dataset_id = Parameter(&#34;dataset_id&#34;)
     table_id = Parameter(&#34;table_id&#34;)
-    dump_mode = Parameter(&#34;dump_mode&#34;, default=&#34;append&#34;)  # overwrite or append
-    batch_data_type = Parameter(&#34;batch_data_type&#34;, default=&#34;csv&#34;)  # csv or parquet
-    dbt_model_secret_parameters = Parameter(&#34;dbt_model_secret_parameters&#34;)
+    dump_mode = Parameter(
+        &#34;dump_mode&#34;, default=&#34;append&#34;, required=False
+    )  # overwrite or append
+    batch_data_type = Parameter(
+        &#34;batch_data_type&#34;, default=&#34;csv&#34;, required=False
+    )  # csv or parquet
+    dbt_model_secret_parameters = Parameter(
+        &#34;dbt_model_secret_parameters&#34;, default={}, required=False
+    )
     #####################################
     #
     # Rename flow run
