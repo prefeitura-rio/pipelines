@@ -35,11 +35,11 @@ def create_api_url_onibus_realocacao(
 
     # Configura parametros da URL
     date_range = {
-        "date_range_start": (  # "2022-11-11 23:00:00",
+        "date_range_start": (  # "2022-11-23 13:00:00",
             timestamp - timedelta(minutes=interval_minutes)
-        ).strftime("%Y-%m-%d %H:%M:%S"),
-        "date_range_end": timestamp.strftime(  # "2022-11-11 23:59:00"
-            "%Y-%m-%d %H:%M:%S"
+        ).strftime("%Y-%m-%dT%H:%M:%S"),
+        "date_range_end": timestamp.strftime(  # "2022-11-23 14:00:00"
+            "%Y-%m-%dT%H:%M:%S"
         ),
     }
     url = "http://ccomobility.com.br/WebServices/Binder/wsconecta/EnvioViagensRetroativasSMTR?"
@@ -87,12 +87,18 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
     # log(f"Before converting, datahora is: \n{df_realocacao['datahora']}")
 
     # Ajusta tipos de data
-    dt_cols = ["dataEntrada", "dataOperacao", "dataSaida"]
+    dt_cols = [
+        "dataEntrada",
+        "dataOperacao",
+        "dataSaida",
+        "dataProcessado",
+        "timestamp_captura",
+    ]
     for col in dt_cols:
         # TODO: Add tz_localize
         log(f"Converting column {col}")
-        df_realocacao[col] = pd.to_datetime(df_realocacao[col]).tz_localize(
-            "America/Sao_Paulo"
+        df_realocacao[col] = pd.to_datetime(df_realocacao[col]).dt.tz_localize(
+            tz=constants.TIMEZONE.value
         )
 
     # Ajusta tempo máximo da realocação
