@@ -239,7 +239,7 @@ ergon_queries = {
         """,
     },
     "ficha_financeira": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "append",
         "partition_columns": "MES_ANO_FOLHA",
@@ -249,7 +249,7 @@ ergon_queries = {
         """,
     },
     "ficha_financeira_contabil": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "append",
         "partition_columns": "MES_ANO_FOLHA",
