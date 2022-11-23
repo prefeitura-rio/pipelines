@@ -29,7 +29,7 @@ with Flow(
     ],
 ) as cor_meteorologia_precipitacao_websirene:
 
-    DATASET_ID = "meio_ambiente_clima"
+    DATASET_ID = "clima_pluviometro"
     TABLE_ID = "taxa_precipitacao_websirene"
     DUMP_MODE = "append"
 
