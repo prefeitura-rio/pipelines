@@ -37,7 +37,7 @@ def download_file(download_url):
     table = soup.find_all("table")
     dfr = pd.read_html(str(table))[0]
     # Corrigir nome das colunas
-    dfr.rename(columns={"Hora Leitura": "data_hora", "Nível [m]": "lamina_nivel"})
+    dfr = dfr.rename(columns={"Hora Leitura": "data_hora", "Nível [m]": "lamina_nivel"})
     return dfr
 
 
