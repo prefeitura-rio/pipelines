@@ -119,12 +119,21 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "dataset_id": "planejamento_gestao_dashboard_metas",
     },
+    "estimativa_premiacao": {
+        "dump_mode": "overwrite",
+        "url": "https://docs.google.com/spreadsheets/d/1ikQC5tQKXCTmOfoi6B5Nxbb7OKs1Ubs9zNTYT0bwbCI\
+            /edit#gid=322217634",
+        "url_type": "google_sheet",
+        "gsheets_sheet_name": "Estimativa Premiação",
+        "materialize_after_dump": True,
+        "dataset_id": "planejamento_gestao_acordo_resultados",
+    },
 }
 
 
 gsheets_clocks = generate_dump_url_schedules(
     interval=timedelta(days=1),
-    start_date=datetime(2022, 9, 29, 14, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2021, 11, 23, 12, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_SMFP_AGENT_LABEL.value,
     ],
