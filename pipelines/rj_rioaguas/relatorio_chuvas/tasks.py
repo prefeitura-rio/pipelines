@@ -46,12 +46,10 @@ def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
     """
     Salvar dados em csv.
     """
-    base_path = Path(os.getcwd())
-    # partition_path = Path(base_path, partitions)
-    # if not os.path.exists(partition_path):
-    #     os.makedirs(partition_path)
-    filename = str(base_path / "nivel.csv")
+    base_path = Path("/tmp/nivel_lagoa/")
+    base_path.mkdir(parents=True, exist_ok=True)
+
+    filename = base_path / "nivel.csv"
     log(f"Saving {filename}")
-    # dados.to_csv(filename, index=False)
-    dados.to_csv(r"{}".format(filename), index=False)
+    dados.to_csv(filename, index=False)
     return base_path
