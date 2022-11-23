@@ -52,7 +52,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
 from pipelines.rj_smtr.schedules import (
     every_hour_minute_six,
     every_minute,
-    every_minute_dev,
+    every_10_minutes_dev
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
@@ -70,16 +70,13 @@ with Flow(
         "raw_dataset_id", default=constants.GPS_SPPO_RAW_DATASET_ID.value
     )
     raw_table_id = Parameter(
-        "raw_table_id", default=constants.REALOCACAO_SPPO_RAW_TABLE_ID.value
+        "raw_table_id", default=constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value
     )
     dataset_id = Parameter("dataset_id", default=constants.GPS_SPPO_DATASET_ID.value)
     table_id = Parameter(
-        "table_id", default=constants.REALOCACAO_SPPO_TREATED_TABLE_ID.value
+        "table_id", default=constants.GPS_SPPO_REALOCACAO_TREATED_TABLE_ID.value
     )
     rebuild = Parameter("rebuild", False)
-
-    # LABELS = get_current_flow_labels()
-    # MODE = get_current_flow_mode(LABELS)
 
     timestamp = get_current_timestamp()
 
@@ -87,51 +84,33 @@ with Flow(
         prefix="GPS SPPO - Realocação: ", now_time=timestamp
     )
 
-    # Set dbt client #
-    # dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
-    # Use the command below to get the dbt client in dev mode:
-    # dbt_client = get_local_dbt_client(host="localhost", port=3001)
-
-    # Set specific run parameters #
-    # date_range = get_materialization_date_range(
-    #     dataset_id=dataset_id,
-    #     table_id=table_id,
-    #     raw_dataset_id=raw_dataset_id,
-    #     raw_table_id=raw_table_id,
-    #     table_date_column_name="data",
-    #     mode=MODE,
-    #     delay_hours=constants.GPS_SPPO_MATERIALIZE_DELAY_HOURS.value,
-    # )
-
     partitions = create_date_hour_partition(timestamp)
 
     filename = parse_timestamp_to_string(timestamp)
 
     filepath = create_local_partition_path(
         dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
-        table_id=constants.REALOCACAO_SPPO_RAW_TABLE_ID.value,
+        table_id=constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
         filename=filename,
         partitions=partitions,
     )
 
-    url_dict = create_api_url_onibus_realocacao(timestamp=timestamp)
+    url = create_api_url_onibus_realocacao(timestamp=timestamp)
 
     # EXTRACT #
-    raw_status = get_raw(url_dict["url"])
+    raw_status = get_raw(url)
 
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
 
     # CLEAN #
-    treated_status = pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
-        status=raw_status, date_range=url_dict["date_range"]
-    )
+    treated_status = pre_treatment_br_rj_riodejaneiro_onibus_realocacao(status=raw_status)
 
     treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
 
     # LOAD #
     error = bq_upload(
         dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
-        table_id=constants.REALOCACAO_SPPO_RAW_TABLE_ID.value,
+        table_id=constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
         filepath=treated_filepath,
         raw_filepath=raw_filepath,
         partitions=partitions,
@@ -140,7 +119,7 @@ with Flow(
 
     upload_logs_to_bq(
         dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
-        parent_table_id=constants.REALOCACAO_SPPO_RAW_TABLE_ID.value,
+        parent_table_id=constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
         error=error,
         timestamp=timestamp,
     )
@@ -150,7 +129,7 @@ realocacao_sppo.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
-realocacao_sppo.schedule = every_minute_dev
+realocacao_sppo.schedule = every_10_minutes_dev
 
 with Flow(
     "SMTR: GPS SPPO - Materialização",
@@ -232,7 +211,6 @@ materialize_sppo.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
-
 
 with Flow(
     "SMTR: GPS SPPO - Captura",
@@ -316,8 +294,6 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
         prefix="GPS SPPO Recapturas: ", now_time=get_now_time(), wait=timestamps
     )
     with case(errors, False):
-        # TODO: adicionar etapa de realocação - se sucesso, entao materializa
-
         with case(materialize, True):
             materialize_no_error = create_flow_run(
                 flow_name=materialize_sppo.name,

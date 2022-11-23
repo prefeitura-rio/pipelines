@@ -20,14 +20,12 @@ from pipelines.rj_smtr.constants import constants
 
 # Tasks #
 
-
 @task
-# pylint: disable=line-too-long
 def create_api_url_onibus_realocacao(
-    interval_minutes: int = 1,
+    interval_minutes: int = 10,
     timestamp: datetime = None,
-    secret_path: str = constants.REALOCACAO_SECRET_PATH.value,
-) -> dict:
+    secret_path: str = constants.GPS_SPPO_REALOCACAO_SECRET_PATH.value,
+) -> str:
     """
     start_date: datahora mínima do sinal de GPS avaliado
     end_date: datahora máxima do sinal de GPS avaliado
@@ -35,10 +33,10 @@ def create_api_url_onibus_realocacao(
 
     # Configura parametros da URL
     date_range = {
-        "date_range_start": (  # "2022-11-23 13:00:00",
+        "date_range_start": (
             timestamp - timedelta(minutes=interval_minutes)
         ).strftime("%Y-%m-%dT%H:%M:%S"),
-        "date_range_end": timestamp.strftime(  # "2022-11-23 14:00:00"
+        "date_range_end": timestamp.strftime(
             "%Y-%m-%dT%H:%M:%S"
         ),
     }
@@ -51,12 +49,11 @@ def create_api_url_onibus_realocacao(
     url += f"&dataInicial={date_range['date_range_start']}&dataFinal={date_range['date_range_end']}"
 
     log(f"Request data from URL:\n{url}")
-    return {"url": url.format(secret=headers[key]), "date_range": date_range}
-
+    return url.format(secret=headers[key])
 
 @task
 def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
-    status: dict, date_range: dict = None
+    status: dict
 ) -> Dict:
     """Basic data treatment for bus gps relocation data. Converts unix time to datetime,
     and apply filtering to stale data that may populate the API response.
@@ -64,7 +61,6 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
     Args:
         status (dict): dict containing the status of the request made to the
         API. Must contain keys: data and error
-        date_range (dict): dict containing date_range_start and date_range_end.
 
     Returns:
         df_realocacao: pandas.core.DataFrame containing the treated data.
@@ -77,14 +73,9 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
         log("Data is empty, skipping treatment...")
         return {"data": pd.DataFrame(), "error": status["error"]}
 
-    # error = None
-    # timezone = constants.TIMEZONE.value
-
     log(f"Data received to treat: \n{status['data'][:5]}")
-    df_realocacao = pd.DataFrame(status["data"])  # pylint: disable=c0103
-    # df_realocacao["timestamp_captura"] = timestamp
+    df_realocacao = pd.DataFrame(status["data"])  
     df_realocacao["timestamp_captura"] = datetime.now().isoformat()
-    # log(f"Before converting, datahora is: \n{df_realocacao['datahora']}")
 
     # Ajusta tipos de data
     dt_cols = [
@@ -95,7 +86,6 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
         "timestamp_captura",
     ]
     for col in dt_cols:
-        # TODO: Add tz_localize
         log(f"Converting column {col}")
         df_realocacao[col] = pd.to_datetime(df_realocacao[col]).dt.tz_localize(
             tz=constants.TIMEZONE.value
