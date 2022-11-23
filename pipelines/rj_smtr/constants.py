@@ -51,9 +51,9 @@ class constants(Enum):  # pylint: disable=c0103
     GPS_SPPO_MATERIALIZE_DELAY_HOURS = 1
 
     # REALOCAÇÃO #
-    REALOCACAO_SPPO_RAW_TABLE_ID = "realocacao"
-    REALOCACAO_SPPO_TREATED_TABLE_ID = "realocacao_sppo"
-    REALOCACAO_SECRET_PATH = "realocacao_api"  # TODO: Criar no vault
+    GPS_SPPO_REALOCACAO_RAW_TABLE_ID = "realocacao"
+    GPS_SPPO_REALOCACAO_TREATED_TABLE_ID = "realocacao"
+    GPS_SPPO_REALOCACAO_SECRET_PATH = "realocacao_api"  # TODO: Alterar nome do path?
 
     # GPS BRT #
     GPS_BRT_SECRET_PATH = "brt_api"
