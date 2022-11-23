@@ -52,7 +52,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
 from pipelines.rj_smtr.schedules import (
     every_hour_minute_six,
     every_minute,
-    every_10_minutes_dev
+    every_10_minutes_dev,
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
@@ -103,7 +103,9 @@ with Flow(
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
 
     # CLEAN #
-    treated_status = pre_treatment_br_rj_riodejaneiro_onibus_realocacao(status=raw_status)
+    treated_status = pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
+        status=raw_status
+    )
 
     treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
 

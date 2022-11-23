@@ -20,6 +20,7 @@ from pipelines.rj_smtr.constants import constants
 
 # Tasks #
 
+
 @task
 def create_api_url_onibus_realocacao(
     interval_minutes: int = 10,
@@ -33,12 +34,10 @@ def create_api_url_onibus_realocacao(
 
     # Configura parametros da URL
     date_range = {
-        "date_range_start": (
-            timestamp - timedelta(minutes=interval_minutes)
-        ).strftime("%Y-%m-%dT%H:%M:%S"),
-        "date_range_end": timestamp.strftime(
+        "date_range_start": (timestamp - timedelta(minutes=interval_minutes)).strftime(
             "%Y-%m-%dT%H:%M:%S"
         ),
+        "date_range_end": timestamp.strftime("%Y-%m-%dT%H:%M:%S"),
     }
     url = "http://ccomobility.com.br/WebServices/Binder/wsconecta/EnvioViagensRetroativasSMTR?"
 
@@ -51,10 +50,9 @@ def create_api_url_onibus_realocacao(
     log(f"Request data from URL:\n{url}")
     return url.format(secret=headers[key])
 
+
 @task
-def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
-    status: dict
-) -> Dict:
+def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(status: dict) -> Dict:
     """Basic data treatment for bus gps relocation data. Converts unix time to datetime,
     and apply filtering to stale data that may populate the API response.
 
@@ -74,7 +72,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
         return {"data": pd.DataFrame(), "error": status["error"]}
 
     log(f"Data received to treat: \n{status['data'][:5]}")
-    df_realocacao = pd.DataFrame(status["data"])  
+    df_realocacao = pd.DataFrame(status["data"])
     df_realocacao["timestamp_captura"] = datetime.now().isoformat()
 
     # Ajusta tipos de data
