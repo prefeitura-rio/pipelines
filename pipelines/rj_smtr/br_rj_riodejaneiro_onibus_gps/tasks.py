@@ -24,28 +24,34 @@ from pipelines.rj_smtr.constants import constants
 @task
 # pylint: disable=line-too-long
 def create_api_url_onibus_realocacao(
-    date_range: Dict = None, secret_path: str = constants.REALOCACAO_SECRET_PATH.value
-) -> str:
+    interval_minutes: int = 1,
+    timestamp: datetime = None,
+    secret_path: str = constants.REALOCACAO_SECRET_PATH.value,
+) -> dict:
     """
     start_date: datahora mínima do sinal de GPS avaliado
     end_date: datahora máxima do sinal de GPS avaliado
     """
 
     # Configura parametros da URL
-
+    date_range = {
+        "date_range_start": (  # "2022-11-11 23:00:00",
+            timestamp - timedelta(minutes=interval_minutes)
+        ).strftime("%Y-%m-%d %H:%M:%S"),
+        "date_range_end": timestamp.strftime(  # "2022-11-11 23:59:00"
+            "%Y-%m-%d %H:%M:%S"
+        ),
+    }
     url = "http://ccomobility.com.br/WebServices/Binder/wsconecta/EnvioViagensRetroativasSMTR?"
 
     headers = get_vault_secret(secret_path)["data"]
     key = list(headers)[0]
     url = f"{url}{key}={{secret}}"
 
-    start = date_range["date_range_start"].strftime("%Y-%m-%d+%H:%M:%S")
-    end = date_range["date_range_end"].strftime("%Y-%m-%d+%H:%M:%S")
+    url += f"&dataInicial={date_range['date_range_start']}&dataFinal={date_range['date_range_end']}"
 
-    url += f"&dataInicial={start}&dataFinal={end}"
-
-    log(f"Request data from URL: {url}")
-    return url.format(secret=headers[key])
+    log(f"Request data from URL:\n{url}")
+    return {"url": url.format(secret=headers[key]), "date_range": date_range}
 
 
 @task
@@ -77,30 +83,24 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
     log(f"Data received to treat: \n{status['data'][:5]}")
     df_realocacao = pd.DataFrame(status["data"])  # pylint: disable=c0103
     # df_realocacao["timestamp_captura"] = timestamp
-    df_realocacao["timestamp_captura"] = datetime.datetime.now().isoformat()
+    df_realocacao["timestamp_captura"] = datetime.now().isoformat()
     # log(f"Before converting, datahora is: \n{df_realocacao['datahora']}")
 
     # Ajusta tipos de data
     dt_cols = ["dataEntrada", "dataOperacao", "dataSaida"]
     for col in dt_cols:
-        df_realocacao[col] = pd.to_datetime(df_realocacao[col])
+        # TODO: Add tz_localize
+        log(f"Converting column {col}")
+        df_realocacao[col] = pd.to_datetime(df_realocacao[col]).tz_localize(
+            "America/Sao_Paulo"
+        )
 
     # Ajusta tempo máximo da realocação
     df_realocacao.loc[
         df_realocacao.dataSaida == "1971-01-01 00:00:00", "dataSaida"
-    ] = date_range["date_range_end"]
+    ] = ""
 
     # TODO: separar os filtros num dicionario
-
-    # Filtra realocações válidas
-    df_realocacao = df_realocacao[
-        (
-            df_realocacao.dataOperacao - df_realocacao.dataEntrada
-            <= datetime.timedelta(minutes=60)
-        )
-        & (df_realocacao.dataEntrada <= df_realocacao.dataSaida)
-        & (df_realocacao.dataEntrada <= df_realocacao.dataOperacao)
-    ]
 
     # Renomeia colunas
     cols = {
@@ -114,7 +114,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
 
     df_realocacao = df_realocacao.rename(columns=cols)
 
-    return df_realocacao.drop_duplicates()
+    return {"data": df_realocacao.drop_duplicates(), "error": None}
 
 
 @task

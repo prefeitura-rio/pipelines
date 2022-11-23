@@ -48,6 +48,12 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
     create_api_url_onibus_realocacao,
     pre_treatment_br_rj_riodejaneiro_onibus_realocacao,
 )
+
+from pipelines.rj_smtr.schedules import (
+    every_hour_minute_six,
+    every_minute,
+    every_minute_dev,
+)
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
 # Flows #
@@ -72,8 +78,8 @@ with Flow(
     )
     rebuild = Parameter("rebuild", False)
 
-    LABELS = get_current_flow_labels()
-    MODE = get_current_flow_mode(LABELS)
+    # LABELS = get_current_flow_labels()
+    # MODE = get_current_flow_mode(LABELS)
 
     timestamp = get_current_timestamp()
 
@@ -82,20 +88,20 @@ with Flow(
     )
 
     # Set dbt client #
-    dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
+    # dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
     # Use the command below to get the dbt client in dev mode:
     # dbt_client = get_local_dbt_client(host="localhost", port=3001)
 
     # Set specific run parameters #
-    date_range = get_materialization_date_range(
-        dataset_id=dataset_id,
-        table_id=table_id,
-        raw_dataset_id=raw_dataset_id,
-        raw_table_id=raw_table_id,
-        table_date_column_name="data",
-        mode=MODE,
-        delay_hours=constants.GPS_SPPO_MATERIALIZE_DELAY_HOURS.value,
-    )
+    # date_range = get_materialization_date_range(
+    #     dataset_id=dataset_id,
+    #     table_id=table_id,
+    #     raw_dataset_id=raw_dataset_id,
+    #     raw_table_id=raw_table_id,
+    #     table_date_column_name="data",
+    #     mode=MODE,
+    #     delay_hours=constants.GPS_SPPO_MATERIALIZE_DELAY_HOURS.value,
+    # )
 
     partitions = create_date_hour_partition(timestamp)
 
@@ -108,16 +114,16 @@ with Flow(
         partitions=partitions,
     )
 
-    url = create_api_url_onibus_realocacao.map(date_range=date_range)
+    url_dict = create_api_url_onibus_realocacao(timestamp=timestamp)
 
     # EXTRACT #
-    raw_status = get_raw(url)
+    raw_status = get_raw(url_dict["url"])
 
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
 
     # CLEAN #
-    treated_status = pre_treatment_br_rj_riodejaneiro_onibus_realocacao.map(
-        status=unmapped(raw_status), date_range=date_range
+    treated_status = pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
+        status=raw_status, date_range=url_dict["date_range"]
     )
 
     treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
@@ -144,6 +150,7 @@ realocacao_sppo.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
+realocacao_sppo.schedule = every_minute_dev
 
 with Flow(
     "SMTR: GPS SPPO - Materialização",
@@ -288,7 +295,7 @@ captura_sppo_v2.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
-# captura_sppo_v2.schedule = every_minute
+captura_sppo_v2.schedule = every_minute
 
 
 with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as recaptura:
@@ -397,4 +404,4 @@ recaptura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
-# recaptura.schedule = every_hour_minute_six
+recaptura.schedule = every_hour_minute_six
