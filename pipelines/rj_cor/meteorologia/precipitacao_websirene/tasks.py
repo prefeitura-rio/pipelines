@@ -50,12 +50,12 @@ def download_tratar_dados() -> pd.DataFrame:
 
     # Converte de UTC para horário São Paulo
     dfr["data_medicao_utc"] = pd.to_datetime(dfr["data_medicao_utc"])
-    dfr["data"] = (
+    dfr["data_medicao"] = (
         dfr["data_medicao_utc"]
         .dt.tz_convert("America/Sao_Paulo")
         .dt.strftime("%Y-%m-%d %H:%M:%S")
     )
-    dfr["data"] = pd.to_datetime(dfr["data"])
+    dfr["data_medicao"] = pd.to_datetime(dfr["data"])
 
     dfr = dfr.drop(["data_medicao_utc"], axis=1)
 
