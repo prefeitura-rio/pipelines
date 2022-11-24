@@ -79,12 +79,12 @@ def download_tratar_dados() -&gt; pd.DataFrame:
 
     # Converte de UTC para horário São Paulo
     dfr[&#34;data_medicao_utc&#34;] = pd.to_datetime(dfr[&#34;data_medicao_utc&#34;])
-    dfr[&#34;data&#34;] = (
+    dfr[&#34;data_medicao&#34;] = (
         dfr[&#34;data_medicao_utc&#34;]
         .dt.tz_convert(&#34;America/Sao_Paulo&#34;)
         .dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
     )
-    dfr[&#34;data&#34;] = pd.to_datetime(dfr[&#34;data&#34;])
+    dfr[&#34;data_medicao&#34;] = pd.to_datetime(dfr[&#34;data&#34;])
 
     dfr = dfr.drop([&#34;data_medicao_utc&#34;], axis=1)
 
@@ -198,12 +198,12 @@ def download_tratar_dados() -&gt; pd.DataFrame:
 
     # Converte de UTC para horário São Paulo
     dfr[&#34;data_medicao_utc&#34;] = pd.to_datetime(dfr[&#34;data_medicao_utc&#34;])
-    dfr[&#34;data&#34;] = (
+    dfr[&#34;data_medicao&#34;] = (
         dfr[&#34;data_medicao_utc&#34;]
         .dt.tz_convert(&#34;America/Sao_Paulo&#34;)
         .dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
     )
-    dfr[&#34;data&#34;] = pd.to_datetime(dfr[&#34;data&#34;])
+    dfr[&#34;data_medicao&#34;] = pd.to_datetime(dfr[&#34;data&#34;])
 
     dfr = dfr.drop([&#34;data_medicao_utc&#34;], axis=1)
 
