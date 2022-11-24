@@ -8,7 +8,6 @@ Fonte: Squitter.
 
 from pathlib import Path
 from typing import Union
-import os
 import pandas as pd
 
 from bs4 import BeautifulSoup
