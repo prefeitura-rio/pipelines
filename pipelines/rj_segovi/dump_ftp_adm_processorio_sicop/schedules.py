@@ -21,11 +21,11 @@ every_week_schedule = Schedule(
                 "pattern": "processo",
                 "dataset_id": "adm_processorio_sicop",
                 "table_id": "processo",
-                "dump_mode": "overwrite", # alterado
-                "materialize_after_dump": True, # alterado
-                "materialization_mode": "dev", # alterado
-                "materialize_to_datario": True, # alterado
-                "dump_to_gcs": True, # alterado
+                "dump_mode": "overwrite",  # alterado
+                "materialize_after_dump": True,  # alterado
+                "materialization_mode": "dev",  # alterado
+                "materialize_to_datario": True,  # alterado
+                "dump_to_gcs": True,  # alterado
             },
         ),
         IntervalClock(
@@ -38,11 +38,11 @@ every_week_schedule = Schedule(
                 "pattern": "expediente",
                 "dataset_id": "adm_processorio_sicop",
                 "table_id": "expediente",
-                "dump_mode": "overwrite", # alterado
-                "materialize_after_dump": True, # alterado
-                "materialization_mode": "dev", # alterado
-                "materialize_to_datario": True, # alterado
-                "dump_to_gcs": True, # alterado
+                "dump_mode": "overwrite",  # alterado
+                "materialize_after_dump": True,  # alterado
+                "materialization_mode": "dev",  # alterado
+                "materialize_to_datario": True,  # alterado
+                "dump_to_gcs": True,  # alterado
             },
         ),
     ]
