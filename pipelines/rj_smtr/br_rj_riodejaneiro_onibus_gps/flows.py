@@ -52,7 +52,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
 from pipelines.rj_smtr.schedules import (
     every_hour_minute_six,
     every_minute,
-    every_minute_dev,
+    every_10_minutes_dev,
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
@@ -70,11 +70,11 @@ with Flow(
         "raw_dataset_id", default=constants.GPS_SPPO_RAW_DATASET_ID.value
     )
     raw_table_id = Parameter(
-        "raw_table_id", default=constants.REALOCACAO_SPPO_RAW_TABLE_ID.value
+        "raw_table_id", default=constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value
     )
     dataset_id = Parameter("dataset_id", default=constants.GPS_SPPO_DATASET_ID.value)
     table_id = Parameter(
-        "table_id", default=constants.REALOCACAO_SPPO_TREATED_TABLE_ID.value
+        "table_id", default=constants.GPS_SPPO_REALOCACAO_TREATED_TABLE_ID.value
     )
     rebuild = Parameter("rebuild", False)
 
@@ -94,7 +94,7 @@ with Flow(
 
     filepath = create_local_partition_path(
         dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
-        table_id=constants.REALOCACAO_SPPO_RAW_TABLE_ID.value,
+        table_id=constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
         filename=filename,
         partitions=partitions,
     )
@@ -116,7 +116,7 @@ with Flow(
     # LOAD #
     error = bq_upload(
         dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
-        table_id=constants.REALOCACAO_SPPO_RAW_TABLE_ID.value,
+        table_id=constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
         filepath=treated_filepath,
         raw_filepath=raw_filepath,
         partitions=partitions,
@@ -125,7 +125,7 @@ with Flow(
 
     upload_logs_to_bq(
         dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
-        parent_table_id=constants.REALOCACAO_SPPO_RAW_TABLE_ID.value,
+        parent_table_id=constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
         error=error,
         timestamp=timestamp,
     )
@@ -135,7 +135,7 @@ realocacao_sppo.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
-realocacao_sppo.schedule = every_minute_dev
+realocacao_sppo.schedule = every_10_minutes_dev
 
 with Flow(
     "SMTR: GPS SPPO - Materialização",
@@ -217,7 +217,6 @@ materialize_sppo.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
-
 
 with Flow(
     "SMTR: GPS SPPO - Captura",
@@ -301,8 +300,6 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
         prefix="GPS SPPO Recapturas: ", now_time=get_now_time(), wait=timestamps
     )
     with case(errors, False):
-        # TODO: adicionar etapa de realocação - se sucesso, entao materializa
-
         with case(materialize, True):
             materialize_no_error = create_flow_run(
                 flow_name=materialize_sppo.name,

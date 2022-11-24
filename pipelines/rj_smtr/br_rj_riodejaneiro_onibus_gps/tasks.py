@@ -22,12 +22,11 @@ from pipelines.rj_smtr.constants import constants
 
 
 @task
-# pylint: disable=line-too-long
 def create_api_url_onibus_realocacao(
     interval_minutes: int = 10,
     timestamp: datetime = None,
-    secret_path: str = constants.REALOCACAO_SECRET_PATH.value,
-) -> dict:
+    secret_path: str = constants.GPS_SPPO_REALOCACAO_SECRET_PATH.value,
+) -> str:
     """
     start_date: datahora mínima do sinal de GPS avaliado
     end_date: datahora máxima do sinal de GPS avaliado
@@ -35,12 +34,10 @@ def create_api_url_onibus_realocacao(
 
     # Configura parametros da URL
     date_range = {
-        "date_range_start": (  # "2022-11-23 13:00:00",
-            timestamp - timedelta(minutes=interval_minutes)
-        ).strftime("%Y-%m-%dT%H:%M:%S"),
-        "date_range_end": timestamp.strftime(  # "2022-11-23 14:00:00"
+        "date_range_start": (timestamp - timedelta(minutes=interval_minutes)).strftime(
             "%Y-%m-%dT%H:%M:%S"
         ),
+        "date_range_end": timestamp.strftime("%Y-%m-%dT%H:%M:%S"),
     }
     url = "http://ccomobility.com.br/WebServices/Binder/wsconecta/EnvioViagensRetroativasSMTR?"
 
@@ -64,7 +61,6 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
     Args:
         status (dict): dict containing the status of the request made to the
         API. Must contain keys: data and error
-        date_range (dict): dict containing date_range_start and date_range_end.
 
     Returns:
         df_realocacao: pandas.core.DataFrame containing the treated data.
@@ -76,9 +72,6 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
     if status["data"] == []:
         log("Data is empty, skipping treatment...")
         return {"data": pd.DataFrame(), "error": status["error"]}
-
-    # error = None
-    # timezone = constants.TIMEZONE.value
 
     log(f"Data received to treat: \n{status['data'][:5]}")
     df_realocacao = pd.DataFrame(status["data"])  # pylint: disable=c0103
@@ -94,7 +87,6 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
         "dataProcessado",
     ]
     for col in dt_cols:
-        # TODO: Add tz_localize
         log(f"Converting column {col}")
         df_realocacao[col] = pd.to_datetime(df_realocacao[col]).dt.tz_localize(
             tz=constants.TIMEZONE.value
