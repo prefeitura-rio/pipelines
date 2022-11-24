@@ -24,7 +24,7 @@ from pipelines.rj_smtr.constants import constants
 @task
 # pylint: disable=line-too-long
 def create_api_url_onibus_realocacao(
-    interval_minutes: int = 1,
+    interval_minutes: int = 10,
     timestamp: datetime = None,
     secret_path: str = constants.REALOCACAO_SECRET_PATH.value,
 ) -> dict:
@@ -51,12 +51,12 @@ def create_api_url_onibus_realocacao(
     url += f"&dataInicial={date_range['date_range_start']}&dataFinal={date_range['date_range_end']}"
 
     log(f"Request data from URL:\n{url}")
-    return {"url": url.format(secret=headers[key]), "date_range": date_range}
+    return url.format(secret=headers[key])
 
 
 @task
 def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
-    status: dict, date_range: dict = None
+    status: dict, timestamp: datetime
 ) -> Dict:
     """Basic data treatment for bus gps relocation data. Converts unix time to datetime,
     and apply filtering to stale data that may populate the API response.
@@ -83,7 +83,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
     log(f"Data received to treat: \n{status['data'][:5]}")
     df_realocacao = pd.DataFrame(status["data"])  # pylint: disable=c0103
     # df_realocacao["timestamp_captura"] = timestamp
-    df_realocacao["timestamp_captura"] = datetime.now().isoformat()
+    df_realocacao["timestamp_captura"] = timestamp.isoformat()
     # log(f"Before converting, datahora is: \n{df_realocacao['datahora']}")
 
     # Ajusta tipos de data
@@ -92,7 +92,6 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
         "dataOperacao",
         "dataSaida",
         "dataProcessado",
-        "timestamp_captura",
     ]
     for col in dt_cols:
         # TODO: Add tz_localize

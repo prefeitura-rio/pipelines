@@ -81,27 +81,12 @@ with Flow(
     # LABELS = get_current_flow_labels()
     # MODE = get_current_flow_mode(LABELS)
 
+    # SETUP
     timestamp = get_current_timestamp()
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix="GPS SPPO - Realocação: ", now_time=timestamp
     )
-
-    # Set dbt client #
-    # dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
-    # Use the command below to get the dbt client in dev mode:
-    # dbt_client = get_local_dbt_client(host="localhost", port=3001)
-
-    # Set specific run parameters #
-    # date_range = get_materialization_date_range(
-    #     dataset_id=dataset_id,
-    #     table_id=table_id,
-    #     raw_dataset_id=raw_dataset_id,
-    #     raw_table_id=raw_table_id,
-    #     table_date_column_name="data",
-    #     mode=MODE,
-    #     delay_hours=constants.GPS_SPPO_MATERIALIZE_DELAY_HOURS.value,
-    # )
 
     partitions = create_date_hour_partition(timestamp)
 
@@ -114,16 +99,16 @@ with Flow(
         partitions=partitions,
     )
 
-    url_dict = create_api_url_onibus_realocacao(timestamp=timestamp)
+    url = create_api_url_onibus_realocacao(timestamp=timestamp)
 
     # EXTRACT #
-    raw_status = get_raw(url_dict["url"])
+    raw_status = get_raw(url)
 
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
 
     # CLEAN #
     treated_status = pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
-        status=raw_status, date_range=url_dict["date_range"]
+        status=raw_status, timestamp=timestamp
     )
 
     treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
