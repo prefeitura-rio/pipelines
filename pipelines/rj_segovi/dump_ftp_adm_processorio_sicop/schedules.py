@@ -23,9 +23,9 @@ every_week_schedule = Schedule(
                 "table_id": "processo",
                 "dump_mode": "overwrite",  # alterado
                 "materialize_after_dump": True,  # alterado
-                "materialization_mode": "dev",  # alterado
-                "materialize_to_datario": True,  # alterado
-                "dump_to_gcs": True,  # alterado
+                "materialization_mode": "prod",  # alterado
+                "materialize_to_datario": False,  # alterado
+                "dump_to_gcs": False,  # alterado
             },
         ),
         IntervalClock(
@@ -40,9 +40,9 @@ every_week_schedule = Schedule(
                 "table_id": "expediente",
                 "dump_mode": "overwrite",  # alterado
                 "materialize_after_dump": True,  # alterado
-                "materialization_mode": "dev",  # alterado
-                "materialize_to_datario": True,  # alterado
-                "dump_to_gcs": True,  # alterado
+                "materialization_mode": "prod",  # alterado
+                "materialize_to_datario": False,  # alterado
+                "dump_to_gcs": False,  # alterado
             },
         ),
     ]
