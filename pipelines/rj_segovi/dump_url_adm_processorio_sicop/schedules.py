@@ -23,28 +23,39 @@ gsheets_urls = {
         "dump_mode": "overwrite",
         "url": "https://drive.google.com/file/d/1ZF71cmU4T03iALerMuN2cOFuFYB6h62s/view?usp=share_link",  # noqa
         "url_type": "google_drive",
+        "materialization_mode": "prod",
         "materialize_after_dump": True,
+        "materialize_to_datario": False,
+        "dump_to_gcs": False,
         "dataset_id": "adm_processorio_sicop",
     },
     "assunto": {
         "dump_mode": "overwrite",
         "url": "https://drive.google.com/file/d/1JCZhr8_Zww3jzF6xSzWG9WZcdLot0ZrS/view?usp=share_link",  # noqa
         "url_type": "google_drive",
+        "materialization_mode": "prod",
         "materialize_after_dump": True,
+        "materialize_to_datario": False,
+        "dump_to_gcs": False,
         "dataset_id": "adm_processorio_sicop",
     },
     "sici": {
         "dump_mode": "overwrite",
         "url": "https://drive.google.com/file/d/1OMh3gClqA1KkIIBznAry29NR-UD__Z-b/view?usp=share_link",  # noqa
         "url_type": "google_drive",
+        "materialization_mode": "prod",
         "materialize_after_dump": True,
+        "materialize_to_datario": False,
+        "dump_to_gcs": False,
         "dataset_id": "adm_processorio_sicop",
     },
     "codigo_sicop": {
         "dump_mode": "overwrite",
         "url": "https://drive.google.com/file/d/1aQl9NNVeUCrAvXPP4e6zaFEp-YUDCPdX/view?usp=share_link",  # noqa
         "url_type": "google_drive",
-        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "materialize_to_datario": False,
+        "dump_to_gcs": False,
         "dataset_id": "adm_processorio_sicop",
     },
 }
