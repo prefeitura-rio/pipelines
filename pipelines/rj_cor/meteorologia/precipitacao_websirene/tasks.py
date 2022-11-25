@@ -55,7 +55,7 @@ def download_tratar_dados() -> pd.DataFrame:
         .dt.tz_convert("America/Sao_Paulo")
         .dt.strftime("%Y-%m-%d %H:%M:%S")
     )
-    dfr["data_medicao"] = pd.to_datetime(dfr["data"])
+    dfr["data_medicao"] = pd.to_datetime(dfr["data_medicao"])
 
     dfr = dfr.drop(["data_medicao_utc"], axis=1)
 
