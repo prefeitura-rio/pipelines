@@ -37,8 +37,29 @@ dados_mestres_tables = {
         "dump_to_gcs": True,
         "materialization_mode": "dev",
     },
-    "zoneamento_urbano": {
-        "url": "https://pgeo3.rio.rj.gov.br/arcgis/rest/services/Urbanismo/LBB_Zoneamento_Urbano/MapServer/0/query?outFields=*&where=1%3D1&f=geojson",
+    "zoneamento_setores": {
+        # source https://www.data.rio/datasets/PCRJ::setores-1/about
+        "url": "https://opendata.arcgis.com/api/v3/datasets/2c56c0ca74d74bcd8b44378e20af707f_1/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",
+        "dataset_id": "dados_mestres",
+        "dump_mode": "overwrite",
+        "materialize_after_dump": False,
+        "materialize_to_datario": False,
+        "dump_to_gcs": False,
+        "materialization_mode": "dev",
+    },
+    "zoneamento_subzonas_subsetores": {
+        # source https://www.data.rio/datasets/PCRJ::subzonas-e-subsetores-1/about
+        "url": "https://opendata.arcgis.com/api/v3/datasets/815b62790a0942519020d4ad28e99fee_2/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",
+        "dataset_id": "dados_mestres",
+        "dump_mode": "overwrite",
+        "materialize_after_dump": False,
+        "materialize_to_datario": False,
+        "dump_to_gcs": False,
+        "materialization_mode": "dev",
+    },
+    "zoneamento_zonas": {
+        # source https://www.data.rio/datasets/PCRJ::zonas-1/about
+        "url": "https://opendata.arcgis.com/api/v3/datasets/d668fb697bd245229d3165aed0ee5193_3/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",
         "dataset_id": "dados_mestres",
         "dump_mode": "overwrite",
         "materialize_after_dump": False,
@@ -47,7 +68,7 @@ dados_mestres_tables = {
         "materialization_mode": "dev",
     },
     "edificacoes": {
-        "url": "https://services5.arcgis.com/mgrvZxGU0bSJbVld/arcgis/rest/services/Quadras_Lotes_Edificacoes/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson",
+        "url": "https://opendata.arcgis.com/api/v3/datasets/124f1607b57d4292af5c0dfc2ff8572c_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",
         "dataset_id": "dados_mestres",
         "dump_mode": "overwrite",
         "materialize_after_dump": False,
@@ -60,7 +81,7 @@ dados_mestres_tables = {
 
 
 dados_mestresclocks = generate_dump_datario_schedules(
-    interval=timedelta(days=30),
+    interval=timedelta(days=365),
     start_date=datetime(2022, 11, 9, 18, 10, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value],
     table_parameters=dados_mestres_tables,
