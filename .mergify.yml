@@ -6,6 +6,7 @@ pull_request_rules:
       - -closed
       - -merged
       - "#commits-behind>0"
+      - label!=do-not-update
     actions:
       update:
   - name: Warn author on conflicts
