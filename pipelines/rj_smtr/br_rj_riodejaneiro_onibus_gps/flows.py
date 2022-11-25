@@ -78,7 +78,6 @@ with Flow(
     )
     rebuild = Parameter("rebuild", False)
 
-    # LABELS = get_current_flow_labels()
     # MODE = get_current_flow_mode(LABELS)
 
     # SETUP
