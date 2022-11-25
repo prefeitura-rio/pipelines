@@ -76,10 +76,6 @@ with Flow(
     table_id = Parameter(
         "table_id", default=constants.GPS_SPPO_REALOCACAO_TREATED_TABLE_ID.value
     )
-    rebuild = Parameter("rebuild", False)
-
-    # LABELS = get_current_flow_labels()
-    # MODE = get_current_flow_mode(LABELS)
 
     # SETUP
     timestamp = get_current_timestamp()
@@ -136,6 +132,79 @@ realocacao_sppo.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 realocacao_sppo.schedule = every_10_minutes_dev
+
+with Flow(
+    "SMTR: GPS SPPO - Realocação (recapturas)", code_owners=["rodrigo", "fernanda"]
+) as realocacao_sppo_recaptura:
+
+    datetime_filter = Parameter("datetime_filter", default=None)
+    # SETUP #
+
+    errors, timestamps, previous_errors = query_logs(
+        dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
+        table_id=constants.GPS_SPPO_REALOCACAO_TREATED_TABLE_ID.value,
+        datetime_filter=datetime_filter,
+        capture_interval_minutes=10,
+        mode="dev",  # TODO: change mode
+    )
+
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix="GPS SPPO Realocacao Recapturas: ",
+        now_time=get_now_time(),
+        wait=timestamps,
+    )
+    with case(errors, True):
+        # SETUP #
+        partitions = create_date_hour_partition.map(timestamps)
+        filename = parse_timestamp_to_string.map(timestamps)
+
+        filepath = create_local_partition_path.map(
+            dataset_id=unmapped(constants.GPS_SPPO_RAW_DATASET_ID.value),
+            table_id=unmapped(constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value),
+            filename=filename,
+            partitions=partitions,
+        )
+
+        url = create_api_url_onibus_realocacao.map(timestamp=timestamps)
+
+        # EXTRACT #
+        raw_status = get_raw.map(url)
+
+        raw_filepath = save_raw_local.map(status=raw_status, file_path=filepath)
+
+        # # CLEAN #
+        trated_status = pre_treatment_br_rj_riodejaneiro_onibus_realocacao.map(
+            status=raw_status,
+            timestamp=timestamps,
+        )
+
+        treated_filepath = save_treated_local.map(
+            status=trated_status, file_path=filepath
+        )
+
+        # # LOAD #
+        error = bq_upload.map(
+            dataset_id=unmapped(constants.GPS_SPPO_RAW_DATASET_ID.value),
+            table_id=unmapped(constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value),
+            filepath=treated_filepath,
+            raw_filepath=raw_filepath,
+            partitions=partitions,
+            status=trated_status,
+        )
+
+        UPLOAD_LOGS = upload_logs_to_bq.map(
+            dataset_id=unmapped(constants.GPS_SPPO_RAW_DATASET_ID.value),
+            parent_table_id=unmapped(constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value),
+            error=error,
+            previous_error=previous_errors,
+            timestamp=timestamps,
+            recapture=unmapped(True),
+        )
+realocacao_sppo_recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+realocacao_sppo_recaptura.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+)
 
 with Flow(
     "SMTR: GPS SPPO - Materialização",
@@ -300,6 +369,18 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
         prefix="GPS SPPO Recapturas: ", now_time=get_now_time(), wait=timestamps
     )
     with case(errors, False):
+        realocacao_recaptura = create_flow_run(
+            flow_name=realocacao_sppo_recaptura.name,
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            labels=LABELS,
+            run_name=realocacao_sppo_recaptura.name,
+        )
+        wait_recaptura = wait_for_flow_run(
+            realocacao_recaptura,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
         with case(materialize, True):
             materialize_no_error = create_flow_run(
                 flow_name=materialize_sppo.name,
@@ -364,6 +445,18 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
             recapture=unmapped(True),
         )
         with case(materialize, True):
+            realocacao_recaptura = create_flow_run(
+                flow_name=realocacao_sppo_recaptura.name,
+                project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+                labels=LABELS,
+                run_name=realocacao_sppo_recaptura.name,
+            )
+            wait_recaptura = wait_for_flow_run(
+                realocacao_recaptura,
+                stream_states=True,
+                stream_logs=True,
+                raise_final_state=True,
+            )
             run_materialize = create_flow_run(
                 flow_name=materialize_sppo.name,
                 project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
@@ -377,8 +470,12 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
                 raise_final_state=True,
             )
     recaptura.set_dependencies(
-        task=run_materialize,
+        task=realocacao_recaptura,
         upstream_tasks=[UPLOAD_LOGS],
+    )
+    recaptura.set_dependencies(
+        task=run_materialize,
+        upstream_tasks=[wait_recaptura],
     )
 
 recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
@@ -387,3 +484,6 @@ recaptura.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 recaptura.schedule = every_hour_minute_six
+
+
+# realocacao_sppo_recaptura.schedule = every_hour_minute_six
