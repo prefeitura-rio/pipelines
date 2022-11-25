@@ -82,7 +82,9 @@ dados_mestres_tables = {
 
 dados_mestresclocks = generate_dump_datario_schedules(
     interval=timedelta(days=365),
-    start_date=datetime(2022, 11, 9, 18, 10, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(
+        2022, 11, 25, 13, 30, tzinfo=pytz.timezone("America/Sao_Paulo")
+    ),
     labels=[constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value],
     table_parameters=dados_mestres_tables,
     runs_interval_minutes=15,
