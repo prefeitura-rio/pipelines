@@ -84,14 +84,14 @@ def download_tratar_dados() -&gt; pd.DataFrame:
         .dt.tz_convert(&#34;America/Sao_Paulo&#34;)
         .dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
     )
-    dfr[&#34;data_medicao&#34;] = pd.to_datetime(dfr[&#34;data&#34;])
+    dfr[&#34;data_medicao&#34;] = pd.to_datetime(dfr[&#34;data_medicao&#34;])
 
     dfr = dfr.drop([&#34;data_medicao_utc&#34;], axis=1)
 
     # Ordenação de variáveis
     cols_order = [
         &#34;id_estacao&#34;,
-        &#34;data&#34;,
+        &#34;data_medicao&#34;,
         &#34;acumulado_chuva_15_min&#34;,
         &#34;acumulado_chuva_1_h&#34;,
         &#34;acumulado_chuva_4_h&#34;,
@@ -123,7 +123,7 @@ def salvar_dados(dfr: pd.DataFrame) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
 
     # Pegar o dia máximo que aparece na base como partição
-    max_date = str(dfr[&#34;data&#34;].max())
+    max_date = str(dfr[&#34;data_medicao&#34;].max())
     ano = max_date[:4]
     mes = str(int(max_date[5:7]))
     data = str(max_date[:10])
@@ -203,14 +203,14 @@ def download_tratar_dados() -&gt; pd.DataFrame:
         .dt.tz_convert(&#34;America/Sao_Paulo&#34;)
         .dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
     )
-    dfr[&#34;data_medicao&#34;] = pd.to_datetime(dfr[&#34;data&#34;])
+    dfr[&#34;data_medicao&#34;] = pd.to_datetime(dfr[&#34;data_medicao&#34;])
 
     dfr = dfr.drop([&#34;data_medicao_utc&#34;], axis=1)
 
     # Ordenação de variáveis
     cols_order = [
         &#34;id_estacao&#34;,
-        &#34;data&#34;,
+        &#34;data_medicao&#34;,
         &#34;acumulado_chuva_15_min&#34;,
         &#34;acumulado_chuva_1_h&#34;,
         &#34;acumulado_chuva_4_h&#34;,
@@ -251,7 +251,7 @@ def salvar_dados(dfr: pd.DataFrame) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
 
     # Pegar o dia máximo que aparece na base como partição
-    max_date = str(dfr[&#34;data&#34;].max())
+    max_date = str(dfr[&#34;data_medicao&#34;].max())
     ano = max_date[:4]
     mes = str(int(max_date[5:7]))
     data = str(max_date[:10])
