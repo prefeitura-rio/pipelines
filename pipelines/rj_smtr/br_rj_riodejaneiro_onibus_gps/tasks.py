@@ -97,7 +97,6 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
         df_realocacao.dataSaida == "1971-01-01 00:00:00", "dataSaida"
     ] = ""
 
-    # TODO: separar os filtros num dicionario
 
     # Renomeia colunas
     cols = {
