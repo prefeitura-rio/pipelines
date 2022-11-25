@@ -78,7 +78,6 @@ with Flow(
     )
     rebuild = Parameter("rebuild", False)
 
-    # MODE = get_current_flow_mode(LABELS)
 
     # SETUP
     timestamp = get_current_timestamp()
