@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Database dumping flows for segovi processorio sicop 
+Database dumping flows for segovi processorio sicop
 """
 
 from copy import deepcopy
