@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Schedules for the SEGOVI SICOP pipeline
+Schedules for the SEGOVI SICOP pipeline 
 """
 from datetime import datetime, timedelta
 
@@ -18,7 +18,7 @@ every_week_schedule = Schedule(
                 constants.RJ_SEGOVI_AGENT_LABEL.value,
             ],
             parameter_defaults={
-                "pattern": "processo",
+                "pattern": "ARQ2001",
                 "dataset_id": "adm_processorio_sicop",
                 "table_id": "processo",
                 "dump_mode": "overwrite",  # alterado
@@ -30,12 +30,12 @@ every_week_schedule = Schedule(
         ),
         IntervalClock(
             interval=timedelta(days=7),
-            start_date=datetime(2022, 1, 1, 12, 50, 0),
+            start_date=datetime(2022, 1, 1, 15, 20, 0),
             labels=[
                 constants.RJ_SEGOVI_AGENT_LABEL.value,
             ],
             parameter_defaults={
-                "pattern": "expediente",
+                "pattern": "ARQ2296",
                 "dataset_id": "adm_processorio_sicop",
                 "table_id": "expediente",
                 "dump_mode": "overwrite",  # alterado
