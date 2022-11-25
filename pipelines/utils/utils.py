@@ -24,8 +24,11 @@ import numpy as np
 import pandas as pd
 import prefect
 from prefect.client import Client
-from prefect.engine.state import State
+from prefect.engine.state import Skipped, State
 from prefect.run_configs import KubernetesRun
+from prefect.utilities.graphql import (
+    with_args,
+)
 from redis_pal import RedisPal
 import requests
 import telegram
@@ -181,6 +184,44 @@ def notify_discord_on_failure(
     )
 
 
+# pylint: disable=unused-argument
+def skip_if_running_handler(obj, old_state: State, new_state: State) -> State:
+    """
+    State handler that will skip a flow run if another instance of the flow is already running.
+
+    Adapted from Prefect Discourse:
+    https://tinyurl.com/4hn5uz2w
+    """
+    if new_state.is_running():
+        client = Client()
+        query = """
+            query($flow_id: uuid) {
+                flow_run(
+                    where: {
+                        _and: [
+                            {state: {_eq: "Running"}},
+                            {flow_id: {_eq: $flow_id}}
+                        ]
+                    }
+                ) {
+                    id
+                }
+            }
+        """
+        # pylint: disable=no-member
+        response = client.graphql(
+            query=query,
+            variables=dict(flow_id=prefect.context.flow_id),
+        )
+        active_flow_runs = response["data"]["flow_run"]
+        if active_flow_runs:
+            logger = prefect.context.get("logger")
+            message = "Skipping this flow run since there are already some flow runs in progress"
+            logger.info(message)
+            return Skipped(message)
+    return new_state
+
+
 def set_default_parameters(
     flow: prefect.Flow, default_parameters: dict
 ) -> prefect.Flow:
@@ -240,16 +281,43 @@ def run_cloud(
 
 
 def run_registered(
-    flow_id: str,
+    flow_name: str,
+    flow_project: str,
     labels: List[str],
     parameters: Dict[str, Any] = None,
     run_description: str = "",
-):
+) -> str:
     """
     Runs an already registered flow on Prefect Server (must have credentials configured).
     """
     # Get Prefect Client and submit flow run
     client = Client()
+    flow_result = client.graphql(
+        {
+            "query": {
+                with_args(
+                    "flow",
+                    {
+                        "where": {
+                            "_and": [
+                                {"name": {"_eq": flow_name}},
+                                {"archived": {"_eq": False}},
+                                {"project": {"name": {"_eq": flow_project}}},
+                            ]
+                        }
+                    },
+                ): {
+                    "id",
+                }
+            }
+        }
+    )
+    flows_found = flow_result.data.flow
+    if len(flows_found) == 0:
+        raise ValueError(f"Flow {flow_name} not found.")
+    if len(flows_found) > 1:
+        raise ValueError(f"More than one flow found for {flow_name}.")
+    flow_id = flow_result["data"]["flow"][0]["id"]
     flow_run_id = client.create_flow_run(
         flow_id=flow_id,
         run_name=f"SUBMITTED REMOTELY - {run_description}",
@@ -260,6 +328,8 @@ def run_registered(
     # Print flow run link so user can check it
     print(f"Run submitted: SUBMITTED REMOTELY - {run_description}")
     print(f"Please check at: https://prefect.dados.rio/flow-run/{flow_run_id}")
+
+    return flow_run_id
 
 
 def query_to_line(query: str) -> str:
@@ -655,6 +725,39 @@ def list_blobs_with_prefix(
     blobs = storage_client.list_blobs(bucket_name, prefix=prefix)
 
     return list(blobs)
+
+
+def upload_files_to_storage(
+    bucket_name: str,
+    prefix: str,
+    local_path: Union[str, Path] = None,
+    files_list: List[str] = None,
+    mode: str = "prod",
+):
+    """
+    Uploads all files from `local_path` to `bucket_name` with `prefix`.
+    Mode needs to be "prod" or "staging"
+    """
+    # Either local_path or files_list must be provided
+    if local_path is None and files_list is None:
+        raise ValueError("Either local_path or files_list must be provided")
+
+    # If local_path is provided, get all files from it
+    if local_path is not None:
+        files_list: List[Path] = list(Path(local_path).glob("**/*"))
+
+    # Assert all items in files_list are Path objects
+    files_list: List[Path] = [Path(f) for f in files_list]
+
+    credentials = get_credentials_from_env(mode=mode)
+    storage_client = storage.Client(credentials=credentials)
+
+    bucket = storage_client.bucket(bucket_name)
+
+    for file in files_list:
+        if file.is_file():
+            blob = bucket.blob(f"{prefix}/{file.name}")
+            blob.upload_from_filename(file)
 
 
 def parser_blobs_to_partition_dict(blobs: list) -> dict:

@@ -50,19 +50,19 @@ def download_tratar_dados() -> pd.DataFrame:
 
     # Converte de UTC para horário São Paulo
     dfr["data_medicao_utc"] = pd.to_datetime(dfr["data_medicao_utc"])
-    dfr["data"] = (
+    dfr["data_medicao"] = (
         dfr["data_medicao_utc"]
         .dt.tz_convert("America/Sao_Paulo")
         .dt.strftime("%Y-%m-%d %H:%M:%S")
     )
-    dfr["data"] = pd.to_datetime(dfr["data"])
+    dfr["data_medicao"] = pd.to_datetime(dfr["data_medicao"])
 
     dfr = dfr.drop(["data_medicao_utc"], axis=1)
 
     # Ordenação de variáveis
     cols_order = [
         "id_estacao",
-        "data",
+        "data_medicao",
         "acumulado_chuva_15_min",
         "acumulado_chuva_1_h",
         "acumulado_chuva_4_h",
@@ -94,7 +94,7 @@ def salvar_dados(dfr: pd.DataFrame) -> Union[str, Path]:
     """
 
     # Pegar o dia máximo que aparece na base como partição
-    max_date = str(dfr["data"].max())
+    max_date = str(dfr["data_medicao"].max())
     ano = max_date[:4]
     mes = str(int(max_date[5:7]))
     data = str(max_date[:10])
