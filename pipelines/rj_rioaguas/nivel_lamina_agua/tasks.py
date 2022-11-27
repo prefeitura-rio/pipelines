@@ -56,7 +56,7 @@ def tratar_dados(dados: pd.DataFrame) -> pd.DataFrame:
         "Temperatura": "temperatura",
         "Umidade": "umidade",
         "Precipitação": "precipitacao",
-        "Lâmina": "lamina_agua",
+        "Lâmina": "altura_agua",
     }
 
     # Substitui valores que aparecem nas linhas
