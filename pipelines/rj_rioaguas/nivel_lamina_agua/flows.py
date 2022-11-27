@@ -40,7 +40,7 @@ with Flow(
 ) as rioaguas_lamina_agua:
 
     # Parâmetros
-    download_url = Parameter("download_url", default="", required=True)
+    download_url = Parameter("download_url", default="", required=False)
 
     # Parâmetros para a Materialização
     materialize_after_dump = Parameter(
