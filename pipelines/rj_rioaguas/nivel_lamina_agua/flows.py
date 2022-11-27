@@ -20,6 +20,9 @@ from pipelines.rj_rioaguas.nivel_lamina_agua.tasks import (
     tratar_dados,
     salvar_dados,
 )
+from pipelines.rj_rioaguas.nivel_lamina_agua.schedules import (
+    MINUTE_SCHEDULE,
+)
 from pipelines.utils.dump_db.constants import (
     constants as dump_db_constants,
 )
@@ -140,4 +143,4 @@ rioaguas_lamina_agua.run_config = KubernetesRun(
         constants.RJ_RIOAGUAS_AGENT_LABEL.value,
     ],
 )
-rioaguas_lamina_agua.schedule = None
+rioaguas_lamina_agua.schedule = MINUTE_SCHEDULE
