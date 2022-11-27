@@ -39,9 +39,6 @@ with Flow(
     code_owners=["JP", "paty"],
 ) as rioaguas_lamina_agua:
 
-    # Parâmetros
-    download_url = Parameter("download_url", default="", required=False)
-
     # Parâmetros para a Materialização
     materialize_after_dump = Parameter(
         "materialize_after_dump", default=False, required=False
@@ -66,7 +63,7 @@ with Flow(
     )
 
     # Tasks
-    dados = download_file(download_url)
+    dados = download_file()
     dados_tratados = tratar_dados(dados)
     save_path = salvar_dados(dados_tratados)
 

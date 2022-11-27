@@ -17,7 +17,7 @@ from pipelines.rj_rioaguas.utils import login
 
 
 @task
-def download_file(download_url: str) -> pd.DataFrame:
+def download_file() -> pd.DataFrame:
     """
     Função para download de tabela com os dados.
 
@@ -30,7 +30,7 @@ def download_file(download_url: str) -> pd.DataFrame:
 
     session = login(url)
 
-    page = session.get(download_url)
+    page = session.get(url)
 
     # Faz o parse do htm e seleciona apenas dados que estão em tabela
     soup = BeautifulSoup(page.text, "html.parser")
