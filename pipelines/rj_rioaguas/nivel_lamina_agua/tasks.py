@@ -87,7 +87,7 @@ def tratar_dados(dados: pd.DataFrame) -> pd.DataFrame:
         "data_medicao",
         "id_estacao",
         "endereco",
-        "lamina_agua",
+        "altura_agua",
         "precipitacao",
         "umidade",
         "temperatura",
@@ -101,7 +101,7 @@ def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
     """
     Salvar dados em csv.
     """
-    base_path = Path("/tmp/nivel_lamina_agua/")
+    base_path = Path("/tmp/altura_agua/")
     base_path.mkdir(parents=True, exist_ok=True)
 
     filename = base_path / "nivel.csv"
@@ -110,7 +110,7 @@ def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
     save_cols = [
         "data_medicao",
         "id_estacao",
-        "lamina_agua",
+        "altura_agua",
     ]
     dados[save_cols].to_csv(filename, index=False)
     return base_path
