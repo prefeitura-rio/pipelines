@@ -32,7 +32,7 @@ from pipelines.utils.tasks import (
 )
 
 with Flow(
-    "RIOAGUAS: Lamina de água",
+    "RIOAGUAS: Lamina de água em via",
     code_owners=["JP", "paty"],
 ) as rioaguas_lamina_agua:
 
@@ -50,7 +50,7 @@ with Flow(
 
     # Parâmetros para salvar dados no GCS
     dataset_id = "saneamento_drenagem"
-    table_id = "nivel_lamina_agua"
+    table_id = "nivel_lamina_agua_via"
     dump_mode = "overwrite"
 
     # Dump to GCS after? Should only dump to GCS if materializing to datario

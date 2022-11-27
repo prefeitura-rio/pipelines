@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Tasks para pipeline de dados de nível da Lagoa Rodrigo de Freitas.
-Fonte: Squitter.
+Tasks para pipeline de dados de nível de lâmina de água em via.
 """
 # pylint: disable=C0327, E1120, W0108
 
@@ -46,10 +45,10 @@ def download_file(download_url: str) -> pd.DataFrame:
 @task
 def tratar_dados(dados: pd.DataFrame) -> pd.DataFrame:
     """Tratar dados para o padrão estabelecido e filtrar linhas para salvarmos apenas as medições
-    que foram contratadas pela prefeitura. Atualmente, apenas o Catete e a Lagoa estão no contrato.
+    que foram contratadas pela prefeitura. Atualmente, apenas o Catete está no contrato.
     """
     # Filtra apenas endereços contratados
-    dados = dados[dados["Endereço"].isin(["Catete", "Lagoa"])].copy()
+    dados = dados[dados["Endereço"].isin(["Catete"])].copy()
 
     rename_cols = {
         "Endereço": "endereco",
@@ -79,7 +78,7 @@ def tratar_dados(dados: pd.DataFrame) -> pd.DataFrame:
         dados["data_medicao"], format="%d/%m/%Y %H:%M"
     )
 
-    estacao_2_id_estacao = {"Catete": "1", "Lagoa": "2"}
+    estacao_2_id_estacao = {"Catete": "1"}
 
     dados["id_estacao"] = dados["endereco"].map(estacao_2_id_estacao)
 
