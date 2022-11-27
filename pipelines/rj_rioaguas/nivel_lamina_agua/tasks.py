@@ -79,7 +79,22 @@ def tratar_dados(dados: pd.DataFrame) -> pd.DataFrame:
         dados["data_medicao"], format="%d/%m/%Y %H:%M"
     )
 
-    return dados
+    estacao_2_id_estacao = {"Catete": "1", "Lagoa": "2"}
+
+    dados["id_estacao"] = dados["endereco"].map(estacao_2_id_estacao)
+
+    # Fixa ordem das colunas
+    cols_order = [
+        "data_medicao",
+        "id_estacao",
+        "endereco",
+        "lamina_agua",
+        "precipitacao",
+        "umidade",
+        "temperatura",
+    ]
+
+    return dados[cols_order]
 
 
 @task
@@ -92,5 +107,11 @@ def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
 
     filename = base_path / "nivel.csv"
     log(f"Saving {filename}")
-    dados.to_csv(filename, index=False)
+
+    save_cols = [
+        "data_medicao",
+        "id_estacao",
+        "lamina_agua",
+    ]
+    dados[save_cols].to_csv(filename, index=False)
     return base_path
