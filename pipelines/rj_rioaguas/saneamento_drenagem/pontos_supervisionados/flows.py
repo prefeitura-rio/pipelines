@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Flows para pipeline de dados de nível da Lagoa Rodrigo de Freitas.
-Fonte: Squitter.
+Flows para pipeline do shapefile de pontos supervisionados de
+drenagem localizado no portal do SIURB.
+Fonte: Rio-águas.
 """
 # pylint: disable=C0327, C0103
 
@@ -15,53 +16,55 @@ from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.decorators import Flow
-from pipelines.rj_rioaguas.relatorio_chuvas.tasks import download_file, salvar_dados
+from pipelines.rj_rioaguas.saneamento_drenagem.pontos_supervisionados.tasks import (
+    wfs_to_df, tratar_dados, salvar_dados
+)
 from pipelines.utils.dump_db.constants import (
     constants as dump_db_constants,
-)  # adicionado
+)
 from pipelines.utils.dump_to_gcs.constants import (
     constants as dump_to_gcs_constants,
-)  # adicionado
-from pipelines.utils.tasks import (  # adicionado
+)
+from pipelines.utils.tasks import (
     create_table_and_upload_to_gcs,
     get_current_flow_labels,
 )
 
 with Flow(
-    "RIOAGUAS: Relatorio de Chuvas - Nivel LRF",
+    "RIOAGUAS: Relatorio de Chuvas - Pontos Supervisionados",
     code_owners=["JP"],
-) as rioaguas_nivel_LRF:
-    # Parâmetros
-    download_url = Parameter(
-        "download_url", default="http://horus.squitter.com.br/dados/meteorologicos/292/"
-    )
+) as rioaguas_pontos_supervisionados:
+
+    # Parâmetros do codigo
+    url_gis = Parameter("url_gis",
+                        default="https://siurb.rio/portal/home/")
+    url_fl = Parameter("url_fl",
+                       default="https://pgeo3.rio.rj.gov.br/arcgis/rest/"
+                       "services/Hosted/PARA_COR_COMPLETA_Com_lat_long/FeatureServer/0")
 
     # Parâmetros para a Materialização
-    materialize_after_dump = Parameter(
-        "materialize_after_dump", default=False, required=False
-    )
-    materialize_to_datario = Parameter(
-        "materialize_to_datario", default=False, required=False
-    )
-    materialization_mode = Parameter("mode", default="dev", required=False)
+    materialize_after_dump = Parameter("materialize_after_dump", default=False,
+                                       required=False)
+    materialize_to_datario = Parameter("materialize_to_datario", default=False,
+                                       required=False)
+    materialization_mode = Parameter("mode", default="dev",
+                                     required=False)
 
     # Parâmetros para salvar dados no GCS
-    dataset_id = "clima_fluviometro"
-    table_id = "nivel_lagoa"
+    dataset_id = "saneamento_drenagem"
+    table_id = "pontos_supervisionados"
     dump_mode = "overwrite"
 
     # Dump to GCS after? Should only dump to GCS if materializing to datario
     dump_to_gcs = Parameter("dump_to_gcs", default=False, required=False)
-
     maximum_bytes_processed = Parameter(
         "maximum_bytes_processed",
-        required=False,
-        default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
+        required=False, default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
 
     # Tasks
-    dados = download_file(download_url)
-    save_path = salvar_dados(dados)
+    sdf = wfs_to_df(url_fl, url_gis)
+    save_path = salvar_dados(tratar_dados(sdf))
 
     # Create table in BigQuery
     upload_table = create_table_and_upload_to_gcs(
@@ -69,8 +72,7 @@ with Flow(
         dataset_id=dataset_id,
         table_id=table_id,
         dump_mode=dump_mode,
-        wait=save_path,
-    )
+        wait=save_path)
 
     # Trigger DBT flow run
     with case(materialize_after_dump, True):
@@ -85,8 +87,7 @@ with Flow(
                 "materialize_to_datario": materialize_to_datario,
             },
             labels=current_flow_labels,
-            run_name=f"Materialize {dataset_id}.{table_id}",
-        )
+            run_name=f"Materialize {dataset_id}.{table_id}")
 
         materialization_flow.set_upstream(upload_table)
 
@@ -94,8 +95,7 @@ with Flow(
             materialization_flow,
             stream_states=True,
             stream_logs=True,
-            raise_final_state=True,
-        )
+            raise_final_state=True)
 
         wait_for_materialization.max_retries = (
             dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
@@ -110,30 +110,25 @@ with Flow(
                 flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
                 project_name=constants.PREFECT_DEFAULT_PROJECT.value,
                 parameters={
-                    "project_id": "datario",
+                    "project_id": "rj-cor",
                     "dataset_id": dataset_id,
                     "table_id": table_id,
                     "maximum_bytes_processed": maximum_bytes_processed,
                 },
                 labels=[
-                    "datario",
+                    "rj-cor",
                 ],
-                run_name=f"Dump to GCS {dataset_id}.{table_id}",
-            )
+                run_name=f"Dump to GCS {dataset_id}.{table_id}")
             dump_to_gcs_flow.set_upstream(wait_for_materialization)
 
             wait_for_dump_to_gcs = wait_for_flow_run(
                 dump_to_gcs_flow,
                 stream_states=True,
                 stream_logs=True,
-                raise_final_state=True,
-            )
+                raise_final_state=True)
 
-rioaguas_nivel_LRF.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-rioaguas_nivel_LRF.run_config = KubernetesRun(
+rioaguas_pontos_supervisionados.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+rioaguas_pontos_supervisionados.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
-    labels=[
-        constants.RJ_COR_AGENT_LABEL.value,
-    ],
-)
-rioaguas_nivel_LRF.schedule = None
+    labels=[constants.RJ_RIOAGUAS_AGENT_LABEL.value])
+rioaguas_pontos_supervisionados.schedule = None
