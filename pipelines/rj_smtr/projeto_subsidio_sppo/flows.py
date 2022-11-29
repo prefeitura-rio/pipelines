@@ -43,7 +43,7 @@ from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import (
 # )
 
 with Flow(
-    "SMTR - Subsidio: Planejado", code_owners=["fernanda", "rodrigo"]
+    "SMTR - Subsidio: Planejado", code_owners=["fernanda"]
 ) as subsidio_sppo_planejado:
 
     # SETUP
@@ -57,9 +57,9 @@ with Flow(
 
     timestamp = get_current_timestamp()
 
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SMTR - Subsidio Planejado:", now_time=timestamp
-    )
+    # rename_flow_run = rename_current_flow_run_now_time(
+    #     prefix="SMTR - Subsidio Planejado:", now_time=timestamp
+    # )
 
     partitions = create_date_hour_partition(timestamp)
 

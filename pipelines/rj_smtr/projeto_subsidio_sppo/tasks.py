@@ -58,12 +58,13 @@ def get_raw_and_save_local(
     error = None
 
     # TODO: checa no redis a ultima versao capturada
-
+    dirpath = Path("./gtfs")
+    dirpath.mkdir(parents=True, exist_ok=True)
     # Download gtfs.zip + quadro.csv
     blobs = get_storage_blobs(
-        dataset_id=dataset_id, table_id="upload_gtfs", mode="development"
+        dataset_id=dataset_id, table_id="upload", mode="development"
     )
-
+    log(f"Got blobs {blobs}")
     raw_filepath = []
 
     for blob in blobs:
@@ -71,45 +72,37 @@ def get_raw_and_save_local(
 
         # Download single CSV file
         if blob_name == "quadro.csv":
-            filepath = create_local_partition_path(
-                dataset_id=dataset_id,
-                table_id="quadro",
-                filename=filename,
-                partitions=partitions,
+            blob.download_to_filename(
+                f"{dirpath.as_posix()}/{blob_name.split('.')[0]}.txt"
             )
-            _file_path = filepath.format(mode=mode, filetype="csv")
-            Path().parent.mkdir(parents=True, exist_ok=True)
-
-            blob.download_to_filename(_file_path)
-            raw_filepath.append(_file_path)
-            log.info(f"File {blob_name} downloaded to {_file_path}")
+            log(f"File {blob_name} downloaded to {dirpath.as_posix()}/{blob_name}")
 
         # Download, extract and save GTFS files from ZIP
         elif blob_name == "gtfs.zip":
             # Download ZIP file
             blob.download_to_filename(blob_name)  # filename = gtfs.zip
+            log(f"Downloaded file {blob_name}")
             # Extract ZIP file
             with zipfile.ZipFile(blob_name, "r") as zip_ref:
-                zip_ref.extractall()
+                zip_ref.extractall(dirpath)
 
-            # Save extracted files with partitions
-            zip_folder = filename.split(".")[0]  # zip_folder = gtfs
+    # Save extracted files with partitions
+    for table in os.listdir(dirpath):
+        table = table.split(".")[0]
+        if table in table_id:
+            filepath = create_local_partition_path(
+                dataset_id=dataset_id,
+                table_id=table,
+                filename=filename,
+                partitions=partitions,
+            )
+            _file_path = filepath.format(mode=mode, filetype="txt")
+            Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
 
-            for table in os.listdir(zip_folder):
-                if table in table_id:
-                    filepath = create_local_partition_path(
-                        dataset_id=dataset_id,
-                        table_id=table_id,
-                        filename=filename,
-                        partitions=partitions,
-                    )
-                    _file_path = filepath.format(mode=mode, filetype="txt")
-                    Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
-
-                    table_path = f"{zip_folder}/{table}.txt"
-                    shutil.move(table_path, _file_path)
-                    raw_filepath.append(_file_path)
-                    log.info(f"File {table}.txt downloaded to {_file_path}")
+            table_path = f"{dirpath}/{table}.txt"
+            shutil.move(table_path, _file_path)
+            raw_filepath.append(_file_path)
+            log(f"File {table}.txt downloaded to {_file_path}")
 
     return {"raw_filepath": raw_filepath, "error": error}
 
