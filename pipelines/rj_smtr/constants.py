@@ -140,3 +140,19 @@ class constants(Enum):  # pylint: disable=c0103
         "RiR": "flag_rir",
         "Apoio": "flag_apoio",
     }
+
+    # SUBSIDIO
+    SUBSIDIO_SPPO_PREPROD_DATASET_ID = "projeto_subsidio_sppo_preprod"
+    # SUBSIDIO_SPPO_RAW_BUCKET_URL = "..."
+    SUBSIDIO_SPPO_GTFS_TABLES = [
+        "quadro",
+        "shapes",
+        "trips",
+        "feed_info",
+    ]
+    # SUBSIDIO_SPPO_GTFS_ENDPOINTS = [
+    #     {"shapes": "..."},
+    #     {"trips": "..."},
+    #     {"quadro": "..."},
+    #     {"feed_info": "..."},
+    # ]
