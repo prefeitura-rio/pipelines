@@ -42,7 +42,7 @@ with Flow(
     ],
 ) as dump_ftp_sicop:
     pattern = Parameter(
-        "pattern", default="processo", required=True
+        "pattern", default="ARQ2001", required=True
     )  # processo or expediente
     dataset_id = Parameter("dataset_id", default="adm_processorio_sicop", required=True)
     table_id = Parameter("table_id", default="processo", required=True)
