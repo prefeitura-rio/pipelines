@@ -17,7 +17,9 @@ from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.decorators import Flow
 from pipelines.rj_rioaguas.saneamento_drenagem.pontos_supervisionados.tasks import (
-    wfs_to_df, tratar_dados, salvar_dados
+    wfs_to_df,
+    tratar_dados,
+    salvar_dados,
 )
 from pipelines.utils.dump_db.constants import (
     constants as dump_db_constants,
@@ -36,19 +38,21 @@ with Flow(
 ) as rioaguas_pontos_supervisionados:
 
     # Parâmetros do codigo
-    url_gis = Parameter("url_gis",
-                        default="https://siurb.rio/portal/home/")
-    url_fl = Parameter("url_fl",
-                       default="https://pgeo3.rio.rj.gov.br/arcgis/rest/"
-                       "services/Hosted/PARA_COR_COMPLETA_Com_lat_long/FeatureServer/0")
+    url_gis = Parameter("url_gis", default="https://siurb.rio/portal/home/")
+    url_fl = Parameter(
+        "url_fl",
+        default="https://pgeo3.rio.rj.gov.br/arcgis/rest/"
+        "services/Hosted/PARA_COR_COMPLETA_Com_lat_long/FeatureServer/0",
+    )
 
     # Parâmetros para a Materialização
-    materialize_after_dump = Parameter("materialize_after_dump", default=False,
-                                       required=False)
-    materialize_to_datario = Parameter("materialize_to_datario", default=False,
-                                       required=False)
-    materialization_mode = Parameter("mode", default="dev",
-                                     required=False)
+    materialize_after_dump = Parameter(
+        "materialize_after_dump", default=False, required=False
+    )
+    materialize_to_datario = Parameter(
+        "materialize_to_datario", default=False, required=False
+    )
+    materialization_mode = Parameter("mode", default="dev", required=False)
 
     # Parâmetros para salvar dados no GCS
     dataset_id = "saneamento_drenagem"
@@ -59,7 +63,8 @@ with Flow(
     dump_to_gcs = Parameter("dump_to_gcs", default=False, required=False)
     maximum_bytes_processed = Parameter(
         "maximum_bytes_processed",
-        required=False, default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
+        required=False,
+        default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
 
     # Tasks
@@ -72,7 +77,8 @@ with Flow(
         dataset_id=dataset_id,
         table_id=table_id,
         dump_mode=dump_mode,
-        wait=save_path)
+        wait=save_path,
+    )
 
     # Trigger DBT flow run
     with case(materialize_after_dump, True):
@@ -87,7 +93,8 @@ with Flow(
                 "materialize_to_datario": materialize_to_datario,
             },
             labels=current_flow_labels,
-            run_name=f"Materialize {dataset_id}.{table_id}")
+            run_name=f"Materialize {dataset_id}.{table_id}",
+        )
 
         materialization_flow.set_upstream(upload_table)
 
@@ -95,7 +102,8 @@ with Flow(
             materialization_flow,
             stream_states=True,
             stream_logs=True,
-            raise_final_state=True)
+            raise_final_state=True,
+        )
 
         wait_for_materialization.max_retries = (
             dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
@@ -118,17 +126,19 @@ with Flow(
                 labels=[
                     "rj-cor",
                 ],
-                run_name=f"Dump to GCS {dataset_id}.{table_id}")
+                run_name=f"Dump to GCS {dataset_id}.{table_id}",
+            )
             dump_to_gcs_flow.set_upstream(wait_for_materialization)
 
             wait_for_dump_to_gcs = wait_for_flow_run(
                 dump_to_gcs_flow,
                 stream_states=True,
                 stream_logs=True,
-                raise_final_state=True)
+                raise_final_state=True,
+            )
 
 rioaguas_pontos_supervisionados.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 rioaguas_pontos_supervisionados.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value,
-    labels=[constants.RJ_RIOAGUAS_AGENT_LABEL.value])
+    image=constants.DOCKER_IMAGE.value, labels=[constants.RJ_RIOAGUAS_AGENT_LABEL.value]
+)
 rioaguas_pontos_supervisionados.schedule = None

@@ -49,20 +49,39 @@ def tratar_dados(sdf: pd.DataFrame) -> pd.DataFrame:
     """
     # Remover colunas que iniciam com field_
     # e outros
-    col_drop = ['bolsoes_co', 'fid', 'lat', 'long'] + [
-        col for col in list(sdf) if col.startswith("field")]
+    col_drop = ["bolsoes_co", "fid", "lat", "long"] + [
+        col for col in list(sdf) if col.startswith("field")
+    ]
     sdf_drop = sdf.drop(columns=col_drop)
 
     # Renomear colunas
-    col_rename = {"descricao_": "descricao_cor",
-                  "informacoe": "infomacoes",
-                  "globalid": "id_global"}
+    col_rename = {
+        "descricao_": "descricao_cor",
+        "informacoe": "infomacoes",
+        "globalid": "id_global",
+    }
     sdf_rename = sdf_drop.rename(col_rename, axis=1)
 
     # Arrumar ordem das colunas
-    col_order = ['codigo', 'classe', 'top_50', 'descricao_cor', 'infomacoes',
-                 'eliminado', 'utm_x', 'utm_y', 'ap', 'ra', 'bairro', 'bacia',
-                 'sub_bacia', 'medida_cor', 'projeto', 'globalid', 'SHAPE']
+    col_order = [
+        "codigo",
+        "classe",
+        "top_50",
+        "descricao_cor",
+        "infomacoes",
+        "eliminado",
+        "utm_x",
+        "utm_y",
+        "ap",
+        "ra",
+        "bairro",
+        "bacia",
+        "sub_bacia",
+        "medida_cor",
+        "projeto",
+        "globalid",
+        "SHAPE",
+    ]
     sdf_order = sdf_rename[col_order]
 
     # Padronizando dados nulos
