@@ -197,7 +197,7 @@ ergon_queries = {
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
-        SELECT NUMFUNC,NUMVINC,CHAVEAVERB,FINALIDADE,DIAS,EVENTOS,INFO1,INFO2,COMPLEMENTO,EMP_CODIGO
+        SELECT NUMFUNC,NUMVINC,CHAVEAVERB,FINALIDADE,DIAS,EMP_CODIGO
         FROM ERGON.AVERB_OQUE_CONTA
         """,
     },
