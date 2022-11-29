@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Schedules for the SEGOVI SICOP pipeline
+Schedules for the SEGOVI SICOP pipeline 
 """
 from datetime import datetime, timedelta
 
@@ -21,11 +21,11 @@ every_week_schedule = Schedule(
                 "pattern": "ARQ2001",
                 "dataset_id": "adm_processorio_sicop",
                 "table_id": "processo",
-                "dump_mode": "overwrite",  # alterado
-                "materialize_after_dump": True,  # alterado
-                "materialization_mode": "prod",  # alterado
-                "materialize_to_datario": False,  # alterado
-                "dump_to_gcs": False,  # alterado
+                "dump_mode": "overwrite",
+                "materialize_after_dump": True,
+                "materialization_mode": "prod",
+                "materialize_to_datario": False,
+                "dump_to_gcs": False,
             },
         ),
         IntervalClock(
@@ -38,11 +38,11 @@ every_week_schedule = Schedule(
                 "pattern": "ARQ2296",
                 "dataset_id": "adm_processorio_sicop",
                 "table_id": "expediente",
-                "dump_mode": "overwrite",  # alterado
-                "materialize_after_dump": True,  # alterado
-                "materialization_mode": "prod",  # alterado
-                "materialize_to_datario": False,  # alterado
-                "dump_to_gcs": False,  # alterado
+                "dump_mode": "overwrite",
+                "materialize_after_dump": True,
+                "materialization_mode": "prod",
+                "materialize_to_datario": False,
+                "dump_to_gcs": False,
             },
         ),
     ]
