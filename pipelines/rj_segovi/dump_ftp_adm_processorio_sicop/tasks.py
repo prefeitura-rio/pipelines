@@ -24,7 +24,6 @@ def get_ftp_client(wait=None):
     """
     Get FTP client
     """
-
     siscob_secret = get_vault_secret("sicop")
     hostname = siscob_secret["data"]["hostname"]
     username = siscob_secret["data"]["username"]
@@ -104,7 +103,7 @@ def parse_save_dataframe(files, save_path, pattern):
     save_path = Path(save_path)
     save_path.mkdir(parents=True, exist_ok=True)
 
-    if pattern == "processo":
+    if pattern == "ARQ2001":
         columns = {
             "orgao_transcritor": 9,
             "codigo_sici": 7,
@@ -122,7 +121,7 @@ def parse_save_dataframe(files, save_path, pattern):
             "matricula_digitador": 9,
             "prazo_cadastro": 26,
         }
-    elif pattern == "expediente":
+    elif pattern == "ARQ2296":
         columns = {
             "codigo_orgao": 8,
             "codigo_sici": 6,
