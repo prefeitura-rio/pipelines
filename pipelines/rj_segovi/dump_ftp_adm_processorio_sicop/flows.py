@@ -43,7 +43,7 @@ with Flow(
 ) as dump_ftp_sicop:
     pattern = Parameter(
         "pattern", default="ARQ2001", required=True
-    )  # processo or expediente
+    )  # # ARQ2001 or ARQ2296
     dataset_id = Parameter("dataset_id", default="adm_processorio_sicop", required=True)
     table_id = Parameter("table_id", default="processo", required=True)
 
@@ -172,7 +172,7 @@ dump_ftp_sicop.run_config = KubernetesRun(
 )
 
 dump_ftp_sicop_default_parameters = {
-    "pattern": "processo",  # processo or expediente
+    "pattern": "ARQ2001",  # ARQ2001 or ARQ2296
     "dataset_id": "adm_processorio_sicop",
     "table_id": "processo",
 }
