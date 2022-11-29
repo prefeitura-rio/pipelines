@@ -23,7 +23,9 @@ from pipelines.rj_smtr.constants import constants
 
 @task
 def create_api_url_onibus_realocacao(
+    interval_minutes: int = 10,
     timestamp: datetime = None,
+    secret_path: str = constants.GPS_SPPO_REALOCACAO_SECRET_PATH.value,
 ) -> str:
     """
     start_date: datahora mínima do sinal de GPS avaliado
@@ -32,15 +34,14 @@ def create_api_url_onibus_realocacao(
 
     # Configura parametros da URL
     date_range = {
-        "date_range_start": (
-            timestamp
-            - timedelta(minutes=constants.GPS_SPPO_REALOCACAO_INTERVAL_MINUTES.value)
-        ).strftime("%Y-%m-%dT%H:%M:%S"),
+        "date_range_start": (timestamp - timedelta(minutes=interval_minutes)).strftime(
+            "%Y-%m-%dT%H:%M:%S"
+        ),
         "date_range_end": timestamp.strftime("%Y-%m-%dT%H:%M:%S"),
     }
     url = "http://ccomobility.com.br/WebServices/Binder/wsconecta/EnvioViagensRetroativasSMTR?"
 
-    headers = get_vault_secret(constants.GPS_SPPO_REALOCACAO_SECRET_PATH.value)["data"]
+    headers = get_vault_secret(secret_path)["data"]
     key = list(headers)[0]
     url = f"{url}{key}={{secret}}"
 

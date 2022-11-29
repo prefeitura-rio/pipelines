@@ -268,12 +268,7 @@ def save_treated_local(file_path: str, status: dict, mode: str = "staging") -> s
 ###############
 @task(nout=3)
 def query_logs(
-    dataset_id: str,
-    table_id: str,
-    datetime_filter=None,
-    max_recaptures: int = 60,
-    capture_interval_minutes: int = 1,
-    mode: str = "prod",
+    dataset_id: str, table_id: str, datetime_filter=None, max_recaptures: int = 60
 ):
     """
     Queries capture logs to check for errors
@@ -293,9 +288,6 @@ def query_logs(
         datetime_filter = pendulum.now(constants.TIMEZONE.value).replace(
             second=0, microsecond=0
         )
-    project = "rj-smtr"
-    if mode == "dev":
-        project += "-dev"
 
     query = f"""
     with t as (
@@ -305,7 +297,7 @@ def query_logs(
         unnest(GENERATE_TIMESTAMP_ARRAY(
             timestamp_sub('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}', interval 1 day),
             timestamp('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'),
-            interval {capture_interval_minutes} minute)
+            interval 1 minute)
         ) as timestamp_array
     where timestamp_array < '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
     ),
@@ -314,7 +306,7 @@ def query_logs(
             *,
             timestamp_trunc(timestamp_captura, minute) as timestamp_array
         from
-            {project}.{dataset_id}.{table_id}_logs
+            rj-smtr.{dataset_id}.{table_id}_logs
         where
             data between
                 date(datetime_sub('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}',
@@ -368,7 +360,7 @@ def query_logs(
             log_critical(message)
             results = results[:max_recaptures]
         return True, results["timestamp_captura"].to_list(), results["erro"].to_list()
-    return False, [], []
+    return False, []
 
 
 @task

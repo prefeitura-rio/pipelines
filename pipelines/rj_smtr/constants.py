@@ -54,7 +54,6 @@ class constants(Enum):  # pylint: disable=c0103
     GPS_SPPO_REALOCACAO_RAW_TABLE_ID = "realocacao"
     GPS_SPPO_REALOCACAO_TREATED_TABLE_ID = "realocacao"
     GPS_SPPO_REALOCACAO_SECRET_PATH = "realocacao_api"  # TODO: Alterar nome do path?
-    GPS_SPPO_REALOCACAO_INTERVAL_MINUTES = 10
 
     # GPS BRT #
     GPS_BRT_SECRET_PATH = "brt_api"
