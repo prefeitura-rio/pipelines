@@ -39,6 +39,8 @@ class constants(Enum):  # pylint: disable=c0103
 
     RJ_COR_AGENT_LABEL = "rj-cor"
 
+    RJ_RIOAGUAS_AGENT_LABEL = "rj-rioaguas"
+
     RJ_SMFP_AGENT_LABEL = "rj-smfp"
 
     RJ_SMS_AGENT_LABEL = "rj-sms"
