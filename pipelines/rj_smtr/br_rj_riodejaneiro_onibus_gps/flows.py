@@ -78,9 +78,6 @@ with Flow(
     )
     rebuild = Parameter("rebuild", False)
 
-    # LABELS = get_current_flow_labels()
-    # MODE = get_current_flow_mode(LABELS)
-
     # SETUP
     timestamp = get_current_timestamp()
 
@@ -133,9 +130,10 @@ with Flow(
 realocacao_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 realocacao_sppo.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 realocacao_sppo.schedule = every_10_minutes_dev
+
 
 with Flow(
     "SMTR: GPS SPPO - Materialização",
@@ -215,8 +213,9 @@ with Flow(
 materialize_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 materialize_sppo.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
+
 
 with Flow(
     "SMTR: GPS SPPO - Captura",
@@ -277,7 +276,7 @@ with Flow(
 captura_sppo_v2.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_sppo_v2.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 captura_sppo_v2.schedule = every_minute
 
@@ -384,6 +383,6 @@ with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as rec
 recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 recaptura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 recaptura.schedule = every_hour_minute_six

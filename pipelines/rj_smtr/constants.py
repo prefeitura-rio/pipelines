@@ -53,7 +53,7 @@ class constants(Enum):  # pylint: disable=c0103
     # REALOCAÇÃO #
     GPS_SPPO_REALOCACAO_RAW_TABLE_ID = "realocacao"
     GPS_SPPO_REALOCACAO_TREATED_TABLE_ID = "realocacao"
-    GPS_SPPO_REALOCACAO_SECRET_PATH = "realocacao_api"  # TODO: Alterar nome do path?
+    GPS_SPPO_REALOCACAO_SECRET_PATH = "realocacao_api"
 
     # GPS BRT #
     GPS_BRT_SECRET_PATH = "brt_api"
