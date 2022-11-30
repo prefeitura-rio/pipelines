@@ -147,6 +147,7 @@ def get_last_run_timestamp(dataset_id: str, table_id: str, mode: str = "prod"):
     """
     redis_client = get_redis_client()
     key = dataset_id + "." + table_id
+    log(f"Fetching key {key} from redis, working on mode {mode}")
     if mode == "dev":
         key = f"{mode}.{key}"
     runs = redis_client.get(key)
@@ -158,6 +159,7 @@ def get_last_run_timestamp(dataset_id: str, table_id: str, mode: str = "prod"):
         return None
     except TypeError:
         return None
+    log(f"Got value {last_run_timestamp}")
     return last_run_timestamp
 
 
