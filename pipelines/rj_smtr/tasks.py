@@ -360,7 +360,7 @@ def query_logs(
             log_critical(message)
             results = results[:max_recaptures]
         return True, results["timestamp_captura"].to_list(), results["erro"].to_list()
-    return False, []
+    return False, [], []
 
 
 @task
