@@ -389,7 +389,7 @@ def query_logs(
             log_critical(message)
             results = results[:max_recaptures]
         return True, results[&#34;timestamp_captura&#34;].to_list(), results[&#34;erro&#34;].to_list()
-    return False, []
+    return False, [], []
 
 
 @task
@@ -1548,7 +1548,7 @@ def query_logs(
             log_critical(message)
             results = results[:max_recaptures]
         return True, results[&#34;timestamp_captura&#34;].to_list(), results[&#34;erro&#34;].to_list()
-    return False, []</code></pre>
+    return False, [], []</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.save_raw_local"><code class="name flex">
