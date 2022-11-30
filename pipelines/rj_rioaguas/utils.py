@@ -6,7 +6,7 @@ Utils Gerais da Rio-Águas.
 import requests
 
 
-def login(url, user, password):
+def login(url, user=None, password=None):
     """
     Função para fazer login no website.
 
@@ -20,19 +20,22 @@ def login(url, user, password):
 
     # Retrieve the CSRF token first
     client.get(url)  # sets cookie
-    if "csrftoken" in client.cookies:
-        # Django 1.6 and up
-        csrftoken = client.cookies["csrftoken"]
-    else:
-        # older versions
-        csrftoken = client.cookies["csrf"]
+    if password:
+        if "csrftoken" in client.cookies:
+            # Django 1.6 and up
+            csrftoken = client.cookies["csrftoken"]
+        else:
+            # older versions
+            csrftoken = client.cookies["csrf"]
 
-    payload = {
-        "username": user,
-        "password": password,
-        "csrfmiddlewaretoken": csrftoken,
-        "next": "/",
-    }
+        payload = {
+            "username": user,
+            "password": password,
+            "csrfmiddlewaretoken": csrftoken,
+            "next": "/",
+        }
+    else:
+        payload = {}
 
     client.post(url, data=payload, headers=dict(Referer=url))
 
