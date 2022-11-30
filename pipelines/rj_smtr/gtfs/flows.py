@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Flows for projeto_subsidio_sppo
+Flows for gtfs
 """
 
 from prefect import Parameter, case
@@ -32,10 +32,10 @@ from pipelines.rj_smtr.tasks import (
     upload_logs_to_bq,
     bq_upload,
 )
-from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import (
+from pipelines.rj_smtr.gtfs.tasks import (
     get_raw,
     save_raw_local,
-    pre_treatment_subsidio_sppo_gtfs,
+    pre_treatment_subsidio_gtfs,
 )
 
 # from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
@@ -43,9 +43,7 @@ from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import (
 #     every_fortnight,
 # )
 
-with Flow(
-    "SMTR - Subsidio: Planejado", code_owners=["fernanda"]
-) as subsidio_sppo_planejado:
+with Flow("SMTR - GTFS: Captura", code_owners=["fernanda"]) as gtfs_captura:
 
     # SETUP
     timestamp = Parameter("timestamp", default=None)
@@ -53,7 +51,7 @@ with Flow(
     timestamp = get_current_timestamp(timestamp)
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SMTR - Subsidio Planejado:", now_time=timestamp
+        prefix="SMTR - GTFS Captura:", now_time=timestamp
     )
 
     partitions = create_date_hour_partition(timestamp)
@@ -61,8 +59,8 @@ with Flow(
     filename = parse_timestamp_to_string(timestamp)
 
     filepath = create_local_partition_path.map(
-        dataset_id=unmapped(smtr_constants.SUBSIDIO_SPPO_PREPROD_DATASET_ID.value),
-        table_id=smtr_constants.SUBSIDIO_SPPO_GTFS_TABLES.value,
+        dataset_id=unmapped(smtr_constants.GTFS_DATASET_ID.value),
+        table_id=smtr_constants.GTFS_TABLES.value,
         filename=unmapped(filename),
         partitions=unmapped(partitions),
     )
@@ -72,7 +70,7 @@ with Flow(
 
     raw_filepath = save_raw_local.map(filepath=filepath, status=unmapped(raw_status))
 
-    treated_status = pre_treatment_subsidio_sppo_gtfs.map(
+    treated_status = pre_treatment_subsidio_gtfs.map(
         status=unmapped(raw_status),
         filepath=raw_filepath,
         timestamp=unmapped(timestamp),
@@ -82,8 +80,8 @@ with Flow(
 
     # LOAD #
     error = bq_upload.map(
-        dataset_id=unmapped(smtr_constants.SUBSIDIO_SPPO_PREPROD_DATASET_ID.value),
-        table_id=smtr_constants.SUBSIDIO_SPPO_GTFS_TABLES.value,
+        dataset_id=unmapped(smtr_constants.GTFS_DATASET_ID.value),
+        table_id=smtr_constants.GTFS_TABLES.value,
         filepath=treated_filepath,
         raw_filepath=raw_filepath,
         partitions=unmapped(partitions),
@@ -91,39 +89,12 @@ with Flow(
     )
 
     upload_logs_to_bq.map(
-        dataset_id=unmapped(smtr_constants.SUBSIDIO_SPPO_PREPROD_DATASET_ID.value),
-        parent_table_id=smtr_constants.SUBSIDIO_SPPO_GTFS_TABLES.value,
+        dataset_id=unmapped(smtr_constants.GTFS_DATASET_ID.value),
+        parent_table_id=smtr_constants.GTFS_TABLES.value,
         error=error,
         timestamp=unmapped(timestamp),
     )
 
-subsidio_sppo_planejado.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-subsidio_sppo_planejado.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+gtfs_captura.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+gtfs_captura.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 # flow.schedule = fortnight
-
-
-# with Flow(
-#     "SMTR - Subsidio: Apuração", code_owners=["fernanda", "rodrigo"]
-# ) as subsidio_sppo_apuracao:
-
-#     date_range_start = Parameter("date_range_start", default=None)
-#     date_range_end = Parameter("date_range_end", default=None)
-
-#     timestamp = get_current_timestamp()
-
-# 1. Verifica se existe o planejado para o período em preprod.
-
-# 1.1 Se não existe, roda o flow planejado. Se não tiver planejado
-# do período, não roda o flow de apuração.
-
-# 1.2 Se existe, copia para produção.
-
-# 2. Verifica se todas datas da quinzena estão com a versão correta
-#    retorna as que devem ser corrigidas
-# date_range_to_update = get_date_range(timestamp, date_range_start, date_range_end)
-
-# 2. Atualiza as datas que precisam ser corrigidas
-
-# Apuração quinzenal
-# 1. Puxa ultima versao do planejado
-# 1. Puxa dados de viagens apuradas

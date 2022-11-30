@@ -141,10 +141,9 @@ class constants(Enum):  # pylint: disable=c0103
         "Apoio": "flag_apoio",
     }
 
-    # SUBSIDIO
-    SUBSIDIO_SPPO_PREPROD_DATASET_ID = "projeto_subsidio_sppo_preprod"
-    # SUBSIDIO_SPPO_RAW_BUCKET_URL = "..."
-    SUBSIDIO_SPPO_GTFS_TABLES = [
+    # GTFS
+    GTFS_DATASET_ID = "gtfs"
+    GTFS_TABLES = [
         "agency",
         "calendar_dates",
         "calendar",
@@ -157,4 +156,7 @@ class constants(Enum):  # pylint: disable=c0103
         "stop_times",
         "trips",
     ]
-    SUBSIDIO_SPPO_GTFS_RAW_PATH = "./gtfs"
+    GTFS_RAW_PATH = "./gtfs"
+
+    # SUBSIDIO
+    # SUBSIDIO_SPPO_PREPROD_DATASET_ID = "projeto_subsidio_sppo_preprod"

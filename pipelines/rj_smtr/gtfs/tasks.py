@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Tasks for projeto_subsidio_sppo
+Tasks for gtfs
 """
 
 from prefect import task
@@ -22,7 +22,7 @@ from pipelines.utils.utils import (
 
 @task
 def get_raw(
-    dataset_id: str = smtr_constants.SUBSIDIO_SPPO_PREPROD_DATASET_ID.value,
+    dataset_id: str = smtr_constants.GTFS_DATASET_ID.value,
 ) -> Dict:
     """
     Retrieve GTFS data from GCS and saves locally without partitioning.
@@ -39,7 +39,7 @@ def get_raw(
     error = None
 
     # Download gtfs.zip + quadro.csv
-    dirpath = Path(smtr_constants.SUBSIDIO_SPPO_GTFS_RAW_PATH.value)
+    dirpath = Path(smtr_constants.GTFS_RAW_PATH.value)
     dirpath.mkdir(parents=True, exist_ok=True)
 
     blobs = get_storage_blobs(
@@ -97,9 +97,7 @@ def save_raw_local(filepath: str, status: dict, mode: str = "raw") -> str:
 
     if status["error"] is None:
         table_id = _file_path.split("/")[-4]
-        raw_table_path = (
-            f"{smtr_constants.SUBSIDIO_SPPO_GTFS_RAW_PATH.value}/{table_id}.txt"
-        )
+        raw_table_path = f"{smtr_constants.GTFS_RAW_PATH.value}/{table_id}.txt"
         shutil.move(raw_table_path, _file_path)
         log(f"File {table_id}.txt saved to: {_file_path}")
 
@@ -185,9 +183,7 @@ def _treat_quadro(data: pd.DataFrame):
 
 
 @task
-def pre_treatment_subsidio_sppo_gtfs(
-    status: Dict, filepath: str, timestamp: str
-) -> Dict:
+def pre_treatment_subsidio_gtfs(status: Dict, filepath: str, timestamp: str) -> Dict:
     """Basic data treatment for bus gps data. Converts unix time to datetime,
     and apply filtering to stale data that may populate the API response.
 
