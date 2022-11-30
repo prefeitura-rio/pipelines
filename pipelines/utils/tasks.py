@@ -45,7 +45,17 @@ def get_now_time():
     """
     now = pendulum.now(pendulum.timezone("America/Sao_Paulo"))
 
-    return f"{now.hour}:{f'0{now.minute}' if len(str(now.minute))==1 else now.minute}"
+    return now.strftime("HH:MM")
+
+
+@prefect.task(checkpoint=False)
+def get_now_day():
+    """
+    Returns the HH:MM.
+    """
+    now = pendulum.now(pendulum.timezone("America/Sao_Paulo"))
+
+    return now.strftime("YYYY-MM-DD")
 
 
 @task
