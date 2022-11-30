@@ -37,7 +37,7 @@ every_minute_dev = Schedule(
     ]
 )
 
-every_10_minutes_dev = Schedule(
+every_10_minutes = Schedule(
     clocks=[
         IntervalClock(
             interval=timedelta(minutes=10),
@@ -45,7 +45,7 @@ every_10_minutes_dev = Schedule(
                 2021, 1, 1, 0, 0, 0, tzinfo=timezone(constants.TIMEZONE.value)
             ),
             labels=[
-                emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value,
+                emd_constants.RJ_SMTR_AGENT_LABEL.value,
             ],
         ),
     ]

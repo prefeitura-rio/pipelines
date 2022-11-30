@@ -52,7 +52,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
 from pipelines.rj_smtr.schedules import (
     every_hour_minute_six,
     every_minute,
-    every_10_minutes_dev,
+    every_10_minutes,
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
@@ -60,7 +60,7 @@ from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
 with Flow(
     "SMTR: GPS SPPO - Realocação (captura)",
-    code_owners=["rodrigo", "fernanda"],
+    code_owners=["rodrigo", "caio"],
 ) as realocacao_sppo:
 
     # SETUP #
@@ -132,7 +132,7 @@ realocacao_sppo.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-realocacao_sppo.schedule = every_10_minutes_dev
+realocacao_sppo.schedule = every_10_minutes
 
 
 with Flow(
