@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_rioaguas.utils API documentation</title>
-<meta name="description" content="Utils Gerais da Rio-Águas." />
+<title>pipelines.rj_rioaguas.nivel_lamina_agua API documentation</title>
+<meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,115 +19,32 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_rioaguas.utils</code></h1>
+<h1 class="title">Module <code>pipelines.rj_rioaguas.nivel_lamina_agua</code></h1>
 </header>
 <section id="section-intro">
-<p>Utils Gerais da Rio-Águas.</p>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python"># -*- coding: utf-8 -*-
-&#34;&#34;&#34;
-Utils Gerais da Rio-Águas.
-&#34;&#34;&#34;
-
-import requests
-
-
-def login(url, user=None, password=None):
-    &#34;&#34;&#34;
-    Função para fazer login no website.
-
-    Args:
-    url (str): URL da página inicial com os campos de usuário e senha.
-    user (str): Usuário do login
-    password (str): Senha de acesso.
-    &#34;&#34;&#34;
-
-    client = requests.Session()
-
-    # Retrieve the CSRF token first
-    client.get(url)  # sets cookie
-    if password:
-        if &#34;csrftoken&#34; in client.cookies:
-            # Django 1.6 and up
-            csrftoken = client.cookies[&#34;csrftoken&#34;]
-        else:
-            # older versions
-            csrftoken = client.cookies[&#34;csrf&#34;]
-
-        payload = {
-            &#34;username&#34;: user,
-            &#34;password&#34;: password,
-            &#34;csrfmiddlewaretoken&#34;: csrftoken,
-            &#34;next&#34;: &#34;/&#34;,
-        }
-    else:
-        payload = {}
-
-    client.post(url, data=payload, headers=dict(Referer=url))
-
-    return client</code></pre>
-</details>
 </section>
 <section>
-</section>
-<section>
-</section>
-<section>
-<h2 class="section-title" id="header-functions">Functions</h2>
+<h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
-<dt id="pipelines.rj_rioaguas.utils.login"><code class="name flex">
-<span>def <span class="ident">login</span></span>(<span>url, user=None, password=None)</span>
-</code></dt>
+<dt><code class="name"><a title="pipelines.rj_rioaguas.nivel_lamina_agua.flows" href="flows.html">pipelines.rj_rioaguas.nivel_lamina_agua.flows</a></code></dt>
 <dd>
-<div class="desc"><p>Função para fazer login no website.</p>
-<p>Args:
-url (str): URL da página inicial com os campos de usuário e senha.
-user (str): Usuário do login
-password (str): Senha de acesso.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def login(url, user=None, password=None):
-    &#34;&#34;&#34;
-    Função para fazer login no website.
-
-    Args:
-    url (str): URL da página inicial com os campos de usuário e senha.
-    user (str): Usuário do login
-    password (str): Senha de acesso.
-    &#34;&#34;&#34;
-
-    client = requests.Session()
-
-    # Retrieve the CSRF token first
-    client.get(url)  # sets cookie
-    if password:
-        if &#34;csrftoken&#34; in client.cookies:
-            # Django 1.6 and up
-            csrftoken = client.cookies[&#34;csrftoken&#34;]
-        else:
-            # older versions
-            csrftoken = client.cookies[&#34;csrf&#34;]
-
-        payload = {
-            &#34;username&#34;: user,
-            &#34;password&#34;: password,
-            &#34;csrfmiddlewaretoken&#34;: csrftoken,
-            &#34;next&#34;: &#34;/&#34;,
-        }
-    else:
-        payload = {}
-
-    client.post(url, data=payload, headers=dict(Referer=url))
-
-    return client</code></pre>
-</details>
+<div class="desc"><p>Flows para pipeline de dados de nível da Lagoa Rodrigo de Freitas.
+Fonte: Squitter.</p></div>
+</dd>
+<dt><code class="name"><a title="pipelines.rj_rioaguas.nivel_lamina_agua.schedules" href="schedules.html">pipelines.rj_rioaguas.nivel_lamina_agua.schedules</a></code></dt>
+<dd>
+<div class="desc"><p>Schedules
+Rodar a cada 5 minutos</p></div>
+</dd>
+<dt><code class="name"><a title="pipelines.rj_rioaguas.nivel_lamina_agua.tasks" href="tasks.html">pipelines.rj_rioaguas.nivel_lamina_agua.tasks</a></code></dt>
+<dd>
+<div class="desc"><p>Tasks para pipeline de dados de nível de lâmina de água em via.</p></div>
 </dd>
 </dl>
+</section>
+<section>
+</section>
+<section>
 </section>
 <section>
 </section>
@@ -167,7 +84,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -186,12 +103,14 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines.rj_rioaguas" href="index.html">pipelines.rj_rioaguas</a></code></li>
+<li><code><a title="pipelines.rj_rioaguas" href="../index.html">pipelines.rj_rioaguas</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="pipelines.rj_rioaguas.utils.login" href="#pipelines.rj_rioaguas.utils.login">login</a></code></li>
+<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<ul>
+<li><code><a title="pipelines.rj_rioaguas.nivel_lamina_agua.flows" href="flows.html">pipelines.rj_rioaguas.nivel_lamina_agua.flows</a></code></li>
+<li><code><a title="pipelines.rj_rioaguas.nivel_lamina_agua.schedules" href="schedules.html">pipelines.rj_rioaguas.nivel_lamina_agua.schedules</a></code></li>
+<li><code><a title="pipelines.rj_rioaguas.nivel_lamina_agua.tasks" href="tasks.html">pipelines.rj_rioaguas.nivel_lamina_agua.tasks</a></code></li>
 </ul>
 </li>
 </ul>

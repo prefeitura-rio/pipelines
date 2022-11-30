@@ -4,8 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_rioaguas.utils API documentation</title>
-<meta name="description" content="Utils Gerais da Rio-Águas." />
+<title>pipelines.rj_rioaguas.nivel_lamina_agua.flows API documentation</title>
+<meta name="description" content="Flows para pipeline de dados de nível da Lagoa Rodrigo de Freitas.
+Fonte: Squitter." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,56 +20,158 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_rioaguas.utils</code></h1>
+<h1 class="title">Module <code>pipelines.rj_rioaguas.nivel_lamina_agua.flows</code></h1>
 </header>
 <section id="section-intro">
-<p>Utils Gerais da Rio-Águas.</p>
+<p>Flows para pipeline de dados de nível da Lagoa Rodrigo de Freitas.
+Fonte: Squitter.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Utils Gerais da Rio-Águas.
+Flows para pipeline de dados de nível da Lagoa Rodrigo de Freitas.
+Fonte: Squitter.
 &#34;&#34;&#34;
+# pylint: disable=C0327, C0103
 
-import requests
+from datetime import timedelta
 
+from prefect import case, Parameter
+from prefect.run_configs import KubernetesRun
+from prefect.storage import GCS
+from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 
-def login(url, user=None, password=None):
-    &#34;&#34;&#34;
-    Função para fazer login no website.
+from pipelines.constants import constants
+from pipelines.utils.constants import constants as utils_constants
+from pipelines.utils.decorators import Flow
+from pipelines.rj_rioaguas.nivel_lamina_agua.tasks import (
+    download_file,
+    tratar_dados,
+    salvar_dados,
+)
+from pipelines.rj_rioaguas.nivel_lamina_agua.schedules import (
+    MINUTE_SCHEDULE,
+)
+from pipelines.utils.dump_db.constants import (
+    constants as dump_db_constants,
+)
+from pipelines.utils.dump_to_gcs.constants import (
+    constants as dump_to_gcs_constants,
+)
+from pipelines.utils.tasks import (
+    create_table_and_upload_to_gcs,
+    get_current_flow_labels,
+)
 
-    Args:
-    url (str): URL da página inicial com os campos de usuário e senha.
-    user (str): Usuário do login
-    password (str): Senha de acesso.
-    &#34;&#34;&#34;
+with Flow(
+    &#34;RIOAGUAS: Lamina de água em via&#34;,
+    code_owners=[&#34;JP&#34;, &#34;paty&#34;],
+) as rioaguas_lamina_agua:
 
-    client = requests.Session()
+    # Parâmetros para a Materialização
+    materialize_after_dump = Parameter(
+        &#34;materialize_after_dump&#34;, default=False, required=False
+    )
+    materialize_to_datario = Parameter(
+        &#34;materialize_to_datario&#34;, default=False, required=False
+    )
+    materialization_mode = Parameter(&#34;mode&#34;, default=&#34;dev&#34;, required=False)
 
-    # Retrieve the CSRF token first
-    client.get(url)  # sets cookie
-    if password:
-        if &#34;csrftoken&#34; in client.cookies:
-            # Django 1.6 and up
-            csrftoken = client.cookies[&#34;csrftoken&#34;]
-        else:
-            # older versions
-            csrftoken = client.cookies[&#34;csrf&#34;]
+    # Parâmetros para salvar dados no GCS
+    dataset_id = &#34;saneamento_drenagem&#34;
+    table_id = &#34;nivel_lamina_agua_via&#34;
+    dump_mode = &#34;overwrite&#34;
 
-        payload = {
-            &#34;username&#34;: user,
-            &#34;password&#34;: password,
-            &#34;csrfmiddlewaretoken&#34;: csrftoken,
-            &#34;next&#34;: &#34;/&#34;,
-        }
-    else:
-        payload = {}
+    # Dump to GCS after? Should only dump to GCS if materializing to datario
+    dump_to_gcs = Parameter(&#34;dump_to_gcs&#34;, default=False, required=False)
 
-    client.post(url, data=payload, headers=dict(Referer=url))
+    maximum_bytes_processed = Parameter(
+        &#34;maximum_bytes_processed&#34;,
+        required=False,
+        default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
+    )
 
-    return client</code></pre>
+    # Tasks
+    dados = download_file()
+    dados_tratados = tratar_dados(dados)
+    save_path = salvar_dados(dados_tratados)
+
+    # Create table in BigQuery
+    upload_table = create_table_and_upload_to_gcs(
+        data_path=save_path,
+        dataset_id=dataset_id,
+        table_id=table_id,
+        dump_mode=dump_mode,
+        wait=save_path,
+    )
+
+    # Trigger DBT flow run
+    with case(materialize_after_dump, True):
+        current_flow_labels = get_current_flow_labels()
+        materialization_flow = create_flow_run(
+            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+            parameters={
+                &#34;dataset_id&#34;: dataset_id,
+                &#34;table_id&#34;: table_id,
+                &#34;mode&#34;: materialization_mode,
+                &#34;materialize_to_datario&#34;: materialize_to_datario,
+            },
+            labels=current_flow_labels,
+            run_name=f&#34;Materialize {dataset_id}.{table_id}&#34;,
+        )
+
+        materialization_flow.set_upstream(upload_table)
+
+        wait_for_materialization = wait_for_flow_run(
+            materialization_flow,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+
+        wait_for_materialization.max_retries = (
+            dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
+        )
+        wait_for_materialization.retry_delay = timedelta(
+            seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
+        )
+
+        with case(dump_to_gcs, True):
+            # Trigger Dump to GCS flow run with project id as datario
+            dump_to_gcs_flow = create_flow_run(
+                flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
+                project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                parameters={
+                    &#34;project_id&#34;: &#34;datario&#34;,
+                    &#34;dataset_id&#34;: dataset_id,
+                    &#34;table_id&#34;: table_id,
+                    &#34;maximum_bytes_processed&#34;: maximum_bytes_processed,
+                },
+                labels=[
+                    &#34;datario&#34;,
+                ],
+                run_name=f&#34;Dump to GCS {dataset_id}.{table_id}&#34;,
+            )
+            dump_to_gcs_flow.set_upstream(wait_for_materialization)
+
+            wait_for_dump_to_gcs = wait_for_flow_run(
+                dump_to_gcs_flow,
+                stream_states=True,
+                stream_logs=True,
+                raise_final_state=True,
+            )
+
+rioaguas_lamina_agua.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+rioaguas_lamina_agua.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[
+        constants.RJ_RIOAGUAS_AGENT_LABEL.value,
+    ],
+)
+rioaguas_lamina_agua.schedule = MINUTE_SCHEDULE</code></pre>
 </details>
 </section>
 <section>
@@ -76,58 +179,6 @@ def login(url, user=None, password=None):
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-functions">Functions</h2>
-<dl>
-<dt id="pipelines.rj_rioaguas.utils.login"><code class="name flex">
-<span>def <span class="ident">login</span></span>(<span>url, user=None, password=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Função para fazer login no website.</p>
-<p>Args:
-url (str): URL da página inicial com os campos de usuário e senha.
-user (str): Usuário do login
-password (str): Senha de acesso.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def login(url, user=None, password=None):
-    &#34;&#34;&#34;
-    Função para fazer login no website.
-
-    Args:
-    url (str): URL da página inicial com os campos de usuário e senha.
-    user (str): Usuário do login
-    password (str): Senha de acesso.
-    &#34;&#34;&#34;
-
-    client = requests.Session()
-
-    # Retrieve the CSRF token first
-    client.get(url)  # sets cookie
-    if password:
-        if &#34;csrftoken&#34; in client.cookies:
-            # Django 1.6 and up
-            csrftoken = client.cookies[&#34;csrftoken&#34;]
-        else:
-            # older versions
-            csrftoken = client.cookies[&#34;csrf&#34;]
-
-        payload = {
-            &#34;username&#34;: user,
-            &#34;password&#34;: password,
-            &#34;csrfmiddlewaretoken&#34;: csrftoken,
-            &#34;next&#34;: &#34;/&#34;,
-        }
-    else:
-        payload = {}
-
-    client.post(url, data=payload, headers=dict(Referer=url))
-
-    return client</code></pre>
-</details>
-</dd>
-</dl>
 </section>
 <section>
 </section>
@@ -167,7 +218,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -186,12 +237,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines.rj_rioaguas" href="index.html">pipelines.rj_rioaguas</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="pipelines.rj_rioaguas.utils.login" href="#pipelines.rj_rioaguas.utils.login">login</a></code></li>
+<li><code><a title="pipelines.rj_rioaguas.nivel_lamina_agua" href="index.html">pipelines.rj_rioaguas.nivel_lamina_agua</a></code></li>
 </ul>
 </li>
 </ul>
