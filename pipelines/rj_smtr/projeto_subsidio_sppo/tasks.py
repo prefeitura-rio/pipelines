@@ -218,13 +218,13 @@ def pre_treatment_subsidio_sppo_gtfs(
         error = traceback.format_exc()
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
-    # Add timestamp_captura
-    data["timestamp_captura"] = timestamp
-
     table_id = filepath.split("/")[-4]
 
     if table_id == "quadro":
         log(f"Treating table: {table_id}")
         data = _treat_quadro(data)
+
+    # Add timestamp_captura
+    data["timestamp_captura"] = timestamp
 
     return {"data": data, "error": error}
