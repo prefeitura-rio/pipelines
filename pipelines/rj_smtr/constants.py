@@ -143,6 +143,7 @@ class constants(Enum):  # pylint: disable=c0103
 
     # SUBSIDIO
     SUBSIDIO_SPPO_PREPROD_DATASET_ID = "projeto_subsidio_sppo_preprod"
+    SUBSIDIO_SPPO_PREPROD_TABLE_ID = "viagens"
     # SUBSIDIO_SPPO_RAW_BUCKET_URL = "..."
     SUBSIDIO_SPPO_GTFS_TABLES = [
         "agency",
