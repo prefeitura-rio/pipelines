@@ -183,7 +183,7 @@ def _treat_quadro(data: pd.DataFrame):
 
 
 @task
-def pre_treatment_subsidio_gtfs(status: Dict, filepath: str, timestamp: str) -> Dict:
+def pre_treatment_gtfs(status: Dict, filepath: str, timestamp: str) -> Dict:
     """Basic data treatment for bus gps data. Converts unix time to datetime,
     and apply filtering to stale data that may populate the API response.
 

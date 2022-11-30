@@ -35,7 +35,7 @@ from pipelines.rj_smtr.tasks import (
 from pipelines.rj_smtr.gtfs.tasks import (
     get_raw,
     save_raw_local,
-    pre_treatment_subsidio_gtfs,
+    pre_treatment_gtfs,
 )
 
 # from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
@@ -70,7 +70,7 @@ with Flow("SMTR - GTFS: Captura", code_owners=["fernanda"]) as gtfs_captura:
 
     raw_filepath = save_raw_local.map(filepath=filepath, status=unmapped(raw_status))
 
-    treated_status = pre_treatment_subsidio_gtfs.map(
+    treated_status = pre_treatment_gtfs.map(
         status=unmapped(raw_status),
         filepath=raw_filepath,
         timestamp=unmapped(timestamp),
