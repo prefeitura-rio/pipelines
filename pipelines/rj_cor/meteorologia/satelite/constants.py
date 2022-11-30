@@ -14,8 +14,8 @@ class constants(Enum):
 
     DATASET_ID = "clima_satelite"
     VARIAVEL_RR = "RRQPEF"
-    TABLE_ID_RR = "taxa_precipitacao_satelite"
+    TABLE_ID_RR = "taxa_precipitacao_goes_16"
     VARIAVEL_TPW = "TPWF"
-    TABLE_ID_TPW = "quantidade_agua_precipitavel_satelite"
+    TABLE_ID_TPW = "quantidade_agua_precipitavel_goes_16"
     VARIAVEL_cmip = "CMIPF"
-    TABLE_ID_cmip = "clean_ir_longwave_window_goes_16"
+    TABLE_ID_cmip = "infravermelho_longo_banda_13_goes_16"

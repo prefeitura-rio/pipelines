@@ -360,7 +360,7 @@ def query_logs(
             log_critical(message)
             results = results[:max_recaptures]
         return True, results["timestamp_captura"].to_list(), results["erro"].to_list()
-    return False, []
+    return False, [], []
 
 
 @task
@@ -564,7 +564,7 @@ def upload_logs_to_bq(  # pylint: disable=R0913
     create_or_append_table(
         dataset_id=dataset_id,
         table_id=table_id,
-        path=str(filepath),
+        path=filepath.as_posix(),
         partitions=partition,
     )
     if error is not None:
@@ -642,6 +642,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
         .strftime(timestr)
     )
     date_range = {"date_range_start": start_ts, "date_range_end": end_ts}
+    log(f"Got date_range as: {date_range}")
     return date_range
 
 
