@@ -21,19 +21,20 @@ from pipelines.utils.decorators import Flow
 from pipelines.rj_smtr.constants import constants as smtr_constants
 from pipelines.rj_smtr.tasks import (
     create_date_hour_partition,
-    # create_local_partition_path,
+    create_local_partition_path,
     # fetch_dataset_sha,
     get_current_timestamp,
     # get_local_dbt_client,
     parse_timestamp_to_string,
     # save_raw_local,
-    # save_treated_local,
+    save_treated_local,
     # set_last_run_timestamp,
     upload_logs_to_bq,
     bq_upload,
 )
 from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import (
-    get_raw_and_save_local,
+    get_raw,
+    save_raw_local,
     pre_treatment_subsidio_sppo_gtfs,
 )
 
@@ -47,60 +48,54 @@ with Flow(
 ) as subsidio_sppo_planejado:
 
     # SETUP
-    # date_range_start = Parameter("date_range_start", default=None)
-    # date_range_end = Parameter("date_range_end", default=None)
-    # update_data = Parameter("update_data", default=False)
+    timestamp = Parameter("timestamp", default=None)
 
-    # planejado_bucket = Parameter(
-    #     "planejado_bucket", default=smtr_constants.SUBSIDIO_GTFS_ENDPOINTS.value
-    # )
+    timestamp = get_current_timestamp(timestamp)
 
-    timestamp = get_current_timestamp()
-
-    # rename_flow_run = rename_current_flow_run_now_time(
-    #     prefix="SMTR - Subsidio Planejado:", now_time=timestamp
-    # )
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix="SMTR - Subsidio Planejado:", now_time=timestamp
+    )
 
     partitions = create_date_hour_partition(timestamp)
 
     filename = parse_timestamp_to_string(timestamp)
 
-    # filepath = create_local_partition_path.map(
-    #     dataset_id=unmapped(smtr_constants.SUBSIDIO_SPPO_PREPROD_DATASET_ID.value),
-    #     table_id=smtr_constants.SUBSIDIO_SPPO_GTFS_TABLES.value,
-    #     filename=unmapped(filename),
-    #     partitions=unmapped(partitions),
-    # )
-    # Get data from GCS
-    raw_filepath = get_raw_and_save_local(
-        # url=smtr_constants.SUBSIDIO_SPPO_RAW_BUCKET_URL.value,
+    filepath = create_local_partition_path.map(
+        dataset_id=unmapped(smtr_constants.SUBSIDIO_SPPO_PREPROD_DATASET_ID.value),
         table_id=smtr_constants.SUBSIDIO_SPPO_GTFS_TABLES.value,
-        filename=filename,
-        partitions=partitions,
+        filename=unmapped(filename),
+        partitions=unmapped(partitions),
     )
-    # raw_filepath = save_raw_local.map(status=raw_status, file_path=filepath)
 
-    # treated_status = pre_treatment_planejado.map(filepath=raw_filepath, timestamp=timestamp)
+    # Get data from GCS
+    raw_status = get_raw()
 
-    # treated_filepath = save_treated_local.map(status=treated_status, file_path=filepath)
+    raw_filepath = save_raw_local.map(filepath=filepath, status=unmapped(raw_status))
+
+    treated_status = pre_treatment_subsidio_sppo_gtfs.map(
+        status=unmapped(raw_status),
+        filepath=raw_filepath,
+        timestamp=unmapped(timestamp),
+    )
+
+    treated_filepath = save_treated_local.map(status=treated_status, file_path=filepath)
 
     # LOAD #
-    # error = bq_upload.map(
-    #     dataset_id=unmapped(smtr_constants.SUBSIDIO_SPPO_PREPROD_DATASET_ID.value),
-    #     table_id=smtr_constants.SUBSIDIO_SPPO_GTFS_TABLES.value,
-    #     filepath=treated_filepath,
-    #     raw_filepath=raw_filepath,
-    #     partitions=partitions,
-    #     status=treated_status,
-    # )
+    error = bq_upload.map(
+        dataset_id=unmapped(smtr_constants.SUBSIDIO_SPPO_PREPROD_DATASET_ID.value),
+        table_id=smtr_constants.SUBSIDIO_SPPO_GTFS_TABLES.value,
+        filepath=treated_filepath,
+        raw_filepath=raw_filepath,
+        partitions=unmapped(partitions),
+        status=treated_status,
+    )
 
-    # upload_logs_to_bq.map(
-    #     dataset_id=unmapped(smtr_constants.SUBSIDIO_SPPO_PREPROD_DATASET_ID.value),
-    #     parent_table_id=smtr_constants.SUBSIDIO_SPPO_GTFS_TABLES.value,
-    #     error=error,
-    #     timestamp=timestamp,
-    # )
-
+    upload_logs_to_bq.map(
+        dataset_id=unmapped(smtr_constants.SUBSIDIO_SPPO_PREPROD_DATASET_ID.value),
+        parent_table_id=smtr_constants.SUBSIDIO_SPPO_GTFS_TABLES.value,
+        error=error,
+        timestamp=unmapped(timestamp),
+    )
 
 subsidio_sppo_planejado.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 subsidio_sppo_planejado.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)

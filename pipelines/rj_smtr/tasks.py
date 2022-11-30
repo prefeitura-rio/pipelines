@@ -562,7 +562,10 @@ def upload_logs_to_bq(  # pylint: disable=R0913
     dataframe.to_csv(filepath, index=False)
     # Upload to Storage
     create_or_append_table(
-        dataset_id=dataset_id, table_id=table_id, path=filepath, partitions=partition
+        dataset_id=dataset_id,
+        table_id=table_id,
+        path=str(filepath),
+        partitions=partition,
     )
     if error is not None:
         raise Exception(f"Pipeline failed with error: {error}")
