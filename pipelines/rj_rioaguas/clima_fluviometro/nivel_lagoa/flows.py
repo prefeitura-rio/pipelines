@@ -19,6 +19,9 @@ from pipelines.rj_rioaguas.clima_fluviometro.nivel_lagoa.tasks import (
     download_file,
     salvar_dados,
 )
+from pipelines.rj_rioaguas.clima_fluviometro.nivel_lagoa.schedules import (
+    MINUTE_SCHEDULE,
+)
 from pipelines.utils.dump_db.constants import (
     constants as dump_db_constants,
 )  # adicionado
@@ -139,4 +142,4 @@ rioaguas_nivel_LRF.run_config = KubernetesRun(
         constants.RJ_COR_AGENT_LABEL.value,
     ],
 )
-rioaguas_nivel_LRF.schedule = None
+rioaguas_nivel_LRF.schedule = MINUTE_SCHEDULE
