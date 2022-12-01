@@ -13,9 +13,6 @@ MINUTE_SCHEDULE = Schedule(
         IntervalClock(
             interval=timedelta(minutes=5),
             start_date=datetime(2021, 1, 1, 0, 1, 0),
-            labels=[
-                constants.RJ_COR_AGENT_LABEL.value,
-            ],
         ),
     ]
 )
