@@ -42,6 +42,9 @@ with Flow(
     )
     MATERIALIZATION_MODE = Parameter("mode", default="dev", required=False)
 
+    # Create BigLake table or simple external table?
+    biglake_table = Parameter("biglake_table", default=False, required=False)
+
     DFR = download_tratar_dados()
     PATH = salvar_dados(dfr=DFR)
 
@@ -51,6 +54,7 @@ with Flow(
         dataset_id=DATASET_ID,
         table_id=TABLE_ID,
         dump_mode=DUMP_MODE,
+        biglake_table=biglake_table,
         wait=PATH,
     )
 

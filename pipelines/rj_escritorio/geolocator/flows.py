@@ -57,6 +57,9 @@ with Flow(
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
 
+    # Create BigLake table or simple external table?
+    biglake_table = Parameter("biglake_table", default=False, required=False)
+
     dataset_id = geolocator_constants.DATASET_ID.value
     table_id = geolocator_constants.TABLE_ID.value
 
@@ -77,6 +80,7 @@ with Flow(
             dataset_id=geolocator_constants.DATASET_ID.value,
             table_id=geolocator_constants.TABLE_ID.value,
             dump_mode="append",
+            biglake_table=biglake_table,
             wait=base_path,
         )
 

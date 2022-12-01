@@ -48,6 +48,9 @@ with Flow(
     include_timestamp = Parameter("include_timestamp", default=False, required=False)
     timestamp = Parameter("timestamp", default=None, required=False)
 
+    # Create BigLake table or simple external table?
+    biglake_table = Parameter("biglake_table", default=False, required=False)
+
     # Get model from MLflow model registry (either model version or stage must be provided)
     model = get_model(
         model_name=model_name,
@@ -77,6 +80,7 @@ with Flow(
             dataset_id=dataset_id,
             table_id=table_id,
             dump_mode=dump_mode,
+            biglake_table=biglake_table,
         )
 
 predict_with_mlflow_model_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)

@@ -57,6 +57,9 @@ with Flow(
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
 
+    # Create BigLake table or simple external table?
+    biglake_table = Parameter("biglake_table", default=False, required=False)
+
     CURRENT_TIME, YESTERDAY = get_dates()
 
     data = slice_data(current_time=CURRENT_TIME)
@@ -71,6 +74,7 @@ with Flow(
         dataset_id=DATASET_ID,
         table_id=TABLE_ID,
         dump_mode=DUMP_MODE,
+        biglake_table=biglake_table,
         wait=PATH,
     )
 

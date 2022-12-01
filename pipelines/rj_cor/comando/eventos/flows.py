@@ -74,6 +74,9 @@ with Flow(
     # Redis interval mode
     redis_mode = Parameter("redis_mode", default="dev", required=False)
 
+    # Create BigLake table or simple external table?
+    biglake_table = Parameter("biglake_table", default=False, required=False)
+
     dataset_id = comando_constants.DATASET_ID.value
     table_id_eventos = comando_constants.TABLE_ID_EVENTOS.value
     table_id_atividades_eventos = comando_constants.TABLE_ID_ATIVIDADES_EVENTOS.value
@@ -102,6 +105,7 @@ with Flow(
         dataset_id=dataset_id,
         table_id=table_id_eventos,
         dump_mode=dump_mode,
+        biglake_table=biglake_table,
         wait=eventos_path,
     )
 
@@ -110,6 +114,7 @@ with Flow(
         dataset_id=dataset_id,
         table_id=table_id_atividades_eventos,
         dump_mode=dump_mode,
+        biglake_table=biglake_table,
         wait=atividade_eventos_path,
     )
 
@@ -291,6 +296,9 @@ with Flow(
         required=False,
     )
 
+    # Create BigLake table or simple external table?
+    biglake_table = Parameter("biglake_table", default=False, required=False)
+
     pops = get_pops()
     redis_pops = get_on_redis(dataset_id, table_id_atividades_pops, mode="dev")
     atividades_pops, update_pops_redis = get_atividades_pops(
@@ -304,6 +312,7 @@ with Flow(
         data_path=path_pops,
         dataset_id=dataset_id,
         table_id=table_id_pops,
+        biglake_table=biglake_table,
         dump_mode=dump_mode,
     )
 
@@ -316,6 +325,7 @@ with Flow(
             data_path=path_atividades_pops,
             dataset_id=dataset_id,
             table_id=table_id_atividades_pops,
+            biglake_table=biglake_table,
             dump_mode="overwrite",
         )
 

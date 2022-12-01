@@ -56,6 +56,9 @@ with Flow(
     current_time = Parameter("current_time", default=None, required=False)
     current_time = get_dates(current_time)
 
+    # Create BigLake table or simple external table?
+    biglake_table = Parameter("biglake_table", default=False, required=False)
+
     date_hour_info = slice_data(current_time=current_time, ref_filename=ref_filename)
 
     # Para taxa de precipitação
@@ -84,6 +87,7 @@ with Flow(
         dataset_id=dataset_id,
         table_id=table_id_rr,
         dump_mode=dump_mode,
+        biglake_table=biglake_table,
         wait=path_rr,
     )
 
@@ -121,6 +125,7 @@ with Flow(
         dataset_id=dataset_id,
         table_id=table_id_tpw,
         dump_mode=dump_mode,
+        biglake_table=biglake_table,
         wait=path_tpw,
     )
 
@@ -160,6 +165,7 @@ with Flow(
         dataset_id=dataset_id,
         table_id=table_id_cmip,
         dump_mode=dump_mode,
+        biglake_table=biglake_table,
         wait=path_cmip,
     )
 

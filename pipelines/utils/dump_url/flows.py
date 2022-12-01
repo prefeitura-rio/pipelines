@@ -81,6 +81,9 @@ with Flow(
         "build_json_dataframe", default=False, required=False
     )
 
+    # Create BigLake table or simple external table?
+    biglake_table = Parameter("biglake_table", default=False, required=False)
+
     #####################################
     #
     # Rename flow run
@@ -133,6 +136,7 @@ with Flow(
         dataset_id=dataset_id,
         table_id=table_id,
         dump_mode=dump_mode,
+        biglake_table=biglake_table,
     )
     CREATE_TABLE_AND_UPLOAD_TO_GCS_TASK.set_upstream(DOWNLOAD_URL_TASK)
     CREATE_TABLE_AND_UPLOAD_TO_GCS_TASK.set_upstream(DUMP_CHUNKS_TASK)
