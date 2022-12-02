@@ -11,7 +11,7 @@ from pipelines.constants import constants
 MINUTE_SCHEDULE = Schedule(
     clocks=[
         IntervalClock(
-            interval=timedelta(minutes=5),
+            interval=timedelta(minutes=10),
             start_date=datetime(2021, 1, 1, 0, 1, 0),
         ),
     ]
