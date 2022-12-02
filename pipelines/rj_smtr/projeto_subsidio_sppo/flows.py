@@ -10,7 +10,7 @@ from prefect.storage import GCS
 
 # EMD Imports #
 
-from pipelines.constants import constants as constants
+from pipelines.constants import constants
 from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
     get_now_date,
