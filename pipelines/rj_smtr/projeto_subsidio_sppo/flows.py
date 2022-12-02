@@ -13,7 +13,7 @@ from prefect.storage import GCS
 from pipelines.constants import constants as constants
 from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
-    get_now_day,
+    get_now_date,
     get_current_flow_mode,
     get_current_flow_labels,
 )
@@ -44,15 +44,17 @@ with Flow(
 ) as subsidio_sppo_preprod:
 
     # Rename flow run
+    current_date = get_now_date()
+
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SMTR - Viagens SPPO (preprod): ", now_time=get_now_day()
+        prefix="SMTR - Viagens SPPO (preprod): ", now_time=current_date
     )
 
     # Get default parameters #
     run_date = Parameter("run_date", default=None)
 
     with case(run_date, False):
-        param_date = get_now_day()
+        param_date = current_date
     with case(run_date, not False):
         default_date = run_date
 
