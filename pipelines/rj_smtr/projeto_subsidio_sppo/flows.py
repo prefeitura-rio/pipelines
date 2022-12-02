@@ -36,8 +36,6 @@ from pipelines.rj_smtr.schedules import (
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
-from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import set_run_vars
-
 # Flows #
 
 with Flow(
