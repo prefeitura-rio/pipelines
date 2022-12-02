@@ -74,12 +74,10 @@ with Flow(
         dataset_id=smtr_constants.SUBSIDIO_SPPO_DATASET_ID.value,
     )
 
-    run_vars = set_run_vars(run_date)
-
     RUN = run_dbt_model(
         dbt_client=dbt_client,
         dataset_id=smtr_constants.SUBSIDIO_SPPO_DATASET_ID.value,
-        _vars=run_vars,
+        _vars={"run_date": run_date},
     )
 
 subsidio_sppo_preprod.storage = GCS(constants.GCS_FLOWS_BUCKET.value)

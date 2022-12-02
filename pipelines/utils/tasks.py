@@ -55,7 +55,7 @@ def get_now_date():
     """
     now = pendulum.now(pendulum.timezone("America/Sao_Paulo"))
 
-    return now.strftime("YYYY-MM-DD")
+    return now.strftime("Y%-m%-d%")
 
 
 @task
