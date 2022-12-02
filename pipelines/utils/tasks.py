@@ -48,6 +48,16 @@ def get_now_time():
     return f"{now.hour}:{f'0{now.minute}' if len(str(now.minute))==1 else now.minute}"
 
 
+@prefect.task(checkpoint=False)
+def get_now_date():
+    """
+    Returns the YYYY-MM-DD.
+    """
+    now = pendulum.now(pendulum.timezone("America/Sao_Paulo"))
+
+    return now.strftime("YYYY-MM-DD")
+
+
 @task
 def get_current_flow_labels() -> List[str]:
     """
