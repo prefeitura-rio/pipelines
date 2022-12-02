@@ -102,7 +102,7 @@ every_day_hour_five = Schedule(
                 2022, 11, 30, 5, 0, tzinfo=timezone(constants.TIMEZONE.value)
             ),
             labels=[
-                emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value,
+                emd_constants.RJ_SMTR_AGENT_LABEL.value,
             ],
         ),
     ]

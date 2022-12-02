@@ -80,7 +80,7 @@ with Flow(
 
 subsidio_sppo_preprod.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 subsidio_sppo_preprod.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value, labels=[constants.RJ_SMTR_DEV_AGENT_LABEL.value]
+    image=constants.DOCKER_IMAGE.value, labels=[constants.RJ_SMTR_AGENT_LABEL.value]
 )
 
 subsidio_sppo_preprod.schedule = every_day_hour_five
