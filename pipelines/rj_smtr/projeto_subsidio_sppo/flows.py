@@ -36,6 +36,8 @@ from pipelines.rj_smtr.schedules import (
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
+from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import set_run_vars
+
 # Flows #
 
 with Flow(
@@ -72,10 +74,12 @@ with Flow(
         dataset_id=smtr_constants.SUBSIDIO_SPPO_DATASET_ID.value,
     )
 
+    run_vars = set_run_vars(run_date)
+
     RUN = run_dbt_model(
         dbt_client=dbt_client,
         dataset_id=smtr_constants.SUBSIDIO_SPPO_DATASET_ID.value,
-        _vars={"run_date": run_date},
+        _vars=run_vars,
     )
 
 subsidio_sppo_preprod.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
