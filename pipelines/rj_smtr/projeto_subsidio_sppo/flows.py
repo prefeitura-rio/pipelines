@@ -6,6 +6,7 @@ Flows for projeto_subsidio_sppo
 from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
+from prefect.utilities.edges import unmapped
 
 # EMD Imports #
 
@@ -71,9 +72,9 @@ with Flow(
     )
 
     RUN = run_dbt_model.map(
-        dbt_client=dbt_client,
-        dataset_id=smtr_constants.SUBSIDIO_SPPO_DATASET_ID.value,
-        _vars={"run_date": run_date},
+        dbt_client=unmapped(dbt_client),
+        dataset_id=unmapped(smtr_constants.SUBSIDIO_SPPO_DATASET_ID.value),
+        _vars=run_date,
     )
 
 subsidio_sppo_preprod.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
