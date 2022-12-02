@@ -3,8 +3,7 @@
 Flows for projeto_subsidio_sppo
 """
 
-from prefect import Parameter, case
-from prefect.tasks.control_flow import merge
+from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
@@ -35,6 +34,9 @@ from pipelines.rj_smtr.schedules import (
     every_day_hour_five,
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
+from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import (
+    get_run_dates,
+)
 
 # Flows #
 
@@ -46,19 +48,15 @@ with Flow(
     # Rename flow run
     current_date = get_now_date()
 
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SMTR - Viagens SPPO (preprod): ", now_time=current_date
-    )
-
     # Get default parameters #
-    run_date = Parameter("run_date", default=False)
+    date_range_start = Parameter("date_range_start", default=False)
+    date_range_end = Parameter("date_range_end", default=False)
 
-    with case(run_date, False):
-        param_date = current_date
-    with case(run_date, not False):
-        default_date = run_date
+    run_date = get_run_dates(date_range_start, date_range_end)
 
-    run_date = merge(param_date, default_date)
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix="SMTR - Viagens SPPO (preprod): ", now_time=run_date
+    )
 
     LABELS = get_current_flow_labels()
     MODE = get_current_flow_mode(LABELS)
@@ -72,7 +70,7 @@ with Flow(
         dataset_id=smtr_constants.SUBSIDIO_SPPO_DATASET_ID.value,
     )
 
-    RUN = run_dbt_model(
+    RUN = run_dbt_model.map(
         dbt_client=dbt_client,
         dataset_id=smtr_constants.SUBSIDIO_SPPO_DATASET_ID.value,
         _vars={"run_date": run_date},
