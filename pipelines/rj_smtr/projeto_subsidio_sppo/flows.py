@@ -51,7 +51,7 @@ with Flow(
     )
 
     # Get default parameters #
-    run_date = Parameter("run_date", default=None)
+    run_date = Parameter("run_date", default=False)
 
     with case(run_date, False):
         param_date = current_date
