@@ -368,7 +368,7 @@ def get_info(path: str) -> Tuple[dict, str]:
 
     if variable == "CMI":
         # Search for the GOES-16 channel in the file name
-        regex = r"-M\\dC\\d"   # noqa: W605
+        regex = r"-M\\dC\\d"  # noqa: W605
         find_expression = re.findall(regex, path)[0]
         product_caracteristics["band"] = int(
             (path[path.find(find_expression) + 4 : path.find("_G16")])
