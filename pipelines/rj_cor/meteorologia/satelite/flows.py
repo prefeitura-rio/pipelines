@@ -175,78 +175,78 @@ with Flow(
         wait=path_cmip,
     )
 
-    # Trigger DBT flow run
-    with case(materialize_after_dump, True):
-        current_flow_labels = get_current_flow_labels()
+    # # Trigger DBT flow run
+    # with case(materialize_after_dump, True):
+    #     current_flow_labels = get_current_flow_labels()
 
-        # Materializar RR
-        materialization_flow_rr = create_flow_run(
-            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
-            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters={
-                "dataset_id": dataset_id,
-                "table_id": table_id_rr,
-                "mode": materialization_mode,
-                "materialize_to_datario": materialize_to_datario,
-            },
-            labels=current_flow_labels,
-            run_name=f"Materialize {dataset_id}.{table_id_rr}",
-        )
+    #     # Materializar RR
+    #     materialization_flow_rr = create_flow_run(
+    #         flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+    #         project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+    #         parameters={
+    #             "dataset_id": dataset_id,
+    #             "table_id": table_id_rr,
+    #             "mode": materialization_mode,
+    #             "materialize_to_datario": materialize_to_datario,
+    #         },
+    #         labels=current_flow_labels,
+    #         run_name=f"Materialize {dataset_id}.{table_id_rr}",
+    #     )
 
-        materialization_flow_rr.set_upstream(upload_table_rr)
+    #     materialization_flow_rr.set_upstream(upload_table_rr)
 
-        wait_for_materialization_rr = wait_for_flow_run(
-            materialization_flow_rr,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
-        )
+    #     wait_for_materialization_rr = wait_for_flow_run(
+    #         materialization_flow_rr,
+    #         stream_states=True,
+    #         stream_logs=True,
+    #         raise_final_state=True,
+    #     )
 
-        # Materializar TPW
-        materialization_flow_tpw = create_flow_run(
-            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
-            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters={
-                "dataset_id": dataset_id,
-                "table_id": table_id_tpw,
-                "mode": materialization_mode,
-                "materialize_to_datario": materialize_to_datario,
-            },
-            labels=current_flow_labels,
-            run_name=f"Materialize {dataset_id}.{table_id_tpw}",
-        )
+    #     # Materializar TPW
+    #     materialization_flow_tpw = create_flow_run(
+    #         flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+    #         project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+    #         parameters={
+    #             "dataset_id": dataset_id,
+    #             "table_id": table_id_tpw,
+    #             "mode": materialization_mode,
+    #             "materialize_to_datario": materialize_to_datario,
+    #         },
+    #         labels=current_flow_labels,
+    #         run_name=f"Materialize {dataset_id}.{table_id_tpw}",
+    #     )
 
-        materialization_flow_tpw.set_upstream(upload_table_tpw)
+    #     materialization_flow_tpw.set_upstream(upload_table_tpw)
 
-        wait_for_materialization_tpw = wait_for_flow_run(
-            materialization_flow_tpw,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
-        )
+    #     wait_for_materialization_tpw = wait_for_flow_run(
+    #         materialization_flow_tpw,
+    #         stream_states=True,
+    #         stream_logs=True,
+    #         raise_final_state=True,
+    #     )
 
-        # Materializar CMIP
-        materialization_flow_cmip = create_flow_run(
-            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
-            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters={
-                "dataset_id": dataset_id,
-                "table_id": table_id_cmip,
-                "mode": materialization_mode,
-                "materialize_to_datario": materialize_to_datario,
-            },
-            labels=current_flow_labels,
-            run_name=f"Materialize {dataset_id}.{table_id_cmip}",
-        )
+    #     # Materializar CMIP
+    #     materialization_flow_cmip = create_flow_run(
+    #         flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+    #         project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+    #         parameters={
+    #             "dataset_id": dataset_id,
+    #             "table_id": table_id_cmip,
+    #             "mode": materialization_mode,
+    #             "materialize_to_datario": materialize_to_datario,
+    #         },
+    #         labels=current_flow_labels,
+    #         run_name=f"Materialize {dataset_id}.{table_id_cmip}",
+    #     )
 
-        materialization_flow_cmip.set_upstream(upload_table_cmip)
+    #     materialization_flow_cmip.set_upstream(upload_table_cmip)
 
-        wait_for_materialization_cmip = wait_for_flow_run(
-            materialization_flow_cmip,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
-        )
+    #     wait_for_materialization_cmip = wait_for_flow_run(
+    #         materialization_flow_cmip,
+    #         stream_states=True,
+    #         stream_logs=True,
+    #         raise_final_state=True,
+    #     )
 
 # para rodar na cloud
 cor_meteorologia_goes16.storage = GCS(constants.GCS_FLOWS_BUCKET.value)

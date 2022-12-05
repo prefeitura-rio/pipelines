@@ -21,7 +21,7 @@ def get_on_redis(
     """
     Set the last updated time on Redis.
     """
-    redis_client = get_redis_client()
+    redis_client = get_redis_client(host="127.0.0.1")
     key = build_redis_key(dataset_id, table_id, "files", mode)
     files_on_redis = redis_client.get(key)
     files_on_redis = [] if files_on_redis is None else files_on_redis
@@ -42,10 +42,10 @@ def save_on_redis(
     """
     Set the last updated time on Redis.
     """
-    redis_client = get_redis_client()
+    redis_client = get_redis_client(host="127.0.0.1")
     key = build_redis_key(dataset_id, table_id, "files", mode)
     files = list(set(files))
-    print(">>>> save on redis files ", files)
-    files.sort()
+    files.sort(reverse=True) # no backfill que roda contrário tem que ter o reverse
     files = files[-keep_last:]
+    # print(">>>> goin to save on redis files ", files)
     redis_client.set(key, files)

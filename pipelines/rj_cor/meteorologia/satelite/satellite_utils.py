@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=too-many-locals
+# flake8: noqa
 """
 Funções úteis no tratamento de dados de satélite
 """
@@ -64,6 +65,7 @@ Funções úteis no tratamento de dados de satélite
 import datetime
 import os
 from pathlib import Path
+import re
 from typing import Tuple, Union
 
 from google.cloud import storage
@@ -369,8 +371,10 @@ def get_info(path: str) -> Tuple[dict, str]:
 
     if variable == "CMI":
         # Search for the GOES-16 channel in the file name
+        regex = r"-M\\dC\\d"   # noqa: W605
+        find_expression = re.findall(regex, path)[0]
         product_caracteristics["band"] = int(
-            (path[path.find("M6C") + 3 : path.find("_G16")])
+            (path[path.find(find_expression) + 4 : path.find("_G16")])
         )
     else:
         product_caracteristics["band"] = np.nan
@@ -572,7 +576,7 @@ def save_data_in_file(
     data["horario"] = pendulum.from_format(
         datetime_save, "YYYYMMDD HHmmss"
     ).to_time_string()
-    log(f">>>>> data head {data.head()}")
+    # log(f">>>>> data head {data.head()}")
     # Fixa ordem das colunas
     data = data[["longitude", "latitude", "horario", variable.lower()]]
 

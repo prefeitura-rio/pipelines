@@ -141,6 +141,7 @@ def download(
     download_file = None
     for path_file in path_files:
         filename = path_file.split("/")[-1]
+        log(f"\n\n[DEBUG]: {filename} check if is in redis")
         if filename not in redis_files:
             log(f"\n\n[DEBUG]: {filename} not in redis")
             redis_files.append(filename)
