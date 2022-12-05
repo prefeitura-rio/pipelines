@@ -64,6 +64,7 @@ Funções úteis no tratamento de dados de satélite
 import datetime
 import os
 from pathlib import Path
+import re
 from typing import Tuple, Union
 
 from google.cloud import storage
@@ -367,8 +368,9 @@ def get_info(path: str) -> Tuple[dict, str]:
 
     if variable == "CMI":
         # Search for the GOES-16 channel in the file name
+        find_expression = re.findall("-M\dC\d", path)[0]
         product_caracteristics["band"] = int(
-            (path[path.find("M6C") + 3 : path.find("_G16")])
+            (path[path.find(find_expression) + 4 : path.find("_G16")])
         )
     else:
         product_caracteristics["band"] = np.nan
@@ -572,7 +574,7 @@ def save_data_in_file(
 
     # salva em csv
     filename = file_path.split("/")[-1].replace(".nc", "")
-    log(f"Saving {filename} on {parquet_path}")
+    log(f"\n\n[DEGUB]: Saving {filename} on {parquet_path}\n\n")
     log(f"Data_save: {date_save}, time_save: {time_save}")
     file_path = os.path.join(parquet_path, f"{filename}.csv")
     data.to_csv(file_path, index=False)
