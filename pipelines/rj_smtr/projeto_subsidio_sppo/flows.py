@@ -31,15 +31,9 @@ from pipelines.rj_smtr.tasks import (
     # set_last_run_timestamp,
 )
 
-from pipelines.rj_smtr.schedules import (
-    every_day_hour_five,
-    every_fortnight
-)
+from pipelines.rj_smtr.schedules import every_day_hour_five, every_fortnight
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
-from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import (
-    get_run_dates,
-    get_run_date
-)
+from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import get_run_dates, get_run_date
 
 # Flows #
 
