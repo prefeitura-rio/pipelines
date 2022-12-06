@@ -67,7 +67,7 @@ from pipelines.utils.tasks import (
 
 with Flow(
     &#34;RIOAGUAS: Lamina de água em via&#34;,
-    code_owners=[&#34;JP&#34;, &#34;paty&#34;],
+    code_owners=[&#34;JP&#34;],
 ) as rioaguas_lamina_agua:
 
     # Parâmetros para a Materialização
@@ -82,7 +82,7 @@ with Flow(
     # Parâmetros para salvar dados no GCS
     dataset_id = &#34;saneamento_drenagem&#34;
     table_id = &#34;nivel_lamina_agua_via&#34;
-    dump_mode = &#34;overwrite&#34;
+    dump_mode = &#34;append&#34;
 
     # Dump to GCS after? Should only dump to GCS if materializing to datario
     dump_to_gcs = Parameter(&#34;dump_to_gcs&#34;, default=False, required=False)
@@ -95,7 +95,7 @@ with Flow(
 
     # Tasks
     dados = download_file()
-    dados_tratados = tratar_dados(dados)
+    dados_tratados = tratar_dados(dados, dataset_id, table_id)
     save_path = salvar_dados(dados_tratados)
 
     # Create table in BigQuery

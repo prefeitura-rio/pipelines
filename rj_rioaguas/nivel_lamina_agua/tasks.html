@@ -37,12 +37,19 @@ Tasks para pipeline de dados de nível de lâmina de água em via.
 from pathlib import Path
 from typing import Union
 import pandas as pd
+import pendulum
 import unidecode
 from bs4 import BeautifulSoup
 
 from prefect import task
-from pipelines.utils.utils import get_vault_secret, log
+from pipelines.rj_cor.meteorologia.utils import save_updated_rows_on_redis
 from pipelines.rj_rioaguas.utils import login
+from pipelines.utils.utils import (
+    get_vault_secret,
+    log,
+    to_partitions,
+    parse_date_columns,
+)
 
 
 @task
@@ -72,12 +79,26 @@ def download_file() -&gt; pd.DataFrame:
 
 
 @task
-def tratar_dados(dados: pd.DataFrame) -&gt; pd.DataFrame:
+def tratar_dados(
+    dados: pd.DataFrame, dataset_id: str, table_id: str, mode: str = &#34;prod&#34;
+) -&gt; pd.DataFrame:
     &#34;&#34;&#34;Tratar dados para o padrão estabelecido e filtrar linhas para salvarmos apenas as medições
-    que foram contratadas pela prefeitura. Atualmente, apenas o Catete está no contrato.
+    que foram contratadas pela prefeitura.
     &#34;&#34;&#34;
-    # Filtra apenas endereços contratados
-    dados = dados[dados[&#34;Endereço&#34;].isin([&#34;Catete&#34;])].copy()
+
+    # Cria id das estações
+    estacao_2_id_estacao = {
+        &#34;Catete&#34;: &#34;1&#34;,
+        &#34;Bangu - Rua da Feira&#34;: &#34;2&#34;,
+        &#34;Bangu - Rua do Açudes&#34;: &#34;3&#34;,
+        &#34;Rio Maracanã - Visc Itamarati&#34;: &#34;4&#34;,
+        &#34;Itanhangá&#34;: &#34;5&#34;,
+        &#34;Bangu - Av Santa Cruz&#34;: &#34;6&#34;,
+        &#34;Lagoa&#34;: &#34;7&#34;,
+        &#34;Rio Maracanã - R: Uruguai&#34;: &#34;8&#34;,
+    }
+
+    dados[&#34;id_estacao&#34;] = dados[&#34;Endereço&#34;].map(estacao_2_id_estacao)
 
     rename_cols = {
         &#34;Endereço&#34;: &#34;endereco&#34;,
@@ -107,10 +128,6 @@ def tratar_dados(dados: pd.DataFrame) -&gt; pd.DataFrame:
         dados[&#34;data_medicao&#34;], format=&#34;%d/%m/%Y %H:%M&#34;
     )
 
-    estacao_2_id_estacao = {&#34;Catete&#34;: &#34;1&#34;}
-
-    dados[&#34;id_estacao&#34;] = dados[&#34;endereco&#34;].map(estacao_2_id_estacao)
-
     # Fixa ordem das colunas
     cols_order = [
         &#34;data_medicao&#34;,
@@ -122,6 +139,10 @@ def tratar_dados(dados: pd.DataFrame) -&gt; pd.DataFrame:
         &#34;temperatura&#34;,
     ]
 
+    log(f&#34;[DEBUG]: dados coletados\n{dados.head()}&#34;)
+    dados = save_updated_rows_on_redis(dados, dataset_id, table_id, mode)
+    log(f&#34;[DEBUG]: dados que serão salvos\n{dados.head()}&#34;)
+
     return dados[cols_order]
 
 
@@ -130,19 +151,35 @@ def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
     Salvar dados em csv.
     &#34;&#34;&#34;
-    base_path = Path(&#34;/tmp/altura_agua/&#34;)
-    base_path.mkdir(parents=True, exist_ok=True)
-
-    filename = base_path / &#34;nivel.csv&#34;
-    log(f&#34;Saving {filename}&#34;)
-
     save_cols = [
         &#34;data_medicao&#34;,
         &#34;id_estacao&#34;,
         &#34;altura_agua&#34;,
     ]
-    dados[save_cols].to_csv(filename, index=False)
-    return base_path</code></pre>
+
+    dataframe = dados[save_cols].copy()
+
+    prepath = Path(&#34;/tmp/altura_agua/&#34;)
+    prepath.mkdir(parents=True, exist_ok=True)
+
+    partition_column = &#34;data_medicao&#34;
+    dataframe, partitions = parse_date_columns(dataframe, partition_column)
+
+    current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y%m%d%H%M&#34;)
+
+    to_partitions(
+        data=dataframe,
+        partition_columns=partitions,
+        savepath=prepath,
+        data_type=&#34;csv&#34;,
+        suffix=current_time,
+    )
+    log(f&#34;[DEBUG] Files saved on {prepath}&#34;)
+
+    # filename = prepath / f&#34;nivel_{current_time}.csv&#34;
+    # log(f&#34;Saving {filename}&#34;)
+    # dados[save_cols].to_csv(filename, index=False)
+    return prepath</code></pre>
 </details>
 </section>
 <section>
@@ -203,38 +240,68 @@ def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
     Salvar dados em csv.
     &#34;&#34;&#34;
-    base_path = Path(&#34;/tmp/altura_agua/&#34;)
-    base_path.mkdir(parents=True, exist_ok=True)
-
-    filename = base_path / &#34;nivel.csv&#34;
-    log(f&#34;Saving {filename}&#34;)
-
     save_cols = [
         &#34;data_medicao&#34;,
         &#34;id_estacao&#34;,
         &#34;altura_agua&#34;,
     ]
-    dados[save_cols].to_csv(filename, index=False)
-    return base_path</code></pre>
+
+    dataframe = dados[save_cols].copy()
+
+    prepath = Path(&#34;/tmp/altura_agua/&#34;)
+    prepath.mkdir(parents=True, exist_ok=True)
+
+    partition_column = &#34;data_medicao&#34;
+    dataframe, partitions = parse_date_columns(dataframe, partition_column)
+
+    current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y%m%d%H%M&#34;)
+
+    to_partitions(
+        data=dataframe,
+        partition_columns=partitions,
+        savepath=prepath,
+        data_type=&#34;csv&#34;,
+        suffix=current_time,
+    )
+    log(f&#34;[DEBUG] Files saved on {prepath}&#34;)
+
+    # filename = prepath / f&#34;nivel_{current_time}.csv&#34;
+    # log(f&#34;Saving {filename}&#34;)
+    # dados[save_cols].to_csv(filename, index=False)
+    return prepath</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_rioaguas.nivel_lamina_agua.tasks.tratar_dados"><code class="name flex">
-<span>def <span class="ident">tratar_dados</span></span>(<span>dados: pandas.core.frame.DataFrame) ‑> pandas.core.frame.DataFrame</span>
+<span>def <span class="ident">tratar_dados</span></span>(<span>dados: pandas.core.frame.DataFrame, dataset_id: str, table_id: str, mode: str = 'prod') ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Tratar dados para o padrão estabelecido e filtrar linhas para salvarmos apenas as medições
-que foram contratadas pela prefeitura. Atualmente, apenas o Catete está no contrato.</p></div>
+que foram contratadas pela prefeitura.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def tratar_dados(dados: pd.DataFrame) -&gt; pd.DataFrame:
+def tratar_dados(
+    dados: pd.DataFrame, dataset_id: str, table_id: str, mode: str = &#34;prod&#34;
+) -&gt; pd.DataFrame:
     &#34;&#34;&#34;Tratar dados para o padrão estabelecido e filtrar linhas para salvarmos apenas as medições
-    que foram contratadas pela prefeitura. Atualmente, apenas o Catete está no contrato.
+    que foram contratadas pela prefeitura.
     &#34;&#34;&#34;
-    # Filtra apenas endereços contratados
-    dados = dados[dados[&#34;Endereço&#34;].isin([&#34;Catete&#34;])].copy()
+
+    # Cria id das estações
+    estacao_2_id_estacao = {
+        &#34;Catete&#34;: &#34;1&#34;,
+        &#34;Bangu - Rua da Feira&#34;: &#34;2&#34;,
+        &#34;Bangu - Rua do Açudes&#34;: &#34;3&#34;,
+        &#34;Rio Maracanã - Visc Itamarati&#34;: &#34;4&#34;,
+        &#34;Itanhangá&#34;: &#34;5&#34;,
+        &#34;Bangu - Av Santa Cruz&#34;: &#34;6&#34;,
+        &#34;Lagoa&#34;: &#34;7&#34;,
+        &#34;Rio Maracanã - R: Uruguai&#34;: &#34;8&#34;,
+    }
+
+    dados[&#34;id_estacao&#34;] = dados[&#34;Endereço&#34;].map(estacao_2_id_estacao)
 
     rename_cols = {
         &#34;Endereço&#34;: &#34;endereco&#34;,
@@ -264,10 +331,6 @@ def tratar_dados(dados: pd.DataFrame) -&gt; pd.DataFrame:
         dados[&#34;data_medicao&#34;], format=&#34;%d/%m/%Y %H:%M&#34;
     )
 
-    estacao_2_id_estacao = {&#34;Catete&#34;: &#34;1&#34;}
-
-    dados[&#34;id_estacao&#34;] = dados[&#34;endereco&#34;].map(estacao_2_id_estacao)
-
     # Fixa ordem das colunas
     cols_order = [
         &#34;data_medicao&#34;,
@@ -278,6 +341,10 @@ def tratar_dados(dados: pd.DataFrame) -&gt; pd.DataFrame:
         &#34;umidade&#34;,
         &#34;temperatura&#34;,
     ]
+
+    log(f&#34;[DEBUG]: dados coletados\n{dados.head()}&#34;)
+    dados = save_updated_rows_on_redis(dados, dataset_id, table_id, mode)
+    log(f&#34;[DEBUG]: dados que serão salvos\n{dados.head()}&#34;)
 
     return dados[cols_order]</code></pre>
 </details>
