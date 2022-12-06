@@ -146,3 +146,6 @@ class constants(Enum):  # pylint: disable=c0103
         "RiR": "flag_rir",
         "Apoio": "flag_apoio",
     }
+
+    # SUBSÍDIO
+    SUBSIDIO_SPPO_DATASET_ID = "projeto_subsidio_sppo"
