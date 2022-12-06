@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_smtr API documentation</title>
-<meta name="description" content="Prefect flows for rj_smtr project" />
+<title>pipelines.rj_smtr.projeto_subsidio_sppo.tasks API documentation</title>
+<meta name="description" content="Tasks for projeto_subsidio_sppo" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,96 +19,71 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_smtr</code></h1>
+<h1 class="title">Module <code>pipelines.rj_smtr.projeto_subsidio_sppo.tasks</code></h1>
 </header>
 <section id="section-intro">
-<p>Prefect flows for rj_smtr project</p>
+<p>Tasks for projeto_subsidio_sppo</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Prefect flows for rj_smtr project
+Tasks for projeto_subsidio_sppo
 &#34;&#34;&#34;
-###############################################################################
-# Automatically managed, please do not touch
-###############################################################################
-from pipelines.rj_smtr.flows import *
 
-from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.flows import *
-from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.flows import *
-from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.flows import *
-from pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.flows import *
-from pipelines.rj_smtr.materialize_to_datario.flows import *
-from pipelines.rj_smtr.registros_ocr_rir.flows import *
-from pipelines.rj_smtr.projeto_subsidio_sppo.flows import *</code></pre>
+from typing import List
+import datetime
+import pandas as pd
+
+from prefect import task
+
+
+@task
+def get_run_dates(date_range_start: str, date_range_end: str) -&gt; List:
+    &#34;&#34;&#34;
+    Generates a list of dates between date_range_start and date_range_end.
+    &#34;&#34;&#34;
+    if (date_range_start is False) or (date_range_end is False):
+        return [{&#34;run_date&#34;: datetime.date.today().strftime(&#34;%Y-%m-%d&#34;)}]
+
+    return [
+        {&#34;run_date&#34;: d.strftime(&#34;%Y-%m-%d&#34;)}
+        for d in pd.date_range(start=date_range_start, end=date_range_end)
+    ]</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt><code class="name"><a title="pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps" href="br_rj_riodejaneiro_brt_gps/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps</a></code></dt>
+<dt id="pipelines.rj_smtr.projeto_subsidio_sppo.tasks.get_run_dates"><code class="name flex">
+<span>def <span class="ident">get_run_dates</span></span>(<span>date_range_start: str, date_range_end: str) ‑> List</span>
+</code></dt>
 <dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps" href="br_rj_riodejaneiro_onibus_gps/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.br_rj_riodejaneiro_sigmob" href="br_rj_riodejaneiro_sigmob/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_sigmob</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps" href="br_rj_riodejaneiro_stpl_gps/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.constants" href="constants.html">pipelines.rj_smtr.constants</a></code></dt>
-<dd>
-<div class="desc"><p>Constant values for the rj_smtr projects</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.example" href="example/index.html">pipelines.rj_smtr.example</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.flows" href="flows.html">pipelines.rj_smtr.flows</a></code></dt>
-<dd>
-<div class="desc"><p>Flows for rj_smtr</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.implicit_ftp" href="implicit_ftp.html">pipelines.rj_smtr.implicit_ftp</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.materialize_to_datario" href="materialize_to_datario/index.html">pipelines.rj_smtr.materialize_to_datario</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.projeto_subsidio_sppo" href="projeto_subsidio_sppo/index.html">pipelines.rj_smtr.projeto_subsidio_sppo</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.registros_ocr_rir" href="registros_ocr_rir/index.html">pipelines.rj_smtr.registros_ocr_rir</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.schedules" href="schedules.html">pipelines.rj_smtr.schedules</a></code></dt>
-<dd>
-<div class="desc"><p>Schedules for rj_smtr</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.tasks" href="tasks.html">pipelines.rj_smtr.tasks</a></code></dt>
-<dd>
-<div class="desc"><p>Tasks for rj_smtr</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr.utils" href="utils.html">pipelines.rj_smtr.utils</a></code></dt>
-<dd>
-<div class="desc"><p>General purpose functions for rj_smtr</p></div>
+<div class="desc"><p>Generates a list of dates between date_range_start and date_range_end.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_run_dates(date_range_start: str, date_range_end: str) -&gt; List:
+    &#34;&#34;&#34;
+    Generates a list of dates between date_range_start and date_range_end.
+    &#34;&#34;&#34;
+    if (date_range_start is False) or (date_range_end is False):
+        return [{&#34;run_date&#34;: datetime.date.today().strftime(&#34;%Y-%m-%d&#34;)}]
+
+    return [
+        {&#34;run_date&#34;: d.strftime(&#34;%Y-%m-%d&#34;)}
+        for d in pd.date_range(start=date_range_start, end=date_range_end)
+    ]</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
 </section>
 <section>
 </section>
@@ -148,7 +123,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -167,25 +142,12 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines" href="../index.html">pipelines</a></code></li>
+<li><code><a title="pipelines.rj_smtr.projeto_subsidio_sppo" href="index.html">pipelines.rj_smtr.projeto_subsidio_sppo</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps" href="br_rj_riodejaneiro_brt_gps/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps</a></code></li>
-<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps" href="br_rj_riodejaneiro_onibus_gps/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps</a></code></li>
-<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_sigmob" href="br_rj_riodejaneiro_sigmob/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_sigmob</a></code></li>
-<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps" href="br_rj_riodejaneiro_stpl_gps/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps</a></code></li>
-<li><code><a title="pipelines.rj_smtr.constants" href="constants.html">pipelines.rj_smtr.constants</a></code></li>
-<li><code><a title="pipelines.rj_smtr.example" href="example/index.html">pipelines.rj_smtr.example</a></code></li>
-<li><code><a title="pipelines.rj_smtr.flows" href="flows.html">pipelines.rj_smtr.flows</a></code></li>
-<li><code><a title="pipelines.rj_smtr.implicit_ftp" href="implicit_ftp.html">pipelines.rj_smtr.implicit_ftp</a></code></li>
-<li><code><a title="pipelines.rj_smtr.materialize_to_datario" href="materialize_to_datario/index.html">pipelines.rj_smtr.materialize_to_datario</a></code></li>
-<li><code><a title="pipelines.rj_smtr.projeto_subsidio_sppo" href="projeto_subsidio_sppo/index.html">pipelines.rj_smtr.projeto_subsidio_sppo</a></code></li>
-<li><code><a title="pipelines.rj_smtr.registros_ocr_rir" href="registros_ocr_rir/index.html">pipelines.rj_smtr.registros_ocr_rir</a></code></li>
-<li><code><a title="pipelines.rj_smtr.schedules" href="schedules.html">pipelines.rj_smtr.schedules</a></code></li>
-<li><code><a title="pipelines.rj_smtr.tasks" href="tasks.html">pipelines.rj_smtr.tasks</a></code></li>
-<li><code><a title="pipelines.rj_smtr.utils" href="utils.html">pipelines.rj_smtr.utils</a></code></li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pipelines.rj_smtr.projeto_subsidio_sppo.tasks.get_run_dates" href="#pipelines.rj_smtr.projeto_subsidio_sppo.tasks.get_run_dates">get_run_dates</a></code></li>
 </ul>
 </li>
 </ul>

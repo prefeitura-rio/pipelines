@@ -77,6 +77,16 @@ def get_now_time():
     return f&#34;{now.hour}:{f&#39;0{now.minute}&#39; if len(str(now.minute))==1 else now.minute}&#34;
 
 
+@prefect.task(checkpoint=False)
+def get_now_date():
+    &#34;&#34;&#34;
+    Returns the YYYY-MM-DD.
+    &#34;&#34;&#34;
+    now = pendulum.now(pendulum.timezone(&#34;America/Sao_Paulo&#34;))
+
+    return now.to_date_string()
+
+
 @task
 def get_current_flow_labels() -&gt; List[str]:
     &#34;&#34;&#34;
@@ -533,6 +543,25 @@ def get_current_flow_mode(labels: List[str]) -&gt; str:
     return &#34;prod&#34;</code></pre>
 </details>
 </dd>
+<dt id="pipelines.utils.tasks.get_now_date"><code class="name flex">
+<span>def <span class="ident">get_now_date</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the YYYY-MM-DD.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@prefect.task(checkpoint=False)
+def get_now_date():
+    &#34;&#34;&#34;
+    Returns the YYYY-MM-DD.
+    &#34;&#34;&#34;
+    now = pendulum.now(pendulum.timezone(&#34;America/Sao_Paulo&#34;))
+
+    return now.to_date_string()</code></pre>
+</details>
+</dd>
 <dt id="pipelines.utils.tasks.get_now_time"><code class="name flex">
 <span>def <span class="ident">get_now_time</span></span>(<span>)</span>
 </code></dt>
@@ -712,6 +741,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.utils.tasks.create_table_and_upload_to_gcs" href="#pipelines.utils.tasks.create_table_and_upload_to_gcs">create_table_and_upload_to_gcs</a></code></li>
 <li><code><a title="pipelines.utils.tasks.get_current_flow_labels" href="#pipelines.utils.tasks.get_current_flow_labels">get_current_flow_labels</a></code></li>
 <li><code><a title="pipelines.utils.tasks.get_current_flow_mode" href="#pipelines.utils.tasks.get_current_flow_mode">get_current_flow_mode</a></code></li>
+<li><code><a title="pipelines.utils.tasks.get_now_date" href="#pipelines.utils.tasks.get_now_date">get_now_date</a></code></li>
 <li><code><a title="pipelines.utils.tasks.get_now_time" href="#pipelines.utils.tasks.get_now_time">get_now_time</a></code></li>
 <li><code><a title="pipelines.utils.tasks.get_user_and_password" href="#pipelines.utils.tasks.get_user_and_password">get_user_and_password</a></code></li>
 <li><code><a title="pipelines.utils.tasks.greater_than" href="#pipelines.utils.tasks.greater_than">greater_than</a></code></li>

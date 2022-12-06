@@ -90,8 +90,10 @@ def run_dbt_model(
     &#34;&#34;&#34;
     run_command = &#34;dbt run&#34;
 
-    if (dataset_id and table_id) and not model:
-        model = f&#34;{dataset_id}.{table_id}&#34;
+    if not model:
+        model = f&#34;{dataset_id}&#34;
+        if table_id:
+            model += f&#34;.{table_id}&#34;
 
     # Set models and upstream/downstream for dbt
     if model:
@@ -335,8 +337,10 @@ def run_dbt_model(
     &#34;&#34;&#34;
     run_command = &#34;dbt run&#34;
 
-    if (dataset_id and table_id) and not model:
-        model = f&#34;{dataset_id}.{table_id}&#34;
+    if not model:
+        model = f&#34;{dataset_id}&#34;
+        if table_id:
+            model += f&#34;.{table_id}&#34;
 
     # Set models and upstream/downstream for dbt
     if model:
