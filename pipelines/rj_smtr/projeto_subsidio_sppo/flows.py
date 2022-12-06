@@ -42,7 +42,7 @@ from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import (
 # Flows #
 
 with Flow(
-    "SMTR: Viagens SPPO: ",
+    "SMTR: Viagens SPPO",
     code_owners=["rodrigo", "fernanda"],
 ) as subsidio_sppo_preprod:
 
@@ -56,7 +56,7 @@ with Flow(
     run_date = get_run_dates(date_range_start, date_range_end)
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SMTR - Viagens SPPO (preprod): ", now_time=run_date
+        prefix="SMTR - Viagens SPPO: ", now_time=run_date
     )
 
     LABELS = get_current_flow_labels()
