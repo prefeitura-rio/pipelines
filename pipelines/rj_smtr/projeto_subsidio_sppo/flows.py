@@ -42,7 +42,7 @@ from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import (
 # Flows #
 
 with Flow(
-    "SMTR: Viagens SPPO - Pré-produção: ",
+    "SMTR: Viagens SPPO: ",
     code_owners=["rodrigo", "fernanda"],
 ) as subsidio_sppo_preprod:
 
