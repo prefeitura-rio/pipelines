@@ -33,10 +33,12 @@ from pipelines.rj_smtr.tasks import (
 
 from pipelines.rj_smtr.schedules import (
     every_day_hour_five,
+    every_fortnight
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import (
     get_run_dates,
+    get_run_date
 )
 
 # Flows #
@@ -83,3 +85,45 @@ subsidio_sppo_preprod.run_config = KubernetesRun(
 )
 
 subsidio_sppo_preprod.schedule = every_day_hour_five
+
+with Flow(
+    "SMTR: Subsídio SPPO Apuração",
+    code_owners=["rodrigo", "fernanda"],
+) as subsidio_sppo_apuracao:
+
+    # Rename flow run
+    current_date = get_now_date()
+
+    # Get default parameters #
+    run_date = Parameter("run_date", default=None)
+
+    run_date = get_run_date(run_date)
+
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix="SMTR - Subsídio SPPO Apuração: ", now_time=current_date
+    )
+
+    LABELS = get_current_flow_labels()
+    MODE = get_current_flow_mode(LABELS)
+
+    # Set dbt client #
+    dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
+    # Use the command below to get the dbt client in dev mode:
+    # dbt_client = get_local_dbt_client(host="localhost", port=3001)
+
+    dataset_sha = fetch_dataset_sha(
+        dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOAD_DATASET_ID.value,
+    )
+
+    RUN = run_dbt_model(
+        dbt_client=dbt_client,
+        dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOAD_DATASET_ID.value,
+        _vars=run_date,
+    )
+
+subsidio_sppo_apuracao.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+subsidio_sppo_apuracao.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value, labels=[constants.RJ_SMTR_DEV_AGENT_LABEL.value]
+)
+
+subsidio_sppo_apuracao.schedule = every_fortnight
