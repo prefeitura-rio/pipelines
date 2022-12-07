@@ -25,6 +25,7 @@ ergon_queries = {
         "materialize_after_dump": False,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
+        "dbt_alias": True,
         "execute_query": """
             SELECT
                 CARGO,
@@ -106,6 +107,7 @@ ergon_queries = {
         "materialize_after_dump": False,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
+        "dbt_alias": True,
         "execute_query": """
             SELECT
                 NUMFUNC,
@@ -216,6 +218,7 @@ ergon_queries = {
         "materialize_after_dump": False,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
+        "dbt_alias": True,
         "execute_query": """
             SELECT
                 NUMEV,
@@ -332,6 +335,7 @@ ergon_queries = {
         "materialize_after_dump": False,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
+        "dbt_alias": True,
         "execute_query": """
             SELECT
                 MES_ANO_FOLHA,
@@ -358,6 +362,7 @@ ergon_queries = {
         "materialization_mode": "prod",
         "dump_mode": "append",
         "partition_columns": "MES_ANO",
+        "dbt_alias": True,
         "execute_query": """
             SELECT
                 LANCAMENTO,
@@ -446,6 +451,7 @@ ergon_queries = {
         "materialize_after_dump": False,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
+        "dbt_alias": True,
         "execute_query": """
             SELECT
                 NUMFUNC,
@@ -520,6 +526,7 @@ ergon_queries = {
         "materialize_after_dump": False,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
+        "dbt_alias": True,
         "execute_query": """
             SELECT
                 NUMERO,
@@ -724,6 +731,7 @@ ergon_queries = {
         "materialize_after_dump": False,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
+        "dbt_alias": True,
         "execute_query": """
             SELECT *
             FROM ERGON.HSETOR_
@@ -733,6 +741,7 @@ ergon_queries = {
         "materialize_after_dump": False,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
+        "dbt_alias": True,
         "execute_query": """
             SELECT
                 NUMFUNC,
@@ -822,6 +831,7 @@ ergon_queries = {
         "materialize_after_dump": False,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
+        "dbt_alias": True,
         "execute_query": """
             SELECT
                 SETOR,
@@ -874,6 +884,7 @@ ergon_queries = {
         "materialize_after_dump": False,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
+        "dbt_alias": True,
         "execute_query": """
             SELECT
                 NUMFUNC,
@@ -949,6 +960,7 @@ ergon_queries = {
         "materialize_after_dump": False,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
+        "dbt_alias": True,
         "execute_query": """
             SELECT
                 NUMFUNC,
