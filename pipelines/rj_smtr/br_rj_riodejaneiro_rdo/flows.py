@@ -90,7 +90,8 @@ with Flow(
     )
     # Parse FTPS
     file_info = get_file_paths_from_ftp(
-        transport_mode=transport_mode, report_type=report_type, wait=rename_run
+        transport_mode=transport_mode,
+        report_type=report_type,
     )
     updated_info = download_and_save_local_from_ftp(file_info=file_info)
     treated_info = pre_treatment_br_rj_riodejaneiro_rdo(file_info=updated_info)
