@@ -33,7 +33,6 @@ General purpose tasks for dumping database data.
 &#34;&#34;&#34;
 # pylint disable=unused-argument, W0613
 
-import io
 from pathlib import Path
 from typing import Union
 from datetime import datetime, timedelta
@@ -70,19 +69,35 @@ def get_datario_geodataframe(
     Save a CSV from data.rio API
     &#34;&#34;&#34;
     path = Path(path)
-    request = requests.get(url)
-    geodatagrame = gpd.read_file(io.BytesIO(request.content))
-    dataframe = pd.DataFrame(geodatagrame)
+    path.mkdir(parents=True, exist_ok=True)
+
+    filepath = path / &#34;geo_data&#34; / &#34;data.geojson&#34;
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+
+    req = requests.get(url, stream=True)
+    with open(filepath, &#34;wb&#34;) as file:
+        for chunk in req.iter_content(chunk_size=1024):
+            if chunk:
+                file.write(chunk)
+                file.flush()
+
+    log(&#34;Data saved&#34;)
+
+    geodataframe = gpd.read_file(filepath)
+    log(&#34;Geodatagrame loaded&#34;)
 
     eventid = datetime.now().strftime(&#34;%Y%m%d-%H%M%S&#34;)
 
-    log(f&#34;Original columns: {dataframe.columns.tolist()}&#34;)
-    dataframe.columns = remove_columns_accents(dataframe)
-    log(f&#34;New columns: {dataframe.columns.tolist()}&#34;)
+    log(f&#34;Original columns: {geodataframe.columns.tolist()}&#34;)
+    geodataframe.columns = remove_columns_accents(geodataframe)
+    log(f&#34;New columns: {geodataframe.columns.tolist()}&#34;)
 
-    dataframe_to_csv(dataframe, path / f&#34;{eventid}.csv&#34;)
+    save_path = path / &#34;csv_data&#34; / f&#34;{eventid}.csv&#34;
+    save_path.parent.mkdir(parents=True, exist_ok=True)
+    geodataframe.to_csv(save_path, index=False, encoding=&#34;utf-8&#34;)
+    log(&#34;Data saved&#34;)
 
-    return path</code></pre>
+    return save_path</code></pre>
 </details>
 </section>
 <section>
@@ -115,19 +130,35 @@ def get_datario_geodataframe(
     Save a CSV from data.rio API
     &#34;&#34;&#34;
     path = Path(path)
-    request = requests.get(url)
-    geodatagrame = gpd.read_file(io.BytesIO(request.content))
-    dataframe = pd.DataFrame(geodatagrame)
+    path.mkdir(parents=True, exist_ok=True)
+
+    filepath = path / &#34;geo_data&#34; / &#34;data.geojson&#34;
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+
+    req = requests.get(url, stream=True)
+    with open(filepath, &#34;wb&#34;) as file:
+        for chunk in req.iter_content(chunk_size=1024):
+            if chunk:
+                file.write(chunk)
+                file.flush()
+
+    log(&#34;Data saved&#34;)
+
+    geodataframe = gpd.read_file(filepath)
+    log(&#34;Geodatagrame loaded&#34;)
 
     eventid = datetime.now().strftime(&#34;%Y%m%d-%H%M%S&#34;)
 
-    log(f&#34;Original columns: {dataframe.columns.tolist()}&#34;)
-    dataframe.columns = remove_columns_accents(dataframe)
-    log(f&#34;New columns: {dataframe.columns.tolist()}&#34;)
+    log(f&#34;Original columns: {geodataframe.columns.tolist()}&#34;)
+    geodataframe.columns = remove_columns_accents(geodataframe)
+    log(f&#34;New columns: {geodataframe.columns.tolist()}&#34;)
 
-    dataframe_to_csv(dataframe, path / f&#34;{eventid}.csv&#34;)
+    save_path = path / &#34;csv_data&#34; / f&#34;{eventid}.csv&#34;
+    save_path.parent.mkdir(parents=True, exist_ok=True)
+    geodataframe.to_csv(save_path, index=False, encoding=&#34;utf-8&#34;)
+    log(&#34;Data saved&#34;)
 
-    return path</code></pre>
+    return save_path</code></pre>
 </details>
 </dd>
 </dl>
