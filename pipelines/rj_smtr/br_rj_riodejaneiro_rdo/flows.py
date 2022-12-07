@@ -59,6 +59,7 @@ Flows for br_rj_riodejaneiro_rdo
 
 # from copy import deepcopy
 from prefect import Parameter
+from prefect.utilities.edges import unmapped
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants as emd_constants
@@ -76,11 +77,12 @@ from pipelines.utils.decorators import Flow
 from pipelines.utils.tasks import rename_current_flow_run_now_time
 
 with Flow(
-    "SMTR - Captura FTPS",
+    "SMTR - Captura FTP",
     code_owners=["caio", "fernanda"],
 ) as captura_ftp:
     transport_mode = Parameter("transport_mode", "SPPO")
     report_type = Parameter("report_type", "RHO")
+    dump = Parameter("dump", False)
     table_id = Parameter("table_id", constants.SPPO_RHO_TABLE_ID.value)
 
     rename_run = rename_current_flow_run_now_time(
@@ -89,18 +91,19 @@ with Flow(
         wait=None,
     )
     # Parse FTPS
-    file_info = get_file_paths_from_ftp(
-        transport_mode=transport_mode,
-        report_type=report_type,
+    files = get_file_paths_from_ftp(
+        transport_mode=transport_mode, report_type=report_type, dump=dump
     )
-    updated_info = download_and_save_local_from_ftp(file_info=file_info)
-    treated_info = pre_treatment_br_rj_riodejaneiro_rdo(file_info=updated_info)
-    bq_upload(
-        dataset_id=constants.RDO_DATASET_ID.value,
-        table_id=table_id,
-        filepath=treated_info["treated_path"],
-        raw_filepath=treated_info["raw_path"],
-        partitions=treated_info["partitions"],
+    updated_info = download_and_save_local_from_ftp.map(file_info=files)
+    treated_path, raw_path, partitions = pre_treatment_br_rj_riodejaneiro_rdo(
+        files=updated_info
+    )
+    bq_upload.map(
+        dataset_id=unmapped(constants.RDO_DATASET_ID.value),
+        table_id=unmapped(table_id),
+        filepath=treated_path,
+        raw_filepath=raw_path,
+        partitions=partitions,
     )
 
 
