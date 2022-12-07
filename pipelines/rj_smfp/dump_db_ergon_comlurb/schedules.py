@@ -22,7 +22,7 @@ from pipelines.utils.utils import untuple_clocks as untuple
 
 ergon_queries = {
     "cargo": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "dbt_alias": True,
@@ -104,7 +104,7 @@ ergon_queries = {
         """,
     },
     "dependente": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "dbt_alias": True,
@@ -215,7 +215,7 @@ ergon_queries = {
         """,
     },
     "funcionario_evento": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "dbt_alias": True,
@@ -332,7 +332,7 @@ ergon_queries = {
         """,
     },
     "ficha_financeira": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "dbt_alias": True,
@@ -358,7 +358,7 @@ ergon_queries = {
         """,
     },
     "fita_banco": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "append",
         "partition_columns": "MES_ANO",
@@ -448,7 +448,7 @@ ergon_queries = {
         """,
     },
     "frequencia": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "dbt_alias": True,
@@ -523,7 +523,7 @@ ergon_queries = {
         """,
     },
     "funcionario": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "dbt_alias": True,
@@ -728,7 +728,7 @@ ergon_queries = {
         """,
     },
     "setor_h": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "dbt_alias": True,
@@ -738,7 +738,7 @@ ergon_queries = {
         """,
     },
     "licenca_afastamento": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "dbt_alias": True,
@@ -828,7 +828,7 @@ ergon_queries = {
         """,
     },
     "setor": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "dbt_alias": True,
@@ -881,7 +881,7 @@ ergon_queries = {
         """,
     },
     "vantagem": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "dbt_alias": True,
@@ -957,7 +957,7 @@ ergon_queries = {
         """,
     },
     "vinculo": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "dbt_alias": True,
