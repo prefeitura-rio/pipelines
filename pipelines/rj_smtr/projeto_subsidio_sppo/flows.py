@@ -9,6 +9,7 @@ from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect.utilities.edges import unmapped
 from prefect.tasks.control_flow import merge
+from pipelines.utils.tasks import log
 
 # EMD Imports #
 
@@ -100,13 +101,18 @@ with Flow(
     # Get default parameters #
     run_date = Parameter("run_date", default=False)
 
+    log(f'Got run_date {run_date} and current_date {current_date}')
+
     with case(run_date, False):
         default_date = current_date
+        log(f'False run_date {run_date} and current_date {current_date}')
 
     with case(run_date, not False):
         input_date = run_date
+        log(f'Not false run_date {run_date} and current_date {current_date}')
 
     run_date = merge(default_date, input_date)
+    log(f'Choosed run_date {run_date}')
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix="SMTR - Subsídio SPPO Apuração: ", now_time=current_date
@@ -141,9 +147,8 @@ with Flow(
             "dataset_id": "transporte_rodoviario_municipal",
             "table_id": "viagem_onibus",
             "mode": "prod",
-            "materialize_to_datario": True,
-            "run_date": run_date,
         },
+        dbt_model_parameters=dict(run_date=run_date)
     )
 
     wait_materialize = wait_for_flow_run(
