@@ -142,7 +142,6 @@ with Flow(
                         "mode": "dev",
                         "materialize_to_datario": True
                     }
-        run_config=smtr_materialize_to_datario_viagem_sppo_flow.run_config,
     )
 
     wait_materialize = wait_for_flow_run(
