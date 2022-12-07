@@ -140,6 +140,7 @@ with Flow(
                         "dataset_id": "transporte_rodoviario_municipal",
                         "table_id": "viagem_onibus",
                         "mode": "dev",
+                        "materialize_to_datario": True
                     }
     )
 
