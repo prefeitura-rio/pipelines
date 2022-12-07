@@ -145,7 +145,7 @@ ergon_queries = {
         FROM ERGON.LIC_AFAST
         """,
     },
-    "frequencias": {
+    "frequencia": {
         "materialize_after_dump": True,
         "materialization_mode": "prod",
         "partition_columns": "DTINI",
