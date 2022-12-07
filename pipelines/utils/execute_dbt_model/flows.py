@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-DBT-related flows. 
+DBT-related flows.
 """
 
 from prefect import Parameter, case
