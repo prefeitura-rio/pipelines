@@ -65,8 +65,6 @@ def handle_dataframe_chunk(
     else:
         partition_column = partition_columns[0]
 
-    dataframe.columns = remove_columns_accents(dataframe)
-
     old_columns = dataframe.columns.tolist()
     dataframe.columns = remove_columns_accents(dataframe)
     new_columns_dict = dict(zip(old_columns, dataframe.columns.tolist()))
@@ -315,8 +313,6 @@ def generate_dump_url_schedules(  # pylint: disable=too-many-arguments,too-many-
         partition_column = None
     else:
         partition_column = partition_columns[0]
-
-    dataframe.columns = remove_columns_accents(dataframe)
 
     old_columns = dataframe.columns.tolist()
     dataframe.columns = remove_columns_accents(dataframe)
