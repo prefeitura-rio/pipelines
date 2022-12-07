@@ -32,7 +32,9 @@ from pipelines.rj_smtr.tasks import (
     # set_last_run_timestamp,
 )
 
-from pipelines.rj_smtr.materialize_to_datario.flows import smtr_materialize_to_datario_viagem_sppo_flow
+from pipelines.rj_smtr.materialize_to_datario.flows import (
+    smtr_materialize_to_datario_viagem_sppo_flow,
+)
 
 from pipelines.rj_smtr.schedules import every_day_hour_five, every_fortnight
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
