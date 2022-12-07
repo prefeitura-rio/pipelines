@@ -116,7 +116,7 @@ every_dayofmonth_one_and_sixteen = Schedule(
                 2022, 12, 16, 12, 0, tzinfo=timezone(constants.TIMEZONE.value)
             ),
             labels=[
-                emd_constants.RJ_SMTR_AGENT_LABEL.value,
+                emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value,
             ],
         ),
         CronClock(
@@ -125,7 +125,7 @@ every_dayofmonth_one_and_sixteen = Schedule(
                 2023, 1, 1, 12, 0, tzinfo=timezone(constants.TIMEZONE.value)
             ),
             labels=[
-                emd_constants.RJ_SMTR_AGENT_LABEL.value,
+                emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value,
             ],
         ),
     ]
