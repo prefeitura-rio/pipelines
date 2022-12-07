@@ -3,11 +3,12 @@
 Flows for projeto_subsidio_sppo
 """
 
-from prefect import Parameter
+from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect.utilities.edges import unmapped
+from prefect.tasks.control_flow import merge
 
 # EMD Imports #
 
@@ -36,9 +37,12 @@ from pipelines.rj_smtr.materialize_to_datario.flows import (
     smtr_materialize_to_datario_viagem_sppo_flow,
 )
 
-from pipelines.rj_smtr.schedules import every_day_hour_five, every_dayofmonth_one_and_sixteen
+from pipelines.rj_smtr.schedules import (
+    every_day_hour_five,
+    every_dayofmonth_one_and_sixteen,
+)
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
-from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import get_run_dates, get_run_date
+from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import get_run_dates
 
 # Flows #
 
@@ -94,9 +98,15 @@ with Flow(
     current_date = get_now_date()
 
     # Get default parameters #
-    run_date = Parameter("run_date", default=None)
+    run_date = Parameter("run_date", default=False)
 
-    run_date = get_run_date(run_date)
+    with case(run_date, False):
+        default_date = current_date
+
+    with case(run_date, not False):
+        input_date = run_date
+
+    run_date = merge(default_date, input_date)
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix="SMTR - Subsídio SPPO Apuração: ", now_time=current_date
@@ -117,7 +127,7 @@ with Flow(
     RUN = run_dbt_model(
         dbt_client=dbt_client,
         dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOAD_DATASET_ID.value,
-        _vars=run_date,
+        _vars=dict(run_date=run_date),
     )
 
     run_materialize = create_flow_run(
