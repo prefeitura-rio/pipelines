@@ -135,7 +135,12 @@ with Flow(
         project_name=constants.PREFECT_DEFAULT_PROJECT.value,
         labels=LABELS,
         run_name=smtr_materialize_to_datario_viagem_sppo_flow.name,
-        run_config=smtr_materialize_to_datario_viagem_sppo_flow.run_config
+        run_config=smtr_materialize_to_datario_viagem_sppo_flow.run_config,
+        parameters={
+                        "dataset_id": "transporte_rodoviario_municipal",
+                        "table_id": "viagem_onibus",
+                        "mode": "dev",
+                    }
     )
 
     wait_materialize = wait_for_flow_run(
