@@ -4,8 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_segovi API documentation</title>
-<meta name="description" content="Prefect flows for segovi project" />
+<title>pipelines.rj_segovi.dump_ftp_adm_processorio_sicop.flows API documentation</title>
+<meta name="description" content="Dumping
+data from SICOP FTP to BigQuery" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,40 +20,202 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_segovi</code></h1>
+<h1 class="title">Module <code>pipelines.rj_segovi.dump_ftp_adm_processorio_sicop.flows</code></h1>
 </header>
 <section id="section-intro">
-<p>Prefect flows for segovi project</p>
+<p>Dumping
+data from SICOP FTP to BigQuery</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Prefect flows for segovi project
+Dumping  data from SICOP FTP to BigQuery
 &#34;&#34;&#34;
+# pylint: disable=E1101
 
-from pipelines.rj_segovi.dump_db_1746.flows import *
-from pipelines.rj_segovi.dump_url_adm_processorio_sicop.flows import *
-from pipelines.rj_segovi.dump_ftp_adm_processorio_sicop.flows import *</code></pre>
+from datetime import timedelta
+
+from prefect import case, Parameter
+from prefect.run_configs import KubernetesRun
+from prefect.storage import GCS
+from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
+
+from pipelines.constants import constants
+from pipelines.rj_segovi.dump_ftp_adm_processorio_sicop.constants import (
+    constants as dump_ftp_processorio_constants,
+)
+from pipelines.rj_segovi.dump_ftp_adm_processorio_sicop.tasks import (
+    get_ftp_client,
+    get_files_to_download,
+    download_files,
+    parse_save_dataframe,
+)
+from pipelines.rj_segovi.dump_ftp_adm_processorio_sicop.schedules import (
+    every_week_schedule,
+)
+from pipelines.utils.constants import constants as utils_constants
+from pipelines.utils.decorators import Flow
+from pipelines.utils.tasks import (
+    get_current_flow_labels,
+    rename_current_flow_run_dataset_table,
+    create_table_and_upload_to_gcs,
+)
+
+from pipelines.utils.dump_to_gcs.constants import constants as dump_to_gcs_constants
+from pipelines.utils.utils import set_default_parameters
+
+with Flow(
+    name=&#34;SEGOVI: Processo.rio-SICOP - Ingerir tabelas de FTP&#34;,
+    code_owners=[
+        &#34;diego&#34;,
+    ],
+) as dump_ftp_sicop:
+    pattern = Parameter(
+        &#34;pattern&#34;, default=&#34;ARQ2001&#34;, required=True
+    )  # # ARQ2001 or ARQ2296
+    dataset_id = Parameter(&#34;dataset_id&#34;, default=&#34;adm_processorio_sicop&#34;, required=True)
+    table_id = Parameter(&#34;table_id&#34;, default=&#34;processo&#34;, required=True)
+
+    # Dump to GCS after? Should only dump to GCS if materializing to datario
+    dump_to_gcs = Parameter(&#34;dump_to_gcs&#34;, default=False, required=False)
+    maximum_bytes_processed = Parameter(
+        &#34;maximum_bytes_processed&#34;,
+        required=False,
+        default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
+    )
+
+    # Materialization parameters
+    materialize_after_dump = Parameter(
+        &#34;materialize_after_dump&#34;, default=False, required=False
+    )
+    materialization_mode = Parameter(
+        &#34;materialization_mode&#34;, default=&#34;dev&#34;, required=False
+    )
+    materialize_to_datario = Parameter(
+        &#34;materialize_to_datario&#34;, default=False, required=False
+    )
+
+    dbt_model_secret_parameters = Parameter(
+        &#34;dbt_model_secret_parameters&#34;, default={}, required=False
+    )
+
+    #####################################
+    #
+    # Rename flow run
+    #
+    #####################################
+    rename_flow_run = rename_current_flow_run_dataset_table(
+        prefix=&#34;Dump: &#34;, dataset_id=dataset_id, table_id=table_id, wait=table_id
+    )
+
+    # Get current flow labels
+    current_flow_labels = get_current_flow_labels()
+
+    client = get_ftp_client(wait=pattern)
+
+    files_to_download, download_data = get_files_to_download(
+        client=client,
+        pattern=pattern,
+        dataset_id=dataset_id,
+        table_id=table_id,
+        date_format=&#39;&#34;%Y-%m-%d&#34;&#39;,
+    )
+
+    with case(download_data, True):
+        files_to_parse = download_files(
+            client=client, files=files_to_download, save_path=&#34;/tmp/ftp/raw&#34;
+        )
+
+        save_path = parse_save_dataframe(
+            files=files_to_parse, save_path=&#34;/tmp/ftp/data&#34;, pattern=pattern
+        )
+
+        create_table_and_upload_to_gcs(
+            data_path=save_path,
+            dataset_id=dataset_id,
+            table_id=table_id,
+            dump_mode=&#34;append&#34;,
+        )
+
+        with case(materialize_after_dump, True):
+            # Trigger DBT flow run
+            materialization_flow = create_flow_run(
+                flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+                project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                parameters={
+                    &#34;dataset_id&#34;: dataset_id,
+                    &#34;table_id&#34;: table_id,
+                    &#34;mode&#34;: materialization_mode,
+                    &#34;materialize_to_datario&#34;: materialize_to_datario,
+                    &#34;dbt_model_secret_parameters&#34;: dbt_model_secret_parameters,
+                },
+                labels=current_flow_labels,
+                run_name=f&#34;Materialize {dataset_id}.{table_id}&#34;,
+            )
+
+            wait_for_materialization = wait_for_flow_run(
+                materialization_flow,
+                stream_states=True,
+                stream_logs=True,
+                raise_final_state=True,
+            )
+            wait_for_materialization.max_retries = (
+                dump_ftp_processorio_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
+            )
+            wait_for_materialization.retry_delay = timedelta(
+                seconds=dump_ftp_processorio_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
+            )
+
+            with case(dump_to_gcs, True):
+                # Trigger Dump to GCS flow run with project id as datario
+                dump_to_gcs_flow = create_flow_run(
+                    flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
+                    project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                    parameters={
+                        &#34;project_id&#34;: &#34;datario&#34;,
+                        &#34;dataset_id&#34;: dataset_id,
+                        &#34;table_id&#34;: table_id,
+                        &#34;maximum_bytes_processed&#34;: maximum_bytes_processed,
+                    },
+                    labels=[
+                        &#34;datario&#34;,
+                    ],
+                    run_name=f&#34;Dump to GCS {dataset_id}.{table_id}&#34;,
+                )
+                dump_to_gcs_flow.set_upstream(wait_for_materialization)
+
+                wait_for_dump_to_gcs = wait_for_flow_run(
+                    dump_to_gcs_flow,
+                    stream_states=True,
+                    stream_logs=True,
+                    raise_final_state=True,
+                )
+
+
+dump_ftp_sicop.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+dump_ftp_sicop.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[
+        constants.RJ_SEGOVI_AGENT_LABEL.value,
+    ],
+)
+
+dump_ftp_sicop_default_parameters = {
+    &#34;pattern&#34;: &#34;ARQ2001&#34;,  # ARQ2001 or ARQ2296
+    &#34;dataset_id&#34;: &#34;adm_processorio_sicop&#34;,
+    &#34;table_id&#34;: &#34;processo&#34;,
+}
+
+dump_ftp_sicop = set_default_parameters(
+    dump_ftp_sicop, default_parameters=dump_ftp_sicop_default_parameters
+)
+
+dump_ftp_sicop.schedule = every_week_schedule</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
-<dl>
-<dt><code class="name"><a title="pipelines.rj_segovi.dump_db_1746" href="dump_db_1746/index.html">pipelines.rj_segovi.dump_db_1746</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_segovi.dump_ftp_adm_processorio_sicop" href="dump_ftp_adm_processorio_sicop/index.html">pipelines.rj_segovi.dump_ftp_adm_processorio_sicop</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_segovi.dump_url_adm_processorio_sicop" href="dump_url_adm_processorio_sicop/index.html">pipelines.rj_segovi.dump_url_adm_processorio_sicop</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 </section>
 <section>
 </section>
@@ -96,7 +259,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -115,14 +278,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines" href="../index.html">pipelines</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="pipelines.rj_segovi.dump_db_1746" href="dump_db_1746/index.html">pipelines.rj_segovi.dump_db_1746</a></code></li>
-<li><code><a title="pipelines.rj_segovi.dump_ftp_adm_processorio_sicop" href="dump_ftp_adm_processorio_sicop/index.html">pipelines.rj_segovi.dump_ftp_adm_processorio_sicop</a></code></li>
-<li><code><a title="pipelines.rj_segovi.dump_url_adm_processorio_sicop" href="dump_url_adm_processorio_sicop/index.html">pipelines.rj_segovi.dump_url_adm_processorio_sicop</a></code></li>
+<li><code><a title="pipelines.rj_segovi.dump_ftp_adm_processorio_sicop" href="index.html">pipelines.rj_segovi.dump_ftp_adm_processorio_sicop</a></code></li>
 </ul>
 </li>
 </ul>
