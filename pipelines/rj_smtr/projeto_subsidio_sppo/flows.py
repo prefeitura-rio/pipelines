@@ -133,7 +133,9 @@ with Flow(
     run_materialize = create_flow_run(
         flow_name=smtr_materialize_to_datario_viagem_sppo_flow.name,
         project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-        labels=LABELS,
+        labels=[
+            constants.RJ_DATARIO_AGENT_LABEL.value,
+        ],
         run_name=smtr_materialize_to_datario_viagem_sppo_flow.name,
         run_config=smtr_materialize_to_datario_viagem_sppo_flow.run_config,
         parameters={
