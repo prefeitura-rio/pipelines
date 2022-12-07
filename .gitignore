@@ -6,6 +6,7 @@ test_local.py
 pylint.txt
 test.py
 setup.py
+.vscode/*
 
 
 # Byte-compiled / optimized / DLL files
