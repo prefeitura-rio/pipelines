@@ -142,7 +142,7 @@ with Flow(
             "table_id": "viagem_onibus",
             "mode": "prod",
             "materialize_to_datario": True,
-            "run_date": run_date
+            "run_date": run_date,
         },
     )
 
