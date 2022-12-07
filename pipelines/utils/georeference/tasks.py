@@ -76,7 +76,7 @@ def get_new_addresses(  # pylint: disable=too-many-arguments, too-many-locals
                 query_destination, billing_project_id=billing_project_id, from_file=True
             )
             destination_addresses.columns = ["address"]
-        except Exception:  # pylint: disable=bare-except
+        except Exception:  # pylint: disable=broad-except
             destination_addresses = pd.DataFrame(columns=["address"])
 
         # pylint: disable=invalid-unary-operand-type
