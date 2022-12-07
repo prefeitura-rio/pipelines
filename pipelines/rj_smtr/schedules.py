@@ -108,7 +108,7 @@ every_day_hour_five = Schedule(
     ]
 )
 
-every_fortnight = Schedule(
+every_dayofmonth_one_and_sixteen = Schedule(
     clocks=[
         CronClock(
             cron="0 12 16 * *",
