@@ -137,7 +137,6 @@ with Flow(
             constants.RJ_DATARIO_AGENT_LABEL.value,
         ],
         run_name=smtr_materialize_to_datario_viagem_sppo_flow.name,
-        run_config=smtr_materialize_to_datario_viagem_sppo_flow.run_config,
         parameters={
             "dataset_id": "transporte_rodoviario_municipal",
             "table_id": "viagem_onibus",
