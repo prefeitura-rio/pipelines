@@ -76,6 +76,7 @@ def download(
     ref_filename: str = None,
     redis_files: list = [],
     wait=None,
+    mode_redis: str = "prod",
 ) -> Union[str, Path]:
     """
     Acessa o S3 e faz o download do primeiro arquivo da data-hora especificada
@@ -117,7 +118,7 @@ def download(
         skip = Skipped("No available files on API")
         raise ENDRUN(state=skip)
 
-    base_path = os.path.join(os.getcwd(), "data", "satelite", variavel[:-1], "input")
+    base_path = os.path.join(os.getcwd(), mode_redis, "data", "satelite", variavel[:-1], "input")
 
     if not os.path.exists(base_path):
         os.makedirs(base_path)
@@ -170,7 +171,7 @@ def download(
 
 
 @task
-def tratar_dados(filename: str) -> dict:
+def tratar_dados(filename: str, mode_redis: str = "prod") -> dict:
     """
     Converte coordenadas X, Y para latlon e recorta área
     """
@@ -181,7 +182,7 @@ def tratar_dados(filename: str) -> dict:
 
 
 @task
-def save_data(info: dict, file_path: str) -> Union[str, Path]:
+def save_data(info: dict, file_path: str, mode_redis: str = "prod") -> Union[str, Path]:
     """
     Convert tif data to csv
     """
@@ -189,5 +190,5 @@ def save_data(info: dict, file_path: str) -> Union[str, Path]:
     variable = info["variable"]
     datetime_save = info["datetime_save"]
     print(f"Saving {variable} in parquet")
-    output_path = save_data_in_file(variable, datetime_save, file_path)
+    output_path = save_data_in_file(variable, datetime_save, file_path, mode_redis)
     return output_path
