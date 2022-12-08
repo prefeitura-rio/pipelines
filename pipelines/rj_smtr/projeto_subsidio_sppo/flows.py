@@ -3,13 +3,12 @@
 Flows for projeto_subsidio_sppo
 """
 
-from prefect import Parameter, case
+from prefect import Parameter #, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect.utilities.edges import unmapped
-from prefect.tasks.control_flow import merge
-from pipelines.utils.tasks import log
+#from prefect.tasks.control_flow import merge
 
 # EMD Imports #
 
@@ -43,7 +42,7 @@ from pipelines.rj_smtr.schedules import (
     every_dayofmonth_one_and_sixteen,
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
-from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import get_run_dates
+from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import get_run_dates #, log_date, get_run_date
 
 # Flows #
 
@@ -99,20 +98,13 @@ with Flow(
     current_date = get_now_date()
 
     # Get default parameters #
-    run_date = Parameter("run_date", default=False)
+    input_date = Parameter("run_date", default=False)
 
-    log(f"Got run_date {run_date} and current_date {current_date}")
+    #log_date('Got run_date and current_date', input_date, current_date)
 
-    with case(run_date, False):
-        default_date = current_date
-        log(f"False run_date {run_date} and current_date {current_date}")
+    run_date = get_run_dates(input_date)[0]
 
-    with case(run_date, not False):
-        input_date = run_date
-        log(f"Not false run_date {run_date} and current_date {current_date}")
-
-    run_date = merge(default_date, input_date)
-    log(f"Choosed run_date {run_date}")
+    #log_date('Choosed run_date', run_date, current_date)
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix="SMTR - Subsídio SPPO Apuração: ", now_time=current_date
@@ -133,7 +125,7 @@ with Flow(
     RUN = run_dbt_model(
         dbt_client=dbt_client,
         dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOAD_DATASET_ID.value,
-        _vars=dict(run_date=run_date),
+        _vars=run_date,
     )
 
     run_materialize = create_flow_run(
@@ -147,8 +139,8 @@ with Flow(
             "dataset_id": "transporte_rodoviario_municipal",
             "table_id": "viagem_onibus",
             "mode": "prod",
+            "run_date": run_date["run_date"]
         },
-        dbt_model_parameters=dict(run_date=run_date),
     )
 
     wait_materialize = wait_for_flow_run(
