@@ -3,12 +3,13 @@
 Flows for projeto_subsidio_sppo
 """
 
-from prefect import Parameter #, case
+from prefect import Parameter  # , case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect.utilities.edges import unmapped
-#from prefect.tasks.control_flow import merge
+
+# from prefect.tasks.control_flow import merge
 
 # EMD Imports #
 
@@ -42,7 +43,9 @@ from pipelines.rj_smtr.schedules import (
     every_dayofmonth_one_and_sixteen,
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
-from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import get_run_dates #, log_date, get_run_date
+from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import (
+    get_run_dates,
+)  # , log_date, get_run_date
 
 # Flows #
 
@@ -100,11 +103,11 @@ with Flow(
     # Get default parameters #
     input_date = Parameter("run_date", default=False)
 
-    #log_date('Got run_date and current_date', input_date, current_date)
+    # log_date('Got run_date and current_date', input_date, current_date)
 
     run_date = get_run_dates(input_date)[0]
 
-    #log_date('Choosed run_date', run_date, current_date)
+    # log_date('Choosed run_date', run_date, current_date)
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix="SMTR - Subsídio SPPO Apuração: ", now_time=current_date
@@ -139,7 +142,7 @@ with Flow(
             "dataset_id": "transporte_rodoviario_municipal",
             "table_id": "viagem_onibus",
             "mode": "prod",
-            "run_date": run_date["run_date"]
+            "run_date": run_date["run_date"],
         },
     )
 

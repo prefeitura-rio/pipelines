@@ -29,6 +29,7 @@ def get_run_dates(date_range_start: str, date_range_end: str = None) -> List:
     log(f"Will run the following dates: {dates}")
     return dates
 
+
 # @task
 # def log_date(msg: str, date_1: str, date_2: str):
 #     """
