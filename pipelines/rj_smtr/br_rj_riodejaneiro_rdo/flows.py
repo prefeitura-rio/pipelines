@@ -82,7 +82,7 @@ from pipelines.rj_smtr.schedules import ftp_schedule
 from pipelines.utils.decorators import Flow
 from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
 from pipelines.utils.tasks import (
-    get_now_time,
+    # get_now_time,
     rename_current_flow_run_now_time,
     get_current_flow_mode,
     get_current_flow_labels,
@@ -175,13 +175,18 @@ with Flow(
         partitions=partitions,
     )
     with case(bool(error), False):
-        create_flow_run(
+        RUN = create_flow_run(
             flow_name=rho_mat_flow.name,
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=LABELS,
             run_name=rho_mat_flow.name,
         )
-
+        wait_for_flow_run(
+            RUN,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
 
 captura_ftp.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_ftp.run_config = KubernetesRun(

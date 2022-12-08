@@ -243,7 +243,20 @@ def pre_treatment_br_rj_riodejaneiro_rdo(
 
 @task
 def get_rdo_date_range(dataset_id: str, table_id: str, mode: str = "prod"):
-    last_run_date = get_last_run_timestamp(dataset_id=dataset_id, table_id=table_id)
+    """Get date range for RDO/RHO materialization
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+        mode (str, optional): mode to materialize to.
+        Accepted options are 'dev' and 'prod'. Defaults to "prod".
+
+    Returns:
+        dict: containing 'date_range_start' and 'date_range_end' keys
+    """
+    last_run_date = get_last_run_timestamp(
+        dataset_id=dataset_id, table_id=table_id, mode=mode
+    )
     if not last_run_date:
         last_run_date = constants.RDO_MATERIALIZE_START_DATE.value
     return {
