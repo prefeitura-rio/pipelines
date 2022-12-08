@@ -360,7 +360,7 @@ def query_logs(
             log_critical(message)
             results = results[:max_recaptures]
         return True, results["timestamp_captura"].to_list(), results["erro"].to_list()
-    return False, []
+    return False, [], []
 
 
 @task
@@ -562,7 +562,10 @@ def upload_logs_to_bq(  # pylint: disable=R0913
     dataframe.to_csv(filepath, index=False)
     # Upload to Storage
     create_or_append_table(
-        dataset_id=dataset_id, table_id=table_id, path=filepath, partitions=partition
+        dataset_id=dataset_id,
+        table_id=table_id,
+        path=filepath.as_posix(),
+        partitions=partition,
     )
     if error is not None:
         raise Exception(f"Pipeline failed with error: {error}")
@@ -639,6 +642,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
         .strftime(timestr)
     )
     date_range = {"date_range_start": start_ts, "date_range_end": end_ts}
+    log(f"Got date_range as: {date_range}")
     return date_range
 
 

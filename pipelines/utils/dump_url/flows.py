@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Dumping data from URLs
+Dumping  data from URLs
 """
 from datetime import timedelta
 

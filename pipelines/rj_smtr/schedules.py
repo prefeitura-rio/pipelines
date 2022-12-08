@@ -37,6 +37,21 @@ every_minute_dev = Schedule(
     ]
 )
 
+every_10_minutes = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(minutes=10),
+            start_date=datetime(
+                2021, 1, 1, 0, 0, 0, tzinfo=timezone(constants.TIMEZONE.value)
+            ),
+            labels=[
+                emd_constants.RJ_SMTR_AGENT_LABEL.value,
+            ],
+        ),
+    ]
+)
+
+
 every_hour = Schedule(
     clocks=[
         IntervalClock(
@@ -71,6 +86,20 @@ every_day = Schedule(
             interval=timedelta(days=1),
             start_date=datetime(
                 2021, 1, 1, 0, 0, tzinfo=timezone(constants.TIMEZONE.value)
+            ),
+            labels=[
+                emd_constants.RJ_SMTR_AGENT_LABEL.value,
+            ],
+        ),
+    ]
+)
+
+every_day_hour_five = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(days=1),
+            start_date=datetime(
+                2022, 11, 30, 5, 0, tzinfo=timezone(constants.TIMEZONE.value)
             ),
             labels=[
                 emd_constants.RJ_SMTR_AGENT_LABEL.value,

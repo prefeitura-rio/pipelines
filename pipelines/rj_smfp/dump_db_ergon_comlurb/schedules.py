@@ -22,9 +22,10 @@ from pipelines.utils.utils import untuple_clocks as untuple
 
 ergon_queries = {
     "cargo": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
+        "dbt_alias": True,
         "execute_query": """
             SELECT
                 CARGO,
@@ -103,9 +104,10 @@ ergon_queries = {
         """,
     },
     "dependente": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
+        "dbt_alias": True,
         "execute_query": """
             SELECT
                 NUMFUNC,
@@ -213,9 +215,10 @@ ergon_queries = {
         """,
     },
     "funcionario_evento": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
+        "dbt_alias": True,
         "execute_query": """
             SELECT
                 NUMEV,
@@ -329,9 +332,10 @@ ergon_queries = {
         """,
     },
     "ficha_financeira": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
+        "dbt_alias": True,
         "execute_query": """
             SELECT
                 MES_ANO_FOLHA,
@@ -354,10 +358,11 @@ ergon_queries = {
         """,
     },
     "fita_banco": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "append",
         "partition_columns": "MES_ANO",
+        "dbt_alias": True,
         "execute_query": """
             SELECT
                 LANCAMENTO,
@@ -443,9 +448,10 @@ ergon_queries = {
         """,
     },
     "frequencia": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
+        "dbt_alias": True,
         "execute_query": """
             SELECT
                 NUMFUNC,
@@ -517,9 +523,10 @@ ergon_queries = {
         """,
     },
     "funcionario": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
+        "dbt_alias": True,
         "execute_query": """
             SELECT
                 NUMERO,
@@ -721,18 +728,20 @@ ergon_queries = {
         """,
     },
     "setor_h": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
+        "dbt_alias": True,
         "execute_query": """
             SELECT *
             FROM ERGON.HSETOR_
         """,
     },
     "licenca_afastamento": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
+        "dbt_alias": True,
         "execute_query": """
             SELECT
                 NUMFUNC,
@@ -819,9 +828,10 @@ ergon_queries = {
         """,
     },
     "setor": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
+        "dbt_alias": True,
         "execute_query": """
             SELECT
                 SETOR,
@@ -871,9 +881,10 @@ ergon_queries = {
         """,
     },
     "vantagem": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
+        "dbt_alias": True,
         "execute_query": """
             SELECT
                 NUMFUNC,
@@ -946,9 +957,10 @@ ergon_queries = {
         """,
     },
     "vinculo": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
+        "dbt_alias": True,
         "execute_query": """
             SELECT
                 NUMFUNC,

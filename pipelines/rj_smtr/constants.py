@@ -49,6 +49,12 @@ class constants(Enum):  # pylint: disable=c0103
     GPS_SPPO_CAPTURE_DELAY_V2 = 60
     GPS_SPPO_RECAPTURE_DELAY_V2 = 6
     GPS_SPPO_MATERIALIZE_DELAY_HOURS = 1
+
+    # REALOCAÇÃO #
+    GPS_SPPO_REALOCACAO_RAW_TABLE_ID = "realocacao"
+    GPS_SPPO_REALOCACAO_TREATED_TABLE_ID = "realocacao"
+    GPS_SPPO_REALOCACAO_SECRET_PATH = "realocacao_api"
+
     # GPS BRT #
     GPS_BRT_SECRET_PATH = "brt_api"
     GPS_BRT_DATASET_ID = "br_rj_riodejaneiro_veiculos"
@@ -140,3 +146,6 @@ class constants(Enum):  # pylint: disable=c0103
         "RiR": "flag_rir",
         "Apoio": "flag_apoio",
     }
+
+    # SUBSÍDIO
+    SUBSIDIO_SPPO_DATASET_ID = "projeto_subsidio_sppo"
