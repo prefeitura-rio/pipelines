@@ -65,7 +65,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.constants import (
     constants as rdo_constants,
 )
 from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.utils import build_table_id
-from pipelines.rj_smtr.utils import connect_ftp
+from pipelines.rj_smtr.utils import connect_ftp, get_last_run_timestamp
 from pipelines.utils.utils import log
 
 
@@ -239,3 +239,14 @@ def pre_treatment_br_rj_riodejaneiro_rdo(
             log(f"Pre Treatment failed with error: {e}")
             continue
     return treated_paths, raw_paths, partitions
+
+
+@task
+def get_rdo_date_range(dataset_id: str, table_id: str, mode: str = "prod"):
+    last_run_date = get_last_run_timestamp(dataset_id=dataset_id, table_id=table_id)
+    if not last_run_date:
+        last_run_date = constants.RDO_MATERIALIZE_START_DATE.value
+    return {
+        "date_range_start": last_run_date,
+        "date_range_end": pendulum.now(constants.TIMEZONE.value).date().isoformat(),
+    }
