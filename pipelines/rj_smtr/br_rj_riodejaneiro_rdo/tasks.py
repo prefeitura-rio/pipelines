@@ -235,7 +235,7 @@ def pre_treatment_br_rj_riodejaneiro_rdo(
             treated_paths.append(file_info["treated_path"])
             raw_paths.append(file_info["raw_path"])
             partitions.append(file_info["partitions"])
-        except Exception as e:
+        except Exception as e:  # pylint: disable=W0703
             log(f"Pre Treatment failed with error: {e}")
             continue
     return treated_paths, raw_paths, partitions

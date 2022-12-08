@@ -32,7 +32,6 @@ General purpose functions for the br_rj_riodejaneiro_rdo project
 from datetime import timedelta
 from prefect.schedules.clocks import IntervalClock
 from pipelines.constants import constants as emd_constants
-from pipelines.utils.utils import get_vault_secret
 from pipelines.rj_smtr.constants import constants
 
 
