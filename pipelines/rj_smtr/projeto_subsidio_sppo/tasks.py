@@ -28,4 +28,3 @@ def get_run_dates(date_range_start: str, date_range_end: str = None) -> List:
 
     log(f"Will run the following dates: {dates}")
     return dates
-    
