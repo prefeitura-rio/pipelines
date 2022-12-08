@@ -49,6 +49,7 @@ with Flow(
     dbt_model_secret_parameters = Parameter(
         "dbt_model_secret_parameters", default={}, required=False
     )
+    dbt_alias = Parameter("dbt_alias", default=False, required=False)
 
     #####################################
     #
@@ -79,6 +80,7 @@ with Flow(
         dataset_id=dataset_id,
         table_id=table_id,
         model=dbt_model,
+        dbt_alias=dbt_alias,
         upstream=upstream,
         downstream=downstream,
         exclude=exclude,
