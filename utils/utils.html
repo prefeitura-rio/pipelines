@@ -874,10 +874,22 @@ def parse_date_columns(
     for col in cols:
         if col in dataframe.columns:
             raise ValueError(f&#34;Column {col} already exists, please review your model.&#34;)
+
     dataframe[partition_date_column] = dataframe[partition_date_column].astype(str)
-    dataframe[data_col] = pd.to_datetime(dataframe[partition_date_column])
+    dataframe[data_col] = pd.to_datetime(
+        dataframe[partition_date_column], errors=&#34;coerce&#34;
+    )
+
     dataframe[ano_col] = dataframe[data_col].dt.year
+    dataframe[ano_col] = pd.to_numeric(
+        dataframe[ano_col], downcast=&#34;integer&#34;, errors=&#34;coerce&#34;
+    )
+
     dataframe[mes_col] = dataframe[data_col].dt.month
+    dataframe[mes_col] = pd.to_numeric(
+        dataframe[mes_col], downcast=&#34;integer&#34;, errors=&#34;coerce&#34;
+    )
+
     dataframe[data_col] = dataframe[data_col].dt.date
 
     return dataframe, [ano_col, mes_col, data_col]
@@ -1449,10 +1461,22 @@ Mode needs to be "prod" or "staging"</p></div>
     for col in cols:
         if col in dataframe.columns:
             raise ValueError(f&#34;Column {col} already exists, please review your model.&#34;)
+
     dataframe[partition_date_column] = dataframe[partition_date_column].astype(str)
-    dataframe[data_col] = pd.to_datetime(dataframe[partition_date_column])
+    dataframe[data_col] = pd.to_datetime(
+        dataframe[partition_date_column], errors=&#34;coerce&#34;
+    )
+
     dataframe[ano_col] = dataframe[data_col].dt.year
+    dataframe[ano_col] = pd.to_numeric(
+        dataframe[ano_col], downcast=&#34;integer&#34;, errors=&#34;coerce&#34;
+    )
+
     dataframe[mes_col] = dataframe[data_col].dt.month
+    dataframe[mes_col] = pd.to_numeric(
+        dataframe[mes_col], downcast=&#34;integer&#34;, errors=&#34;coerce&#34;
+    )
+
     dataframe[data_col] = dataframe[data_col].dt.date
 
     return dataframe, [ano_col, mes_col, data_col]</code></pre>

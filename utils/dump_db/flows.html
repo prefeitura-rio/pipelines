@@ -125,6 +125,8 @@ with Flow(
     dbt_model_secret_parameters = Parameter(
         &#34;dbt_model_secret_parameters&#34;, default={}, required=False
     )
+    dbt_alias = Parameter(&#34;dbt_alias&#34;, default=False, required=False)
+
     #####################################
     #
     # Rename flow run
@@ -225,6 +227,7 @@ with Flow(
                     &#34;mode&#34;: materialization_mode,
                     &#34;materialize_to_datario&#34;: materialize_to_datario,
                     &#34;dbt_model_secret_parameters&#34;: dbt_model_secret_parameters,
+                    &#34;dbt_alias&#34;: dbt_alias,
                 },
                 labels=current_flow_labels,
                 run_name=f&#34;Materialize {dataset_id}.{table_id}&#34;,

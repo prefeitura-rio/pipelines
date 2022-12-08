@@ -41,7 +41,6 @@ from pipelines.constants import constants
 from pipelines.utils.dump_db.utils import generate_dump_db_schedules
 from pipelines.utils.utils import untuple_clocks as untuple
 
-
 #####################################
 #
 # Ergon Schedules
@@ -165,17 +164,133 @@ ergon_queries = {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
         &#34;execute_query&#34;: &#34;SELECT * FROM C_ERGON.VW_DLK_ERG_VINCULOS&#34;,
     },
-    # &#34;fichas_financeiras&#34;: {
-    #     &#34;materialize_after_dump&#34;: True,
-    #     &#34;materialization_mode&#34;: &#34;prod&#34;,
-    #     &#34;dump_mode&#34;: &#34;overwrite&#34;,
-    #     &#34;execute_query&#34;: &#34;SELECT * FROM ergon.fichas_financeiras limit 1000&#34;,
-    # },
+    &#34;licenca_afastamento&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;partition_columns&#34;: &#34;DTINI&#34;,
+        &#34;dump_mode&#34;: &#34;append&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;
+        SELECT NUMFUNC,NUMVINC,DTINI,DTFIM,TIPOFREQ,CODFREQ,MOTIVO,DTPREVFIM,FLEX_CAMPO_01,FLEX_CAMPO_02,EMP_CODIGO,FLEX_CAMPO_07
+        FROM ERGON.LIC_AFAST
+        &#34;&#34;&#34;,
+    },
+    &#34;frequencia&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;partition_columns&#34;: &#34;DTINI&#34;,
+        &#34;dump_mode&#34;: &#34;append&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;
+        SELECT NUMFUNC,NUMVINC,DTINI,DTFIM,TIPOFREQ,CODFREQ,OBS,EMP_CODIGO
+        FROM ERGON.FREQUENCIAS
+        &#34;&#34;&#34;,
+    },
+    &#34;vantagens&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;partition_columns&#34;: &#34;DTINI&#34;,
+        &#34;dump_mode&#34;: &#34;append&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;
+        SELECT NUMFUNC,NUMVINC,VANTAGEM,DTINI,DTFIM,VALOR,INFO,TIPO_INCORPORACAO,PERC_INC_FUNCAO,INC_TABELAVENC,INC_REFERENCIA,OBS,VALOR2,INFO2,VALOR3,INFO3,VALOR4,INFO4,VALOR5,INFO5,VALOR6,INFO6,FLEX_CAMPO_05,EMP_CODIGO,CHAVEVANT
+        FROM ERGON.VANTAGENS
+        &#34;&#34;&#34;,
+    },
+    &#34;total_contagem&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;
+        SELECT CHAVE, NUMFUNC,NUMVINC,FINALIDADE,DIASTOT,DIASFPUB,DIASFPUBESP,TOTAL_PERIODOS,TOTAL_ANOS,DATA_PROXIMO,NOME_PROXIMO,EMP_CODIGO
+        FROM ERGON.TOTAL_CONTA
+        &#34;&#34;&#34;,
+    },
+    &#34;pre_contagem&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;
+        SELECT FINALIDADE,NUMFUNC,NUMVINC,PERIODOS,OFFSET,DTINI,EMP_CODIGO,FLEX_CAMPO_01
+        FROM ERGON.PRE_CONTA
+        &#34;&#34;&#34;,
+    },
+    &#34;averbacoes&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;
+        SELECT NUMFUNC,NUMVINC,CHAVE,DTINI,DTFIM,INSTITUICAO,TIPOTEMPO,DATA_A_CONTAR,TOTAL_DIAS,MOTIVO,SOBREPOE,EMP_CODIGO,OBS,REGPREV
+        FROM ERGON.AVERBACOES_CONTA
+        &#34;&#34;&#34;,
+    },
+    &#34;averbacoes_contagem&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;
+        SELECT NUMFUNC,NUMVINC,CHAVEAVERB,FINALIDADE,DIAS,EMP_CODIGO
+        FROM ERGON.AVERB_OQUE_CONTA
+        &#34;&#34;&#34;,
+    },
+    &#34;frequencia_antigo&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;
+        SELECT M9, SF_OCORRENCIA, SF_DT_OC_Y2
+        FROM C_ERGON.VW_SIMPA_SIRHU_FREQUENCIA_GBP;
+        &#34;&#34;&#34;,
+    },
+    &#34;afastamento_antigo&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;
+        SELECT M10, SA_DT_AFAS_Y2, SA_DT_PRER_Y2, SA_DT_RETR_Y2
+        FROM C_ERGON.VW_SIMPA_SIRHU_AFASTAMENTO_GBP
+        &#34;&#34;&#34;,
+    },
+    &#34;afastamento_antigo_nomes&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;
+        SELECT
+        EMP_CODIGO, AFAST_COD, AFAST_DESCR
+        FROM SIMPA.SIRHU_DBTABELAS_AFASTAMENTO;
+        &#34;&#34;&#34;,
+    },
+    &#34;tipo_tempo&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;
+        SELECT SIGLA, NOME, APOSENTADORIA, FERIAS, DIAS_FER, ADICTSERV, LICESP, DIAS_LICESP, ADICTCHEFIA, PROGRESSAO
+        FROM ERGON.TIPO_TEMPO
+        &#34;&#34;&#34;,
+    },
+    &#34;ficha_financeira&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_mode&#34;: &#34;append&#34;,
+        &#34;partition_columns&#34;: &#34;MES_ANO_FOLHA&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;
+        SELECT MES_ANO_FOLHA,NUM_FOLHA,LANCAMENTO,NUMFUNC,NUMVINC,LINHA,NUMPENS,MES_ANO_DIREITO,RUBRICA,TIPO_RUBRICA,DESC_VANT,COMPLEMENTO,VALOR,CORRECAO,EXECUCAO,EMP_CODIGO
+        FROM ERGON.FICHAS_FINANCEIRAS
+        &#34;&#34;&#34;,
+    },
+    &#34;ficha_financeira_contabil&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_mode&#34;: &#34;append&#34;,
+        &#34;partition_columns&#34;: &#34;MES_ANO_FOLHA&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;
+        SELECT MES_ANO_FOLHA,NUM_FOLHA,NUMFUNC,NUMVINC,NUMPENS,SETOR,SECRETARIA,TIPO_FUNC,ATI_INAT_PENS,DETALHA,RUBRICA,TIPO_RUBRICA,MES_ANO_DIREITO,DESC_VANT,VALOR,COMPLEMENTO,TIPO_CLASSIF,CLASSIFICACAO,TIPO_CLASSIF_FR,CLASSIF_FR,ELEMDESP,TIPORUB,EMP_CODIGO
+        FROM ERGON.IPL_PT_FICHAS
+        &#34;&#34;&#34;,
+    },
 }
 
-
 ergon_clocks = generate_dump_db_schedules(
-    interval=timedelta(days=30),
+    interval=timedelta(days=1),
     start_date=datetime(2022, 11, 9, 10, 30, tzinfo=pytz.timezone(&#34;America/Sao_Paulo&#34;)),
     labels=[
         constants.RJ_SMFP_AGENT_LABEL.value,

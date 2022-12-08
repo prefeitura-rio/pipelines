@@ -51,9 +51,10 @@ from pipelines.utils.utils import untuple_clocks as untuple
 
 ergon_queries = {
     &#34;cargo&#34;: {
-        &#34;materialize_after_dump&#34;: False,
+        &#34;materialize_after_dump&#34;: True,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;dbt_alias&#34;: True,
         &#34;execute_query&#34;: &#34;&#34;&#34;
             SELECT
                 CARGO,
@@ -132,9 +133,10 @@ ergon_queries = {
         &#34;&#34;&#34;,
     },
     &#34;dependente&#34;: {
-        &#34;materialize_after_dump&#34;: False,
+        &#34;materialize_after_dump&#34;: True,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;dbt_alias&#34;: True,
         &#34;execute_query&#34;: &#34;&#34;&#34;
             SELECT
                 NUMFUNC,
@@ -242,9 +244,10 @@ ergon_queries = {
         &#34;&#34;&#34;,
     },
     &#34;funcionario_evento&#34;: {
-        &#34;materialize_after_dump&#34;: False,
+        &#34;materialize_after_dump&#34;: True,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;dbt_alias&#34;: True,
         &#34;execute_query&#34;: &#34;&#34;&#34;
             SELECT
                 NUMEV,
@@ -358,9 +361,10 @@ ergon_queries = {
         &#34;&#34;&#34;,
     },
     &#34;ficha_financeira&#34;: {
-        &#34;materialize_after_dump&#34;: False,
+        &#34;materialize_after_dump&#34;: True,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;dbt_alias&#34;: True,
         &#34;execute_query&#34;: &#34;&#34;&#34;
             SELECT
                 MES_ANO_FOLHA,
@@ -383,10 +387,11 @@ ergon_queries = {
         &#34;&#34;&#34;,
     },
     &#34;fita_banco&#34;: {
-        &#34;materialize_after_dump&#34;: False,
+        &#34;materialize_after_dump&#34;: True,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_mode&#34;: &#34;append&#34;,
         &#34;partition_columns&#34;: &#34;MES_ANO&#34;,
+        &#34;dbt_alias&#34;: True,
         &#34;execute_query&#34;: &#34;&#34;&#34;
             SELECT
                 LANCAMENTO,
@@ -472,9 +477,10 @@ ergon_queries = {
         &#34;&#34;&#34;,
     },
     &#34;frequencia&#34;: {
-        &#34;materialize_after_dump&#34;: False,
+        &#34;materialize_after_dump&#34;: True,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;dbt_alias&#34;: True,
         &#34;execute_query&#34;: &#34;&#34;&#34;
             SELECT
                 NUMFUNC,
@@ -546,9 +552,10 @@ ergon_queries = {
         &#34;&#34;&#34;,
     },
     &#34;funcionario&#34;: {
-        &#34;materialize_after_dump&#34;: False,
+        &#34;materialize_after_dump&#34;: True,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;dbt_alias&#34;: True,
         &#34;execute_query&#34;: &#34;&#34;&#34;
             SELECT
                 NUMERO,
@@ -750,18 +757,20 @@ ergon_queries = {
         &#34;&#34;&#34;,
     },
     &#34;setor_h&#34;: {
-        &#34;materialize_after_dump&#34;: False,
+        &#34;materialize_after_dump&#34;: True,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;dbt_alias&#34;: True,
         &#34;execute_query&#34;: &#34;&#34;&#34;
             SELECT *
             FROM ERGON.HSETOR_
         &#34;&#34;&#34;,
     },
     &#34;licenca_afastamento&#34;: {
-        &#34;materialize_after_dump&#34;: False,
+        &#34;materialize_after_dump&#34;: True,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;dbt_alias&#34;: True,
         &#34;execute_query&#34;: &#34;&#34;&#34;
             SELECT
                 NUMFUNC,
@@ -848,9 +857,10 @@ ergon_queries = {
         &#34;&#34;&#34;,
     },
     &#34;setor&#34;: {
-        &#34;materialize_after_dump&#34;: False,
+        &#34;materialize_after_dump&#34;: True,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;dbt_alias&#34;: True,
         &#34;execute_query&#34;: &#34;&#34;&#34;
             SELECT
                 SETOR,
@@ -900,9 +910,10 @@ ergon_queries = {
         &#34;&#34;&#34;,
     },
     &#34;vantagem&#34;: {
-        &#34;materialize_after_dump&#34;: False,
+        &#34;materialize_after_dump&#34;: True,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;dbt_alias&#34;: True,
         &#34;execute_query&#34;: &#34;&#34;&#34;
             SELECT
                 NUMFUNC,
@@ -975,9 +986,10 @@ ergon_queries = {
         &#34;&#34;&#34;,
     },
     &#34;vinculo&#34;: {
-        &#34;materialize_after_dump&#34;: False,
+        &#34;materialize_after_dump&#34;: True,
         &#34;materialization_mode&#34;: &#34;prod&#34;,
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;dbt_alias&#34;: True,
         &#34;execute_query&#34;: &#34;&#34;&#34;
             SELECT
                 NUMFUNC,
