@@ -16,7 +16,7 @@ def get_run_dates(date_range_start: str, date_range_end: str = None) -> List:
     """
     Generates a list of dates between date_range_start and date_range_end.
     """
-    if date_range_end is None:
+    if (date_range_end is None) and (date_range_start is not False):
         dates = [{"run_date": date_range_start}]
     elif (date_range_start is False) or (date_range_end is False):
         dates = [{"run_date": datetime.date.today().strftime("%Y-%m-%d")}]
