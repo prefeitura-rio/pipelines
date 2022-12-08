@@ -30,7 +30,7 @@ from pipelines.utils.utils import log
 
 
 @task
-def printa(parameter):  
+def printa(parameter):
     """
     Renomeia colunas e filtra dados com a hora e minuto do timestamp
     de execução mais próximo à este
