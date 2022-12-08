@@ -543,7 +543,14 @@ def save_data_in_file(
     )
 
     tif_data = os.path.join(
-        os.getcwd(), mode_redis, "data", "satelite", variable, "temp", partitions, "dados.tif"
+        os.getcwd(),
+        mode_redis,
+        "data",
+        "satelite",
+        variable,
+        "temp",
+        partitions,
+        "dados.tif",
     )
 
     data = xr.open_dataset(tif_data, engine="rasterio")
@@ -565,7 +572,9 @@ def save_data_in_file(
     )
 
     # cria pasta de partições se elas não existem
-    output_path = os.path.join(os.getcwd(), mode_redis, "data", "satelite", variable, "output")
+    output_path = os.path.join(
+        os.getcwd(), mode_redis, "data", "satelite", variable, "output"
+    )
     parquet_path = os.path.join(output_path, partitions)
 
     if not os.path.exists(parquet_path):

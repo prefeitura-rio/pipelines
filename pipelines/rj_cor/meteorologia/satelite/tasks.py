@@ -118,7 +118,9 @@ def download(
         skip = Skipped("No available files on API")
         raise ENDRUN(state=skip)
 
-    base_path = os.path.join(os.getcwd(), mode_redis, "data", "satelite", variavel[:-1], "input")
+    base_path = os.path.join(
+        os.getcwd(), mode_redis, "data", "satelite", variavel[:-1], "input"
+    )
 
     if not os.path.exists(base_path):
         os.makedirs(base_path)

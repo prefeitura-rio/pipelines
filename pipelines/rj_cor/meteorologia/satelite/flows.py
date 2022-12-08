@@ -156,7 +156,9 @@ with Flow(
 
     # Start data treatment if there are new files
     info_cmip = tratar_dados(filename=filename_cmip, mode_redis=mode_redis)
-    path_cmip = save_data(info=info_cmip, file_path=filename_cmip, mode_redis=mode_redis)
+    path_cmip = save_data(
+        info=info_cmip, file_path=filename_cmip, mode_redis=mode_redis
+    )
 
     # Create table in BigQuery
     upload_table_cmip = create_table_and_upload_to_gcs(
