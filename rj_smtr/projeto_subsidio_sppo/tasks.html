@@ -35,8 +35,9 @@ Tasks for projeto_subsidio_sppo
 from typing import List
 import datetime
 import pandas as pd
-
 from prefect import task
+
+from pipelines.utils.tasks import log
 
 
 @task
@@ -45,12 +46,14 @@ def get_run_dates(date_range_start: str, date_range_end: str) -&gt; List:
     Generates a list of dates between date_range_start and date_range_end.
     &#34;&#34;&#34;
     if (date_range_start is False) or (date_range_end is False):
-        return [{&#34;run_date&#34;: datetime.date.today().strftime(&#34;%Y-%m-%d&#34;)}]
-
-    return [
-        {&#34;run_date&#34;: d.strftime(&#34;%Y-%m-%d&#34;)}
-        for d in pd.date_range(start=date_range_start, end=date_range_end)
-    ]</code></pre>
+        dates = [{&#34;run_date&#34;: datetime.date.today().strftime(&#34;%Y-%m-%d&#34;)}]
+    else:
+        dates = [
+            {&#34;run_date&#34;: d.strftime(&#34;%Y-%m-%d&#34;)}
+            for d in pd.date_range(start=date_range_start, end=date_range_end)
+        ]
+    log(f&#34;Will run the following dates: {dates}&#34;)
+    return dates</code></pre>
 </details>
 </section>
 <section>
@@ -75,12 +78,14 @@ def get_run_dates(date_range_start: str, date_range_end: str) -&gt; List:
     Generates a list of dates between date_range_start and date_range_end.
     &#34;&#34;&#34;
     if (date_range_start is False) or (date_range_end is False):
-        return [{&#34;run_date&#34;: datetime.date.today().strftime(&#34;%Y-%m-%d&#34;)}]
-
-    return [
-        {&#34;run_date&#34;: d.strftime(&#34;%Y-%m-%d&#34;)}
-        for d in pd.date_range(start=date_range_start, end=date_range_end)
-    ]</code></pre>
+        dates = [{&#34;run_date&#34;: datetime.date.today().strftime(&#34;%Y-%m-%d&#34;)}]
+    else:
+        dates = [
+            {&#34;run_date&#34;: d.strftime(&#34;%Y-%m-%d&#34;)}
+            for d in pd.date_range(start=date_range_start, end=date_range_end)
+        ]
+    log(f&#34;Will run the following dates: {dates}&#34;)
+    return dates</code></pre>
 </details>
 </dd>
 </dl>

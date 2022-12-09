@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>pipelines.rj_smtr.materialize_to_datario.flows API documentation</title>
-<meta name="description" content="Database dumping flows for sme project" />
+<meta name="description" content="Flows for materialize_to_datario" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,14 +22,14 @@
 <h1 class="title">Module <code>pipelines.rj_smtr.materialize_to_datario.flows</code></h1>
 </header>
 <section id="section-intro">
-<p>Database dumping flows for sme project</p>
+<p>Flows for materialize_to_datario</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Database dumping flows for sme project
+Flows for materialize_to_datario
 &#34;&#34;&#34;
 
 from copy import deepcopy
@@ -39,11 +39,13 @@ from prefect.storage import GCS
 
 from pipelines.constants import constants
 
+from pipelines.utils.execute_dbt_model.flows import utils_run_dbt_model_flow
+from pipelines.utils.utils import set_default_parameters
+from pipelines.utils.tasks import get_now_date
+
 from pipelines.rj_smtr.materialize_to_datario.schedules import (
     smtr_materialize_to_datario_daily_schedule,
 )
-from pipelines.utils.execute_dbt_model.flows import utils_run_dbt_model_flow
-from pipelines.utils.utils import set_default_parameters
 
 # # VIAGEM SPPO #
 
@@ -66,6 +68,7 @@ smtr_materialize_to_datario_viagem_sppo_parameters = {
     &#34;dataset_id&#34;: &#34;transporte_rodoviario_municipal&#34;,
     &#34;table_id&#34;: &#34;viagem_onibus&#34;,
     &#34;mode&#34;: &#34;prod&#34;,
+    &#34;dbt_model_parameters&#34;: {&#34;run_date&#34;: get_now_date.run()},
 }
 
 smtr_materialize_to_datario_viagem_sppo_flow = set_default_parameters(
