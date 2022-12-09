@@ -92,35 +92,38 @@ with Flow(
     code_owners=["rodrigo", "fernanda"],
 ) as subsidio_sppo_apuracao:
 
-    # Rename flow run
-    current_date = get_now_date()
+    # 1. SETUP #
 
     # Get default parameters #
-    input_date = Parameter("run_date", default=False)
+    run_date = Parameter("run_date", default=get_now_date.run())
 
-    run_date = get_run_dates(input_date)[0]
-
+    # Rename flow run #
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SMTR - Subsídio SPPO Apuração: ", now_time=current_date
+        prefix="SMTR - Subsídio SPPO Apuração: ", now_time=run_date
     )
 
+    # Set dbt client #
     LABELS = get_current_flow_labels()
     MODE = get_current_flow_mode(LABELS)
 
-    # Set dbt client #
     dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
     # Use the command below to get the dbt client in dev mode:
     # dbt_client = get_local_dbt_client(host="localhost", port=3001)
 
+    # Get models version #
     dataset_sha = fetch_dataset_sha(
         dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOAD_DATASET_ID.value,
     )
 
+    # 2. TREAT #
+
     RUN = run_dbt_model(
         dbt_client=dbt_client,
         dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOAD_DATASET_ID.value,
-        _vars=run_date,
+        _vars=dict(run_date=run_date),
     )
+
+    # 3. PUBLISH #
 
     run_materialize = create_flow_run(
         flow_name=smtr_materialize_to_datario_viagem_sppo_flow.name,
@@ -133,7 +136,7 @@ with Flow(
             "dataset_id": "transporte_rodoviario_municipal",
             "table_id": "viagem_onibus",
             "mode": "prod",
-            "dbt_model_parameters": run_date,
+            "dbt_model_parameters": dict(run_date=run_date),
         },
     )
 
