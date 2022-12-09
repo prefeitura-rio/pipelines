@@ -44,6 +44,7 @@ phonenumbers = "^8.12.57"
 lxml = "^4.9.1"
 Unidecode = "^1.3.6"
 html5lib = "^1.1"
+earthengine-api = "^0.1.334"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.12.2"
