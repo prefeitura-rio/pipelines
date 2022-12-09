@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=R0903
 """
 Customizing stuff for the pipelines package.
 """

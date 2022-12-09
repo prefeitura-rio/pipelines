@@ -5,7 +5,7 @@ Flows for precipitacao_alertario
 """
 from datetime import timedelta
 
-from prefect import case, Parameter
+from prefect import case, Parameter, task
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
@@ -26,6 +26,17 @@ from pipelines.utils.tasks import (
     create_table_and_upload_to_gcs,
     get_current_flow_labels,
 )
+from pipelines.utils.utils import log
+
+
+@task
+def printa(parameter):
+    """
+    Renomeia colunas e filtra dados com a hora e minuto do timestamp
+    de execução mais próximo à este
+    """
+    log(f"\n\n>>>>>>> {parameter}\n\n")
+
 
 with Flow(
     name="COR: Meteorologia - Precipitacao ALERTARIO",
@@ -55,14 +66,10 @@ with Flow(
         required=False,
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
-
+    printa(MATERIALIZE_AFTER_DUMP)
     dados, empty_data, current_time = tratar_dados(
         dataset_id=DATASET_ID, table_id=TABLE_ID
     )
-
-    # If dataframe is empty stop flow
-    with case(empty_data, True):
-        MATERIALIZE_AFTER_DUMP = False
 
     with case(empty_data, False):
         path = salvar_dados(dados=dados, current_time=current_time)
@@ -74,7 +81,7 @@ with Flow(
             dump_mode=DUMP_MODE,
             wait=path,
         )
-
+    printa(MATERIALIZE_AFTER_DUMP)
     # Trigger DBT flow run
     with case(MATERIALIZE_AFTER_DUMP, True):
         current_flow_labels = get_current_flow_labels()
@@ -91,7 +98,8 @@ with Flow(
             run_name=f"Materialize {DATASET_ID}.{TABLE_ID}",
         )
 
-        materialization_flow.set_upstream(UPLOAD_TABLE)
+        current_flow_labels.set_upstream(UPLOAD_TABLE)
+        materialization_flow.set_upstream(current_flow_labels)
 
         wait_for_materialization = wait_for_flow_run(
             materialization_flow,

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=too-many-locals
+# pylint: disable=too-many-locals, R0913
 """
 Funções úteis no tratamento de dados de satélite
 """
