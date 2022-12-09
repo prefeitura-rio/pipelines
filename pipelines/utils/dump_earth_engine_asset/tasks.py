@@ -10,7 +10,6 @@ from basedosdados.download.base import google_client
 from basedosdados.upload.base import Base
 import ee
 from google.cloud import bigquery
-import jinja2
 from prefect import task
 
 from pipelines.utils.dump_to_gcs.constants import constants as dump_to_gcs_constants
@@ -25,11 +24,9 @@ from pipelines.utils.utils import (
 
 @task
 def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
-    dataset_id: str,
-    table_id: str,
     project_id: str = None,
-    query: Union[str, jinja2.Template] = None,
-    jinja_query_params: dict = None,
+    query: str = None,
+    gcs_asset_path: str = None,
     bd_project_mode: str = "prod",
     billing_project_id: str = None,
     location: str = "US",
@@ -50,34 +47,6 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
                 "project_id must be either provided or inferred from environment variables"
             )
         log(f"Project ID was inferred from environment variables: {project_id}")
-
-    # Asserts that dataset_id and table_id are provided
-    if not dataset_id or not table_id:
-        raise ValueError("dataset_id and table_id must be provided")
-
-    # If query is not provided, build query from it
-    if not query:
-        query = f"SELECT * FROM `{project_id}.{dataset_id}.{table_id}`"
-        log(f"Query was inferred from dataset_id and table_id: {query}")
-
-    # If query is provided, use it!
-    # If it's a template, we must render it.
-    if not query:
-        if not jinja_query_params:
-            jinja_query_params = {}
-        if isinstance(query, jinja2.Template):
-            try:
-                query = query.render(
-                    {
-                        "project_id": project_id,
-                        "dataset_id": dataset_id,
-                        "table_id": table_id,
-                        **jinja_query_params,
-                    }
-                )
-            except jinja2.TemplateError as exc:
-                raise ValueError(f"Error rendering query: {exc}") from exc
-            log(f"Query was rendered: {query}")
 
     # If query is not a string, raise an error
     if not isinstance(query, str):
@@ -104,8 +73,6 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
             f"Billing project ID was inferred from environment variables: {billing_project_id}"
         )
 
-    # Checking if data exceeds the maximum allowed size
-    log("Checking if data exceeds the maximum allowed size")
     # pylint: disable=E1124
     client = google_client(project_id, billing_project_id, from_file=True, reauth=False)
     job_config = bigquery.QueryJobConfig()
@@ -130,7 +97,7 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
         f"Query results were stored in {dest_project_id}.{dest_dataset_id}.{dest_table_id}"
     )
 
-    blob_path = f"gs://datario/share/{dataset_id}/{table_id}/data*.csv.gz"
+    blob_path = f"{gcs_asset_path}/data*.csv.gz"
     log(f"Loading data to {blob_path}")
     dataset_ref = bigquery.DatasetReference(dest_project_id, dest_dataset_id)
     table_ref = dataset_ref.table(dest_table_id)
@@ -145,7 +112,7 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
     log("Data was loaded successfully")
 
     # Get the BLOB we've just created and make it public
-    blobs = list_blobs_with_prefix("datario", f"share/{dataset_id}/{table_id}/")
+    blobs = list_blobs_with_prefix(project_id, blob_path)
     if not blobs:
         raise ValueError(f"No blob found at {blob_path}")
 
@@ -177,15 +144,14 @@ def get_project_id(
 @task(nout=2)
 def trigger_cron_job(
     project_id: str,
-    dataset_id: str,
-    table_id: str,
+    ee_asset_path: str,
     cron_expression: str,
 ):
     """
     Tells whether to trigger a cron job.
     """
     redis_client = get_redis_client()
-    key = f"{project_id}__{dataset_id}__{table_id}"
+    key = f"{project_id}__{ee_asset_path}"
     log(f"Checking if cron job should be triggered for {key}")
     val = redis_client.get(key)
     current_datetime = datetime.now()
@@ -203,15 +169,14 @@ def trigger_cron_job(
 @task
 def update_last_trigger(
     project_id: str,
-    dataset_id: str,
-    table_id: str,
+    ee_asset_path: str,
     execution_time: datetime,
 ):
     """
     Update the last trigger.
     """
     redis_client = get_redis_client()
-    key = f"{project_id}__{dataset_id}__{table_id}"
+    key = f"{project_id}__{ee_asset_path}"
     redis_client.set(key, {"last_trigger": execution_time})
 
 
