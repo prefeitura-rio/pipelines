@@ -552,7 +552,7 @@ def save_data_in_file(
         partitions,
         "dados.tif",
     )
-
+    log(f"debug path >>>>>>{tif_data}")
     data = xr.open_dataset(tif_data, engine="rasterio")
     # print('>>>>>>>>>>>>>>> data', data['band_data'].values)
 
