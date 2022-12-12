@@ -1239,7 +1239,7 @@ tqdm = ["tqdm"]
 
 [[package]]
 name = "geobr"
-version = "0.1.10"
+version = "0.2.0"
 description = "geobr: Download Official Spatial Data Sets of Brazil"
 category = "main"
 optional = false
@@ -4609,7 +4609,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.11"
-content-hash = "0bab9f64eb47241a95fd9e1df2c20eebb15a5c1e270b5772dc068b5d3a201de2"
+content-hash = "14e2623a21f1e1fdc6da8c704235b0282798ee5c5ca59aa2e32a8acd04704411"
 
 [metadata.files]
 adal = [
@@ -5355,8 +5355,8 @@ fsspec = [
     {file = "fsspec-2022.8.2.tar.gz", hash = "sha256:7f12b90964a98a7e921d27fb36be536ea036b73bf3b724ac0b0bd7b8e39c7c18"},
 ]
 geobr = [
-    {file = "geobr-0.1.10-py2.py3-none-any.whl", hash = "sha256:6548a6e9c91bd4e99bfaa3d0ae58c1f94ba5864268a562d15ad17ee81504d8a3"},
-    {file = "geobr-0.1.10.tar.gz", hash = "sha256:9b373fb6db308f7c96a0883bed72283254950871970eeb39733d712fc14c1bac"},
+    {file = "geobr-0.2.0-py2.py3-none-any.whl", hash = "sha256:17d310684e690d0d2234cb2c9c28d95adcf2a8ab39bb0985282b2532ab2ec23a"},
+    {file = "geobr-0.2.0.tar.gz", hash = "sha256:cdfee63590a74dd6725f0b97d9384172f2757e7f034477eba0ccb9bf000eac42"},
 ]
 geographiclib = [
     {file = "geographiclib-2.0-py3-none-any.whl", hash = "sha256:6b7225248e45ff7edcee32becc4e0a1504c606ac5ee163a5656d482e0cd38734"},
