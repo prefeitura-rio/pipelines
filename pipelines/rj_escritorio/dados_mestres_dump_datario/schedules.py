@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# flake8: noqa: E501
 """
 Schedules for the database dump pipeline
 """
@@ -21,7 +22,7 @@ from pipelines.utils.dump_datario.utils import generate_dump_datario_schedules
 dados_mestres_tables = {
     "bairro": {
         # source https://www.data.rio/datasets/PCRJ::limite-de-bairros/about
-        "url": "https://pgeo3.rio.rj.gov.br/arcgis/rest/services/Cartografia/Limites_administrativos/MapServer/4/query?outFields=*&where=1%3D1&f=geojson",
+        "url": "https://pgeo3.rio.rj.gov.br/arcgis/rest/services/Cartografia/Limites_administrativos/MapServer/4/query?outFields=*&where=1%3D1&f=geojson",  # noqa
         "dataset_id": "dados_mestres",
         "dump_mode": "overwrite",
         "materialize_after_dump": True,
@@ -31,7 +32,7 @@ dados_mestres_tables = {
     },
     "logradouro": {
         # source https://www.data.rio/datasets/PCRJ::logradouros-1/about
-        "url": "https://opendata.arcgis.com/api/v3/datasets/899168c8feab4230a9f795ed07cdde7b_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",
+        "url": "https://opendata.arcgis.com/api/v3/datasets/899168c8feab4230a9f795ed07cdde7b_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",  # noqa
         "dataset_id": "dados_mestres",
         "dump_mode": "overwrite",
         "materialize_after_dump": True,
@@ -41,7 +42,7 @@ dados_mestres_tables = {
     },
     "zoneamento_setores": {
         # source https://www.data.rio/datasets/PCRJ::setores-1/about
-        "url": "https://opendata.arcgis.com/api/v3/datasets/2c56c0ca74d74bcd8b44378e20af707f_1/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",
+        "url": "https://opendata.arcgis.com/api/v3/datasets/2c56c0ca74d74bcd8b44378e20af707f_1/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",  # noqa
         "dataset_id": "dados_mestres",
         "dump_mode": "overwrite",
         "materialize_after_dump": True,
@@ -51,7 +52,7 @@ dados_mestres_tables = {
     },
     "zoneamento_subzonas_subsetores": {
         # source https://www.data.rio/datasets/PCRJ::subzonas-e-subsetores-1/about
-        "url": "https://opendata.arcgis.com/api/v3/datasets/815b62790a0942519020d4ad28e99fee_2/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",
+        "url": "https://opendata.arcgis.com/api/v3/datasets/815b62790a0942519020d4ad28e99fee_2/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",  # noqa
         "dataset_id": "dados_mestres",
         "dump_mode": "overwrite",
         "materialize_after_dump": True,
@@ -61,7 +62,7 @@ dados_mestres_tables = {
     },
     "zoneamento_zonas": {
         # source https://www.data.rio/datasets/PCRJ::zonas-1/about
-        "url": "https://opendata.arcgis.com/api/v3/datasets/d668fb697bd245229d3165aed0ee5193_3/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",
+        "url": "https://opendata.arcgis.com/api/v3/datasets/d668fb697bd245229d3165aed0ee5193_3/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",  # noqa
         "dataset_id": "dados_mestres",
         "dump_mode": "overwrite",
         "materialize_after_dump": True,
@@ -71,7 +72,7 @@ dados_mestres_tables = {
     },
     "edificacoes": {
         # source https://www.data.rio/datasets/PCRJ::edifica%C3%A7%C3%B5es-2013-1/about
-        "url": "https://opendata.arcgis.com/api/v3/datasets/124f1607b57d4292af5c0dfc2ff8572c_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",
+        "url": "https://opendata.arcgis.com/api/v3/datasets/124f1607b57d4292af5c0dfc2ff8572c_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",  # noqa
         "dataset_id": "dados_mestres",
         "dump_mode": "overwrite",
         "materialize_after_dump": True,
