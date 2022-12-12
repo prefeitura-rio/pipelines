@@ -38,12 +38,10 @@ from typing import Union
 from datetime import datetime, timedelta
 
 import geopandas as gpd
-import pandas as pd
 from prefect import task
 import requests
 
 from pipelines.utils.utils import (
-    dataframe_to_csv,
     log,
     remove_columns_accents,
 )
