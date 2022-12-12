@@ -30,12 +30,12 @@ from pipelines.utils.utils import log
 
 
 @task
-def printa(parameter):
+def printa(parameter, texto):
     """
     Renomeia colunas e filtra dados com a hora e minuto do timestamp
     de execução mais próximo à este
     """
-    log(f"\n\n>>>>>>> {parameter}\n\n")
+    log(f"\n\n>>>>>>> {texto}: {parameter}\n\n")
 
 
 with Flow(
@@ -66,7 +66,7 @@ with Flow(
         required=False,
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
-    printa(MATERIALIZE_AFTER_DUMP)
+    printa(MATERIALIZE_AFTER_DUMP, '1')
     dados, empty_data, current_time = tratar_dados(
         dataset_id=DATASET_ID, table_id=TABLE_ID
     )
@@ -81,9 +81,10 @@ with Flow(
             dump_mode=DUMP_MODE,
             wait=path,
         )
-    printa(MATERIALIZE_AFTER_DUMP)
+    printa(MATERIALIZE_AFTER_DUMP, '2')
     # Trigger DBT flow run
     with case(MATERIALIZE_AFTER_DUMP, True):
+        printa(MATERIALIZE_AFTER_DUMP, '3')
         current_flow_labels = get_current_flow_labels()
         materialization_flow = create_flow_run(
             flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
