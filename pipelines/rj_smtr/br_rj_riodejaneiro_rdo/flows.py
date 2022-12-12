@@ -27,18 +27,18 @@ from pipelines.rj_smtr.schedules import ftp_schedule
 from pipelines.utils.decorators import Flow
 from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
 from pipelines.utils.tasks import (
-    # get_now_time,
+    get_now_time,
     rename_current_flow_run_now_time,
     get_current_flow_mode,
     get_current_flow_labels,
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
-with Flow("SMTR - SPPO RHO - Materialização") as rho_mat_flow:
+with Flow("SMTR: SPPO RHO - Materialização") as rho_mat_flow:
     # Rename flow run
-    # rename_flow_run = rename_current_flow_run_now_time(
-    #     prefix="SPPO RHO - Materialização: ", now_time=get_now_time()
-    # )
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix="SPPO RHO - Materialização: ", now_time=get_now_time()
+    )
 
     # Get default parameters #
     dataset_id = Parameter("dataset_id", default=constants.RDO_DATASET_ID.value)
@@ -88,7 +88,7 @@ with Flow("SMTR - SPPO RHO - Materialização") as rho_mat_flow:
         )
 
 with Flow(
-    "SMTR - RDO -Captura FTP",
+    "SMTR: RDO - Captura",
     code_owners=["caio", "fernanda"],
 ) as captura_ftp:
     # SETUP
@@ -108,7 +108,7 @@ with Flow(
     )
     updated_info = download_and_save_local_from_ftp.map(file_info=files)
     # TRANSFORM
-    treated_path, raw_path, partitions = pre_treatment_br_rj_riodejaneiro_rdo(
+    treated_path, raw_path, partitions, status = pre_treatment_br_rj_riodejaneiro_rdo(
         files=updated_info
     )
     # LOAD
@@ -118,7 +118,7 @@ with Flow(
         filepath=treated_path,
         raw_filepath=raw_path,
         partitions=partitions,
-        status=unmapped({"error": None}),
+        status=status,
     )
     with case(bool(error), False):
         RUN = create_flow_run(

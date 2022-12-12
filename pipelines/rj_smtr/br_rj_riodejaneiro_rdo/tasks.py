@@ -47,37 +47,41 @@ def get_file_paths_from_ftp(
     else:
         min_timestamp = datetime(2022, 1, 1).timestamp()
     # Connect to FTP & search files
-    ftp_client = connect_ftp(constants.RDO_FTPS_SECRET_PATH.value)
-    files_updated_times = {
-        file: datetime.timestamp(parser.parse(info["modify"]))
-        for file, info in ftp_client.mlsd(transport_mode)
-    }
-    # Get files modified inside interval
-    files = []
-    for filename, file_mtime in files_updated_times.items():
-        if min_timestamp <= file_mtime < max_timestamp:
-            if filename[:3] == report_type and "HISTORICO" not in filename:
-                log(
-                    f"""
-                    Found file
-                    - {filename}
-                    at folder
-                    - {transport_mode}
-                    with timestamp
-                    - {str(file_mtime)}"""
-                )
-                # Get date from file
-                date = re.findall("2\\d{3}\\d{2}\\d{2}", filename)[-1]
+    try:
+        ftp_client = connect_ftp(constants.RDO_FTPS_SECRET_PATH.value)
+        files_updated_times = {
+            file: datetime.timestamp(parser.parse(info["modify"]))
+            for file, info in ftp_client.mlsd(transport_mode)
+        }
+        # Get files modified inside interval
+        files = []
+        for filename, file_mtime in files_updated_times.items():
+            if min_timestamp <= file_mtime < max_timestamp:
+                if filename[:3] == report_type and "HISTORICO" not in filename:
+                    log(
+                        f"""
+                        Found file
+                        - {filename}
+                        at folder
+                        - {transport_mode}
+                        with timestamp
+                        - {str(file_mtime)}"""
+                    )
+                    # Get date from file
+                    date = re.findall("2\\d{3}\\d{2}\\d{2}", filename)[-1]
 
-                file_info = {
-                    "transport_mode": transport_mode,
-                    "report_type": report_type,
-                    "filename": filename.split(".")[0],
-                    "ftp_path": transport_mode + "/" + filename,
-                    "partitions": f"ano={date[:4]}/mes={date[4:6]}/dia={date[6:]}",
-                }
-                log(f"Create file info: {file_info}")
-                files.append(file_info)
+                    file_info = {
+                        "transport_mode": transport_mode,
+                        "report_type": report_type,
+                        "filename": filename.split(".")[0],
+                        "ftp_path": transport_mode + "/" + filename,
+                        "partitions": f"ano={date[:4]}/mes={date[4:6]}/dia={date[6:]}",
+                        "error": None,
+                    }
+                    log(f"Create file info: {file_info}")
+                    files.append(file_info)
+    except Exception as e:  # pylint: disable=W0703
+        return [{"error": e}]
     return files
 
 
@@ -87,6 +91,9 @@ def download_and_save_local_from_ftp(file_info: dict):
     Downloads file from FTP and saves to data/raw/<dataset_id>/<table_id>.
     """
     # table_id: str, kind: str, rho: bool = False, rdo: bool = True
+    if file_info["error"] is not None:
+        return file_info
+
     dataset_id = constants.RDO_DATASET_ID.value
     base_path = (
         f'{os.getcwd()}/{os.getenv("DATA_FOLDER", "data")}/{{bucket_mode}}/{dataset_id}'
@@ -105,24 +112,29 @@ def download_and_save_local_from_ftp(file_info: dict):
         bucket_mode="raw", file_ext="txt"
     )
     Path(file_info["raw_path"]).parent.mkdir(parents=True, exist_ok=True)
-    # Get data from FTP - TODO: create get_raw() error alike
-    ftp_client = connect_ftp(constants.RDO_FTPS_SECRET_PATH.value)
-    if not Path(file_info["raw_path"]).is_file():
-        with open(file_info["raw_path"], "wb") as raw_file:
-            ftp_client.retrbinary(
-                "RETR " + file_info["ftp_path"],
-                raw_file.write,
-            )
-    ftp_client.quit()
-    # Get timestamp of download time
-    file_info["timestamp_captura"] = pendulum.now(constants.TIMEZONE.value).isoformat()
+    try:
+        # Get data from FTP - TODO: create get_raw() error alike
+        ftp_client = connect_ftp(constants.RDO_FTPS_SECRET_PATH.value)
+        if not Path(file_info["raw_path"]).is_file():
+            with open(file_info["raw_path"], "wb") as raw_file:
+                ftp_client.retrbinary(
+                    "RETR " + file_info["ftp_path"],
+                    raw_file.write,
+                )
+        ftp_client.quit()
+        # Get timestamp of download time
+        file_info["timestamp_captura"] = pendulum.now(
+            constants.TIMEZONE.value
+        ).isoformat()
 
-    log(f"Timestamp captura is {file_info['timestamp_captura']}")
-    log(f"Update file info: {file_info}")
+        log(f"Timestamp captura is {file_info['timestamp_captura']}")
+        log(f"Update file info: {file_info}")
+    except Exception as e:  # pylint: disable=W0703
+        file_info["error"] = e
     return file_info
 
 
-@task(nout=3)
+@task(nout=4)
 def pre_treatment_br_rj_riodejaneiro_rdo(
     files: list,
     divide_columns_by: int = 100,
@@ -137,7 +149,7 @@ def pre_treatment_br_rj_riodejaneiro_rdo(
     Returns:
         dict: updated file_info with treated filepath
     """
-    treated_paths, raw_paths, partitions = [], [], []
+    treated_paths, raw_paths, partitions, status = [], [], [], []
     for file_info in files:
         try:
             config = rdo_constants.RDO_PRE_TREATMENT_CONFIG.value[
@@ -148,6 +160,9 @@ def pre_treatment_br_rj_riodejaneiro_rdo(
             df = pd.read_csv(  # pylint: disable=C0103
                 file_info["raw_path"], header=None, delimiter=";", index_col=False
             )  # pylint: disable=C0103
+            if len(df) == 0:
+                status.append({"error": "ValueError: file is empty"})
+                continue  # If file is empty, skip current iteration
             log(f"Load csv from raw file:\n{df.head(5)}")
             # Set column names for those already in the file
             df.columns = config["reindex_columns"][: len(df.columns)]
@@ -190,10 +205,12 @@ def pre_treatment_br_rj_riodejaneiro_rdo(
             treated_paths.append(file_info["treated_path"])
             raw_paths.append(file_info["raw_path"])
             partitions.append(file_info["partitions"])
+            status.append({"error": None})
         except Exception as e:  # pylint: disable=W0703
             log(f"Pre Treatment failed with error: {e}")
+            status.append({"error": e})
             continue
-    return treated_paths, raw_paths, partitions
+    return treated_paths, raw_paths, partitions, status
 
 
 @task
