@@ -225,12 +225,12 @@ def format_partitioned_query(
         select * from {aux_name}
         where {partition_column} >= TO_DATE('{last_date}', '{date_format}')
         """
-    else:
-        return f"""
-        with {aux_name} as ({query})
-        select * from {aux_name}
-        where {partition_column} >= '{last_date}'
-        """
+
+    return f"""
+    with {aux_name} as ({query})
+    select * from {aux_name}
+    where {partition_column} >= '{last_date}'
+    """
 
 
 ###############

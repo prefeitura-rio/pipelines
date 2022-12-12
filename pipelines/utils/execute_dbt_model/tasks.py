@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=R0914, W0611, W0613, R0913
 """
 Tasks related to DBT flows.
 """
-# pylint: disable=unused-argument
 
 from datetime import timedelta
 from typing import Any, Dict, List, Union
@@ -42,7 +42,6 @@ def get_k8s_dbt_client(
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-# pylint: disable=too-many-arguments
 def run_dbt_model(
     dbt_client: DbtClient,
     dataset_id: str = None,

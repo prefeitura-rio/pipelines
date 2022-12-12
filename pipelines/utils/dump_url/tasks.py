@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=E1101
 """
 General purpose tasks for dumping data from URLs.
 """
+
 from datetime import datetime, timedelta
 import io
 from pathlib import Path
@@ -146,7 +148,7 @@ def dump_files(
     file_path: str,
     partition_columns: List[str],
     save_path: str = ".",
-    chunksize: int = 10**6,
+    chunksize: int = 10 ** 6,
     build_json_dataframe: bool = False,
     dataframe_key_column: str = None,
 ) -> None:
