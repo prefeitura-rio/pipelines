@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-General purpose tasks for dumping database data. 
+General purpose tasks for dumping database data.
 """
 from datetime import datetime, timedelta
 from pathlib import Path
