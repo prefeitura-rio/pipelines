@@ -95,7 +95,7 @@ with Flow(
     # 1. SETUP #
 
     # Get default parameters #
-    run_date = Parameter("run_date", default=get_now_date.run())
+    run_date = Parameter("run_date", default=get_now_date())
 
     # Rename flow run #
     rename_flow_run = rename_current_flow_run_now_time(
