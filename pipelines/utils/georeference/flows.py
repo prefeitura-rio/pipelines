@@ -87,7 +87,7 @@ with Flow(
         current_flow_labels=current_flow_labels,
     )
 
-    with case(new_addresses, True):
+    with case(exists_new_addresses, True):
         # Georeference the table
         georeferenced_table = georeference_dataframe(new_addresses=new_addresses)
         base_path = dataframe_to_csv(dataframe=georeferenced_table)
