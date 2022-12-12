@@ -1124,6 +1124,14 @@ geopandas = ">=0.7.0,<0.8.0"
 shapely = ">=1.7.0,<2.0.0"
 
 [[package]]
+name = "geographiclib"
+version = "2.0"
+description = "The geodesic routines from GeographicLib"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[[package]]
 name = "geopandas"
 version = "0.7.0"
 description = "Geographic pandas extensions"
@@ -1136,6 +1144,26 @@ fiona = "*"
 pandas = ">=0.23.0"
 pyproj = ">=2.2.0"
 shapely = "*"
+
+[[package]]
+name = "geopy"
+version = "2.3.0"
+description = "Python Geocoding Toolbox"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+geographiclib = ">=1.52,<3"
+
+[package.extras]
+aiohttp = ["aiohttp"]
+dev = ["coverage", "flake8 (>=5.0,<5.1)", "isort (>=5.10.0,<5.11.0)", "pytest-asyncio (>=0.17)", "pytest (>=3.10)", "readme-renderer", "sphinx-issues", "sphinx (<=4.3.2)", "sphinx-rtd-theme (>=0.5.0)"]
+dev-docs = ["readme-renderer", "sphinx (<=4.3.2)", "sphinx-issues", "sphinx-rtd-theme (>=0.5.0)"]
+dev-lint = ["flake8 (>=5.0,<5.1)", "isort (>=5.10.0,<5.11.0)"]
+dev-test = ["coverage", "pytest-asyncio (>=0.17)", "pytest (>=3.10)", "sphinx (<=4.3.2)"]
+requests = ["urllib3 (>=1.24.2)", "requests (>=2.16.2)"]
+timezone = ["pytz"]
 
 [[package]]
 name = "gitdb"
@@ -3712,7 +3740,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.11"
-content-hash = "3df7aff67f70e296681bc2b37a57de5d1b09b9d3a28b80d365ff18f4164a6555"
+content-hash = "2445678b8c4dc814eaee249347b100d6adc014132f8838a528ac4c0a92d2cf8e"
 
 [metadata.files]
 adal = []
@@ -3925,10 +3953,12 @@ geobr = [
     {file = "geobr-0.1.10-py2.py3-none-any.whl", hash = "sha256:6548a6e9c91bd4e99bfaa3d0ae58c1f94ba5864268a562d15ad17ee81504d8a3"},
     {file = "geobr-0.1.10.tar.gz", hash = "sha256:9b373fb6db308f7c96a0883bed72283254950871970eeb39733d712fc14c1bac"},
 ]
+geographiclib = []
 geopandas = [
     {file = "geopandas-0.7.0-py2.py3-none-any.whl", hash = "sha256:dd478cfb979c7aca529a61c05f26a4606852547a0d7e22ae9babe0c70f7d73f8"},
     {file = "geopandas-0.7.0.tar.gz", hash = "sha256:19074b090ab928527193c50b383d31a259a9b84b18553562631295fa67f640bc"},
 ]
+geopy = []
 gitdb = []
 gitpython = []
 google-api-core = []

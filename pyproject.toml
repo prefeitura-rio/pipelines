@@ -45,6 +45,7 @@ s3fs = "^2022.2.0"
 scp = "^0.14.4"
 tweepy = "4.4"
 xarray = "^2022.3.0"
+geopy = "^2.3.0"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.12.2"
