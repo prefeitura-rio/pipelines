@@ -3,51 +3,6 @@
 Tasks for br_rj_riodejaneiro_rdo
 """
 
-###############################################################################
-#
-# Aqui é onde devem ser definidas as tasks para os flows do projeto.
-# Cada task representa um passo da pipeline. Não é estritamente necessário
-# tratar todas as exceções que podem ocorrer durante a execução de uma task,
-# mas é recomendável, ainda que não vá implicar em  uma quebra no sistema.
-# Mais informações sobre tasks podem ser encontradas na documentação do
-# Prefect: https://docs.prefect.io/core/concepts/tasks.html
-#
-# De modo a manter consistência na codebase, todo o código escrito passará
-# pelo pylint. Todos os warnings e erros devem ser corrigidos.
-#
-# As tasks devem ser definidas como funções comuns ao Python, com o decorador
-# @task acima. É recomendado inserir type hints para as variáveis.
-#
-# Um exemplo de task é o seguinte:
-#
-# -----------------------------------------------------------------------------
-# from prefect import task
-#
-# @task
-# def my_task(param1: str, param2: int) -> str:
-#     """
-#     My task description.
-#     """
-#     return f'{param1} {param2}'
-# -----------------------------------------------------------------------------
-#
-# Você também pode usar pacotes Python arbitrários, como numpy, pandas, etc.
-#
-# -----------------------------------------------------------------------------
-# from prefect import task
-# import numpy as np
-#
-# @task
-# def my_task(a: np.ndarray, b: np.ndarray) -> str:
-#     """
-#     My task description.
-#     """
-#     return np.add(a, b)
-# -----------------------------------------------------------------------------
-#
-# Abaixo segue um código para exemplificação, que pode ser removido.
-#
-###############################################################################
 from datetime import datetime, timedelta
 import re
 import os
@@ -92,7 +47,7 @@ def get_file_paths_from_ftp(
     else:
         min_timestamp = datetime(2022, 1, 1).timestamp()
     # Connect to FTP & search files
-    ftp_client = connect_ftp()
+    ftp_client = connect_ftp(constants.RDO_FTPS_SECRET_PATH.value)
     files_updated_times = {
         file: datetime.timestamp(parser.parse(info["modify"]))
         for file, info in ftp_client.mlsd(transport_mode)
@@ -151,7 +106,7 @@ def download_and_save_local_from_ftp(file_info: dict):
     )
     Path(file_info["raw_path"]).parent.mkdir(parents=True, exist_ok=True)
     # Get data from FTP - TODO: create get_raw() error alike
-    ftp_client = connect_ftp()
+    ftp_client = connect_ftp(constants.RDO_FTPS_SECRET_PATH.value)
     if not Path(file_info["raw_path"]).is_file():
         with open(file_info["raw_path"], "wb") as raw_file:
             ftp_client.retrbinary(

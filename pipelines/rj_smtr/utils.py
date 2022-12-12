@@ -166,9 +166,7 @@ def map_dict_keys(data: dict, mapping: dict) -> None:
     return data
 
 
-def connect_ftp(
-    secret_path: str = constants.RDO_FTPS_SECRET_PATH.value, secure: bool = True
-):
+def connect_ftp(secret_path: str = None, secure: bool = True):
     """Connect to FTP
 
     Returns:
