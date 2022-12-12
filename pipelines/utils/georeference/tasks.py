@@ -9,7 +9,9 @@ from typing import List, Tuple
 from uuid import uuid4
 
 import basedosdados as bd
-from geolocate import geolocate_batch
+from geopy.extra.rate_limiter import RateLimiter
+from geopy.geocoders import Nominatim
+from geopy.location import Location
 import pandas as pd
 from prefect import task
 
@@ -98,7 +100,18 @@ def georeference_dataframe(new_addresses: pd.DataFrame) -> pd.DataFrame:
     all_addresses = new_addresses["address"].tolist()
     all_addresses = [f"{address}, Rio de Janeiro" for address in all_addresses]
 
-    geolocated_addresses = geolocate_batch(all_addresses)
+    geolocator = Nominatim(user_agent="prefeitura-rio")
+    geocode = RateLimiter(geolocator.geocode, min_delay_seconds=1)
+    locations: List[Location] = [geocode(address) for address in all_addresses]
+    geolocated_addresses = [
+        {
+            "latitude": location.latitude,
+            "longitude": location.longitude,
+        }
+        if location is not None
+        else {"latitude": None, "longitude": None}
+        for location in locations
+    ]
 
     output = pd.DataFrame(geolocated_addresses)
     output["address"] = new_addresses["address"]

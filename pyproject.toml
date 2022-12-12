@@ -44,7 +44,7 @@ phonenumbers = "^8.12.57"
 lxml = "^4.9.1"
 Unidecode = "^1.3.6"
 html5lib = "^1.1"
-geolocate = "^0.1.2"
+geopy = "^2.3.0"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.12.2"
