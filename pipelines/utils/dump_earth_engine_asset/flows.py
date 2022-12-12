@@ -14,6 +14,7 @@ from pipelines.utils.dump_earth_engine_asset.tasks import (
     get_project_id,
     trigger_cron_job,
     update_last_trigger,
+    get_earth_engine_key_from_vault,
     create_table_asset,
 )
 from pipelines.utils.tasks import rename_current_flow_run_msg
@@ -39,7 +40,7 @@ with Flow(
     )
 
     service_account = (Parameter("service_account"),)
-    service_account_secret_path = (Parameter("service_account_secret_path"),)
+    vault_path_earth_engine_key = (Parameter("vault_path_earth_engine_key"),)
     gcs_asset_path = (Parameter("gcs_asset_path"),)
     ee_asset_path = (Parameter("ee_asset_path"),)
 
@@ -71,6 +72,11 @@ with Flow(
         )
         update_task.set_upstream(download_task)
 
+        service_account_secret_path = get_earth_engine_key_from_vault(
+            vault_path_earth_engine_key=vault_path_earth_engine_key
+        )
+        service_account_secret_path.set_upstream(update_task)
+
         create_table_asset(
             service_account=service_account,
             service_account_secret_path=service_account_secret_path,
@@ -79,7 +85,7 @@ with Flow(
             ee_asset_path=ee_asset_path,
         )
 
-        create_table_asset.set_upstream(update_task)
+        create_table_asset.set_upstream(service_account_secret_path)
 
 
 dump_earth_engine_asset_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)

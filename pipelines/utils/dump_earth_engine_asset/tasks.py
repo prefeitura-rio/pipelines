@@ -3,6 +3,8 @@
 Tasks for dumping data directly from BigQuery to GCS.
 """
 from datetime import datetime
+import json
+from pathlib import Path
 from time import sleep
 from typing import Union
 
@@ -16,6 +18,7 @@ from pipelines.utils.dump_to_gcs.constants import constants as dump_to_gcs_const
 from pipelines.utils.utils import (
     determine_whether_to_execute_or_not,
     get_redis_client,
+    get_vault_client,
     human_readable,
     list_blobs_with_prefix,
     log,
@@ -178,6 +181,29 @@ def update_last_trigger(
     redis_client = get_redis_client()
     key = f"{project_id}__{ee_asset_path}"
     redis_client.set(key, {"last_trigger": execution_time})
+
+
+@task
+def get_earth_engine_key_from_vault(
+    vault_path_earth_engine_key: str,
+):
+    vault_path_earth_engine_key = vault_path_earth_engine_key
+    log(
+        f"Getting Earth Engine key from https://vault.dados.rio/ui/vault/secrets/secret/show/{vault_path_earth_engine_key}"
+    )
+    vault_client = get_vault_client()
+
+    secret = vault_client.secrets.kv.read_secret_version(vault_path_earth_engine_key)[
+        "data"
+    ]["key"]
+    
+    service_account_secret_path = Path("/tmp/earth-engine/key.json")
+    service_account_secret_path.mkdir(parents=True, exist_ok=True)
+    
+    with open(service_account_secret_path, "w", encoding="utf-8") as f:
+        json.dump(secret, f, ensure_ascii=False, indent=4)
+
+    return service_account_secret_path
 
 
 @task
