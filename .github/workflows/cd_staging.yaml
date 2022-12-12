@@ -25,9 +25,10 @@ env:
 
 jobs:
   build-container:
-    if: startsWith(github.head_ref, 'staging/')
+    if: startsWith(github.head_ref, 'staging/') || contains( github.event.pull_request.labels.*.name, 'staging')
     name: Register flows (staging)
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v2
 

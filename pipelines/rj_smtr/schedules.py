@@ -6,7 +6,7 @@ Schedules for rj_smtr
 from datetime import timedelta, datetime
 from pytz import timezone
 from prefect.schedules import Schedule
-from prefect.schedules.clocks import IntervalClock
+from prefect.schedules.clocks import IntervalClock, CronClock
 from pipelines.constants import constants as emd_constants
 from pipelines.rj_smtr.constants import constants
 
@@ -89,6 +89,43 @@ every_day = Schedule(
             ),
             labels=[
                 emd_constants.RJ_SMTR_AGENT_LABEL.value,
+            ],
+        ),
+    ]
+)
+
+every_day_hour_five = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(days=1),
+            start_date=datetime(
+                2022, 11, 30, 5, 0, tzinfo=timezone(constants.TIMEZONE.value)
+            ),
+            labels=[
+                emd_constants.RJ_SMTR_AGENT_LABEL.value,
+            ],
+        ),
+    ]
+)
+
+every_dayofmonth_one_and_sixteen = Schedule(
+    clocks=[
+        CronClock(
+            cron="0 12 16 * *",
+            start_date=datetime(
+                2022, 12, 16, 12, 0, tzinfo=timezone(constants.TIMEZONE.value)
+            ),
+            labels=[
+                emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value,
+            ],
+        ),
+        CronClock(
+            cron="0 12 1 * *",
+            start_date=datetime(
+                2023, 1, 1, 12, 0, tzinfo=timezone(constants.TIMEZONE.value)
+            ),
+            labels=[
+                emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value,
             ],
         ),
     ]

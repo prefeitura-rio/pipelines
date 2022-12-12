@@ -42,12 +42,13 @@ def get_k8s_dbt_client(
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments, too-many-locals
 def run_dbt_model(
     dbt_client: DbtClient,
     dataset_id: str = None,
     table_id: str = None,
     model: str = None,
+    dbt_alias: bool = False,
     upstream: bool = None,
     downstream: bool = None,
     exclude: str = None,
@@ -60,9 +61,13 @@ def run_dbt_model(
     Run a DBT model.
     """
     run_command = "dbt run"
+    if dbt_alias:
+        table_id = f"{dataset_id}__{table_id}"
 
-    if (dataset_id and table_id) and not model:
-        model = f"{dataset_id}.{table_id}"
+    if not model:
+        model = f"{dataset_id}"
+        if table_id:
+            model += f".{table_id}"
 
     # Set models and upstream/downstream for dbt
     if model:
