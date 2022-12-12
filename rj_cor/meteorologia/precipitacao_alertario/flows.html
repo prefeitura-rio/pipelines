@@ -56,6 +56,7 @@ from pipelines.utils.tasks import (
     get_current_flow_labels,
 )
 
+
 with Flow(
     name=&#34;COR: Meteorologia - Precipitacao ALERTARIO&#34;,
     code_owners=[
@@ -89,10 +90,6 @@ with Flow(
         dataset_id=DATASET_ID, table_id=TABLE_ID
     )
 
-    # If dataframe is empty stop flow
-    with case(empty_data, True):
-        MATERIALIZE_AFTER_DUMP = False
-
     with case(empty_data, False):
         path = salvar_dados(dados=dados, current_time=current_time)
         # Create table in BigQuery
@@ -104,62 +101,63 @@ with Flow(
             wait=path,
         )
 
-    # Trigger DBT flow run
-    with case(MATERIALIZE_AFTER_DUMP, True):
-        current_flow_labels = get_current_flow_labels()
-        materialization_flow = create_flow_run(
-            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
-            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters={
-                &#34;dataset_id&#34;: DATASET_ID,
-                &#34;table_id&#34;: TABLE_ID,
-                &#34;mode&#34;: MATERIALIZATION_MODE,
-                &#34;materialize_to_datario&#34;: MATERIALIZE_TO_DATARIO,
-            },
-            labels=current_flow_labels,
-            run_name=f&#34;Materialize {DATASET_ID}.{TABLE_ID}&#34;,
-        )
-
-        materialization_flow.set_upstream(UPLOAD_TABLE)
-
-        wait_for_materialization = wait_for_flow_run(
-            materialization_flow,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
-        )
-
-        wait_for_materialization.max_retries = (
-            dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
-        )
-        wait_for_materialization.retry_delay = timedelta(
-            seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
-        )
-
-        with case(DUMP_TO_GCS, True):
-            # Trigger Dump to GCS flow run with project id as datario
-            dump_to_gcs_flow = create_flow_run(
-                flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
+        # Trigger DBT flow run
+        with case(MATERIALIZE_AFTER_DUMP, True):
+            current_flow_labels = get_current_flow_labels()
+            materialization_flow = create_flow_run(
+                flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
                 project_name=constants.PREFECT_DEFAULT_PROJECT.value,
                 parameters={
-                    &#34;project_id&#34;: &#34;datario&#34;,
                     &#34;dataset_id&#34;: DATASET_ID,
                     &#34;table_id&#34;: TABLE_ID,
-                    &#34;maximum_bytes_processed&#34;: MAXIMUM_BYTES_PROCESSED,
+                    &#34;mode&#34;: MATERIALIZATION_MODE,
+                    &#34;materialize_to_datario&#34;: MATERIALIZE_TO_DATARIO,
                 },
-                labels=[
-                    &#34;datario&#34;,
-                ],
-                run_name=f&#34;Dump to GCS {DATASET_ID}.{TABLE_ID}&#34;,
+                labels=current_flow_labels,
+                run_name=f&#34;Materialize {DATASET_ID}.{TABLE_ID}&#34;,
             )
-            dump_to_gcs_flow.set_upstream(wait_for_materialization)
 
-            wait_for_dump_to_gcs = wait_for_flow_run(
-                dump_to_gcs_flow,
+            current_flow_labels.set_upstream(UPLOAD_TABLE)
+            materialization_flow.set_upstream(current_flow_labels)
+
+            wait_for_materialization = wait_for_flow_run(
+                materialization_flow,
                 stream_states=True,
                 stream_logs=True,
                 raise_final_state=True,
             )
+
+            wait_for_materialization.max_retries = (
+                dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
+            )
+            wait_for_materialization.retry_delay = timedelta(
+                seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
+            )
+
+            with case(DUMP_TO_GCS, True):
+                # Trigger Dump to GCS flow run with project id as datario
+                dump_to_gcs_flow = create_flow_run(
+                    flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
+                    project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                    parameters={
+                        &#34;project_id&#34;: &#34;datario&#34;,
+                        &#34;dataset_id&#34;: DATASET_ID,
+                        &#34;table_id&#34;: TABLE_ID,
+                        &#34;maximum_bytes_processed&#34;: MAXIMUM_BYTES_PROCESSED,
+                    },
+                    labels=[
+                        &#34;datario&#34;,
+                    ],
+                    run_name=f&#34;Dump to GCS {DATASET_ID}.{TABLE_ID}&#34;,
+                )
+                dump_to_gcs_flow.set_upstream(wait_for_materialization)
+
+                wait_for_dump_to_gcs = wait_for_flow_run(
+                    dump_to_gcs_flow,
+                    stream_states=True,
+                    stream_logs=True,
+                    raise_final_state=True,
+                )
 
 # para rodar na cloud
 cor_meteorologia_precipitacao_alertario.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
