@@ -109,10 +109,9 @@ def rename_current_flow_run_dataset_table(
     client = Client()
     return client.set_flow_run_name(flow_run_id, f"{prefix}{dataset_id}.{table_id}")
 
+
 @task
-def rename_current_flow_run_msg(
-    msg: str, wait=None
-) -> None:
+def rename_current_flow_run_msg(msg: str, wait=None) -> None:
     """
     Rename the current flow run.
     """
