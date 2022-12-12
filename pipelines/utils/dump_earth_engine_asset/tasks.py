@@ -196,10 +196,10 @@ def get_earth_engine_key_from_vault(
     secret = vault_client.secrets.kv.read_secret_version(vault_path_earth_engine_key)[
         "data"
     ]["key"]
-    
+
     service_account_secret_path = Path("/tmp/earth-engine/key.json")
-    service_account_secret_path.mkdir(parents=True, exist_ok=True)
-    
+    service_account_secret_path.parent.mkdir(parents=True, exist_ok=True)
+
     with open(service_account_secret_path, "w", encoding="utf-8") as f:
         json.dump(secret, f, ensure_ascii=False, indent=4)
 
