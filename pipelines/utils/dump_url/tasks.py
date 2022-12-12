@@ -148,7 +148,7 @@ def dump_files(
     file_path: str,
     partition_columns: List[str],
     save_path: str = ".",
-    chunksize: int = 10 ** 6,
+    chunksize: int = 10**6,
     build_json_dataframe: bool = False,
     dataframe_key_column: str = None,
 ) -> None:
