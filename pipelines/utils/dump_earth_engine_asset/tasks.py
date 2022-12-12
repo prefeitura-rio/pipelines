@@ -116,8 +116,11 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
 
     # Get the BLOB we've just created and make it public
     blobs = list_blobs_with_prefix(project_id, blob_path)
+    log(f"{blobs}")
     if not blobs:
         raise ValueError(f"No blob found at {blob_path}")
+
+    return blob_path
 
 
 @task
@@ -213,7 +216,7 @@ def create_table_asset(
     service_account: str,
     service_account_secret_path: str,
     project_id: str,
-    gcs_asset_path: str,
+    gcs_file_asset_path: str,
     ee_asset_path: str,
 ):
     """
@@ -240,7 +243,7 @@ def create_table_asset(
 
     params = {
         "name": ee_asset_path,
-        "sources": [{"primaryPath": gcs_asset_path, "charset": "UTF-8"}],
+        "sources": [{"primaryPath": gcs_file_asset_path, "charset": "UTF-8"}],
     }
 
     request_id = ee.data.newTaskId(1)[0]

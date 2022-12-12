@@ -57,7 +57,7 @@ with Flow(
     )
 
     with case(trigger_download, True):
-        download_task = download_data_to_gcs(  # pylint: disable=C0103
+        gcs_file_asset_path = download_data_to_gcs(  # pylint: disable=C0103
             project_id=project_id,
             gcs_asset_path=gcs_asset_path,
             query=query,
@@ -70,7 +70,7 @@ with Flow(
             ee_asset_path=ee_asset_path,
             execution_time=execution_time,
         )
-        update_task.set_upstream(download_task)
+        update_task.set_upstream(gcs_file_asset_path)  # pylint: disable=E1101
 
         service_account_secret_path = get_earth_engine_key_from_vault(
             vault_path_earth_engine_key=vault_path_earth_engine_key
@@ -81,7 +81,7 @@ with Flow(
             service_account=service_account,
             service_account_secret_path=service_account_secret_path,
             project_id=project_id,
-            gcs_asset_path=gcs_asset_path,
+            gcs_file_asset_path=gcs_file_asset_path,
             ee_asset_path=ee_asset_path,
         )
 
