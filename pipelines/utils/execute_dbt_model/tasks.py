@@ -42,7 +42,7 @@ def get_k8s_dbt_client(
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments, too-many-locals
 def run_dbt_model(
     dbt_client: DbtClient,
     dataset_id: str = None,
