@@ -172,6 +172,7 @@ def format_partitioned_query(
     query: str,
     dataset_id: str,
     table_id: str,
+    database_type: str,
     partition_columns: List[str] = None,
     lower_bound_date: str = None,
     date_format: str = None,
@@ -218,12 +219,17 @@ def format_partitioned_query(
         f"Partitioned DETECTED: {partition_column}, retuning a NEW QUERY "
         "with partitioned columns and filters"
     )
-
-    return f"""
-    with {aux_name} as ({query})
-    select * from {aux_name}
-    where {partition_column} >= '{last_date}'
-    """
+    if database_type == "oracle":
+        return f"""
+        select * from ({query}) {aux_name}
+        where {partition_column} >= TO_DATE('{last_date}', '{date_format}')
+        """
+    else:
+        return f"""
+        with {aux_name} as ({query})
+        select * from {aux_name}
+        where {partition_column} >= '{last_date}'
+        """
 
 
 ###############
