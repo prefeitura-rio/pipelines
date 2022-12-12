@@ -91,7 +91,9 @@ def get_new_addresses(  # pylint: disable=too-many-arguments, too-many-locals
 
 
 @task
-def georeference_dataframe(new_addresses: pd.DataFrame) -> pd.DataFrame:
+def georeference_dataframe(
+    new_addresses: pd.DataFrame, log_divider: int = 60
+) -> pd.DataFrame:
     """
     Georeference all addresses in a dataframe
     """
@@ -102,7 +104,16 @@ def georeference_dataframe(new_addresses: pd.DataFrame) -> pd.DataFrame:
 
     geolocator = Nominatim(user_agent="prefeitura-rio")
     geocode = RateLimiter(geolocator.geocode, min_delay_seconds=1)
-    locations: List[Location] = [geocode(address) for address in all_addresses]
+
+    log(f"There are {len(all_addresses)} addresses to georeference")
+
+    locations: List[Location] = []
+    for i, address in enumerate(all_addresses):
+        if i % log_divider == 0:
+            log(f"Georeferencing address {i} of {len(all_addresses)}...")
+        location = geocode(address)
+        locations.append(location)
+
     geolocated_addresses = [
         {
             "latitude": location.latitude,
