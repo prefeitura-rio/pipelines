@@ -20,7 +20,7 @@ from pipelines.utils.utils import untuple_clocks as untuple
 gsheets_urls = {
     "alertas_desmatamento": {
         "dump_mode": "overwrite",
-        "url": "https://drive.google.com/file/d/1Q5MbIStFAWzM1q9Vf82xzKBYAZHNt9l6/view?usp=share_link",  # noqa: E501
+        "url": "https://drive.google.com/file/d/1Q5MbIStFAWzM1q9Vf82xzKBYAZHNt9l6/view?usp=share_link",  # noqa
         "url_type": "google_drive",
         "materialize_after_dump": True,
     }
