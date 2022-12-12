@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0103
 """
 Tasks for dumping data directly from BigQuery to GCS.
 """
@@ -6,7 +7,6 @@ from datetime import datetime
 import json
 from pathlib import Path
 from time import sleep
-from typing import Union
 
 from basedosdados.download.base import google_client
 from basedosdados.upload.base import Base
@@ -14,7 +14,6 @@ import ee
 from google.cloud import bigquery
 from prefect import task
 
-from pipelines.utils.dump_to_gcs.constants import constants as dump_to_gcs_constants
 from pipelines.utils.utils import (
     determine_whether_to_execute_or_not,
     get_redis_client,
@@ -83,6 +82,7 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
     job = client["bigquery"].query(query, job_config=job_config)
     while not job.done():
         sleep(1)
+    # pylint: disable=E1101
     table_size = job.total_bytes_processed
     log(f'Table size: {human_readable(table_size, unit="B", unit_divider=1024)}')
 
@@ -187,7 +187,9 @@ def update_last_trigger(
 def get_earth_engine_key_from_vault(
     vault_path_earth_engine_key: str,
 ):
-    vault_path_earth_engine_key = vault_path_earth_engine_key
+    """
+    Get earth engine service account key from vault.
+    """
     log(
         f"Getting Earth Engine key from https://vault.dados.rio/ui/vault/secrets/secret/show/{vault_path_earth_engine_key}"
     )
@@ -242,5 +244,5 @@ def create_table_asset(
     }
 
     request_id = ee.data.newTaskId(1)[0]
-    task = ee.data.startTableIngestion(request_id=request_id, params=params)
-    log(ee.data.getTaskStatus(task["id"]))
+    task_status = ee.data.startTableIngestion(request_id=request_id, params=params)
+    log(ee.data.getTaskStatus(task_status["id"]))

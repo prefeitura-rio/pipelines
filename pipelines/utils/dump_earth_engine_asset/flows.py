@@ -67,7 +67,7 @@ with Flow(
 
         update_task = update_last_trigger(  # pylint: disable=C0103
             project_id=project_id,
-            gcs_asset_path=gcs_asset_path,
+            ee_asset_path=ee_asset_path,
             execution_time=execution_time,
         )
         update_task.set_upstream(download_task)
@@ -75,7 +75,7 @@ with Flow(
         service_account_secret_path = get_earth_engine_key_from_vault(
             vault_path_earth_engine_key=vault_path_earth_engine_key
         )
-        service_account_secret_path.set_upstream(update_task)
+        service_account_secret_path.set_upstream(update_task)  # pylint: disable=E1101
 
         create_table_asset(
             service_account=service_account,
