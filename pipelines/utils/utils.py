@@ -851,14 +851,20 @@ def parse_date_columns(
         dataframe[partition_date_column], errors="coerce"
     )
 
-    dataframe[ano_col] = dataframe[data_col].dt.year
-    dataframe[ano_col] = pd.to_numeric(
-        dataframe[ano_col], downcast="integer", errors="coerce"
+    dataframe[ano_col] = (
+        dataframe[data_col]
+        .dt.year.fillna(-1)
+        .astype(int)
+        .astype(str)
+        .replace("-1", np.nan)
     )
 
-    dataframe[mes_col] = dataframe[data_col].dt.month
-    dataframe[mes_col] = pd.to_numeric(
-        dataframe[mes_col], downcast="integer", errors="coerce"
+    dataframe[mes_col] = (
+        dataframe[data_col]
+        .dt.month.fillna(-1)
+        .astype(int)
+        .astype(str)
+        .replace("-1", np.nan)
     )
 
     dataframe[data_col] = dataframe[data_col].dt.date
