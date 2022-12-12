@@ -27,7 +27,7 @@ seop_ee_flow.run_config = KubernetesRun(
 )
 
 seop_ee_default_parameters = {
-    "project_id": "conservacao_ambiental_monitor_verde",
+    "project_id": "rj-seop",
     "query": "",
     "bd_project_mode": "prod",
     "billing_project_id": "rj-seop",
