@@ -221,7 +221,8 @@ def format_partitioned_query(
     )
     if database_type == "oracle":
         return f"""
-        select * from ({query}) {aux_name}
+        with {aux_name} as ({query})
+        select * from {aux_name}
         where {partition_column} >= TO_DATE('{last_date}', '{date_format}')
         """
     else:
