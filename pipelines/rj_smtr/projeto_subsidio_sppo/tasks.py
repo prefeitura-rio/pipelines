@@ -10,7 +10,6 @@ from prefect import task
 from pipelines.utils.tasks import log, get_now_date
 
 
-
 @task
 def get_run_dates(date_range_start: str, date_range_end: str) -> List:
     """
