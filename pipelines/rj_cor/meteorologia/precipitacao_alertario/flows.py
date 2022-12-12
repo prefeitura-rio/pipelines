@@ -72,63 +72,63 @@ with Flow(
             wait=path,
         )
 
-      # Trigger DBT flow run
-      with case(MATERIALIZE_AFTER_DUMP, True):
-          current_flow_labels = get_current_flow_labels()
-          materialization_flow = create_flow_run(
-              flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
-              project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-              parameters={
-                  "dataset_id": DATASET_ID,
-                  "table_id": TABLE_ID,
-                  "mode": MATERIALIZATION_MODE,
-                  "materialize_to_datario": MATERIALIZE_TO_DATARIO,
-              },
-              labels=current_flow_labels,
-              run_name=f"Materialize {DATASET_ID}.{TABLE_ID}",
-          )
+    # Trigger DBT flow run
+        with case(MATERIALIZE_AFTER_DUMP, True):
+            current_flow_labels = get_current_flow_labels()
+            materialization_flow = create_flow_run(
+                flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+                project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                parameters={
+                    "dataset_id": DATASET_ID,
+                    "table_id": TABLE_ID,
+                    "mode": MATERIALIZATION_MODE,
+                    "materialize_to_datario": MATERIALIZE_TO_DATARIO,
+                },
+                labels=current_flow_labels,
+                run_name=f"Materialize {DATASET_ID}.{TABLE_ID}",
+            )
 
-          current_flow_labels.set_upstream(UPLOAD_TABLE)
-          materialization_flow.set_upstream(current_flow_labels)
+            current_flow_labels.set_upstream(UPLOAD_TABLE)
+            materialization_flow.set_upstream(current_flow_labels)
 
-          wait_for_materialization = wait_for_flow_run(
-              materialization_flow,
-              stream_states=True,
-              stream_logs=True,
-              raise_final_state=True,
-          )
+            wait_for_materialization = wait_for_flow_run(
+                materialization_flow,
+                stream_states=True,
+                stream_logs=True,
+                raise_final_state=True,
+            )
 
-          wait_for_materialization.max_retries = (
-              dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
-          )
-          wait_for_materialization.retry_delay = timedelta(
-              seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
-          )
+            wait_for_materialization.max_retries = (
+                dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
+            )
+            wait_for_materialization.retry_delay = timedelta(
+                seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
+            )
 
-          with case(DUMP_TO_GCS, True):
-              # Trigger Dump to GCS flow run with project id as datario
-              dump_to_gcs_flow = create_flow_run(
-                  flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
-                  project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-                  parameters={
-                      "project_id": "datario",
-                      "dataset_id": DATASET_ID,
-                      "table_id": TABLE_ID,
-                      "maximum_bytes_processed": MAXIMUM_BYTES_PROCESSED,
-                  },
-                  labels=[
-                      "datario",
-                  ],
-                  run_name=f"Dump to GCS {DATASET_ID}.{TABLE_ID}",
-              )
-              dump_to_gcs_flow.set_upstream(wait_for_materialization)
+            with case(DUMP_TO_GCS, True):
+                # Trigger Dump to GCS flow run with project id as datario
+                dump_to_gcs_flow = create_flow_run(
+                    flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
+                    project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                    parameters={
+                        "project_id": "datario",
+                        "dataset_id": DATASET_ID,
+                        "table_id": TABLE_ID,
+                        "maximum_bytes_processed": MAXIMUM_BYTES_PROCESSED,
+                    },
+                    labels=[
+                        "datario",
+                    ],
+                    run_name=f"Dump to GCS {DATASET_ID}.{TABLE_ID}",
+                )
+                dump_to_gcs_flow.set_upstream(wait_for_materialization)
 
-              wait_for_dump_to_gcs = wait_for_flow_run(
-                  dump_to_gcs_flow,
-                  stream_states=True,
-                  stream_logs=True,
-                  raise_final_state=True,
-              )
+                wait_for_dump_to_gcs = wait_for_flow_run(
+                    dump_to_gcs_flow,
+                    stream_states=True,
+                    stream_logs=True,
+                    raise_final_state=True,
+                )
 
 # para rodar na cloud
 cor_meteorologia_precipitacao_alertario.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
