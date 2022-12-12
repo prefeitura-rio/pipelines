@@ -87,24 +87,24 @@ with Flow(
               labels=current_flow_labels,
               run_name=f"Materialize {DATASET_ID}.{TABLE_ID}",
           )
-  
+
           current_flow_labels.set_upstream(UPLOAD_TABLE)
           materialization_flow.set_upstream(current_flow_labels)
-  
+
           wait_for_materialization = wait_for_flow_run(
               materialization_flow,
               stream_states=True,
               stream_logs=True,
               raise_final_state=True,
           )
-  
+
           wait_for_materialization.max_retries = (
               dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
           )
           wait_for_materialization.retry_delay = timedelta(
               seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
           )
-  
+
           with case(DUMP_TO_GCS, True):
               # Trigger Dump to GCS flow run with project id as datario
               dump_to_gcs_flow = create_flow_run(
@@ -122,7 +122,7 @@ with Flow(
                   run_name=f"Dump to GCS {DATASET_ID}.{TABLE_ID}",
               )
               dump_to_gcs_flow.set_upstream(wait_for_materialization)
-  
+
               wait_for_dump_to_gcs = wait_for_flow_run(
                   dump_to_gcs_flow,
                   stream_states=True,
