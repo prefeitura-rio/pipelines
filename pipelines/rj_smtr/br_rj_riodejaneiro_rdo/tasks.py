@@ -3,7 +3,7 @@
 Tasks for br_rj_riodejaneiro_rdo
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import re
 import os
 from pathlib import Path
@@ -21,7 +21,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.constants import (
 )
 from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.utils import build_table_id
 from pipelines.rj_smtr.utils import connect_ftp, get_last_run_timestamp
-from pipelines.utils.utils import log
+from pipelines.utils.utils import log, get_redis_client
 
 
 @task
@@ -33,56 +33,48 @@ def get_file_paths_from_ftp(
     get filename and partitions (from filename) on FTP client.
     """
 
-    execution_time = pendulum.now(constants.TIMEZONE.value)
-    # Define interval for date search
-    now = execution_time + timedelta(
-        hours=11, minutes=30
-    )  # Sunday, January 9, 2022 2:30:00 PM
-    max_timestamp = now.timestamp()
-    if not dump:
-        min_timestamp = (
-            now - timedelta(days=1)
-        ).timestamp()  # Saturday, January 8, 2022 2:30:00 PM
-        log(f"{execution_time} of type {type(execution_time)}")
-    else:
-        min_timestamp = datetime(2022, 1, 1).timestamp()
+    min_timestamp = datetime(2022, 1, 1).timestamp()  # set min timestamp for search
     # Connect to FTP & search files
-    try:
-        ftp_client = connect_ftp(constants.RDO_FTPS_SECRET_PATH.value)
-        files_updated_times = {
-            file: datetime.timestamp(parser.parse(info["modify"]))
-            for file, info in ftp_client.mlsd(transport_mode)
-        }
-        # Get files modified inside interval
-        files = []
-        for filename, file_mtime in files_updated_times.items():
-            if min_timestamp <= file_mtime < max_timestamp:
-                if filename[:3] == report_type and "HISTORICO" not in filename:
-                    log(
-                        f"""
-                        Found file
-                        - {filename}
-                        at folder
-                        - {transport_mode}
-                        with timestamp
-                        - {str(file_mtime)}"""
-                    )
-                    # Get date from file
-                    date = re.findall("2\\d{3}\\d{2}\\d{2}", filename)[-1]
+    # try:
+    ftp_client = connect_ftp(constants.RDO_FTPS_SECRET_PATH.value)
+    files_updated_times = {
+        file: datetime.timestamp(parser.parse(info["modify"]))
+        for file, info in ftp_client.mlsd(transport_mode)
+    }
+    # Get files modified inside interval
+    files = []
+    for filename, file_mtime in files_updated_times.items():
+        if file_mtime >= min_timestamp:
+            if filename[:3] == report_type and "HISTORICO" not in filename:
+                # Get date from file
+                date = re.findall("2\\d{3}\\d{2}\\d{2}", filename)[-1]
 
-                    file_info = {
-                        "transport_mode": transport_mode,
-                        "report_type": report_type,
-                        "filename": filename.split(".")[0],
-                        "ftp_path": transport_mode + "/" + filename,
-                        "partitions": f"ano={date[:4]}/mes={date[4:6]}/dia={date[6:]}",
-                        "error": None,
-                    }
-                    log(f"Create file info: {file_info}")
-                    files.append(file_info)
-    except Exception as e:  # pylint: disable=W0703
-        return [{"error": e}]
+                file_info = {
+                    "transport_mode": transport_mode,
+                    "report_type": report_type,
+                    "filename": filename.split(".")[0],
+                    "ftp_path": transport_mode + "/" + filename,
+                    "partitions": f"ano={date[:4]}/mes={date[4:6]}/dia={date[6:]}",
+                    "error": None,
+                }
+                # log(f"Create file info: {file_info}")
+                files.append(file_info)
+    # except Exception as e:  # pylint: disable=W0703
+    #     return [{"error": e}]
+    log(f"There are {len(files)} files at the FTP")
     return files
+
+
+@task
+def check_files_for_download(files: list, dataset_id: str, table_id: str):
+    redis_client = get_redis_client("localhost")  # TODO: remove localhost
+    exclude_files = redis_client.get(f"{dataset_id}.{table_id}")["files"]
+    log(f"There are {len(exclude_files)} already downloaded")
+    download_files = [
+        file_info for file_info in files if file_info["filename"] not in exclude_files
+    ]
+    log(f"Will download the remaining {len(download_files)} files:{download_files}")
+    return download_files
 
 
 @task
@@ -162,7 +154,7 @@ def pre_treatment_br_rj_riodejaneiro_rdo(
             )  # pylint: disable=C0103
             if len(df) == 0:
                 status.append({"error": "ValueError: file is empty"})
-                continue  # If file is empty, skip current iteration
+                continue  # If file is empty, skip current iteration.
             log(f"Load csv from raw file:\n{df.head(5)}")
             # Set column names for those already in the file
             df.columns = config["reindex_columns"][: len(df.columns)]
@@ -211,6 +203,39 @@ def pre_treatment_br_rj_riodejaneiro_rdo(
             status.append({"error": e})
             continue
     return treated_paths, raw_paths, partitions, status
+
+
+@task
+def update_rdo_redis(
+    download_files: list,
+    table_id: str,
+    dataset_id: str = constants.RDO_DATASET_ID.value,
+    wait=None,
+):
+    key = f"{dataset_id}.{table_id}"
+    redis_client = get_redis_client("localhost")  # TODO: remove localhost
+    content = redis_client.get(key)  # get current redis state
+    # log(
+    #     f"""
+    # Redis has {len(content['files'])} files registered:
+    # {content['files'][:5]}
+    # ...
+    # {content['files'][-5:-1]}
+    # """
+    # )
+    log(f"content is:\n{content}")
+    insert_content = [
+        file_info["filename"] for file_info in download_files
+    ]  # parse filenames to append
+    log(
+        f"""
+    Will register {len(insert_content)} files:
+        {insert_content}
+    """
+    )
+    content["files"].extend(insert_content)  # generate updated dict to set
+    log(f"content after append has {len(content['files'])}")
+    return redis_client.set(key, content)
 
 
 @task

@@ -11,9 +11,11 @@ from prefect.storage import GCS
 from pipelines.constants import constants as emd_constants
 from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.tasks import (
     get_file_paths_from_ftp,
+    check_files_for_download,
     download_and_save_local_from_ftp,
     pre_treatment_br_rj_riodejaneiro_rdo,
     get_rdo_date_range,
+    update_rdo_redis,
 )
 from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.tasks import (
@@ -96,6 +98,7 @@ with Flow(
     report_type = Parameter("report_type", "RHO")
     dump = Parameter("dump", False)
     table_id = Parameter("table_id", constants.SPPO_RHO_TABLE_ID.value)
+    materialize = Parameter("materialize", False)
 
     rename_run = rename_current_flow_run_now_time(
         prefix=f"Captura FTP - {transport_mode}-{report_type} ",
@@ -106,7 +109,10 @@ with Flow(
     files = get_file_paths_from_ftp(
         transport_mode=transport_mode, report_type=report_type, dump=dump
     )
-    updated_info = download_and_save_local_from_ftp.map(file_info=files)
+    download_files = check_files_for_download(
+        files=files, dataset_id=constants.RDO_DATASET_ID.value, table_id=table_id
+    )
+    updated_info = download_and_save_local_from_ftp.map(file_info=download_files)
     # TRANSFORM
     treated_path, raw_path, partitions, status = pre_treatment_br_rj_riodejaneiro_rdo(
         files=updated_info
@@ -120,19 +126,22 @@ with Flow(
         partitions=partitions,
         status=status,
     )
-    with case(bool(error), False):
+    set_redis = update_rdo_redis(download_files, table_id=table_id, wait=error)
+
+    with case(bool(error), False), case(materialize, True):
         RUN = create_flow_run(
             flow_name=rho_mat_flow.name,
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=LABELS,
             run_name=rho_mat_flow.name,
-        )
+        )  # TODO: set dependencies
         wait_for_flow_run(
             RUN,
             stream_states=True,
             stream_logs=True,
             raise_final_state=True,
         )
+    captura_ftp.set_dependencies(RUN, [set_redis])
 
 captura_ftp.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_ftp.run_config = KubernetesRun(
