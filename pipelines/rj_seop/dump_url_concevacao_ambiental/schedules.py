@@ -25,7 +25,7 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "dataset_id": "conservacao_ambiental_monitor_verde",
     },
-    "licensas": {
+    "licencas": {
         "dump_mode": "overwrite",
         "url": "https://drive.google.com/file/d/1alofNfwGceEWYEQEbd9bNWaEdLdm-laR/view?usp=share_link",
         "url_type": "google_drive",
