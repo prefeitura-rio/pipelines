@@ -20,10 +20,18 @@ from pipelines.utils.utils import untuple_clocks as untuple
 gsheets_urls = {
     "alertas_desmatamento": {
         "dump_mode": "overwrite",
-        "url": "https://drive.google.com/file/d/1Q5MbIStFAWzM1q9Vf82xzKBYAZHNt9l6/view?usp=share_link",  # noqa
+        "url": "https://drive.google.com/file/d/1Q5MbIStFAWzM1q9Vf82xzKBYAZHNt9l6/view?usp=share_link",
         "url_type": "google_drive",
         "materialize_after_dump": True,
-    }
+        "dataset_id": "conservacao_ambiental_monitor_verde",
+    },
+    "licensas": {
+        "dump_mode": "overwrite",
+        "url": "https://drive.google.com/file/d/1alofNfwGceEWYEQEbd9bNWaEdLdm-laR/view?usp=share_link",
+        "url_type": "google_drive",
+        "materialize_after_dump": True,
+        "dataset_id": "conservacao_ambiental_licenciamento_geosislic",
+    },
 }
 
 gsheets_clocks = generate_dump_url_schedules(
@@ -32,8 +40,8 @@ gsheets_clocks = generate_dump_url_schedules(
     labels=[
         constants.RJ_SEOP_AGENT_LABEL.value,
     ],
-    dataset_id="conservacao_ambiental_monitor_verde",
+    dataset_id="",
     table_parameters=gsheets_urls,
 )
 
-gsheets_daily_update_schedule = Schedule(clocks=untuple(gsheets_clocks))
+gsheets_year_update_schedule = Schedule(clocks=untuple(gsheets_clocks))
