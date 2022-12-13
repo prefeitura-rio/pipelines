@@ -30,7 +30,7 @@ gsheets_urls = {
         "url": "https://drive.google.com/file/d/1alofNfwGceEWYEQEbd9bNWaEdLdm-laR/view?usp=share_link",
         "url_type": "google_drive",
         "materialize_after_dump": True,
-        "dataset_id": "conservacao_ambiental_licenciamento_geosislic",
+        "dataset_id": "urbanismo_geosislic_licenciamento",
     },
 }
 
