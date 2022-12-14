@@ -10,14 +10,14 @@ from prefect.storage import GCS
 
 from pipelines.constants import constants
 
-from pipelines.rj_seop.dump_url_monitor_verde.schedules import (
-    gsheets_daily_update_schedule,
+from pipelines.rj_seop.dump_url_concevacao_ambiental.schedules import (
+    gsheets_year_update_schedule,
 )
 from pipelines.utils.dump_url.flows import dump_url_flow
 from pipelines.utils.utils import set_default_parameters
 
 seop_gsheets_flow = deepcopy(dump_url_flow)
-seop_gsheets_flow.name = "SEOP: Monitor Verde - Ingerir CSV do Google Drive"
+seop_gsheets_flow.name = "SEOP: Concervacao Ambiental - Ingerir CSV do Google Drive"
 seop_gsheets_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 seop_gsheets_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
@@ -33,4 +33,4 @@ seop_gsheets_flow = set_default_parameters(
     seop_gsheets_flow, default_parameters=seop_gsheets_default_parameters
 )
 
-seop_gsheets_flow.schedule = gsheets_daily_update_schedule
+seop_gsheets_flow.schedule = gsheets_year_update_schedule
