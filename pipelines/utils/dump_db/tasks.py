@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=R0914
 """
 General purpose tasks for dumping database data.
 """
