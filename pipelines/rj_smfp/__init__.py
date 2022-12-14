@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Prefect flows for rj_smfp project
+Prefect flows for rj_smfp project in RJ
 """
 
 from pipelines.rj_smfp.dump_db_ergon.flows import *
