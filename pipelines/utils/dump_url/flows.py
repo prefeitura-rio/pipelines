@@ -134,7 +134,6 @@ with Flow(
         table_id=table_id,
         dump_mode=dump_mode,
     )
-    CREATE_TABLE_AND_UPLOAD_TO_GCS_TASK.set_upstream(DOWNLOAD_URL_TASK)
     CREATE_TABLE_AND_UPLOAD_TO_GCS_TASK.set_upstream(DUMP_CHUNKS_TASK)
 
     #####################################
@@ -156,6 +155,7 @@ with Flow(
             labels=current_flow_labels,
             run_name=f"Materialize {dataset_id}.{table_id}",
         )
+        materialization_flow.set_upstream(CREATE_TABLE_AND_UPLOAD_TO_GCS_TASK)
 
         wait_for_materialization = wait_for_flow_run(
             materialization_flow,
