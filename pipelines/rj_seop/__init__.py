@@ -3,4 +3,4 @@
 Prefect flows for SEOP's project
 """
 
-from pipelines.rj_seop.dump_url_monitor_verde.flows import *
+from pipelines.rj_seop.dump_url_concevacao_ambiental.flows import *
