@@ -45,8 +45,8 @@ def merge_file_info_and_errors(files: list, errors: list):
     Returns:
         list: containing dicts with updated error
     """
-    for i in range(len(files)):
-        files[i]["error"] = errors[i]
+    for i, file in enumerate(files):
+        file["error"] = errors[i]
     return files
 
 

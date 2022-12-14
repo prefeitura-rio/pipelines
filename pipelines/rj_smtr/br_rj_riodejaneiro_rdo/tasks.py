@@ -138,8 +138,8 @@ def download_and_save_local_from_ftp(file_info: dict):
 
         log(f"Timestamp captura is {file_info['timestamp_captura']}")
         log(f"Update file info: {file_info}")
-    except Exception as e:  # pylint: disable=W0703
-        file_info["error"] = e
+    except Exception as error:  # pylint: disable=W0703
+        file_info["error"] = error
     return file_info
 
 
@@ -233,7 +233,7 @@ def update_rdo_redis(
     table_id: str,
     dataset_id: str = constants.RDO_DATASET_ID.value,
     errors=None,
-    wait=None,
+    wait=None,  # pylint: disable=W0613
 ):
     """
     Update files downloaded to redis, if uploaded correctly.
@@ -255,7 +255,7 @@ def update_rdo_redis(
     if errors:
         log(f"Received errors:\n {errors}")
         merge_file_info_and_errors(download_files, errors)
-    log(f"content is:\n{content}")
+    log(f"content is:\n{content['files'][:5]}")
     insert_content = [
         file_info["filename"] for file_info in download_files if not file_info["error"]
     ]  # parse filenames to append
