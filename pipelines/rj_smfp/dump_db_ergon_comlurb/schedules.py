@@ -880,7 +880,7 @@ ergon_queries = {
             FROM ERGON.SETORES_ERGON
         """,
     },
-    "vantagem": {
+    "vantagens": {
         "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
