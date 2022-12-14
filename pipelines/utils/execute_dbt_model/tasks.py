@@ -54,6 +54,7 @@ def run_dbt_model(
     flags: str = None,
     _vars: Union[dict, List[Dict]] = None,
     sync: bool = True,
+    wait=None,
 ):
     """
     Run a DBT model.
