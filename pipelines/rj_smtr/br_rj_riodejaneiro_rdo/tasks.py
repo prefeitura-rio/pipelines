@@ -20,7 +20,11 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.constants import (
     constants as rdo_constants,
 )
 from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.utils import build_table_id
-from pipelines.rj_smtr.utils import connect_ftp, get_last_run_timestamp
+from pipelines.rj_smtr.utils import (
+    connect_ftp,
+    get_last_run_timestamp,
+    merge_file_info_and_errors,
+)
 from pipelines.utils.utils import log, get_redis_client
 
 
@@ -142,7 +146,9 @@ def pre_treatment_br_rj_riodejaneiro_rdo(
         dict: updated file_info with treated filepath
     """
     treated_paths, raw_paths, partitions, status = [], [], [], []
+    log(f"Received {len(files)} to treat")
     for file_info in files:
+        log(f"Processing file {files.index(file_info)}")
         try:
             config = rdo_constants.RDO_PRE_TREATMENT_CONFIG.value[
                 file_info["transport_mode"]
@@ -153,6 +159,7 @@ def pre_treatment_br_rj_riodejaneiro_rdo(
                 file_info["raw_path"], header=None, delimiter=";", index_col=False
             )  # pylint: disable=C0103
             if len(df) == 0:
+                log("Dataframe is empty")
                 status.append({"error": "ValueError: file is empty"})
                 continue  # If file is empty, skip current iteration.
             log(f"Load csv from raw file:\n{df.head(5)}")
@@ -200,8 +207,10 @@ def pre_treatment_br_rj_riodejaneiro_rdo(
             status.append({"error": None})
         except Exception as e:  # pylint: disable=W0703
             log(f"Pre Treatment failed with error: {e}")
+            treated_paths.append(None)
+            raw_paths.append(None)
+            partitions.append(None)
             status.append({"error": e})
-            continue
     return treated_paths, raw_paths, partitions, status
 
 
@@ -210,22 +219,18 @@ def update_rdo_redis(
     download_files: list,
     table_id: str,
     dataset_id: str = constants.RDO_DATASET_ID.value,
+    errors=None,
     wait=None,
 ):
     key = f"{dataset_id}.{table_id}"
     redis_client = get_redis_client("localhost")  # TODO: remove localhost
     content = redis_client.get(key)  # get current redis state
-    # log(
-    #     f"""
-    # Redis has {len(content['files'])} files registered:
-    # {content['files'][:5]}
-    # ...
-    # {content['files'][-5:-1]}
-    # """
-    # )
+    if errors:
+        log(f"Received errors:\n {errors}")
+        merge_file_info_and_errors(download_files, errors)
     log(f"content is:\n{content}")
     insert_content = [
-        file_info["filename"] for file_info in download_files
+        file_info["filename"] for file_info in download_files if not file_info["error"]
     ]  # parse filenames to append
     log(
         f"""
@@ -234,7 +239,7 @@ def update_rdo_redis(
     """
     )
     content["files"].extend(insert_content)  # generate updated dict to set
-    log(f"content after append has {len(content['files'])}")
+    log(f"After appending, content has {len(content['files'])} files registered")
     return redis_client.set(key, content)
 
 

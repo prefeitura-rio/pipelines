@@ -118,7 +118,7 @@ with Flow(
         files=updated_info
     )
     # LOAD
-    error = bq_upload.map(
+    errors = bq_upload.map(
         dataset_id=unmapped(constants.RDO_DATASET_ID.value),
         table_id=unmapped(table_id),
         filepath=treated_path,
@@ -126,9 +126,11 @@ with Flow(
         partitions=partitions,
         status=status,
     )
-    set_redis = update_rdo_redis(download_files, table_id=table_id, wait=error)
+    set_redis = update_rdo_redis(
+        download_files=download_files, table_id=table_id, errors=errors
+    )
 
-    with case(bool(error), False), case(materialize, True):
+    with case(bool(errors), False), case(materialize, True):
         RUN = create_flow_run(
             flow_name=rho_mat_flow.name,
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,

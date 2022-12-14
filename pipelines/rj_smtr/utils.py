@@ -166,6 +166,12 @@ def map_dict_keys(data: dict, mapping: dict) -> None:
     return data
 
 
+def merge_file_info_and_errors(files: list, errors: list):
+    for i in range(len(files)):
+        files[i]["error"] = errors[i]
+    return files
+
+
 def connect_ftp(secret_path: str = None, secure: bool = True):
     """Connect to FTP
 
