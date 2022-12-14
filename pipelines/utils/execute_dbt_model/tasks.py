@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=R0914, W0611, W0613, R0913
 """
 Tasks related to DBT flows.
 """
-# pylint: disable=unused-argument, R0914
 
 from datetime import timedelta
 from typing import Any, Dict, List, Union
