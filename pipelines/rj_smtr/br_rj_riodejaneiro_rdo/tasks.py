@@ -19,11 +19,14 @@ from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.constants import (
     constants as rdo_constants,
 )
-from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.utils import build_table_id
+from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.utils import (
+    build_table_id,
+    merge_file_info_and_errors,
+)
+
 from pipelines.rj_smtr.utils import (
     connect_ftp,
     get_last_run_timestamp,
-    merge_file_info_and_errors,
 )
 from pipelines.utils.utils import log, get_redis_client
 
@@ -71,7 +74,17 @@ def get_file_paths_from_ftp(
 
 @task
 def check_files_for_download(files: list, dataset_id: str, table_id: str):
-    redis_client = get_redis_client("localhost")  # TODO: remove localhost
+    """Check redis for files already downloaded from the FTP
+
+    Args:
+        files (list): file informations gathered from FTP
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+
+    Returns:
+        list: Containing the info on the files to download
+    """
+    redis_client = get_redis_client()
     exclude_files = redis_client.get(f"{dataset_id}.{table_id}")["files"]
     log(f"There are {len(exclude_files)} already downloaded")
     download_files = [
@@ -222,8 +235,22 @@ def update_rdo_redis(
     errors=None,
     wait=None,
 ):
+    """
+    Update files downloaded to redis, if uploaded correctly.
+
+    Args:
+        download_files (list): information on the downloaded files
+        table_id (str): table_id on BigQuery
+        dataset_id (str, optional): dataset_id on BigQuery.
+        Defaults to constants.RDO_DATASET_ID.value.
+        errors (list, optional): list of errors. Defaults to None.
+        wait (Any, optional): wait for task before run. Defaults to None.
+
+    Returns:
+        bool: if redis key was set
+    """
     key = f"{dataset_id}.{table_id}"
-    redis_client = get_redis_client("localhost")  # TODO: remove localhost
+    redis_client = get_redis_client()
     content = redis_client.get(key)  # get current redis state
     if errors:
         log(f"Received errors:\n {errors}")

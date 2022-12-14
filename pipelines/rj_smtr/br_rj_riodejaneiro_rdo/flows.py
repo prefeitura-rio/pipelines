@@ -136,7 +136,7 @@ with Flow(
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=LABELS,
             run_name=rho_mat_flow.name,
-        )  # TODO: set dependencies
+        )
         wait_for_flow_run(
             RUN,
             stream_states=True,

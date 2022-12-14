@@ -35,6 +35,21 @@ def build_table_id(mode: str, report_type: str):
     return table_id
 
 
+def merge_file_info_and_errors(files: list, errors: list):
+    """
+
+    Args:
+        files (list): List of dicts
+        errors (list): list of errors
+
+    Returns:
+        list: containing dicts with updated error
+    """
+    for i in range(len(files)):
+        files[i]["error"] = errors[i]
+    return files
+
+
 def generate_ftp_schedules(
     interval_minutes: int, label: str = emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value
 ):
