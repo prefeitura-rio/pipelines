@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 # pylint: disable= line-too-long
 
+"""
+Tasks for nivel_reservatorio project
+"""
+
 from io import StringIO
 from pathlib import Path
 import os

@@ -12,7 +12,6 @@ from pipelines.rj_escritorio import *
 from pipelines.rj_rioaguas import *
 from pipelines.rj_segovi import *
 from pipelines.rj_seop import *
-from pipelines.rj_rioaguas import *
 from pipelines.rj_sme import *
 from pipelines.rj_smfp import *
 from pipelines.rj_smi import *

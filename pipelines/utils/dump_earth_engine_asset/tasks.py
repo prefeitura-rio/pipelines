@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0103
+# flake8: noqa: E501
 """
 Tasks for dumping data directly from BigQuery to GCS.
 """
