@@ -139,6 +139,16 @@ def rename_current_flow_run_dataset_table(
     return client.set_flow_run_name(flow_run_id, f&#34;{prefix}{dataset_id}.{table_id}&#34;)
 
 
+@task
+def rename_current_flow_run_msg(msg: str, wait=None) -&gt; None:
+    &#34;&#34;&#34;
+    Rename the current flow run.
+    &#34;&#34;&#34;
+    flow_run_id = prefect.context.get(&#34;flow_run_id&#34;)
+    client = Client()
+    return client.set_flow_run_name(flow_run_id, msg)
+
+
 ##################
 #
 # Hashicorp Vault
@@ -654,6 +664,25 @@ def rename_current_flow_run_dataset_table(
     return client.set_flow_run_name(flow_run_id, f&#34;{prefix}{dataset_id}.{table_id}&#34;)</code></pre>
 </details>
 </dd>
+<dt id="pipelines.utils.tasks.rename_current_flow_run_msg"><code class="name flex">
+<span>def <span class="ident">rename_current_flow_run_msg</span></span>(<span>msg: str, wait=None) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Rename the current flow run.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def rename_current_flow_run_msg(msg: str, wait=None) -&gt; None:
+    &#34;&#34;&#34;
+    Rename the current flow run.
+    &#34;&#34;&#34;
+    flow_run_id = prefect.context.get(&#34;flow_run_id&#34;)
+    client = Client()
+    return client.set_flow_run_name(flow_run_id, msg)</code></pre>
+</details>
+</dd>
 <dt id="pipelines.utils.tasks.rename_current_flow_run_now_time"><code class="name flex">
 <span>def <span class="ident">rename_current_flow_run_now_time</span></span>(<span>prefix: str, now_time=None, wait=None) ‑> None</span>
 </code></dt>
@@ -747,6 +776,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.utils.tasks.greater_than" href="#pipelines.utils.tasks.greater_than">greater_than</a></code></li>
 <li><code><a title="pipelines.utils.tasks.log_task" href="#pipelines.utils.tasks.log_task">log_task</a></code></li>
 <li><code><a title="pipelines.utils.tasks.rename_current_flow_run_dataset_table" href="#pipelines.utils.tasks.rename_current_flow_run_dataset_table">rename_current_flow_run_dataset_table</a></code></li>
+<li><code><a title="pipelines.utils.tasks.rename_current_flow_run_msg" href="#pipelines.utils.tasks.rename_current_flow_run_msg">rename_current_flow_run_msg</a></code></li>
 <li><code><a title="pipelines.utils.tasks.rename_current_flow_run_now_time" href="#pipelines.utils.tasks.rename_current_flow_run_now_time">rename_current_flow_run_now_time</a></code></li>
 </ul>
 </li>

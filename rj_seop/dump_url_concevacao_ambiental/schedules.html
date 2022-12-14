@@ -4,9 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_seop.dump_url_monitor_verde.flows API documentation</title>
-<meta name="description" content="Database
-dumping flows for SEOP project" />
+<title>pipelines.rj_seop.dump_url_concevacao_ambiental.schedules API documentation</title>
+<meta name="description" content="Schedules for the database dump pipeline" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -20,51 +19,61 @@ dumping flows for SEOP project" />
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_seop.dump_url_monitor_verde.flows</code></h1>
+<h1 class="title">Module <code>pipelines.rj_seop.dump_url_concevacao_ambiental.schedules</code></h1>
 </header>
 <section id="section-intro">
-<p>Database
-dumping flows for SEOP project</p>
+<p>Schedules for the database dump pipeline</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Database  dumping flows for SEOP project
+Schedules for the database dump pipeline
 &#34;&#34;&#34;
 
-from copy import deepcopy
+from datetime import datetime, timedelta
 
-from prefect.run_configs import KubernetesRun
-from prefect.storage import GCS
-
+import pytz
+from prefect.schedules import Schedule
 from pipelines.constants import constants
+from pipelines.utils.dump_url.utils import generate_dump_url_schedules
+from pipelines.utils.utils import untuple_clocks as untuple
 
-from pipelines.rj_seop.dump_url_monitor_verde.schedules import (
-    gsheets_daily_update_schedule,
-)
-from pipelines.utils.dump_url.flows import dump_url_flow
-from pipelines.utils.utils import set_default_parameters
+#####################################
+#
+# Monitor Verde Schedule
+#
+#####################################
 
-seop_gsheets_flow = deepcopy(dump_url_flow)
-seop_gsheets_flow.name = &#34;SEOP: Monitor Verde - Ingerir CSV do Google Drive&#34;
-seop_gsheets_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-seop_gsheets_flow.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value,
+gsheets_urls = {
+    &#34;alertas_desmatamento&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://drive.google.com/file/d/1Q5MbIStFAWzM1q9Vf82xzKBYAZHNt9l6/view?usp=share_link&#34;,
+        &#34;url_type&#34;: &#34;google_drive&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;conservacao_ambiental_monitor_verde&#34;,
+    },
+    &#34;licencas&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://drive.google.com/file/d/1alofNfwGceEWYEQEbd9bNWaEdLdm-laR/view?usp=share_link&#34;,
+        &#34;url_type&#34;: &#34;google_drive&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;urbanismo_geosislic_licenciamento&#34;,
+    },
+}
+
+gsheets_clocks = generate_dump_url_schedules(
+    interval=timedelta(days=365),
+    start_date=datetime(2022, 11, 4, 20, 0, tzinfo=pytz.timezone(&#34;America/Sao_Paulo&#34;)),
     labels=[
         constants.RJ_SEOP_AGENT_LABEL.value,
     ],
+    dataset_id=&#34;&#34;,
+    table_parameters=gsheets_urls,
 )
 
-seop_gsheets_default_parameters = {
-    &#34;dataset_id&#34;: &#34;conservacao_ambiental_monitor_verde&#34;,
-}
-seop_gsheets_flow = set_default_parameters(
-    seop_gsheets_flow, default_parameters=seop_gsheets_default_parameters
-)
-
-seop_gsheets_flow.schedule = gsheets_daily_update_schedule</code></pre>
+gsheets_year_update_schedule = Schedule(clocks=untuple(gsheets_clocks))</code></pre>
 </details>
 </section>
 <section>
@@ -130,7 +139,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines.rj_seop.dump_url_monitor_verde" href="index.html">pipelines.rj_seop.dump_url_monitor_verde</a></code></li>
+<li><code><a title="pipelines.rj_seop.dump_url_concevacao_ambiental" href="index.html">pipelines.rj_seop.dump_url_concevacao_ambiental</a></code></li>
 </ul>
 </li>
 </ul>

@@ -881,14 +881,20 @@ def parse_date_columns(
         dataframe[partition_date_column], errors=&#34;coerce&#34;
     )
 
-    dataframe[ano_col] = dataframe[data_col].dt.year
-    dataframe[ano_col] = pd.to_numeric(
-        dataframe[ano_col], downcast=&#34;integer&#34;, errors=&#34;coerce&#34;
+    dataframe[ano_col] = (
+        dataframe[data_col]
+        .dt.year.fillna(-1)
+        .astype(int)
+        .astype(str)
+        .replace(&#34;-1&#34;, np.nan)
     )
 
-    dataframe[mes_col] = dataframe[data_col].dt.month
-    dataframe[mes_col] = pd.to_numeric(
-        dataframe[mes_col], downcast=&#34;integer&#34;, errors=&#34;coerce&#34;
+    dataframe[mes_col] = (
+        dataframe[data_col]
+        .dt.month.fillna(-1)
+        .astype(int)
+        .astype(str)
+        .replace(&#34;-1&#34;, np.nan)
     )
 
     dataframe[data_col] = dataframe[data_col].dt.date
@@ -1468,14 +1474,20 @@ Mode needs to be "prod" or "staging"</p></div>
         dataframe[partition_date_column], errors=&#34;coerce&#34;
     )
 
-    dataframe[ano_col] = dataframe[data_col].dt.year
-    dataframe[ano_col] = pd.to_numeric(
-        dataframe[ano_col], downcast=&#34;integer&#34;, errors=&#34;coerce&#34;
+    dataframe[ano_col] = (
+        dataframe[data_col]
+        .dt.year.fillna(-1)
+        .astype(int)
+        .astype(str)
+        .replace(&#34;-1&#34;, np.nan)
     )
 
-    dataframe[mes_col] = dataframe[data_col].dt.month
-    dataframe[mes_col] = pd.to_numeric(
-        dataframe[mes_col], downcast=&#34;integer&#34;, errors=&#34;coerce&#34;
+    dataframe[mes_col] = (
+        dataframe[data_col]
+        .dt.month.fillna(-1)
+        .astype(int)
+        .astype(str)
+        .replace(&#34;-1&#34;, np.nan)
     )
 
     dataframe[data_col] = dataframe[data_col].dt.date

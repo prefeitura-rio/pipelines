@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.utils.execute_dbt_model.flows API documentation</title>
-<meta name="description" content="DBT-related flows." />
+<title>pipelines.utils.dump_earth_engine_asset.flows API documentation</title>
+<meta name="description" content="Flows for dumping data directly from BigQuery to GCS." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,139 +19,108 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.utils.execute_dbt_model.flows</code></h1>
+<h1 class="title">Module <code>pipelines.utils.dump_earth_engine_asset.flows</code></h1>
 </header>
 <section id="section-intro">
-<p>DBT-related flows.</p>
+<p>Flows for dumping data directly from BigQuery to GCS.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-DBT-related flows.
+Flows for dumping data directly from BigQuery to GCS.
 &#34;&#34;&#34;
-
 from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
-from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 
 from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.decorators import Flow
-from pipelines.utils.execute_dbt_model.tasks import (
-    get_k8s_dbt_client,
-    is_running_at_datario,
-    is_valid_dictionary,
-    merge_dictionaries,
-    model_parameters_from_secrets,
-    run_dbt_model,
+from pipelines.utils.dump_earth_engine_asset.tasks import (
+    download_data_to_gcs,
+    get_project_id,
+    trigger_cron_job,
+    update_last_trigger,
+    get_earth_engine_key_from_vault,
+    create_table_asset,
 )
-from pipelines.utils.tasks import (
-    get_current_flow_labels,
-    log_task,
-    rename_current_flow_run_dataset_table,
-)
+from pipelines.utils.tasks import rename_current_flow_run_msg
 
 with Flow(
-    name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+    name=utils_constants.FLOW_DUMP_EARTH_ENGINE_ASSET_NAME.value,
     code_owners=[
         &#34;diego&#34;,
         &#34;gabriel&#34;,
     ],
-) as utils_run_dbt_model_flow:
+) as dump_earth_engine_asset_flow:
 
-    # Parameters
-    dataset_id = Parameter(&#34;dataset_id&#34;)
-    table_id = Parameter(&#34;table_id&#34;)
-    upstream = Parameter(&#34;upstream&#34;, default=None, required=False)
-    downstream = Parameter(&#34;downstream&#34;, default=None, required=False)
-    exclude = Parameter(&#34;exclude&#34;, default=None, required=False)
-    flags = Parameter(&#34;flags&#34;, default=None, required=False)
-    mode = Parameter(&#34;mode&#34;, default=&#34;dev&#34;, required=False)
-    materialize_to_datario = Parameter(
-        &#34;materialize_to_datario&#34;, default=False, required=False
-    )
-    dbt_model_parameters = Parameter(&#34;dbt_model_parameters&#34;, default={}, required=False)
-    dbt_model_secret_parameters = Parameter(
-        &#34;dbt_model_secret_parameters&#34;, default={}, required=False
-    )
-    dbt_alias = Parameter(&#34;dbt_alias&#34;, default=False, required=False)
-
-    #####################################
-    #
-    # Rename flow run
-    #
-    #####################################
-    rename_flow_run = rename_current_flow_run_dataset_table(
-        prefix=&#34;Materialize: &#34;, dataset_id=dataset_id, table_id=table_id, wait=table_id
+    project_id = Parameter(&#34;project_id&#34;, required=False)
+    query = Parameter(&#34;query&#34;, required=False)
+    bd_project_mode = Parameter(
+        &#34;bd_project_mode&#34;, required=False, default=&#34;prod&#34;
+    )  # prod or staging
+    billing_project_id = Parameter(&#34;billing_project_id&#34;, required=False)
+    desired_crontab = Parameter(
+        &#34;desired_crontab&#34;,
+        required=False,
+        default=&#34;0 0 * * *&#34;,
     )
 
-    # Get DBT client
-    dbt_client = get_k8s_dbt_client(mode=mode, wait=rename_flow_run)
+    service_account = (Parameter(&#34;service_account&#34;),)
+    vault_path_earth_engine_key = (Parameter(&#34;vault_path_earth_engine_key&#34;),)
+    gcs_asset_path = (Parameter(&#34;gcs_asset_path&#34;),)
+    ee_asset_path = (Parameter(&#34;ee_asset_path&#34;),)
 
-    # Parse model parameters
-    public_model_parameters = is_valid_dictionary(dbt_model_parameters)
-
-    # Get secret model parameters
-    secret_model_parameters = model_parameters_from_secrets(dbt_model_secret_parameters)
-
-    # Merge parameters
-    model_parameters = merge_dictionaries(
-        dict1=public_model_parameters, dict2=secret_model_parameters
+    rename_flow_run = rename_current_flow_run_msg(
+        msg=f&#34;Criar EE Asset: {ee_asset_path}&#34;,
     )
 
-    # Run DBT model
-    materialize_this = run_dbt_model(  # pylint: disable=invalid-name
-        dbt_client=dbt_client,
-        dataset_id=dataset_id,
-        table_id=table_id,
-        dbt_alias=dbt_alias,
-        upstream=upstream,
-        downstream=downstream,
-        exclude=exclude,
-        flags=flags,
-        _vars=model_parameters,
-        sync=True,
+    project_id = get_project_id(project_id=project_id, bd_project_mode=bd_project_mode)
+
+    trigger_download, execution_time = trigger_cron_job(
+        project_id=project_id,
+        ee_asset_path=ee_asset_path,
+        cron_expression=desired_crontab,
     )
 
-    with case(materialize_to_datario, True):
-        current_labels = get_current_flow_labels()
-        running_at_datario = is_running_at_datario(current_labels)
-        with case(running_at_datario, True):
-            log_warning = log_task(  # pylint: disable=invalid-name
-                &#34;You&#39;re running this flow at the datario agent, &#34;
-                &#34;I won&#39;t submit any more flow runs.&#34;
-            )
-            log_warning.set_upstream(running_at_datario)
-        with case(running_at_datario, False):
-            datario_materialization_flow = create_flow_run(
-                flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
-                project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-                parameters={
-                    &#34;dataset_id&#34;: dataset_id,
-                    &#34;table_id&#34;: table_id,
-                    &#34;mode&#34;: &#34;prod&#34;,
-                    &#34;materialize_to_datario&#34;: False,  # setting this to true might cause an
-                    # infinite loop
-                },
-                labels=[
-                    constants.RJ_DATARIO_AGENT_LABEL.value,
-                ],
-                run_name=f&#34;Publish to datario: {dataset_id}.{table_id}&#34;,
-            )
-            datario_materialization_flow.set_upstream(materialize_this)
+    with case(trigger_download, True):
+        gcs_file_asset_path = download_data_to_gcs(  # pylint: disable=C0103
+            project_id=project_id,
+            gcs_asset_path=gcs_asset_path,
+            query=query,
+            bd_project_mode=bd_project_mode,
+            billing_project_id=billing_project_id,
+        )
 
-            wait_for_materialization = wait_for_flow_run(
-                datario_materialization_flow,
-                stream_states=True,
-                stream_logs=True,
-                raise_final_state=True,
-            )
+        update_task = update_last_trigger(  # pylint: disable=C0103
+            project_id=project_id,
+            ee_asset_path=ee_asset_path,
+            execution_time=execution_time,
+        )
+        update_task.set_upstream(gcs_file_asset_path)  # pylint: disable=E1101
 
-utils_run_dbt_model_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-utils_run_dbt_model_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)</code></pre>
+        service_account_secret_path = get_earth_engine_key_from_vault(
+            vault_path_earth_engine_key=vault_path_earth_engine_key
+        )
+        service_account_secret_path.set_upstream(update_task)  # pylint: disable=E1101
+
+        create_table_asset(
+            service_account=service_account,
+            service_account_secret_path=service_account_secret_path,
+            project_id=project_id,
+            gcs_file_asset_path=gcs_file_asset_path,
+            ee_asset_path=ee_asset_path,
+        )
+
+        create_table_asset.set_upstream(service_account_secret_path)
+
+
+dump_earth_engine_asset_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+dump_earth_engine_asset_flow.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value
+)</code></pre>
 </details>
 </section>
 <section>
@@ -217,7 +186,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines.utils.execute_dbt_model" href="index.html">pipelines.utils.execute_dbt_model</a></code></li>
+<li><code><a title="pipelines.utils.dump_earth_engine_asset" href="index.html">pipelines.utils.dump_earth_engine_asset</a></code></li>
 </ul>
 </li>
 </ul>
