@@ -22,7 +22,7 @@ from pipelines.utils.decorators import Flow
 
 nivel_gsheets_flow = deepcopy(dump_url_flow)
 nivel_gsheets_flow.name = (
-    "RIOAGUAS: nivel - Nivel dos reservatorios nas Prcs Varnhagen, Niteroi e Bandeira"
+    "RIOAGUAS: Drenagem - Nivel dos reservatorios"
 )
 nivel_gsheets_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 nivel_gsheets_flow.run_config = KubernetesRun(
