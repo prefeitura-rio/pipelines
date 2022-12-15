@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=R0914,W0613,W0102,W0613,R0912,R0915
+# pylint: disable=R0914,W0613,W0102,W0613,R0912,R0915,E1136,E1137
 """
 Tasks for comando
 """
@@ -260,7 +260,7 @@ def get_pops() -> pd.DataFrame:
     pops = pd.DataFrame(response["objeto"])
     pops["id"] = pops["id"].astype("int")
     pops = pops.rename({"id": "id_pop", "titulo": "pop_titulo"}, axis=1)
-    pops["pop_titulo"] = pops["pop_titulo"].str.capitalize() # pylint: disable=unsubscriptable-object, E1137
+    pops["pop_titulo"] = pops["pop_titulo"].str.capitalize() # pylint: disable=unsubscriptable-object, E1137, E1136
 
     return pops[["id_pop", "pop_titulo"]] # pylint: disable=unsubscriptable-object
 
