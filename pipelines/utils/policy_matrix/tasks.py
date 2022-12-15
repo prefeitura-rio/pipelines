@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Tasks for the policy matrix generation.
+"""
 from typing import Dict, List, Union
 
 from basedosdados.upload.base import Base
@@ -13,7 +16,7 @@ def get_discovery_api(mode: str = "prod") -> googleapiclient.discovery.Resource:
     Get the discovery API for the given mode.
     """
     base = Base()
-    credentials = base._load_credentials(mode=mode)
+    credentials = base._load_credentials(mode=mode)  # pylint: disable=W0212
     return googleapiclient.discovery.build(
         "cloudresourcemanager", "v1", credentials=credentials
     )
