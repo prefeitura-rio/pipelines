@@ -33,7 +33,7 @@ gsheets_clocks = generate_dump_url_schedules(
     interval=timedelta(days=1),
     start_date=datetime(2022, 11, 17, 12, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
-        constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
+        constants.RJ_RIOAGUAS_AGENT_LABEL.value,
     ],
     dataset_id="saneamento_drenagem",
     table_parameters=gsheets_urls,
