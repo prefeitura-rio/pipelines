@@ -14,12 +14,12 @@ from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.decorators import Flow
-from pipelines.rj_rioaguas.nivel_lamina_agua.tasks import (
+from pipelines.rj_rioaguas.saneamento_drenagem.nivel_lamina_agua.tasks import (
     download_file,
     tratar_dados,
     salvar_dados,
 )
-from pipelines.rj_rioaguas.nivel_lamina_agua.schedules import (
+from pipelines.rj_rioaguas.saneamento_drenagem.nivel_lamina_agua.schedules import (
     MINUTE_SCHEDULE,
 )
 from pipelines.utils.dump_db.constants import (
