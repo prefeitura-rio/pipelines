@@ -260,9 +260,11 @@ def get_pops() -> pd.DataFrame:
     pops = pd.DataFrame(response["objeto"])
     pops["id"] = pops["id"].astype("int")
     pops = pops.rename({"id": "id_pop", "titulo": "pop_titulo"}, axis=1)
-    pops["pop_titulo"] = pops["pop_titulo"].str.capitalize() # pylint: disable=unsubscriptable-object, E1137, E1136
+    pops["pop_titulo"] = pops[
+        "pop_titulo"
+    ].str.capitalize()  # pylint: disable=unsubscriptable-object, E1137
 
-    return pops[["id_pop", "pop_titulo"]] # pylint: disable=unsubscriptable-object
+    return pops[["id_pop", "pop_titulo"]]  # pylint: disable=unsubscriptable-object
 
 
 @task(nout=2)
