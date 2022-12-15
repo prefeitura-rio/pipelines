@@ -13,7 +13,6 @@ import pendulum
 from bs4 import BeautifulSoup
 from prefect import task
 
-from pipelines.utils.utils import get_vault_secret, log
 from pipelines.rj_cor.meteorologia.utils import save_updated_rows_on_redis
 from pipelines.rj_rioaguas.utils import login
 from pipelines.utils.utils import (
@@ -49,11 +48,12 @@ def download_file(download_url):
 def tratar_dados(
     dfr: pd.DataFrame, dataset_id: str, table_id: str, mode: str = "prod"
 ) -> pd.DataFrame:
-     """Tratar dados para o padrão estabelecido e filtrar linhas para salvarmos apenas as medições
+    """
+    Tratar dados para o padrão estabelecido e filtrar linhas para salvarmos apenas as medições
     que foram contratadas pela prefeitura.
     """
 
-    # Corrigir nome das colunas
+    # Renomeia colunas
     dfr = dfr.rename(columns={"Hora Leitura": "data_hora", "Nível [m]": "lamina_nivel"})
     # Adiciona coluna para id e nome da lagoa
     dfr["id_lagoa"] = "1"
@@ -75,7 +75,7 @@ def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
     prepath.mkdir(parents=True, exist_ok=True)
 
     partition_column = "data_hora"
-    dataframe, partitions = parse_date_columns(dataframe, partition_column)
+    dataframe, partitions = parse_date_columns(dados, partition_column)
     # Sal
     current_time = pendulum.now("America/Sao_Paulo").strftime("%Y%m%d%H%M")
 
