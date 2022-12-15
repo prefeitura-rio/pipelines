@@ -56,8 +56,8 @@ def tratar_dados(
     # Renomeia colunas
     dfr = dfr.rename(columns={"Hora Leitura": "data_hora", "Nível [m]": "lamina_nivel"})
     # Adiciona coluna para id e nome da lagoa
-    dfr["id_lagoa"] = "1"
-    dfr["nome_lagoa"] = "Lagoa rodrigo de freitas"
+    dfr["id_estacao"] = "1"
+    dfr["nome_estacao"] = "Lagoa rodrigo de freitas"
     # Acessa o redis e mantem apenas linhas que ainda não foram salvas
     log(f"[DEBUG]: dados coletados\n{dfr.head()}")
     dfr = save_updated_rows_on_redis(dfr, dataset_id, table_id, mode)

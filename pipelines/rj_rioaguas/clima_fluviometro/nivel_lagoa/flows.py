@@ -32,7 +32,7 @@ from pipelines.utils.tasks import (
 )
 
 with Flow(
-    "RIOAGUAS: Relatorio de Chuvas - Nivel LRF",
+    "RIOAGUAS: Fluviometro - Nivel Lagoas",
     code_owners=["JP"],
 ) as rioaguas_nivel_LRF:
     # Parâmetros
