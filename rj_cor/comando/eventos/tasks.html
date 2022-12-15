@@ -28,7 +28,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
-# pylint: disable=R0914,W0613,W0102,W0613,R0912,R0915
+# pylint: disable=R0914,W0613,W0102,W0613,R0912,R0915,E1136,E1137
 &#34;&#34;&#34;
 Tasks for comando
 &#34;&#34;&#34;
@@ -289,9 +289,11 @@ def get_pops() -&gt; pd.DataFrame:
     pops = pd.DataFrame(response[&#34;objeto&#34;])
     pops[&#34;id&#34;] = pops[&#34;id&#34;].astype(&#34;int&#34;)
     pops = pops.rename({&#34;id&#34;: &#34;id_pop&#34;, &#34;titulo&#34;: &#34;pop_titulo&#34;}, axis=1)
-    pops[&#34;pop_titulo&#34;] = pops[&#34;pop_titulo&#34;].str.capitalize()
+    pops[&#34;pop_titulo&#34;] = pops[
+        &#34;pop_titulo&#34;
+    ].str.capitalize()  # pylint: disable=unsubscriptable-object, E1137
 
-    return pops[[&#34;id_pop&#34;, &#34;pop_titulo&#34;]]
+    return pops[[&#34;id_pop&#34;, &#34;pop_titulo&#34;]]  # pylint: disable=unsubscriptable-object
 
 
 @task(nout=2)
@@ -743,9 +745,11 @@ def get_pops() -&gt; pd.DataFrame:
     pops = pd.DataFrame(response[&#34;objeto&#34;])
     pops[&#34;id&#34;] = pops[&#34;id&#34;].astype(&#34;int&#34;)
     pops = pops.rename({&#34;id&#34;: &#34;id_pop&#34;, &#34;titulo&#34;: &#34;pop_titulo&#34;}, axis=1)
-    pops[&#34;pop_titulo&#34;] = pops[&#34;pop_titulo&#34;].str.capitalize()
+    pops[&#34;pop_titulo&#34;] = pops[
+        &#34;pop_titulo&#34;
+    ].str.capitalize()  # pylint: disable=unsubscriptable-object, E1137
 
-    return pops[[&#34;id_pop&#34;, &#34;pop_titulo&#34;]]</code></pre>
+    return pops[[&#34;id_pop&#34;, &#34;pop_titulo&#34;]]  # pylint: disable=unsubscriptable-object</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.comando.eventos.tasks.not_none"><code class="name flex">
