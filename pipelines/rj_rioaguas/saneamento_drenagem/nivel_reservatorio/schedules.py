@@ -30,7 +30,7 @@ gsheets_urls = {
 
 
 gsheets_clocks = generate_dump_url_schedules(
-    interval=timedelta(minutes=1),
+    interval=timedelta(days=1),
     start_date=datetime(2022, 11, 17, 12, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
@@ -39,4 +39,4 @@ gsheets_clocks = generate_dump_url_schedules(
     table_parameters=gsheets_urls,
 )
 
-gsheets_five_minute_update_schedule = Schedule(clocks=untuple(gsheets_clocks))
+gsheets_daily_update_schedule = Schedule(clocks=untuple(gsheets_clocks))
