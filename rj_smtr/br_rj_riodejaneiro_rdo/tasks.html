@@ -56,6 +56,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.utils import (
 from pipelines.rj_smtr.utils import (
     connect_ftp,
     get_last_run_timestamp,
+    set_redis_rdo_files,
 )
 from pipelines.utils.utils import log, get_redis_client
 
@@ -114,7 +115,13 @@ def check_files_for_download(files: list, dataset_id: str, table_id: str):
         list: Containing the info on the files to download
     &#34;&#34;&#34;
     redis_client = get_redis_client()
-    exclude_files = redis_client.get(f&#34;{dataset_id}.{table_id}&#34;)[&#34;files&#34;]
+
+    try:
+        exclude_files = redis_client.get(f&#34;{dataset_id}.{table_id}&#34;)[&#34;files&#34;]
+    except TypeError:
+        set_redis_rdo_files(redis_client, dataset_id, table_id)
+        exclude_files = redis_client.get(f&#34;{dataset_id}.{table_id}&#34;)[&#34;files&#34;]
+
     log(f&#34;There are {len(exclude_files)} already downloaded&#34;)
     download_files = [
         file_info for file_info in files if file_info[&#34;filename&#34;] not in exclude_files
@@ -366,7 +373,13 @@ def check_files_for_download(files: list, dataset_id: str, table_id: str):
         list: Containing the info on the files to download
     &#34;&#34;&#34;
     redis_client = get_redis_client()
-    exclude_files = redis_client.get(f&#34;{dataset_id}.{table_id}&#34;)[&#34;files&#34;]
+
+    try:
+        exclude_files = redis_client.get(f&#34;{dataset_id}.{table_id}&#34;)[&#34;files&#34;]
+    except TypeError:
+        set_redis_rdo_files(redis_client, dataset_id, table_id)
+        exclude_files = redis_client.get(f&#34;{dataset_id}.{table_id}&#34;)[&#34;files&#34;]
+
     log(f&#34;There are {len(exclude_files)} already downloaded&#34;)
     download_files = [
         file_info for file_info in files if file_info[&#34;filename&#34;] not in exclude_files

@@ -32,7 +32,8 @@
 General purpose functions for the br_rj_riodejaneiro_rdo project
 &#34;&#34;&#34;
 
-from datetime import timedelta
+from datetime import timedelta, datetime
+from pytz import timezone
 from prefect.schedules.clocks import IntervalClock
 from pipelines.constants import constants as emd_constants
 from pipelines.rj_smtr.constants import constants
@@ -80,7 +81,7 @@ def merge_file_info_and_errors(files: list, errors: list):
 
 
 def generate_ftp_schedules(
-    interval_minutes: int, label: str = emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value
+    interval_minutes: int, label: str = emd_constants.RJ_SMTR_AGENT_LABEL.value
 ):
     &#34;&#34;&#34;Generates IntervalClocks with the parameters needed to capture
     each report.
@@ -101,6 +102,9 @@ def generate_ftp_schedules(
             clocks.append(
                 IntervalClock(
                     interval=timedelta(minutes=interval_minutes),
+                    start_date=datetime(
+                        2022, 12, 16, 5, 0, tzinfo=timezone(constants.TIMEZONE.value)
+                    ),
                     parameter_defaults={
                         &#34;transport_mode&#34;: mode,
                         &#34;report_type&#34;: report,
@@ -168,7 +172,7 @@ of current flow run</p>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.br_rj_riodejaneiro_rdo.utils.generate_ftp_schedules"><code class="name flex">
-<span>def <span class="ident">generate_ftp_schedules</span></span>(<span>interval_minutes: int, label: str = 'rj-smtr-dev')</span>
+<span>def <span class="ident">generate_ftp_schedules</span></span>(<span>interval_minutes: int, label: str = 'rj-smtr')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Generates IntervalClocks with the parameters needed to capture
@@ -188,7 +192,7 @@ each report.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def generate_ftp_schedules(
-    interval_minutes: int, label: str = emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value
+    interval_minutes: int, label: str = emd_constants.RJ_SMTR_AGENT_LABEL.value
 ):
     &#34;&#34;&#34;Generates IntervalClocks with the parameters needed to capture
     each report.
@@ -209,6 +213,9 @@ each report.</p>
             clocks.append(
                 IntervalClock(
                     interval=timedelta(minutes=interval_minutes),
+                    start_date=datetime(
+                        2022, 12, 16, 5, 0, tzinfo=timezone(constants.TIMEZONE.value)
+                    ),
                     parameter_defaults={
                         &#34;transport_mode&#34;: mode,
                         &#34;report_type&#34;: report,

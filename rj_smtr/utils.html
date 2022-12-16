@@ -221,7 +221,34 @@ def safe_cast(val, to_type, default=None):
     try:
         return to_type(val)
     except ValueError:
-        return default</code></pre>
+        return default
+
+
+def set_redis_rdo_files(redis_client, dataset_id: str, table_id: str):
+    &#34;&#34;&#34;
+    Register downloaded files to Redis
+
+    Args:
+        redis_client (_type_): _description_
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+
+    Returns:
+        bool: if the key was properly set
+    &#34;&#34;&#34;
+    content = redis_client.get(f&#34;{dataset_id}.{table_id}&#34;)
+    # update content
+    st_client = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+    blob_names = [
+        blob.name
+        for blob in st_client.client[&#34;storage_staging&#34;].list_blobs(
+            st_client.bucket, prefix=f&#34;staging/{dataset_id}/{table_id}&#34;
+        )
+    ]
+    files = [blob_name.split(&#34;/&#34;)[-1].replace(&#34;.csv&#34;, &#34;&#34;) for blob_name in blob_names]
+    content[&#34;files&#34;] = files
+    # set key
+    return redis_client.set(f&#34;{dataset_id}.{table_id}&#34;, content)</code></pre>
 </details>
 </section>
 <section>
@@ -554,6 +581,56 @@ Useful to incrementally materialize tables via DBT</p>
         return default</code></pre>
 </details>
 </dd>
+<dt id="pipelines.rj_smtr.utils.set_redis_rdo_files"><code class="name flex">
+<span>def <span class="ident">set_redis_rdo_files</span></span>(<span>redis_client, dataset_id: str, table_id: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Register downloaded files to Redis</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>redis_client</code></strong> :&ensp;<code>_type_</code></dt>
+<dd><em>description</em></dd>
+<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>dataset_id on BigQuery</dd>
+<dt><strong><code>table_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>table_id on BigQuery</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bool</code></dt>
+<dd>if the key was properly set</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_redis_rdo_files(redis_client, dataset_id: str, table_id: str):
+    &#34;&#34;&#34;
+    Register downloaded files to Redis
+
+    Args:
+        redis_client (_type_): _description_
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+
+    Returns:
+        bool: if the key was properly set
+    &#34;&#34;&#34;
+    content = redis_client.get(f&#34;{dataset_id}.{table_id}&#34;)
+    # update content
+    st_client = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+    blob_names = [
+        blob.name
+        for blob in st_client.client[&#34;storage_staging&#34;].list_blobs(
+            st_client.bucket, prefix=f&#34;staging/{dataset_id}/{table_id}&#34;
+        )
+    ]
+    files = [blob_name.split(&#34;/&#34;)[-1].replace(&#34;.csv&#34;, &#34;&#34;) for blob_name in blob_names]
+    content[&#34;files&#34;] = files
+    # set key
+    return redis_client.set(f&#34;{dataset_id}.{table_id}&#34;, content)</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -627,6 +704,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.utils.log_critical" href="#pipelines.rj_smtr.utils.log_critical">log_critical</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.map_dict_keys" href="#pipelines.rj_smtr.utils.map_dict_keys">map_dict_keys</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.safe_cast" href="#pipelines.rj_smtr.utils.safe_cast">safe_cast</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.set_redis_rdo_files" href="#pipelines.rj_smtr.utils.set_redis_rdo_files">set_redis_rdo_files</a></code></li>
 </ul>
 </li>
 </ul>
