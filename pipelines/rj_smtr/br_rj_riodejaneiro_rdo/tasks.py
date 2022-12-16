@@ -27,6 +27,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.utils import (
 from pipelines.rj_smtr.utils import (
     connect_ftp,
     get_last_run_timestamp,
+    set_redis_rdo_files,
 )
 from pipelines.utils.utils import log, get_redis_client
 
@@ -85,7 +86,13 @@ def check_files_for_download(files: list, dataset_id: str, table_id: str):
         list: Containing the info on the files to download
     """
     redis_client = get_redis_client()
-    exclude_files = redis_client.get(f"{dataset_id}.{table_id}")["files"]
+
+    try:
+        exclude_files = redis_client.get(f"{dataset_id}.{table_id}")["files"]
+    except TypeError:
+        set_redis_rdo_files(redis_client, dataset_id, table_id)
+        exclude_files = redis_client.get(f"{dataset_id}.{table_id}")["files"]
+
     log(f"There are {len(exclude_files)} already downloaded")
     download_files = [
         file_info for file_info in files if file_info["filename"] not in exclude_files
