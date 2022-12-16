@@ -152,4 +152,4 @@ subsidio_sppo_apuracao.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value, labels=[constants.RJ_SMTR_DEV_AGENT_LABEL.value]
 )
 
-subsidio_sppo_apuracao.schedule = every_dayofmonth_one_and_sixteen
+# subsidio_sppo_apuracao.schedule = every_dayofmonth_one_and_sixteen
