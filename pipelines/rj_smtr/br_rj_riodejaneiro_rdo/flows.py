@@ -136,21 +136,6 @@ with Flow(
         download_files=download_files, table_id=table_id, errors=errors
     )
 
-    with case(bool(errors), False), case(materialize, True):
-        RUN = create_flow_run(
-            flow_name=sppo_rho_materialize.name,
-            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            labels=LABELS,
-            run_name=sppo_rho_materialize.name,
-        )
-        wait_for_flow_run(
-            RUN,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
-        )
-    captura_ftp.set_dependencies(RUN, [set_redis])
-
 captura_ftp.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_ftp.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
