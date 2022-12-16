@@ -3,7 +3,8 @@
 General purpose functions for the br_rj_riodejaneiro_rdo project
 """
 
-from datetime import timedelta
+from datetime import timedelta, datetime
+from pytz import timezone
 from prefect.schedules.clocks import IntervalClock
 from pipelines.constants import constants as emd_constants
 from pipelines.rj_smtr.constants import constants
@@ -51,7 +52,7 @@ def merge_file_info_and_errors(files: list, errors: list):
 
 
 def generate_ftp_schedules(
-    interval_minutes: int, label: str = emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value
+    interval_minutes: int, label: str = emd_constants.RJ_SMTR_AGENT_LABEL.value
 ):
     """Generates IntervalClocks with the parameters needed to capture
     each report.
@@ -72,6 +73,9 @@ def generate_ftp_schedules(
             clocks.append(
                 IntervalClock(
                     interval=timedelta(minutes=interval_minutes),
+                    start_date=datetime(
+                        2022, 12, 16, 5, 0, tzinfo=timezone(constants.TIMEZONE.value)
+                    ),
                     parameter_defaults={
                         "transport_mode": mode,
                         "report_type": report,

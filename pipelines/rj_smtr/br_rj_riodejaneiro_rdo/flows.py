@@ -36,7 +36,7 @@ from pipelines.utils.tasks import (
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
-with Flow("SMTR: SPPO RHO - Materialização") as rho_mat_flow:
+with Flow("SMTR: SPPO RHO - Materialização") as sppo_rho_materialize:
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
         prefix="SPPO RHO - Materialização: ", now_time=get_now_time()
@@ -89,6 +89,12 @@ with Flow("SMTR: SPPO RHO - Materialização") as rho_mat_flow:
             mode=MODE,
         )
 
+sppo_rho_materialize.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+sppo_rho_materialize.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+
 with Flow(
     "SMTR: RDO - Captura",
     code_owners=["caio", "fernanda"],
@@ -132,10 +138,10 @@ with Flow(
 
     with case(bool(errors), False), case(materialize, True):
         RUN = create_flow_run(
-            flow_name=rho_mat_flow.name,
+            flow_name=sppo_rho_materialize.name,
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=LABELS,
-            run_name=rho_mat_flow.name,
+            run_name=sppo_rho_materialize.name,
         )
         wait_for_flow_run(
             RUN,
@@ -148,7 +154,7 @@ with Flow(
 captura_ftp.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_ftp.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 captura_ftp.schedule = ftp_schedule
 
