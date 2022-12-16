@@ -124,7 +124,7 @@ def get_table_min_max_value(  # pylint: disable=R0913
     return result.iloc[0][0]
 
 
-def get_last_run_timestamp(dataset_id: str, table_id: str, mode: str = "prod"):
+def get_last_run_timestamp(dataset_id: str, table_id: str, mode: str = "prod") -> str:
     """
     Query redis to retrive the time for when the last materialization
     ran.
@@ -166,9 +166,7 @@ def map_dict_keys(data: dict, mapping: dict) -> None:
     return data
 
 
-def connect_ftp(
-    secret_path: str = constants.FTPS_SECRET_PATH.value, secure: bool = True
-):
+def connect_ftp(secret_path: str = None, secure: bool = True):
     """Connect to FTP
 
     Returns:
