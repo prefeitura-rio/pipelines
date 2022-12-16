@@ -37,7 +37,7 @@ from pipelines.rj_smtr.materialize_to_datario.flows import (
 
 from pipelines.rj_smtr.schedules import (
     every_day_hour_five,
-    every_dayofmonth_one_and_sixteen,
+    # every_dayofmonth_one_and_sixteen,
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import get_run_dates
