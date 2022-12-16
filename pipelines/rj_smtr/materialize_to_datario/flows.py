@@ -39,7 +39,7 @@ smtr_materialize_to_datario_viagem_sppo_parameters = {
     "dataset_id": "transporte_rodoviario_municipal",
     "table_id": "viagem_onibus",
     "mode": "prod",
-    "dbt_model_parameters": {"date_range_end": get_now_date.run()},
+    "dbt_model_parameters": {"date_range_end": get_now_date.run(), "date_range_start": None},
 }
 
 smtr_materialize_to_datario_viagem_sppo_flow = set_default_parameters(
