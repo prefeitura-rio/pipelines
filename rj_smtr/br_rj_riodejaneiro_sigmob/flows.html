@@ -99,7 +99,6 @@ with Flow(
             dataset_id=dataset_id,
             table_id=&#34;data_versao_efetiva&#34;,
             flags=&#34;--full-refresh&#34;,
-            wait=INCREMENTAL_RUN,
         )
         # TESTS = run_dbt_model(
         #     command=&#34;test&#34;, dbt_client=dbt_client, dataset_id=dataset_id, wait=LAST_RUN

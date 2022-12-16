@@ -156,9 +156,16 @@ class constants(Enum):  # pylint: disable=c0103
             &#34;key_column&#34;: &#34;trip_id&#34;,
         },
     }
-    # RDO
-    FTPS_SECRET_PATH = &#34;smtr_rdo_ftps&#34;
 
+    # RDO/RHO
+    RDO_FTP_ALLOWED_PATHS = [&#34;SPPO&#34;, &#34;STPL&#34;]
+    RDO_FTPS_SECRET_PATH = &#34;smtr_rdo_ftps&#34;
+    RDO_DATASET_ID = &#34;br_rj_riodejaneiro_rdo&#34;
+    SPPO_RDO_TABLE_ID = &#34;rdo_registros_sppo&#34;
+    SPPO_RHO_TABLE_ID = &#34;rho_registros_sppo&#34;
+    STPL_RDO_TABLE_ID = &#34;rdo_registros_stpl&#34;
+    STPL_RHO_TABLE_ID = &#34;rho_registros_stpl&#34;
+    RDO_MATERIALIZE_START_DATE = &#34;2022-12-07&#34;
     # ROCK IN RIO
     RIR_DATASET_ID = &#34;dashboards&#34;
     RIR_TABLE_ID = &#34;registros_ocr_rir&#34;
@@ -323,9 +330,16 @@ class constants(Enum):  # pylint: disable=c0103
             &#34;key_column&#34;: &#34;trip_id&#34;,
         },
     }
-    # RDO
-    FTPS_SECRET_PATH = &#34;smtr_rdo_ftps&#34;
 
+    # RDO/RHO
+    RDO_FTP_ALLOWED_PATHS = [&#34;SPPO&#34;, &#34;STPL&#34;]
+    RDO_FTPS_SECRET_PATH = &#34;smtr_rdo_ftps&#34;
+    RDO_DATASET_ID = &#34;br_rj_riodejaneiro_rdo&#34;
+    SPPO_RDO_TABLE_ID = &#34;rdo_registros_sppo&#34;
+    SPPO_RHO_TABLE_ID = &#34;rho_registros_sppo&#34;
+    STPL_RDO_TABLE_ID = &#34;rdo_registros_stpl&#34;
+    STPL_RHO_TABLE_ID = &#34;rho_registros_stpl&#34;
+    RDO_MATERIALIZE_START_DATE = &#34;2022-12-07&#34;
     # ROCK IN RIO
     RIR_DATASET_ID = &#34;dashboards&#34;
     RIR_TABLE_ID = &#34;registros_ocr_rir&#34;
@@ -356,10 +370,6 @@ class constants(Enum):  # pylint: disable=c0103
 <h3>Class variables</h3>
 <dl>
 <dt id="pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH"><code class="name">var <span class="ident">CRITICAL_SECRET_PATH</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="pipelines.rj_smtr.constants.constants.FTPS_SECRET_PATH"><code class="name">var <span class="ident">FTPS_SECRET_PATH</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -483,6 +493,22 @@ class constants(Enum):  # pylint: disable=c0103
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="pipelines.rj_smtr.constants.constants.RDO_DATASET_ID"><code class="name">var <span class="ident">RDO_DATASET_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.RDO_FTPS_SECRET_PATH"><code class="name">var <span class="ident">RDO_FTPS_SECRET_PATH</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.RDO_FTP_ALLOWED_PATHS"><code class="name">var <span class="ident">RDO_FTP_ALLOWED_PATHS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.RDO_MATERIALIZE_START_DATE"><code class="name">var <span class="ident">RDO_MATERIALIZE_START_DATE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="pipelines.rj_smtr.constants.constants.RETRY_DELAY"><code class="name">var <span class="ident">RETRY_DELAY</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -524,6 +550,22 @@ class constants(Enum):  # pylint: disable=c0103
 <div class="desc"></div>
 </dd>
 <dt id="pipelines.rj_smtr.constants.constants.SIGMOB_PAGES_FOR_CSV_FILE"><code class="name">var <span class="ident">SIGMOB_PAGES_FOR_CSV_FILE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.SPPO_RDO_TABLE_ID"><code class="name">var <span class="ident">SPPO_RDO_TABLE_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.SPPO_RHO_TABLE_ID"><code class="name">var <span class="ident">SPPO_RHO_TABLE_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.STPL_RDO_TABLE_ID"><code class="name">var <span class="ident">STPL_RDO_TABLE_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.STPL_RHO_TABLE_ID"><code class="name">var <span class="ident">STPL_RHO_TABLE_ID</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -615,7 +657,6 @@ setTimeout(() => input.focus(), 100);
 <h4><code><a title="pipelines.rj_smtr.constants.constants" href="#pipelines.rj_smtr.constants.constants">constants</a></code></h4>
 <ul class="">
 <li><code><a title="pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH">CRITICAL_SECRET_PATH</a></code></li>
-<li><code><a title="pipelines.rj_smtr.constants.constants.FTPS_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.FTPS_SECRET_PATH">FTPS_SECRET_PATH</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_DATASET_ID">GPS_BRT_DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_MAPPING_KEYS" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_MAPPING_KEYS">GPS_BRT_MAPPING_KEYS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_MATERIALIZE_DELAY_HOURS" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_MATERIALIZE_DELAY_HOURS">GPS_BRT_MATERIALIZE_DELAY_HOURS</a></code></li>
@@ -646,6 +687,10 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_STPL_TREATED_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.GPS_STPL_TREATED_TABLE_ID">GPS_STPL_TREATED_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.MAX_RETRIES" href="#pipelines.rj_smtr.constants.constants.MAX_RETRIES">MAX_RETRIES</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.MAX_TIMEOUT_SECONDS" href="#pipelines.rj_smtr.constants.constants.MAX_TIMEOUT_SECONDS">MAX_TIMEOUT_SECONDS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.RDO_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.RDO_DATASET_ID">RDO_DATASET_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.RDO_FTPS_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.RDO_FTPS_SECRET_PATH">RDO_FTPS_SECRET_PATH</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.RDO_FTP_ALLOWED_PATHS" href="#pipelines.rj_smtr.constants.constants.RDO_FTP_ALLOWED_PATHS">RDO_FTP_ALLOWED_PATHS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.RDO_MATERIALIZE_START_DATE" href="#pipelines.rj_smtr.constants.constants.RDO_MATERIALIZE_START_DATE">RDO_MATERIALIZE_START_DATE</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.RETRY_DELAY" href="#pipelines.rj_smtr.constants.constants.RETRY_DELAY">RETRY_DELAY</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.RIR_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.RIR_DATASET_ID">RIR_DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.RIR_OCR_PRIMARY_COLUMNS" href="#pipelines.rj_smtr.constants.constants.RIR_OCR_PRIMARY_COLUMNS">RIR_OCR_PRIMARY_COLUMNS</a></code></li>
@@ -657,6 +702,10 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.constants.constants.SIGMOB_ENDPOINTS" href="#pipelines.rj_smtr.constants.constants.SIGMOB_ENDPOINTS">SIGMOB_ENDPOINTS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SIGMOB_GET_REQUESTS_TIMEOUT" href="#pipelines.rj_smtr.constants.constants.SIGMOB_GET_REQUESTS_TIMEOUT">SIGMOB_GET_REQUESTS_TIMEOUT</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SIGMOB_PAGES_FOR_CSV_FILE" href="#pipelines.rj_smtr.constants.constants.SIGMOB_PAGES_FOR_CSV_FILE">SIGMOB_PAGES_FOR_CSV_FILE</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.SPPO_RDO_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.SPPO_RDO_TABLE_ID">SPPO_RDO_TABLE_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.SPPO_RHO_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.SPPO_RHO_TABLE_ID">SPPO_RHO_TABLE_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.STPL_RDO_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.STPL_RDO_TABLE_ID">STPL_RDO_TABLE_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.STPL_RHO_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.STPL_RHO_TABLE_ID">STPL_RHO_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DASHBOAD_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DASHBOAD_DATASET_ID">SUBSIDIO_SPPO_DASHBOAD_DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DATASET_ID">SUBSIDIO_SPPO_DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.TASK_MAX_RETRIES" href="#pipelines.rj_smtr.constants.constants.TASK_MAX_RETRIES">TASK_MAX_RETRIES</a></code></li>
