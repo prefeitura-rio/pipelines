@@ -4,7 +4,8 @@ Flows for br_rj_riodejaneiro_rdo
 """
 
 from prefect import Parameter, case
-from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
+
+# from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect.utilities.edges import unmapped
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
@@ -23,7 +24,7 @@ from pipelines.rj_smtr.tasks import (
     get_current_timestamp,
     set_last_run_timestamp,
 )
-from pipelines.rj_smtr.schedules import ftp_schedule
+from pipelines.rj_smtr.schedules import every_day
 
 # from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.schedules import every_two_weeks
 from pipelines.utils.decorators import Flow
@@ -36,7 +37,7 @@ from pipelines.utils.tasks import (
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
-with Flow("SMTR: SPPO RHO - Materialização") as rho_mat_flow:
+with Flow("SMTR: SPPO RHO - Materialização") as sppo_rho_materialize:
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
         prefix="SPPO RHO - Materialização: ", now_time=get_now_time()
@@ -89,6 +90,12 @@ with Flow("SMTR: SPPO RHO - Materialização") as rho_mat_flow:
             mode=MODE,
         )
 
+sppo_rho_materialize.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+sppo_rho_materialize.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+
 with Flow(
     "SMTR: RDO - Captura",
     code_owners=["caio", "fernanda"],
@@ -130,27 +137,12 @@ with Flow(
         download_files=download_files, table_id=table_id, errors=errors
     )
 
-    with case(bool(errors), False), case(materialize, True):
-        RUN = create_flow_run(
-            flow_name=rho_mat_flow.name,
-            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            labels=LABELS,
-            run_name=rho_mat_flow.name,
-        )
-        wait_for_flow_run(
-            RUN,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
-        )
-    captura_ftp.set_dependencies(RUN, [set_redis])
-
 captura_ftp.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_ftp.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-captura_ftp.schedule = ftp_schedule
+captura_ftp.schedule = every_day
 
 
 # captura_sppo_rho = deepcopy(captura_sppo_rdo)
