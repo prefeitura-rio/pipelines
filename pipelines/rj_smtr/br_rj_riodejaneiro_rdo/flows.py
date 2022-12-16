@@ -4,7 +4,8 @@ Flows for br_rj_riodejaneiro_rdo
 """
 
 from prefect import Parameter, case
-from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
+
+# from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect.utilities.edges import unmapped
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
