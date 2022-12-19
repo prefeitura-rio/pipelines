@@ -790,6 +790,13 @@ def upload_files_to_storage(
             blob.upload_from_filename(file)
 
 
+def is_date(date_string: str):
+    try:
+        return datetime.strptime(date_string, &#34;%Y-%m-%d&#34;).strftime(&#34;%Y-%m-%d&#34;)
+    except ValueError as err:
+        print(err)
+
+
 def parser_blobs_to_partition_dict(blobs: list) -&gt; dict:
     &#34;&#34;&#34;
     Extracts the partition information from the blobs.
@@ -1335,6 +1342,22 @@ characters besides underlines ("_").</p></div>
         unit_prefix = prefix
         value /= unit_divider
     return f&#34;{value:.{decimal_places}f}{unit_prefix}{unit}&#34;</code></pre>
+</details>
+</dd>
+<dt id="pipelines.utils.utils.is_date"><code class="name flex">
+<span>def <span class="ident">is_date</span></span>(<span>date_string: str)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_date(date_string: str):
+    try:
+        return datetime.strptime(date_string, &#34;%Y-%m-%d&#34;).strftime(&#34;%Y-%m-%d&#34;)
+    except ValueError as err:
+        print(err)</code></pre>
 </details>
 </dd>
 <dt id="pipelines.utils.utils.list_blobs_with_prefix"><code class="name flex">
@@ -2155,6 +2178,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.utils.utils.get_vault_client" href="#pipelines.utils.utils.get_vault_client">get_vault_client</a></code></li>
 <li><code><a title="pipelines.utils.utils.get_vault_secret" href="#pipelines.utils.utils.get_vault_secret">get_vault_secret</a></code></li>
 <li><code><a title="pipelines.utils.utils.human_readable" href="#pipelines.utils.utils.human_readable">human_readable</a></code></li>
+<li><code><a title="pipelines.utils.utils.is_date" href="#pipelines.utils.utils.is_date">is_date</a></code></li>
 <li><code><a title="pipelines.utils.utils.list_blobs_with_prefix" href="#pipelines.utils.utils.list_blobs_with_prefix">list_blobs_with_prefix</a></code></li>
 <li><code><a title="pipelines.utils.utils.log" href="#pipelines.utils.utils.log">log</a></code></li>
 <li><code><a title="pipelines.utils.utils.notify_discord_on_failure" href="#pipelines.utils.utils.notify_discord_on_failure">notify_discord_on_failure</a></code></li>

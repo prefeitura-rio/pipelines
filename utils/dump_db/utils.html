@@ -38,11 +38,7 @@ from typing import List, Union
 import pandas as pd
 
 from prefect.schedules.clocks import IntervalClock
-from pipelines.utils.utils import (
-    log,
-    query_to_line,
-    remove_columns_accents,
-)
+from pipelines.utils.utils import log, query_to_line, remove_columns_accents, is_date
 
 
 def extract_last_partition_date(partitions_dict: dict, date_format: str):
@@ -51,10 +47,11 @@ def extract_last_partition_date(partitions_dict: dict, date_format: str):
     &#34;&#34;&#34;
     last_partition_date = None
     for partition, values in partitions_dict.items():
+        new_values = [date for date in values if is_date(date_string=date) is not None]
         try:
-            last_partition_date = datetime.strptime(max(values), &#34;%Y-%m-%d&#34;).strftime(
-                date_format
-            )
+            last_partition_date = datetime.strptime(
+                max(new_values), &#34;%Y-%m-%d&#34;
+            ).strftime(date_format)
             log(f&#34;{partition} is in date format Y-m-d&#34;)
         except ValueError:
             log(f&#34;Partition {partition} is not a date&#34;)
@@ -174,10 +171,11 @@ Creates the query without accents.</p></div>
     &#34;&#34;&#34;
     last_partition_date = None
     for partition, values in partitions_dict.items():
+        new_values = [date for date in values if is_date(date_string=date) is not None]
         try:
-            last_partition_date = datetime.strptime(max(values), &#34;%Y-%m-%d&#34;).strftime(
-                date_format
-            )
+            last_partition_date = datetime.strptime(
+                max(new_values), &#34;%Y-%m-%d&#34;
+            ).strftime(date_format)
             log(f&#34;{partition} is in date format Y-m-d&#34;)
         except ValueError:
             log(f&#34;Partition {partition} is not a date&#34;)
