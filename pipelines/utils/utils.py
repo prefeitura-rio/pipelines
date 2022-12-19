@@ -761,6 +761,13 @@ def upload_files_to_storage(
             blob.upload_from_filename(file)
 
 
+def is_date(date_string: str):
+    try:
+        return datetime.strptime(date_string, "%Y-%m-%d").strftime("%Y-%m-%d")
+    except ValueError as err:
+        print(err)
+
+
 def parser_blobs_to_partition_dict(blobs: list) -> dict:
     """
     Extracts the partition information from the blobs.
