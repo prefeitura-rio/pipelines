@@ -50,7 +50,7 @@ from pipelines.utils.dump_datario.utils import generate_dump_datario_schedules
 
 dados_mestres_tables = {
     &#34;bairro&#34;: {
-        # source https://www.data.rio/datasets/PCRJ::limite-de-bairros/about
+        # source: https://www.data.rio/datasets/PCRJ::limite-de-bairros/about
         &#34;url&#34;: &#34;https://pgeo3.rio.rj.gov.br/arcgis/rest/services/Cartografia/Limites_administrativos/MapServer/4/query?outFields=*&amp;where=1%3D1&amp;f=geojson&#34;,  # noqa
         &#34;dataset_id&#34;: &#34;dados_mestres&#34;,
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
@@ -60,7 +60,7 @@ dados_mestres_tables = {
         &#34;materialization_mode&#34;: &#34;dev&#34;,
     },
     &#34;logradouro&#34;: {
-        # source https://www.data.rio/datasets/PCRJ::logradouros-1/about
+        # source: https://www.data.rio/datasets/PCRJ::logradouros-1/about
         &#34;url&#34;: &#34;https://opendata.arcgis.com/api/v3/datasets/899168c8feab4230a9f795ed07cdde7b_0/downloads/data?format=geojson&amp;spatialRefId=4326&amp;where=1%3D1&#34;,  # noqa
         &#34;dataset_id&#34;: &#34;dados_mestres&#34;,
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
@@ -70,7 +70,7 @@ dados_mestres_tables = {
         &#34;materialization_mode&#34;: &#34;dev&#34;,
     },
     &#34;zoneamento_setores&#34;: {
-        # source https://www.data.rio/datasets/PCRJ::setores-1/about
+        # source: https://www.data.rio/datasets/PCRJ::setores-1/about
         &#34;url&#34;: &#34;https://opendata.arcgis.com/api/v3/datasets/2c56c0ca74d74bcd8b44378e20af707f_1/downloads/data?format=geojson&amp;spatialRefId=4326&amp;where=1%3D1&#34;,  # noqa
         &#34;dataset_id&#34;: &#34;dados_mestres&#34;,
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
@@ -80,7 +80,7 @@ dados_mestres_tables = {
         &#34;materialization_mode&#34;: &#34;dev&#34;,
     },
     &#34;zoneamento_subzonas_subsetores&#34;: {
-        # source https://www.data.rio/datasets/PCRJ::subzonas-e-subsetores-1/about
+        # source: https://www.data.rio/datasets/PCRJ::subzonas-e-subsetores-1/about
         &#34;url&#34;: &#34;https://opendata.arcgis.com/api/v3/datasets/815b62790a0942519020d4ad28e99fee_2/downloads/data?format=geojson&amp;spatialRefId=4326&amp;where=1%3D1&#34;,  # noqa
         &#34;dataset_id&#34;: &#34;dados_mestres&#34;,
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
@@ -90,7 +90,7 @@ dados_mestres_tables = {
         &#34;materialization_mode&#34;: &#34;dev&#34;,
     },
     &#34;zoneamento_zonas&#34;: {
-        # source https://www.data.rio/datasets/PCRJ::zonas-1/about
+        # source: https://www.data.rio/datasets/PCRJ::zonas-1/about
         &#34;url&#34;: &#34;https://opendata.arcgis.com/api/v3/datasets/d668fb697bd245229d3165aed0ee5193_3/downloads/data?format=geojson&amp;spatialRefId=4326&amp;where=1%3D1&#34;,  # noqa
         &#34;dataset_id&#34;: &#34;dados_mestres&#34;,
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
@@ -100,8 +100,19 @@ dados_mestres_tables = {
         &#34;materialization_mode&#34;: &#34;dev&#34;,
     },
     &#34;edificacoes&#34;: {
-        # source https://www.data.rio/datasets/PCRJ::edifica%C3%A7%C3%B5es-2013-1/about
+        # source: https://www.data.rio/datasets/PCRJ::edifica%C3%A7%C3%B5es-2013-1/about
         &#34;url&#34;: &#34;https://opendata.arcgis.com/api/v3/datasets/124f1607b57d4292af5c0dfc2ff8572c_0/downloads/data?format=geojson&amp;spatialRefId=4326&amp;where=1%3D1&#34;,  # noqa
+        &#34;dataset_id&#34;: &#34;dados_mestres&#34;,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialize_to_datario&#34;: False,
+        &#34;dump_to_gcs&#34;: False,
+        &#34;materialization_mode&#34;: &#34;dev&#34;,
+        &#34;interval&#34;: timedelta(days=500),
+    },
+    &#34;lote&#34;: {
+        # source: https://www.data.rio/datasets/PCRJ::lotes-2013-1/about
+        &#34;url&#34;: &#34;https://opendata.arcgis.com/api/v3/datasets/e7a93d5c81844e07ab82ccfc45b436f4_1/downloads/data?format=geojson&amp;spatialRefId=4326&amp;where=1%3D1&#34;,  # noqa
         &#34;dataset_id&#34;: &#34;dados_mestres&#34;,
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
         &#34;materialize_after_dump&#34;: True,
