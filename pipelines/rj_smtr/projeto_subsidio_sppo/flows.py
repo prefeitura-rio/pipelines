@@ -136,7 +136,7 @@ with Flow(
             "dataset_id": "transporte_rodoviario_municipal",
             "table_id": "viagem_onibus",
             "mode": "prod",
-            "dbt_model_parameters": dict(run_date=run_date),
+            "dbt_model_parameters": dict(date_range_end=run_date),
         },
     )
 
