@@ -83,7 +83,7 @@ with Flow(
         url=url, path=f"data/{uuid4()}/", wait=rename_flow_run
     )
 
-    create_table_and_upload_to_gcs(
+    create_table_and_upload_to_gcs_done = create_table_and_upload_to_gcs(
         data_path=datario_path,
         dataset_id=dataset_id,
         table_id=table_id,
@@ -106,6 +106,7 @@ with Flow(
             labels=current_flow_labels,
             run_name=f"Materialize {dataset_id}.{table_id}",
         )
+        materialization_flow.set_upstream(create_table_and_upload_to_gcs_done)
 
         wait_for_materialization = wait_for_flow_run(
             materialization_flow,
