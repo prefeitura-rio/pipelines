@@ -450,7 +450,7 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
             labels,
             dataset_id,
             table_id,
-            prefect.context.logger,
+            prefect.context.logger,  # pylint: disable=no-member
         ),
     )
     worker_dataframe_to_csv = Thread(
@@ -467,7 +467,7 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
             prepath,
             batch_data_type,
             eventid,
-            prefect.context.logger,
+            prefect.context.logger,  # pylint: disable=no-member
         ),
     )
     worker_batch_to_dataframe.start()
