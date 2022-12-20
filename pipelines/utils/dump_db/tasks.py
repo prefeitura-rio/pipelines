@@ -332,6 +332,9 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
         while not done.is_set():
             try:
                 batch = batches.get(timeout=1)
+            except Empty:
+                sleep(1)
+            else:
                 start_time = time()
                 dataframe = batch_to_dataframe(batch, columns)
                 elapsed_time = time() - start_time
@@ -346,8 +349,6 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
                 )
                 index_document(doc)
                 batches.task_done()
-            except Empty:
-                sleep(1)
 
     def thread_dataframe_to_csv(
         dataframes: Queue,
@@ -367,6 +368,9 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
             try:
                 # Get dataframe from queue
                 dataframe: pd.DataFrame = dataframes.get(timeout=1)
+            except Empty:
+                sleep(1)
+            else:
                 # Clean dataframe
                 start_time = time()
                 old_columns = dataframe.columns.tolist()
@@ -418,8 +422,6 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
                 index_document(doc)
                 idx += 1
                 dataframes.task_done()
-            except Empty:
-                sleep(1)
 
     # Initialize threads
     done = Event()
@@ -490,9 +492,22 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
         index_document(doc)
         idx += 1
 
-    log("Waiting for batches to be parsed as dataframes...")
+    log("Waiting for batches queue...")
+    start_sleep = 1
+    max_sleep = 300
+    while batches.unfinished_tasks > 0:
+        sleep(start_sleep)
+        start_sleep = min(start_sleep * 2, max_sleep)
+        log(
+            f"Waiting for {batches.unfinished_tasks} batches to be parsed as dataframes..."
+        )
     batches.join()
-    log("Waiting for dataframes to be dumped to csv...")
+    start_sleep = 1
+    log("Waiting for dataframes queue...")
+    while dataframes.unfinished_tasks > 0:
+        sleep(start_sleep)
+        start_sleep = min(start_sleep * 2, max_sleep)
+        log(f"Waiting for {dataframes.unfinished_tasks} dataframes to be dumped...")
     dataframes.join()
     done.set()
 
