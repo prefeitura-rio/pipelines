@@ -35,9 +35,6 @@ from pipelines.constants import constants
 def get_datario_geodataframe(
     url: str,
     path: Union[str, Path],
-    geometry_column: str = "geometry",
-    convert_to_crs_4326: bool = False,
-    geometry_3d_to_2d: bool = False,
     wait=None,  # pylint: disable=unused-argument
 ):
     """ "
@@ -58,6 +55,25 @@ def get_datario_geodataframe(
 
     log("Data saved")
 
+    return filepath
+
+
+@task(
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def transform_geodataframe(
+    filepath: Union[str, Path],
+    path: Union[str, Path],
+    geometry_column: str = "geometry",
+    convert_to_crs_4326: bool = False,
+    geometry_3d_to_2d: bool = False,
+    wait=None,  # pylint: disable=unused-argument
+):
+    """ "
+    Transform a CSV from data.rio API
+    """
+
     geodataframe = gpd.read_file(filepath)
     log("Geodatagrame loaded")
 
@@ -67,10 +83,9 @@ def get_datario_geodataframe(
     geodataframe.columns = remove_columns_accents(geodataframe)
     log(f"New columns: {geodataframe.columns.tolist()}")
 
-    ## Flat column geometry  to crs 4326
+    geodataframe["geometry_wkt"] = geodataframe[geometry_column].copy()
 
     if convert_to_crs_4326:
-        geodataframe["geometry_wkt"] = geodataframe[geometry_column].copy()
 
         try:
             geodataframe.crs = "epsg:4326"

@@ -21,6 +21,7 @@ from pipelines.utils.tasks import (
 from pipelines.utils.decorators import Flow
 from pipelines.utils.dump_datario.tasks import (
     get_datario_geodataframe,
+    transform_geodataframe,
 )
 
 with Flow(
@@ -83,14 +84,22 @@ with Flow(
     #
     #####################################
 
-    datario_path = get_datario_geodataframe(  # pylint: disable=invalid-name
+    filepath = get_datario_geodataframe(  # pylint: disable=invalid-name
         url=url,
+        path=f"data/{uuid4()}/",
+        wait=rename_flow_run,
+    )
+    filepath.set_upstream(rename_flow_run)
+
+    datario_path = transform_geodataframe()(  # pylint: disable=invalid-name
+        filepath=filepath,
         path=f"data/{uuid4()}/",
         geometry_column=geometry_column,
         convert_to_crs_4326=convert_to_crs_4326,
         geometry_3d_to_2d=geometry_3d_to_2d,
-        wait=rename_flow_run,
+        wait=filepath,
     )
+    datario_path.set_upstream(filepath)
 
     create_table_and_upload_to_gcs_done = create_table_and_upload_to_gcs(
         data_path=datario_path,
@@ -99,6 +108,7 @@ with Flow(
         dump_mode=dump_mode,
         wait=datario_path,
     )
+    create_table_and_upload_to_gcs_done.set_upstream(datario_path)
 
     with case(materialize_after_dump, True):
         # Trigger DBT flow run
