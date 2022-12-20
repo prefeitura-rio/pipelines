@@ -105,7 +105,7 @@ dados_mestres_tables = {
     },
     "aeis_bairro_maravilha": {
         # source: https://www.data.rio/datasets/PCRJ::aeis-%C3%A1rea-de-especial-interesse-social-bairro-maravilha/about
-        "url": "https://opendata.arcgis.com/api/v3/datasets/e7a93d5c81844e07ab82ccfc45b436f4_1/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",  # noqa
+        "url": "https://opendata.arcgis.com/api/v3/datasets/ac12b0d378d44f75a86042aad13b8741_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",  # noqa
         "dataset_id": "dados_mestres",
         "dump_mode": "overwrite",
         "materialize_after_dump": True,
