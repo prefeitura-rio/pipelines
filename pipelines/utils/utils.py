@@ -761,7 +761,7 @@ def upload_files_to_storage(
             blob.upload_from_filename(file)
 
 
-def is_date(date_string: str) -> Union[datetime, False]:
+def is_date(date_string: str) -> Union[datetime, bool]:
     """
     Checks whether a string is a valid date.
     """
