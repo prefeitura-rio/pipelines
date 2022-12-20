@@ -335,10 +335,12 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
             except Empty:
                 sleep(1)
             else:
+                log("GOT batch from queue")
                 start_time = time()
                 dataframe = batch_to_dataframe(batch, columns)
                 elapsed_time = time() - start_time
                 dataframes.put(dataframe)
+                log("PUT dataframe in queue")
                 doc = format_document(
                     flow_name=flow_name,
                     labels=labels,
@@ -349,6 +351,7 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
                 )
                 index_document(doc)
                 batches.task_done()
+                log("COMPLETED batch to dataframe")
 
     def thread_dataframe_to_csv(
         dataframes: Queue,
@@ -371,6 +374,7 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
             except Empty:
                 sleep(1)
             else:
+                log("GOT dataframe from queue")
                 # Clean dataframe
                 start_time = time()
                 old_columns = dataframe.columns.tolist()
@@ -422,6 +426,7 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
                 index_document(doc)
                 idx += 1
                 dataframes.task_done()
+                log("COMPLETED dataframe to csv")
 
     # Initialize threads
     done = Event()
@@ -477,6 +482,7 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
             log(f"Dumping batch {idx} with size {len(batch)}")
         # Add current batch to queue
         batches.put(batch)
+        log("PUT batch in queue")
         # Get next batch
         start_fetch_batch = time()
         batch = database.fetch_batch(batch_size)
