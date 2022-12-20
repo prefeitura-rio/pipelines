@@ -63,6 +63,8 @@ def get_file_paths_from_ftp(
                     "filename": filename.split(".")[0],
                     "ftp_path": transport_mode + "/" + filename,
                     "partitions": f"ano={date[:4]}/mes={date[4:6]}/dia={date[6:]}",
+                    "date": date,
+                    "modified": file_mtime,
                     "error": None,
                 }
                 # log(f"Create file info: {file_info}")
@@ -74,24 +76,31 @@ def get_file_paths_from_ftp(
 
 
 @task
-def check_files_for_download(files: list, dataset_id: str, table_id: str):
+def check_files_for_download(
+    files: list, dataset_id: str, table_id: str, mode: str = "prod"
+):
     """Check redis for files already downloaded from the FTP
 
     Args:
         files (list): file informations gathered from FTP
         dataset_id (str): dataset_id on BigQuery
         table_id (str): table_id on BigQuery
+        mode(str, Optional): mode to run the flow. Accepts
+        `prod` or `dev`. Defaults to `prod`
 
     Returns:
         list: Containing the info on the files to download
     """
     redis_client = get_redis_client()
+    key = f"{dataset_id}.{table_id}"
+    if mode == "dev":
+        key = f"{mode}.{key}"
 
     try:
-        exclude_files = redis_client.get(f"{dataset_id}.{table_id}")["files"]
+        exclude_files = redis_client.get(key)["files"]
     except TypeError:
         set_redis_rdo_files(redis_client, dataset_id, table_id)
-        exclude_files = redis_client.get(f"{dataset_id}.{table_id}")["files"]
+        exclude_files = redis_client.get(key)["files"]
 
     log(f"There are {len(exclude_files)} already downloaded")
     download_files = [
@@ -235,11 +244,12 @@ def pre_treatment_br_rj_riodejaneiro_rdo(
 
 
 @task
-def update_rdo_redis(
+def update_rdo_redis(  # pylint: disable=R0913
     download_files: list,
     table_id: str,
     dataset_id: str = constants.RDO_DATASET_ID.value,
     errors=None,
+    mode: str = "prod",
     wait=None,  # pylint: disable=W0613
 ):
     """
@@ -257,6 +267,8 @@ def update_rdo_redis(
         bool: if redis key was set
     """
     key = f"{dataset_id}.{table_id}"
+    if mode == "dev":
+        key = f"{mode}.{key}"
     redis_client = get_redis_client()
     content = redis_client.get(key)  # get current redis state
     if errors:
@@ -274,7 +286,13 @@ def update_rdo_redis(
     )
     content["files"].extend(insert_content)  # generate updated dict to set
     log(f"After appending, content has {len(content['files'])} files registered")
-    return redis_client.set(key, content)
+    redis_client.set(key, content)
+    run_dates = [
+        {"run_date": file_info["date"]}
+        for file_info in download_files
+        if not file_info["error"]
+    ]
+    return run_dates
 
 
 @task
