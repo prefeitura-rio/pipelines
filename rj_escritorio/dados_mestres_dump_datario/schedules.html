@@ -121,6 +121,28 @@ dados_mestres_tables = {
         &#34;materialization_mode&#34;: &#34;dev&#34;,
         &#34;interval&#34;: timedelta(days=500),
     },
+    &#34;aeis&#34;: {
+        # source: https://www.data.rio/datasets/PCRJ::aeis-%C3%A1rea-de-especial-interesse-social-smpu/about
+        &#34;url&#34;: &#34;https://opendata.arcgis.com/api/v3/datasets/98fc248a56724688b06d6611bdb2524d_1/downloads/data?format=geojson&amp;spatialRefId=4326&amp;where=1%3D1&#34;,  # noqa
+        &#34;dataset_id&#34;: &#34;dados_mestres&#34;,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialize_to_datario&#34;: False,
+        &#34;dump_to_gcs&#34;: False,
+        &#34;materialization_mode&#34;: &#34;dev&#34;,
+        &#34;interval&#34;: timedelta(days=500),
+    },
+    &#34;aeis_bairro_maravilha&#34;: {
+        # source: https://www.data.rio/datasets/PCRJ::aeis-%C3%A1rea-de-especial-interesse-social-bairro-maravilha/about
+        &#34;url&#34;: &#34;https://opendata.arcgis.com/api/v3/datasets/e7a93d5c81844e07ab82ccfc45b436f4_1/downloads/data?format=geojson&amp;spatialRefId=4326&amp;where=1%3D1&#34;,  # noqa
+        &#34;dataset_id&#34;: &#34;dados_mestres&#34;,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialize_to_datario&#34;: False,
+        &#34;dump_to_gcs&#34;: False,
+        &#34;materialization_mode&#34;: &#34;dev&#34;,
+        &#34;interval&#34;: timedelta(days=500),
+    },
 }
 
 
