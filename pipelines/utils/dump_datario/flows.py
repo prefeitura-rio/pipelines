@@ -92,7 +92,7 @@ with Flow(
     )
     file_path.set_upstream(rename_flow_run)
 
-    datario_path = transform_geodataframe()(
+    datario_path = transform_geodataframe(
         file_path=file_path,
         path=path,
         geometry_column=geometry_column,
