@@ -6,7 +6,16 @@ General utilities for interacting with datario-dump
 from datetime import timedelta, datetime
 from typing import List
 
-from shapely.geometry import Polygon, MultiPolygon, LinearRing, LineString, MultiLineString, MultiPoint, Point, GeometryCollection
+from shapely.geometry import (
+    Polygon,
+    MultiPolygon,
+    LinearRing,
+    LineString,
+    MultiLineString,
+    MultiPoint,
+    Point,
+    GeometryCollection,
+)
 
 from prefect.schedules.clocks import IntervalClock
 
@@ -44,10 +53,7 @@ def generate_dump_datario_schedules(  # pylint: disable=too-many-arguments,too-m
                 "convert_to_crs_4326"
             ]
         if "geometry_3d_to_2d" in parameters:
-            parameter_defaults["geometry_3d_to_2d"] = parameters[
-                "geometry_3d_to_2d"
-            ]       
-            
+            parameter_defaults["geometry_3d_to_2d"] = parameters["geometry_3d_to_2d"]
 
         new_interval = parameters["interval"] if "interval" in parameters else interval
         clocks.append(
@@ -121,4 +127,6 @@ def remove_third_dimension(geom):
         return GeometryCollection(new_geoms)
 
     else:
-        raise RuntimeError("Currently this type of geometry is not supported: {}".format(type(geom)))
+        raise RuntimeError(
+            "Currently this type of geometry is not supported: {}".format(type(geom))
+        )
