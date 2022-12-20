@@ -113,6 +113,8 @@ def transform_geodataframe(
 
         log("geometry converted 3D to 2D")
 
+    log(f"New columns: {geodataframe.columns.tolist()}")
+
     save_path = path / "csv_data" / f"{eventid}.csv"
     save_path.parent.mkdir(parents=True, exist_ok=True)
     geodataframe.to_csv(save_path, index=False, encoding="utf-8")
