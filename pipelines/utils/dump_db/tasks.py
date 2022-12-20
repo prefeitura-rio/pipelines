@@ -332,9 +332,6 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
         while not done.is_set():
             try:
                 batch = batches.get(timeout=1)
-            except Empty:
-                sleep(1)
-            else:
                 log("GOT batch from queue")
                 start_time = time()
                 dataframe = batch_to_dataframe(batch, columns)
@@ -352,6 +349,8 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
                 index_document(doc)
                 batches.task_done()
                 log("COMPLETED batch to dataframe")
+            except Empty:
+                sleep(1)
 
     def thread_dataframe_to_csv(
         dataframes: Queue,
@@ -371,9 +370,6 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
             try:
                 # Get dataframe from queue
                 dataframe: pd.DataFrame = dataframes.get(timeout=1)
-            except Empty:
-                sleep(1)
-            else:
                 log("GOT dataframe from queue")
                 # Clean dataframe
                 start_time = time()
@@ -427,6 +423,8 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
                 idx += 1
                 dataframes.task_done()
                 log("COMPLETED dataframe to csv")
+            except Empty:
+                sleep(1)
 
     # Initialize threads
     done = Event()
