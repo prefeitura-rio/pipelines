@@ -2,7 +2,7 @@
 """
 General purpose tasks for dumping database data.
 """
-# pylint disable=unused-argument, W0613
+# pylint: disable=unused-argument, W0613, R0913, W0108,
 
 from pathlib import Path
 from typing import Union
@@ -11,7 +11,6 @@ from datetime import datetime, timedelta
 import geopandas as gpd
 from prefect import task
 import requests
-from shapely import wkt
 
 from pipelines.utils.utils import (
     log,
@@ -31,6 +30,7 @@ from pipelines.constants import constants
 @task(
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+    nout=2,
 )
 def get_datario_geodataframe(
     url: str,
@@ -43,11 +43,11 @@ def get_datario_geodataframe(
     path = Path(path)
     path.mkdir(parents=True, exist_ok=True)
 
-    filepath = path / "geo_data" / "data.geojson"
-    filepath.parent.mkdir(parents=True, exist_ok=True)
+    file_path = path / "geo_data" / "data.geojson"
+    file_path.parent.mkdir(parents=True, exist_ok=True)
 
     req = requests.get(url, stream=True)
-    with open(filepath, "wb") as file:
+    with open(file_path, "wb") as file:
         for chunk in req.iter_content(chunk_size=1024):
             if chunk:
                 file.write(chunk)
@@ -55,7 +55,7 @@ def get_datario_geodataframe(
 
     log("Data saved")
 
-    return filepath
+    return file_path, path
 
 
 @task(
@@ -63,7 +63,7 @@ def get_datario_geodataframe(
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 def transform_geodataframe(
-    filepath: Union[str, Path],
+    file_path: Union[str, Path],
     path: Union[str, Path],
     geometry_column: str = "geometry",
     convert_to_crs_4326: bool = False,
@@ -74,7 +74,7 @@ def transform_geodataframe(
     Transform a CSV from data.rio API
     """
 
-    geodataframe = gpd.read_file(filepath)
+    geodataframe = gpd.read_file(file_path)
     log("Geodatagrame loaded")
 
     eventid = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -92,9 +92,11 @@ def transform_geodataframe(
             geodataframe[geometry_column] = geodataframe[geometry_column].to_crs(
                 "epsg:4326"
             )
-        except Exception as e:
-            log(f"Error converting to crs 4326: {e}")
-            raise e
+        except Exception as err:
+            log(f"Error converting to crs 4326: {err}")
+            raise err
+
+        log("geometry converted to crs 4326")
 
     if geometry_3d_to_2d:
         try:
@@ -105,9 +107,11 @@ def transform_geodataframe(
             geodataframe[geometry_column] = geodataframe[geometry_column].apply(
                 lambda geom: remove_third_dimension(geom)
             )
-        except Exception as e:
-            log(f"Error converting 3d to 2d: {e}")
-            raise e
+        except Exception as err:
+            log(f"Error converting 3d to 2d: {err}")
+            raise err
+
+        log("geometry converted 3D to 2D")
 
     save_path = path / "csv_data" / f"{eventid}.csv"
     save_path.parent.mkdir(parents=True, exist_ok=True)

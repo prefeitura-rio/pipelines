@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=R0914, W0622, R1705, R1704, R0911, C0103, R0911, R0912, W0703, W0612
 """
 General utilities for interacting with datario-dump
 """
@@ -71,7 +72,9 @@ def generate_dump_datario_schedules(  # pylint: disable=too-many-arguments,too-m
 
 
 def remove_third_dimension(geom):
-
+    """
+    Remove third dimension from geometry
+    """
     if geom is None:
         return None
 
@@ -139,7 +142,10 @@ def remove_third_dimension(geom):
 
 
 def load_wkt(x: str):
+    """
+    Fromt text to geometry
+    """
     try:
         return wkt.loads(x)
-    except:
+    except Exception as err:
         return None
