@@ -141,7 +141,7 @@ def remove_third_dimension(geom):
         )
 
 
-def load_wkt(x: str):
+def load_wkt(x):
     """
     Fromt text to geometry
     """
