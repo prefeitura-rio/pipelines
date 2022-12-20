@@ -16,6 +16,8 @@ from shapely.geometry import (
     Point,
     GeometryCollection,
 )
+from shapely import wkt
+
 
 from prefect.schedules.clocks import IntervalClock
 
@@ -69,6 +71,10 @@ def generate_dump_datario_schedules(  # pylint: disable=too-many-arguments,too-m
 
 
 def remove_third_dimension(geom):
+
+    if geom is None:
+        return None
+
     if geom.is_empty:
         return geom
 
@@ -130,3 +136,10 @@ def remove_third_dimension(geom):
         raise RuntimeError(
             "Currently this type of geometry is not supported: {}".format(type(geom))
         )
+
+
+def load_wkt(x: str):
+    try:
+        return wkt.loads(x)
+    except:
+        return None

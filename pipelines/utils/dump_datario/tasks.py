@@ -18,7 +18,7 @@ from pipelines.utils.utils import (
     remove_columns_accents,
 )
 
-from pipelines.utils.dump_datario.utils import remove_third_dimension
+from pipelines.utils.dump_datario.utils import remove_third_dimension, load_wkt
 from pipelines.constants import constants
 
 ###############
@@ -84,7 +84,7 @@ def get_datario_geodataframe(
     if geometry_3d_to_2d:
         try:
             geodataframe[geometry_column] = (
-                geodataframe[geometry_column].astype(str).apply(wkt.loads)
+                geodataframe[geometry_column].astype(str).apply(load_wkt)
             )
 
             geodataframe[geometry_column] = geodataframe[geometry_column].apply(
