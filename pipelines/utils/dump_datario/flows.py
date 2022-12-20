@@ -42,6 +42,7 @@ with Flow(
     convert_to_crs_4326 = Parameter(
         "convert_to_crs_4326", default=False, required=False
     )
+    geometry_3d_to_2d = Parameter("geometry_3d_to_2d", default=False, required=False)
 
     # BigQuery parameters
     dataset_id = Parameter("dataset_id")
@@ -87,6 +88,7 @@ with Flow(
         path=f"data/{uuid4()}/",
         geometry_column=geometry_column,
         convert_to_crs_4326=convert_to_crs_4326,
+        geometry_3d_to_2d=geometry_3d_to_2d,
         wait=rename_flow_run,
     )
 

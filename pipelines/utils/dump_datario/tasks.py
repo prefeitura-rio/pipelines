@@ -11,11 +11,14 @@ from datetime import datetime, timedelta
 import geopandas as gpd
 from prefect import task
 import requests
+from shapely import wkt
 
 from pipelines.utils.utils import (
     log,
     remove_columns_accents,
 )
+
+from pipelines.utils.dump_datario.utils import remove_third_dimension
 from pipelines.constants import constants
 
 ###############
@@ -34,6 +37,7 @@ def get_datario_geodataframe(
     path: Union[str, Path],
     geometry_column: str = "geometry",
     convert_to_crs_4326: bool = False,
+    geometry_3d_to_2d: bool = False,
     wait=None,  # pylint: disable=unused-argument
 ):
     """ "
@@ -67,7 +71,28 @@ def get_datario_geodataframe(
 
     if convert_to_crs_4326:
         geodataframe["geometry_wkt"] = geodataframe[geometry_column].copy()
-        geodataframe[geometry_column] = geodataframe[geometry_column].to_crs("epsg:4326")
+
+        try:
+            geodataframe.crs = "epsg:4326"
+            geodataframe[geometry_column] = geodataframe[geometry_column].to_crs(
+                "epsg:4326"
+            )
+        except Exception as e:
+            log(f"Error converting to crs 4326: {e}")
+            raise e
+
+    if geometry_3d_to_2d:
+        try:
+            geodataframe[geometry_column] = (
+                geodataframe[geometry_column].astype(str).apply(wkt.loads)
+            )
+
+            geodataframe[geometry_column] = geodataframe[geometry_column].apply(
+                lambda geom: remove_third_dimension(geom)
+            )
+        except Exception as e:
+            log(f"Error converting 3d to 2d: {e}")
+            raise e
 
     save_path = path / "csv_data" / f"{eventid}.csv"
     save_path.parent.mkdir(parents=True, exist_ok=True)

@@ -92,6 +92,7 @@ dados_mestres_tables = {
         "interval": timedelta(days=500),
         "convert_to_crs_4326": True,
         "geometry_column": "geometry",
+        "geometry_3d_to_2d": True,
     },
     "lote": {
         # source: https://www.data.rio/datasets/PCRJ::lotes-2013-1/about
@@ -105,6 +106,7 @@ dados_mestres_tables = {
         "interval": timedelta(days=500),
         "convert_to_crs_4326": True,
         "geometry_column": "geometry",
+        "geometry_3d_to_2d": True,
     },
     "aeis": {
         # source: https://www.data.rio/datasets/PCRJ::aeis-%C3%A1rea-de-especial-interesse-social-smpu/about
@@ -118,6 +120,7 @@ dados_mestres_tables = {
         "interval": timedelta(days=500),
         "convert_to_crs_4326": True,
         "geometry_column": "geometry",
+        "geometry_3d_to_2d": True,
     },
     "aeis_bairro_maravilha": {
         # source: https://www.data.rio/datasets/PCRJ::aeis-%C3%A1rea-de-especial-interesse-social-bairro-maravilha/about
@@ -131,6 +134,7 @@ dados_mestres_tables = {
         "interval": timedelta(days=500),
         "convert_to_crs_4326": True,
         "geometry_column": "geometry",
+        "geometry_3d_to_2d": True,
     },
 }
 
@@ -138,7 +142,7 @@ dados_mestres_tables = {
 dados_mestresclocks = generate_dump_datario_schedules(
     interval=timedelta(days=365),
     start_date=datetime(
-        2022, 12, 20, 15, 10, tzinfo=pytz.timezone("America/Sao_Paulo")
+        2022, 12, 20, 17, 20, tzinfo=pytz.timezone("America/Sao_Paulo")
     ),
     labels=[constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value],
     table_parameters=dados_mestres_tables,
