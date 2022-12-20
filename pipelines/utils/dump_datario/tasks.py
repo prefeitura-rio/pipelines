@@ -67,7 +67,9 @@ def get_datario_geodataframe(
 
     if convert_to_crs_4326:
         geodataframe["geometry_wkt"] = geodataframe[geometry_column].copy()
-        geodataframe[geometry_column] = geodataframe[geometry_column].to_crs("epsg:4326")
+        geodataframe[geometry_column] = geodataframe[geometry_column].to_crs(
+            "epsg:4326"
+        )
 
     save_path = path / "csv_data" / f"{eventid}.csv"
     save_path.parent.mkdir(parents=True, exist_ok=True)
