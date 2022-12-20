@@ -38,13 +38,16 @@ with Flow(
 
     # Datario
     url = Parameter("url")
+    geometry_column = Parameter("geometry_column", default="geometry", required=False)
+    convert_to_crs_4326 = Parameter(
+        "convert_to_crs_4326", default=False, required=False
+    )
 
     # BigQuery parameters
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
     # overwrite or append
     dump_mode = Parameter("dump_mode", default="overwrite")
-
     # Materialization parameters
     materialize_after_dump = Parameter(
         "materialize_after_dump", default=False, required=False
@@ -80,7 +83,11 @@ with Flow(
     #####################################
 
     datario_path = get_datario_geodataframe(  # pylint: disable=invalid-name
-        url=url, path=f"data/{uuid4()}/", wait=rename_flow_run
+        url=url,
+        path=f"data/{uuid4()}/",
+        geometry_column=geometry_column,
+        convert_to_crs_4326=convert_to_crs_4326,
+        wait=rename_flow_run,
     )
 
     create_table_and_upload_to_gcs_done = create_table_and_upload_to_gcs(

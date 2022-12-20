@@ -35,6 +35,12 @@ def generate_dump_datario_schedules(  # pylint: disable=too-many-arguments,too-m
             parameter_defaults["materialization_mode"] = parameters[
                 "materialization_mode"
             ]
+        if "geometry_column" in parameters:
+            parameter_defaults["geometry_column"] = parameters["geometry_column"]
+        if "convert_to_crs_4326" in parameters:
+            parameter_defaults["convert_to_crs_4326"] = parameters[
+                "convert_to_crs_4326"
+            ]
         new_interval = parameters["interval"] if "interval" in parameters else interval
         clocks.append(
             IntervalClock(

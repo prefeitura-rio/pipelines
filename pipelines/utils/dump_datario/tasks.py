@@ -32,6 +32,8 @@ from pipelines.constants import constants
 def get_datario_geodataframe(
     url: str,
     path: Union[str, Path],
+    geometry_column: str = "geometry",
+    convert_to_crs_4326: bool = False,
     wait=None,  # pylint: disable=unused-argument
 ):
     """ "
@@ -60,6 +62,12 @@ def get_datario_geodataframe(
     log(f"Original columns: {geodataframe.columns.tolist()}")
     geodataframe.columns = remove_columns_accents(geodataframe)
     log(f"New columns: {geodataframe.columns.tolist()}")
+
+    ## Flat column geometry  to crs 4326
+
+    if convert_to_crs_4326:
+        geodataframe["geometry_wkt"] = geodataframe[geometry_column].copy()
+        geodataframe[geometry_column] = geodataframe[geometry_column].to_crs("epsg:4326")
 
     save_path = path / "csv_data" / f"{eventid}.csv"
     save_path.parent.mkdir(parents=True, exist_ok=True)
