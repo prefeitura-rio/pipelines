@@ -761,11 +761,15 @@ def upload_files_to_storage(
             blob.upload_from_filename(file)
 
 
-def is_date(date_string: str):
+def is_date(date_string: str) -> Union[datetime, False]:
+    """
+    Checks whether a string is a valid date.
+    """
     try:
         return datetime.strptime(date_string, "%Y-%m-%d").strftime("%Y-%m-%d")
     except ValueError as err:
         print(err)
+        return False
 
 
 def parser_blobs_to_partition_dict(blobs: list) -> dict:
