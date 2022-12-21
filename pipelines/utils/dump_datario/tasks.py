@@ -35,7 +35,7 @@ from pipelines.constants import constants
 def get_datario_geodataframe(
     url: str,
     path: Union[str, Path],
-    wait=None,  # pylint: disable=unused-argument
+    wait=None,
 ):
     """ "
     Save a CSV from data.rio API
@@ -68,12 +68,13 @@ def transform_geodataframe(
     geometry_column: str = "geometry",
     convert_to_crs_4326: bool = False,
     geometry_3d_to_2d: bool = False,
-    wait=None,  # pylint: disable=unused-argument
+    wait=None,
 ):
     """ "
     Transform a CSV from data.rio API
     """
     eventid = datetime.now().strftime("%Y%m%d-%H%M%S")
+
     # move to path file since file_path is path / "geo_data" / "data.geojson"
     save_path = file_path.parent.parent / "csv_data" / f"{eventid}.csv"
     save_path.parent.mkdir(parents=True, exist_ok=True)
@@ -83,16 +84,19 @@ def transform_geodataframe(
     for index, feature_collection in enumerate(geojson.stream(batch=chunksize)):
         count = index + 1
         geodataframe = gpd.GeoDataFrame.from_features(feature_collection["features"])
+        log(f"{count} x {chunksize} rows: geodataframe loaded")
 
+        # move geometry column to the end
         cols = geodataframe.columns.tolist()
         cols.remove(geometry_column)
         cols.append(geometry_column)
         geodataframe = geodataframe[cols]
 
-        log(f"{count}: geodataframe loaded")
+        # remove accents from columns
         geodataframe.columns = remove_columns_accents(geodataframe)
         geodataframe["geometry_wkt"] = geodataframe[geometry_column].copy()
 
+        # convert geometry to crs 4326
         if convert_to_crs_4326:
             try:
                 geodataframe.crs = "epsg:4326"
@@ -104,8 +108,8 @@ def transform_geodataframe(
                 raise err
 
             log(f"{count}: geometry converted to crs 4326")
-
-        if geometry_3d_to_2d:
+        # convert geometry 3d to 2d
+        elif geometry_3d_to_2d:
             try:
                 geodataframe[geometry_column] = (
                     geodataframe[geometry_column].astype(str).apply(load_wkt)
@@ -122,6 +126,7 @@ def transform_geodataframe(
 
         log(f"{count}: new columns: {geodataframe.columns.tolist()}")
 
+        # save geodataframe to csv
         geodataframe.to_csv(
             save_path,
             index=False,
@@ -129,7 +134,9 @@ def transform_geodataframe(
             mode="a",
             header=not save_path.exists(),
         )
+
+        # clear memory
         del geodataframe
-        log(f"{count}: Data saved")
+        log(f"{count} x {chunksize} rows: Data saved")
 
     return save_path
