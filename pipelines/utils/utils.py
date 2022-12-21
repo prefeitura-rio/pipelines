@@ -771,8 +771,7 @@ def is_date(date_string: str, date_format: str = "%Y-%m-%d") -> Union[datetime, 
     """
     try:
         return datetime.strptime(date_string, date_format).strftime(date_format)
-    except ValueError as err:
-        print(err)
+    except ValueError:
         return False
 
 
