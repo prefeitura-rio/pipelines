@@ -310,6 +310,8 @@ def create_table_and_upload_to_gcs(
         # pylint: disable=C0301
         log(&#34;STEP UPLOAD: Table does not exist in STAGING, need to create first&#34;)
 
+    return data_path
+
 
 @task(
     max_retries=constants.TASK_MAX_RETRIES.value,
@@ -510,7 +512,9 @@ def create_table_and_upload_to_gcs(
         )
     else:
         # pylint: disable=C0301
-        log(&#34;STEP UPLOAD: Table does not exist in STAGING, need to create first&#34;)</code></pre>
+        log(&#34;STEP UPLOAD: Table does not exist in STAGING, need to create first&#34;)
+
+    return data_path</code></pre>
 </details>
 </dd>
 <dt id="pipelines.utils.tasks.get_current_flow_labels"><code class="name flex">

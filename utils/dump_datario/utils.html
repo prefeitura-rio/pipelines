@@ -28,12 +28,26 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
+# pylint: disable=R0914, W0622, R1705, R1704, R0911, C0103, R0911, R0912, W0703, W0612
 &#34;&#34;&#34;
 General utilities for interacting with datario-dump
 &#34;&#34;&#34;
 
 from datetime import timedelta, datetime
 from typing import List
+
+from shapely.geometry import (
+    Polygon,
+    MultiPolygon,
+    LinearRing,
+    LineString,
+    MultiLineString,
+    MultiPoint,
+    Point,
+    GeometryCollection,
+)
+from shapely import wkt
+
 
 from prefect.schedules.clocks import IntervalClock
 
@@ -64,6 +78,15 @@ def generate_dump_datario_schedules(  # pylint: disable=too-many-arguments,too-m
             parameter_defaults[&#34;materialization_mode&#34;] = parameters[
                 &#34;materialization_mode&#34;
             ]
+        if &#34;geometry_column&#34; in parameters:
+            parameter_defaults[&#34;geometry_column&#34;] = parameters[&#34;geometry_column&#34;]
+        if &#34;convert_to_crs_4326&#34; in parameters:
+            parameter_defaults[&#34;convert_to_crs_4326&#34;] = parameters[
+                &#34;convert_to_crs_4326&#34;
+            ]
+        if &#34;geometry_3d_to_2d&#34; in parameters:
+            parameter_defaults[&#34;geometry_3d_to_2d&#34;] = parameters[&#34;geometry_3d_to_2d&#34;]
+
         new_interval = parameters[&#34;interval&#34;] if &#34;interval&#34; in parameters else interval
         clocks.append(
             IntervalClock(
@@ -74,7 +97,72 @@ def generate_dump_datario_schedules(  # pylint: disable=too-many-arguments,too-m
                 parameter_defaults=parameter_defaults,
             )
         )
-    return clocks</code></pre>
+    return clocks
+
+
+def remove_third_dimension(geom):
+    &#34;&#34;&#34;
+    Remove third dimension from geometry
+    &#34;&#34;&#34;
+    if geom is None:
+        return None
+
+    if geom.is_empty:
+        return geom
+
+    if isinstance(geom, Polygon):
+        exterior = geom.exterior
+        new_exterior = remove_third_dimension(exterior)
+
+        interiors = geom.interiors
+        new_interiors = [remove_third_dimension(int) for int in interiors]
+        return Polygon(new_exterior, new_interiors)
+
+    elif isinstance(geom, LinearRing):
+        return LinearRing([xy[:2] for xy in list(geom.coords)])
+
+    elif isinstance(geom, LineString):
+        return LineString([xy[:2] for xy in list(geom.coords)])
+
+    elif isinstance(geom, Point):
+        return Point([xy[:2] for xy in list(geom.coords)])
+
+    elif isinstance(geom, MultiPoint):
+        points = list(geom.geoms)
+        new_points = [remove_third_dimension(point) for point in points]
+        return MultiPoint(new_points)
+
+    elif isinstance(geom, MultiLineString):
+        lines = list(geom.geoms)
+        new_lines = [remove_third_dimension(line) for line in lines]
+        return MultiLineString(new_lines)
+
+    elif isinstance(geom, MultiPolygon):
+        pols = list(geom.geoms)
+
+        new_pols = [remove_third_dimension(pol) for pol in pols]
+        return MultiPolygon(new_pols)
+
+    elif isinstance(geom, GeometryCollection):
+        geoms = list(geom.geoms)
+
+        new_geoms = [remove_third_dimension(geom) for geom in geoms]
+        return GeometryCollection(new_geoms)
+
+    else:
+        raise RuntimeError(
+            f&#34;Currently this type of geometry is not supported: {type(geom)}&#34;
+        )
+
+
+def load_wkt(x):
+    &#34;&#34;&#34;
+    Fromt text to geometry
+    &#34;&#34;&#34;
+    try:
+        return wkt.loads(x)
+    except Exception as err:
+        return None</code></pre>
 </details>
 </section>
 <section>
@@ -119,6 +207,15 @@ def generate_dump_datario_schedules(  # pylint: disable=too-many-arguments,too-m
             parameter_defaults[&#34;materialization_mode&#34;] = parameters[
                 &#34;materialization_mode&#34;
             ]
+        if &#34;geometry_column&#34; in parameters:
+            parameter_defaults[&#34;geometry_column&#34;] = parameters[&#34;geometry_column&#34;]
+        if &#34;convert_to_crs_4326&#34; in parameters:
+            parameter_defaults[&#34;convert_to_crs_4326&#34;] = parameters[
+                &#34;convert_to_crs_4326&#34;
+            ]
+        if &#34;geometry_3d_to_2d&#34; in parameters:
+            parameter_defaults[&#34;geometry_3d_to_2d&#34;] = parameters[&#34;geometry_3d_to_2d&#34;]
+
         new_interval = parameters[&#34;interval&#34;] if &#34;interval&#34; in parameters else interval
         clocks.append(
             IntervalClock(
@@ -130,6 +227,89 @@ def generate_dump_datario_schedules(  # pylint: disable=too-many-arguments,too-m
             )
         )
     return clocks</code></pre>
+</details>
+</dd>
+<dt id="pipelines.utils.dump_datario.utils.load_wkt"><code class="name flex">
+<span>def <span class="ident">load_wkt</span></span>(<span>x)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Fromt text to geometry</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_wkt(x):
+    &#34;&#34;&#34;
+    Fromt text to geometry
+    &#34;&#34;&#34;
+    try:
+        return wkt.loads(x)
+    except Exception as err:
+        return None</code></pre>
+</details>
+</dd>
+<dt id="pipelines.utils.dump_datario.utils.remove_third_dimension"><code class="name flex">
+<span>def <span class="ident">remove_third_dimension</span></span>(<span>geom)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Remove third dimension from geometry</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def remove_third_dimension(geom):
+    &#34;&#34;&#34;
+    Remove third dimension from geometry
+    &#34;&#34;&#34;
+    if geom is None:
+        return None
+
+    if geom.is_empty:
+        return geom
+
+    if isinstance(geom, Polygon):
+        exterior = geom.exterior
+        new_exterior = remove_third_dimension(exterior)
+
+        interiors = geom.interiors
+        new_interiors = [remove_third_dimension(int) for int in interiors]
+        return Polygon(new_exterior, new_interiors)
+
+    elif isinstance(geom, LinearRing):
+        return LinearRing([xy[:2] for xy in list(geom.coords)])
+
+    elif isinstance(geom, LineString):
+        return LineString([xy[:2] for xy in list(geom.coords)])
+
+    elif isinstance(geom, Point):
+        return Point([xy[:2] for xy in list(geom.coords)])
+
+    elif isinstance(geom, MultiPoint):
+        points = list(geom.geoms)
+        new_points = [remove_third_dimension(point) for point in points]
+        return MultiPoint(new_points)
+
+    elif isinstance(geom, MultiLineString):
+        lines = list(geom.geoms)
+        new_lines = [remove_third_dimension(line) for line in lines]
+        return MultiLineString(new_lines)
+
+    elif isinstance(geom, MultiPolygon):
+        pols = list(geom.geoms)
+
+        new_pols = [remove_third_dimension(pol) for pol in pols]
+        return MultiPolygon(new_pols)
+
+    elif isinstance(geom, GeometryCollection):
+        geoms = list(geom.geoms)
+
+        new_geoms = [remove_third_dimension(geom) for geom in geoms]
+        return GeometryCollection(new_geoms)
+
+    else:
+        raise RuntimeError(
+            f&#34;Currently this type of geometry is not supported: {type(geom)}&#34;
+        )</code></pre>
 </details>
 </dd>
 </dl>
@@ -197,6 +377,8 @@ setTimeout(() => input.focus(), 100);
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="pipelines.utils.dump_datario.utils.generate_dump_datario_schedules" href="#pipelines.utils.dump_datario.utils.generate_dump_datario_schedules">generate_dump_datario_schedules</a></code></li>
+<li><code><a title="pipelines.utils.dump_datario.utils.load_wkt" href="#pipelines.utils.dump_datario.utils.load_wkt">load_wkt</a></code></li>
+<li><code><a title="pipelines.utils.dump_datario.utils.remove_third_dimension" href="#pipelines.utils.dump_datario.utils.remove_third_dimension">remove_third_dimension</a></code></li>
 </ul>
 </li>
 </ul>

@@ -58,9 +58,11 @@ dados_mestres_tables = {
         &#34;materialize_to_datario&#34;: True,
         &#34;dump_to_gcs&#34;: True,
         &#34;materialization_mode&#34;: &#34;dev&#34;,
+        &#34;convert_to_crs_4326&#34;: True,
+        &#34;geometry_column&#34;: &#34;geometry&#34;,
     },
     &#34;logradouro&#34;: {
-        # source: https://www.data.rio/datasets/PCRJ::logradouros-1/about
+        # source: https://www.data.rio/datasets/PCRJ::logradouros/about
         &#34;url&#34;: &#34;https://opendata.arcgis.com/api/v3/datasets/899168c8feab4230a9f795ed07cdde7b_0/downloads/data?format=geojson&amp;spatialRefId=4326&amp;where=1%3D1&#34;,  # noqa
         &#34;dataset_id&#34;: &#34;dados_mestres&#34;,
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
@@ -68,6 +70,8 @@ dados_mestres_tables = {
         &#34;materialize_to_datario&#34;: True,
         &#34;dump_to_gcs&#34;: True,
         &#34;materialization_mode&#34;: &#34;dev&#34;,
+        &#34;convert_to_crs_4326&#34;: True,
+        &#34;geometry_column&#34;: &#34;geometry&#34;,
     },
     &#34;zoneamento_setores&#34;: {
         # source: https://www.data.rio/datasets/PCRJ::setores-1/about
@@ -78,6 +82,8 @@ dados_mestres_tables = {
         &#34;materialize_to_datario&#34;: False,
         &#34;dump_to_gcs&#34;: False,
         &#34;materialization_mode&#34;: &#34;dev&#34;,
+        &#34;convert_to_crs_4326&#34;: True,
+        &#34;geometry_column&#34;: &#34;geometry&#34;,
     },
     &#34;zoneamento_subzonas_subsetores&#34;: {
         # source: https://www.data.rio/datasets/PCRJ::subzonas-e-subsetores-1/about
@@ -88,6 +94,8 @@ dados_mestres_tables = {
         &#34;materialize_to_datario&#34;: False,
         &#34;dump_to_gcs&#34;: False,
         &#34;materialization_mode&#34;: &#34;dev&#34;,
+        &#34;convert_to_crs_4326&#34;: True,
+        &#34;geometry_column&#34;: &#34;geometry&#34;,
     },
     &#34;zoneamento_zonas&#34;: {
         # source: https://www.data.rio/datasets/PCRJ::zonas-1/about
@@ -98,6 +106,8 @@ dados_mestres_tables = {
         &#34;materialize_to_datario&#34;: False,
         &#34;dump_to_gcs&#34;: False,
         &#34;materialization_mode&#34;: &#34;dev&#34;,
+        &#34;convert_to_crs_4326&#34;: True,
+        &#34;geometry_column&#34;: &#34;geometry&#34;,
     },
     &#34;edificacoes&#34;: {
         # source: https://www.data.rio/datasets/PCRJ::edifica%C3%A7%C3%B5es-2013-1/about
@@ -109,6 +119,9 @@ dados_mestres_tables = {
         &#34;dump_to_gcs&#34;: False,
         &#34;materialization_mode&#34;: &#34;dev&#34;,
         &#34;interval&#34;: timedelta(days=500),
+        &#34;convert_to_crs_4326&#34;: True,
+        &#34;geometry_column&#34;: &#34;geometry&#34;,
+        &#34;geometry_3d_to_2d&#34;: True,
     },
     &#34;lote&#34;: {
         # source: https://www.data.rio/datasets/PCRJ::lotes-2013-1/about
@@ -120,6 +133,9 @@ dados_mestres_tables = {
         &#34;dump_to_gcs&#34;: False,
         &#34;materialization_mode&#34;: &#34;dev&#34;,
         &#34;interval&#34;: timedelta(days=500),
+        &#34;convert_to_crs_4326&#34;: True,
+        &#34;geometry_column&#34;: &#34;geometry&#34;,
+        &#34;geometry_3d_to_2d&#34;: True,
     },
     &#34;aeis&#34;: {
         # source: https://www.data.rio/datasets/PCRJ::aeis-%C3%A1rea-de-especial-interesse-social-smpu/about
@@ -131,6 +147,9 @@ dados_mestres_tables = {
         &#34;dump_to_gcs&#34;: False,
         &#34;materialization_mode&#34;: &#34;dev&#34;,
         &#34;interval&#34;: timedelta(days=500),
+        &#34;convert_to_crs_4326&#34;: True,
+        &#34;geometry_column&#34;: &#34;geometry&#34;,
+        &#34;geometry_3d_to_2d&#34;: True,
     },
     &#34;aeis_bairro_maravilha&#34;: {
         # source: https://www.data.rio/datasets/PCRJ::aeis-%C3%A1rea-de-especial-interesse-social-bairro-maravilha/about
@@ -142,6 +161,9 @@ dados_mestres_tables = {
         &#34;dump_to_gcs&#34;: False,
         &#34;materialization_mode&#34;: &#34;dev&#34;,
         &#34;interval&#34;: timedelta(days=500),
+        &#34;convert_to_crs_4326&#34;: True,
+        &#34;geometry_column&#34;: &#34;geometry&#34;,
+        &#34;geometry_3d_to_2d&#34;: True,
     },
 }
 
@@ -149,7 +171,7 @@ dados_mestres_tables = {
 dados_mestresclocks = generate_dump_datario_schedules(
     interval=timedelta(days=365),
     start_date=datetime(
-        2022, 11, 25, 13, 30, tzinfo=pytz.timezone(&#34;America/Sao_Paulo&#34;)
+        2022, 12, 20, 17, 35, tzinfo=pytz.timezone(&#34;America/Sao_Paulo&#34;)
     ),
     labels=[constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value],
     table_parameters=dados_mestres_tables,
