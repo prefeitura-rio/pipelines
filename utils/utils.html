@@ -794,14 +794,13 @@ def upload_files_to_storage(
             blob.upload_from_filename(file)
 
 
-def is_date(date_string: str):
+def is_date(date_string: str, date_format: str = &#34;%Y-%m-%d&#34;):
     &#34;&#34;&#34;
     check if is date format
     &#34;&#34;&#34;
     try:
-        return datetime.strptime(date_string, &#34;%Y-%m-%d&#34;).strftime(&#34;%Y-%m-%d&#34;)
+        return datetime.strptime(date_string, date_format).strftime(date_format)
     except ValueError as err:
-        log(err)
         return None
 
 
@@ -1351,7 +1350,7 @@ characters besides underlines ("_").</p></div>
 </details>
 </dd>
 <dt id="pipelines.utils.utils.is_date"><code class="name flex">
-<span>def <span class="ident">is_date</span></span>(<span>date_string: str)</span>
+<span>def <span class="ident">is_date</span></span>(<span>date_string: str, date_format: str = '%Y-%m-%d')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>check if is date format</p></div>
@@ -1359,14 +1358,13 @@ characters besides underlines ("_").</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def is_date(date_string: str):
+<pre><code class="python">def is_date(date_string: str, date_format: str = &#34;%Y-%m-%d&#34;):
     &#34;&#34;&#34;
     check if is date format
     &#34;&#34;&#34;
     try:
-        return datetime.strptime(date_string, &#34;%Y-%m-%d&#34;).strftime(&#34;%Y-%m-%d&#34;)
+        return datetime.strptime(date_string, date_format).strftime(date_format)
     except ValueError as err:
-        log(err)
         return None</code></pre>
 </details>
 </dd>
