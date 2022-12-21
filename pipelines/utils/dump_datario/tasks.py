@@ -163,5 +163,5 @@ def transform_geodataframe(
             mod=mod,
         )
         count += 1
-    log("DATA TRANSFORMED!!!")
+    log(f"{count} x {batch_size} DATA TRANSFORMED!!!")
     return save_path
