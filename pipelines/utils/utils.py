@@ -58,6 +58,14 @@ def log(msg: Any, level: str = "info") -> None:
     prefect.context.logger.log(levels[level], msg)  # pylint: disable=E1101
 
 
+def log_mod(msg: str, index: int, mod: int):
+    """
+    Only logs a message if the index is a multiple of mod.
+    """
+    if index % mod == 0 or index == 1:
+        log(msg)
+
+
 ###############
 #
 # Datetime utils
@@ -83,9 +91,7 @@ def determine_whether_to_execute_or_not(
         cron_expression, datetime_last_execution
     )
     next_cron_expression_time = cron_expression_iterator.get_next(datetime)
-    if next_cron_expression_time <= datetime_now:
-        return True
-    return False
+    return next_cron_expression_time <= datetime_now
 
 
 ###############
@@ -245,9 +251,7 @@ def run_local(flow: prefect.Flow, parameters: Dict[str, Any] = None):
     flow.schedule = None
 
     # Run flow
-    if parameters:
-        return flow.run(parameters=parameters)
-    return flow.run()
+    return flow.run(parameters=parameters) if parameters else flow.run()
 
 
 def run_cloud(
@@ -762,10 +766,14 @@ def upload_files_to_storage(
 
 
 def is_date(date_string: str):
+    """
+    check if is date format
+    """
     try:
         return datetime.strptime(date_string, "%Y-%m-%d").strftime("%Y-%m-%d")
     except ValueError as err:
-        print(err)
+        log(err)
+        return None
 
 
 def parser_blobs_to_partition_dict(blobs: list) -> dict:

@@ -281,6 +281,8 @@ def create_table_and_upload_to_gcs(
         # pylint: disable=C0301
         log("STEP UPLOAD: Table does not exist in STAGING, need to create first")
 
+    return data_path
+
 
 @task(
     max_retries=constants.TASK_MAX_RETRIES.value,
