@@ -20,7 +20,11 @@ def extract_last_partition_date(partitions_dict: dict, date_format: str):
     last_partition_date = None
     for partition, values in partitions_dict.items():
         log(f"Partition {partition} has values {values}", "debug")
-        new_values = [date for date in values if is_date(date_string=date)]
+        new_values = [
+            date
+            for date in values
+            if is_date(date_string=date, date_format=date_format)
+        ]
         log(f"Partition {partition} has new values {new_values}", "debug")
         try:
             last_partition_date = datetime.strptime(
