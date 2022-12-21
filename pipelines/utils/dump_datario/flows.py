@@ -103,14 +103,14 @@ with Flow(
     )
     datario_path.set_upstream(file_path)
 
-    create_table_and_upload_to_gcs_done = create_table_and_upload_to_gcs(
+    upload_table = create_table_and_upload_to_gcs(
         data_path=datario_path,
         dataset_id=dataset_id,
         table_id=table_id,
         dump_mode=dump_mode,
         wait=datario_path,
     )
-    create_table_and_upload_to_gcs_done.set_upstream(datario_path)
+    upload_table.set_upstream(datario_path)
 
     with case(materialize_after_dump, True):
         # Trigger DBT flow run
@@ -127,7 +127,7 @@ with Flow(
             labels=current_flow_labels,
             run_name=f"Materialize {dataset_id}.{table_id}",
         )
-        materialization_flow.set_upstream(create_table_and_upload_to_gcs_done)
+        materialization_flow.set_upstream(upload_table)
 
         wait_for_materialization = wait_for_flow_run(
             materialization_flow,
