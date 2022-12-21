@@ -28,6 +28,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
+# pylint: disable=line-too-long
 &#34;&#34;&#34;
 Schedules for the database dump pipeline
 &#34;&#34;&#34;
@@ -49,8 +50,7 @@ from pipelines.utils.utils import untuple_clocks as untuple
 gsheets_urls = {
     &#34;metrica_1&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_\
-            /edit#gid=1536258547&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_/edit#gid=1536258547&#34;,  # noqa: E501
         &#34;url_type&#34;: &#34;google_sheet&#34;,
         &#34;gsheets_sheet_order&#34;: 1,
         &#34;materialize_after_dump&#34;: True,
@@ -58,8 +58,7 @@ gsheets_urls = {
     },
     &#34;metrica_2&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_\
-            /edit#gid=1536258547&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_/edit#gid=1536258547&#34;,  # noqa: E501
         &#34;url_type&#34;: &#34;google_sheet&#34;,
         &#34;gsheets_sheet_order&#34;: 2,
         &#34;materialize_after_dump&#34;: True,
@@ -67,7 +66,7 @@ gsheets_urls = {
     },
     &#34;metrica_3&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_/edit#gid=1536258547&#34;,  # noqa: E501
         &#34;url_type&#34;: &#34;google_sheet&#34;,
         &#34;gsheets_sheet_order&#34;: 3,
         &#34;materialize_after_dump&#34;: True,
@@ -75,7 +74,7 @@ gsheets_urls = {
     },
     &#34;metrica_4&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_/edit#gid=1536258547&#34;,  # noqa: E501
         &#34;url_type&#34;: &#34;google_sheet&#34;,
         &#34;gsheets_sheet_order&#34;: 4,
         &#34;materialize_after_dump&#34;: True,
@@ -83,7 +82,7 @@ gsheets_urls = {
     },
     &#34;metrica_5&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_/edit#gid=1536258547&#34;,  # noqa: E501
         &#34;url_type&#34;: &#34;google_sheet&#34;,
         &#34;gsheets_sheet_order&#34;: 5,
         &#34;materialize_after_dump&#34;: True,
@@ -91,7 +90,7 @@ gsheets_urls = {
     },
     &#34;metrica_6&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_/edit#gid=1536258547&#34;,  # noqa: E501
         &#34;url_type&#34;: &#34;google_sheet&#34;,
         &#34;gsheets_sheet_order&#34;: 6,
         &#34;materialize_after_dump&#34;: True,
@@ -99,7 +98,7 @@ gsheets_urls = {
     },
     &#34;metrica_7&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_/edit#gid=1536258547&#34;,  # noqa: E501
         &#34;url_type&#34;: &#34;google_sheet&#34;,
         &#34;gsheets_sheet_order&#34;: 7,
         &#34;materialize_after_dump&#34;: True,
@@ -107,7 +106,7 @@ gsheets_urls = {
     },
     &#34;metrica_8&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_/edit#gid=1536258547&#34;,  # noqa: E501
         &#34;url_type&#34;: &#34;google_sheet&#34;,
         &#34;gsheets_sheet_order&#34;: 8,
         &#34;materialize_after_dump&#34;: True,
@@ -115,7 +114,7 @@ gsheets_urls = {
     },
     &#34;metrica_9&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_/edit#gid=1536258547&#34;,  # noqa: E501
         &#34;url_type&#34;: &#34;google_sheet&#34;,
         &#34;gsheets_sheet_order&#34;: 9,
         &#34;materialize_after_dump&#34;: True,
@@ -123,7 +122,7 @@ gsheets_urls = {
     },
     &#34;metrica_10&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_/edit#gid=1536258547&#34;,  # noqa: E501
         &#34;url_type&#34;: &#34;google_sheet&#34;,
         &#34;gsheets_sheet_order&#34;: 10,
         &#34;materialize_after_dump&#34;: True,
@@ -131,7 +130,7 @@ gsheets_urls = {
     },
     &#34;metrica_11&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_/edit#gid=1536258547&#34;,  # noqa: E501
         &#34;url_type&#34;: &#34;google_sheet&#34;,
         &#34;gsheets_sheet_order&#34;: 11,
         &#34;materialize_after_dump&#34;: True,
@@ -139,7 +138,7 @@ gsheets_urls = {
     },
     &#34;metrica_12&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_/edit#gid=1536258547&#34;,  # noqa: E501
         &#34;url_type&#34;: &#34;google_sheet&#34;,
         &#34;gsheets_sheet_order&#34;: 12,
         &#34;materialize_after_dump&#34;: True,
@@ -147,7 +146,7 @@ gsheets_urls = {
     },
     &#34;metrica_13&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_/edit#gid=1536258547&#34;,  # noqa: E501
         &#34;url_type&#34;: &#34;google_sheet&#34;,
         &#34;gsheets_sheet_order&#34;: 13,
         &#34;materialize_after_dump&#34;: True,
@@ -155,7 +154,7 @@ gsheets_urls = {
     },
     &#34;metrica_14&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_/edit#gid=1536258547&#34;,  # noqa: E501
         &#34;url_type&#34;: &#34;google_sheet&#34;,
         &#34;gsheets_sheet_order&#34;: 14,
         &#34;materialize_after_dump&#34;: True,
@@ -163,7 +162,7 @@ gsheets_urls = {
     },
     &#34;metrica_15&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
-        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_/edit#gid=1536258547&#34;,  # noqa: E501
         &#34;url_type&#34;: &#34;google_sheet&#34;,
         &#34;gsheets_sheet_order&#34;: 15,
         &#34;materialize_after_dump&#34;: True,
