@@ -86,7 +86,7 @@ with Flow(
     #
     #####################################
 
-    file_path, path = get_datario_geodataframe(
+    file_path = get_datario_geodataframe(
         url=url,
         path=f"data/{uuid4()}/",
         wait=rename_flow_run,
@@ -95,7 +95,6 @@ with Flow(
 
     datario_path = transform_geodataframe(
         file_path=file_path,
-        path=path,
         chunksize=chunksize,
         geometry_column=geometry_column,
         convert_to_crs_4326=convert_to_crs_4326,

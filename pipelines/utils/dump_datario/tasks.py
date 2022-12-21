@@ -31,7 +31,6 @@ from pipelines.constants import constants
 @task(
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
-    nout=2,
 )
 def get_datario_geodataframe(
     url: str,
@@ -56,7 +55,7 @@ def get_datario_geodataframe(
 
     log("Data saved")
 
-    return file_path, path
+    return file_path
 
 
 @task(
@@ -65,7 +64,6 @@ def get_datario_geodataframe(
 )
 def transform_geodataframe(
     file_path: Union[str, Path],
-    path: Union[str, Path],
     chunksize: int = 50000,
     geometry_column: str = "geometry",
     convert_to_crs_4326: bool = False,
@@ -76,13 +74,14 @@ def transform_geodataframe(
     Transform a CSV from data.rio API
     """
     eventid = datetime.now().strftime("%Y%m%d-%H%M%S")
-    save_path = path / "csv_data" / f"{eventid}.csv"
+    # move to path file since file_path is path / "geo_data" / "data.geojson"
+    save_path = file_path.parent.parent / "csv_data" / f"{eventid}.csv"
     save_path.parent.mkdir(parents=True, exist_ok=True)
 
     geojson = geojsplit.GeoJSONBatchStreamer(file_path)
 
     for index, feature_collection in enumerate(geojson.stream(batch=chunksize)):
-        count = (index + 1) * chunksize
+        count = index + 1
         geodataframe = gpd.GeoDataFrame.from_features(feature_collection["features"])
 
         cols = geodataframe.columns.tolist()
