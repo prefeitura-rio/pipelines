@@ -31,7 +31,8 @@ def extract_last_partition_date(partitions_dict: dict, date_format: str):
                 max(new_values), date_format
             ).strftime(date_format)
             log(
-                f"last partition from {partition} is in date format {date_format}: {last_partition_date}"
+                f"last partition from {partition} is in date format "
+                f"{date_format}: {last_partition_date}"
             )
         except ValueError:
             log(

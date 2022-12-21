@@ -4,7 +4,6 @@
 General purpose tasks for dumping database data.
 """
 from datetime import datetime, timedelta
-import logging
 from queue import Empty, Queue
 from pathlib import Path
 from threading import Event, Thread
@@ -14,7 +13,6 @@ from uuid import uuid4
 
 import basedosdados as bd
 import pandas as pd
-import prefect
 from prefect import task
 
 from pipelines.utils.dump_db.db import (
@@ -330,18 +328,14 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
         labels: List[str],
         dataset_id: str,
         table_id: str,
-        logger: logging.Logger,
     ):
-        logger.info("---\n\tStarting thread_batch_to_dataframe")
         while not done.is_set():
             try:
                 batch = batches.get(timeout=1)
-                logger.info("---\n\tGOT batch from queue")
                 start_time = time()
                 dataframe = batch_to_dataframe(batch, columns)
                 elapsed_time = time() - start_time
                 dataframes.put(dataframe)
-                logger.info("---\n\tPUT dataframe in queue")
                 doc = format_document(
                     flow_name=flow_name,
                     labels=labels,
@@ -352,10 +346,8 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
                 )
                 index_document(doc)
                 batches.task_done()
-                logger.info("---\n\tCOMPLETED batch to dataframe")
             except Empty:
                 sleep(1)
-        logger.info("---\n\tExiting thread_batch_to_dataframe")
 
     def thread_dataframe_to_csv(
         dataframes: Queue,
@@ -369,24 +361,16 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
         prepath: Path,
         batch_data_type: str,
         eventid: str,
-        logger: logging.Logger,
     ):
-        logger.info("---\n\tStarting thread_dataframe_to_csv")
-        idx = 0
         while not done.is_set():
             try:
                 # Get dataframe from queue
                 dataframe: pd.DataFrame = dataframes.get(timeout=1)
-                logger.info("---\n\tGOT dataframe from queue")
                 # Clean dataframe
                 start_time = time()
                 old_columns = dataframe.columns.tolist()
                 dataframe.columns = remove_columns_accents(dataframe)
                 new_columns_dict = dict(zip(old_columns, dataframe.columns.tolist()))
-                if idx == 0:
-                    logger.info(
-                        f"---\n\tNew columns without accents: {new_columns_dict}"
-                    )
                 dataframe = clean_dataframe(dataframe)
                 elapsed_time = time() - start_time
                 doc = format_document(
@@ -429,12 +413,9 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
                     metrics={f"batch_to_{batch_data_type}": elapsed_time},
                 )
                 index_document(doc)
-                idx += 1
                 dataframes.task_done()
-                logger.info("---\n\tCOMPLETED dataframe to csv")
             except Empty:
                 sleep(1)
-        logger.info("---\n\tExiting thread_dataframe_to_csv")
 
     # Initialize threads
     done = Event()
@@ -450,7 +431,6 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
             labels,
             dataset_id,
             table_id,
-            prefect.context.logger,  # pylint: disable=no-member
         ),
     )
     worker_dataframe_to_csv = Thread(
@@ -467,7 +447,6 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
             prepath,
             batch_data_type,
             eventid,
-            prefect.context.logger,  # pylint: disable=no-member
         ),
     )
     worker_batch_to_dataframe.start()
@@ -492,7 +471,6 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
             log(f"Dumping batch {idx} with size {len(batch)}")
         # Add current batch to queue
         batches.put(batch)
-        log("PUT batch in queue")
         # Get next batch
         start_fetch_batch = time()
         batch = database.fetch_batch(batch_size)
