@@ -62,7 +62,7 @@ def log_mod(msg: str, index: int, mod: int):
     """
     Only logs a message if the index is a multiple of mod.
     """
-    if index % mod == 0:
+    if index % mod == 0 or index == 1:
         log(msg)
 
 

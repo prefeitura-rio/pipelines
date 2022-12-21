@@ -2,7 +2,7 @@
 """
 General purpose tasks for dumping database data.
 """
-# pylint: disable=unused-argument, W0613, R0913, W0108,
+# pylint: disable=unused-argument, W0613, R0913, W0108
 
 from pathlib import Path
 from typing import Union
@@ -139,7 +139,11 @@ def transform_geodataframe(
                 mod=mod,
             )
 
-        log_mod(f"{count}: new columns: {geodataframe.columns.tolist()}")
+        log_mod(
+            msg=f"{count}: new columns: {geodataframe.columns.tolist()}",
+            index=count,
+            mod=mod,
+        )
 
         # save geodataframe to csv
         geodataframe.to_csv(
