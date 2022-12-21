@@ -765,14 +765,13 @@ def upload_files_to_storage(
             blob.upload_from_filename(file)
 
 
-def is_date(date_string: str):
+def is_date(date_string: str, date_format: str = "%Y-%m-%d"):
     """
     check if is date format
     """
     try:
-        return datetime.strptime(date_string, "%Y-%m-%d").strftime("%Y-%m-%d")
+        return datetime.strptime(date_string, date_format).strftime(date_format)
     except ValueError as err:
-        log(err)
         return None
 
 
