@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Database dumping flows for segovi project 
+Database dumping flows for segovi project
 """
 
 from copy import deepcopy
