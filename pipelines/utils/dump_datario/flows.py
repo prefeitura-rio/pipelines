@@ -45,7 +45,7 @@ with Flow(
         "convert_to_crs_4326", default=False, required=False
     )
     geometry_3d_to_2d = Parameter("geometry_3d_to_2d", default=False, required=False)
-    chunksize = Parameter("chunksize", default=100000, required=True)
+    chunksize = Parameter("chunksize", default=50000, required=True)
 
     # BigQuery parameters
     dataset_id = Parameter("dataset_id")

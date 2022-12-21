@@ -82,7 +82,7 @@ def transform_geodataframe(
     geojson = geojsplit.GeoJSONBatchStreamer(file_path)
 
     for index, feature_collection in enumerate(geojson.stream(batch=chunksize)):
-
+        count = (index + 1) * chunksize
         geodataframe = gpd.GeoDataFrame.from_features(feature_collection["features"])
 
         cols = geodataframe.columns.tolist()
@@ -90,7 +90,7 @@ def transform_geodataframe(
         cols.append(geometry_column)
         geodataframe = geodataframe[cols]
 
-        log(f"loop {index+1}: Geodatagrame loaded")
+        log(f"{count}: geodataframe loaded")
         geodataframe.columns = remove_columns_accents(geodataframe)
         geodataframe["geometry_wkt"] = geodataframe[geometry_column].copy()
 
@@ -101,10 +101,10 @@ def transform_geodataframe(
                     "epsg:4326"
                 )
             except Exception as err:
-                log(f"loop {index+1}:Error converting to crs 4326: {err}")
+                log(f"{count}: error converting to crs 4326: {err}")
                 raise err
 
-            log(f"loop {index+1}: geometry converted to crs 4326")
+            log(f"{count}: geometry converted to crs 4326")
 
         if geometry_3d_to_2d:
             try:
@@ -116,12 +116,12 @@ def transform_geodataframe(
                     lambda geom: remove_third_dimension(geom)
                 )
             except Exception as err:
-                log(f"loop {index+1}: Error converting 3d to 2d: {err}")
+                log(f"{count}: error converting 3d to 2d: {err}")
                 raise err
 
-            log(f"loop {index+1}: geometry converted 3D to 2D")
+            log(f"{count}: geometry converted 3D to 2D")
 
-        log(f"loop {index+1}:  New columns: {geodataframe.columns.tolist()}")
+        log(f"{count}: new columns: {geodataframe.columns.tolist()}")
 
         geodataframe.to_csv(
             save_path,
@@ -130,6 +130,7 @@ def transform_geodataframe(
             mode="a",
             header=not save_path.exists(),
         )
-        log(f"loop {index+1}: Data saved")
+        del geodataframe
+        log(f"{count}: Data saved")
 
     return save_path
