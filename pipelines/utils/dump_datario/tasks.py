@@ -88,27 +88,23 @@ def transform_geodataframe(
         cols = geodataframe.columns.tolist()
         cols.remove(geometry_column)
         cols.append(geometry_column)
-        geodataframe.columns = cols
+        geodataframe = geodataframe[cols]
 
-        log(f"{index}: Geodatagrame loaded")
-        log(f"{index}: Original columns: {geodataframe.columns.tolist()}")
+        log(f"loop {index+1}: Geodatagrame loaded")
         geodataframe.columns = remove_columns_accents(geodataframe)
-        log(f"{index}: New columns: {geodataframe.columns.tolist()}")
-
         geodataframe["geometry_wkt"] = geodataframe[geometry_column].copy()
 
         if convert_to_crs_4326:
-
             try:
                 geodataframe.crs = "epsg:4326"
                 geodataframe[geometry_column] = geodataframe[geometry_column].to_crs(
                     "epsg:4326"
                 )
             except Exception as err:
-                log(f"{index}:Error converting to crs 4326: {err}")
+                log(f"loop {index+1}:Error converting to crs 4326: {err}")
                 raise err
 
-            log(f"{index}: geometry converted to crs 4326")
+            log(f"loop {index+1}: geometry converted to crs 4326")
 
         if geometry_3d_to_2d:
             try:
@@ -120,12 +116,12 @@ def transform_geodataframe(
                     lambda geom: remove_third_dimension(geom)
                 )
             except Exception as err:
-                log(f"{index}: Error converting 3d to 2d: {err}")
+                log(f"loop {index+1}: Error converting 3d to 2d: {err}")
                 raise err
 
             log("geometry converted 3D to 2D")
 
-        log(f"{index}:  New columns: {geodataframe.columns.tolist()}")
+        log(f"loop {index+1}:  New columns: {geodataframe.columns.tolist()}")
 
         geodataframe.to_csv(
             save_path,
