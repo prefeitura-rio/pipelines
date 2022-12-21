@@ -16,9 +16,12 @@ def extract_last_partition_date(partitions_dict: dict, date_format: str):
     """
     Extract last date from partitions folders
     """
+    log(f"Extracting last partition date from {partitions_dict}", "debug")
     last_partition_date = None
     for partition, values in partitions_dict.items():
+        log(f"Partition {partition} has values {values}", "debug")
         new_values = [date for date in values if is_date(date_string=date)]
+        log(f"Partition {partition} has new values {new_values}", "debug")
         try:
             last_partition_date = datetime.strptime(
                 max(new_values), "%Y-%m-%d"
