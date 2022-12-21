@@ -130,7 +130,7 @@ with Flow(
     run_dates = update_rdo_redis(
         download_files=download_files, table_id=table_id, errors=errors
     )
-    with case(bool(run_dates), True):
+    with case(bool(run_dates) and materialize, True):
         run_materialize = create_flow_run(
             flow_name=sppo_rho_materialize.name,
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
@@ -138,6 +138,7 @@ with Flow(
             labels=LABELS,
             run_name=sppo_rho_materialize.name,
         )
+    captura_ftp.set_dependencies(run_materialize, [run_dates])
 
 captura_ftp.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_ftp.run_config = KubernetesRun(
