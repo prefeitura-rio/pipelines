@@ -13,12 +13,12 @@ import geopandas as gpd
 from prefect import task
 import requests
 
-from pipelines.utils.utils import (
-    log,
-    remove_columns_accents,
-)
+from pipelines.utils.utils import log, log_mod, remove_columns_accents
 
-from pipelines.utils.dump_datario.utils import remove_third_dimension, load_wkt
+from pipelines.utils.dump_datario.utils import (
+    load_wkt,
+    remove_third_dimension,
+)
 from pipelines.constants import constants
 
 ###############
@@ -64,12 +64,12 @@ def get_datario_geodataframe(
 )
 def transform_geodataframe(
     file_path: Union[str, Path],
-    chunksize: int = 50000,
+    batch_size: int = 50000,
     geometry_column: str = "geometry",
     convert_to_crs_4326: bool = False,
     geometry_3d_to_2d: bool = False,
     wait=None,
-):
+):  # sourcery skip: convert-to-enumerate
     """ "
     Transform a CSV from data.rio API
     """
@@ -80,10 +80,17 @@ def transform_geodataframe(
     save_path.parent.mkdir(parents=True, exist_ok=True)
 
     geojson = geojsplit.GeoJSONBatchStreamer(file_path)
-    count = 1
-    for feature_collection in geojson.stream(batch=chunksize):
+
+    # only print every print_mod batches
+    mod = 100
+    for index, feature_collection in enumerate(geojson.stream(batch=batch_size)):
+        count = index + 1
         geodataframe = gpd.GeoDataFrame.from_features(feature_collection["features"])
-        log(f"{count} x {chunksize} rows: geodataframe loaded")
+        log_mod(
+            msg=f"{count} x {batch_size} rows: geodataframe loaded",
+            index=count,
+            mod=mod,
+        )
 
         # move geometry column to the end
         cols = geodataframe.columns.tolist()
@@ -106,7 +113,11 @@ def transform_geodataframe(
                 log(f"{count}: error converting to crs 4326: {err}")
                 raise err
 
-            log(f"{count}: geometry converted to crs 4326")
+            log_mod(
+                msg=f"{count}: geometry converted to crs 4326",
+                index=count,
+                mod=mod,
+            )
 
         # convert geometry 3d to 2d
         if geometry_3d_to_2d:
@@ -116,15 +127,19 @@ def transform_geodataframe(
                 )
 
                 geodataframe[geometry_column] = geodataframe[geometry_column].apply(
-                    lambda geom: remove_third_dimension(geom)
+                    remove_third_dimension
                 )
             except Exception as err:
                 log(f"{count}: error converting 3d to 2d: {err}")
                 raise err
 
-            log(f"{count}: geometry converted 3D to 2D")
+            log_mod(
+                msg=f"{count}: geometry converted 3D to 2D",
+                index=count,
+                mod=mod,
+            )
 
-        log(f"{count}: new columns: {geodataframe.columns.tolist()}")
+        log_mod(f"{count}: new columns: {geodataframe.columns.tolist()}")
 
         # save geodataframe to csv
         geodataframe.to_csv(
@@ -137,7 +152,11 @@ def transform_geodataframe(
 
         # clear memory
         del geodataframe
-        log(f"{count} x {chunksize} rows: Data saved")
-        count += 1
+
+        log_mod(
+            msg=f"{count} x {batch_size} rows: Data saved",
+            index=count,
+            mod=mod,
+        )
 
     return save_path

@@ -58,6 +58,14 @@ def log(msg: Any, level: str = "info") -> None:
     prefect.context.logger.log(levels[level], msg)  # pylint: disable=E1101
 
 
+def log_mod(msg: str, index: int, mod: int):
+    """
+    Only logs a message if the index is a multiple of mod.
+    """
+    if index % mod == 0:
+        log(msg)
+
+
 ###############
 #
 # Datetime utils

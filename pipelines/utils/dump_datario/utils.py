@@ -86,58 +86,43 @@ def remove_third_dimension(geom):
         new_exterior = remove_third_dimension(exterior)
 
         interiors = geom.interiors
-        new_interiors = []
-        for int in interiors:
-            new_interiors.append(remove_third_dimension(int))
-
+        new_interiors = [remove_third_dimension(int) for int in interiors]
         return Polygon(new_exterior, new_interiors)
 
     elif isinstance(geom, LinearRing):
-        return LinearRing([xy[0:2] for xy in list(geom.coords)])
+        return LinearRing([xy[:2] for xy in list(geom.coords)])
 
     elif isinstance(geom, LineString):
-        return LineString([xy[0:2] for xy in list(geom.coords)])
+        return LineString([xy[:2] for xy in list(geom.coords)])
 
     elif isinstance(geom, Point):
-        return Point([xy[0:2] for xy in list(geom.coords)])
+        return Point([xy[:2] for xy in list(geom.coords)])
 
     elif isinstance(geom, MultiPoint):
         points = list(geom.geoms)
-        new_points = []
-        for point in points:
-            new_points.append(remove_third_dimension(point))
-
+        new_points = [remove_third_dimension(point) for point in points]
         return MultiPoint(new_points)
 
     elif isinstance(geom, MultiLineString):
         lines = list(geom.geoms)
-        new_lines = []
-        for line in lines:
-            new_lines.append(remove_third_dimension(line))
-
+        new_lines = [remove_third_dimension(line) for line in lines]
         return MultiLineString(new_lines)
 
     elif isinstance(geom, MultiPolygon):
         pols = list(geom.geoms)
 
-        new_pols = []
-        for pol in pols:
-            new_pols.append(remove_third_dimension(pol))
-
+        new_pols = [remove_third_dimension(pol) for pol in pols]
         return MultiPolygon(new_pols)
 
     elif isinstance(geom, GeometryCollection):
         geoms = list(geom.geoms)
 
-        new_geoms = []
-        for geom in geoms:
-            new_geoms.append(remove_third_dimension(geom))
-
+        new_geoms = [remove_third_dimension(geom) for geom in geoms]
         return GeometryCollection(new_geoms)
 
     else:
         raise RuntimeError(
-            "Currently this type of geometry is not supported: {}".format(type(geom))
+            f"Currently this type of geometry is not supported: {type(geom)}"
         )
 
 
