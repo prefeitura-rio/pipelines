@@ -1,10 +1,24 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=R0914, W0622, R1705, R1704, R0911, C0103, R0911, R0912, W0703, W0612
 """
 General utilities for interacting with datario-dump
 """
 
 from datetime import timedelta, datetime
 from typing import List
+
+from shapely.geometry import (
+    Polygon,
+    MultiPolygon,
+    LinearRing,
+    LineString,
+    MultiLineString,
+    MultiPoint,
+    Point,
+    GeometryCollection,
+)
+from shapely import wkt
+
 
 from prefect.schedules.clocks import IntervalClock
 
@@ -35,6 +49,15 @@ def generate_dump_datario_schedules(  # pylint: disable=too-many-arguments,too-m
             parameter_defaults["materialization_mode"] = parameters[
                 "materialization_mode"
             ]
+        if "geometry_column" in parameters:
+            parameter_defaults["geometry_column"] = parameters["geometry_column"]
+        if "convert_to_crs_4326" in parameters:
+            parameter_defaults["convert_to_crs_4326"] = parameters[
+                "convert_to_crs_4326"
+            ]
+        if "geometry_3d_to_2d" in parameters:
+            parameter_defaults["geometry_3d_to_2d"] = parameters["geometry_3d_to_2d"]
+
         new_interval = parameters["interval"] if "interval" in parameters else interval
         clocks.append(
             IntervalClock(
@@ -46,3 +69,68 @@ def generate_dump_datario_schedules(  # pylint: disable=too-many-arguments,too-m
             )
         )
     return clocks
+
+
+def remove_third_dimension(geom):
+    """
+    Remove third dimension from geometry
+    """
+    if geom is None:
+        return None
+
+    if geom.is_empty:
+        return geom
+
+    if isinstance(geom, Polygon):
+        exterior = geom.exterior
+        new_exterior = remove_third_dimension(exterior)
+
+        interiors = geom.interiors
+        new_interiors = [remove_third_dimension(int) for int in interiors]
+        return Polygon(new_exterior, new_interiors)
+
+    elif isinstance(geom, LinearRing):
+        return LinearRing([xy[:2] for xy in list(geom.coords)])
+
+    elif isinstance(geom, LineString):
+        return LineString([xy[:2] for xy in list(geom.coords)])
+
+    elif isinstance(geom, Point):
+        return Point([xy[:2] for xy in list(geom.coords)])
+
+    elif isinstance(geom, MultiPoint):
+        points = list(geom.geoms)
+        new_points = [remove_third_dimension(point) for point in points]
+        return MultiPoint(new_points)
+
+    elif isinstance(geom, MultiLineString):
+        lines = list(geom.geoms)
+        new_lines = [remove_third_dimension(line) for line in lines]
+        return MultiLineString(new_lines)
+
+    elif isinstance(geom, MultiPolygon):
+        pols = list(geom.geoms)
+
+        new_pols = [remove_third_dimension(pol) for pol in pols]
+        return MultiPolygon(new_pols)
+
+    elif isinstance(geom, GeometryCollection):
+        geoms = list(geom.geoms)
+
+        new_geoms = [remove_third_dimension(geom) for geom in geoms]
+        return GeometryCollection(new_geoms)
+
+    else:
+        raise RuntimeError(
+            f"Currently this type of geometry is not supported: {type(geom)}"
+        )
+
+
+def load_wkt(x):
+    """
+    Fromt text to geometry
+    """
+    try:
+        return wkt.loads(x)
+    except Exception as err:
+        return None
