@@ -60,7 +60,7 @@ def log(msg: Any, level: str = "info") -> None:
 
 def log_mod(msg: str, index: int, mod: int):
     """
-    Only logs a message if the index is a multiple of mod. 
+    Only logs a message if the index is a multiple of mod.
     """
     if index % mod == 0 or index == 1:
         log(msg)
@@ -91,9 +91,7 @@ def determine_whether_to_execute_or_not(
         cron_expression, datetime_last_execution
     )
     next_cron_expression_time = cron_expression_iterator.get_next(datetime)
-    if next_cron_expression_time <= datetime_now:
-        return True
-    return False
+    return next_cron_expression_time <= datetime_now
 
 
 ###############
@@ -253,9 +251,7 @@ def run_local(flow: prefect.Flow, parameters: Dict[str, Any] = None):
     flow.schedule = None
 
     # Run flow
-    if parameters:
-        return flow.run(parameters=parameters)
-    return flow.run()
+    return flow.run(parameters=parameters) if parameters else flow.run()
 
 
 def run_cloud(
