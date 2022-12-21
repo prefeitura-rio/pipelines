@@ -159,7 +159,7 @@ gsheets_urls = {
 
 gsheets_clocks = generate_dump_url_schedules(
     interval=timedelta(days=1),
-    runs_interval_minutes = 1,
+    runs_interval_minutes=1,
     start_date=datetime(2021, 12, 21, 16, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
