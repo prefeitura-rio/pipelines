@@ -83,8 +83,8 @@ def transform_geodataframe(
 
     # only print every print_mod batches
     mod = 100
-    for index, feature_collection in enumerate(geojson.stream(batch=batch_size)):
-        count = index + 1
+    count = 1
+    for feature_collection in geojson.stream(batch=batch_size):
         geodataframe = gpd.GeoDataFrame.from_features(feature_collection["features"])
         log_mod(
             msg=f"{count} x {batch_size} rows: geodataframe loaded",
@@ -162,5 +162,6 @@ def transform_geodataframe(
             index=count,
             mod=mod,
         )
+        count += 1
     log("DATA TRANSFORMED!!!")
     return save_path
