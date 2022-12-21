@@ -33,12 +33,15 @@
 General purpose tasks for dumping database data.
 &#34;&#34;&#34;
 from datetime import datetime, timedelta
+from queue import Empty, Queue
 from pathlib import Path
-from time import time
+from threading import Event, Thread
+from time import sleep, time
 from typing import Dict, List, Union
 from uuid import uuid4
 
 import basedosdados as bd
+import pandas as pd
 from prefect import task
 
 from pipelines.utils.dump_db.db import (
@@ -319,7 +322,6 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
     &#34;&#34;&#34;
     Dumps batches of data to FILE.
     &#34;&#34;&#34;
-    start_time = time()
     # Get columns
     columns = database.get_columns()
     log(f&#34;Got columns: {columns}&#34;)
@@ -340,8 +342,147 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
         log(&#34;NO partition column specified! Writing unique files&#34;)
     else:
         log(f&#34;Partition column: {partition_column} FOUND!! Write to partitioned files&#34;)
-    start_fetch_batch = time()
+
+    # Initialize queues
+    batches = Queue()
+    dataframes = Queue()
+
+    # Define thread functions
+    def thread_batch_to_dataframe(
+        batches: Queue,
+        dataframes: Queue,
+        done: Event,
+        columns: List[str],
+        flow_name: str,
+        labels: List[str],
+        dataset_id: str,
+        table_id: str,
+    ):
+        while not done.is_set():
+            try:
+                batch = batches.get(timeout=1)
+                start_time = time()
+                dataframe = batch_to_dataframe(batch, columns)
+                elapsed_time = time() - start_time
+                dataframes.put(dataframe)
+                doc = format_document(
+                    flow_name=flow_name,
+                    labels=labels,
+                    event_type=&#34;batch_to_dataframe&#34;,
+                    dataset_id=dataset_id,
+                    table_id=table_id,
+                    metrics={&#34;batch_to_dataframe&#34;: elapsed_time},
+                )
+                index_document(doc)
+                batches.task_done()
+            except Empty:
+                sleep(1)
+
+    def thread_dataframe_to_csv(
+        dataframes: Queue,
+        done: Event,
+        flow_name: str,
+        labels: List[str],
+        dataset_id: str,
+        table_id: str,
+        partition_column: str,
+        partition_columns: List[str],
+        prepath: Path,
+        batch_data_type: str,
+        eventid: str,
+    ):
+        while not done.is_set():
+            try:
+                # Get dataframe from queue
+                dataframe: pd.DataFrame = dataframes.get(timeout=1)
+                # Clean dataframe
+                start_time = time()
+                old_columns = dataframe.columns.tolist()
+                dataframe.columns = remove_columns_accents(dataframe)
+                new_columns_dict = dict(zip(old_columns, dataframe.columns.tolist()))
+                dataframe = clean_dataframe(dataframe)
+                elapsed_time = time() - start_time
+                doc = format_document(
+                    flow_name=flow_name,
+                    labels=labels,
+                    event_type=&#34;clean_dataframe&#34;,
+                    dataset_id=dataset_id,
+                    table_id=table_id,
+                    metrics={&#34;clean_dataframe&#34;: elapsed_time},
+                )
+                index_document(doc)
+                # Dump dataframe to file
+                start_time = time()
+                if partition_column:
+                    dataframe, date_partition_columns = parse_date_columns(
+                        dataframe, new_columns_dict[partition_column]
+                    )
+                    partitions = date_partition_columns + [
+                        new_columns_dict[col] for col in partition_columns[1:]
+                    ]
+                    to_partitions(
+                        data=dataframe,
+                        partition_columns=partitions,
+                        savepath=prepath,
+                        data_type=batch_data_type,
+                    )
+                elif batch_data_type == &#34;csv&#34;:
+                    dataframe_to_csv(dataframe, prepath / f&#34;{eventid}-{idx}.csv&#34;)
+                elif batch_data_type == &#34;parquet&#34;:
+                    dataframe_to_parquet(
+                        dataframe, prepath / f&#34;{eventid}-{idx}.parquet&#34;
+                    )
+                elapsed_time = time() - start_time
+                doc = format_document(
+                    flow_name=flow_name,
+                    labels=labels,
+                    event_type=f&#34;batch_to_{batch_data_type}&#34;,
+                    dataset_id=dataset_id,
+                    table_id=table_id,
+                    metrics={f&#34;batch_to_{batch_data_type}&#34;: elapsed_time},
+                )
+                index_document(doc)
+                dataframes.task_done()
+            except Empty:
+                sleep(1)
+
+    # Initialize threads
+    done = Event()
+    eventid = datetime.now().strftime(&#34;%Y%m%d-%H%M%S&#34;)
+    worker_batch_to_dataframe = Thread(
+        target=thread_batch_to_dataframe,
+        args=(
+            batches,
+            dataframes,
+            done,
+            columns,
+            flow_name,
+            labels,
+            dataset_id,
+            table_id,
+        ),
+    )
+    worker_dataframe_to_csv = Thread(
+        target=thread_dataframe_to_csv,
+        args=(
+            dataframes,
+            done,
+            flow_name,
+            labels,
+            dataset_id,
+            table_id,
+            partition_column,
+            partition_columns,
+            prepath,
+            batch_data_type,
+            eventid,
+        ),
+    )
+    worker_batch_to_dataframe.start()
+    worker_dataframe_to_csv.start()
+
     # Dump batches
+    start_fetch_batch = time()
     batch = database.fetch_batch(batch_size)
     time_fetch_batch = time() - start_fetch_batch
     doc = format_document(
@@ -353,74 +494,12 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
         metrics={&#34;fetch_batch&#34;: time_fetch_batch},
     )
     index_document(doc)
-    eventid = datetime.now().strftime(&#34;%Y%m%d-%H%M%S&#34;)
     idx = 0
     while len(batch) &gt; 0:
         if idx % 100 == 0:
             log(f&#34;Dumping batch {idx} with size {len(batch)}&#34;)
-        start_fetch_batch = time()
-        # Convert to dataframe
-        dataframe = batch_to_dataframe(batch, columns)
-        time_fetch_batch = time() - start_fetch_batch
-        doc = format_document(
-            flow_name=flow_name,
-            labels=labels,
-            event_type=&#34;batch_to_dataframe&#34;,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            metrics={&#34;batch_to_dataframe&#34;: time_fetch_batch},
-        )
-        index_document(doc)
-        # Clean dataframe
-        start_fetch_batch = time()
-        old_columns = dataframe.columns.tolist()
-        dataframe.columns = remove_columns_accents(dataframe)
-        new_columns_dict = dict(zip(old_columns, dataframe.columns.tolist()))
-        if idx == 0:
-            log(f&#34;New columns without accents: {new_columns_dict}&#34;)
-
-        dataframe = clean_dataframe(dataframe)
-        time_fetch_batch = time() - start_fetch_batch
-        doc = format_document(
-            flow_name=flow_name,
-            labels=labels,
-            event_type=&#34;clean_dataframe&#34;,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            metrics={&#34;clean_dataframe&#34;: time_fetch_batch},
-        )
-        index_document(doc)
-        # Write to CSV
-        start_fetch_batch = time()
-        if partition_column:
-            dataframe, date_partition_columns = parse_date_columns(
-                dataframe, new_columns_dict[partition_column]
-            )
-
-            partitions = date_partition_columns + [
-                new_columns_dict[col] for col in partition_columns[1:]
-            ]
-            to_partitions(
-                data=dataframe,
-                partition_columns=partitions,
-                savepath=prepath,
-                data_type=batch_data_type,
-            )
-        elif batch_data_type == &#34;csv&#34;:
-            dataframe_to_csv(dataframe, prepath / f&#34;{eventid}-{idx}.csv&#34;)
-        elif batch_data_type == &#34;parquet&#34;:
-            dataframe_to_parquet(dataframe, prepath / f&#34;{eventid}-{idx}.parquet&#34;)
-
-        time_fetch_batch = time() - start_fetch_batch
-        doc = format_document(
-            flow_name=flow_name,
-            labels=labels,
-            event_type=f&#34;batch_to_{batch_data_type}&#34;,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            metrics={f&#34;batch_to_{batch_data_type}&#34;: time_fetch_batch},
-        )
-        index_document(doc)
+        # Add current batch to queue
+        batches.put(batch)
         # Get next batch
         start_fetch_batch = time()
         batch = database.fetch_batch(batch_size)
@@ -436,18 +515,33 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
         index_document(doc)
         idx += 1
 
-    log(f&#34;Dumped {idx} batches with size {len(batch)}, total of {idx*batch_size}&#34;)
+    log(&#34;Waiting for batches queue...&#34;)
+    start_sleep = 1
+    max_sleep = 300
+    while batches.unfinished_tasks &gt; 0:
+        sleep(start_sleep)
+        start_sleep = min(start_sleep * 2, max_sleep)
+        log(
+            f&#34;Waiting for {batches.unfinished_tasks} batches to be parsed as dataframes...&#34;
+        )
+    batches.join()
+    start_sleep = 1
+    log(&#34;Waiting for dataframes queue...&#34;)
+    while dataframes.unfinished_tasks &gt; 0:
+        sleep(start_sleep)
+        start_sleep = min(start_sleep * 2, max_sleep)
+        log(f&#34;Waiting for {dataframes.unfinished_tasks} dataframes to be dumped...&#34;)
+    dataframes.join()
+    done.set()
 
-    time_elapsed = time() - start_time
-    doc = format_document(
-        flow_name=flow_name,
-        labels=labels,
-        event_type=&#34;batches_to_csv&#34;,
-        dataset_id=dataset_id,
-        table_id=table_id,
-        metrics={&#34;batches_to_csv&#34;: time_elapsed},
+    log(&#34;Waiting for threads to finish...&#34;)
+    worker_batch_to_dataframe.join()
+    worker_dataframe_to_csv.join()
+
+    log(
+        f&#34;Successfully dumped {idx} batches with size {len(batch)}, total of {idx*batch_size}&#34;
     )
-    index_document(doc)
+
     return prepath, idx</code></pre>
 </details>
 </section>
@@ -653,7 +747,6 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
     &#34;&#34;&#34;
     Dumps batches of data to FILE.
     &#34;&#34;&#34;
-    start_time = time()
     # Get columns
     columns = database.get_columns()
     log(f&#34;Got columns: {columns}&#34;)
@@ -674,8 +767,147 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
         log(&#34;NO partition column specified! Writing unique files&#34;)
     else:
         log(f&#34;Partition column: {partition_column} FOUND!! Write to partitioned files&#34;)
-    start_fetch_batch = time()
+
+    # Initialize queues
+    batches = Queue()
+    dataframes = Queue()
+
+    # Define thread functions
+    def thread_batch_to_dataframe(
+        batches: Queue,
+        dataframes: Queue,
+        done: Event,
+        columns: List[str],
+        flow_name: str,
+        labels: List[str],
+        dataset_id: str,
+        table_id: str,
+    ):
+        while not done.is_set():
+            try:
+                batch = batches.get(timeout=1)
+                start_time = time()
+                dataframe = batch_to_dataframe(batch, columns)
+                elapsed_time = time() - start_time
+                dataframes.put(dataframe)
+                doc = format_document(
+                    flow_name=flow_name,
+                    labels=labels,
+                    event_type=&#34;batch_to_dataframe&#34;,
+                    dataset_id=dataset_id,
+                    table_id=table_id,
+                    metrics={&#34;batch_to_dataframe&#34;: elapsed_time},
+                )
+                index_document(doc)
+                batches.task_done()
+            except Empty:
+                sleep(1)
+
+    def thread_dataframe_to_csv(
+        dataframes: Queue,
+        done: Event,
+        flow_name: str,
+        labels: List[str],
+        dataset_id: str,
+        table_id: str,
+        partition_column: str,
+        partition_columns: List[str],
+        prepath: Path,
+        batch_data_type: str,
+        eventid: str,
+    ):
+        while not done.is_set():
+            try:
+                # Get dataframe from queue
+                dataframe: pd.DataFrame = dataframes.get(timeout=1)
+                # Clean dataframe
+                start_time = time()
+                old_columns = dataframe.columns.tolist()
+                dataframe.columns = remove_columns_accents(dataframe)
+                new_columns_dict = dict(zip(old_columns, dataframe.columns.tolist()))
+                dataframe = clean_dataframe(dataframe)
+                elapsed_time = time() - start_time
+                doc = format_document(
+                    flow_name=flow_name,
+                    labels=labels,
+                    event_type=&#34;clean_dataframe&#34;,
+                    dataset_id=dataset_id,
+                    table_id=table_id,
+                    metrics={&#34;clean_dataframe&#34;: elapsed_time},
+                )
+                index_document(doc)
+                # Dump dataframe to file
+                start_time = time()
+                if partition_column:
+                    dataframe, date_partition_columns = parse_date_columns(
+                        dataframe, new_columns_dict[partition_column]
+                    )
+                    partitions = date_partition_columns + [
+                        new_columns_dict[col] for col in partition_columns[1:]
+                    ]
+                    to_partitions(
+                        data=dataframe,
+                        partition_columns=partitions,
+                        savepath=prepath,
+                        data_type=batch_data_type,
+                    )
+                elif batch_data_type == &#34;csv&#34;:
+                    dataframe_to_csv(dataframe, prepath / f&#34;{eventid}-{idx}.csv&#34;)
+                elif batch_data_type == &#34;parquet&#34;:
+                    dataframe_to_parquet(
+                        dataframe, prepath / f&#34;{eventid}-{idx}.parquet&#34;
+                    )
+                elapsed_time = time() - start_time
+                doc = format_document(
+                    flow_name=flow_name,
+                    labels=labels,
+                    event_type=f&#34;batch_to_{batch_data_type}&#34;,
+                    dataset_id=dataset_id,
+                    table_id=table_id,
+                    metrics={f&#34;batch_to_{batch_data_type}&#34;: elapsed_time},
+                )
+                index_document(doc)
+                dataframes.task_done()
+            except Empty:
+                sleep(1)
+
+    # Initialize threads
+    done = Event()
+    eventid = datetime.now().strftime(&#34;%Y%m%d-%H%M%S&#34;)
+    worker_batch_to_dataframe = Thread(
+        target=thread_batch_to_dataframe,
+        args=(
+            batches,
+            dataframes,
+            done,
+            columns,
+            flow_name,
+            labels,
+            dataset_id,
+            table_id,
+        ),
+    )
+    worker_dataframe_to_csv = Thread(
+        target=thread_dataframe_to_csv,
+        args=(
+            dataframes,
+            done,
+            flow_name,
+            labels,
+            dataset_id,
+            table_id,
+            partition_column,
+            partition_columns,
+            prepath,
+            batch_data_type,
+            eventid,
+        ),
+    )
+    worker_batch_to_dataframe.start()
+    worker_dataframe_to_csv.start()
+
     # Dump batches
+    start_fetch_batch = time()
     batch = database.fetch_batch(batch_size)
     time_fetch_batch = time() - start_fetch_batch
     doc = format_document(
@@ -687,74 +919,12 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
         metrics={&#34;fetch_batch&#34;: time_fetch_batch},
     )
     index_document(doc)
-    eventid = datetime.now().strftime(&#34;%Y%m%d-%H%M%S&#34;)
     idx = 0
     while len(batch) &gt; 0:
         if idx % 100 == 0:
             log(f&#34;Dumping batch {idx} with size {len(batch)}&#34;)
-        start_fetch_batch = time()
-        # Convert to dataframe
-        dataframe = batch_to_dataframe(batch, columns)
-        time_fetch_batch = time() - start_fetch_batch
-        doc = format_document(
-            flow_name=flow_name,
-            labels=labels,
-            event_type=&#34;batch_to_dataframe&#34;,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            metrics={&#34;batch_to_dataframe&#34;: time_fetch_batch},
-        )
-        index_document(doc)
-        # Clean dataframe
-        start_fetch_batch = time()
-        old_columns = dataframe.columns.tolist()
-        dataframe.columns = remove_columns_accents(dataframe)
-        new_columns_dict = dict(zip(old_columns, dataframe.columns.tolist()))
-        if idx == 0:
-            log(f&#34;New columns without accents: {new_columns_dict}&#34;)
-
-        dataframe = clean_dataframe(dataframe)
-        time_fetch_batch = time() - start_fetch_batch
-        doc = format_document(
-            flow_name=flow_name,
-            labels=labels,
-            event_type=&#34;clean_dataframe&#34;,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            metrics={&#34;clean_dataframe&#34;: time_fetch_batch},
-        )
-        index_document(doc)
-        # Write to CSV
-        start_fetch_batch = time()
-        if partition_column:
-            dataframe, date_partition_columns = parse_date_columns(
-                dataframe, new_columns_dict[partition_column]
-            )
-
-            partitions = date_partition_columns + [
-                new_columns_dict[col] for col in partition_columns[1:]
-            ]
-            to_partitions(
-                data=dataframe,
-                partition_columns=partitions,
-                savepath=prepath,
-                data_type=batch_data_type,
-            )
-        elif batch_data_type == &#34;csv&#34;:
-            dataframe_to_csv(dataframe, prepath / f&#34;{eventid}-{idx}.csv&#34;)
-        elif batch_data_type == &#34;parquet&#34;:
-            dataframe_to_parquet(dataframe, prepath / f&#34;{eventid}-{idx}.parquet&#34;)
-
-        time_fetch_batch = time() - start_fetch_batch
-        doc = format_document(
-            flow_name=flow_name,
-            labels=labels,
-            event_type=f&#34;batch_to_{batch_data_type}&#34;,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            metrics={f&#34;batch_to_{batch_data_type}&#34;: time_fetch_batch},
-        )
-        index_document(doc)
+        # Add current batch to queue
+        batches.put(batch)
         # Get next batch
         start_fetch_batch = time()
         batch = database.fetch_batch(batch_size)
@@ -770,18 +940,33 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
         index_document(doc)
         idx += 1
 
-    log(f&#34;Dumped {idx} batches with size {len(batch)}, total of {idx*batch_size}&#34;)
+    log(&#34;Waiting for batches queue...&#34;)
+    start_sleep = 1
+    max_sleep = 300
+    while batches.unfinished_tasks &gt; 0:
+        sleep(start_sleep)
+        start_sleep = min(start_sleep * 2, max_sleep)
+        log(
+            f&#34;Waiting for {batches.unfinished_tasks} batches to be parsed as dataframes...&#34;
+        )
+    batches.join()
+    start_sleep = 1
+    log(&#34;Waiting for dataframes queue...&#34;)
+    while dataframes.unfinished_tasks &gt; 0:
+        sleep(start_sleep)
+        start_sleep = min(start_sleep * 2, max_sleep)
+        log(f&#34;Waiting for {dataframes.unfinished_tasks} dataframes to be dumped...&#34;)
+    dataframes.join()
+    done.set()
 
-    time_elapsed = time() - start_time
-    doc = format_document(
-        flow_name=flow_name,
-        labels=labels,
-        event_type=&#34;batches_to_csv&#34;,
-        dataset_id=dataset_id,
-        table_id=table_id,
-        metrics={&#34;batches_to_csv&#34;: time_elapsed},
+    log(&#34;Waiting for threads to finish...&#34;)
+    worker_batch_to_dataframe.join()
+    worker_dataframe_to_csv.join()
+
+    log(
+        f&#34;Successfully dumped {idx} batches with size {len(batch)}, total of {idx*batch_size}&#34;
     )
-    index_document(doc)
+
     return prepath, idx</code></pre>
 </details>
 </dd>

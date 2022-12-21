@@ -794,14 +794,14 @@ def upload_files_to_storage(
             blob.upload_from_filename(file)
 
 
-def is_date(date_string: str, date_format: str = &#34;%Y-%m-%d&#34;):
+def is_date(date_string: str, date_format: str = &#34;%Y-%m-%d&#34;) -&gt; Union[datetime, bool]:
     &#34;&#34;&#34;
-    check if is date format
+    Checks whether a string is a valid date.
     &#34;&#34;&#34;
     try:
         return datetime.strptime(date_string, date_format).strftime(date_format)
-    except ValueError as err:
-        return None
+    except ValueError:
+        return False
 
 
 def parser_blobs_to_partition_dict(blobs: list) -&gt; dict:
@@ -1350,22 +1350,22 @@ characters besides underlines ("_").</p></div>
 </details>
 </dd>
 <dt id="pipelines.utils.utils.is_date"><code class="name flex">
-<span>def <span class="ident">is_date</span></span>(<span>date_string: str, date_format: str = '%Y-%m-%d')</span>
+<span>def <span class="ident">is_date</span></span>(<span>date_string: str, date_format: str = '%Y-%m-%d') ‑> Union[datetime.datetime, bool]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>check if is date format</p></div>
+<div class="desc"><p>Checks whether a string is a valid date.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def is_date(date_string: str, date_format: str = &#34;%Y-%m-%d&#34;):
+<pre><code class="python">def is_date(date_string: str, date_format: str = &#34;%Y-%m-%d&#34;) -&gt; Union[datetime, bool]:
     &#34;&#34;&#34;
-    check if is date format
+    Checks whether a string is a valid date.
     &#34;&#34;&#34;
     try:
         return datetime.strptime(date_string, date_format).strftime(date_format)
-    except ValueError as err:
-        return None</code></pre>
+    except ValueError:
+        return False</code></pre>
 </details>
 </dd>
 <dt id="pipelines.utils.utils.list_blobs_with_prefix"><code class="name flex">
