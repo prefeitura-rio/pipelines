@@ -108,8 +108,9 @@ def transform_geodataframe(
                 raise err
 
             log(f"{count}: geometry converted to crs 4326")
+
         # convert geometry 3d to 2d
-        elif geometry_3d_to_2d:
+        if geometry_3d_to_2d:
             try:
                 geodataframe[geometry_column] = (
                     geodataframe[geometry_column].astype(str).apply(load_wkt)
