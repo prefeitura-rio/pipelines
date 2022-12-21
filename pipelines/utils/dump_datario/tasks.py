@@ -82,7 +82,7 @@ def transform_geodataframe(
     geojson = geojsplit.GeoJSONBatchStreamer(file_path)
 
     # only print every print_mod batches
-    mod = 100
+    mod = 1000
     count = 1
     for feature_collection in geojson.stream(batch=batch_size):
         geodataframe = gpd.GeoDataFrame.from_features(feature_collection["features"])
