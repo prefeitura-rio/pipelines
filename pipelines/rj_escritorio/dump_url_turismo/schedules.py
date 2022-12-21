@@ -18,7 +18,7 @@ from pipelines.utils.utils import untuple_clocks as untuple
 #####################################
 
 gsheets_urls = {
-        "metrica_1": {
+    "metrica_1": {
         "dump_mode": "overwrite",
         "url": "https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_\
             /edit#gid=1536258547",
@@ -27,8 +27,6 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "dataset_id": "rj_setur_turismo",
     },
-
-
     "metrica_2": {
         "dump_mode": "overwrite",
         "url": "https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_\
@@ -38,8 +36,6 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "dataset_id": "rj_setur_turismo",
     },
-
-
     "metrica_3": {
         "dump_mode": "overwrite",
         "url": "https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547",
@@ -48,8 +44,6 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "dataset_id": "rj_setur_turismo",
     },
-
-
     "metrica_4": {
         "dump_mode": "overwrite",
         "url": "https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547",
@@ -58,8 +52,6 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "dataset_id": "rj_setur_turismo",
     },
-
-
     "metrica_5": {
         "dump_mode": "overwrite",
         "url": "https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547",
@@ -68,8 +60,6 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "dataset_id": "rj_setur_turismo",
     },
-
-
     "metrica_6": {
         "dump_mode": "overwrite",
         "url": "https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547",
@@ -78,8 +68,6 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "dataset_id": "rj_setur_turismo",
     },
-
-
     "metrica_7": {
         "dump_mode": "overwrite",
         "url": "https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547",
@@ -88,8 +76,6 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "dataset_id": "rj_setur_turismo",
     },
-
-
     "metrica_8": {
         "dump_mode": "overwrite",
         "url": "https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547",
@@ -98,8 +84,6 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "dataset_id": "rj_setur_turismo",
     },
-
-
     "metrica_9": {
         "dump_mode": "overwrite",
         "url": "https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547",
@@ -108,8 +92,6 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "dataset_id": "rj_setur_turismo",
     },
-
-
     "metrica_10": {
         "dump_mode": "overwrite",
         "url": "https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547",
@@ -118,8 +100,6 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "dataset_id": "rj_setur_turismo",
     },
-
-
     "metrica_11": {
         "dump_mode": "overwrite",
         "url": "https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547",
@@ -128,8 +108,6 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "dataset_id": "rj_setur_turismo",
     },
-
-
     "metrica_12": {
         "dump_mode": "overwrite",
         "url": "https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547",
@@ -138,8 +116,6 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "dataset_id": "rj_setur_turismo",
     },
-
-
     "metrica_13": {
         "dump_mode": "overwrite",
         "url": "https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547",
@@ -148,8 +124,6 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "dataset_id": "rj_setur_turismo",
     },
-
-
     "metrica_14": {
         "dump_mode": "overwrite",
         "url": "https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547",
@@ -158,8 +132,6 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "dataset_id": "rj_setur_turismo",
     },
-
-
     "metrica_15": {
         "dump_mode": "overwrite",
         "url": "https://docs.google.com/spreadsheets/d/1VUTYACCrvsFVnTHgICsgUh712gpV9x1_            /edit#gid=1536258547",
