@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Union
 from datetime import datetime, timedelta
 
-import pandas as pd
 from geojsplit import geojsplit
 import geopandas as gpd
 from prefect import task

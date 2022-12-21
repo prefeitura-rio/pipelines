@@ -762,10 +762,14 @@ def upload_files_to_storage(
 
 
 def is_date(date_string: str):
+    """
+    check if is date format
+    """
     try:
         return datetime.strptime(date_string, "%Y-%m-%d").strftime("%Y-%m-%d")
     except ValueError as err:
-        print(err)
+        log(err)
+        return None
 
 
 def parser_blobs_to_partition_dict(blobs: list) -> dict:
