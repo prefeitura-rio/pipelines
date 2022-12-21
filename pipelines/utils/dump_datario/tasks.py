@@ -119,7 +119,7 @@ def transform_geodataframe(
                 log(f"loop {index+1}: Error converting 3d to 2d: {err}")
                 raise err
 
-            log("geometry converted 3D to 2D")
+            log(f"loop {index+1}: geometry converted 3D to 2D")
 
         log(f"loop {index+1}:  New columns: {geodataframe.columns.tolist()}")
 
@@ -130,6 +130,6 @@ def transform_geodataframe(
             mode="a",
             header=not save_path.exists(),
         )
-        log(f"{index}: Data saved")
+        log(f"loop {index+1}: Data saved")
 
     return save_path
