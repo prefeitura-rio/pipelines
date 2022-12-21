@@ -80,9 +80,8 @@ def transform_geodataframe(
     save_path.parent.mkdir(parents=True, exist_ok=True)
 
     geojson = geojsplit.GeoJSONBatchStreamer(file_path)
-
-    for index, feature_collection in enumerate(geojson.stream(batch=chunksize)):
-        count = index + 1
+    count = 1
+    for feature_collection in geojson.stream(batch=chunksize):
         geodataframe = gpd.GeoDataFrame.from_features(feature_collection["features"])
         log(f"{count} x {chunksize} rows: geodataframe loaded")
 
@@ -139,5 +138,6 @@ def transform_geodataframe(
         # clear memory
         del geodataframe
         log(f"{count} x {chunksize} rows: Data saved")
+        count += 1
 
     return save_path
