@@ -33,7 +33,7 @@ dados_mestres_tables = {
         "geometry_column": "geometry",
     },
     "logradouro": {
-        # source: https://www.data.rio/datasets/PCRJ::logradouros-1/about
+        # source: https://www.data.rio/datasets/PCRJ::logradouros/about
         "url": "https://opendata.arcgis.com/api/v3/datasets/899168c8feab4230a9f795ed07cdde7b_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",  # noqa
         "dataset_id": "dados_mestres",
         "dump_mode": "overwrite",
