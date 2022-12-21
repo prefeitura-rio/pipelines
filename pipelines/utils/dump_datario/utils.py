@@ -132,5 +132,5 @@ def load_wkt(x):
     """
     try:
         return wkt.loads(x)
-    except Exception as err:
+    except Exception:
         return None
