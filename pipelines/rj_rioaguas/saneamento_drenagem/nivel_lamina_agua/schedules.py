@@ -18,11 +18,8 @@ MINUTE_SCHEDULE = Schedule(
                 constants.RJ_RIOAGUAS_AGENT_LABEL.value,
             ],
             parameter_defaults={
-                "dataset_id": "saneamento_dragagem",
-                "table_id": "nivel_lamina_agua_via",
-                "dump_mode": "append",
                 "materialize_after_dump": True,
-                "materialization_mode": "dev",
+                "materialization_mode": "prod",
                 "materialize_to_datario": False,
                 "dump_to_gcs": False,
             },
