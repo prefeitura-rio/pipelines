@@ -19,7 +19,7 @@ MINUTE_SCHEDULE = Schedule(
             ],
             parameter_defaults={
                 "materialize_after_dump": True,
-                "materialization_mode": "prod",
+                "mode": "prod",
                 "materialize_to_datario": False,
                 "dump_to_gcs": False,
             },
