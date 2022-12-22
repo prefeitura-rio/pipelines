@@ -23,7 +23,7 @@ MINUTE_SCHEDULE = Schedule(
                 "materialization_mode": "dev",
                 "materialize_to_datario": False,
                 "dump_to_gcs": False,
-            }
+            },
         ),
     ]
 )
