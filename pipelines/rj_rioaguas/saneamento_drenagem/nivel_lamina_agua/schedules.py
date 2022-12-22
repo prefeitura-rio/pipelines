@@ -7,6 +7,8 @@ from datetime import timedelta, datetime
 from prefect.schedules import Schedule
 from prefect.schedules.clocks import IntervalClock
 
+from pipelines.constants import constants
+
 MINUTE_SCHEDULE = Schedule(
     clocks=[
         IntervalClock(
