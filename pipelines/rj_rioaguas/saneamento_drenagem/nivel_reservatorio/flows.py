@@ -13,7 +13,7 @@ from prefect.storage import GCS
 from pipelines.constants import constants
 
 from pipelines.rj_rioaguas.saneamento_drenagem.nivel_reservatorio.schedules import (
-    gsheets_daily_update_schedule,
+    update_schedule_nivel_reservatorio,
 )
 
 from pipelines.utils.dump_url.flows import dump_url_flow
@@ -42,4 +42,4 @@ nivel_gsheets_flow = set_default_parameters(
     nivel_gsheets_flow, default_parameters=nivel_gsheets_flow_parameters
 )
 
-nivel_gsheets_flow.schedule = gsheets_daily_update_schedule
+nivel_gsheets_flow.schedule = update_schedule_nivel_reservatorio
