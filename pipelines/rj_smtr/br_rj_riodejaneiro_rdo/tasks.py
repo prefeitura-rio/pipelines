@@ -288,7 +288,7 @@ def update_rdo_redis(  # pylint: disable=R0913
     log(f"After appending, content has {len(content['files'])} files registered")
     redis_client.set(key, content)
     run_dates = [
-        {"run_date": file_info["date"]}
+        {"partition_date": file_info["date"]}
         for file_info in download_files
         if not file_info["error"]
     ]

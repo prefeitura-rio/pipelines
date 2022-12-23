@@ -46,7 +46,7 @@ with Flow("SMTR: SPPO RHO - Materialização") as sppo_rho_materialize:
     dataset_id = Parameter("dataset_id", default=constants.RDO_DATASET_ID.value)
     table_id = Parameter("table_id", default=constants.SPPO_RHO_TABLE_ID.value)
     rebuild = Parameter("rebuild", False)
-    run_dates = Parameter("run_dates", default=None)
+    partition_dates = Parameter("partition_dates", default=None)
 
     LABELS = get_current_flow_labels()
     MODE = get_current_flow_mode(LABELS)
@@ -68,7 +68,7 @@ with Flow("SMTR: SPPO RHO - Materialização") as sppo_rho_materialize:
             dataset_id=dataset_id,
             table_id=table_id,
             upstream=True,
-            _vars=[run_dates],
+            _vars=[partition_dates],
             flags="--full-refresh",
         )
     with case(rebuild, False):
@@ -76,7 +76,7 @@ with Flow("SMTR: SPPO RHO - Materialização") as sppo_rho_materialize:
             dbt_client=dbt_client,
             dataset_id=dataset_id,
             table_id=table_id,
-            _vars=[run_dates],
+            _vars=[partition_dates],
         )
 
 sppo_rho_materialize.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
