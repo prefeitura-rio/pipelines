@@ -45,6 +45,9 @@ lxml = "^4.9.1"
 Unidecode = "^1.3.6"
 html5lib = "^1.1"
 geopy = "^2.3.0"
+gcsfs = "^2022.11.0"
+haversine = "^2.7.0"
+dask = "^2022.12.1"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.12.2"
