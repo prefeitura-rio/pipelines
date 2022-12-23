@@ -25,12 +25,16 @@ gsheets_urls = {
         "url": "https://docs.google.com/spreadsheets/d/1zM0N_PonkALEK3YD2A4DF9W10Cm2n99_IiySm8zygqk/edit#gid=1343658906",  # noqa
         "url_type": "google_sheet",
         "gsheets_sheet_name": "Reservatórios",
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "materialize_to_datario": False,
+        "dump_to_gcs": False,
     },
 }
 
 
 gsheets_clocks = generate_dump_url_schedules(
-    interval=timedelta(days=1),
+    interval=timedelta(hours=2),
     start_date=datetime(2022, 11, 17, 12, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_RIOAGUAS_AGENT_LABEL.value,
