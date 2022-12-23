@@ -15,7 +15,7 @@ from pipelines.constants import constants
 
 #####################################
 #
-# Eath Engine Asset creation schedules
+# Earth Engine Asset creation schedules
 #
 #####################################
 
