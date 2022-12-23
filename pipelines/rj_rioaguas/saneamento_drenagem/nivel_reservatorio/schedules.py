@@ -2,7 +2,7 @@
 # pylint: disable= line-too-long
 
 """
-Schedules for the database dump pipeline 
+Schedules for the database dump pipeline
 """
 
 from datetime import datetime, timedelta

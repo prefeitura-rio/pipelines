@@ -2,7 +2,7 @@
 # pylint: disable= line-too-long
 
 """
-Database dumping flows for nivel_reservatorio project 
+Database dumping flows for nivel_reservatorio project
 """
 
 from copy import deepcopy
