@@ -48,8 +48,8 @@ from pipelines.utils.utils import untuple_clocks as untuple
 #
 ######################################
 
-gsheets_urls = {
-    &#34;test_table&#34;: {
+gsheets_urls_nivel_reservatorio = {
+    &#34;nivel_reservatorio&#34;: {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
         &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1zM0N_PonkALEK3YD2A4DF9W10Cm2n99_IiySm8zygqk/edit#gid=1343658906&#34;,  # noqa
         &#34;url_type&#34;: &#34;google_sheet&#34;,
@@ -62,17 +62,19 @@ gsheets_urls = {
 }
 
 
-gsheets_clocks = generate_dump_url_schedules(
+gsheets_clocks_nivel_reservatorio = generate_dump_url_schedules(
     interval=timedelta(hours=2),
     start_date=datetime(2022, 11, 17, 12, 0, tzinfo=pytz.timezone(&#34;America/Sao_Paulo&#34;)),
     labels=[
         constants.RJ_RIOAGUAS_AGENT_LABEL.value,
     ],
     dataset_id=&#34;saneamento_drenagem&#34;,
-    table_parameters=gsheets_urls,
+    table_parameters=gsheets_urls_nivel_reservatorio,
 )
 
-gsheets_daily_update_schedule = Schedule(clocks=untuple(gsheets_clocks))</code></pre>
+update_schedule_nivel_reservatorio = Schedule(
+    clocks=untuple(gsheets_clocks_nivel_reservatorio)
+)</code></pre>
 </details>
 </section>
 <section>
