@@ -7,7 +7,4 @@ Essa pipeline requer alguns requirements:
 - fastparquet
 - gcsfs
 - haversine
-
-Essa pipeline usa alguns dados estaticos locais que nao sobem para o repositorio. Adicione manualmente
-- dados/intervalo_trechos.parquet
-
+- dask

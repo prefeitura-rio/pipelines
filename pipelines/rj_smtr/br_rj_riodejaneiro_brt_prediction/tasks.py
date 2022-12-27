@@ -148,7 +148,6 @@ def recover_historical_brt_registers(first_date: date, end_date: date):
 
     response = query_gcp(bigquery_client, query_servicos)
     servicos = [resp["servico"] for resp in response]
-    # servicos = ['22']
 
     trip_mapper = get_trip_map()
 
@@ -192,8 +191,11 @@ def extract_historical_brt_intervals():
     df_trechos = pd.DataFrame()
     df_stops_brt = get_stops()
 
-    for tripid in unique_tripid:
+    for tripid in unique_tripid[:5]:
         log(f"Coletando trechos de {tripid}...")
+
+        if tripid is None:
+            continue
 
         try:
             df_registros_tripid = df_registros_brt[
