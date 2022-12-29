@@ -47,7 +47,7 @@ from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import get_run_dates
 with Flow(
     "SMTR: Viagens SPPO",
     code_owners=["rodrigo", "fernanda"],
-) as subsidio_sppo_preprod:
+) as viagens_sppo:
 
     # Rename flow run
     current_date = get_now_date()
@@ -77,15 +77,18 @@ with Flow(
     RUN = run_dbt_model.map(
         dbt_client=unmapped(dbt_client),
         dataset_id=unmapped(smtr_constants.SUBSIDIO_SPPO_DATASET_ID.value),
+        table_id=unmapped(smtr_constants.SUBSIDIO_SPPO_TABLE_ID.value),
+        upstream=True,
+        exclude="+gps_sppo",
         _vars=run_date,
     )
 
-subsidio_sppo_preprod.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-subsidio_sppo_preprod.run_config = KubernetesRun(
+viagens_sppo.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+viagens_sppo.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value, labels=[constants.RJ_SMTR_AGENT_LABEL.value]
 )
 
-subsidio_sppo_preprod.schedule = every_day_hour_five
+viagens_sppo.schedule = every_day_hour_five
 
 with Flow(
     "SMTR: Subsídio SPPO Apuração",
