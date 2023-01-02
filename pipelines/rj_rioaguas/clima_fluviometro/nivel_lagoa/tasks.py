@@ -49,8 +49,7 @@ def tratar_dados(
     dfr: pd.DataFrame, dataset_id: str, table_id: str, mode: str = "prod"
 ) -> pd.DataFrame:
     """
-    Tratar dados para o padrão estabelecido e filtrar linhas para salvarmos apenas as medições
-    que foram contratadas pela prefeitura.
+    Tratar dados para o padrão estabelecido.
     """
 
     # Renomeia colunas
