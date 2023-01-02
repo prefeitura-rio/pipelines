@@ -17,21 +17,22 @@ from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.decorators import Flow
 from pipelines.rj_rioaguas.clima_fluviometro.nivel_lagoa.tasks import (
     download_file,
+    tratar_dados,
     salvar_dados,
 )
 from pipelines.utils.dump_db.constants import (
     constants as dump_db_constants,
-)  # adicionado
+)
 from pipelines.utils.dump_to_gcs.constants import (
     constants as dump_to_gcs_constants,
-)  # adicionado
-from pipelines.utils.tasks import (  # adicionado
+)
+from pipelines.utils.tasks import (
     create_table_and_upload_to_gcs,
     get_current_flow_labels,
 )
 
 with Flow(
-    "RIOAGUAS: Relatorio de Chuvas - Nivel LRF",
+    "RIOAGUAS: Fluviometro - Nivel Lagoas",
     code_owners=["JP"],
 ) as rioaguas_nivel_LRF:
     # Parâmetros
@@ -51,7 +52,7 @@ with Flow(
     # Parâmetros para salvar dados no GCS
     dataset_id = "clima_fluviometro"
     table_id = "nivel_lagoa"
-    dump_mode = "overwrite"
+    dump_mode = "append"
 
     # Dump to GCS after? Should only dump to GCS if materializing to datario
     dump_to_gcs = Parameter("dump_to_gcs", default=False, required=False)
@@ -64,7 +65,8 @@ with Flow(
 
     # Tasks
     dados = download_file(download_url)
-    save_path = salvar_dados(dados)
+    dados_tratados = tratar_dados(dados, dataset_id, table_id)
+    save_path = salvar_dados(dados_tratados)
 
     # Create table in BigQuery
     upload_table = create_table_and_upload_to_gcs(

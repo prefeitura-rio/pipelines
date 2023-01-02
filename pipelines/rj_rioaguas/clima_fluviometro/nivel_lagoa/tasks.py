@@ -9,11 +9,18 @@ Fonte: Squitter.
 from pathlib import Path
 from typing import Union
 import pandas as pd
-
+import pendulum
 from bs4 import BeautifulSoup
 from prefect import task
-from pipelines.utils.utils import get_vault_secret, log
+
+from pipelines.rj_cor.meteorologia.utils import save_updated_rows_on_redis
 from pipelines.rj_rioaguas.utils import login
+from pipelines.utils.utils import (
+    get_vault_secret,
+    log,
+    to_partitions,
+    parse_date_columns,
+)
 
 
 @task
@@ -30,14 +37,32 @@ def download_file(download_url):
     user = dicionario["data"]["user"]
     password = dicionario["data"]["password"]
     session = login(url, user, password)
-    # download_url = "http://horus.squitter.com.br/dados/meteorologicos/292/"
     page = session.get(download_url)
     soup = BeautifulSoup(page.text, "html.parser")
     table = soup.find_all("table")
     dfr = pd.read_html(str(table))[0]
-    # Corrigir nome das colunas
-    dfr = dfr.rename(columns={"Hora Leitura": "data_hora", "Nível [m]": "lamina_nivel"})
     return dfr
+
+
+@task
+def tratar_dados(
+    dfr: pd.DataFrame, dataset_id: str, table_id: str, mode: str = "prod"
+) -> pd.DataFrame:
+    """
+    Tratar dados para o padrão estabelecido.
+    """
+
+    # Renomeia colunas
+    dfr = dfr.rename(columns={"Hora Leitura": "data_hora", "Nível [m]": "lamina_nivel"})
+    # Adiciona coluna para id e nome da lagoa
+    dfr["id_estacao"] = "1"
+    dfr["nome_estacao"] = "Lagoa rodrigo de freitas"
+    # Acessa o redis e mantem apenas linhas que ainda não foram salvas
+    log(f"[DEBUG]: dados coletados\n{dfr.head()}")
+    dfr = save_updated_rows_on_redis(dfr, dataset_id, table_id, mode)
+    log(f"[DEBUG]: dados que serão salvos\n{dfr.head()}")
+
+    return dfr[["data_hora", "id_lagoa", "nome_lagoa", "lamina_nivel"]]
 
 
 @task
@@ -45,10 +70,21 @@ def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
     """
     Salvar dados em csv.
     """
-    base_path = Path("/tmp/nivel_lagoa/")
-    base_path.mkdir(parents=True, exist_ok=True)
+    prepath = Path("/tmp/nivel_lagoa/")
+    prepath.mkdir(parents=True, exist_ok=True)
 
-    filename = base_path / "nivel.csv"
-    log(f"Saving {filename}")
-    dados.to_csv(filename, index=False)
-    return base_path
+    partition_column = "data_hora"
+    dataframe, partitions = parse_date_columns(dados, partition_column)
+    # Sal
+    current_time = pendulum.now("America/Sao_Paulo").strftime("%Y%m%d%H%M")
+
+    # Cria partições a partir da data
+    to_partitions(
+        data=dataframe,
+        partition_columns=partitions,
+        savepath=prepath,
+        data_type="csv",
+        suffix=current_time,
+    )
+    log(f"[DEBUG] Files saved on {prepath}")
+    return prepath
