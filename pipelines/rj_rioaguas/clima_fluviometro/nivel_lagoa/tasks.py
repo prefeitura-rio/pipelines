@@ -5,7 +5,7 @@ Tasks para pipeline de dados de nível da Lagoa Rodrigo de Freitas.
 Fonte: Squitter.
 """
 # pylint: disable= C0327
-
+from datetime import timedelta
 from pathlib import Path
 from typing import Union, Tuple
 import pandas as pd
@@ -13,6 +13,7 @@ import pendulum
 from bs4 import BeautifulSoup
 from prefect import task
 
+from pipelines.constants import constants
 from pipelines.rj_cor.meteorologia.utils import save_updated_rows_on_redis
 from pipelines.rj_rioaguas.utils import login
 from pipelines.utils.utils import (
@@ -75,7 +76,7 @@ def tratar_dados(
     log(f"[DEBUG]: dados que serão salvos\n{dfr.head()}")
 
     # If df is empty stop flow
-    empty_data = dados.shape[0] == 0
+    empty_data = dfr.shape[0] == 0
     log(f"[DEBUG]: dataframe is empty: {empty_data}")
 
     return dfr[["data_medicao", "id_estacao", "nome_estacao", "lamina_nivel"]], empty_data
