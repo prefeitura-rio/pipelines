@@ -53,14 +53,16 @@ def tratar_dados(
     """
 
     # Renomeia colunas
-    dfr = dfr.rename(columns={"Hora Leitura": "data_medicao", "Nível [m]": "lamina_nivel"})
+    dfr = dfr.rename(
+        columns={"Hora Leitura": "data_medicao", "Nível [m]": "lamina_nivel"}
+    )
     # Adiciona coluna para id e nome da lagoa
     dfr["id_estacao"] = "1"
     dfr["nome_estacao"] = "Lagoa rodrigo de freitas"
     # Remove duplicados
     dfr = dfr.drop_duplicates(subset=["id_estacao", "data_medicao"], keep="first")
     # Cria id único para ser salvo no redis e comparado com demais dados salvos
-    dfr["id"] = dfr["id_estacao"] + '_' + dfr["data_medicao"]
+    dfr["id"] = dfr["id_estacao"] + "_" + dfr["data_medicao"]
     # Acessa o redis e mantem apenas linhas que ainda não foram salvas
     log(f"[DEBUG]: dados coletados\n{dfr.head()}")
     dfr = save_updated_rows_on_redis(
