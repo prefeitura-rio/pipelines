@@ -53,7 +53,8 @@ def tratar_dados(
     """
 
     # Renomeia colunas e remove duplicados
-    dfr = dfr.rename(columns={"Hora Leitura": "data_medicao", "Nível [m]": "lamina_nivel"}).drop_duplicates()
+    dfr = dfr.rename(columns={"Hora Leitura": "data_medicao", "Nível [m]": "lamina_nivel"})
+    dfr = dfr.drop_duplicates(subset=["id_estacao", "data_medicao"], keep="first")
     # Adiciona coluna para id e nome da lagoa
     dfr["id_estacao"] = "1"
     dfr["nome_estacao"] = "Lagoa rodrigo de freitas"
@@ -61,7 +62,9 @@ def tratar_dados(
     dfr["id"] = dfr["id_estacao"] + '_' + dfr["data_medicao"]
     # Acessa o redis e mantem apenas linhas que ainda não foram salvas
     log(f"[DEBUG]: dados coletados\n{dfr.head()}")
-    dfr = save_updated_rows_on_redis(dfr, dataset_id, table_id, unique_id="id", mode=mode)
+    dfr = save_updated_rows_on_redis(
+        dfr, dataset_id, table_id, unique_id="id", mode=mode
+    )
     log(f"[DEBUG]: dados que serão salvos\n{dfr.head()}")
 
     return dfr[["data_medicao", "id_lagoa", "nome_lagoa", "lamina_nivel"]]
