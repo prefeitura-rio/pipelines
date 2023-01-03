@@ -52,12 +52,13 @@ def tratar_dados(
     Tratar dados para o padrão estabelecido.
     """
 
-    # Renomeia colunas e remove duplicados
+    # Renomeia colunas
     dfr = dfr.rename(columns={"Hora Leitura": "data_medicao", "Nível [m]": "lamina_nivel"})
-    dfr = dfr.drop_duplicates(subset=["id_estacao", "data_medicao"], keep="first")
     # Adiciona coluna para id e nome da lagoa
     dfr["id_estacao"] = "1"
     dfr["nome_estacao"] = "Lagoa rodrigo de freitas"
+    # Remove duplicados
+    dfr = dfr.drop_duplicates(subset=["id_estacao", "data_medicao"], keep="first")
     # Cria id único para ser salvo no redis e comparado com demais dados salvos
     dfr["id"] = dfr["id_estacao"] + '_' + dfr["data_medicao"]
     # Acessa o redis e mantem apenas linhas que ainda não foram salvas
