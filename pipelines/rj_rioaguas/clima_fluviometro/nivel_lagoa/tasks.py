@@ -52,14 +52,16 @@ def tratar_dados(
     Tratar dados para o padrão estabelecido.
     """
 
-    # Renomeia colunas
-    dfr = dfr.rename(columns={"Hora Leitura": "data_hora", "Nível [m]": "lamina_nivel"})
+    # Renomeia colunas e remove duplicados
+    dfr = dfr.rename(columns={"Hora Leitura": "data_hora", "Nível [m]": "lamina_nivel"}).drop_duplicates()
     # Adiciona coluna para id e nome da lagoa
     dfr["id_estacao"] = "1"
     dfr["nome_estacao"] = "Lagoa rodrigo de freitas"
+    # Cria id único para ser salvo no redis e comparado com demais dados salvos
+    dfr["id"] = dfr["id_estacao"] + '_' + dfr["data_hora"]
     # Acessa o redis e mantem apenas linhas que ainda não foram salvas
     log(f"[DEBUG]: dados coletados\n{dfr.head()}")
-    dfr = save_updated_rows_on_redis(dfr, dataset_id, table_id, mode)
+    dfr = save_updated_rows_on_redis(dfr, dataset_id, table_id, unique_id="id", mode=mode)
     log(f"[DEBUG]: dados que serão salvos\n{dfr.head()}")
 
     return dfr[["data_hora", "id_lagoa", "nome_lagoa", "lamina_nivel"]]
@@ -75,7 +77,6 @@ def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
 
     partition_column = "data_hora"
     dataframe, partitions = parse_date_columns(dados, partition_column)
-    # Sal
     current_time = pendulum.now("America/Sao_Paulo").strftime("%Y%m%d%H%M")
 
     # Cria partições a partir da data
