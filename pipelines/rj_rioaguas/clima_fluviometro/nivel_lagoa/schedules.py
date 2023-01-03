@@ -18,7 +18,7 @@ DAILY_SCHEDULE = Schedule(
             ],
             parameter_defaults={
                 "materialization_mode": "prod",
-                "dump_to_gcs": True,
+            },
         ),
     ]
 )
