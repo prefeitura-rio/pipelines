@@ -69,11 +69,11 @@ def tratar_dados(
     # Cria id único para ser salvo no redis e comparado com demais dados salvos
     dfr["id"] = dfr["id_estacao"] + "_" + dfr["data_medicao"]
     # Acessa o redis e mantem apenas linhas que ainda não foram salvas
-    log(f"[DEBUG]: dados coletados\n{dfr.head()}")
+    log(f"[DEBUG]: dados coletados\n{dfr.tail()}")
     dfr = save_updated_rows_on_redis(
         dfr, dataset_id, table_id, unique_id="id", mode=mode
     )
-    log(f"[DEBUG]: dados que serão salvos\n{dfr.head()}")
+    log(f"[DEBUG]: dados que serão salvos\n{dfr.tail()}")
 
     # If df is empty stop flow
     empty_data = dfr.shape[0] == 0

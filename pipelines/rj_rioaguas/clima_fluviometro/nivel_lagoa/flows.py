@@ -47,7 +47,7 @@ with Flow(
     materialize_to_datario = Parameter(
         "materialize_to_datario", default=False, required=False
     )
-    materialization_mode = Parameter("mode", default="prod", required=False)
+    materialization_mode = Parameter("mode", default="dev", required=False)
 
     # Parâmetros para salvar dados no GCS
     dataset_id = "clima_fluviometro"

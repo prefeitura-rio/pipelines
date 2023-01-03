@@ -37,15 +37,16 @@ def save_updated_rows_on_redis(
 
     # Convert dictionary to dfr
     updates = pd.DataFrame(updates.items(), columns=[unique_id, "last_update"])
-
+    log(f">>> data saved in redis: {updates}")
     # dfr and updates need to have the same index, in our case unique_id
     missing_in_dfr = [
         i for i in updates[unique_id].unique() if i not in dfr[unique_id].unique()
     ]
+    log(f">>> data missing_in_dfr: {missing_in_dfr}")
     missing_in_updates = [
         i for i in dfr[unique_id].unique() if i not in updates[unique_id].unique()
     ]
-
+    log(f">>> data missing_in_updates: {missing_in_updates}")
     # If unique_id doesn't exists on updates we create a fake date for this station on updates
     if len(missing_in_updates) > 0:
         for i in missing_in_updates:
@@ -61,17 +62,18 @@ def save_updated_rows_on_redis(
     # Set the index with the unique_id
     dfr.set_index(dfr[unique_id].unique(), inplace=True)
     updates.set_index(updates[unique_id].unique(), inplace=True)
-
+    log(f">>> new dfr: {dfr}")
+    log(f">>> new updates: {updates}")
     # Keep on dfr only the stations that has a time after the one that is saved on redis
     dfr = dfr.where(
         (dfr[unique_id] == updates[unique_id])
         & (dfr.data_medicao > updates.last_update)
     ).dropna(subset=[unique_id])
-
+    log(f">>> data to save in redis as a dataframe: {dfr}")
     # Convert stations with the new updates dates in a dictionary
     dfr.set_index(unique_id, inplace=True)
     new_updates = dfr["data_medicao"].astype(str).to_dict()
-
+    log(f">>> data to save in redis as a dict: {new_updates}")
     # Save this new information on redis
     [redis_client.hset(key, k, v) for k, v in new_updates.items()]
 

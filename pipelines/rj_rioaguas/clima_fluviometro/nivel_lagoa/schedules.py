@@ -16,6 +16,9 @@ DAILY_SCHEDULE = Schedule(
             labels=[
                 constants.RJ_RIOAGUAS_AGENT_LABEL.value,
             ],
+            parameter_defaults={
+                "materialization_mode": "prod",
+                "dump_to_gcs": True,
         ),
     ]
 )
