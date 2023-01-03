@@ -7,6 +7,7 @@ import pandas as pd
 
 from pipelines.utils.utils import (
     get_redis_client,
+    log,
 )
 
 
