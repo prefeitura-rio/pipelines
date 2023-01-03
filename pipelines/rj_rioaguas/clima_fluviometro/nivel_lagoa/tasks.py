@@ -78,7 +78,10 @@ def tratar_dados(
     empty_data = dados.shape[0] == 0
     log(f"[DEBUG]: dataframe is empty: {empty_data}")
 
-    return dfr[["data_medicao", "id_estacao", "nome_estacao", "lamina_nivel"]], empty_data
+    return (
+        dfr[["data_medicao", "id_estacao", "nome_estacao", "lamina_nivel"]],
+        empty_data,
+    )
 
 
 @task
