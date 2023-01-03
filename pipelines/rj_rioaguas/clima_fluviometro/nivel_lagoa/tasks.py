@@ -7,7 +7,7 @@ Fonte: Squitter.
 # pylint: disable= C0327
 
 from pathlib import Path
-from typing import Union
+from typing import Union, Tuple
 import pandas as pd
 import pendulum
 from bs4 import BeautifulSoup
@@ -44,10 +44,14 @@ def download_file(download_url):
     return dfr
 
 
-@task
+@task(
+    nout=2,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
 def tratar_dados(
     dfr: pd.DataFrame, dataset_id: str, table_id: str, mode: str = "prod"
-) -> pd.DataFrame:
+) -> Tuple[pd.DataFrame, bool]:
     """
     Tratar dados para o padrão estabelecido.
     """
@@ -70,7 +74,11 @@ def tratar_dados(
     )
     log(f"[DEBUG]: dados que serão salvos\n{dfr.head()}")
 
-    return dfr[["data_medicao", "id_lagoa", "nome_lagoa", "lamina_nivel"]]
+    # If df is empty stop flow
+    empty_data = dados.shape[0] == 0
+    log(f"[DEBUG]: dataframe is empty: {empty_data}")
+
+    return dfr[["data_medicao", "id_estacao", "nome_estacao", "lamina_nivel"]], empty_data
 
 
 @task

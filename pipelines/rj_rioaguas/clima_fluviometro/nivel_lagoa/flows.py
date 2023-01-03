@@ -65,74 +65,76 @@ with Flow(
 
     # Tasks
     dados = download_file(download_url)
-    dados_tratados = tratar_dados(dados, dataset_id, table_id)
-    save_path = salvar_dados(dados_tratados)
+    dados_tratados, empty_data = tratar_dados(dados, dataset_id, table_id)
 
-    # Create table in BigQuery
-    upload_table = create_table_and_upload_to_gcs(
-        data_path=save_path,
-        dataset_id=dataset_id,
-        table_id=table_id,
-        dump_mode=dump_mode,
-        wait=save_path,
-    )
-
-    # Trigger DBT flow run
-    with case(materialize_after_dump, True):
-        current_flow_labels = get_current_flow_labels()
-        materialization_flow = create_flow_run(
-            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
-            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters={
-                "dataset_id": dataset_id,
-                "table_id": table_id,
-                "mode": materialization_mode,
-                "materialize_to_datario": materialize_to_datario,
-            },
-            labels=current_flow_labels,
-            run_name=f"Materialize {dataset_id}.{table_id}",
-        )
-
-        materialization_flow.set_upstream(upload_table)
-
-        wait_for_materialization = wait_for_flow_run(
-            materialization_flow,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
-        )
-
-        wait_for_materialization.max_retries = (
-            dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
-        )
-        wait_for_materialization.retry_delay = timedelta(
-            seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
-        )
-
-        with case(dump_to_gcs, True):
-            # Trigger Dump to GCS flow run with project id as datario
-            dump_to_gcs_flow = create_flow_run(
-                flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
-                project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-                parameters={
-                    "project_id": "rj-cor",
-                    "dataset_id": dataset_id,
-                    "table_id": table_id,
-                    "maximum_bytes_processed": maximum_bytes_processed,
-                },
-                labels=[
-                    "rj-cor",
-                ],
-                run_name=f"Dump to GCS {dataset_id}.{table_id}",
-            )
-            dump_to_gcs_flow.set_upstream(wait_for_materialization)
-
-            wait_for_dump_to_gcs = wait_for_flow_run(
-                dump_to_gcs_flow,
-                stream_states=True,
-                stream_logs=True,
-                raise_final_state=True,
-            )
+    with case(empty_data, False):
+      save_path = salvar_dados(dados_tratados)
+  
+      # Create table in BigQuery
+      upload_table = create_table_and_upload_to_gcs(
+          data_path=save_path,
+          dataset_id=dataset_id,
+          table_id=table_id,
+          dump_mode=dump_mode,
+          wait=save_path,
+      )
+  
+      # Trigger DBT flow run
+      with case(materialize_after_dump, True):
+          current_flow_labels = get_current_flow_labels()
+          materialization_flow = create_flow_run(
+              flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+              project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+              parameters={
+                  "dataset_id": dataset_id,
+                  "table_id": table_id,
+                  "mode": materialization_mode,
+                  "materialize_to_datario": materialize_to_datario,
+              },
+              labels=current_flow_labels,
+              run_name=f"Materialize {dataset_id}.{table_id}",
+          )
+  
+          materialization_flow.set_upstream(upload_table)
+  
+          wait_for_materialization = wait_for_flow_run(
+              materialization_flow,
+              stream_states=True,
+              stream_logs=True,
+              raise_final_state=True,
+          )
+  
+          wait_for_materialization.max_retries = (
+              dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
+          )
+          wait_for_materialization.retry_delay = timedelta(
+              seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
+          )
+  
+          with case(dump_to_gcs, True):
+              # Trigger Dump to GCS flow run with project id as datario
+              dump_to_gcs_flow = create_flow_run(
+                  flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
+                  project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                  parameters={
+                      "project_id": "rj-cor",
+                      "dataset_id": dataset_id,
+                      "table_id": table_id,
+                      "maximum_bytes_processed": maximum_bytes_processed,
+                  },
+                  labels=[
+                      "rj-cor",
+                  ],
+                  run_name=f"Dump to GCS {dataset_id}.{table_id}",
+              )
+              dump_to_gcs_flow.set_upstream(wait_for_materialization)
+  
+              wait_for_dump_to_gcs = wait_for_flow_run(
+                  dump_to_gcs_flow,
+                  stream_states=True,
+                  stream_logs=True,
+                  raise_final_state=True,
+              )
 
 rioaguas_nivel_LRF.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 rioaguas_nivel_LRF.run_config = KubernetesRun(
