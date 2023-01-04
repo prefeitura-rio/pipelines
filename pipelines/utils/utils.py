@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=C0103,W0106
+# pylint: disable=C0103
 """
 General utilities for all pipelines.
 """
@@ -900,6 +900,7 @@ def final_column_treatment(column: str) -> str:
         return non_alpha_removed
 
 
+# pylint: disable=W0106
 def save_updated_rows_on_redis(
     dataframe: pd.DataFrame,
     dataset_id: str,
@@ -985,6 +986,6 @@ def save_updated_rows_on_redis(
     # Save this new information on redis
     [
         redis_client.hset(key, k, v) for k, v in new_updates.items()
-    ]  # pylint: disable=W0106
+    ]
 
     return dataframe.reset_index()
