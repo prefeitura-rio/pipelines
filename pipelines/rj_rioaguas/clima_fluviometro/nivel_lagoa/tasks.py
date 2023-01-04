@@ -45,7 +45,7 @@ def save_updated_rows_on_redis(
     key = dataset_id + "." + table_id
     if mode == "dev":
         key = f"{mode}.{key}"
-
+    log(f">>> redis key: {key}")
     # Access all data saved on redis with this key
     updates = redis_client.hgetall(key)
 
@@ -99,11 +99,13 @@ def save_updated_rows_on_redis(
     log(f">>> data to save in redis as a dataframe2: {dfr}")
     # Keep only the last date for each unique_id
     keep_cols = [unique_id, date_column]
-    new_updates = dfr[keep_cols].sort_values(keep_cols).iloc[-1].copy()
+    new_updates = dfr[keep_cols].sort_values(keep_cols)
+    new_updates = new_updates.groupby(unique_id, as_index=False).tail(1)
     log(f">>> new_updates: {new_updates}")
     # Convert stations with the new updates dates in a dictionary
-    new_updates.set_index(unique_id, inplace=True)
-    new_updates = dfr[date_column].astype(str).to_dict()
+    # new_updates.set_index(unique_id, inplace=True)
+    # new_updates = dfr[date_column].astype(str).to_dict()
+    new_updates = dict(zip(new_updates[unique_id], new_updates[date_column]))
     log(f">>> data to save in redis as a dict: {new_updates}")
     # Save this new information on redis
     [redis_client.hset(key, k, v) for k, v in new_updates.items()]
