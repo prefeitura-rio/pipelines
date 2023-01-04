@@ -52,7 +52,8 @@ def save_updated_rows_on_redis(
     # Convert data in dictionary in format with unique_id in key and last updated time as value
     # Example > {"12": "2022-06-06 14:45:00"}
     updates = {k.decode("utf-8"): v.decode("utf-8") for k, v in updates.items()}
-
+    # apagar
+    updates = {"1": "1900-01-01 00:00:10"}
     # Convert dictionary to dfr
     updates = pd.DataFrame(updates.items(), columns=[unique_id, "last_update"])
     log(f">>> data saved in redis: {updates}")
@@ -101,6 +102,7 @@ def save_updated_rows_on_redis(
     keep_cols = [unique_id, date_column]
     new_updates = dfr[keep_cols].sort_values(keep_cols)
     new_updates = new_updates.groupby(unique_id, as_index=False).tail(1)
+    new_updates[date_column] = new_updates[date_column].astype(str)
     log(f">>> new_updates: {new_updates}")
     # Convert stations with the new updates dates in a dictionary
     # new_updates.set_index(unique_id, inplace=True)
