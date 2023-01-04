@@ -95,18 +95,15 @@ def save_updated_rows_on_redis(
     dfr["last_update"] = dfr["last_update"].apply(
         pd.to_datetime, format="%Y-%m-%d %H:%M:%S"
     )
-    a = dfr[dfr[date_column] > dfr["last_update"]].copy()
-    log(f">>> data to save in redis as a dataframe: {a}")
     dfr = dfr[dfr[date_column] > dfr["last_update"]].dropna(subset=[unique_id])
     log(f">>> data to save in redis as a dataframe2: {dfr}")
     # Keep only the last date for each unique_id
     keep_cols = [unique_id, date_column]
-    new_updates = dfr[keep_cols].sort_values(keep_cols).copy()
-    new_updates.drop_duplicates(subset=unique_id, keep="last")
+    new_updates = dfr[keep_cols].sort_values(keep_cols).iloc[-1].copy()
     log(f">>> new_updates: {new_updates}")
     # Convert stations with the new updates dates in a dictionary
     new_updates.set_index(unique_id, inplace=True)
-    new_updates = dfr["last_update"].astype(str).to_dict()
+    new_updates = dfr[date_column].astype(str).to_dict()
     log(f">>> data to save in redis as a dict: {new_updates}")
     # Save this new information on redis
     [redis_client.hset(key, k, v) for k, v in new_updates.items()]
