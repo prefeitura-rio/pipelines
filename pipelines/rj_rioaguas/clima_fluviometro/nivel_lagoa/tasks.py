@@ -15,104 +15,14 @@ from prefect import task
 
 from pipelines.constants import constants
 
-# from pipelines.rj_cor.meteorologia.utils import save_updated_rows_on_redis
+from pipelines.rj_cor.meteorologia.utils import save_updated_rows_on_redis
 from pipelines.rj_rioaguas.utils import login
 from pipelines.utils.utils import (
     get_vault_secret,
     log,
     to_partitions,
     parse_date_columns,
-    get_redis_client,
 )
-
-
-def save_updated_rows_on_redis(
-    dfr: pd.DataFrame,
-    dataset_id: str,
-    table_id: str,
-    unique_id: str = "id_estacao",
-    date_column: str = "data_medicao",
-    date_format: str = "%Y-%m-%d %H:%M:%S",
-    mode: str = "prod",
-) -> pd.DataFrame:
-    """
-    Acess redis to get the last time each unique_id was updated, return
-    updated unique_id as a DataFrame and save new dates on redis
-    """
-
-    redis_client = get_redis_client()
-
-    key = dataset_id + "." + table_id
-    if mode == "dev":
-        key = f"{mode}.{key}"
-    log(f">>> redis key: {key}")
-    # Access all data saved on redis with this key
-    updates = redis_client.hgetall(key)
-
-    # Convert data in dictionary in format with unique_id in key and last updated time as value
-    # Example > {"12": "2022-06-06 14:45:00"}
-    updates = {k.decode("utf-8"): v.decode("utf-8") for k, v in updates.items()}
-    # apagar
-    updates = {"1": "1900-01-01 00:00:10"}
-    # Convert dictionary to dfr
-    updates = pd.DataFrame(updates.items(), columns=[unique_id, "last_update"])
-    log(f">>> data saved in redis: {updates}")
-    # dfr and updates need to have the same index, in our case unique_id
-    missing_in_dfr = [
-        i for i in updates[unique_id].unique() if i not in dfr[unique_id].unique()
-    ]
-    log(f">>> data missing_in_dfr: {missing_in_dfr}")
-    missing_in_updates = [
-        i for i in dfr[unique_id].unique() if i not in updates[unique_id].unique()
-    ]
-    log(f">>> data missing_in_updates: {missing_in_updates}")
-    log(f">>> old dfr: {dfr.iloc[3]}")
-    log(f">>> old dfr: {dfr.iloc[1]}")
-    log(f">>> old dfr: {dfr.iloc[2]}")
-    # If unique_id doesn't exists on updates we create a fake date for this station on updates
-    if len(missing_in_updates) > 0:
-        for i in missing_in_updates:
-            updates = updates.append(
-                {unique_id: i, "last_update": "1900-01-01 00:00:00"},
-                ignore_index=True,
-            )
-
-    # If unique_id doesn't exists on dfr we remove this stations from updates
-    if len(missing_in_dfr) > 0:
-        updates = updates[~updates[unique_id].isin(missing_in_dfr)]
-
-    # Set the index with the unique_id
-    # dfr.set_index(dfr[unique_id].unique(), inplace=True)
-    # updates.set_index(updates[unique_id].unique(), inplace=True)
-    log(f">>> new dfr: {dfr}")
-    log(f">>> new dfr: {dfr.iloc[0]}")
-    log(f">>> new updates: {updates}")
-    log(f">>> new updates: {updates.iloc[0]}")
-    # Merge dfs using unique_id
-    dfr = dfr.merge(updates, how="left", on=unique_id)
-    log(f">>>df merge: {dfr}")
-    # Keep on dfr only the stations that has a time after the one that is saved on redis
-    dfr[date_column] = dfr[date_column].apply(pd.to_datetime, format=date_format)
-    dfr["last_update"] = dfr["last_update"].apply(
-        pd.to_datetime, format="%Y-%m-%d %H:%M:%S"
-    )
-    dfr = dfr[dfr[date_column] > dfr["last_update"]].dropna(subset=[unique_id])
-    log(f">>> data to save in redis as a dataframe2: {dfr}")
-    # Keep only the last date for each unique_id
-    keep_cols = [unique_id, date_column]
-    new_updates = dfr[keep_cols].sort_values(keep_cols)
-    new_updates = new_updates.groupby(unique_id, as_index=False).tail(1)
-    new_updates[date_column] = new_updates[date_column].astype(str)
-    log(f">>> new_updates: {new_updates}")
-    # Convert stations with the new updates dates in a dictionary
-    # new_updates.set_index(unique_id, inplace=True)
-    # new_updates = dfr[date_column].astype(str).to_dict()
-    new_updates = dict(zip(new_updates[unique_id], new_updates[date_column]))
-    log(f">>> data to save in redis as a dict: {new_updates}")
-    # Save this new information on redis
-    [redis_client.hset(key, k, v) for k, v in new_updates.items()]
-
-    return dfr.reset_index()
 
 
 @task
@@ -157,8 +67,6 @@ def tratar_dados(
     dfr["nome_estacao"] = "Lagoa rodrigo de freitas"
     # Remove duplicados
     dfr = dfr.drop_duplicates(subset=["id_estacao", "data_medicao"], keep="first")
-    # Cria id único para ser salvo no redis e comparado com demais dados salvos
-    dfr["id"] = dfr["id_estacao"] + "_" + dfr["data_medicao"]
     # Acessa o redis e mantem apenas linhas que ainda não foram salvas
     log(f"[DEBUG]: dados coletados\n{dfr.tail()}")
     dfr = save_updated_rows_on_redis(
