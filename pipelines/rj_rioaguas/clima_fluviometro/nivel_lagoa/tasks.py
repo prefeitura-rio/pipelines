@@ -159,7 +159,13 @@ def tratar_dados(
     # Acessa o redis e mantem apenas linhas que ainda não foram salvas
     log(f"[DEBUG]: dados coletados\n{dfr.tail()}")
     dfr = save_updated_rows_on_redis(
-        dfr, dataset_id, table_id, unique_id="id_estacao", mode=mode
+        dfr,
+        dataset_id,
+        table_id,
+        unique_id="id_estacao",
+        date_col="data_medicao",
+        date_format="%d/%m/%Y %H:%M",
+        mode=mode,
     )
     log(f"[DEBUG]: dados que serão salvos\n{dfr.tail()}")
 
