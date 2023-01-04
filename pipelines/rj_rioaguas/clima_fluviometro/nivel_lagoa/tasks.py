@@ -4,7 +4,7 @@
 Tasks para pipeline de dados de nível da Lagoa Rodrigo de Freitas.
 Fonte: Squitter.
 """
-# pylint: disable= C0327
+# pylint: disable= C0327,W0106
 from datetime import timedelta
 from pathlib import Path
 from typing import Union, Tuple
@@ -78,7 +78,9 @@ def save_updated_rows_on_redis(
     dfr.set_index(dfr[unique_id].unique(), inplace=True)
     updates.set_index(updates[unique_id].unique(), inplace=True)
     log(f">>> new dfr: {dfr}")
+    log(f">>> new dfr: {dfr.iloc[0]}")
     log(f">>> new updates: {updates}")
+    log(f">>> new updates: {updates.iloc[0]}")
     # Keep on dfr only the stations that has a time after the one that is saved on redis
     dfr = dfr.where(
         (dfr[unique_id] == updates[unique_id])
@@ -142,7 +144,7 @@ def tratar_dados(
     # Acessa o redis e mantem apenas linhas que ainda não foram salvas
     log(f"[DEBUG]: dados coletados\n{dfr.tail()}")
     dfr = save_updated_rows_on_redis(
-        dfr, dataset_id, table_id, unique_id="id", mode=mode
+        dfr, dataset_id, table_id, unique_id="id_estacao", mode=mode
     )
     log(f"[DEBUG]: dados que serão salvos\n{dfr.tail()}")
 
