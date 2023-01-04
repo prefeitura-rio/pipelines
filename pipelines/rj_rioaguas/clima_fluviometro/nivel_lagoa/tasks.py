@@ -63,6 +63,9 @@ def save_updated_rows_on_redis(
         i for i in dfr[unique_id].unique() if i not in updates[unique_id].unique()
     ]
     log(f">>> data missing_in_updates: {missing_in_updates}")
+    log(f">>> old dfr: {dfr.iloc[3]}")
+    log(f">>> old dfr: {dfr.iloc[1]}")
+    log(f">>> old dfr: {dfr.iloc[2]}")
     # If unique_id doesn't exists on updates we create a fake date for this station on updates
     if len(missing_in_updates) > 0:
         for i in missing_in_updates:
@@ -76,8 +79,8 @@ def save_updated_rows_on_redis(
         updates = updates[~updates[unique_id].isin(missing_in_dfr)]
 
     # Set the index with the unique_id
-    dfr.set_index(dfr[unique_id].unique(), inplace=True)
-    updates.set_index(updates[unique_id].unique(), inplace=True)
+    # dfr.set_index(dfr[unique_id].unique(), inplace=True)
+    # updates.set_index(updates[unique_id].unique(), inplace=True)
     log(f">>> new dfr: {dfr}")
     log(f">>> new dfr: {dfr.iloc[0]}")
     log(f">>> new updates: {updates}")
