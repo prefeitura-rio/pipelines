@@ -15,13 +15,14 @@ from prefect import task
 
 from pipelines.constants import constants
 
-from pipelines.rj_cor.meteorologia.utils import save_updated_rows_on_redis
+# from pipelines.rj_cor.meteorologia.utils import save_updated_rows_on_redis
 from pipelines.rj_rioaguas.utils import login
 from pipelines.utils.utils import (
     get_vault_secret,
     log,
     to_partitions,
     parse_date_columns,
+    save_updated_rows_on_redis,
 )
 
 

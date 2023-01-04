@@ -17,8 +17,7 @@ import pandas_read_xml as pdx
 # from prefect import context
 
 from pipelines.constants import constants
-from pipelines.rj_cor.meteorologia.utils import save_updated_rows_on_redis
-from pipelines.utils.utils import log
+from pipelines.utils.utils import log, save_updated_rows_on_redis
 
 
 @task(
@@ -63,7 +62,8 @@ def tratar_dados(dataset_id: str, table_id: str) -> Tuple[pd.DataFrame, bool]:
 
     # Converte de UTC para horário São Paulo
     dados["data_medicao_utc"] = pd.to_datetime(dados["data_medicao_utc"])
-    dados["data_medicao"] = dados["data_medicao_utc"].dt.strftime("%Y-%m-%d %H:%M:%S")
+    date_format = "%Y-%m-%d %H:%M:%S"
+    dados["data_medicao"] = dados["data_medicao_utc"].dt.strftime(date_format)
 
     # Alterando valores ND, '-' e np.nan para NULL
     dados.replace(["ND", "-", np.nan], [None, None, None], inplace=True)
@@ -88,7 +88,15 @@ def tratar_dados(dataset_id: str, table_id: str) -> Tuple[pd.DataFrame, bool]:
     log(f"uniquesss df >>>, {type(dados.id_estacao.unique()[0])}")
     dados["id_estacao"] = dados["id_estacao"].astype(str)
 
-    dados = save_updated_rows_on_redis(dados, dataset_id, table_id, mode="dev")
+    dados = save_updated_rows_on_redis(
+        dados,
+        dataset_id,
+        table_id,
+        unique_id="id_estacao",
+        date_column="data_medicao",
+        date_format=date_format,
+        mode="dev",
+    )
 
     dados["id_estacao"] = dados["id_estacao"].astype(int)
 

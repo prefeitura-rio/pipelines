@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=W0106
+# pylint: disable=W0106,R0913,R0914
 """
 General utilities for meteorologia.
 """

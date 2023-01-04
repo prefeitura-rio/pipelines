@@ -13,13 +13,13 @@ import unidecode
 from bs4 import BeautifulSoup
 from prefect import task
 
-from pipelines.rj_cor.meteorologia.utils import save_updated_rows_on_redis
 from pipelines.rj_rioaguas.utils import login
 from pipelines.utils.utils import (
     get_vault_secret,
     log,
     to_partitions,
     parse_date_columns,
+    save_updated_rows_on_redis,
 )
 
 
@@ -95,8 +95,9 @@ def tratar_dados(
 
     dados["endereco"] = dados["endereco"].str.capitalize()
     dados["endereco"] = dados["endereco"].apply(lambda x: unidecode.unidecode(x))
+    date_format = "%d/%m/%Y %H:%M"
     dados["data_medicao"] = pd.to_datetime(
-        dados["data_medicao"], format="%d/%m/%Y %H:%M"
+        dados["data_medicao"], format=date_format
     )
 
     # Fixa ordem das colunas
@@ -111,7 +112,15 @@ def tratar_dados(
     ]
 
     log(f"[DEBUG]: dados coletados\n{dados.head()}")
-    dados = save_updated_rows_on_redis(dados, dataset_id, table_id, mode)
+    dados = save_updated_rows_on_redis(
+        dados,
+        dataset_id,
+        table_id,
+        unique_id="id_estacao",
+        date_column="data_medicao",
+        date_format="%d/%m/%Y %H:%M",
+        mode=mode,
+    )
     log(f"[DEBUG]: dados que serão salvos\n{dados.head()}")
 
     return dados[cols_order]
