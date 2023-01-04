@@ -163,7 +163,7 @@ def tratar_dados(
         dataset_id,
         table_id,
         unique_id="id_estacao",
-        date_col="data_medicao",
+        date_column="data_medicao",
         date_format="%d/%m/%Y %H:%M",
         mode=mode,
     )
