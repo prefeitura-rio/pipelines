@@ -899,6 +899,7 @@ def final_column_treatment(column: str) -> str:
         non_alpha_removed = re.sub(r"[\W]+", "", column)
         return non_alpha_removed
 
+
 def save_updated_rows_on_redis(
     dataframe: pd.DataFrame,
     dataset_id: str,
@@ -924,17 +925,25 @@ def save_updated_rows_on_redis(
 
     # Convert data in dictionary in format with unique_id in key and last updated time as value
     # Example > {"12": "2022-06-06 14:45:00"}
-    last_updates = {k.decode("utf-8"): v.decode("utf-8") for k, v in last_updates.items()}
+    last_updates = {
+        k.decode("utf-8"): v.decode("utf-8") for k, v in last_updates.items()
+    }
 
     # Convert dictionary to dataframe
-    last_updates = pd.DataFrame(last_updates.items(), columns=[unique_id, "last_update"])
+    last_updates = pd.DataFrame(
+        last_updates.items(), columns=[unique_id, "last_update"]
+    )
 
     # dataframe and last_updates need to have the same index, in our case unique_id
     missing_in_dfr = [
-        i for i in last_updates[unique_id].unique() if i not in dataframe[unique_id].unique()
+        i
+        for i in last_updates[unique_id].unique()
+        if i not in dataframe[unique_id].unique()
     ]
     missing_in_updates = [
-        i for i in dataframe[unique_id].unique() if i not in last_updates[unique_id].unique()
+        i
+        for i in dataframe[unique_id].unique()
+        if i not in last_updates[unique_id].unique()
     ]
 
     # If unique_id doesn't exists on updates we create a fake date for this station on updates
@@ -953,11 +962,15 @@ def save_updated_rows_on_redis(
     dataframe = dataframe.merge(last_updates, how="left", on=unique_id)
 
     # Keep on dataframe only the stations that has a time after the one that is saved on redis
-    dataframe[date_column] = dataframe[date_column].apply(pd.to_datetime, format=date_format)
+    dataframe[date_column] = dataframe[date_column].apply(
+        pd.to_datetime, format=date_format
+    )
     dataframe["last_update"] = dataframe["last_update"].apply(
         pd.to_datetime, format="%Y-%m-%d %H:%M:%S"
     )
-    dataframe = dataframe[dataframe[date_column] > dataframe["last_update"]].dropna(subset=[unique_id])
+    dataframe = dataframe[dataframe[date_column] > dataframe["last_update"]].dropna(
+        subset=[unique_id]
+    )
 
     # Keep only the last date for each unique_id
     keep_cols = [unique_id, date_column]

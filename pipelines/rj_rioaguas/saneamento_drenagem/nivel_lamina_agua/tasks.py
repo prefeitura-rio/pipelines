@@ -96,9 +96,7 @@ def tratar_dados(
     dados["endereco"] = dados["endereco"].str.capitalize()
     dados["endereco"] = dados["endereco"].apply(lambda x: unidecode.unidecode(x))
     date_format = "%d/%m/%Y %H:%M"
-    dados["data_medicao"] = pd.to_datetime(
-        dados["data_medicao"], format=date_format
-    )
+    dados["data_medicao"] = pd.to_datetime(dados["data_medicao"], format=date_format)
 
     # Fixa ordem das colunas
     cols_order = [
