@@ -107,7 +107,7 @@ def save_updated_rows_on_redis(
     log(f">>> data to save in redis as a dict: {new_updates}")
     # Save this new information on redis
     [redis_client.hset(key, k, v) for k, v in new_updates.items()]
-    
+
     return dfr.reset_index()
 
 
