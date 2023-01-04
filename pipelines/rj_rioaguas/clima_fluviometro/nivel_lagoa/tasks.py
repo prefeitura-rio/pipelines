@@ -94,7 +94,7 @@ def save_updated_rows_on_redis(
     date_cols = [date_column, "last_update"]
     dfr[date_cols] = dfr[date_cols].apply(pd.to_datetime, format=date_format)
     a = dfr[dfr[date_column] > dfr["last_update"]].copy()
-    log(f">>> data to save in redis as a dataframe: {a}")  
+    log(f">>> data to save in redis as a dataframe: {a}")
     dfr = dfr[dfr[date_column] > dfr["last_update"]].dropna(subset=[unique_id])
     log(f">>> data to save in redis as a dataframe2: {dfr}")
     # Keep only the last date for each unique_id
