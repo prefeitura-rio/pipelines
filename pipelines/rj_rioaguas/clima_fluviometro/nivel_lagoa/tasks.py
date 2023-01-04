@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup
 from prefect import task
 
 from pipelines.constants import constants
+
 # from pipelines.rj_cor.meteorologia.utils import save_updated_rows_on_redis
 from pipelines.rj_rioaguas.utils import login
 from pipelines.utils.utils import (
