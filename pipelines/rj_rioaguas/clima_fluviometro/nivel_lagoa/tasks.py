@@ -90,11 +90,11 @@ def save_updated_rows_on_redis(
     dfr = dfr.merge(updates, how="left", on=unique_id)
     log(f">>>df merge: {dfr}")
     # Keep on dfr only the stations that has a time after the one that is saved on redis
-    date_cols = [date_column, last_update]
+    date_cols = [date_column, "last_update"]
     dfr[date_cols] = dfr[date_cols].apply(pd.to_datetime, format='%Y-%m-%d %H:%M:%S')
-    a = dfr[dfr[date_column] > dfr[last_update]].copy()
+    a = dfr[dfr[date_column] > dfr["last_update"]].copy()
     log(f">>> data to save in redis as a dataframe: {a}")  
-    dfr = dfr[dfr[date_column] > dfr[last_update]].dropna(subset=[unique_id])
+    dfr = dfr[dfr[date_column] > dfr["last_update"]].dropna(subset=[unique_id])
     log(f">>> data to save in redis as a dataframe2: {dfr}")
     # Keep only the last date for each unique_id
     keep_cols = [unique_id, date_column]
