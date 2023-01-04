@@ -4,7 +4,7 @@
 Tasks para pipeline de dados de nível da Lagoa Rodrigo de Freitas.
 Fonte: Squitter.
 """
-# pylint: disable= C0327,W0106
+# pylint: disable= C0327,W0106,R0913,R0914
 from datetime import timedelta
 from pathlib import Path
 from typing import Union, Tuple
@@ -32,6 +32,7 @@ def save_updated_rows_on_redis(
     table_id: str,
     unique_id: str = "id_estacao",
     date_column: str = "data_medicao",
+    date_format: str = "%Y-%m-%d %H:%M:%S",
     mode: str = "prod",
 ) -> pd.DataFrame:
     """
@@ -91,7 +92,7 @@ def save_updated_rows_on_redis(
     log(f">>>df merge: {dfr}")
     # Keep on dfr only the stations that has a time after the one that is saved on redis
     date_cols = [date_column, "last_update"]
-    dfr[date_cols] = dfr[date_cols].apply(pd.to_datetime, format='%Y-%m-%d %H:%M:%S')
+    dfr[date_cols] = dfr[date_cols].apply(pd.to_datetime, format=date_format)
     a = dfr[dfr[date_column] > dfr["last_update"]].copy()
     log(f">>> data to save in redis as a dataframe: {a}")  
     dfr = dfr[dfr[date_column] > dfr["last_update"]].dropna(subset=[unique_id])
