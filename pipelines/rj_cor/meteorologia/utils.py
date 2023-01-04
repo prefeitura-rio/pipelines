@@ -86,4 +86,3 @@ def save_updated_rows_on_redis(
     [redis_client.hset(key, k, v) for k, v in new_updates.items()]
 
     return dfr.reset_index()
-
