@@ -29,16 +29,6 @@ from pipelines.utils.tasks import (
 from pipelines.utils.utils import log
 
 
-@task
-def printa(parameter):
-    """
-    Renomeia colunas e filtra dados com a hora e minuto do timestamp
-    de execução mais próximo à este
-    """
-    log(f"\n\n>>>>>>> {parameter}\n\n")
-
-
-
 with Flow(
     name="COR: Meteorologia - Precipitacao ALERTARIO",
     code_owners=[
@@ -67,13 +57,13 @@ with Flow(
         required=False,
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
-    printa(MATERIALIZE_AFTER_DUMP)
-    dados, empty_data, current_time = tratar_dados(
-        dataset_id=DATASET_ID, table_id=TABLE_ID
+
+    dados, empty_data = tratar_dados(
+        dataset_id=DATASET_ID, table_id=TABLE_ID, mode=MATERIALIZATION_MODE,
     )
 
     with case(empty_data, False):
-        path = salvar_dados(dados=dados, current_time=current_time)
+        path = salvar_dados(dados=dados)
         # Create table in BigQuery
         UPLOAD_TABLE = create_table_and_upload_to_gcs(
             data_path=path,
