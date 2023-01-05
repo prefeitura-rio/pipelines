@@ -17,7 +17,6 @@ import pandas_read_xml as pdx
 # from prefect import context
 
 from pipelines.constants import constants
-from pipelines.rj_cor.meteorologia.utils import save_updated_rows_on_redis
 from pipelines.utils.utils import (
     log,
     to_partitions,

@@ -5,7 +5,7 @@ Flows for precipitacao_alertario
 """
 from datetime import timedelta
 
-from prefect import case, Parameter, task
+from prefect import case, Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
@@ -26,7 +26,6 @@ from pipelines.utils.tasks import (
     create_table_and_upload_to_gcs,
     get_current_flow_labels,
 )
-from pipelines.utils.utils import log
 
 
 with Flow(
