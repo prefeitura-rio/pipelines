@@ -21,7 +21,7 @@ from pipelines.utils.utils import (
     log,
     to_partitions,
     parse_date_columns,
-    # save_updated_rows_on_redis,
+    save_updated_rows_on_redis,
 )
 
 
