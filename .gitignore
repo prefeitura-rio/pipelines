@@ -4,6 +4,7 @@ replit.nix
 **/data/
 test_local.py
 pylint.txt
+test.py
 test/*
 setup.py
 .vscode/*
