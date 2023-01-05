@@ -40,15 +40,15 @@ import pandas as pd
 import pendulum
 import unidecode
 from bs4 import BeautifulSoup
-
 from prefect import task
-from pipelines.rj_cor.meteorologia.utils import save_updated_rows_on_redis
+
 from pipelines.rj_rioaguas.utils import login
 from pipelines.utils.utils import (
     get_vault_secret,
     log,
     to_partitions,
     parse_date_columns,
+    save_updated_rows_on_redis,
 )
 
 
@@ -124,9 +124,8 @@ def tratar_dados(
 
     dados[&#34;endereco&#34;] = dados[&#34;endereco&#34;].str.capitalize()
     dados[&#34;endereco&#34;] = dados[&#34;endereco&#34;].apply(lambda x: unidecode.unidecode(x))
-    dados[&#34;data_medicao&#34;] = pd.to_datetime(
-        dados[&#34;data_medicao&#34;], format=&#34;%d/%m/%Y %H:%M&#34;
-    )
+    date_format = &#34;%d/%m/%Y %H:%M&#34;
+    dados[&#34;data_medicao&#34;] = pd.to_datetime(dados[&#34;data_medicao&#34;], format=date_format)
 
     # Fixa ordem das colunas
     cols_order = [
@@ -140,7 +139,15 @@ def tratar_dados(
     ]
 
     log(f&#34;[DEBUG]: dados coletados\n{dados.head()}&#34;)
-    dados = save_updated_rows_on_redis(dados, dataset_id, table_id, mode)
+    dados = save_updated_rows_on_redis(
+        dados,
+        dataset_id,
+        table_id,
+        unique_id=&#34;id_estacao&#34;,
+        date_column=&#34;data_medicao&#34;,
+        date_format=&#34;%d/%m/%Y %H:%M&#34;,
+        mode=mode,
+    )
     log(f&#34;[DEBUG]: dados que serão salvos\n{dados.head()}&#34;)
 
     return dados[cols_order]
@@ -327,9 +334,8 @@ def tratar_dados(
 
     dados[&#34;endereco&#34;] = dados[&#34;endereco&#34;].str.capitalize()
     dados[&#34;endereco&#34;] = dados[&#34;endereco&#34;].apply(lambda x: unidecode.unidecode(x))
-    dados[&#34;data_medicao&#34;] = pd.to_datetime(
-        dados[&#34;data_medicao&#34;], format=&#34;%d/%m/%Y %H:%M&#34;
-    )
+    date_format = &#34;%d/%m/%Y %H:%M&#34;
+    dados[&#34;data_medicao&#34;] = pd.to_datetime(dados[&#34;data_medicao&#34;], format=date_format)
 
     # Fixa ordem das colunas
     cols_order = [
@@ -343,7 +349,15 @@ def tratar_dados(
     ]
 
     log(f&#34;[DEBUG]: dados coletados\n{dados.head()}&#34;)
-    dados = save_updated_rows_on_redis(dados, dataset_id, table_id, mode)
+    dados = save_updated_rows_on_redis(
+        dados,
+        dataset_id,
+        table_id,
+        unique_id=&#34;id_estacao&#34;,
+        date_column=&#34;data_medicao&#34;,
+        date_format=&#34;%d/%m/%Y %H:%M&#34;,
+        mode=mode,
+    )
     log(f&#34;[DEBUG]: dados que serão salvos\n{dados.head()}&#34;)
 
     return dados[cols_order]</code></pre>

@@ -28,7 +28,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
-# pylint: disable=W0106
+# pylint: disable=W0106,R0913,R0914
 &#34;&#34;&#34;
 General utilities for meteorologia.
 &#34;&#34;&#34;
@@ -36,15 +36,22 @@ import pandas as pd
 
 from pipelines.utils.utils import (
     get_redis_client,
+    log,
 )
 
 
 def save_updated_rows_on_redis(
-    dfr: pd.DataFrame, dataset_id: str, table_id: str, mode: str = &#34;prod&#34;
+    dfr: pd.DataFrame,
+    dataset_id: str,
+    table_id: str,
+    unique_id: str = &#34;id_estacao&#34;,
+    date_column: str = &#34;data_medicao&#34;,
+    date_format: str = &#34;%Y-%m-%d %H:%M:%S&#34;,
+    mode: str = &#34;prod&#34;,
 ) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
-    Acess redis to get the last time each id_estacao was updated, return
-    updated stations as a DataFrame and save new dates on redis
+    Acess redis to get the last time each unique_id was updated, return
+    updated unique_id as a DataFrame and save new dates on redis
     &#34;&#34;&#34;
 
     redis_client = get_redis_client()
@@ -56,46 +63,53 @@ def save_updated_rows_on_redis(
     # Access all data saved on redis with this key
     updates = redis_client.hgetall(key)
 
-    # Convert data in dictionary in format with id_estacao in key and last updated time as value
+    # Convert data in dictionary in format with unique_id in key and last updated time as value
     # Example &gt; {&#34;12&#34;: &#34;2022-06-06 14:45:00&#34;}
     updates = {k.decode(&#34;utf-8&#34;): v.decode(&#34;utf-8&#34;) for k, v in updates.items()}
 
     # Convert dictionary to dfr
-    updates = pd.DataFrame(updates.items(), columns=[&#34;id_estacao&#34;, &#34;last_update&#34;])
+    updates = pd.DataFrame(updates.items(), columns=[unique_id, &#34;last_update&#34;])
+    log(f&#34;&gt;&gt;&gt; data saved in redis: {updates}&#34;)
 
-    # dfr and updates need to have the same index, in our case id_estacao
+    # dfr and updates need to have the same index, in our case unique_id
     missing_in_dfr = [
-        i for i in updates.id_estacao.unique() if i not in dfr.id_estacao.unique()
+        i for i in updates[unique_id].unique() if i not in dfr[unique_id].unique()
     ]
     missing_in_updates = [
-        i for i in dfr.id_estacao.unique() if i not in updates.id_estacao.unique()
+        i for i in dfr[unique_id].unique() if i not in updates[unique_id].unique()
     ]
 
-    # If id_estacao doesn&#39;t exists on updates we create a fake date for this station on updates
+    # If unique_id doesn&#39;t exists on updates we create a fake date for this station on updates
     if len(missing_in_updates) &gt; 0:
         for i in missing_in_updates:
             updates = updates.append(
-                {&#34;id_estacao&#34;: i, &#34;last_update&#34;: &#34;1900-01-01 00:00:00&#34;},
+                {unique_id: i, &#34;last_update&#34;: &#34;1900-01-01 00:00:00&#34;},
                 ignore_index=True,
             )
 
-    # If id_estacao doesn&#39;t exists on dfr we remove this stations from updates
+    # If unique_id doesn&#39;t exists on dfr we remove this stations from updates
     if len(missing_in_dfr) &gt; 0:
-        updates = updates[~updates.id_estacao.isin(missing_in_dfr)]
+        updates = updates[~updates[unique_id].isin(missing_in_dfr)]
 
-    # Set the index with the id_estacao
-    dfr.set_index(dfr.id_estacao.unique(), inplace=True)
-    updates.set_index(updates.id_estacao.unique(), inplace=True)
+    # Merge dfs using unique_id
+    dfr = dfr.merge(updates, how=&#34;left&#34;, on=unique_id)
 
     # Keep on dfr only the stations that has a time after the one that is saved on redis
-    dfr = dfr.where(
-        (dfr.id_estacao == updates.id_estacao)
-        &amp; (dfr.data_medicao &gt; updates.last_update)
-    ).dropna(subset=[&#34;id_estacao&#34;])
+    dfr[date_column] = dfr[date_column].apply(pd.to_datetime, format=date_format)
+    dfr[&#34;last_update&#34;] = dfr[&#34;last_update&#34;].apply(
+        pd.to_datetime, format=&#34;%Y-%m-%d %H:%M:%S&#34;
+    )
+    dfr = dfr[dfr[date_column] &gt; dfr[&#34;last_update&#34;]].dropna(subset=[unique_id])
+
+    # Keep only the last date for each unique_id
+    keep_cols = [unique_id, date_column]
+    new_updates = dfr[keep_cols].sort_values(keep_cols)
+    new_updates = new_updates.groupby(unique_id, as_index=False).tail(1)
+    new_updates[date_column] = new_updates[date_column].astype(str)
 
     # Convert stations with the new updates dates in a dictionary
-    dfr.set_index(&#34;id_estacao&#34;, inplace=True)
-    new_updates = dfr[&#34;data_medicao&#34;].astype(str).to_dict()
+    new_updates = dict(zip(new_updates[unique_id], new_updates[date_column]))
+    log(f&#34;&gt;&gt;&gt; data to save in redis as a dict: {new_updates}&#34;)
 
     # Save this new information on redis
     [redis_client.hset(key, k, v) for k, v in new_updates.items()]
@@ -111,21 +125,27 @@ def save_updated_rows_on_redis(
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pipelines.rj_cor.meteorologia.utils.save_updated_rows_on_redis"><code class="name flex">
-<span>def <span class="ident">save_updated_rows_on_redis</span></span>(<span>dfr: pandas.core.frame.DataFrame, dataset_id: str, table_id: str, mode: str = 'prod') ‑> pandas.core.frame.DataFrame</span>
+<span>def <span class="ident">save_updated_rows_on_redis</span></span>(<span>dfr: pandas.core.frame.DataFrame, dataset_id: str, table_id: str, unique_id: str = 'id_estacao', date_column: str = 'data_medicao', date_format: str = '%Y-%m-%d %H:%M:%S', mode: str = 'prod') ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Acess redis to get the last time each id_estacao was updated, return
-updated stations as a DataFrame and save new dates on redis</p></div>
+<div class="desc"><p>Acess redis to get the last time each unique_id was updated, return
+updated unique_id as a DataFrame and save new dates on redis</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def save_updated_rows_on_redis(
-    dfr: pd.DataFrame, dataset_id: str, table_id: str, mode: str = &#34;prod&#34;
+    dfr: pd.DataFrame,
+    dataset_id: str,
+    table_id: str,
+    unique_id: str = &#34;id_estacao&#34;,
+    date_column: str = &#34;data_medicao&#34;,
+    date_format: str = &#34;%Y-%m-%d %H:%M:%S&#34;,
+    mode: str = &#34;prod&#34;,
 ) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
-    Acess redis to get the last time each id_estacao was updated, return
-    updated stations as a DataFrame and save new dates on redis
+    Acess redis to get the last time each unique_id was updated, return
+    updated unique_id as a DataFrame and save new dates on redis
     &#34;&#34;&#34;
 
     redis_client = get_redis_client()
@@ -137,46 +157,53 @@ updated stations as a DataFrame and save new dates on redis</p></div>
     # Access all data saved on redis with this key
     updates = redis_client.hgetall(key)
 
-    # Convert data in dictionary in format with id_estacao in key and last updated time as value
+    # Convert data in dictionary in format with unique_id in key and last updated time as value
     # Example &gt; {&#34;12&#34;: &#34;2022-06-06 14:45:00&#34;}
     updates = {k.decode(&#34;utf-8&#34;): v.decode(&#34;utf-8&#34;) for k, v in updates.items()}
 
     # Convert dictionary to dfr
-    updates = pd.DataFrame(updates.items(), columns=[&#34;id_estacao&#34;, &#34;last_update&#34;])
+    updates = pd.DataFrame(updates.items(), columns=[unique_id, &#34;last_update&#34;])
+    log(f&#34;&gt;&gt;&gt; data saved in redis: {updates}&#34;)
 
-    # dfr and updates need to have the same index, in our case id_estacao
+    # dfr and updates need to have the same index, in our case unique_id
     missing_in_dfr = [
-        i for i in updates.id_estacao.unique() if i not in dfr.id_estacao.unique()
+        i for i in updates[unique_id].unique() if i not in dfr[unique_id].unique()
     ]
     missing_in_updates = [
-        i for i in dfr.id_estacao.unique() if i not in updates.id_estacao.unique()
+        i for i in dfr[unique_id].unique() if i not in updates[unique_id].unique()
     ]
 
-    # If id_estacao doesn&#39;t exists on updates we create a fake date for this station on updates
+    # If unique_id doesn&#39;t exists on updates we create a fake date for this station on updates
     if len(missing_in_updates) &gt; 0:
         for i in missing_in_updates:
             updates = updates.append(
-                {&#34;id_estacao&#34;: i, &#34;last_update&#34;: &#34;1900-01-01 00:00:00&#34;},
+                {unique_id: i, &#34;last_update&#34;: &#34;1900-01-01 00:00:00&#34;},
                 ignore_index=True,
             )
 
-    # If id_estacao doesn&#39;t exists on dfr we remove this stations from updates
+    # If unique_id doesn&#39;t exists on dfr we remove this stations from updates
     if len(missing_in_dfr) &gt; 0:
-        updates = updates[~updates.id_estacao.isin(missing_in_dfr)]
+        updates = updates[~updates[unique_id].isin(missing_in_dfr)]
 
-    # Set the index with the id_estacao
-    dfr.set_index(dfr.id_estacao.unique(), inplace=True)
-    updates.set_index(updates.id_estacao.unique(), inplace=True)
+    # Merge dfs using unique_id
+    dfr = dfr.merge(updates, how=&#34;left&#34;, on=unique_id)
 
     # Keep on dfr only the stations that has a time after the one that is saved on redis
-    dfr = dfr.where(
-        (dfr.id_estacao == updates.id_estacao)
-        &amp; (dfr.data_medicao &gt; updates.last_update)
-    ).dropna(subset=[&#34;id_estacao&#34;])
+    dfr[date_column] = dfr[date_column].apply(pd.to_datetime, format=date_format)
+    dfr[&#34;last_update&#34;] = dfr[&#34;last_update&#34;].apply(
+        pd.to_datetime, format=&#34;%Y-%m-%d %H:%M:%S&#34;
+    )
+    dfr = dfr[dfr[date_column] &gt; dfr[&#34;last_update&#34;]].dropna(subset=[unique_id])
+
+    # Keep only the last date for each unique_id
+    keep_cols = [unique_id, date_column]
+    new_updates = dfr[keep_cols].sort_values(keep_cols)
+    new_updates = new_updates.groupby(unique_id, as_index=False).tail(1)
+    new_updates[date_column] = new_updates[date_column].astype(str)
 
     # Convert stations with the new updates dates in a dictionary
-    dfr.set_index(&#34;id_estacao&#34;, inplace=True)
-    new_updates = dfr[&#34;data_medicao&#34;].astype(str).to_dict()
+    new_updates = dict(zip(new_updates[unique_id], new_updates[date_column]))
+    log(f&#34;&gt;&gt;&gt; data to save in redis as a dict: {new_updates}&#34;)
 
     # Save this new information on redis
     [redis_client.hset(key, k, v) for k, v in new_updates.items()]

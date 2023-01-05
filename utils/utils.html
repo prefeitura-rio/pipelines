@@ -926,7 +926,96 @@ def final_column_treatment(column: str) -&gt; str:
         return f&#34;_{column}&#34;
     except ValueError:  # pylint: disable=bare-except
         non_alpha_removed = re.sub(r&#34;[\W]+&#34;, &#34;&#34;, column)
-        return non_alpha_removed</code></pre>
+        return non_alpha_removed
+
+
+# pylint: disable=W0106
+def save_updated_rows_on_redis(
+    dataframe: pd.DataFrame,
+    dataset_id: str,
+    table_id: str,
+    unique_id: str = &#34;id_estacao&#34;,
+    date_column: str = &#34;data_medicao&#34;,
+    date_format: str = &#34;%Y-%m-%d %H:%M:%S&#34;,
+    mode: str = &#34;prod&#34;,
+) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Acess redis to get the last time each unique_id was updated, return
+    updated unique_id as a DataFrame and save new dates on redis
+    &#34;&#34;&#34;
+
+    redis_client = get_redis_client()
+
+    key = dataset_id + &#34;.&#34; + table_id
+    if mode == &#34;dev&#34;:
+        key = f&#34;{mode}.{key}&#34;
+
+    # Access all data saved on redis with this key
+    last_updates = redis_client.hgetall(key)
+
+    # Convert data in dictionary in format with unique_id in key and last updated time as value
+    # Example &gt; {&#34;12&#34;: &#34;2022-06-06 14:45:00&#34;}
+    last_updates = {
+        k.decode(&#34;utf-8&#34;): v.decode(&#34;utf-8&#34;) for k, v in last_updates.items()
+    }
+
+    # Convert dictionary to dataframe
+    last_updates = pd.DataFrame(
+        last_updates.items(), columns=[unique_id, &#34;last_update&#34;]
+    )
+
+    # dataframe and last_updates need to have the same index, in our case unique_id
+    missing_in_dfr = [
+        i
+        for i in last_updates[unique_id].unique()
+        if i not in dataframe[unique_id].unique()
+    ]
+    missing_in_updates = [
+        i
+        for i in dataframe[unique_id].unique()
+        if i not in last_updates[unique_id].unique()
+    ]
+
+    # If unique_id doesn&#39;t exists on updates we create a fake date for this station on updates
+    if len(missing_in_updates) &gt; 0:
+        for i in missing_in_updates:
+            last_updates = last_updates.append(
+                {unique_id: i, &#34;last_update&#34;: &#34;1900-01-01 00:00:00&#34;},
+                ignore_index=True,
+            )
+
+    # If unique_id doesn&#39;t exists on dataframe we remove this stations from last_updates
+    if len(missing_in_dfr) &gt; 0:
+        last_updates = last_updates[~last_updates[unique_id].isin(missing_in_dfr)]
+
+    # Merge dfs using unique_id
+    dataframe = dataframe.merge(last_updates, how=&#34;left&#34;, on=unique_id)
+
+    # Keep on dataframe only the stations that has a time after the one that is saved on redis
+    dataframe[date_column] = dataframe[date_column].apply(
+        pd.to_datetime, format=date_format
+    )
+    dataframe[&#34;last_update&#34;] = dataframe[&#34;last_update&#34;].apply(
+        pd.to_datetime, format=&#34;%Y-%m-%d %H:%M:%S&#34;
+    )
+    dataframe = dataframe[dataframe[date_column] &gt; dataframe[&#34;last_update&#34;]].dropna(
+        subset=[unique_id]
+    )
+
+    # Keep only the last date for each unique_id
+    keep_cols = [unique_id, date_column]
+    new_updates = dataframe[keep_cols].sort_values(keep_cols)
+    new_updates = new_updates.groupby(unique_id, as_index=False).tail(1)
+    new_updates[date_column] = new_updates[date_column].astype(str)
+
+    # Convert stations with the new updates dates in a dictionary
+    new_updates = dict(zip(new_updates[unique_id], new_updates[date_column]))
+    log(f&#34;&gt;&gt;&gt; data to save in redis as a dict: {new_updates}&#34;)
+
+    # Save this new information on redis
+    [redis_client.hset(key, k, v) for k, v in new_updates.items()]
+
+    return dataframe.reset_index()</code></pre>
 </details>
 </section>
 <section>
@@ -1744,6 +1833,104 @@ Mode needs to be "prod" or "staging"</p></div>
     return flow_run_id</code></pre>
 </details>
 </dd>
+<dt id="pipelines.utils.utils.save_updated_rows_on_redis"><code class="name flex">
+<span>def <span class="ident">save_updated_rows_on_redis</span></span>(<span>dataframe: pandas.core.frame.DataFrame, dataset_id: str, table_id: str, unique_id: str = 'id_estacao', date_column: str = 'data_medicao', date_format: str = '%Y-%m-%d %H:%M:%S', mode: str = 'prod') ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Acess redis to get the last time each unique_id was updated, return
+updated unique_id as a DataFrame and save new dates on redis</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_updated_rows_on_redis(
+    dataframe: pd.DataFrame,
+    dataset_id: str,
+    table_id: str,
+    unique_id: str = &#34;id_estacao&#34;,
+    date_column: str = &#34;data_medicao&#34;,
+    date_format: str = &#34;%Y-%m-%d %H:%M:%S&#34;,
+    mode: str = &#34;prod&#34;,
+) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Acess redis to get the last time each unique_id was updated, return
+    updated unique_id as a DataFrame and save new dates on redis
+    &#34;&#34;&#34;
+
+    redis_client = get_redis_client()
+
+    key = dataset_id + &#34;.&#34; + table_id
+    if mode == &#34;dev&#34;:
+        key = f&#34;{mode}.{key}&#34;
+
+    # Access all data saved on redis with this key
+    last_updates = redis_client.hgetall(key)
+
+    # Convert data in dictionary in format with unique_id in key and last updated time as value
+    # Example &gt; {&#34;12&#34;: &#34;2022-06-06 14:45:00&#34;}
+    last_updates = {
+        k.decode(&#34;utf-8&#34;): v.decode(&#34;utf-8&#34;) for k, v in last_updates.items()
+    }
+
+    # Convert dictionary to dataframe
+    last_updates = pd.DataFrame(
+        last_updates.items(), columns=[unique_id, &#34;last_update&#34;]
+    )
+
+    # dataframe and last_updates need to have the same index, in our case unique_id
+    missing_in_dfr = [
+        i
+        for i in last_updates[unique_id].unique()
+        if i not in dataframe[unique_id].unique()
+    ]
+    missing_in_updates = [
+        i
+        for i in dataframe[unique_id].unique()
+        if i not in last_updates[unique_id].unique()
+    ]
+
+    # If unique_id doesn&#39;t exists on updates we create a fake date for this station on updates
+    if len(missing_in_updates) &gt; 0:
+        for i in missing_in_updates:
+            last_updates = last_updates.append(
+                {unique_id: i, &#34;last_update&#34;: &#34;1900-01-01 00:00:00&#34;},
+                ignore_index=True,
+            )
+
+    # If unique_id doesn&#39;t exists on dataframe we remove this stations from last_updates
+    if len(missing_in_dfr) &gt; 0:
+        last_updates = last_updates[~last_updates[unique_id].isin(missing_in_dfr)]
+
+    # Merge dfs using unique_id
+    dataframe = dataframe.merge(last_updates, how=&#34;left&#34;, on=unique_id)
+
+    # Keep on dataframe only the stations that has a time after the one that is saved on redis
+    dataframe[date_column] = dataframe[date_column].apply(
+        pd.to_datetime, format=date_format
+    )
+    dataframe[&#34;last_update&#34;] = dataframe[&#34;last_update&#34;].apply(
+        pd.to_datetime, format=&#34;%Y-%m-%d %H:%M:%S&#34;
+    )
+    dataframe = dataframe[dataframe[date_column] &gt; dataframe[&#34;last_update&#34;]].dropna(
+        subset=[unique_id]
+    )
+
+    # Keep only the last date for each unique_id
+    keep_cols = [unique_id, date_column]
+    new_updates = dataframe[keep_cols].sort_values(keep_cols)
+    new_updates = new_updates.groupby(unique_id, as_index=False).tail(1)
+    new_updates[date_column] = new_updates[date_column].astype(str)
+
+    # Convert stations with the new updates dates in a dictionary
+    new_updates = dict(zip(new_updates[unique_id], new_updates[date_column]))
+    log(f&#34;&gt;&gt;&gt; data to save in redis as a dict: {new_updates}&#34;)
+
+    # Save this new information on redis
+    [redis_client.hset(key, k, v) for k, v in new_updates.items()]
+
+    return dataframe.reset_index()</code></pre>
+</details>
+</dd>
 <dt id="pipelines.utils.utils.send_discord_message"><code class="name flex">
 <span>def <span class="ident">send_discord_message</span></span>(<span>message: str, webhook_url: str) ‑> None</span>
 </code></dt>
@@ -2213,6 +2400,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.utils.utils.run_cloud" href="#pipelines.utils.utils.run_cloud">run_cloud</a></code></li>
 <li><code><a title="pipelines.utils.utils.run_local" href="#pipelines.utils.utils.run_local">run_local</a></code></li>
 <li><code><a title="pipelines.utils.utils.run_registered" href="#pipelines.utils.utils.run_registered">run_registered</a></code></li>
+<li><code><a title="pipelines.utils.utils.save_updated_rows_on_redis" href="#pipelines.utils.utils.save_updated_rows_on_redis">save_updated_rows_on_redis</a></code></li>
 <li><code><a title="pipelines.utils.utils.send_discord_message" href="#pipelines.utils.utils.send_discord_message">send_discord_message</a></code></li>
 <li><code><a title="pipelines.utils.utils.send_telegram_message" href="#pipelines.utils.utils.send_telegram_message">send_telegram_message</a></code></li>
 <li><code><a title="pipelines.utils.utils.set_default_parameters" href="#pipelines.utils.utils.set_default_parameters">set_default_parameters</a></code></li>

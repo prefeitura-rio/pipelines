@@ -60,9 +60,13 @@ from pipelines.utils.utils import log
 def get_dates(current_time) -&gt; str:
     &#34;&#34;&#34;
     Task para obter o dia atual caso nenhuma data tenha sido passada
+    Subtraimos 5 minutos da hora atual pois o último arquivo que sobre na aws
+    sempre cai na hora seguinte (Exemplo: o arquivo
+    OR_ABI-L2-RRQPEF-M6_G16_s20230010850208_e20230010859516_c20230010900065.nc
+    cujo início da medição foi às 08:50 foi salvo na AWS às 09:00:33).
     &#34;&#34;&#34;
     if current_time is None:
-        current_time = pendulum.now(&#34;UTC&#34;).to_datetime_string()
+        current_time = pendulum.now(&#34;UTC&#34;).subtract(minutes=5).to_datetime_string()
     return current_time
 
 
@@ -343,7 +347,11 @@ def download(
 <span>def <span class="ident">get_dates</span></span>(<span>current_time) ‑> str</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Task para obter o dia atual caso nenhuma data tenha sido passada</p></div>
+<div class="desc"><p>Task para obter o dia atual caso nenhuma data tenha sido passada
+Subtraimos 5 minutos da hora atual pois o último arquivo que sobre na aws
+sempre cai na hora seguinte (Exemplo: o arquivo
+OR_ABI-L2-RRQPEF-M6_G16_s20230010850208_e20230010859516_c20230010900065.nc
+cujo início da medição foi às 08:50 foi salvo na AWS às 09:00:33).</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -352,9 +360,13 @@ def download(
 def get_dates(current_time) -&gt; str:
     &#34;&#34;&#34;
     Task para obter o dia atual caso nenhuma data tenha sido passada
+    Subtraimos 5 minutos da hora atual pois o último arquivo que sobre na aws
+    sempre cai na hora seguinte (Exemplo: o arquivo
+    OR_ABI-L2-RRQPEF-M6_G16_s20230010850208_e20230010859516_c20230010900065.nc
+    cujo início da medição foi às 08:50 foi salvo na AWS às 09:00:33).
     &#34;&#34;&#34;
     if current_time is None:
-        current_time = pendulum.now(&#34;UTC&#34;).to_datetime_string()
+        current_time = pendulum.now(&#34;UTC&#34;).subtract(minutes=5).to_datetime_string()
     return current_time</code></pre>
 </details>
 </dd>
