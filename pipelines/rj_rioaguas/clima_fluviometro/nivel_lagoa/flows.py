@@ -50,7 +50,7 @@ with Flow(
     materialization_mode = Parameter("mode", default="dev", required=False)
 
     # Parâmetros para salvar dados no GCS
-    dataset_id = "clima_fluviometro"
+    dataset_id = "saneamento_drenagem"
     table_id = "nivel_lagoa"
     dump_mode = "append"
 
@@ -140,7 +140,7 @@ rioaguas_nivel_LRF.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 rioaguas_nivel_LRF.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[
-        constants.RJ_COR_AGENT_LABEL.value,
+        constants.RJ_RIOAGUAS_AGENT_LABEL.value,
     ],
 )
 rioaguas_nivel_LRF.schedule = None
