@@ -4,7 +4,6 @@
 Tasks related to DBT flows.
 """
 
-
 from datetime import timedelta
 from typing import Any, Dict, List, Union
 
