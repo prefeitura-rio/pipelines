@@ -33,20 +33,30 @@ from pipelines.constants import constants
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 def get_datario_geodataframe(
-    url: str,
+    url: str,  # URL of the data.rio API
     path: Union[str, Path],
     wait=None,
 ):
     """ "
     Save a CSV from data.rio API
+
+    Parameters:
+        - url (str): URL of the data.rio API
+        - path (Union[str, Path]): Local path to save the file
+        - wait (Optional[Any]): Prefect task wait parameter (default: None)
     """
+
+    # Create the path if it doesn't exist
     path = Path(path)
     path.mkdir(parents=True, exist_ok=True)
 
+    # Set the file path to save the data
     file_path = path / "geo_data" / "data.geojson"
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
+    # Make a request to the API URL to download the data
     req = requests.get(url, stream=True)
+    # Save the data to the specified file path
     with open(file_path, "wb") as file:
         for chunk in req.iter_content(chunk_size=1024):
             if chunk:
@@ -72,6 +82,14 @@ def transform_geodataframe(
 ):  # sourcery skip: convert-to-enumerate
     """ "
     Transform a CSV from data.rio API
+
+    Parameters:
+        - file_path (Union[str, Path]): Path to the geojson file to be transformed.
+        - batch_size (int): Number of rows to process at once.
+        - geometry_column (str): Column containing the geometry data.
+        - convert_to_crs_4326 (bool): Convert the geometry data to the crs 4326 projection.
+        - geometry_3d_to_2d (bool): Convert the geometry data from 3D to 2D.
+        - wait (None): Prefect task wait parameter (default: None)
     """
     eventid = datetime.now().strftime("%Y%m%d-%H%M%S")
 
