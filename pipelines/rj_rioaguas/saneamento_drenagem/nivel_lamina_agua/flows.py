@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Flows para pipeline de dados de nível da Lagoa Rodrigo de Freitas.
-Fonte: Squitter.
+Flows para pipeline de dados de nível de lâmina de água em via.
 """
 # pylint: disable=C0327, C0103
 
