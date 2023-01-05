@@ -37,7 +37,7 @@ from pipelines.rj_smtr.materialize_to_datario.flows import (
 
 from pipelines.rj_smtr.schedules import (
     every_day_hour_five,
-    every_dayofmonth_one_and_sixteen,
+    # every_dayofmonth_one_and_sixteen,
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import get_run_dates
@@ -47,7 +47,7 @@ from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import get_run_dates
 with Flow(
     "SMTR: Viagens SPPO",
     code_owners=["rodrigo", "fernanda"],
-) as subsidio_sppo_preprod:
+) as viagens_sppo:
 
     # Rename flow run
     current_date = get_now_date()
@@ -77,15 +77,18 @@ with Flow(
     RUN = run_dbt_model.map(
         dbt_client=unmapped(dbt_client),
         dataset_id=unmapped(smtr_constants.SUBSIDIO_SPPO_DATASET_ID.value),
+        table_id=unmapped(smtr_constants.SUBSIDIO_SPPO_TABLE_ID.value),
+        upstream=True,
+        exclude="+gps_sppo",
         _vars=run_date,
     )
 
-subsidio_sppo_preprod.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-subsidio_sppo_preprod.run_config = KubernetesRun(
+viagens_sppo.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+viagens_sppo.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value, labels=[constants.RJ_SMTR_AGENT_LABEL.value]
 )
 
-subsidio_sppo_preprod.schedule = every_day_hour_five
+viagens_sppo.schedule = every_day_hour_five
 
 with Flow(
     "SMTR: Subsídio SPPO Apuração",
@@ -136,7 +139,7 @@ with Flow(
             "dataset_id": "transporte_rodoviario_municipal",
             "table_id": "viagem_onibus",
             "mode": "prod",
-            "dbt_model_parameters": dict(run_date=run_date),
+            "dbt_model_parameters": dict(date_range_end=run_date),
         },
     )
 
@@ -149,7 +152,7 @@ with Flow(
 
 subsidio_sppo_apuracao.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 subsidio_sppo_apuracao.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value, labels=[constants.RJ_SMTR_DEV_AGENT_LABEL.value]
+    image=constants.DOCKER_IMAGE.value, labels=[constants.RJ_SMTR_AGENT_LABEL.value]
 )
 
-subsidio_sppo_apuracao.schedule = every_dayofmonth_one_and_sixteen
+# subsidio_sppo_apuracao.schedule = every_dayofmonth_one_and_sixteen

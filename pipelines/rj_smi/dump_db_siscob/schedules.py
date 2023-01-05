@@ -26,29 +26,30 @@ siscob_queries = {
         "dump_mode": "overwrite",
         "execute_query": """
             Select
-                CD_OBRA,
-                DS_TITULO,
-                ORGAO_CONTRATANTE,
-                ORGAO_EXECUTOR,
-                NR_PROCESSO,
-                OBJETO,
-                NM_FAVORECIDO,
-                CNPJ,
-                NR_LICITACAO,
-                MODALIDADE,
-                DT_ASS_CONTRATO,
-                DT_INICIO_OBRA,
-                DT_TERMINO_PREVISTO,
-                DT_TERMINO_ATUAL,
-                NR_CONTRATO,
-                AA_EXERCICIO,
-                SITUACAO,
-                VL_ORCADO_C_BDI,
-                VL_CONTRATADO,
-                VL_VIGENTE,
-                PC_MEDIDO,
-                PRAZO_INICIAL
-            from dbo.fuSEGOVI_Dados_da_Obra();
+                DISTINCT
+                    CD_OBRA,
+                    DS_TITULO,
+                    ORGAO_CONTRATANTE,
+                    ORGAO_EXECUTOR,
+                    NR_PROCESSO,
+                    OBJETO,
+                    NM_FAVORECIDO,
+                    CNPJ,
+                    NR_LICITACAO,
+                    MODALIDADE,
+                    DT_ASS_CONTRATO,
+                    DT_INICIO_OBRA,
+                    DT_TERMINO_PREVISTO,
+                    DT_TERMINO_ATUAL,
+                    NR_CONTRATO,
+                    AA_EXERCICIO,
+                    SITUACAO,
+                    VL_ORCADO_C_BDI,
+                    VL_CONTRATADO,
+                    VL_VIGENTE,
+                    PC_MEDIDO,
+                    PRAZO_INICIAL
+            from dbo.fuSEGOVI_Dados_da_Obra()
             """,
     },
     "medicao": {
@@ -57,14 +58,15 @@ siscob_queries = {
         "dump_mode": "overwrite",
         "execute_query": """
             Select
-                CD_OBRA,
-                NR_MEDICAO,
-                CD_ETAPA,
-                TP_MEDICAO_D,
-                DT_INI_MEDICAO,
-                DT_FIM_MEDICAO,
-                VL_FINAL
-            from dbo.fuSEGOVI_Medicoes();
+                DISTINCT
+                    CD_OBRA,
+                    NR_MEDICAO,
+                    CD_ETAPA,
+                    TP_MEDICAO_D,
+                    DT_INI_MEDICAO,
+                    DT_FIM_MEDICAO,
+                    VL_FINAL
+            from dbo.fuSEGOVI_Medicoes()
             """,
     },
     "termo_aditivo": {
@@ -73,13 +75,14 @@ siscob_queries = {
         "dump_mode": "overwrite",
         "execute_query": """
             Select
-                CD_OBRA,
-                NR_DO_TERMO,
-                TP_ACERTO,
-                DT_DO,
-                DT_AUTORIZACAO,
-                VL_ACERTO
-            from dbo.fuSEGOVI_Termos_Aditivos();
+                DISTINCT
+                    CD_OBRA,
+                    NR_DO_TERMO,
+                    TP_ACERTO,
+                    DT_DO,
+                    DT_AUTORIZACAO,
+                    VL_ACERTO
+            from dbo.fuSEGOVI_Termos_Aditivos()
             """,
     },
     "cronograma_financeiro": {
@@ -88,13 +91,14 @@ siscob_queries = {
         "dump_mode": "overwrite",
         "execute_query": """
             Select
-                CD_OBRA,
-                ETAPA,
-                DT_INICIO_ETAPA,
-                DT_FIM_ETAPA,
-                PC_PERCENTUAL,
-                VL_ESTIMADO
-            from dbo.fuSEGOVI_Cronograma_Financeiro();
+                DISTINCT
+                    CD_OBRA,
+                    ETAPA,
+                    DT_INICIO_ETAPA,
+                    DT_FIM_ETAPA,
+                    PC_PERCENTUAL,
+                    VL_ESTIMADO
+            from dbo.fuSEGOVI_Cronograma_Financeiro()
             """,
     },
     "localizacao": {
@@ -108,7 +112,7 @@ siscob_queries = {
                 NM_BAIRRO,
                 NM_RA,
                 NM_AP
-            from dbo.fuSEGOVI_Localizacoes_obra();
+            from dbo.fuSEGOVI_Localizacoes_obra()
             """,
     },
     "cronograma_alteracao": {
@@ -117,15 +121,16 @@ siscob_queries = {
         "dump_mode": "overwrite",
         "execute_query": """
             Select
-                CD_OBRA,
-                NR_PROCESSO,
-                TP_ALTERACAO,
-                DT_PUBL_DO,
-                CD_ETAPA,
-                NR_PRAZO,
-                DT_VALIDADE,
-                DS_OBSERVACAO
-            from dbo.fuSEGOVI_Alteração_de_Cronograma();
+                DISTINCT
+                    CD_OBRA,
+                    NR_PROCESSO,
+                    TP_ALTERACAO,
+                    DT_PUBL_DO,
+                    CD_ETAPA,
+                    NR_PRAZO,
+                    DT_VALIDADE,
+                    DS_OBSERVACAO
+            from dbo.fuSEGOVI_Alteração_de_Cronograma()
             """,
     },
     "programa_fonte": {
@@ -134,21 +139,22 @@ siscob_queries = {
         "dump_mode": "overwrite",
         "execute_query": """
             Select
-                CD_OBRA,
-                CD_PRG_TRAB,
-                PROGRAMA_TRABALHO,
-                CD_FONTE_RECURSO,
-                FONTE_RECURSO,
-                CD_NATUREZA_DSP,
-                NATUREZA_DESPESA
-            from dbo.fuSEGOVI_Programa_Fonte();
+                DISTINCT
+                    CD_OBRA,
+                    CD_PRG_TRAB,
+                    PROGRAMA_TRABALHO,
+                    CD_FONTE_RECURSO,
+                    FONTE_RECURSO,
+                    CD_NATUREZA_DSP,
+                    NATUREZA_DESPESA
+            from dbo.fuSEGOVI_Programa_Fonte()
             """,
     },
 }
 
 siscob_clocks = generate_dump_db_schedules(
-    interval=timedelta(days=7),
-    start_date=datetime(2022, 10, 2, 0, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    interval=timedelta(days=30),
+    start_date=datetime(2022, 12, 19, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_SMI_AGENT_LABEL.value,
     ],

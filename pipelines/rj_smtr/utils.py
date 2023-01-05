@@ -124,7 +124,7 @@ def get_table_min_max_value(  # pylint: disable=R0913
     return result.iloc[0][0]
 
 
-def get_last_run_timestamp(dataset_id: str, table_id: str, mode: str = "prod"):
+def get_last_run_timestamp(dataset_id: str, table_id: str, mode: str = "prod") -> str:
     """
     Query redis to retrive the time for when the last materialization
     ran.
@@ -166,9 +166,7 @@ def map_dict_keys(data: dict, mapping: dict) -> None:
     return data
 
 
-def connect_ftp(
-    secret_path: str = constants.FTPS_SECRET_PATH.value, secure: bool = True
-):
+def connect_ftp(secret_path: str = None, secure: bool = True):
     """Connect to FTP
 
     Returns:
@@ -195,3 +193,30 @@ def safe_cast(val, to_type, default=None):
         return to_type(val)
     except ValueError:
         return default
+
+
+def set_redis_rdo_files(redis_client, dataset_id: str, table_id: str):
+    """
+    Register downloaded files to Redis
+
+    Args:
+        redis_client (_type_): _description_
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+
+    Returns:
+        bool: if the key was properly set
+    """
+    content = redis_client.get(f"{dataset_id}.{table_id}")
+    # update content
+    st_client = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+    blob_names = [
+        blob.name
+        for blob in st_client.client["storage_staging"].list_blobs(
+            st_client.bucket, prefix=f"staging/{dataset_id}/{table_id}"
+        )
+    ]
+    files = [blob_name.split("/")[-1].replace(".csv", "") for blob_name in blob_names]
+    content["files"] = files
+    # set key
+    return redis_client.set(f"{dataset_id}.{table_id}", content)

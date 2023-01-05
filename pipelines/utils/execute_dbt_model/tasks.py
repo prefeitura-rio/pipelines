@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=R0914, W0611, W0613, R0913
 """
 Tasks related to DBT flows.
 """
-# pylint: disable=unused-argument, R0914
+
 
 from datetime import timedelta
 from typing import Any, Dict, List, Union
@@ -42,12 +43,11 @@ def get_k8s_dbt_client(
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments, too-many-locals
 def run_dbt_model(
     dbt_client: DbtClient,
-    dataset_id: str = None,
+    dataset_id: str,
     table_id: str = None,
-    model: str = None,
     dbt_alias: bool = False,
     upstream: bool = None,
     downstream: bool = None,
@@ -55,28 +55,48 @@ def run_dbt_model(
     flags: str = None,
     _vars: Union[dict, List[Dict]] = None,
     sync: bool = True,
-    wait=None,  # pylint: disable=unused-argument
+    wait=None,
 ):
     """
     Run a DBT model.
-    """
-    run_command = "dbt run"
-    if dbt_alias:
-        table_id = f"{dataset_id}__{table_id}"
 
-    if not model:
-        model = f"{dataset_id}"
-        if table_id:
-            model += f".{table_id}"
+    Args:
+        dbt_client (DbtClient): DBT client.
+        dataset_id (str): Dataset ID of the dbt model.
+        table_id (str, optional): Table ID of the dbt model. If None, the
+        whole dataset will be run.
+        dbt_alias (bool, optional): If True, the model will be run by
+        its alias. Defaults to False.
+        upstream (bool, optional): If True, the upstream models will be run.
+        downstream (bool, optional): If True, the downstream models will
+        be run.
+        exclude (str, optional): Models to exclude from the run.
+        flags (str, optional): Flags to pass to the dbt run command.
+        See:
+        https://docs.getdbt.com/reference/dbt-jinja-functions/flags/
+        _vars (Union[dict, List[Dict]], optional): Variables to pass to
+        dbt. Defaults to None.
+        sync (bool, optional): Whether to run the command synchronously.
+    """
 
     # Set models and upstream/downstream for dbt
-    if model:
-        run_command += " --select "
-        if upstream:
-            run_command += "+"
-        run_command += f"{model}"
-        if downstream:
-            run_command += "+"
+    run_command = "dbt run --select "
+
+    if upstream:
+        run_command += "+"
+
+    if table_id:
+        if dbt_alias:
+            table_id = f"{dataset_id}.{dataset_id}__{table_id}"
+        else:
+            table_id = f"{dataset_id}.{table_id}"
+    else:
+        table_id = dataset_id
+
+    run_command += f"{table_id}"
+
+    if downstream:
+        run_command += "+"
 
     if exclude:
         run_command += f" --exclude {exclude}"
@@ -91,6 +111,7 @@ def run_dbt_model(
         else:
             vars_str = f'"{_vars}"'
             run_command += f" --vars {vars_str}"
+
     if flags:
         run_command += f" {flags}"
 

@@ -110,6 +110,16 @@ def rename_current_flow_run_dataset_table(
     return client.set_flow_run_name(flow_run_id, f"{prefix}{dataset_id}.{table_id}")
 
 
+@task
+def rename_current_flow_run_msg(msg: str, wait=None) -> None:
+    """
+    Rename the current flow run.
+    """
+    flow_run_id = prefect.context.get("flow_run_id")
+    client = Client()
+    return client.set_flow_run_name(flow_run_id, msg)
+
+
 ##################
 #
 # Hashicorp Vault
@@ -270,6 +280,8 @@ def create_table_and_upload_to_gcs(
     else:
         # pylint: disable=C0301
         log("STEP UPLOAD: Table does not exist in STAGING, need to create first")
+
+    return data_path
 
 
 @task(

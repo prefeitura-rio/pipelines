@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# flake8: noqa: E501
 """
 Schedules for the database dump pipeline
 """
@@ -23,7 +24,15 @@ gsheets_urls = {
         "url": "https://drive.google.com/file/d/1Q5MbIStFAWzM1q9Vf82xzKBYAZHNt9l6/view?usp=share_link",  # noqa: E501
         "url_type": "google_drive",
         "materialize_after_dump": True,
-    }
+        "dataset_id": "conservacao_ambiental_monitor_verde",
+    },
+    "licencas": {
+        "dump_mode": "overwrite",
+        "url": "https://drive.google.com/file/d/14GieP41HlKSgr5T9xifELOQr4G2acwNQ/view?usp=share_link",
+        "url_type": "google_drive",
+        "materialize_after_dump": True,
+        "dataset_id": "urbanismo_geosislic_licenciamento",
+    },
 }
 
 gsheets_clocks = generate_dump_url_schedules(
@@ -32,8 +41,8 @@ gsheets_clocks = generate_dump_url_schedules(
     labels=[
         constants.RJ_SEOP_AGENT_LABEL.value,
     ],
-    dataset_id="conservacao_ambiental_monitor_verde",
+    dataset_id="",
     table_parameters=gsheets_urls,
 )
 
-gsheets_daily_update_schedule = Schedule(clocks=untuple(gsheets_clocks))
+gsheets_year_update_schedule = Schedule(clocks=untuple(gsheets_clocks))
