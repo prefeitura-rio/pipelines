@@ -58,7 +58,9 @@ with Flow(
     )
 
     dados, empty_data = tratar_dados(
-        dataset_id=DATASET_ID, table_id=TABLE_ID, mode=MATERIALIZATION_MODE,
+        dataset_id=DATASET_ID,
+        table_id=TABLE_ID,
+        mode=MATERIALIZATION_MODE,
     )
 
     with case(empty_data, False):

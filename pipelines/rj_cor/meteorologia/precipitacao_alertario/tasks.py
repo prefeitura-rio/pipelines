@@ -30,7 +30,9 @@ from pipelines.utils.utils import (
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def tratar_dados(dataset_id: str, table_id: str, mode: str = "dev") -> Tuple[pd.DataFrame, bool]:
+def tratar_dados(
+    dataset_id: str, table_id: str, mode: str = "dev"
+) -> Tuple[pd.DataFrame, bool]:
     """
     Renomeia colunas e filtra dados com a hora e minuto do timestamp
     de execução mais próximo à este
