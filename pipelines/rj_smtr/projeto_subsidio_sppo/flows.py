@@ -15,6 +15,7 @@ from pipelines.constants import constants
 from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
     get_now_date,
+    get_yesterday,
     get_current_flow_mode,
     get_current_flow_labels,
 )
@@ -88,7 +89,7 @@ viagens_sppo.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value, labels=[constants.RJ_SMTR_AGENT_LABEL.value]
 )
 
-viagens_sppo.schedule = every_day_hour_five
+# viagens_sppo.schedule = every_day_hour_five
 
 with Flow(
     "SMTR: Subsídio SPPO Apuração",
@@ -98,11 +99,11 @@ with Flow(
     # 1. SETUP #
 
     # Get default parameters #
-    run_date = Parameter("run_date", default=get_now_date.run())
+    end_date = Parameter("end_date", default=get_yesterday.run())
 
     # Rename flow run #
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SMTR - Subsídio SPPO Apuração: ", now_time=run_date
+        prefix="SMTR - Subsídio SPPO Apuração: ", now_time=end_date
     )
 
     # Set dbt client #
@@ -123,7 +124,7 @@ with Flow(
     RUN = run_dbt_model(
         dbt_client=dbt_client,
         dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOAD_DATASET_ID.value,
-        _vars=dict(run_date=run_date),
+        _vars=dict(end_date=end_date),
     )
 
     # 3. PUBLISH #
