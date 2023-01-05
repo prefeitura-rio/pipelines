@@ -4,7 +4,6 @@
 Tasks for precipitacao_alertario
 """
 from datetime import timedelta
-import os
 from pathlib import Path
 from typing import Union, Tuple
 
