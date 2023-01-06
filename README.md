@@ -5,7 +5,6 @@ da Prefeitura do Rio de Janeiro. O repositório é gerido pelo Escritório
 Municipal de Dados (EMD) e alimentado de forma colaborativa com as equipes de
 dados e tecnologia das Secretarias.
 
-
 > 💜 Todo o código é desenvolvido em Python utilizando o software livre [Prefect](https://prefect.io/).
 
 ## Configuração de ambiente para desenvolvimento
@@ -88,7 +87,7 @@ constants.py                 # valores constantes para todos os órgãos
 
 ```
 
-### Adicionando órgãos e projetos
+### Adicionando órgãos e projetos (descontinuado)
 
 O script `manage.py` é responsável por criar e listar projetos desse repositório. Para usá-lo, no entanto, você deve instalar as dependências em `requirements-cli.txt`:
 
