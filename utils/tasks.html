@@ -80,9 +80,19 @@ def get_now_time():
 @prefect.task(checkpoint=False)
 def get_now_date():
     &#34;&#34;&#34;
-    Returns the YYYY-MM-DD.
+    Returns the current date in YYYY-MM-DD.
     &#34;&#34;&#34;
     now = pendulum.now(pendulum.timezone(&#34;America/Sao_Paulo&#34;))
+
+    return now.to_date_string()
+
+
+@prefect.task(checkpoint=False)
+def get_yesterday():
+    &#34;&#34;&#34;
+    Returns the previous date in YYYY-MM-DD.
+    &#34;&#34;&#34;
+    now = pendulum.yesterday(pendulum.timezone(&#34;America/Sao_Paulo&#34;))
 
     return now.to_date_string()
 
@@ -561,7 +571,7 @@ def get_current_flow_mode(labels: List[str]) -&gt; str:
 <span>def <span class="ident">get_now_date</span></span>(<span>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Returns the YYYY-MM-DD.</p></div>
+<div class="desc"><p>Returns the current date in YYYY-MM-DD.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -569,7 +579,7 @@ def get_current_flow_mode(labels: List[str]) -&gt; str:
 <pre><code class="python">@prefect.task(checkpoint=False)
 def get_now_date():
     &#34;&#34;&#34;
-    Returns the YYYY-MM-DD.
+    Returns the current date in YYYY-MM-DD.
     &#34;&#34;&#34;
     now = pendulum.now(pendulum.timezone(&#34;America/Sao_Paulo&#34;))
 
@@ -611,6 +621,25 @@ def get_user_and_password(secret_path: str, wait=None):
     &#34;&#34;&#34;
     log(f&#34;Getting user and password for secret path: {secret_path}&#34;)
     return get_username_and_password_from_secret(secret_path)</code></pre>
+</details>
+</dd>
+<dt id="pipelines.utils.tasks.get_yesterday"><code class="name flex">
+<span>def <span class="ident">get_yesterday</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the previous date in YYYY-MM-DD.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@prefect.task(checkpoint=False)
+def get_yesterday():
+    &#34;&#34;&#34;
+    Returns the previous date in YYYY-MM-DD.
+    &#34;&#34;&#34;
+    now = pendulum.yesterday(pendulum.timezone(&#34;America/Sao_Paulo&#34;))
+
+    return now.to_date_string()</code></pre>
 </details>
 </dd>
 <dt id="pipelines.utils.tasks.greater_than"><code class="name flex">
@@ -777,6 +806,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.utils.tasks.get_now_date" href="#pipelines.utils.tasks.get_now_date">get_now_date</a></code></li>
 <li><code><a title="pipelines.utils.tasks.get_now_time" href="#pipelines.utils.tasks.get_now_time">get_now_time</a></code></li>
 <li><code><a title="pipelines.utils.tasks.get_user_and_password" href="#pipelines.utils.tasks.get_user_and_password">get_user_and_password</a></code></li>
+<li><code><a title="pipelines.utils.tasks.get_yesterday" href="#pipelines.utils.tasks.get_yesterday">get_yesterday</a></code></li>
 <li><code><a title="pipelines.utils.tasks.greater_than" href="#pipelines.utils.tasks.greater_than">greater_than</a></code></li>
 <li><code><a title="pipelines.utils.tasks.log_task" href="#pipelines.utils.tasks.log_task">log_task</a></code></li>
 <li><code><a title="pipelines.utils.tasks.rename_current_flow_run_dataset_table" href="#pipelines.utils.tasks.rename_current_flow_run_dataset_table">rename_current_flow_run_dataset_table</a></code></li>
