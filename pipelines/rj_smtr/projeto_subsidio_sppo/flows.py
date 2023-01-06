@@ -79,8 +79,8 @@ with Flow(
         dbt_client=unmapped(dbt_client),
         dataset_id=unmapped(smtr_constants.SUBSIDIO_SPPO_DATASET_ID.value),
         table_id=unmapped(smtr_constants.SUBSIDIO_SPPO_TABLE_ID.value),
-        upstream=True,
-        exclude="+gps_sppo",
+        upstream=unmapped(True),
+        exclude=unmapped("+gps_sppo"),
         _vars=run_date,
     )
 
