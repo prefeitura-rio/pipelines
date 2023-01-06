@@ -62,7 +62,6 @@ def tratar_dados(
 
     dados = pdx.fully_flatten(dados).drop(drop_cols, axis=1).rename(rename_cols, axis=1)
     log(f"\n[DEBUG]: df.head() {dados.head()}")
-    log("\n[DEBUG]: verificando se mudou no prefect")
 
     # Converte de UTC para horário São Paulo
     dados["data_medicao_utc"] = pd.to_datetime(dados["data_medicao_utc"])
