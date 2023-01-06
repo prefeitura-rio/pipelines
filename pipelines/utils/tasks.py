@@ -51,9 +51,19 @@ def get_now_time():
 @prefect.task(checkpoint=False)
 def get_now_date():
     """
-    Returns the YYYY-MM-DD.
+    Returns the current date in YYYY-MM-DD.
     """
     now = pendulum.now(pendulum.timezone("America/Sao_Paulo"))
+
+    return now.to_date_string()
+
+
+@prefect.task(checkpoint=False)
+def get_yesterday():
+    """
+    Returns the previous date in YYYY-MM-DD.
+    """
+    now = pendulum.yesterday(pendulum.timezone("America/Sao_Paulo"))
 
     return now.to_date_string()
 
