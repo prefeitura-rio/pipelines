@@ -3,7 +3,6 @@
 Tasks for precipitacao_alertario
 """
 from datetime import timedelta
-import os
 from pathlib import Path
 from typing import Union, Tuple
 
@@ -84,20 +83,6 @@ def tratar_dados(
 
     dfr = dfr.drop(["data_medicao_utc"], axis=1)
 
-    # Ordenação de variáveis
-    cols_order = [
-        "id_estacao",
-        "data_medicao",
-        "acumulado_chuva_15_min",
-        "acumulado_chuva_1_h",
-        "acumulado_chuva_4_h",
-        "acumulado_chuva_24_h",
-        "acumulado_chuva_96_h",
-        "acumulado_chuva_mes",
-    ]
-
-    dfr = dfr[cols_order]
-
     # Converte variáveis que deveriam ser float para float
     float_cols = [
         "acumulado_chuva_15_min",
@@ -131,6 +116,20 @@ def salvar_dados(dfr: pd.DataFrame) -> Union[str, Path]:
     """
     Salvar dados tratados em csv para conseguir subir pro GCP
     """
+  
+    # Ordenação de variáveis
+    cols_order = [
+        "id_estacao",
+        "data_medicao",
+        "acumulado_chuva_15_min",
+        "acumulado_chuva_1_h",
+        "acumulado_chuva_4_h",
+        "acumulado_chuva_24_h",
+        "acumulado_chuva_96_h",
+        "acumulado_chuva_mes",
+    ]
+
+    dfr = dfr[cols_order]
 
     prepath = Path("/tmp/precipitacao_websirene/")
     prepath.mkdir(parents=True, exist_ok=True)
