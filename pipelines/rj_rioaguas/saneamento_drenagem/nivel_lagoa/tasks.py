@@ -61,7 +61,7 @@ def tratar_dados(
 
     # Renomeia colunas
     dfr = dfr.rename(
-        columns={"Hora Leitura": "data_medicao", "Nível [m]": "lamina_nivel"}
+        columns={"Hora Leitura": "data_medicao", "Nível [m]": "nivel_agua"}
     )
     # Adiciona coluna para id e nome da lagoa
     dfr["id_estacao"] = "1"
@@ -79,14 +79,14 @@ def tratar_dados(
         date_format="%d/%m/%Y %H:%M",
         mode=mode,
     )
-    log(f"[DEBUG]: dados que serão salvos\n{dfr.tail()}")
+    log(f"[DEBUG]: dados que serão salvos no df\n{dfr.tail()}")
 
     # If df is empty stop flow
     empty_data = dfr.shape[0] == 0
     log(f"[DEBUG]: dataframe is empty: {empty_data}")
 
     return (
-        dfr[["data_medicao", "id_estacao", "nome_estacao", "lamina_nivel"]],
+        dfr[["data_medicao", "id_estacao", "nome_estacao", "nivel_agua"]],
         empty_data,
     )
 
