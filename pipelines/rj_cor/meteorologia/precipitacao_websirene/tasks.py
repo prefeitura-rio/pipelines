@@ -116,7 +116,7 @@ def salvar_dados(dfr: pd.DataFrame) -> Union[str, Path]:
     """
     Salvar dados tratados em csv para conseguir subir pro GCP
     """
-  
+
     # Ordenação de variáveis
     cols_order = [
         "id_estacao",
