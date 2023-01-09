@@ -427,10 +427,10 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
                         data_type=batch_data_type,
                     )
                 elif batch_data_type == &#34;csv&#34;:
-                    dataframe_to_csv(dataframe, prepath / f&#34;{eventid}-{idx}.csv&#34;)
+                    dataframe_to_csv(dataframe, prepath / f&#34;{eventid}-{uuid4()}.csv&#34;)
                 elif batch_data_type == &#34;parquet&#34;:
                     dataframe_to_parquet(
-                        dataframe, prepath / f&#34;{eventid}-{idx}.parquet&#34;
+                        dataframe, prepath / f&#34;{eventid}-{uuid4()}.parquet&#34;
                     )
                 elapsed_time = time() - start_time
                 doc = format_document(
@@ -852,10 +852,10 @@ def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
                         data_type=batch_data_type,
                     )
                 elif batch_data_type == &#34;csv&#34;:
-                    dataframe_to_csv(dataframe, prepath / f&#34;{eventid}-{idx}.csv&#34;)
+                    dataframe_to_csv(dataframe, prepath / f&#34;{eventid}-{uuid4()}.csv&#34;)
                 elif batch_data_type == &#34;parquet&#34;:
                     dataframe_to_parquet(
-                        dataframe, prepath / f&#34;{eventid}-{idx}.parquet&#34;
+                        dataframe, prepath / f&#34;{eventid}-{uuid4()}.parquet&#34;
                     )
                 elapsed_time = time() - start_time
                 doc = format_document(
