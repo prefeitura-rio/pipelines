@@ -16,10 +16,10 @@ import pandas_read_xml as pdx
 # from prefect import context
 
 from pipelines.constants import constants
+from pipelines.rj_cor.meteorologia.precipitacao_alertario.utils import parse_date_columns
 from pipelines.utils.utils import (
     log,
     to_partitions,
-    parse_date_columns,
     save_updated_rows_on_redis,
 )
 
