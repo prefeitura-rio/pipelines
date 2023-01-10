@@ -178,6 +178,7 @@ dump_ftp_sicop_default_parameters = {
     "table_id": "processo",
 }
 
+# pylint: disable=C0103
 dump_ftp_sicop = set_default_parameters(
     dump_ftp_sicop, default_parameters=dump_ftp_sicop_default_parameters
 )
