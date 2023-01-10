@@ -81,7 +81,7 @@ with Flow(
         table_id=unmapped(smtr_constants.SUBSIDIO_SPPO_TABLE_ID.value),
         upstream=unmapped(True),
         exclude=unmapped("+gps_sppo"),
-        _vars=run_date
+        _vars=run_date,
     )
 
 viagens_sppo.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
