@@ -9,8 +9,7 @@ import pytz
 from prefect.schedules import Schedule
 
 from pipelines.constants import constants
-from pipelines.utils.execute_dbt_model.utils import \
-    generate_execute_dbt_model_schedules
+from pipelines.utils.execute_dbt_model.utils import generate_execute_dbt_model_schedules
 from pipelines.utils.utils import untuple_clocks as untuple
 
 materialize_smi_flow_schedule_parameters = {
@@ -29,7 +28,7 @@ materialize_smi_flow_schedule_parameters = {
     "programa_fonte": {
         "dataset_id": "infraestrutura_siscob_obras_dashboard",
         "mode": "prod",
-    }
+    },
 }
 
 materialize_smi_flow_schedule_clocks = generate_execute_dbt_model_schedules(
@@ -45,4 +44,3 @@ materialize_smi_flow_schedule_clocks = generate_execute_dbt_model_schedules(
 materialize_smi_flow_schedule = Schedule(
     clocks=untuple(materialize_smi_flow_schedule_clocks)
 )
-

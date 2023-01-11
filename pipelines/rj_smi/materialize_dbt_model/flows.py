@@ -9,8 +9,9 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 from pipelines.constants import constants
-from pipelines.rj_smi.materialize_dbt_model.schedules import \
-    materialize_smi_flow_schedule
+from pipelines.rj_smi.materialize_dbt_model.schedules import (
+    materialize_smi_flow_schedule,
+)
 from pipelines.utils.execute_dbt_model.flows import utils_run_dbt_model_flow
 from pipelines.utils.utils import set_default_parameters
 
