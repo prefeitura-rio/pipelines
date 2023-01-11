@@ -45,15 +45,36 @@ def generate_execute_dbt_model_schedules(  # pylint: disable=too-many-arguments,
     Generates multiple schedules for execute dbt model.
     """
     clocks = []
+
+    optional_parameters = [
+        "dbt_alias",
+        "dbt_model_parameters",
+        "dbt_model_secret_parameters",
+        "downstream",
+        "exclude",
+        "flags",
+        "materialize_to_datario",
+        "mode",
+    ]
+
     for count, (table_id, parameters) in enumerate(table_parameters.items()):
         parameter_defaults = {
             "dataset_id": parameters["dataset_id"],
             "table_id": table_id,
             "mode": parameters["mode"],
         }
+
+        for complement_parameter in optional_parameters:
+            if complement_parameter in parameters:
+                parameter_defaults[complement_parameter] = parameters[
+                    complement_parameter
+                ]
+
+        new_interval = parameters["interval"] if "interval" in parameters else interval
+
         clocks.append(
             IntervalClock(
-                interval=interval,
+                interval=new_interval,
                 start_date=start_date
                 + timedelta(minutes=runs_interval_minutes * count),
                 labels=labels,
