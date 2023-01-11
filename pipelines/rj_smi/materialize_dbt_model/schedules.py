@@ -3,26 +3,33 @@
 Schedules for daily logs materialization.
 """
 
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 
-from prefect.schedules import Schedule
 import pytz
+from prefect.schedules import Schedule
 
 from pipelines.constants import constants
-
-from pipelines.utils.execute_dbt_model.utils import generate_execute_dbt_model_schedules
+from pipelines.utils.execute_dbt_model.utils import \
+    generate_execute_dbt_model_schedules
 from pipelines.utils.utils import untuple_clocks as untuple
 
-
 materialize_smi_flow_schedule_parameters = {
-    "tabela_1": {
-        "dataset_id": "transporte_rodoviario_municipal",
+    "obra": {
+        "dataset_id": "infraestrutura_siscob_obras_dashboard",
         "mode": "prod",
     },
-    "tabela_2": {
-        "dataset_id": "transporte_rodoviario_municipal",
+    "localizacao": {
+        "dataset_id": "infraestrutura_siscob_obras_dashboard",
         "mode": "prod",
     },
+    "medicao": {
+        "dataset_id": "infraestrutura_siscob_obras_dashboard",
+        "mode": "prod",
+    },
+    "programa_fonte": {
+        "dataset_id": "infraestrutura_siscob_obras_dashboard",
+        "mode": "prod",
+    }
 }
 
 materialize_smi_flow_schedule_clocks = generate_execute_dbt_model_schedules(
@@ -38,3 +45,4 @@ materialize_smi_flow_schedule_clocks = generate_execute_dbt_model_schedules(
 materialize_smi_flow_schedule = Schedule(
     clocks=untuple(materialize_smi_flow_schedule_clocks)
 )
+

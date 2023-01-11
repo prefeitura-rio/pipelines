@@ -9,10 +9,8 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 from pipelines.constants import constants
-
-from pipelines.rj_smi.materialize_dbt_model.schedules import (
-    materialize_smi_flow_schedule,
-)
+from pipelines.rj_smi.materialize_dbt_model.schedules import \
+    materialize_smi_flow_schedule
 from pipelines.utils.execute_dbt_model.flows import utils_run_dbt_model_flow
 from pipelines.utils.utils import set_default_parameters
 
@@ -27,8 +25,8 @@ materialize_smi_flow.run_config = KubernetesRun(
 )
 
 materialize_smi_flow_default_parameters = {
-    "dataset_id": "dashboard_obras",
-    "table_id": "",
+    "dataset_id": "infraestrutura_siscob_obras_dashboard",
+    "table_id": "obra",
     "mode": "prod",
 }
 materialize_smi_flow = set_default_parameters(
