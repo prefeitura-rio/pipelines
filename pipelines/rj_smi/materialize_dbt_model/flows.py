@@ -17,7 +17,7 @@ from pipelines.utils.execute_dbt_model.flows import utils_run_dbt_model_flow
 from pipelines.utils.utils import set_default_parameters
 
 materialize_smi_flow = deepcopy(utils_run_dbt_model_flow)
-materialize_smi_flow.name = "SMI:  - Materialize logs"
+materialize_smi_flow.name = "SMI:  - dbt - materializa tabelas da SMI"
 materialize_smi_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 materialize_smi_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
