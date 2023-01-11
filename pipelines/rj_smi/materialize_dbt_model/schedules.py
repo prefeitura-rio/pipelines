@@ -33,7 +33,7 @@ materialize_smi_flow_schedule_parameters = {
         "dataset_id": "infraestrutura_siscob_obras_dashboard",
         "mode": "prod",
         "dbt_alias": True,
-    }
+    },
 }
 
 materialize_smi_flow_schedule_clocks = generate_execute_dbt_model_schedules(
@@ -49,4 +49,3 @@ materialize_smi_flow_schedule_clocks = generate_execute_dbt_model_schedules(
 materialize_smi_flow_schedule = Schedule(
     clocks=untuple(materialize_smi_flow_schedule_clocks)
 )
-
