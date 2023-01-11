@@ -17,18 +17,22 @@ materialize_smi_flow_schedule_parameters = {
     "obra": {
         "dataset_id": "infraestrutura_siscob_obras_dashboard",
         "mode": "prod",
+        "dbt_alias": True,
     },
     "localizacao": {
         "dataset_id": "infraestrutura_siscob_obras_dashboard",
         "mode": "prod",
+        "dbt_alias": True,
     },
     "medicao": {
         "dataset_id": "infraestrutura_siscob_obras_dashboard",
         "mode": "prod",
+        "dbt_alias": True,
     },
     "programa_fonte": {
         "dataset_id": "infraestrutura_siscob_obras_dashboard",
         "mode": "prod",
+        "dbt_alias": True,
     }
 }
 
