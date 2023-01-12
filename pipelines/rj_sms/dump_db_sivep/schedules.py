@@ -21,7 +21,8 @@ sms_web_queries = {
     "srag": {
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM gtsinan.vw_sivep_escritoriodados;",
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
     }
 }
 

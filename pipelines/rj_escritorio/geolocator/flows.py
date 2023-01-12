@@ -72,7 +72,7 @@ with Flow(
             upstream_tasks=[base_geolocalizada],
         )
         # today = get_today()
-        create_table_and_upload_to_gcs(
+        upload_table = create_table_and_upload_to_gcs(
             data_path=base_path,
             dataset_id=geolocator_constants.DATASET_ID.value,
             table_id=geolocator_constants.TABLE_ID.value,
@@ -95,6 +95,7 @@ with Flow(
                 labels=current_flow_labels,
                 run_name=f"Materialize {dataset_id}.{table_id}",
             )
+            materialization_flow.set_upstream(upload_table)
 
             wait_for_materialization = wait_for_flow_run(
                 materialization_flow,
