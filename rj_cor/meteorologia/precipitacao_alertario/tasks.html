@@ -33,7 +33,6 @@
 Tasks for precipitacao_alertario
 &#34;&#34;&#34;
 from datetime import timedelta
-import os
 from pathlib import Path
 from typing import Union, Tuple
 
@@ -46,22 +45,28 @@ import pandas_read_xml as pdx
 # from prefect import context
 
 from pipelines.constants import constants
-from pipelines.utils.utils import log, save_updated_rows_on_redis
+from pipelines.rj_cor.meteorologia.precipitacao_alertario.utils import (
+    parse_date_columns,
+)
+from pipelines.utils.utils import (
+    log,
+    to_partitions,
+    save_updated_rows_on_redis,
+)
 
 
 @task(
-    nout=3,
+    nout=2,
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def tratar_dados(dataset_id: str, table_id: str) -&gt; Tuple[pd.DataFrame, bool]:
+def tratar_dados(
+    dataset_id: str, table_id: str, mode: str = &#34;dev&#34;
+) -&gt; Tuple[pd.DataFrame, bool]:
     &#34;&#34;&#34;
     Renomeia colunas e filtra dados com a hora e minuto do timestamp
     de execução mais próximo à este
     &#34;&#34;&#34;
-
-    # Hora atual no formato YYYYMMDDHHmm para criar partições
-    current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y%m%d%H%M&#34;)
 
     url = &#34;http://alertario.rio.rj.gov.br/upload/xml/Chuvas.xml&#34;
     dados = pdx.read_xml(url, [&#34;estacoes&#34;])
@@ -124,7 +129,7 @@ def tratar_dados(dataset_id: str, table_id: str) -&gt; Tuple[pd.DataFrame, bool]
         unique_id=&#34;id_estacao&#34;,
         date_column=&#34;data_medicao&#34;,
         date_format=date_format,
-        mode=&#34;dev&#34;,
+        mode=mode,
     )
 
     dados[&#34;id_estacao&#34;] = dados[&#34;id_estacao&#34;].astype(int)
@@ -146,32 +151,32 @@ def tratar_dados(dataset_id: str, table_id: str) -&gt; Tuple[pd.DataFrame, bool]
     empty_data = dados.shape[0] == 0
     log(f&#34;[DEBUG]: dataframe is empty: {empty_data}&#34;)
 
-    return dados, empty_data, current_time
+    return dados, empty_data
 
 
 @task
-def salvar_dados(dados: pd.DataFrame, current_time: str) -&gt; Union[str, Path]:
+def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
     Salvar dados tratados em csv para conseguir subir pro GCP
     &#34;&#34;&#34;
 
-    ano = current_time[:4]
-    mes = str(int(current_time[4:6]))
-    dia = str(int(current_time[6:8]))
-    partitions = os.path.join(f&#34;ano={ano}&#34;, f&#34;mes={mes}&#34;, f&#34;dia={dia}&#34;)
+    prepath = Path(&#34;/tmp/precipitacao_alertario/&#34;)
+    prepath.mkdir(parents=True, exist_ok=True)
 
-    base_path = os.path.join(os.getcwd(), &#34;data&#34;, &#34;precipitacao_alertario&#34;, &#34;output&#34;)
+    partition_column = &#34;data_medicao&#34;
+    dataframe, partitions = parse_date_columns(dados, partition_column)
+    current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y%m%d%H%M&#34;)
 
-    partition_path = os.path.join(base_path, partitions)
-
-    if not os.path.exists(partition_path):
-        os.makedirs(partition_path)
-
-    filename = os.path.join(partition_path, f&#34;dados_{current_time}.csv&#34;)
-
-    log(f&#34;Saving {filename}&#34;)
-    dados.to_csv(filename, index=False)
-    return base_path</code></pre>
+    # Cria partições a partir da data
+    to_partitions(
+        data=dataframe,
+        partition_columns=partitions,
+        savepath=prepath,
+        data_type=&#34;csv&#34;,
+        suffix=current_time,
+    )
+    log(f&#34;[DEBUG] Files saved on {prepath}&#34;)
+    return prepath</code></pre>
 </details>
 </section>
 <section>
@@ -182,7 +187,7 @@ def salvar_dados(dados: pd.DataFrame, current_time: str) -&gt; Union[str, Path]:
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.salvar_dados"><code class="name flex">
-<span>def <span class="ident">salvar_dados</span></span>(<span>dados: pandas.core.frame.DataFrame, current_time: str) ‑> Union[str, pathlib.Path]</span>
+<span>def <span class="ident">salvar_dados</span></span>(<span>dados: pandas.core.frame.DataFrame) ‑> Union[str, pathlib.Path]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Salvar dados tratados em csv para conseguir subir pro GCP</p></div>
@@ -191,32 +196,32 @@ def salvar_dados(dados: pd.DataFrame, current_time: str) -&gt; Union[str, Path]:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def salvar_dados(dados: pd.DataFrame, current_time: str) -&gt; Union[str, Path]:
+def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
     Salvar dados tratados em csv para conseguir subir pro GCP
     &#34;&#34;&#34;
 
-    ano = current_time[:4]
-    mes = str(int(current_time[4:6]))
-    dia = str(int(current_time[6:8]))
-    partitions = os.path.join(f&#34;ano={ano}&#34;, f&#34;mes={mes}&#34;, f&#34;dia={dia}&#34;)
+    prepath = Path(&#34;/tmp/precipitacao_alertario/&#34;)
+    prepath.mkdir(parents=True, exist_ok=True)
 
-    base_path = os.path.join(os.getcwd(), &#34;data&#34;, &#34;precipitacao_alertario&#34;, &#34;output&#34;)
+    partition_column = &#34;data_medicao&#34;
+    dataframe, partitions = parse_date_columns(dados, partition_column)
+    current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y%m%d%H%M&#34;)
 
-    partition_path = os.path.join(base_path, partitions)
-
-    if not os.path.exists(partition_path):
-        os.makedirs(partition_path)
-
-    filename = os.path.join(partition_path, f&#34;dados_{current_time}.csv&#34;)
-
-    log(f&#34;Saving {filename}&#34;)
-    dados.to_csv(filename, index=False)
-    return base_path</code></pre>
+    # Cria partições a partir da data
+    to_partitions(
+        data=dataframe,
+        partition_columns=partitions,
+        savepath=prepath,
+        data_type=&#34;csv&#34;,
+        suffix=current_time,
+    )
+    log(f&#34;[DEBUG] Files saved on {prepath}&#34;)
+    return prepath</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.tratar_dados"><code class="name flex">
-<span>def <span class="ident">tratar_dados</span></span>(<span>dataset_id: str, table_id: str) ‑> Tuple[pandas.core.frame.DataFrame, bool]</span>
+<span>def <span class="ident">tratar_dados</span></span>(<span>dataset_id: str, table_id: str, mode: str = 'dev') ‑> Tuple[pandas.core.frame.DataFrame, bool]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Renomeia colunas e filtra dados com a hora e minuto do timestamp
@@ -226,18 +231,17 @@ de execução mais próximo à este</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task(
-    nout=3,
+    nout=2,
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def tratar_dados(dataset_id: str, table_id: str) -&gt; Tuple[pd.DataFrame, bool]:
+def tratar_dados(
+    dataset_id: str, table_id: str, mode: str = &#34;dev&#34;
+) -&gt; Tuple[pd.DataFrame, bool]:
     &#34;&#34;&#34;
     Renomeia colunas e filtra dados com a hora e minuto do timestamp
     de execução mais próximo à este
     &#34;&#34;&#34;
-
-    # Hora atual no formato YYYYMMDDHHmm para criar partições
-    current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y%m%d%H%M&#34;)
 
     url = &#34;http://alertario.rio.rj.gov.br/upload/xml/Chuvas.xml&#34;
     dados = pdx.read_xml(url, [&#34;estacoes&#34;])
@@ -300,7 +304,7 @@ def tratar_dados(dataset_id: str, table_id: str) -&gt; Tuple[pd.DataFrame, bool]
         unique_id=&#34;id_estacao&#34;,
         date_column=&#34;data_medicao&#34;,
         date_format=date_format,
-        mode=&#34;dev&#34;,
+        mode=mode,
     )
 
     dados[&#34;id_estacao&#34;] = dados[&#34;id_estacao&#34;].astype(int)
@@ -322,7 +326,7 @@ def tratar_dados(dataset_id: str, table_id: str) -&gt; Tuple[pd.DataFrame, bool]
     empty_data = dados.shape[0] == 0
     log(f&#34;[DEBUG]: dataframe is empty: {empty_data}&#34;)
 
-    return dados, empty_data, current_time</code></pre>
+    return dados, empty_data</code></pre>
 </details>
 </dd>
 </dl>

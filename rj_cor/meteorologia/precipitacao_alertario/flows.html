@@ -86,12 +86,14 @@ with Flow(
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
 
-    dados, empty_data, current_time = tratar_dados(
-        dataset_id=DATASET_ID, table_id=TABLE_ID
+    dados, empty_data = tratar_dados(
+        dataset_id=DATASET_ID,
+        table_id=TABLE_ID,
+        mode=MATERIALIZATION_MODE,
     )
 
     with case(empty_data, False):
-        path = salvar_dados(dados=dados, current_time=current_time)
+        path = salvar_dados(dados=dados)
         # Create table in BigQuery
         UPLOAD_TABLE = create_table_and_upload_to_gcs(
             data_path=path,

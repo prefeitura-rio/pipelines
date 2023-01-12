@@ -139,6 +139,7 @@ def tratar_dados(
     ]
 
     log(f&#34;[DEBUG]: dados coletados\n{dados.head()}&#34;)
+
     dados = save_updated_rows_on_redis(
         dados,
         dataset_id,
@@ -349,6 +350,7 @@ def tratar_dados(
     ]
 
     log(f&#34;[DEBUG]: dados coletados\n{dados.head()}&#34;)
+
     dados = save_updated_rows_on_redis(
         dados,
         dataset_id,

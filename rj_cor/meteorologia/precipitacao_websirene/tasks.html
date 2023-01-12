@@ -32,29 +32,53 @@
 Tasks for precipitacao_alertario
 &#34;&#34;&#34;
 from datetime import timedelta
-import os
 from pathlib import Path
-from typing import Union
+from typing import Union, Tuple
 
 import pandas as pd
+import pendulum
 from prefect import task
 import pandas_read_xml as pdx
 
 from pipelines.constants import constants
+from pipelines.utils.utils import (
+    log,
+    to_partitions,
+    parse_date_columns,
+    save_updated_rows_on_redis,
+)
 
 
 @task(
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def download_tratar_dados() -&gt; pd.DataFrame:
+def download_dados() -&gt; pd.DataFrame:
     &#34;&#34;&#34;
-    Faz o request e salva dados localmente
+    Faz o request e salva em um dataframe
     &#34;&#34;&#34;
 
     # Acessar url websirene
     url = &#34;http://websirene.rio.rj.gov.br/xml/chuvas.xml&#34;
 
+    dfr = pdx.read_xml(url, [&#34;estacoes&#34;])
+    return dfr
+
+
+@task(
+    nout=2,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def tratar_dados(
+    dfr: pd.DataFrame,
+    dataset_id: str,
+    table_id: str,
+    mode: str = &#34;dev&#34;,
+) -&gt; Tuple[pd.DataFrame, bool]:
+    &#34;&#34;&#34;
+    Faz o request e salva dados localmente
+    &#34;&#34;&#34;
     drop_cols = [
         &#34;@hora&#34;,
         &#34;estacao|@nome&#34;,
@@ -74,19 +98,53 @@ def download_tratar_dados() -&gt; pd.DataFrame:
         &#34;estacao|chuvas|@mes&#34;: &#34;acumulado_chuva_mes&#34;,
     }
 
-    dfr = pdx.read_xml(url, [&#34;estacoes&#34;])
     dfr = pdx.fully_flatten(dfr).drop(drop_cols, axis=1).rename(rename_cols, axis=1)
 
     # Converte de UTC para horário São Paulo
+    date_format = &#34;%Y-%m-%d %H:%M:%S&#34;
     dfr[&#34;data_medicao_utc&#34;] = pd.to_datetime(dfr[&#34;data_medicao_utc&#34;])
     dfr[&#34;data_medicao&#34;] = (
         dfr[&#34;data_medicao_utc&#34;]
         .dt.tz_convert(&#34;America/Sao_Paulo&#34;)
-        .dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+        .dt.strftime(date_format)
     )
     dfr[&#34;data_medicao&#34;] = pd.to_datetime(dfr[&#34;data_medicao&#34;])
 
     dfr = dfr.drop([&#34;data_medicao_utc&#34;], axis=1)
+
+    # Converte variáveis que deveriam ser float para float
+    float_cols = [
+        &#34;acumulado_chuva_15_min&#34;,
+        &#34;acumulado_chuva_1_h&#34;,
+        &#34;acumulado_chuva_4_h&#34;,
+        &#34;acumulado_chuva_24_h&#34;,
+        &#34;acumulado_chuva_96_h&#34;,
+        &#34;acumulado_chuva_mes&#34;,
+    ]
+    dfr[float_cols] = dfr[float_cols].apply(pd.to_numeric, errors=&#34;coerce&#34;)
+
+    dfr = save_updated_rows_on_redis(
+        dfr,
+        dataset_id,
+        table_id,
+        unique_id=&#34;id_estacao&#34;,
+        date_column=&#34;data_medicao&#34;,
+        date_format=date_format,
+        mode=mode,
+    )
+
+    # If df is empty stop flow
+    empty_data = dfr.shape[0] == 0
+    log(f&#34;[DEBUG]: dataframe is empty: {empty_data}&#34;)
+
+    return dfr, empty_data
+
+
+@task
+def salvar_dados(dfr: pd.DataFrame) -&gt; Union[str, Path]:
+    &#34;&#34;&#34;
+    Salvar dados tratados em csv para conseguir subir pro GCP
+    &#34;&#34;&#34;
 
     # Ordenação de variáveis
     cols_order = [
@@ -102,48 +160,23 @@ def download_tratar_dados() -&gt; pd.DataFrame:
 
     dfr = dfr[cols_order]
 
-    # Converte variáveis que deveriam ser float para float
-    float_cols = [
-        &#34;acumulado_chuva_15_min&#34;,
-        &#34;acumulado_chuva_1_h&#34;,
-        &#34;acumulado_chuva_4_h&#34;,
-        &#34;acumulado_chuva_24_h&#34;,
-        &#34;acumulado_chuva_96_h&#34;,
-        &#34;acumulado_chuva_mes&#34;,
-    ]
-    dfr[float_cols] = dfr[float_cols].apply(pd.to_numeric, errors=&#34;coerce&#34;)
+    prepath = Path(&#34;/tmp/precipitacao_websirene/&#34;)
+    prepath.mkdir(parents=True, exist_ok=True)
 
-    return dfr
+    partition_column = &#34;data_medicao&#34;
+    dataframe, partitions = parse_date_columns(dfr, partition_column)
+    current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y%m%d%H%M&#34;)
 
-
-@task
-def salvar_dados(dfr: pd.DataFrame) -&gt; Union[str, Path]:
-    &#34;&#34;&#34;
-    Salvar dados tratados em csv para conseguir subir pro GCP
-    &#34;&#34;&#34;
-
-    # Pegar o dia máximo que aparece na base como partição
-    max_date = str(dfr[&#34;data_medicao&#34;].max())
-    ano = max_date[:4]
-    mes = str(int(max_date[5:7]))
-    data = str(max_date[:10])
-
-    partitions = os.path.join(
-        f&#34;ano_particao={ano}&#34;, f&#34;mes_particao={mes}&#34;, f&#34;data_particao={data}&#34;
+    # Cria partições a partir da data
+    to_partitions(
+        data=dataframe,
+        partition_columns=partitions,
+        savepath=prepath,
+        data_type=&#34;csv&#34;,
+        suffix=current_time,
     )
-
-    base_path = os.path.join(os.getcwd(), &#34;data&#34;, &#34;precipitacao_websirene&#34;, &#34;output&#34;)
-
-    partition_path = os.path.join(base_path, partitions)
-
-    if not os.path.exists(partition_path):
-        os.makedirs(partition_path)
-
-    filename = os.path.join(partition_path, f&#34;dados_{max_date}.csv&#34;)
-
-    print(f&#34;Saving {filename}&#34;)
-    dfr.to_csv(filename, index=False)
-    return base_path</code></pre>
+    log(f&#34;[DEBUG] Files saved on {prepath}&#34;)
+    return prepath</code></pre>
 </details>
 </section>
 <section>
@@ -153,11 +186,11 @@ def salvar_dados(dfr: pd.DataFrame) -&gt; Union[str, Path]:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="pipelines.rj_cor.meteorologia.precipitacao_websirene.tasks.download_tratar_dados"><code class="name flex">
-<span>def <span class="ident">download_tratar_dados</span></span>(<span>) ‑> pandas.core.frame.DataFrame</span>
+<dt id="pipelines.rj_cor.meteorologia.precipitacao_websirene.tasks.download_dados"><code class="name flex">
+<span>def <span class="ident">download_dados</span></span>(<span>) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Faz o request e salva dados localmente</p></div>
+<div class="desc"><p>Faz o request e salva em um dataframe</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -166,72 +199,15 @@ def salvar_dados(dfr: pd.DataFrame) -&gt; Union[str, Path]:
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def download_tratar_dados() -&gt; pd.DataFrame:
+def download_dados() -&gt; pd.DataFrame:
     &#34;&#34;&#34;
-    Faz o request e salva dados localmente
+    Faz o request e salva em um dataframe
     &#34;&#34;&#34;
 
     # Acessar url websirene
     url = &#34;http://websirene.rio.rj.gov.br/xml/chuvas.xml&#34;
 
-    drop_cols = [
-        &#34;@hora&#34;,
-        &#34;estacao|@nome&#34;,
-        &#34;estacao|@type&#34;,
-        &#34;estacao|localizacao|@bacia&#34;,
-        &#34;estacao|localizacao|@latitude&#34;,
-        &#34;estacao|localizacao|@longitude&#34;,
-    ]
-    rename_cols = {
-        &#34;estacao|@id&#34;: &#34;id_estacao&#34;,
-        &#34;estacao|chuvas|@h01&#34;: &#34;acumulado_chuva_1_h&#34;,
-        &#34;estacao|chuvas|@h04&#34;: &#34;acumulado_chuva_4_h&#34;,
-        &#34;estacao|chuvas|@h24&#34;: &#34;acumulado_chuva_24_h&#34;,
-        &#34;estacao|chuvas|@h96&#34;: &#34;acumulado_chuva_96_h&#34;,
-        &#34;estacao|chuvas|@hora&#34;: &#34;data_medicao_utc&#34;,
-        &#34;estacao|chuvas|@m15&#34;: &#34;acumulado_chuva_15_min&#34;,
-        &#34;estacao|chuvas|@mes&#34;: &#34;acumulado_chuva_mes&#34;,
-    }
-
     dfr = pdx.read_xml(url, [&#34;estacoes&#34;])
-    dfr = pdx.fully_flatten(dfr).drop(drop_cols, axis=1).rename(rename_cols, axis=1)
-
-    # Converte de UTC para horário São Paulo
-    dfr[&#34;data_medicao_utc&#34;] = pd.to_datetime(dfr[&#34;data_medicao_utc&#34;])
-    dfr[&#34;data_medicao&#34;] = (
-        dfr[&#34;data_medicao_utc&#34;]
-        .dt.tz_convert(&#34;America/Sao_Paulo&#34;)
-        .dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
-    )
-    dfr[&#34;data_medicao&#34;] = pd.to_datetime(dfr[&#34;data_medicao&#34;])
-
-    dfr = dfr.drop([&#34;data_medicao_utc&#34;], axis=1)
-
-    # Ordenação de variáveis
-    cols_order = [
-        &#34;id_estacao&#34;,
-        &#34;data_medicao&#34;,
-        &#34;acumulado_chuva_15_min&#34;,
-        &#34;acumulado_chuva_1_h&#34;,
-        &#34;acumulado_chuva_4_h&#34;,
-        &#34;acumulado_chuva_24_h&#34;,
-        &#34;acumulado_chuva_96_h&#34;,
-        &#34;acumulado_chuva_mes&#34;,
-    ]
-
-    dfr = dfr[cols_order]
-
-    # Converte variáveis que deveriam ser float para float
-    float_cols = [
-        &#34;acumulado_chuva_15_min&#34;,
-        &#34;acumulado_chuva_1_h&#34;,
-        &#34;acumulado_chuva_4_h&#34;,
-        &#34;acumulado_chuva_24_h&#34;,
-        &#34;acumulado_chuva_96_h&#34;,
-        &#34;acumulado_chuva_mes&#34;,
-    ]
-    dfr[float_cols] = dfr[float_cols].apply(pd.to_numeric, errors=&#34;coerce&#34;)
-
     return dfr</code></pre>
 </details>
 </dd>
@@ -250,28 +226,121 @@ def salvar_dados(dfr: pd.DataFrame) -&gt; Union[str, Path]:
     Salvar dados tratados em csv para conseguir subir pro GCP
     &#34;&#34;&#34;
 
-    # Pegar o dia máximo que aparece na base como partição
-    max_date = str(dfr[&#34;data_medicao&#34;].max())
-    ano = max_date[:4]
-    mes = str(int(max_date[5:7]))
-    data = str(max_date[:10])
+    # Ordenação de variáveis
+    cols_order = [
+        &#34;id_estacao&#34;,
+        &#34;data_medicao&#34;,
+        &#34;acumulado_chuva_15_min&#34;,
+        &#34;acumulado_chuva_1_h&#34;,
+        &#34;acumulado_chuva_4_h&#34;,
+        &#34;acumulado_chuva_24_h&#34;,
+        &#34;acumulado_chuva_96_h&#34;,
+        &#34;acumulado_chuva_mes&#34;,
+    ]
 
-    partitions = os.path.join(
-        f&#34;ano_particao={ano}&#34;, f&#34;mes_particao={mes}&#34;, f&#34;data_particao={data}&#34;
+    dfr = dfr[cols_order]
+
+    prepath = Path(&#34;/tmp/precipitacao_websirene/&#34;)
+    prepath.mkdir(parents=True, exist_ok=True)
+
+    partition_column = &#34;data_medicao&#34;
+    dataframe, partitions = parse_date_columns(dfr, partition_column)
+    current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y%m%d%H%M&#34;)
+
+    # Cria partições a partir da data
+    to_partitions(
+        data=dataframe,
+        partition_columns=partitions,
+        savepath=prepath,
+        data_type=&#34;csv&#34;,
+        suffix=current_time,
+    )
+    log(f&#34;[DEBUG] Files saved on {prepath}&#34;)
+    return prepath</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.precipitacao_websirene.tasks.tratar_dados"><code class="name flex">
+<span>def <span class="ident">tratar_dados</span></span>(<span>dfr: pandas.core.frame.DataFrame, dataset_id: str, table_id: str, mode: str = 'dev') ‑> Tuple[pandas.core.frame.DataFrame, bool]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Faz o request e salva dados localmente</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    nout=2,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def tratar_dados(
+    dfr: pd.DataFrame,
+    dataset_id: str,
+    table_id: str,
+    mode: str = &#34;dev&#34;,
+) -&gt; Tuple[pd.DataFrame, bool]:
+    &#34;&#34;&#34;
+    Faz o request e salva dados localmente
+    &#34;&#34;&#34;
+    drop_cols = [
+        &#34;@hora&#34;,
+        &#34;estacao|@nome&#34;,
+        &#34;estacao|@type&#34;,
+        &#34;estacao|localizacao|@bacia&#34;,
+        &#34;estacao|localizacao|@latitude&#34;,
+        &#34;estacao|localizacao|@longitude&#34;,
+    ]
+    rename_cols = {
+        &#34;estacao|@id&#34;: &#34;id_estacao&#34;,
+        &#34;estacao|chuvas|@h01&#34;: &#34;acumulado_chuva_1_h&#34;,
+        &#34;estacao|chuvas|@h04&#34;: &#34;acumulado_chuva_4_h&#34;,
+        &#34;estacao|chuvas|@h24&#34;: &#34;acumulado_chuva_24_h&#34;,
+        &#34;estacao|chuvas|@h96&#34;: &#34;acumulado_chuva_96_h&#34;,
+        &#34;estacao|chuvas|@hora&#34;: &#34;data_medicao_utc&#34;,
+        &#34;estacao|chuvas|@m15&#34;: &#34;acumulado_chuva_15_min&#34;,
+        &#34;estacao|chuvas|@mes&#34;: &#34;acumulado_chuva_mes&#34;,
+    }
+
+    dfr = pdx.fully_flatten(dfr).drop(drop_cols, axis=1).rename(rename_cols, axis=1)
+
+    # Converte de UTC para horário São Paulo
+    date_format = &#34;%Y-%m-%d %H:%M:%S&#34;
+    dfr[&#34;data_medicao_utc&#34;] = pd.to_datetime(dfr[&#34;data_medicao_utc&#34;])
+    dfr[&#34;data_medicao&#34;] = (
+        dfr[&#34;data_medicao_utc&#34;]
+        .dt.tz_convert(&#34;America/Sao_Paulo&#34;)
+        .dt.strftime(date_format)
+    )
+    dfr[&#34;data_medicao&#34;] = pd.to_datetime(dfr[&#34;data_medicao&#34;])
+
+    dfr = dfr.drop([&#34;data_medicao_utc&#34;], axis=1)
+
+    # Converte variáveis que deveriam ser float para float
+    float_cols = [
+        &#34;acumulado_chuva_15_min&#34;,
+        &#34;acumulado_chuva_1_h&#34;,
+        &#34;acumulado_chuva_4_h&#34;,
+        &#34;acumulado_chuva_24_h&#34;,
+        &#34;acumulado_chuva_96_h&#34;,
+        &#34;acumulado_chuva_mes&#34;,
+    ]
+    dfr[float_cols] = dfr[float_cols].apply(pd.to_numeric, errors=&#34;coerce&#34;)
+
+    dfr = save_updated_rows_on_redis(
+        dfr,
+        dataset_id,
+        table_id,
+        unique_id=&#34;id_estacao&#34;,
+        date_column=&#34;data_medicao&#34;,
+        date_format=date_format,
+        mode=mode,
     )
 
-    base_path = os.path.join(os.getcwd(), &#34;data&#34;, &#34;precipitacao_websirene&#34;, &#34;output&#34;)
+    # If df is empty stop flow
+    empty_data = dfr.shape[0] == 0
+    log(f&#34;[DEBUG]: dataframe is empty: {empty_data}&#34;)
 
-    partition_path = os.path.join(base_path, partitions)
-
-    if not os.path.exists(partition_path):
-        os.makedirs(partition_path)
-
-    filename = os.path.join(partition_path, f&#34;dados_{max_date}.csv&#34;)
-
-    print(f&#34;Saving {filename}&#34;)
-    dfr.to_csv(filename, index=False)
-    return base_path</code></pre>
+    return dfr, empty_data</code></pre>
 </details>
 </dd>
 </dl>
@@ -338,8 +407,9 @@ setTimeout(() => input.focus(), 100);
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_websirene.tasks.download_tratar_dados" href="#pipelines.rj_cor.meteorologia.precipitacao_websirene.tasks.download_tratar_dados">download_tratar_dados</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_websirene.tasks.download_dados" href="#pipelines.rj_cor.meteorologia.precipitacao_websirene.tasks.download_dados">download_dados</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_websirene.tasks.salvar_dados" href="#pipelines.rj_cor.meteorologia.precipitacao_websirene.tasks.salvar_dados">salvar_dados</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_websirene.tasks.tratar_dados" href="#pipelines.rj_cor.meteorologia.precipitacao_websirene.tasks.tratar_dados">tratar_dados</a></code></li>
 </ul>
 </li>
 </ul>
