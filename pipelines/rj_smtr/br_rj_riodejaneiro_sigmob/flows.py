@@ -21,7 +21,7 @@ from pipelines.utils.tasks import rename_current_flow_run_now_time, get_now_time
 
 from pipelines.rj_smtr.constants import constants
 
-#from pipelines.rj_smtr.schedules import every_day
+# from pipelines.rj_smtr.schedules import every_day
 from pipelines.rj_smtr.tasks import (
     bq_upload_from_dict,
     build_incremental_model,
