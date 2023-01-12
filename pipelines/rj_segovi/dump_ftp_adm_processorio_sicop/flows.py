@@ -2,7 +2,7 @@
 """
 Dumping  data from SICOP FTP to BigQuery
 """
-# pylint: disable=E1101
+# pylint: disable=E1101,C0103
 
 from datetime import timedelta
 
