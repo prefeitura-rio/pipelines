@@ -165,6 +165,18 @@ dados_mestres_tables = {
         &#34;geometry_column&#34;: &#34;geometry&#34;,
         &#34;geometry_3d_to_2d&#34;: True,
     },
+    &#34;subprefeitura&#34;: {
+        # source: https://www.data.rio/datasets/PCRJ::limites-coordenadorias-especiais-dos-bairros-subprefeituras/about
+        &#34;url&#34;: &#34;https://opendata.arcgis.com/api/v3/datasets/e178d4b87fc94d389c73992263024e79_0/downloads/data?format=geojson&amp;spatialRefId=4326&amp;where=1%3D1&#34;,  # noqa
+        &#34;dataset_id&#34;: &#34;dados_mestres&#34;,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialize_to_datario&#34;: True,
+        &#34;dump_to_gcs&#34;: True,
+        &#34;materialization_mode&#34;: &#34;dev&#34;,
+        &#34;convert_to_crs_4326&#34;: True,
+        &#34;geometry_column&#34;: &#34;geometry&#34;,
+    },
 }
 
 
