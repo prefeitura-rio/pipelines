@@ -3,7 +3,6 @@
 """
 Converte coordenada X,Y para latlon
 """
-import time as t
 
 import netCDF4 as nc
 import numpy as np

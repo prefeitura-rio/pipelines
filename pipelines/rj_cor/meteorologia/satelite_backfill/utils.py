@@ -1,19 +1,13 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=W0102
 """
 General utilities for backfill pipelines.
 """
 
-from os import getenv, walk
-from os.path import join
-from pathlib import Path
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict
 
-import basedosdados as bd
-import numpy as np
-import pandas as pd
 import pendulum
 import prefect
-import requests
 
 from pipelines.utils.utils import log
 
@@ -55,6 +49,7 @@ def run_local_backfill(
         "format_date",
         "interval",
         "interval_period",
+        "mode_redis",
         "start_date",
     ]:
         log(
@@ -68,6 +63,7 @@ def run_local_backfill(
     format_date = backfill_parameters["format_date"]
     interval = int(backfill_parameters["interval"])
     interval_period = backfill_parameters["interval_period"]
+    mode_redis = backfill_parameters["mode_redis"]
 
     if interval_period not in ("minutes", "hours", "days", "weeks"):
         log(
@@ -81,6 +77,7 @@ def run_local_backfill(
     while start_date < end_date:
         # Run flow
         parameters["current_time"] = end_date.to_datetime_string()
+        parameters["mode_redis"] = mode_redis
         flow.run(parameters=parameters)
         # Update end_date backwards
         if interval_period == "minutes":

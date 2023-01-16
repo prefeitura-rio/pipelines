@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=too-many-locals
+# pylint: disable=too-many-locals,R0913
 # flake8: noqa
 """
 Funções úteis no tratamento de dados de satélite
@@ -371,7 +371,8 @@ def get_info(path: str) -> Tuple[dict, str]:
 
     if variable == "CMI":
         # Search for the GOES-16 channel in the file name
-        regex = r"-M\\dC\\d"   # noqa: W605
+        regex = "-M\\dC\\d"  # noqa: W605
+        log(f"\n\n>>>> path {path} regex: {re.findall(regex, path)}")
         find_expression = re.findall(regex, path)[0]
         product_caracteristics["band"] = int(
             (path[path.find(find_expression) + 4 : path.find("_G16")])
@@ -408,6 +409,7 @@ def remap_g16(
     resolution: int,
     variable: str,
     datetime_save: str,
+    mode_redis: str = "prod",
 ):
     """
     the GOES-16 image is reprojected to the rectangular projection in the extent region
@@ -442,7 +444,7 @@ def remap_g16(
     )
 
     tif_path = os.path.join(
-        os.getcwd(), "data", "satelite", variable, "temp", partitions
+        os.getcwd(), mode_redis, "data", "satelite", variable, "temp", partitions
     )
 
     if not os.path.exists(tif_path):
@@ -525,7 +527,7 @@ def treat_data(
 
 
 def save_data_in_file(
-    variable: str, datetime_save: str, file_path: str
+    variable: str, datetime_save: str, file_path: str, mode_redis: str = "prod"
 ) -> Union[str, Path]:
     """
     Save data in parquet
@@ -545,7 +547,14 @@ def save_data_in_file(
     )
 
     tif_data = os.path.join(
-        os.getcwd(), "data", "satelite", variable, "temp", partitions, "dados.tif"
+        os.getcwd(),
+        mode_redis,
+        "data",
+        "satelite",
+        variable,
+        "temp",
+        partitions,
+        "dados.tif",
     )
 
     data = xr.open_dataset(tif_data, engine="rasterio")
@@ -567,7 +576,9 @@ def save_data_in_file(
     )
 
     # cria pasta de partições se elas não existem
-    output_path = os.path.join(os.getcwd(), "data", "satelite", variable, "output")
+    output_path = os.path.join(
+        os.getcwd(), mode_redis, "data", "satelite", variable, "output"
+    )
     parquet_path = os.path.join(output_path, partitions)
 
     if not os.path.exists(parquet_path):
@@ -589,7 +600,7 @@ def save_data_in_file(
     return output_path
 
 
-def main(path: Union[str, Path]):
+def main(path: Union[str, Path], mode_redis: str = "prod"):
     """
     Função principal para converter dados x,y em lon,lat
     """
@@ -630,6 +641,7 @@ def main(path: Union[str, Path]):
         resolution,
         product_caracteristics["variable"],
         datetime_save,
+        mode_redis,
     )
 
     info = {

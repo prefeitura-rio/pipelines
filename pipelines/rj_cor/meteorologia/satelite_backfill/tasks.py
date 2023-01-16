@@ -10,12 +10,14 @@ from prefect import task
 
 @task
 def delete_files(
-    path: str,
+    mode_redis: str,
     wait=None,  # pylint: disable=unused-argument
 ):
     """
     Deletar tanto os arquivos raw, quanto os temporários e de output
     """
+    path = f"/home/patricia/Documentos/escritorio_dados/prefeitura-rio/pipelines/\
+        {mode_redis}/data/satelite/"
     if os.path.exists(path):
         shutil.rmtree(path)
 
