@@ -49,6 +49,12 @@ class constants(Enum):  # pylint: disable=c0103
     GPS_SPPO_CAPTURE_DELAY_V2 = 60
     GPS_SPPO_RECAPTURE_DELAY_V2 = 6
     GPS_SPPO_MATERIALIZE_DELAY_HOURS = 1
+
+    # REALOCAÇÃO #
+    GPS_SPPO_REALOCACAO_RAW_TABLE_ID = "realocacao"
+    GPS_SPPO_REALOCACAO_TREATED_TABLE_ID = "realocacao"
+    GPS_SPPO_REALOCACAO_SECRET_PATH = "realocacao_api"
+
     # GPS BRT #
     GPS_BRT_SECRET_PATH = "brt_api"
     GPS_BRT_DATASET_ID = "br_rj_riodejaneiro_veiculos"
@@ -121,9 +127,16 @@ class constants(Enum):  # pylint: disable=c0103
             "key_column": "trip_id",
         },
     }
-    # RDO
-    FTPS_SECRET_PATH = "smtr_rdo_ftps"
 
+    # RDO/RHO
+    RDO_FTP_ALLOWED_PATHS = ["SPPO", "STPL"]
+    RDO_FTPS_SECRET_PATH = "smtr_rdo_ftps"
+    RDO_DATASET_ID = "br_rj_riodejaneiro_rdo"
+    SPPO_RDO_TABLE_ID = "rdo_registros_sppo"
+    SPPO_RHO_TABLE_ID = "rho_registros_sppo"
+    STPL_RDO_TABLE_ID = "rdo_registros_stpl"
+    STPL_RHO_TABLE_ID = "rho_registros_stpl"
+    RDO_MATERIALIZE_START_DATE = "2022-12-07"
     # ROCK IN RIO
     RIR_DATASET_ID = "dashboards"
     RIR_TABLE_ID = "registros_ocr_rir"
@@ -140,3 +153,10 @@ class constants(Enum):  # pylint: disable=c0103
         "RiR": "flag_rir",
         "Apoio": "flag_apoio",
     }
+
+    # SUBSÍDIO
+    SUBSIDIO_SPPO_DATASET_ID = "projeto_subsidio_sppo"
+    SUBSIDIO_SPPO_TABLE_ID = "viagem_completa"
+
+    # SUBSÍDIO DASHBOARD
+    SUBSIDIO_SPPO_DASHBOAD_DATASET_ID = "dashboard_subsidio_sppo"

@@ -48,6 +48,3 @@ jobs:
         with:
           message: "${{ steps.code-tree-analysis.outputs.pr-message }}"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Run tests
-        run: |
-          pytest

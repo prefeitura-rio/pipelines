@@ -82,14 +82,22 @@ with Flow(
     secret_path = Parameter("vault_secret_path")
 
     # Data file parameters
-    batch_size = Parameter("batch_size", default=50000)
+    batch_size = Parameter("batch_size", default=50000, required=False)
 
     # BigQuery parameters
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
-    dump_mode = Parameter("dump_mode", default="append")  # overwrite or append
-    batch_data_type = Parameter("batch_data_type", default="csv")  # csv or parquet
-    dbt_model_secret_parameters = Parameter("dbt_model_secret_parameters")
+    dump_mode = Parameter(
+        "dump_mode", default="append", required=False
+    )  # overwrite or append
+    batch_data_type = Parameter(
+        "batch_data_type", default="csv", required=False
+    )  # csv or parquet
+    dbt_model_secret_parameters = Parameter(
+        "dbt_model_secret_parameters", default={}, required=False
+    )
+    dbt_alias = Parameter("dbt_alias", default=False, required=False)
+
     #####################################
     #
     # Rename flow run
@@ -137,6 +145,7 @@ with Flow(
         query=query,
         dataset_id=dataset_id,
         table_id=table_id,
+        database_type=database_type,
         partition_columns=partition_columns,
         lower_bound_date=lower_bound_date,
         date_format=partition_date_format,
@@ -171,7 +180,7 @@ with Flow(
 
     with case(data_exists, True):
 
-        create_table_and_upload_to_gcs(
+        upload_table = create_table_and_upload_to_gcs(
             data_path=batches_path,
             dataset_id=dataset_id,
             table_id=table_id,
@@ -190,11 +199,12 @@ with Flow(
                     "mode": materialization_mode,
                     "materialize_to_datario": materialize_to_datario,
                     "dbt_model_secret_parameters": dbt_model_secret_parameters,
+                    "dbt_alias": dbt_alias,
                 },
                 labels=current_flow_labels,
                 run_name=f"Materialize {dataset_id}.{table_id}",
             )
-
+            materialization_flow.set_upstream(upload_table)
             wait_for_materialization = wait_for_flow_run(
                 materialization_flow,
                 stream_states=True,
