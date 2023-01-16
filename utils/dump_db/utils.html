@@ -113,6 +113,7 @@ def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-l
             &#34;execute_query&#34;: query_to_line(parameters[&#34;execute_query&#34;]),
         }
 
+        print(query_to_line(parameters[&#34;execute_query&#34;]))
         # Add remaining parameters if value is not None
         for key, value in parameters.items():
             if value is not None and key not in [&#34;interval&#34;]:
@@ -120,7 +121,8 @@ def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-l
 
         if &#34;dbt_alias&#34; in parameters:
             parameter_defaults[&#34;dbt_alias&#34;] = parameters[&#34;dbt_alias&#34;]
-
+        if &#34;dataset_id&#34; in parameters:
+                parameter_defaults[&#34;dataset_id&#34;] = parameters[&#34;dataset_id&#34;]
         new_interval = parameters[&#34;interval&#34;] if &#34;interval&#34; in parameters else interval
 
         clocks.append(
@@ -242,6 +244,7 @@ Creates the query without accents.</p></div>
             &#34;execute_query&#34;: query_to_line(parameters[&#34;execute_query&#34;]),
         }
 
+        print(query_to_line(parameters[&#34;execute_query&#34;]))
         # Add remaining parameters if value is not None
         for key, value in parameters.items():
             if value is not None and key not in [&#34;interval&#34;]:
@@ -249,7 +252,8 @@ Creates the query without accents.</p></div>
 
         if &#34;dbt_alias&#34; in parameters:
             parameter_defaults[&#34;dbt_alias&#34;] = parameters[&#34;dbt_alias&#34;]
-
+        if &#34;dataset_id&#34; in parameters:
+                parameter_defaults[&#34;dataset_id&#34;] = parameters[&#34;dataset_id&#34;]
         new_interval = parameters[&#34;interval&#34;] if &#34;interval&#34; in parameters else interval
 
         clocks.append(
