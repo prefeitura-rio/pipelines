@@ -84,6 +84,7 @@ def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-l
             "execute_query": query_to_line(parameters["execute_query"]),
         }
 
+        print(query_to_line(parameters["execute_query"]))
         # Add remaining parameters if value is not None
         for key, value in parameters.items():
             if value is not None and key not in ["interval"]:
@@ -91,7 +92,8 @@ def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-l
 
         if "dbt_alias" in parameters:
             parameter_defaults["dbt_alias"] = parameters["dbt_alias"]
-
+        if "dataset_id" in parameters:
+                parameter_defaults["dataset_id"] = parameters["dataset_id"]
         new_interval = parameters["interval"] if "interval" in parameters else interval
 
         clocks.append(
