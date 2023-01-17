@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=too-many-locals, R0913
+# pylint: disable=too-many-locals,R0913
 """
 Funções úteis no tratamento de dados de satélite
 """
@@ -129,10 +129,11 @@ def converte_timezone(datetime_save: str) -> str:
     Recebe o formato de data hora em 'YYYYMMDD HHmm' no UTC e
     retorna no mesmo formato no horário São Paulo
     """
-    log(f">>>>>>> {datetime_save}")
-    datahora = pendulum.from_format(datetime_save, "YYYYMMDD HHmm")
+    log(f">>>>>>> datetime_save {datetime_save}")
+    datahora = pendulum.from_format(datetime_save, "YYYYMMDD HHmmss")
+    log(f">>>>>>> datahora {datahora}")
     datahora = datahora.in_tz("America/Sao_Paulo")
-    return datahora.format("YYYYMMDD HHmm")
+    return datahora.format("YYYYMMDD HHmmss")
 
 
 def extract_julian_day_and_hour_from_filename(filename: str):
@@ -155,7 +156,7 @@ def extract_julian_day_and_hour_from_filename(filename: str):
     julian_day = int(start[4:7])
 
     # Time (UTC) as string
-    hour_utc = start[7:11]
+    hour_utc = start[7:13]
 
     # Time of the start of the Scan
     # time = start[7:9] + ":" + start[9:11] + ":" + start[11:13] + " UTC"
@@ -203,12 +204,12 @@ def get_info(path: str) -> Tuple[dict, str]:
     # Detect the product type
     # =====================================================================
     procura_m = path.find("-M6")
+    # Se não encontra o termo "M6" tenta encontrar "M3" e depois "M4"
     if procura_m == -1:
         procura_m = path.find("-M3")
     if procura_m == -1:
         procura_m = path.find("-M4")
     product = path[path.find("L2-") + 3 : procura_m]
-    print(product)
 
     # Nem todos os produtos foram adicionados no dicionário de características
     # dos produtos. Olhar arquivo original caso o produto não estaja aqui
@@ -368,7 +369,7 @@ def get_info(path: str) -> Tuple[dict, str]:
 
     if variable == "CMI":
         # Search for the GOES-16 channel in the file name
-        regex = "-M\\dC\\d"  # noqa: W605
+        regex = r"-M\\dC\\d"  # noqa: W605
         find_expression = re.findall(regex, path)[0]
         product_caracteristics["band"] = int(
             (path[path.find(find_expression) + 4 : path.find("_G16")])
@@ -552,7 +553,7 @@ def save_data_in_file(
         partitions,
         "dados.tif",
     )
-    log(f"debug path >>>>>>{tif_data}")
+
     data = xr.open_dataset(tif_data, engine="rasterio")
     # print('>>>>>>>>>>>>>>> data', data['band_data'].values)
 
@@ -580,12 +581,16 @@ def save_data_in_file(
     if not os.path.exists(parquet_path):
         os.makedirs(parquet_path)
 
+    # Guarda horário do arquivo na coluna
+    data["horario"] = pendulum.from_format(
+        datetime_save, "YYYYMMDD HHmmss"
+    ).to_time_string()
     # Fixa ordem das colunas
-    data = data[["longitude", "latitude", variable.lower()]]
+    data = data[["longitude", "latitude", "horario", variable.lower()]]
 
     # salva em csv
     filename = file_path.split("/")[-1].replace(".nc", "")
-    log(f"\n\n[DEGUB]: Saving {filename} on {parquet_path}\n\n")
+    log(f"Saving {filename} on {parquet_path}")
     log(f"Data_save: {date_save}, time_save: {time_save}")
     file_path = os.path.join(parquet_path, f"{filename}.csv")
     data.to_csv(file_path, index=False)

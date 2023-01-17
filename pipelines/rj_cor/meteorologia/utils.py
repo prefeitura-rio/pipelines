@@ -27,7 +27,9 @@ def save_updated_rows_on_redis(
 
     redis_client = get_redis_client()
 
-    key = mode + "." + dataset_id + "." + table_id
+    key = dataset_id + "." + table_id
+    if mode == "dev":
+        key = f"{mode}.{key}"
 
     # Access all data saved on redis with this key
     updates = redis_client.hgetall(key)
