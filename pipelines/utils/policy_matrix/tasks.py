@@ -108,7 +108,7 @@ def roles_matrix_to_pandas_dataframe(
     Converts the roles matrix to a pandas dataframe with the following format:
     project_id | member | role
     """
-    return pd.DataFrame(
+    dataframe = pd.DataFrame(
         [
             [project_id, member, role]
             for project_id, members in roles_matrix.items()
@@ -117,3 +117,9 @@ def roles_matrix_to_pandas_dataframe(
         ],
         columns=["project_id", "member", "role"],
     )
+
+    dataframe.insert(1, "email", dataframe["member"].apply(lambda x: x.split(":")[1]))
+    dataframe.insert(1, "type", dataframe["member"].apply(lambda x: x.split(":")[0]))
+    dataframe.drop(columns=["member"], inplace=True)
+
+    return dataframe
