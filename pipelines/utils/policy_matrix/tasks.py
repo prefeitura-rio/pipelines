@@ -106,10 +106,14 @@ def roles_matrix_to_pandas_dataframe(
 ) -> pd.DataFrame:
     """
     Converts the roles matrix to a pandas dataframe with the following format:
-    |             | project_id_1 | project_id_2 | ... |
-    |-------------|--------------|--------------|-----|
-    | member_1    | role_1       | role_2       | ... |
-    | member_2    | role_1       | role_2       | ... |
-    | ...         | ...          | ...          | ... |
+    project_id | member | role
     """
-    return pd.DataFrame.from_dict(roles_matrix).T
+    return pd.DataFrame(
+        [
+            [project_id, member, role]
+            for project_id, members in roles_matrix.items()
+            for member, roles in members.items()
+            for role in roles
+        ],
+        columns=["project_id", "member", "role"],
+    )
