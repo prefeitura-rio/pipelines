@@ -181,7 +181,8 @@ with Flow(
     with case(rebuild, True):
         RUN = run_dbt_model(
             dbt_client=dbt_client,
-            model=table_id,
+            dataset_id=dataset_id,
+            table_id=table_id,
             upstream=True,
             exclude="+data_versao_efetiva",
             _vars=[date_range, dataset_sha],
@@ -197,7 +198,8 @@ with Flow(
     with case(rebuild, False):
         RUN = run_dbt_model(
             dbt_client=dbt_client,
-            model=table_id,
+            dataset_id=dataset_id,
+            table_id=table_id,
             exclude="+data_versao_efetiva",
             _vars=[date_range, dataset_sha],
             upstream=True,

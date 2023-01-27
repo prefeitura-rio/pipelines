@@ -12,7 +12,7 @@ from pipelines.constants import constants
 
 from pipelines.utils.execute_dbt_model.flows import utils_run_dbt_model_flow
 from pipelines.utils.utils import set_default_parameters
-from pipelines.utils.tasks import get_now_date
+from pipelines.utils.tasks import get_yesterday
 
 from pipelines.rj_smtr.materialize_to_datario.schedules import (
     smtr_materialize_to_datario_daily_schedule,
@@ -39,7 +39,10 @@ smtr_materialize_to_datario_viagem_sppo_parameters = {
     "dataset_id": "transporte_rodoviario_municipal",
     "table_id": "viagem_onibus",
     "mode": "prod",
-    "dbt_model_parameters": {"run_date": get_now_date.run()},
+    "dbt_model_parameters": {
+        "date_range_end": get_yesterday.run(),
+        "date_range_start": None,
+    },
 }
 
 smtr_materialize_to_datario_viagem_sppo_flow = set_default_parameters(

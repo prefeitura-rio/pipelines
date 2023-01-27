@@ -36,7 +36,6 @@ with Flow(
     # Parameters
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
-    dbt_model = Parameter("dbt_model", default=None, required=False)
     upstream = Parameter("upstream", default=None, required=False)
     downstream = Parameter("downstream", default=None, required=False)
     exclude = Parameter("exclude", default=None, required=False)
@@ -79,7 +78,6 @@ with Flow(
         dbt_client=dbt_client,
         dataset_id=dataset_id,
         table_id=table_id,
-        model=dbt_model,
         dbt_alias=dbt_alias,
         upstream=upstream,
         downstream=downstream,

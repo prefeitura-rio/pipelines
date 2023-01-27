@@ -213,7 +213,7 @@ ergon_queries = {
         "dump_mode": "overwrite",
         "execute_query": """
         SELECT M9, SF_OCORRENCIA, SF_DT_OC_Y2
-        FROM C_ERGON.VW_SIMPA_SIRHU_FREQUENCIA_GBP;
+        FROM C_ERGON.VW_SIMPA_SIRHU_FREQUENCIA_GBP
         """,
     },
     "afastamento_antigo": {
@@ -232,7 +232,7 @@ ergon_queries = {
         "execute_query": """
         SELECT
         EMP_CODIGO, AFAST_COD, AFAST_DESCR
-        FROM SIMPA.SIRHU_DBTABELAS_AFASTAMENTO;
+        FROM SIMPA.SIRHU_DBTABELAS_AFASTAMENTO
         """,
     },
     "tipo_tempo": {
@@ -251,7 +251,7 @@ ergon_queries = {
         "dump_mode": "append",
         "partition_columns": "MES_ANO_FOLHA",
         "execute_query": """
-        SELECT MES_ANO_FOLHA,NUM_FOLHA,LANCAMENTO,NUMFUNC,NUMVINC,LINHA,NUMPENS,MES_ANO_DIREITO,
+        SELECT MES_ANO_FOLHA,NUM_FOLHA,LANCAMENTO,NUMFUNC,NUMVINC,NUMPENS,MES_ANO_DIREITO,
             RUBRICA,TIPO_RUBRICA,DESC_VANT,COMPLEMENTO,VALOR,CORRECAO,EXECUCAO,EMP_CODIGO
         FROM ERGON.FICHAS_FINANCEIRAS
         """,

@@ -880,7 +880,7 @@ ergon_queries = {
             FROM ERGON.SETORES_ERGON
         """,
     },
-    "vantagem": {
+    "vantagens": {
         "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
@@ -1119,7 +1119,7 @@ ergon_queries = {
 
 
 ergon_clocks = generate_dump_db_schedules(
-    interval=timedelta(days=30),
+    interval=timedelta(days=1),
     start_date=datetime(
         2022, 10, 25, 18, 30, tzinfo=pytz.timezone("America/Sao_Paulo")
     ),
