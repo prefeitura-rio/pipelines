@@ -2,6 +2,7 @@
 """
 Tasks for the policy matrix generation.
 """
+from pathlib import Path
 from typing import Dict, List, Union
 
 from basedosdados.upload.base import Base
@@ -24,7 +25,7 @@ def get_discovery_api(mode: str = "prod") -> googleapiclient.discovery.Resource:
 
 @task
 def get_iam_policy(
-    project_id: str, discovery_api: googleapiclient.discovery.Resource
+    project_ids: list, discovery_api: googleapiclient.discovery.Resource
 ) -> Dict[str, Union[int, str, List[Dict[str, Union[str, List[str]]]]]]:
     """
     Get the IAM policy for the given project.
@@ -42,14 +43,17 @@ def get_iam_policy(
         ]
     }
     """
-    return (
+
+    return [
         discovery_api.projects()
         .getIamPolicy(
-            resource=project_id, body={"options": {"requestedPolicyVersion": 1}}
+            resource=project_id,
+            body={"options": {"requestedPolicyVersion": 1}},
         )
         .execute()
-    )
-
+        for project_id in project_ids
+    ]
+    
 
 @task
 def merge_iam_policies(
@@ -122,4 +126,11 @@ def roles_matrix_to_pandas_dataframe(
     dataframe.insert(1, "type", dataframe["member"].apply(lambda x: x.split(":")[0]))
     dataframe.drop(columns=["member"], inplace=True)
 
-    return dataframe
+    save_path = Path('/tmp/roles_matrix/')
+    save_path.mkdir(parents=True, exist_ok=True)
+    
+    save_file_path = save_path / 'roles_matrix.csv'
+    
+    dataframe.to_csv(save_file_path, index=False)
+    
+    return save_file_path
