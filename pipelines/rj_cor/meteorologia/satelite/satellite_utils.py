@@ -432,7 +432,7 @@ def remap_g16(
         f"ano_particao={year}",
         f"mes_particao={month}",
         f"data_particao={data}",
-        f"hora={time_save}",
+        f"hora_particao={time_save}",
     )
 
     tif_path = os.path.join(
@@ -535,7 +535,7 @@ def save_data_in_file(
         f"ano_particao={year}",
         f"mes_particao={month}",
         f"data_particao={date}",
-        f"hora={time_save}",
+        f"hora_particao={time_save}",
     )
 
     tif_data = os.path.join(

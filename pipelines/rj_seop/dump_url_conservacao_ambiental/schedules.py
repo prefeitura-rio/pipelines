@@ -28,7 +28,7 @@ gsheets_urls = {
     },
     "licencas": {
         "dump_mode": "overwrite",
-        "url": "https://drive.google.com/file/d/1alofNfwGceEWYEQEbd9bNWaEdLdm-laR/view?usp=share_link",
+        "url": "https://drive.google.com/file/d/14GieP41HlKSgr5T9xifELOQr4G2acwNQ/view?usp=share_link",
         "url_type": "google_drive",
         "materialize_after_dump": True,
         "dataset_id": "urbanismo_geosislic_licenciamento",

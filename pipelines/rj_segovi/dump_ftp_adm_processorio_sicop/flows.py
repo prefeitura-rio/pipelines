@@ -2,7 +2,7 @@
 """
 Dumping  data from SICOP FTP to BigQuery
 """
-# pylint: disable=E1101
+# pylint: disable=E1101,C0103
 
 from datetime import timedelta
 
@@ -101,7 +101,7 @@ with Flow(
             files=files_to_parse, save_path="/tmp/ftp/data", pattern=pattern
         )
 
-        create_table_and_upload_to_gcs(
+        upload_table = create_table_and_upload_to_gcs(
             data_path=save_path,
             dataset_id=dataset_id,
             table_id=table_id,
@@ -123,6 +123,7 @@ with Flow(
                 labels=current_flow_labels,
                 run_name=f"Materialize {dataset_id}.{table_id}",
             )
+            materialization_flow.set_upstream(upload_table)
 
             wait_for_materialization = wait_for_flow_run(
                 materialization_flow,
@@ -177,6 +178,7 @@ dump_ftp_sicop_default_parameters = {
     "table_id": "processo",
 }
 
+# pylint: disable=C0103
 dump_ftp_sicop = set_default_parameters(
     dump_ftp_sicop, default_parameters=dump_ftp_sicop_default_parameters
 )

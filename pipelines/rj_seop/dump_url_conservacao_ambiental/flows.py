@@ -10,7 +10,7 @@ from prefect.storage import GCS
 
 from pipelines.constants import constants
 
-from pipelines.rj_seop.dump_url_concevacao_ambiental.schedules import (
+from pipelines.rj_seop.dump_url_conservacao_ambiental.schedules import (
     gsheets_year_update_schedule,
 )
 from pipelines.utils.dump_url.flows import dump_url_flow

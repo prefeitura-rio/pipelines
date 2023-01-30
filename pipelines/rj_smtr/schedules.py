@@ -8,6 +8,7 @@ from pytz import timezone
 from prefect.schedules import Schedule
 from prefect.schedules.clocks import IntervalClock, CronClock
 from pipelines.constants import constants as emd_constants
+from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.utils import generate_ftp_schedules
 from pipelines.rj_smtr.constants import constants
 
 every_minute = Schedule(
@@ -94,6 +95,10 @@ every_day = Schedule(
     ]
 )
 
+ftp_clocks = generate_ftp_schedules(
+    interval_minutes=60, label=emd_constants.RJ_SMTR_DEV_AGENT_LABEL
+)
+ftp_schedule = Schedule(ftp_clocks)
 every_day_hour_five = Schedule(
     clocks=[
         IntervalClock(
@@ -116,7 +121,7 @@ every_dayofmonth_one_and_sixteen = Schedule(
                 2022, 12, 16, 12, 0, tzinfo=timezone(constants.TIMEZONE.value)
             ),
             labels=[
-                emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value,
+                emd_constants.RJ_SMTR_AGENT_LABEL.value,
             ],
         ),
         CronClock(
@@ -125,7 +130,7 @@ every_dayofmonth_one_and_sixteen = Schedule(
                 2023, 1, 1, 12, 0, tzinfo=timezone(constants.TIMEZONE.value)
             ),
             labels=[
-                emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value,
+                emd_constants.RJ_SMTR_AGENT_LABEL.value,
             ],
         ),
     ]
