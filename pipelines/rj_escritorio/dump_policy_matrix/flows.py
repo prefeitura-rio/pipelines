@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-flows for Policy Matrix 
+flows for Policy Matrix
 """
 
 from copy import deepcopy
