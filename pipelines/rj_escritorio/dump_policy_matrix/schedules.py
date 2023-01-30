@@ -49,6 +49,7 @@ project_ids = [
     "rj-smi-dev",
 ]
 
+project_ids = ",".join(project_ids)
 
 every_week = Schedule(
     clocks=[
@@ -59,7 +60,7 @@ every_week = Schedule(
                 constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
             ],
             parameter_defaults={
-                "project_ids": ",".join(project_ids),
+                "project_ids": project_ids,
             },
         )
     ]

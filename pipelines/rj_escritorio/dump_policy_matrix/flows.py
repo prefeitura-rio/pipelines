@@ -10,7 +10,10 @@ from prefect.storage import GCS
 
 from pipelines.constants import constants
 
-from pipelines.rj_escritorio.dump_policy_matrix.schedules import every_week, project_ids
+from pipelines.rj_escritorio.dump_policy_matrix.schedules import (
+    every_week,
+    project_ids,
+)
 from pipelines.utils.policy_matrix.flows import utils_policy_matrix_flow
 from pipelines.utils.utils import set_default_parameters
 
@@ -24,7 +27,7 @@ policy_matrix_flow.run_config = KubernetesRun(
     ],
 )
 
-policy_matrix_default_parameters = {"project_ids": ",".join(project_ids)}
+policy_matrix_default_parameters = {"project_ids": project_ids}
 policy_matrix_flow = set_default_parameters(
     policy_matrix_flow, default_parameters=policy_matrix_default_parameters
 )
