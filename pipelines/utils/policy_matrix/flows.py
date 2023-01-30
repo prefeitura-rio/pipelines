@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name, E1101
 """
 Flow for generating policy matrix
 """
@@ -61,7 +61,7 @@ with Flow(
     role_matrix = generate_roles_matrix(policies=merged_policies)
     role_matrix.set_upstream(merged_policies)
 
-    save_file_path = roles_matrix_to_pandas_dataframe(role_matrix=role_matrix)
+    save_file_path = roles_matrix_to_pandas_dataframe(roles_matrix=role_matrix)
     save_file_path.set_upstream(role_matrix)
 
     create_and_upload_to_gcs = create_table_and_upload_to_gcs(
