@@ -26,7 +26,7 @@ def get_discovery_api(mode: str = "prod") -> googleapiclient.discovery.Resource:
 @task
 def get_iam_policy(
     project_ids: list, discovery_api: googleapiclient.discovery.Resource
-) -> Dict[str, Union[int, str, List[Dict[str, Union[str, List[str]]]]]]:
+) -> List[Dict[str, Union[int, str, List[Dict[str, Union[str, List[str]]]]]]]:
     """
     Get the IAM policy for the given project.
 
