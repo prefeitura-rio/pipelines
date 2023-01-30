@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Database dumping flows for Setur project
+flows for Policy Matrix 
 """
 
 from copy import deepcopy
