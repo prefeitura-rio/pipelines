@@ -43,7 +43,7 @@ project_ids = [
     "rj-precipitacao",
     "rj-sms",
     "rj-sms-dev",
-    "rj-rioaguas",  
+    "rj-rioaguas",
     "rj-rioaguas-dev",
     "rj-smi",
     "rj-smi-dev",
@@ -59,7 +59,7 @@ every_week = Schedule(
                 constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
             ],
             parameter_defaults={
-                "project_ids": ','.join(project_ids),
+                "project_ids": ",".join(project_ids),
             },
         )
     ]

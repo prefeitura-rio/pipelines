@@ -53,7 +53,7 @@ def get_iam_policy(
         .execute()
         for project_id in project_ids
     ]
-    
+
 
 @task
 def merge_iam_policies(
@@ -126,11 +126,11 @@ def roles_matrix_to_pandas_dataframe(
     dataframe.insert(1, "type", dataframe["member"].apply(lambda x: x.split(":")[0]))
     dataframe.drop(columns=["member"], inplace=True)
 
-    save_path = Path('/tmp/roles_matrix/')
+    save_path = Path("/tmp/roles_matrix/")
     save_path.mkdir(parents=True, exist_ok=True)
-    
-    save_file_path = save_path / 'roles_matrix.csv'
-    
+
+    save_file_path = save_path / "roles_matrix.csv"
+
     dataframe.to_csv(save_file_path, index=False)
-    
+
     return save_file_path
