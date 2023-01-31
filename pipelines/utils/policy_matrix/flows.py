@@ -38,13 +38,14 @@ with Flow(
 
     # Parameters
     project_ids = Parameter("project_ids", default="rj-escritorio,rj-escritorio-dev")
+    mode = Parameter("mode", default="dev")
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix="Matrix Acessos: ", now_time=get_now_time()
     )
     rename_flow_run.set_upstream(project_ids)
 
-    discovery_api = get_discovery_api()
+    discovery_api = get_discovery_api(mode=mode)
     discovery_api.set_upstream(rename_flow_run)
 
     project_ids_list = parse_comma_separated_string_to_list(text=project_ids)

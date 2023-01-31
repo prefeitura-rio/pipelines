@@ -61,6 +61,7 @@ every_week = Schedule(
             ],
             parameter_defaults={
                 "project_ids": project_ids,
+                "mode": "dev",
             },
         )
     ]

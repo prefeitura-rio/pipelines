@@ -27,7 +27,7 @@ policy_matrix_flow.run_config = KubernetesRun(
     ],
 )
 
-policy_matrix_default_parameters = {"project_ids": project_ids}
+policy_matrix_default_parameters = {"project_ids": project_ids, "mode": "dev"}
 policy_matrix_flow = set_default_parameters(
     policy_matrix_flow, default_parameters=policy_matrix_default_parameters
 )
