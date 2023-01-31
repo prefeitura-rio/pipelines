@@ -6,6 +6,8 @@ test_local.py
 pylint.txt
 test.py
 test/*
+test/*.ipynb
+test/*.csv
 setup.py
 .vscode/*
 
