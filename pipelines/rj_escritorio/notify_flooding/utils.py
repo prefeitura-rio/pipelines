@@ -42,6 +42,7 @@ def get_circle(
     return dataframe
 
 
+# pylint: disable=R0913
 def send_email(
     from_address: str,
     to_address: str,

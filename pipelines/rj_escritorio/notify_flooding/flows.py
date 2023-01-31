@@ -46,7 +46,7 @@ with Flow(
     # Flow
     all_open_occurences = get_open_occurrences(api_url=api_url)
     flooding_pop_id = parse_comma_separated_string_to_list(
-        input=flooding_pop_id, output_type=int
+        input_text=flooding_pop_id, output_type=int
     )
     open_flooding_occurences = filter_flooding_occurences(
         open_occurrences=all_open_occurences, flooding_pop_id=flooding_pop_id

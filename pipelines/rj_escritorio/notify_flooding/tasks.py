@@ -20,7 +20,7 @@ from pipelines.utils.utils import (
 
 @task
 def parse_comma_separated_string_to_list(
-    input: str,
+    input_text: str,
     output_type: type = int,
 ) -> List[Any]:
     """
@@ -33,9 +33,9 @@ def parse_comma_separated_string_to_list(
     Returns:
         List of the input string elements.
     """
-    if input == "":
+    if input_text == "":
         return []
-    return [output_type(element) for element in input.split(",")]
+    return [output_type(element) for element in input_text.split(",")]
 
 
 @task
@@ -152,7 +152,7 @@ def compare_flooding_occurences(
 
 
 @task
-def update_flooding_occurences_cache(
+def update_flooding_occurences_cache(  # pylint: disable=R0913
     flooding_occurrences: List[Dict[str, Union[str, int, float]]],
     redis_key: str,
     host: str = "redis.redis.svc.cluster.local",
