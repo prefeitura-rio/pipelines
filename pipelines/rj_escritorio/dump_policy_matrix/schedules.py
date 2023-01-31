@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=line-too-long
+# pylint: disable=line-too-long, C0103
 """
 Schedules for the database dump pipeline
 """
