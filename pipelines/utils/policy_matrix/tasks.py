@@ -11,7 +11,7 @@ import pandas as pd
 from prefect import task
 
 
-@task
+@task(checkpoint=False)
 def get_discovery_api(mode: str = "prod") -> googleapiclient.discovery.Resource:
     """
     Get the discovery API for the given mode.
@@ -23,7 +23,7 @@ def get_discovery_api(mode: str = "prod") -> googleapiclient.discovery.Resource:
     )
 
 
-@task
+@task(checkpoint=False)
 def get_iam_policy(
     project_ids: list, discovery_api: googleapiclient.discovery.Resource
 ) -> List[Dict[str, Union[int, str, List[Dict[str, Union[str, List[str]]]]]]]:
@@ -55,7 +55,7 @@ def get_iam_policy(
     ]
 
 
-@task
+@task(checkpoint=False)
 def merge_iam_policies(
     project_ids: List[str],
     policies: List[Dict[str, Union[int, str, List[Dict[str, Union[str, List[str]]]]]]],
@@ -79,7 +79,7 @@ def merge_iam_policies(
     }
 
 
-@task
+@task(checkpoint=False)
 def generate_roles_matrix(
     policies: Dict[str, List[Dict[str, Union[str, List[str]]]]]
 ) -> Dict[str, Dict[str, List[str]]]:
@@ -104,7 +104,7 @@ def generate_roles_matrix(
     return roles_matrix
 
 
-@task
+@task(checkpoint=False)
 def roles_matrix_to_pandas_dataframe(
     roles_matrix: Dict[str, Dict[str, List[str]]]
 ) -> pd.DataFrame:
