@@ -38,7 +38,7 @@ with Flow(
 
     # Parameters
     project_ids = Parameter("project_ids", default="rj-escritorio,rj-escritorio-dev")
-    mode = Parameter("mode", default="dev")
+    mode = Parameter("mode", default="prod")
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix="Matrix Acessos: ", now_time=get_now_time()
