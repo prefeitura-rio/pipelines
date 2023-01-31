@@ -43,7 +43,6 @@ with Flow(
     rename_flow_run = rename_current_flow_run_now_time(
         prefix="Matrix Acessos: ", now_time=get_now_time()
     )
-    rename_flow_run.set_upstream(project_ids)
 
     discovery_api = get_discovery_api(mode=mode)
     discovery_api.set_upstream(rename_flow_run)
