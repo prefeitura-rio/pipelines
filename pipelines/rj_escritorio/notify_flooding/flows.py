@@ -8,6 +8,7 @@ from prefect.storage import GCS
 from prefect.utilities.edges import unmapped
 
 from pipelines.constants import constants
+from pipelines.rj_escritorio.notify_flooding.schedules import test_schedule
 from pipelines.rj_escritorio.notify_flooding.tasks import (
     parse_comma_separated_string_to_list,
     get_open_occurrences,
@@ -80,3 +81,4 @@ rj_escritorio_notify_flooding_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value],
 )
+rj_escritorio_notify_flooding_flow.schedule = test_schedule
