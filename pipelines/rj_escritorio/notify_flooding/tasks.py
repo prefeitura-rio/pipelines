@@ -15,6 +15,7 @@ from pipelines.rj_escritorio.notify_flooding.utils import (
 from pipelines.utils.utils import (
     get_redis_client,
     get_vault_secret,
+    log,
 )
 
 
@@ -138,16 +139,26 @@ def compare_flooding_occurences(
         current flooding occurrences.
     """
     ids_from_api = [occurrence["id"] for occurrence in from_api]
+    log(f"IDs from API: {ids_from_api}")
     ids_from_cache = [occurrence["id"] for occurrence in from_cache]
+    log(f"IDs from cache: {ids_from_cache}")
     new_occurrences = [
         occurrence for occurrence in from_api if occurrence["id"] not in ids_from_cache
     ]
+    log(f"New occurrences: {[occurrence['id'] for occurrence in new_occurrences]}")
     closed_occurrences = [
         occurrence for occurrence in from_cache if occurrence["id"] not in ids_from_api
     ]
-    current_occurences = list(
-        set(from_cache) + set(new_occurrences) - set(closed_occurrences)
+    log(
+        f"Closed occurrences: {[occurrence['id'] for occurrence in closed_occurrences]}"
     )
+    current_occurences = [
+        occurence for occurence in from_cache if occurence["id"] in ids_from_api
+    ]
+    log(
+        f"Current occurrences: {[occurrence['id'] for occurrence in current_occurences]}"
+    )
+    current_occurences += new_occurrences
     return new_occurrences, closed_occurrences, current_occurences
 
 
