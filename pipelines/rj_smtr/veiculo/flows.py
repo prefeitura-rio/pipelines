@@ -41,7 +41,7 @@ from pipelines.rj_smtr.tasks import (
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
-from pipelines.rj_smtr.veiculos.tasks import (
+from pipelines.rj_smtr.veiculo.tasks import (
     pre_treatment_veiculos,
 )
 
