@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Schedules for the database dump pipeline 
+Schedules for the database dump pipeline
 """
 
 from datetime import timedelta, datetime
@@ -288,8 +288,8 @@ group by
 
 QUERY_CHAMADO_1746_DS = """
 select
-	distinct ch.id_chamado,
-	ch.ds_chamado,
+    distinct ch.id_chamado,
+    ch.ds_chamado,
     CONVERT (
         VARCHAR,
         CONVERT(DATETIME, ch.dt_inicio, 10),
@@ -468,8 +468,8 @@ where
     uo.id_instituicao_fk = 3
     and id_categoria in (2)
 group by
-  	ch.id_chamado,
-  	ch.ds_chamado,
+    ch.id_chamado,
+    ch.ds_chamado,
     CONVERT (
         VARCHAR,
         CONVERT(DATETIME, ch.dt_inicio, 10),
