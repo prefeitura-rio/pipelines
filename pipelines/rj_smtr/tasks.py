@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import traceback
 from typing import Dict
+import io
 
 from basedosdados import Storage, Table
 import basedosdados as bd
@@ -148,15 +149,18 @@ def get_current_timestamp(
 
 
 @task
-def create_date_hour_partition(timestamp: datetime) -> str:
+def create_date_hour_partition(timestamp: datetime, date_only: bool = False) -> str:
     """
     Get date hour Hive partition structure from timestamp.
     """
-    return f"data={timestamp.strftime('%Y-%m-%d')}/hora={timestamp.strftime('%H')}"
+    if date_only:
+        return f"data={timestamp.date()}"
+    else:
+        return f"data={timestamp.date()}/hora={timestamp.strftime('%H')}"
 
 
 @task
-def parse_timestamp_to_string(timestamp: datetime, pattern="%Y-%m-%d-%H-%M-%S") -> str:
+def parse_timestamp_to_string(timestamp: datetime, pattern="%Y-%m-%d_%H-%M-%S") -> str:
     """
     Parse timestamp to string pattern.
     """
@@ -216,9 +220,15 @@ def create_local_partition_path(
 
 
 @task
-def save_raw_local(file_path: str, status: dict, mode: str = "raw") -> str:
+def save_raw_local(
+    file_path: str,
+    status: dict,
+    mode: str = "raw",
+    filetype: str = "json",
+    sep: str = ";",
+) -> str:
     """
-    Saves json response from API to .json file.
+    Saves json response from web to a file.
 
     Args:
         file_path (str): Path which to save raw file
@@ -230,10 +240,13 @@ def save_raw_local(file_path: str, status: dict, mode: str = "raw") -> str:
     Returns:
         str: Path to the saved file
     """
-    _file_path = file_path.format(mode=mode, filetype="json")
+    _file_path = file_path.format(mode=mode, filetype=filetype)
     Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
     if status["error"] is None:
-        json.dump(status["data"], Path(_file_path).open("w", encoding="utf-8"))
+        if filetype == "json":
+            json.dump(status["data"], Path(_file_path).open("w", encoding="utf-8"))
+        else:
+            status["data"].to_csv(_file_path, sep=sep, index=False)
         log(f"Raw data saved to: {_file_path}")
     return _file_path
 
@@ -364,7 +377,9 @@ def query_logs(
 
 
 @task
-def get_raw(url: str, headers: dict = None) -> Dict:
+def get_raw(
+    url: str, headers: dict = None, filetype: str = "json", sep: str = ","
+) -> Dict:
     """
     Request data from a url API.
 
@@ -391,10 +406,51 @@ def get_raw(url: str, headers: dict = None) -> Dict:
 
     # Check data results
     if response.ok:  # status code is less than 400
-        data = response.json()
+        if filetype == "json":
+            data = response.json()
+        else:
+            if headers is None:
+                data = pd.read_csv(io.StringIO(response.text), sep=sep)
+            else:
+                data = pd.read_csv(
+                    io.StringIO(response.text), sep=sep, names=headers, header=0
+                )
+
         if isinstance(data, dict) and "DescricaoErro" in data.keys():
             error = data["DescricaoErro"]
             log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+
+    return {"data": data, "error": error}
+
+
+@task
+def get_raw_local(file: str, headers: list = None) -> Dict:
+    """
+    Request data from a local file.
+
+    Args:
+        file (str): File path
+        headers (dict, optional): Aditional fields to send along the request.
+    Returns:
+        dict: Conatining keys
+          * `data`: json returned from API
+          * `error`: error catched from API request
+    """
+    data = None
+
+    # Get data from file
+    try:
+        if headers is None:
+            data = pd.read_csv(file, sep=";")
+        else:
+            data = pd.read_csv(file, sep=";", names=headers, header=0)
+
+        log(data)
+        error = None
+    except Exception as exp:
+        error = exp
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+        return {"data": None, "error": error}
 
     return {"data": data, "error": error}
 
