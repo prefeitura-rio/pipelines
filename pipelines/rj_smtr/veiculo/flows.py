@@ -97,7 +97,7 @@ with Flow(
         partitions=partitions,
         status=treated_status,
     )
-    RUN = upload_logs_to_bq(
+    upload_logs_to_bq(
         dataset_id=constants.VEHICLE_GCS_DATASET_ID.value,
         parent_table_id=constants.VEHICLE_GCS_TABLE_ID.value,
         timestamp=timestamp,
@@ -110,8 +110,8 @@ with Flow(
         dataset_id=constants.VEHICLE_GCS_DATASET_ID,
         table_id=constants.VEHICLE_GCS_TABLE_ID,
         timestamp=timestamp,
-        wait=RUN,
         mode=MODE,
+        wait=error,
     )
 
 vehicle_capture.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)

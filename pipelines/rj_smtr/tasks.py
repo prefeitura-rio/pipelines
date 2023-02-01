@@ -722,6 +722,17 @@ def set_last_run_timestamp(
     Returns:
         _type_: _description_
     """
+
+    log(
+        f"""
+        dataset_id={dataset_id}
+        table_id={table_id}
+        timestamp={timestamp}
+        wait={wait}
+        mode={mode}
+    """
+    )
+
     redis_client = get_redis_client()
     key = dataset_id + "." + table_id
     if mode == "dev":
