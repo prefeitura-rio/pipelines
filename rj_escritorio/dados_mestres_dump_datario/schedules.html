@@ -177,6 +177,18 @@ dados_mestres_tables = {
         &#34;convert_to_crs_4326&#34;: True,
         &#34;geometry_column&#34;: &#34;geometry&#34;,
     },
+    &#34;numero_porta&#34;: {
+        # source: https://www.data.rio/datasets/PCRJ::n%C3%BAmero-de-porta-endere%C3%A7os/about
+        &#34;url&#34;: &#34;https://opendata.arcgis.com/api/v3/datasets/dcd2a72a81f44727ace876e893636009_0/downloads/data?format=geojson&amp;spatialRefId=4326&amp;where=1%3D1&#34;,  # noqa
+        &#34;dataset_id&#34;: &#34;dados_mestres&#34;,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialize_to_datario&#34;: True,
+        &#34;dump_to_gcs&#34;: True,
+        &#34;materialization_mode&#34;: &#34;dev&#34;,
+        &#34;convert_to_crs_4326&#34;: True,
+        &#34;geometry_column&#34;: &#34;geometry&#34;,
+    },
 }
 
 
