@@ -13,7 +13,6 @@ from pipelines.constants import constants as emd_constants
 from pipelines.utils.decorators import Flow
 from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
 from pipelines.utils.tasks import (
-    get_now_time,
     rename_current_flow_run_now_time,
     get_current_flow_mode,
     get_current_flow_labels,
@@ -31,10 +30,8 @@ from pipelines.rj_smtr.tasks import (
     create_local_partition_path,
     fetch_dataset_sha,
     get_current_timestamp,
-    get_materialization_date_range,
     # get_local_dbt_client,
     get_raw,
-    get_raw_local,
     parse_timestamp_to_string,
     save_raw_local,
     save_treated_local,
@@ -57,6 +54,9 @@ with Flow(
 
     timestamp = get_current_timestamp()
 
+    LABELS = get_current_flow_labels()
+    MODE = get_current_flow_mode(LABELS)
+
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
         prefix="SMTR: Licenciamento de Veículos - Captura - ", now_time=timestamp
@@ -75,9 +75,9 @@ with Flow(
     )
     # EXTRACT
     # url = "https://apps.data.rio/SMTR/DADOS CADASTRAIS/Cadastro de Veiculos.txt"
-    # pylint: disable=E501
+
     # flake8: noqa: E501
-    url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSKSkECTDUxrSFHOvk1A1u6ME5kqVDnyYD7zS4bqxVeY9en50mjPOOAYPgdKYjW05852YraxoekWpsg/pub?output=csv"  # pylint: disable=E501
+    url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSKSkECTDUxrSFHOvk1A1u6ME5kqVDnyYD7zS4bqxVeY9en50mjPOOAYPgdKYjW05852YraxoekWpsg/pub?output=csv"
 
     raw_status = get_raw(
         url=url, headers=constants.VEHICLE_MAPPING_KEYS.value, filetype="txt"
@@ -97,17 +97,22 @@ with Flow(
         partitions=partitions,
         status=treated_status,
     )
-    upload_logs_to_bq(
+    RUN = upload_logs_to_bq(
         dataset_id=constants.VEHICLE_GCS_DATASET_ID.value,
         parent_table_id=constants.VEHICLE_GCS_TABLE_ID.value,
         timestamp=timestamp,
         error=error,
     )
-    # vehicle_capture.set_dependencies(task=partitions, upstream_tasks=[rename_flow_run])
-    vehicle_capture.set_dependencies(task=partitions)
+    vehicle_capture.set_dependencies(task=partitions, upstream_tasks=[rename_flow_run])
 
     # Salvar timestamp no REDIS para posterior materialização apenas da última captura com sucesso
-    # Notebook sandbox
+    set_last_run_timestamp(
+        dataset_id=constants.VEHICLE_GCS_DATASET_ID,
+        table_id=constants.VEHICLE_GCS_TABLE_ID,
+        timestamp=timestamp,
+        wait=RUN,
+        mode=MODE,
+    )
 
 vehicle_capture.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 vehicle_capture.run_config = KubernetesRun(
