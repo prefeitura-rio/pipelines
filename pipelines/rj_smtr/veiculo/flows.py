@@ -105,7 +105,7 @@ with Flow(
     )
     vehicle_capture.set_dependencies(task=partitions, upstream_tasks=[rename_flow_run])
 
-    # Salvar timestamp no REDIS para posterior materialização apenas da última captura com sucesso
+    # REDIS SET LAST RUN
     set_last_run_timestamp(
         dataset_id=constants.VEHICLE_GCS_DATASET_ID.value,
         table_id=constants.VEHICLE_GCS_TABLE_ID.value,
