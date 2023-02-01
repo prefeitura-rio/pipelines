@@ -107,8 +107,8 @@ with Flow(
 
     # Salvar timestamp no REDIS para posterior materialização apenas da última captura com sucesso
     set_last_run_timestamp(
-        dataset_id=constants.VEHICLE_GCS_DATASET_ID,
-        table_id=constants.VEHICLE_GCS_TABLE_ID,
+        dataset_id=constants.VEHICLE_GCS_DATASET_ID.value,
+        table_id=constants.VEHICLE_GCS_TABLE_ID.value,
         timestamp=timestamp,
         mode=MODE,
         wait=error,
