@@ -228,7 +228,7 @@ def save_raw_local(
     sep: str = ";",
 ) -> str:
     """
-    Saves json response from web to a file.
+    Saves response from web to a file.
 
     Args:
         file_path (str): Path which to save raw file
