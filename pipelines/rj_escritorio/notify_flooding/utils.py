@@ -8,6 +8,7 @@ from email.mime.base import MIMEBase
 from email import encoders
 from pathlib import Path
 import smtplib
+from typing import List, Union
 
 import fiona
 import geopandas as gpd
@@ -45,7 +46,7 @@ def get_circle(
 # pylint: disable=R0913
 def send_email(
     from_address: str,
-    to_address: str,
+    to_address: Union[str, List[str]],
     subject: str,
     body: str,
     smtp_server: str,
@@ -60,7 +61,9 @@ def send_email(
     """
     message = MIMEMultipart()
     message["From"] = from_address
-    message["To"] = to_address
+    if isinstance(to_address, str):
+        to_address = [to_address]
+    message["To"] = ", ".join(to_address)
     message["Subject"] = subject
     message.attach(MIMEText(body, "plain"))
     if attachment is not None:

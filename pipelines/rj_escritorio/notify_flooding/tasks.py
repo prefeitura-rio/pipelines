@@ -190,7 +190,7 @@ def update_flooding_occurences_cache(  # pylint: disable=R0913
 def send_email_for_flooding_occurence(
     occurence: Dict[str, Union[str, int, float]],
     mode: str,
-    to_email: str,
+    to_email: Union[str, List[str]],
     email_configuration_secret_path: str,
 ):
     """
@@ -199,7 +199,7 @@ def send_email_for_flooding_occurence(
     Args:
         occurence: Flooding occurrence.
         mode: Must be "new" or "closed".
-        to_email: Email to send the email to.
+        to_email: Email (or list of emails) to send the email to.
         email_configuration_secret_path: Path to the from email in Vault. This provides username,
             password and SMTP server.
     """

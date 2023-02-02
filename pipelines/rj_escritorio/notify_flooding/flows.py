@@ -48,6 +48,9 @@ with Flow(
     flooding_pop_id = parse_comma_separated_string_to_list(
         input_text=flooding_pop_id, output_type=int
     )
+    to_email = parse_comma_separated_string_to_list(
+        input_text=to_email, output_type=str
+    )
     open_flooding_occurences = filter_flooding_occurences(
         open_occurrences=all_open_occurences, flooding_pop_id=flooding_pop_id
     )
