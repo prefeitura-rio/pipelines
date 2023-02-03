@@ -252,7 +252,7 @@ def save_raw_local(
         elif filetype in ("txt", "csv"):
             status["data"].to_csv(_file_path, sep=sep, index=False)
         log(f"Raw data saved to: {_file_path}")
-    # TODO: adicionar catch de erro e alterar return para dict (status)
+    # TODO: adicionar catch de erro e alterar return para dict (status) # pylint: disable=W0511
     return _file_path
 
 
@@ -382,7 +382,7 @@ def query_logs(
 
 
 @task
-def get_raw(
+def get_raw(  # pylint: disable=R0912
     url: str,
     headers: dict = None,
     filetype: str = "json",
