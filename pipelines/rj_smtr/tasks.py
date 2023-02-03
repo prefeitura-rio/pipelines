@@ -421,12 +421,10 @@ def get_raw(
         if isinstance(data, dict) and "DescricaoErro" in data.keys():
             error = data["DescricaoErro"]
             log(f"[CATCHED] Task failed with error: \n{error}", level="error")
-            return {"data": None, "error": error}
 
     except Exception as exp:
         error = exp
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
-        return {"data": None, "error": error}
 
     return {"data": data, "error": error}
 
