@@ -21,7 +21,7 @@ from pipelines.rj_smtr.utils import log_critical, map_dict_keys
 
 
 @task
-def pre_treatment_veiculos(status: dict, timestamp: str):
+def pre_treatment_veiculo_sppo_licenciamento(status: dict, timestamp: str):
     """Basic data treatment for vehicle data. Converts unix time to datetime,
     and apply filtering to stale data that may populate the API response.
 
@@ -51,7 +51,7 @@ def pre_treatment_veiculos(status: dict, timestamp: str):
     columns = key_columns + ["timestamp_captura", "content"]
     df = pd.DataFrame(columns=columns)  # pylint: disable=c0103
 
-    data = data.rename(columns=constants.VEHICLE_MAPPING_KEYS.value)
+    data = data.rename(columns=constants.SPPO_VEICULO_LICENCIAMENTO_MAPPING_KEYS.value)
     df[key_columns] = data[key_columns].copy()
     df["content"] = data[data.columns.difference(key_columns)].apply(
         lambda x: x.to_dict(), axis=1

@@ -42,15 +42,15 @@ from pipelines.rj_smtr.tasks import (
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
 from pipelines.rj_smtr.veiculo.tasks import (
-    pre_treatment_veiculos,
+    pre_treatment_veiculo_sppo_licenciamento,
 )
 
 # Flows #
 
 with Flow(
-    "SMTR: Licenciamento de Veículos - Captura",
+    "SMTR: Licenciamento de Veículos SPPO - Captura",
     code_owners=["rodrigo", "fernanda"],
-) as vehicle_capture:
+) as veiculo_sppo_licenciamento_captura:
 
     timestamp = get_current_timestamp()
 
@@ -59,7 +59,7 @@ with Flow(
 
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SMTR: Licenciamento de Veículos - Captura - ", now_time=timestamp
+        prefix="SMTR: Licenciamento de Veículos SPPO - Captura - ", now_time=timestamp
     )
 
     # SETUP LOCAL #
@@ -68,8 +68,8 @@ with Flow(
     filename = parse_timestamp_to_string(timestamp)
 
     filepath = create_local_partition_path(
-        dataset_id=constants.VEHICLE_GCS_DATASET_ID.value,
-        table_id=constants.VEHICLE_GCS_TABLE_ID.value,
+        dataset_id=constants.SPPO_VEICULO_DATASET_ID.value,
+        table_id=constants.SPPO_VEICULO_LICENCIAMENTO_TABLE_ID.value,
         filename=filename,
         partitions=partitions,
     )
@@ -80,43 +80,49 @@ with Flow(
     url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSKSkECTDUxrSFHOvk1A1u6ME5kqVDnyYD7zS4bqxVeY9en50mjPOOAYPgdKYjW05852YraxoekWpsg/pub?output=csv"
 
     raw_status = get_raw(
-        url=url, headers=constants.VEHICLE_MAPPING_KEYS.value, filetype="txt"
+        url=url,
+        headers=constants.SPPO_VEICULO_LICENCIAMENTO_MAPPING_KEYS.value,
+        filetype="txt",
     )
 
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath, filetype="txt")
     # TREAT
-    treated_status = pre_treatment_veiculos(status=raw_status, timestamp=timestamp)
+    treated_status = pre_treatment_veiculo_sppo_licenciamento(
+        status=raw_status, timestamp=timestamp
+    )
 
     treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
     # LOAD
     error = bq_upload(
-        dataset_id=constants.VEHICLE_GCS_DATASET_ID.value,
-        table_id=constants.VEHICLE_GCS_TABLE_ID.value,
+        dataset_id=constants.SPPO_VEICULO_DATASET_ID.value,
+        table_id=constants.SPPO_VEICULO_LICENCIAMENTO_TABLE_ID.value,
         filepath=treated_filepath,
         raw_filepath=raw_filepath,
         partitions=partitions,
         status=treated_status,
     )
     upload_logs_to_bq(
-        dataset_id=constants.VEHICLE_GCS_DATASET_ID.value,
-        parent_table_id=constants.VEHICLE_GCS_TABLE_ID.value,
+        dataset_id=constants.SPPO_VEICULO_DATASET_ID.value,
+        parent_table_id=constants.SPPO_VEICULO_LICENCIAMENTO_TABLE_ID.value,
         timestamp=timestamp,
         error=error,
     )
-    vehicle_capture.set_dependencies(task=partitions, upstream_tasks=[rename_flow_run])
+    veiculo_sppo_licenciamento_captura.set_dependencies(
+        task=partitions, upstream_tasks=[rename_flow_run]
+    )
 
     # REDIS SET LAST RUN
     set_last_run_timestamp(
-        dataset_id=constants.VEHICLE_GCS_DATASET_ID.value,
-        table_id=constants.VEHICLE_GCS_TABLE_ID.value,
+        dataset_id=constants.SPPO_VEICULO_DATASET_ID.value,
+        table_id=constants.SPPO_VEICULO_LICENCIAMENTO_TABLE_ID.value,
         timestamp=timestamp,
         mode=MODE,
         wait=error,
     )
 
-vehicle_capture.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-vehicle_capture.run_config = KubernetesRun(
+veiculo_sppo_licenciamento_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+veiculo_sppo_licenciamento_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
-vehicle_capture.schedule = every_day
+veiculo_sppo_licenciamento_captura.schedule = every_day

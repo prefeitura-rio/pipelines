@@ -162,11 +162,9 @@ class constants(Enum):  # pylint: disable=c0103
     SUBSIDIO_SPPO_DASHBOAD_DATASET_ID = "dashboard_subsidio_sppo"
 
     # VEÍCULOS LICENCIADOS
-    VEHICLE_BQ_DATASET_ID = "veiculo"
-    VEHICLE_GCS_DATASET_ID = "veiculo"
-    VEHICLE_GCS_TABLE_ID = "licenciamento"
-    VEHICLE_TREATED_TABLE_ID = "licenciamento"
-    VEHICLE_MAPPING_KEYS = {
+    SPPO_VEICULO_DATASET_ID = "veiculo"
+    SPPO_VEICULO_LICENCIAMENTO_TABLE_ID = "sppo_licenciamento"
+    SPPO_VEICULO_LICENCIAMENTO_MAPPING_KEYS = {
         "placa": "placa",
         "ordem": "id_veiculo",
         "permissao": "permissao",
