@@ -245,9 +245,10 @@ def save_raw_local(
     if status["error"] is None:
         if filetype == "json":
             json.dump(status["data"], Path(_file_path).open("w", encoding="utf-8"))
-        else:
+        elif filetype == "txt" or filetype == "csv":
             status["data"].to_csv(_file_path, sep=sep, index=False)
         log(f"Raw data saved to: {_file_path}")
+    # TODO: adicionar catch de erro e alterar return para dict (status)
     return _file_path
 
 
@@ -405,20 +406,27 @@ def get_raw(
         return {"data": None, "error": error}
 
     # Check data results
-    if response.ok:  # status code is less than 400
-        if filetype == "json":
-            data = response.json()
-        else:
-            if headers is None:
-                data = pd.read_csv(io.StringIO(response.text), sep=sep)
-            else:
-                data = pd.read_csv(
-                    io.StringIO(response.text), sep=sep, names=headers, header=0
-                )
+    try:
+        if response.ok:  # status code is less than 400
+            if filetype == "json":
+                data = response.json()
+            elif filetype == "txt" or filetype == "csv":
+                if headers is None:
+                    data = pd.read_csv(io.StringIO(response.text), sep=sep)
+                else:
+                    data = pd.read_csv(
+                        io.StringIO(response.text), sep=sep, names=headers, header=0
+                    )
 
         if isinstance(data, dict) and "DescricaoErro" in data.keys():
             error = data["DescricaoErro"]
             log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+            return {"data": None, "error": error}
+
+    except Exception as exp:
+        error = exp
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+        return {"data": None, "error": error}
 
     return {"data": data, "error": error}
 
