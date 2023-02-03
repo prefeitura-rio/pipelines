@@ -3,25 +3,22 @@
 Tasks for veiculos
 """
 
-from datetime import timedelta
-import traceback
 import pandas as pd
 from prefect import task
 
 # EMD Imports #
 
-from pipelines.utils.utils import get_vault_secret, log
+from pipelines.utils.utils import log  # ,get_vault_secret
 
 # SMTR Imports #
 
-from pipelines.rj_smtr.constants import constants
-from pipelines.rj_smtr.utils import log_critical, map_dict_keys
+from pipelines.rj_smtr.veiculo.constants import constants
 
 # Tasks #
 
 
 @task
-def pre_treatment_veiculo_sppo_licenciamento(status: dict, timestamp: str):
+def pre_treatment_sppo_licenciamento(status: dict, timestamp: str):
     """Basic data treatment for vehicle data. Converts unix time to datetime,
     and apply filtering to stale data that may populate the API response.
 
@@ -46,12 +43,18 @@ def pre_treatment_veiculo_sppo_licenciamento(status: dict, timestamp: str):
     - timestamp:\n{timestamp}
     - data:\n{data[:10]}"""
     )
+
+    # Checar id_veiculo único
+    # Checar relação única placa e id_veiculo
+    # Checar relação única planta e tipo_veiculo
+    # tipo_veiculo não nulo
+
     # Create dataframe sctructure
-    key_columns = ["placa", "data_ultima_vistoria"]
+    key_columns = ["id_veiculo"]
     columns = key_columns + ["timestamp_captura", "content"]
     df = pd.DataFrame(columns=columns)  # pylint: disable=c0103
 
-    data = data.rename(columns=constants.SPPO_VEICULO_LICENCIAMENTO_MAPPING_KEYS.value)
+    data = data.rename(columns=constants.SPPO_LICENCIAMENTO_MAPPING_KEYS.value)
     df[key_columns] = data[key_columns].copy()
     df["content"] = data[data.columns.difference(key_columns)].apply(
         lambda x: x.to_dict(), axis=1
