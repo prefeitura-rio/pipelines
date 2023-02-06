@@ -220,3 +220,39 @@ def set_redis_rdo_files(redis_client, dataset_id: str, table_id: str):
     content["files"] = files
     # set key
     return redis_client.set(f"{dataset_id}.{table_id}", content)
+
+
+# PRE TREAT #
+
+
+def check_not_null(data: pd.DataFrame, columns: list, subset_query: str):
+    """
+    Check if there are null values in columns.
+
+    Args:
+        columns (list): list of columns to check
+        subset_query (str): query to check if there are important data
+        being removed
+
+    Returns:
+        pandas.DataFrame: data without null values
+    """
+
+    for col in columns:
+        remove = data.query(f"{col} != {col}")  # null values
+        data = data.drop(remove.index)
+        log(
+            f"[data-check] Removed {len(remove)} rows with null '{col}'",
+            level="warning",
+        )
+
+        if subset_query:
+            # Check if there are important data being removed
+            remove = remove.query(subset_query)
+            if len(remove) > 0:
+                log(
+                    f"[data-check] Removed {len(remove)} critical rows with null '{col}'",
+                    level="warning",
+                )
+
+    return data
