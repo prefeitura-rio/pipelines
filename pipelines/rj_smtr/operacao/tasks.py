@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Tasks for veiculos
+Tasks for operacao
 """
 
 import pandas as pd
@@ -46,7 +46,8 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
     - data:\n{data.head()}"""
     )
 
-    log(f"Data raw: {data.info()}", level="info")
+    log("Data raw:\n", level="info")
+    data.info()
 
     # Rename columns
     columns = constants.SPPO_INFRACAO_MAPPING_KEYS.value
@@ -78,6 +79,7 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
 
     df["timestamp_captura"] = timestamp
 
-    log(f"Data pre-treated: {df.info()}", level="info")
+    log("Data pre-treated:\n", level="info")
+    df.info()
 
     return {"data": df, "error": error}
