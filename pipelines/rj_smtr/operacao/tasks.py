@@ -5,6 +5,7 @@ Tasks for veiculos
 
 import pandas as pd
 from prefect import task
+from datetime import datetime
 
 # EMD Imports #
 
@@ -40,20 +41,50 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: str):
         f"""
     Received inputs:
     - timestamp:\n{timestamp}
-    - data:\n{data[:10]}"""
+    - data:\n{data.head()}"""
     )
 
-    # Create dataframe sctructure
-    key_columns = ["placa", "id_auto_infracao"]
-    columns = key_columns + ["timestamp_captura", "content"]
-    df = pd.DataFrame(columns=columns)  # pylint: disable=c0103
+    log(f"Data raw: {df.info()}", level="info")
 
-    data = data.rename(columns=constants.SPPO_INFRACAO_MAPPING_KEYS.value)
-    df[key_columns] = data[key_columns].copy()
-    df["content"] = data[data["modo"] == "ONIBUS"][
-        data.columns.difference(key_columns)
+    # Rename columns
+    columns = constants.SPPO_INFRACAO_MAPPING_KEYS.value
+    data = data.rename(columns=columns)
+    
+    for col in columns.keys():
+        data.col = data.col.str.strip()
+
+    # Filter data
+    filters = [
+        "modo != 'ONIBUS'"
+    ]
+
+    for item in filters:
+        remove = data.query(item)
+        data = data.drop(remove.index)
+        log(f"Removed {len(remove)} rows from filter: {item}", level="info")
+    
+    # Check primary keys
+    pk_columns = ["placa", "id_auto_infracao"]
+    filter_new_data = f"data_infracao == {datetime.strptime(timestamp).strftime('%Y-%m-%d')}"
+
+    for col in pk_columns:
+        remove = data.query(f"{col} != {col}") # null values
+        data = data.drop(remove.index)
+
+        # Check if there are important data being removed
+        remove = remove.query(filter_new_data)
+        if len(remove) > 0:
+            log(f"Removed {len(remove)} rows with {filter_new_data}", level="warning")
+
+    # Create nested structure
+    df = data[pk_columns].copy()
+
+    df["content"] = data[
+        data.columns.difference(pk_columns)
     ].apply(lambda x: x.to_dict(), axis=1)
+
     df["timestamp_captura"] = timestamp
-    log(f"timestamp captura is:\n{df['timestamp_captura']}")
+
+    log(f"Data pre-treated: {df.info()}", level="info")
 
     return {"data": df, "error": error}
