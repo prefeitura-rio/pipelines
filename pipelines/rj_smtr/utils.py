@@ -256,3 +256,22 @@ def check_not_null(data: pd.DataFrame, columns: list, subset_query: str = None):
                 )
 
     return data
+
+
+def convert_boolean(data: pd.DataFrame, columns: list, dict_keys: dict):
+    """
+    Convert string columns to boolean.
+
+    Args:
+        data (pd.DataFrame): dataframe to be modified
+        columns (list): list of columns to modify
+        dict_keys (dict): dict of keys to be converted (e.g.: {"Sim": True, "Nao": False})
+
+    Returns:
+        pandas.DataFrame: data without null values
+    """
+
+    for col in columns:
+        data[col] = data[col].map(dict_keys)
+
+    return data

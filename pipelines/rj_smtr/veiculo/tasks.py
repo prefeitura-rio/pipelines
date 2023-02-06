@@ -14,7 +14,7 @@ from pipelines.utils.utils import log  # ,get_vault_secret
 # SMTR Imports #
 
 from pipelines.rj_smtr.veiculo.constants import constants
-from pipelines.rj_smtr.utils import check_not_null
+from pipelines.rj_smtr.utils import check_not_null, convert_boolean
 
 # Tasks #
 
@@ -62,8 +62,9 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
 
     # Convert to boolean
     boolean_cols = data.columns[data.columns.str.contains("indicador")].to_list()
-    for col in boolean_cols:
-        data[col] = data[col].map({"Sim": True, "Nao": False})
+    data = convert_boolean(
+        data=data, columns=boolean_cols, dict_keys={"Sim": True, "Nao": False}
+    )
 
     # Filter data
     # Checar id_veiculo único
