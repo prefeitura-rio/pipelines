@@ -14,7 +14,7 @@ from pipelines.utils.utils import log  # ,get_vault_secret
 # SMTR Imports #
 
 from pipelines.rj_smtr.operacao.constants import constants
-from pipelines.rj_smtr.utils import check_not_null 
+from pipelines.rj_smtr.utils import check_not_null
 
 # Tasks #
 
@@ -51,7 +51,7 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
     # Rename columns
     columns = constants.SPPO_INFRACAO_MAPPING_KEYS.value
     data = data.rename(columns=columns)
-    
+
     for col in columns.values():
         data[col] = data[col].str.strip()
 
