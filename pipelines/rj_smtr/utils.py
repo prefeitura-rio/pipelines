@@ -225,7 +225,7 @@ def set_redis_rdo_files(redis_client, dataset_id: str, table_id: str):
 # PRE TREAT #
 
 
-def check_not_null(data: pd.DataFrame, columns: list, subset_query: str):
+def check_not_null(data: pd.DataFrame, columns: list, subset_query: str = None):
     """
     Check if there are null values in columns.
 
@@ -246,7 +246,7 @@ def check_not_null(data: pd.DataFrame, columns: list, subset_query: str):
             level="warning",
         )
 
-        if subset_query:
+        if subset_query is not None:
             # Check if there are important data being removed
             remove = remove.query(subset_query)
             if len(remove) > 0:

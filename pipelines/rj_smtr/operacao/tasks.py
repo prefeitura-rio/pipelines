@@ -3,9 +3,9 @@
 Tasks for operacao
 """
 
+from datetime import datetime
 import pandas as pd
 from prefect import task
-from datetime import datetime
 
 # EMD Imports #
 
@@ -21,7 +21,7 @@ from pipelines.rj_smtr.utils import check_not_null
 
 @task
 def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
-    """Basic data treatment for violation data. Apply filtering.
+    """Basic data treatment for violation data. Apply filtering to raw data.
 
     Args:
         status_dict (dict): dict containing the status of the request made.
@@ -71,15 +71,15 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
     data = check_not_null(data, pk_columns, subset_query=filter_new_data)
 
     # Create nested structure
-    df = data[pk_columns].copy()
+    df_treated = data[pk_columns].copy()
 
-    df["content"] = data[data.columns.difference(pk_columns)].apply(
+    df_treated["content"] = data[data.columns.difference(pk_columns)].apply(
         lambda x: x.to_dict(), axis=1
     )
 
-    df["timestamp_captura"] = timestamp
+    df_treated["timestamp_captura"] = timestamp
 
     log("Data pre-treated:\n", level="info")
-    df.info()
+    df_treated.info()
 
-    return {"data": df, "error": error}
+    return {"data": df_treated, "error": error}
