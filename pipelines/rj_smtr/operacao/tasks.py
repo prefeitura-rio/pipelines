@@ -49,26 +49,26 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: str):
     # Rename columns
     columns = constants.SPPO_INFRACAO_MAPPING_KEYS.value
     data = data.rename(columns=columns)
-    
+
     for col in columns.keys():
         data.col = data.col.str.strip()
 
     # Filter data
-    filters = [
-        "modo != 'ONIBUS'"
-    ]
+    filters = ["modo != 'ONIBUS'"]
 
     for item in filters:
         remove = data.query(item)
         data = data.drop(remove.index)
         log(f"Removed {len(remove)} rows from filter: {item}", level="info")
-    
+
     # Check primary keys
     pk_columns = ["placa", "id_auto_infracao"]
-    filter_new_data = f"data_infracao == {datetime.strptime(timestamp).strftime('%Y-%m-%d')}"
+    filter_new_data = (
+        f"data_infracao == {datetime.strptime(timestamp).strftime('%Y-%m-%d')}"
+    )
 
     for col in pk_columns:
-        remove = data.query(f"{col} != {col}") # null values
+        remove = data.query(f"{col} != {col}")  # null values
         data = data.drop(remove.index)
 
         # Check if there are important data being removed
@@ -79,9 +79,9 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: str):
     # Create nested structure
     df = data[pk_columns].copy()
 
-    df["content"] = data[
-        data.columns.difference(pk_columns)
-    ].apply(lambda x: x.to_dict(), axis=1)
+    df["content"] = data[data.columns.difference(pk_columns)].apply(
+        lambda x: x.to_dict(), axis=1
+    )
 
     df["timestamp_captura"] = timestamp
 
