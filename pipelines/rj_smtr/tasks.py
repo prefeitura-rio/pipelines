@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import traceback
 from typing import Dict
+import io
 
 from basedosdados import Storage, Table
 import basedosdados as bd
@@ -148,11 +149,16 @@ def get_current_timestamp(
 
 
 @task
-def create_date_hour_partition(timestamp: datetime) -> str:
+def create_date_hour_partition(timestamp: datetime, date_only: bool = False) -> str:
     """
     Get date hour Hive partition structure from timestamp.
     """
-    return f"data={timestamp.strftime('%Y-%m-%d')}/hora={timestamp.strftime('%H')}"
+    if date_only:
+        date_part = f"data={timestamp.date()}"
+    else:
+        date_part = f"data={timestamp.date()}/hora={timestamp.strftime('%H')}"
+
+    return date_part
 
 
 @task
@@ -216,25 +222,37 @@ def create_local_partition_path(
 
 
 @task
-def save_raw_local(file_path: str, status: dict, mode: str = "raw") -> str:
+def save_raw_local(
+    file_path: str,
+    status: dict,
+    mode: str = "raw",
+    filetype: str = "json",
+    sep: str = ";",
+) -> str:
     """
-    Saves json response from API to .json file.
+    Saves response from web to a file.
 
     Args:
         file_path (str): Path which to save raw file
         status (dict): Must contain keys
-          * `data`: json returned from API
-          * `error`: error catched from API request
-        mode (str, optional): Folder to save locally, later folder which to upload to GCS.
+          * `data`: data returned
+          * `error`: error catched
+        mode (str, optional): Folder to save locally, later folder which to upload to GCS
+        filetype (str, optional): Filetype to be formatted (supported only: json, csv and txt)
+        sep (str, optional): File separator in case of txt or csv files.
 
     Returns:
         str: Path to the saved file
     """
-    _file_path = file_path.format(mode=mode, filetype="json")
+    _file_path = file_path.format(mode=mode, filetype=filetype)
     Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
     if status["error"] is None:
-        json.dump(status["data"], Path(_file_path).open("w", encoding="utf-8"))
+        if filetype == "json":
+            json.dump(status["data"], Path(_file_path).open("w", encoding="utf-8"))
+        elif filetype in ("txt", "csv"):
+            status["data"].to_csv(_file_path, sep=sep, index=False)
         log(f"Raw data saved to: {_file_path}")
+    # TODO: adicionar catch de erro e alterar return para dict (status) # pylint: disable=W0511
     return _file_path
 
 
@@ -364,36 +382,76 @@ def query_logs(
 
 
 @task
-def get_raw(url: str, headers: dict = None) -> Dict:
+def get_raw(  # pylint: disable=R0912
+    url: str,
+    headers: dict = None,
+    filetype: str = "json",
+    sep: str = ",",
+    local_flag: bool = False,
+) -> Dict:
     """
-    Request data from a url API.
+    Request data.
 
     Args:
-        url (str): URL to send request to
+        url (str): URL to send request to or local filepath to be opened (if local_flag is True)
         headers (dict, optional): Aditional fields to send along the request.
+        filetype (str, optional): Filetype to be formatted (supported only: json, csv and txt)
+        sep (str, optional): File separator in case of txt or csv files
+        local_flag (bool, optional): Flag to open local file instead of request a URL
     Returns:
         dict: Conatining keys
-          * `data`: json returned from API
-          * `error`: error catched from API request
+          * `data`: returned data
+          * `error`: error catched
     """
     data = None
 
-    # Get data from API
-    try:
-        response = requests.get(
-            url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
-        )
-        error = None
-    except Exception as exp:
-        error = exp
-        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
-        return {"data": None, "error": error}
+    if local_flag:
+        try:
+            if headers is None:
+                data = pd.read_csv(url, sep=sep)
+            else:
+                data = pd.read_csv(url, sep=sep, names=headers, header=0)
 
-    # Check data results
-    if response.ok:  # status code is less than 400
-        data = response.json()
-        if isinstance(data, dict) and "DescricaoErro" in data.keys():
-            error = data["DescricaoErro"]
+            log(data)
+            error = None
+        except Exception as exp:
+            error = exp
+            log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+
+    else:
+        # Get data from API
+        try:
+            response = requests.get(
+                url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
+            )
+            error = None
+        except Exception as exp:
+            error = exp
+            log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+            return {"data": None, "error": error}
+
+        # Check data results
+        try:
+            if response.ok:  # status code is less than 400
+                if filetype == "json":
+                    data = response.json()
+                elif filetype in ("txt", "csv"):
+                    if headers is None:
+                        data = pd.read_csv(io.StringIO(response.text), sep=sep)
+                    else:
+                        data = pd.read_csv(
+                            io.StringIO(response.text), sep=sep, names=headers, header=0
+                        )
+                else:
+                    error = "Unsupported raw file extension. Supported only: json, csv and txt"
+                    log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+
+            if isinstance(data, dict) and "DescricaoErro" in data.keys():
+                error = data["DescricaoErro"]
+                log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+
+        except Exception as exp:
+            error = exp
             log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return {"data": data, "error": error}
