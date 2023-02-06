@@ -35,7 +35,7 @@ def get_circle(
     Returns:
         GeoDataFrame with the circle geometry.
     """
-    center = Point(latitude, longitude)
+    center = Point(longitude, latitude)
     dataframe = gpd.GeoDataFrame(geometry=gpd.GeoSeries(center).buffer(radius / 111139))
     if fname is not None:
         fname = Path(fname).with_suffix(".kml")
