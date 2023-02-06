@@ -14,20 +14,22 @@ from pipelines.utils.utils import log  # ,get_vault_secret
 # SMTR Imports #
 
 from pipelines.rj_smtr.operacao.constants import constants
+from pipelines.rj_smtr.utils import check_not_null 
 
 # Tasks #
 
 
 @task
-def pre_treatment_sppo_infracao(status: dict, timestamp: str):
+def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
     """Basic data treatment for violation data. Apply filtering.
 
     Args:
         status_dict (dict): dict containing the status of the request made.
         Must contain keys: data, timestamp and error
+        timestamp (datetime): timestamp of the data capture
 
     Returns:
-        df: pandas.core.DataFrame containing the treated data.
+        dict: dict containing the data treated and the current error status.
     """
 
     # Check previous error
@@ -44,14 +46,14 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: str):
     - data:\n{data.head()}"""
     )
 
-    log(f"Data raw: {df.info()}", level="info")
+    log(f"Data raw: {data.info()}", level="info")
 
     # Rename columns
     columns = constants.SPPO_INFRACAO_MAPPING_KEYS.value
     data = data.rename(columns=columns)
-
-    for col in columns.keys():
-        data.col = data.col.str.strip()
+    
+    for col in columns.values():
+        data[col] = data[col].str.strip()
 
     # Filter data
     filters = ["modo != 'ONIBUS'"]
@@ -63,18 +65,9 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: str):
 
     # Check primary keys
     pk_columns = ["placa", "id_auto_infracao"]
-    filter_new_data = (
-        f"data_infracao == {datetime.strptime(timestamp).strftime('%Y-%m-%d')}"
-    )
+    filter_new_data = f"data_infracao == '{timestamp.strftime('%Y-%m-%d')}'"
 
-    for col in pk_columns:
-        remove = data.query(f"{col} != {col}")  # null values
-        data = data.drop(remove.index)
-
-        # Check if there are important data being removed
-        remove = remove.query(filter_new_data)
-        if len(remove) > 0:
-            log(f"Removed {len(remove)} rows with {filter_new_data}", level="warning")
+    data = check_not_null(data, pk_columns, subset_query=filter_new_data)
 
     # Create nested structure
     df = data[pk_columns].copy()
