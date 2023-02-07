@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=R0914,W0613,W0102,W0613,R0912,R0915
+# pylint: disable=R0914,W0613,W0102,W0613,R0912,R0915,E1136,E1137
 """
 Tasks for comando
 """
@@ -260,9 +260,11 @@ def get_pops() -> pd.DataFrame:
     pops = pd.DataFrame(response["objeto"])
     pops["id"] = pops["id"].astype("int")
     pops = pops.rename({"id": "id_pop", "titulo": "pop_titulo"}, axis=1)
-    pops["pop_titulo"] = pops["pop_titulo"].str.capitalize()
+    pops["pop_titulo"] = pops[
+        "pop_titulo"
+    ].str.capitalize()  # pylint: disable=unsubscriptable-object, E1137
 
-    return pops[["id_pop", "pop_titulo"]]
+    return pops[["id_pop", "pop_titulo"]]  # pylint: disable=unsubscriptable-object
 
 
 @task(nout=2)
@@ -368,6 +370,12 @@ def save_no_partition(dataframe: pd.DataFrame, append: bool = False) -> str:
     """
     Saves a dataframe to a temporary directory and returns the path to the directory.
     """
+
+    if "sigla" in dataframe.columns:
+        dataframe = dataframe.sort_values(["id_pop", "sigla", "acao"])
+    else:
+        dataframe = dataframe.sort_values("id_pop")
+
     path_to_directory = "/tmp/" + str(uuid4().hex) + "/"
     os.makedirs(path_to_directory, exist_ok=True)
     if append:

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0103
 """
 Schedules for precipitacao_alertario
 Rodar a cada 5 minutos
@@ -11,7 +12,7 @@ from pipelines.constants import constants
 minute_schedule = Schedule(
     clocks=[
         IntervalClock(
-            interval=timedelta(minutes=15),
+            interval=timedelta(minutes=10),
             start_date=datetime(2021, 1, 1, 0, 5, 0),
             labels=[
                 constants.RJ_COR_AGENT_LABEL.value,

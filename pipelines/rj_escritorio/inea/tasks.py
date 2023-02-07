@@ -135,6 +135,17 @@ def list_vol_files(
             for file in all_files
             if file.split("/")[-1][: len(greater_than) + 7] >= f"9921GUA{greater_than}"
         ]
+
+    # Filter files with same filename
+    filenames = set()
+    filtered_remote_files = []
+    for file in remote_files:
+        filename = file.split("/")[-1]
+        if filename not in filenames:
+            filtered_remote_files.append(file)
+            filenames.add(filename)
+    remote_files = filtered_remote_files
+
     log(f"Found {len(remote_files)} files.")
     log(f"Remote files: {remote_files}")
     return remote_files, output_directory_path
