@@ -147,3 +147,5 @@ dmypy.json
 # Backfill stuff
 backfill.csv
 REVIEW.md
+
+.idea/
