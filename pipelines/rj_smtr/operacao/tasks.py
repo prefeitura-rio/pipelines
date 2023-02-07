@@ -74,7 +74,7 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
     df_treated = data[pk_columns].copy()
 
     df_treated["content"] = data[data.columns.difference(pk_columns)].apply(
-        lambda x: x.to_dict(), axis=1
+        lambda x: x.to_json(), axis=1
     )
 
     df_treated["timestamp_captura"] = timestamp
