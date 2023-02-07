@@ -17,15 +17,12 @@ from pipelines.utils.dump_url.flows import dump_url_flow
 from pipelines.utils.utils import set_default_parameters
 
 formacao_dump_url_remenber_flow = deepcopy(dump_url_flow)
-formacao_dump_url_remenber_flow.name = (
-    "Dump url remember"
-)
+formacao_dump_url_remenber_flow.name = "Dump url remember"
 
 formacao_dump_url_remenber_gsheets_flow.storage = GCS(constants.GCS_BUCKET.value)
 formacao_dump_url_remenber_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
-    labels=[constants.RJ_SEGOVI_AGENT_LABEL.value
-            ],
+    labels=[constants.RJ_SEGOVI_AGENT_LABEL.value],
 )
 
 formacao_dump_url_remenber_default_parameters = {

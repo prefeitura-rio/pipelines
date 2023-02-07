@@ -29,7 +29,8 @@ gsheets_clocks = generate_dump_url_schedules(
     interval=timedelta(days=365),
     start_date=datetime(2023, 2, 7, 0, 0, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
-        constants.RJ_SEGOVI_AGENT_LABEL.value, ],
+        constants.RJ_SEGOVI_AGENT_LABEL.value,
+    ],
     table_parameters=gsheets_url,
     dataset_id="db_remember_teste",
 )
