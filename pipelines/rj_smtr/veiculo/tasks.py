@@ -47,7 +47,7 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
     )
 
     log("Data raw:\n", level="info")
-    data.info()
+    log(data.info(), level="info")
 
     # Rename columns
     columns = constants.SPPO_LICENCIAMENTO_MAPPING_KEYS.value
@@ -102,6 +102,6 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
     df_treated["timestamp_captura"] = timestamp
 
     log("Data pre-treated:\n", level="info")
-    df_treated.info()
+    log(df_treated.info(), level="info")
 
     return {"data": df_treated, "error": error}
