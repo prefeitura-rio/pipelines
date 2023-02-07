@@ -6,6 +6,7 @@ Tasks for veiculos
 from datetime import datetime
 import pandas as pd
 from prefect import task
+import io
 
 # EMD Imports #
 
@@ -46,8 +47,11 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
     - data:\n{data.head()}"""
     )
 
-    log("Data raw:\n", level="info")
-    log(data.info(), level="info")
+    buffer = io.StringIO()
+    data.info(buf=buffer)
+    info_out = buffer.getvalue()
+
+    log(f"Data raw:\n{info_out}", level="info")
 
     # Rename columns
     columns = constants.SPPO_LICENCIAMENTO_MAPPING_KEYS.value
@@ -101,7 +105,10 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
 
     df_treated["timestamp_captura"] = timestamp
 
-    log("Data pre-treated:\n", level="info")
-    log(df_treated.info(), level="info")
+    buffer = io.StringIO()
+    df_treated.info(buf=buffer)
+    info_out = buffer.getvalue()
+
+    log(f"Data pre-treated:\n{info_out}", level="info")
 
     return {"data": df_treated, "error": error}
