@@ -64,6 +64,9 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
         data = data.drop(remove.index)
         log(f"Removed {len(remove)} rows from filter: {item}", level="info")
 
+    # Update valor type to float
+    data["valor"] = data["valor"].str.replace(",", ".").astype(float)
+
     # Check primary keys
     pk_columns = ["placa", "id_auto_infracao"]
     filter_new_data = f"data_infracao == '{timestamp.strftime('%Y-%m-%d')}'"
