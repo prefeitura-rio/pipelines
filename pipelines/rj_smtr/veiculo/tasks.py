@@ -87,6 +87,11 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
 
     data = check_not_null(data, relevant_columns)
 
+    # Update indicador_ar_condicionado based on tipo_veiculo
+    data["indicador_ar_condicionado"] = data["tipo_veiculo"].map(
+        lambda x: True if "C/AR" in x.replace(" ", "") else False
+    )
+
     # Create nested structure
     df_treated = data[pk_columns].copy()
 
