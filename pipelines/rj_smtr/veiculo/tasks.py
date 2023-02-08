@@ -74,7 +74,7 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
     # Checar id_veiculo único
     # Checar relação única placa e id_veiculo
     # Checar relação única planta e tipo_veiculo
-    filters = []
+    filters = ["tipo_veiculo.str.contains('ROD')"]
 
     for item in filters:
         remove = data.query(item)
