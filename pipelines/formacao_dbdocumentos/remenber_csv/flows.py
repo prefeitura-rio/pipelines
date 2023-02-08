@@ -21,7 +21,9 @@ from pipelines.utils.utils import set_default_parameters
 formacao_dbdocumentos_remenber_csv_gsheets_flow = deepcopy(dump_url_flow)
 formacao_dbdocumentos_remenber_csv_gsheets_flow.name = "Dump url remember"
 
-formacao_dbdocumentos_remenber_csv_gsheets_flow.storage = GCS(constants.GCS_BUCKET.value)
+formacao_dbdocumentos_remenber_csv_gsheets_flow.storage = GCS(
+    constants.GCS_BUCKET.value
+)
 formacao_dbdocumentos_remenber_csv_gsheets_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_SEGOVI_AGENT_LABEL.value],
