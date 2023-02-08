@@ -96,6 +96,9 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
         lambda x: True if "C/AR" in x.replace(" ", "") else False
     )
 
+    # Add status
+    data["status"] = "Licenciado"
+
     # Create nested structure
     df_treated = data[pk_columns].copy()
 
