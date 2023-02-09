@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_escritorio API documentation</title>
-<meta name="description" content="Prefect flows for emd project" />
+<title>pipelines.rj_escritorio.rain_dashboard.schedules API documentation</title>
+<meta name="description" content="Schedules for rj_escritorio.rain_dashboard." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,102 +19,193 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_escritorio</code></h1>
+<h1 class="title">Module <code>pipelines.rj_escritorio.rain_dashboard.schedules</code></h1>
 </header>
 <section id="section-intro">
-<p>Prefect flows for emd project</p>
+<p>Schedules for rj_escritorio.rain_dashboard.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
+# flake8: noqa: E501
 &#34;&#34;&#34;
-Prefect flows for emd project
+Schedules for rj_escritorio.rain_dashboard.
 &#34;&#34;&#34;
-###############################################################################
-# Automatically managed, please do not touch
-###############################################################################
-from pipelines.rj_escritorio.bot_sistemas.flows import *
-from pipelines.rj_escritorio.dados_mestres_dump_datario.flows import *
-from pipelines.rj_escritorio.dummy_predict.flows import *
-from pipelines.rj_escritorio.template_pipeline.flows import *
-from pipelines.rj_escritorio.tweets_flamengo.flows import *
-from pipelines.rj_escritorio.birthdays.flows import *
-from pipelines.rj_escritorio.logs.flows import *
-from pipelines.rj_escritorio.cleanup.flows import *
-from pipelines.rj_escritorio.waze.flows import *
-from pipelines.rj_escritorio.geolocator.flows import *
-from pipelines.rj_escritorio.inea.flows import *
-from pipelines.rj_escritorio.seconserva_buracos_refresh_data.flows import *
-from pipelines.rj_escritorio.dump_url_turismo.flows import *
-from pipelines.rj_escritorio.dump_policy_matrix.flows import *
-from pipelines.rj_escritorio.rain_dashboard.flows import *</code></pre>
+
+from datetime import timedelta
+
+import pendulum
+from prefect.schedules import Schedule
+from prefect.schedules.clocks import IntervalClock
+
+from pipelines.constants import constants
+
+every_fifteen_minutes = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(minutes=15),
+            start_date=pendulum.datetime(2021, 1, 1, 0, 5, 0, tz=&#34;America/Sao_Paulo&#34;),
+            labels=[
+                constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
+            ],
+            parameter_defaults={
+                &#34;query&#34;: &#34;&#34;&#34;
+                WITH
+
+                max_timestamps AS (
+                SELECT
+                    MAX(data_particao) AS max_data_particao
+                FROM `rj-cor.clima_pluviometro.taxa_precipitacao_alertario`
+                ),
+
+                alertario AS (
+                SELECT
+                    id_estacao,
+                    acumulado_chuva_15_min,
+                    CURRENT_DATE(&#39;America/Sao_Paulo&#39;) as data,
+                    data_update
+                FROM (
+                    SELECT
+                    id_estacao,
+                    acumulado_chuva_15_min,
+                    data_particao,
+                    DATETIME(CONCAT(data_particao,&#34; &#34;, horario)) AS data_update,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY id_estacao ORDER BY DATETIME(CONCAT(data_particao,&#34; &#34;, horario)) DESC
+                    ) AS row_num
+                    FROM `rj-cor.clima_pluviometro.taxa_precipitacao_alertario`
+                )AS a
+                JOIN max_timestamps b
+                    ON  a.data_particao = b.max_data_particao
+                WHERE a.row_num = 1
+
+                -- MAX FROM AFTER A GIVEN DATE
+                -- SELECT
+                --   id_estacao,
+                --   MAX(acumulado_chuva_15_min) AS acumulado_chuva_15_min,
+                -- FROM `rj-cor.clima_pluviometro.taxa_precipitacao_alertario` t1
+                -- WHERE TRUE
+                --     AND DATE_TRUNC(t1.data_particao, day) &gt; &#39;2023-01-09&#39;
+                -- GROUP BY id_estacao
+                ),
+
+                last_measurements AS (
+                SELECT
+                    a.id_estacao,
+                    &#34;alertario&#34; AS sistema,
+                    a.acumulado_chuva_15_min,
+                FROM alertario a
+                ),
+
+                h3_chuvas AS (
+                SELECT
+                    h3.*,
+                    lm.acumulado_chuva_15_min,
+                    lm.acumulado_chuva_15_min/power(h3.dist,5) AS p1_15min,
+                    1/power(h3.dist,5) AS inv_dist
+                FROM (
+                    WITH centroid_h3 AS (
+                    SELECT
+                        *,
+                        ST_CENTROID(geometry) AS geom
+                    FROM `rj-cor.dados_mestres.h3_grid_res8`
+                    ),
+
+                    estacoes_pluviometricas AS (
+                    SELECT
+                        id_estacao AS id,
+                        &#34;alertario&#34; AS sistema,
+                        ST_GEOGPOINT(CAST(longitude AS FLOAT64),
+                        CAST(latitude AS FLOAT64)) AS geom
+                        FROM `rj-cor.clima_pluviometro.estacoes_alertario`
+                    ),
+
+                    estacoes_mais_proximas AS (
+                    SELECT AS VALUE s
+                    FROM (
+                        SELECT
+                            ARRAY_AGG(
+                                STRUCT&lt;id_h3 STRING,
+                                id_estacao STRING,
+                                dist FLOAT64,
+                                sistema STRING&gt;(
+                                a.id, b.id,
+                                ST_DISTANCE(a.geom, b.geom),
+                                b.sistema
+                                )
+                                ORDER BY ST_DISTANCE(a.geom, b.geom)
+                            ) AS ar
+                        FROM (SELECT id, geom FROM centroid_h3) a
+                        CROSS JOIN(
+                            SELECT id, sistema, geom
+                            FROM estacoes_pluviometricas
+                            WHERE geom is not null
+                            ) b
+                        WHERE a.id &lt;&gt; b.id
+                        GROUP BY a.id
+                        ) ab CROSS JOIN
+                        UNNEST(ab.ar) s
+                    )
+
+                    SELECT
+                    *,
+                    row_number() OVER (PARTITION BY id_h3 ORDER BY dist) AS ranking
+                    FROM estacoes_mais_proximas
+                    ORDER BY id_h3, ranking
+                    ) h3
+                    LEFT JOIN last_measurements
+                    lm ON lm.id_estacao=h3.id_estacao AND lm.sistema=h3.sistema
+                    ),
+
+                h3_media AS (
+                SELECT
+                    id_h3,
+                    CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL) AS chuva_15min,
+                FROM h3_chuvas
+                GROUP BY id_h3
+                ),
+
+                final_table AS (
+                SELECT
+                    h3_media.id_h3,
+                    nome AS bairro,
+                    cast(round(h3_media.chuva_15min,2) AS decimal) AS chuva_15min,
+                FROM h3_media
+                LEFT JOIN `rj-cor.dados_mestres.h3_grid_res8` h3_grid
+                    ON h3_grid.id=h3_media.id_h3
+                INNER JOIN `rj-cor.dados_mestres.bairro`
+                    ON ST_CONTAINS(`rj-cor.dados_mestres.bairro`.geometry, ST_CENTROID(h3_grid.geometry))
+                )
+
+
+                SELECT
+                id_h3,
+                bairro,
+                chuva_15min,
+                CASE
+                    WHEN chuva_15min&gt;0     AND chuva_15min&lt;=1.25 THEN &#39;Chuva Fraca&#39;
+                    WHEN chuva_15min&gt;1.25  AND chuva_15min&lt;=6.25 THEN &#39;Chuva Moderada&#39;
+                    WHEN chuva_15min&gt;6.25  AND chuva_15min&lt;=12.5 THEN &#39;Chuva Forte&#39;
+                    WHEN chuva_15min&gt; 12.5                       THEN &#39;Chuva Muito Forte&#39;
+                    ELSE &#39;SEM CHUVA&#39;
+                END AS status,
+                CASE
+                    WHEN chuva_15min&gt;0     AND chuva_15min&lt;=1.25 THEN &#39;#00CCFF&#39;
+                    WHEN chuva_15min&gt;1.25  AND chuva_15min&lt;=6.25 THEN &#39;#BFA230&#39;
+                    WHEN chuva_15min&gt;6.25  AND chuva_15min&lt;=12.5 THEN &#39;#E0701F&#39;
+                    WHEN chuva_15min&gt; 12.5                       THEN &#39;#FF0000&#39;
+                    ELSE &#39;#ffffff&#39;
+                END AS color
+                FROM final_table
+            &#34;&#34;&#34;
+            },
+        )
+    ]
+)</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
-<dl>
-<dt><code class="name"><a title="pipelines.rj_escritorio.birthdays" href="birthdays/index.html">pipelines.rj_escritorio.birthdays</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.bot_sistemas" href="bot_sistemas/index.html">pipelines.rj_escritorio.bot_sistemas</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.cleanup" href="cleanup/index.html">pipelines.rj_escritorio.cleanup</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.dados_mestres_dump_datario" href="dados_mestres_dump_datario/index.html">pipelines.rj_escritorio.dados_mestres_dump_datario</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.dummy_predict" href="dummy_predict/index.html">pipelines.rj_escritorio.dummy_predict</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.dump_policy_matrix" href="dump_policy_matrix/index.html">pipelines.rj_escritorio.dump_policy_matrix</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.dump_url_turismo" href="dump_url_turismo/index.html">pipelines.rj_escritorio.dump_url_turismo</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.geolocator" href="geolocator/index.html">pipelines.rj_escritorio.geolocator</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.inea" href="inea/index.html">pipelines.rj_escritorio.inea</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.logs" href="logs/index.html">pipelines.rj_escritorio.logs</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.rain_dashboard" href="rain_dashboard/index.html">pipelines.rj_escritorio.rain_dashboard</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.seconserva_buracos_refresh_data" href="seconserva_buracos_refresh_data/index.html">pipelines.rj_escritorio.seconserva_buracos_refresh_data</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.template_pipeline" href="template_pipeline/index.html">pipelines.rj_escritorio.template_pipeline</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.tweets_flamengo" href="tweets_flamengo/index.html">pipelines.rj_escritorio.tweets_flamengo</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.waze" href="waze/index.html">pipelines.rj_escritorio.waze</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 </section>
 <section>
 </section>
@@ -158,7 +249,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -177,26 +268,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines" href="../index.html">pipelines</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="pipelines.rj_escritorio.birthdays" href="birthdays/index.html">pipelines.rj_escritorio.birthdays</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.bot_sistemas" href="bot_sistemas/index.html">pipelines.rj_escritorio.bot_sistemas</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.cleanup" href="cleanup/index.html">pipelines.rj_escritorio.cleanup</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.dados_mestres_dump_datario" href="dados_mestres_dump_datario/index.html">pipelines.rj_escritorio.dados_mestres_dump_datario</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.dummy_predict" href="dummy_predict/index.html">pipelines.rj_escritorio.dummy_predict</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.dump_policy_matrix" href="dump_policy_matrix/index.html">pipelines.rj_escritorio.dump_policy_matrix</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.dump_url_turismo" href="dump_url_turismo/index.html">pipelines.rj_escritorio.dump_url_turismo</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.geolocator" href="geolocator/index.html">pipelines.rj_escritorio.geolocator</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.inea" href="inea/index.html">pipelines.rj_escritorio.inea</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.logs" href="logs/index.html">pipelines.rj_escritorio.logs</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.rain_dashboard" href="rain_dashboard/index.html">pipelines.rj_escritorio.rain_dashboard</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.seconserva_buracos_refresh_data" href="seconserva_buracos_refresh_data/index.html">pipelines.rj_escritorio.seconserva_buracos_refresh_data</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.template_pipeline" href="template_pipeline/index.html">pipelines.rj_escritorio.template_pipeline</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.tweets_flamengo" href="tweets_flamengo/index.html">pipelines.rj_escritorio.tweets_flamengo</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.waze" href="waze/index.html">pipelines.rj_escritorio.waze</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.rain_dashboard" href="index.html">pipelines.rj_escritorio.rain_dashboard</a></code></li>
 </ul>
 </li>
 </ul>

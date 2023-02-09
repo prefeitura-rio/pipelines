@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_escritorio API documentation</title>
-<meta name="description" content="Prefect flows for emd project" />
+<title>pipelines.rj_escritorio.rain_dashboard.tasks API documentation</title>
+<meta name="description" content="Tasks for setting rain data in Redis." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,106 +19,195 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_escritorio</code></h1>
+<h1 class="title">Module <code>pipelines.rj_escritorio.rain_dashboard.tasks</code></h1>
 </header>
 <section id="section-intro">
-<p>Prefect flows for emd project</p>
+<p>Tasks for setting rain data in Redis.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Prefect flows for emd project
+Tasks for setting rain data in Redis.
 &#34;&#34;&#34;
-###############################################################################
-# Automatically managed, please do not touch
-###############################################################################
-from pipelines.rj_escritorio.bot_sistemas.flows import *
-from pipelines.rj_escritorio.dados_mestres_dump_datario.flows import *
-from pipelines.rj_escritorio.dummy_predict.flows import *
-from pipelines.rj_escritorio.template_pipeline.flows import *
-from pipelines.rj_escritorio.tweets_flamengo.flows import *
-from pipelines.rj_escritorio.birthdays.flows import *
-from pipelines.rj_escritorio.logs.flows import *
-from pipelines.rj_escritorio.cleanup.flows import *
-from pipelines.rj_escritorio.waze.flows import *
-from pipelines.rj_escritorio.geolocator.flows import *
-from pipelines.rj_escritorio.inea.flows import *
-from pipelines.rj_escritorio.seconserva_buracos_refresh_data.flows import *
-from pipelines.rj_escritorio.dump_url_turismo.flows import *
-from pipelines.rj_escritorio.dump_policy_matrix.flows import *
-from pipelines.rj_escritorio.rain_dashboard.flows import *</code></pre>
+from typing import Dict, List, Union
+
+import basedosdados as bd
+from basedosdados.upload.base import Base
+import pandas as pd
+from prefect import task
+
+from pipelines.utils.utils import get_redis_client, log
+
+
+@task(checkpoint=False)
+def get_data(query: str, mode: str = &#34;prod&#34;) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Load rain data from BigQuery
+    &#34;&#34;&#34;
+
+    # Get billing project ID
+    log(&#34;Inferring billing project ID from environment.&#34;)
+    billing_project_id: str = None
+    try:
+        bd_base = Base()
+        billing_project_id = bd_base.config[&#34;gcloud-projects&#34;][mode][&#34;name&#34;]
+    except KeyError:
+        pass
+    if not billing_project_id:
+        raise ValueError(
+            &#34;billing_project_id must be either provided or inferred from environment variables&#34;
+        )
+    log(f&#34;Billing project ID: {billing_project_id}&#34;)
+
+    # Load data
+    log(&#34;Loading data from BigQuery...&#34;)
+    dataframe = bd.read_sql(
+        query=query, billing_project_id=billing_project_id, from_file=True
+    )
+
+    # Type assertions
+    if &#34;chuva_15min&#34; in dataframe.columns:
+        dataframe[&#34;chuva_15min&#34;] = dataframe[&#34;chuva_15min&#34;].astype(&#34;float64&#34;)
+    else:
+        log(
+            &#39;Column &#34;chuva_15min&#34; not found in dataframe, skipping type assertion.&#39;,
+            &#34;warning&#34;,
+        )
+
+    log(&#34;Data loaded successfully.&#34;)
+
+    return dataframe
+
+
+@task(checkpoint=False)
+def dataframe_to_dict(dataframe: pd.DataFrame) -&gt; List[Dict[str, Union[str, float]]]:
+    &#34;&#34;&#34;
+    Convert dataframe to dictionary
+    &#34;&#34;&#34;
+    log(&#34;Converting dataframe to dictionary...&#34;)
+    return dataframe.to_dict(orient=&#34;records&#34;)
+
+
+@task(checkpoint=False)
+def set_redis_key(
+    key: str,
+    value: List[Dict[str, Union[str, float]]],
+    host: str = &#34;redis.redis.svc.cluster.local&#34;,
+    port: int = 6379,
+    db: int = 0,  # pylint: disable=C0103
+) -&gt; None:
+    &#34;&#34;&#34;
+    Set Redis key
+    &#34;&#34;&#34;
+    log(&#34;Setting Redis key...&#34;)
+    redis_client = get_redis_client(host=host, port=port, db=db)
+    redis_client.set(key, value)
+    log(&#34;Redis key set successfully.&#34;)</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt><code class="name"><a title="pipelines.rj_escritorio.birthdays" href="birthdays/index.html">pipelines.rj_escritorio.birthdays</a></code></dt>
+<dt id="pipelines.rj_escritorio.rain_dashboard.tasks.dataframe_to_dict"><code class="name flex">
+<span>def <span class="ident">dataframe_to_dict</span></span>(<span>dataframe: pandas.core.frame.DataFrame) ‑> List[Dict[str, Union[str, float]]]</span>
+</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Convert dataframe to dictionary</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(checkpoint=False)
+def dataframe_to_dict(dataframe: pd.DataFrame) -&gt; List[Dict[str, Union[str, float]]]:
+    &#34;&#34;&#34;
+    Convert dataframe to dictionary
+    &#34;&#34;&#34;
+    log(&#34;Converting dataframe to dictionary...&#34;)
+    return dataframe.to_dict(orient=&#34;records&#34;)</code></pre>
+</details>
 </dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.bot_sistemas" href="bot_sistemas/index.html">pipelines.rj_escritorio.bot_sistemas</a></code></dt>
+<dt id="pipelines.rj_escritorio.rain_dashboard.tasks.get_data"><code class="name flex">
+<span>def <span class="ident">get_data</span></span>(<span>query: str, mode: str = 'prod') ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Load rain data from BigQuery</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(checkpoint=False)
+def get_data(query: str, mode: str = &#34;prod&#34;) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Load rain data from BigQuery
+    &#34;&#34;&#34;
+
+    # Get billing project ID
+    log(&#34;Inferring billing project ID from environment.&#34;)
+    billing_project_id: str = None
+    try:
+        bd_base = Base()
+        billing_project_id = bd_base.config[&#34;gcloud-projects&#34;][mode][&#34;name&#34;]
+    except KeyError:
+        pass
+    if not billing_project_id:
+        raise ValueError(
+            &#34;billing_project_id must be either provided or inferred from environment variables&#34;
+        )
+    log(f&#34;Billing project ID: {billing_project_id}&#34;)
+
+    # Load data
+    log(&#34;Loading data from BigQuery...&#34;)
+    dataframe = bd.read_sql(
+        query=query, billing_project_id=billing_project_id, from_file=True
+    )
+
+    # Type assertions
+    if &#34;chuva_15min&#34; in dataframe.columns:
+        dataframe[&#34;chuva_15min&#34;] = dataframe[&#34;chuva_15min&#34;].astype(&#34;float64&#34;)
+    else:
+        log(
+            &#39;Column &#34;chuva_15min&#34; not found in dataframe, skipping type assertion.&#39;,
+            &#34;warning&#34;,
+        )
+
+    log(&#34;Data loaded successfully.&#34;)
+
+    return dataframe</code></pre>
+</details>
 </dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.cleanup" href="cleanup/index.html">pipelines.rj_escritorio.cleanup</a></code></dt>
+<dt id="pipelines.rj_escritorio.rain_dashboard.tasks.set_redis_key"><code class="name flex">
+<span>def <span class="ident">set_redis_key</span></span>(<span>key: str, value: List[Dict[str, Union[str, float]]], host: str = 'redis.redis.svc.cluster.local', port: int = 6379, db: int = 0) ‑> None</span>
+</code></dt>
 <dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.dados_mestres_dump_datario" href="dados_mestres_dump_datario/index.html">pipelines.rj_escritorio.dados_mestres_dump_datario</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.dummy_predict" href="dummy_predict/index.html">pipelines.rj_escritorio.dummy_predict</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.dump_policy_matrix" href="dump_policy_matrix/index.html">pipelines.rj_escritorio.dump_policy_matrix</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.dump_url_turismo" href="dump_url_turismo/index.html">pipelines.rj_escritorio.dump_url_turismo</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.geolocator" href="geolocator/index.html">pipelines.rj_escritorio.geolocator</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.inea" href="inea/index.html">pipelines.rj_escritorio.inea</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.logs" href="logs/index.html">pipelines.rj_escritorio.logs</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.rain_dashboard" href="rain_dashboard/index.html">pipelines.rj_escritorio.rain_dashboard</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.seconserva_buracos_refresh_data" href="seconserva_buracos_refresh_data/index.html">pipelines.rj_escritorio.seconserva_buracos_refresh_data</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.template_pipeline" href="template_pipeline/index.html">pipelines.rj_escritorio.template_pipeline</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.tweets_flamengo" href="tweets_flamengo/index.html">pipelines.rj_escritorio.tweets_flamengo</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.waze" href="waze/index.html">pipelines.rj_escritorio.waze</a></code></dt>
-<dd>
-<div class="desc"></div>
+<div class="desc"><p>Set Redis key</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(checkpoint=False)
+def set_redis_key(
+    key: str,
+    value: List[Dict[str, Union[str, float]]],
+    host: str = &#34;redis.redis.svc.cluster.local&#34;,
+    port: int = 6379,
+    db: int = 0,  # pylint: disable=C0103
+) -&gt; None:
+    &#34;&#34;&#34;
+    Set Redis key
+    &#34;&#34;&#34;
+    log(&#34;Setting Redis key...&#34;)
+    redis_client = get_redis_client(host=host, port=port, db=db)
+    redis_client.set(key, value)
+    log(&#34;Redis key set successfully.&#34;)</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
 </section>
 <section>
 </section>
@@ -158,7 +247,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -177,26 +266,14 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines" href="../index.html">pipelines</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.rain_dashboard" href="index.html">pipelines.rj_escritorio.rain_dashboard</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="pipelines.rj_escritorio.birthdays" href="birthdays/index.html">pipelines.rj_escritorio.birthdays</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.bot_sistemas" href="bot_sistemas/index.html">pipelines.rj_escritorio.bot_sistemas</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.cleanup" href="cleanup/index.html">pipelines.rj_escritorio.cleanup</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.dados_mestres_dump_datario" href="dados_mestres_dump_datario/index.html">pipelines.rj_escritorio.dados_mestres_dump_datario</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.dummy_predict" href="dummy_predict/index.html">pipelines.rj_escritorio.dummy_predict</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.dump_policy_matrix" href="dump_policy_matrix/index.html">pipelines.rj_escritorio.dump_policy_matrix</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.dump_url_turismo" href="dump_url_turismo/index.html">pipelines.rj_escritorio.dump_url_turismo</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.geolocator" href="geolocator/index.html">pipelines.rj_escritorio.geolocator</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.inea" href="inea/index.html">pipelines.rj_escritorio.inea</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.logs" href="logs/index.html">pipelines.rj_escritorio.logs</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.rain_dashboard" href="rain_dashboard/index.html">pipelines.rj_escritorio.rain_dashboard</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.seconserva_buracos_refresh_data" href="seconserva_buracos_refresh_data/index.html">pipelines.rj_escritorio.seconserva_buracos_refresh_data</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.template_pipeline" href="template_pipeline/index.html">pipelines.rj_escritorio.template_pipeline</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.tweets_flamengo" href="tweets_flamengo/index.html">pipelines.rj_escritorio.tweets_flamengo</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.waze" href="waze/index.html">pipelines.rj_escritorio.waze</a></code></li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pipelines.rj_escritorio.rain_dashboard.tasks.dataframe_to_dict" href="#pipelines.rj_escritorio.rain_dashboard.tasks.dataframe_to_dict">dataframe_to_dict</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.rain_dashboard.tasks.get_data" href="#pipelines.rj_escritorio.rain_dashboard.tasks.get_data">get_data</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.rain_dashboard.tasks.set_redis_key" href="#pipelines.rj_escritorio.rain_dashboard.tasks.set_redis_key">set_redis_key</a></code></li>
 </ul>
 </li>
 </ul>
