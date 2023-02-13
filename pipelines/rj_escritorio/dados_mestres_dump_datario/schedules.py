@@ -148,6 +148,18 @@ dados_mestres_tables = {
         "convert_to_crs_4326": True,
         "geometry_column": "geometry",
     },
+    "numero_porta": {
+        # source: https://www.data.rio/datasets/PCRJ::n%C3%BAmero-de-porta-endere%C3%A7os/about
+        "url": "https://opendata.arcgis.com/api/v3/datasets/dcd2a72a81f44727ace876e893636009_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",  # noqa
+        "dataset_id": "dados_mestres",
+        "dump_mode": "overwrite",
+        "materialize_after_dump": True,
+        "materialize_to_datario": True,
+        "dump_to_gcs": True,
+        "materialization_mode": "dev",
+        "convert_to_crs_4326": True,
+        "geometry_column": "geometry",
+    },
 }
 
 
