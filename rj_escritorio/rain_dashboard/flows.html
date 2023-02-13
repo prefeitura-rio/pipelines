@@ -52,19 +52,32 @@ with Flow(
     skip_if_running=True,
 ) as rj_escritorio_rain_dashboard_flow:
     # Parameters
-    query = Parameter(&#34;query&#34;)
+    query_data = Parameter(&#34;query_data&#34;)
+    query_update = Parameter(&#34;query_update&#34;)
     mode = Parameter(&#34;mode&#34;, default=&#34;prod&#34;)
     redis_data_key = Parameter(&#34;redis_data_key&#34;, default=&#34;data_last_15min_rain&#34;)
+    redis_update_key = Parameter(
+        &#34;redis_update_key&#34;, default=&#34;data_last_15min_rain_update&#34;
+    )
     redis_host = Parameter(&#34;redis_host&#34;, default=&#34;redis.redis.svc.cluster.local&#34;)
     redis_port = Parameter(&#34;redis_port&#34;, default=6379)
     redis_db = Parameter(&#34;redis_db&#34;, default=1)
 
     # Tasks
-    dataframe = get_data(query=query, mode=mode)
+    dataframe = get_data(query=query_data, mode=mode)
+    dataframe_update = get_data(query=query_update, mode=mode)
     dictionary = dataframe_to_dict(dataframe=dataframe)
+    dictionary_update = dataframe_to_dict(dataframe=dataframe_update)
     set_redis_key(
         key=redis_data_key,
         value=dictionary,
+        host=redis_host,
+        port=redis_port,
+        db=redis_db,
+    )
+    set_redis_key(
+        key=redis_update_key,
+        value=dictionary_update,
         host=redis_host,
         port=redis_port,
         db=redis_db,
