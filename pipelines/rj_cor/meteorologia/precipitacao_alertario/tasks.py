@@ -10,8 +10,10 @@ from typing import Union, Tuple
 import numpy as np
 import pandas as pd
 import pendulum
+import prefect
 from prefect import task, Flow
-from prefect.tasks.prefect import wait_for_flow_run as wait_for_flow_run_task
+from prefect.backend.flow_run import FlowRunView, watch_flow_run
+from prefect.engine.signals import signal_from_state
 
 import pandas_read_xml as pdx
 
@@ -30,17 +32,45 @@ from pipelines.utils.utils import (
 
 @task(timeout=60 * 2)  # 2 minutes
 def wait_for_flow_run(
-    flow: Flow, stream_states: bool, stream_logs: bool, raise_final_state: bool
-):
+    flow_run_id: str,
+    stream_states: bool = True,
+    stream_logs: bool = False,
+    raise_final_state: bool = False,
+) -> "FlowRunView":
     """
-    Wait for flow run to finish.
+    Task to wait for a flow run to finish executing, streaming state and log information
+
+    Args:
+        - flow_run_id: The flow run id to wait for
+        - stream_states: Stream information about the flow run state changes
+        - stream_logs: Stream flow run logs; if `stream_state` is `False` this will be
+            ignored
+        - raise_final_state: If set, the state of this task will be set to the final
+            state of the child flow run on completion.
+
+    Returns:
+        FlowRunView: A view of the flow run after completion
     """
-    return wait_for_flow_run_task(
-        flow=flow,
-        stream_states=True,
-        stream_logs=True,
-        raise_final_state=True,
-    )
+
+    flow_run = FlowRunView.from_flow_run_id(flow_run_id)
+
+    for log in watch_flow_run(
+        flow_run_id, stream_states=stream_states, stream_logs=stream_logs
+    ):
+        message = f"Flow {flow_run.name!r}: {log.message}"
+        prefect.context.logger.log(log.level, message)
+
+    # Get the final view of the flow run
+    flow_run = flow_run.get_latest()
+
+    if raise_final_state:
+        state_signal = signal_from_state(flow_run.state)(
+            message=f"{flow_run_id} finished in state {flow_run.state}",
+            result=flow_run,
+        )
+        raise state_signal
+    else:
+        return flow_run
 
 
 @task(
