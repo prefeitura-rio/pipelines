@@ -10,7 +10,7 @@ from typing import Union, Tuple
 import numpy as np
 import pandas as pd
 import pendulum
-from prefect import task
+from prefect import task, Flow
 from prefect.tasks.prefect import wait_for_flow_run as wait_for_flow_run_task
 
 import pandas_read_xml as pdx
@@ -29,7 +29,9 @@ from pipelines.utils.utils import (
 
 
 @task(timeout=60 * 2)  # 2 minutes
-def wait_for_flow_run(flow, stream_states, stream_logs, raise_final_state):
+def wait_for_flow_run(
+    flow: Flow, stream_states: bool, stream_logs: bool, raise_final_state: bool
+):
     """
     Wait for flow run to finish.
     """
