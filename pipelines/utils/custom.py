@@ -120,7 +120,7 @@ def wait_for_flow_run_with_timeout(timeout: Union[int, timedelta]):
             flow_run_id, stream_states=stream_states, stream_logs=stream_logs
         ):
             message = f"Flow {flow_run.name!r}: {log.message}"
-            prefect.context.logger.log(log.level, message)
+            prefect.context.logger.log(log.level, message)  # pylint: disable=no-member
 
         # Get the final view of the flow run
         flow_run = flow_run.get_latest()
@@ -131,7 +131,6 @@ def wait_for_flow_run_with_timeout(timeout: Union[int, timedelta]):
                 result=flow_run,
             )
             raise state_signal
-        else:
-            return flow_run
+        return flow_run
 
     return wait_for_flow_run
