@@ -8,13 +8,14 @@ from datetime import timedelta
 from prefect import case, Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
-from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
+from prefect.tasks.prefect import create_flow_run
 
 from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks import (
     tratar_dados,
     salvar_dados,
+    wait_for_flow_run,
 )
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.schedules import (
     minute_schedule,
@@ -101,7 +102,7 @@ with Flow(
             materialization_flow.set_upstream(current_flow_labels)
 
             wait_for_materialization = wait_for_flow_run(
-                materialization_flow,
+                flow=materialization_flow,
                 stream_states=True,
                 stream_logs=True,
                 raise_final_state=True,
@@ -128,7 +129,7 @@ with Flow(
                 rain_dashboard_update_flow.set_upstream(wait_for_materialization)
 
                 wait_for_rain_dashboard_update = wait_for_flow_run(
-                    rain_dashboard_update_flow,
+                    flow=rain_dashboard_update_flow,
                     stream_states=True,
                     stream_logs=True,
                     raise_final_state=False,
@@ -153,7 +154,7 @@ with Flow(
                 dump_to_gcs_flow.set_upstream(wait_for_materialization)
 
                 wait_for_dump_to_gcs = wait_for_flow_run(
-                    dump_to_gcs_flow,
+                    flow=dump_to_gcs_flow,
                     stream_states=True,
                     stream_logs=True,
                     raise_final_state=True,

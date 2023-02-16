@@ -11,6 +11,8 @@ import numpy as np
 import pandas as pd
 import pendulum
 from prefect import task
+from prefect.tasks.prefect import wait_for_flow_run as wait_for_flow_run_task
+
 import pandas_read_xml as pdx
 
 # from prefect import context
@@ -24,6 +26,19 @@ from pipelines.utils.utils import (
     to_partitions,
     save_updated_rows_on_redis,
 )
+
+
+@task(timeout=60 * 2)  # 2 minutes
+def wait_for_flow_run(flow, stream_states, stream_logs, raise_final_state):
+    """
+    Wait for flow run to finish.
+    """
+    return wait_for_flow_run_task(
+        flow=flow,
+        stream_states=True,
+        stream_logs=True,
+        raise_final_state=True,
+    )
 
 
 @task(
