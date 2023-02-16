@@ -12,6 +12,7 @@ from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 
 from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
+from pipelines.utils.custom import wait_for_flow_run_with_timeout
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks import (
     tratar_dados,
     salvar_dados,
@@ -30,6 +31,9 @@ from pipelines.utils.tasks import (
     get_current_flow_labels,
 )
 
+wait_for_flow_run_with_2min_timeout = wait_for_flow_run_with_timeout(
+    timeout=timedelta(minutes=2)
+)
 
 with Flow(
     name="COR: Meteorologia - Precipitacao ALERTARIO",
@@ -100,7 +104,7 @@ with Flow(
             current_flow_labels.set_upstream(UPLOAD_TABLE)
             materialization_flow.set_upstream(current_flow_labels)
 
-            wait_for_materialization = wait_for_flow_run(
+            wait_for_materialization = wait_for_flow_run_with_2min_timeout(
                 flow_run_id=materialization_flow,
                 stream_states=True,
                 stream_logs=True,
@@ -152,7 +156,7 @@ with Flow(
                 )
                 dump_to_gcs_flow.set_upstream(wait_for_materialization)
 
-                wait_for_dump_to_gcs = wait_for_flow_run(
+                wait_for_dump_to_gcs = wait_for_flow_run_with_2min_timeout(
                     flow_run_id=dump_to_gcs_flow,
                     stream_states=True,
                     stream_logs=True,
