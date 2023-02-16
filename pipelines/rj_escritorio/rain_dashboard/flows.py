@@ -7,7 +7,11 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 from pipelines.constants import constants
-from pipelines.rj_escritorio.rain_dashboard.schedules import every_fifteen_minutes
+from pipelines.rj_escritorio.rain_dashboard.constants import (
+    constants as rain_dashboard_constants,
+)
+
+# from pipelines.rj_escritorio.rain_dashboard.schedules import every_fifteen_minutes
 from pipelines.rj_escritorio.rain_dashboard.tasks import (
     dataframe_to_dict,
     get_data,
@@ -16,7 +20,7 @@ from pipelines.rj_escritorio.rain_dashboard.tasks import (
 from pipelines.utils.decorators import Flow
 
 with Flow(
-    "EMD: Atualizar dados de chuva na api.dados.rio",
+    name=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_NAME.value,
     code_owners=[
         "gabriel",
     ],
@@ -60,4 +64,4 @@ rj_escritorio_rain_dashboard_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value],
 )
-rj_escritorio_rain_dashboard_flow.schedule = every_fifteen_minutes
+# rj_escritorio_rain_dashboard_flow.schedule = every_fifteen_minutes
