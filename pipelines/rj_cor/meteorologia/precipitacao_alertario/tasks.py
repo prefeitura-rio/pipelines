@@ -30,49 +30,6 @@ from pipelines.utils.utils import (
 )
 
 
-@task(timeout=60 * 2)  # 2 minutes
-def wait_for_flow_run(
-    flow_run_id: str,
-    stream_states: bool = True,
-    stream_logs: bool = False,
-    raise_final_state: bool = False,
-) -> "FlowRunView":
-    """
-    Task to wait for a flow run to finish executing, streaming state and log information
-
-    Args:
-        - flow_run_id: The flow run id to wait for
-        - stream_states: Stream information about the flow run state changes
-        - stream_logs: Stream flow run logs; if `stream_state` is `False` this will be
-            ignored
-        - raise_final_state: If set, the state of this task will be set to the final
-            state of the child flow run on completion.
-
-    Returns:
-        FlowRunView: A view of the flow run after completion
-    """
-
-    flow_run = FlowRunView.from_flow_run_id(flow_run_id)
-
-    for log in watch_flow_run(
-        flow_run_id, stream_states=stream_states, stream_logs=stream_logs
-    ):
-        message = f"Flow {flow_run.name!r}: {log.message}"
-        prefect.context.logger.log(log.level, message)
-
-    # Get the final view of the flow run
-    flow_run = flow_run.get_latest()
-
-    if raise_final_state:
-        state_signal = signal_from_state(flow_run.state)(
-            message=f"{flow_run_id} finished in state {flow_run.state}",
-            result=flow_run,
-        )
-        raise state_signal
-    else:
-        return flow_run
-
-
 @task(
     nout=2,
     max_retries=constants.TASK_MAX_RETRIES.value,
