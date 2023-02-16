@@ -6,7 +6,7 @@
 <meta name="generator" content="pdoc 0.10.0" />
 <title>pipelines.rj_cor.meteorologia.precipitacao_alertario.schedules API documentation</title>
 <meta name="description" content="Schedules for precipitacao_alertario
-Rodar a cada 5 minutos" />
+Rodar a cada 1 minuto" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -24,7 +24,7 @@ Rodar a cada 5 minutos" />
 </header>
 <section id="section-intro">
 <p>Schedules for precipitacao_alertario
-Rodar a cada 5 minutos</p>
+Rodar a cada 1 minuto</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -33,7 +33,7 @@ Rodar a cada 5 minutos</p>
 # pylint: disable=C0103
 &#34;&#34;&#34;
 Schedules for precipitacao_alertario
-Rodar a cada 5 minutos
+Rodar a cada 1 minuto
 &#34;&#34;&#34;
 from datetime import timedelta, datetime
 from prefect.schedules import Schedule
@@ -50,6 +50,10 @@ minute_schedule = Schedule(
             ],
             parameter_defaults={
                 &#34;trigger_rain_dashboard_update&#34;: True,
+                &#34;materialize_after_dump&#34;: True,
+                &#34;mode&#34;: &#34;prod&#34;,
+                &#34;materialize_to_datario&#34;: True,
+                &#34;dump_to_gcs&#34;: True,
             },
         ),
     ]
