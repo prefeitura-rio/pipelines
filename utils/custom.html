@@ -33,13 +33,18 @@
 Customizing stuff for the pipelines package.
 &#34;&#34;&#34;
 
+from datetime import timedelta
 from functools import partial
-from typing import Callable, Iterable, List, Optional, Set
+from typing import Callable, Iterable, List, Optional, Set, Union
 
+import prefect
+from prefect import task
+from prefect.backend.flow_run import FlowRunView, watch_flow_run
 from prefect.core.edge import Edge
 from prefect.core.flow import Flow
 from prefect.core.task import Task
 from prefect.engine.result import Result
+from prefect.engine.signals import signal_from_state
 from prefect.engine.state import State
 from prefect.environments import Environment
 from prefect.executors import Executor
@@ -100,7 +105,64 @@ class CustomFlow(Flow):
             validate=validate,
             result=result,
             terminal_state_handler=terminal_state_handler,
-        )</code></pre>
+        )
+
+
+def wait_for_flow_run_with_timeout(timeout: Union[int, timedelta]):
+    &#34;&#34;&#34;
+    Builds the `wait_for_flow_run` task with a timeout.
+
+    Example: if you provide `timeout=120`, it would be equivalent to:
+
+    ```python
+    @task(timeout=120)
+    def wait_for_flow_run(...):
+        ...
+    ```
+    &#34;&#34;&#34;
+
+    @task(timeout=timeout)
+    def wait_for_flow_run(
+        flow_run_id: str,
+        stream_states: bool = True,
+        stream_logs: bool = False,
+        raise_final_state: bool = False,
+    ) -&gt; &#34;FlowRunView&#34;:
+        &#34;&#34;&#34;
+        Task to wait for a flow run to finish executing, streaming state and log information
+
+        Args:
+            - flow_run_id: The flow run id to wait for
+            - stream_states: Stream information about the flow run state changes
+            - stream_logs: Stream flow run logs; if `stream_state` is `False` this will be
+                ignored
+            - raise_final_state: If set, the state of this task will be set to the final
+                state of the child flow run on completion.
+
+        Returns:
+            FlowRunView: A view of the flow run after completion
+        &#34;&#34;&#34;
+
+        flow_run = FlowRunView.from_flow_run_id(flow_run_id)
+
+        for log in watch_flow_run(
+            flow_run_id, stream_states=stream_states, stream_logs=stream_logs
+        ):
+            message = f&#34;Flow {flow_run.name!r}: {log.message}&#34;
+            prefect.context.logger.log(log.level, message)  # pylint: disable=no-member
+
+        # Get the final view of the flow run
+        flow_run = flow_run.get_latest()
+
+        if raise_final_state:
+            state_signal = signal_from_state(flow_run.state)(
+                message=f&#34;{flow_run_id} finished in state {flow_run.state}&#34;,
+                result=flow_run,
+            )
+            raise state_signal
+        return flow_run
+
+    return wait_for_flow_run</code></pre>
 </details>
 </section>
 <section>
@@ -108,6 +170,80 @@ class CustomFlow(Flow):
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pipelines.utils.custom.wait_for_flow_run_with_timeout"><code class="name flex">
+<span>def <span class="ident">wait_for_flow_run_with_timeout</span></span>(<span>timeout: Union[int, datetime.timedelta])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Builds the <code>wait_for_flow_run</code> task with a timeout.</p>
+<p>Example: if you provide <code>timeout=120</code>, it would be equivalent to:</p>
+<pre><code class="language-python">@task(timeout=120)
+def wait_for_flow_run(...):
+    ...
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def wait_for_flow_run_with_timeout(timeout: Union[int, timedelta]):
+    &#34;&#34;&#34;
+    Builds the `wait_for_flow_run` task with a timeout.
+
+    Example: if you provide `timeout=120`, it would be equivalent to:
+
+    ```python
+    @task(timeout=120)
+    def wait_for_flow_run(...):
+        ...
+    ```
+    &#34;&#34;&#34;
+
+    @task(timeout=timeout)
+    def wait_for_flow_run(
+        flow_run_id: str,
+        stream_states: bool = True,
+        stream_logs: bool = False,
+        raise_final_state: bool = False,
+    ) -&gt; &#34;FlowRunView&#34;:
+        &#34;&#34;&#34;
+        Task to wait for a flow run to finish executing, streaming state and log information
+
+        Args:
+            - flow_run_id: The flow run id to wait for
+            - stream_states: Stream information about the flow run state changes
+            - stream_logs: Stream flow run logs; if `stream_state` is `False` this will be
+                ignored
+            - raise_final_state: If set, the state of this task will be set to the final
+                state of the child flow run on completion.
+
+        Returns:
+            FlowRunView: A view of the flow run after completion
+        &#34;&#34;&#34;
+
+        flow_run = FlowRunView.from_flow_run_id(flow_run_id)
+
+        for log in watch_flow_run(
+            flow_run_id, stream_states=stream_states, stream_logs=stream_logs
+        ):
+            message = f&#34;Flow {flow_run.name!r}: {log.message}&#34;
+            prefect.context.logger.log(log.level, message)  # pylint: disable=no-member
+
+        # Get the final view of the flow run
+        flow_run = flow_run.get_latest()
+
+        if raise_final_state:
+            state_signal = signal_from_state(flow_run.state)(
+                message=f&#34;{flow_run_id} finished in state {flow_run.state}&#34;,
+                result=flow_run,
+            )
+            raise state_signal
+        return flow_run
+
+    return wait_for_flow_run</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
@@ -237,6 +373,11 @@ setTimeout(() => input.focus(), 100);
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="pipelines.utils" href="index.html">pipelines.utils</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pipelines.utils.custom.wait_for_flow_run_with_timeout" href="#pipelines.utils.custom.wait_for_flow_run_with_timeout">wait_for_flow_run_with_timeout</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
