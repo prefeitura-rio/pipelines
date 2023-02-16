@@ -101,7 +101,7 @@ with Flow(
             materialization_flow.set_upstream(current_flow_labels)
 
             wait_for_materialization = wait_for_flow_run(
-                flow=materialization_flow,
+                flow_run_id=materialization_flow,
                 stream_states=True,
                 stream_logs=True,
                 raise_final_state=True,
@@ -128,7 +128,7 @@ with Flow(
                 rain_dashboard_update_flow.set_upstream(wait_for_materialization)
 
                 wait_for_rain_dashboard_update = wait_for_flow_run(
-                    flow=rain_dashboard_update_flow,
+                    flow_run_id=rain_dashboard_update_flow,
                     stream_states=True,
                     stream_logs=True,
                     raise_final_state=False,
@@ -153,7 +153,7 @@ with Flow(
                 dump_to_gcs_flow.set_upstream(wait_for_materialization)
 
                 wait_for_dump_to_gcs = wait_for_flow_run(
-                    flow=dump_to_gcs_flow,
+                    flow_run_id=dump_to_gcs_flow,
                     stream_states=True,
                     stream_logs=True,
                     raise_final_state=True,
