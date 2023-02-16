@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_escritorio API documentation</title>
-<meta name="description" content="Prefect flows for emd project" />
+<title>pipelines.rj_escritorio.notify_flooding.utils API documentation</title>
+<meta name="description" content="Utilities for the flooding notification pipeline." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,111 +19,207 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_escritorio</code></h1>
+<h1 class="title">Module <code>pipelines.rj_escritorio.notify_flooding.utils</code></h1>
 </header>
 <section id="section-intro">
-<p>Prefect flows for emd project</p>
+<p>Utilities for the flooding notification pipeline.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Prefect flows for emd project
+Utilities for the flooding notification pipeline.
 &#34;&#34;&#34;
-###############################################################################
-# Automatically managed, please do not touch
-###############################################################################
-from pipelines.rj_escritorio.bot_sistemas.flows import *
-from pipelines.rj_escritorio.dados_mestres_dump_datario.flows import *
-from pipelines.rj_escritorio.dummy_predict.flows import *
-from pipelines.rj_escritorio.notify_flooding.flows import *
-from pipelines.rj_escritorio.template_pipeline.flows import *
-from pipelines.rj_escritorio.tweets_flamengo.flows import *
-from pipelines.rj_escritorio.birthdays.flows import *
-from pipelines.rj_escritorio.logs.flows import *
-from pipelines.rj_escritorio.cleanup.flows import *
-from pipelines.rj_escritorio.waze.flows import *
-from pipelines.rj_escritorio.geolocator.flows import *
-from pipelines.rj_escritorio.inea.flows import *
-from pipelines.rj_escritorio.seconserva_buracos_refresh_data.flows import *
-from pipelines.rj_escritorio.dump_url_turismo.flows import *
-from pipelines.rj_escritorio.dump_policy_matrix.flows import *
-from pipelines.rj_escritorio.rain_dashboard.flows import *</code></pre>
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
+from pathlib import Path
+import smtplib
+from typing import List, Union
+
+import fiona
+import geopandas as gpd
+from shapely.geometry import Point
+
+fiona.supported_drivers[&#34;KML&#34;] = &#34;rw&#34;
+
+
+def get_circle(
+    latitude: float,
+    longitude: float,
+    radius: float,
+    fname: str = None,
+) -&gt; gpd.GeoDataFrame:
+    &#34;&#34;&#34;
+    Get a circle geometry from a point and a radius.
+
+    Args:
+        latitude: Latitude of the point.
+        longitude: Longitude of the point.
+        radius: Radius of the circle in meters.
+        fname: File name to save the circle geometry in KML (if None, the geometry is not saved).
+
+    Returns:
+        GeoDataFrame with the circle geometry.
+    &#34;&#34;&#34;
+    center = Point(longitude, latitude)
+    dataframe = gpd.GeoDataFrame(geometry=gpd.GeoSeries(center).buffer(radius / 111139))
+    if fname is not None:
+        fname = Path(fname).with_suffix(&#34;.kml&#34;)
+        dataframe.to_file(fname, driver=&#34;KML&#34;)
+    return dataframe
+
+
+# pylint: disable=R0913
+def send_email(
+    from_address: str,
+    to_address: Union[str, List[str]],
+    subject: str,
+    body: str,
+    smtp_server: str,
+    smtp_port: int,
+    smtp_username: str = None,
+    smtp_password: str = None,
+    tls: bool = True,
+    attachment: str = None,
+):
+    &#34;&#34;&#34;
+    Sends an email, optionally with an attachment.
+    &#34;&#34;&#34;
+    message = MIMEMultipart()
+    message[&#34;From&#34;] = from_address
+    if isinstance(to_address, str):
+        to_address = [to_address]
+    message[&#34;To&#34;] = &#34;, &#34;.join(to_address)
+    message[&#34;Subject&#34;] = subject
+    message.attach(MIMEText(body, &#34;plain&#34;))
+    if attachment is not None:
+        with open(attachment, &#34;rb&#34;) as file:
+            payload = MIMEBase(&#34;application&#34;, &#34;octate-stream&#34;)
+            payload.set_payload(file.read())
+        encoders.encode_base64(payload)
+        payload.add_header(&#34;Content-Disposition&#34;, f&#34;attachment; filename={attachment}&#34;)
+        message.attach(payload)
+    session = smtplib.SMTP(smtp_server, smtp_port)
+    if tls:
+        session.starttls()
+    if smtp_username is None:
+        smtp_username = from_address
+    if smtp_password is not None:
+        session.login(smtp_username, smtp_password)
+    text = message.as_string()
+    session.sendmail(from_address, to_address, text)
+    session.quit()</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt><code class="name"><a title="pipelines.rj_escritorio.birthdays" href="birthdays/index.html">pipelines.rj_escritorio.birthdays</a></code></dt>
+<dt id="pipelines.rj_escritorio.notify_flooding.utils.get_circle"><code class="name flex">
+<span>def <span class="ident">get_circle</span></span>(<span>latitude: float, longitude: float, radius: float, fname: str = None) ‑> geopandas.geodataframe.GeoDataFrame</span>
+</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Get a circle geometry from a point and a radius.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>latitude</code></strong></dt>
+<dd>Latitude of the point.</dd>
+<dt><strong><code>longitude</code></strong></dt>
+<dd>Longitude of the point.</dd>
+<dt><strong><code>radius</code></strong></dt>
+<dd>Radius of the circle in meters.</dd>
+<dt><strong><code>fname</code></strong></dt>
+<dd>File name to save the circle geometry in KML (if None, the geometry is not saved).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>GeoDataFrame with the circle geometry.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_circle(
+    latitude: float,
+    longitude: float,
+    radius: float,
+    fname: str = None,
+) -&gt; gpd.GeoDataFrame:
+    &#34;&#34;&#34;
+    Get a circle geometry from a point and a radius.
+
+    Args:
+        latitude: Latitude of the point.
+        longitude: Longitude of the point.
+        radius: Radius of the circle in meters.
+        fname: File name to save the circle geometry in KML (if None, the geometry is not saved).
+
+    Returns:
+        GeoDataFrame with the circle geometry.
+    &#34;&#34;&#34;
+    center = Point(longitude, latitude)
+    dataframe = gpd.GeoDataFrame(geometry=gpd.GeoSeries(center).buffer(radius / 111139))
+    if fname is not None:
+        fname = Path(fname).with_suffix(&#34;.kml&#34;)
+        dataframe.to_file(fname, driver=&#34;KML&#34;)
+    return dataframe</code></pre>
+</details>
 </dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.bot_sistemas" href="bot_sistemas/index.html">pipelines.rj_escritorio.bot_sistemas</a></code></dt>
+<dt id="pipelines.rj_escritorio.notify_flooding.utils.send_email"><code class="name flex">
+<span>def <span class="ident">send_email</span></span>(<span>from_address: str, to_address: Union[str, List[str]], subject: str, body: str, smtp_server: str, smtp_port: int, smtp_username: str = None, smtp_password: str = None, tls: bool = True, attachment: str = None)</span>
+</code></dt>
 <dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.cleanup" href="cleanup/index.html">pipelines.rj_escritorio.cleanup</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.dados_mestres_dump_datario" href="dados_mestres_dump_datario/index.html">pipelines.rj_escritorio.dados_mestres_dump_datario</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.dummy_predict" href="dummy_predict/index.html">pipelines.rj_escritorio.dummy_predict</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.dump_policy_matrix" href="dump_policy_matrix/index.html">pipelines.rj_escritorio.dump_policy_matrix</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.dump_url_turismo" href="dump_url_turismo/index.html">pipelines.rj_escritorio.dump_url_turismo</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.geolocator" href="geolocator/index.html">pipelines.rj_escritorio.geolocator</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.inea" href="inea/index.html">pipelines.rj_escritorio.inea</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.logs" href="logs/index.html">pipelines.rj_escritorio.logs</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.notify_flooding" href="notify_flooding/index.html">pipelines.rj_escritorio.notify_flooding</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.rain_dashboard" href="rain_dashboard/index.html">pipelines.rj_escritorio.rain_dashboard</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.seconserva_buracos_refresh_data" href="seconserva_buracos_refresh_data/index.html">pipelines.rj_escritorio.seconserva_buracos_refresh_data</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.template_pipeline" href="template_pipeline/index.html">pipelines.rj_escritorio.template_pipeline</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.tweets_flamengo" href="tweets_flamengo/index.html">pipelines.rj_escritorio.tweets_flamengo</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.waze" href="waze/index.html">pipelines.rj_escritorio.waze</a></code></dt>
-<dd>
-<div class="desc"></div>
+<div class="desc"><p>Sends an email, optionally with an attachment.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send_email(
+    from_address: str,
+    to_address: Union[str, List[str]],
+    subject: str,
+    body: str,
+    smtp_server: str,
+    smtp_port: int,
+    smtp_username: str = None,
+    smtp_password: str = None,
+    tls: bool = True,
+    attachment: str = None,
+):
+    &#34;&#34;&#34;
+    Sends an email, optionally with an attachment.
+    &#34;&#34;&#34;
+    message = MIMEMultipart()
+    message[&#34;From&#34;] = from_address
+    if isinstance(to_address, str):
+        to_address = [to_address]
+    message[&#34;To&#34;] = &#34;, &#34;.join(to_address)
+    message[&#34;Subject&#34;] = subject
+    message.attach(MIMEText(body, &#34;plain&#34;))
+    if attachment is not None:
+        with open(attachment, &#34;rb&#34;) as file:
+            payload = MIMEBase(&#34;application&#34;, &#34;octate-stream&#34;)
+            payload.set_payload(file.read())
+        encoders.encode_base64(payload)
+        payload.add_header(&#34;Content-Disposition&#34;, f&#34;attachment; filename={attachment}&#34;)
+        message.attach(payload)
+    session = smtplib.SMTP(smtp_server, smtp_port)
+    if tls:
+        session.starttls()
+    if smtp_username is None:
+        smtp_username = from_address
+    if smtp_password is not None:
+        session.login(smtp_username, smtp_password)
+    text = message.as_string()
+    session.sendmail(from_address, to_address, text)
+    session.quit()</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
 </section>
 <section>
 </section>
@@ -163,7 +259,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -182,27 +278,13 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines" href="../index.html">pipelines</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.notify_flooding" href="index.html">pipelines.rj_escritorio.notify_flooding</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="pipelines.rj_escritorio.birthdays" href="birthdays/index.html">pipelines.rj_escritorio.birthdays</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.bot_sistemas" href="bot_sistemas/index.html">pipelines.rj_escritorio.bot_sistemas</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.cleanup" href="cleanup/index.html">pipelines.rj_escritorio.cleanup</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.dados_mestres_dump_datario" href="dados_mestres_dump_datario/index.html">pipelines.rj_escritorio.dados_mestres_dump_datario</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.dummy_predict" href="dummy_predict/index.html">pipelines.rj_escritorio.dummy_predict</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.dump_policy_matrix" href="dump_policy_matrix/index.html">pipelines.rj_escritorio.dump_policy_matrix</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.dump_url_turismo" href="dump_url_turismo/index.html">pipelines.rj_escritorio.dump_url_turismo</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.geolocator" href="geolocator/index.html">pipelines.rj_escritorio.geolocator</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.inea" href="inea/index.html">pipelines.rj_escritorio.inea</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.logs" href="logs/index.html">pipelines.rj_escritorio.logs</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.notify_flooding" href="notify_flooding/index.html">pipelines.rj_escritorio.notify_flooding</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.rain_dashboard" href="rain_dashboard/index.html">pipelines.rj_escritorio.rain_dashboard</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.seconserva_buracos_refresh_data" href="seconserva_buracos_refresh_data/index.html">pipelines.rj_escritorio.seconserva_buracos_refresh_data</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.template_pipeline" href="template_pipeline/index.html">pipelines.rj_escritorio.template_pipeline</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.tweets_flamengo" href="tweets_flamengo/index.html">pipelines.rj_escritorio.tweets_flamengo</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.waze" href="waze/index.html">pipelines.rj_escritorio.waze</a></code></li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pipelines.rj_escritorio.notify_flooding.utils.get_circle" href="#pipelines.rj_escritorio.notify_flooding.utils.get_circle">get_circle</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.notify_flooding.utils.send_email" href="#pipelines.rj_escritorio.notify_flooding.utils.send_email">send_email</a></code></li>
 </ul>
 </li>
 </ul>
