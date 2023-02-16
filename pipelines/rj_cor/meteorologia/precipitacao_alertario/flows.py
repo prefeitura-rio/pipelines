@@ -36,6 +36,7 @@ with Flow(
     code_owners=[
         "paty",
     ],
+    skip_if_running=True,
 ) as cor_meteorologia_precipitacao_alertario:
 
     DATASET_ID = "clima_pluviometro"
