@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import pendulum
 import prefect
-from prefect import task, Flow
+from prefect import task
 from prefect.backend.flow_run import FlowRunView, watch_flow_run
 from prefect.engine.signals import signal_from_state
 
