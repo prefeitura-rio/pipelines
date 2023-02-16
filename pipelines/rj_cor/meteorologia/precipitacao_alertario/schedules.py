@@ -17,6 +17,9 @@ minute_schedule = Schedule(
             labels=[
                 constants.RJ_COR_AGENT_LABEL.value,
             ],
+            parameter_defaults={
+                "trigger_rain_dashboard_update": True,
+            },
         ),
     ]
 )
