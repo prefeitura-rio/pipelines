@@ -7,6 +7,10 @@ from enum import Enum
 
 
 class constants(Enum):  # pylint: disable=c0103
+    """
+    Constants for the rain dashboard pipeline
+    """
+
     RAIN_DASHBOARD_FLOW_NAME = "EMD: Atualizar dados de chuva na api.dados.rio"
     RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS = {
         "query_data": """
