@@ -19,6 +19,9 @@ from pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks import (
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.schedules import (
     minute_schedule,
 )
+from pipelines.rj_escritorio.rain_dashboard.constants import (
+    constants as rain_dashboard_constants,
+)
 from pipelines.utils.decorators import Flow
 from pipelines.utils.dump_db.constants import constants as dump_db_constants
 from pipelines.utils.dump_to_gcs.constants import constants as dump_to_gcs_constants
@@ -47,6 +50,9 @@ with Flow(
         "materialize_to_datario", default=False, required=False
     )
     MATERIALIZATION_MODE = Parameter("mode", default="dev", required=False)
+    TRIGGER_RAIN_DASHBOARD_UPDATE = Parameter(
+        "trigger_rain_dashboard_update", default=False, required=False
+    )
 
     # Dump to GCS after? Should only dump to GCS if materializing to datario
     DUMP_TO_GCS = Parameter("dump_to_gcs", default=False, required=False)
@@ -106,6 +112,26 @@ with Flow(
             wait_for_materialization.retry_delay = timedelta(
                 seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
             )
+
+            with case(TRIGGER_RAIN_DASHBOARD_UPDATE, True):
+                # Trigger rain dashboard update flow run
+                rain_dashboard_update_flow = create_flow_run(
+                    flow_name=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_NAME.value,
+                    project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                    parameters=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS.value,  # noqa
+                    labels=[
+                        "rj-escritorio-dev",
+                    ],
+                    run_name="Update rain dashboard data (triggered by precipitacao_alertario flow)",  # noqa
+                )
+                rain_dashboard_update_flow.set_upstream(wait_for_materialization)
+
+                wait_for_rain_dashboard_update = wait_for_flow_run(
+                    rain_dashboard_update_flow,
+                    stream_states=True,
+                    stream_logs=True,
+                    raise_final_state=False,
+                )
 
             with case(DUMP_TO_GCS, True):
                 # Trigger Dump to GCS flow run with project id as datario
