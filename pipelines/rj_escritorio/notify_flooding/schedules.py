@@ -21,7 +21,7 @@ test_schedule = Schedule(
             ],
             parameter_defaults={
                 "email_configuration_secret_path": "smtp-escritoriodedados-gmail",
-                "flooding_pop_id": "24,34,13,2,3,1,30,23,0,31,6,29,22,27,5,35,28,32,21,17,18,15,8",
+                "flooding_pop_id": "31,6,5,32,33",
                 "to_email": "waze_crisis@google.com",
             },
         ),
