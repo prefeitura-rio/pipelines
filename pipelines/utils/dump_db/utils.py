@@ -91,7 +91,8 @@ def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-l
 
         if "dbt_alias" in parameters:
             parameter_defaults["dbt_alias"] = parameters["dbt_alias"]
-
+        if "dataset_id" in parameters:
+            parameter_defaults["dataset_id"] = parameters["dataset_id"]
         new_interval = parameters["interval"] if "interval" in parameters else interval
 
         clocks.append(
