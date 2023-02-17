@@ -73,7 +73,7 @@ def download(data: str, yesterday: str) -> pd.DataFrame:
     log(f">>>>>>>>>> debug {dicionario}")
     token = dicionario["data"]["token"]
     log(f">>>>>>>>>> debug {token[0:10]}")
-  
+
     raw = []
     for id_estacao in estacoes_unicas:
         url = f"https://apitempo.inmet.gov.br/token/estacao/{yesterday}/{data}/{id_estacao}/{token}"
