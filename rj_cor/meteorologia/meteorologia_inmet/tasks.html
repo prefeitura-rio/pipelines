@@ -43,7 +43,7 @@ from prefect import task
 import requests
 
 from pipelines.constants import constants
-from pipelines.utils.utils import log
+from pipelines.utils.utils import get_vault_secret, log
 
 # from pipelines.rj_cor.meteorologia.meteorologia_inmet.meteorologia_utils import converte_timezone
 
@@ -97,9 +97,13 @@ def download(data: str, yesterday: str) -&gt; pd.DataFrame:
     # Trazer desde o dia anterior evita problemas quando já é outro dia
     # no UTC, visto que ele só traria dados do novo dia e substituiria
     # no arquivo da partição do dia atual no nosso timezone
+
+    dicionario = get_vault_secret(&#34;inmet_api&#34;)
+    token = dicionario[&#34;data&#34;][&#34;token&#34;]
+
     raw = []
     for id_estacao in estacoes_unicas:
-        url = f&#34;https://apitempo.inmet.gov.br/estacao/{yesterday}/{data}/{id_estacao}&#34;
+        url = f&#34;https://apitempo.inmet.gov.br/token/estacao/{yesterday}/{data}/{id_estacao}/{token}&#34;
         res = requests.get(url)
         if res.status_code != 200:
             log(f&#34;Problema no id: {id_estacao}, {res.status_code}, {url}&#34;)
@@ -325,9 +329,13 @@ def download(data: str, yesterday: str) -&gt; pd.DataFrame:
     # Trazer desde o dia anterior evita problemas quando já é outro dia
     # no UTC, visto que ele só traria dados do novo dia e substituiria
     # no arquivo da partição do dia atual no nosso timezone
+
+    dicionario = get_vault_secret(&#34;inmet_api&#34;)
+    token = dicionario[&#34;data&#34;][&#34;token&#34;]
+
     raw = []
     for id_estacao in estacoes_unicas:
-        url = f&#34;https://apitempo.inmet.gov.br/estacao/{yesterday}/{data}/{id_estacao}&#34;
+        url = f&#34;https://apitempo.inmet.gov.br/token/estacao/{yesterday}/{data}/{id_estacao}/{token}&#34;
         res = requests.get(url)
         if res.status_code != 200:
             log(f&#34;Problema no id: {id_estacao}, {res.status_code}, {url}&#34;)
