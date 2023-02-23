@@ -70,9 +70,7 @@ def download(data: str, yesterday: str) -> pd.DataFrame:
     # no arquivo da partição do dia atual no nosso timezone
 
     dicionario = get_vault_secret("inmet_api")
-    log(f">>>>>>>>>> debug {dicionario}")
     token = dicionario["data"]["token"]
-    log(f">>>>>>>>>> debug {token[0:10]}")
   
     raw = []
     for id_estacao in estacoes_unicas:
