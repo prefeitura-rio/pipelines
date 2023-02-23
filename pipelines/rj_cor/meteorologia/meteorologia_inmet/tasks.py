@@ -71,6 +71,7 @@ def download(data: str, yesterday: str) -> pd.DataFrame:
 
     dicionario = get_vault_secret("inmet_api")
     token = dicionario["data"]["token"]
+    log(f">>>>>>>>>> debug {token[0:10]}")
 
     raw = []
     for id_estacao in estacoes_unicas:
