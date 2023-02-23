@@ -35,7 +35,7 @@ with Flow(
     ],
 ) as cor_meteorologia_meteorologia_inmet:
 
-    DATASET_ID = "meio_ambiente_clima"
+    DATASET_ID = "clima_estacao_meteorologica"
     TABLE_ID = "meteorologia_inmet"
     DUMP_MODE = "append"
 
