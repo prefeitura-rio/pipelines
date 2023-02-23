@@ -76,7 +76,7 @@ def download(data: str, yesterday: str) -> pd.DataFrame:
   
     raw = []
     for id_estacao in estacoes_unicas:
-        url = f"https://apitempo.inmet.gov.br/estacao/{yesterday}/{data}/{id_estacao}/{token}"
+        url = f"https://apitempo.inmet.gov.br/token/estacao/{yesterday}/{data}/{id_estacao}/{token}"
         res = requests.get(url)
         if res.status_code != 200:
             log(f"Problema no id: {id_estacao}, {res.status_code}, {url}")
