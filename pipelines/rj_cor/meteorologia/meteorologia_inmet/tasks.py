@@ -71,7 +71,7 @@ def download(data: str, yesterday: str) -> pd.DataFrame:
 
     dicionario = get_vault_secret("inmet_api")
     token = dicionario["data"]["token"]
-  
+
     raw = []
     for id_estacao in estacoes_unicas:
         url = f"https://apitempo.inmet.gov.br/token/estacao/{yesterday}/{data}/{id_estacao}/{token}"
