@@ -48,9 +48,9 @@ def compare_dates_between_tables_redis(
     date_2 = redis_client.hgetall(key_table_2)
 
     log(">>>> debug date_1, date_2 redis", date_1, date_2)
-    if len(date_1)<10:
+    if len(date_1) < 10:
         date_1 = "2023-02-23 19:39:34"
-    if len(date_2)<10:
+    if len(date_2) < 10:
         date_2 = "2023-02-24 19:39:34"
     # Convert date to pendulum
     date_1 = pendulum.from_format(date_1, format_date_table_1)
