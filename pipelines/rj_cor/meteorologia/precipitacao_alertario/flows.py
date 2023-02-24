@@ -111,9 +111,7 @@ with Flow(
             )
 
             save_last_dbt_update(
-                dataset_id=DATASET_ID,
-                table_id=TABLE_ID,
-                mode=MATERIALIZATION_MODE
+                dataset_id=DATASET_ID, table_id=TABLE_ID, mode=MATERIALIZATION_MODE
             )
 
             current_flow_labels.set_upstream(check_to_run_dbt)

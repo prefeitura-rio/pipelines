@@ -181,7 +181,9 @@ def check_to_run_dbt(
     """
     It will run even if its upstream tasks skip.
     """
-    key_table_1 = build_redis_key(dataset_id, table_id, name="dbt_last_update", mode=mode)
+    key_table_1 = build_redis_key(
+        dataset_id, table_id, name="dbt_last_update", mode=mode
+    )
     key_table_2 = build_redis_key(dataset_id, table_id, name="last_update", mode=mode)
 
     format_date_table_1 = "YYYY-MM-DD HH:mm:SS"
@@ -190,10 +192,7 @@ def check_to_run_dbt(
     # Returns true if date saved on table_2 (alertario) is bigger than
     # the date saved on table_1 (dbt).
     run_dbt = compare_dates_between_tables_redis(
-        key_table_1,
-        format_date_table_1,
-        key_table_2,
-        format_date_table_2
+        key_table_1, format_date_table_1, key_table_2, format_date_table_2
     )
 
     return run_dbt

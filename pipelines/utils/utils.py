@@ -901,7 +901,9 @@ def final_column_treatment(column: str) -> str:
         return non_alpha_removed
 
 
-def build_redis_key(dataset_id: str, table_id: str, name: str = None, mode: str = "prod"):
+def build_redis_key(
+    dataset_id: str, table_id: str, name: str = None, mode: str = "prod"
+):
     """
     Helper function for building a key to redis
     """
