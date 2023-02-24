@@ -92,7 +92,7 @@ with Flow(
         table_id=TABLE_ID,
         mode=MATERIALIZATION_MODE,
     )
-    check_to_run_dbt.set_upstream(UPLOAD_TABLE)
+    run_dbt.set_upstream(UPLOAD_TABLE)
 
     with case(run_dbt, True):
         # Trigger DBT flow run
@@ -115,7 +115,7 @@ with Flow(
                 dataset_id=DATASET_ID, table_id=TABLE_ID, mode=MATERIALIZATION_MODE
             )
 
-            # current_flow_labels.set_upstream(check_to_run_dbt)
+            # current_flow_labels.set_upstream(run_dbt)
             # materialization_flow.set_upstream(current_flow_labels)
             # save_last_dbt_update.set_upstream(materialization_flow)
 
