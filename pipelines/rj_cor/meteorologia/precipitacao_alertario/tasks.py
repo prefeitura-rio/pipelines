@@ -48,7 +48,7 @@ def compare_dates_between_tables_redis(
     date_1 = redis_client.hgetall(key_table_1)
     date_2 = redis_client.hgetall(key_table_2)
 
-    log(">>>> debug date_1, date_2 redis", date_1, date_2)
+    log(f">>>> debug date_1, date_2 redis {date_1}, {date_2}")
     if len(date_1) < 10:
         date_1 = "2023-02-23 19:39:34"
     if len(date_2) < 10:
@@ -56,7 +56,7 @@ def compare_dates_between_tables_redis(
     # Convert date to pendulum
     date_1 = pendulum.from_format(date_1, format_date_table_1)
     date_2 = pendulum.from_format(date_2, format_date_table_2)
-    log(">>>> debug date_1, date_2 pendulum", date_1, date_2)
+    log(f">>>> debug date_1, date_2 pendulum {date_1}, {date_2}")
     return date_1 < date_2
 
 
@@ -144,8 +144,9 @@ def tratar_dados(
     # Save max date on redis to compare this with last dbt run
     if not empty_data:
         max_date = str(dados["data_medicao"].max())
-        key = build_redis_key(dataset_id, table_id, name="last_update", mode=mode)
-        save_str_on_redis(key, max_date)
+        redis_key = build_redis_key(dataset_id, table_id, name="last_update", mode=mode)
+        log(f"[DEBUG]: dataframe is not empty key: {redis_key} {max_date}")
+        save_str_on_redis(redis_key, 'date', max_date)
 
     # Fixar ordem das colunas
     dados = dados[
@@ -198,9 +199,9 @@ def save_last_dbt_update(
     Save on dbt last timestamp where it was updated
     """
     now = pendulum.now("America/Sao_Paulo").to_datetime_string()
-    key = build_redis_key(dataset_id, table_id, name="last_update", mode=mode)
-    log(">>>>> debug saving actual date on dbt redis", now)
-    save_str_on_redis(key, now)
+    redis_key = build_redis_key(dataset_id, table_id, name="last_update", mode=mode)
+    log(f">>>>> debug saving actual date on dbt redis {redis_key} {now}")
+    save_str_on_redis(redis_key, 'date', now)
 
 
 @task(skip_on_upstream_skip=False)

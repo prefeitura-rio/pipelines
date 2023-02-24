@@ -916,15 +916,16 @@ def build_redis_key(
 
 
 def save_str_on_redis(
+    redis_key: str,
     key: str,
-    text: str,
+    value: str,
 ):
     """
     Function to save a string on redis
     """
 
     redis_client = get_redis_client()
-    redis_client.hset(key, text)
+    redis_client.hset(redis_key, key, value)
 
 
 def compare_dates_between_tables_redis(
@@ -944,7 +945,7 @@ def compare_dates_between_tables_redis(
     date_1 = redis_client.hgetall(key_table_1)
     date_2 = redis_client.hgetall(key_table_2)
 
-    log(">>>> debug date_1, date_2 redis", date_1, date_2)
+    log(f">>>> debug date_1, date_2 redis {date_1}, {date_2}")
     if len(date_1) < 10:
         date_1 = "2023-02-23 19:39:34"
     if len(date_2) < 10:
@@ -952,7 +953,7 @@ def compare_dates_between_tables_redis(
     # Convert date to pendulum
     date_1 = pendulum.from_format(date_1, format_date_table_1)
     date_2 = pendulum.from_format(date_2, format_date_table_2)
-    log(">>>> debug date_1, date_2 pendulum", date_1, date_2)
+    log(f">>>> debug date_1, date_2 pendulum {date_1}, {date_2}")
     return date_1 < date_2
 
 
