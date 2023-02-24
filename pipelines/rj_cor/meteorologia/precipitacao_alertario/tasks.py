@@ -169,6 +169,7 @@ def save_last_dbt_update(
     """
     now = pendulum.now("America/Sao_Paulo").to_datetime_string()
     key = build_redis_key(dataset_id, table_id, name="last_update", mode=mode)
+    log(">>>>> debug saving actual date on dbt redis", now)
     save_str_on_redis(key, now)
 
 
@@ -181,6 +182,7 @@ def check_to_run_dbt(
     """
     It will run even if its upstream tasks skip.
     """
+    log(">>>> debug checando datas")
     key_table_1 = build_redis_key(dataset_id, table_id, name="dbt_last_update", mode=mode)
     key_table_2 = build_redis_key(dataset_id, table_id, name="last_update", mode=mode)
 

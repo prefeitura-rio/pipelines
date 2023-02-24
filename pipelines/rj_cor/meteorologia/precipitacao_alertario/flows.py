@@ -46,7 +46,7 @@ with Flow(
 ) as cor_meteorologia_precipitacao_alertario:
 
     DATASET_ID = "clima_pluviometro"
-    TABLE_ID = "taxa_precipitacao_alertario"
+    TABLE_ID = "taxa_precipitacao_alertario_teste"
     DUMP_MODE = "append"
 
     # Materialization parameters
