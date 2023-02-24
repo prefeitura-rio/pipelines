@@ -146,7 +146,7 @@ def tratar_dados(
         max_date = str(dados["data_medicao"].max())
         redis_key = build_redis_key(dataset_id, table_id, name="last_update", mode=mode)
         log(f"[DEBUG]: dataframe is not empty key: {redis_key} {max_date}")
-        save_str_on_redis(redis_key, 'date', max_date)
+        save_str_on_redis(redis_key, "date", max_date)
 
     # Fixar ordem das colunas
     dados = dados[
@@ -201,7 +201,7 @@ def save_last_dbt_update(
     now = pendulum.now("America/Sao_Paulo").to_datetime_string()
     redis_key = build_redis_key(dataset_id, table_id, name="last_update", mode=mode)
     log(f">>>>> debug saving actual date on dbt redis {redis_key} {now}")
-    save_str_on_redis(redis_key, 'date', now)
+    save_str_on_redis(redis_key, "date", now)
 
 
 @task(skip_on_upstream_skip=False)
