@@ -90,6 +90,7 @@ with Flow(
     run_dbt = check_to_run_dbt(
         dataset_id=DATASET_ID,
         table_id=TABLE_ID,
+        mode=MATERIALIZATION_MODE,
     )
     check_to_run_dbt.set_upstream(UPLOAD_TABLE)
 

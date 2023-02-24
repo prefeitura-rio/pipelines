@@ -204,7 +204,7 @@ def save_last_dbt_update(
     save_str_on_redis(redis_key, "date", now)
 
 
-@task(skip_on_upstream_skip=False)
+@task()  # skip_on_upstream_skip=False
 def check_to_run_dbt(
     dataset_id: str,
     table_id: str,
