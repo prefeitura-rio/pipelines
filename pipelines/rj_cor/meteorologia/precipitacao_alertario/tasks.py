@@ -22,12 +22,41 @@ from pipelines.rj_cor.meteorologia.precipitacao_alertario.utils import (
 )
 from pipelines.utils.utils import (
     build_redis_key,
-    compare_dates_between_tables_redis,
+    # compare_dates_between_tables_redis,
     log,
     to_partitions,
     save_str_on_redis,
     save_updated_rows_on_redis,
 )
+
+
+def compare_dates_between_tables_redis(
+    key_table_1: str,
+    format_date_table_1: str,
+    key_table_2: str,
+    format_date_table_2: str,
+):
+    """
+    Function that checks if the date saved on the second
+    table is bigger then the first one
+    """
+
+    redis_client = get_redis_client()
+
+    # get saved date on redis
+    date_1 = redis_client.hgetall(key_table_1)
+    date_2 = redis_client.hgetall(key_table_2)
+
+    log(">>>> debug date_1, date_2 redis", date_1, date_2)
+    if len(date_1)<10:
+        date_1 = "2023-02-23 19:39:34"
+    if len(date_2)<10:
+        date_2 = "2023-02-24 19:39:34"
+    # Convert date to pendulum
+    date_1 = pendulum.from_format(date_1, format_date_table_1)
+    date_2 = pendulum.from_format(date_2, format_date_table_2)
+    log(">>>> debug date_1, date_2 pendulum", date_1, date_2)
+    return date_1 < date_2
 
 
 @task(

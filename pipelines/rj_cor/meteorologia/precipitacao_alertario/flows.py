@@ -96,86 +96,86 @@ with Flow(
     with case(run_dbt, True):
         # Trigger DBT flow run
         with case(MATERIALIZE_AFTER_DUMP, True):
-            current_flow_labels = get_current_flow_labels()
-            materialization_flow = create_flow_run(
-                flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
-                project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-                parameters={
-                    "dataset_id": DATASET_ID,
-                    "table_id": TABLE_ID,
-                    "mode": MATERIALIZATION_MODE,
-                    "materialize_to_datario": MATERIALIZE_TO_DATARIO,
-                },
-                labels=current_flow_labels,
-                run_name=f"Materialize {DATASET_ID}.{TABLE_ID}",
-            )
+            # current_flow_labels = get_current_flow_labels()
+            # materialization_flow = create_flow_run(
+            #     flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+            #     project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+            #     parameters={
+            #         "dataset_id": DATASET_ID,
+            #         "table_id": TABLE_ID,
+            #         "mode": MATERIALIZATION_MODE,
+            #         "materialize_to_datario": MATERIALIZE_TO_DATARIO,
+            #     },
+            #     labels=current_flow_labels,
+            #     run_name=f"Materialize {DATASET_ID}.{TABLE_ID}",
+            # )
 
             save_last_dbt_update(
                 dataset_id=DATASET_ID, table_id=TABLE_ID, mode=MATERIALIZATION_MODE
             )
 
-            current_flow_labels.set_upstream(check_to_run_dbt)
-            materialization_flow.set_upstream(current_flow_labels)
-            save_last_dbt_update.set_upstream(materialization_flow)
+            # current_flow_labels.set_upstream(check_to_run_dbt)
+            # materialization_flow.set_upstream(current_flow_labels)
+            # save_last_dbt_update.set_upstream(materialization_flow)
 
-            wait_for_materialization = wait_for_flow_run_with_2min_timeout(
-                flow_run_id=materialization_flow,
-                stream_states=True,
-                stream_logs=True,
-                raise_final_state=True,
-            )
+            # wait_for_materialization = wait_for_flow_run_with_2min_timeout(
+            #     flow_run_id=materialization_flow,
+            #     stream_states=True,
+            #     stream_logs=True,
+            #     raise_final_state=True,
+            # )
 
-            wait_for_materialization.max_retries = (
-                dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
-            )
-            wait_for_materialization.retry_delay = timedelta(
-                seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
-            )
+            # wait_for_materialization.max_retries = (
+            #     dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
+            # )
+            # wait_for_materialization.retry_delay = timedelta(
+            #     seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
+            # )
 
-            with case(TRIGGER_RAIN_DASHBOARD_UPDATE, True):
-                # Trigger rain dashboard update flow run
-                rain_dashboard_update_flow = create_flow_run(
-                    flow_name=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_NAME.value,
-                    project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-                    parameters=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS.value,  # noqa
-                    labels=[
-                        "rj-escritorio-dev",
-                    ],
-                    run_name="Update rain dashboard data (triggered by precipitacao_alertario flow)",  # noqa
-                )
-                rain_dashboard_update_flow.set_upstream(wait_for_materialization)
+            # with case(TRIGGER_RAIN_DASHBOARD_UPDATE, True):
+            #     # Trigger rain dashboard update flow run
+            #     rain_dashboard_update_flow = create_flow_run(
+            #         flow_name=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_NAME.value,
+            #         project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+            #         parameters=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS.value,  # noqa
+            #         labels=[
+            #             "rj-escritorio-dev",
+            #         ],
+            #         run_name="Update rain dashboard data (triggered by precipitacao_alertario flow)",  # noqa
+            #     )
+            #     rain_dashboard_update_flow.set_upstream(wait_for_materialization)
 
-                wait_for_rain_dashboard_update = wait_for_flow_run(
-                    flow_run_id=rain_dashboard_update_flow,
-                    stream_states=True,
-                    stream_logs=True,
-                    raise_final_state=False,
-                )
+            #     wait_for_rain_dashboard_update = wait_for_flow_run(
+            #         flow_run_id=rain_dashboard_update_flow,
+            #         stream_states=True,
+            #         stream_logs=True,
+            #         raise_final_state=False,
+            #     )
 
-            with case(DUMP_TO_GCS, True):
-                # Trigger Dump to GCS flow run with project id as datario
-                dump_to_gcs_flow = create_flow_run(
-                    flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
-                    project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-                    parameters={
-                        "project_id": "datario",
-                        "dataset_id": DATASET_ID,
-                        "table_id": TABLE_ID,
-                        "maximum_bytes_processed": MAXIMUM_BYTES_PROCESSED,
-                    },
-                    labels=[
-                        "datario",
-                    ],
-                    run_name=f"Dump to GCS {DATASET_ID}.{TABLE_ID}",
-                )
-                dump_to_gcs_flow.set_upstream(wait_for_materialization)
+            # with case(DUMP_TO_GCS, True):
+            #     # Trigger Dump to GCS flow run with project id as datario
+            #     dump_to_gcs_flow = create_flow_run(
+            #         flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
+            #         project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+            #         parameters={
+            #             "project_id": "datario",
+            #             "dataset_id": DATASET_ID,
+            #             "table_id": TABLE_ID,
+            #             "maximum_bytes_processed": MAXIMUM_BYTES_PROCESSED,
+            #         },
+            #         labels=[
+            #             "datario",
+            #         ],
+            #         run_name=f"Dump to GCS {DATASET_ID}.{TABLE_ID}",
+            #     )
+            #     dump_to_gcs_flow.set_upstream(wait_for_materialization)
 
-                wait_for_dump_to_gcs = wait_for_flow_run_with_2min_timeout(
-                    flow_run_id=dump_to_gcs_flow,
-                    stream_states=True,
-                    stream_logs=True,
-                    raise_final_state=True,
-                )
+            #     wait_for_dump_to_gcs = wait_for_flow_run_with_2min_timeout(
+            #         flow_run_id=dump_to_gcs_flow,
+            #         stream_states=True,
+            #         stream_logs=True,
+            #         raise_final_state=True,
+            #     )
 
 # para rodar na cloud
 cor_meteorologia_precipitacao_alertario.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
