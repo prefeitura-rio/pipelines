@@ -21,8 +21,11 @@ from pipelines.rj_cor.meteorologia.precipitacao_alertario.utils import (
     parse_date_columns,
 )
 from pipelines.utils.utils import (
+    build_redis_key,
+    compare_dates_between_tables_redis,
     log,
     to_partitions,
+    save_str_on_redis,
     save_updated_rows_on_redis,
 )
 
@@ -104,7 +107,15 @@ def tratar_dados(
         mode=mode,
     )
 
-    dados["id_estacao"] = dados["id_estacao"].astype(int)
+    # If df is empty stop flow on flows.py
+    empty_data = dados.shape[0] == 0
+    log(f"[DEBUG]: dataframe is empty: {empty_data}")
+
+    # Save max date on redis to compare this with last dbt run
+    if not empty_data:
+        max_date = str(dados["data_medicao"].max())
+        key = build_redis_key(dataset_id, table_id, name="last_update", mode=mode)
+        save_str_on_redis(key, max_date)
 
     # Fixar ordem das colunas
     dados = dados[
@@ -118,10 +129,6 @@ def tratar_dados(
             "acumulado_chuva_96_h",
         ]
     ]
-
-    # If df is empty stop flow
-    empty_data = dados.shape[0] == 0
-    log(f"[DEBUG]: dataframe is empty: {empty_data}")
 
     return dados, empty_data
 
@@ -149,3 +156,44 @@ def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
     )
     log(f"[DEBUG] Files saved on {prepath}")
     return prepath
+
+
+@task
+def save_last_dbt_update(
+    dataset_id: str,
+    table_id: str,
+    mode: str = "dev",
+) -> None:
+    """
+    Save on dbt last timestamp where it was updated
+    """
+    now = pendulum.now("America/Sao_Paulo").to_datetime_string()
+    key = build_redis_key(dataset_id, table_id, name="last_update", mode=mode)
+    save_str_on_redis(key, now)
+
+
+@task(skip_on_upstream_skip=False)
+def check_to_run_dbt(
+    dataset_id: str,
+    table_id: str,
+    mode: str = "dev",
+) -> bool:
+    """
+    It will run even if its upstream tasks skip.
+    """
+    key_table_1 = build_redis_key(dataset_id, table_id, name="dbt_last_update", mode=mode)
+    key_table_2 = build_redis_key(dataset_id, table_id, name="last_update", mode=mode)
+
+    format_date_table_1 = "YYYY-MM-DD HH:mm:SS"
+    format_date_table_2 = "YYYY-MM-DD HH:mm:SS"
+
+    # Returns true if date saved on table_2 (alertario) is bigger than
+    # the date saved on table_1 (dbt).
+    run_dbt = compare_dates_between_tables_redis(
+        key_table_1,
+        format_date_table_1,
+        key_table_2,
+        format_date_table_2
+    )
+
+    return run_dbt

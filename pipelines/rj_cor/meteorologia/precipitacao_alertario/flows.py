@@ -14,8 +14,10 @@ from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.custom import wait_for_flow_run_with_timeout
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks import (
+    check_to_run_dbt,
     tratar_dados,
     salvar_dados,
+    save_last_dbt_update,
 )
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.schedules import (
     minute_schedule,
@@ -85,6 +87,13 @@ with Flow(
             wait=path,
         )
 
+    run_dbt = check_to_run_dbt(
+        dataset_id=DATASET_ID,
+        table_id=TABLE_ID,
+    )
+    check_to_run_dbt.set_upstream(UPLOAD_TABLE)
+
+    with case(run_dbt, True):
         # Trigger DBT flow run
         with case(MATERIALIZE_AFTER_DUMP, True):
             current_flow_labels = get_current_flow_labels()
@@ -101,8 +110,15 @@ with Flow(
                 run_name=f"Materialize {DATASET_ID}.{TABLE_ID}",
             )
 
-            current_flow_labels.set_upstream(UPLOAD_TABLE)
+            save_last_dbt_update(
+                dataset_id=DATASET_ID,
+                table_id=TABLE_ID,
+                mode=MATERIALIZATION_MODE
+            )
+
+            current_flow_labels.set_upstream(check_to_run_dbt)
             materialization_flow.set_upstream(current_flow_labels)
+            save_last_dbt_update.set_upstream(materialization_flow)
 
             wait_for_materialization = wait_for_flow_run_with_2min_timeout(
                 flow_run_id=materialization_flow,
