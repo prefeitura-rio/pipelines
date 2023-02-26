@@ -51,9 +51,9 @@ def compare_dates_between_tables_redis(
     log(
         f">>>> debug date_1, date_2 redis {date_1}, {date_2}"
     )
-    if len(date_1) < 10:
+    if "date" not in date_1.keys():
         date_1 = {"date": "2023-02-23 19:39:34"}
-    if len(date_2) < 10:
+    if "date" not in date_2.keys():
         date_2 = {"date": "2023-02-23 19:39:34"}
     # Convert date to pendulum
     date_1 = pendulum.from_format(date_1["date"], format_date_table_1)
