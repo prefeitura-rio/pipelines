@@ -945,7 +945,7 @@ def compare_dates_between_tables_redis(
     date_1 = redis_client.hgetall(key_table_1)
     date_2 = redis_client.hgetall(key_table_2)
 
-    log(f">>>> debug date_1, date_2 redis {date_1}, {date_2}, len {len(date_1['date'])")
+    log(f">>>> debug date_1, date_2 redis {date_1}, {date_2}, len {len(date_1['date'])}")
     if len(date_1['date']) < 10:
         date_1 = "2023-02-23 19:39:34"
     if len(date_2['date']) < 10:
