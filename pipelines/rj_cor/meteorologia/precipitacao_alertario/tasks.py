@@ -48,9 +48,7 @@ def compare_dates_between_tables_redis(
     date_1 = redis_client.hgetall(key_table_1)
     date_2 = redis_client.hgetall(key_table_2)
 
-    log(
-        f">>>> debug date_1, date_2 redis {date_1}, {date_2}"
-    )
+    log(f">>>> debug date_1, date_2 redis {date_1}, {date_2}")
     if "date" not in date_1.keys():
         date_1 = {"date": "2023-02-23 19:39:34"}
     if "date" not in date_2.keys():
