@@ -78,16 +78,16 @@ with Flow(
     )
 
     # EXTRACT
-    # URL = "https://apps.data.rio/SMTR/DADOS CADASTRAIS/Cadastro de Veiculos.txt"
+    URL = "https://siurblab.rio.rj.gov.br/SMTR/DADOS%20CADASTRAIS/Cadastro%20de%20Veiculos.txt"
 
     # TODO: Alterar para link do FTP a ser definido # pylint: disable=W0511
     # flake8: noqa: E501
-    URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSKSkECTDUxrSFHOvk1A1u6ME5kqVDnyYD7zS4bqxVeY9en50mjPOOAYPgdKYjW05852YraxoekWpsg/pub?output=csv"
+    # URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSKSkECTDUxrSFHOvk1A1u6ME5kqVDnyYD7zS4bqxVeY9en50mjPOOAYPgdKYjW05852YraxoekWpsg/pub?output=csv"
 
     raw_status = get_raw(
         url=URL,
         headers=constants.SPPO_LICENCIAMENTO_MAPPING_KEYS.value,
-        # sep=";",
+        sep=";",
         filetype="txt",
     )
 
