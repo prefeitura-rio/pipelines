@@ -19,6 +19,7 @@ import pandas_read_xml as pdx
 from pipelines.constants import constants
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.utils import (
     parse_date_columns,
+    treat_date_col,
 )
 from pipelines.utils.utils import (
     build_redis_key,
@@ -71,8 +72,19 @@ def tratar_dados(
 
     # Converte de UTC para horário São Paulo
     dados["data_medicao_utc"] = pd.to_datetime(dados["data_medicao_utc"])
+
+    see_cols = ["data_medicao_utc", "id_estacao", "acumulado_chuva_15_min"]
+    log(f"DEBUG: data utc {dados[see_cols]}")
+
     date_format = "%Y-%m-%d %H:%M:%S"
     dados["data_medicao"] = dados["data_medicao_utc"].dt.strftime(date_format)
+
+    log(f"DEBUG: df dtypes {dados.dtypes}")
+    see_cols = ["data_medicao", "id_estacao", "acumulado_chuva_15_min"]
+    log(f"DEBUG: data antes {dados[see_cols]}")
+
+    dados.data_medicao = dados.data_medicao.apply(treat_date_col)
+    log(f"DEBUG: data dps {dados[see_cols]}")
 
     # Alterando valores ND, '-' e np.nan para NULL
     dados.replace(["ND", "-", np.nan], [None, None, None], inplace=True)

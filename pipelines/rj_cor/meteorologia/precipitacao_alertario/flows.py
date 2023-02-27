@@ -111,13 +111,6 @@ with Flow(
                 run_name=f"Materialize {DATASET_ID}.{TABLE_ID}",
             )
 
-            last_dbt_update = save_last_dbt_update(
-                dataset_id=DATASET_ID,
-                table_id=TABLE_ID,
-                mode=MATERIALIZATION_MODE,
-                wait=materialization_flow,
-            )
-
             current_flow_labels.set_upstream(run_dbt)
             materialization_flow.set_upstream(current_flow_labels)
 
@@ -126,6 +119,13 @@ with Flow(
                 stream_states=True,
                 stream_logs=True,
                 raise_final_state=True,
+            )
+
+            last_dbt_update = save_last_dbt_update(
+                dataset_id=DATASET_ID,
+                table_id=TABLE_ID,
+                mode=MATERIALIZATION_MODE,
+                wait=wait_for_materialization,
             )
 
             wait_for_materialization.max_retries = (
