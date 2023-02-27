@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=C0103
+# pylint: disable=C0103, W0611 
+# apagar esse ultimo
 """
 Flows for precipitacao_alertario.
 """
