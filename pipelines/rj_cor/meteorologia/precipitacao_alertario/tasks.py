@@ -63,10 +63,12 @@ def compare_dates_between_tables_redis(
 
     if len(date_1) == 0:
         date_1 = "2023-02-24 19:39:34"
+        date_1 = pendulum.from_format(date, format_date_table_1)
     else:
         date_1 = treat_redis_output(date_1, format_date_table_1)
     if len(date_2) == 0:
         date_2 = "2023-02-23 19:39:34"
+        date_2 = pendulum.from_format(date, format_date_table_2)
     else:
         date_2 = treat_redis_output(date_2, format_date_table_2)
 
