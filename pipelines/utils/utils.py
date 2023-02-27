@@ -955,7 +955,7 @@ def compare_dates_between_tables_redis(
 
     log(f">>>> debug date_1, date_2 redis {date_1}, {date_2}")
 
-    if (len(date_1["date"]) == 0) | (len(date_2["date"]) == 0):
+    if (len(date_1 == 0) | (len(date_2) == 0):
         return True
 
     date_1 = treat_redis_output(date_1)
