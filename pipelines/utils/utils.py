@@ -928,47 +928,45 @@ def save_str_on_redis(
     redis_client.hset(redis_key, key, value)
 
 
-# def compare_dates_between_tables_redis(
-#     key_table_1: str,
-#     format_date_table_1: str,
-#     key_table_2: str,
-#     format_date_table_2: str,
-# ):
-#     """
-#     Function that checks if the date saved on the second
-#     table is bigger then the first one
-#     """
+def treat_redis_output(text):
+    """
+    Redis returns a dict where both key and value are byte string
+    Example: {b'date': b'2023-02-27 07:29:04'}
+    """
+    return {k.decode("utf-8"): v.decode("utf-8") for k, v in text.items()}
 
-#     redis_client = get_redis_client()
 
-#     # get saved date on redis
-#     date_1 = redis_client.hgetall(key_table_1)
-#     date_2 = redis_client.hgetall(key_table_2)
+def compare_dates_between_tables_redis(
+    key_table_1: str,
+    format_date_table_1: str,
+    key_table_2: str,
+    format_date_table_2: str,
+):
+    """
+    Function that checks if the date saved on the second
+    table is bigger then the first one
+    """
 
-#     log(f">>>> debug date_1, date_2 redis {date_1}, {date_2}")
+    redis_client = get_redis_client()
 
-#     # if (len(date_1["date"]) == 0) | (len(date_2["date"]) == 0)
-#     #     return True
-#     def treat_redis_output(date, format_date_table):
-#         """
-#         Redis returns a dict where both key and value are byte string
-#         {b'date': b'2023-02-27 07:29:04'}
-#         """
-#         date = {k.decode("utf-8"): v.decode("utf-8") for k, v in date.items()}
-#         # Convert date to pendulum
-#         return pendulum.from_format(date["date"], format_date_table)
+    # get saved date on redis
+    date_1 = redis_client.hgetall(key_table_1)
+    date_2 = redis_client.hgetall(key_table_2)
 
-#     if len(date_1) == 0:
-#         date_1 = "2023-02-24 19:39:34"
-#     else:
-#         date_1 = treat_redis_output(date_1, format_date_table_1)
-#     if len(date_2) == 0:
-#         date_2 = "2023-02-23 19:39:34"
-#     else:
-#         date_2 = treat_redis_output(date_2, format_date_table_2)
+    log(f">>>> debug date_1, date_2 redis {date_1}, {date_2}")
 
-#     log(f">>>> debug date_1, date_2 pendulum {date_1}, {date_2}, {date_1 < date_2}")
-#     return date_1 < date_2
+    if (len(date_1["date"]) == 0) | (len(date_2["date"]) == 0):
+        return True
+
+    date_1 = treat_redis_output(date_1)
+    date_2 = treat_redis_output(date_2)
+
+    # Convert date to pendulum
+    date_1 = pendulum.from_format(date_1, format_date_table_1)
+    date_2 = pendulum.from_format(date_2, format_date_table_2)
+    log(f">>>> debug data max alertario {date_1}:, data redis: {date_2}")
+    log(f">>>> debug data redis > data max alertario: {date_1 < date_2}")
+    return date_1 < date_2
 
 
 # pylint: disable=W0106
