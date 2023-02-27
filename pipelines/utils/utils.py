@@ -960,10 +960,11 @@ def compare_dates_between_tables_redis(
 
     date_1 = treat_redis_output(date_1)
     date_2 = treat_redis_output(date_2)
+    log(f">>>> debug date_1, date_2 treated {date_1}, {date_2}")
 
     # Convert date to pendulum
-    date_1 = pendulum.from_format(date_1, format_date_table_1)
-    date_2 = pendulum.from_format(date_2, format_date_table_2)
+    date_1 = pendulum.from_format(date_1['date'], format_date_table_1)
+    date_2 = pendulum.from_format(date_2['date'], format_date_table_2)
     log(f">>>> debug data max alertario {date_1}:, data redis: {date_2}")
     log(f">>>> debug data redis > data max alertario: {date_1 < date_2}")
     return date_1 < date_2
