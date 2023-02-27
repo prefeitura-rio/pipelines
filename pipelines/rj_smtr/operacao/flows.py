@@ -78,11 +78,11 @@ with Flow(
     )
 
     # EXTRACT
-    # URL = "https://apps.data.rio/SMTR/Multas/multas.txt"
+    URL = "https://siurblab.rio.rj.gov.br/SMTR/Multas/multas.txt"
 
     # TODO: Alterar para link do FTP a ser definido # pylint: disable=W0511
     # flake8: noqa: E501
-    URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS47M-uRV-L5F67Qq26UVJJuSqpm1RPVexG4XsCM0IcTopPoPB3dkFbwZ2eoJrf6Ou9w7KMcSTfI2hy/pub?output=csv"
+    # URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS47M-uRV-L5F67Qq26UVJJuSqpm1RPVexG4XsCM0IcTopPoPB3dkFbwZ2eoJrf6Ou9w7KMcSTfI2hy/pub?output=csv"
 
     raw_status = get_raw(
         url=URL,
