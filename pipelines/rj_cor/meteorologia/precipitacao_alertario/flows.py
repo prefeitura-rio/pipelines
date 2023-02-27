@@ -97,6 +97,7 @@ with Flow(
 
     with case(run_dbt, True):
         # Trigger DBT flow run
+        MATERIALIZE_AFTER_DUMP = True
         with case(MATERIALIZE_AFTER_DUMP, True):
             # current_flow_labels = get_current_flow_labels()
             # materialization_flow = create_flow_run(
