@@ -164,6 +164,7 @@ def save_last_dbt_update(
     dataset_id: str,
     table_id: str,
     mode: str = "dev",
+    wait=None,  # pylint: disable=unused-argument
 ) -> None:
     """
     Save on dbt last timestamp where it was updated

@@ -112,12 +112,14 @@ with Flow(
             )
 
             last_dbt_update = save_last_dbt_update(
-                dataset_id=DATASET_ID, table_id=TABLE_ID, mode=MATERIALIZATION_MODE
+                dataset_id=DATASET_ID,
+                table_id=TABLE_ID,
+                mode=MATERIALIZATION_MODE,
+                wait=materialization_flow,
             )
 
             current_flow_labels.set_upstream(run_dbt)
             materialization_flow.set_upstream(current_flow_labels)
-            last_dbt_update.set_upstream(materialization_flow)
 
             wait_for_materialization = wait_for_flow_run_with_2min_timeout(
                 flow_run_id=materialization_flow,
