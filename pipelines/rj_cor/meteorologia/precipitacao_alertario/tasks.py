@@ -185,7 +185,6 @@ def check_to_run_dbt(
     It will run even if its upstream tasks skip.
     """
 
-    log(">>>> debug checando datas")
     key_table_1 = build_redis_key(
         dataset_id, table_id, name="dbt_last_update", mode=mode
     )
@@ -199,5 +198,5 @@ def check_to_run_dbt(
     run_dbt = compare_dates_between_tables_redis(
         key_table_1, format_date_table_1, key_table_2, format_date_table_2
     )
-
+    log(f">>>> debug data alertario > data dbt: {run_dbt}")
     return run_dbt
