@@ -954,7 +954,7 @@ def compare_dates_between_tables_redis(
         Redis returns a dict where both key and value are byte string
         {b'date': b'2023-02-27 07:29:04'}
         """
-        date = {k.decode("utf-8"): v.decode("utf-8") for k, v in text.items()}
+        date = {k.decode("utf-8"): v.decode("utf-8") for k, v in date.items()}
         # Convert date to pendulum
         return pendulum.from_format(date["date"], format_date_table)
 
