@@ -945,15 +945,13 @@ def compare_dates_between_tables_redis(
     date_1 = redis_client.hgetall(key_table_1)
     date_2 = redis_client.hgetall(key_table_2)
 
-    log(
-        f">>>> debug date_1, date_2 redis {date_1}, {date_2}"
-    )
+    log(f">>>> debug date_1, date_2 redis {date_1}, {date_2}")
 
     # if (len(date_1["date"]) == 0) | (len(date_2["date"]) == 0)
     #     return True
     def treat_redis_output(date, format_date_table):
         """
-        Redis returns a dict where both key and value are byte string 
+        Redis returns a dict where both key and value are byte string
         {b'date': b'2023-02-27 07:29:04'}
         """
         date = {k.decode("utf-8"): v.decode("utf-8") for k, v in text.items()}
