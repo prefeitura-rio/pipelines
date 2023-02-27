@@ -87,6 +87,7 @@ with Flow(
     raw_status = get_raw(
         url=URL,
         headers=constants.SPPO_INFRACAO_MAPPING_KEYS.value,
+        sep=";",
         filetype="txt",
     )
 
