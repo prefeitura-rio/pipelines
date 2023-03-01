@@ -49,6 +49,7 @@ from pipelines.rj_smtr.veiculo.tasks import (
 
 # Flows #
 
+# flake8: noqa: E501
 sppo_licenciamento_captura_name = f"SMTR: Captura - {constants.DATASET_ID.value}.{constants.SPPO_LICENCIAMENTO_TABLE_ID.value}"
 with Flow(
     sppo_licenciamento_captura_name,
@@ -78,11 +79,7 @@ with Flow(
     )
 
     # EXTRACT
-    URL = "https://siurblab.rio.rj.gov.br/SMTR/DADOS%20CADASTRAIS/Cadastro%20de%20Veiculos.txt"
-
-    # TODO: Alterar para link do FTP a ser definido # pylint: disable=W0511
-    # flake8: noqa: E501
-    # URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSKSkECTDUxrSFHOvk1A1u6ME5kqVDnyYD7zS4bqxVeY9en50mjPOOAYPgdKYjW05852YraxoekWpsg/pub?output=csv"
+    URL = constants.SPPO_LICENCIAMENTO_URL.value
 
     raw_status = get_raw(
         url=URL,

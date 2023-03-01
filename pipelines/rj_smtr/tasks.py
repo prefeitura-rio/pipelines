@@ -142,7 +142,8 @@ def get_current_timestamp(
     Get current timestamp for flow run.
     """
     if not timestamp:
-        timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
+        # timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
+        timestamp = datetime(year=2023, month=2, day=1)
     if truncate_minute:
         return timestamp.replace(second=0, microsecond=0)
     return timestamp
