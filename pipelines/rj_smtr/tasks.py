@@ -143,7 +143,7 @@ def get_current_timestamp(
     """
     if not timestamp:
         # timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
-        timestamp = datetime(year=2023, month=2, day=1)
+        timestamp = datetime(year=2023, month=2, day=27)
     if truncate_minute:
         return timestamp.replace(second=0, microsecond=0)
     return timestamp
