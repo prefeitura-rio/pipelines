@@ -14,9 +14,8 @@ class constants(Enum):  # pylint: disable=c0103
     DATASET_ID = "veiculo"
 
     # VEÍCULOS LICENCIADOS
-    # SPPO_LICENCIAMENTO_URL = "https://siurblab.rio.rj.gov.br/SMTR/DADOS%20CADASTRAIS/Cadastro%20de%20Veiculos.txt"
     # flake8: noqa: E501
-    SPPO_LICENCIAMENTO_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTYl7DMbLpS_RV_t-9TJcmGuO1A4hU24qN-4XQQluKROYVd7ECPj_jo_-99lr_tLEjiHCsENbD_V1aU/pub?output=csv"
+    SPPO_LICENCIAMENTO_URL = "https://siurblab.rio.rj.gov.br/SMTR/DADOS%20CADASTRAIS/Cadastro%20de%20Veiculos.txt"
     SPPO_LICENCIAMENTO_TABLE_ID = "sppo_licenciamento_stu"
     SPPO_LICENCIAMENTO_MAPPING_KEYS = {
         "placa": "placa",
