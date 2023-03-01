@@ -20,7 +20,7 @@ cetrio_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 cetrio_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[
-        constants.RJ_SMFP_AGENT_LABEL.value,
+        constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
     ],
 )
 
