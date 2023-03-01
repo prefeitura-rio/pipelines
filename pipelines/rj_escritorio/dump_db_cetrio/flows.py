@@ -10,7 +10,9 @@ from prefect.storage import GCS
 
 from pipelines.constants import constants
 
-from pipelines.rj_escritorio.dump_db_cetrio.schedules import cetrio_daily_update_schedule
+from pipelines.rj_escritorio.dump_db_cetrio.schedules import (
+    cetrio_daily_update_schedule,
+)
 from pipelines.utils.dump_db.flows import dump_sql_flow
 from pipelines.utils.utils import set_default_parameters
 
