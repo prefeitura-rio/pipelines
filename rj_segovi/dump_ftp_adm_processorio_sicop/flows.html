@@ -100,7 +100,8 @@ with Flow(
     dbt_model_secret_parameters = Parameter(
         &#34;dbt_model_secret_parameters&#34;, default={}, required=False
     )
-
+    biglake_table = Parameter(&#34;biglake_table&#34;, default=False, required=False)
+    
     #####################################
     #
     # Rename flow run
@@ -136,6 +137,7 @@ with Flow(
             data_path=save_path,
             dataset_id=dataset_id,
             table_id=table_id,
+            biglake_table=biglake_table,
             dump_mode=&#34;append&#34;,
         )
 
