@@ -97,7 +97,7 @@ with Flow(
         "dbt_model_secret_parameters", default={}, required=False
     )
     dbt_alias = Parameter("dbt_alias", default=False, required=False)
-
+    biglake_table = Parameter("dbt_alias", default=False, required=False)
     #####################################
     #
     # Rename flow run
@@ -185,6 +185,7 @@ with Flow(
             dataset_id=dataset_id,
             table_id=table_id,
             dump_mode=dump_mode,
+            biglake_table = biglake_table,
             wait=data_exists,
         )
 
