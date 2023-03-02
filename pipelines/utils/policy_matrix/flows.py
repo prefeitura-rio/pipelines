@@ -69,6 +69,7 @@ with Flow(
         dataset_id="datalake_policy",
         table_id="permissoes",
         dump_mode="overwrite",
+        biglake_table=False,
     )
     create_and_upload_to_gcs.set_upstream(save_file_path)
 
