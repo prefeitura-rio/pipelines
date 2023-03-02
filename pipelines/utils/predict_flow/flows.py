@@ -47,7 +47,7 @@ with Flow(
     )
     include_timestamp = Parameter("include_timestamp", default=False, required=False)
     timestamp = Parameter("timestamp", default=None, required=False)
-    biglake_table = Parameter("dbt_alias", default=False, required=False)
+    biglake_table = Parameter("biglake_table", default=False, required=False)
 
     # Get model from MLflow model registry (either model version or stage must be provided)
     model = get_model(
