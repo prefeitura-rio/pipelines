@@ -81,7 +81,7 @@ with Flow(
     build_json_dataframe = Parameter(
         "build_json_dataframe", default=False, required=False
     )
-    biglake_table = Parameter("dbt_alias", default=False, required=False)
+    biglake_table = Parameter("biglake_table", default=False, required=False)
     #####################################
     #
     # Rename flow run
