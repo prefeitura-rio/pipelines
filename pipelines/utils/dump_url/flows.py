@@ -81,7 +81,7 @@ with Flow(
     build_json_dataframe = Parameter(
         "build_json_dataframe", default=False, required=False
     )
-
+    biglake_table = Parameter("dbt_alias", default=False, required=False)
     #####################################
     #
     # Rename flow run
@@ -133,6 +133,7 @@ with Flow(
         data_path=DUMP_DATA_PATH,
         dataset_id=dataset_id,
         table_id=table_id,
+        biglake_table=biglake_table,
         dump_mode=dump_mode,
     )
     CREATE_TABLE_AND_UPLOAD_TO_GCS_TASK.set_upstream(DUMP_CHUNKS_TASK)

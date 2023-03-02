@@ -70,7 +70,7 @@ with Flow(
         required=False,
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
-
+    biglake_table = Parameter("dbt_alias", default=False, required=False)
     #####################################
     #
     # Rename flow run
@@ -108,6 +108,7 @@ with Flow(
         dataset_id=dataset_id,
         table_id=table_id,
         dump_mode=dump_mode,
+        biglake_table=biglake_table,
         wait=datario_path,
     )
     CREATE_TABLE_AND_UPLOAD_TO_GCS_DONE.set_upstream(datario_path)
