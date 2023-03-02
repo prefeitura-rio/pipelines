@@ -68,7 +68,8 @@ with Flow(
         required=False,
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
-
+    biglake_table = Parameter("dbt_alias", default=False, required=False)
+    
     # Validate the georeference mode
     georef_mode_valid = validate_georeference_mode(mode=georeference_mode)
 
@@ -95,6 +96,7 @@ with Flow(
             data_path=base_path,
             dataset_id=destination_dataset_id,
             table_id=destination_table_id,
+            biglake_table=biglake_table,
             dump_mode="append",
         )
 
