@@ -59,7 +59,6 @@ with Flow(
 
     dataset_id = geolocator_constants.DATASET_ID.value
     table_id = geolocator_constants.TABLE_ID.value
-
     novos_enderecos, possui_enderecos_novos = seleciona_enderecos_novos()
 
     # Roda apenas se houver endereços novos
@@ -77,6 +76,7 @@ with Flow(
             dataset_id=geolocator_constants.DATASET_ID.value,
             table_id=geolocator_constants.TABLE_ID.value,
             dump_mode="append",
+            biglake_table=False,
             wait=base_path,
         )
 
