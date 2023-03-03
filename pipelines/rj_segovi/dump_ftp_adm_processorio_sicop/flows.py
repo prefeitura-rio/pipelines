@@ -69,7 +69,7 @@ with Flow(
     dbt_model_secret_parameters = Parameter(
         "dbt_model_secret_parameters", default={}, required=False
     )
-    biglake_table = Parameter("dbt_alias", default=False, required=False)
+    biglake_table = Parameter("biglake_table", default=False, required=False)
 
     #####################################
     #
