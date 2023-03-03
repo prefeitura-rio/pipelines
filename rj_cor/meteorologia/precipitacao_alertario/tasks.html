@@ -48,10 +48,14 @@ import pandas_read_xml as pdx
 from pipelines.constants import constants
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.utils import (
     parse_date_columns,
+    treat_date_col,
 )
 from pipelines.utils.utils import (
+    build_redis_key,
+    compare_dates_between_tables_redis,
     log,
     to_partitions,
+    save_str_on_redis,
     save_updated_rows_on_redis,
 )
 
@@ -97,8 +101,19 @@ def tratar_dados(
 
     # Converte de UTC para horário São Paulo
     dados[&#34;data_medicao_utc&#34;] = pd.to_datetime(dados[&#34;data_medicao_utc&#34;])
+
+    see_cols = [&#34;data_medicao_utc&#34;, &#34;id_estacao&#34;, &#34;acumulado_chuva_15_min&#34;]
+    log(f&#34;DEBUG: data utc {dados[see_cols]}&#34;)
+
     date_format = &#34;%Y-%m-%d %H:%M:%S&#34;
     dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao_utc&#34;].dt.strftime(date_format)
+
+    log(f&#34;DEBUG: df dtypes {dados.dtypes}&#34;)
+    see_cols = [&#34;data_medicao&#34;, &#34;id_estacao&#34;, &#34;acumulado_chuva_15_min&#34;]
+    log(f&#34;DEBUG: data antes {dados[see_cols]}&#34;)
+
+    dados.data_medicao = dados.data_medicao.apply(treat_date_col)
+    log(f&#34;DEBUG: data dps {dados[see_cols]}&#34;)
 
     # Alterando valores ND, &#39;-&#39; e np.nan para NULL
     dados.replace([&#34;ND&#34;, &#34;-&#34;, np.nan], [None, None, None], inplace=True)
@@ -133,7 +148,16 @@ def tratar_dados(
         mode=mode,
     )
 
-    dados[&#34;id_estacao&#34;] = dados[&#34;id_estacao&#34;].astype(int)
+    # If df is empty stop flow on flows.py
+    empty_data = dados.shape[0] == 0
+    log(f&#34;[DEBUG]: dataframe is empty: {empty_data}&#34;)
+
+    # Save max date on redis to compare this with last dbt run
+    if not empty_data:
+        max_date = str(dados[&#34;data_medicao&#34;].max())
+        redis_key = build_redis_key(dataset_id, table_id, name=&#34;last_update&#34;, mode=mode)
+        log(f&#34;[DEBUG]: dataframe is not empty key: {redis_key} {max_date}&#34;)
+        save_str_on_redis(redis_key, &#34;date&#34;, max_date)
 
     # Fixar ordem das colunas
     dados = dados[
@@ -147,10 +171,6 @@ def tratar_dados(
             &#34;acumulado_chuva_96_h&#34;,
         ]
     ]
-
-    # If df is empty stop flow
-    empty_data = dados.shape[0] == 0
-    log(f&#34;[DEBUG]: dataframe is empty: {empty_data}&#34;)
 
     return dados, empty_data
 
@@ -177,7 +197,50 @@ def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
         suffix=current_time,
     )
     log(f&#34;[DEBUG] Files saved on {prepath}&#34;)
-    return prepath</code></pre>
+    return prepath
+
+
+@task
+def save_last_dbt_update(
+    dataset_id: str,
+    table_id: str,
+    mode: str = &#34;dev&#34;,
+    wait=None,  # pylint: disable=unused-argument
+) -&gt; None:
+    &#34;&#34;&#34;
+    Save on dbt last timestamp where it was updated
+    &#34;&#34;&#34;
+    now = pendulum.now(&#34;America/Sao_Paulo&#34;).to_datetime_string()
+    redis_key = build_redis_key(dataset_id, table_id, name=&#34;dbt_last_update&#34;, mode=mode)
+    log(f&#34;&gt;&gt;&gt;&gt;&gt; debug saving actual date on dbt redis {redis_key} {now}&#34;)
+    save_str_on_redis(redis_key, &#34;date&#34;, now)
+
+
+@task(skip_on_upstream_skip=False)
+def check_to_run_dbt(
+    dataset_id: str,
+    table_id: str,
+    mode: str = &#34;dev&#34;,
+) -&gt; bool:
+    &#34;&#34;&#34;
+    It will run even if its upstream tasks skip.
+    &#34;&#34;&#34;
+
+    key_table_1 = build_redis_key(
+        dataset_id, table_id, name=&#34;dbt_last_update&#34;, mode=mode
+    )
+    key_table_2 = build_redis_key(dataset_id, table_id, name=&#34;last_update&#34;, mode=mode)
+
+    format_date_table_1 = &#34;YYYY-MM-DD HH:mm:SS&#34;
+    format_date_table_2 = &#34;YYYY-MM-DD HH:mm:SS&#34;
+
+    # Returns true if date saved on table_2 (alertario) is bigger than
+    # the date saved on table_1 (dbt).
+    run_dbt = compare_dates_between_tables_redis(
+        key_table_1, format_date_table_1, key_table_2, format_date_table_2
+    )
+    log(f&#34;&gt;&gt;&gt;&gt; debug data alertario &gt; data dbt: {run_dbt}&#34;)
+    return run_dbt</code></pre>
 </details>
 </section>
 <section>
@@ -187,6 +250,42 @@ def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.check_to_run_dbt"><code class="name flex">
+<span>def <span class="ident">check_to_run_dbt</span></span>(<span>dataset_id: str, table_id: str, mode: str = 'dev') ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>It will run even if its upstream tasks skip.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(skip_on_upstream_skip=False)
+def check_to_run_dbt(
+    dataset_id: str,
+    table_id: str,
+    mode: str = &#34;dev&#34;,
+) -&gt; bool:
+    &#34;&#34;&#34;
+    It will run even if its upstream tasks skip.
+    &#34;&#34;&#34;
+
+    key_table_1 = build_redis_key(
+        dataset_id, table_id, name=&#34;dbt_last_update&#34;, mode=mode
+    )
+    key_table_2 = build_redis_key(dataset_id, table_id, name=&#34;last_update&#34;, mode=mode)
+
+    format_date_table_1 = &#34;YYYY-MM-DD HH:mm:SS&#34;
+    format_date_table_2 = &#34;YYYY-MM-DD HH:mm:SS&#34;
+
+    # Returns true if date saved on table_2 (alertario) is bigger than
+    # the date saved on table_1 (dbt).
+    run_dbt = compare_dates_between_tables_redis(
+        key_table_1, format_date_table_1, key_table_2, format_date_table_2
+    )
+    log(f&#34;&gt;&gt;&gt;&gt; debug data alertario &gt; data dbt: {run_dbt}&#34;)
+    return run_dbt</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.salvar_dados"><code class="name flex">
 <span>def <span class="ident">salvar_dados</span></span>(<span>dados: pandas.core.frame.DataFrame) ‑> Union[str, pathlib.Path]</span>
 </code></dt>
@@ -219,6 +318,31 @@ def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
     )
     log(f&#34;[DEBUG] Files saved on {prepath}&#34;)
     return prepath</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.save_last_dbt_update"><code class="name flex">
+<span>def <span class="ident">save_last_dbt_update</span></span>(<span>dataset_id: str, table_id: str, mode: str = 'dev', wait=None) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Save on dbt last timestamp where it was updated</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def save_last_dbt_update(
+    dataset_id: str,
+    table_id: str,
+    mode: str = &#34;dev&#34;,
+    wait=None,  # pylint: disable=unused-argument
+) -&gt; None:
+    &#34;&#34;&#34;
+    Save on dbt last timestamp where it was updated
+    &#34;&#34;&#34;
+    now = pendulum.now(&#34;America/Sao_Paulo&#34;).to_datetime_string()
+    redis_key = build_redis_key(dataset_id, table_id, name=&#34;dbt_last_update&#34;, mode=mode)
+    log(f&#34;&gt;&gt;&gt;&gt;&gt; debug saving actual date on dbt redis {redis_key} {now}&#34;)
+    save_str_on_redis(redis_key, &#34;date&#34;, now)</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.tratar_dados"><code class="name flex">
@@ -272,8 +396,19 @@ def tratar_dados(
 
     # Converte de UTC para horário São Paulo
     dados[&#34;data_medicao_utc&#34;] = pd.to_datetime(dados[&#34;data_medicao_utc&#34;])
+
+    see_cols = [&#34;data_medicao_utc&#34;, &#34;id_estacao&#34;, &#34;acumulado_chuva_15_min&#34;]
+    log(f&#34;DEBUG: data utc {dados[see_cols]}&#34;)
+
     date_format = &#34;%Y-%m-%d %H:%M:%S&#34;
     dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao_utc&#34;].dt.strftime(date_format)
+
+    log(f&#34;DEBUG: df dtypes {dados.dtypes}&#34;)
+    see_cols = [&#34;data_medicao&#34;, &#34;id_estacao&#34;, &#34;acumulado_chuva_15_min&#34;]
+    log(f&#34;DEBUG: data antes {dados[see_cols]}&#34;)
+
+    dados.data_medicao = dados.data_medicao.apply(treat_date_col)
+    log(f&#34;DEBUG: data dps {dados[see_cols]}&#34;)
 
     # Alterando valores ND, &#39;-&#39; e np.nan para NULL
     dados.replace([&#34;ND&#34;, &#34;-&#34;, np.nan], [None, None, None], inplace=True)
@@ -308,7 +443,16 @@ def tratar_dados(
         mode=mode,
     )
 
-    dados[&#34;id_estacao&#34;] = dados[&#34;id_estacao&#34;].astype(int)
+    # If df is empty stop flow on flows.py
+    empty_data = dados.shape[0] == 0
+    log(f&#34;[DEBUG]: dataframe is empty: {empty_data}&#34;)
+
+    # Save max date on redis to compare this with last dbt run
+    if not empty_data:
+        max_date = str(dados[&#34;data_medicao&#34;].max())
+        redis_key = build_redis_key(dataset_id, table_id, name=&#34;last_update&#34;, mode=mode)
+        log(f&#34;[DEBUG]: dataframe is not empty key: {redis_key} {max_date}&#34;)
+        save_str_on_redis(redis_key, &#34;date&#34;, max_date)
 
     # Fixar ordem das colunas
     dados = dados[
@@ -322,10 +466,6 @@ def tratar_dados(
             &#34;acumulado_chuva_96_h&#34;,
         ]
     ]
-
-    # If df is empty stop flow
-    empty_data = dados.shape[0] == 0
-    log(f&#34;[DEBUG]: dataframe is empty: {empty_data}&#34;)
 
     return dados, empty_data</code></pre>
 </details>
@@ -394,7 +534,9 @@ setTimeout(() => input.focus(), 100);
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.check_to_run_dbt" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.check_to_run_dbt">check_to_run_dbt</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.salvar_dados" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.salvar_dados">salvar_dados</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.save_last_dbt_update" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.save_last_dbt_update">save_last_dbt_update</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.tratar_dados" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.tratar_dados">tratar_dados</a></code></li>
 </ul>
 </li>
