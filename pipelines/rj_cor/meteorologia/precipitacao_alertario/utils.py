@@ -53,3 +53,12 @@ def parse_date_columns(
     )
 
     return dataframe, [ano_col, mes_col, data_col]
+
+
+def treat_date_col(row):
+    """
+    Add zero hour if date cames without it
+    """
+    if len(row) == 10:
+        row = row + " 00:00:00"
+    return row
