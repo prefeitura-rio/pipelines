@@ -93,6 +93,7 @@ with Flow(
         table_id_rr,
         "prod",
         redis_files_rr_updated,
+        keep_last=200,
         wait=path_rr,
     )
 
@@ -130,6 +131,7 @@ with Flow(
         table_id_tpw,
         "prod",
         redis_files_tpw_updated,
+        keep_last=200,
         wait=path_tpw,
     )
 
@@ -169,6 +171,7 @@ with Flow(
         table_id_cmip,
         "prod",
         redis_files_cmip_updated,
+        keep_last=200,
         wait=path_cmip,
     )
 
