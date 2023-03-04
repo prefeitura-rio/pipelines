@@ -64,5 +64,4 @@ rj_escritorio_rain_dashboard_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value],
 )
-
 # rj_escritorio_rain_dashboard_flow.schedule = every_fifteen_minutes

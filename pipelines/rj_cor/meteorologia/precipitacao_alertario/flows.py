@@ -35,7 +35,6 @@ wait_for_flow_run_with_2min_timeout = wait_for_flow_run_with_timeout(
     timeout=timedelta(minutes=2)
 )
 
-
 with Flow(
     name="COR: Meteorologia - Precipitacao ALERTARIO",
     code_owners=[
