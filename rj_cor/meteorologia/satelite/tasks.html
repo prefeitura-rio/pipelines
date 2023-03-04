@@ -109,6 +109,7 @@ def download(
     ref_filename: str = None,
     redis_files: list = [],
     wait=None,
+    mode_redis: str = &#34;prod&#34;,
 ) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
     Acessa o S3 e faz o download do primeiro arquivo da data-hora especificada
@@ -150,7 +151,9 @@ def download(
         skip = Skipped(&#34;No available files on API&#34;)
         raise ENDRUN(state=skip)
 
-    base_path = os.path.join(os.getcwd(), &#34;data&#34;, &#34;satelite&#34;, variavel[:-1], &#34;input&#34;)
+    base_path = os.path.join(
+        os.getcwd(), mode_redis, &#34;data&#34;, &#34;satelite&#34;, variavel[:-1], &#34;input&#34;
+    )
 
     if not os.path.exists(base_path):
         os.makedirs(base_path)
@@ -174,12 +177,13 @@ def download(
     download_file = None
     for path_file in path_files:
         filename = path_file.split(&#34;/&#34;)[-1]
+        log(f&#34;\n\n[DEBUG]: {filename} check if is in redis&#34;)
         if filename not in redis_files:
             log(f&#34;\n\n[DEBUG]: {filename} not in redis&#34;)
             redis_files.append(filename)
             path_filename = os.path.join(base_path, filename)
             download_file = path_file
-            log(f&#34;[DEBUG]: filename to be append on redis_files: {redis_files}&#34;)
+            # log(f&#34;[DEBUG]: filename to be append on redis_files: {redis_files}&#34;)
             break
 
     # Skip task if there is no new file
@@ -203,18 +207,18 @@ def download(
 
 
 @task
-def tratar_dados(filename: str) -&gt; dict:
+def tratar_dados(filename: str, mode_redis: str = &#34;prod&#34;) -&gt; dict:
     &#34;&#34;&#34;
     Converte coordenadas X, Y para latlon e recorta área
     &#34;&#34;&#34;
     log(f&#34;\n&gt;&gt;&gt;&gt; Started treating file: {filename}&#34;)
-    grid, goes16_extent, info = main(filename)
+    grid, goes16_extent, info = main(filename, mode_redis)
     del grid, goes16_extent
     return info
 
 
 @task
-def save_data(info: dict, file_path: str) -&gt; Union[str, Path]:
+def save_data(info: dict, file_path: str, mode_redis: str = &#34;prod&#34;) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
     Convert tif data to csv
     &#34;&#34;&#34;
@@ -222,7 +226,7 @@ def save_data(info: dict, file_path: str) -&gt; Union[str, Path]:
     variable = info[&#34;variable&#34;]
     datetime_save = info[&#34;datetime_save&#34;]
     print(f&#34;Saving {variable} in parquet&#34;)
-    output_path = save_data_in_file(variable, datetime_save, file_path)
+    output_path = save_data_in_file(variable, datetime_save, file_path, mode_redis)
     return output_path</code></pre>
 </details>
 </section>
@@ -234,7 +238,7 @@ def save_data(info: dict, file_path: str) -&gt; Union[str, Path]:
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pipelines.rj_cor.meteorologia.satelite.tasks.download"><code class="name flex">
-<span>def <span class="ident">download</span></span>(<span>variavel: str, date_hour_info: dict, band: str = None, ref_filename: str = None, redis_files: list = [], wait=None) ‑> Union[str, pathlib.Path]</span>
+<span>def <span class="ident">download</span></span>(<span>variavel: str, date_hour_info: dict, band: str = None, ref_filename: str = None, redis_files: list = [], wait=None, mode_redis: str = 'prod') ‑> Union[str, pathlib.Path]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Acessa o S3 e faz o download do primeiro arquivo da data-hora especificada</p></div>
@@ -250,6 +254,7 @@ def download(
     ref_filename: str = None,
     redis_files: list = [],
     wait=None,
+    mode_redis: str = &#34;prod&#34;,
 ) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
     Acessa o S3 e faz o download do primeiro arquivo da data-hora especificada
@@ -291,7 +296,9 @@ def download(
         skip = Skipped(&#34;No available files on API&#34;)
         raise ENDRUN(state=skip)
 
-    base_path = os.path.join(os.getcwd(), &#34;data&#34;, &#34;satelite&#34;, variavel[:-1], &#34;input&#34;)
+    base_path = os.path.join(
+        os.getcwd(), mode_redis, &#34;data&#34;, &#34;satelite&#34;, variavel[:-1], &#34;input&#34;
+    )
 
     if not os.path.exists(base_path):
         os.makedirs(base_path)
@@ -315,12 +322,13 @@ def download(
     download_file = None
     for path_file in path_files:
         filename = path_file.split(&#34;/&#34;)[-1]
+        log(f&#34;\n\n[DEBUG]: {filename} check if is in redis&#34;)
         if filename not in redis_files:
             log(f&#34;\n\n[DEBUG]: {filename} not in redis&#34;)
             redis_files.append(filename)
             path_filename = os.path.join(base_path, filename)
             download_file = path_file
-            log(f&#34;[DEBUG]: filename to be append on redis_files: {redis_files}&#34;)
+            # log(f&#34;[DEBUG]: filename to be append on redis_files: {redis_files}&#34;)
             break
 
     # Skip task if there is no new file
@@ -371,7 +379,7 @@ def get_dates(current_time) -&gt; str:
 </details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.tasks.save_data"><code class="name flex">
-<span>def <span class="ident">save_data</span></span>(<span>info: dict, file_path: str) ‑> Union[str, pathlib.Path]</span>
+<span>def <span class="ident">save_data</span></span>(<span>info: dict, file_path: str, mode_redis: str = 'prod') ‑> Union[str, pathlib.Path]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Convert tif data to csv</p></div>
@@ -380,7 +388,7 @@ def get_dates(current_time) -&gt; str:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def save_data(info: dict, file_path: str) -&gt; Union[str, Path]:
+def save_data(info: dict, file_path: str, mode_redis: str = &#34;prod&#34;) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
     Convert tif data to csv
     &#34;&#34;&#34;
@@ -388,7 +396,7 @@ def save_data(info: dict, file_path: str) -&gt; Union[str, Path]:
     variable = info[&#34;variable&#34;]
     datetime_save = info[&#34;datetime_save&#34;]
     print(f&#34;Saving {variable} in parquet&#34;)
-    output_path = save_data_in_file(variable, datetime_save, file_path)
+    output_path = save_data_in_file(variable, datetime_save, file_path, mode_redis)
     return output_path</code></pre>
 </details>
 </dd>
@@ -433,7 +441,7 @@ def slice_data(current_time: str, ref_filename: str = None) -&gt; dict:
 </details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.tasks.tratar_dados"><code class="name flex">
-<span>def <span class="ident">tratar_dados</span></span>(<span>filename: str) ‑> dict</span>
+<span>def <span class="ident">tratar_dados</span></span>(<span>filename: str, mode_redis: str = 'prod') ‑> dict</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Converte coordenadas X, Y para latlon e recorta área</p></div>
@@ -442,12 +450,12 @@ def slice_data(current_time: str, ref_filename: str = None) -&gt; dict:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def tratar_dados(filename: str) -&gt; dict:
+def tratar_dados(filename: str, mode_redis: str = &#34;prod&#34;) -&gt; dict:
     &#34;&#34;&#34;
     Converte coordenadas X, Y para latlon e recorta área
     &#34;&#34;&#34;
     log(f&#34;\n&gt;&gt;&gt;&gt; Started treating file: {filename}&#34;)
-    grid, goes16_extent, info = main(filename)
+    grid, goes16_extent, info = main(filename, mode_redis)
     del grid, goes16_extent
     return info</code></pre>
 </details>

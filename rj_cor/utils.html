@@ -37,9 +37,7 @@ def build_redis_key(dataset_id: str, table_id: str, name: str, mode: str = &#34;
     &#34;&#34;&#34;
     Helper function for building a key where to store the last updated time
     &#34;&#34;&#34;
-    key = dataset_id + &#34;.&#34; + table_id + &#34;.&#34; + name
-    if mode == &#34;dev&#34;:
-        key = f&#34;{mode}.{key}&#34;
+    key = mode + &#34;.&#34; + dataset_id + &#34;.&#34; + table_id + &#34;.&#34; + name
     return key</code></pre>
 </details>
 </section>
@@ -63,9 +61,7 @@ def build_redis_key(dataset_id: str, table_id: str, name: str, mode: str = &#34;
     &#34;&#34;&#34;
     Helper function for building a key where to store the last updated time
     &#34;&#34;&#34;
-    key = dataset_id + &#34;.&#34; + table_id + &#34;.&#34; + name
-    if mode == &#34;dev&#34;:
-        key = f&#34;{mode}.{key}&#34;
+    key = mode + &#34;.&#34; + dataset_id + &#34;.&#34; + table_id + &#34;.&#34; + name
     return key</code></pre>
 </details>
 </dd>

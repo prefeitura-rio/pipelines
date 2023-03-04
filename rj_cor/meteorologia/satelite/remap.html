@@ -32,7 +32,6 @@
 &#34;&#34;&#34;
 Converte coordenada X,Y para latlon
 &#34;&#34;&#34;
-import time as t
 
 import netCDF4 as nc
 import numpy as np
@@ -135,9 +134,7 @@ def remap(
 
     # Perform the projection/resampling
 
-    print(&#34;Remapping&#34;, path)
-
-    start = t.time()
+    # print(&#34;Remapping&#34;, path)
 
     gdal.ReprojectImage(
         raw,
@@ -147,8 +144,6 @@ def remap(
         gdal.GRA_NearestNeighbour,
         options=[&#34;NUM_THREADS=ALL_CPUS&#34;],
     )
-
-    print(&#34;- finished! Time:&#34;, t.time() - start, &#34;seconds&#34;)
 
     # Close file
     raw = None
@@ -310,9 +305,7 @@ def remap(
 
     # Perform the projection/resampling
 
-    print(&#34;Remapping&#34;, path)
-
-    start = t.time()
+    # print(&#34;Remapping&#34;, path)
 
     gdal.ReprojectImage(
         raw,
@@ -322,8 +315,6 @@ def remap(
         gdal.GRA_NearestNeighbour,
         options=[&#34;NUM_THREADS=ALL_CPUS&#34;],
     )
-
-    print(&#34;- finished! Time:&#34;, t.time() - start, &#34;seconds&#34;)
 
     # Close file
     raw = None

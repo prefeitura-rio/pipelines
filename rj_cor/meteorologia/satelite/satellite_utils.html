@@ -28,7 +28,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
-# pylint: disable=too-many-locals
+# pylint: disable=too-many-locals, R0913
 &#34;&#34;&#34;
 Funções úteis no tratamento de dados de satélite
 &#34;&#34;&#34;
@@ -44,7 +44,7 @@ Funções úteis no tratamento de dados de satélite
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # General Public License for more details.
 # You should have received a copy of the GNU General Public License
-# along with this program. If not, see http://www.gnu.org/licenses/.
+# along with this program. If not, see http://www.gnu.org/licenses/..
 ####################################################################
 
 # ===================================================================
@@ -93,6 +93,7 @@ Funções úteis no tratamento de dados de satélite
 import datetime
 import os
 from pathlib import Path
+import re
 from typing import Tuple, Union
 
 from google.cloud import storage
@@ -157,10 +158,11 @@ def converte_timezone(datetime_save: str) -&gt; str:
     Recebe o formato de data hora em &#39;YYYYMMDD HHmm&#39; no UTC e
     retorna no mesmo formato no horário São Paulo
     &#34;&#34;&#34;
-    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; {datetime_save}&#34;)
-    datahora = pendulum.from_format(datetime_save, &#34;YYYYMMDD HHmm&#34;)
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; datetime_save {datetime_save}&#34;)
+    datahora = pendulum.from_format(datetime_save, &#34;YYYYMMDD HHmmss&#34;)
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; datahora {datahora}&#34;)
     datahora = datahora.in_tz(&#34;America/Sao_Paulo&#34;)
-    return datahora.format(&#34;YYYYMMDD HHmm&#34;)
+    return datahora.format(&#34;YYYYMMDD HHmmss&#34;)
 
 
 def extract_julian_day_and_hour_from_filename(filename: str):
@@ -183,7 +185,7 @@ def extract_julian_day_and_hour_from_filename(filename: str):
     julian_day = int(start[4:7])
 
     # Time (UTC) as string
-    hour_utc = start[7:11]
+    hour_utc = start[7:13]
 
     # Time of the start of the Scan
     # time = start[7:9] + &#34;:&#34; + start[9:11] + &#34;:&#34; + start[11:13] + &#34; UTC&#34;
@@ -231,12 +233,12 @@ def get_info(path: str) -&gt; Tuple[dict, str]:
     # Detect the product type
     # =====================================================================
     procura_m = path.find(&#34;-M6&#34;)
+    # Se não encontra o termo &#34;M6&#34; tenta encontrar &#34;M3&#34; e depois &#34;M4&#34;
     if procura_m == -1:
         procura_m = path.find(&#34;-M3&#34;)
     if procura_m == -1:
         procura_m = path.find(&#34;-M4&#34;)
     product = path[path.find(&#34;L2-&#34;) + 3 : procura_m]
-    print(product)
 
     # Nem todos os produtos foram adicionados no dicionário de características
     # dos produtos. Olhar arquivo original caso o produto não estaja aqui
@@ -396,8 +398,10 @@ def get_info(path: str) -&gt; Tuple[dict, str]:
 
     if variable == &#34;CMI&#34;:
         # Search for the GOES-16 channel in the file name
+        regex = &#34;-M\\dC\\d&#34;  # noqa: W605
+        find_expression = re.findall(regex, path)[0]
         product_caracteristics[&#34;band&#34;] = int(
-            (path[path.find(&#34;M6C&#34;) + 3 : path.find(&#34;_G16&#34;)])
+            (path[path.find(find_expression) + 4 : path.find(&#34;_G16&#34;)])
         )
     else:
         product_caracteristics[&#34;band&#34;] = np.nan
@@ -431,6 +435,7 @@ def remap_g16(
     resolution: int,
     variable: str,
     datetime_save: str,
+    mode_redis: str = &#34;prod&#34;,
 ):
     &#34;&#34;&#34;
     the GOES-16 image is reprojected to the rectangular projection in the extent region
@@ -465,7 +470,7 @@ def remap_g16(
     )
 
     tif_path = os.path.join(
-        os.getcwd(), &#34;data&#34;, &#34;satelite&#34;, variable, &#34;temp&#34;, partitions
+        os.getcwd(), mode_redis, &#34;data&#34;, &#34;satelite&#34;, variable, &#34;temp&#34;, partitions
     )
 
     if not os.path.exists(tif_path):
@@ -548,7 +553,7 @@ def treat_data(
 
 
 def save_data_in_file(
-    variable: str, datetime_save: str, file_path: str
+    variable: str, datetime_save: str, file_path: str, mode_redis: str = &#34;prod&#34;
 ) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
     Save data in parquet
@@ -568,9 +573,16 @@ def save_data_in_file(
     )
 
     tif_data = os.path.join(
-        os.getcwd(), &#34;data&#34;, &#34;satelite&#34;, variable, &#34;temp&#34;, partitions, &#34;dados.tif&#34;
+        os.getcwd(),
+        mode_redis,
+        &#34;data&#34;,
+        &#34;satelite&#34;,
+        variable,
+        &#34;temp&#34;,
+        partitions,
+        &#34;dados.tif&#34;,
     )
-
+    log(f&#34;debug path &gt;&gt;&gt;&gt;&gt;&gt;{tif_data}&#34;)
     data = xr.open_dataset(tif_data, engine=&#34;rasterio&#34;)
     # print(&#39;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; data&#39;, data[&#39;band_data&#39;].values)
 
@@ -590,25 +602,31 @@ def save_data_in_file(
     )
 
     # cria pasta de partições se elas não existem
-    output_path = os.path.join(os.getcwd(), &#34;data&#34;, &#34;satelite&#34;, variable, &#34;output&#34;)
+    output_path = os.path.join(
+        os.getcwd(), mode_redis, &#34;data&#34;, &#34;satelite&#34;, variable, &#34;output&#34;
+    )
     parquet_path = os.path.join(output_path, partitions)
 
     if not os.path.exists(parquet_path):
         os.makedirs(parquet_path)
 
+    # Guarda horário do arquivo na coluna
+    data[&#34;horario&#34;] = pendulum.from_format(
+        datetime_save, &#34;YYYYMMDD HHmmss&#34;
+    ).to_time_string()
     # Fixa ordem das colunas
-    data = data[[&#34;longitude&#34;, &#34;latitude&#34;, variable.lower()]]
+    data = data[[&#34;longitude&#34;, &#34;latitude&#34;, &#34;horario&#34;, variable.lower()]]
 
     # salva em csv
     filename = file_path.split(&#34;/&#34;)[-1].replace(&#34;.nc&#34;, &#34;&#34;)
-    log(f&#34;Saving {filename} on {parquet_path}&#34;)
+    log(f&#34;\n\n[DEGUB]: Saving {filename} on {parquet_path}\n\n&#34;)
     log(f&#34;Data_save: {date_save}, time_save: {time_save}&#34;)
     file_path = os.path.join(parquet_path, f&#34;{filename}.csv&#34;)
     data.to_csv(file_path, index=False)
     return output_path
 
 
-def main(path: Union[str, Path]):
+def main(path: Union[str, Path], mode_redis: str = &#34;prod&#34;):
     &#34;&#34;&#34;
     Função principal para converter dados x,y em lon,lat
     &#34;&#34;&#34;
@@ -649,6 +667,7 @@ def main(path: Union[str, Path]):
         resolution,
         product_caracteristics[&#34;variable&#34;],
         datetime_save,
+        mode_redis,
     )
 
     info = {
@@ -722,10 +741,11 @@ retorna no mesmo formato no horário São Paulo</p></div>
     Recebe o formato de data hora em &#39;YYYYMMDD HHmm&#39; no UTC e
     retorna no mesmo formato no horário São Paulo
     &#34;&#34;&#34;
-    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; {datetime_save}&#34;)
-    datahora = pendulum.from_format(datetime_save, &#34;YYYYMMDD HHmm&#34;)
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; datetime_save {datetime_save}&#34;)
+    datahora = pendulum.from_format(datetime_save, &#34;YYYYMMDD HHmmss&#34;)
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; datahora {datahora}&#34;)
     datahora = datahora.in_tz(&#34;America/Sao_Paulo&#34;)
-    return datahora.format(&#34;YYYYMMDD HHmm&#34;)</code></pre>
+    return datahora.format(&#34;YYYYMMDD HHmmss&#34;)</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.download_blob"><code class="name flex">
@@ -813,7 +833,7 @@ hour_utc (str): 1900 (20222901900203)</p></div>
     julian_day = int(start[4:7])
 
     # Time (UTC) as string
-    hour_utc = start[7:11]
+    hour_utc = start[7:13]
 
     # Time of the start of the Scan
     # time = start[7:9] + &#34;:&#34; + start[9:11] + &#34;:&#34; + start[11:13] + &#34; UTC&#34;
@@ -903,12 +923,12 @@ Mode needs to be "prod" or "staging"</p></div>
     # Detect the product type
     # =====================================================================
     procura_m = path.find(&#34;-M6&#34;)
+    # Se não encontra o termo &#34;M6&#34; tenta encontrar &#34;M3&#34; e depois &#34;M4&#34;
     if procura_m == -1:
         procura_m = path.find(&#34;-M3&#34;)
     if procura_m == -1:
         procura_m = path.find(&#34;-M4&#34;)
     product = path[path.find(&#34;L2-&#34;) + 3 : procura_m]
-    print(product)
 
     # Nem todos os produtos foram adicionados no dicionário de características
     # dos produtos. Olhar arquivo original caso o produto não estaja aqui
@@ -1068,8 +1088,10 @@ Mode needs to be "prod" or "staging"</p></div>
 
     if variable == &#34;CMI&#34;:
         # Search for the GOES-16 channel in the file name
+        regex = &#34;-M\\dC\\d&#34;  # noqa: W605
+        find_expression = re.findall(regex, path)[0]
         product_caracteristics[&#34;band&#34;] = int(
-            (path[path.find(&#34;M6C&#34;) + 3 : path.find(&#34;_G16&#34;)])
+            (path[path.find(find_expression) + 4 : path.find(&#34;_G16&#34;)])
         )
     else:
         product_caracteristics[&#34;band&#34;] = np.nan
@@ -1078,7 +1100,7 @@ Mode needs to be "prod" or "staging"</p></div>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.main"><code class="name flex">
-<span>def <span class="ident">main</span></span>(<span>path: Union[str, pathlib.Path])</span>
+<span>def <span class="ident">main</span></span>(<span>path: Union[str, pathlib.Path], mode_redis: str = 'prod')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Função principal para converter dados x,y em lon,lat</p></div>
@@ -1086,7 +1108,7 @@ Mode needs to be "prod" or "staging"</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def main(path: Union[str, Path]):
+<pre><code class="python">def main(path: Union[str, Path], mode_redis: str = &#34;prod&#34;):
     &#34;&#34;&#34;
     Função principal para converter dados x,y em lon,lat
     &#34;&#34;&#34;
@@ -1127,6 +1149,7 @@ Mode needs to be "prod" or "staging"</p></div>
         resolution,
         product_caracteristics[&#34;variable&#34;],
         datetime_save,
+        mode_redis,
     )
 
     info = {
@@ -1145,7 +1168,7 @@ Mode needs to be "prod" or "staging"</p></div>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.remap_g16"><code class="name flex">
-<span>def <span class="ident">remap_g16</span></span>(<span>path: Union[str, pathlib.Path], extent: list, resolution: int, variable: str, datetime_save: str)</span>
+<span>def <span class="ident">remap_g16</span></span>(<span>path: Union[str, pathlib.Path], extent: list, resolution: int, variable: str, datetime_save: str, mode_redis: str = 'prod')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>the GOES-16 image is reprojected to the rectangular projection in the extent region</p></div>
@@ -1159,6 +1182,7 @@ Mode needs to be "prod" or "staging"</p></div>
     resolution: int,
     variable: str,
     datetime_save: str,
+    mode_redis: str = &#34;prod&#34;,
 ):
     &#34;&#34;&#34;
     the GOES-16 image is reprojected to the rectangular projection in the extent region
@@ -1193,7 +1217,7 @@ Mode needs to be "prod" or "staging"</p></div>
     )
 
     tif_path = os.path.join(
-        os.getcwd(), &#34;data&#34;, &#34;satelite&#34;, variable, &#34;temp&#34;, partitions
+        os.getcwd(), mode_redis, &#34;data&#34;, &#34;satelite&#34;, variable, &#34;temp&#34;, partitions
     )
 
     if not os.path.exists(tif_path):
@@ -1207,7 +1231,7 @@ Mode needs to be "prod" or "staging"</p></div>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.save_data_in_file"><code class="name flex">
-<span>def <span class="ident">save_data_in_file</span></span>(<span>variable: str, datetime_save: str, file_path: str) ‑> Union[str, pathlib.Path]</span>
+<span>def <span class="ident">save_data_in_file</span></span>(<span>variable: str, datetime_save: str, file_path: str, mode_redis: str = 'prod') ‑> Union[str, pathlib.Path]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Save data in parquet</p></div>
@@ -1216,7 +1240,7 @@ Mode needs to be "prod" or "staging"</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def save_data_in_file(
-    variable: str, datetime_save: str, file_path: str
+    variable: str, datetime_save: str, file_path: str, mode_redis: str = &#34;prod&#34;
 ) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
     Save data in parquet
@@ -1236,9 +1260,16 @@ Mode needs to be "prod" or "staging"</p></div>
     )
 
     tif_data = os.path.join(
-        os.getcwd(), &#34;data&#34;, &#34;satelite&#34;, variable, &#34;temp&#34;, partitions, &#34;dados.tif&#34;
+        os.getcwd(),
+        mode_redis,
+        &#34;data&#34;,
+        &#34;satelite&#34;,
+        variable,
+        &#34;temp&#34;,
+        partitions,
+        &#34;dados.tif&#34;,
     )
-
+    log(f&#34;debug path &gt;&gt;&gt;&gt;&gt;&gt;{tif_data}&#34;)
     data = xr.open_dataset(tif_data, engine=&#34;rasterio&#34;)
     # print(&#39;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; data&#39;, data[&#39;band_data&#39;].values)
 
@@ -1258,18 +1289,24 @@ Mode needs to be "prod" or "staging"</p></div>
     )
 
     # cria pasta de partições se elas não existem
-    output_path = os.path.join(os.getcwd(), &#34;data&#34;, &#34;satelite&#34;, variable, &#34;output&#34;)
+    output_path = os.path.join(
+        os.getcwd(), mode_redis, &#34;data&#34;, &#34;satelite&#34;, variable, &#34;output&#34;
+    )
     parquet_path = os.path.join(output_path, partitions)
 
     if not os.path.exists(parquet_path):
         os.makedirs(parquet_path)
 
+    # Guarda horário do arquivo na coluna
+    data[&#34;horario&#34;] = pendulum.from_format(
+        datetime_save, &#34;YYYYMMDD HHmmss&#34;
+    ).to_time_string()
     # Fixa ordem das colunas
-    data = data[[&#34;longitude&#34;, &#34;latitude&#34;, variable.lower()]]
+    data = data[[&#34;longitude&#34;, &#34;latitude&#34;, &#34;horario&#34;, variable.lower()]]
 
     # salva em csv
     filename = file_path.split(&#34;/&#34;)[-1].replace(&#34;.nc&#34;, &#34;&#34;)
-    log(f&#34;Saving {filename} on {parquet_path}&#34;)
+    log(f&#34;\n\n[DEGUB]: Saving {filename} on {parquet_path}\n\n&#34;)
     log(f&#34;Data_save: {date_save}, time_save: {time_save}&#34;)
     file_path = os.path.join(parquet_path, f&#34;{filename}.csv&#34;)
     data.to_csv(file_path, index=False)

@@ -56,9 +56,7 @@ def save_updated_rows_on_redis(
 
     redis_client = get_redis_client()
 
-    key = dataset_id + &#34;.&#34; + table_id
-    if mode == &#34;dev&#34;:
-        key = f&#34;{mode}.{key}&#34;
+    key = mode + &#34;.&#34; + dataset_id + &#34;.&#34; + table_id
 
     # Access all data saved on redis with this key
     updates = redis_client.hgetall(key)
@@ -150,9 +148,7 @@ updated unique_id as a DataFrame and save new dates on redis</p></div>
 
     redis_client = get_redis_client()
 
-    key = dataset_id + &#34;.&#34; + table_id
-    if mode == &#34;dev&#34;:
-        key = f&#34;{mode}.{key}&#34;
+    key = mode + &#34;.&#34; + dataset_id + &#34;.&#34; + table_id
 
     # Access all data saved on redis with this key
     updates = redis_client.hgetall(key)
