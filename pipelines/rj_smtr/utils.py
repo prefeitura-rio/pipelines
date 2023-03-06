@@ -275,3 +275,46 @@ def convert_boolean(data: pd.DataFrame, columns: list, dict_keys: dict):
         data[col] = data[col].map(dict_keys)
 
     return data
+
+
+def check_relation(data: pd.DataFrame, columns: list):
+    """
+    Check relation between collumns.
+
+    Args:
+        data (pd.DataFrame): dataframe to be modified
+        columns (list): list of lists of columns to be checked
+
+    Returns:
+        None
+    """
+
+    for cols in columns:
+        df_dup = (
+            data[~data.duplicated(subset=cols)]
+            .groupby(cols)
+            .count()
+            .reset_index()
+            .iloc[:, :1]
+        )
+
+        for col in cols:
+            df_dup_col = (
+                data[~data.duplicated(subset=col)]
+                .groupby(col)
+                .count()
+                .reset_index()
+                .iloc[:, :1]
+            )
+
+            if len(df_dup_col[~df_dup_col[col].duplicated()]) == len(df_dup):
+                log(
+                    f"[data-check] Comparing '{col}' in '{cols}', there are no duplicated values",
+                    level="info",
+                )
+            else:
+                log(
+                    f"[data-check] Comparing '{col}' in '{cols}', there are duplicated values",
+                    level="warning",
+                )
+    return
