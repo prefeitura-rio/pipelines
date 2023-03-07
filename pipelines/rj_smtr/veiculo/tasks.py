@@ -5,6 +5,7 @@ Tasks for veiculos
 
 from datetime import datetime
 import pandas as pd
+import numpy as np
 from prefect import task
 
 # EMD Imports #
@@ -19,6 +20,8 @@ from pipelines.rj_smtr.utils import (
     convert_boolean,
     check_relation,
     data_info_str,
+    filter_null,
+    filter_data,
 )
 
 # Tasks #
@@ -69,27 +72,31 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
     )
 
     # Check data
-    # check_columns = [["id_veiculo", "placa"], ["tipo_veiculo", "id_planta"]]
+    check_columns = [["id_veiculo", "placa"], ["tipo_veiculo", "id_planta"]]
 
-    # check_relation(data, check_columns)
-
-    # Filter data (TBD)
-    filters = ["tipo_veiculo.str.contains('ROD')"]
-
-    for item in filters:
-        remove = data.query(item)
-        data = data.drop(remove.index)
-        log(f"Removed {len(remove)} rows from filter: {item}", level="info")
+    check_relation(data, check_columns)
 
     # Check primary keys
     pk_columns = ["id_veiculo"]
 
-    # data = check_not_null(data, pk_columns)
+    check_not_null(data, pk_columns)
 
     # Check relevant columns
-    # relevant_columns = ["tipo_veiculo"]
+    relevant_columns = ["tipo_veiculo"]
 
-    # data = check_not_null(data, relevant_columns)
+    check_not_null(data, relevant_columns)
+
+    # Filter data
+    # Filter Veículos rodoviários (TBD)
+    filters = ["tipo_veiculo.str.contains('ROD')"]
+
+    data = filter_data(data, filters)
+
+    # Filter null primary keys
+    data = filter_null(data, pk_columns)
+
+    # Filter null relevant columns
+    data = filter_null(data, relevant_columns)
 
     # Update indicador_ar_condicionado based on tipo_veiculo
     data["indicador_ar_condicionado"] = data["tipo_veiculo"].map(
@@ -150,24 +157,26 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
 
     # Strip str columns
     for col in columns.values():
-        data[col] = data[col].str.strip()
-
-    # Filter data
-    filters = ["modo != 'ONIBUS'"]
-
-    for item in filters:
-        remove = data.query(item)
-        data = data.drop(remove.index)
-        log(f"Removed {len(remove)} rows from filter: {item}", level="info")
+        data[col] = data[col].str.strip().replace("", np.nan)
 
     # Update valor type to float
     data["valor"] = data["valor"].str.replace(",", ".").astype(float)
 
     # Check primary keys
     pk_columns = ["placa", "id_auto_infracao"]
-    # filter_new_data = f"data_infracao == '{timestamp.strftime('%Y-%m-%d')}'"
+    check_new_data = f"data_infracao == '{timestamp.strftime('%Y-%m-%d')}'"
 
-    # data = check_not_null(data, pk_columns, subset_query=filter_new_data)
+    check_not_null(data, pk_columns, subset_query=check_new_data)
+
+    # Filter data
+    filters = ["modo != 'ONIBUS'"]
+
+    data = filter_data(data, filters)
+
+    # Filter null values in primary keys
+    filter_new_data = f"data_infracao == '{timestamp.strftime('%Y-%m-%d')}'"
+
+    data = filter_null(data, pk_columns, subset_query=filter_new_data)
 
     log(f"Pre-treated data:\n{data_info_str(data)}", level="info")
 

@@ -6,10 +6,10 @@ General purpose functions for rj_smtr
 from ftplib import FTP
 from pathlib import Path
 
+import io
 import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
-import io
 from pipelines.rj_smtr.implicit_ftp import ImplicitFtpTls
 
 from pipelines.utils.utils import log
@@ -236,14 +236,13 @@ def check_not_null(data: pd.DataFrame, columns: list, subset_query: str = None):
         being removed
 
     Returns:
-        pandas.DataFrame: data without null values
+        None
     """
 
     for col in columns:
         remove = data.query(f"{col} != {col}")  # null values
-        data = data.drop(remove.index)
         log(
-            f"[data-check] Removed {len(remove)} rows with null '{col}'",
+            f"[data-check] There are {len(remove)} rows with null values in '{col}'",
             level="warning",
         )
 
@@ -252,7 +251,73 @@ def check_not_null(data: pd.DataFrame, columns: list, subset_query: str = None):
             remove = remove.query(subset_query)
             if len(remove) > 0:
                 log(
-                    f"[data-check] Removed {len(remove)} critical rows with null '{col}'",
+                    f"""[data-check] There are {len(remove)} critical rows with
+                    null values in '{col}' (query: {subset_query})""",
+                    level="warning",
+                )
+
+    return
+
+
+def filter_null(data: pd.DataFrame, columns: list, subset_query: str = None):
+    """
+    Filter null values in columns.
+
+    Args:
+        columns (list): list of columns to check
+        subset_query (str): query to check if there are important data
+        being removed
+
+    Returns:
+        pandas.DataFrame: data without null values
+    """
+
+    for col in columns:
+        remove = data.query(f"{col} != {col}")  # null values
+        data = data.drop(remove.index)
+        log(
+            f"[data-filter] Removed {len(remove)} rows with null '{col}'",
+            level="warning",
+        )
+
+        if subset_query is not None:
+            # Check if there are important data being removed
+            remove = remove.query(subset_query)
+            if len(remove) > 0:
+                log(
+                    f"[data-filter] Removed {len(remove)} critical rows with null '{col}'",
+                    level="warning",
+                )
+
+    return data
+
+
+def filter_data(data: pd.DataFrame, filters: list, subset_query: str = None):
+    """
+    Filter data from a dataframe
+
+    Args:
+        data (pd.DataFrame): data DataFrame
+        filters (list): list of queries to filter data
+
+    Returns:
+        pandas.DataFrame: data without filter data
+    """
+    for item in filters:
+        remove = data.query(item)
+        data = data.drop(remove.index)
+        log(
+            f"[data-filter] Removed {len(remove)} rows from filter: {item}",
+            level="info",
+        )
+
+        if subset_query is not None:
+            # Check if there are important data being removed
+            remove = remove.query(subset_query)
+            if len(remove) > 0:
+                log(
+                    f"""[data-filter] Removed {len(remove)} critical rows
+                    from filter: {item} (subquery: {subset_query})""",
                     level="warning",
                 )
 

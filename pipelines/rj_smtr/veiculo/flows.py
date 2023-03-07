@@ -12,7 +12,6 @@ from prefect.storage import GCS
 from pipelines.constants import constants as emd_constants
 from pipelines.utils.decorators import Flow
 
-# from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
 from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
     get_current_flow_mode,
@@ -37,8 +36,6 @@ from pipelines.rj_smtr.tasks import (
     upload_logs_to_bq,
     bq_upload,
 )
-
-# from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
 from pipelines.rj_smtr.veiculo.tasks import (
     pre_treatment_sppo_licenciamento,
