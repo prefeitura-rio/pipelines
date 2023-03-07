@@ -47,7 +47,7 @@ class constants(Enum):  # pylint: disable=c0103
     SPPO_LICENCIAMENTO_TABLE_ID = "sppo_licenciamento_stu"
 
     # INFRAÇÃO
-    SPPO_INFRACAO_TABLE_ID = "sppo_infracao"
+    SPPO_INFRACAO_URL = "https://siurblab.rio.rj.gov.br/SMTR/Multas/multas.txt"
     SPPO_INFRACAO_MAPPING_KEYS = {
         "permissao": "permissao",
         "modal": "modo",
@@ -60,3 +60,8 @@ class constants(Enum):  # pylint: disable=c0103
         "status": "status",
         "data_pagamento": "data_pagamento",
     }
+    SPPO_INFRACAO_CSV_ARGS = {
+        "sep": ";",
+        "names": SPPO_LICENCIAMENTO_MAPPING_KEYS.keys(),
+    }
+    SPPO_INFRACAO_TABLE_ID = "sppo_infracao"

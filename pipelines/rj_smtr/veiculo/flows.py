@@ -24,7 +24,7 @@ from pipelines.utils.tasks import (
 from pipelines.rj_smtr.veiculo.constants import constants
 
 from pipelines.rj_smtr.schedules import (
-    every_day,
+    every_day_hour_five,
 )
 from pipelines.rj_smtr.tasks import (
     create_date_partition,
@@ -80,10 +80,10 @@ with Flow(
     )
 
     # EXTRACT
-    URL = constants.SPPO_LICENCIAMENTO_URL.value
-
     raw_status = get_raw(
-        url=URL, filetype="txt", csv_args=constants.SPPO_LICENCIAMENTO_CSV_ARGS.value
+        url=constants.SPPO_LICENCIAMENTO_URL.value,
+        filetype="txt",
+        csv_args=constants.SPPO_LICENCIAMENTO_CSV_ARGS.value,
     )
 
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
@@ -114,21 +114,12 @@ with Flow(
         task=partitions, upstream_tasks=[rename_flow_run]
     )
 
-    # REDIS SET LAST RUN
-    set_last_run_timestamp(
-        dataset_id=constants.DATASET_ID.value,
-        table_id=constants.SPPO_LICENCIAMENTO_TABLE_ID.value,
-        timestamp=timestamp,
-        mode=MODE,
-        wait=error,
-    )
-
 sppo_licenciamento_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_licenciamento_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
-sppo_licenciamento_captura.schedule = every_day
+sppo_licenciamento_captura.schedule = every_day_hour_five
 
 sppo_infracao_captura_name = f"SMTR: Captura - {constants.DATASET_ID.value}.{constants.SPPO_INFRACAO_TABLE_ID.value}"
 with Flow(
@@ -159,20 +150,13 @@ with Flow(
     )
 
     # EXTRACT
-    URL = "https://siurblab.rio.rj.gov.br/SMTR/Multas/multas.txt"
-
-    # TODO: Alterar para link do FTP a ser definido # pylint: disable=W0511
-    # flake8: noqa: E501
-    # URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS47M-uRV-L5F67Qq26UVJJuSqpm1RPVexG4XsCM0IcTopPoPB3dkFbwZ2eoJrf6Ou9w7KMcSTfI2hy/pub?output=csv"
-
     raw_status = get_raw(
-        url=URL,
-        headers=constants.SPPO_INFRACAO_MAPPING_KEYS.value,
-        sep=";",
+        url=constants.SPPO_INFRACAO_URL.value,
         filetype="txt",
+        csv_args=constants.SPPO_INFRACAO_CSV_ARGS.value,
     )
 
-    raw_filepath = save_raw_local(status=raw_status, file_path=filepath, filetype="txt")
+    raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
 
     # TREAT
     treated_status = pre_treatment_sppo_infracao(status=raw_status, timestamp=timestamp)
@@ -198,18 +182,9 @@ with Flow(
         task=partitions, upstream_tasks=[rename_flow_run]
     )
 
-    # REDIS SET LAST RUN
-    set_last_run_timestamp(
-        dataset_id=constants.DATASET_ID.value,
-        table_id=constants.SPPO_INFRACAO_TABLE_ID.value,
-        timestamp=timestamp,
-        mode=MODE,
-        wait=error,
-    )
-
 sppo_infracao_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_infracao_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
-sppo_infracao_captura.schedule = every_day
+sppo_infracao_captura.schedule = every_day_hour_five

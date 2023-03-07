@@ -38,6 +38,14 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
         return {"data": pd.DataFrame(), "error": status["error"]}
 
     error = None
+
+    # Check json
+    buffer = io.StringIO()
+    status["data"].info(buf=buffer)
+    info_out = buffer.getvalue()
+
+    log(f"Data raw:\n{info_out}", level="info")
+
     data = status["data"]
 
     log(
@@ -57,8 +65,6 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
     columns = constants.SPPO_LICENCIAMENTO_MAPPING_KEYS.value
     data = data.rename(columns=columns)
 
-    data.info()
-
     # Strip str columns
     str_columns = data.columns[data.dtypes == "object"].to_list()
     for col in str_columns:
@@ -71,11 +77,11 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
     )
 
     # Check data
-    check_columns = [["id_veiculo", "placa"], ["tipo_veiculo", "id_planta"]]
+    # check_columns = [["id_veiculo", "placa"], ["tipo_veiculo", "id_planta"]]
 
-    check_relation(data, check_columns)
+    # check_relation(data, check_columns)
 
-    # Filter data
+    # Filter data (TBD)
     filters = ["tipo_veiculo.str.contains('ROD')"]
 
     for item in filters:
@@ -86,12 +92,12 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
     # Check primary keys
     pk_columns = ["id_veiculo"]
 
-    data = check_not_null(data, pk_columns)
+    # data = check_not_null(data, pk_columns)
 
     # Check relevant columns
-    relevant_columns = ["tipo_veiculo"]
+    # relevant_columns = ["tipo_veiculo"]
 
-    data = check_not_null(data, relevant_columns)
+    # data = check_not_null(data, relevant_columns)
 
     # Update indicador_ar_condicionado based on tipo_veiculo
     data["indicador_ar_condicionado"] = data["tipo_veiculo"].map(
@@ -137,6 +143,14 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
         return {"data": pd.DataFrame(), "error": status["error"]}
 
     error = None
+
+    buffer = io.StringIO()
+    status["data"].info(buf=buffer)
+    info_out = buffer.getvalue()
+
+    log(f"Data raw:\n{info_out}", level="info")
+
+    # Check json
     data = status["data"]
 
     log(
@@ -156,6 +170,7 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
     columns = constants.SPPO_INFRACAO_MAPPING_KEYS.value
     data = data.rename(columns=columns)
 
+    # Strip str columns
     for col in columns.values():
         data[col] = data[col].str.strip()
 
