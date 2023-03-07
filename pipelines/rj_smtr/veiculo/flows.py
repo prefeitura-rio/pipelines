@@ -29,14 +29,11 @@ from pipelines.rj_smtr.schedules import (
 from pipelines.rj_smtr.tasks import (
     create_date_partition,
     create_local_partition_path,
-    # fetch_dataset_sha,
     get_current_timestamp,
-    # get_local_dbt_client,
     get_raw,
     parse_timestamp_to_string,
     save_raw_local,
     save_treated_local,
-    set_last_run_timestamp,
     upload_logs_to_bq,
     bq_upload,
 )
