@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_escritorio API documentation</title>
-<meta name="description" content="Prefect flows for emd project" />
+<title>pipelines.rj_escritorio.dump_url_seeketing.schedules API documentation</title>
+<meta name="description" content="Schedules for the database dump pipeline" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,112 +19,135 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_escritorio</code></h1>
+<h1 class="title">Module <code>pipelines.rj_escritorio.dump_url_seeketing.schedules</code></h1>
 </header>
 <section id="section-intro">
-<p>Prefect flows for emd project</p>
+<p>Schedules for the database dump pipeline</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
+# pylint: disable=line-too-long
 &#34;&#34;&#34;
-Prefect flows for emd project
+Schedules for the database dump pipeline
 &#34;&#34;&#34;
-###############################################################################
-# Automatically managed, please do not touch
-###############################################################################
-from pipelines.rj_escritorio.bot_sistemas.flows import *
-from pipelines.rj_escritorio.dados_mestres_dump_datario.flows import *
-from pipelines.rj_escritorio.dummy_predict.flows import *
-from pipelines.rj_escritorio.notify_flooding.flows import *
-from pipelines.rj_escritorio.template_pipeline.flows import *
-from pipelines.rj_escritorio.tweets_flamengo.flows import *
-from pipelines.rj_escritorio.birthdays.flows import *
-from pipelines.rj_escritorio.logs.flows import *
-from pipelines.rj_escritorio.cleanup.flows import *
-from pipelines.rj_escritorio.waze.flows import *
-from pipelines.rj_escritorio.geolocator.flows import *
-from pipelines.rj_escritorio.inea.flows import *
-from pipelines.rj_escritorio.seconserva_buracos_refresh_data.flows import *
-from pipelines.rj_escritorio.dump_url_turismo.flows import *
-from pipelines.rj_escritorio.dump_policy_matrix.flows import *
-from pipelines.rj_escritorio.rain_dashboard.flows import *
-from pipelines.rj_escritorio.dump_url_seeketing.flows import *</code></pre>
+
+from datetime import datetime, timedelta
+
+import pytz
+from prefect.schedules import Schedule
+from pipelines.constants import constants
+from pipelines.utils.dump_url.utils import generate_dump_url_schedules
+from pipelines.utils.utils import untuple_clocks as untuple
+
+#####################################
+#
+# Setur Schedules
+#
+#####################################
+
+gsheets_urls = {
+    &#34;museu_do_amanha&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1wio45Se6HXo1nFeyY2GXxa-fduJlnICVW1p_Rg4UbjI\
+            /edit#gid=722381052&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;Museu do Amanhã&#34;,
+        &#34;gsheets_sheet_range&#34;: &#34;A5:B1000&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;rj_setur_turismo&#34;,
+    },
+    &#34;cristo_redentor&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1wio45Se6HXo1nFeyY2GXxa-fduJlnICVW1p_Rg4UbjI\
+            /edit#gid=722381052&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;Cristo Redentor (Paineiras)&#34;,
+        &#34;gsheets_sheet_range&#34;: &#34;A5:B1000&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;rj_setur_turismo&#34;,
+    },
+    &#34;bio_parque&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1wio45Se6HXo1nFeyY2GXxa-fduJlnICVW1p_Rg4UbjI\
+            /edit#gid=722381052&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;Bio Parque&#34;,
+        &#34;gsheets_sheet_range&#34;: &#34;A5:B1000&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;rj_setur_turismo&#34;,
+    },
+    &#34;aquario&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1wio45Se6HXo1nFeyY2GXxa-fduJlnICVW1p_Rg4UbjI\
+            /edit#gid=722381052&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;AquaRio&#34;,
+        &#34;gsheets_sheet_range&#34;: &#34;A5:B1000&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;rj_setur_turismo&#34;,
+    },
+    &#34;ccbb&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1wio45Se6HXo1nFeyY2GXxa-fduJlnICVW1p_Rg4UbjI\
+            /edit#gid=722381052&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;CCBB&#34;,
+        &#34;gsheets_sheet_range&#34;: &#34;A5:B1000&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;rj_setur_turismo&#34;,
+    },
+    &#34;iss&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1wio45Se6HXo1nFeyY2GXxa-fduJlnICVW1p_Rg4UbjI\
+            /edit#gid=722381052&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;ISS&#34;,
+        &#34;gsheets_sheet_range&#34;: &#34;A5:B1000&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;rj_setur_turismo&#34;,
+    },
+    &#34;galeao&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1wio45Se6HXo1nFeyY2GXxa-fduJlnICVW1p_Rg4UbjI\
+            /edit#gid=722381052&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;Galeão&#34;,
+        &#34;gsheets_sheet_range&#34;: &#34;A5:D1000&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;rj_setur_turismo&#34;,
+    },
+    &#34;caged&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1wio45Se6HXo1nFeyY2GXxa-fduJlnICVW1p_Rg4UbjI\
+            /edit#gid=722381052&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;CAGED&#34;,
+        &#34;gsheets_sheet_range&#34;: &#34;A5:F1000&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;rj_setur_turismo&#34;,
+    },
+}
+
+
+gsheets_clocks = generate_dump_url_schedules(
+    interval=timedelta(days=1),
+    runs_interval_minutes=1,
+    start_date=datetime(
+        2021, 12, 21, 14, 20, tzinfo=pytz.timezone(&#34;America/Sao_Paulo&#34;)
+    ),
+    labels=[
+        constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
+    ],
+    table_parameters=gsheets_urls,
+    dataset_id=&#34;rj_setur_turismo&#34;,
+)
+
+gsheets_daily_update_schedule = Schedule(clocks=untuple(gsheets_clocks))</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
-<dl>
-<dt><code class="name"><a title="pipelines.rj_escritorio.birthdays" href="birthdays/index.html">pipelines.rj_escritorio.birthdays</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.bot_sistemas" href="bot_sistemas/index.html">pipelines.rj_escritorio.bot_sistemas</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.cleanup" href="cleanup/index.html">pipelines.rj_escritorio.cleanup</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.dados_mestres_dump_datario" href="dados_mestres_dump_datario/index.html">pipelines.rj_escritorio.dados_mestres_dump_datario</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.dummy_predict" href="dummy_predict/index.html">pipelines.rj_escritorio.dummy_predict</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.dump_policy_matrix" href="dump_policy_matrix/index.html">pipelines.rj_escritorio.dump_policy_matrix</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.dump_url_seeketing" href="dump_url_seeketing/index.html">pipelines.rj_escritorio.dump_url_seeketing</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.dump_url_turismo" href="dump_url_turismo/index.html">pipelines.rj_escritorio.dump_url_turismo</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.geolocator" href="geolocator/index.html">pipelines.rj_escritorio.geolocator</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.inea" href="inea/index.html">pipelines.rj_escritorio.inea</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.logs" href="logs/index.html">pipelines.rj_escritorio.logs</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.notify_flooding" href="notify_flooding/index.html">pipelines.rj_escritorio.notify_flooding</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.rain_dashboard" href="rain_dashboard/index.html">pipelines.rj_escritorio.rain_dashboard</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.seconserva_buracos_refresh_data" href="seconserva_buracos_refresh_data/index.html">pipelines.rj_escritorio.seconserva_buracos_refresh_data</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.template_pipeline" href="template_pipeline/index.html">pipelines.rj_escritorio.template_pipeline</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.tweets_flamengo" href="tweets_flamengo/index.html">pipelines.rj_escritorio.tweets_flamengo</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio.waze" href="waze/index.html">pipelines.rj_escritorio.waze</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 </section>
 <section>
 </section>
@@ -168,7 +191,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -187,28 +210,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines" href="../index.html">pipelines</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="pipelines.rj_escritorio.birthdays" href="birthdays/index.html">pipelines.rj_escritorio.birthdays</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.bot_sistemas" href="bot_sistemas/index.html">pipelines.rj_escritorio.bot_sistemas</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.cleanup" href="cleanup/index.html">pipelines.rj_escritorio.cleanup</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.dados_mestres_dump_datario" href="dados_mestres_dump_datario/index.html">pipelines.rj_escritorio.dados_mestres_dump_datario</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.dummy_predict" href="dummy_predict/index.html">pipelines.rj_escritorio.dummy_predict</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.dump_policy_matrix" href="dump_policy_matrix/index.html">pipelines.rj_escritorio.dump_policy_matrix</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.dump_url_seeketing" href="dump_url_seeketing/index.html">pipelines.rj_escritorio.dump_url_seeketing</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.dump_url_turismo" href="dump_url_turismo/index.html">pipelines.rj_escritorio.dump_url_turismo</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.geolocator" href="geolocator/index.html">pipelines.rj_escritorio.geolocator</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.inea" href="inea/index.html">pipelines.rj_escritorio.inea</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.logs" href="logs/index.html">pipelines.rj_escritorio.logs</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.notify_flooding" href="notify_flooding/index.html">pipelines.rj_escritorio.notify_flooding</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.rain_dashboard" href="rain_dashboard/index.html">pipelines.rj_escritorio.rain_dashboard</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.seconserva_buracos_refresh_data" href="seconserva_buracos_refresh_data/index.html">pipelines.rj_escritorio.seconserva_buracos_refresh_data</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.template_pipeline" href="template_pipeline/index.html">pipelines.rj_escritorio.template_pipeline</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.tweets_flamengo" href="tweets_flamengo/index.html">pipelines.rj_escritorio.tweets_flamengo</a></code></li>
-<li><code><a title="pipelines.rj_escritorio.waze" href="waze/index.html">pipelines.rj_escritorio.waze</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.dump_url_seeketing" href="index.html">pipelines.rj_escritorio.dump_url_seeketing</a></code></li>
 </ul>
 </li>
 </ul>
