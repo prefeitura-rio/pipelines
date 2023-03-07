@@ -243,7 +243,7 @@ def check_not_null(data: pd.DataFrame, columns: list, subset_query: str = None):
         remove = data.query(f"{col} != {col}")  # null values
         log(
             f"[data-check] There are {len(remove)} rows with null values in '{col}'",
-            level="warning",
+            level="info",
         )
 
         if subset_query is not None:
@@ -277,7 +277,7 @@ def filter_null(data: pd.DataFrame, columns: list, subset_query: str = None):
         data = data.drop(remove.index)
         log(
             f"[data-filter] Removed {len(remove)} rows with null '{col}'",
-            level="warning",
+            level="info",
         )
 
         if subset_query is not None:
