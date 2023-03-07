@@ -16,7 +16,6 @@ class constants(Enum):  # pylint: disable=c0103
     # VEÍCULOS LICENCIADOS
     # flake8: noqa: E501
     SPPO_LICENCIAMENTO_URL = "https://siurblab.rio.rj.gov.br/SMTR/DADOS%20CADASTRAIS/Cadastro%20de%20Veiculos.txt"
-    SPPO_LICENCIAMENTO_TABLE_ID = "sppo_licenciamento_stu"
     SPPO_LICENCIAMENTO_MAPPING_KEYS = {
         "placa": "placa",
         "ordem": "id_veiculo",
@@ -41,8 +40,13 @@ class constants(Enum):  # pylint: disable=c0103
         "wifi": "indicador_wifi",
         "usb": "indicador_usb",
     }
+    SPPO_LICENCIAMENTO_CSV_ARGS = {
+        "sep": ";",
+        "names": SPPO_LICENCIAMENTO_MAPPING_KEYS.keys(),
+    }
+    SPPO_LICENCIAMENTO_TABLE_ID = "sppo_licenciamento_stu"
 
-    # VEÍCULOS LICENCIADOS
+    # INFRAÇÃO
     SPPO_INFRACAO_TABLE_ID = "sppo_infracao"
     SPPO_INFRACAO_MAPPING_KEYS = {
         "permissao": "permissao",

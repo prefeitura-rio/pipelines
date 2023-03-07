@@ -83,13 +83,10 @@ with Flow(
     URL = constants.SPPO_LICENCIAMENTO_URL.value
 
     raw_status = get_raw(
-        url=URL,
-        headers=constants.SPPO_LICENCIAMENTO_MAPPING_KEYS.value,
-        sep=";",
-        filetype="txt",
+        url=URL, filetype="txt", csv_args=constants.SPPO_LICENCIAMENTO_CSV_ARGS.value
     )
 
-    raw_filepath = save_raw_local(status=raw_status, file_path=filepath, filetype="txt")
+    raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
 
     # TREAT
     treated_status = pre_treatment_sppo_licenciamento(
