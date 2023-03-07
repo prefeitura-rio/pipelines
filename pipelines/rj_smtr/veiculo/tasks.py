@@ -6,7 +6,6 @@ Tasks for veiculos
 from datetime import datetime
 import pandas as pd
 from prefect import task
-import io
 
 # EMD Imports #
 
@@ -15,7 +14,12 @@ from pipelines.utils.utils import log  # ,get_vault_secret
 # SMTR Imports #
 
 from pipelines.rj_smtr.veiculo.constants import constants
-from pipelines.rj_smtr.utils import check_not_null, convert_boolean, check_relation
+from pipelines.rj_smtr.utils import (
+    check_not_null,
+    convert_boolean,
+    check_relation,
+    data_info_str,
+)
 
 # Tasks #
 
@@ -47,11 +51,7 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
     - data:\n{data.head()}"""
     )
 
-    buffer = io.StringIO()
-    data.info(buf=buffer)
-    info_out = buffer.getvalue()
-
-    log(f"Data raw:\n{info_out}", level="info")
+    log(f"Raw data:\n{data_info_str(data)}", level="info")
 
     # Rename columns
     columns = constants.SPPO_LICENCIAMENTO_MAPPING_KEYS.value
@@ -99,6 +99,8 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
     # Add status
     data["status"] = "Licenciado"
 
+    log(f"Pre-treated data:\n{data_info_str(data)}", level="info")
+
     # Create nested structure
     df_treated = data[pk_columns].copy()
 
@@ -108,11 +110,7 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
 
     df_treated["timestamp_captura"] = timestamp
 
-    buffer = io.StringIO()
-    df_treated.info(buf=buffer)
-    info_out = buffer.getvalue()
-
-    log(f"Data pre-treated:\n{info_out}", level="info")
+    log(f"Pre-treated data:\n{data_info_str(df_treated)}", level="info")
 
     return {"data": df_treated, "error": error}
 
@@ -144,11 +142,7 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
     - data:\n{data.head()}"""
     )
 
-    buffer = io.StringIO()
-    data.info(buf=buffer)
-    info_out = buffer.getvalue()
-
-    log(f"Data raw:\n{info_out}", level="info")
+    log(f"Raw data:\n{data_info_str(data)}", level="info")
 
     # Rename columns
     columns = constants.SPPO_INFRACAO_MAPPING_KEYS.value
@@ -171,9 +165,11 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
 
     # Check primary keys
     pk_columns = ["placa", "id_auto_infracao"]
-    filter_new_data = f"data_infracao == '{timestamp.strftime('%Y-%m-%d')}'"
+    # filter_new_data = f"data_infracao == '{timestamp.strftime('%Y-%m-%d')}'"
 
-    data = check_not_null(data, pk_columns, subset_query=filter_new_data)
+    # data = check_not_null(data, pk_columns, subset_query=filter_new_data)
+
+    log(f"Pre-treated data:\n{data_info_str(data)}", level="info")
 
     # Create nested structure
     df_treated = data[pk_columns].copy()
@@ -184,10 +180,6 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
 
     df_treated["timestamp_captura"] = timestamp
 
-    buffer = io.StringIO()
-    df_treated.info(buf=buffer)
-    info_out = buffer.getvalue()
-
-    log(f"Data pre-treated:\n{info_out}", level="info")
+    log(f"Pre-treated data:\n{data_info_str(df_treated)}", level="info")
 
     return {"data": df_treated, "error": error}
