@@ -62,6 +62,6 @@ class constants(Enum):  # pylint: disable=c0103
     }
     SPPO_INFRACAO_CSV_ARGS = {
         "sep": ";",
-        "names": SPPO_LICENCIAMENTO_MAPPING_KEYS.keys(),
+        "names": SPPO_INFRACAO_MAPPING_KEYS.keys(),
     }
     SPPO_INFRACAO_TABLE_ID = "sppo_infracao"
