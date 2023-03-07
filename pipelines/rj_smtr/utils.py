@@ -9,6 +9,7 @@ from pathlib import Path
 import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
+import io
 from pipelines.rj_smtr.implicit_ftp import ImplicitFtpTls
 
 from pipelines.utils.utils import log
@@ -318,3 +319,18 @@ def check_relation(data: pd.DataFrame, columns: list):
                     level="warning",
                 )
     return
+
+
+def data_info_str(data: pd.DataFrame):
+    """
+    Return dataframe info as a str to log
+
+    Args:
+        data (pd.DataFrame): dataframe
+
+    Returns:
+        data.info() as a string
+    """
+    buffer = io.StringIO()
+    data.info(buf=buffer)
+    return buffer.getvalue()
