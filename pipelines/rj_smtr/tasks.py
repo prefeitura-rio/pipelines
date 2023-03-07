@@ -375,7 +375,7 @@ def get_raw(  # pylint: disable=R0912
     url: str, headers: dict = None, filetype: str = "json", csv_args: dict = {}
 ) -> Dict:
     """
-    Request data.
+    Request data from URL API
 
     Args:
         url (str): URL to send request
