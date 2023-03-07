@@ -38,15 +38,7 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
         return {"data": pd.DataFrame(), "error": status["error"]}
 
     error = None
-
-    # Check json
-    buffer = io.StringIO()
-    status["data"].info(buf=buffer)
-    info_out = buffer.getvalue()
-
-    log(f"Data raw:\n{info_out}", level="info")
-
-    data = status["data"]
+    data = pd.json_normalize(status["data"])
 
     log(
         f"""
@@ -143,15 +135,7 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
         return {"data": pd.DataFrame(), "error": status["error"]}
 
     error = None
-
-    buffer = io.StringIO()
-    status["data"].info(buf=buffer)
-    info_out = buffer.getvalue()
-
-    log(f"Data raw:\n{info_out}", level="info")
-
-    # Check json
-    data = status["data"]
+    data = pd.json_normalize(status["data"])
 
     log(
         f"""
