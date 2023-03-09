@@ -385,7 +385,7 @@ def get_raw(  # pylint: disable=R0912
     Returns:
         dict: Conatining keys
           * `data`: returned data
-          * `error`: error catched
+          * `error` (str): catched error, if any. Otherwise, returns None
     """
     data = None
 
