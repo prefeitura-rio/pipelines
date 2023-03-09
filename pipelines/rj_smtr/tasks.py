@@ -416,7 +416,7 @@ def get_raw(  # pylint: disable=R0912
 
     except Exception as exp:
         error = exp
-    
+
     if error is not None:
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
