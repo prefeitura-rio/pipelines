@@ -32,7 +32,7 @@ class constants(Enum):  # pylint: disable=c0103
         "lotacao_sentado": "quantidade_lotacao_sentado",
         "lotacao_pe": "quantidade_lotacao_pe",
         "elevador": "indicador_elevador",
-        "ar_condicionado": "indicador_ar_condicionado",
+        "ar_condicionado": "indicador_ar_condicionado_stu",
         "tipo_veiculo": "tipo_veiculo",
         "combustivel": "tipo_combustivel",
         "portas": "quantidade_portas",
