@@ -75,13 +75,13 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
         # check_relation(data, check_columns)
 
         log("Filtering null primary keys...", level="info")
-        primary_key = "id_veiculo"
-        data.dropna(subset=[primary_key], inplace=True)
+        primary_key = ["id_veiculo"]
+        data.dropna(subset=primary_key, inplace=True)
 
         log("Update indicador_ar_condicionado based on tipo_veiculo...", level="info")
         data["indicador_ar_condicionado"] = data["tipo_veiculo"].map(
             lambda x: None
-            if isinstance(x) != str
+            if not isinstance(x, str)
             else bool("C/AR" in x.replace(" ", ""))
         )
 
@@ -91,11 +91,14 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
 
         log("Creating nested structure...", level="info")
         data = (
-            data.groupby([primary_key, "timestamp_captura"])
-            .apply(lambda x: x[data.columns.difference(primary_key)].to_dict("records"))
-            .reset_index()
-            .rename(columns={0: "content"})
-            .to_json(orient="records")
+            data.groupby(primary_key + ["timestamp_captura"])
+            .apply(lambda x: x[data.columns.difference(primary_key)].to_json())
+            .reset_index(name="content")
+        )
+
+        log(
+            f"Finished nested structure! Pre-treated data:\n{data_info_str(data)}",
+            level="info",
         )
 
     except Exception as exp:  # pylint: disable=W0703
