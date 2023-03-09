@@ -80,22 +80,27 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
 
         log("Update indicador_ar_condicionado based on tipo_veiculo...", level="info")
         data["indicador_ar_condicionado"] = data["tipo_veiculo"].map(
-            lambda x: None if isinstance(x) != str else bool("C/AR" in x.replace(" ", ""))
+            lambda x: None
+            if isinstance(x) != str
+            else bool("C/AR" in x.replace(" ", ""))
         )
 
-        log(f"Finished cleaning! Pre-treated data:\n{data_info_str(data)}", level="info")
+        log(
+            f"Finished cleaning! Pre-treated data:\n{data_info_str(data)}", level="info"
+        )
 
         log("Creating nested structure...", level="info")
-        data = (data.groupby([primary_key, "timestamp_captura"])
-            .apply(lambda x: x[data.columns.difference(primary_key)].to_dict('records'))
+        data = (
+            data.groupby([primary_key, "timestamp_captura"])
+            .apply(lambda x: x[data.columns.difference(primary_key)].to_dict("records"))
             .reset_index()
             .rename(columns={0: "content"})
-            .to_json(orient='records')
+            .to_json(orient="records")
         )
-    
-    except Exception as exp: # pylint: disable=W0703
+
+    except Exception as exp:  # pylint: disable=W0703
         error = exp
-    
+
     if error is not None:
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
