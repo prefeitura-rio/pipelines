@@ -372,7 +372,7 @@ def query_logs(
 
 @task
 def get_raw(  # pylint: disable=R0912
-    url: str, headers: dict = None, filetype: str = "json", csv_args: dict = {}
+    url: str, headers: dict = None, filetype: str = "json", csv_args: dict = None
 ) -> Dict:
     """
     Request data from URL API
@@ -388,24 +388,24 @@ def get_raw(  # pylint: disable=R0912
           * `error` (str): catched error, if any. Otherwise, returns None
     """
     data = None
+    error = None
 
-    # Get data from API
     try:
         response = requests.get(
             url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
         )
-        error = None
-    except Exception as exp:
-        error = exp
-        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
-        return {"data": None, "error": error}
 
-    # Check data results
-    try:
         if response.ok:  # status code is less than 400
             if filetype == "json":
                 data = response.json()
+
+                # todo: move to data check on specfic API # pylint: disable=W0102
+                if isinstance(data, dict) and "DescricaoErro" in data.keys():
+                    error = data["DescricaoErro"]
+
             elif filetype in ("txt", "csv"):
+                if csv_args is None:
+                    csv_args = {}
                 data = pd.read_csv(io.StringIO(response.text), **csv_args).to_dict(
                     orient="records"
                 )
@@ -413,14 +413,11 @@ def get_raw(  # pylint: disable=R0912
                 error = (
                     "Unsupported raw file extension. Supported only: json, csv and txt"
                 )
-                log(f"[CATCHED] Task failed with error: \n{error}", level="error")
-
-        if isinstance(data, dict) and "DescricaoErro" in data.keys():
-            error = data["DescricaoErro"]
-            log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     except Exception as exp:
         error = exp
+    
+    if error is not None:
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return {"data": data, "error": error}
