@@ -384,7 +384,7 @@ def get_raw(  # pylint: disable=R0912
         csv_args (dict, optional): Arguments for read_csv, if needed
     Returns:
         dict: Conatining keys
-          * `data`: returned data
+          * `data` (json): data result
           * `error` (str): catched error, if any. Otherwise, returns None
     """
     data = None
