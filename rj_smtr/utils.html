@@ -35,6 +35,7 @@ General purpose functions for rj_smtr
 from ftplib import FTP
 from pathlib import Path
 
+import io
 import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
@@ -248,7 +249,166 @@ def set_redis_rdo_files(redis_client, dataset_id: str, table_id: str):
     files = [blob_name.split(&#34;/&#34;)[-1].replace(&#34;.csv&#34;, &#34;&#34;) for blob_name in blob_names]
     content[&#34;files&#34;] = files
     # set key
-    return redis_client.set(f&#34;{dataset_id}.{table_id}&#34;, content)</code></pre>
+    return redis_client.set(f&#34;{dataset_id}.{table_id}&#34;, content)
+
+
+# PRE TREAT #
+
+
+def check_not_null(data: pd.DataFrame, columns: list, subset_query: str = None):
+    &#34;&#34;&#34;
+    Check if there are null values in columns.
+
+    Args:
+        columns (list): list of columns to check
+        subset_query (str): query to check if there are important data
+        being removed
+
+    Returns:
+        None
+    &#34;&#34;&#34;
+
+    for col in columns:
+        remove = data.query(f&#34;{col} != {col}&#34;)  # null values
+        log(
+            f&#34;[data-check] There are {len(remove)} rows with null values in &#39;{col}&#39;&#34;,
+            level=&#34;info&#34;,
+        )
+
+        if subset_query is not None:
+            # Check if there are important data being removed
+            remove = remove.query(subset_query)
+            if len(remove) &gt; 0:
+                log(
+                    f&#34;&#34;&#34;[data-check] There are {len(remove)} critical rows with
+                    null values in &#39;{col}&#39; (query: {subset_query})&#34;&#34;&#34;,
+                    level=&#34;warning&#34;,
+                )
+
+    return
+
+
+def filter_null(data: pd.DataFrame, columns: list, subset_query: str = None):
+    &#34;&#34;&#34;
+    Filter null values in columns.
+
+    Args:
+        columns (list): list of columns to check
+        subset_query (str): query to check if there are important data
+        being removed
+
+    Returns:
+        pandas.DataFrame: data without null values
+    &#34;&#34;&#34;
+
+    for col in columns:
+        remove = data.query(f&#34;{col} != {col}&#34;)  # null values
+        data = data.drop(remove.index)
+        log(
+            f&#34;[data-filter] Removed {len(remove)} rows with null &#39;{col}&#39;&#34;,
+            level=&#34;info&#34;,
+        )
+
+        if subset_query is not None:
+            # Check if there are important data being removed
+            remove = remove.query(subset_query)
+            if len(remove) &gt; 0:
+                log(
+                    f&#34;[data-filter] Removed {len(remove)} critical rows with null &#39;{col}&#39;&#34;,
+                    level=&#34;warning&#34;,
+                )
+
+    return data
+
+
+def filter_data(data: pd.DataFrame, filters: list, subset_query: str = None):
+    &#34;&#34;&#34;
+    Filter data from a dataframe
+
+    Args:
+        data (pd.DataFrame): data DataFrame
+        filters (list): list of queries to filter data
+
+    Returns:
+        pandas.DataFrame: data without filter data
+    &#34;&#34;&#34;
+    for item in filters:
+        remove = data.query(item)
+        data = data.drop(remove.index)
+        log(
+            f&#34;[data-filter] Removed {len(remove)} rows from filter: {item}&#34;,
+            level=&#34;info&#34;,
+        )
+
+        if subset_query is not None:
+            # Check if there are important data being removed
+            remove = remove.query(subset_query)
+            if len(remove) &gt; 0:
+                log(
+                    f&#34;&#34;&#34;[data-filter] Removed {len(remove)} critical rows
+                    from filter: {item} (subquery: {subset_query})&#34;&#34;&#34;,
+                    level=&#34;warning&#34;,
+                )
+
+    return data
+
+
+def check_relation(data: pd.DataFrame, columns: list):
+    &#34;&#34;&#34;
+    Check relation between collumns.
+
+    Args:
+        data (pd.DataFrame): dataframe to be modified
+        columns (list): list of lists of columns to be checked
+
+    Returns:
+        None
+    &#34;&#34;&#34;
+
+    for cols in columns:
+        df_dup = (
+            data[~data.duplicated(subset=cols)]
+            .groupby(cols)
+            .count()
+            .reset_index()
+            .iloc[:, :1]
+        )
+
+        for col in cols:
+            df_dup_col = (
+                data[~data.duplicated(subset=col)]
+                .groupby(col)
+                .count()
+                .reset_index()
+                .iloc[:, :1]
+            )
+
+            if len(df_dup_col[~df_dup_col[col].duplicated()]) == len(df_dup):
+                log(
+                    f&#34;[data-check] Comparing &#39;{col}&#39; in &#39;{cols}&#39;, there are no duplicated values&#34;,
+                    level=&#34;info&#34;,
+                )
+            else:
+                log(
+                    f&#34;[data-check] Comparing &#39;{col}&#39; in &#39;{cols}&#39;, there are duplicated values&#34;,
+                    level=&#34;warning&#34;,
+                )
+    return
+
+
+def data_info_str(data: pd.DataFrame):
+    &#34;&#34;&#34;
+    Return dataframe info as a str to log
+
+    Args:
+        data (pd.DataFrame): dataframe
+
+    Returns:
+        data.info() as a string
+    &#34;&#34;&#34;
+    buffer = io.StringIO()
+    data.info(buf=buffer)
+    return buffer.getvalue()</code></pre>
 </details>
 </section>
 <section>
@@ -291,6 +451,119 @@ Defaults to 'bigquery_prod'.</p>
         str: the requested project_id
     &#34;&#34;&#34;
     return bd.upload.base.Base().client[kind].project</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.utils.check_not_null"><code class="name flex">
+<span>def <span class="ident">check_not_null</span></span>(<span>data: pandas.core.frame.DataFrame, columns: list, subset_query: str = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check if there are null values in columns.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>columns</code></strong> :&ensp;<code>list</code></dt>
+<dd>list of columns to check</dd>
+<dt><strong><code>subset_query</code></strong> :&ensp;<code>str</code></dt>
+<dd>query to check if there are important data</dd>
+</dl>
+<p>being removed</p>
+<h2 id="returns">Returns</h2>
+<p>None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_not_null(data: pd.DataFrame, columns: list, subset_query: str = None):
+    &#34;&#34;&#34;
+    Check if there are null values in columns.
+
+    Args:
+        columns (list): list of columns to check
+        subset_query (str): query to check if there are important data
+        being removed
+
+    Returns:
+        None
+    &#34;&#34;&#34;
+
+    for col in columns:
+        remove = data.query(f&#34;{col} != {col}&#34;)  # null values
+        log(
+            f&#34;[data-check] There are {len(remove)} rows with null values in &#39;{col}&#39;&#34;,
+            level=&#34;info&#34;,
+        )
+
+        if subset_query is not None:
+            # Check if there are important data being removed
+            remove = remove.query(subset_query)
+            if len(remove) &gt; 0:
+                log(
+                    f&#34;&#34;&#34;[data-check] There are {len(remove)} critical rows with
+                    null values in &#39;{col}&#39; (query: {subset_query})&#34;&#34;&#34;,
+                    level=&#34;warning&#34;,
+                )
+
+    return</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.utils.check_relation"><code class="name flex">
+<span>def <span class="ident">check_relation</span></span>(<span>data: pandas.core.frame.DataFrame, columns: list)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check relation between collumns.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>pd.DataFrame</code></dt>
+<dd>dataframe to be modified</dd>
+<dt><strong><code>columns</code></strong> :&ensp;<code>list</code></dt>
+<dd>list of lists of columns to be checked</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_relation(data: pd.DataFrame, columns: list):
+    &#34;&#34;&#34;
+    Check relation between collumns.
+
+    Args:
+        data (pd.DataFrame): dataframe to be modified
+        columns (list): list of lists of columns to be checked
+
+    Returns:
+        None
+    &#34;&#34;&#34;
+
+    for cols in columns:
+        df_dup = (
+            data[~data.duplicated(subset=cols)]
+            .groupby(cols)
+            .count()
+            .reset_index()
+            .iloc[:, :1]
+        )
+
+        for col in cols:
+            df_dup_col = (
+                data[~data.duplicated(subset=col)]
+                .groupby(col)
+                .count()
+                .reset_index()
+                .iloc[:, :1]
+            )
+
+            if len(df_dup_col[~df_dup_col[col].duplicated()]) == len(df_dup):
+                log(
+                    f&#34;[data-check] Comparing &#39;{col}&#39; in &#39;{cols}&#39;, there are no duplicated values&#34;,
+                    level=&#34;info&#34;,
+                )
+            else:
+                log(
+                    f&#34;[data-check] Comparing &#39;{col}&#39; in &#39;{cols}&#39;, there are duplicated values&#34;,
+                    level=&#34;warning&#34;,
+                )
+    return</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.utils.connect_ftp"><code class="name flex">
@@ -371,6 +644,145 @@ Defaults to 'bigquery_prod'.</p>
             filepath=path, if_exists=&#34;replace&#34;, timeout=600, partitions=partitions
         )
         log(&#34;Appended to table on STAGING successfully.&#34;)</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.utils.data_info_str"><code class="name flex">
+<span>def <span class="ident">data_info_str</span></span>(<span>data: pandas.core.frame.DataFrame)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return dataframe info as a str to log</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>pd.DataFrame</code></dt>
+<dd>dataframe</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>data.info() as a string</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def data_info_str(data: pd.DataFrame):
+    &#34;&#34;&#34;
+    Return dataframe info as a str to log
+
+    Args:
+        data (pd.DataFrame): dataframe
+
+    Returns:
+        data.info() as a string
+    &#34;&#34;&#34;
+    buffer = io.StringIO()
+    data.info(buf=buffer)
+    return buffer.getvalue()</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.utils.filter_data"><code class="name flex">
+<span>def <span class="ident">filter_data</span></span>(<span>data: pandas.core.frame.DataFrame, filters: list, subset_query: str = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Filter data from a dataframe</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>pd.DataFrame</code></dt>
+<dd>data DataFrame</dd>
+<dt><strong><code>filters</code></strong> :&ensp;<code>list</code></dt>
+<dd>list of queries to filter data</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pandas.DataFrame</code></dt>
+<dd>data without filter data</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def filter_data(data: pd.DataFrame, filters: list, subset_query: str = None):
+    &#34;&#34;&#34;
+    Filter data from a dataframe
+
+    Args:
+        data (pd.DataFrame): data DataFrame
+        filters (list): list of queries to filter data
+
+    Returns:
+        pandas.DataFrame: data without filter data
+    &#34;&#34;&#34;
+    for item in filters:
+        remove = data.query(item)
+        data = data.drop(remove.index)
+        log(
+            f&#34;[data-filter] Removed {len(remove)} rows from filter: {item}&#34;,
+            level=&#34;info&#34;,
+        )
+
+        if subset_query is not None:
+            # Check if there are important data being removed
+            remove = remove.query(subset_query)
+            if len(remove) &gt; 0:
+                log(
+                    f&#34;&#34;&#34;[data-filter] Removed {len(remove)} critical rows
+                    from filter: {item} (subquery: {subset_query})&#34;&#34;&#34;,
+                    level=&#34;warning&#34;,
+                )
+
+    return data</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.utils.filter_null"><code class="name flex">
+<span>def <span class="ident">filter_null</span></span>(<span>data: pandas.core.frame.DataFrame, columns: list, subset_query: str = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Filter null values in columns.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>columns</code></strong> :&ensp;<code>list</code></dt>
+<dd>list of columns to check</dd>
+<dt><strong><code>subset_query</code></strong> :&ensp;<code>str</code></dt>
+<dd>query to check if there are important data</dd>
+</dl>
+<p>being removed</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pandas.DataFrame</code></dt>
+<dd>data without null values</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def filter_null(data: pd.DataFrame, columns: list, subset_query: str = None):
+    &#34;&#34;&#34;
+    Filter null values in columns.
+
+    Args:
+        columns (list): list of columns to check
+        subset_query (str): query to check if there are important data
+        being removed
+
+    Returns:
+        pandas.DataFrame: data without null values
+    &#34;&#34;&#34;
+
+    for col in columns:
+        remove = data.query(f&#34;{col} != {col}&#34;)  # null values
+        data = data.drop(remove.index)
+        log(
+            f&#34;[data-filter] Removed {len(remove)} rows with null &#39;{col}&#39;&#34;,
+            level=&#34;info&#34;,
+        )
+
+        if subset_query is not None:
+            # Check if there are important data being removed
+            remove = remove.query(subset_query)
+            if len(remove) &gt; 0:
+                log(
+                    f&#34;[data-filter] Removed {len(remove)} critical rows with null &#39;{col}&#39;&#34;,
+                    level=&#34;warning&#34;,
+                )
+
+    return data</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.utils.generate_df_and_save"><code class="name flex">
@@ -696,8 +1108,13 @@ setTimeout(() => input.focus(), 100);
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="pipelines.rj_smtr.utils.bq_project" href="#pipelines.rj_smtr.utils.bq_project">bq_project</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.check_not_null" href="#pipelines.rj_smtr.utils.check_not_null">check_not_null</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.check_relation" href="#pipelines.rj_smtr.utils.check_relation">check_relation</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.connect_ftp" href="#pipelines.rj_smtr.utils.connect_ftp">connect_ftp</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.create_or_append_table" href="#pipelines.rj_smtr.utils.create_or_append_table">create_or_append_table</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.data_info_str" href="#pipelines.rj_smtr.utils.data_info_str">data_info_str</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.filter_data" href="#pipelines.rj_smtr.utils.filter_data">filter_data</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.filter_null" href="#pipelines.rj_smtr.utils.filter_null">filter_null</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.generate_df_and_save" href="#pipelines.rj_smtr.utils.generate_df_and_save">generate_df_and_save</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.get_last_run_timestamp" href="#pipelines.rj_smtr.utils.get_last_run_timestamp">get_last_run_timestamp</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.get_table_min_max_value" href="#pipelines.rj_smtr.utils.get_table_min_max_value">get_table_min_max_value</a></code></li>

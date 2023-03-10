@@ -39,6 +39,7 @@ import os
 from pathlib import Path
 import traceback
 from typing import Dict
+import io
 
 from basedosdados import Storage, Table
 import basedosdados as bd
@@ -185,6 +186,14 @@ def create_date_hour_partition(timestamp: datetime) -&gt; str:
 
 
 @task
+def create_date_partition(timestamp: datetime) -&gt; str:
+    &#34;&#34;&#34;
+    Get date hour Hive partition structure from timestamp.
+    &#34;&#34;&#34;
+    return f&#34;data={timestamp.date()}&#34;
+
+
+@task
 def parse_timestamp_to_string(timestamp: datetime, pattern=&#34;%Y-%m-%d-%H-%M-%S&#34;) -&gt; str:
     &#34;&#34;&#34;
     Parse timestamp to string pattern.
@@ -248,14 +257,12 @@ def create_local_partition_path(
 def save_raw_local(file_path: str, status: dict, mode: str = &#34;raw&#34;) -&gt; str:
     &#34;&#34;&#34;
     Saves json response from API to .json file.
-
     Args:
         file_path (str): Path which to save raw file
         status (dict): Must contain keys
-          * `data`: json returned from API
-          * `error`: error catched from API request
+          * data: json returned from API
+          * error: error catched from API request
         mode (str, optional): Folder to save locally, later folder which to upload to GCS.
-
     Returns:
         str: Path to the saved file
     &#34;&#34;&#34;
@@ -393,37 +400,54 @@ def query_logs(
 
 
 @task
-def get_raw(url: str, headers: dict = None) -&gt; Dict:
+def get_raw(  # pylint: disable=R0912
+    url: str, headers: dict = None, filetype: str = &#34;json&#34;, csv_args: dict = None
+) -&gt; Dict:
     &#34;&#34;&#34;
-    Request data from a url API.
+    Request data from URL API
 
     Args:
-        url (str): URL to send request to
+        url (str): URL to send request
         headers (dict, optional): Aditional fields to send along the request.
+        filetype (str, optional): Filetype to be formatted (supported only: json, csv and txt)
+        csv_args (dict, optional): Arguments for read_csv, if needed
     Returns:
         dict: Conatining keys
-          * `data`: json returned from API
-          * `error`: error catched from API request
+          * `data` (json): data result
+          * `error` (str): catched error, if any. Otherwise, returns None
     &#34;&#34;&#34;
     data = None
+    error = None
 
-    # Get data from API
     try:
         response = requests.get(
             url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
         )
-        error = None
+
+        if response.ok:  # status code is less than 400
+            if filetype == &#34;json&#34;:
+                data = response.json()
+
+                # todo: move to data check on specfic API # pylint: disable=W0102
+                if isinstance(data, dict) and &#34;DescricaoErro&#34; in data.keys():
+                    error = data[&#34;DescricaoErro&#34;]
+
+            elif filetype in (&#34;txt&#34;, &#34;csv&#34;):
+                if csv_args is None:
+                    csv_args = {}
+                data = pd.read_csv(io.StringIO(response.text), **csv_args).to_dict(
+                    orient=&#34;records&#34;
+                )
+            else:
+                error = (
+                    &#34;Unsupported raw file extension. Supported only: json, csv and txt&#34;
+                )
+
     except Exception as exp:
         error = exp
-        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
-        return {&#34;data&#34;: None, &#34;error&#34;: error}
 
-    # Check data results
-    if response.ok:  # status code is less than 400
-        data = response.json()
-        if isinstance(data, dict) and &#34;DescricaoErro&#34; in data.keys():
-            error = data[&#34;DescricaoErro&#34;]
-            log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+    if error is not None:
+        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
 
     return {&#34;data&#34;: data, &#34;error&#34;: error}
 
@@ -1074,6 +1098,23 @@ def create_date_hour_partition(timestamp: datetime) -&gt; str:
     return f&#34;data={timestamp.strftime(&#39;%Y-%m-%d&#39;)}/hora={timestamp.strftime(&#39;%H&#39;)}&#34;</code></pre>
 </details>
 </dd>
+<dt id="pipelines.rj_smtr.tasks.create_date_partition"><code class="name flex">
+<span>def <span class="ident">create_date_partition</span></span>(<span>timestamp: datetime.datetime) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get date hour Hive partition structure from timestamp.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def create_date_partition(timestamp: datetime) -&gt; str:
+    &#34;&#34;&#34;
+    Get date hour Hive partition structure from timestamp.
+    &#34;&#34;&#34;
+    return f&#34;data={timestamp.date()}&#34;</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_smtr.tasks.create_local_partition_path"><code class="name flex">
 <span>def <span class="ident">create_local_partition_path</span></span>(<span>dataset_id: str, table_id: str, filename: str, partitions: str = None) ‑> str</span>
 </code></dt>
@@ -1355,60 +1396,81 @@ def get_materialization_date_range(  # pylint: disable=R0913
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.get_raw"><code class="name flex">
-<span>def <span class="ident">get_raw</span></span>(<span>url: str, headers: dict = None) ‑> Dict</span>
+<span>def <span class="ident">get_raw</span></span>(<span>url: str, headers: dict = None, filetype: str = 'json', csv_args: dict = None) ‑> Dict</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request data from a url API.</p>
+<div class="desc"><p>Request data from URL API</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>url</code></strong> :&ensp;<code>str</code></dt>
-<dd>URL to send request to</dd>
+<dd>URL to send request</dd>
 <dt><strong><code>headers</code></strong> :&ensp;<code>dict</code>, optional</dt>
 <dd>Aditional fields to send along the request.</dd>
+<dt><strong><code>filetype</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Filetype to be formatted (supported only: json, csv and txt)</dd>
+<dt><strong><code>csv_args</code></strong> :&ensp;<code>dict</code>, optional</dt>
+<dd>Arguments for read_csv, if needed</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>dict</code></dt>
 <dd>Conatining keys
-* <code>data</code>: json returned from API
-* <code>error</code>: error catched from API request</dd>
+* <code>data</code> (json): data result
+* <code>error</code> (str): catched error, if any. Otherwise, returns None</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def get_raw(url: str, headers: dict = None) -&gt; Dict:
+def get_raw(  # pylint: disable=R0912
+    url: str, headers: dict = None, filetype: str = &#34;json&#34;, csv_args: dict = None
+) -&gt; Dict:
     &#34;&#34;&#34;
-    Request data from a url API.
+    Request data from URL API
 
     Args:
-        url (str): URL to send request to
+        url (str): URL to send request
         headers (dict, optional): Aditional fields to send along the request.
+        filetype (str, optional): Filetype to be formatted (supported only: json, csv and txt)
+        csv_args (dict, optional): Arguments for read_csv, if needed
     Returns:
         dict: Conatining keys
-          * `data`: json returned from API
-          * `error`: error catched from API request
+          * `data` (json): data result
+          * `error` (str): catched error, if any. Otherwise, returns None
     &#34;&#34;&#34;
     data = None
+    error = None
 
-    # Get data from API
     try:
         response = requests.get(
             url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
         )
-        error = None
+
+        if response.ok:  # status code is less than 400
+            if filetype == &#34;json&#34;:
+                data = response.json()
+
+                # todo: move to data check on specfic API # pylint: disable=W0102
+                if isinstance(data, dict) and &#34;DescricaoErro&#34; in data.keys():
+                    error = data[&#34;DescricaoErro&#34;]
+
+            elif filetype in (&#34;txt&#34;, &#34;csv&#34;):
+                if csv_args is None:
+                    csv_args = {}
+                data = pd.read_csv(io.StringIO(response.text), **csv_args).to_dict(
+                    orient=&#34;records&#34;
+                )
+            else:
+                error = (
+                    &#34;Unsupported raw file extension. Supported only: json, csv and txt&#34;
+                )
+
     except Exception as exp:
         error = exp
-        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
-        return {&#34;data&#34;: None, &#34;error&#34;: error}
 
-    # Check data results
-    if response.ok:  # status code is less than 400
-        data = response.json()
-        if isinstance(data, dict) and &#34;DescricaoErro&#34; in data.keys():
-            error = data[&#34;DescricaoErro&#34;]
-            log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+    if error is not None:
+        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
 
     return {&#34;data&#34;: data, &#34;error&#34;: error}</code></pre>
 </details>
@@ -1562,8 +1624,8 @@ def query_logs(
 <dd>Path which to save raw file</dd>
 <dt><strong><code>status</code></strong> :&ensp;<code>dict</code></dt>
 <dd>Must contain keys
-* <code>data</code>: json returned from API
-* <code>error</code>: error catched from API request</dd>
+* data: json returned from API
+* error: error catched from API request</dd>
 <dt><strong><code>mode</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>Folder to save locally, later folder which to upload to GCS.</dd>
 </dl>
@@ -1580,14 +1642,12 @@ def query_logs(
 def save_raw_local(file_path: str, status: dict, mode: str = &#34;raw&#34;) -&gt; str:
     &#34;&#34;&#34;
     Saves json response from API to .json file.
-
     Args:
         file_path (str): Path which to save raw file
         status (dict): Must contain keys
-          * `data`: json returned from API
-          * `error`: error catched from API request
+          * data: json returned from API
+          * error: error catched from API request
         mode (str, optional): Folder to save locally, later folder which to upload to GCS.
-
     Returns:
         str: Path to the saved file
     &#34;&#34;&#34;
@@ -1863,6 +1923,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.tasks.build_incremental_model" href="#pipelines.rj_smtr.tasks.build_incremental_model">build_incremental_model</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.create_current_date_hour_partition" href="#pipelines.rj_smtr.tasks.create_current_date_hour_partition">create_current_date_hour_partition</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.create_date_hour_partition" href="#pipelines.rj_smtr.tasks.create_date_hour_partition">create_date_hour_partition</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.create_date_partition" href="#pipelines.rj_smtr.tasks.create_date_partition">create_date_partition</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.create_local_partition_path" href="#pipelines.rj_smtr.tasks.create_local_partition_path">create_local_partition_path</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.delay_now_time" href="#pipelines.rj_smtr.tasks.delay_now_time">delay_now_time</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.fetch_dataset_sha" href="#pipelines.rj_smtr.tasks.fetch_dataset_sha">fetch_dataset_sha</a></code></li>
