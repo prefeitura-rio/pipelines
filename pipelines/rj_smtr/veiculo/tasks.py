@@ -162,7 +162,6 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
         # Check primary keys
         # pk_columns = ["placa", "id_auto_infracao"]
         # check_new_data = f"data_infracao == '{timestamp.strftime('%Y-%m-%d')}'"
-
         # check_not_null(data, pk_columns, subset_query=check_new_data)
 
         log(
