@@ -91,7 +91,7 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
         data = (
             data.groupby(primary_key + ["timestamp_captura"])
             .apply(lambda x: x[data.columns.difference(primary_key)].to_json())
-            .reset_index(name="content")
+            .reset_index(name="content")[primary_key + ["content", "timestamp_captura"]]
         )
 
         log(
@@ -173,7 +173,7 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
         data = (
             data.groupby(primary_key + ["timestamp_captura"])
             .apply(lambda x: x[data.columns.difference(primary_key)].to_json())
-            .reset_index(name="content")
+            .reset_index(name="content")[primary_key + ["content", "timestamp_captura"]]
         )
 
         log(
