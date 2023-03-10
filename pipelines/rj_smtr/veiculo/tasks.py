@@ -176,7 +176,7 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
         log("Creating nested structure...", level="info")
         data = (
             data.groupby(primary_key + ["timestamp_captura"])
-            .apply(lambda x: x[data.columns.difference(primary_key)].to_json())
+            .apply(lambda x: x[data.columns.difference(primary_key)].to_json(orient="records")))
             .reset_index(name="content")[primary_key + ["content", "timestamp_captura"]]
         )
 
