@@ -88,14 +88,14 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
         )
 
         log("Creating nested structure...", level="info")
-        cols = primary_key + ["timestamp_captura"]
-        data = (
-            data.groupby(cols)
-            .apply(
-                lambda x: x[data.columns.difference(cols)].to_dict(orient="records")[0]
-            )
-            .reset_index(name="content")[primary_key + ["content", "timestamp_captura"]]
+        pk_columns = [primary_key]
+
+        df_treated = data[pk_columns].copy()
+        df_treated["content"] = data[data.columns.difference(pk_columns)].apply(
+            lambda x: x.to_json(), axis=1
         )
+
+        df_treated["timestamp_captura"] = timestamp
 
         log(
             f"Finished nested structure! Pre-treated data:\n{data_info_str(data)}",
@@ -173,14 +173,14 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
 
         log("Creating nested structure...", level="info")
 
-        cols = primary_key + ["timestamp_captura"]
-        data = (
-            data.groupby(cols)
-            .apply(
-                lambda x: x[data.columns.difference(cols)].to_dict(orient="records")[0]
-            )
-            .reset_index(name="content")[primary_key + ["content", "timestamp_captura"]]
+        pk_columns = [primary_key]
+
+        df_treated = data[pk_columns].copy()
+        df_treated["content"] = data[data.columns.difference(pk_columns)].apply(
+            lambda x: x.to_json(), axis=1
         )
+
+        df_treated["timestamp_captura"] = timestamp
 
         log(
             f"Finished nested structure! Pre-treated data:\n{data_info_str(data)}",
