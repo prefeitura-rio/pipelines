@@ -134,7 +134,7 @@ materialize_brt.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-materialize_brt.schedule = every_hour
+# materialize_brt.schedule = every_hour
 
 
 with Flow(
@@ -194,4 +194,4 @@ captura_brt.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-captura_brt.schedule = every_minute
+# captura_brt.schedule = every_minute
