@@ -21,21 +21,6 @@ from pipelines.rj_smtr.utils import log_critical, map_dict_keys
 
 
 @task
-def create_api_url_brt_gps(secret_path: str = constants.GPS_BRT_SECRET_PATH.value):
-    """Create the url to request data from
-
-    Args:
-        secret_path (str, optional): secret path to the url.
-
-    Returns:
-        _str: url to request
-    """
-    url = get_vault_secret(secret_path=secret_path)["data"]["url"]
-    log(f"Request data from {url}")
-    return url
-
-
-@task
 def pre_treatment_br_rj_riodejaneiro_brt_gps(status: dict, timestamp):
     """Basic data treatment for brt gps data. Converts unix time to datetime,
     and apply filtering to stale data that may populate the API response.
@@ -50,6 +35,7 @@ def pre_treatment_br_rj_riodejaneiro_brt_gps(status: dict, timestamp):
 
     # Check previous error
     if status["error"] is not None:
+        log("Skipped due to previous error.")
         return {"data": pd.DataFrame(), "error": status["error"]}
 
     error = None

@@ -45,7 +45,6 @@ from pipelines.rj_smtr.tasks import (
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
 from pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks import (
-    create_api_url_brt_gps,
     pre_treatment_br_rj_riodejaneiro_brt_gps,
 )
 
@@ -161,9 +160,11 @@ with Flow(
         partitions=partitions,
     )
     # EXTRACT
-    url = create_api_url_brt_gps()
 
-    raw_status = get_raw(url=url)
+    raw_status = get_raw(
+        url=constants.GPS_BRT_API_URL_V2.value,
+        headers_path=constants.GPS_BRT_API_SECRET_PATH_V2.value,
+    )
 
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
     # TREAT
