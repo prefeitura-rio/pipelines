@@ -41,12 +41,8 @@ with Flow(
     DUMP_MODE = "append"
 
     # data_inicio e data_fim devem ser strings no formato "YYYY-MM-DD"
-    data_inicio = Parameter(
-        "data_inicio", default='', required=False
-    )
-    data_fim = Parameter(
-        "data_fim", default='', required=False
-    )
+    data_inicio = Parameter("data_inicio", default="", required=False)
+    data_fim = Parameter("data_fim", default="", required=False)
 
     # Materialization parameters
     MATERIALIZE_AFTER_DUMP = Parameter(
