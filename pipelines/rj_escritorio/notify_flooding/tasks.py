@@ -207,7 +207,7 @@ def send_email_for_flooding_occurence(
         raise ValueError(f"Invalid mode: {mode}")
     secret = get_vault_secret(email_configuration_secret_path)["data"]
     if mode == "new":
-        subject = f"NEW FLOODING OCCURENCE - ID {occurence['id']}"
+        subject = f"NEW FLOOD OCCURENCE - ID {occurence['id']}"
         body = subject
         circle_fname = f"{uuid4()}.kml"
         get_circle(
@@ -218,7 +218,7 @@ def send_email_for_flooding_occurence(
         )
         attachment = circle_fname
     else:
-        subject = f"CLOSED FLOODING OCCURENCE - ID {occurence['id']}"
+        subject = f"CLOSED FLOOD OCCURENCE - ID {occurence['id']}"
         body = subject
         attachment = None
     send_email(
