@@ -18,7 +18,7 @@ from pipelines.utils.utils import untuple_clocks as untuple
 #####################################
 
 cetrio_queries = {
-    "pit": {
+    "fluxo_veiculos": {
         "dump_mode": "overwrite",
         "execute_query": "SELECT f.CodCET AS cod_cet, \
             e.Logradouro, \
@@ -48,13 +48,13 @@ cetrio_clocks = generate_dump_db_schedules(
     interval=timedelta(days=1),
     start_date=datetime(2023, 3, 1, 22, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
-        constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
+        constants.RJ_CETRIO_AGENT_LABEL.value,
     ],
     db_database="DWOCR_Staging",
     db_host="10.39.64.50",
     db_port="1433",
     db_type="sql_server",
-    dataset_id="cetrio",
+    dataset_id="transporte_rodoviario_radar_transito",
     vault_secret_path="cet-rio-ocr-staging",
     table_parameters=cetrio_queries,
 )

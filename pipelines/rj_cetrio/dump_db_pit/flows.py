@@ -22,7 +22,7 @@ cetrio_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 cetrio_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[
-        constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
+        constants.RJ_CETRIO_AGENT_LABEL.value,
     ],
 )
 
@@ -32,7 +32,7 @@ cetrio_default_parameters = {
     "db_port": "1433",
     "db_type": "sql_server",
     "vault_secret_path": "cet-rio-ocr-staging",
-    "dataset_id": "cetrio",
+    "dataset_id": "transporte_rodoviario_radar_transito",
     "mode": "dev",
 }
 cetrio_flow = set_default_parameters(
