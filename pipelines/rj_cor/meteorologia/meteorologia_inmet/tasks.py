@@ -17,6 +17,7 @@ from pipelines.utils.utils import get_vault_secret, log, to_partitions
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.utils import (
     parse_date_columns,
 )
+
 # from pipelines.rj_cor.meteorologia.meteorologia_inmet.meteorologia_utils import converte_timezone
 
 
@@ -29,7 +30,7 @@ def get_dates(data_inicio: str, data_fim: str) -> Tuple[str, str]:
     Caso contrário, retorna as datas inputadas mos parâmetros do flow.
     """
     # segundo o manual do inmet o dado vem em UTC
-    if data_inicio != '':
+    if data_inicio != "":
         data_fim = pendulum.now("UTC").format("YYYY-MM-DD")
         data_inicio = pendulum.yesterday("UTC").format("YYYY-MM-DD")
         backfill = 0
