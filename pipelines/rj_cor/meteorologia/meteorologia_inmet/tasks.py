@@ -17,10 +17,6 @@ from pipelines.utils.utils import get_vault_secret, log, to_partitions
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.utils import (
     parse_date_columns,
 )
-<<<<<<< HEAD
-=======
-
->>>>>>> 4db4a22e90be290f3cca24da80526965ebc60eaa
 # from pipelines.rj_cor.meteorologia.meteorologia_inmet.meteorologia_utils import converte_timezone
 
 
