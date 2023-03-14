@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.flows API documentation</title>
-<meta name="description" content="Flows for br_rj_riodejaneiro_brt_gps" />
+<title>pipelines.rj_escritorio.data_catalog API documentation</title>
+<meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,214 +19,30 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.flows</code></h1>
+<h1 class="title">Module <code>pipelines.rj_escritorio.data_catalog</code></h1>
 </header>
 <section id="section-intro">
-<p>Flows for br_rj_riodejaneiro_brt_gps</p>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python"># -*- coding: utf-8 -*-
-&#34;&#34;&#34;
-Flows for br_rj_riodejaneiro_brt_gps
-&#34;&#34;&#34;
-
-from prefect import Parameter, case
-from prefect.run_configs import KubernetesRun
-from prefect.storage import GCS
-
-# EMD Imports #
-
-from pipelines.constants import constants as emd_constants
-from pipelines.utils.decorators import Flow
-from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
-from pipelines.utils.tasks import (
-    get_now_time,
-    rename_current_flow_run_now_time,
-    get_current_flow_mode,
-    get_current_flow_labels,
-)
-
-# SMTR Imports #
-
-from pipelines.rj_smtr.constants import constants
-
-# from pipelines.rj_smtr.schedules import (
-#     every_minute,
-#     every_hour,
-# )
-from pipelines.rj_smtr.tasks import (
-    create_date_hour_partition,
-    create_local_partition_path,
-    fetch_dataset_sha,
-    get_current_timestamp,
-    get_materialization_date_range,
-    # get_local_dbt_client,
-    get_raw,
-    parse_timestamp_to_string,
-    save_raw_local,
-    save_treated_local,
-    set_last_run_timestamp,
-    upload_logs_to_bq,
-    bq_upload,
-)
-from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
-
-from pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks import (
-    create_api_url_brt_gps,
-    pre_treatment_br_rj_riodejaneiro_brt_gps,
-)
-
-# Flows #
-
-with Flow(
-    &#34;SMTR: GPS BRT - Materialização&#34;,
-    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;],
-) as materialize_brt:
-
-    # Rename flow run
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix=&#34;GPS BRT - Materialização: &#34;, now_time=get_now_time()
-    )
-
-    # Get default parameters #
-    raw_dataset_id = Parameter(
-        &#34;raw_dataset_id&#34;, default=constants.GPS_BRT_RAW_DATASET_ID.value
-    )
-    raw_table_id = Parameter(
-        &#34;raw_table_id&#34;, default=constants.GPS_BRT_RAW_TABLE_ID.value
-    )
-    dataset_id = Parameter(&#34;dataset_id&#34;, default=constants.GPS_BRT_DATASET_ID.value)
-    table_id = Parameter(&#34;table_id&#34;, default=constants.GPS_BRT_TREATED_TABLE_ID.value)
-    rebuild = Parameter(&#34;rebuild&#34;, False)
-
-    LABELS = get_current_flow_labels()
-    MODE = get_current_flow_mode(LABELS)
-
-    # Set dbt client #
-    dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
-    # Use the command below to get the dbt client in dev mode:
-    # dbt_client = get_local_dbt_client(host=&#34;localhost&#34;, port=3001)
-
-    # Set specific run parameters #
-    date_range = get_materialization_date_range(
-        dataset_id=dataset_id,
-        table_id=table_id,
-        raw_dataset_id=raw_dataset_id,
-        raw_table_id=raw_table_id,
-        table_date_column_name=&#34;data&#34;,
-        mode=MODE,
-        delay_hours=constants.GPS_BRT_MATERIALIZE_DELAY_HOURS.value,
-    )
-    dataset_sha = fetch_dataset_sha(
-        dataset_id=dataset_id,
-    )
-
-    # Run materialization #
-    with case(rebuild, True):
-        RUN = run_dbt_model(
-            dbt_client=dbt_client,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            upstream=True,
-            exclude=&#34;+data_versao_efetiva&#34;,
-            _vars=[date_range, dataset_sha],
-            flags=&#34;--full-refresh&#34;,
-        )
-        set_last_run_timestamp(
-            dataset_id=dataset_id,
-            table_id=table_id,
-            timestamp=date_range[&#34;date_range_end&#34;],
-            wait=RUN,
-            mode=MODE,
-        )
-    with case(rebuild, False):
-        RUN = run_dbt_model(
-            dbt_client=dbt_client,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            upstream=True,
-            exclude=&#34;+data_versao_efetiva&#34;,
-            _vars=[date_range, dataset_sha],
-        )
-        set_last_run_timestamp(
-            dataset_id=dataset_id,
-            table_id=table_id,
-            timestamp=date_range[&#34;date_range_end&#34;],
-            wait=RUN,
-            mode=MODE,
-        )
-
-materialize_brt.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-materialize_brt.run_config = KubernetesRun(
-    image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
-)
-# materialize_brt.schedule = every_hour
-
-
-with Flow(
-    &#34;SMTR: GPS BRT - Captura&#34;,
-    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;],
-) as captura_brt:
-
-    timestamp = get_current_timestamp()
-
-    # Rename flow run
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix=&#34;SMTR: GPS BRT - Captura - &#34;, now_time=timestamp
-    )
-
-    # SETUP LOCAL #
-    partitions = create_date_hour_partition(timestamp)
-
-    filename = parse_timestamp_to_string(timestamp)
-
-    filepath = create_local_partition_path(
-        dataset_id=constants.GPS_BRT_RAW_DATASET_ID.value,
-        table_id=constants.GPS_BRT_RAW_TABLE_ID.value,
-        filename=filename,
-        partitions=partitions,
-    )
-    # EXTRACT
-    url = create_api_url_brt_gps()
-
-    raw_status = get_raw(url=url)
-
-    raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
-    # TREAT
-    treated_status = pre_treatment_br_rj_riodejaneiro_brt_gps(
-        status=raw_status, timestamp=timestamp
-    )
-
-    treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
-    # LOAD
-    error = bq_upload(
-        dataset_id=constants.GPS_BRT_RAW_DATASET_ID.value,
-        table_id=constants.GPS_BRT_RAW_TABLE_ID.value,
-        filepath=treated_filepath,
-        raw_filepath=raw_filepath,
-        partitions=partitions,
-        status=treated_status,
-    )
-    upload_logs_to_bq(
-        dataset_id=constants.GPS_BRT_RAW_DATASET_ID.value,
-        parent_table_id=constants.GPS_BRT_RAW_TABLE_ID.value,
-        timestamp=timestamp,
-        error=error,
-    )
-    captura_brt.set_dependencies(task=partitions, upstream_tasks=[rename_flow_run])
-
-captura_brt.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-captura_brt.run_config = KubernetesRun(
-    image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
-)
-# captura_brt.schedule = every_minute</code></pre>
-</details>
 </section>
 <section>
+<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+<dl>
+<dt><code class="name"><a title="pipelines.rj_escritorio.data_catalog.flows" href="flows.html">pipelines.rj_escritorio.data_catalog.flows</a></code></dt>
+<dd>
+<div class="desc"><p>Flow definition for generating a data catalog from BigQuery.</p></div>
+</dd>
+<dt><code class="name"><a title="pipelines.rj_escritorio.data_catalog.schedules" href="schedules.html">pipelines.rj_escritorio.data_catalog.schedules</a></code></dt>
+<dd>
+<div class="desc"><p>Schedules for the data catalog pipeline.</p></div>
+</dd>
+<dt><code class="name"><a title="pipelines.rj_escritorio.data_catalog.tasks" href="tasks.html">pipelines.rj_escritorio.data_catalog.tasks</a></code></dt>
+<dd>
+<div class="desc"><p>Tasks for generating a data catalog from BigQuery.</p></div>
+</dd>
+<dt><code class="name"><a title="pipelines.rj_escritorio.data_catalog.utils" href="utils.html">pipelines.rj_escritorio.data_catalog.utils</a></code></dt>
+<dd>
+<div class="desc"><p>Helper functions for generating a data catalog from BigQuery.</p></div>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -289,7 +105,15 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps" href="index.html">pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps</a></code></li>
+<li><code><a title="pipelines.rj_escritorio" href="../index.html">pipelines.rj_escritorio</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<ul>
+<li><code><a title="pipelines.rj_escritorio.data_catalog.flows" href="flows.html">pipelines.rj_escritorio.data_catalog.flows</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.data_catalog.schedules" href="schedules.html">pipelines.rj_escritorio.data_catalog.schedules</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.data_catalog.tasks" href="tasks.html">pipelines.rj_escritorio.data_catalog.tasks</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.data_catalog.utils" href="utils.html">pipelines.rj_escritorio.data_catalog.utils</a></code></li>
 </ul>
 </li>
 </ul>

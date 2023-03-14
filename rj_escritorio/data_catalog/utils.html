@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.flows API documentation</title>
-<meta name="description" content="Flows for br_rj_riodejaneiro_brt_gps" />
+<title>pipelines.rj_escritorio.data_catalog.utils API documentation</title>
+<meta name="description" content="Helper functions for generating a data catalog from BigQuery." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,211 +19,62 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.flows</code></h1>
+<h1 class="title">Module <code>pipelines.rj_escritorio.data_catalog.utils</code></h1>
 </header>
 <section id="section-intro">
-<p>Flows for br_rj_riodejaneiro_brt_gps</p>
+<p>Helper functions for generating a data catalog from BigQuery.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Flows for br_rj_riodejaneiro_brt_gps
+Helper functions for generating a data catalog from BigQuery.
 &#34;&#34;&#34;
+from typing import Any, List
 
-from prefect import Parameter, case
-from prefect.run_configs import KubernetesRun
-from prefect.storage import GCS
+from google.cloud import bigquery
+from gspread.worksheet import Worksheet
 
-# EMD Imports #
-
-from pipelines.constants import constants as emd_constants
-from pipelines.utils.decorators import Flow
-from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
-from pipelines.utils.tasks import (
-    get_now_time,
-    rename_current_flow_run_now_time,
-    get_current_flow_mode,
-    get_current_flow_labels,
-)
-
-# SMTR Imports #
-
-from pipelines.rj_smtr.constants import constants
-
-# from pipelines.rj_smtr.schedules import (
-#     every_minute,
-#     every_hour,
-# )
-from pipelines.rj_smtr.tasks import (
-    create_date_hour_partition,
-    create_local_partition_path,
-    fetch_dataset_sha,
-    get_current_timestamp,
-    get_materialization_date_range,
-    # get_local_dbt_client,
-    get_raw,
-    parse_timestamp_to_string,
-    save_raw_local,
-    save_treated_local,
-    set_last_run_timestamp,
-    upload_logs_to_bq,
-    bq_upload,
-)
-from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
-
-from pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks import (
-    create_api_url_brt_gps,
-    pre_treatment_br_rj_riodejaneiro_brt_gps,
-)
-
-# Flows #
-
-with Flow(
-    &#34;SMTR: GPS BRT - Materialização&#34;,
-    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;],
-) as materialize_brt:
-
-    # Rename flow run
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix=&#34;GPS BRT - Materialização: &#34;, now_time=get_now_time()
-    )
-
-    # Get default parameters #
-    raw_dataset_id = Parameter(
-        &#34;raw_dataset_id&#34;, default=constants.GPS_BRT_RAW_DATASET_ID.value
-    )
-    raw_table_id = Parameter(
-        &#34;raw_table_id&#34;, default=constants.GPS_BRT_RAW_TABLE_ID.value
-    )
-    dataset_id = Parameter(&#34;dataset_id&#34;, default=constants.GPS_BRT_DATASET_ID.value)
-    table_id = Parameter(&#34;table_id&#34;, default=constants.GPS_BRT_TREATED_TABLE_ID.value)
-    rebuild = Parameter(&#34;rebuild&#34;, False)
-
-    LABELS = get_current_flow_labels()
-    MODE = get_current_flow_mode(LABELS)
-
-    # Set dbt client #
-    dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
-    # Use the command below to get the dbt client in dev mode:
-    # dbt_client = get_local_dbt_client(host=&#34;localhost&#34;, port=3001)
-
-    # Set specific run parameters #
-    date_range = get_materialization_date_range(
-        dataset_id=dataset_id,
-        table_id=table_id,
-        raw_dataset_id=raw_dataset_id,
-        raw_table_id=raw_table_id,
-        table_date_column_name=&#34;data&#34;,
-        mode=MODE,
-        delay_hours=constants.GPS_BRT_MATERIALIZE_DELAY_HOURS.value,
-    )
-    dataset_sha = fetch_dataset_sha(
-        dataset_id=dataset_id,
-    )
-
-    # Run materialization #
-    with case(rebuild, True):
-        RUN = run_dbt_model(
-            dbt_client=dbt_client,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            upstream=True,
-            exclude=&#34;+data_versao_efetiva&#34;,
-            _vars=[date_range, dataset_sha],
-            flags=&#34;--full-refresh&#34;,
-        )
-        set_last_run_timestamp(
-            dataset_id=dataset_id,
-            table_id=table_id,
-            timestamp=date_range[&#34;date_range_end&#34;],
-            wait=RUN,
-            mode=MODE,
-        )
-    with case(rebuild, False):
-        RUN = run_dbt_model(
-            dbt_client=dbt_client,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            upstream=True,
-            exclude=&#34;+data_versao_efetiva&#34;,
-            _vars=[date_range, dataset_sha],
-        )
-        set_last_run_timestamp(
-            dataset_id=dataset_id,
-            table_id=table_id,
-            timestamp=date_range[&#34;date_range_end&#34;],
-            wait=RUN,
-            mode=MODE,
-        )
-
-materialize_brt.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-materialize_brt.run_config = KubernetesRun(
-    image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
-)
-# materialize_brt.schedule = every_hour
+from pipelines.utils.utils import get_credentials_from_env
 
 
-with Flow(
-    &#34;SMTR: GPS BRT - Captura&#34;,
-    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;],
-) as captura_brt:
+def get_bigquery_client(mode: str = &#34;prod&#34;) -&gt; bigquery.Client:
+    &#34;&#34;&#34;
+    Get BigQuery client.
 
-    timestamp = get_current_timestamp()
+    Returns:
+        BigQuery client.
+    &#34;&#34;&#34;
+    credentials = get_credentials_from_env(mode=mode)
+    client = bigquery.Client(credentials=credentials)
+    return client
 
-    # Rename flow run
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix=&#34;SMTR: GPS BRT - Captura - &#34;, now_time=timestamp
-    )
 
-    # SETUP LOCAL #
-    partitions = create_date_hour_partition(timestamp)
+def write_data_to_gsheets(
+    worksheet: Worksheet, data: List[List[Any]], start_cell: str = &#34;A1&#34;
+):
+    &#34;&#34;&#34;
+    Write data to a Google Sheets worksheet.
 
-    filename = parse_timestamp_to_string(timestamp)
-
-    filepath = create_local_partition_path(
-        dataset_id=constants.GPS_BRT_RAW_DATASET_ID.value,
-        table_id=constants.GPS_BRT_RAW_TABLE_ID.value,
-        filename=filename,
-        partitions=partitions,
-    )
-    # EXTRACT
-    url = create_api_url_brt_gps()
-
-    raw_status = get_raw(url=url)
-
-    raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
-    # TREAT
-    treated_status = pre_treatment_br_rj_riodejaneiro_brt_gps(
-        status=raw_status, timestamp=timestamp
-    )
-
-    treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
-    # LOAD
-    error = bq_upload(
-        dataset_id=constants.GPS_BRT_RAW_DATASET_ID.value,
-        table_id=constants.GPS_BRT_RAW_TABLE_ID.value,
-        filepath=treated_filepath,
-        raw_filepath=raw_filepath,
-        partitions=partitions,
-        status=treated_status,
-    )
-    upload_logs_to_bq(
-        dataset_id=constants.GPS_BRT_RAW_DATASET_ID.value,
-        parent_table_id=constants.GPS_BRT_RAW_TABLE_ID.value,
-        timestamp=timestamp,
-        error=error,
-    )
-    captura_brt.set_dependencies(task=partitions, upstream_tasks=[rename_flow_run])
-
-captura_brt.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-captura_brt.run_config = KubernetesRun(
-    image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
-)
-# captura_brt.schedule = every_minute</code></pre>
+    Args:
+        worksheet: Google Sheets worksheet.
+        data: List of lists of data.
+        start_cell: Cell to start writing data.
+    &#34;&#34;&#34;
+    try:
+        start_letter = start_cell[0]
+        start_row = int(start_cell[1:])
+    except ValueError as exc:
+        raise ValueError(&#34;Invalid start_cell. Please use a cell like A1.&#34;) from exc
+    cols_len = len(data[0])
+    rows_len = len(data)
+    end_letter = chr(ord(start_letter) + cols_len - 1)
+    if end_letter not in &#34;ABCDEFGHIJKLMNOPQRSTUVWXYZ&#34;:
+        raise ValueError(&#34;Too many columns. Please refactor this code.&#34;)
+    end_row = start_row + rows_len - 1
+    range_name = f&#34;{start_letter}{start_row}:{end_letter}{end_row}&#34;
+    worksheet.update(range_name, data)</code></pre>
 </details>
 </section>
 <section>
@@ -231,6 +82,76 @@ captura_brt.run_config = KubernetesRun(
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pipelines.rj_escritorio.data_catalog.utils.get_bigquery_client"><code class="name flex">
+<span>def <span class="ident">get_bigquery_client</span></span>(<span>mode: str = 'prod') ‑> google.cloud.bigquery.client.Client</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get BigQuery client.</p>
+<h2 id="returns">Returns</h2>
+<p>BigQuery client.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_bigquery_client(mode: str = &#34;prod&#34;) -&gt; bigquery.Client:
+    &#34;&#34;&#34;
+    Get BigQuery client.
+
+    Returns:
+        BigQuery client.
+    &#34;&#34;&#34;
+    credentials = get_credentials_from_env(mode=mode)
+    client = bigquery.Client(credentials=credentials)
+    return client</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_escritorio.data_catalog.utils.write_data_to_gsheets"><code class="name flex">
+<span>def <span class="ident">write_data_to_gsheets</span></span>(<span>worksheet: gspread.worksheet.Worksheet, data: List[List[Any]], start_cell: str = 'A1')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Write data to a Google Sheets worksheet.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>worksheet</code></strong></dt>
+<dd>Google Sheets worksheet.</dd>
+<dt><strong><code>data</code></strong></dt>
+<dd>List of lists of data.</dd>
+<dt><strong><code>start_cell</code></strong></dt>
+<dd>Cell to start writing data.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def write_data_to_gsheets(
+    worksheet: Worksheet, data: List[List[Any]], start_cell: str = &#34;A1&#34;
+):
+    &#34;&#34;&#34;
+    Write data to a Google Sheets worksheet.
+
+    Args:
+        worksheet: Google Sheets worksheet.
+        data: List of lists of data.
+        start_cell: Cell to start writing data.
+    &#34;&#34;&#34;
+    try:
+        start_letter = start_cell[0]
+        start_row = int(start_cell[1:])
+    except ValueError as exc:
+        raise ValueError(&#34;Invalid start_cell. Please use a cell like A1.&#34;) from exc
+    cols_len = len(data[0])
+    rows_len = len(data)
+    end_letter = chr(ord(start_letter) + cols_len - 1)
+    if end_letter not in &#34;ABCDEFGHIJKLMNOPQRSTUVWXYZ&#34;:
+        raise ValueError(&#34;Too many columns. Please refactor this code.&#34;)
+    end_row = start_row + rows_len - 1
+    range_name = f&#34;{start_letter}{start_row}:{end_letter}{end_row}&#34;
+    worksheet.update(range_name, data)</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -289,7 +210,13 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps" href="index.html">pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.data_catalog" href="index.html">pipelines.rj_escritorio.data_catalog</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pipelines.rj_escritorio.data_catalog.utils.get_bigquery_client" href="#pipelines.rj_escritorio.data_catalog.utils.get_bigquery_client">get_bigquery_client</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.data_catalog.utils.write_data_to_gsheets" href="#pipelines.rj_escritorio.data_catalog.utils.write_data_to_gsheets">write_data_to_gsheets</a></code></li>
 </ul>
 </li>
 </ul>

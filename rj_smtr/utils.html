@@ -285,8 +285,6 @@ def check_not_null(data: pd.DataFrame, columns: list, subset_query: str = None):
                     level=&#34;warning&#34;,
                 )
 
-    return
-
 
 def filter_null(data: pd.DataFrame, columns: list, subset_query: str = None):
     &#34;&#34;&#34;
@@ -393,7 +391,6 @@ def check_relation(data: pd.DataFrame, columns: list):
                     f&#34;[data-check] Comparing &#39;{col}&#39; in &#39;{cols}&#39;, there are duplicated values&#34;,
                     level=&#34;warning&#34;,
                 )
-    return
 
 
 def data_info_str(data: pd.DataFrame):
@@ -500,9 +497,7 @@ Defaults to 'bigquery_prod'.</p>
                     f&#34;&#34;&#34;[data-check] There are {len(remove)} critical rows with
                     null values in &#39;{col}&#39; (query: {subset_query})&#34;&#34;&#34;,
                     level=&#34;warning&#34;,
-                )
-
-    return</code></pre>
+                )</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.utils.check_relation"><code class="name flex">
@@ -562,8 +557,7 @@ Defaults to 'bigquery_prod'.</p>
                 log(
                     f&#34;[data-check] Comparing &#39;{col}&#39; in &#39;{cols}&#39;, there are duplicated values&#34;,
                     level=&#34;warning&#34;,
-                )
-    return</code></pre>
+                )</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.utils.connect_ftp"><code class="name flex">
