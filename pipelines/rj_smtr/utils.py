@@ -256,8 +256,6 @@ def check_not_null(data: pd.DataFrame, columns: list, subset_query: str = None):
                     level="warning",
                 )
 
-    return
-
 
 def filter_null(data: pd.DataFrame, columns: list, subset_query: str = None):
     """
@@ -364,7 +362,6 @@ def check_relation(data: pd.DataFrame, columns: list):
                     f"[data-check] Comparing '{col}' in '{cols}', there are duplicated values",
                     level="warning",
                 )
-    return
 
 
 def data_info_str(data: pd.DataFrame):
