@@ -16,13 +16,22 @@ from pipelines.utils.utils import get_credentials_from_env, log
 
 
 @task
-def list_tables(project_id: str, client: bigquery.Client = None, mode: str = "prod"):
+def list_tables(
+    project_id: str,
+    client: bigquery.Client = None,
+    mode: str = "prod",
+    exclude_staging: bool = True,
+    exclude_test: bool = True,
+):
     """
     List all datasets and tables in a project.
 
     Args:
         client: BigQuery client.
         project_id: Project ID.
+        mode: BigQuery client mode.
+        exclude_staging: Exclude staging datasets.
+        exclude_test: Exclude anything that contains the word "test".
 
     Returns:
         List of dictionaries in the format:
@@ -40,9 +49,18 @@ def list_tables(project_id: str, client: bigquery.Client = None, mode: str = "pr
     log(f"Listing tables in project {project_id}.")
     tables = []
     for dataset in client.list_datasets(project=project_id):
+        dataset_id: str = dataset.dataset_id
+        if exclude_staging and dataset_id.endswith("_staging"):
+            log(f"Excluding staging dataset {dataset_id}.")
+            continue
+        if exclude_test and "test" in dataset_id:
+            log(f"Excluding test dataset {dataset_id}.")
+            continue
         for table in client.list_tables(dataset):
-            dataset_id = dataset.dataset_id
             table_id = table.table_id
+            if exclude_test and "test" in table_id:
+                log(f"Excluding test table {table_id}.")
+                continue
             table_info = {
                 "project_id": project_id,
                 "dataset_id": dataset_id,
