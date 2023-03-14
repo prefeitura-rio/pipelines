@@ -30,13 +30,14 @@ def get_dates(data_inicio: str, data_fim: str) -> Tuple[str, str]:
     Caso contrário, retorna as datas inputadas mos parâmetros do flow.
     """
     # segundo o manual do inmet o dado vem em UTC
-
+    log(f"data de inicio e fim antes do if {data_inicio} {data_fim}")
     if data_inicio == "":
         data_fim = pendulum.now("UTC").format("YYYY-MM-DD")
         data_inicio = pendulum.yesterday("UTC").format("YYYY-MM-DD")
         backfill = 0
     else:
         backfill = 1
+    log(f"data de inicio e fim dps do if {data_inicio} {data_fim}")
 
     return data_inicio, data_fim, backfill
 

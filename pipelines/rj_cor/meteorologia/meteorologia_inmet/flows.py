@@ -62,9 +62,9 @@ with Flow(
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
 
-    data_inicio, data_fim, backfill = get_dates(data_inicio, data_fim)
+    data_inicio_, data_fim_, backfill = get_dates(data_inicio, data_fim)
     # data = slice_data(current_time=CURRENT_TIME)
-    dados = download(data_inicio, data_fim)
+    dados = download(data_inicio_, data_fim_)
     dados = tratar_dados(dados, backfill)
     PATH = salvar_dados(dados=dados)
 
