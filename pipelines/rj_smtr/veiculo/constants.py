@@ -42,7 +42,7 @@ class constants(Enum):  # pylint: disable=c0103
     }
     SPPO_LICENCIAMENTO_CSV_ARGS = {
         "sep": ";",
-        "names": SPPO_LICENCIAMENTO_MAPPING_KEYS.keys(),
+        "names": SPPO_LICENCIAMENTO_MAPPING_KEYS.keys(),  # pylint: disable=e1101
     }
     SPPO_LICENCIAMENTO_TABLE_ID = "sppo_licenciamento_stu"
 
@@ -62,6 +62,6 @@ class constants(Enum):  # pylint: disable=c0103
     }
     SPPO_INFRACAO_CSV_ARGS = {
         "sep": ";",
-        "names": SPPO_INFRACAO_MAPPING_KEYS.keys(),
+        "names": SPPO_INFRACAO_MAPPING_KEYS.keys(),  # pylint: disable=e1101
     }
     SPPO_INFRACAO_TABLE_ID = "sppo_infracao"
