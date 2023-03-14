@@ -23,10 +23,10 @@ from pipelines.utils.tasks import (
 
 from pipelines.rj_smtr.constants import constants
 
-from pipelines.rj_smtr.schedules import (
-    every_minute,
-    every_hour,
-)
+# from pipelines.rj_smtr.schedules import (
+#     every_minute,
+#     every_hour,
+# )
 from pipelines.rj_smtr.tasks import (
     create_date_hour_partition,
     create_local_partition_path,
