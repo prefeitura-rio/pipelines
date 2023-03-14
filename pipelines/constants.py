@@ -49,6 +49,8 @@ class constants(Enum):  # pylint: disable=c0103
 
     RJ_SECONSERVA_AGENT_LABEL = "rj-seconserva"
 
+    RJ_CETRIO_AGENT_LABEL = "rj-cetrio"
+
     ######################################
     # Other constants
     ######################################
