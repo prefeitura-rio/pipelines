@@ -45,12 +45,13 @@ from pipelines.utils.utils import get_credentials_from_env, log
 
 
 @task
-def list_tables(
+def list_tables(  # pylint: disable=too-many-arguments
     project_id: str,
     client: bigquery.Client = None,
     mode: str = &#34;prod&#34;,
     exclude_staging: bool = True,
     exclude_test: bool = True,
+    exclude_logs: bool = True,
 ):
     &#34;&#34;&#34;
     List all datasets and tables in a project.
@@ -61,6 +62,7 @@ def list_tables(
         mode: BigQuery client mode.
         exclude_staging: Exclude staging datasets.
         exclude_test: Exclude anything that contains the word &#34;test&#34;.
+        exclude_logs: Exclude log datasets.
 
     Returns:
         List of dictionaries in the format:
@@ -84,6 +86,11 @@ def list_tables(
             continue
         if exclude_test and &#34;test&#34; in dataset_id:
             log(f&#34;Excluding test dataset {dataset_id}.&#34;)
+            continue
+        if exclude_logs and (
+            dataset_id.startswith(&#34;logs_&#34;) or dataset_id.endswith(&#34;_logs&#34;)
+        ):
+            log(f&#34;Excluding logs dataset {dataset_id}.&#34;)
             continue
         for table in client.list_tables(dataset):
             table_id = table.table_id
@@ -225,7 +232,7 @@ def generate_dataframe_from_list_of_tables(list_of_tables: list) -&gt; pd.DataFr
 </details>
 </dd>
 <dt id="pipelines.rj_escritorio.data_catalog.tasks.list_tables"><code class="name flex">
-<span>def <span class="ident">list_tables</span></span>(<span>project_id: str, client: google.cloud.bigquery.client.Client = None, mode: str = 'prod', exclude_staging: bool = True, exclude_test: bool = True)</span>
+<span>def <span class="ident">list_tables</span></span>(<span>project_id: str, client: google.cloud.bigquery.client.Client = None, mode: str = 'prod', exclude_staging: bool = True, exclude_test: bool = True, exclude_logs: bool = True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>List all datasets and tables in a project.</p>
@@ -241,6 +248,8 @@ def generate_dataframe_from_list_of_tables(list_of_tables: list) -&gt; pd.DataFr
 <dd>Exclude staging datasets.</dd>
 <dt><strong><code>exclude_test</code></strong></dt>
 <dd>Exclude anything that contains the word "test".</dd>
+<dt><strong><code>exclude_logs</code></strong></dt>
+<dd>Exclude log datasets.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <p>List of dictionaries in the format:
@@ -256,12 +265,13 @@ def generate_dataframe_from_list_of_tables(list_of_tables: list) -&gt; pd.DataFr
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def list_tables(
+def list_tables(  # pylint: disable=too-many-arguments
     project_id: str,
     client: bigquery.Client = None,
     mode: str = &#34;prod&#34;,
     exclude_staging: bool = True,
     exclude_test: bool = True,
+    exclude_logs: bool = True,
 ):
     &#34;&#34;&#34;
     List all datasets and tables in a project.
@@ -272,6 +282,7 @@ def list_tables(
         mode: BigQuery client mode.
         exclude_staging: Exclude staging datasets.
         exclude_test: Exclude anything that contains the word &#34;test&#34;.
+        exclude_logs: Exclude log datasets.
 
     Returns:
         List of dictionaries in the format:
@@ -295,6 +306,11 @@ def list_tables(
             continue
         if exclude_test and &#34;test&#34; in dataset_id:
             log(f&#34;Excluding test dataset {dataset_id}.&#34;)
+            continue
+        if exclude_logs and (
+            dataset_id.startswith(&#34;logs_&#34;) or dataset_id.endswith(&#34;_logs&#34;)
+        ):
+            log(f&#34;Excluding logs dataset {dataset_id}.&#34;)
             continue
         for table in client.list_tables(dataset):
             table_id = table.table_id

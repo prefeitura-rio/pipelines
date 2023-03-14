@@ -64,6 +64,7 @@ with Flow(
     bq_client_mode = Parameter(&#34;bq_client_mode&#34;, default=&#34;prod&#34;)
     exclude_staging = Parameter(&#34;exclude_staging&#34;, default=True)
     exclude_test = Parameter(&#34;exclude_test&#34;, default=True)
+    exclude_logs = Parameter(&#34;exclude_logs&#34;, default=True)
 
     # Flow
     project_ids = parse_comma_separated_string_to_list(
@@ -74,6 +75,7 @@ with Flow(
         mode=unmapped(bq_client_mode),
         exclude_staging=unmapped(exclude_staging),
         exclude_test=unmapped(exclude_test),
+        exclude_logs=unmapped(exclude_logs),
     )
     list_of_tables = merge_list_of_list_of_tables(list_of_list_of_tables)
     dataframe = generate_dataframe_from_list_of_tables(list_of_tables)
