@@ -16,7 +16,7 @@ from pipelines.utils.utils import get_credentials_from_env, log
 
 
 @task
-def list_tables(
+def list_tables(  # pylint: disable=too-many-arguments
     project_id: str,
     client: bigquery.Client = None,
     mode: str = "prod",
