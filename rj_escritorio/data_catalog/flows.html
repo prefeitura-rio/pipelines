@@ -62,13 +62,18 @@ with Flow(
     spreadsheet_url = Parameter(&#34;spreadsheet_url&#34;)
     sheet_name = Parameter(&#34;sheet_name&#34;)
     bq_client_mode = Parameter(&#34;bq_client_mode&#34;, default=&#34;prod&#34;)
+    exclude_staging = Parameter(&#34;exclude_staging&#34;, default=True)
+    exclude_test = Parameter(&#34;exclude_test&#34;, default=True)
 
     # Flow
     project_ids = parse_comma_separated_string_to_list(
         input_text=project_ids, output_type=str
     )
     list_of_list_of_tables = list_tables.map(
-        project_id=project_ids, mode=unmapped(bq_client_mode)
+        project_id=project_ids,
+        mode=unmapped(bq_client_mode),
+        exclude_staging=unmapped(exclude_staging),
+        exclude_test=unmapped(exclude_test),
     )
     list_of_tables = merge_list_of_list_of_tables(list_of_list_of_tables)
     dataframe = generate_dataframe_from_list_of_tables(list_of_tables)

@@ -45,13 +45,22 @@ from pipelines.utils.utils import get_credentials_from_env, log
 
 
 @task
-def list_tables(project_id: str, client: bigquery.Client = None, mode: str = &#34;prod&#34;):
+def list_tables(
+    project_id: str,
+    client: bigquery.Client = None,
+    mode: str = &#34;prod&#34;,
+    exclude_staging: bool = True,
+    exclude_test: bool = True,
+):
     &#34;&#34;&#34;
     List all datasets and tables in a project.
 
     Args:
         client: BigQuery client.
         project_id: Project ID.
+        mode: BigQuery client mode.
+        exclude_staging: Exclude staging datasets.
+        exclude_test: Exclude anything that contains the word &#34;test&#34;.
 
     Returns:
         List of dictionaries in the format:
@@ -69,9 +78,18 @@ def list_tables(project_id: str, client: bigquery.Client = None, mode: str = &#3
     log(f&#34;Listing tables in project {project_id}.&#34;)
     tables = []
     for dataset in client.list_datasets(project=project_id):
+        dataset_id: str = dataset.dataset_id
+        if exclude_staging and dataset_id.endswith(&#34;_staging&#34;):
+            log(f&#34;Excluding staging dataset {dataset_id}.&#34;)
+            continue
+        if exclude_test and &#34;test&#34; in dataset_id:
+            log(f&#34;Excluding test dataset {dataset_id}.&#34;)
+            continue
         for table in client.list_tables(dataset):
-            dataset_id = dataset.dataset_id
             table_id = table.table_id
+            if exclude_test and &#34;test&#34; in table_id:
+                log(f&#34;Excluding test table {table_id}.&#34;)
+                continue
             table_info = {
                 &#34;project_id&#34;: project_id,
                 &#34;dataset_id&#34;: dataset_id,
@@ -207,7 +225,7 @@ def generate_dataframe_from_list_of_tables(list_of_tables: list) -&gt; pd.DataFr
 </details>
 </dd>
 <dt id="pipelines.rj_escritorio.data_catalog.tasks.list_tables"><code class="name flex">
-<span>def <span class="ident">list_tables</span></span>(<span>project_id: str, client: google.cloud.bigquery.client.Client = None, mode: str = 'prod')</span>
+<span>def <span class="ident">list_tables</span></span>(<span>project_id: str, client: google.cloud.bigquery.client.Client = None, mode: str = 'prod', exclude_staging: bool = True, exclude_test: bool = True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>List all datasets and tables in a project.</p>
@@ -217,6 +235,12 @@ def generate_dataframe_from_list_of_tables(list_of_tables: list) -&gt; pd.DataFr
 <dd>BigQuery client.</dd>
 <dt><strong><code>project_id</code></strong></dt>
 <dd>Project ID.</dd>
+<dt><strong><code>mode</code></strong></dt>
+<dd>BigQuery client mode.</dd>
+<dt><strong><code>exclude_staging</code></strong></dt>
+<dd>Exclude staging datasets.</dd>
+<dt><strong><code>exclude_test</code></strong></dt>
+<dd>Exclude anything that contains the word "test".</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <p>List of dictionaries in the format:
@@ -232,13 +256,22 @@ def generate_dataframe_from_list_of_tables(list_of_tables: list) -&gt; pd.DataFr
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def list_tables(project_id: str, client: bigquery.Client = None, mode: str = &#34;prod&#34;):
+def list_tables(
+    project_id: str,
+    client: bigquery.Client = None,
+    mode: str = &#34;prod&#34;,
+    exclude_staging: bool = True,
+    exclude_test: bool = True,
+):
     &#34;&#34;&#34;
     List all datasets and tables in a project.
 
     Args:
         client: BigQuery client.
         project_id: Project ID.
+        mode: BigQuery client mode.
+        exclude_staging: Exclude staging datasets.
+        exclude_test: Exclude anything that contains the word &#34;test&#34;.
 
     Returns:
         List of dictionaries in the format:
@@ -256,9 +289,18 @@ def list_tables(project_id: str, client: bigquery.Client = None, mode: str = &#3
     log(f&#34;Listing tables in project {project_id}.&#34;)
     tables = []
     for dataset in client.list_datasets(project=project_id):
+        dataset_id: str = dataset.dataset_id
+        if exclude_staging and dataset_id.endswith(&#34;_staging&#34;):
+            log(f&#34;Excluding staging dataset {dataset_id}.&#34;)
+            continue
+        if exclude_test and &#34;test&#34; in dataset_id:
+            log(f&#34;Excluding test dataset {dataset_id}.&#34;)
+            continue
         for table in client.list_tables(dataset):
-            dataset_id = dataset.dataset_id
             table_id = table.table_id
+            if exclude_test and &#34;test&#34; in table_id:
+                log(f&#34;Excluding test table {table_id}.&#34;)
+                continue
             table_info = {
                 &#34;project_id&#34;: project_id,
                 &#34;dataset_id&#34;: dataset_id,
