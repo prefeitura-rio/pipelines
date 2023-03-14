@@ -25,11 +25,19 @@ def get_bigquery_client(mode: str = "prod") -> bigquery.Client:
 def write_data_to_gsheets(
     worksheet: Worksheet, data: List[List[Any]], start_cell: str = "A1"
 ):
+    """
+    Write data to a Google Sheets worksheet.
+
+    Args:
+        worksheet: Google Sheets worksheet.
+        data: List of lists of data.
+        start_cell: Cell to start writing data.
+    """
     try:
         start_letter = start_cell[0]
         start_row = int(start_cell[1:])
-    except ValueError:
-        raise ValueError("Invalid start_cell. Please use a cell like A1.")
+    except ValueError as exc:
+        raise ValueError("Invalid start_cell. Please use a cell like A1.") from exc
     cols_len = len(data[0])
     rows_len = len(data)
     end_letter = chr(ord(start_letter) + cols_len - 1)

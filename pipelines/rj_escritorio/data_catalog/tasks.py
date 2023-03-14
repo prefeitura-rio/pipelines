@@ -48,7 +48,7 @@ def list_tables(project_id: str, client: bigquery.Client = None, mode: str = "pr
                 "dataset_id": dataset_id,
                 "table_id": table_id,
                 "url": f"https://console.cloud.google.com/bigquery?p={project_id}&d={dataset_id}&t={table_id}&page=table",
-                "private": False if project_id == "datario" else True,
+                "private": not project_id == "datario",
             }
             tables.append(table_info)
     log(f"Found {len(tables)} tables in project {project_id}.")
