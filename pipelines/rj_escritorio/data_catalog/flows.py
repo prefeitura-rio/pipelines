@@ -8,6 +8,7 @@ from prefect.storage import GCS
 from prefect.utilities.edges import unmapped
 
 from pipelines.constants import constants
+from pipelines.rj_escritorio.data_catalog.schedules import update_data_catalog_schedule
 from pipelines.rj_escritorio.data_catalog.tasks import (
     generate_dataframe_from_list_of_tables,
     list_tables,
@@ -54,4 +55,4 @@ rj_escritorio_data_catalog_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value],
 )
-rj_escritorio_data_catalog_flow.schedule = None
+rj_escritorio_data_catalog_flow.schedule = update_data_catalog_schedule
