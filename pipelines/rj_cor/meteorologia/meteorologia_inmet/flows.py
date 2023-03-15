@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0103, E1120
 """
 Flows for meteorologia_inmet
 """
@@ -13,7 +14,7 @@ from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.rj_cor.meteorologia.meteorologia_inmet.tasks import (
     get_dates,
-    slice_data,
+    # slice_data,
     download,
     tratar_dados,
     salvar_dados,
@@ -39,6 +40,10 @@ with Flow(
     TABLE_ID = "meteorologia_inmet"
     DUMP_MODE = "append"
 
+    # data_inicio e data_fim devem ser strings no formato "YYYY-MM-DD"
+    data_inicio = Parameter("data_inicio", default="", required=False)
+    data_fim = Parameter("data_fim", default="", required=False)
+
     # Materialization parameters
     MATERIALIZE_AFTER_DUMP = Parameter(
         "materialize_after_dump", default=False, required=False
@@ -57,13 +62,11 @@ with Flow(
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
 
-    CURRENT_TIME, YESTERDAY = get_dates()
-
-    data = slice_data(current_time=CURRENT_TIME)
-
-    dados = download(data=data, yesterday=YESTERDAY)
-    dados, partitions = tratar_dados(dados=dados)
-    PATH = salvar_dados(dados=dados, partitions=partitions, data=data)
+    data_inicio_, data_fim_, backfill = get_dates(data_inicio, data_fim)
+    # data = slice_data(current_time=CURRENT_TIME)
+    dados = download(data_inicio_, data_fim_)
+    dados = tratar_dados(dados, backfill)
+    PATH = salvar_dados(dados=dados)
 
     # Create table in BigQuery
     UPLOAD_TABLE = create_table_and_upload_to_gcs(
