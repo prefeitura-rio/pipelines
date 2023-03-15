@@ -37,7 +37,7 @@ with Flow(
 ) as cor_meteorologia_meteorologia_inmet:
 
     DATASET_ID = "clima_estacao_meteorologica"
-    TABLE_ID = "meteorologia_inmet_test"
+    TABLE_ID = "meteorologia_inmet"
     DUMP_MODE = "append"
 
     # data_inicio e data_fim devem ser strings no formato "YYYY-MM-DD"
