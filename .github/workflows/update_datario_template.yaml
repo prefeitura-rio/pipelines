@@ -23,7 +23,7 @@ env:
 
 jobs:
   build-container:
-    name: Register flows (production)
+    name: Update data.rio description template
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
