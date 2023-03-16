@@ -30,18 +30,12 @@ class GisItemNotFound(Exception):
 def build_html_from_metadata(
     html_template: jinja2.Template,
     metadata: Dict[str, Any],
-    project_id: str,
-    dataset_id: str,
-    table_id: str,
 ) -> str:
     """
     Builds HTML from the table metadata
     """
     return html_template.render(
         **metadata,
-        project_id=project_id,
-        dataset_id=dataset_id,
-        table_id=table_id,
     )
 
 
@@ -79,9 +73,6 @@ def build_items_data_from_metadata_json(metadata: List[Dict[str, Any]]) -> List[
                 "description": build_html_from_metadata(
                     html_template=html_template,
                     metadata=table,
-                    project_id=project_id,
-                    dataset_id=dataset_id,
-                    table_id=table_id,
                 ),
                 "snippet": table["metadata"]["short_description"],
                 "title": table["metadata"]["title"],
@@ -127,20 +118,6 @@ def create_or_update_item(
         content_manager: ContentManager = gis.content
         item = content_manager.add(**data)  # pylint: disable=no-member
         return item
-
-
-def fetch_single_result(url: str) -> Dict[str, Any]:
-    """
-    Fetches a DRF API and raises if there's more than one result or no result at all.
-    """
-    response = requests.get(url)
-    response.raise_for_status()
-    response_json = response.json()
-    if response_json["count"] == 1:
-        return response_json["results"][0]
-    if response_json["count"] > 1:
-        raise Exception(f"There is more than one result to URL {url}.")
-    raise Exception(f"There is no result to URL {url}.")
 
 
 def fetch_api_metadata(
@@ -195,7 +172,7 @@ def fetch_api_metadata(
     title_prefix = dataset_metadata["title_prefix"]
     table_metadata = fetch_single_result(
         f"{base_url}/tables/?project={project_id}&dataset={dataset_id}&name={table_id}"
-    )["results"][0]
+    )
     metadata["title"] = f"{title_prefix}: {table_metadata['title']}"
     metadata["short_description"] = table_metadata["short_description"]
     metadata["long_description"] = table_metadata["long_description"]
@@ -215,6 +192,20 @@ def fetch_api_metadata(
             }
         )
     return metadata
+
+
+def fetch_single_result(url: str) -> Dict[str, Any]:
+    """
+    Fetches a DRF API and raises if there's more than one result or no result at all.
+    """
+    response = requests.get(url)
+    response.raise_for_status()
+    response_json = response.json()
+    if response_json["count"] == 1:
+        return response_json["results"][0]
+    if response_json["count"] > 1:
+        raise Exception(f"There is more than one result to URL {url}.")
+    raise Exception(f"There is no result to URL {url}.")
 
 
 def get_bigquery_client(mode: str = "prod") -> bigquery.Client:
