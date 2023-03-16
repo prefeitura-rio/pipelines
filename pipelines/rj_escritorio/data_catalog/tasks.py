@@ -3,13 +3,19 @@
 """
 Tasks for generating a data catalog from BigQuery.
 """
+from arcgis.gis import Item
 from google.cloud import bigquery
 import gspread
 import pandas as pd
 from prefect import task
 
+from pipelines.rj_escritorio.data_catalog.constants import constants
 from pipelines.rj_escritorio.data_catalog.utils import (
+    build_items_data_from_metadata_json,
+    create_or_update_item,
+    fetch_api_metadata,
     get_bigquery_client,
+    get_directory,
     write_data_to_gsheets,
 )
 from pipelines.utils.utils import get_credentials_from_env, log
@@ -99,65 +105,83 @@ def merge_list_of_list_of_tables(list_of_list_of_tables: list) -> list:
 
 
 @task
-def generate_dataframe_from_list_of_tables(list_of_tables: list) -> pd.DataFrame:
+def fetch_metadata(list_of_tables: list) -> list:
     """
-    Generate a Pandas DataFrame from a list of tables.
+    For each table in the list, fetches metadata from the metadata API.
 
     Args:
         list_of_tables: List of tables.
 
     Returns:
-        Pandas DataFrame.
+        List of tables with metadata. Each table is a dictionary in the format:
+        {
+            "project_id": "project_id",
+            "dataset_id": "dataset_id",
+            "table_id": "table_id",
+            "url": "https://console.cloud.google.com/bigquery?p={project_id}&d={dataset_id}&t={table_id}&page=table",
+            "private": True/False,
+            "metadata": {
+                "title": "Title",
+                "short_description": "Short description",
+                "long_description": "Long description",
+                "update_frequency": "Update frequency",
+                "temporal_coverage": "Temporal coverage",
+                "data_owner": "Data owner",
+                "publisher_name": "Publisher name",
+                "publisher_email": "Publisher email",
+                "tags": ["Tag1", "Tag2"],
+                "categories": ["Category1", "Category2"],
+                "columns": [
+                    {
+                        "name": "column_name",
+                        "description": "Column description",
+                    }
+                ]
+            }
+        }
     """
-    dataframe = pd.DataFrame(list_of_tables)
-    log(f"Generated DataFrame with shape {dataframe.shape}.")
-    return dataframe
+    log(f"Fetching metadata for {len(list_of_tables)} tables.")
+    for table in list_of_tables:
+        project_id = table["project_id"]
+        dataset_id = table["dataset_id"]
+        table_id = table["table_id"]
+        table["metadata"] = fetch_api_metadata(
+            project_id=project_id, dataset_id=dataset_id, table_id=table_id
+        )
+    log(f"Fetched metadata for {len(list_of_tables)} tables.")
+    return list_of_tables
 
 
 @task
-def update_gsheets_data_catalog(
-    dataframe: pd.DataFrame, spreadsheet_url: str, sheet_name: str
-) -> None:
+def update_datario_catalog(list_of_metadata: list):
     """
-    Update a Google Sheets spreadsheet with a DataFrame.
+    Update the data.rio catalog with our tables.
 
     Args:
-        dataframe: Pandas DataFrame.
-        spreadsheet_url: Google Sheets spreadsheet URL.
-        sheet_name: Google Sheets sheet name.
+        list_of_metadata: List of tables with metadata.
     """
-    # Get gspread client
-    credentials = get_credentials_from_env(
-        scopes=[
-            "https://www.googleapis.com/auth/spreadsheets",
-            "https://www.googleapis.com/auth/drive",
-        ]
-    )
-    gspread_client = gspread.authorize(credentials)
-    # Open spreadsheet
-    log(f"Opening Google Sheets spreadsheet {spreadsheet_url} with sheet {sheet_name}.")
-    sheet = gspread_client.open_by_url(spreadsheet_url)
-    worksheet = sheet.worksheet(sheet_name)
-    # Update spreadsheet
-    log("Deleting old data.")
-    worksheet.clear()
-    log("Rewriting headers.")
-    write_data_to_gsheets(
-        worksheet=worksheet,
-        data=[dataframe.columns.tolist()],
-    )
-    log("Updating new data.")
-    write_data_to_gsheets(
-        worksheet=worksheet,
-        data=dataframe.values.tolist(),
-        start_cell="A2",
-    )
-    # Add filters
-    log("Adding filters.")
-    first_col = "A"
-    last_col = chr(ord(first_col) + len(dataframe.columns) - 1)
-    worksheet.set_basic_filter(f"{first_col}:{last_col}")
-    # Resize columns
-    log("Resizing columns.")
-    worksheet.columns_auto_resize(0, len(dataframe.columns) - 1)
-    log("Done.")
+    log(f"Updating data.rio catalog with {len(list_of_metadata)} tables.")
+    duplicates_list = constants.DONT_PUBLISH.value
+    (
+        items_data,
+        categories,
+        project_ids,
+        dataset_ids,
+        table_ids,
+    ) = build_items_data_from_metadata_json(metadata=list_of_metadata)
+    for item_data, item_categories, project_id, dataset_id, table_id in zip(
+        items_data, categories, project_ids, dataset_ids, table_ids
+    ):
+        log(f"Updating table `{project_id}.{dataset_id}.{table_id}`")
+        item: Item = create_or_update_item(
+            project_id=project_id,
+            dataset_id=dataset_id,
+            table_id=table_id,
+            data=item_data,
+        )
+        log(f"Created/updated item: ID={item.id}, Title={item.title}")
+        item.share(everyone=True, org=True, groups=item_categories)
+        log(f"Shared item: ID={item.id} with groups: {item_categories}")
+        move_dir = get_directory(project_id, dataset_id, table_id, duplicates_list)
+        item.move(move_dir)
+        log(f"Moved item: ID={item.id} to {move_dir}/ directory")

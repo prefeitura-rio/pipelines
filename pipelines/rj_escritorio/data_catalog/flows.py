@@ -10,10 +10,10 @@ from prefect.utilities.edges import unmapped
 from pipelines.constants import constants
 from pipelines.rj_escritorio.data_catalog.schedules import update_data_catalog_schedule
 from pipelines.rj_escritorio.data_catalog.tasks import (
-    generate_dataframe_from_list_of_tables,
+    fetch_metadata,
     list_tables,
     merge_list_of_list_of_tables,
-    update_gsheets_data_catalog,
+    update_datario_catalog,
 )
 from pipelines.rj_escritorio.notify_flooding.tasks import (
     parse_comma_separated_string_to_list,
@@ -49,12 +49,8 @@ with Flow(
         exclude_logs=unmapped(exclude_logs),
     )
     list_of_tables = merge_list_of_list_of_tables(list_of_list_of_tables)
-    dataframe = generate_dataframe_from_list_of_tables(list_of_tables)
-    update_gsheets_data_catalog(
-        dataframe=dataframe,
-        spreadsheet_url=spreadsheet_url,
-        sheet_name=sheet_name,
-    )
+    list_of_metadata = fetch_metadata(list_of_tables=list_of_tables)
+    update_datario_catalog(list_of_metadata=list_of_metadata)
 
 
 rj_escritorio_data_catalog_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
