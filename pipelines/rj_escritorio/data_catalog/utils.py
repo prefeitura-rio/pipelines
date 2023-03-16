@@ -125,7 +125,7 @@ def create_or_update_item(
         return item
     except GisItemNotFound:  # Else, create it.
         content_manager: ContentManager = gis.content
-        item = content_manager.add(**data)
+        item = content_manager.add(**data)  # pylint: disable=no-member
         return item
 
 
@@ -138,10 +138,9 @@ def fetch_single_result(url: str) -> Dict[str, Any]:
     response_json = response.json()
     if response_json["count"] == 1:
         return response_json["results"][0]
-    elif response_json["count"] > 1:
+    if response_json["count"] > 1:
         raise Exception(f"There is more than one result to URL {url}.")
-    else:
-        raise Exception(f"There is no result to URL {url}.")
+    raise Exception(f"There is no result to URL {url}.")
 
 
 def fetch_api_metadata(

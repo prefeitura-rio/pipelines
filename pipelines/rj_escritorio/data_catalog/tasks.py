@@ -5,8 +5,6 @@ Tasks for generating a data catalog from BigQuery.
 """
 from arcgis.gis import Item
 from google.cloud import bigquery
-import gspread
-import pandas as pd
 from prefect import task
 
 from pipelines.rj_escritorio.data_catalog.constants import constants
@@ -16,9 +14,8 @@ from pipelines.rj_escritorio.data_catalog.utils import (
     fetch_api_metadata,
     get_bigquery_client,
     get_directory,
-    write_data_to_gsheets,
 )
-from pipelines.utils.utils import get_credentials_from_env, log
+from pipelines.utils.utils import log
 
 
 @task

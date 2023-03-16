@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+"""
+Constants for the data catalog flow.
+"""
 from enum import Enum
 
 
-class constants(Enum):
+class constants(Enum):  # pylint: disable=invalid-name
     """
     Constant values for the data catalog flow
     """
