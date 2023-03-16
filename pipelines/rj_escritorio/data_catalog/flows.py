@@ -30,8 +30,6 @@ with Flow(
 
     # Parameters
     project_ids = Parameter("project_ids")
-    spreadsheet_url = Parameter("spreadsheet_url")
-    sheet_name = Parameter("sheet_name")
     bq_client_mode = Parameter("bq_client_mode", default="prod")
     exclude_staging = Parameter("exclude_staging", default=True)
     exclude_test = Parameter("exclude_test", default=True)
