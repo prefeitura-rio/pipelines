@@ -10,7 +10,7 @@ from prefect import task
 
 # EMD Imports #
 
-from pipelines.utils.utils import get_vault_secret, log
+from pipelines.utils.utils import log
 
 # SMTR Imports #
 
@@ -64,7 +64,7 @@ def pre_treatment_br_rj_riodejaneiro_brt_gps(status: dict, timestamp):
     # Remove timezone and force it to be config timezone
     log(f"Before converting, timestamp_gps is: \n{df['timestamp_gps']}")
     df["timestamp_gps"] = (
-        pd.to_datetime(df["timestamp_gps"], unit="s")
+        pd.to_datetime(df["timestamp_gps"], unit="ms")
         .dt.tz_localize("UTC")
         .dt.tz_convert(timezone)
     )
