@@ -113,7 +113,7 @@ sppo_licenciamento_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-sppo_licenciamento_captura.schedule = every_day_hour_five
+# sppo_licenciamento_captura.schedule = every_day_hour_five
 
 sppo_infracao_captura_name = f"SMTR: Captura - {constants.DATASET_ID.value}.{constants.SPPO_INFRACAO_TABLE_ID.value}"
 with Flow(
@@ -181,4 +181,4 @@ sppo_infracao_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-sppo_infracao_captura.schedule = every_day_hour_five
+# sppo_infracao_captura.schedule = every_day_hour_five

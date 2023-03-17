@@ -107,4 +107,4 @@ captura_stpl.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 # Seguindo o padrão de captura adotado pelo BRT
-captura_stpl.schedule = every_minute
+# captura_stpl.schedule = every_minute
