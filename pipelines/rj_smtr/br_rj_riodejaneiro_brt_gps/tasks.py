@@ -39,7 +39,7 @@ def pre_treatment_br_rj_riodejaneiro_brt_gps(status: dict, timestamp):
         return {"data": pd.DataFrame(), "error": status["error"]}
 
     error = None
-    data = status["data"]
+    data = status["data"]["veiculos"]
     timezone = constants.TIMEZONE.value
     log(
         f"""
