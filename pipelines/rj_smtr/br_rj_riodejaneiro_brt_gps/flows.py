@@ -23,10 +23,10 @@ from pipelines.utils.tasks import (
 
 from pipelines.rj_smtr.constants import constants
 
-# from pipelines.rj_smtr.schedules import (
-#     every_minute,
-#     every_hour,
-# )
+from pipelines.rj_smtr.schedules import (
+    every_minute_dev,
+    # every_hour,
+)
 from pipelines.rj_smtr.tasks import (
     create_date_hour_partition,
     create_local_partition_path,
@@ -195,4 +195,4 @@ captura_brt.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-# captura_brt.schedule = every_minute
+captura_brt.schedule = every_minute_dev
