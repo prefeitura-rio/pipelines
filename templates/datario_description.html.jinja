@@ -1,3 +1,4 @@
+{% if private %}
 <section
     style="background-color: #C03D29; border-radius: 10px; width: 100%; text-align: center; color: #FFF0E9; padding: 20px 0;">
     <p style="font-size: 1.414rem;">
@@ -10,6 +11,7 @@
         amet.
     </p>
 </section>
+{% endif %}
 <div>
     <p style="font-size: 1.028rem;">
         {{ metadata.get('long_description') }}
