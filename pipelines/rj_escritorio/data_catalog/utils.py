@@ -225,6 +225,17 @@ def fetch_single_result(url: str) -> Union[Dict[str, Any], None]:
     return None
 
 
+def get_all_items() -> List[Item]:
+    """
+    Lists all datalake items on ArcGIS Online.
+    """
+    search_query = "tags:datalake"
+    gis = get_gis_client()
+    content_manager: ContentManager = gis.content
+    items = content_manager.search(search_query)
+    return items
+
+
 def get_bigquery_client(mode: str = "prod") -> bigquery.Client:
     """
     Get BigQuery client.

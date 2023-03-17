@@ -3,6 +3,8 @@
 """
 Tasks for generating a data catalog from BigQuery.
 """
+from typing import List
+
 from arcgis.gis import Item
 from google.cloud import bigquery
 from prefect import task
@@ -14,6 +16,7 @@ from pipelines.rj_escritorio.data_catalog.utils import (
     fetch_api_metadata,
     get_bigquery_client,
     get_directory,
+    get_all_items,
 )
 from pipelines.utils.utils import log
 
@@ -167,6 +170,7 @@ def update_datario_catalog(list_of_metadata: list):
         list_of_metadata: List of tables with metadata.
     """
     log(f"Updating data.rio catalog with {len(list_of_metadata)} tables.")
+    updated_items = []
     duplicates_list = constants.DONT_PUBLISH.value
     (
         items_data,
@@ -191,3 +195,10 @@ def update_datario_catalog(list_of_metadata: list):
         move_dir = get_directory(project_id, dataset_id, table_id, duplicates_list)
         item.move(move_dir)
         log(f"Moved item: ID={item.id} to {move_dir}/ directory")
+        updated_items.append(item.id)
+        all_items: List[Item] = get_all_items()
+        not_updated_items = [item for item in all_items if item.id not in updated_items]
+        log(f"Deleting {len(not_updated_items)} items.")
+        for item in not_updated_items:
+            item.delete()
+            log(f"Deleted item: ID={item.id}")
