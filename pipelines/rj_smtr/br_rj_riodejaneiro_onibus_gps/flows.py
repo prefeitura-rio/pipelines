@@ -132,7 +132,7 @@ realocacao_sppo.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-# realocacao_sppo.schedule = every_10_minutes
+realocacao_sppo.schedule = every_10_minutes
 
 
 with Flow(
@@ -280,7 +280,7 @@ captura_sppo_v2.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-# captura_sppo_v2.schedule = every_minute
+captura_sppo_v2.schedule = every_minute
 
 
 with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as recaptura:
