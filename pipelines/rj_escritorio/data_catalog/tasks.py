@@ -138,13 +138,22 @@ def fetch_metadata(list_of_tables: list) -> list:
         }
     """
     log(f"Fetching metadata for {len(list_of_tables)} tables.")
+    remove_tables = []
     for table in list_of_tables:
         project_id = table["project_id"]
         dataset_id = table["dataset_id"]
         table_id = table["table_id"]
-        table["metadata"] = fetch_api_metadata(
-            project_id=project_id, dataset_id=dataset_id, table_id=table_id
-        )
+        try:
+            table["metadata"] = fetch_api_metadata(
+                project_id=project_id, dataset_id=dataset_id, table_id=table_id
+            )
+        except:  # pylint: disable=bare-except
+            log(
+                f"Error fetching metadata for {project_id}.{dataset_id}.{table_id}. Will exclude this table from the catalog."  # pylint: disable=line-too-long
+            )
+            remove_tables.append(table)
+    for table in remove_tables:
+        list_of_tables.remove(table)
     log(f"Fetched metadata for {len(list_of_tables)} tables.")
     return list_of_tables
 

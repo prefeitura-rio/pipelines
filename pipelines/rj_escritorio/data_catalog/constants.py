@@ -14,3 +14,4 @@ class constants(Enum):  # pylint: disable=invalid-name
     DONT_PUBLISH = ["datario.dados_mestres.bairro", "datario.dados_mestres.logradouro"]
     GCS_BUCKET_NAME = "datario-public"
     DESCRIPTION_HTML_TEMPLATE_PATH = "templates/datario_description.html.jinja"
+    DISCORD_WEBHOOK_SECRET_PATH = "missing_metadata_webhook"

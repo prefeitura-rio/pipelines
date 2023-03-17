@@ -2,7 +2,7 @@
 """
 Helper functions for generating a data catalog from BigQuery.
 """
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 from arcgis import GIS
 from arcgis.gis import ContentManager, Item
@@ -18,6 +18,7 @@ from pipelines.utils.utils import (
     get_credentials_from_env,
     get_vault_secret,
     list_blobs_with_prefix,
+    send_discord_message,
 )
 
 
@@ -169,10 +170,28 @@ def fetch_api_metadata(
     dataset_metadata = fetch_single_result(
         f"{base_url}/datasets/?project={project_id}&name={dataset_id}"
     )
+    if dataset_metadata is None:
+        notify_missing_metadata(
+            project_id=project_id,
+            dataset_id=dataset_id,
+            table_id=None,
+        )
+        raise Exception(
+            f"Dataset metadata not found for project {project_id} and dataset {dataset_id}"
+        )
     title_prefix = dataset_metadata["title_prefix"]
     table_metadata = fetch_single_result(
         f"{base_url}/tables/?project={project_id}&dataset={dataset_id}&name={table_id}"
     )
+    if table_metadata is None:
+        notify_missing_metadata(
+            project_id=project_id,
+            dataset_id=dataset_id,
+            table_id=table_id,
+        )
+        raise Exception(
+            f"Table metadata not found for project {project_id}, dataset {dataset_id} and table {table_id}"  # noqa, pylint: disable=line-too-long
+        )
     metadata["title"] = f"{title_prefix}: {table_metadata['title']}"
     metadata["short_description"] = table_metadata["short_description"]
     metadata["long_description"] = table_metadata["long_description"]
@@ -194,18 +213,16 @@ def fetch_api_metadata(
     return metadata
 
 
-def fetch_single_result(url: str) -> Dict[str, Any]:
+def fetch_single_result(url: str) -> Union[Dict[str, Any], None]:
     """
-    Fetches a DRF API and raises if there's more than one result or no result at all.
+    Fetches a DRF API and returns None if there's more than one result or no result at all.
     """
     response = requests.get(url)
     response.raise_for_status()
     response_json = response.json()
     if response_json["count"] == 1:
         return response_json["results"][0]
-    if response_json["count"] > 1:
-        raise Exception(f"There is more than one result to URL {url}.")
-    raise Exception(f"There is no result to URL {url}.")
+    return None
 
 
 def get_bigquery_client(mode: str = "prod") -> bigquery.Client:
@@ -311,6 +328,22 @@ def get_license():
     This work is licensed under a
     <a rel="license" href={license_url}>Creative Commons {cc_license_name} Unported License</a>.
     """
+
+
+def notify_missing_metadata(project_id: str, dataset_id: str, table_id: str) -> None:
+    """
+    Notifies in Discord that the metadata is missing.
+    """
+    if table_id is None:
+        message = f"Metadata for dataset `{project_id}.{dataset_id}` is missing."
+    else:
+        message = (
+            f"Metadata for table `{project_id}.{dataset_id}.{table_id}` is missing."
+        )
+    webhook_url = get_vault_secret(
+        data_catalog_constants.DISCORD_WEBHOOK_SECRET_PATH.value
+    )["data"]["url"]
+    send_discord_message(message=message, webhook_url=webhook_url)
 
 
 def write_data_to_gsheets(
