@@ -193,6 +193,6 @@ with Flow(
 captura_brt.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_brt.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 captura_brt.schedule = every_minute_dev
