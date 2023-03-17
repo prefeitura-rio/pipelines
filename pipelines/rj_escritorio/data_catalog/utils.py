@@ -232,7 +232,7 @@ def get_all_items() -> List[Item]:
     search_query = "tags:datalake"
     gis = get_gis_client()
     content_manager: ContentManager = gis.content
-    items = content_manager.search(search_query)
+    items = content_manager.search(search_query)  # pylint: disable=no-member
     return items
 
 

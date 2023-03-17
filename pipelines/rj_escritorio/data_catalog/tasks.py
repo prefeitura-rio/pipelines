@@ -162,7 +162,7 @@ def fetch_metadata(list_of_tables: list) -> list:
 
 
 @task
-def update_datario_catalog(list_of_metadata: list):
+def update_datario_catalog(list_of_metadata: list):  # pylint: disable=too-many-locals
     """
     Update the data.rio catalog with our tables.
 
