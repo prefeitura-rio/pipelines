@@ -163,7 +163,7 @@ with Flow(
 
     raw_status = get_raw(
         url=constants.GPS_BRT_API_URL.value,
-        headers_path=constants.GPS_BRT_API_SECRET_PATH.value,
+        headers=constants.GPS_BRT_API_SECRET_PATH.value,
     )
 
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)

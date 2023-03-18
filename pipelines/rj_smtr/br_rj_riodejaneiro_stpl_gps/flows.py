@@ -71,7 +71,7 @@ with Flow(
         partitions=partitions,
     )
 
-    raw_status = get_raw(url=url, headers_path=constants.GPS_STPL_API_SECRET_PATH.value)
+    raw_status = get_raw(url=url, headers=constants.GPS_STPL_API_SECRET_PATH.value)
 
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
 
