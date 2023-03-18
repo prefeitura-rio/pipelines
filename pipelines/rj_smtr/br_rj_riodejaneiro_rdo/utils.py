@@ -60,7 +60,7 @@ def generate_ftp_schedules(
     Args:
         interval_minutes (int): interval which this flow will be run.
         label (str, optional): Prefect label, defines which agent to use when launching flow run.
-        Defaults to emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value.
+        Defaults to emd_constants.RJ_SMTR_AGENT_LABEL.value.
 
     Returns:
         List(IntervalClock): containing the clocks for scheduling runs
