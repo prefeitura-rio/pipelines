@@ -18,6 +18,7 @@ from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
     get_current_flow_mode,
     get_current_flow_labels,
+    get_now_date,
 )
 
 # SMTR Imports #
@@ -39,7 +40,6 @@ from pipelines.rj_smtr.tasks import (
     bq_upload,
     fetch_dataset_sha,
     get_run_dates,
-    get_now_date,
 )
 
 from pipelines.rj_smtr.veiculo.tasks import (

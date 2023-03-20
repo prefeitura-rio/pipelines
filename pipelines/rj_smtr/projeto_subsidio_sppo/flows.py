@@ -17,9 +17,6 @@ from pipelines.utils.tasks import (
     get_date_ago,
     get_current_flow_mode,
     get_current_flow_labels,
-    get_run_dates,
-)
-from pipelines.rj_smtr.tasks import (
     get_now_date,
 )
 from pipelines.utils.decorators import Flow
@@ -31,6 +28,7 @@ from pipelines.rj_smtr.constants import constants as smtr_constants
 
 from pipelines.rj_smtr.tasks import (
     fetch_dataset_sha,
+    get_run_dates,
     # get_local_dbt_client,
     # set_last_run_timestamp,
 )

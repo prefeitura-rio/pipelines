@@ -29,11 +29,10 @@ from pipelines.rj_smtr.utils import (
     get_last_run_timestamp,
     log_critical,
 )
-from pipelines.rj_smtr.tasks import (
-    get_now_date,
-)
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
+
+from pipelines.utils.tasks import get_now_date
 
 ###############
 #
