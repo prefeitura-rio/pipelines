@@ -238,7 +238,8 @@ with Flow(
 
     RUN = run_dbt_model.map(
         dbt_client=unmapped(dbt_client),
-        dataset_id=unmapped(constants.SPPO_VEICULO_DIA_TABLE_ID.value),
+        dataset_id=unmapped(constants.DATASET_ID.value),
+        table_id=unmapped(constants.SPPO_VEICULO_DIA_TABLE_ID.value),
         _vars=run_date,
     )
 
