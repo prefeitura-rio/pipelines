@@ -129,31 +129,31 @@ with Flow(
     )
 
     # 2. GET DATA #
-    sppo_licenciamento_captura_run = create_flow_run(
-        flow_name=sppo_licenciamento_captura.name,
-        project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-        run_name=sppo_licenciamento_captura.name,
-    )
+    # sppo_licenciamento_captura_run = create_flow_run(
+    #     flow_name=sppo_licenciamento_captura.name,
+    #     project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+    #     run_name=sppo_licenciamento_captura.name,
+    # )
 
-    sppo_infracao_captura_run = create_flow_run(
-        flow_name=sppo_infracao_captura.name,
-        project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-        run_name=sppo_infracao_captura.name,
-    )
+    # sppo_infracao_captura_run = create_flow_run(
+    #     flow_name=sppo_infracao_captura.name,
+    #     project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+    #     run_name=sppo_infracao_captura.name,
+    # )
 
-    wait_for_flow_run(
-        sppo_licenciamento_captura_run,
-        stream_states=True,
-        stream_logs=True,
-        raise_final_state=True,
-    )
+    # wait_for_flow_run(
+    #     sppo_licenciamento_captura_run,
+    #     stream_states=True,
+    #     stream_logs=True,
+    #     raise_final_state=True,
+    # )
 
-    wait_for_flow_run(
-        sppo_infracao_captura_run,
-        stream_states=True,
-        stream_logs=True,
-        raise_final_state=True,
-    )
+    # wait_for_flow_run(
+    #     sppo_infracao_captura_run,
+    #     stream_states=True,
+    #     stream_logs=True,
+    #     raise_final_state=True,
+    # )
 
     # 3. MATERIALIZE DATA #
     sppo_veiculo_dia_run = create_flow_run(
