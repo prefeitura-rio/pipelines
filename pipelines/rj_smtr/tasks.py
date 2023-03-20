@@ -28,6 +28,8 @@ from pipelines.rj_smtr.utils import (
     get_table_min_max_value,
     get_last_run_timestamp,
     log_critical,
+)
+from pipelines.rj_smtr.tasks import (
     get_now_date,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client

@@ -15,7 +15,6 @@ from pipelines.utils.decorators import Flow
 from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
 
 from pipelines.utils.tasks import (
-    get_now_date,
     rename_current_flow_run_now_time,
     get_current_flow_mode,
     get_current_flow_labels,
@@ -40,6 +39,7 @@ from pipelines.rj_smtr.tasks import (
     bq_upload,
     fetch_dataset_sha,
     get_run_dates,
+    get_now_date,
 )
 
 from pipelines.rj_smtr.veiculo.tasks import (
@@ -118,7 +118,7 @@ with Flow(
 sppo_licenciamento_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_licenciamento_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 sppo_licenciamento_captura.schedule = every_day_hour_five
 
@@ -186,7 +186,7 @@ with Flow(
 sppo_infracao_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_infracao_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 sppo_infracao_captura.schedule = every_day_hour_five
 
@@ -245,5 +245,5 @@ with Flow(
 sppo_veiculo_dia.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_veiculo_dia.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )

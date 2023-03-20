@@ -14,11 +14,13 @@ from prefect.utilities.edges import unmapped
 from pipelines.constants import constants
 from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
-    get_now_date,
     get_date_ago,
     get_current_flow_mode,
     get_current_flow_labels,
     get_run_dates,
+)
+from pipelines.rj_smtr.tasks import (
+    get_now_date,
 )
 from pipelines.utils.decorators import Flow
 from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
@@ -197,7 +199,7 @@ with Flow(
 
 subsidio_sppo_apuracao.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 subsidio_sppo_apuracao.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value, labels=[constants.RJ_SMTR_AGENT_LABEL.value]
+    image=constants.DOCKER_IMAGE.value, labels=[constants.RJ_SMTR_DEV_AGENT_LABEL.value]
 )
 
 # subsidio_sppo_apuracao.schedule = every_dayofmonth_one_and_sixteen
