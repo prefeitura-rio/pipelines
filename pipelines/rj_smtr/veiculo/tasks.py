@@ -88,11 +88,11 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
         )
 
         log("Creating nested structure...", level="info")
-        cols = primary_key + ["timestamp_captura"]
+        pk_cols = primary_key + ["timestamp_captura"]
         data = (
-            data.groupby(cols)
+            data.groupby(pk_cols)
             .apply(
-                lambda x: x[data.columns.difference(primary_key)].to_json(
+                lambda x: x[data.columns.difference(pk_cols)].to_json(
                     orient="records"
                 )
             )
@@ -175,11 +175,11 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
         )
 
         log("Creating nested structure...", level="info")
-        cols = primary_key + ["timestamp_captura"]
+        pk_cols = primary_key + ["timestamp_captura"]
         data = (
-            data.groupby(cols)
+            data.groupby(pk_cols)
             .apply(
-                lambda x: x[data.columns.difference(primary_key)].to_json(
+                lambda x: x[data.columns.difference(pk_cols)].to_json(
                     orient="records"
                 )
             )
