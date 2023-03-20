@@ -15,9 +15,10 @@ from pipelines.constants import constants
 from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
     get_now_date,
-    get_yesterday,
+    get_date_ago,
     get_current_flow_mode,
     get_current_flow_labels,
+    get_run_dates,
 )
 from pipelines.utils.decorators import Flow
 from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
@@ -36,12 +37,17 @@ from pipelines.rj_smtr.materialize_to_datario.flows import (
     smtr_materialize_to_datario_viagem_sppo_flow,
 )
 
+from pipelines.rj_smtr.veiculo.flows import (
+    sppo_licenciamento_captura,
+    sppo_infracao_captura,
+    sppo_veiculo_dia,
+)
+
 from pipelines.rj_smtr.schedules import (
     every_day_hour_five,
     # every_dayofmonth_one_and_sixteen,
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
-from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import get_run_dates
 
 # Flows #
 
@@ -99,11 +105,14 @@ with Flow(
     # 1. SETUP #
 
     # Get default parameters #
-    end_date = Parameter("end_date", default=get_yesterday.run())
+    date_range_start = Parameter("date_range_start", default=get_date_ago.run(5))
+    date_range_end = Parameter("date_range_end", default=get_date_ago.run(5))
+
+    run_date = get_run_dates(date_range_start, date_range_end)
 
     # Rename flow run #
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SMTR - Subsídio SPPO Apuração: ", now_time=end_date
+        prefix="SMTR - Subsídio SPPO Apuração: ", now_time=run_date
     )
 
     # Set dbt client #
@@ -116,40 +125,75 @@ with Flow(
 
     # Get models version #
     dataset_sha = fetch_dataset_sha(
-        dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOAD_DATASET_ID.value,
+        dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
     )
 
-    # 2. TREAT #
-
-    RUN = run_dbt_model(
-        dbt_client=dbt_client,
-        dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOAD_DATASET_ID.value,
-        _vars=dict(end_date=end_date),
-    )
-
-    # 3. PUBLISH #
-
-    run_materialize = create_flow_run(
-        flow_name=smtr_materialize_to_datario_viagem_sppo_flow.name,
+    # 2. GET DATA #
+    sppo_licenciamento_captura_run = create_flow_run(
+        flow_name=sppo_licenciamento_captura.name,
         project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-        labels=[
-            constants.RJ_DATARIO_AGENT_LABEL.value,
-        ],
-        run_name=smtr_materialize_to_datario_viagem_sppo_flow.name,
-        parameters={
-            "dataset_id": "transporte_rodoviario_municipal",
-            "table_id": "viagem_onibus",
-            "mode": "prod",
-            "dbt_model_parameters": dict(date_range_end=end_date),
-        },
+        run_name=sppo_licenciamento_captura.name,
     )
 
-    wait_materialize = wait_for_flow_run(
-        run_materialize,
+    sppo_infracao_captura_run = create_flow_run(
+        flow_name=sppo_infracao_captura.name,
+        project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+        run_name=sppo_infracao_captura.name,
+    )
+
+    wait_for_flow_run(
+        sppo_licenciamento_captura_run,
         stream_states=True,
         stream_logs=True,
         raise_final_state=True,
     )
+
+    wait_for_flow_run(
+        sppo_infracao_captura_run,
+        stream_states=True,
+        stream_logs=True,
+        raise_final_state=True,
+    )
+
+    # 3. MATERIALIZE DATA #
+    sppo_veiculo_dia_run = create_flow_run(
+        flow_name=sppo_veiculo_dia.name,
+        project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+        run_name=sppo_veiculo_dia.name,
+        parameters=dict(
+            date_range_start=date_range_start, date_range_end=date_range_end
+        ),
+    )
+
+    wait_for_flow_run(
+        sppo_veiculo_dia_run,
+        stream_states=True,
+        stream_logs=True,
+        raise_final_state=True,
+    )
+
+    # 4. CALCULATE #
+    run_dbt_model(
+        dbt_client=dbt_client,
+        dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
+        _vars=dict(date_range_start=date_range_start, date_range_end=date_range_end),
+    )
+
+    # # 3. PUBLISH #
+    # run_materialize = create_flow_run(
+    #     flow_name=smtr_materialize_to_datario_viagem_sppo_flow.name,
+    #     project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+    #     labels=[
+    #         constants.RJ_DATARIO_AGENT_LABEL.value,
+    #     ],
+    #     run_name=smtr_materialize_to_datario_viagem_sppo_flow.name,
+    #     parameters={
+    #         "dataset_id": "transporte_rodoviario_municipal",
+    #         "table_id": "viagem_onibus",
+    #         "mode": "prod",
+    #         "dbt_model_parameters": dict(date_range_end=end_date),
+    #     },
+    # )
 
 subsidio_sppo_apuracao.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 subsidio_sppo_apuracao.run_config = KubernetesRun(

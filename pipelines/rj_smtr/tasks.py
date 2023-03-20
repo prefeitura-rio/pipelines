@@ -4,22 +4,22 @@ Tasks for rj_smtr
 """
 # pylint: disable=W0703
 
-from datetime import datetime, timedelta
 import json
 import os
-from pathlib import Path
 import traceback
-from typing import Dict
 import io
+from typing import Dict, List
+from pathlib import Path
+from datetime import datetime, timedelta
 
-from basedosdados import Storage, Table
 import basedosdados as bd
-from dbt_client import DbtClient
 import pandas as pd
 import pendulum
+import requests
+from basedosdados import Storage, Table
+from dbt_client import DbtClient
 from prefect import task
 from pytz import timezone
-import requests
 
 from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.utils import (
@@ -28,6 +28,7 @@ from pipelines.rj_smtr.utils import (
     get_table_min_max_value,
     get_last_run_timestamp,
     log_critical,
+    get_now_date,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
@@ -732,3 +733,19 @@ def fetch_dataset_sha(dataset_id: str):
 
     dataset_version = response.json()[0]["sha"]
     return {"version": dataset_version}
+
+
+@task
+def get_run_dates(date_range_start: str, date_range_end: str) -> List:
+    """
+    Generates a list of dates between date_range_start and date_range_end.
+    """
+    if (date_range_start is False) or (date_range_end is False):
+        dates = [{"run_date": get_now_date.run()}]
+    else:
+        dates = [
+            {"run_date": d.strftime("%Y-%m-%d")}
+            for d in pd.date_range(start=date_range_start, end=date_range_end)
+        ]
+    log(f"Will run the following dates: {dates}")
+    return dates
