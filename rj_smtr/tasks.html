@@ -59,7 +59,7 @@ from pipelines.rj_smtr.utils import (
     log_critical,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
-from pipelines.utils.utils import log, get_redis_client
+from pipelines.utils.utils import log, get_redis_client, get_vault_secret
 
 ###############
 #
@@ -401,14 +401,14 @@ def query_logs(
 
 @task
 def get_raw(  # pylint: disable=R0912
-    url: str, headers: dict = None, filetype: str = &#34;json&#34;, csv_args: dict = None
+    url: str, headers: str = None, filetype: str = &#34;json&#34;, csv_args: dict = None
 ) -&gt; Dict:
     &#34;&#34;&#34;
     Request data from URL API
 
     Args:
         url (str): URL to send request
-        headers (dict, optional): Aditional fields to send along the request.
+        headers (str, optional): Path to headers guardeded on Vault, if needed.
         filetype (str, optional): Filetype to be formatted (supported only: json, csv and txt)
         csv_args (dict, optional): Arguments for read_csv, if needed
     Returns:
@@ -420,6 +420,9 @@ def get_raw(  # pylint: disable=R0912
     error = None
 
     try:
+        if headers is not None:
+            headers = get_vault_secret(headers)[&#34;data&#34;]
+
         response = requests.get(
             url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
         )
@@ -1396,7 +1399,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.get_raw"><code class="name flex">
-<span>def <span class="ident">get_raw</span></span>(<span>url: str, headers: dict = None, filetype: str = 'json', csv_args: dict = None) ‑> Dict</span>
+<span>def <span class="ident">get_raw</span></span>(<span>url: str, headers: str = None, filetype: str = 'json', csv_args: dict = None) ‑> Dict</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Request data from URL API</p>
@@ -1404,8 +1407,8 @@ def get_materialization_date_range(  # pylint: disable=R0913
 <dl>
 <dt><strong><code>url</code></strong> :&ensp;<code>str</code></dt>
 <dd>URL to send request</dd>
-<dt><strong><code>headers</code></strong> :&ensp;<code>dict</code>, optional</dt>
-<dd>Aditional fields to send along the request.</dd>
+<dt><strong><code>headers</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Path to headers guardeded on Vault, if needed.</dd>
 <dt><strong><code>filetype</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>Filetype to be formatted (supported only: json, csv and txt)</dd>
 <dt><strong><code>csv_args</code></strong> :&ensp;<code>dict</code>, optional</dt>
@@ -1424,14 +1427,14 @@ def get_materialization_date_range(  # pylint: disable=R0913
 </summary>
 <pre><code class="python">@task
 def get_raw(  # pylint: disable=R0912
-    url: str, headers: dict = None, filetype: str = &#34;json&#34;, csv_args: dict = None
+    url: str, headers: str = None, filetype: str = &#34;json&#34;, csv_args: dict = None
 ) -&gt; Dict:
     &#34;&#34;&#34;
     Request data from URL API
 
     Args:
         url (str): URL to send request
-        headers (dict, optional): Aditional fields to send along the request.
+        headers (str, optional): Path to headers guardeded on Vault, if needed.
         filetype (str, optional): Filetype to be formatted (supported only: json, csv and txt)
         csv_args (dict, optional): Arguments for read_csv, if needed
     Returns:
@@ -1443,6 +1446,9 @@ def get_raw(  # pylint: disable=R0912
     error = None
 
     try:
+        if headers is not None:
+            headers = get_vault_secret(headers)[&#34;data&#34;]
+
         response = requests.get(
             url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
         )

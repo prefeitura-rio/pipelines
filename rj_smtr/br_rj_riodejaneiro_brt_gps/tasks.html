@@ -39,7 +39,7 @@ from prefect import task
 
 # EMD Imports #
 
-from pipelines.utils.utils import get_vault_secret, log
+from pipelines.utils.utils import log
 
 # SMTR Imports #
 
@@ -47,21 +47,6 @@ from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.utils import log_critical, map_dict_keys
 
 # Tasks #
-
-
-@task
-def create_api_url_brt_gps(secret_path: str = constants.GPS_BRT_SECRET_PATH.value):
-    &#34;&#34;&#34;Create the url to request data from
-
-    Args:
-        secret_path (str, optional): secret path to the url.
-
-    Returns:
-        _str: url to request
-    &#34;&#34;&#34;
-    url = get_vault_secret(secret_path=secret_path)[&#34;data&#34;][&#34;url&#34;]
-    log(f&#34;Request data from {url}&#34;)
-    return url
 
 
 @task
@@ -79,10 +64,11 @@ def pre_treatment_br_rj_riodejaneiro_brt_gps(status: dict, timestamp):
 
     # Check previous error
     if status[&#34;error&#34;] is not None:
+        log(&#34;Skipped due to previous error.&#34;)
         return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
 
     error = None
-    data = status[&#34;data&#34;]
+    data = status[&#34;data&#34;][&#34;veiculos&#34;]
     timezone = constants.TIMEZONE.value
     log(
         f&#34;&#34;&#34;
@@ -105,9 +91,9 @@ def pre_treatment_br_rj_riodejaneiro_brt_gps(status: dict, timestamp):
     log(f&#34;timestamp captura is:\n{df[&#39;timestamp_captura&#39;]}&#34;)
 
     # Remove timezone and force it to be config timezone
-    log(f&#34;Before converting, timestamp_gps is: \n{df[&#39;timestamp_gps&#39;]}&#34;)
+    log(f&#34;Before converting, timestamp_gps was: \n{df[&#39;timestamp_gps&#39;]}&#34;)
     df[&#34;timestamp_gps&#34;] = (
-        pd.to_datetime(df[&#34;timestamp_gps&#34;], unit=&#34;s&#34;)
+        pd.to_datetime(df[&#34;timestamp_gps&#34;], unit=&#34;ms&#34;)
         .dt.tz_localize(&#34;UTC&#34;)
         .dt.tz_convert(timezone)
     )
@@ -137,40 +123,6 @@ def pre_treatment_br_rj_riodejaneiro_brt_gps(status: dict, timestamp):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks.create_api_url_brt_gps"><code class="name flex">
-<span>def <span class="ident">create_api_url_brt_gps</span></span>(<span>secret_path: str = 'brt_api')</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Create the url to request data from</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>secret_path</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>secret path to the url.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>_str</code></dt>
-<dd>url to request</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task
-def create_api_url_brt_gps(secret_path: str = constants.GPS_BRT_SECRET_PATH.value):
-    &#34;&#34;&#34;Create the url to request data from
-
-    Args:
-        secret_path (str, optional): secret path to the url.
-
-    Returns:
-        _str: url to request
-    &#34;&#34;&#34;
-    url = get_vault_secret(secret_path=secret_path)[&#34;data&#34;][&#34;url&#34;]
-    log(f&#34;Request data from {url}&#34;)
-    return url</code></pre>
-</details>
-</dd>
 <dt id="pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks.pre_treatment_br_rj_riodejaneiro_brt_gps"><code class="name flex">
 <span>def <span class="ident">pre_treatment_br_rj_riodejaneiro_brt_gps</span></span>(<span>status: dict, timestamp)</span>
 </code></dt>
@@ -207,10 +159,11 @@ def pre_treatment_br_rj_riodejaneiro_brt_gps(status: dict, timestamp):
 
     # Check previous error
     if status[&#34;error&#34;] is not None:
+        log(&#34;Skipped due to previous error.&#34;)
         return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
 
     error = None
-    data = status[&#34;data&#34;]
+    data = status[&#34;data&#34;][&#34;veiculos&#34;]
     timezone = constants.TIMEZONE.value
     log(
         f&#34;&#34;&#34;
@@ -233,9 +186,9 @@ def pre_treatment_br_rj_riodejaneiro_brt_gps(status: dict, timestamp):
     log(f&#34;timestamp captura is:\n{df[&#39;timestamp_captura&#39;]}&#34;)
 
     # Remove timezone and force it to be config timezone
-    log(f&#34;Before converting, timestamp_gps is: \n{df[&#39;timestamp_gps&#39;]}&#34;)
+    log(f&#34;Before converting, timestamp_gps was: \n{df[&#39;timestamp_gps&#39;]}&#34;)
     df[&#34;timestamp_gps&#34;] = (
-        pd.to_datetime(df[&#34;timestamp_gps&#34;], unit=&#34;s&#34;)
+        pd.to_datetime(df[&#34;timestamp_gps&#34;], unit=&#34;ms&#34;)
         .dt.tz_localize(&#34;UTC&#34;)
         .dt.tz_convert(timezone)
     )
@@ -322,7 +275,6 @@ setTimeout(() => input.focus(), 100);
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks.create_api_url_brt_gps" href="#pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks.create_api_url_brt_gps">create_api_url_brt_gps</a></code></li>
 <li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks.pre_treatment_br_rj_riodejaneiro_brt_gps" href="#pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks.pre_treatment_br_rj_riodejaneiro_brt_gps">pre_treatment_br_rj_riodejaneiro_brt_gps</a></code></li>
 </ul>
 </li>
