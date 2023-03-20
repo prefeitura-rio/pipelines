@@ -105,10 +105,10 @@ with Flow(
     # 1. SETUP #
 
     # Get default parameters #
-    date_range_start = Parameter("date_range_start", default=get_date_ago.run(5))
-    date_range_end = Parameter("date_range_end", default=get_date_ago.run(5))
+    start_date = Parameter("start_date", default=get_date_ago.run(5))
+    end_date = Parameter("end_date", default=get_date_ago.run(5))
 
-    run_date = get_run_dates(date_range_start, date_range_end)
+    run_date = get_run_dates(start_date, end_date)
 
     # Rename flow run #
     rename_flow_run = rename_current_flow_run_now_time(
@@ -160,9 +160,7 @@ with Flow(
         flow_name=sppo_veiculo_dia.name,
         project_name=constants.PREFECT_DEFAULT_PROJECT.value,
         run_name=sppo_veiculo_dia.name,
-        parameters=dict(
-            date_range_start=date_range_start, date_range_end=date_range_end
-        ),
+        parameters=dict(start_date=start_date, end_date=end_date),
     )
 
     wait_for_flow_run(
@@ -176,7 +174,7 @@ with Flow(
     run_dbt_model(
         dbt_client=dbt_client,
         dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
-        _vars=dict(date_range_start=date_range_start, date_range_end=date_range_end),
+        _vars=dict(start_date=start_date, end_date=end_date),
     )
 
     # # 3. PUBLISH #
@@ -191,7 +189,7 @@ with Flow(
     #         "dataset_id": "transporte_rodoviario_municipal",
     #         "table_id": "viagem_onibus",
     #         "mode": "prod",
-    #         "dbt_model_parameters": dict(date_range_end=end_date),
+    #         "dbt_model_parameters": dict(end_date=end_date),
     #     },
     # )
 

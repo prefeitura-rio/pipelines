@@ -210,10 +210,10 @@ with Flow(
     # 1. SETUP #
 
     # Get default parameters #
-    date_range_start = Parameter("date_range_start", default=get_now_date.run())
-    date_range_end = Parameter("date_range_end", default=get_now_date.run())
+    start_date = Parameter("start_date", default=get_now_date.run())
+    end_date = Parameter("end_date", default=get_now_date.run())
 
-    run_date = get_run_dates(date_range_start, date_range_end)
+    run_date = get_run_dates(start_date, end_date)
 
     # Rename flow run #
     rename_flow_run = rename_current_flow_run_now_time(
