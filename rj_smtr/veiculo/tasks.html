@@ -117,11 +117,11 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
         )
 
         log(&#34;Creating nested structure...&#34;, level=&#34;info&#34;)
-        cols = primary_key + [&#34;timestamp_captura&#34;]
+        pk_cols = primary_key + [&#34;timestamp_captura&#34;]
         data = (
-            data.groupby(cols)
+            data.groupby(pk_cols)
             .apply(
-                lambda x: x[data.columns.difference(primary_key)].to_json(
+                lambda x: x[data.columns.difference(pk_cols)].to_json(
                     orient=&#34;records&#34;
                 )
             )
@@ -204,11 +204,11 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
         )
 
         log(&#34;Creating nested structure...&#34;, level=&#34;info&#34;)
-        cols = primary_key + [&#34;timestamp_captura&#34;]
+        pk_cols = primary_key + [&#34;timestamp_captura&#34;]
         data = (
-            data.groupby(cols)
+            data.groupby(pk_cols)
             .apply(
-                lambda x: x[data.columns.difference(primary_key)].to_json(
+                lambda x: x[data.columns.difference(pk_cols)].to_json(
                     orient=&#34;records&#34;
                 )
             )
@@ -317,11 +317,11 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
         )
 
         log(&#34;Creating nested structure...&#34;, level=&#34;info&#34;)
-        cols = primary_key + [&#34;timestamp_captura&#34;]
+        pk_cols = primary_key + [&#34;timestamp_captura&#34;]
         data = (
-            data.groupby(cols)
+            data.groupby(pk_cols)
             .apply(
-                lambda x: x[data.columns.difference(primary_key)].to_json(
+                lambda x: x[data.columns.difference(pk_cols)].to_json(
                     orient=&#34;records&#34;
                 )
             )
@@ -427,11 +427,11 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
         )
 
         log(&#34;Creating nested structure...&#34;, level=&#34;info&#34;)
-        cols = primary_key + [&#34;timestamp_captura&#34;]
+        pk_cols = primary_key + [&#34;timestamp_captura&#34;]
         data = (
-            data.groupby(cols)
+            data.groupby(pk_cols)
             .apply(
-                lambda x: x[data.columns.difference(primary_key)].to_json(
+                lambda x: x[data.columns.difference(pk_cols)].to_json(
                     orient=&#34;records&#34;
                 )
             )
