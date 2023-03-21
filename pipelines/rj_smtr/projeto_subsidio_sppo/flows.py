@@ -134,7 +134,9 @@ with Flow(
         flow_name=sppo_veiculo_dia.name,
         project_name=constants.PREFECT_DEFAULT_PROJECT.value,
         run_name=sppo_veiculo_dia.name,
-        parameters=dict(start_date=start_date, end_date=end_date),
+        parameters=dict(
+            start_date=start_date, end_date=end_date, stu_data_versao=stu_data_versao
+        ),
     )
 
     wait_for_flow_run(
