@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines API documentation</title>
-<meta name="description" content="Pipelines for all data projects on the Rio de Janeiro City Hall." />
+<title>pipelines.rj_setur.dump_url_seeketing.schedules API documentation</title>
+<meta name="description" content="Schedules for the database dump pipeline" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,88 +19,155 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Package <code>pipelines</code></h1>
+<h1 class="title">Module <code>pipelines.rj_setur.dump_url_seeketing.schedules</code></h1>
 </header>
 <section id="section-intro">
-<p>Pipelines for all data projects on the Rio de Janeiro City Hall.</p>
+<p>Schedules for the database dump pipeline</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
+# pylint: disable=line-too-long
 &#34;&#34;&#34;
-Pipelines for all data projects on the Rio de Janeiro City Hall.
-&#34;&#34;&#34;</code></pre>
+Schedules for the database dump pipeline
+&#34;&#34;&#34;
+
+from datetime import datetime, timedelta
+
+import pytz
+from prefect.schedules import Schedule
+from pipelines.constants import constants
+from pipelines.utils.dump_url.utils import generate_dump_url_schedules
+from pipelines.utils.utils import untuple_clocks as untuple
+
+#####################################
+#
+# Setur Schedules
+#
+#####################################
+
+gsheets_urls = {
+    &#34;museu_do_amanha&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1wio45Se6HXo1nFeyY2GXxa-fduJlnICVW1p_Rg4UbjI\
+            /edit#gid=722381052&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;Museu do Amanhã&#34;,
+        &#34;gsheets_sheet_range&#34;: &#34;A5:B1000&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;turismo_fluxo_visitantes&#34;,
+    },
+    &#34;cristo_redentor&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1wio45Se6HXo1nFeyY2GXxa-fduJlnICVW1p_Rg4UbjI\
+            /edit#gid=722381052&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;Cristo Redentor (Paineiras)&#34;,
+        &#34;gsheets_sheet_range&#34;: &#34;A5:B1000&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;turismo_fluxo_visitantes&#34;,
+    },
+    &#34;bio_parque&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1wio45Se6HXo1nFeyY2GXxa-fduJlnICVW1p_Rg4UbjI\
+            /edit#gid=722381052&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;Bio Parque&#34;,
+        &#34;gsheets_sheet_range&#34;: &#34;A5:B1000&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;turismo_fluxo_visitantes&#34;,
+    },
+    &#34;aquario&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1wio45Se6HXo1nFeyY2GXxa-fduJlnICVW1p_Rg4UbjI\
+            /edit#gid=722381052&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;AquaRio&#34;,
+        &#34;gsheets_sheet_range&#34;: &#34;A5:B1000&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;turismo_fluxo_visitantes&#34;,
+    },
+    &#34;ccbb&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1wio45Se6HXo1nFeyY2GXxa-fduJlnICVW1p_Rg4UbjI\
+            /edit#gid=722381052&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;CCBB&#34;,
+        &#34;gsheets_sheet_range&#34;: &#34;A5:B1000&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;turismo_fluxo_visitantes&#34;,
+    },
+    &#34;iss&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1wio45Se6HXo1nFeyY2GXxa-fduJlnICVW1p_Rg4UbjI\
+            /edit#gid=722381052&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;ISS&#34;,
+        &#34;gsheets_sheet_range&#34;: &#34;A5:B1000&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;turismo_fluxo_visitantes&#34;,
+    },
+    &#34;galeao&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1wio45Se6HXo1nFeyY2GXxa-fduJlnICVW1p_Rg4UbjI\
+            /edit#gid=722381052&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;Galeão&#34;,
+        &#34;gsheets_sheet_range&#34;: &#34;A5:D1000&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;turismo_fluxo_visitantes&#34;,
+    },
+    &#34;caged&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1wio45Se6HXo1nFeyY2GXxa-fduJlnICVW1p_Rg4UbjI\
+            /edit#gid=722381052&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;CAGED&#34;,
+        &#34;gsheets_sheet_range&#34;: &#34;A5:F1000&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;turismo_fluxo_visitantes&#34;,
+    },
+    &#34;rede_hoteleira_ocupacao_geral&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1wio45Se6HXo1nFeyY2GXxa-fduJlnICVW1p_Rg4UbjI\
+            /edit#gid=722381052&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;Ocupação da Rede Hoteleira&#34;,
+        &#34;gsheets_sheet_range&#34;: &#34;A5:B1000&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;turismo_fluxo_visitantes&#34;,
+    },
+    &#34;rede_hoteleira_ocupacao_grandes_eventos&#34;: {
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;url&#34;: &#34;https://docs.google.com/spreadsheets/d/1wio45Se6HXo1nFeyY2GXxa-fduJlnICVW1p_Rg4UbjI\
+            /edit#gid=722381052&#34;,
+        &#34;url_type&#34;: &#34;google_sheet&#34;,
+        &#34;gsheets_sheet_name&#34;: &#34;Ocupação da Rede Hoteleira em Grandes Eventos&#34;,
+        &#34;gsheets_sheet_range&#34;: &#34;A5:C1000&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;dataset_id&#34;: &#34;turismo_fluxo_visitantes&#34;,
+    },
+}
+
+
+gsheets_clocks = generate_dump_url_schedules(
+    interval=timedelta(days=1),
+    runs_interval_minutes=1,
+    start_date=datetime(
+        2021, 12, 21, 17, 15, tzinfo=pytz.timezone(&#34;America/Sao_Paulo&#34;)
+    ),
+    labels=[
+        constants.RJ_SETUR_AGENT_LABEL.value,
+    ],
+    table_parameters=gsheets_urls,
+    dataset_id=&#34;turismo_fluxo_visitantes&#34;,
+)
+
+gsheets_daily_update_schedule = Schedule(clocks=untuple(gsheets_clocks))</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
-<dl>
-<dt><code class="name"><a title="pipelines.constants" href="constants.html">pipelines.constants</a></code></dt>
-<dd>
-<div class="desc"><p>Constants for all flows</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.datario" href="datario/index.html">pipelines.datario</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for datario project</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.flows" href="flows.html">pipelines.flows</a></code></dt>
-<dd>
-<div class="desc"><p>Imports all flows for every project so we can register all of them.</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_cetrio" href="rj_cetrio/index.html">pipelines.rj_cetrio</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for rj_cetrio project in RJ</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_cor" href="rj_cor/index.html">pipelines.rj_cor</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for cor project</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_escritorio" href="rj_escritorio/index.html">pipelines.rj_escritorio</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for emd project</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_rioaguas" href="rj_rioaguas/index.html">pipelines.rj_rioaguas</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows para níveis dos reservatórios</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_segovi" href="rj_segovi/index.html">pipelines.rj_segovi</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for segovi project</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_seop" href="rj_seop/index.html">pipelines.rj_seop</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for SEOP's project</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_setur" href="rj_setur/index.html">pipelines.rj_setur</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for rj_cetrio project in RJ</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_sme" href="rj_sme/index.html">pipelines.rj_sme</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for sme project</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smfp" href="rj_smfp/index.html">pipelines.rj_smfp</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for rj_smfp project in RJ</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smi" href="rj_smi/index.html">pipelines.rj_smi</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for rj_smi project</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_sms" href="rj_sms/index.html">pipelines.rj_sms</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for rj_sms project</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_smtr" href="rj_smtr/index.html">pipelines.rj_smtr</a></code></dt>
-<dd>
-<div class="desc"><p>Prefect flows for rj_smtr project</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.utils" href="utils/index.html">pipelines.utils</a></code></dt>
-<dd>
-<div class="desc"><p>Helper flows that could fit any pipeline.</p></div>
-</dd>
-</dl>
 </section>
 <section>
 </section>
@@ -144,7 +211,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -161,24 +228,9 @@ setTimeout(() => input.focus(), 100);
 <ul></ul>
 </div>
 <ul id="index">
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines.constants" href="constants.html">pipelines.constants</a></code></li>
-<li><code><a title="pipelines.datario" href="datario/index.html">pipelines.datario</a></code></li>
-<li><code><a title="pipelines.flows" href="flows.html">pipelines.flows</a></code></li>
-<li><code><a title="pipelines.rj_cetrio" href="rj_cetrio/index.html">pipelines.rj_cetrio</a></code></li>
-<li><code><a title="pipelines.rj_cor" href="rj_cor/index.html">pipelines.rj_cor</a></code></li>
-<li><code><a title="pipelines.rj_escritorio" href="rj_escritorio/index.html">pipelines.rj_escritorio</a></code></li>
-<li><code><a title="pipelines.rj_rioaguas" href="rj_rioaguas/index.html">pipelines.rj_rioaguas</a></code></li>
-<li><code><a title="pipelines.rj_segovi" href="rj_segovi/index.html">pipelines.rj_segovi</a></code></li>
-<li><code><a title="pipelines.rj_seop" href="rj_seop/index.html">pipelines.rj_seop</a></code></li>
-<li><code><a title="pipelines.rj_setur" href="rj_setur/index.html">pipelines.rj_setur</a></code></li>
-<li><code><a title="pipelines.rj_sme" href="rj_sme/index.html">pipelines.rj_sme</a></code></li>
-<li><code><a title="pipelines.rj_smfp" href="rj_smfp/index.html">pipelines.rj_smfp</a></code></li>
-<li><code><a title="pipelines.rj_smi" href="rj_smi/index.html">pipelines.rj_smi</a></code></li>
-<li><code><a title="pipelines.rj_sms" href="rj_sms/index.html">pipelines.rj_sms</a></code></li>
-<li><code><a title="pipelines.rj_smtr" href="rj_smtr/index.html">pipelines.rj_smtr</a></code></li>
-<li><code><a title="pipelines.utils" href="utils/index.html">pipelines.utils</a></code></li>
+<li><code><a title="pipelines.rj_setur.dump_url_seeketing" href="index.html">pipelines.rj_setur.dump_url_seeketing</a></code></li>
 </ul>
 </li>
 </ul>

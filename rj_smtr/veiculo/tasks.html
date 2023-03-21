@@ -121,9 +121,7 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
         data = (
             data.groupby(pk_cols)
             .apply(
-                lambda x: x[data.columns.difference(pk_cols)].to_json(
-                    orient=&#34;records&#34;
-                )
+                lambda x: x[data.columns.difference(pk_cols)].to_json(orient=&#34;records&#34;)
             )
             .str.strip(&#34;[]&#34;)
             .reset_index(name=&#34;content&#34;)[primary_key + [&#34;content&#34;, &#34;timestamp_captura&#34;]]
@@ -208,9 +206,7 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
         data = (
             data.groupby(pk_cols)
             .apply(
-                lambda x: x[data.columns.difference(pk_cols)].to_json(
-                    orient=&#34;records&#34;
-                )
+                lambda x: x[data.columns.difference(pk_cols)].to_json(orient=&#34;records&#34;)
             )
             .str.strip(&#34;[]&#34;)
             .reset_index(name=&#34;content&#34;)[primary_key + [&#34;content&#34;, &#34;timestamp_captura&#34;]]
@@ -321,9 +317,7 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
         data = (
             data.groupby(pk_cols)
             .apply(
-                lambda x: x[data.columns.difference(pk_cols)].to_json(
-                    orient=&#34;records&#34;
-                )
+                lambda x: x[data.columns.difference(pk_cols)].to_json(orient=&#34;records&#34;)
             )
             .str.strip(&#34;[]&#34;)
             .reset_index(name=&#34;content&#34;)[primary_key + [&#34;content&#34;, &#34;timestamp_captura&#34;]]
@@ -431,9 +425,7 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
         data = (
             data.groupby(pk_cols)
             .apply(
-                lambda x: x[data.columns.difference(pk_cols)].to_json(
-                    orient=&#34;records&#34;
-                )
+                lambda x: x[data.columns.difference(pk_cols)].to_json(orient=&#34;records&#34;)
             )
             .str.strip(&#34;[]&#34;)
             .reset_index(name=&#34;content&#34;)[primary_key + [&#34;content&#34;, &#34;timestamp_captura&#34;]]
