@@ -14,7 +14,7 @@ from prefect.utilities.edges import unmapped
 from pipelines.constants import constants
 from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
-    get_date_ago,
+    get_previous_date,
     get_current_flow_mode,
     get_current_flow_labels,
     get_now_date,
@@ -105,8 +105,8 @@ with Flow(
     # 1. SETUP #
 
     # Get default parameters #
-    start_date = Parameter("start_date", default=get_date_ago.run(5))
-    end_date = Parameter("end_date", default=get_date_ago.run(5))
+    start_date = Parameter("start_date", default=get_previous_date.run(5))
+    end_date = Parameter("end_date", default=get_previous_date.run(5))
 
     run_date = get_run_dates(start_date, end_date)
 
@@ -128,34 +128,7 @@ with Flow(
         dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
     )
 
-    # 2. GET DATA #
-    # sppo_licenciamento_captura_run = create_flow_run(
-    #     flow_name=sppo_licenciamento_captura.name,
-    #     project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-    #     run_name=sppo_licenciamento_captura.name,
-    # )
-
-    # sppo_infracao_captura_run = create_flow_run(
-    #     flow_name=sppo_infracao_captura.name,
-    #     project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-    #     run_name=sppo_infracao_captura.name,
-    # )
-
-    # wait_for_flow_run(
-    #     sppo_licenciamento_captura_run,
-    #     stream_states=True,
-    #     stream_logs=True,
-    #     raise_final_state=True,
-    # )
-
-    # wait_for_flow_run(
-    #     sppo_infracao_captura_run,
-    #     stream_states=True,
-    #     stream_logs=True,
-    #     raise_final_state=True,
-    # )
-
-    # 3. MATERIALIZE DATA #
+    # 2. MATERIALIZE DATA #
     sppo_veiculo_dia_run = create_flow_run(
         flow_name=sppo_veiculo_dia.name,
         project_name=constants.PREFECT_DEFAULT_PROJECT.value,
@@ -170,7 +143,7 @@ with Flow(
         raise_final_state=True,
     )
 
-    # 4. CALCULATE #
+    # 3. CALCULATE #
     run_dbt_model(
         dbt_client=dbt_client,
         dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
