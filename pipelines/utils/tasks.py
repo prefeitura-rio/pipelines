@@ -69,7 +69,7 @@ def get_yesterday():
 
 
 @prefect.task(checkpoint=False)
-def get_date_ago(days):
+def get_previous_date(days):
     """
     Returns the date of {days} days ago in YYYY-MM-DD.
     """
