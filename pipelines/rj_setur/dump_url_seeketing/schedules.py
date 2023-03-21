@@ -126,7 +126,7 @@ gsheets_clocks = generate_dump_url_schedules(
     interval=timedelta(days=1),
     runs_interval_minutes=1,
     start_date=datetime(
-        2021, 12, 21, 14, 20, tzinfo=pytz.timezone("America/Sao_Paulo")
+        2021, 12, 21, 17, 15, tzinfo=pytz.timezone("America/Sao_Paulo")
     ),
     labels=[
         constants.RJ_SETUR_AGENT_LABEL.value,
