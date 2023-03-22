@@ -42,6 +42,7 @@ with Flow(
         default="rj_escritorio_notify_flooding_flow_cached_flooding_occurences",
     )
     to_email = Parameter("to_email")
+    circle_radius = Parameter("circle_radius", default=10)
 
     # Flow
     all_open_occurences = get_open_occurrences(api_url=api_url)
@@ -71,12 +72,14 @@ with Flow(
         mode=unmapped("new"),
         to_email=unmapped(to_email),
         email_configuration_secret_path=unmapped(email_configuration_secret_path),
+        radius=unmapped(circle_radius),
     )
     send_email_for_flooding_occurence.map(
         occurence=closed_flooding_occurences,
         mode=unmapped("closed"),
         to_email=unmapped(to_email),
         email_configuration_secret_path=unmapped(email_configuration_secret_path),
+        radius=unmapped(circle_radius),
     )
 
 rj_escritorio_notify_flooding_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
