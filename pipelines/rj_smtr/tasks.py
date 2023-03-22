@@ -30,7 +30,7 @@ from pipelines.rj_smtr.utils import (
     log_critical,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
-from pipelines.utils.utils import log, get_redis_client
+from pipelines.utils.utils import log, get_redis_client, get_vault_secret
 
 ###############
 #
@@ -372,14 +372,14 @@ def query_logs(
 
 @task
 def get_raw(  # pylint: disable=R0912
-    url: str, headers: dict = None, filetype: str = "json", csv_args: dict = None
+    url: str, headers: str = None, filetype: str = "json", csv_args: dict = None
 ) -> Dict:
     """
     Request data from URL API
 
     Args:
         url (str): URL to send request
-        headers (dict, optional): Aditional fields to send along the request.
+        headers (str, optional): Path to headers guardeded on Vault, if needed.
         filetype (str, optional): Filetype to be formatted (supported only: json, csv and txt)
         csv_args (dict, optional): Arguments for read_csv, if needed
     Returns:
@@ -391,6 +391,9 @@ def get_raw(  # pylint: disable=R0912
     error = None
 
     try:
+        if headers is not None:
+            headers = get_vault_secret(headers)["data"]
+
         response = requests.get(
             url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
         )

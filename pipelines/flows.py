@@ -14,6 +14,7 @@ from pipelines.rj_rioaguas import *
 from pipelines.rj_seconserva import *
 from pipelines.rj_segovi import *
 from pipelines.rj_seop import *
+from pipelines.rj_setur import *
 from pipelines.rj_sme import *
 from pipelines.rj_smfp import *
 from pipelines.rj_smi import *
