@@ -41,7 +41,7 @@ with Flow(
     )
 
     # Delete the old flow runs
-    delete_flow_run.map(old_flow_runs)
+    delete_flow_run.map(flow_run_dict=old_flow_runs, client=unmapped(client))
 
 database_cleanup_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 database_cleanup_flow.run_config = KubernetesRun(
