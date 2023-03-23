@@ -129,6 +129,51 @@ class constants(Enum):  # pylint: disable=c0103
         },
     }
 
+    GTFS_STORAGE_FOLDER = "gtfs/"
+
+    GTFS_TABLE_NAMES = [
+        "agency",
+        "calendar_dates",
+        "calendar",
+        "routes",
+        "shapes",
+        "stops",
+        "trips",
+        "frequencies",
+        "stop_times",
+    ]
+
+    GTFS_PK_SUBSET = {
+        "agency": ["agency_id"],
+        "calendar": ["service_id"],
+        "calendar_dates": ["service_id", "date"],
+        "fare_attributes": ["fare_id"],
+        "feed_info": ["feed_id"],
+        "frequencies": ["trip_id", "start_time"],
+        "routes": ["route_id"],
+        "shapes": ["shape_id", "shape_pt_sequence"],
+        "stop_times": ["trip_id", "stop_sequence"],
+        "stops": ["stop_id"],
+        "trips": ["trip_id"],
+    }
+
+    GTFS_FK_SUBSET = {
+        "trips": {"route_id": {"field": "route_id", "table_name": "routes"}},
+        "frequencies": {"trip_id": {"field": "trip_id", "table_name": "trips"}},
+        "stop_times": {
+            "stop_id": {"field": "stop_id", "table_name": "stops"},
+            "trip_id": {"field": "trip_id", "table_name": "trips"},
+        },
+    }
+
+    GTFS_RENAME_COLUMNS = {
+        "frequencies": {"trip_id": "trip_id_id"},
+        "routes": {"agency_id": "agency_id_id"},
+        "stops": {"parent_station": "parent_station_id"},
+        "stoptimes": {"stop_id": "stop_id_id", "trip_id": "trip_id_id"},
+        "trips": {"route_id": "route_id_id"},
+    }
+
     # RDO/RHO
     RDO_FTP_ALLOWED_PATHS = ["SPPO", "STPL"]
     RDO_FTPS_SECRET_PATH = "smtr_rdo_ftps"
