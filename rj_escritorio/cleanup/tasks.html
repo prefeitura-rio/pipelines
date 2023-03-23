@@ -104,6 +104,56 @@ def get_old_flow_runs(
 
 
 @task
+def get_old_running_flow_runs(older_than_days: int, client: Client = None):
+    &#34;&#34;&#34;
+    Fetches old running flow runs from the API.
+
+    Args:
+        older_than_days (int): The age of the flow runs (in days) to fetch.
+        client (Client, optional): The prefect client. Defaults to None.
+
+    Returns:
+        A list containing one dictionary for every flow we got. The format for the
+        dictionary is the following:
+    ```py
+    {
+        &#34;id&#34;: &#34;some-uuid4&#34;,
+        &#34;state&#34;: &#34;the-final-state-for-this-flow&#34;,
+        &#34;start_time&#34;: &#34;2022-01-01T00:00:00.000000+00:00
+    }
+    ```
+    &#34;&#34;&#34;
+    maximum_start_time = (
+        pendulum.now(tz=&#34;America/Sao_Paulo&#34;)
+        .subtract(days=older_than_days)
+        .to_iso8601_string()
+    )
+    if not client:
+        client = Client()
+    query = &#34;&#34;&#34;
+        query($maximum_start_time: timestamptz) {
+            flow_run (
+                where: {
+                    _and: [
+                        {start_time: {_lte: $maximum_start_time}},
+                        {state: {_eq: &#34;Running&#34;}},
+                    ]
+                }
+            ) {
+                id
+                state
+                start_time
+                labels
+            }
+        }
+    &#34;&#34;&#34;
+    response = client.graphql(
+        query=query, variables=dict(maximum_start_time=maximum_start_time)
+    )
+    return response[&#34;data&#34;][&#34;flow_run&#34;]
+
+
+@task
 def delete_flow_run(flow_run_dict: Dict[str, str], client: Client = None) -&gt; None:
     &#34;&#34;&#34;
     Deletes a flow run from the API.
@@ -126,7 +176,32 @@ def delete_flow_run(flow_run_dict: Dict[str, str], client: Client = None) -&gt; 
     response = client.graphql(query=query, variables=dict(flow_run_id=flow_run_id))
     success: bool = response[&#34;data&#34;][&#34;delete_flow_run&#34;][&#34;success&#34;]
     if not success:
-        raise Exception(f&#34;Could not delete flow run {flow_run_id}&#34;)</code></pre>
+        raise Exception(f&#34;Could not delete flow run {flow_run_id}&#34;)
+
+
+@task
+def cancel_flow_run(flow_run_dict: Dict[str, str], client: Client = None) -&gt; None:
+    &#34;&#34;&#34;
+    Cancels a flow run from the API.
+    &#34;&#34;&#34;
+    flow_run_id = flow_run_dict[&#34;id&#34;]
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Cancelling flow run {flow_run_id}&#34;)
+    if not client:
+        client = Client()
+    query = &#34;&#34;&#34;
+        mutation($flow_run_id: UUID!) {
+            cancel_flow_run (
+                input: {
+                    flow_run_id: $flow_run_id
+                }
+            ) {
+                state
+            }
+        }
+    &#34;&#34;&#34;
+    response = client.graphql(query=query, variables=dict(flow_run_id=flow_run_id))
+    state: str = response[&#34;data&#34;][&#34;cancel_flow_run&#34;][&#34;state&#34;]
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Flow run {flow_run_id} is now {state}&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -136,6 +211,40 @@ def delete_flow_run(flow_run_dict: Dict[str, str], client: Client = None) -&gt; 
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="pipelines.rj_escritorio.cleanup.tasks.cancel_flow_run"><code class="name flex">
+<span>def <span class="ident">cancel_flow_run</span></span>(<span>flow_run_dict: Dict[str, str], client: prefect.client.client.Client = None) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Cancels a flow run from the API.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def cancel_flow_run(flow_run_dict: Dict[str, str], client: Client = None) -&gt; None:
+    &#34;&#34;&#34;
+    Cancels a flow run from the API.
+    &#34;&#34;&#34;
+    flow_run_id = flow_run_dict[&#34;id&#34;]
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Cancelling flow run {flow_run_id}&#34;)
+    if not client:
+        client = Client()
+    query = &#34;&#34;&#34;
+        mutation($flow_run_id: UUID!) {
+            cancel_flow_run (
+                input: {
+                    flow_run_id: $flow_run_id
+                }
+            ) {
+                state
+            }
+        }
+    &#34;&#34;&#34;
+    response = client.graphql(query=query, variables=dict(flow_run_id=flow_run_id))
+    state: str = response[&#34;data&#34;][&#34;cancel_flow_run&#34;][&#34;state&#34;]
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Flow run {flow_run_id} is now {state}&#34;)</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_escritorio.cleanup.tasks.delete_flow_run"><code class="name flex">
 <span>def <span class="ident">delete_flow_run</span></span>(<span>flow_run_dict: Dict[str, str], client: prefect.client.client.Client = None) ‑> None</span>
 </code></dt>
@@ -253,6 +362,81 @@ def get_old_flow_runs(
     return response[&#34;data&#34;][&#34;flow_run&#34;]</code></pre>
 </details>
 </dd>
+<dt id="pipelines.rj_escritorio.cleanup.tasks.get_old_running_flow_runs"><code class="name flex">
+<span>def <span class="ident">get_old_running_flow_runs</span></span>(<span>older_than_days: int, client: prefect.client.client.Client = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Fetches old running flow runs from the API.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>older_than_days</code></strong> :&ensp;<code>int</code></dt>
+<dd>The age of the flow runs (in days) to fetch.</dd>
+<dt><strong><code>client</code></strong> :&ensp;<code>Client</code>, optional</dt>
+<dd>The prefect client. Defaults to None.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A list containing one dictionary for every flow we got. The format for the
+dictionary is the following:</p>
+<pre><code class="language-py">{
+    &quot;id&quot;: &quot;some-uuid4&quot;,
+    &quot;state&quot;: &quot;the-final-state-for-this-flow&quot;,
+    &quot;start_time&quot;: &quot;2022-01-01T00:00:00.000000+00:00
+}
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_old_running_flow_runs(older_than_days: int, client: Client = None):
+    &#34;&#34;&#34;
+    Fetches old running flow runs from the API.
+
+    Args:
+        older_than_days (int): The age of the flow runs (in days) to fetch.
+        client (Client, optional): The prefect client. Defaults to None.
+
+    Returns:
+        A list containing one dictionary for every flow we got. The format for the
+        dictionary is the following:
+    ```py
+    {
+        &#34;id&#34;: &#34;some-uuid4&#34;,
+        &#34;state&#34;: &#34;the-final-state-for-this-flow&#34;,
+        &#34;start_time&#34;: &#34;2022-01-01T00:00:00.000000+00:00
+    }
+    ```
+    &#34;&#34;&#34;
+    maximum_start_time = (
+        pendulum.now(tz=&#34;America/Sao_Paulo&#34;)
+        .subtract(days=older_than_days)
+        .to_iso8601_string()
+    )
+    if not client:
+        client = Client()
+    query = &#34;&#34;&#34;
+        query($maximum_start_time: timestamptz) {
+            flow_run (
+                where: {
+                    _and: [
+                        {start_time: {_lte: $maximum_start_time}},
+                        {state: {_eq: &#34;Running&#34;}},
+                    ]
+                }
+            ) {
+                id
+                state
+                start_time
+                labels
+            }
+        }
+    &#34;&#34;&#34;
+    response = client.graphql(
+        query=query, variables=dict(maximum_start_time=maximum_start_time)
+    )
+    return response[&#34;data&#34;][&#34;flow_run&#34;]</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_escritorio.cleanup.tasks.get_prefect_client"><code class="name flex">
 <span>def <span class="ident">get_prefect_client</span></span>(<span>) ‑> prefect.client.client.Client</span>
 </code></dt>
@@ -334,8 +518,10 @@ setTimeout(() => input.focus(), 100);
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="pipelines.rj_escritorio.cleanup.tasks.cancel_flow_run" href="#pipelines.rj_escritorio.cleanup.tasks.cancel_flow_run">cancel_flow_run</a></code></li>
 <li><code><a title="pipelines.rj_escritorio.cleanup.tasks.delete_flow_run" href="#pipelines.rj_escritorio.cleanup.tasks.delete_flow_run">delete_flow_run</a></code></li>
 <li><code><a title="pipelines.rj_escritorio.cleanup.tasks.get_old_flow_runs" href="#pipelines.rj_escritorio.cleanup.tasks.get_old_flow_runs">get_old_flow_runs</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.cleanup.tasks.get_old_running_flow_runs" href="#pipelines.rj_escritorio.cleanup.tasks.get_old_running_flow_runs">get_old_running_flow_runs</a></code></li>
 <li><code><a title="pipelines.rj_escritorio.cleanup.tasks.get_prefect_client" href="#pipelines.rj_escritorio.cleanup.tasks.get_prefect_client">get_prefect_client</a></code></li>
 </ul>
 </li>
