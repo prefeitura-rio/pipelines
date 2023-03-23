@@ -27,8 +27,8 @@ dump_siscor_flow.run_config = KubernetesRun(
 )
 
 siscor_default_parameters = {
-    "db_database": "SISCOR",
-    "db_host": "10.70.1.34",
+    "db_database": "siscor_seconserva",
+    "db_host": "10.70.11.61",
     "db_port": "1433",
     "db_type": "sql_server",
     "vault_secret_path": "db_siscor",

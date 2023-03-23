@@ -68,8 +68,8 @@ siscor_clocks = generate_dump_db_schedules(
     labels=[
         constants.RJ_SECONSERVA_AGENT_LABEL.value,
     ],
-    db_database="SISCOR",
-    db_host="10.70.1.34",
+    db_database="siscor_seconserva",
+    db_host="10.70.11.61",
     db_port="1433",
     db_type="sql_server",
     dataset_id="infraestrutura_siscor_obras",
