@@ -192,6 +192,7 @@ def send_email_for_flooding_occurence(
     mode: str,
     to_email: Union[str, List[str]],
     email_configuration_secret_path: str,
+    radius: int = 10,
 ):
     """
     Send an email for a flooding occurrence.
@@ -203,6 +204,10 @@ def send_email_for_flooding_occurence(
         email_configuration_secret_path: Path to the from email in Vault. This provides username,
             password and SMTP server.
     """
+    try:
+        radius = int(radius)
+    except ValueError as exc:
+        raise ValueError(f"Invalid radius: {radius}") from exc
     if mode not in ["new", "closed"]:
         raise ValueError(f"Invalid mode: {mode}")
     secret = get_vault_secret(email_configuration_secret_path)["data"]
@@ -213,7 +218,7 @@ def send_email_for_flooding_occurence(
         get_circle(
             latitude=occurence["latitude"],
             longitude=occurence["longitude"],
-            radius=10,
+            radius=radius,
             fname=circle_fname,
         )
         attachment = circle_fname
