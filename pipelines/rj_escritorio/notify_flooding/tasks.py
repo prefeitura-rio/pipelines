@@ -206,8 +206,8 @@ def send_email_for_flooding_occurence(
     """
     try:
         radius = int(radius)
-    except ValueError:
-        raise ValueError(f"Invalid radius: {radius}")
+    except ValueError as exc:
+        raise ValueError(f"Invalid radius: {radius}") from exc
     if mode not in ["new", "closed"]:
         raise ValueError(f"Invalid mode: {mode}")
     secret = get_vault_secret(email_configuration_secret_path)["data"]
