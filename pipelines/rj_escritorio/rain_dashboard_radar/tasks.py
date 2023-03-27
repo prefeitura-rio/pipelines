@@ -76,6 +76,7 @@ def get_filenames_storage(
     return files_on_storage_list[-3:]
 
 
+@task()
 def download_files_storage(
     bucket_name: str, files_to_download: list, destination_path: str
 ) -> None:
@@ -91,6 +92,7 @@ def download_files_storage(
         download_blob(bucket_name, source_blob_name, destination_file_name)
 
 
+@task()
 def change_predict_rain_specs(files_to_model: list, destination_path: str) -> None:
     """
     a
