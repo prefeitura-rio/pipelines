@@ -5,6 +5,7 @@ Tasks for setting rain dashboard using radar data.
 """
 import json
 from pathlib import Path
+import os
 from google.cloud import storage
 import pendulum
 from prefect import task
@@ -100,7 +101,7 @@ def download_files_storage(
     Realiza o download dos arquivos listados em files_to_download no bucket especificado
     """
 
-    destination_path.mkdir(parents=True, exist_ok=True)
+    os.makedirs(destination_path, exist_ok=True)
 
     for file in files_to_download:
         source_blob_name, destination_file_name = file, file.split("/")[-1]
