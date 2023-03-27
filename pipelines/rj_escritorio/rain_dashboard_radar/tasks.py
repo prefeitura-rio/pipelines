@@ -46,7 +46,9 @@ def list_blobs_with_prefix(bucket_name, prefix, delimiter=None):
 
 
 @task()
-def get_filenames_storage(bucket_name: str = 'rj-escritorio-dev', radar: str = "gua") -> list:
+def get_filenames_storage(
+    bucket_name: str = "rj-escritorio-dev", radar: str = "gua"
+) -> list:
     """Esc"""
     last_30min = pendulum.now("UTC").subtract(minutes=30).to_datetime_string()
     today = pendulum.now("UTC").format("YYYY-MM-DD")
@@ -92,9 +94,7 @@ def download_blob(bucket_name, source_blob_name, destination_file_name) -> None:
 
 
 def download_files_storage(
-    bucket_name: str,
-    files_to_download: list,
-    destination_path: str
+    bucket_name: str, files_to_download: list, destination_path: str
 ) -> None:
     """
     Realiza o download dos arquivos listados em files_to_download no bucket especificado
@@ -103,7 +103,7 @@ def download_files_storage(
     destination_path.mkdir(parents=True, exist_ok=True)
 
     for file in files_to_download:
-        source_blob_name, destination_file_name = file, file.split('/')[-1]
+        source_blob_name, destination_file_name = file, file.split("/")[-1]
         destination_file_name = Path(destination_path, destination_file_name)
         download_blob(bucket_name, source_blob_name, destination_file_name)
 
@@ -112,12 +112,12 @@ def change_predict_rain_specs(files_to_model: list, destination_path: str) -> No
     """
     a
     """
-    with open('src/predict_rain_specs.json', 'r') as file:
+    with open("src/predict_rain_specs.json", "r") as file:
         predict_specs = json.load(file)
     print("load")
-    filenames = [destination_path + i.split('/')[-1] for i in files_to_model]
+    filenames = [destination_path + i.split("/")[-1] for i in files_to_model]
     print("filenames", filenames)
     predict_specs["radar_ppi_hdfs"] = filenames
     print("predict_specs", predict_specs)
-    with open('src/predict_rain_specs.json', 'w') as file:
+    with open("src/predict_rain_specs.json", "w") as file:
         json.dump(predict_specs, file)
