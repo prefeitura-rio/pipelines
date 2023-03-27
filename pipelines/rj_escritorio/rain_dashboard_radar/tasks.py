@@ -10,6 +10,8 @@ from google.cloud import storage
 import pendulum
 from prefect import task
 
+from pipelines.rj_escritorio.rain_dashboard_radar.utils import download_blob
+
 
 @task()
 def list_blobs_with_prefix(bucket_name, prefix, delimiter=None):
@@ -72,26 +74,6 @@ def get_filenames_storage(
     files_on_storage_list.sort()
 
     return files_on_storage_list[-3:]
-
-
-@task()
-def download_blob(bucket_name, source_blob_name, destination_file_name) -> None:
-    """
-    Downloads a blob mencioned on source_blob_name from bucket_name
-    and save it on destination_file_name.
-    """
-
-    storage_client = storage.Client()
-
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.blob(source_blob_name)
-    blob.download_to_filename(destination_file_name)
-
-    print(
-        "Blob {} downloaded to file path {}. successfully ".format(
-            source_blob_name, destination_file_name
-        )
-    )
 
 
 def download_files_storage(
