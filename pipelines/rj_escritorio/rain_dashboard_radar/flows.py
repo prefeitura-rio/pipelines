@@ -6,10 +6,8 @@ Flows for setting rain dashboard using radar data.
 from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
-
+from prefect.tasks.shell import ShellTask
 from pipelines.constants import constants
-
-
 # from pipelines.rj_escritorio.rain_dashboard.constants import (
 #     constants as rain_dashboard_constants,
 # )
@@ -21,6 +19,11 @@ from pipelines.rj_escritorio.rain_dashboard_radar.tasks import (
     get_filenames_storage,
 )
 from pipelines.utils.decorators import Flow
+
+start_model = ShellTask(
+    name="Run model",
+    command="python src/predict_rain.py -sf src/predict_specs.json"
+)
 
 with Flow(
     name="EMD: Extrair e atualizar dados de chuva na api.dados.rio",
@@ -36,14 +39,16 @@ with Flow(
     # Tasks
     bucket_name = "rj-escritorio-dev"
     files_on_storage_list = get_filenames_storage(bucket_name, radar)
-    download_files_storage(
+    download_files = download_files_storage(
         bucket_name,
         files_to_download=files_on_storage_list,
         destination_path="radar_data/",
     )
-    change_predict_rain_specs(
-        files_to_model=files_on_storage_list, destination_path="radar_data/"
+    change_json_file = change_predict_rain_specs(
+        files_to_model=files_on_storage_list,
+        destination_path="pipelines/rj_escritorio/rain_dashboard_radar/radar_data/"
     )
+    start_model_tsk = start_model(wait_for=[change_json_file, download_files])
 
 
 rj_escritorio_rain_dashboard_radar_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
