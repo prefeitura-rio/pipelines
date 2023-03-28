@@ -16,13 +16,9 @@ from pipelines.utils.execute_dbt_model.flows import utils_run_dbt_model_flow
 from pipelines.utils.utils import set_default_parameters
 
 dbt_setur_seeketing = deepcopy(utils_run_dbt_model_flow)
-dbt_setur_seeketing.name = (
-    "SETUR: Seeketing - Materializar tabelas"
-)
+dbt_setur_seeketing.name = "SETUR: Seeketing - Materializar tabelas"
 dbt_setur_seeketing.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-dbt_setur_seeketing.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value
-)
+dbt_setur_seeketing.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 
 setur_seeketing_default_parameters = {
     "dataset_id": "turismo_fluxo_visitantes",

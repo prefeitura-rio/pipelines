@@ -44,6 +44,4 @@ setur_seeketing_clocks = [
     )
     for count, (_, table_id) in enumerate(setur_seeketing_tables.items())
 ]
-setur_seeketing_daily_update_schedule = Schedule(
-    clocks=untuple(setur_seeketing_clocks)
-)
+setur_seeketing_daily_update_schedule = Schedule(clocks=untuple(setur_seeketing_clocks))
