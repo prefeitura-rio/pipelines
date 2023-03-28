@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # flake8: noqa: E501
 import datetime
 import json
@@ -9,7 +10,9 @@ import git
 from src.utils.general_utils import print_error, print_ok, print_warning
 
 
-def print_and_log(message: str, log_entry: dict, print_func, verbose: bool = True) -> dict:
+def print_and_log(
+    message: str, log_entry: dict, print_func, verbose: bool = True
+) -> dict:
     log_entry["shell_output"] += message + "\n"
     if verbose:
         print_func(message)
@@ -35,7 +38,13 @@ def initialize_log_entry(args: dict) -> dict:
 
 
 def get_predict_filepaths_and_log(args: dict, model_name: str) -> dict:
-    standard_arguments = ["overwrite", "personal", "verbose", "input_test_set_file", "n_jobs"]
+    standard_arguments = [
+        "overwrite",
+        "personal",
+        "verbose",
+        "input_test_set_file",
+        "n_jobs",
+    ]
 
     model_parameters = [key for key in args.keys() if key not in standard_arguments]
 
@@ -52,11 +61,16 @@ def get_predict_filepaths_and_log(args: dict, model_name: str) -> dict:
 
     log_entry = initialize_log_entry(args)
     log_entry["input_files"] = {"test_set_file": "", "model_file": ""}
-    log_entry["output_files"] = {"predict": str(output_predict_filepath), "log": str(output_log_filepath)}
+    log_entry["output_files"] = {
+        "predict": str(output_predict_filepath),
+        "log": str(output_log_filepath),
+    }
 
     input_model_filepath = pathlib.Path(f"{output_path}/model.joblib")
     test_set_filepath = pathlib.Path(
-        args["personal"] * "personal/" + "data/processed/radar_cal/" + args["input_test_set_file"]
+        args["personal"] * "personal/"
+        + "data/processed/radar_cal/"
+        + args["input_test_set_file"]
     )
 
     log_entry["input_files"]["test_set_file"] = str(test_set_filepath)
@@ -69,7 +83,9 @@ def get_predict_filepaths_and_log(args: dict, model_name: str) -> dict:
         exit()
 
     if not input_model_filepath.is_file():
-        error_message = "Error: Specified input model file does not exist. Terminating..."
+        error_message = (
+            "Error: Specified input model file does not exist. Terminating..."
+        )
         log_entry = print_and_log(error_message, log_entry, print_error)
         save_log(log_entry, output_log_filepath)
         exit()
@@ -77,12 +93,12 @@ def get_predict_filepaths_and_log(args: dict, model_name: str) -> dict:
     if output_predict_filepath.is_file():
         if args["overwrite"]:
             warning_message = f"Warning: overwriting existing prediction file {output_predict_filepath}"
-            log_entry = print_and_log(warning_message, log_entry, print_warning, args["verbose"])
+            log_entry = print_and_log(
+                warning_message, log_entry, print_warning, args["verbose"]
+            )
             output_predict_filepath.unlink()
         else:
-            error_message = (
-                f"Error: prediction file {output_predict_filepath} already exists. Pass -o to overwrite. Terminating..."
-            )
+            error_message = f"Error: prediction file {output_predict_filepath} already exists. Pass -o to overwrite. Terminating..."
             log_entry = print_and_log(error_message, log_entry, print_error)
             save_log(log_entry, output_log_filepath)
             exit()
@@ -115,9 +131,17 @@ def get_train_filepaths_and_log(args: dict, model_name: str) -> dict:
 
     log_entry = initialize_log_entry(args)
     log_entry["input_file"] = ""
-    log_entry["output_files"] = {"model": "", "params": "", "log": str(output_log_filepath)}
+    log_entry["output_files"] = {
+        "model": "",
+        "params": "",
+        "log": str(output_log_filepath),
+    }
 
-    train_set_filepath = pathlib.Path(args["personal"] * "personal/" + "data/processed/radar_cal/" + args["input_file"])
+    train_set_filepath = pathlib.Path(
+        args["personal"] * "personal/"
+        + "data/processed/radar_cal/"
+        + args["input_file"]
+    )
     log_entry["input_file"] = str(train_set_filepath)
 
     if not train_set_filepath.is_file():
@@ -137,14 +161,14 @@ def get_train_filepaths_and_log(args: dict, model_name: str) -> dict:
 
     if output_model_filepath.is_file():
         if args["overwrite"]:
-            warning_message = f"Warning: overwriting existing model file {output_model_filepath}"
+            warning_message = (
+                f"Warning: overwriting existing model file {output_model_filepath}"
+            )
             log_entry["shell_output"] += f"{warning_message}\n"
             print_warning(warning_message, verbose=args["verbose"])
             output_model_filepath.unlink()
         else:
-            warning_message = (
-                f"Warning: model file {output_model_filepath} already exists. Pass -o to overwrite. Terminating..."
-            )
+            warning_message = f"Warning: model file {output_model_filepath} already exists. Pass -o to overwrite. Terminating..."
             log_entry["shell_output"] += f"{warning_message}\n"
             print_warning(warning_message)
             with open(output_log_filepath, "a") as outfile:
@@ -159,9 +183,7 @@ def get_train_filepaths_and_log(args: dict, model_name: str) -> dict:
             print_warning(warning_message, verbose=args["verbose"])
             output_parameters_filepath.unlink()
         else:
-            warning_message = (
-                f"Warning: parameters file {output_parameters_filepath} already exists. Pass -o to overwrite."
-            )
+            warning_message = f"Warning: parameters file {output_parameters_filepath} already exists. Pass -o to overwrite."
             log_entry["shell_output"] += f"{warning_message}\n"
             print_warning(warning_message)
             with open(output_log_filepath, "a") as outfile:

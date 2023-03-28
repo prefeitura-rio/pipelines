@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # flake8: noqa: E501
 import numpy as np
 
@@ -6,16 +7,24 @@ from src.data.process.RadarData import RadarData
 
 
 # Implementation for two operands only for now
-def parse_operation(p2f: PointsToFeatures, rd: RadarData, operation_descriptor: str) -> np.array:
+def parse_operation(
+    p2f: PointsToFeatures, rd: RadarData, operation_descriptor: str
+) -> np.array:
     for basic_operation_desc, basic_operation_func in BASIC_OPERATIONS.items():
         if basic_operation_desc in operation_descriptor:
-            operand1_desc, operand2_desc = operation_descriptor.split(basic_operation_desc)
+            operand1_desc, operand2_desc = operation_descriptor.split(
+                basic_operation_desc
+            )
 
             operand1 = parse_operation(p2f, rd, operand1_desc)
             operand2 = parse_operation(p2f, rd, operand2_desc)
 
             if basic_operation_desc == "/" and operand2_desc == "beam:rain_bins":
-                result = np.where(operand2 == 0, np.divide(operand1, operand2 + 0.0001), np.divide(operand1, operand2))
+                result = np.where(
+                    operand2 == 0,
+                    np.divide(operand1, operand2 + 0.0001),
+                    np.divide(operand1, operand2),
+                )
             else:
                 result = basic_operation_func(operand1, operand2)
             return result

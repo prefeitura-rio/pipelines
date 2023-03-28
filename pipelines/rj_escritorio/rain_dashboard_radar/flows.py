@@ -8,6 +8,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.shell import ShellTask
 from pipelines.constants import constants
+
 # from pipelines.rj_escritorio.rain_dashboard.constants import (
 #     constants as rain_dashboard_constants,
 # )
@@ -21,8 +22,7 @@ from pipelines.rj_escritorio.rain_dashboard_radar.tasks import (
 from pipelines.utils.decorators import Flow
 
 start_model = ShellTask(
-    name="Run model",
-    command="python src/predict_rain.py -sf src/predict_specs.json"
+    name="Run model", command="python src/predict_rain.py -sf src/predict_specs.json"
 )
 
 with Flow(
@@ -46,7 +46,7 @@ with Flow(
     )
     change_json_file = change_predict_rain_specs(
         files_to_model=files_on_storage_list,
-        destination_path="pipelines/rj_escritorio/rain_dashboard_radar/radar_data/"
+        destination_path="pipelines/rj_escritorio/rain_dashboard_radar/radar_data/",
     )
     start_model_tsk = start_model(wait_for=[change_json_file, download_files])
 
