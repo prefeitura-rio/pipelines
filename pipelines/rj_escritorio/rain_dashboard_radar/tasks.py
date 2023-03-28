@@ -13,6 +13,7 @@ from pipelines.rj_escritorio.rain_dashboard_radar.utils import (
     download_blob,
     list_blobs_with_prefix,
 )
+from pipelines.utils.utils import log
 
 
 @task()
@@ -22,7 +23,6 @@ def get_filenames_storage(
     """Esc"""
     last_30min = pendulum.now("UTC").subtract(minutes=30).to_datetime_string()
     today = pendulum.now("UTC").format("YYYY-MM-DD")
-    print(today, last_30min)
 
     # Get data from yesterday if the date from last_30min is different from today
     if today == last_30min[:11]:
@@ -39,6 +39,7 @@ def get_filenames_storage(
 
     files_on_storage_list = list(set(files_on_storage_list))
     files_on_storage_list.sort()
+    log(f"Last radar files: {files_on_storage_list[-3:]}")
 
     return files_on_storage_list[-3:]
 
@@ -62,14 +63,15 @@ def download_files_storage(
 @task()
 def change_predict_rain_specs(files_to_model: list, destination_path: str) -> None:
     """
-    a
+    Change name of radar files inside json file
     """
-    with open("src/predict_rain_specs.json", "r") as file:
+    json_file = "pipelines/rj_escritorio/rain_dashboard_radar/src/predict_rain_specs.json"
+    with open(json_file, "r") as file:
         predict_specs = json.load(file)
-    print("load")
+    log("load")
     filenames = [destination_path + i.split("/")[-1] for i in files_to_model]
-    print("filenames", filenames)
+    log(f"filenames to save on json file: {filenames}")
     predict_specs["radar_ppi_hdfs"] = filenames
-    print("predict_specs", predict_specs)
-    with open("src/predict_rain_specs.json", "w") as file:
+    log(f"predict_specs : {predict_specs}")
+    with open(json_file, "w") as file:
         json.dump(predict_specs, file)
