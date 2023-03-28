@@ -65,7 +65,9 @@ def change_predict_rain_specs(files_to_model: list, destination_path: str) -> No
     """
     Change name of radar files inside json file
     """
-    json_file = "pipelines/rj_escritorio/rain_dashboard_radar/src/predict_rain_specs.json"
+    json_file = (
+        "pipelines/rj_escritorio/rain_dashboard_radar/src/predict_rain_specs.json"
+    )
     with open(json_file, "r") as file:
         predict_specs = json.load(file)
     log("load")
