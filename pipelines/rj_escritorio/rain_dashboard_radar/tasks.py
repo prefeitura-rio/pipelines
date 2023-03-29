@@ -85,6 +85,7 @@ def change_predict_rain_specs(files_to_model: list, destination_path: str) -> No
 def run_model():
     """
     Call a shell task to run model
+    https://github.com/BioBD/sgwfc-gene-python/blob/7dadf7b854a7a37405ee203331671f8cd61b114b/workflow/modules.py
     """
     log("[DEBUG] Start runing model")
     base_path = "pipelines/rj_escritorio/rain_dashboard_radar"
