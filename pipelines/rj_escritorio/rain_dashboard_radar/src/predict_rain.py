@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # flake8: noqa: E501
 import argparse
 import datetime
@@ -32,7 +33,9 @@ parser.add_argument(
     help="Filepath of specifications for predictions.",
     type=str,
 )
-parser.add_argument("--n_jobs", "-nj", help="Number of jobs to parallelize.", type=int, default=1)
+parser.add_argument(
+    "--n_jobs", "-nj", help="Number of jobs to parallelize.", type=int, default=1
+)
 parser.add_argument(
     "--output_hdf",
     "-oh",
@@ -96,18 +99,21 @@ for hdf in input_hdfs:
             origin_radar_data = f"{process}-{by_feature}"
             index_matrix = radar_data_dict[origin_radar_data].indices
             new_radar_data = process_ppi(
-                args.verbose, specs_dict["feature"], specs_dict["process_type"], hdf, index_matrix
-            )
-        else:
-            new_radar_data = process_ppi(
                 args.verbose,
                 specs_dict["feature"],
                 specs_dict["process_type"],
-                hdf
+                hdf,
+                index_matrix,
+            )
+        else:
+            new_radar_data = process_ppi(
+                args.verbose, specs_dict["feature"], specs_dict["process_type"], hdf
             )
 
         assert new_radar_data.nrays == NRAYS, f"nrays should be {NRAYS}."
-        radar_data_dict[f"{specs_dict['process_type']}-{specs_dict['feature']}"] = new_radar_data
+        radar_data_dict[
+            f"{specs_dict['process_type']}-{specs_dict['feature']}"
+        ] = new_radar_data
 
     radar_data_hdfs.append(radar_data_dict)
 
@@ -128,7 +134,9 @@ indices_paths = pathlib.Path(indices_folder).rglob("*.npy")
 
 if len(list(indices_paths)):
     p2f = PointsToFeatures.load_indices(indices_folder)
-    assert np.all(np.isclose(p2f.coordinates, coordinates)), "Given coordinates are not the same as loaded ones."
+    assert np.all(
+        np.isclose(p2f.coordinates, coordinates)
+    ), "Given coordinates are not the same as loaded ones."
 
     print_ok("Indices loaded successfully.", args.verbose)
 else:

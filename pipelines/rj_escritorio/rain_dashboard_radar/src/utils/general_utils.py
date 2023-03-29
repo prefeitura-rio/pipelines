@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # flake8: noqa: E501
 import datetime
 import time
@@ -60,7 +61,10 @@ def print_ok(
 
 
 def print_info(
-    message: str, verbose: bool = True, skip_line_before: bool = False, skip_line_after: bool = False
+    message: str,
+    verbose: bool = True,
+    skip_line_before: bool = False,
+    skip_line_after: bool = False,
 ) -> None:
     if verbose:
         string_before = "\n" if skip_line_before else ""
@@ -79,12 +83,17 @@ def parse_dates_argument(dates_str: str, format: str = "%Y%m%d") -> list:
             start = datetime.datetime.strptime(date_range[0], "%Y%m%d").date()
             end = datetime.datetime.strptime(date_range[1], "%Y%m%d").date()
             delta = end - start
-            dates_between = [(start + datetime.timedelta(days=i)).strftime(format) for i in range(delta.days + 1)]
+            dates_between = [
+                (start + datetime.timedelta(days=i)).strftime(format)
+                for i in range(delta.days + 1)
+            ]
             dates = list(set(dates).union(set(dates_between)))
 
         else:
             try:
-                new_pre_date = datetime.datetime.strptime(pre_date, "%Y%m%d").strftime(format)
+                new_pre_date = datetime.datetime.strptime(pre_date, "%Y%m%d").strftime(
+                    format
+                )
             except ValueError:
                 raise Exception("Error: wrong formatting for dates")
 
@@ -199,7 +208,9 @@ class _TicToc(object):
             name = "[{}] ".format(self.name)
         else:
             name = self.name
-        print("-{0}elapsed time: {1:.3g} ({2})".format(name, self.elapsed, self._measure))
+        print(
+            "-{0}elapsed time: {1:.3g} ({2})".format(name, self.elapsed, self._measure)
+        )
 
     def tic(self) -> None:
         """
@@ -360,7 +371,9 @@ def diff_groups(file1, grp1, file2, grp2, path):
         h1 = desc1[name]["htype"]
         h2 = desc2[name]["htype"]
         if h1 != h2:
-            diff.append(f"{path_to_element}: Different element types: '{h1}' and '{h2}' (DIFF_OBJECTS)")
+            diff.append(
+                f"{path_to_element}: Different element types: '{h1}' and '{h2}' (DIFF_OBJECTS)"
+            )
             continue  # different hdf5 types -- don't try to compare further
         # compare attributes
         keys_attrs1 = set(desc1[name]["attr"].keys())
@@ -370,9 +383,13 @@ def diff_groups(file1, grp1, file2, grp2, path):
         diff_keys2 = keys_attrs2.difference(keys_attrs1)
 
         if len(diff_keys1):
-            diff.append(f"{path_to_element}: Attributes {diff_keys1} only in '{file1}' (DIFF_UNIQ_ATTR_A)")
+            diff.append(
+                f"{path_to_element}: Attributes {diff_keys1} only in '{file1}' (DIFF_UNIQ_ATTR_A)"
+            )
         if len(diff_keys2):
-            diff.append(f"{path_to_element}: Attributes {diff_keys2} only in '{file2}' (DIFF_UNIQ_ATTR_B)")
+            diff.append(
+                f"{path_to_element}: Attributes {diff_keys2} only in '{file2}' (DIFF_UNIQ_ATTR_B)"
+            )
         common_keys_attr = keys_attrs1.intersection(keys_attrs2)
         for k in common_keys_attr:
             v1 = desc1[name]["attr"][k]
@@ -394,7 +411,9 @@ def diff_groups(file1, grp1, file2, grp2, path):
         data1 = desc1[name]["data"]
         data2 = desc2[name]["data"]
         if type(data1) != type(data2):
-            diff.append(f"{path_to_element}: Different dtypes: '{type(data1)}' and '{type(data2)}' (DIFF_DTYPE)")
+            diff.append(
+                f"{path_to_element}: Different dtypes: '{type(data1)}' and '{type(data2)}' (DIFF_DTYPE)"
+            )
         if not np.array_equal(data1, data2):
             diff.append(f"{path_to_element}: Different datasets (DIFF_DATASET)")
     for name in common:
@@ -404,7 +423,9 @@ def diff_groups(file1, grp1, file2, grp2, path):
         if desc1[name]["htype"] != "group":
             continue
         # recurse into subgroup
-        diff.extend(diff_groups(file1, grp1[name], file2, grp2[name], path + name + "/"))
+        diff.extend(
+            diff_groups(file1, grp1[name], file2, grp2[name], path + name + "/")
+        )
 
     return diff
 
