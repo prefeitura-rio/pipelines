@@ -21,7 +21,7 @@ from pipelines.rj_escritorio.rain_dashboard_radar.tasks import (
 )
 from pipelines.utils.decorators import Flow
 
-start_model = ShellTask(
+run_model = ShellTask(
     name="Run model", command="python src/predict_rain.py -sf src/predict_specs.json"
 )
 
@@ -30,7 +30,7 @@ with Flow(
     code_owners=[
         "paty",
     ],
-    skip_if_running=True,
+    # skip_if_running=True,
 ) as rj_escritorio_rain_dashboard_radar_flow:
     # Parameters
     mode = Parameter("mode", default="prod")
@@ -40,7 +40,7 @@ with Flow(
     bucket_name = "rj-escritorio-dev"
     files_on_storage_list = get_filenames_storage(bucket_name, radar)
     download_files_storage(
-        bucket_name,
+        bucket_name=bucket_name,
         files_to_download=files_on_storage_list,
         destination_path="radar_data/",
     )
@@ -48,7 +48,7 @@ with Flow(
         files_to_model=files_on_storage_list,
         destination_path="pipelines/rj_escritorio/rain_dashboard_radar/radar_data/",
     )
-    start_model(upstream_tasks=[change_predict_rain_specs, download_files_storage])
+    run_model(upstream_tasks=[change_predict_rain_specs, download_files_storage])
 
 
 rj_escritorio_rain_dashboard_radar_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)

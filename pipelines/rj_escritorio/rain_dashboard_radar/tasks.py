@@ -39,7 +39,7 @@ def get_filenames_storage(
 
     files_on_storage_list = list(set(files_on_storage_list))
     files_on_storage_list.sort()
-    log(f"Last radar files: {files_on_storage_list[-3:]}")
+    log(f"[DEBUG] Last radar files: {files_on_storage_list[-3:]}")
 
     return files_on_storage_list[-3:]
 
