@@ -23,10 +23,13 @@ def get_on_redis(
     """
     redis_client = get_redis_client(host="127.0.0.1")
     key = build_redis_key(dataset_id, table_id, "files", mode)
+    # print(f"\n\n get from key {key} \n\n")
     files_on_redis = redis_client.get(key)
+    # print("\n\n files saved on redis: ", files_on_redis, "\n\n")
     files_on_redis = [] if files_on_redis is None else files_on_redis
     files_on_redis = list(set(files_on_redis))
     files_on_redis.sort()
+    # print("\n\n files saved on redis: ", files_on_redis, "\n\n")
     return files_on_redis
 
 
@@ -44,8 +47,10 @@ def save_on_redis(
     """
     redis_client = get_redis_client(host="127.0.0.1")
     key = build_redis_key(dataset_id, table_id, "files", mode)
+    # print(f"\n\n save on key {key} \n\n")
     files = list(set(files))
     files.sort(reverse=True)  # no backfill que roda contrário tem que ter o reverse
+    # print("\n\n all files to save on redis: ", files, "\n\n")
     files = files[-keep_last:]
-    # print(">>>> goin to save on redis files ", files)
+    # print("\n\n files to save on redis: ", files, "\n\n")
     redis_client.set(key, files)

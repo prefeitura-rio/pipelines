@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# flake8: noqa: E501
 """
 Tasks for backfill pipeline.
 """
@@ -16,9 +17,9 @@ def delete_files(
     """
     Deletar tanto os arquivos raw, quanto os temporários e de output
     """
-    path = f"/home/patricia/Documentos/escritorio_dados/prefeitura-rio/pipelines/\
-        {mode_redis}/data/satelite/"
+    path = f"/home/patricia/Documentos/escritorio_dados/prefeitura-rio/pipelines/{mode_redis}/data/satelite/"
     if os.path.exists(path):
+        print("\n\n\n\n path exist\n\n\n")
         shutil.rmtree(path)
 
     # filename_temp = filename.replace("output", "temp").replace(".csv", ".tif")

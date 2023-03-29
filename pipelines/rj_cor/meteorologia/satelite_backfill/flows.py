@@ -66,47 +66,47 @@ with Flow(
 
     delete_folder = delete_files(mode_redis)
 
-    # Para taxa de precipitação
-    variavel_rr = satelite_constants.VARIAVEL_RR.value
-    table_id_rr = satelite_constants.TABLE_ID_RR.value
+    # # Para taxa de precipitação
+    # variavel_rr = satelite_constants.VARIAVEL_RR.value
+    # table_id_rr = satelite_constants.TABLE_ID_RR.value
 
-    # Get filenames that were already treated on redis
-    redis_files_rr = get_on_redis(dataset_id, table_id_rr, mode=mode_redis)
+    # # Get filenames that were already treated on redis
+    # redis_files_rr = get_on_redis(dataset_id, table_id_rr, mode=mode_redis)
 
-    redis_files_rr.set_upstream(delete_folder)
+    # redis_files_rr.set_upstream(delete_folder)
 
-    # Download raw data from API
-    filename_rr, redis_files_rr_updated = download(
-        variavel=variavel_rr,
-        date_hour_info=date_hour_info,
-        redis_files=redis_files_rr,
-        ref_filename=ref_filename,
-        wait=redis_files_rr,
-        mode_redis=mode_redis,
-    )
+    # # Download raw data from API
+    # filename_rr, redis_files_rr_updated = download(
+    #     variavel=variavel_rr,
+    #     date_hour_info=date_hour_info,
+    #     redis_files=redis_files_rr,
+    #     ref_filename=ref_filename,
+    #     wait=redis_files_rr,
+    #     mode_redis=mode_redis,
+    # )
 
-    # Start data treatment if there are new files
-    info_rr = tratar_dados(filename=filename_rr, mode_redis=mode_redis)
-    path_rr = save_data(info=info_rr, file_path=filename_rr, mode_redis=mode_redis)
+    # # Start data treatment if there are new files
+    # info_rr = tratar_dados(filename=filename_rr, mode_redis=mode_redis)
+    # path_rr = save_data(info=info_rr, file_path=filename_rr, mode_redis=mode_redis)
 
-    # Create table in BigQuery
-    upload_table_rr = create_table_and_upload_to_gcs(
-        data_path=path_rr,
-        dataset_id=dataset_id,
-        table_id=table_id_rr,
-        dump_mode=dump_mode,
-        wait=path_rr,
-    )
+    # # Create table in BigQuery
+    # upload_table_rr = create_table_and_upload_to_gcs(
+    #     data_path=path_rr,
+    #     dataset_id=dataset_id,
+    #     table_id=table_id_rr,
+    #     dump_mode=dump_mode,
+    #     wait=path_rr,
+    # )
 
-    # Save new filenames on redis
-    save_on_redis(
-        dataset_id,
-        table_id_rr,
-        mode_redis,
-        redis_files_rr_updated,
-        keep_last=200,
-        wait=path_rr,
-    )
+    # # Save new filenames on redis
+    # save_on_redis(
+    #     dataset_id,
+    #     table_id_rr,
+    #     mode=mode_redis,
+    #     files=redis_files_rr_updated,
+    #     keep_last=2000,
+    #     wait=path_rr,
+    # )
 
     # Para quantidade de água precipitável
     variavel_tpw = satelite_constants.VARIAVEL_TPW.value
@@ -145,7 +145,7 @@ with Flow(
         table_id_tpw,
         mode_redis,
         redis_files_tpw_updated,
-        keep_last=200,
+        keep_last=2000,
         wait=path_tpw,
     )
 
@@ -190,7 +190,7 @@ with Flow(
         table_id_cmip,
         mode_redis,
         redis_files_cmip_updated,
-        keep_last=200,
+        keep_last=2000,
         wait=path_cmip,
     )
 
