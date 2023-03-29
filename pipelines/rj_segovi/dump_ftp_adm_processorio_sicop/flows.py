@@ -69,6 +69,7 @@ with Flow(
     dbt_model_secret_parameters = Parameter(
         "dbt_model_secret_parameters", default={}, required=False
     )
+    biglake_table = Parameter("biglake_table", default=False, required=False)
 
     #####################################
     #
@@ -105,6 +106,7 @@ with Flow(
             data_path=save_path,
             dataset_id=dataset_id,
             table_id=table_id,
+            biglake_table=biglake_table,
             dump_mode="append",
         )
 

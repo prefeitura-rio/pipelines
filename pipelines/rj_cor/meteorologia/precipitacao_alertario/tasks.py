@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import pendulum
 from prefect import task
+
 import pandas_read_xml as pdx
 
 # from prefect import context
@@ -18,10 +19,14 @@ import pandas_read_xml as pdx
 from pipelines.constants import constants
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.utils import (
     parse_date_columns,
+    treat_date_col,
 )
 from pipelines.utils.utils import (
+    build_redis_key,
+    compare_dates_between_tables_redis,
     log,
     to_partitions,
+    save_str_on_redis,
     save_updated_rows_on_redis,
 )
 
@@ -67,8 +72,19 @@ def tratar_dados(
 
     # Converte de UTC para horário São Paulo
     dados["data_medicao_utc"] = pd.to_datetime(dados["data_medicao_utc"])
+
+    see_cols = ["data_medicao_utc", "id_estacao", "acumulado_chuva_15_min"]
+    log(f"DEBUG: data utc {dados[see_cols]}")
+
     date_format = "%Y-%m-%d %H:%M:%S"
     dados["data_medicao"] = dados["data_medicao_utc"].dt.strftime(date_format)
+
+    log(f"DEBUG: df dtypes {dados.dtypes}")
+    see_cols = ["data_medicao", "id_estacao", "acumulado_chuva_15_min"]
+    log(f"DEBUG: data antes {dados[see_cols]}")
+
+    dados.data_medicao = dados.data_medicao.apply(treat_date_col)
+    log(f"DEBUG: data dps {dados[see_cols]}")
 
     # Alterando valores ND, '-' e np.nan para NULL
     dados.replace(["ND", "-", np.nan], [None, None, None], inplace=True)
@@ -103,7 +119,16 @@ def tratar_dados(
         mode=mode,
     )
 
-    dados["id_estacao"] = dados["id_estacao"].astype(int)
+    # If df is empty stop flow on flows.py
+    empty_data = dados.shape[0] == 0
+    log(f"[DEBUG]: dataframe is empty: {empty_data}")
+
+    # Save max date on redis to compare this with last dbt run
+    if not empty_data:
+        max_date = str(dados["data_medicao"].max())
+        redis_key = build_redis_key(dataset_id, table_id, name="last_update", mode=mode)
+        log(f"[DEBUG]: dataframe is not empty key: {redis_key} {max_date}")
+        save_str_on_redis(redis_key, "date", max_date)
 
     # Fixar ordem das colunas
     dados = dados[
@@ -117,10 +142,6 @@ def tratar_dados(
             "acumulado_chuva_96_h",
         ]
     ]
-
-    # If df is empty stop flow
-    empty_data = dados.shape[0] == 0
-    log(f"[DEBUG]: dataframe is empty: {empty_data}")
 
     return dados, empty_data
 
@@ -148,3 +169,46 @@ def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
     )
     log(f"[DEBUG] Files saved on {prepath}")
     return prepath
+
+
+@task
+def save_last_dbt_update(
+    dataset_id: str,
+    table_id: str,
+    mode: str = "dev",
+    wait=None,  # pylint: disable=unused-argument
+) -> None:
+    """
+    Save on dbt last timestamp where it was updated
+    """
+    now = pendulum.now("America/Sao_Paulo").to_datetime_string()
+    redis_key = build_redis_key(dataset_id, table_id, name="dbt_last_update", mode=mode)
+    log(f">>>>> debug saving actual date on dbt redis {redis_key} {now}")
+    save_str_on_redis(redis_key, "date", now)
+
+
+@task(skip_on_upstream_skip=False)
+def check_to_run_dbt(
+    dataset_id: str,
+    table_id: str,
+    mode: str = "dev",
+) -> bool:
+    """
+    It will run even if its upstream tasks skip.
+    """
+
+    key_table_1 = build_redis_key(
+        dataset_id, table_id, name="dbt_last_update", mode=mode
+    )
+    key_table_2 = build_redis_key(dataset_id, table_id, name="last_update", mode=mode)
+
+    format_date_table_1 = "YYYY-MM-DD HH:mm:SS"
+    format_date_table_2 = "YYYY-MM-DD HH:mm:SS"
+
+    # Returns true if date saved on table_2 (alertario) is bigger than
+    # the date saved on table_1 (dbt).
+    run_dbt = compare_dates_between_tables_redis(
+        key_table_1, format_date_table_1, key_table_2, format_date_table_2
+    )
+    log(f">>>> debug data alertario > data dbt: {run_dbt}")
+    return run_dbt

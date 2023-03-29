@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0103
 """
-Flows for precipitacao_alertario
+Flows for precipitacao_alertario.
 """
 from datetime import timedelta
 
@@ -12,12 +12,18 @@ from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 
 from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
+from pipelines.utils.custom import wait_for_flow_run_with_timeout
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks import (
+    check_to_run_dbt,
     tratar_dados,
     salvar_dados,
+    save_last_dbt_update,
 )
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.schedules import (
     minute_schedule,
+)
+from pipelines.rj_escritorio.rain_dashboard.constants import (
+    constants as rain_dashboard_constants,
 )
 from pipelines.utils.decorators import Flow
 from pipelines.utils.dump_db.constants import constants as dump_db_constants
@@ -27,12 +33,16 @@ from pipelines.utils.tasks import (
     get_current_flow_labels,
 )
 
+wait_for_flow_run_with_2min_timeout = wait_for_flow_run_with_timeout(
+    timeout=timedelta(minutes=2)
+)
 
 with Flow(
     name="COR: Meteorologia - Precipitacao ALERTARIO",
     code_owners=[
         "paty",
     ],
+    skip_if_running=True,
 ) as cor_meteorologia_precipitacao_alertario:
 
     DATASET_ID = "clima_pluviometro"
@@ -47,6 +57,9 @@ with Flow(
         "materialize_to_datario", default=False, required=False
     )
     MATERIALIZATION_MODE = Parameter("mode", default="dev", required=False)
+    TRIGGER_RAIN_DASHBOARD_UPDATE = Parameter(
+        "trigger_rain_dashboard_update", default=False, required=False
+    )
 
     # Dump to GCS after? Should only dump to GCS if materializing to datario
     DUMP_TO_GCS = Parameter("dump_to_gcs", default=False, required=False)
@@ -74,6 +87,14 @@ with Flow(
             wait=path,
         )
 
+    run_dbt = check_to_run_dbt(
+        dataset_id=DATASET_ID,
+        table_id=TABLE_ID,
+        mode=MATERIALIZATION_MODE,
+    )
+    run_dbt.set_upstream(UPLOAD_TABLE)
+
+    with case(run_dbt, True):
         # Trigger DBT flow run
         with case(MATERIALIZE_AFTER_DUMP, True):
             current_flow_labels = get_current_flow_labels()
@@ -90,14 +111,21 @@ with Flow(
                 run_name=f"Materialize {DATASET_ID}.{TABLE_ID}",
             )
 
-            current_flow_labels.set_upstream(UPLOAD_TABLE)
+            current_flow_labels.set_upstream(run_dbt)
             materialization_flow.set_upstream(current_flow_labels)
 
-            wait_for_materialization = wait_for_flow_run(
-                materialization_flow,
+            wait_for_materialization = wait_for_flow_run_with_2min_timeout(
+                flow_run_id=materialization_flow,
                 stream_states=True,
                 stream_logs=True,
                 raise_final_state=True,
+            )
+
+            last_dbt_update = save_last_dbt_update(
+                dataset_id=DATASET_ID,
+                table_id=TABLE_ID,
+                mode=MATERIALIZATION_MODE,
+                wait=wait_for_materialization,
             )
 
             wait_for_materialization.max_retries = (
@@ -106,6 +134,26 @@ with Flow(
             wait_for_materialization.retry_delay = timedelta(
                 seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
             )
+
+            with case(TRIGGER_RAIN_DASHBOARD_UPDATE, True):
+                # Trigger rain dashboard update flow run
+                rain_dashboard_update_flow = create_flow_run(
+                    flow_name=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_NAME.value,
+                    project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                    parameters=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS.value,  # noqa
+                    labels=[
+                        "rj-escritorio-dev",
+                    ],
+                    run_name="Update rain dashboard data (triggered by precipitacao_alertario flow)",  # noqa
+                )
+                rain_dashboard_update_flow.set_upstream(wait_for_materialization)
+
+                wait_for_rain_dashboard_update = wait_for_flow_run(
+                    flow_run_id=rain_dashboard_update_flow,
+                    stream_states=True,
+                    stream_logs=True,
+                    raise_final_state=False,
+                )
 
             with case(DUMP_TO_GCS, True):
                 # Trigger Dump to GCS flow run with project id as datario
@@ -125,8 +173,8 @@ with Flow(
                 )
                 dump_to_gcs_flow.set_upstream(wait_for_materialization)
 
-                wait_for_dump_to_gcs = wait_for_flow_run(
-                    dump_to_gcs_flow,
+                wait_for_dump_to_gcs = wait_for_flow_run_with_2min_timeout(
+                    flow_run_id=dump_to_gcs_flow,
                     stream_states=True,
                     stream_logs=True,
                     raise_final_state=True,

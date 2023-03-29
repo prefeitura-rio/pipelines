@@ -102,6 +102,7 @@ with Flow(
         dataset_id=dataset_id,
         table_id=table_id_eventos,
         dump_mode=dump_mode,
+        biglake_table=False,
         wait=eventos_path,
     )
 
@@ -110,6 +111,7 @@ with Flow(
         dataset_id=dataset_id,
         table_id=table_id_atividades_eventos,
         dump_mode=dump_mode,
+        biglake_table=False,
         wait=atividade_eventos_path,
     )
 
@@ -304,6 +306,7 @@ with Flow(
         data_path=path_pops,
         dataset_id=dataset_id,
         table_id=table_id_pops,
+        biglake_table=False,
         dump_mode=dump_mode,
     )
 
@@ -316,6 +319,7 @@ with Flow(
             data_path=path_atividades_pops,
             dataset_id=dataset_id,
             table_id=table_id_atividades_pops,
+            biglake_table=False,
             dump_mode="overwrite",
         )
 
