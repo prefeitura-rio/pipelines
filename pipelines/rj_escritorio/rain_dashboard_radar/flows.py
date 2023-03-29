@@ -46,7 +46,7 @@ with Flow(
         files_to_model=files_on_storage_list,
         destination_path="pipelines/rj_escritorio/rain_dashboard_radar/radar_data/",
     )
-    run_model = ShellTask(
+    ShellTask(
         name="Run model",
         command="python pipelines/rj_escritorio/rain_dashboard_radar/src/predict_rain.py -sf pipelines/rj_escritorio/rain_dashboard_radar/src/predict_specs.json",
     )
