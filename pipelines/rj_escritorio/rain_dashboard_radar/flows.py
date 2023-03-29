@@ -49,7 +49,6 @@ with Flow(
     run_model = ShellTask(
         name="Run model",
         command="python pipelines/rj_escritorio/rain_dashboard_radar/src/predict_rain.py -sf pipelines/rj_escritorio/rain_dashboard_radar/src/predict_specs.json",
-        upstream_tasks=[change_predict_rain_specs, download_files_storage],
     )
     # run_model(upstream_tasks=[change_predict_rain_specs, download_files_storage])
 
