@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=W1514
+# pylint: disable=W1514, W0612
+# flake8: noqa: F841
 """
 Tasks for setting rain dashboard using radar data.
 """
@@ -8,6 +9,7 @@ from pathlib import Path
 import os
 import pendulum
 from prefect import task
+from prefect.tasks.shell import ShellTask
 
 from pipelines.rj_escritorio.rain_dashboard_radar.utils import (
     download_blob,
@@ -77,3 +79,17 @@ def change_predict_rain_specs(files_to_model: list, destination_path: str) -> No
     log(f"predict_specs : {predict_specs}")
     with open(json_file, "w") as file:
         json.dump(predict_specs, file)
+
+
+@task()
+def run_model():
+    """
+    Call a shell task to run model
+    """
+    log("[DEBUG] Start runing model")
+    base_path = "pipelines/rj_escritorio/rain_dashboard_radar"
+    shell_task = ShellTask(
+        name="Run model",
+        command=f"python {base_path}/src/predict_rain.py -sf {base_path}/src/predict_specs.json",
+    )
+    log("[DEBUG] End runing model")
