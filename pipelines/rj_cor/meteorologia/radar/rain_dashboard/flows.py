@@ -38,6 +38,7 @@ with Flow(
     dataset_id = radar_constants.DATASET_ID.value
     table_id = radar_constants.TABLE_ID.value
     dump_mode = "append"
+    base_path = "pipelines/rj_cor/meteorologia/radar/rain_dashboard/"
 
     # Tasks
     bucket_name = "rj-escritorio-dev"
@@ -49,13 +50,13 @@ with Flow(
     )
     change_json_task = change_predict_rain_specs(
         files_to_model=files_on_storage_list,
-        destination_path="pipelines/rj_escritorio/rain_dashboard_radar/radar_data/",
+        destination_path=f"{base_path}radar_data/",
     )
     run_model_task = run_model()
     run_model_task.set_upstream(download_files_task)
 
     upload_table = create_table_and_upload_to_gcs(
-        data_path="pipelines/rj_escritorio/rain_dashboard_radar/predictions/",
+        data_path=f"{base_path}predictions/",
         dataset_id=dataset_id,
         table_id=table_id,
         dump_mode=dump_mode,

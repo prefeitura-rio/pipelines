@@ -108,6 +108,7 @@ def run_model():
     dfr = pd.read_csv(f"{data_path}predictions.csv")
     log(f"[DEBUG] Predictions file {dfr.head()}")
 
+    data_path = "pipelines/rj_escritorio/rain_dashboard_radar/predictions/"
     path = Path(data_path)
     if not path.is_dir():
         log(f"[DEBUG] is not dir {path}")
