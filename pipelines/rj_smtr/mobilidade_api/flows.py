@@ -20,8 +20,8 @@ from pipelines.constants import constants as emd_constants
 with Flow("SMTR - Update DB - Postgres") as update_db:
 
     gtfs_paths = get_gtfs_zipfiles()
-    gtfs_dirs = extract_gtfs.map(filepath=gtfs_paths)
-    tables = concat_gtfs(dirpaths=gtfs_dirs)  # change args to single list?
+    gtfs_dirs = extract_gtfs.map(zip_path=gtfs_paths)
+    tables = concat_gtfs(dir_paths=gtfs_dirs)  # change args to single list?
     table_paths = treat_gtfs_tables(tables=tables)
     execute_update(table_paths=table_paths)
 

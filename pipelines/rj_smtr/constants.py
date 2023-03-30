@@ -149,7 +149,7 @@ class constants(Enum):  # pylint: disable=c0103
         "calendar_dates": ["service_id", "date"],
         "fare_attributes": ["fare_id"],
         "feed_info": ["feed_id"],
-        "frequencies": ["trip_id", "start_time"],
+        "frequencies": ["trip_id", "start_time", "end_time", "headway_secs"],
         "routes": ["route_id"],
         "shapes": ["shape_id", "shape_pt_sequence"],
         "stop_times": ["trip_id", "stop_sequence"],
@@ -158,11 +158,11 @@ class constants(Enum):  # pylint: disable=c0103
     }
 
     GTFS_FK_SUBSET = {
-        "trips": {"route_id": {"field": "route_id", "table_name": "routes"}},
-        "frequencies": {"trip_id": {"field": "trip_id", "table_name": "trips"}},
+        "trips": {"route_id": {"table_name": "routes", "field": "route_id"}},
+        "frequencies": {"trip_id": {"table_name": "trips", "field": "trip_id"}},
         "stop_times": {
-            "stop_id": {"field": "stop_id", "table_name": "stops"},
-            "trip_id": {"field": "trip_id", "table_name": "trips"},
+            "stop_id": {"table_name": "stops", "field": "stop_id"},
+            "trip_id": {"table_name": "trips", "field": "trip_id"},
         },
     }
 
@@ -170,8 +170,32 @@ class constants(Enum):  # pylint: disable=c0103
         "frequencies": {"trip_id": "trip_id_id"},
         "routes": {"agency_id": "agency_id_id"},
         "stops": {"parent_station": "parent_station_id"},
-        "stoptimes": {"stop_id": "stop_id_id", "trip_id": "trip_id_id"},
+        "stop_times": {"stop_id": "stop_id_id", "trip_id": "trip_id_id"},
         "trips": {"route_id": "route_id_id"},
+    }
+
+    GTFS_RENAME_TABLES = {
+        "agency": "pontos_agency",
+        "calendar_dates": "pontos_calendardates",
+        "calendar": "pontos_calendar",
+        "routes": "pontos_routes",
+        "shapes": "pontos_shapes",
+        "stops": "pontos_stops",
+        "trips": "pontos_trips",
+        "frequencies": "pontos_frequencies",
+        "stop_times": "pontos_stoptimes",
+    }
+
+    GTFS_COLUMN_TYPE = {
+        "trips": {"direction_id": "Int64"},
+        "stops": {"location_type": "Int64"},
+        "stop_times": {
+            "pickup_type": "Int64",
+            "drop_off_type": "Int64",
+            "timepoint": "Int64",
+            "continuous_pickup": "Int64",
+            "continuous_drop_off": "Int64",
+        },
     }
 
     # RDO/RHO
