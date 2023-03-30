@@ -11,14 +11,31 @@ import joblib
 import numpy as np
 import pandas as pd
 
-from src.data.PredictedData import PredictedData
-from src.data.process.integrity.check_integrity_ppi_hdf import main as check_integrity
-from src.data.process.PointsToFeatures import PointsToFeatures
-from src.data.process.process_ppi import process_ppi
-from src.data.process.RadarData import RadarData
-from src.utils.data_utils import NRAYS
-from src.utils.featurization_utils import parse_operation
-from src.utils.general_utils import print_ok, print_warning
+from pipelines.rj_cor.meteorologia.radar.rain_dashboard.src.data.PredictedData import (
+    PredictedData,
+)
+from pipelines.rj_cor.meteorologia.radar.rain_dashboard.src.data.process.integrity.check_integrity_ppi_hdf import (
+    main as check_integrity,
+)
+from pipelines.rj_cor.meteorologia.radar.rain_dashboard.src.data.process.PointsToFeatures import (
+    PointsToFeatures,
+)
+from pipelines.rj_cor.meteorologia.radar.rain_dashboard.src.data.process.process_ppi import (
+    process_ppi,
+)
+from pipelines.rj_cor.meteorologia.radar.rain_dashboard.src.data.process.RadarData import (
+    RadarData,
+)
+from pipelines.rj_cor.meteorologia.radar.rain_dashboard.src.utils.data_utils import (
+    NRAYS,
+)
+from pipelines.rj_cor.meteorologia.radar.rain_dashboard.src.utils.featurization_utils import (
+    parse_operation,
+)
+from pipelines.rj_cor.meteorologia.radar.rain_dashboard.src.utils.general_utils import (
+    print_ok,
+    print_warning,
+)
 
 REF_LATLON = (-22.9932804107666, -43.58795928955078)
 
@@ -210,6 +227,8 @@ if args.output_hdf:
     predictions.save_hdf(output_filepath)
 else:
     # np.savetxt(output_filepath, predictions.predictions, delimiter=",")
-    pd.DataFrame(predictions.predictions).to_csv(
-        output_filepath, index=False, delimiter=","
-    )
+    print(">>>>>>>>>>>>>>>>>>>")
+    print(type(predictions.predictions))
+    print(predictions.predictions)
+    dfr = pd.DataFrame(predictions.predictions, columns=["prediction"]).astype(float)
+    dfr.to_csv(output_filepath, index=False)

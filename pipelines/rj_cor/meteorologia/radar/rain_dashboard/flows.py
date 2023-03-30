@@ -46,7 +46,7 @@ with Flow(
     download_files_task = download_files_storage(
         bucket_name=bucket_name,
         files_to_download=files_on_storage_list,
-        destination_path="radar_data/",
+        destination_path=f"{base_path}radar_data/",
     )
     change_json_task = change_predict_rain_specs(
         files_to_model=files_on_storage_list,

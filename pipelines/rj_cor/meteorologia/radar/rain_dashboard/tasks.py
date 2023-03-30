@@ -92,6 +92,8 @@ def run_model():
     """
     log("[DEBUG] Start runing model")
     base_path = "pipelines/rj_cor/meteorologia/radar/rain_dashboard"
+    base_path2 = "pipelines.rj_cor.meteorologia.radar.rain_dashboard"
+    base_path3 = "/home/patricia/Documentos/escritorio_dados/prefeitura-rio/pipelines/pipelines/rj_cor/meteorologia/radar/rain_dashboard"
     data_path = f"{base_path}/predictions/"
     path = Path(data_path)
     if path.exists():
@@ -99,10 +101,20 @@ def run_model():
     else:
         os.makedirs(data_path, exist_ok=True)
 
+    # shell_task = ShellTask(
+    #     name="Run model",
+    #     command=f"python3 -m printa",
+    # )
     shell_task = ShellTask(
         name="Run model",
-        command=f"python {base_path}/src/predict_rain.py -sf {base_path}/src/predict_specs.json",
+        command=f"python3 -m {base_path2}.src.predict_rain -sf {base_path3}/src/predict_rain_specs.json",
     )
+    # shell_task = ShellTask(
+    #     name="Run model",
+    #     command=f"cd {base_path} && python src/predict_rain.py -sf src/predict_rain_specs.json --verbose",
+    # )
+    # python3 -m pipelines.rj_cor.meteorologia.radar.rain_dashboard.src.predict_rain -sf /home/patricia/Documentos/escritorio_dados/prefeitura-rio/pipelines/pipelines/rj_cor/meteorologia/radar/rain_dashboard/src/predict_rain_specs.json
+    # /home/patricia/Documentos/escritorio_dados/prefeitura-rio/pipelines/pipelines/rj_cor/meteorologia/radar/rain_dashboard/src/predict_rain_specs.json
     lista = os.listdir(f"{data_path}")
     log(f"[DEBUG] files in prediction folder {lista}")
     dfr = pd.read_csv(f"{data_path}predictions.csv")

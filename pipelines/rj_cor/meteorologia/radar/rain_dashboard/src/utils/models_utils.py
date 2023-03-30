@@ -8,7 +8,11 @@ import pathlib
 
 import git
 
-from src.utils.general_utils import print_error, print_ok, print_warning
+from pipelines.rj_cor.meteorologia.radar.rain_dashboard.src.utils.general_utils import (
+    print_error,
+    print_ok,
+    print_warning,
+)
 
 
 def print_and_log(

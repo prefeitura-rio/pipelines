@@ -3,8 +3,12 @@
 # pylint: skip-file
 import numpy as np
 
-from src.data.process.PointsToFeatures import PointsToFeatures
-from src.data.process.RadarData import RadarData
+from pipelines.rj_cor.meteorologia.radar.rain_dashboard.src.data.process.PointsToFeatures import (
+    PointsToFeatures,
+)
+from pipelines.rj_cor.meteorologia.radar.rain_dashboard.src.data.process.RadarData import (
+    RadarData,
+)
 
 
 # Implementation for two operands only for now
