@@ -7,16 +7,16 @@ Tasks for setting rain dashboard using radar data.
 import json
 from pathlib import Path
 import os
-from os import walk
-from os.path import join
 import pandas as pd
 import pendulum
 from prefect import task
-from prefect.tasks.shell import ShellTask
 
 from pipelines.rj_cor.meteorologia.radar.rain_dashboard.utils import (
     download_blob,
     list_blobs_with_prefix,
+)
+from pipelines.rj_cor.meteorologia.radar.rain_dashboard.src.predict_rain import (
+    run_model_prediction,
 )
 from pipelines.utils.utils import log
 
@@ -92,8 +92,6 @@ def run_model():
     """
     log("[DEBUG] Start runing model")
     base_path = "pipelines/rj_cor/meteorologia/radar/rain_dashboard"
-    base_path2 = "pipelines.rj_cor.meteorologia.radar.rain_dashboard"
-    base_path3 = "/home/patricia/Documentos/escritorio_dados/prefeitura-rio/pipelines/pipelines/rj_cor/meteorologia/radar/rain_dashboard"
     data_path = f"{base_path}/predictions/"
     path = Path(data_path)
     if path.exists():
@@ -101,44 +99,8 @@ def run_model():
     else:
         os.makedirs(data_path, exist_ok=True)
 
-    # shell_task = ShellTask(
-    #     name="Run model",
-    #     command=f"python3 -m printa",
-    # )
-    shell_task = ShellTask(
-        name="Run model",
-        command=f"python3 -m {base_path2}.src.predict_rain -sf {base_path3}/src/predict_rain_specs.json",
-    )
-    # shell_task = ShellTask(
-    #     name="Run model",
-    #     command=f"cd {base_path} && python src/predict_rain.py -sf src/predict_rain_specs.json --verbose",
-    # )
-    # python3 -m pipelines.rj_cor.meteorologia.radar.rain_dashboard.src.predict_rain -sf /home/patricia/Documentos/escritorio_dados/prefeitura-rio/pipelines/pipelines/rj_cor/meteorologia/radar/rain_dashboard/src/predict_rain_specs.json
-    # /home/patricia/Documentos/escritorio_dados/prefeitura-rio/pipelines/pipelines/rj_cor/meteorologia/radar/rain_dashboard/src/predict_rain_specs.json
-    lista = os.listdir(f"{data_path}")
-    log(f"[DEBUG] files in prediction folder {lista}")
+    run_model_prediction(base_path=base_path)
+
     dfr = pd.read_csv(f"{data_path}predictions.csv")
     log(f"[DEBUG] Predictions file \n{dfr.head()}")
-
-    data_path = "pipelines/rj_escritorio/rain_dashboard_radar/predictions/"
-    path = Path(data_path)
-    if not path.is_dir():
-        log(f"[DEBUG] is not dir {path}")
-        path = path.parent
-        log(f"[DEBUG] is not dir2 {path}")
-    # Grab first `data_type` file found
-    found: bool = False
-    file: str = None
-    for subdir, _, filenames in walk(str(path)):
-        log(f"subdirs: {subdir, filenames}")
-        for fname in filenames:
-            log(f"fnames: {fname}")
-            if fname.endswith(".csv"):
-                file = join(subdir, fname)
-                log(f"Found csv file: {file}")
-                found = True
-                break
-        if found:
-            break
-    log(f"[DEBUG] file {file}")
     log("[DEBUG] End runing model")
