@@ -9,6 +9,7 @@ import pathlib
 import h5py
 import joblib
 import numpy as np
+import pandas as pd
 
 from src.data.PredictedData import PredictedData
 from src.data.process.integrity.check_integrity_ppi_hdf import main as check_integrity
@@ -208,4 +209,5 @@ predictions = PredictedData(
 if args.output_hdf:
     predictions.save_hdf(output_filepath)
 else:
-    np.savetxt(output_filepath, predictions.predictions, delimiter=",")
+    # np.savetxt(output_filepath, predictions.predictions, delimiter=",")
+    pd.DataFrame(predictions.predictions).to_csv(output_filepath, index=False, delimiter=",")

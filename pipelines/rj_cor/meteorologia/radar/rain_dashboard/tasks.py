@@ -106,7 +106,7 @@ def run_model():
     lista = os.listdir(f"{data_path}")
     log(f"[DEBUG] files in prediction folder {lista}")
     dfr = pd.read_csv(f"{data_path}predictions.csv")
-    log(f"[DEBUG] Predictions file {dfr.head()}")
+    log(f"[DEBUG] Predictions file \n{dfr.head()}")
 
     data_path = "pipelines/rj_escritorio/rain_dashboard_radar/predictions/"
     path = Path(data_path)
