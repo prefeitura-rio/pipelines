@@ -22,5 +22,4 @@ from pipelines.rj_escritorio.seconserva_buracos_refresh_data.flows import *
 from pipelines.rj_escritorio.dump_url_turismo.flows import *
 from pipelines.rj_escritorio.dump_policy_matrix.flows import *
 from pipelines.rj_escritorio.rain_dashboard.flows import *
-from pipelines.rj_escritorio.rain_dashboard_radar.flows import *
 from pipelines.rj_escritorio.dump_url_seeketing.flows import *

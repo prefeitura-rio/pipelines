@@ -8,19 +8,18 @@ from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants
-
-# from pipelines.rj_escritorio.rain_dashboard.constants import (
-#     constants as rain_dashboard_constants,
-# )
-
-# from pipelines.rj_escritorio.rain_dashboard.schedules import every_fifteen_minutes
-from pipelines.rj_escritorio.rain_dashboard_radar.tasks import (
+# from pipelines.rj_cor.meteorologia.radar.rain_dashboard.schedules import every_fifteen_minutes
+from pipelines.rj_cor.meteorologia.radar.rain_dashboard.constants import (
+    constants as radar_constants,
+)
+from pipelines.rj_cor.meteorologia.radar.rain_dashboard.tasks import (
     change_predict_rain_specs,
     download_files_storage,
     get_filenames_storage,
     run_model,
 )
 from pipelines.utils.decorators import Flow
+from pipelines.utils.tasks import create_table_and_upload_to_gcs
 
 
 with Flow(
@@ -29,10 +28,15 @@ with Flow(
         "paty",
     ],
     # skip_if_running=True,
-) as rj_escritorio_rain_dashboard_radar_flow:
-    # Parameters
+) as rj_cor_rain_dashboard_radar_flow:
+    # Prefect Parameters
     mode = Parameter("mode", default="prod")
     radar = Parameter("radar_name", default="gua")
+
+    # Other Parameters
+    dataset_id = radar_constants.DATASET_ID.value
+    table_id = radar_constants.TABLE_ID.value
+    dump_mode = "append"
 
     # Tasks
     bucket_name = "rj-escritorio-dev"
@@ -48,10 +52,17 @@ with Flow(
     )
     run_model_task = run_model()
     run_model_task.set_upstream(download_files_task)
-    # run_model(upstream_tasks=[change_predict_rain_specs, download_files_storage])
 
-rj_escritorio_rain_dashboard_radar_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-rj_escritorio_rain_dashboard_radar_flow.run_config = KubernetesRun(
+    upload_table = create_table_and_upload_to_gcs(
+        data_path="pipelines/rj_escritorio/rain_dashboard_radar/predictions/",
+        dataset_id=dataset_id,
+        table_id=table_id,
+        dump_mode=dump_mode,
+    )
+    upload_table.set_upstream(run_model_task)
+
+rj_cor_rain_dashboard_radar_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+rj_cor_rain_dashboard_radar_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
-    labels=[constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value],
+    labels=[constants.RJ_COR_AGENT_LABEL.value],
 )

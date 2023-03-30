@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # flake8: noqa: E501
+# pylint: skip-file
 import numpy as np
 
 from src.data.process.PointsToFeatures import PointsToFeatures

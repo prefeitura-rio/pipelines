@@ -11,7 +11,7 @@ import pendulum
 from prefect import task
 from prefect.tasks.shell import ShellTask
 
-from pipelines.rj_escritorio.rain_dashboard_radar.utils import (
+from pipelines.rj_cor.meteorologia.radar.rain_dashboard.utils import (
     download_blob,
     list_blobs_with_prefix,
 )
@@ -68,7 +68,7 @@ def change_predict_rain_specs(files_to_model: list, destination_path: str) -> No
     Change name of radar files inside json file
     """
     json_file = (
-        "pipelines/rj_escritorio/rain_dashboard_radar/src/predict_rain_specs.json"
+        "pipelines/rj_cor/meteorologia/radar/rain_dashboard/src/predict_rain_specs.json"
     )
     with open(json_file, "r") as file:
         predict_specs = json.load(file)
@@ -88,7 +88,7 @@ def run_model():
     https://github.com/BioBD/sgwfc-gene-python/blob/7dadf7b854a7a37405ee203331671f8cd61b114b/workflow/modules.py
     """
     log("[DEBUG] Start runing model")
-    base_path = "pipelines/rj_escritorio/rain_dashboard_radar"
+    base_path = "pipelines/rj_cor/meteorologia/radar/rain_dashboard"
     shell_task = ShellTask(
         name="Run model",
         command=f"python {base_path}/src/predict_rain.py -sf {base_path}/src/predict_specs.json",
