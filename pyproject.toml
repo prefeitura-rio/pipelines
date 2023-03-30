@@ -58,6 +58,7 @@ h5py = "^3.7.0"
 opencv-python = "^4.6.0"
 kaleido = "0.2.1"
 haversine = "^2.6.0"
+plotly = "^5.14.0"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.12.2"
