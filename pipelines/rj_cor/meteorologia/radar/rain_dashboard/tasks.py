@@ -103,20 +103,23 @@ def run_model():
         name="Run model",
         command=f"python {base_path}/src/predict_rain.py -sf {base_path}/src/predict_specs.json",
     )
-    lista = os.listdir(f"{base_path}/predictions/")
+    lista = os.listdir(f"{data_path}")
     log(f"[DEBUG] files in prediction folder {lista}")
-    dfr = pd.read_csv(f"{base_path}/predictions/predictions.csv")
+    dfr = pd.read_csv(f"{data_path}predictions.csv")
     log(f"[DEBUG] Predictions file {dfr.head()}")
-    data_path="pipelines/rj_escritorio/rain_dashboard_radar/predictions/"
+
     path = Path(data_path)
     if not path.is_dir():
-        log("[DEBUG] is not dir")
+        log(f"[DEBUG] is not dir {path}")
         path = path.parent
+        log(f"[DEBUG] is not dir2 {path}")
     # Grab first `data_type` file found
     found: bool = False
     file: str = None
     for subdir, _, filenames in walk(str(path)):
+        log(f"subdirs: {subdir, filenames}")
         for fname in filenames:
+            log(f"fnames: {fname}")
             if fname.endswith(".csv"):
                 file = join(subdir, fname)
                 log(f"Found csv file: {file}")
