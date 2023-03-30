@@ -210,4 +210,6 @@ if args.output_hdf:
     predictions.save_hdf(output_filepath)
 else:
     # np.savetxt(output_filepath, predictions.predictions, delimiter=",")
-    pd.DataFrame(predictions.predictions).to_csv(output_filepath, index=False, delimiter=",")
+    pd.DataFrame(predictions.predictions).to_csv(
+        output_filepath, index=False, delimiter=","
+    )
