@@ -7,6 +7,9 @@ Tasks for setting rain dashboard using radar data.
 import json
 from pathlib import Path
 import os
+from os import walk
+from os.path import join
+import pandas as pd
 import pendulum
 from prefect import task
 from prefect.tasks.shell import ShellTask
@@ -89,8 +92,37 @@ def run_model():
     """
     log("[DEBUG] Start runing model")
     base_path = "pipelines/rj_cor/meteorologia/radar/rain_dashboard"
+    data_path = f"{base_path}/predictions/"
+    path = Path(data_path)
+    if path.exists():
+        log("DEBUG predictions path exists")
+    else:
+        os.makedirs(data_path, exist_ok=True)
+
     shell_task = ShellTask(
         name="Run model",
         command=f"python {base_path}/src/predict_rain.py -sf {base_path}/src/predict_specs.json",
     )
+    lista = os.listdir(f"{base_path}/predictions/")
+    log(f"[DEBUG] files in prediction folder {lista}")
+    dfr = pd.read_csv(f"{base_path}/predictions/predictions.csv")
+    log(f"[DEBUG] Predictions file {dfr.head()}")
+    data_path="pipelines/rj_escritorio/rain_dashboard_radar/predictions/"
+    path = Path(data_path)
+    if not path.is_dir():
+        log("[DEBUG] is not dir")
+        path = path.parent
+    # Grab first `data_type` file found
+    found: bool = False
+    file: str = None
+    for subdir, _, filenames in walk(str(path)):
+        for fname in filenames:
+            if fname.endswith(".csv"):
+                file = join(subdir, fname)
+                log(f"Found csv file: {file}")
+                found = True
+                break
+        if found:
+            break
+    log(f"[DEBUG] file {file}")
     log("[DEBUG] End runing model")
