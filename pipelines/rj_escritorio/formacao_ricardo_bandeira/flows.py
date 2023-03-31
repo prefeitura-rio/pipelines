@@ -20,9 +20,7 @@ with Flow(
     hello_name(name=name)
 
 
-rj_escritorio_formacao_ricardo_bandeira.storage = GCS(
-    constants.GCS_FLOWS_BUCKET.value
-)
+rj_escritorio_formacao_ricardo_bandeira.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 rj_escritorio_formacao_ricardo_bandeira.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value],
