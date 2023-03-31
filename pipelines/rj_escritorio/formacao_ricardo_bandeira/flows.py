@@ -10,7 +10,7 @@ from pipelines.rj_escritorio.formacao_infra.tasks import (
 from pipelines.utils.decorators import Flow
 
 with Flow(
-    "EMD: formacao - Exemplo para formação em infraestrutura",
+    "EMD: formacao - Exemplo infra Ricardo Bandeira",
     code_owners=[
         "gabriel",
         "diego",
