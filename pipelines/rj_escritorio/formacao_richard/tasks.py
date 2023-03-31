@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from perfect import task
+from prefect import task
 from pipelines.utils.utils import log
 
 
