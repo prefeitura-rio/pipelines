@@ -15,15 +15,15 @@ with Flow(
         "gabriel",
     ],
     skip_if_running=True,
-) as rj_escritorio_formacao_infra_example_flow:
+) as rj_escritorio_formacao_richard_example_flow:
     number1 = Parameter("number1", default=1)
     number2 = Parameter("number2", default=2)
     add_numbers(number1=number1, number2=number2)
 
-rj_escritorio_formacao_infra_example_flow.storage = GCS(
+rj_escritorio_formacao_richard_example_flow.storage = GCS(
     constants.GCS_FLOWS_BUCKET.value
 )
-rj_escritorio_formacao_infra_example_flow.run_config = KubernetesRun(
+rj_escritorio_formacao_richard_example_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value],
 )
