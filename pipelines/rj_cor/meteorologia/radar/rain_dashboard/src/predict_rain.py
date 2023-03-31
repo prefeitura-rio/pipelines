@@ -58,11 +58,15 @@ def run_model_prediction(
     model_filepath = pathlib.Path(model_filepath)
 
     coordinates = []
+    id_hex = []
+    bairro = []
 
     with open(coordinates_filepath, "r") as f:
         for line in f:
             latlon = (float(line.split(",")[0]), float(line.split(",")[1]))
             coordinates.append(latlon)
+            id_hex.append(line.split(",")[2])
+            bairro.append(line.split(",")[3])
 
     with open(radar_cal_specs_dicts_filepath, "r") as json_file:
         json_list = list(json_file)
@@ -207,9 +211,22 @@ def run_model_prediction(
     else:
         # np.savetxt(output_filepath, predictions.predictions, delimiter=",")
         print(">>>>>>>>>>>>>>>>>>>")
-        print(type(predictions.predictions))
         print(predictions.predictions)
-        dfr = pd.DataFrame(predictions.predictions, columns=["prediction"]).astype(
-            float
+        print(predictions.coordinates)
+        print(id_hex)
+        dfr = pd.DataFrame(
+            predictions.coordinates, columns=["latitude", "longitude"]
+        ).astype(float)
+        dfr["predictions"] = predictions.predictions
+        dfr["id_h3"] = id_hex
+        dfr["bairro"] = bairro
+        dfr["last_update"] = pd.to_datetime(
+            prediction_dt_str, format="%Y%m%d %H%M%S", utc=True
         )
+        dfr["last_update"] = (
+            dfr["last_update"]
+            .dt.tz_convert("America/Sao_Paulo")
+            .dt.strftime("%Y-%m-%d %H:%M:%S")
+        )
+        log(f"DEBUUUUUUGGG {dfr.head()}")
         dfr.to_csv(output_filepath, index=False)
