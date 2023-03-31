@@ -4,7 +4,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 from pipelines.constants import constants
-from pipelines.rj_escritorio.formacao_infra.tasks import (
+from pipelines.rj_escritorio.formacao_richard.tasks import (
     add_numbers,
 )
 from pipelines.utils.decorators import Flow
