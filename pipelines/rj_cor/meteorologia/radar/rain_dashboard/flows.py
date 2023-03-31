@@ -9,7 +9,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants
 
-# from pipelines.rj_cor.meteorologia.radar.rain_dashboard.schedules import every_fifteen_minutes
+from pipelines.rj_cor.meteorologia.radar.rain_dashboard.schedules import time_schedule
 from pipelines.rj_cor.meteorologia.radar.rain_dashboard.constants import (
     constants as radar_constants,
 )
@@ -18,6 +18,10 @@ from pipelines.rj_cor.meteorologia.radar.rain_dashboard.tasks import (
     download_files_storage,
     get_filenames_storage,
     run_model,
+)
+from pipelines.rj_cor.tasks import (
+    get_on_redis,
+    save_on_redis,
 )
 from pipelines.utils.decorators import Flow
 from pipelines.utils.tasks import create_table_and_upload_to_gcs
@@ -42,7 +46,9 @@ with Flow(
 
     # Tasks
     bucket_name = "rj-escritorio-dev"
-    files_on_storage_list = get_filenames_storage(bucket_name, radar)
+    files_saved_redis = get_on_redis(dataset_id, table_id, mode=mode)
+    files_on_storage_list = get_filenames_storage(bucket_name, radar, files_saved_redis)
+
     download_files_task = download_files_storage(
         bucket_name=bucket_name,
         files_to_download=files_on_storage_list,
@@ -63,8 +69,20 @@ with Flow(
     )
     upload_table.set_upstream(run_model_task)
 
+    # Save new filenames on redis
+    save_on_redis(
+        dataset_id,
+        table_id,
+        mode,
+        files_on_storage_list,
+        keep_last=3,
+        wait=upload_table,
+    )
+
 rj_cor_rain_dashboard_radar_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 rj_cor_rain_dashboard_radar_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_COR_AGENT_LABEL.value],
 )
+
+rj_cor_rain_dashboard_radar_flow.schedule = time_schedule

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=W1514, W0612
+# pylint: disable=W1514, W0612, W0102
 # flake8: noqa: F841
 """
 Tasks for setting rain dashboard using radar data.
@@ -10,6 +10,8 @@ import os
 import pandas as pd
 import pendulum
 from prefect import task
+from prefect.engine.signals import ENDRUN
+from prefect.engine.state import Skipped
 
 from pipelines.rj_cor.meteorologia.radar.rain_dashboard.utils import (
     download_blob,
@@ -23,7 +25,9 @@ from pipelines.utils.utils import log
 
 @task()
 def get_filenames_storage(
-    bucket_name: str = "rj-escritorio-dev", radar: str = "gua"
+    bucket_name: str = "rj-escritorio-dev",
+    radar: str = "gua",
+    files_saved_redis: list = [],
 ) -> list:
     """Esc"""
     last_30min = pendulum.now("UTC").subtract(minutes=30).to_datetime_string()
@@ -44,9 +48,20 @@ def get_filenames_storage(
 
     files_on_storage_list = list(set(files_on_storage_list))
     files_on_storage_list.sort()
-    log(f"[DEBUG] Last radar files: {files_on_storage_list[-3:]}")
+    files_on_storage_list = files_on_storage_list[-3:]
 
-    return files_on_storage_list[-3:]
+    files_saved_redis.sort()
+
+    log(f"[DEBUG] Last radar files: {files_on_storage_list}")
+    log(f"[DEBUG] Last redis files: {files_saved_redis}")
+
+    # if we have the same files on redis and on radar, skip flow
+    if files_on_storage_list == files_saved_redis:
+        log("No available files on API")
+        skip = Skipped("No available files on API")
+        raise ENDRUN(state=skip)
+
+    return files_on_storage_list
 
 
 @task()
