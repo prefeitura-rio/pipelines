@@ -9,7 +9,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import pyproj
 
-from pipelines.rj_cor.meteorologia.radar.rain_dashboard.src.utils.data_utils import (
+from pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.data_utils import (
     NRAYS,
 )
 

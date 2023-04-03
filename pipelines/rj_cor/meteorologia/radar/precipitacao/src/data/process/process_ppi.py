@@ -8,15 +8,15 @@ import h5py
 import numpy as np
 from tqdm import tqdm
 
-from pipelines.rj_cor.meteorologia.radar.rain_dashboard.src.data.process.RadarData import (
+from pipelines.rj_cor.meteorologia.radar.precipitacao.src.data.process.RadarData import (
     RSCALE,
     RSTART,
     RadarData,
 )
-from pipelines.rj_cor.meteorologia.radar.rain_dashboard.src.utils.data_utils import (
+from pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.data_utils import (
     NRAYS,
 )
-from pipelines.rj_cor.meteorologia.radar.rain_dashboard.src.utils.general_utils import (
+from pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.general_utils import (
     parse_dates_argument,
     print_error,
     print_ok,

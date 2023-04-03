@@ -8,11 +8,11 @@ from multiprocessing.pool import Pool
 import numpy as np
 import pyproj
 
-from pipelines.rj_cor.meteorologia.radar.rain_dashboard.src.data.process.RadarData import (
+from pipelines.rj_cor.meteorologia.radar.precipitacao.src.data.process.RadarData import (
     LOG_SCALE_VARIABLES,
     RadarData,
 )
-from pipelines.rj_cor.meteorologia.radar.rain_dashboard.src.utils.data_utils import (
+from pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.data_utils import (
     NRAYS,
     distance,
     get_close_azimuthal_grid_points,

@@ -7,10 +7,10 @@ import pathlib
 import h5py
 import numpy as np
 
-from pipelines.rj_cor.meteorologia.radar.rain_dashboard.src.utils.data_utils import (
+from pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.data_utils import (
     NRAYS,
 )
-from pipelines.rj_cor.meteorologia.radar.rain_dashboard.src.utils.general_utils import (
+from pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.general_utils import (
     print_error,
     print_ok,
     print_warning,
