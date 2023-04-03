@@ -254,7 +254,14 @@ def send_email_for_flooding_occurence(
     else:
         subject = f&#34;CLOSED FLOOD OCCURENCE - ID {occurence[&#39;id&#39;]}&#34;
         body = subject
-        attachment = None
+        circle_fname = f&#34;{uuid4()}.kml&#34;
+        get_circle(
+            latitude=occurence[&#34;latitude&#34;],
+            longitude=occurence[&#34;longitude&#34;],
+            radius=radius,
+            fname=circle_fname,
+        )
+        attachment = circle_fname
     send_email(
         from_address=secret[&#34;smtp_username&#34;],
         to_address=to_email,
@@ -574,7 +581,14 @@ def send_email_for_flooding_occurence(
     else:
         subject = f&#34;CLOSED FLOOD OCCURENCE - ID {occurence[&#39;id&#39;]}&#34;
         body = subject
-        attachment = None
+        circle_fname = f&#34;{uuid4()}.kml&#34;
+        get_circle(
+            latitude=occurence[&#34;latitude&#34;],
+            longitude=occurence[&#34;longitude&#34;],
+            radius=radius,
+            fname=circle_fname,
+        )
+        attachment = circle_fname
     send_email(
         from_address=secret[&#34;smtp_username&#34;],
         to_address=to_email,
