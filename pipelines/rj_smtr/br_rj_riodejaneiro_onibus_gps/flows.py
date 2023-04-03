@@ -62,7 +62,6 @@ with Flow(
     "SMTR: GPS SPPO - Realocação (captura)",
     code_owners=["rodrigo", "caio"],
 ) as realocacao_sppo:
-
     # SETUP #
 
     # Get default parameters #
@@ -223,7 +222,6 @@ with Flow(
     "SMTR: GPS SPPO - Captura",
     code_owners=["caio", "fernanda"],
 ) as captura_sppo_v2:
-
     version = Parameter("version", default=2)
 
     # SETUP #
@@ -284,7 +282,6 @@ captura_sppo_v2.schedule = every_minute
 
 
 with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as recaptura:
-
     version = Parameter("version", default=2)
     datetime_filter = Parameter("datetime_filter", default=None)
     materialize = Parameter("materialize", default=True)

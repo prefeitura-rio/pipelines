@@ -39,7 +39,6 @@ with Flow(
         "paty",
     ],
 ) as cor_meteorologia_goes16:
-
     # Materialization parameters
     materialize_after_dump = Parameter(
         "materialize_after_dump", default=False, required=False

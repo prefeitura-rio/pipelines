@@ -50,7 +50,6 @@ with Flow(
     sppo_licenciamento_captura_name,
     code_owners=["rodrigo", "fernanda"],
 ) as sppo_licenciamento_captura:
-
     timestamp = get_current_timestamp()
 
     LABELS = get_current_flow_labels()
@@ -120,7 +119,6 @@ with Flow(
     sppo_infracao_captura_name,
     code_owners=["rodrigo", "fernanda"],
 ) as sppo_infracao_captura:
-
     timestamp = get_current_timestamp()
 
     LABELS = get_current_flow_labels()

@@ -35,7 +35,6 @@ with Flow(
         "diego",
     ],
 ) as utils_policy_matrix_flow:
-
     # Parameters
     project_ids = Parameter("project_ids", default="rj-escritorio,rj-escritorio-dev")
     mode = Parameter("mode", default="prod")

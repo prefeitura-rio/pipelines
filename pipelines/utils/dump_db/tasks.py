@@ -224,7 +224,6 @@ def format_partitioned_query(
         "with partitioned columns and filters"
     )
     if database_type == "oracle":
-
         oracle_date_format = "YYYY-MM-DD" if date_format == "%Y-%m-%d" else date_format
 
         return f"""
