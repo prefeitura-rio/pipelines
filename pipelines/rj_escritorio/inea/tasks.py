@@ -16,7 +16,12 @@ import pexpect
 from prefect import task
 from scp import SCPClient
 
-from pipelines.utils.utils import get_credentials_from_env, list_blobs_with_prefix, log
+from pipelines.utils.utils import (
+    get_credentials_from_env,
+    get_vault_secret,
+    list_blobs_with_prefix,
+    log,
+)
 
 
 @task
@@ -121,7 +126,8 @@ def list_vol_files(
         hostname = "a9921"
         startswith = "9921GUA"
     elif radar == "mac":
-        env_variable = "INEA_MAC_SSH_PASSWORD"
+        dicionario = get_vault_secret("inea_mac_ssh_password")
+        env_variable = dicionario["data"]["password"]
         hostname = "a9915"
         startswith = "9915MAC"
 
