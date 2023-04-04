@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=R0915
 """
 Tasks for INEA.
 """
@@ -41,6 +42,7 @@ def list_vol_files(
     product: str,
     date: str = None,
     greater_than: str = None,
+    # less_than: str = None,
     mode: str = "prod",
     output_format: str = "NetCDF",
     output_directory: str = "/var/escritoriodedados/temp/",
@@ -52,10 +54,13 @@ def list_vol_files(
     Args:
         date (str): Date of the files to be fetched (e.g. 20220125)
         greater_than (str): Fetch files with a date greater than this one
+        less_than (str): Fetch files with a date less than this one
         output_directory (str): Directory where the files will be saved
+        radar (str): Radar name. Must be `gua` or `mac`
     """
 
-    # If none of `date` or `greater_than` are provided, find blob with the latest date
+    # If none of `date`, `greater_than` or `less_than` are provided, find blob with the latest date
+    # if date is None and greater_than is None and less_than is None:
     if date is None and greater_than is None:
         log("No date or greater_than provided. Finding latest blob...")
         # First, we build the search prefix
@@ -110,30 +115,41 @@ def list_vol_files(
     output_directory_path.mkdir(parents=True, exist_ok=True)
     log(f"Temporary directory created: {output_directory_path}")
 
+    # Create vars based on radar name
+    if radar == "gua":
+        env_variable = "INEA_SSH_PASSWORD"
+        hostname = "a9921"
+        startswith = "9921GUA"
+    elif radar == "mac":
+        env_variable = "INEA_MAC_SSH_PASSWORD"
+        hostname = "a9915"
+        startswith = "9915MAC"
+
     # Get SSH password from env
-    ssh_password = getenv("INEA_SSH_PASSWORD")
+    ssh_password = getenv(env_variable)
 
     # Open SSH client
     ssh_client = SSHClient()
     ssh_client.load_system_host_keys()
-    ssh_client.connect(hostname="a9921", username="root", password=ssh_password)
+    ssh_client.connect(hostname=hostname, username="root", password=ssh_password)
 
     # List remote files
     log("Listing remote files...")
     if date:
         _, stdout, _ = ssh_client.exec_command(
-            f"find {vols_remote_directory} -name '9921GUA{date}*.vol'"
+            f"find {vols_remote_directory} -name '{startswith}{date}*.vol'"
         )
         remote_files = stdout.read().decode("utf-8").splitlines()
     else:
         _, stdout, _ = ssh_client.exec_command(
-            f"find {vols_remote_directory} -name '9921GUA*.vol'"
+            f"find {vols_remote_directory} -name '{startswith}*.vol'"
         )
         all_files = stdout.read().decode("utf-8").splitlines()
         remote_files = [
             file
             for file in all_files
-            if file.split("/")[-1][: len(greater_than) + 7] >= f"9921GUA{greater_than}"
+            if file.split("/")[-1][: len(greater_than) + 7]
+            >= f"{startswith}{greater_than}"
         ]
 
     # Filter files with same filename
@@ -157,6 +173,7 @@ def list_vol_files(
 )
 def fetch_vol_file(
     remote_file: str,
+    radar: str,
     output_directory: str = "/var/escritoriodedados/temp/",
 ):
     """
@@ -164,15 +181,25 @@ def fetch_vol_file(
 
     Args:
         remote_file (str): Remote file to be fetched
+        radar (str): Radar name. Must be `gua` or `mac`
         output_directory (str): Directory where the files will be saved
     """
+
+    # Create vars based on radar name
+    if radar == "gua":
+        env_variable = "INEA_SSH_PASSWORD"
+        hostname = "a9921"
+    elif radar == "mac":
+        env_variable = "INEA_MAC_SSH_PASSWORD"
+        hostname = "a9915"
+
     # Get SSH password from env
-    ssh_password = getenv("INEA_SSH_PASSWORD")
+    ssh_password = getenv(env_variable)
 
     # Open SSH client
     ssh_client = SSHClient()
     ssh_client.load_system_host_keys()
-    ssh_client.connect(hostname="a9921", username="root", password=ssh_password)
+    ssh_client.connect(hostname=hostname, username="root", password=ssh_password)
 
     # Open SCP client
     scp = SCPClient(ssh_client.get_transport(), sanitize=lambda x: x)
