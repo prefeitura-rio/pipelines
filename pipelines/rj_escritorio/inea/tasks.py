@@ -57,9 +57,11 @@ def list_vol_files(
     List files from INEA server
 
     Args:
+        product (str): "ppi"
         date (str): Date of the files to be fetched (e.g. 20220125)
         greater_than (str): Fetch files with a date greater than this one
         less_than (str): Fetch files with a date less than this one
+        output_format (str): "NetCDF" or "HDF5"
         output_directory (str): Directory where the files will be saved
         radar (str): Radar name. Must be `gua` or `mac`
     """
