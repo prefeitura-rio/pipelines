@@ -55,7 +55,9 @@ with Flow(
         vols_remote_directory=vols_remote_directory,
     )
     downloaded_files = fetch_vol_file.map(
-        remote_file=remote_files, output_directory=unmapped(output_directory)
+        remote_file=remote_files,
+        radar=radar,
+        output_directory=unmapped(output_directory),
     )
     converted_files = convert_vol_file.map(
         downloaded_file=downloaded_files,
