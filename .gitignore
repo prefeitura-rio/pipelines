@@ -147,3 +147,10 @@ dmypy.json
 # Backfill stuff
 backfill.csv
 REVIEW.md
+
+.idea
+misc.xml
+modules.xml
+pipelines.iml
+vsc.xml
+inspectionProfiles/
