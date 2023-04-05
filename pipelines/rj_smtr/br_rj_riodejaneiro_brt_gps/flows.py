@@ -25,6 +25,7 @@ from pipelines.rj_smtr.constants import constants
 
 from pipelines.rj_smtr.schedules import (
     every_minute,
+    every_10_minutes,
     # every_hour,
 )
 from pipelines.rj_smtr.tasks import (
@@ -36,6 +37,7 @@ from pipelines.rj_smtr.tasks import (
     # get_local_dbt_client,
     get_raw,
     parse_timestamp_to_string,
+    query_logs_and_notify,
     save_raw_local,
     save_treated_local,
     set_last_run_timestamp,
@@ -196,3 +198,12 @@ captura_brt.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 captura_brt.schedule = every_minute
+
+with Flow("SMTR: GPS BRT - Notify", code_owners=["caio"]) as notify:
+    query_logs_and_notify()
+notify.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+notify.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+notify.schedule = every_10_minutes

@@ -128,6 +128,8 @@ class constants(Enum):  # pylint: disable=c0103
             "key_column": "trip_id",
         },
     }
+    # WEBHOOK
+    QRCODE_WEBHOOK = "qrcode_webhook_url"
 
     # RDO/RHO
     RDO_FTP_ALLOWED_PATHS = ["SPPO", "STPL"]

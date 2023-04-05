@@ -30,7 +30,12 @@ from pipelines.rj_smtr.utils import (
     log_critical,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
-from pipelines.utils.utils import log, get_redis_client, get_vault_secret
+from pipelines.utils.utils import (
+    log,
+    get_redis_client,
+    get_vault_secret,
+    send_discord_message,
+)
 
 ###############
 #
@@ -368,6 +373,90 @@ def query_logs(
             results = results[:max_recaptures]
         return True, results["timestamp_captura"].to_list(), results["erro"].to_list()
     return False, [], []
+
+
+@task
+def query_logs_and_notify(
+    webhook_secret_path: str = constants.QRCODE_WEBHOOK.value,
+    interval_minutes: int = 15,
+    max_failures: int = 10,
+):
+    """
+    Query the last <interval_minutes> of data captures and notify
+    if over <max_failures> occured.
+    Args:
+        webhook_secret_path (str, optional): discord channel to notify_.
+        Defaults to constants.QRCODE_WEBHOOK.value.
+        interval_minutes (int, optional): interval to query for. Defaults to 15.
+    """
+
+    datetime_filter = pendulum.now("America/Sao_Paulo")
+    dataset_id = constants.GPS_BRT_RAW_DATASET_ID.value
+    table_id = constants.GPS_BRT_RAW_TABLE_ID.value
+
+    webhook_url = get_vault_secret(webhook_secret_path)["url"]
+
+    query = f"""
+    with t as (
+    select
+        datetime(timestamp_array) as timestamp_array
+    from
+        unnest(GENERATE_TIMESTAMP_ARRAY(
+            timestamp_sub(
+                '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}',
+                interval {interval_minutes} minute),
+            timestamp('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'),
+            interval 1 minute)
+        ) as timestamp_array
+    where timestamp_array < '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
+    ),
+    logs as (
+        select
+            *,
+            timestamp_trunc(timestamp_captura, minute) as timestamp_array
+        from
+            rj-smtr.{dataset_id}.{table_id}_logs
+        where
+            data between
+                date(datetime_sub('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}',
+                interval {interval_minutes} minute))
+                and date('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}')
+        and
+            timestamp_captura between
+                datetime_sub(
+                    '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}',
+                    interval {interval_minutes} minute)
+                and '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
+        order by timestamp_captura
+    )
+    select
+        case
+            when logs.timestamp_captura is not null then logs.timestamp_captura
+            else t.timestamp_array
+        end as timestamp_captura,
+        logs.erro
+    from
+        t
+    left join
+        logs
+    on
+        logs.timestamp_array = t.timestamp_array
+    where
+        logs.sucesso is not True
+    order by
+        timestamp_captura
+    """
+    results = bd.read_sql(query=query, billing_project_id=bq_project())
+    if len(results) >= max_failures:
+        message = f"""
+        Nos ultimos {interval_minutes} minutos foram identificadas {len(results)} falhas.
+        -----------------------------------------------------------------
+        Descrição das falhas:
+        {results.to_string()}
+        -----------------------------------------------------------------
+        Ações devem ser tomadas: @fscovino#9750 @Lauro Silvestre#6823
+        """
+        send_discord_message(message=message, webhook_url=webhook_url)
 
 
 @task
