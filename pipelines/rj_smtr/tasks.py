@@ -394,7 +394,7 @@ def query_logs_and_notify(
     dataset_id = constants.GPS_BRT_RAW_DATASET_ID.value
     table_id = constants.GPS_BRT_RAW_TABLE_ID.value
 
-    webhook_url = get_vault_secret(webhook_secret_path)["url"]
+    webhook_url = get_vault_secret(webhook_secret_path)["data"]["url"]
 
     query = f"""
     with t as (
@@ -446,8 +446,10 @@ def query_logs_and_notify(
     order by
         timestamp_captura
     """
+    log(f"Will run query:\n {query}")
     results = bd.read_sql(query=query, billing_project_id=bq_project())
     if len(results) >= max_failures:
+        log(f"{len(results)} failures. Will notify discord")
         message = f"""
         Nos ultimos {interval_minutes} minutos foram identificadas {len(results)} falhas.
         -----------------------------------------------------------------
