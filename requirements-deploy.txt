@@ -6,3 +6,4 @@ typer==0.4.0
 networkx==2.6.3
 pytest-cov==3.0.0
 pyyaml
+arcgis==1.9.1

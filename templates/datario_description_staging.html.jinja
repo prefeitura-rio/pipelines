@@ -1,0 +1,158 @@
+<div>
+    <p style="font-size: 1.028rem;">
+        {{ metadata.get('long_description') }}
+    </p>
+</div>
+<div>
+    <p style="font-size: 1.414rem;">
+        Como acessar
+    </p>
+    <p style="font-size: 1.212rem;">
+        Nessa página
+    </p>
+    <p style="font-size: 1.028rem;">
+        Aqui, você encontrará um botão para realizar o download dos dados em formato CSV e compactados com gzip. Ou,
+        para mesmo resultado, pode clicar <a href="{{ url }}">aqui</a>.
+    </p>
+    <p style="font-size: 1.212rem;">
+        BigQuery
+    </p>
+    <div
+        style="background: #f8f8f8; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
+        <pre style="margin: 0; line-height: 125%">
+            <span style="color: #204a87; font-weight: bold">
+                SELECT
+            </span>
+            <span style="color: #ce5c00; font-weight: bold">
+                *
+            </span>
+            <span style="color: #204a87; font-weight: bold">
+                FROM
+            </span>
+            <span style="color: #ce5c00;">
+                `{{ project_id }}.{{ dataset_id }}.{{ table_id }}`
+            </span>
+            <span style="color: #204a87; font-weight: bold">
+                LIMIT
+            </span>
+            <span style="color: #0000cf; font-weight: bold">
+                1000
+            </span>
+        </pre>
+    </div>
+    <p style="font-size: 1.028rem;">
+        Clique <a
+            href="https://console.cloud.google.com/bigquery?p={{ project_id }}&d={{ dataset_id }}&t={{ table_id }}&page=table">aqui</a>
+        para ir diretamente a essa tabela no BigQuery. Caso não tenha experiência com BigQuery,
+        acesse <a href="https://docs.dados.rio/">nossa documentação</a> para entender como acessar os dados.
+    </p>
+    <p style="font-size: 1.212rem;">
+        Python
+    </p>
+    <div
+        style="background: #f8f8f8; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
+        <pre style="margin: 0; line-height: 125%">
+            <span style="color: #204a87; font-weight: bold">import</span>
+            <span style="color: #000000">basedosdados</span>
+            <span style="color: #204a87; font-weight: bold">as</span>
+            <span style="color: #000000">bd</span>
+            <br />
+            <br />
+            <span style="color: #8f5902; font-style: italic"># Para carregar o dado direto no pandas</span>
+            <br />
+            <span style="color: #000000">df</span>
+            <span style="color: #ce5c00; font-weight: bold">=</span>
+            <span style="color: #000000">bd</span><span style="color: #ce5c00; font-weight: bold">.</span><span style="color: #000000">read_sql</span>
+            <span style="color: #000000; font-weight: bold">(</span>
+            <span style="color: #4e9a06">&quot;SELECT * FROM `{{ project_id }}.{{ dataset_id }}.{{ table_id }}` LIMIT 1000&quot;</span>
+            <span style="color: #000000; font-weight: bold">,</span>
+            <span style="color: #000000">billing_project_id</span>
+            <span style="color: #ce5c00; font-weight: bold">=</span>
+            <span style="color: #4e9a06">&quot;&lt;id_do_seu_projeto_gcp&gt;&quot;</span>
+            <span style="color: #000000; font-weight: bold">)</span>
+        </pre>
+    </div>
+    <p> </p>
+    <p style="font-size: 1.212rem;">
+        R
+    </p>
+    <div
+        style="background: #f8f8f8; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
+        <pre style="margin: 0; line-height: 125%">
+            install.packages(
+            <span style="color: #4e9a06">&quot;basedosdados&quot;</span>
+            )
+            <br />
+            library(
+            <span style="color: #4e9a06">&quot;basedosdados&quot;</span>
+            )
+            <br />
+            <br />
+            <span style="color: #8f5902; font-style: italic"># Defina o seu projeto no Google Cloud</span>
+            <br />
+            set_billing_id(
+            <span style="color: #4e9a06">&quot;&lt;id_do_seu_projeto_gcp&gt;&quot;</span>
+            )
+            <br />
+            <br />
+            <span style="color: #8f5902; font-style: italic"># Para carregar o dado direto no R</span>
+            <br />
+            tb <span style="color: #ce5c00; font-weight: bold">&lt;-</span> read_sql(
+            <span style="color: #4e9a06">&quot;SELECT * FROM `{{ project_id }}.{{ dataset_id }}.{{ table_id }}` LIMIT 1000&quot;</span>
+            )
+        </pre>
+    </div>
+    <p> </p>
+</div>
+<div>
+    <p style="font-size: 1.414rem;">
+        Cobertura temporal
+    </p>
+    <p style="font-size: 1.028rem;">
+        {{ metadata.get('temporal_coverage') }}
+    </p>
+</div>
+<div>
+    <p style="font-size: 1.414rem;">
+        Frequência de atualização
+    </p>
+    <p style="font-size: 1.028rem;">
+        {{ metadata.get('update_frequency') }}
+    </p>
+</div>
+<div>
+    <p style="font-size: 1.414rem;">
+        Órgão gestor
+    </p>
+    <p style="font-size: 1.028rem;">
+        {{ metadata.get('data_owner') }}
+    </p>
+</div>
+<div>
+    <p style="font-size: 1.414rem;">
+        Colunas
+    </p>
+    <table style="border:1px solid #C0C0C0; border-collapse:collapse; padding:5px;">
+        <tr>
+            <th style="border:1px solid #C0C0C0; text-align:center; padding:5px; background:#F0F0F0;">Nome</th>
+            <th style="border:1px solid #C0C0C0; text-align:center; padding:5px; background:#F0F0F0;">Descrição</th>
+        </tr>
+        <tbody>
+            {% for column in metadata.get('columns') %}
+            <tr>
+                <td style="border:1px solid #C0C0C0; text-align:center; padding:5px;">{{ column["name"] }}</td>
+                <td style="border:1px solid #C0C0C0; text-align:center; padding:5px;">{{ column["description"] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div>
+    <p style="font-size: 1.414rem;">
+        Dados do publicador
+    </p>
+    <p style="font-size: 1.028rem;">
+        <b>Nome:</b> {{ metadata.get('publisher_name') }}<br>
+        <b>E-mail:</b> {{ metadata.get('publisher_email') }}
+    </p>
+</div>

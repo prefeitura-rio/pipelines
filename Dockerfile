@@ -44,7 +44,8 @@ RUN python3 -m pip install --no-cache-dir -U "pip>=21.2.4" "prefect==$PREFECT_VE
 WORKDIR /app
 COPY . .
 COPY --from=curl-step /tmp/GDAL-3.4.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl /tmp/GDAL-3.4.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl
-RUN python3 -m pip install --prefer-binary --no-cache-dir -U . && \
+RUN python3 -m pip install --prefer-binary --no-cache-dir "arcgis==1.9.1" && \
+    python3 -m pip install --prefer-binary --no-cache-dir -U . && \
     mkdir -p /opt/prefect/app/bases && \
     mkdir -p /root/.basedosdados/templates && \
     mkdir -p /root/.basedosdados/credentials/ && \

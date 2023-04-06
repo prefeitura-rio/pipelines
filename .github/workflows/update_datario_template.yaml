@@ -1,0 +1,43 @@
+name: Update data.rio description template
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - ".github/workflows/update_datario_template.yaml"
+      - "templates/**/*"
+  pull_request:
+    branches:
+      - master
+    paths:
+      - ".github/workflows/update_datario_template.yaml"
+      - "templates/**/*"
+
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+  GH_PAT: ${{ secrets.GH_PAT }}
+  GKE_CLUSTER: ${{ secrets.GKE_CLUSTER_NAME }}
+  GKE_ZONE: ${{ secrets.GKE_ZONE }}
+
+jobs:
+  build-container:
+    name: Update data.rio description template
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v0.2.1
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          export_default_credentials: true
+
+      - name: Upload templates folder
+        id: upload_folder
+        uses: google-github-actions/upload-cloud-storage@v1
+        with:
+          path: templates
+          destination: datario-public
