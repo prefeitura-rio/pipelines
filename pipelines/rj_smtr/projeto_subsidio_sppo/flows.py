@@ -41,7 +41,7 @@ from pipelines.rj_smtr.schedules import (
     # every_dayofmonth_one_and_sixteen,
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
-from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import get_run_dates
+from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import get_run_dates, get_join_dict
 
 # Flows #
 
@@ -56,10 +56,10 @@ with Flow(
     date_range_start = Parameter("date_range_start", default=False)
     date_range_end = Parameter("date_range_end", default=False)
 
-    run_date = get_run_dates(date_range_start, date_range_end)
+    run_dates = get_run_dates(date_range_start, date_range_end)
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SMTR - Viagens SPPO: ", now_time=run_date
+        prefix="SMTR - Viagens SPPO: ", now_time=run_dates
     )
 
     LABELS = get_current_flow_labels()
@@ -74,13 +74,15 @@ with Flow(
         dataset_id=smtr_constants.SUBSIDIO_SPPO_DATASET_ID.value,
     )
 
+    _vars = get_join_dict(dict_list=run_dates, new_dict=dataset_sha)
+
     RUN = run_dbt_model.map(
         dbt_client=unmapped(dbt_client),
         dataset_id=unmapped(smtr_constants.SUBSIDIO_SPPO_DATASET_ID.value),
         table_id=unmapped(smtr_constants.SUBSIDIO_SPPO_TABLE_ID.value),
         upstream=unmapped(True),
         exclude=unmapped("+gps_sppo"),
-        _vars=run_date,
+        _vars=_vars,
     )
 
 viagens_sppo.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
