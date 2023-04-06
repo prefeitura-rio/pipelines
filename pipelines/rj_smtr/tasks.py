@@ -390,7 +390,7 @@ def query_logs_and_notify(
         interval_minutes (int, optional): interval to query for. Defaults to 15.
     """
 
-    datetime_filter = pendulum.now("America/Sao_Paulo")
+    datetime_filter = pendulum.now("America/Sao_Paulo").replace(second=0, microsecond=0)
     dataset_id = constants.GPS_BRT_RAW_DATASET_ID.value
     table_id = constants.GPS_BRT_RAW_TABLE_ID.value
 
@@ -456,7 +456,7 @@ def query_logs_and_notify(
         Descrição das falhas:
         {results.to_string()}
         -----------------------------------------------------------------
-        Ações devem ser tomadas: @fscovino#9750 @Lauro Silvestre#6823
+        Ações devem ser tomadas: <@!692709168221650954>
         """
         send_discord_message(message=message, webhook_url=webhook_url)
 
