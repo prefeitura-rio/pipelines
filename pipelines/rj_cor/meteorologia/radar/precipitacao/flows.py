@@ -24,6 +24,9 @@ from pipelines.rj_cor.tasks import (
     get_on_redis,
     save_on_redis,
 )
+from pipelines.rj_escritorio.rain_dashboard.constants import (
+    constants as rain_dashboard_constants,
+)
 from pipelines.utils.decorators import Flow
 from pipelines.utils.tasks import create_table_and_upload_to_gcs
 
@@ -90,7 +93,7 @@ with Flow(
     with case(TRIGGER_RAIN_DASHBOARD_UPDATE, True):
         # Trigger rain dashboard update flow run
         rain_radar_dashboard_update_flow = create_flow_run(
-            flow_name=radar_constants.RAIN_DASHBOARD_FLOW_NAME.value,
+            flow_name=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_NAME.value,
             project_name=constants.PREFECT_DEFAULT_PROJECT.value,
             parameters=radar_constants.RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS.value,  # noqa
             labels=[
