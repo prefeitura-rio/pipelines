@@ -67,6 +67,7 @@ with Flow(
     )
     run_model_task = run_model()
     run_model_task.set_upstream(download_files_task)
+    run_model_task.set_upstream(change_json_task)
 
     upload_table = create_table_and_upload_to_gcs(
         data_path=f"{BASE_PATH}predictions/",
