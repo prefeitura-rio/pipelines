@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_cor API documentation</title>
-<meta name="description" content="Prefect flows for cor project" />
+<title>pipelines.rj_cor.meteorologia.radar.precipitacao.utils API documentation</title>
+<meta name="description" content="General utils for setting rain dashboard using radar data." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,56 +19,174 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_cor</code></h1>
+<h1 class="title">Module <code>pipelines.rj_cor.meteorologia.radar.precipitacao.utils</code></h1>
 </header>
 <section id="section-intro">
-<p>Prefect flows for cor project</p>
+<p>General utils for setting rain dashboard using radar data.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
+# pylint: disable=C0103, C0302
 &#34;&#34;&#34;
-Prefect flows for cor project
+General utils for setting rain dashboard using radar data.
 &#34;&#34;&#34;
-from pipelines.rj_cor.bot_semaforo.flows import *
-from pipelines.rj_cor.meteorologia.meteorologia_inmet.flows import *
-from pipelines.rj_cor.meteorologia.precipitacao_alertario.flows import *
-from pipelines.rj_cor.meteorologia.satelite.flows import *
-from pipelines.rj_cor.meteorologia.precipitacao_websirene.flows import *
-from pipelines.rj_cor.meteorologia.radar.precipitacao.flows import *
-from pipelines.rj_cor.comando.eventos.flows import *</code></pre>
+from google.cloud import storage
+
+
+def list_blobs_with_prefix(bucket_name, prefix, delimiter=None):
+    &#34;&#34;&#34;Lists all the blobs in the bucket that begin with the prefix.
+
+    This can be used to list all blobs in a &#34;folder&#34;, e.g. &#34;public/&#34;.
+
+    The delimiter argument can be used to restrict the results to only the
+    &#34;files&#34; in the given &#34;folder&#34;. Without the delimiter, the entire tree under
+    the prefix is returned. For example, given these blobs:
+
+        a/1.txt
+        a/b/2.txt
+
+    If you specify prefix =&#39;a/&#39;, without a delimiter, you&#39;ll get back:
+
+        a/1.txt
+        a/b/2.txt
+
+    However, if you specify prefix=&#39;a/&#39; and delimiter=&#39;/&#39;, you&#39;ll get back
+    only the file directly under &#39;a/&#39;:
+
+        a/1.txt
+
+    As part of the response, you&#39;ll also get back a blobs.prefixes entity
+    that lists the &#34;subfolders&#34; under `a/`:
+
+        a/b/
+    &#34;&#34;&#34;
+
+    storage_client = storage.Client()
+    blobs = storage_client.list_blobs(bucket_name, prefix=prefix, delimiter=delimiter)
+
+    return blobs
+
+
+def download_blob(bucket_name, source_blob_name, destination_file_name) -&gt; None:
+    &#34;&#34;&#34;
+    Downloads a blob mencioned on source_blob_name from bucket_name
+    and save it on destination_file_name.
+    &#34;&#34;&#34;
+
+    storage_client = storage.Client()
+
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(source_blob_name)
+    blob.download_to_filename(destination_file_name)
+
+    print(
+        &#34;Blob {} downloaded to file path {}. successfully &#34;.format(
+            source_blob_name, destination_file_name
+        )
+    )</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt><code class="name"><a title="pipelines.rj_cor.bot_semaforo" href="bot_semaforo/index.html">pipelines.rj_cor.bot_semaforo</a></code></dt>
+<dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.utils.download_blob"><code class="name flex">
+<span>def <span class="ident">download_blob</span></span>(<span>bucket_name, source_blob_name, destination_file_name) ‑> None</span>
+</code></dt>
 <dd>
-<div class="desc"><p>CET Semaphores Telegram Bot</p></div>
+<div class="desc"><p>Downloads a blob mencioned on source_blob_name from bucket_name
+and save it on destination_file_name.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def download_blob(bucket_name, source_blob_name, destination_file_name) -&gt; None:
+    &#34;&#34;&#34;
+    Downloads a blob mencioned on source_blob_name from bucket_name
+    and save it on destination_file_name.
+    &#34;&#34;&#34;
+
+    storage_client = storage.Client()
+
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(source_blob_name)
+    blob.download_to_filename(destination_file_name)
+
+    print(
+        &#34;Blob {} downloaded to file path {}. successfully &#34;.format(
+            source_blob_name, destination_file_name
+        )
+    )</code></pre>
+</details>
 </dd>
-<dt><code class="name"><a title="pipelines.rj_cor.comando" href="comando/index.html">pipelines.rj_cor.comando</a></code></dt>
+<dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.utils.list_blobs_with_prefix"><code class="name flex">
+<span>def <span class="ident">list_blobs_with_prefix</span></span>(<span>bucket_name, prefix, delimiter=None)</span>
+</code></dt>
 <dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_cor.meteorologia" href="meteorologia/index.html">pipelines.rj_cor.meteorologia</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_cor.tasks" href="tasks.html">pipelines.rj_cor.tasks</a></code></dt>
-<dd>
-<div class="desc"><p>Common
-Tasks for rj-cor</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_cor.utils" href="utils.html">pipelines.rj_cor.utils</a></code></dt>
-<dd>
-<div class="desc"><p>Utils for rj-cor</p></div>
+<div class="desc"><p>Lists all the blobs in the bucket that begin with the prefix.</p>
+<p>This can be used to list all blobs in a "folder", e.g. "public/".</p>
+<p>The delimiter argument can be used to restrict the results to only the
+"files" in the given "folder". Without the delimiter, the entire tree under
+the prefix is returned. For example, given these blobs:</p>
+<pre><code>a/1.txt
+a/b/2.txt
+</code></pre>
+<p>If you specify prefix ='a/', without a delimiter, you'll get back:</p>
+<pre><code>a/1.txt
+a/b/2.txt
+</code></pre>
+<p>However, if you specify prefix='a/' and delimiter='/', you'll get back
+only the file directly under 'a/':</p>
+<pre><code>a/1.txt
+</code></pre>
+<p>As part of the response, you'll also get back a blobs.prefixes entity
+that lists the "subfolders" under <code>a/</code>:</p>
+<pre><code>a/b/
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def list_blobs_with_prefix(bucket_name, prefix, delimiter=None):
+    &#34;&#34;&#34;Lists all the blobs in the bucket that begin with the prefix.
+
+    This can be used to list all blobs in a &#34;folder&#34;, e.g. &#34;public/&#34;.
+
+    The delimiter argument can be used to restrict the results to only the
+    &#34;files&#34; in the given &#34;folder&#34;. Without the delimiter, the entire tree under
+    the prefix is returned. For example, given these blobs:
+
+        a/1.txt
+        a/b/2.txt
+
+    If you specify prefix =&#39;a/&#39;, without a delimiter, you&#39;ll get back:
+
+        a/1.txt
+        a/b/2.txt
+
+    However, if you specify prefix=&#39;a/&#39; and delimiter=&#39;/&#39;, you&#39;ll get back
+    only the file directly under &#39;a/&#39;:
+
+        a/1.txt
+
+    As part of the response, you&#39;ll also get back a blobs.prefixes entity
+    that lists the &#34;subfolders&#34; under `a/`:
+
+        a/b/
+    &#34;&#34;&#34;
+
+    storage_client = storage.Client()
+    blobs = storage_client.list_blobs(bucket_name, prefix=prefix, delimiter=delimiter)
+
+    return blobs</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
 </section>
 <section>
 </section>
@@ -108,7 +226,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -127,16 +245,13 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines" href="../index.html">pipelines</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.radar.precipitacao" href="index.html">pipelines.rj_cor.meteorologia.radar.precipitacao</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="pipelines.rj_cor.bot_semaforo" href="bot_semaforo/index.html">pipelines.rj_cor.bot_semaforo</a></code></li>
-<li><code><a title="pipelines.rj_cor.comando" href="comando/index.html">pipelines.rj_cor.comando</a></code></li>
-<li><code><a title="pipelines.rj_cor.meteorologia" href="meteorologia/index.html">pipelines.rj_cor.meteorologia</a></code></li>
-<li><code><a title="pipelines.rj_cor.tasks" href="tasks.html">pipelines.rj_cor.tasks</a></code></li>
-<li><code><a title="pipelines.rj_cor.utils" href="utils.html">pipelines.rj_cor.utils</a></code></li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pipelines.rj_cor.meteorologia.radar.precipitacao.utils.download_blob" href="#pipelines.rj_cor.meteorologia.radar.precipitacao.utils.download_blob">download_blob</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.radar.precipitacao.utils.list_blobs_with_prefix" href="#pipelines.rj_cor.meteorologia.radar.precipitacao.utils.list_blobs_with_prefix">list_blobs_with_prefix</a></code></li>
 </ul>
 </li>
 </ul>

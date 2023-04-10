@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_cor API documentation</title>
-<meta name="description" content="Prefect flows for cor project" />
+<title>pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.featurization_utils API documentation</title>
+<meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,56 +19,161 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_cor</code></h1>
+<h1 class="title">Module <code>pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.featurization_utils</code></h1>
 </header>
 <section id="section-intro">
-<p>Prefect flows for cor project</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
-&#34;&#34;&#34;
-Prefect flows for cor project
-&#34;&#34;&#34;
-from pipelines.rj_cor.bot_semaforo.flows import *
-from pipelines.rj_cor.meteorologia.meteorologia_inmet.flows import *
-from pipelines.rj_cor.meteorologia.precipitacao_alertario.flows import *
-from pipelines.rj_cor.meteorologia.satelite.flows import *
-from pipelines.rj_cor.meteorologia.precipitacao_websirene.flows import *
-from pipelines.rj_cor.meteorologia.radar.precipitacao.flows import *
-from pipelines.rj_cor.comando.eventos.flows import *</code></pre>
+# flake8: noqa: E501
+# pylint: skip-file
+import numpy as np
+
+from pipelines.rj_cor.meteorologia.radar.precipitacao.src.data.process.PointsToFeatures import (
+    PointsToFeatures,
+)
+from pipelines.rj_cor.meteorologia.radar.precipitacao.src.data.process.RadarData import (
+    RadarData,
+)
+
+
+# Implementation for two operands only for now
+def parse_operation(
+    p2f: PointsToFeatures, rd: RadarData, operation_descriptor: str
+) -&gt; np.array:
+    for basic_operation_desc, basic_operation_func in BASIC_OPERATIONS.items():
+        if basic_operation_desc in operation_descriptor:
+            operand1_desc, operand2_desc = operation_descriptor.split(
+                basic_operation_desc
+            )
+
+            operand1 = parse_operation(p2f, rd, operand1_desc)
+            operand2 = parse_operation(p2f, rd, operand2_desc)
+
+            if basic_operation_desc == &#34;/&#34; and operand2_desc == &#34;beam:rain_bins&#34;:
+                result = np.where(
+                    operand2 == 0,
+                    np.divide(operand1, operand2 + 0.0001),
+                    np.divide(operand1, operand2),
+                )
+            else:
+                result = basic_operation_func(operand1, operand2)
+            return result
+
+    if operation_descriptor == &#34;dist:&#34;:
+        return p2f.get_dist()
+    elif &#34;_nearest&#34; in operation_descriptor:
+        k, _ = operation_descriptor.split(&#34;_&#34;)
+        k = int(k)
+        _, operation = operation_descriptor.split(&#34;:&#34;)
+
+        result = p2f.apply_nearest_neighbors(rd, operation, k)
+
+        assert not np.count_nonzero(
+            ~np.isfinite(result)
+        ), f&#34;Result from {operation_descriptor} contains infinity or NaN in {np.where(~np.isfinite(result))}&#34;
+        return result
+    elif &#34;beam&#34; in operation_descriptor:
+        _, operation_with_param = operation_descriptor.split(&#34;:&#34;)
+        if &#34;,&#34; in operation_with_param:
+            operation, param = operation_with_param.split(&#34;,&#34;)
+            threshold = float(param)
+
+            result = p2f.apply_beam(rd, operation, threshold)
+            assert not np.count_nonzero(
+                ~np.isfinite(result)
+            ), f&#34;Result from {operation_descriptor} contains infinity or NaN in {np.where(~np.isfinite(result))}&#34;
+            return result
+        else:
+            operation = operation_with_param
+            result = p2f.apply_beam(rd, operation)
+            assert not np.count_nonzero(
+                ~np.isfinite(result)
+            ), f&#34;Result from {operation_descriptor} contains infinity or NaN in {np.where(~np.isfinite(result))}&#34;
+            return result
+    else:
+        raise Exception(f&#34;Invalid {operation_descriptor} descriptor.&#34;)
+
+
+BASIC_OPERATIONS = {&#34;+&#34;: np.add, &#34;-&#34;: np.subtract, &#34;/&#34;: np.divide, &#34;*&#34;: np.multiply}</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt><code class="name"><a title="pipelines.rj_cor.bot_semaforo" href="bot_semaforo/index.html">pipelines.rj_cor.bot_semaforo</a></code></dt>
-<dd>
-<div class="desc"><p>CET Semaphores Telegram Bot</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_cor.comando" href="comando/index.html">pipelines.rj_cor.comando</a></code></dt>
+<dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.featurization_utils.parse_operation"><code class="name flex">
+<span>def <span class="ident">parse_operation</span></span>(<span>p2f: <a title="pipelines.rj_cor.meteorologia.radar.precipitacao.src.data.process.PointsToFeatures.PointsToFeatures" href="../data/process/PointsToFeatures.html#pipelines.rj_cor.meteorologia.radar.precipitacao.src.data.process.PointsToFeatures.PointsToFeatures">PointsToFeatures</a>, rd: <a title="pipelines.rj_cor.meteorologia.radar.precipitacao.src.data.process.RadarData.RadarData" href="../data/process/RadarData.html#pipelines.rj_cor.meteorologia.radar.precipitacao.src.data.process.RadarData.RadarData">RadarData</a>, operation_descriptor: str) ‑> <built-in function array></span>
+</code></dt>
 <dd>
 <div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_cor.meteorologia" href="meteorologia/index.html">pipelines.rj_cor.meteorologia</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_cor.tasks" href="tasks.html">pipelines.rj_cor.tasks</a></code></dt>
-<dd>
-<div class="desc"><p>Common
-Tasks for rj-cor</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_cor.utils" href="utils.html">pipelines.rj_cor.utils</a></code></dt>
-<dd>
-<div class="desc"><p>Utils for rj-cor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def parse_operation(
+    p2f: PointsToFeatures, rd: RadarData, operation_descriptor: str
+) -&gt; np.array:
+    for basic_operation_desc, basic_operation_func in BASIC_OPERATIONS.items():
+        if basic_operation_desc in operation_descriptor:
+            operand1_desc, operand2_desc = operation_descriptor.split(
+                basic_operation_desc
+            )
+
+            operand1 = parse_operation(p2f, rd, operand1_desc)
+            operand2 = parse_operation(p2f, rd, operand2_desc)
+
+            if basic_operation_desc == &#34;/&#34; and operand2_desc == &#34;beam:rain_bins&#34;:
+                result = np.where(
+                    operand2 == 0,
+                    np.divide(operand1, operand2 + 0.0001),
+                    np.divide(operand1, operand2),
+                )
+            else:
+                result = basic_operation_func(operand1, operand2)
+            return result
+
+    if operation_descriptor == &#34;dist:&#34;:
+        return p2f.get_dist()
+    elif &#34;_nearest&#34; in operation_descriptor:
+        k, _ = operation_descriptor.split(&#34;_&#34;)
+        k = int(k)
+        _, operation = operation_descriptor.split(&#34;:&#34;)
+
+        result = p2f.apply_nearest_neighbors(rd, operation, k)
+
+        assert not np.count_nonzero(
+            ~np.isfinite(result)
+        ), f&#34;Result from {operation_descriptor} contains infinity or NaN in {np.where(~np.isfinite(result))}&#34;
+        return result
+    elif &#34;beam&#34; in operation_descriptor:
+        _, operation_with_param = operation_descriptor.split(&#34;:&#34;)
+        if &#34;,&#34; in operation_with_param:
+            operation, param = operation_with_param.split(&#34;,&#34;)
+            threshold = float(param)
+
+            result = p2f.apply_beam(rd, operation, threshold)
+            assert not np.count_nonzero(
+                ~np.isfinite(result)
+            ), f&#34;Result from {operation_descriptor} contains infinity or NaN in {np.where(~np.isfinite(result))}&#34;
+            return result
+        else:
+            operation = operation_with_param
+            result = p2f.apply_beam(rd, operation)
+            assert not np.count_nonzero(
+                ~np.isfinite(result)
+            ), f&#34;Result from {operation_descriptor} contains infinity or NaN in {np.where(~np.isfinite(result))}&#34;
+            return result
+    else:
+        raise Exception(f&#34;Invalid {operation_descriptor} descriptor.&#34;)</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
 </section>
 <section>
 </section>
@@ -108,7 +213,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../../../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -127,16 +232,12 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines" href="../index.html">pipelines</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils" href="index.html">pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="pipelines.rj_cor.bot_semaforo" href="bot_semaforo/index.html">pipelines.rj_cor.bot_semaforo</a></code></li>
-<li><code><a title="pipelines.rj_cor.comando" href="comando/index.html">pipelines.rj_cor.comando</a></code></li>
-<li><code><a title="pipelines.rj_cor.meteorologia" href="meteorologia/index.html">pipelines.rj_cor.meteorologia</a></code></li>
-<li><code><a title="pipelines.rj_cor.tasks" href="tasks.html">pipelines.rj_cor.tasks</a></code></li>
-<li><code><a title="pipelines.rj_cor.utils" href="utils.html">pipelines.rj_cor.utils</a></code></li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.featurization_utils.parse_operation" href="#pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.featurization_utils.parse_operation">parse_operation</a></code></li>
 </ul>
 </li>
 </ul>

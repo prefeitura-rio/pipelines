@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_cor.meteorologia.satelite.flows API documentation</title>
-<meta name="description" content="Flows for emd" />
+<title>pipelines.rj_cor.meteorologia.radar.precipitacao.flows API documentation</title>
+<meta name="description" content="Flows for setting rain dashboard using radar data." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,18 +19,19 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_cor.meteorologia.satelite.flows</code></h1>
+<h1 class="title">Module <code>pipelines.rj_cor.meteorologia.radar.precipitacao.flows</code></h1>
 </header>
 <section id="section-intro">
-<p>Flows for emd</p>
+<p>Flows for setting rain dashboard using radar data.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
+# flake8: noqa: E501
 # pylint: disable=C0103
 &#34;&#34;&#34;
-Flows for emd
+Flows for setting rain dashboard using radar data.
 &#34;&#34;&#34;
 from prefect import case, Parameter
 from prefect.run_configs import KubernetesRun
@@ -38,255 +39,117 @@ from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 
 from pipelines.constants import constants
-from pipelines.rj_cor.meteorologia.satelite.constants import (
-    constants as satelite_constants,
+from pipelines.rj_cor.meteorologia.radar.precipitacao.schedules import TIME_SCHEDULE
+from pipelines.rj_cor.meteorologia.radar.precipitacao.constants import (
+    constants as radar_constants,
 )
-from pipelines.utils.constants import constants as utils_constants
-from pipelines.rj_cor.meteorologia.satelite.tasks import (
-    get_dates,
-    slice_data,
-    download,
-    tratar_dados,
-    save_data,
+from pipelines.rj_cor.meteorologia.radar.precipitacao.tasks import (
+    change_predict_rain_specs,
+    download_files_storage,
+    get_filenames_storage,
+    run_model,
 )
 from pipelines.rj_cor.tasks import (
     get_on_redis,
     save_on_redis,
 )
-from pipelines.rj_cor.meteorologia.satelite.schedules import hour_schedule
-
+from pipelines.rj_escritorio.rain_dashboard.constants import (
+    constants as rain_dashboard_constants,
+)
 from pipelines.utils.decorators import Flow
 
-from pipelines.utils.tasks import (
-    create_table_and_upload_to_gcs,
-    get_current_flow_labels,
-)
+from pipelines.utils.tasks import create_table_and_upload_to_gcs
+
 
 with Flow(
-    name=&#34;COR: Meteorologia - Satelite GOES 16&#34;,
+    name=&#34;COR: Meteorologia - Precipitacao RADAR&#34;,
     code_owners=[
         &#34;paty&#34;,
     ],
-) as cor_meteorologia_goes16:
+    # skip_if_running=True,
+) as cor_meteorologia_precipitacao_radar_flow:
 
-    # Materialization parameters
-    materialize_after_dump = Parameter(
-        &#34;materialize_after_dump&#34;, default=False, required=False
-    )
-    materialize_to_datario = Parameter(
-        &#34;materialize_to_datario&#34;, default=False, required=False
-    )
-    materialization_mode = Parameter(&#34;mode&#34;, default=&#34;dev&#34;, required=False)
-
-    # Other parameters
-    dataset_id = satelite_constants.DATASET_ID.value
-    dump_mode = &#34;append&#34;
-    mode_redis = Parameter(&#34;mode_redis&#34;, default=&#34;prod&#34;, required=False)
-    ref_filename = Parameter(&#34;ref_filename&#34;, default=None, required=False)
-    current_time = Parameter(&#34;current_time&#34;, default=None, required=False)
-    current_time = get_dates(current_time)
-
-    date_hour_info = slice_data(current_time=current_time, ref_filename=ref_filename)
-
-    # Para taxa de precipitação
-    variavel_rr = satelite_constants.VARIAVEL_RR.value
-    table_id_rr = satelite_constants.TABLE_ID_RR.value
-
-    # Get filenames that were already treated on redis
-    redis_files_rr = get_on_redis(dataset_id, table_id_rr, mode=mode_redis)
-
-    # Download raw data from API
-    filename_rr, redis_files_rr_updated = download(
-        variavel=variavel_rr,
-        date_hour_info=date_hour_info,
-        redis_files=redis_files_rr,
-        ref_filename=ref_filename,
-        wait=redis_files_rr,
-        mode_redis=mode_redis,
+    # Prefect Parameters
+    MODE = Parameter(&#34;mode&#34;, default=&#34;prod&#34;)
+    RADAR_NAME = Parameter(&#34;radar_name&#34;, default=&#34;gua&#34;)
+    TRIGGER_RAIN_DASHBOARD_UPDATE = Parameter(
+        &#34;trigger_rain_dashboard_update&#34;, default=False, required=False
     )
 
-    # Start data treatment if there are new files
-    info_rr = tratar_dados(filename=filename_rr, mode_redis=mode_redis)
-    path_rr = save_data(info=info_rr, file_path=filename_rr, mode_redis=mode_redis)
+    # Other Parameters
+    DATASET_ID = radar_constants.DATASET_ID.value
+    TABLE_ID = radar_constants.TABLE_ID.value
+    DUMP_MODE = &#34;append&#34;
+    BASE_PATH = &#34;pipelines/rj_cor/meteorologia/radar/precipitacao/&#34;
 
-    # Create table in BigQuery
-    upload_table_rr = create_table_and_upload_to_gcs(
-        data_path=path_rr,
-        dataset_id=dataset_id,
-        table_id=table_id_rr,
-        dump_mode=dump_mode,
-        wait=path_rr,
+    # Tasks
+    BUCKET_NAME = &#34;rj-escritorio-dev&#34;
+    files_saved_redis = get_on_redis(DATASET_ID, TABLE_ID, mode=MODE)
+    files_on_storage_list = get_filenames_storage(
+        BUCKET_NAME, RADAR_NAME, files_saved_redis
     )
+
+    download_files_task = download_files_storage(
+        bucket_name=BUCKET_NAME,
+        files_to_download=files_on_storage_list,
+        destination_path=f&#34;{BASE_PATH}radar_data/&#34;,
+    )
+    change_json_task = change_predict_rain_specs(
+        files_to_model=files_on_storage_list,
+        destination_path=f&#34;{BASE_PATH}radar_data/&#34;,
+    )
+    download_files_task.set_upstream(change_json_task)
+    run_model_task = run_model()
+    run_model_task.set_upstream(download_files_task)
+    # run_model_task.set_upstream(change_json_task)
+
+    upload_table = create_table_and_upload_to_gcs(
+        data_path=f&#34;{BASE_PATH}predictions/&#34;,
+        dataset_id=DATASET_ID,
+        table_id=TABLE_ID,
+        dump_mode=DUMP_MODE,
+        wait=run_model_task,
+    )
+    # upload_table.set_upstream(run_model_task)
 
     # Save new filenames on redis
-    save_on_redis(
-        dataset_id,
-        table_id_rr,
-        mode_redis,
-        redis_files_rr_updated,
-        wait=path_rr,
+    save_last_update_redis = save_on_redis(
+        DATASET_ID,
+        TABLE_ID,
+        MODE,
+        files_on_storage_list,
+        keep_last=3,
+        wait=upload_table,
     )
+    # save_last_update_redis.set_upstream(upload_table)
 
-    # Para quantidade de água precipitável
-    variavel_tpw = satelite_constants.VARIAVEL_TPW.value
-    table_id_tpw = satelite_constants.TABLE_ID_TPW.value
-
-    # Get filenames that were already treated on redis
-    redis_files_tpw = get_on_redis(dataset_id, table_id_tpw, mode=mode_redis)
-
-    # Download raw data from API
-    filename_tpw, redis_files_tpw_updated = download(
-        variavel=variavel_tpw,
-        date_hour_info=date_hour_info,
-        redis_files=redis_files_tpw,
-        ref_filename=ref_filename,
-        wait=redis_files_tpw,
-        mode_redis=mode_redis,
-    )
-
-    # Start data treatment if there are new files
-    info_tpw = tratar_dados(filename=filename_tpw, mode_redis=mode_redis)
-    path_tpw = save_data(info=info_tpw, file_path=filename_tpw, mode_redis=mode_redis)
-
-    upload_table_tpw = create_table_and_upload_to_gcs(
-        data_path=path_tpw,
-        dataset_id=dataset_id,
-        table_id=table_id_tpw,
-        dump_mode=dump_mode,
-        wait=path_tpw,
-    )
-
-    # Save new filenames on redis
-    save_on_redis(
-        dataset_id,
-        table_id_tpw,
-        mode_redis,
-        redis_files_tpw_updated,
-        wait=path_tpw,
-    )
-
-    # Para clean_ir_longwave_window (band 13) CMIPF
-    variavel_cmip = satelite_constants.VARIAVEL_cmip.value
-    table_id_cmip = satelite_constants.TABLE_ID_cmip.value
-
-    # Get filenames that were already treated on redis
-    redis_files_cmip = get_on_redis(dataset_id, table_id_cmip, mode=mode_redis)
-
-    # Download raw data from API
-    filename_cmip, redis_files_cmip_updated = download(
-        variavel=variavel_cmip,
-        date_hour_info=date_hour_info,
-        band=&#34;13&#34;,
-        redis_files=redis_files_cmip,
-        ref_filename=ref_filename,
-        wait=redis_files_cmip,
-        mode_redis=mode_redis,
-    )
-
-    # Start data treatment if there are new files
-    info_cmip = tratar_dados(filename=filename_cmip, mode_redis=mode_redis)
-    path_cmip = save_data(
-        info=info_cmip, file_path=filename_cmip, mode_redis=mode_redis
-    )
-
-    # Create table in BigQuery
-    upload_table_cmip = create_table_and_upload_to_gcs(
-        data_path=path_cmip,
-        dataset_id=dataset_id,
-        table_id=table_id_cmip,
-        dump_mode=dump_mode,
-        wait=path_cmip,
-    )
-
-    # Save new filenames on redis
-    save_on_redis(
-        dataset_id,
-        table_id_cmip,
-        mode_redis,
-        redis_files_cmip_updated,
-        wait=path_cmip,
-    )
-
-    # Trigger DBT flow run
-    with case(materialize_after_dump, True):
-        current_flow_labels = get_current_flow_labels()
-
-        # Materializar RR
-        materialization_flow_rr = create_flow_run(
-            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+    with case(TRIGGER_RAIN_DASHBOARD_UPDATE, True):
+        # Trigger rain dashboard update flow run
+        rain_radar_dashboard_update_flow = create_flow_run(
+            flow_name=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_NAME.value,
             project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters={
-                &#34;dataset_id&#34;: dataset_id,
-                &#34;table_id&#34;: table_id_rr,
-                &#34;mode&#34;: materialization_mode,
-                &#34;materialize_to_datario&#34;: materialize_to_datario,
-            },
-            labels=current_flow_labels,
-            run_name=f&#34;Materialize {dataset_id}.{table_id_rr}&#34;,
+            parameters=radar_constants.RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS.value,  # noqa
+            labels=[
+                &#34;rj-cor&#34;,
+            ],
+            run_name=&#34;Update radar rain dashboard data (triggered by precipitacao_radar flow)&#34;,  # noqa
         )
+        rain_radar_dashboard_update_flow.set_upstream(upload_table)
 
-        materialization_flow_rr.set_upstream(upload_table_rr)
-
-        wait_for_materialization_rr = wait_for_flow_run(
-            materialization_flow_rr,
+        wait_for_rain_dashboard_update = wait_for_flow_run(
+            flow_run_id=rain_radar_dashboard_update_flow,
             stream_states=True,
             stream_logs=True,
-            raise_final_state=True,
+            raise_final_state=False,
         )
 
-        # Materializar TPW
-        materialization_flow_tpw = create_flow_run(
-            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
-            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters={
-                &#34;dataset_id&#34;: dataset_id,
-                &#34;table_id&#34;: table_id_tpw,
-                &#34;mode&#34;: materialization_mode,
-                &#34;materialize_to_datario&#34;: materialize_to_datario,
-            },
-            labels=current_flow_labels,
-            run_name=f&#34;Materialize {dataset_id}.{table_id_tpw}&#34;,
-        )
-
-        materialization_flow_tpw.set_upstream(upload_table_tpw)
-
-        wait_for_materialization_tpw = wait_for_flow_run(
-            materialization_flow_tpw,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
-        )
-
-        # Materializar CMIP
-        materialization_flow_cmip = create_flow_run(
-            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
-            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters={
-                &#34;dataset_id&#34;: dataset_id,
-                &#34;table_id&#34;: table_id_cmip,
-                &#34;mode&#34;: materialization_mode,
-                &#34;materialize_to_datario&#34;: materialize_to_datario,
-            },
-            labels=current_flow_labels,
-            run_name=f&#34;Materialize {dataset_id}.{table_id_cmip}&#34;,
-        )
-
-        materialization_flow_cmip.set_upstream(upload_table_cmip)
-
-        wait_for_materialization_cmip = wait_for_flow_run(
-            materialization_flow_cmip,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
-        )
-
-# para rodar na cloud
-cor_meteorologia_goes16.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-cor_meteorologia_goes16.run_config = KubernetesRun(
+cor_meteorologia_precipitacao_radar_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+cor_meteorologia_precipitacao_radar_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_COR_AGENT_LABEL.value],
 )
-cor_meteorologia_goes16.schedule = hour_schedule</code></pre>
+
+cor_meteorologia_precipitacao_radar_flow.schedule = TIME_SCHEDULE</code></pre>
 </details>
 </section>
 <section>
@@ -333,7 +196,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../../../../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -352,7 +215,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines.rj_cor.meteorologia.satelite" href="index.html">pipelines.rj_cor.meteorologia.satelite</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.radar.precipitacao" href="index.html">pipelines.rj_cor.meteorologia.radar.precipitacao</a></code></li>
 </ul>
 </li>
 </ul>
