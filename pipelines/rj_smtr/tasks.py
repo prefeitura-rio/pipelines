@@ -750,3 +750,15 @@ def get_run_dates(date_range_start: str, date_range_end: str) -> List:
         ]
     log(f"Will run the following dates: {dates}")
     return dates
+
+
+@task
+def get_join_dict(dict_list: list, new_dict: dict) -> List:
+    """
+    Updates a list of dictionaries with a new dictionary.
+    """
+    for dict_temp in dict_list:
+        dict_temp.update(new_dict)
+
+    log(f"get_join_dict: {dict_list}")
+    return dict_list

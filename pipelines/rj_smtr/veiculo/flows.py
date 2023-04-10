@@ -40,6 +40,7 @@ from pipelines.rj_smtr.tasks import (
     bq_upload,
     fetch_dataset_sha,
     get_run_dates,
+    get_join_dict,
 )
 
 from pipelines.rj_smtr.veiculo.tasks import (
@@ -191,7 +192,7 @@ sppo_infracao_captura.run_config = KubernetesRun(
 sppo_infracao_captura.schedule = every_day_hour_five
 
 # flake8: noqa: E501
-sppo_veiculo_dia_name = f"SMTR: Materialização - {constants.DATASET_ID.value}.{constants.SPPO_VEICULO_DIA_TABLE_ID.value}"
+sppo_veiculo_dia_name = f"[TESTE] SMTR: Materialização - {constants.DATASET_ID.value}.{constants.SPPO_VEICULO_DIA_TABLE_ID.value}"
 with Flow(
     sppo_veiculo_dia_name,
     code_owners=["rodrigo", "fernanda"],
@@ -199,26 +200,19 @@ with Flow(
 
     timestamp = get_current_timestamp()
 
-    LABELS = get_current_flow_labels()
-    MODE = get_current_flow_mode(LABELS)
-
-    # Rename flow run
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix=f"{sppo_veiculo_dia_name} - ", now_time=timestamp
-    )
-
     # 1. SETUP #
 
     # Get default parameters #
     start_date = Parameter("start_date", default=get_now_date.run())
     end_date = Parameter("end_date", default=get_now_date.run())
+    stu_data_versao = Parameter("stu_data_versao", default="")
 
-    run_date = get_run_dates(start_date, end_date)
+    run_dates = get_run_dates(start_date, end_date)
 
     # Rename flow run #
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=f"SMTR: Materialização - {constants.DATASET_ID.value}.{constants.SPPO_VEICULO_DIA_TABLE_ID.value} ",
-        now_time=run_date,
+        prefix=sppo_veiculo_dia_name,
+        now_time=run_dates,
     )
 
     # Set dbt client #
@@ -234,12 +228,16 @@ with Flow(
         dataset_id=constants.DATASET_ID.value,
     )
 
-    # 2. TREAT #
+    dict_list = get_join_dict(dict_list=run_dates, new_dict=dataset_sha)
+    _vars = get_join_dict(
+        dict_list=dict_list, new_dict=dict(stu_data_versao=stu_data_versao)
+    )
 
+    # 2. TREAT #
     RUN = run_dbt_model.map(
         dbt_client=unmapped(dbt_client),
         dataset_id=unmapped(constants.DATASET_ID.value),
-        _vars=run_date,
+        _vars=_vars,
     )
 
 sppo_veiculo_dia.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)

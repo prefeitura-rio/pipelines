@@ -29,6 +29,7 @@ from pipelines.rj_smtr.constants import constants as smtr_constants
 from pipelines.rj_smtr.tasks import (
     fetch_dataset_sha,
     get_run_dates,
+    get_join_dict,
     # get_local_dbt_client,
     # set_last_run_timestamp,
 )
@@ -48,7 +49,6 @@ from pipelines.rj_smtr.schedules import (
     # every_dayofmonth_one_and_sixteen,
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
-from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import get_run_dates, get_join_dict
 
 # Flows #
 
@@ -101,7 +101,7 @@ viagens_sppo.run_config = KubernetesRun(
 viagens_sppo.schedule = every_day_hour_five
 
 with Flow(
-    "SMTR: Subsídio SPPO Apuração",
+    "[TESTE] SMTR: Subsídio SPPO Apuração",
     code_owners=["rodrigo", "fernanda"],
 ) as subsidio_sppo_apuracao:
 
@@ -133,14 +133,11 @@ with Flow(
     )
 
     # 2. MATERIALIZE DATA #
-    sppo_veiculo_dia_run = create_flow_run(
-        flow_name=sppo_veiculo_dia.name,
-        project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-        run_name=sppo_veiculo_dia.name,
-        parameters=dict(
-            start_date=start_date, end_date=end_date, stu_data_versao=stu_data_versao
-        ),
+    parameters = dict(
+        start_date=start_date, end_date=end_date, stu_data_versao=stu_data_versao
     )
+
+    sppo_veiculo_dia_run = sppo_veiculo_dia.run(parameters=parameters)
 
     wait_for_flow_run(
         sppo_veiculo_dia_run,
