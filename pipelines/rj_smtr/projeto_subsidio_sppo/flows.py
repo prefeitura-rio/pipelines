@@ -137,7 +137,7 @@ with Flow(
         start_date=start_date, end_date=end_date, stu_data_versao=stu_data_versao
     )
 
-    sppo_veiculo_dia_run = sppo_veiculo_dia.run(parameters=parameters)
+    sppo_veiculo_dia_run = sppo_veiculo_dia.run(parameters=parameters, labels=LABELS)
 
     wait_for_flow_run(
         sppo_veiculo_dia_run,
@@ -147,12 +147,14 @@ with Flow(
     )
 
     # 3. CALCULATE #
-    run_dbt_model(
+    subsidio_sppo_apuracao_run = run_dbt_model(
         dbt_client=dbt_client,
         dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
         _vars=dict(start_date=start_date, end_date=end_date),
         upstream_tasks=[sppo_veiculo_dia_run],
     )
+
+    subsidio_sppo_apuracao_run.set_upstream(sppo_veiculo_dia_run)
 
     # # 3. PUBLISH #
     # run_materialize = create_flow_run(
