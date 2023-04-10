@@ -29,7 +29,7 @@ from pipelines.rj_escritorio.rain_dashboard.constants import (
 )
 from pipelines.utils.decorators import Flow
 
-# from pipelines.utils.tasks import create_table_and_upload_to_gcs
+from pipelines.utils.tasks import create_table_and_upload_to_gcs
 
 
 with Flow(
@@ -74,23 +74,25 @@ with Flow(
     run_model_task.set_upstream(download_files_task)
     # run_model_task.set_upstream(change_json_task)
 
-    # upload_table = create_table_and_upload_to_gcs(
-    #     data_path=f"{BASE_PATH}predictions/",
-    #     dataset_id=DATASET_ID,
-    #     table_id=TABLE_ID,
-    #     dump_mode=DUMP_MODE,
-    # )
+    upload_table = create_table_and_upload_to_gcs(
+        data_path=f"{BASE_PATH}predictions/",
+        dataset_id=DATASET_ID,
+        table_id=TABLE_ID,
+        dump_mode=DUMP_MODE,
+        wait=run_model_task,
+    )
     # upload_table.set_upstream(run_model_task)
 
     # Save new filenames on redis
-    save_on_redis(
+    save_last_update_redis = save_on_redis(
         DATASET_ID,
         TABLE_ID,
         MODE,
         files_on_storage_list,
         keep_last=3,
-        # wait=upload_table,
+        wait=upload_table,
     )
+    # save_last_update_redis.set_upstream(upload_table)
 
     with case(TRIGGER_RAIN_DASHBOARD_UPDATE, True):
         # Trigger rain dashboard update flow run
