@@ -44,7 +44,7 @@ with Flow(
     MODE = Parameter("mode", default="prod")
     RADAR_NAME = Parameter("radar_name", default="gua")
     TRIGGER_RAIN_DASHBOARD_UPDATE = Parameter(
-        "trigger_rain_dashboard_update", default=False, required=False
+        "trigger_rain_dashboard_update", default=True, required=False
     )
 
     # Other Parameters
