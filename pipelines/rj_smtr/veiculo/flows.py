@@ -18,7 +18,7 @@ from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
     get_current_flow_mode,
     get_current_flow_labels,
-    get_now_date,
+    get_previous_date,
 )
 
 # SMTR Imports #
@@ -201,8 +201,8 @@ with Flow(
     # 1. SETUP #
 
     # Get default parameters #
-    start_date = Parameter("start_date", default=get_now_date.run())
-    end_date = Parameter("end_date", default=get_now_date.run())
+    start_date = Parameter("start_date", default=get_previous_date.run(5))
+    end_date = Parameter("end_date", default=get_previous_date.run(5))
     stu_data_versao = Parameter("stu_data_versao", default="")
 
     run_dates = get_run_dates(start_date, end_date)
