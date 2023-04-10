@@ -46,7 +46,7 @@ def run_model_prediction(
 
     with open(prediction_specs_filepath, "r") as json_file:
         prediction_specs_dict = json.load(json_file)
-
+    log("[DEBUG] read json ok")
     input_hdfs = prediction_specs_dict["radar_ppi_hdfs"]
     coordinates_filepath = prediction_specs_dict["coordinates"]
     radar_cal_specs_dicts_filepath = prediction_specs_dict["radar_cal_specs"]
@@ -67,11 +67,11 @@ def run_model_prediction(
             coordinates.append(latlon)
             id_hex.append(line.split(",")[2])
             bairro.append(line.split(",")[3])
-
+    log("[DEBUG] read coordinates filepath ok")
     with open(radar_cal_specs_dicts_filepath, "r") as json_file:
         json_list = list(json_file)
     dicts_list = []
-
+    log("[DEBUG] read radar cal specs ok")
     for json_str in json_list:
         result = json.loads(json_str)
         dicts_list.append(result)
@@ -79,7 +79,7 @@ def run_model_prediction(
     radar_data_hdfs = []
 
     last_hdf = h5py.File(input_hdfs[-1])
-
+    log("[DEBUG] read last hdf ok")
     hdf_date = last_hdf["what"].attrs["date"].decode("UTF-8")
     hdf_time = last_hdf["what"].attrs["time"].decode("UTF-8")
 
@@ -210,10 +210,9 @@ def run_model_prediction(
         predictions.save_hdf(output_filepath)
     else:
         # np.savetxt(output_filepath, predictions.predictions, delimiter=",")
-        print(">>>>>>>>>>>>>>>>>>>")
-        print(predictions.predictions)
-        print(predictions.coordinates)
-        print(id_hex)
+        log(f"[DEBUG] predictions.predictions: {predictions.predictions}")
+        log(f"[DEBUG] predictions.coordinates: {predictions.coordinates}")
+        log(f"[DEBUG] id_hex: {id_hex[:10]}")
         dfr = pd.DataFrame(
             predictions.coordinates, columns=["latitude", "longitude"]
         ).astype(float)
