@@ -105,7 +105,7 @@ with Flow(
             ],
             run_name="Update radar rain dashboard data (triggered by precipitacao_radar flow)",  # noqa
         )
-        # rain_radar_dashboard_update_flow.set_upstream(upload_table)
+        rain_radar_dashboard_update_flow.set_upstream(upload_table)
 
         wait_for_rain_dashboard_update = wait_for_flow_run(
             flow_run_id=rain_radar_dashboard_update_flow,
