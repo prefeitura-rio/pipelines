@@ -198,8 +198,6 @@ with Flow(
     code_owners=["rodrigo", "fernanda"],
 ) as sppo_veiculo_dia:
 
-    timestamp = get_current_timestamp()
-
     # 1. SETUP #
 
     # Get default parameters #

@@ -112,11 +112,11 @@ with Flow(
     end_date = Parameter("end_date", default=get_previous_date.run(5))
     stu_data_versao = Parameter("stu_data_versao", default="")
 
-    run_date = get_run_dates(start_date, end_date)
+    run_dates = get_run_dates(start_date, end_date)
 
     # Rename flow run #
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SMTR - Subsídio SPPO Apuração: ", now_time=run_date
+        prefix="SMTR - Subsídio SPPO Apuração: ", now_time=run_dates
     )
 
     # Set dbt client #
