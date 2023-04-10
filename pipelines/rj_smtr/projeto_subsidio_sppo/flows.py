@@ -151,6 +151,7 @@ with Flow(
         dbt_client=dbt_client,
         dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
         _vars=dict(start_date=start_date, end_date=end_date),
+        upstream_tasks=[sppo_veiculo_dia_run],
     )
 
     # # 3. PUBLISH #
