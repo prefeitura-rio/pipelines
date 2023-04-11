@@ -58,10 +58,11 @@ class constants(Enum):  # pylint: disable=c0103
         SELECT
             id_h3,
             bairro,
-            chuva_15min,
+            CASE
+                WHEN chuva_15min&lt;= 0.05 THEN 0.0 ELSE ROUND(chuva_15min, 2) END AS chuva_15min,
             estacoes,
             CASE
-                WHEN chuva_15min&gt; 0     AND chuva_15min&lt;= 1.25 THEN &#39;chuva fraca&#39;
+                WHEN chuva_15min&gt; 0.05  AND chuva_15min&lt;= 1.25 THEN &#39;chuva fraca&#39;
                 WHEN chuva_15min&gt; 1.25  AND chuva_15min&lt;= 6.25 THEN &#39;chuva moderada&#39;
                 WHEN chuva_15min&gt; 6.25  AND chuva_15min&lt;= 12.5 THEN &#39;chuva forte&#39;
                 WHEN chuva_15min&gt; 12.5                         THEN &#39;chuva muito forte&#39;
@@ -126,10 +127,11 @@ class constants(Enum):  # pylint: disable=c0103
         SELECT
             id_h3,
             bairro,
-            chuva_15min,
+            CASE
+                WHEN chuva_15min&lt;= 0.05 THEN 0.0 ELSE ROUND(chuva_15min, 2) END AS chuva_15min,
             estacoes,
             CASE
-                WHEN chuva_15min&gt; 0     AND chuva_15min&lt;= 1.25 THEN &#39;chuva fraca&#39;
+                WHEN chuva_15min&gt; 0.05  AND chuva_15min&lt;= 1.25 THEN &#39;chuva fraca&#39;
                 WHEN chuva_15min&gt; 1.25  AND chuva_15min&lt;= 6.25 THEN &#39;chuva moderada&#39;
                 WHEN chuva_15min&gt; 6.25  AND chuva_15min&lt;= 12.5 THEN &#39;chuva forte&#39;
                 WHEN chuva_15min&gt; 12.5                         THEN &#39;chuva muito forte&#39;
