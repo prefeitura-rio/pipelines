@@ -102,7 +102,7 @@ viagens_sppo.schedule = every_day_hour_five
 subsidio_sppo_apuracao_name = "SMTR: Subsídio SPPO Apuração"
 with Flow(
     subsidio_sppo_apuracao_name,
-    code_owners=["rodrigo", "fernanda"],
+    code_owners=["rodrigo"],
 ) as subsidio_sppo_apuracao:
 
     # 1. SETUP #
