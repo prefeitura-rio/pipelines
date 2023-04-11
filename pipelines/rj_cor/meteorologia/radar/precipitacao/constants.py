@@ -30,7 +30,7 @@ class constants(Enum):  # pylint: disable=c0103
             id_h3,
             bairro,
             CASE
-                WHEN chuva_15min<= 0.05 THEN 0 ELSE ROUND(chuva_15min, 2) END AS chuva_15min,
+                WHEN chuva_15min<= 0.05 THEN 0.0 ELSE ROUND(chuva_15min, 2) END AS chuva_15min,
             estacoes,
             CASE
                 WHEN chuva_15min> 0.05  AND chuva_15min<= 1.25 THEN 'chuva fraca'
