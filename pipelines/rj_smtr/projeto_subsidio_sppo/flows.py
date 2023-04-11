@@ -126,7 +126,7 @@ with Flow(
             start_date=start_date, end_date=end_date, stu_data_versao=stu_data_versao
         )
 
-        sppo_veiculo_dia_run = create_flow_run(
+        SPPO_VEICULO_DIA_RUN = create_flow_run(
             flow_name=sppo_veiculo_dia.name,
             project_name=constants.PREFECT_DEFAULT_PROJECT.value,
             run_name=sppo_veiculo_dia.name,
@@ -134,7 +134,7 @@ with Flow(
         )
 
         wait_for_flow_run(
-            sppo_veiculo_dia_run,
+            SPPO_VEICULO_DIA_RUN,
             stream_states=True,
             stream_logs=True,
             raise_final_state=True,
@@ -161,7 +161,7 @@ with Flow(
     )
 
     with case(materialize_sppo_veiculo_dia, True):
-        SUBSIDIO_SPPO_APURACAO_RUN.set_upstream(sppo_veiculo_dia_run)
+        SPPO_VEICULO_DIA_RUN.set_downstream(SUBSIDIO_SPPO_APURACAO_RUN)
 
     # # 3. PUBLISH #
     # run_materialize = create_flow_run(
