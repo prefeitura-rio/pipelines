@@ -18,7 +18,7 @@ from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
     get_current_flow_mode,
     get_current_flow_labels,
-    get_now_date,
+    get_yesterday,
     get_previous_date,
 )
 
@@ -120,7 +120,7 @@ with Flow(
 sppo_licenciamento_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_licenciamento_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 sppo_licenciamento_captura.schedule = every_day_hour_five
 
@@ -188,7 +188,7 @@ with Flow(
 sppo_infracao_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_infracao_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 sppo_infracao_captura.schedule = every_day_hour_five
 
@@ -202,9 +202,9 @@ with Flow(
     # 1. SETUP #
 
     # Get default parameters #
-    start_date = Parameter("start_date", default=get_now_date.run())
-    end_date = Parameter("end_date", default=get_now_date.run())
-    stu_data_versao = Parameter("stu_data_versao", default=get_previous_date.run(5))
+    start_date = Parameter("start_date", default=get_yesterday.run())
+    end_date = Parameter("end_date", default=get_yesterday.run())
+    stu_data_versao = Parameter("stu_data_versao", default=get_previous_date.run(6))
 
     run_dates = get_run_dates(start_date, end_date)
 
