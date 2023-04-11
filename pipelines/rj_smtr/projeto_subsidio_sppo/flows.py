@@ -124,7 +124,17 @@ with Flow(
         start_date=start_date, end_date=end_date, stu_data_versao=stu_data_versao
     )
 
-    sppo_veiculo_dia_run = sppo_veiculo_dia.run(parameters=parameters)
+    # sppo_veiculo_dia_run = sppo_veiculo_dia.run(parameters=parameters)
+
+    sppo_veiculo_dia_run = create_flow_run(
+        flow_name=sppo_veiculo_dia.name,
+        project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+        # labels=[
+        #     constants.RJ_DATARIO_AGENT_LABEL.value,
+        # ],
+        run_name=sppo_veiculo_dia.name,
+        parameters=parameters,
+    )
 
     # Set dbt client #
     LABELS = get_current_flow_labels()
