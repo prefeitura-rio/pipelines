@@ -14,10 +14,11 @@ from prefect.utilities.edges import unmapped
 from pipelines.constants import constants
 from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
+    get_now_date,
+    get_yesterday,
+    get_previous_date,
     get_current_flow_mode,
     get_current_flow_labels,
-    get_now_date,
-    get_previous_date,
 )
 from pipelines.utils.decorators import Flow
 from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
@@ -107,9 +108,9 @@ with Flow(
     # 1. SETUP #
 
     # Get default parameters #
-    start_date = Parameter("start_date", default=get_now_date.run())
-    end_date = Parameter("end_date", default=get_now_date.run())
-    stu_data_versao = Parameter("stu_data_versao", default=get_previous_date.run(5))
+    start_date = Parameter("start_date", default=get_yesterday.run())
+    end_date = Parameter("end_date", default=get_yesterday.run())
+    stu_data_versao = Parameter("stu_data_versao", default=get_previous_date.run(6))
     materialize_sppo_veiculo_dia = Parameter("materialize_sppo_veiculo_dia", True)
 
     run_dates = get_run_dates(start_date, end_date)
