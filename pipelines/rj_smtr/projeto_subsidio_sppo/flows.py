@@ -128,7 +128,8 @@ with Flow(
 
     sppo_veiculo_dia_run = create_flow_run(
         flow_name=sppo_veiculo_dia.name,
-        project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+        # project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+        project_name="staging",
         # labels=[
         #     constants.RJ_DATARIO_AGENT_LABEL.value,
         # ],
@@ -161,7 +162,6 @@ with Flow(
         dbt_client=dbt_client,
         dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
         _vars=dict(start_date=start_date, end_date=end_date),
-        upstream_tasks=[sppo_veiculo_dia_run],
     )
 
     subsidio_sppo_apuracao_run.set_upstream(sppo_veiculo_dia_run)
