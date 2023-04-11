@@ -89,10 +89,7 @@ def check_files_for_download(files: list, dataset_id: str, table_id: str):
 
     try:
         exclude_files = redis_client.get(f"{dataset_id}.{table_id}")["files"]
-    except TypeError:
-        set_redis_rdo_files(redis_client, dataset_id, table_id)
-        exclude_files = redis_client.get(f"{dataset_id}.{table_id}")["files"]
-    except KeyError:
+    except (TypeError, KeyError):
         set_redis_rdo_files(redis_client, dataset_id, table_id)
         exclude_files = redis_client.get(f"{dataset_id}.{table_id}")["files"]
 
