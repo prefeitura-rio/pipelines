@@ -223,6 +223,7 @@ with Flow(
     # dbt_client = get_local_dbt_client(host="localhost", port=3001)
 
     # Get models version #
+    # TODO: include version in a column in the table
     dataset_sha = fetch_dataset_sha(
         dataset_id=constants.DATASET_ID.value,
     )
@@ -233,7 +234,7 @@ with Flow(
     )
 
     # 2. TREAT #
-    RUN = run_dbt_model.map(
+    run_dbt_model.map(
         dbt_client=unmapped(dbt_client),
         dataset_id=unmapped(constants.DATASET_ID.value),
         _vars=_vars,
