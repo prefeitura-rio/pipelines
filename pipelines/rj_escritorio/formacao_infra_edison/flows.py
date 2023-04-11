@@ -13,7 +13,7 @@ with Flow(
     "EMD: Formacao - Infraestrutura Edison Moreira",
     code_owners=["gabriel", "diego", "edisonmoreira"],
 ) as rj_escritorio_formacao_infra_edison_flow:
-    name = Parameter("name", default="Cosmos")
+    name = Parameter("name", default="Via Láctea")
     hello_name(name=name)
 
 
