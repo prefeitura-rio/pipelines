@@ -119,6 +119,13 @@ with Flow(
         prefix="SMTR - Subsídio SPPO Apuração: ", now_time=run_dates
     )
 
+    # 2. MATERIALIZE DATA #
+    parameters = dict(
+        start_date=start_date, end_date=end_date, stu_data_versao=stu_data_versao
+    )
+
+    sppo_veiculo_dia_run = sppo_veiculo_dia.run(parameters=parameters)
+
     # Set dbt client #
     LABELS = get_current_flow_labels()
     MODE = get_current_flow_mode(LABELS)
@@ -131,13 +138,6 @@ with Flow(
     dataset_sha = fetch_dataset_sha(
         dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
     )
-
-    # 2. MATERIALIZE DATA #
-    parameters = dict(
-        start_date=start_date, end_date=end_date, stu_data_versao=stu_data_versao
-    )
-
-    sppo_veiculo_dia_run = sppo_veiculo_dia.run(parameters=parameters, labels=LABELS)
 
     wait_for_flow_run(
         sppo_veiculo_dia_run,
