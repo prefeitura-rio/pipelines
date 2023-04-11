@@ -18,6 +18,7 @@ from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
     get_current_flow_mode,
     get_current_flow_labels,
+    get_now_date,
     get_previous_date,
 )
 
@@ -192,7 +193,7 @@ sppo_infracao_captura.run_config = KubernetesRun(
 sppo_infracao_captura.schedule = every_day_hour_five
 
 # flake8: noqa: E501
-sppo_veiculo_dia_name = f"[TESTE] SMTR: Materialização - {constants.DATASET_ID.value}.{constants.SPPO_VEICULO_DIA_TABLE_ID.value}"
+sppo_veiculo_dia_name = f"SMTR: Materialização - {constants.DATASET_ID.value}.{constants.SPPO_VEICULO_DIA_TABLE_ID.value}"
 with Flow(
     sppo_veiculo_dia_name,
     code_owners=["rodrigo", "fernanda"],
@@ -201,15 +202,15 @@ with Flow(
     # 1. SETUP #
 
     # Get default parameters #
-    start_date = Parameter("start_date", default=get_previous_date.run(5))
-    end_date = Parameter("end_date", default=get_previous_date.run(5))
-    stu_data_versao = Parameter("stu_data_versao", default="")
+    start_date = Parameter("start_date", default=get_now_date.run())
+    end_date = Parameter("end_date", default=get_now_date.run())
+    stu_data_versao = Parameter("stu_data_versao", default=get_previous_date.run(5))
 
     run_dates = get_run_dates(start_date, end_date)
 
     # Rename flow run #
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=sppo_veiculo_dia_name,
+        prefix=sppo_veiculo_dia_name + ": ",
         now_time=run_dates,
     )
 
@@ -241,5 +242,5 @@ with Flow(
 sppo_veiculo_dia.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_veiculo_dia.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )

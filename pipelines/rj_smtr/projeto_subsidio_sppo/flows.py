@@ -14,10 +14,10 @@ from prefect.utilities.edges import unmapped
 from pipelines.constants import constants
 from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
-    get_previous_date,
     get_current_flow_mode,
     get_current_flow_labels,
     get_now_date,
+    get_previous_date,
 )
 from pipelines.utils.decorators import Flow
 from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
@@ -34,13 +34,11 @@ from pipelines.rj_smtr.tasks import (
     # set_last_run_timestamp,
 )
 
-from pipelines.rj_smtr.materialize_to_datario.flows import (
-    smtr_materialize_to_datario_viagem_sppo_flow,
-)
+# from pipelines.rj_smtr.materialize_to_datario.flows import (
+#     smtr_materialize_to_datario_viagem_sppo_flow,
+# )
 
 from pipelines.rj_smtr.veiculo.flows import (
-    sppo_licenciamento_captura,
-    sppo_infracao_captura,
     sppo_veiculo_dia,
 )
 
@@ -101,16 +99,16 @@ viagens_sppo.run_config = KubernetesRun(
 viagens_sppo.schedule = every_day_hour_five
 
 with Flow(
-    "[TESTE] SMTR: Subsídio SPPO Apuração",
+    "SMTR: Subsídio SPPO Apuração",
     code_owners=["rodrigo", "fernanda"],
 ) as subsidio_sppo_apuracao:
 
     # 1. SETUP #
 
     # Get default parameters #
-    start_date = Parameter("start_date", default=get_previous_date.run(5))
-    end_date = Parameter("end_date", default=get_previous_date.run(5))
-    stu_data_versao = Parameter("stu_data_versao", default="")
+    start_date = Parameter("start_date", default=get_now_date.run())
+    end_date = Parameter("end_date", default=get_now_date.run())
+    stu_data_versao = Parameter("stu_data_versao", default=get_previous_date.run(5))
 
     run_dates = get_run_dates(start_date, end_date)
 
@@ -124,15 +122,9 @@ with Flow(
         start_date=start_date, end_date=end_date, stu_data_versao=stu_data_versao
     )
 
-    # sppo_veiculo_dia_run = sppo_veiculo_dia.run(parameters=parameters)
-
     sppo_veiculo_dia_run = create_flow_run(
         flow_name=sppo_veiculo_dia.name,
-        # project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-        project_name="staging",
-        # labels=[
-        #     constants.RJ_DATARIO_AGENT_LABEL.value,
-        # ],
+        project_name=constants.PREFECT_DEFAULT_PROJECT.value,
         run_name=sppo_veiculo_dia.name,
         parameters=parameters,
     )
@@ -158,13 +150,13 @@ with Flow(
     )
 
     # 3. CALCULATE #
-    subsidio_sppo_apuracao_run = run_dbt_model(
+    SUBSIDIO_SPPO_APURACAO_RUN = run_dbt_model(
         dbt_client=dbt_client,
         dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
         _vars=dict(start_date=start_date, end_date=end_date),
     )
 
-    subsidio_sppo_apuracao_run.set_upstream(sppo_veiculo_dia_run)
+    SUBSIDIO_SPPO_APURACAO_RUN.set_upstream(sppo_veiculo_dia_run)
 
     # # 3. PUBLISH #
     # run_materialize = create_flow_run(
@@ -184,7 +176,7 @@ with Flow(
 
 subsidio_sppo_apuracao.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 subsidio_sppo_apuracao.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value, labels=[constants.RJ_SMTR_DEV_AGENT_LABEL.value]
+    image=constants.DOCKER_IMAGE.value, labels=[constants.RJ_SMTR_AGENT_LABEL.value]
 )
 
 # subsidio_sppo_apuracao.schedule = every_dayofmonth_one_and_sixteen
