@@ -133,13 +133,6 @@ with Flow(
         dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
     )
 
-    # 3. CALCULATE #
-    SUBSIDIO_SPPO_APURACAO_RUN = run_dbt_model(
-        dbt_client=dbt_client,
-        dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
-        _vars=dict(start_date=start_date, end_date=end_date),
-    )
-
     # 2. MATERIALIZE DATA #
     with case(materialize_sppo_veiculo_dia, True):
         parameters = dict(
@@ -160,7 +153,22 @@ with Flow(
             raise_final_state=True,
         )
 
+        # 3. CALCULATE #
+        SUBSIDIO_SPPO_APURACAO_RUN = run_dbt_model(
+            dbt_client=dbt_client,
+            dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
+            _vars=dict(start_date=start_date, end_date=end_date),
+        )
+
         SPPO_VEICULO_DIA_RUN.set_downstream(SUBSIDIO_SPPO_APURACAO_RUN)
+
+    with case(materialize_sppo_veiculo_dia, False):
+        # 3. CALCULATE #
+        run_dbt_model(
+            dbt_client=dbt_client,
+            dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
+            _vars=dict(start_date=start_date, end_date=end_date),
+        )
 
     # # 3. PUBLISH #
     # run_materialize = create_flow_run(
