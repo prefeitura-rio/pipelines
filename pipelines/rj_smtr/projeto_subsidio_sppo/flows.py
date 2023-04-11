@@ -120,26 +120,6 @@ with Flow(
         prefix=subsidio_sppo_apuracao_name + ": ", now_time=run_dates
     )
 
-    # 2. MATERIALIZE DATA #
-    with case(materialize_sppo_veiculo_dia, True):
-        parameters = dict(
-            start_date=start_date, end_date=end_date, stu_data_versao=stu_data_versao
-        )
-
-        SPPO_VEICULO_DIA_RUN = create_flow_run(
-            flow_name=sppo_veiculo_dia.name,
-            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-            run_name=sppo_veiculo_dia.name,
-            parameters=parameters,
-        )
-
-        wait_for_flow_run(
-            SPPO_VEICULO_DIA_RUN,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
-        )
-
     # Set dbt client #
     LABELS = get_current_flow_labels()
     MODE = get_current_flow_mode(LABELS)
@@ -160,7 +140,26 @@ with Flow(
         _vars=dict(start_date=start_date, end_date=end_date),
     )
 
+    # 2. MATERIALIZE DATA #
     with case(materialize_sppo_veiculo_dia, True):
+        parameters = dict(
+            start_date=start_date, end_date=end_date, stu_data_versao=stu_data_versao
+        )
+
+        SPPO_VEICULO_DIA_RUN = create_flow_run(
+            flow_name=sppo_veiculo_dia.name,
+            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+            run_name=sppo_veiculo_dia.name,
+            parameters=parameters,
+        )
+
+        wait_for_flow_run(
+            SPPO_VEICULO_DIA_RUN,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+
         SPPO_VEICULO_DIA_RUN.set_downstream(SUBSIDIO_SPPO_APURACAO_RUN)
 
     # # 3. PUBLISH #
