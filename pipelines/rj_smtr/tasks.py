@@ -4,22 +4,22 @@ Tasks for rj_smtr
 """
 # pylint: disable=W0703
 
+from datetime import datetime, timedelta
 import json
 import os
-import traceback
-import io
-from typing import Dict, List
 from pathlib import Path
-from datetime import datetime, timedelta
+import traceback
+from typing import Dict, List
+import io
 
+from basedosdados import Storage, Table
 import basedosdados as bd
+from dbt_client import DbtClient
 import pandas as pd
 import pendulum
-import requests
-from basedosdados import Storage, Table
-from dbt_client import DbtClient
 from prefect import task
 from pytz import timezone
+import requests
 
 from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.utils import (
