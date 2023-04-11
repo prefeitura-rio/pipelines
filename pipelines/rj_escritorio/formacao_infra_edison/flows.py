@@ -2,20 +2,22 @@
 from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
-
 from pipelines.constants import constants
 from pipelines.rj_escritorio.formacao_infra_edison.tasks import (
-    hello_name,
+    coletaDado,
+    trataDado,
+    dataframe_to_csv,
 )
 from pipelines.utils.decorators import Flow
 
 with Flow(
     "EMD: Formacao - Infraestrutura Edison Moreira",
-    code_owners=["gabriel", "diego", "edisonmoreira"],
+    code_owners=["gabriel", "diego", "Edison Moreira"],
 ) as rj_escritorio_formacao_infra_edison_flow:
-    name = Parameter("name", default="Via Láctea")
-    hello_name(name=name)
 
+    dados = coletaDado(500)
+    df = trataDado(dados)
+    dataframe_to_csv(df, "data.csv")
 
 rj_escritorio_formacao_infra_edison_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 rj_escritorio_formacao_infra_edison_flow.run_config = KubernetesRun(
