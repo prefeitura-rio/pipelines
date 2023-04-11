@@ -3,7 +3,7 @@
 Flows for projeto_subsidio_sppo
 """
 
-from prefect import Parameter
+from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
@@ -98,8 +98,9 @@ viagens_sppo.run_config = KubernetesRun(
 
 viagens_sppo.schedule = every_day_hour_five
 
+subsidio_sppo_apuracao_name = "SMTR: Subsídio SPPO Apuração"
 with Flow(
-    "SMTR: Subsídio SPPO Apuração",
+    subsidio_sppo_apuracao_name,
     code_owners=["rodrigo", "fernanda"],
 ) as subsidio_sppo_apuracao:
 
@@ -109,25 +110,34 @@ with Flow(
     start_date = Parameter("start_date", default=get_now_date.run())
     end_date = Parameter("end_date", default=get_now_date.run())
     stu_data_versao = Parameter("stu_data_versao", default=get_previous_date.run(5))
+    materialize_sppo_veiculo_dia = Parameter("materialize_sppo_veiculo_dia", True)
 
     run_dates = get_run_dates(start_date, end_date)
 
     # Rename flow run #
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SMTR - Subsídio SPPO Apuração: ", now_time=run_dates
+        prefix=subsidio_sppo_apuracao_name + ": ", now_time=run_dates
     )
 
     # 2. MATERIALIZE DATA #
-    parameters = dict(
-        start_date=start_date, end_date=end_date, stu_data_versao=stu_data_versao
-    )
+    with case(materialize_sppo_veiculo_dia, True):
+        parameters = dict(
+            start_date=start_date, end_date=end_date, stu_data_versao=stu_data_versao
+        )
 
-    sppo_veiculo_dia_run = create_flow_run(
-        flow_name=sppo_veiculo_dia.name,
-        project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-        run_name=sppo_veiculo_dia.name,
-        parameters=parameters,
-    )
+        sppo_veiculo_dia_run = create_flow_run(
+            flow_name=sppo_veiculo_dia.name,
+            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+            run_name=sppo_veiculo_dia.name,
+            parameters=parameters,
+        )
+
+        wait_for_flow_run(
+            sppo_veiculo_dia_run,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
 
     # Set dbt client #
     LABELS = get_current_flow_labels()
@@ -142,13 +152,6 @@ with Flow(
         dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
     )
 
-    wait_for_flow_run(
-        sppo_veiculo_dia_run,
-        stream_states=True,
-        stream_logs=True,
-        raise_final_state=True,
-    )
-
     # 3. CALCULATE #
     SUBSIDIO_SPPO_APURACAO_RUN = run_dbt_model(
         dbt_client=dbt_client,
@@ -156,7 +159,8 @@ with Flow(
         _vars=dict(start_date=start_date, end_date=end_date),
     )
 
-    SUBSIDIO_SPPO_APURACAO_RUN.set_upstream(sppo_veiculo_dia_run)
+    with case(materialize_sppo_veiculo_dia, True):
+        SUBSIDIO_SPPO_APURACAO_RUN.set_upstream(sppo_veiculo_dia_run)
 
     # # 3. PUBLISH #
     # run_materialize = create_flow_run(
