@@ -726,10 +726,9 @@ def set_last_run_timestamp(
     key = dataset_id + &#34;.&#34; + table_id
     if mode == &#34;dev&#34;:
         key = f&#34;{mode}.{key}&#34;
-    value = {
-        &#34;last_run_timestamp&#34;: timestamp,
-    }
-    redis_client.set(key, value)
+    content = redis_client.get(key)
+    content[&#34;last_run_timestamp&#34;] = timestamp
+    redis_client.set(key, content)
     return True
 
 
@@ -1766,10 +1765,9 @@ def set_last_run_timestamp(
     key = dataset_id + &#34;.&#34; + table_id
     if mode == &#34;dev&#34;:
         key = f&#34;{mode}.{key}&#34;
-    value = {
-        &#34;last_run_timestamp&#34;: timestamp,
-    }
-    redis_client.set(key, value)
+    content = redis_client.get(key)
+    content[&#34;last_run_timestamp&#34;] = timestamp
+    redis_client.set(key, content)
     return True</code></pre>
 </details>
 </dd>

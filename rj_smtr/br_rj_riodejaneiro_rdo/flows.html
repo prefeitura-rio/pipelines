@@ -137,7 +137,7 @@ with Flow(
     materialize = Parameter(&#34;materialize&#34;, False)
 
     rename_run = rename_current_flow_run_now_time(
-        prefix=f&#34;Captura FTP - {transport_mode}-{report_type} &#34;,
+        prefix=f&#34;Captura FTP - {transport_mode.run()}-{report_type.run()} &#34;,
         now_time=get_current_timestamp(),
         wait=None,
     )

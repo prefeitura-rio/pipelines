@@ -118,7 +118,7 @@ def check_files_for_download(files: list, dataset_id: str, table_id: str):
 
     try:
         exclude_files = redis_client.get(f&#34;{dataset_id}.{table_id}&#34;)[&#34;files&#34;]
-    except TypeError:
+    except (TypeError, KeyError):
         set_redis_rdo_files(redis_client, dataset_id, table_id)
         exclude_files = redis_client.get(f&#34;{dataset_id}.{table_id}&#34;)[&#34;files&#34;]
 
@@ -376,7 +376,7 @@ def check_files_for_download(files: list, dataset_id: str, table_id: str):
 
     try:
         exclude_files = redis_client.get(f&#34;{dataset_id}.{table_id}&#34;)[&#34;files&#34;]
-    except TypeError:
+    except (TypeError, KeyError):
         set_redis_rdo_files(redis_client, dataset_id, table_id)
         exclude_files = redis_client.get(f&#34;{dataset_id}.{table_id}&#34;)[&#34;files&#34;]
 
