@@ -24,15 +24,19 @@ def get_gtfs_zipfiles():
         storage_folder (str, optional): Defaults to "gtfs".
     """
     file_paths = []
-    client = bd.Storage().client["storage_staging"]
+    st = bd.Storage("", "")
+    client = st.client["storage_staging"]
     blobs = client.list_blobs(
-        bucket_or_name=client.bucket, prefix=constants.GTFS_STORAGE_FOLDER.value
+        bucket_or_name=st.bucket, prefix=constants.GTFS_STORAGE_FOLDER.value
     )
-    module_path = "data/" + '-'.join(__name__.split('.')[1:-1])
+    dirpath = Path("./raw")
+    dirpath.mkdir(parents=True, exist_ok=True)
     for blob in blobs:
-        file_path = f"{module_path}/downloaded/{blob.name}"
-        blob.download_to_filename(file_path)
-        file_paths.append(file_path)
+        # get blob name as only filename
+        if blob.name.endswith(".zip"):
+            file_path = f"{dirpath.as_posix()}/{blob.name.split('/')[-1]}"
+            blob.download_to_filename(file_path)
+            file_paths.append(file_path)
     return file_paths
 
 
@@ -102,38 +106,42 @@ def treat_gtfs_tables(tables: Dict[str, pd.DataFrame]) -> dict:
     """
     table_paths = {}
     # Remove SN routes from table `routes`
+    log("Removing SN routes")
     tables["routes"] = tables["routes"][
-        ~ tables["routes"].route_short_name.astype(str).str.contains("SN")].copy()
+        ~tables["routes"].route_short_name.astype(str).str.contains("SN")
+    ].copy()
 
     # Cross checks to remove invalid foreign keys
+    log("Cross checking for foreign keys")
     for (
         table_name,
         fk_info,
     ) in constants.GTFS_FK_SUBSET.value.items():  # dict containing cross check refs
         main_table = tables[table_name]
         for fk_field, fk_table_info in fk_info.items():
-
+            log(f'Table:{table_name}, Foreign table: {fk_table_info["table_name"]}')
             fk_table = tables[fk_table_info["table_name"]]
             # Check if the foreign key column on the main table has
             # a reference on the source table
             mask = main_table[fk_field].isin(fk_table[fk_table_info["field"]])
+            log(f"Shape before: {main_table.shape}")
             tables[table_name] = main_table[mask]
+            log(f"Shape after: {main_table.shape}")
 
     # enforce type of columns - it affects rename_trip_id
     for table_name, table in tables.items():
         map_col_type = constants.GTFS_COLUMN_TYPE.value.get(table_name)
         if map_col_type:
             tables[table_name] = table.astype(map_col_type)
-            
 
     trips = tables["trips"]
 
-    def rename_trip_id(trip_id:str) -> str:
+    def rename_trip_id(trip_id: str) -> str:
         """Returns: trip_short_name + direction_id + service_id"""
         trip = trips[trips.trip_id == trip_id].iloc[0]
         return f"{trip.trip_short_name}{trip.direction_id}{trip.service_id}"
-    trip_id_dict = dict(zip(trips['trip_id'], trips['trip_id'].apply(rename_trip_id)))
 
+    trip_id_dict = dict(zip(trips["trip_id"], trips["trip_id"].apply(rename_trip_id)))
 
     # General treatment
     for table_name, table in tables.items():
@@ -141,24 +149,25 @@ def treat_gtfs_tables(tables: Dict[str, pd.DataFrame]) -> dict:
         # rename trip_id
         if "trip_id" in table.columns:
             table.trip_id = table.trip_id.map(trip_id_dict)
-
+        log(f"Dropping duplicates for table {table_name}")
         # drop primary key duplicates
-        table.drop_duplicates(constants.GTFS_PK_SUBSET.value[table_name], keep='first', inplace=True)
+        log(f"Shape before: {table.shape}")
+        table.drop_duplicates(
+            constants.GTFS_PK_SUBSET.value[table_name], keep="first", inplace=True
+        )
+        log(f"Shape after: {table.shape}")
 
         # rename columns
         if constants.GTFS_RENAME_COLUMNS.value.get(table_name):
             table.rename(
-                columns=constants.GTFS_RENAME_COLUMNS.value[table_name],
-                inplace=True
+                columns=constants.GTFS_RENAME_COLUMNS.value[table_name], inplace=True
             )
 
         # Save local for later import
-        module_path = "data/" + '-'.join(__name__.split('.')[1:-1])
-        table_path = f"{module_path}/treated"
-        Path(table_path).mkdir(parents=True, exist_ok=True)
-        table_path += f"/{table_name}.csv"
-        table.to_csv(table_path, sep=",", index=False)
-        table_paths[table_name] = table_path
+        Path("./treated").mkdir(parents=True, exist_ok=True)
+        filepath = f"./treated/{table_name}.csv"
+        table.to_csv(filepath, sep=",", index=False)
+        table_paths[table_name] = filepath
 
     return table_paths
 
@@ -172,23 +181,23 @@ def execute_update(table_paths: Dict[str, str]):  # pylint: disable=W0613
     Args:
         table_paths (Dict[str, str]): _description_
     """
-    db_data = get_vault_secret("TBD")  # TODO: add secret_path
+    db_data = get_vault_secret(constants.MOBILIDADE_DB.value)["data"]
     pgdb = Postgres(  # pylint: disable=W0612
-        db_data["hostname"], db_data["username"], db_data["pw"], db_data["db_name"]
+        db_data["hostname"], db_data["username"], db_data["pw"], db_data["dbname"]
     )
     cursor = pgdb.get_cursor()
 
+    # Tuncate all tables before updating, avoids duplicate key error
     for table_name in constants.GTFS_TABLE_NAMES.value:  # pylint: disable=W0612
         table_db_name = constants.GTFS_RENAME_TABLES.value[table_name]
-
-    for table_name in constants.GTFS_TABLE_NAMES.value:  # pylint: disable=W0612
-        table_db_name = constants.GTFS_RENAME_TABLES.value[table_name]
-        # empty table
+        # Remove old data
+        log(f"Truncating table {table_db_name}")
         cursor.execute(f"TRUNCATE {table_db_name} CASCADE")
+        pgdb.commit()
         # insert data
         log(f"Inserting in {table_db_name}...")
-        with open(table_paths[table_name], 'r', encoding="utf8") as table_data:
-            table_cols = table_data.readline().strip().split(',')
+        with open(table_paths[table_name], "r", encoding="utf8") as table_data:
+            table_cols = table_data.readline().strip().split(",")
             table_data.seek(0)
 
             next(table_data)  # skip csv header
@@ -198,8 +207,3 @@ def execute_update(table_paths: Dict[str, str]):  # pylint: disable=W0613
             """
             cursor.copy_expert(sql, table_data)
             pgdb.commit()
-        
-        # TODO: expor banco de teste para conexão externa
-        # TODO: definir método de buscar o gtfs
-        # TODO: adicionar dados de conexão do banco ao vault
-        pass

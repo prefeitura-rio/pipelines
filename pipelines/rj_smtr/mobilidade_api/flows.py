@@ -28,5 +28,5 @@ with Flow("SMTR - Update DB - Postgres") as update_db:
 update_db.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 update_db.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )

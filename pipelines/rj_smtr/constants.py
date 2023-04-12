@@ -149,7 +149,7 @@ class constants(Enum):  # pylint: disable=c0103
         "calendar_dates": ["service_id", "date"],
         "fare_attributes": ["fare_id"],
         "feed_info": ["feed_id"],
-        "frequencies": ["trip_id", "start_time", "end_time", "headway_secs"],
+        "frequencies": ["trip_id", "start_time"],
         "routes": ["route_id"],
         "shapes": ["shape_id", "shape_pt_sequence"],
         "stop_times": ["trip_id", "stop_sequence"],
@@ -197,7 +197,7 @@ class constants(Enum):  # pylint: disable=c0103
             "continuous_drop_off": "Int64",
         },
     }
-
+    MOBILIDADE_DB = "mobilidade-dev-db"
     # RDO/RHO
     RDO_FTP_ALLOWED_PATHS = ["SPPO", "STPL"]
     RDO_FTPS_SECRET_PATH = "smtr_rdo_ftps"
