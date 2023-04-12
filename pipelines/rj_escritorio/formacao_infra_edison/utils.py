@@ -2,5 +2,5 @@
 from pipelines.utils.utils import log
 
 
-def hello_name(name: str) -> None:
-    log(f"Olá {name}!")
+def exibeLog(name: str) -> None:
+    log(f"log {name}!")

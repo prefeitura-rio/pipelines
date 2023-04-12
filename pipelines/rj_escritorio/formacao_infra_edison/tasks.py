@@ -4,7 +4,7 @@ import requests
 import pandas as pd
 from pandas import json_normalize
 import json
-from pipelines.utils.utils import log
+from pipelines.utils.utils import exibeLog
 from pathlib import Path
 from uuid import uuid4
 
@@ -21,7 +21,7 @@ def coletaDado(quantidadeDado: int):
     """
     parametroAPI = "https://randomuser.me/api/?results=" + str(quantidadeDado)
     requests.get(parametroAPI)
-    log("Dados baixados com sucesso!")
+    exibeLog("Dados baixados com sucesso!")
 
 
 @task
@@ -34,8 +34,9 @@ def trataDado(dados):
     Returns:
         _response_: Dataframe
     """
-    json_normalize(dados.json(["results"]))
-    log("Dados convertidos em DataFrame com sucesso!")
+    transformaDados = dados.json(["results"])
+    json_normalize(transformaDados)
+    exibeLog("Dados convertidos em DataFrame com sucesso!")
 
 
 @task
@@ -47,4 +48,4 @@ def dataframe_to_csv(dataframe: pd.DataFrame, filename: str = "data.csv") -> Non
     temp_filename = Path(f"/tmp/{uuid4()}/{filename}")
     temp_filename.parent.mkdir(parents=True, exist_ok=True)
     dataframe.to_csv(temp_filename, index=False)
-    log("Dados salvos em data.csv com sucesso!")
+    exibeLog("Dados salvos em data.csv com sucesso!")
