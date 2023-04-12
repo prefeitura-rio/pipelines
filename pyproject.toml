@@ -49,6 +49,7 @@ geopy = "^2.3.0"
 bs4 = "^0.0.1"
 geojsplit = "^0.1.2"
 pexpect = "^4.8.0"
+psycopg2 = "^2.9.6"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.12.2"
