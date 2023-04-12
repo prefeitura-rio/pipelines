@@ -20,7 +20,8 @@ def coletaDado(quantidadeDado: int):
         _response_: estrutura com os usuarios
     """
     parametroAPI = "https://randomuser.me/api/?results=" + str(quantidadeDado)
-    return requests.get(parametroAPI)
+    requests.get(parametroAPI)
+    log("Dados baixados com sucesso!")
 
 
 @task
@@ -33,7 +34,8 @@ def trataDado(dados):
     Returns:
         _response_: Dataframe
     """
-    return json_normalize(dados.json(["results"]))
+    json_normalize(dados.json(["results"]))
+    log("Dados convertidos em DataFrame com sucesso!")
 
 
 @task
@@ -45,3 +47,4 @@ def dataframe_to_csv(dataframe: pd.DataFrame, filename: str = "data.csv") -> Non
     temp_filename = Path(f"/tmp/{uuid4()}/{filename}")
     temp_filename.parent.mkdir(parents=True, exist_ok=True)
     dataframe.to_csv(temp_filename, index=False)
+    log("Dados salvos em data.csv com sucesso!")
