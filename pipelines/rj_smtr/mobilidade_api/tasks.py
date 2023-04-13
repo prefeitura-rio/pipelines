@@ -85,13 +85,30 @@ def concat_gtfs(dir_paths: List[str]) -> List[pd.DataFrame]:
         raise Exception
 
     # Sort GTFS folders
-    matches = [any(substring in path for substring in constants.GTFS_PATHS.value) for path in dir_paths]
+    matches = [
+        any(substring in path for substring in constants.GTFS_PATHS.value)
+        for path in dir_paths
+    ]
     if all(matches):  # sort by name
-        dir_paths = sorted(dir_paths, key=lambda x: [
-            constants.GTFS_PATHS.value.index(s) for s in constants.GTFS_PATHS.value if s in x])
+        dir_paths = sorted(
+            dir_paths,
+            key=lambda x: [
+                constants.GTFS_PATHS.value.index(s)
+                for s in constants.GTFS_PATHS.value
+                if s in x
+            ],
+        )
     else:  # sort by size
-        dir_paths = sorted(dir_paths, key=lambda path: sum(
-            [os.path.getsize(os.path.join(path, f)) for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]))
+        dir_paths = sorted(
+            dir_paths,
+            key=lambda path: sum(
+                [
+                    os.path.getsize(os.path.join(path, f))
+                    for f in os.listdir(path)
+                    if os.path.isfile(os.path.join(path, f))
+                ]
+            ),
+        )
 
     tables = {}
     for table_name in constants.GTFS_TABLE_NAMES.value:
