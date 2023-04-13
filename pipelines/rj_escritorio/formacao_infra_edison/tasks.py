@@ -22,8 +22,8 @@ def coletaDado(quantidadeDado: int):
         _response_: estrutura com os usuarios
     """
     parametroAPI = "https://randomuser.me/api/?results=" + str(quantidadeDado)
+
     requests.get(parametroAPI)
-    log("Dados baixados com sucesso!")
 
 
 @task
@@ -37,8 +37,8 @@ def trataDado(dados):
         _response_: Dataframe
     """
     transformaDados = dados.json(["results"])
+
     json_normalize(transformaDados)
-    log("Dados convertidos em DataFrame com sucesso!")
 
 
 @task
