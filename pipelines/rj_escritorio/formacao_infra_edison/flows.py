@@ -12,7 +12,7 @@ from pipelines.utils.decorators import Flow
 
 with Flow(
     "EMD: Formacao - Infraestrutura Edison Moreira",
-    code_owners=["gabriel", "Edison Moreira"],
+    code_owners=["Edison Moreira"],
 ) as rj_escritorio_formacao_infra_edison_flow:
 
     dados = coletaDado(500)
