@@ -4,7 +4,7 @@ import requests
 import pandas as pd
 from pandas import json_normalize
 import json
-from pipelines.rj_escritorio.formacao_infra_edison.tasks import log
+from utils import log
 from pathlib import Path
 from uuid import uuid4
 
