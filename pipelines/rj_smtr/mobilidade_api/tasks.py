@@ -2,6 +2,7 @@
 """
 Tasks for mobilidade-api
 """
+import os
 from typing import List, Dict
 from zipfile import ZipFile
 from pathlib import Path
@@ -82,6 +83,16 @@ def concat_gtfs(dir_paths: List[str]) -> List[pd.DataFrame]:
     if len(dir_paths) > 2:
         log("There were more than 2 gtfs files")
         raise Exception
+
+    # Sort GTFS folders
+    matches = [any(substring in path for substring in constants.GTFS_PATHS.value) for path in dir_paths]
+    if all(matches):  # sort by name
+        dir_paths = sorted(dir_paths, key=lambda x: [
+            constants.GTFS_PATHS.value.index(s) for s in constants.GTFS_PATHS.value if s in x])
+    else:  # sort by size
+        dir_paths = sorted(dir_paths, key=lambda path: sum(
+            [os.path.getsize(os.path.join(path, f)) for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]))
+
     tables = {}
     for table_name in constants.GTFS_TABLE_NAMES.value:
         tb1 = pd.read_csv(f"{dir_paths[0]}/{table_name}.txt")
@@ -128,29 +139,17 @@ def treat_gtfs_tables(tables: Dict[str, pd.DataFrame]) -> dict:
             tables[table_name] = main_table[mask]
             log(f"Shape after: {main_table.shape}")
 
-    # enforce type of columns - it affects rename_trip_id
+    # General treatment
     for table_name, table in tables.items():
+        log(f"Treating table {table_name}")
+
+        # enforce type of columns
         map_col_type = constants.GTFS_COLUMN_TYPE.value.get(table_name)
         if map_col_type:
             tables[table_name] = table.astype(map_col_type)
 
-    trips = tables["trips"]
-
-    def rename_trip_id(trip_id: str) -> str:
-        """Returns: trip_short_name + direction_id + service_id"""
-        trip = trips[trips.trip_id == trip_id].iloc[0]
-        return f"{trip.trip_short_name}{trip.direction_id}{trip.service_id}"
-
-    trip_id_dict = dict(zip(trips["trip_id"], trips["trip_id"].apply(rename_trip_id)))
-
-    # General treatment
-    for table_name, table in tables.items():
-
-        # rename trip_id
-        if "trip_id" in table.columns:
-            table.trip_id = table.trip_id.map(trip_id_dict)
-        log(f"Dropping duplicates for table {table_name}")
         # drop primary key duplicates
+        log(f"Dropping duplicates for table {table_name}")
         log(f"Shape before: {table.shape}")
         table.drop_duplicates(
             constants.GTFS_PK_SUBSET.value[table_name], keep="first", inplace=True
@@ -158,9 +157,9 @@ def treat_gtfs_tables(tables: Dict[str, pd.DataFrame]) -> dict:
         log(f"Shape after: {table.shape}")
 
         # rename columns
-        if constants.GTFS_RENAME_COLUMNS.value.get(table_name):
+        if constants.GTFS_DJANGO_COLUMNS.value.get(table_name):
             table.rename(
-                columns=constants.GTFS_RENAME_COLUMNS.value[table_name], inplace=True
+                columns=constants.GTFS_DJANGO_COLUMNS.value[table_name], inplace=True
             )
 
         # Save local for later import
@@ -189,10 +188,10 @@ def execute_update(table_paths: Dict[str, str]):  # pylint: disable=W0613
 
     # Tuncate all tables before updating, avoids duplicate key error
     for table_name in constants.GTFS_TABLE_NAMES.value:  # pylint: disable=W0612
-        table_db_name = constants.GTFS_RENAME_TABLES.value[table_name]
+        table_db_name = constants.GTFS_DJANGO_TABLES.value[table_name]
         # Remove old data
         log(f"Truncating table {table_db_name}")
-        cursor.execute(f"TRUNCATE {table_db_name} CASCADE")
+        cursor.execute(f"TRUNCATE {table_db_name} RESTART IDENTITY CASCADE")
         pgdb.commit()
         # insert data
         log(f"Inserting in {table_db_name}...")

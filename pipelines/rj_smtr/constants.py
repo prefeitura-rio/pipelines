@@ -166,7 +166,7 @@ class constants(Enum):  # pylint: disable=c0103
         },
     }
 
-    GTFS_RENAME_COLUMNS = {
+    GTFS_DJANGO_COLUMNS = {
         "frequencies": {"trip_id": "trip_id_id"},
         "routes": {"agency_id": "agency_id_id"},
         "stops": {"parent_station": "parent_station_id"},
@@ -174,7 +174,7 @@ class constants(Enum):  # pylint: disable=c0103
         "trips": {"route_id": "route_id_id"},
     }
 
-    GTFS_RENAME_TABLES = {
+    GTFS_DJANGO_TABLES = {
         "agency": "pontos_agency",
         "calendar_dates": "pontos_calendardates",
         "calendar": "pontos_calendar",
