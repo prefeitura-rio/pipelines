@@ -10,7 +10,7 @@ from pipelines.rj_escritorio.formacao_infra_caique.exemplo1.tasks import (
 from pipelines.utils.decorators import Flow
 
 with Flow(
-    "EMD: formacao - Exemplo 1 do curso de formação em infraestrutura - Caique",
+    "EMD: Exemplo da aula 2 do curso de formação em infraestrutura - Caique",
     code_owners=[
         "gabriel",
         "diego",

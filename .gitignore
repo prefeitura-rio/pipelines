@@ -148,9 +148,12 @@ dmypy.json
 backfill.csv
 REVIEW.md
 
-.idea
+.idea/
 misc.xml
 modules.xml
 pipelines.iml
 vsc.xml
+workspace.xml
 inspectionProfiles/
+profiles_settings.xml
+
