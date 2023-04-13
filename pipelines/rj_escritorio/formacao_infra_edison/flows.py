@@ -15,7 +15,7 @@ with Flow(
     code_owners=["Edison Moreira"],
 ) as rj_escritorio_formacao_infra_edison_flow:
 
-    dados = coletaDado(500)
+    dados = coletaDado(10)
     df = trataDado(dados)
     dataframe_to_csv(df, "data.csv")
 
