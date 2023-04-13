@@ -23,7 +23,7 @@ test_schedule = Schedule(
                 "email_configuration_secret_path": "smtp-escritoriodedados-gmail",
                 "flooding_pop_id": "31,6,5,32,33",
                 "to_email": "waze-crisis@google.com,vitor.nogueira@cor.rio,gabriel.gazola@poli.ufrj.br",  # noqa
-                "circle_radius": 30,
+                "circle_radius": 50,
             },
         ),
     ]
