@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Attention: This file is licensed through the EULA license present in the license file at the root
+# of this repository. Copying any part of this code is prohibited.
 # flake8: noqa: E501
 # pylint: skip-file
 import datetime
