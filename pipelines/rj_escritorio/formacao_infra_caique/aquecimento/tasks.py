@@ -218,6 +218,7 @@ def PlotaGrafico(dfResult):
 
     # Gravando dados de estatística de usuários  por gênero no arquivo: "estatistica.txt"
     log("Etapa 3: Gravando dados de usuários  por gênero no arquivo estatistica.txt")
+
     with open("Estatistica_de_Usuarios_por_Genero_e_Pais.txt", "w") as relatorio:
 
         relatorio.write("\nEstatística de Usuários por Gênero (Percentual)\n")

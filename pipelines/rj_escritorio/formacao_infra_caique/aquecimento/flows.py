@@ -14,6 +14,7 @@ from pipelines.rj_escritorio.formacao_infra_caique.aquecimento.tasks import (
 )
 from pipelines.utils.decorators import Flow
 
+
 with Flow(
     "EMD: Flow do exercício de aquecimento do curso de formação em infraestrutura - Caique",
     code_owners=[
