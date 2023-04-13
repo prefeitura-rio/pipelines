@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Atenção: Informação proprietária. Leia a licença de uso.
 import argparse
 import datetime
 import pathlib

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Atenção: Informação proprietária. Leia a licença de uso.
 # flake8: noqa: E501
 # pylint: skip-file
 import numpy as np
