@@ -15,9 +15,9 @@ with Flow(
     code_owners=["Edison Moreira"],
 ) as rj_escritorio_formacao_infra_edison_flow:
 
-    dados = coletaDado(10)
-    df = trataDado(dados)
-    dataframe_to_csv(df, "data.csv")
+    dados_coletados = coletaDado(10)
+    df_transformado = trataDado(dados_coletados)
+    dataframe_to_csv(df_transformado, "data.csv")
 
 rj_escritorio_formacao_infra_edison_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 rj_escritorio_formacao_infra_edison_flow.run_config = KubernetesRun(

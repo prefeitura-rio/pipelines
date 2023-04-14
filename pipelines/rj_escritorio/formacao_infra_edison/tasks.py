@@ -42,7 +42,7 @@ def trataDado(dados):
 
 
 @task
-def dataframe_to_csv(dataframe: pd.DataFrame, filename: str = "data.csv") -> None:
+def dataframe_to_csv(dataframe: pd.DataFrame, filename: str = "data.csv"):
     """
     Save dataframe to csv
     """
@@ -50,4 +50,3 @@ def dataframe_to_csv(dataframe: pd.DataFrame, filename: str = "data.csv") -> Non
     temp_filename = Path(f"/tmp/{uuid4()}/{filename}")
     temp_filename.parent.mkdir(parents=True, exist_ok=True)
     dataframe.to_csv(temp_filename, index=False)
-    log("Dados salvos em data.csv com sucesso!")
