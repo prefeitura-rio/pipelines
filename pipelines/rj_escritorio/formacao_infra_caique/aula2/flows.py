@@ -22,7 +22,7 @@ with Flow(
     ],
 ) as rj_escritorio_formacao_infra_caique_aula2_flow:
 
-    # Parâmetros: nreg=50, inc='', gender='', nat=''
+    # Parâmetros: nreg=50, inc='', gender='', nat=' '
 
     nreg = Parameter("nreg", default=50)
     inc = Parameter("inc", default="")
