@@ -15,12 +15,12 @@ from pipelines.utils.decorators import Flow
 
 
 with Flow(
-    "EMD: Flow do exercício de aquecimento do curso de formação em infraestrutura - Caique",
+    "EMD: Flow do exercício da aula 2 do curso de formação em infraestrutura - Caique",
     code_owners=[
         "gabriel",
         "diego",
     ],
-) as rj_escritorio_formacao_infra_caique_aquecimento_flow:
+) as rj_escritorio_formacao_infra_caique_aula2_flow:
 
     # Parâmetros: nreg=50, inc='', gender='', nat=''
 
@@ -34,10 +34,10 @@ with Flow(
     PlotaGrafico(df)
     GroupByCountryState(df)
 
-rj_escritorio_formacao_infra_caique_aquecimento_flow.storage = GCS(
+rj_escritorio_formacao_infra_caique_aula2_flow.storage = GCS(
     constants.GCS_FLOWS_BUCKET.value
 )
-GCS.run_config = KubernetesRun(
+rj_escritorio_formacao_infra_caique_aula2_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value],
 )
