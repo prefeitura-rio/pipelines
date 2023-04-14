@@ -25,9 +25,9 @@ def coletaDado(quantidadeDado: int):
 
     response = requests.get(parametroAPI)
 
-    transformaDados = response.json(["results"])
+    transformaDados = response.json()
 
-    json_normalize(transformaDados)
+    json_normalize(transformaDados["results"])
 
 
 @task
