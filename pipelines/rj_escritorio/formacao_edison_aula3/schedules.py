@@ -28,7 +28,7 @@ gsheets_urls = {
 
 gsheets_clocks = generate_dump_url_schedules(
     interval=timedelta(days=3),
-    start_date=datetime(2023, 3, 14, 20, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2023, 3, 14, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
     ],
@@ -36,4 +36,4 @@ gsheets_clocks = generate_dump_url_schedules(
     table_parameters=gsheets_urls,
 )
 
-gsheets_year_update_schedule = Schedule(clocks=untuple(gsheets_clocks))
+gsheets_schedule = Schedule(clocks=untuple(gsheets_clocks))

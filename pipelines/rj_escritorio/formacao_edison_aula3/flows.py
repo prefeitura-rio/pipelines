@@ -9,11 +9,9 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 from pipelines.constants import constants
+from pipelines.rj_escritorio.formacao_edison_aula3.schedules import gsheets_schedule
 from pipelines.utils.dump_url.flows import dump_url_flow
 from pipelines.utils.utils import set_default_parameters
-
-# from pipelines.rj_sme.dump_url_educacao_basica.schedules import (
-#     gsheets_year_update_schedule,
 
 formacao_dump_gsheets_flow = deepcopy(dump_url_flow)
 formacao_dump_gsheets_flow.name = "EMD: Formacao Edison- Ingerir Google Sheet"
@@ -33,4 +31,4 @@ formacao_dump_gsheets_flow = set_default_parameters(
     default_parameters=formacao_dump_gsheets_default_parameters,
 )
 
-formacao_dump_gsheets_flow.schedule = None
+formacao_dump_gsheets_flow.schedule = gsheets_schedule
