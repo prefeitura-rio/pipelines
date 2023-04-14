@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 from prefect import task
 from pipelines.utils.utils import log
-from pipelines.rj_escritorio.formacao_infra_caique.aquecimento.utils import FormataTexto
+from pipelines.rj_escritorio.formacao_infra_caique.aula2.utils import FormataTexto
 
 
 # *****************************************  Etapa 1  ***********************************
