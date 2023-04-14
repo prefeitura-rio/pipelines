@@ -16,7 +16,7 @@ from pipelines.utils.utils import set_default_parameters
 #     gsheets_year_update_schedule,
 
 formacao_dump_gsheets_flow = deepcopy(dump_url_flow)
-formacao_dump_gsheets_flow.name = "EMD: Formação Edisom - Ingerir CSV do Google Drive"
+formacao_dump_gsheets_flow.name = "EMD: Formacao Edison- Ingerir Google Sheet"
 formacao_dump_gsheets_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 formacao_dump_gsheets_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,

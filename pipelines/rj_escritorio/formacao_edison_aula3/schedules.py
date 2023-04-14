@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # flake8: noqa: E501
 """
-Schedules for the Google Sheet dump pipeline
+Schedules Carga de Google Sheet para DataLake
 """
 
 from datetime import datetime, timedelta
@@ -14,7 +14,7 @@ from pipelines.utils.utils import untuple_clocks as untuple
 
 #####################################
 #
-# Google Sheet basica
+# Google Sheet Basica
 #
 #####################################
 
@@ -28,7 +28,7 @@ gsheets_urls = {
 
 gsheets_clocks = generate_dump_url_schedules(
     interval=timedelta(days=3),
-    start_date=datetime(2023, 4, 14, 20, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2023, 3, 14, 20, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
     ],
