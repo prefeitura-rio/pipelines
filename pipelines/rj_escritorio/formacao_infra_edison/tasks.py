@@ -23,20 +23,9 @@ def coletaDado(quantidadeDado: int):
     """
     parametroAPI = "https://randomuser.me/api/?results=" + str(quantidadeDado)
 
-    requests.get(parametroAPI)
+    response = requests.get(parametroAPI)
 
-
-@task
-def trataDado(dados):
-    """Função para transformar dados coletados normalizando o Dataframe
-
-    Args:
-        response (requests): dados coletados da API
-
-    Returns:
-        _response_: Dataframe
-    """
-    transformaDados = dados.json(["results"])
+    transformaDados = response.json(["results"])
 
     json_normalize(transformaDados)
 
