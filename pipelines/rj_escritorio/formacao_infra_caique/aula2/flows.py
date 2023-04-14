@@ -5,7 +5,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 from pipelines.constants import constants
-from pipelines.rj_escritorio.formacao_infra_caique.aquecimento.tasks import (
+from pipelines.rj_escritorio.formacao_infra_caique.aula2.tasks import (
     GetApiRndUser,
     FormtaTelefoneDf,
     PlotaGrafico,
