@@ -2,7 +2,7 @@
 """
 Tasks for mobilidade-api
 """
-import os
+
 from typing import List, Dict
 from zipfile import ZipFile
 from pathlib import Path
@@ -25,7 +25,7 @@ def get_gtfs_zipfiles():
         storage_folder (str, optional): Defaults to "gtfs".
     """
     file_paths = []
-    st = bd.Storage("", "")
+    st = bd.Storage("", "")  # pylint: disable=C0103
     client = st.client["storage_staging"]
     blobs = client.list_blobs(
         bucket_or_name=st.bucket, prefix=constants.GTFS_STORAGE_FOLDER.value
@@ -83,37 +83,19 @@ def concat_gtfs(dir_paths: List[str]) -> List[pd.DataFrame]:
     if len(dir_paths) > 2:
         log("There were more than 2 gtfs files")
         raise Exception
-
-    # Sort GTFS folders
-    matches = [
-        any(substring in path for substring in constants.GTFS_PATHS.value)
-        for path in dir_paths
-    ]
-    if all(matches):  # sort by name
-        dir_paths = sorted(
-            dir_paths,
-            key=lambda x: [
-                constants.GTFS_PATHS.value.index(s)
-                for s in constants.GTFS_PATHS.value
-                if s in x
-            ],
-        )
-    else:  # sort by size
-        dir_paths = sorted(
-            dir_paths,
-            key=lambda path: sum(
-                [
-                    os.path.getsize(os.path.join(path, f))
-                    for f in os.listdir(path)
-                    if os.path.isfile(os.path.join(path, f))
-                ]
-            ),
-        )
-
+    # diferentiate between brt and sppo gtfs files
+    path_dict = {}
+    for path in dir_paths:
+        if "brt" in path:
+            path_dict["brt"] = path
+        else:
+            path_dict["sppo"] = path
     tables = {}
     for table_name in constants.GTFS_TABLE_NAMES.value:
-        tb1 = pd.read_csv(f"{dir_paths[0]}/{table_name}.txt")
-        tb2 = pd.read_csv(f"{dir_paths[1]}/{table_name}.txt")
+        # merge tables in especifc order for better handling
+        # when dropping duplicates
+        tb1 = pd.read_csv(f"{path_dict['brt']}/{table_name}.txt")
+        tb2 = pd.read_csv(f"{path_dict['sppo']}/{table_name}.txt")
         tb_concat = pd.concat([tb1, tb2], axis=0)
         tables[table_name] = tb_concat
     return tables
@@ -163,11 +145,16 @@ def treat_gtfs_tables(tables: Dict[str, pd.DataFrame]) -> dict:
         # enforce type of columns
         map_col_type = constants.GTFS_COLUMN_TYPE.value.get(table_name)
         if map_col_type:
-            tables[table_name] = table.astype(map_col_type)
+            for column, dtype in map_col_type.items():
+                # enforce type for writing NaN to csv as blank field
+                table[column] = pd.to_numeric(table[column], errors="coerce").astype(
+                    dtype
+                )
 
         # drop primary key duplicates
         log(f"Dropping duplicates for table {table_name}")
         log(f"Shape before: {table.shape}")
+        # keeping first, being consistent with merge order @ concat_gtfs
         table.drop_duplicates(
             constants.GTFS_PK_SUBSET.value[table_name], keep="first", inplace=True
         )
@@ -182,7 +169,12 @@ def treat_gtfs_tables(tables: Dict[str, pd.DataFrame]) -> dict:
         # Save local for later import
         Path("./treated").mkdir(parents=True, exist_ok=True)
         filepath = f"./treated/{table_name}.csv"
-        table.to_csv(filepath, sep=",", index=False)
+        table.to_csv(
+            filepath,
+            sep=",",
+            index=False,
+            na_rep="",
+        )
         table_paths[table_name] = filepath
 
     return table_paths
