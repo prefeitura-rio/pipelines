@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Fluxo para ingestao de Google Sheet para o Datalake
+Fluxo para ingestao de Google Sheet para o BigQuery
 """
 
 from copy import deepcopy
