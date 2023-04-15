@@ -16,7 +16,6 @@ from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
     get_now_date,
     get_yesterday,
-    get_previous_date,
     get_current_flow_mode,
     get_current_flow_labels,
 )
@@ -99,9 +98,9 @@ viagens_sppo.run_config = KubernetesRun(
 
 viagens_sppo.schedule = every_day_hour_five
 
-subsidio_sppo_apuracao_name = "SMTR: Subsídio SPPO Apuração"
+SUBSIDIO_SPPO_APURACAO_NAME = "SMTR: Subsídio SPPO Apuração"
 with Flow(
-    subsidio_sppo_apuracao_name,
+    SUBSIDIO_SPPO_APURACAO_NAME,
     code_owners=["rodrigo"],
 ) as subsidio_sppo_apuracao:
 
@@ -110,14 +109,15 @@ with Flow(
     # Get default parameters #
     start_date = Parameter("start_date", default=get_yesterday.run())
     end_date = Parameter("end_date", default=get_yesterday.run())
-    stu_data_versao = Parameter("stu_data_versao", default=get_previous_date.run(6))
+    stu_data_versao = Parameter("stu_data_versao", default="")
     materialize_sppo_veiculo_dia = Parameter("materialize_sppo_veiculo_dia", True)
+    change_view_end_date = Parameter("change_view_end_date", True)
 
     run_dates = get_run_dates(start_date, end_date)
 
     # Rename flow run #
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=subsidio_sppo_apuracao_name + ": ", now_time=run_dates
+        prefix=SUBSIDIO_SPPO_APURACAO_NAME + ": ", now_time=run_dates
     )
 
     # Set dbt client #
@@ -154,21 +154,39 @@ with Flow(
         )
 
         # 3. CALCULATE #
-        SUBSIDIO_SPPO_APURACAO_RUN = run_dbt_model(
-            dbt_client=dbt_client,
-            dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
-            _vars=dict(start_date=start_date, end_date=end_date),
-        )
+        with case(change_view_end_date, True):
+            SUBSIDIO_SPPO_APURACAO_RUN = run_dbt_model(
+                dbt_client=dbt_client,
+                dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
+                _vars=dict(start_date=start_date, end_date=end_date),
+            )
+
+        with case(change_view_end_date, False):
+            SUBSIDIO_SPPO_APURACAO_RUN = run_dbt_model(
+                dbt_client=dbt_client,
+                dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
+                exclude="config.materialized:view",
+                _vars=dict(start_date=start_date, end_date=end_date),
+            )
 
         SPPO_VEICULO_DIA_RUN.set_downstream(SUBSIDIO_SPPO_APURACAO_RUN)
 
     with case(materialize_sppo_veiculo_dia, False):
         # 3. CALCULATE #
-        run_dbt_model(
-            dbt_client=dbt_client,
-            dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
-            _vars=dict(start_date=start_date, end_date=end_date),
-        )
+        with case(change_view_end_date, True):
+            run_dbt_model(
+                dbt_client=dbt_client,
+                dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
+                _vars=dict(start_date=start_date, end_date=end_date),
+            )
+
+        with case(change_view_end_date, False):
+            run_dbt_model(
+                dbt_client=dbt_client,
+                dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
+                exclude="config.materialized:view",
+                _vars=dict(start_date=start_date, end_date=end_date),
+            )
 
     # # 3. PUBLISH #
     # run_materialize = create_flow_run(
