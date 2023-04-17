@@ -17,6 +17,8 @@ class constants(Enum):  # pylint: disable=c0103
         "EMD: Atualizar dados de chuva provinientes de radar na api.dados.rio"
     )
     RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS = {
+        "redis_data_key": "redis_data_key_chuva_recente_radar_inea",
+        "redis_update_key": "redis_update_key_chuva_recente_radar_inea",
         "query_data": """
         WITH final_table AS (
             SELECT

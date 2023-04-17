@@ -6,6 +6,8 @@ Constant values for the rj_cor.comando projects
 
 from enum import Enum
 
+### tirar todos os _temp, consertar legenda linha 55+, consertar valores linha 55+, descomentar os where
+
 
 class constants(Enum):  # pylint: disable=c0103
     """
@@ -21,6 +23,8 @@ class constants(Enum):  # pylint: disable=c0103
         "procedimento_operacional_padrao_orgaos_responsaveis_temp"
     )
     RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS = {
+        "redis_data_key": "redis_data_key_alagamento_recente_comando",
+        "redis_update_key": "redis_update_key_alagamento_recente_comando",
         "query_data": """
 
         WITH
