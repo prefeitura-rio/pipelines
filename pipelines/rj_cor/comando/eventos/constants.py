@@ -38,7 +38,7 @@ class constants(Enum):  # pylint: disable=c0103
             SELECT
                 h3_grid.id AS id_h3,
                 nome AS bairro,
-                COUNT(DISTINCT id_evento) AS qnt_alagamentos
+                COUNT(DISTINCT id_evento)/18 AS qnt_alagamentos
             FROM `rj-cor.dados_mestres.h3_grid_res8` h3_grid
             INNER JOIN `rj-cor.dados_mestres.bairro`
                 ON ST_CONTAINS(`rj-cor.dados_mestres.bairro`.geometry, ST_CENTROID(h3_grid.geometry))
