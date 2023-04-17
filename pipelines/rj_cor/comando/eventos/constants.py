@@ -42,7 +42,7 @@ class constants(Enum):  # pylint: disable=c0103
             FROM `rj-cor.dados_mestres.h3_grid_res8` h3_grid
             INNER JOIN `rj-cor.dados_mestres.bairro`
                 ON ST_CONTAINS(`rj-cor.dados_mestres.bairro`.geometry, ST_CENTROID(h3_grid.geometry))
-            INNER JOIN alagamentos
+            LEFT JOIN alagamentos
                 ON ST_CONTAINS(h3_grid.geometry, alagamentos.geometry)
             GROUP BY id_h3, bairro
             )
