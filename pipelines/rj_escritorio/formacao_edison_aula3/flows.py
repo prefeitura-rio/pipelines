@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Fluxo para ingestao de Google Sheet para o BigQuery
+Pipeline para ingestao de GoogleSheet básica no BigQuery
 """
 
 from copy import deepcopy
