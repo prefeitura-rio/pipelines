@@ -29,10 +29,10 @@ class constants(Enum):  # pylint: disable=c0103
                 id_evento,
                 ST_GEOGPOINT(CAST(longitude AS FLOAT64),
                 CAST(latitude AS FLOAT64)) AS geometry
-            FROM `rj-cor.adm_cor_comando_staging.ocorrencias`
+            FROM `rj-cor.adm_cor_comando_staging.ocorrencias_temp`
             WHERE id_pop IN ("5", "6", "31", "32", "33")
-                AND data_particao >= DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 15 MINUTE), day)
-                AND CAST(data_inicio AS DATETIME) >= TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 15 MINUTE)
+            --    AND data_particao >= DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 15 MINUTE), day)
+            --    AND CAST(data_inicio AS DATETIME) >= TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 15 MINUTE)
             ),
             final_table AS (
             SELECT
@@ -74,7 +74,7 @@ class constants(Enum):  # pylint: disable=c0103
                 data_inicio
             )
             ) AS last_update
-        FROM `rj-cor.adm_cor_comando_staging.ocorrencias`
-        WHERE data_particao> DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 2 DAY)
+        FROM `rj-cor.adm_cor_comando_staging.ocorrencias_temp`
+        --WHERE data_particao> DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 2 DAY)
         """,
     }
