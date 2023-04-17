@@ -14,10 +14,12 @@ class constants(Enum):  # pylint: disable=c0103
 
     PATH_BASE_ENDERECOS = "/tmp/base_enderecos.csv"
     DATASET_ID = "adm_cor_comando"
-    TABLE_ID_EVENTOS = "ocorrencias"
-    TABLE_ID_ATIVIDADES_EVENTOS = "ocorrencias_orgaos_responsaveis"
-    TABLE_ID_POPS = "procedimento_operacional_padrao"
-    TABLE_ID_ATIVIDADES_POPS = "procedimento_operacional_padrao_orgaos_responsaveis"
+    TABLE_ID_EVENTOS = "ocorrencias_temp"
+    TABLE_ID_ATIVIDADES_EVENTOS = "ocorrencias_orgaos_responsaveis_temp"
+    TABLE_ID_POPS = "procedimento_operacional_padrao_temp"
+    TABLE_ID_ATIVIDADES_POPS = (
+        "procedimento_operacional_padrao_orgaos_responsaveis_temp"
+    )
     RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS = {
         "query_data": """
 
@@ -53,7 +55,7 @@ class constants(Enum):  # pylint: disable=c0103
                 WHEN qnt_alagamentos> 0  AND qnt_alagamentos<= 2 THEN 'pouco crítico'
                 WHEN qnt_alagamentos> 2  AND qnt_alagamentos<= 5 THEN 'crítico'
                 WHEN qnt_alagamentos> 5  AND qnt_alagamentos<= 8 THEN 'muito crítico'
-                WHEN qnt_alagamentos> 8                          THEN 'extramamemte crítico'
+                WHEN qnt_alagamentos> 8                          THEN 'extremamemte crítico'
                 ELSE 'Sem alagamento'
             END AS status,
             CASE
