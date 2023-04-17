@@ -52,17 +52,17 @@ class constants(Enum):  # pylint: disable=c0103
             bairro,
             qnt_alagamentos,
             CASE
-                WHEN chuva_15min> 0.2  AND chuva_15min<= 1.25 THEN 'chuva fraca'
-                WHEN chuva_15min> 1.25  AND chuva_15min<= 6.25 THEN 'chuva moderada'
-                WHEN chuva_15min> 6.25  AND chuva_15min<= 12.5 THEN 'chuva forte'
-                WHEN chuva_15min> 12.5                         THEN 'chuva muito forte'
+                WHEN qnt_alagamentos> 0.2   AND qnt_alagamentos<= 1.25 THEN 'chuva fraca'
+                WHEN qnt_alagamentos> 1.25  AND qnt_alagamentos<= 6.25 THEN 'chuva moderada'
+                WHEN qnt_alagamentos> 6.25  AND qnt_alagamentos<= 12.5 THEN 'chuva forte'
+                WHEN qnt_alagamentos> 12.5                         THEN 'chuva muito forte'
                 ELSE 'sem chuva'
             END AS status,
             CASE
-                WHEN chuva_15min> 0     AND chuva_15min<= 1.25 THEN '#DAECFB'--'#00CCFF'
-                WHEN chuva_15min> 1.25  AND chuva_15min<= 6.25 THEN '#A9CBE8'--'#BFA230'
-                WHEN chuva_15min> 6.25  AND chuva_15min<= 12.5 THEN '#77A9D5'--'#E0701F'
-                WHEN chuva_15min> 12.5                         THEN '#125999'--'#FF0000'
+                WHEN qnt_alagamentos> 0     AND qnt_alagamentos<= 1.25 THEN '#DAECFB'--'#00CCFF'
+                WHEN qnt_alagamentos> 1.25  AND qnt_alagamentos<= 6.25 THEN '#A9CBE8'--'#BFA230'
+                WHEN qnt_alagamentos> 6.25  AND qnt_alagamentos<= 12.5 THEN '#77A9D5'--'#E0701F'
+                WHEN qnt_alagamentos> 12.5                         THEN '#125999'--'#FF0000'
                 ELSE '#ffffff'
             END AS color
         FROM final_table
