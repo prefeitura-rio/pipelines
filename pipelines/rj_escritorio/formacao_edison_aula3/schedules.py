@@ -23,6 +23,7 @@ gsheets_urls = {
         "dump_mode": "overwrite",
         "url": "https://docs.google.com/spreadsheets/d/1cr6EYi3-IKSnCBbrBVsI7o5CTFmUV7h6uQ2kMGAysyg/edit#gid=0",  # noqa
         "url_type": "google_sheet",
+        "dataset_id": "formacao_edison",
     }
 }
 
