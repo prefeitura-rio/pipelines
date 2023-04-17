@@ -24,5 +24,7 @@ from pipelines.rj_escritorio.dump_policy_matrix.flows import *
 from pipelines.rj_escritorio.rain_dashboard.flows import *
 from pipelines.rj_escritorio.dump_url_seeketing.flows import *
 
+# Inibido para Aula 3
 # from pipelines.rj_escritorio.formacao_infra_edison.flows import *
+#
 from pipelines.rj_escritorio.formacao_edison_aula3.flows import *

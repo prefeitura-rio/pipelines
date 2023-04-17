@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # flake8: noqa: E501
 """
-Schedules Carga de Google Sheet para DataLake
+Schedule - Carga de Google Sheet para DataLake
 """
 
 from datetime import datetime, timedelta
@@ -21,7 +21,7 @@ from pipelines.utils.utils import untuple_clocks as untuple
 gsheets_urls = {
     "sheet": {
         "dump_mode": "overwrite",
-        "url": "https://docs.google.com/spreadsheets/d/1cr6EYi3-IKSnCBbrBVsI7o5CTFmUV7h6uQ2kMGAysyg/edit#gid=0",  # noqa
+        "url": "https://docs.google.com/spreadsheets/d/1cr6EYi3-IKSnCBbrBVsI7o5CTFmUV7h6uQ2kMGAysyg/edit#gid=0",
         "url_type": "google_sheet",
         "dataset_id": "formacao_edison",
     }

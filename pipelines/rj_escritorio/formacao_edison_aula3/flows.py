@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Pipeline para ingestao de GoogleSheet básica no BigQuery
+Pipeline para ingestao de GoogleSheet no Datalake
+
 """
 
 from copy import deepcopy
