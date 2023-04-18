@@ -30,9 +30,9 @@ caique_dump_gsheets_default_parameters = {
     "dataset_id": "formacao_caique",
 }
 
-rj_escritorio_formacao_infra_caique_aula3_flow = set_default_parameters(
+caique_dump_gsheets_flow = set_default_parameters(
     caique_dump_gsheets_flow,
     default_parameters=caique_dump_gsheets_default_parameters,
 )
 
-rj_escritorio_formacao_infra_caique_aula3_flow.schedule = gsheets_schedule
+caique_dump_gsheets_flow.schedule = gsheets_schedule
