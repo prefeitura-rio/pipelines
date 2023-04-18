@@ -15,7 +15,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 formacao_dump_gsheets_flow = deepcopy(dump_url_flow)
-formacao_dump_gsheets_flow.name = "Formação exemplo: Ingerir CSV do Google Drive"
+formacao_dump_gsheets_flow.name = "Formação Caique: Ingerir planilha do Google Drive"
 formacao_dump_gsheets_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 formacao_dump_gsheets_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
