@@ -257,7 +257,7 @@ with Flow(
             labels=[
                 "rj-cor",
             ],
-            run_name="Update radar rain dashboard data (triggered by precipitacao_radar flow)",  # noqa
+            run_name="Update radar rain dashboard data (triggered by cor_comando flow)",  # noqa
         )
         rain_radar_dashboard_update_flow.set_upstream(task_upload_eventos)
 
