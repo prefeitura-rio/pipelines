@@ -17,7 +17,7 @@ from pipelines.rj_escritorio.formacao_infra_caique.aula3.schedules import (
 )
 
 caique_dump_gsheets_flow = deepcopy(dump_url_flow)
-caique_dump_gsheets_flow.name = "Formação_Caique: Ingerir planilha Google Drive"
+caique_dump_gsheets_flow.name = "EMD: Formação_Caique | Ingerir planilha Google Drive"
 caique_dump_gsheets_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 caique_dump_gsheets_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
