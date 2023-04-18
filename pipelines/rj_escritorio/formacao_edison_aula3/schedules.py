@@ -18,22 +18,23 @@ from pipelines.utils.utils import untuple_clocks as untuple
 #####################################
 
 gsheets_urls = {
-    "sheet": {
+    "aula3": {
         "dump_mode": "overwrite",
         "url": "https://docs.google.com/spreadsheets/d/1nuj1wOX_CeNYyyAdxAZzkVZ2RblzNQIELOFEdHid2A0/edit?usp=sharing",
         #   "url": "https://docs.google.com/spreadsheets/d/1cr6EYi3-IKSnCBbrBVsI7o5CTFmUV7h6uQ2kMGAysyg/edit#gid=0",
         "url_type": "google_sheet",
+        "materialize_after_dump": True,
         "dataset_id": "formacao_edison",
     }
 }
 
 gsheets_clocks = generate_dump_url_schedules(
     interval=timedelta(days=3),
-    start_date=datetime(2023, 3, 14, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2023, 3, 14, 20, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
     ],
-    dataset_id="",
+    dataset_id="formacao_edison",
     table_parameters=gsheets_urls,
 )
 
