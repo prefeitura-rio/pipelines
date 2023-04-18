@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Pipeline para ingestao de GoogleSheet no Datalake
-
+Pipeline de ingestao de GoogleSheet no Datalake
 """
-
 from copy import deepcopy
 
 from prefect.run_configs import KubernetesRun

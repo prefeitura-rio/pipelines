@@ -3,7 +3,6 @@
 """
 Schedule - Carga de Google Sheet para DataLake
 """
-
 from datetime import datetime, timedelta
 
 import pytz
@@ -25,7 +24,6 @@ gsheets_urls = {
         #   "url": "https://docs.google.com/spreadsheets/d/1cr6EYi3-IKSnCBbrBVsI7o5CTFmUV7h6uQ2kMGAysyg/edit#gid=0",
         "url_type": "google_sheet",
         "dataset_id": "formacao_edison",
-        "gsheets_sheet_name": "sheet_3",
     }
 }
 
@@ -35,7 +33,7 @@ gsheets_clocks = generate_dump_url_schedules(
     labels=[
         constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
     ],
-    dataset_id="formacao_edison",
+    dataset_id="",
     table_parameters=gsheets_urls,
 )
 
