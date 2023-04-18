@@ -5,32 +5,34 @@ Cópia do flow de template para dump de URL
 
 from copy import deepcopy
 
-from pipelines.constants import constants
-from pipelines.rj_escritorio.formacao_infra_caique.aula3.schedules import (
-    gsheets_schedule,
-)
-from pipelines.utils.dump_url.flows import dump_url_flow
-from pipelines.utils.utils import set_default_parameters
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
-formacao_dump_gsheets_flow = deepcopy(dump_url_flow)
-formacao_dump_gsheets_flow.name = "Formação Caique: Ingerir planilha do Google Drive"
-formacao_dump_gsheets_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-formacao_dump_gsheets_flow.run_config = KubernetesRun(
+from pipelines.constants import constants
+from pipelines.utils.dump_url.flows import dump_url_flow
+from pipelines.utils.utils import set_default_parameters
+
+from pipelines.rj_escritorio.formacao_infra_caique.aula3.schedules import (
+    gsheets_schedule,
+)
+
+caique_dump_gsheets_flow = deepcopy(dump_url_flow)
+caique_dump_gsheets_flow.name = "Formação Caique: Ingerir planilha do Google Drive"
+caique_dump_gsheets_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+caique_dump_gsheets_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[
         constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
     ],
 )
 
-formacao_dump_gsheets_default_parameters = {
-    "dataset_id": "teste_formacao",
+caique_dump_gsheets_default_parameters = {
+    "dataset_id": "formacao_caique",
 }
 
 rj_escritorio_formacao_infra_caique_aula3_flow = set_default_parameters(
-    formacao_dump_gsheets_flow,
-    default_parameters=formacao_dump_gsheets_default_parameters,
+    caique_dump_gsheets_flow,
+    default_parameters=caique_dump_gsheets_default_parameters,
 )
 
 rj_escritorio_formacao_infra_caique_aula3_flow.schedule = gsheets_schedule
