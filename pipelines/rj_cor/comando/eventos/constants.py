@@ -23,8 +23,8 @@ class constants(Enum):  # pylint: disable=c0103
         "procedimento_operacional_padrao_orgaos_responsaveis_temp"
     )
     RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS = {
-        "redis_data_key": "redis_data_key_alagamento_recente_comando",
-        "redis_update_key": "redis_update_key_alagamento_recente_comando",
+        "redis_data_key": "data_alagamento_recente_comando",
+        "redis_update_key": "data_update_alagamento_recente_comando",
         "query_data": """
 
         WITH
@@ -56,17 +56,17 @@ class constants(Enum):  # pylint: disable=c0103
             bairro,
             qnt_alagamentos,
             CASE
-                WHEN qnt_alagamentos> 0.2   AND qnt_alagamentos<= 1.25 THEN 'chuva fraca'
-                WHEN qnt_alagamentos> 1.25  AND qnt_alagamentos<= 6.25 THEN 'chuva moderada'
-                WHEN qnt_alagamentos> 6.25  AND qnt_alagamentos<= 12.5 THEN 'chuva forte'
-                WHEN qnt_alagamentos> 12.5                         THEN 'chuva muito forte'
-                ELSE 'sem chuva'
-            END AS status,
+                WHEN qnt_alagamentos> 0  AND qnt_alagamentos<= 1 THEN 'pouco crítico'
+                WHEN qnt_alagamentos> 1  AND qnt_alagamentos<= 2 THEN 'crítico'
+                WHEN qnt_alagamentos> 2  AND qnt_alagamentos<= 3 THEN 'muito crítico'
+                WHEN qnt_alagamentos> 3                          THEN 'extremamente crítico'
+                ELSE 'sem alagamento'
+                END AS status,
             CASE
-                WHEN qnt_alagamentos> 0     AND qnt_alagamentos<= 1.25 THEN '#DAECFB'--'#00CCFF'
-                WHEN qnt_alagamentos> 1.25  AND qnt_alagamentos<= 6.25 THEN '#A9CBE8'--'#BFA230'
-                WHEN qnt_alagamentos> 6.25  AND qnt_alagamentos<= 12.5 THEN '#77A9D5'--'#E0701F'
-                WHEN qnt_alagamentos> 12.5                         THEN '#125999'--'#FF0000'
+                WHEN qnt_alagamentos> 0  AND qnt_alagamentos<= 1 THEN '#DAECFB'--'#00CCFF'
+                WHEN qnt_alagamentos> 1  AND qnt_alagamentos<= 2 THEN '#A9CBE8'--'#BFA230'
+                WHEN qnt_alagamentos> 2  AND qnt_alagamentos<= 3 THEN '#77A9D5'--'#E0701F'
+                WHEN qnt_alagamentos> 3                          THEN '#125999'--'#FF0000'
                 ELSE '#ffffff'
             END AS color
         FROM final_table
