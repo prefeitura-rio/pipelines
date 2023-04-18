@@ -17,7 +17,7 @@ gsheets_urls = {
         "dump_mode": "overwrite",
         "url": "https://docs.google.com/spreadsheets/d/1q-upTF4Dz7yTCVYonE9_8jt1wDHz3qYe8bLo3IN2tsY/edit?usp=sharing",  # noqa
         "url_type": "google_sheet",
-        "dataset_id": "formacao-caique-aula3",
+        "dataset_id": "formacao_caique",
     }
 }
 
