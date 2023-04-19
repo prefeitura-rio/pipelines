@@ -132,6 +132,7 @@ def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
     find_codec(auth_token)
     log("url_eventos")
     find_codec(url_eventos)
+    log(f"url_eventos: {url_eventos}  auth_token: {auth_token}")
 
     # Request Eventos
     response = get_url(url=url_eventos, parameters=date_interval, token=auth_token)
