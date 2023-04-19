@@ -18,13 +18,14 @@ from pipelines.utils.utils import untuple_clocks as untuple
 #####################################
 
 gsheets_urls = {
-    "aula3": {
+    "sheet": {
         "dump_mode": "overwrite",
         "url": "https://docs.google.com/spreadsheets/d/1nuj1wOX_CeNYyyAdxAZzkVZ2RblzNQIELOFEdHid2A0/edit?usp=sharing",
-        #   "url": "https://docs.google.com/spreadsheets/d/1cr6EYi3-IKSnCBbrBVsI7o5CTFmUV7h6uQ2kMGAysyg/edit#gid=0",
         "url_type": "google_sheet",
         "materialize_after_dump": True,
         "dataset_id": "formacao_edison",
+        "table_id": "aula3",
+        "gsheets_sheet_order": 1,
     }
 }
 
