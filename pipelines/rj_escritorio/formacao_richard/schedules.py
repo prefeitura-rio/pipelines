@@ -13,6 +13,7 @@ gsheets_urls = {
         "dump_mode": "overwrite",
         "url": "https://docs.google.com/spreadsheets/d/1NLdmrcDDEyt5zFGGyrKulX9MlYgWw-ibU_FUTi5LMj8/edit?usp=sharing",
         "url_type": "google_sheet",
+        "dataset_id": "teste_formacao_richard",
     }
 }
 
