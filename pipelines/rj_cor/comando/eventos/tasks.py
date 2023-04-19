@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=R0914,W0613,W0102,W0613,R0912,R0915,E1136,E1137
+# pylint: disable=R0914,W0613,W0102,W0613,R0912,R0915,E1136,E1137,W0702
+# flake8: noqa: E722
 """
 Tasks for comando
 """
@@ -34,6 +35,8 @@ def get_date_interval(
     """
     If `date_interval_text` is provided, parse it for the date interval. Else,
     get the date interval from Redis.
+    Example of date_interval_text to use when selecting type string:
+    {"inicio": "2023-04-19 08:54:41.0", "fim": "2023-04-19 10:40:41.0"}
     """
     if date_interval_text:
         log(f">>>>>>>>>>> Date interval was provided: {date_interval_text}")
@@ -114,6 +117,21 @@ def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
     url_secret = get_vault_secret("comando")["data"]
     url_eventos = url_secret["endpoint_eventos"]
     url_atividades_evento = url_secret["endpoint_atividades_evento"]
+
+    all_codecs = ["ascii", "latin_1", "utf_8"]
+
+    def find_codec(text):
+        for i in all_codecs:
+            for j in all_codecs:
+                try:
+                    log(f"{i}, to {j}, {text.encode(i).decode(j)}")
+                except:
+                    pass
+
+    log("auth_token")
+    find_codec(auth_token)
+    log("url_eventos")
+    find_codec(url_eventos)
 
     # Request Eventos
     response = get_url(url=url_eventos, parameters=date_interval, token=auth_token)
