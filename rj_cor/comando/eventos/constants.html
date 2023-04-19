@@ -28,11 +28,14 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
+# flake8: noqa: E501
 &#34;&#34;&#34;
 Constant values for the rj_cor.comando projects
 &#34;&#34;&#34;
 
 from enum import Enum
+
+### tirar todos os _temp, consertar legenda linha 55+, consertar valores linha 55+, descomentar os where
 
 
 class constants(Enum):  # pylint: disable=c0103
@@ -42,10 +45,72 @@ class constants(Enum):  # pylint: disable=c0103
 
     PATH_BASE_ENDERECOS = &#34;/tmp/base_enderecos.csv&#34;
     DATASET_ID = &#34;adm_cor_comando&#34;
-    TABLE_ID_EVENTOS = &#34;ocorrencias&#34;
-    TABLE_ID_ATIVIDADES_EVENTOS = &#34;ocorrencias_orgaos_responsaveis&#34;
-    TABLE_ID_POPS = &#34;procedimento_operacional_padrao&#34;
-    TABLE_ID_ATIVIDADES_POPS = &#34;procedimento_operacional_padrao_orgaos_responsaveis&#34;</code></pre>
+    TABLE_ID_EVENTOS = &#34;ocorrencias_temp&#34;
+    TABLE_ID_ATIVIDADES_EVENTOS = &#34;ocorrencias_orgaos_responsaveis_temp&#34;
+    TABLE_ID_POPS = &#34;procedimento_operacional_padrao_temp&#34;
+    TABLE_ID_ATIVIDADES_POPS = (
+        &#34;procedimento_operacional_padrao_orgaos_responsaveis_temp&#34;
+    )
+    RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS = {
+        &#34;redis_data_key&#34;: &#34;data_alagamento_recente_comando&#34;,
+        &#34;redis_update_key&#34;: &#34;data_update_alagamento_recente_comando&#34;,
+        &#34;query_data&#34;: &#34;&#34;&#34;
+
+        WITH
+            alagamentos AS (
+            SELECT
+                id_evento,
+                ST_GEOGPOINT(CAST(longitude AS FLOAT64),
+                CAST(latitude AS FLOAT64)) AS geometry
+            FROM `rj-cor.adm_cor_comando_staging.ocorrencias_temp`
+            WHERE id_pop IN (&#34;5&#34;, &#34;6&#34;, &#34;31&#34;, &#34;32&#34;, &#34;33&#34;)
+            --    AND data_particao &gt;= DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE), day)
+            --    AND CAST(data_inicio AS DATETIME) &gt;= TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE)
+            ),
+            final_table AS (
+            SELECT
+                h3_grid.id AS id_h3,
+                nome AS bairro,
+                COUNT(DISTINCT id_evento) AS qnt_alagamentos
+            FROM `rj-cor.dados_mestres.h3_grid_res8` h3_grid
+            INNER JOIN `rj-cor.dados_mestres.bairro`
+                ON ST_CONTAINS(`rj-cor.dados_mestres.bairro`.geometry, ST_CENTROID(h3_grid.geometry))
+            LEFT JOIN alagamentos
+                ON ST_CONTAINS(h3_grid.geometry, alagamentos.geometry)
+            GROUP BY id_h3, bairro
+            )
+
+        SELECT
+            id_h3,
+            bairro,
+            qnt_alagamentos,
+            CASE
+                WHEN qnt_alagamentos&gt; 0  AND qnt_alagamentos&lt;= 1 THEN &#39;pouco crítico&#39;
+                WHEN qnt_alagamentos&gt; 1  AND qnt_alagamentos&lt;= 2 THEN &#39;crítico&#39;
+                WHEN qnt_alagamentos&gt; 2  AND qnt_alagamentos&lt;= 3 THEN &#39;muito crítico&#39;
+                WHEN qnt_alagamentos&gt; 3                          THEN &#39;extremamente crítico&#39;
+                ELSE &#39;sem alagamento&#39;
+                END AS status,
+            CASE
+                WHEN qnt_alagamentos&gt; 0  AND qnt_alagamentos&lt;= 1 THEN &#39;#DAECFB&#39;--&#39;#00CCFF&#39;
+                WHEN qnt_alagamentos&gt; 1  AND qnt_alagamentos&lt;= 2 THEN &#39;#A9CBE8&#39;--&#39;#BFA230&#39;
+                WHEN qnt_alagamentos&gt; 2  AND qnt_alagamentos&lt;= 3 THEN &#39;#77A9D5&#39;--&#39;#E0701F&#39;
+                WHEN qnt_alagamentos&gt; 3                          THEN &#39;#125999&#39;--&#39;#FF0000&#39;
+                ELSE &#39;#ffffff&#39;
+            END AS color
+        FROM final_table
+        &#34;&#34;&#34;,
+        &#34;query_update&#34;: &#34;&#34;&#34;
+        SELECT
+            MAX(
+            DATETIME(
+                data_inicio
+            )
+            ) AS last_update
+        FROM `rj-cor.adm_cor_comando_staging.ocorrencias_temp`
+        --WHERE data_particao&gt; DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 2 DAY)
+        &#34;&#34;&#34;,
+    }</code></pre>
 </details>
 </section>
 <section>
@@ -74,10 +139,72 @@ class constants(Enum):  # pylint: disable=c0103
 
     PATH_BASE_ENDERECOS = &#34;/tmp/base_enderecos.csv&#34;
     DATASET_ID = &#34;adm_cor_comando&#34;
-    TABLE_ID_EVENTOS = &#34;ocorrencias&#34;
-    TABLE_ID_ATIVIDADES_EVENTOS = &#34;ocorrencias_orgaos_responsaveis&#34;
-    TABLE_ID_POPS = &#34;procedimento_operacional_padrao&#34;
-    TABLE_ID_ATIVIDADES_POPS = &#34;procedimento_operacional_padrao_orgaos_responsaveis&#34;</code></pre>
+    TABLE_ID_EVENTOS = &#34;ocorrencias_temp&#34;
+    TABLE_ID_ATIVIDADES_EVENTOS = &#34;ocorrencias_orgaos_responsaveis_temp&#34;
+    TABLE_ID_POPS = &#34;procedimento_operacional_padrao_temp&#34;
+    TABLE_ID_ATIVIDADES_POPS = (
+        &#34;procedimento_operacional_padrao_orgaos_responsaveis_temp&#34;
+    )
+    RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS = {
+        &#34;redis_data_key&#34;: &#34;data_alagamento_recente_comando&#34;,
+        &#34;redis_update_key&#34;: &#34;data_update_alagamento_recente_comando&#34;,
+        &#34;query_data&#34;: &#34;&#34;&#34;
+
+        WITH
+            alagamentos AS (
+            SELECT
+                id_evento,
+                ST_GEOGPOINT(CAST(longitude AS FLOAT64),
+                CAST(latitude AS FLOAT64)) AS geometry
+            FROM `rj-cor.adm_cor_comando_staging.ocorrencias_temp`
+            WHERE id_pop IN (&#34;5&#34;, &#34;6&#34;, &#34;31&#34;, &#34;32&#34;, &#34;33&#34;)
+            --    AND data_particao &gt;= DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE), day)
+            --    AND CAST(data_inicio AS DATETIME) &gt;= TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE)
+            ),
+            final_table AS (
+            SELECT
+                h3_grid.id AS id_h3,
+                nome AS bairro,
+                COUNT(DISTINCT id_evento) AS qnt_alagamentos
+            FROM `rj-cor.dados_mestres.h3_grid_res8` h3_grid
+            INNER JOIN `rj-cor.dados_mestres.bairro`
+                ON ST_CONTAINS(`rj-cor.dados_mestres.bairro`.geometry, ST_CENTROID(h3_grid.geometry))
+            LEFT JOIN alagamentos
+                ON ST_CONTAINS(h3_grid.geometry, alagamentos.geometry)
+            GROUP BY id_h3, bairro
+            )
+
+        SELECT
+            id_h3,
+            bairro,
+            qnt_alagamentos,
+            CASE
+                WHEN qnt_alagamentos&gt; 0  AND qnt_alagamentos&lt;= 1 THEN &#39;pouco crítico&#39;
+                WHEN qnt_alagamentos&gt; 1  AND qnt_alagamentos&lt;= 2 THEN &#39;crítico&#39;
+                WHEN qnt_alagamentos&gt; 2  AND qnt_alagamentos&lt;= 3 THEN &#39;muito crítico&#39;
+                WHEN qnt_alagamentos&gt; 3                          THEN &#39;extremamente crítico&#39;
+                ELSE &#39;sem alagamento&#39;
+                END AS status,
+            CASE
+                WHEN qnt_alagamentos&gt; 0  AND qnt_alagamentos&lt;= 1 THEN &#39;#DAECFB&#39;--&#39;#00CCFF&#39;
+                WHEN qnt_alagamentos&gt; 1  AND qnt_alagamentos&lt;= 2 THEN &#39;#A9CBE8&#39;--&#39;#BFA230&#39;
+                WHEN qnt_alagamentos&gt; 2  AND qnt_alagamentos&lt;= 3 THEN &#39;#77A9D5&#39;--&#39;#E0701F&#39;
+                WHEN qnt_alagamentos&gt; 3                          THEN &#39;#125999&#39;--&#39;#FF0000&#39;
+                ELSE &#39;#ffffff&#39;
+            END AS color
+        FROM final_table
+        &#34;&#34;&#34;,
+        &#34;query_update&#34;: &#34;&#34;&#34;
+        SELECT
+            MAX(
+            DATETIME(
+                data_inicio
+            )
+            ) AS last_update
+        FROM `rj-cor.adm_cor_comando_staging.ocorrencias_temp`
+        --WHERE data_particao&gt; DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 2 DAY)
+        &#34;&#34;&#34;,
+    }</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -90,6 +217,10 @@ class constants(Enum):  # pylint: disable=c0103
 <div class="desc"></div>
 </dd>
 <dt id="pipelines.rj_cor.comando.eventos.constants.constants.PATH_BASE_ENDERECOS"><code class="name">var <span class="ident">PATH_BASE_ENDERECOS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_cor.comando.eventos.constants.constants.RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS"><code class="name">var <span class="ident">RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -178,6 +309,7 @@ setTimeout(() => input.focus(), 100);
 <ul class="">
 <li><code><a title="pipelines.rj_cor.comando.eventos.constants.constants.DATASET_ID" href="#pipelines.rj_cor.comando.eventos.constants.constants.DATASET_ID">DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_cor.comando.eventos.constants.constants.PATH_BASE_ENDERECOS" href="#pipelines.rj_cor.comando.eventos.constants.constants.PATH_BASE_ENDERECOS">PATH_BASE_ENDERECOS</a></code></li>
+<li><code><a title="pipelines.rj_cor.comando.eventos.constants.constants.RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS" href="#pipelines.rj_cor.comando.eventos.constants.constants.RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS">RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS</a></code></li>
 <li><code><a title="pipelines.rj_cor.comando.eventos.constants.constants.TABLE_ID_ATIVIDADES_EVENTOS" href="#pipelines.rj_cor.comando.eventos.constants.constants.TABLE_ID_ATIVIDADES_EVENTOS">TABLE_ID_ATIVIDADES_EVENTOS</a></code></li>
 <li><code><a title="pipelines.rj_cor.comando.eventos.constants.constants.TABLE_ID_ATIVIDADES_POPS" href="#pipelines.rj_cor.comando.eventos.constants.constants.TABLE_ID_ATIVIDADES_POPS">TABLE_ID_ATIVIDADES_POPS</a></code></li>
 <li><code><a title="pipelines.rj_cor.comando.eventos.constants.constants.TABLE_ID_EVENTOS" href="#pipelines.rj_cor.comando.eventos.constants.constants.TABLE_ID_EVENTOS">TABLE_ID_EVENTOS</a></code></li>

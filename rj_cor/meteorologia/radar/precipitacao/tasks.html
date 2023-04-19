@@ -28,7 +28,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
-# pylint: disable=W0612, W0102
+# pylint: disable=W0612, W0102, W1514
 # flake8: noqa: F841
 &#34;&#34;&#34;
 Tasks for setting rain dashboard using radar data.
@@ -36,7 +36,6 @@ Tasks for setting rain dashboard using radar data.
 import json
 from pathlib import Path
 import os
-import pandas as pd
 import pendulum
 from prefect import task
 from prefect.engine.signals import ENDRUN
@@ -145,8 +144,6 @@ def run_model():
 
     run_model_prediction(base_path=base_path)
 
-    dfr = pd.read_csv(f&#34;{data_path}predictions.csv&#34;)
-    log(f&#34;[DEBUG] Predictions file \n{dfr.head()}&#34;)
     log(&#34;[DEBUG] End runing model&#34;)</code></pre>
 </details>
 </section>
@@ -287,8 +284,6 @@ def run_model():
 
     run_model_prediction(base_path=base_path)
 
-    dfr = pd.read_csv(f&#34;{data_path}predictions.csv&#34;)
-    log(f&#34;[DEBUG] Predictions file \n{dfr.head()}&#34;)
     log(&#34;[DEBUG] End runing model&#34;)</code></pre>
 </details>
 </dd>

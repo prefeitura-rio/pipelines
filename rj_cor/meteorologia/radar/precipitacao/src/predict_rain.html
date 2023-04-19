@@ -219,11 +219,6 @@ def run_model_prediction(
     output_path = pathlib.Path(output_path)
     output_path.mkdir(parents=True, exist_ok=True)
 
-    if output_hdf:
-        output_filepath = output_path / &#34;predictions.hdf&#34;
-    else:
-        output_filepath = output_path / &#34;predictions.csv&#34;
-
     model_parent_folders = str(model_filepath.parents[0]).split(&#34;/&#34;)[-2:]
     model = &#34;/&#34;.join(model_parent_folders)
 
@@ -237,7 +232,7 @@ def run_model_prediction(
     )
 
     if output_hdf:
-        predictions.save_hdf(output_filepath)
+        predictions.save_hdf(output_path / &#34;predictions.hdf&#34;)
     else:
         # np.savetxt(output_filepath, predictions.predictions, delimiter=&#34;,&#34;)
         log(f&#34;[DEBUG] predictions.predictions: {predictions.predictions}&#34;)
@@ -257,8 +252,10 @@ def run_model_prediction(
             .dt.tz_convert(&#34;America/Sao_Paulo&#34;)
             .dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
         )
+        last_update = dfr[&#34;last_update&#34;].max()
+        log(f&#34;DEBUUUUUUGGG last_update: {last_update}&#34;)
         log(f&#34;DEBUUUUUUGGG {dfr.head()}&#34;)
-        dfr.to_csv(output_filepath, index=False)</code></pre>
+        dfr.to_csv(output_path / f&#34;predictions_{last_update}.csv&#34;, index=False)</code></pre>
 </details>
 </section>
 <section>
@@ -432,11 +429,6 @@ def run_model_prediction(
     output_path = pathlib.Path(output_path)
     output_path.mkdir(parents=True, exist_ok=True)
 
-    if output_hdf:
-        output_filepath = output_path / &#34;predictions.hdf&#34;
-    else:
-        output_filepath = output_path / &#34;predictions.csv&#34;
-
     model_parent_folders = str(model_filepath.parents[0]).split(&#34;/&#34;)[-2:]
     model = &#34;/&#34;.join(model_parent_folders)
 
@@ -450,7 +442,7 @@ def run_model_prediction(
     )
 
     if output_hdf:
-        predictions.save_hdf(output_filepath)
+        predictions.save_hdf(output_path / &#34;predictions.hdf&#34;)
     else:
         # np.savetxt(output_filepath, predictions.predictions, delimiter=&#34;,&#34;)
         log(f&#34;[DEBUG] predictions.predictions: {predictions.predictions}&#34;)
@@ -470,8 +462,10 @@ def run_model_prediction(
             .dt.tz_convert(&#34;America/Sao_Paulo&#34;)
             .dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
         )
+        last_update = dfr[&#34;last_update&#34;].max()
+        log(f&#34;DEBUUUUUUGGG last_update: {last_update}&#34;)
         log(f&#34;DEBUUUUUUGGG {dfr.head()}&#34;)
-        dfr.to_csv(output_filepath, index=False)</code></pre>
+        dfr.to_csv(output_path / f&#34;predictions_{last_update}.csv&#34;, index=False)</code></pre>
 </details>
 </dd>
 </dl>
