@@ -200,7 +200,7 @@ from
 where
     uo.id_instituicao_fk = 3
     and id_categoria in (2)
-    and ch.dt_inicio >= '2023-01-01'
+    and ch.dt_inicio >= '2023-04-10'
 group by
     ch.id_chamado,
     CONVERT (
