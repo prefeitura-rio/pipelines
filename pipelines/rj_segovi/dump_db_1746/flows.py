@@ -17,10 +17,10 @@ from pipelines.utils.utils import set_default_parameters
 #
 # 1746 dump db flow
 #
-dump_1746_flow = deepcopy(dump_sql_flow)
-dump_1746_flow.name = "SEGOVI: 1746 - Ingerir tabelas de banco SQL"
-dump_1746_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-dump_1746_flow.run_config = KubernetesRun(
+formacao_dump_1746_flow = deepcopy(dump_sql_flow)
+formacao_dump_1746_flow.name = "SEGOVI: 1746 - Ingerir tabelas de banco SQL"
+formacao_dump_1746_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+formacao_dump_1746_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[
         constants.RJ_SEGOVI_AGENT_LABEL.value,
@@ -36,8 +36,8 @@ _1746_default_parameters = {
     "vault_secret_path": "clustersql2",
     "lower_bound_date": "2021-01-01",
 }
-dump_1746_flow = set_default_parameters(
-    dump_1746_flow, default_parameters=_1746_default_parameters
+formacao_dump_1746_flow = set_default_parameters(
+    formacao_dump_1746_flow, default_parameters=_1746_default_parameters
 )
 
-dump_1746_flow.schedule = _1746_daily_update_schedule
+formacao_dump_1746_flow.schedule = _1746_daily_update_schedule
