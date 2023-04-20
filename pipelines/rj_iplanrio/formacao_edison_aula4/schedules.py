@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Schedule Exemplo para Carga de DB para o Datalake
+Schedule Exemplo para Carga DB SQL_SERVER para o Datalake
 """
 
 from datetime import timedelta, datetime
@@ -291,7 +291,6 @@ _1746_queries = {
         "partition_columns": "dt_inicio",
         "lower_bound_date": "2023-01-01",
         "materialize_after_dump": False,
-        # "materialization_mode": "dev",
         "materialize_to_datario": False,
         "dump_to_gcs": False,
         "dump_mode": "append",

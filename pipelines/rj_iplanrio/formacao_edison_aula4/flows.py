@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Flow Exemplo  para Carga de DB para o Datalake
+Flow Exemplo para Carga de DB para o Datalake
 """
 
 from copy import deepcopy
@@ -20,7 +20,9 @@ from pipelines.utils.utils import set_default_parameters
 # 1746 dump db flow
 #
 dump_1746_formacao_edison_flow = deepcopy(dump_sql_flow)
-dump_1746_formacao_edison_flow.name = "IPLANRIO: 1746 - Ingerir tabelas de banco SQL"
+dump_1746_formacao_edison_flow.name = (
+    "IPLANRIO: Formacao 1746 - Ingerir tabelas de banco SQL"
+)
 dump_1746_formacao_edison_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_1746_formacao_edison_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
