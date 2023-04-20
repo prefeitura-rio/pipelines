@@ -21,7 +21,7 @@ from pipelines.utils.utils import set_default_parameters
 #
 dump_1746_formacao_edison_flow = deepcopy(dump_sql_flow)
 dump_1746_formacao_edison_flow.name = (
-    "IPLANRIO: Formacao 1746 - Ingerir tabelas de banco SQL"
+    "IPLANRIO: Formacao Edison 1746 - Ingerir tabelas de banco SQL"  # noqa
 )
 dump_1746_formacao_edison_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_1746_formacao_edison_flow.run_config = KubernetesRun(
@@ -41,7 +41,8 @@ _1746_default_parameters = {
 }
 
 dump_1746_formacao_edison_flow = set_default_parameters(
-    dump_1746_formacao_edison_flow, default_parameters=_1746_default_parameters
+    dump_1746_formacao_edison_flow,
+    default_parameters=_1746_default_parameters,
 )
 
 dump_1746_formacao_edison_flow.schedule = _1746_weekly_update_schedule

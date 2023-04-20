@@ -287,9 +287,8 @@ group by
 """
 
 _1746_queries = {
-    "chamado_1746": {
+    "chamados": {
         "partition_columns": "dt_inicio",
-        "lower_bound_date": "2023-01-01",
         "materialize_after_dump": False,
         "materialize_to_datario": False,
         "dump_to_gcs": False,
@@ -299,7 +298,7 @@ _1746_queries = {
 }
 
 _1746_clocks = generate_dump_db_schedules(
-    interval=timedelta(days=1),
+    interval=timedelta(days=7),
     start_date=datetime(2023, 4, 14, 2, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_IPLANRIO_AGENT_LABEL.value,
