@@ -40,7 +40,7 @@ rj_iplanrio_formacao_ricardo_bandeira_dump_1746_default_parameters = {
     "db_type": "sql_server",
     "db_database": "REPLICA1746",
     # parametros do destino
-    "dataset_id": "formacao_1746_teste",
+    "dataset_id": "formacao_1746_teste_ricardo",
     # credenciais
     "vault_secret_path": "clustersql2",
 }

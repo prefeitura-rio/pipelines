@@ -308,7 +308,7 @@ _1746_clocks = generate_dump_db_schedules(
     db_host="10.70.1.34",
     db_port="1433",
     db_type="sql_server",
-    dataset_id="formacao_1746_teste",
+    dataset_id="formacao_1746_teste_ricardo",
     vault_secret_path="clustersql2",
     table_parameters=_1746_queries,
 )
