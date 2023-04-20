@@ -12,13 +12,11 @@ from pipelines.constants import constants
 from pipelines.utils.dump_db.utils import generate_dump_db_schedules
 from pipelines.utils.utils import untuple_clocks as untuple
 
-
 #####################################
 #
 # 1746 Schedules
 #
 #####################################
-
 
 QUERY_CHAMADO_1746 = """
 select

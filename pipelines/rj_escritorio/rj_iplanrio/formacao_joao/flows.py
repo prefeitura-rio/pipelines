@@ -37,7 +37,7 @@ rj_iplanrio_formacao_dump_default_parameters = {
     "db_host": "10.70.1.34",
     "db_port": "1433",
     "db_type": "sql_server",
-    "dataset_id": "joao_aula4",  # destino
+    "dataset_id": "dataset_aula4",  # destino
     "vault_secret_path": "clustersql2",  # credencial
     #   "lower_bound_date": "2021-01-01", #materialização
 }
