@@ -309,6 +309,7 @@ _1746_clocks = generate_dump_db_schedules(
     db_port="1433",
     db_type="sql_server",
     dataset_id="formacao_1746_edison",
+    table_id="chamados",
     vault_secret_path="clustersql2",
     table_parameters=_1746_queries,
 )

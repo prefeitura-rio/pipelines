@@ -41,6 +41,7 @@ rj_iplanrio_formacao_edison_dump_1746_default_parameters = {
     "db_database": "REPLICA1746",
     # parametros do destino
     "dataset_id": "formacao_1746_edison",
+    "table_id": "chamados",
     # credenciais
     "vault_secret_path": "clustersql2",
 }
