@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Flow Exemplo para Carga de DB para o Datalake
+Flow Exemplo Carga de DB e uma Table para o Datalake
 """
 
 from copy import deepcopy
