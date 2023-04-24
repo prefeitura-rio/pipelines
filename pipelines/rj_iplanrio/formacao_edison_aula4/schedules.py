@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Schedule Exemplo Carga de DB e uma Table para o Datalake
+Schedule Exemplo Carga DB 1746 e Table chamados para o Datalake
 """
 
 from datetime import timedelta, datetime
@@ -300,7 +300,7 @@ _1746_queries = {
 
 _1746_clocks = generate_dump_db_schedules(
     interval=timedelta(days=7),
-    start_date=datetime(2023, 4, 23, 2, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2023, 4, 10, 2, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_IPLANRIO_AGENT_LABEL.value,
     ],

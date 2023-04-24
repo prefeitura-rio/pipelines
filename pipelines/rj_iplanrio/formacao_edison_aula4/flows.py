@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Flow Exemplo Carga de DB e uma Table para o Datalake
+Flow Exemplo Carga DB 1746 e Table chamados para o Datalake
 """
 
 from copy import deepcopy
@@ -21,7 +21,7 @@ from pipelines.utils.utils import set_default_parameters
 #
 rj_iplanrio_formacao_edison_dump_1746_flow = deepcopy(dump_sql_flow)
 rj_iplanrio_formacao_edison_dump_1746_flow.name = (
-    "IPLANRIO: 1746 - Formacao Edison - Ingerir tabelas de banco SQL"  # noqa
+    "IPLANRIO: 1746 - Formacao Edison - Ingerir tabela DB SQLSERVER"  # noqa
 )
 rj_iplanrio_formacao_edison_dump_1746_flow.storage = GCS(
     constants.GCS_FLOWS_BUCKET.value
