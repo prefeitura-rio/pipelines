@@ -15,7 +15,7 @@ from pipelines.utils.utils import untuple_clocks as untuple
 
 #####################################
 #
-# 1746 Schedules
+# 1746 Schedule Chamados
 #
 #####################################
 
@@ -300,7 +300,7 @@ _1746_queries = {
 
 _1746_clocks = generate_dump_db_schedules(
     interval=timedelta(days=7),
-    start_date=datetime(2023, 4, 10, 2, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2023, 4, 19, 2, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_IPLANRIO_AGENT_LABEL.value,
     ],
@@ -309,6 +309,7 @@ _1746_clocks = generate_dump_db_schedules(
     db_port="1433",
     db_type="sql_server",
     dataset_id="formacao_1746_edison",
+    # table_id = chamados
     vault_secret_path="clustersql2",
     table_parameters=_1746_queries,
 )
