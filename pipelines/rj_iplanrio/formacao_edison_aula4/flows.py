@@ -19,30 +19,34 @@ from pipelines.utils.utils import set_default_parameters
 #
 # 1746 dump db flow
 #
-dump_1746_formacao_edison_flow = deepcopy(dump_sql_flow)
-dump_1746_formacao_edison_flow.name = (
-    "IPLANRIO: Formacao Edison 1746 - Ingerir tabelas de banco SQL"  # noqa
+rj_iplanrio_formacao_edison_dump_1746_flow = deepcopy(dump_sql_flow)
+rj_iplanrio_formacao_edison_dump_1746_flow.name = (
+    "IPLANRIO: 1746 - Formacao Edison - Ingerir tabelas de banco SQL"  # noqa
 )
-dump_1746_formacao_edison_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-dump_1746_formacao_edison_flow.run_config = KubernetesRun(
+rj_iplanrio_formacao_edison_dump_1746_flow.storage = GCS(
+    constants.GCS_FLOWS_BUCKET.value
+)
+rj_iplanrio_formacao_edison_dump_1746_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[
         constants.RJ_IPLANRIO_AGENT_LABEL.value,
     ],
 )
 
-_1746_default_parameters = {
-    "db_database": "REPLICA1746",
+rj_iplanrio_formacao_edison_dump_1746_default_parameters = {
+    # parametros da origem/fonte
     "db_host": "10.70.1.34",
     "db_port": "1433",
     "db_type": "sql_server",
-    "dataset_id": "formacao_edison_1746",
+    "db_database": "REPLICA1746",
+    # parametros do destino
+    "dataset_id": "formacao_1746_edison",
+    # credenciais
     "vault_secret_path": "clustersql2",
 }
-
-dump_1746_formacao_edison_flow = set_default_parameters(
-    dump_1746_formacao_edison_flow,
-    default_parameters=_1746_default_parameters,
+rj_iplanrio_formacao_edison_dump_1746_flow = set_default_parameters(
+    rj_iplanrio_formacao_edison_dump_1746_flow,
+    default_parameters=rj_iplanrio_formacao_edison_dump_1746_default_parameters,
 )
 
-dump_1746_formacao_edison_flow.schedule = _1746_weekly_update_schedule
+rj_iplanrio_formacao_edison_dump_1746_flow.schedule = _1746_weekly_update_schedule

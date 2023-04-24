@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Schedule Exemplo para Carga DB SQL_SERVER para o Datalake
+Schedule Exemplo para Carga de DB para o Datalake
 """
 
 from datetime import timedelta, datetime
@@ -15,7 +15,7 @@ from pipelines.utils.utils import untuple_clocks as untuple
 
 #####################################
 #
-# 1746 Chamado Schedules
+# 1746 Schedules
 #
 #####################################
 
@@ -286,6 +286,7 @@ group by
     no_justificativa
 """
 
+
 _1746_queries = {
     "chamados": {
         "partition_columns": "dt_inicio",
@@ -299,7 +300,7 @@ _1746_queries = {
 
 _1746_clocks = generate_dump_db_schedules(
     interval=timedelta(days=7),
-    start_date=datetime(2023, 4, 14, 2, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2023, 4, 23, 2, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_IPLANRIO_AGENT_LABEL.value,
     ],
@@ -307,7 +308,7 @@ _1746_clocks = generate_dump_db_schedules(
     db_host="10.70.1.34",
     db_port="1433",
     db_type="sql_server",
-    dataset_id="formacao_edison_1746",
+    dataset_id="formacao_1746_edison",
     vault_secret_path="clustersql2",
     table_parameters=_1746_queries,
 )
