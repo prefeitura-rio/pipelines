@@ -21,7 +21,7 @@ from pipelines.utils.utils import untuple_clocks as untuple
 
 
 QUERY_CHAMADO_1746 = """
-select
+SELECT
     distinct ch.id_chamado,
     CONVERT (
         VARCHAR,
