@@ -200,7 +200,7 @@ from
 where
     uo.id_instituicao_fk = 3
     and id_categoria in (2)
-    and ch.dt_inicio >= '2023-04-10'
+    and ch.dt_inicio >= '2023-04-16'
 group by
     ch.id_chamado,
     CONVERT (
@@ -284,7 +284,7 @@ group by
     chs.dt_alvo_diagnostico,
     cl.dt_real_diagnostico,
     no_justificativa
-"""
+        """
 
 
 _1746_queries = {

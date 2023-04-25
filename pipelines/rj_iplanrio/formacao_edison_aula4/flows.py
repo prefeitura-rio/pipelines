@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Flow Exemplo Carga DB 1746 e Table chamados para o Datalake
+Flow Exemplo Carga DB 1746, Table chamados dt_inicio => 2023-04-16 para o Datalake
 """
 
 from copy import deepcopy
