@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Schedule Exemplo Carga DB 1746 e Table chamados para o Datalake
+Schedule Exemplo Carga DB 1746 Table chamados dt_inicio 2023-04-16 para o Datalake
 """
 
 from datetime import timedelta, datetime
