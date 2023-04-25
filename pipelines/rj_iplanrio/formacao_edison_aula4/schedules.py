@@ -200,7 +200,7 @@ from
 where
     uo.id_instituicao_fk = 3
     and id_categoria in (2)
-    and ch.dt_inicio >= '2023-04-16'
+    and ch.dt_inicio >= '2023-04-10'
 group by
     ch.id_chamado,
     CONVERT (
@@ -284,7 +284,7 @@ group by
     chs.dt_alvo_diagnostico,
     cl.dt_real_diagnostico,
     no_justificativa
-        """
+"""
 
 
 _1746_queries = {
@@ -300,7 +300,7 @@ _1746_queries = {
 
 _1746_clocks = generate_dump_db_schedules(
     interval=timedelta(days=7),
-    start_date=datetime(2023, 4, 16, 2, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2023, 4, 23, 2, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_IPLANRIO_AGENT_LABEL.value,
     ],
@@ -309,7 +309,6 @@ _1746_clocks = generate_dump_db_schedules(
     db_port="1433",
     db_type="sql_server",
     dataset_id="formacao_1746_edison",
-    # table_id = chamados
     vault_secret_path="clustersql2",
     table_parameters=_1746_queries,
 )
