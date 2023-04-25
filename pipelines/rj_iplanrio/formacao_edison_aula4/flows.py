@@ -39,7 +39,7 @@ rj_iplanrio_formacao_edison_dump_1746_default_parameters = {
     "db_port": "1433",
     "db_type": "sql_server",
     "db_database": "REPLICA1746",
-    # parametros do destino
+    # parametros do destino Datalake rj_iplanrio
     "dataset_id": "formacao_1746_edison",
     # table_id = chamados
     # credenciais
