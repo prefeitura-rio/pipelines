@@ -12,12 +12,13 @@ from pipelines.constants import constants
 from pipelines.rj_iplanrio.formacao_edison_aula4a.schedules import (
     _EGPWEB_weekly_update_schedule,
 )
+
 from pipelines.utils.dump_db.flows import dump_sql_flow
 from pipelines.utils.utils import set_default_parameters
 
 rj_iplanrio_formacao_edison_dump_EGPWEB_flow = deepcopy(dump_sql_flow)
 rj_iplanrio_formacao_edison_dump_EGPWEB_flow.name = (
-    "IPLANRIO: EGPWEB - Formacao Edison Ingerir tabela DB SQLSERVER"  # noqa
+    "IPLANRIO: EGPWEB - Formacao Edison Ingerir tabela DB"
 )
 rj_iplanrio_formacao_edison_dump_EGPWEB_flow.storage = GCS(
     constants.GCS_FLOWS_BUCKET.value
