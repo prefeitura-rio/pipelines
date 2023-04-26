@@ -17,7 +17,7 @@ from pipelines.utils.utils import set_default_parameters
 
 rj_iplanrio_formacao_edison_dump_EGPWEB_flow = deepcopy(dump_sql_flow)
 rj_iplanrio_formacao_edison_dump_EGPWEB_flow.name = (
-    "IPLANRIO: EGPWEB - Formacao Edison - Ingerir tabela DB SQLSERVER"  # noqa"
+    "IPLANRIO: EGPWEB - Formacao Edison Ingerir tabela DB SQLSERVER"  # noqa
 )
 rj_iplanrio_formacao_edison_dump_EGPWEB_flow.storage = GCS(
     constants.GCS_FLOWS_BUCKET.value
