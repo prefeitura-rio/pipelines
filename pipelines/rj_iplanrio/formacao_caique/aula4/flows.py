@@ -21,7 +21,7 @@ from pipelines.utils.utils import set_default_parameters
 #
 rj_iplanrio_formacao_caique_dump_1746_flow = deepcopy(dump_sql_flow)
 rj_iplanrio_formacao_caique_dump_1746_flow.name = (
-    "IPLANRIO: 1746 (formacao) - Ingerir tabelas de banco SQL"  # noqa
+    "IPLANRIO: Formacao Caique - 1746 - Ingerir tabelas de banco SQL"  # noqa
 )
 rj_iplanrio_formacao_caique_dump_1746_flow.storage = GCS(
     constants.GCS_FLOWS_BUCKET.value
