@@ -191,11 +191,6 @@ def run_model_prediction(
     output_path = pathlib.Path(output_path)
     output_path.mkdir(parents=True, exist_ok=True)
 
-    if output_hdf:
-        output_filepath = output_path / "predictions.hdf"
-    else:
-        output_filepath = output_path / "predictions.csv"
-
     model_parent_folders = str(model_filepath.parents[0]).split("/")[-2:]
     model = "/".join(model_parent_folders)
 
@@ -209,7 +204,7 @@ def run_model_prediction(
     )
 
     if output_hdf:
-        predictions.save_hdf(output_filepath)
+        predictions.save_hdf(output_path / "predictions.hdf")
     else:
         # np.savetxt(output_filepath, predictions.predictions, delimiter=",")
         log(f"[DEBUG] predictions.predictions: {predictions.predictions}")
@@ -229,5 +224,7 @@ def run_model_prediction(
             .dt.tz_convert("America/Sao_Paulo")
             .dt.strftime("%Y-%m-%d %H:%M:%S")
         )
+        last_update = dfr["last_update"].max()
+        log(f"DEBUUUUUUGGG last_update: {last_update}")
         log(f"DEBUUUUUUGGG {dfr.head()}")
-        dfr.to_csv(output_filepath, index=False)
+        dfr.to_csv(output_path / f"predictions_{last_update}.csv", index=False)
