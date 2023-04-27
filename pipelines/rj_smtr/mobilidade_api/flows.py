@@ -17,7 +17,7 @@ from pipelines.utils.decorators import Flow
 from pipelines.constants import constants as emd_constants
 
 
-with Flow("SMTR - Update DB - Postgres") as update_db:
+with Flow("SMTR - Update DB - Postgres", code_owners=["caio"]) as update_db:
 
     gtfs_paths = get_gtfs_zipfiles()
     gtfs_dirs = extract_gtfs.map(zip_path=gtfs_paths)
