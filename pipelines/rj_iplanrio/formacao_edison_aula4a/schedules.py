@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Schedule Exemplo Carga DB EGPWEB Tables chances e comentarios para Datalake
+Schedule Carga DB EGPWEB Tables chances e comentarios para Datalake
 """
 from datetime import datetime, timedelta
 

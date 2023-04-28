@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Flow Exemplo Carga DB EGPWEB Tables chances e comentarios para o Datalake
+Flow Carga DB EGPWEB Tables chances e comentarios para o Datalake
 """
 from copy import deepcopy
 
@@ -18,8 +18,9 @@ from pipelines.utils.utils import set_default_parameters
 
 rj_iplanrio_formacao_edison_dump_EGPWEB_flow = deepcopy(dump_sql_flow)
 rj_iplanrio_formacao_edison_dump_EGPWEB_flow.name = (
-    "IPLANRIO: EGPWEB - Formacao Edison Ingerir tabela DB"
+    "IPLANRIO: EGPWEB - Formacao Edison Ingerir tabela DB"  # noqa
 )
+
 rj_iplanrio_formacao_edison_dump_EGPWEB_flow.storage = GCS(
     constants.GCS_FLOWS_BUCKET.value
 )
