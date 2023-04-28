@@ -197,7 +197,7 @@ class constants(Enum):  # pylint: disable=c0103
             "continuous_drop_off": "Int64",
         },
     }
-    MOBILIDADE_DB = "mobilidade-dev-db"
+    MOBILIDADE_DB = "mobilidade-db"
     # RDO/RHO
     RDO_FTP_ALLOWED_PATHS = ["SPPO", "STPL"]
     RDO_FTPS_SECRET_PATH = "smtr_rdo_ftps"
