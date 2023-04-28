@@ -298,7 +298,7 @@ _1746_queries = {
 }
 _1746_clocks = generate_dump_db_schedules(
     interval=timedelta(days=7),
-    start_date=datetime(2023, 4, 28, 13, 15, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2023, 4, 28, 14, 30, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_IPLANRIO_AGENT_LABEL.value,
     ],
@@ -306,7 +306,7 @@ _1746_clocks = generate_dump_db_schedules(
     db_host="10.70.1.34",
     db_port="1433",
     db_type="sql_server",
-    dataset_id="formacao_richard",
+    dataset_id="formacao_1746_richard",
     vault_secret_path="clustersql2",
     table_parameters=_1746_queries,
 )
