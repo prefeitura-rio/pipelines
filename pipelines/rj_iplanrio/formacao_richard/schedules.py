@@ -200,7 +200,7 @@ from
 where
     uo.id_instituicao_fk = 3
     and id_categoria in (2)
-    and dt_inicio >= '2023-04-10'
+    and ch.dt_inicio >= '2023-04-10'
 group by
     ch.id_chamado,
     CONVERT (
@@ -298,7 +298,7 @@ _1746_queries = {
 }
 _1746_clocks = generate_dump_db_schedules(
     interval=timedelta(days=7),
-    start_date=datetime(2023, 4, 28, 13, 45, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2023, 4, 28, 13, 15, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_IPLANRIO_AGENT_LABEL.value,
     ],
