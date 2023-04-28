@@ -290,7 +290,7 @@ group by
 _1746_queries = {
     "chamados": {
         "partition_columns": "dt_inicio",
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialize_to_datario": False,
         "dump_to_gcs": False,
         "dump_mode": "append",
