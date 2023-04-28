@@ -298,7 +298,7 @@ _1746_queries = {
 }
 _1746_clocks = generate_dump_db_schedules(
     interval=timedelta(days=7),
-    start_date=datetime(2023, 4, 23, 2, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2023, 4, 28, 1, 20, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_IPLANRIO_AGENT_LABEL.value,
     ],
