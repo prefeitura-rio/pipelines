@@ -204,7 +204,7 @@ with Flow(
     # Get default parameters #
     start_date = Parameter("start_date", default=get_yesterday.run())
     end_date = Parameter("end_date", default=get_yesterday.run())
-    stu_data_versao = Parameter("stu_data_versao", default=get_previous_date.run(6))
+    stu_data_versao = Parameter("stu_data_versao", default="")
 
     run_dates = get_run_dates(start_date, end_date)
 
