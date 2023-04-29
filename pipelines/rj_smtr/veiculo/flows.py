@@ -41,7 +41,6 @@ from pipelines.rj_smtr.tasks import (
     get_run_dates,
     get_join_dict,
     get_yesterday,
-    get_previous_date,
 )
 
 from pipelines.rj_smtr.veiculo.tasks import (
