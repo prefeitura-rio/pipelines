@@ -15,7 +15,6 @@ from pipelines.constants import constants
 from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
     get_now_date,
-    get_yesterday,
     get_current_flow_mode,
     get_current_flow_labels,
 )
@@ -30,6 +29,7 @@ from pipelines.rj_smtr.tasks import (
     fetch_dataset_sha,
     get_run_dates,
     get_join_dict,
+    get_previous_date,
     # get_local_dbt_client,
     # set_last_run_timestamp,
 )
@@ -107,11 +107,11 @@ with Flow(
     # 1. SETUP #
 
     # Get default parameters #
-    start_date = Parameter("start_date", default=get_yesterday.run())
-    end_date = Parameter("end_date", default=get_yesterday.run())
+    start_date = Parameter("start_date", default=get_previous_date.run(5))
+    end_date = Parameter("end_date", default=get_previous_date.run(5))
     stu_data_versao = Parameter("stu_data_versao", default="")
     materialize_sppo_veiculo_dia = Parameter("materialize_sppo_veiculo_dia", True)
-    change_view_end_date = Parameter("change_view_end_date", True)
+    change_view_end_date = Parameter("change_view_end_date", False)
 
     run_dates = get_run_dates(start_date, end_date)
 
@@ -208,5 +208,4 @@ subsidio_sppo_apuracao.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 subsidio_sppo_apuracao.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value, labels=[constants.RJ_SMTR_AGENT_LABEL.value]
 )
-
-# subsidio_sppo_apuracao.schedule = every_dayofmonth_one_and_sixteen
+subsidio_sppo_apuracao.schedule = every_day_hour_five
