@@ -58,26 +58,6 @@ def get_now_date():
     return now.to_date_string()
 
 
-@prefect.task(checkpoint=False)
-def get_yesterday():
-    """
-    Returns the previous date in YYYY-MM-DD.
-    """
-    now = pendulum.yesterday(pendulum.timezone("America/Sao_Paulo"))
-
-    return now.to_date_string()
-
-
-@prefect.task(checkpoint=False)
-def get_previous_date(days):
-    """
-    Returns the date of {days} days ago in YYYY-MM-DD.
-    """
-    now = pendulum.now(pendulum.timezone("America/Sao_Paulo")).subtract(days=days)
-
-    return now.to_date_string()
-
-
 @task
 def get_current_flow_labels() -> List[str]:
     """

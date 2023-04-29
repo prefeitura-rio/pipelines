@@ -761,3 +761,22 @@ def get_join_dict(dict_list: list, new_dict: dict) -> List:
 
     log(f"get_join_dict: {dict_list}")
     return dict_list
+
+
+@task
+def get_previous_date(days):
+    """
+    Returns the date of {days} days ago in YYYY-MM-DD.
+    """
+    now = pendulum.now(pendulum.timezone("America/Sao_Paulo")).subtract(days=days)
+
+    return now.to_date_string()
+
+
+@task
+def get_yesterday():
+    """
+    Returns the previous date in YYYY-MM-DD.
+    """
+
+    return get_previous_date.run(1)

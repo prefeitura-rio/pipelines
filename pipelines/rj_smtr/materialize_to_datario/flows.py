@@ -12,7 +12,7 @@ from pipelines.constants import constants
 
 from pipelines.utils.execute_dbt_model.flows import utils_run_dbt_model_flow
 from pipelines.utils.utils import set_default_parameters
-from pipelines.utils.tasks import get_yesterday
+from pipelines.rj_smtr.tasks import get_yesterday
 
 from pipelines.rj_smtr.materialize_to_datario.schedules import (
     smtr_materialize_to_datario_daily_schedule,
