@@ -133,11 +133,15 @@ with Flow(
         dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
     )
 
+    _vars = {"start_date": start_date, "end_date": end_date}
+
     # 2. MATERIALIZE DATA #
     with case(materialize_sppo_veiculo_dia, True):
-        parameters = dict(
-            start_date=start_date, end_date=end_date, stu_data_versao=stu_data_versao
-        )
+        parameters = {
+            "start_date": start_date,
+            "end_date": end_date,
+            "stu_data_versao": stu_data_versao,
+        }
 
         SPPO_VEICULO_DIA_RUN = create_flow_run(
             flow_name=sppo_veiculo_dia.name,
@@ -158,7 +162,7 @@ with Flow(
             SUBSIDIO_SPPO_APURACAO_RUN = run_dbt_model(
                 dbt_client=dbt_client,
                 dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
-                _vars=dict(start_date=start_date, end_date=end_date),
+                _vars=_vars,
             )
 
         with case(change_view_end_date, False):
@@ -166,7 +170,7 @@ with Flow(
                 dbt_client=dbt_client,
                 dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
                 exclude="config.materialized:view",
-                _vars=dict(start_date=start_date, end_date=end_date),
+                _vars=_vars,
             )
 
         SPPO_VEICULO_DIA_RUN.set_downstream(SUBSIDIO_SPPO_APURACAO_RUN)
@@ -177,7 +181,7 @@ with Flow(
             run_dbt_model(
                 dbt_client=dbt_client,
                 dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
-                _vars=dict(start_date=start_date, end_date=end_date),
+                _vars=_vars,
             )
 
         with case(change_view_end_date, False):
@@ -185,7 +189,7 @@ with Flow(
                 dbt_client=dbt_client,
                 dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
                 exclude="config.materialized:view",
-                _vars=dict(start_date=start_date, end_date=end_date),
+                _vars=_vars,
             )
 
     # # 3. PUBLISH #

@@ -229,7 +229,7 @@ with Flow(
 
     dict_list = get_join_dict(dict_list=run_dates, new_dict=dataset_sha)
     _vars = get_join_dict(
-        dict_list=dict_list, new_dict=dict(stu_data_versao=stu_data_versao)
+        dict_list=dict_list, new_dict={"stu_data_versao": stu_data_versao}
     )
 
     # 2. TREAT #
