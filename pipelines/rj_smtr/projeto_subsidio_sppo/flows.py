@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=W0511
 """
 Flows for projeto_subsidio_sppo
 """

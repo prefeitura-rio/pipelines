@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=W0703, W0511
 """
 Tasks for rj_smtr
 """
-# pylint: disable=W0703
 
 from datetime import datetime, timedelta
 import json
