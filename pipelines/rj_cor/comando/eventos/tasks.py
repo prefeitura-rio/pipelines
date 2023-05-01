@@ -118,22 +118,6 @@ def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
     url_eventos = url_secret["endpoint_eventos"]
     url_atividades_evento = url_secret["endpoint_atividades_evento"]
 
-    all_codecs = ["ascii", "latin_1", "utf_8"]
-
-    def find_codec(text):
-        for i in all_codecs:
-            for j in all_codecs:
-                try:
-                    log(f"{i}, to {j}, {text.encode(i).decode(j)}")
-                except:
-                    pass
-
-    log("auth_token")
-    find_codec(auth_token)
-    log("url_eventos")
-    find_codec(url_eventos)
-    log(f"url_eventos: {url_eventos}  auth_token: {auth_token}")
-
     # Request Eventos
     response = get_url(url=url_eventos, parameters=date_interval, token=auth_token)
 
