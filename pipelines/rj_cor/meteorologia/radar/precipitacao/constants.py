@@ -17,14 +17,23 @@ class constants(Enum):  # pylint: disable=c0103
         "EMD: Atualizar dados de chuva provinientes de radar na api.dados.rio"
     )
     RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS = {
+        "redis_data_key": "data_chuva_recente_radar_inea",
+        "redis_update_key": "data_update_chuva_recente_radar_inea",
         "query_data": """
-        WITH final_table AS (
+        WITH
+        last_update_date AS (
+            SELECT
+                MAX(last_update) AS last_update
+            FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba`
+        ),
+        final_table AS (
             SELECT
                 id_h3,
                 bairro,
                 CAST(predictions AS FLOAT64) AS chuva_15min,
                 "Guaratiba" AS estacoes,
-            FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba`
+            FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba` tx
+            INNER JOIN last_update_date lud ON lud.last_update = tx.last_update
         )
         SELECT
             id_h3,
@@ -33,7 +42,7 @@ class constants(Enum):  # pylint: disable=c0103
                 WHEN chuva_15min<= 0.2 THEN 0.0 ELSE ROUND(chuva_15min, 2) END AS chuva_15min,
             estacoes,
             CASE
-                WHEN chuva_15min> 0.2  AND chuva_15min<= 1.25 THEN 'chuva fraca'
+                WHEN chuva_15min> 0.2   AND chuva_15min<= 1.25 THEN 'chuva fraca'
                 WHEN chuva_15min> 1.25  AND chuva_15min<= 6.25 THEN 'chuva moderada'
                 WHEN chuva_15min> 6.25  AND chuva_15min<= 12.5 THEN 'chuva forte'
                 WHEN chuva_15min> 12.5                         THEN 'chuva muito forte'
