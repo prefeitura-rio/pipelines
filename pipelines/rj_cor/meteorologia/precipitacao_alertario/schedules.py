@@ -18,7 +18,7 @@ minute_schedule = Schedule(
                 constants.RJ_COR_AGENT_LABEL.value,
             ],
             parameter_defaults={
-                "trigger_rain_dashboard_update": True,
+                # "trigger_rain_dashboard_update": True,
                 "materialize_after_dump": True,
                 "mode": "prod",
                 "materialize_to_datario": False,
