@@ -16,6 +16,12 @@ dados e tecnologia das Secretarias.
 - `pip`
 - (Opcional, mas recomendado) Um ambiente virtual para desenvolvimento (`miniconda`, `virtualenv` ou similares)
 
+### Licenças
+
+Este repositório contém parte do código sob a licença GPL-3.0 e parte sob uma licença EULA.
+Todo código sob a licença EULA terá um cabeçalho indicando que é proprietário.
+Consulte os respectivos tópicos em LICENÇA para os termos e condições de cada licença.
+
 ### Procedimentos
 
 - Clonar esse repositório
