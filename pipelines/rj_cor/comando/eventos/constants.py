@@ -6,8 +6,6 @@ Constant values for the rj_cor.comando projects
 
 from enum import Enum
 
-### tirar todos os _temp, consertar legenda linha 55+, consertar valores linha 55+, descomentar os where
-
 
 class constants(Enum):  # pylint: disable=c0103
     """
@@ -16,12 +14,10 @@ class constants(Enum):  # pylint: disable=c0103
 
     PATH_BASE_ENDERECOS = "/tmp/base_enderecos.csv"
     DATASET_ID = "adm_cor_comando"
-    TABLE_ID_EVENTOS = "ocorrencias_temp"
-    TABLE_ID_ATIVIDADES_EVENTOS = "ocorrencias_orgaos_responsaveis_temp"
-    TABLE_ID_POPS = "procedimento_operacional_padrao_temp"
-    TABLE_ID_ATIVIDADES_POPS = (
-        "procedimento_operacional_padrao_orgaos_responsaveis_temp"
-    )
+    TABLE_ID_EVENTOS = "ocorrencias"
+    TABLE_ID_ATIVIDADES_EVENTOS = "ocorrencias_orgaos_responsaveis"
+    TABLE_ID_POPS = "procedimento_operacional_padrao"
+    TABLE_ID_ATIVIDADES_POPS = "procedimento_operacional_padrao_orgaos_responsaveis"
     RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS = {
         "redis_data_key": "data_alagamento_recente_comando",
         "redis_update_key": "data_update_alagamento_recente_comando",
@@ -33,10 +29,10 @@ class constants(Enum):  # pylint: disable=c0103
                 id_evento,
                 ST_GEOGPOINT(CAST(longitude AS FLOAT64),
                 CAST(latitude AS FLOAT64)) AS geometry
-            FROM `rj-cor.adm_cor_comando_staging.ocorrencias_temp`
+            FROM `rj-cor.adm_cor_comando_staging.ocorrencias`
             WHERE id_pop IN ("5", "6", "31", "32", "33")
-            --    AND data_particao >= DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 15 MINUTE), day)
-            --    AND CAST(data_inicio AS DATETIME) >= TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 15 MINUTE)
+                AND data_particao >= DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 15 MINUTE), day)
+                AND CAST(data_inicio AS DATETIME) >= TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 15 MINUTE)
             ),
             final_table AS (
             SELECT
@@ -78,7 +74,7 @@ class constants(Enum):  # pylint: disable=c0103
                 data_inicio
             )
             ) AS last_update
-        FROM `rj-cor.adm_cor_comando_staging.ocorrencias_temp`
-        --WHERE data_particao> DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 2 DAY)
+        FROM `rj-cor.adm_cor_comando_staging.ocorrencias`
+        WHERE data_particao> DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 2 DAY)
         """,
     }
