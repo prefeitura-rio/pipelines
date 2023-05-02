@@ -55,7 +55,6 @@ with Flow(
     mode_redis = Parameter("mode_redis", default="prod", required=False)
     ref_filename = Parameter("ref_filename", default=None, required=False)
     current_time = Parameter("current_time", default=None, required=False)
-    mode_redis = Parameter("mode_redis", default="prod", required=False)
     current_time = get_dates(current_time)
 
     date_hour_info = slice_data(current_time=current_time, ref_filename=ref_filename)
