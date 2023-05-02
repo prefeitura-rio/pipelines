@@ -198,7 +198,7 @@ from
 where
     uo.id_instituicao_fk = 3
     and id_categoria in (2)
-    and ch.dt_inicio >= '2023-01-01'
+    and ch.dt_inicio >= '2023-03-01'
 group by
     ch.id_chamado,
     CONVERT (
@@ -579,15 +579,15 @@ _1746_clocks = generate_dump_db_schedules(
     interval=timedelta(days=1),
     start_date=datetime(2022, 3, 21, 2, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
-        constants.RJ_SEGOVI_AGENT_LABEL.value,
+        constants.RJ_IPLANRIO_AGENT_LABEL.value,
     ],
     db_database="REPLICA1746",
     db_host="10.70.1.34",
     db_port="1433",
     db_type="sql_server",
-    dataset_id="administracao_servicos_publicos",
+    dataset_id="formacao_1746_teste",
     vault_secret_path="clustersql2",
     table_parameters=_1746_queries,
 )
 
-_1746_daily_update_schedule = Schedule(clocks=untuple(_1746_clocks))
+_1746_weekly_update_schedule = Schedule(clocks=untuple(_1746_clocks))
