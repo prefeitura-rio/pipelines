@@ -28,7 +28,8 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
-# pylint: disable=R0914,W0613,W0102,W0613,R0912,R0915,E1136,E1137
+# pylint: disable=R0914,W0613,W0102,W0613,R0912,R0915,E1136,E1137,W0702
+# flake8: noqa: E722
 &#34;&#34;&#34;
 Tasks for comando
 &#34;&#34;&#34;
@@ -63,6 +64,8 @@ def get_date_interval(
     &#34;&#34;&#34;
     If `date_interval_text` is provided, parse it for the date interval. Else,
     get the date interval from Redis.
+    Example of date_interval_text to use when selecting type string:
+    {&#34;inicio&#34;: &#34;2023-04-19 08:54:41.0&#34;, &#34;fim&#34;: &#34;2023-04-19 10:40:41.0&#34;}
     &#34;&#34;&#34;
     if date_interval_text:
         log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Date interval was provided: {date_interval_text}&#34;)
@@ -669,8 +672,9 @@ def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -&gt; pd.DataFrame
 <span>def <span class="ident">get_date_interval</span></span>(<span>date_interval_text: str, dataset_id: str, table_id: str, mode: str = 'prod') ‑> Tuple[dict, str]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>If <code>date_interval_text</code> is provided, parse it for the date interval. Else,
-get the date interval from Redis.</p></div>
+<div class="desc"><p 08:54:41.0_="08:54:41.0&quot;," 10:40:41.0_="10:40:41.0&quot;" _2023-04-19="&quot;2023-04-19" _fim_:="&quot;fim&quot;:" _inicio_:="&quot;inicio&quot;:">If <code>date_interval_text</code> is provided, parse it for the date interval. Else,
+get the date interval from Redis.
+Example of date_interval_text to use when selecting type string:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -685,6 +689,8 @@ def get_date_interval(
     &#34;&#34;&#34;
     If `date_interval_text` is provided, parse it for the date interval. Else,
     get the date interval from Redis.
+    Example of date_interval_text to use when selecting type string:
+    {&#34;inicio&#34;: &#34;2023-04-19 08:54:41.0&#34;, &#34;fim&#34;: &#34;2023-04-19 10:40:41.0&#34;}
     &#34;&#34;&#34;
     if date_interval_text:
         log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Date interval was provided: {date_interval_text}&#34;)

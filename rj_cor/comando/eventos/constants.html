@@ -35,8 +35,6 @@ Constant values for the rj_cor.comando projects
 
 from enum import Enum
 
-### tirar todos os _temp, consertar legenda linha 55+, consertar valores linha 55+, descomentar os where
-
 
 class constants(Enum):  # pylint: disable=c0103
     &#34;&#34;&#34;
@@ -45,12 +43,10 @@ class constants(Enum):  # pylint: disable=c0103
 
     PATH_BASE_ENDERECOS = &#34;/tmp/base_enderecos.csv&#34;
     DATASET_ID = &#34;adm_cor_comando&#34;
-    TABLE_ID_EVENTOS = &#34;ocorrencias_temp&#34;
-    TABLE_ID_ATIVIDADES_EVENTOS = &#34;ocorrencias_orgaos_responsaveis_temp&#34;
-    TABLE_ID_POPS = &#34;procedimento_operacional_padrao_temp&#34;
-    TABLE_ID_ATIVIDADES_POPS = (
-        &#34;procedimento_operacional_padrao_orgaos_responsaveis_temp&#34;
-    )
+    TABLE_ID_EVENTOS = &#34;ocorrencias&#34;
+    TABLE_ID_ATIVIDADES_EVENTOS = &#34;ocorrencias_orgaos_responsaveis&#34;
+    TABLE_ID_POPS = &#34;procedimento_operacional_padrao&#34;
+    TABLE_ID_ATIVIDADES_POPS = &#34;procedimento_operacional_padrao_orgaos_responsaveis&#34;
     RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS = {
         &#34;redis_data_key&#34;: &#34;data_alagamento_recente_comando&#34;,
         &#34;redis_update_key&#34;: &#34;data_update_alagamento_recente_comando&#34;,
@@ -62,10 +58,10 @@ class constants(Enum):  # pylint: disable=c0103
                 id_evento,
                 ST_GEOGPOINT(CAST(longitude AS FLOAT64),
                 CAST(latitude AS FLOAT64)) AS geometry
-            FROM `rj-cor.adm_cor_comando_staging.ocorrencias_temp`
+            FROM `rj-cor.adm_cor_comando_staging.ocorrencias`
             WHERE id_pop IN (&#34;5&#34;, &#34;6&#34;, &#34;31&#34;, &#34;32&#34;, &#34;33&#34;)
-            --    AND data_particao &gt;= DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE), day)
-            --    AND CAST(data_inicio AS DATETIME) &gt;= TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE)
+                AND data_particao &gt;= DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE), day)
+                AND CAST(data_inicio AS DATETIME) &gt;= TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE)
             ),
             final_table AS (
             SELECT
@@ -107,8 +103,8 @@ class constants(Enum):  # pylint: disable=c0103
                 data_inicio
             )
             ) AS last_update
-        FROM `rj-cor.adm_cor_comando_staging.ocorrencias_temp`
-        --WHERE data_particao&gt; DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 2 DAY)
+        FROM `rj-cor.adm_cor_comando_staging.ocorrencias`
+        WHERE data_particao&gt; DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 2 DAY)
         &#34;&#34;&#34;,
     }</code></pre>
 </details>
@@ -139,12 +135,10 @@ class constants(Enum):  # pylint: disable=c0103
 
     PATH_BASE_ENDERECOS = &#34;/tmp/base_enderecos.csv&#34;
     DATASET_ID = &#34;adm_cor_comando&#34;
-    TABLE_ID_EVENTOS = &#34;ocorrencias_temp&#34;
-    TABLE_ID_ATIVIDADES_EVENTOS = &#34;ocorrencias_orgaos_responsaveis_temp&#34;
-    TABLE_ID_POPS = &#34;procedimento_operacional_padrao_temp&#34;
-    TABLE_ID_ATIVIDADES_POPS = (
-        &#34;procedimento_operacional_padrao_orgaos_responsaveis_temp&#34;
-    )
+    TABLE_ID_EVENTOS = &#34;ocorrencias&#34;
+    TABLE_ID_ATIVIDADES_EVENTOS = &#34;ocorrencias_orgaos_responsaveis&#34;
+    TABLE_ID_POPS = &#34;procedimento_operacional_padrao&#34;
+    TABLE_ID_ATIVIDADES_POPS = &#34;procedimento_operacional_padrao_orgaos_responsaveis&#34;
     RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS = {
         &#34;redis_data_key&#34;: &#34;data_alagamento_recente_comando&#34;,
         &#34;redis_update_key&#34;: &#34;data_update_alagamento_recente_comando&#34;,
@@ -156,10 +150,10 @@ class constants(Enum):  # pylint: disable=c0103
                 id_evento,
                 ST_GEOGPOINT(CAST(longitude AS FLOAT64),
                 CAST(latitude AS FLOAT64)) AS geometry
-            FROM `rj-cor.adm_cor_comando_staging.ocorrencias_temp`
+            FROM `rj-cor.adm_cor_comando_staging.ocorrencias`
             WHERE id_pop IN (&#34;5&#34;, &#34;6&#34;, &#34;31&#34;, &#34;32&#34;, &#34;33&#34;)
-            --    AND data_particao &gt;= DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE), day)
-            --    AND CAST(data_inicio AS DATETIME) &gt;= TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE)
+                AND data_particao &gt;= DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE), day)
+                AND CAST(data_inicio AS DATETIME) &gt;= TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE)
             ),
             final_table AS (
             SELECT
@@ -201,8 +195,8 @@ class constants(Enum):  # pylint: disable=c0103
                 data_inicio
             )
             ) AS last_update
-        FROM `rj-cor.adm_cor_comando_staging.ocorrencias_temp`
-        --WHERE data_particao&gt; DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 2 DAY)
+        FROM `rj-cor.adm_cor_comando_staging.ocorrencias`
+        WHERE data_particao&gt; DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 2 DAY)
         &#34;&#34;&#34;,
     }</code></pre>
 </details>
