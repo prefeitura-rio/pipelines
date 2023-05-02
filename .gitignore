@@ -10,6 +10,7 @@ test/*.ipynb
 test/*.csv
 setup.py
 .vscode/*
+*.hdf
 
 
 
