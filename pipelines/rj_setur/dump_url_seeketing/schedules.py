@@ -115,7 +115,7 @@ gsheets_urls = {
             /edit#gid=722381052",
         "url_type": "google_sheet",
         "gsheets_sheet_name": "Ocupação da Rede Hoteleira em Grandes Eventos",
-        "gsheets_sheet_range": "A5:C1000",
+        "gsheets_sheet_range": "A5:E1000",
         "materialize_after_dump": True,
         "dataset_id": "turismo_fluxo_visitantes",
     },
