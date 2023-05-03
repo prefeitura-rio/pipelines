@@ -113,7 +113,7 @@ class constants(Enum):  # pylint: disable=c0103
                 CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL) AS chuva_15min,
                 STRING_AGG(estacao ORDER BY estacao) estacoes
             FROM h3_chuvas
-            WHERE ranking < 4
+            -- WHERE ranking < 4
             GROUP BY id_h3
             ),
 

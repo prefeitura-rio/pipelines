@@ -113,6 +113,24 @@ with Flow(
             stream_logs=True,
             raise_final_state=False,
         )
+        # Trigger rain dashboard update last 2h flow run
+        rain_dashboard_last_2h_update_flow = create_flow_run(
+            flow_name=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_NAME.value,
+            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+            parameters=radar_constants.RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS.value,  # noqa
+            labels=[
+                "rj-cor",
+            ],
+            run_name="Update radar rain dashboard data (triggered by precipitacao_radar last 2h flow)",  # noqa
+        )
+        rain_dashboard_last_2h_update_flow.set_upstream(upload_table)
+
+        wait_for_rain_dashboard_last_2h_update = wait_for_flow_run(
+            flow_run_id=rain_dashboard_last_2h_update_flow,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=False,
+        )
 
 cor_meteorologia_precipitacao_radar_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 cor_meteorologia_precipitacao_radar_flow.run_config = KubernetesRun(

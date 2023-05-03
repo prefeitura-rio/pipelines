@@ -13,8 +13,8 @@ class constants(Enum):  # pylint: disable=c0103
     """
 
     RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS = {
-        "redis_data_key": "data_alagamento_passado_comando",
-        "redis_update_key": "data_update_alagamento_passado_comando",
+        "redis_data_key": "data_chuva_passado_alertario",
+        "redis_update_key": "data_update_chuva_passado_alertario",
         "query_data": """
         WITH
             alertario AS ( -- seleciona as últimas 8 medições do alertario que deveriam ser das últimas 2h
@@ -116,7 +116,7 @@ class constants(Enum):  # pylint: disable=c0103
                 CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL) AS chuva_15min,
                 STRING_AGG(estacao ORDER BY estacao) estacoes
             FROM h3_chuvas
-            WHERE ranking < 4
+            -- WHERE ranking < 4
             GROUP BY id_h3
             ),
 
