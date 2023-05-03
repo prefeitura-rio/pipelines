@@ -1,21 +1,23 @@
 # -*- coding: utf-8 -*-
 # flake8: noqa: E501
 """
-Constants for the rain dashboard pipeline
+Constant values for the rj_cor.meteorologia.precipitacao_alertario project
 """
+
 from enum import Enum
 
 
 class constants(Enum):  # pylint: disable=c0103
     """
-    Constants for the rain dashboard pipeline
+    Constant values for the precipitacao_alertario project
     """
 
-    RAIN_DASHBOARD_FLOW_NAME = "EMD: Atualizar dados de chuva na api.dados.rio"
-    RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS = {
+    RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS = {
+        "redis_data_key": "data_alagamento_passado_comando",
+        "redis_update_key": "data_update_alagamento_passado_comando",
         "query_data": """
         WITH
-            alertario AS ( -- seleciona a última medição do alertario
+            alertario AS ( -- seleciona as últimas 8 medições do alertario que deveriam ser das últimas 2h
             SELECT
                 id_estacao,
                 acumulado_chuva_15_min,
@@ -31,18 +33,19 @@ class constants(Enum):  # pylint: disable=c0103
                     PARTITION BY id_estacao ORDER BY DATETIME(CONCAT(data_particao," ", horario)) DESC
                 ) AS row_num
                 FROM `rj-cor.clima_pluviometro.taxa_precipitacao_alertario`
-                WHERE data_particao> DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY)
+                WHERE data_particao>= DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY)
             )AS a
-            WHERE a.row_num = 1
+            WHERE a.row_num <= 8
             ),
 
-            last_measurements AS (-- concatena medições do alertario e websirene
+            last_measurements AS (-- concatena medições do alertario e websirene e soma dados das últimas 2h
             SELECT
                 a.id_estacao,
-                a.data_update,
                 "alertario" AS sistema,
-                a.acumulado_chuva_15_min,
+                MAX(a.data_update) AS data_update,
+                SUM(a.acumulado_chuva_15_min) AS acumulado_chuva_15_min,
             FROM alertario a
+            GROUP BY a.id_estacao, sistema
             ),
 
             h3_chuvas AS ( -- calcula qnt de chuva para cada h3
@@ -70,7 +73,7 @@ class constants(Enum):  # pylint: disable=c0103
                     FROM `rj-cor.clima_pluviometro.estacoes_alertario`
                 ),
 
-                estacoes_mais_proximas AS (
+                estacoes_mais_proximas AS ( -- calcula distância das estações para cada centróide do h3
                     SELECT AS VALUE s
                     FROM (
                         SELECT
@@ -120,8 +123,8 @@ class constants(Enum):  # pylint: disable=c0103
             final_table AS (
             SELECT
                 h3_media.id_h3,
+                h3_media.estacoes,
                 nome AS bairro,
-                estacoes,
                 cast(round(h3_media.chuva_15min,2) AS decimal) AS chuva_15min,
             FROM h3_media
             LEFT JOIN `rj-cor.dados_mestres.h3_grid_res8` h3_grid
