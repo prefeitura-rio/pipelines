@@ -41,7 +41,7 @@ from pipelines.rj_smtr.tasks import (
     fetch_dataset_sha,
     get_run_dates,
     get_join_dict,
-    get_yesterday,
+    get_previous_date,
 )
 
 from pipelines.rj_smtr.veiculo.tasks import (
@@ -202,8 +202,8 @@ with Flow(
     # 1. SETUP #
 
     # Get default parameters #
-    start_date = Parameter("start_date", default=get_yesterday.run())
-    end_date = Parameter("end_date", default=get_yesterday.run())
+    start_date = Parameter("start_date", default=get_previous_date.run(1))
+    end_date = Parameter("end_date", default=get_previous_date.run(1))
     stu_data_versao = Parameter("stu_data_versao", default="")
 
     run_dates = get_run_dates(start_date, end_date)

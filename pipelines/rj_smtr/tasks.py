@@ -771,12 +771,3 @@ def get_previous_date(days):
     now = pendulum.now(pendulum.timezone("America/Sao_Paulo")).subtract(days=days)
 
     return now.to_date_string()
-
-
-@task
-def get_yesterday():
-    """
-    Returns the previous date in YYYY-MM-DD.
-    """
-
-    return get_previous_date.run(1)
