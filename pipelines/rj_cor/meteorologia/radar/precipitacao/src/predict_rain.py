@@ -228,4 +228,4 @@ def run_model_prediction(
         log(f"DEBUUUUUUGGG data_medicao: {data_medicao}")
         log(f"DEBUUUUUUGGG {dfr.head()}")
         # dfr.to_csv(output_path / f"predictions_{data_medicao}.csv", index=False)
-        return dfr, output_path
+        return dfr

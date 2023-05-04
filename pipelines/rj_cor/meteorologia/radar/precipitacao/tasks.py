@@ -122,11 +122,11 @@ def run_model(wait=None) -> Tuple[pd.DataFrame, Union[str, Path]]:
     else:
         os.makedirs(data_path, exist_ok=True)
 
-    dfr, output_path = run_model_prediction(base_path=base_path)
+    dfr = run_model_prediction(base_path=base_path)
 
     log("[DEBUG] End runing model")
 
-    return dfr, output_path
+    return dfr
 
 
 @task
@@ -139,6 +139,7 @@ def save_data(dfr: pd.DataFrame) -> Union[str, Path]:
     prepath.mkdir(parents=True, exist_ok=True)
 
     partition_column = "data_medicao"
+    log(f"DEBUUUUUUGGG22 {dfr.head()}")
     dataframe, partitions = parse_date_columns(dfr, partition_column)
     suffix = (
         pd.to_datetime(dataframe[partition_column]).max().dt.strftime("%Y%m%d%H%M%S")
