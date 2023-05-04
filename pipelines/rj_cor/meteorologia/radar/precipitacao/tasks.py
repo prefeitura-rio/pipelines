@@ -141,9 +141,7 @@ def save_data(dfr: pd.DataFrame) -> Union[str, Path]:
     partition_column = "data_medicao"
     log(f"DEBUUUUUUGGG22 {dfr.head()}")
     dataframe, partitions = parse_date_columns(dfr, partition_column)
-    suffix = (
-        pd.to_datetime(dataframe[partition_column]).max().dt.strftime("%Y%m%d%H%M%S")
-    )
+    suffix = pd.to_datetime(dataframe[partition_column]).max().strftime("%Y%m%d%H%M%S")
     log(f"[DEBUG] SUFFIX {suffix}")
 
     # Cria partições a partir da data
