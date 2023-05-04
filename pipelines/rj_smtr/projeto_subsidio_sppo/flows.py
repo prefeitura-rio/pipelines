@@ -35,9 +35,9 @@ from pipelines.rj_smtr.tasks import (
     # set_last_run_timestamp,
 )
 
-# from pipelines.rj_smtr.materialize_to_datario.flows import (
-#     smtr_materialize_to_datario_viagem_sppo_flow,
-# )
+from pipelines.rj_smtr.materialize_to_datario.flows import (
+    smtr_materialize_to_datario_viagem_sppo_flow,
+)
 
 from pipelines.rj_smtr.veiculo.flows import (
     sppo_veiculo_dia,
@@ -112,6 +112,7 @@ with Flow(
     end_date = Parameter("end_date", default=get_previous_date.run(5))
     stu_data_versao = Parameter("stu_data_versao", default="")
     materialize_sppo_veiculo_dia = Parameter("materialize_sppo_veiculo_dia", True)
+    publish = Parameter("publish", True)
     change_view_end_date = Parameter("change_view_end_date", False)
 
     run_dates = get_run_dates(start_date, end_date)
@@ -181,35 +182,48 @@ with Flow(
     with case(materialize_sppo_veiculo_dia, False):
         # 3. CALCULATE #
         with case(change_view_end_date, True):
-            run_dbt_model(
+            SUBSIDIO_SPPO_DASHBOARD_RUN = run_dbt_model(
                 dbt_client=dbt_client,
                 dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
                 _vars=_vars,
             )
 
         with case(change_view_end_date, False):
-            run_dbt_model(
+            SUBSIDIO_SPPO_DASHBOARD_RUN = run_dbt_model(
                 dbt_client=dbt_client,
                 dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
                 exclude="config.materialized:view",
                 _vars=_vars,
             )
 
-    # # 3. PUBLISH #
-    # run_materialize = create_flow_run(
-    #     flow_name=smtr_materialize_to_datario_viagem_sppo_flow.name,
-    #     project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-    #     labels=[
-    #         constants.RJ_DATARIO_AGENT_LABEL.value,
-    #     ],
-    #     run_name=smtr_materialize_to_datario_viagem_sppo_flow.name,
-    #     parameters={
-    #         "dataset_id": "transporte_rodoviario_municipal",
-    #         "table_id": "viagem_onibus",
-    #         "mode": "prod",
-    #         "dbt_model_parameters": dict(end_date=end_date),
-    #     },
-    # )
+    # 4. PUBLISH #
+    with case(publish, True):
+
+        wait_for_flow_run(
+            SUBSIDIO_SPPO_DASHBOARD_RUN,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+
+        SMTR_MATERIALIZIZE_TO_DATARIO_VIAGEM_SPPO_RUN = create_flow_run(
+            flow_name=smtr_materialize_to_datario_viagem_sppo_flow.name,
+            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+            labels=[
+                constants.RJ_DATARIO_AGENT_LABEL.value,
+            ],
+            run_name=smtr_materialize_to_datario_viagem_sppo_flow.name,
+            parameters={
+                "dataset_id": "transporte_rodoviario_municipal",
+                "table_id": "viagem_onibus",
+                "mode": "prod",
+                "dbt_model_parameters": {"end_date": end_date},
+            },
+        )
+
+        SUBSIDIO_SPPO_DASHBOARD_RUN.set_downstream(
+            SMTR_MATERIALIZIZE_TO_DATARIO_VIAGEM_SPPO_RUN
+        )
 
 subsidio_sppo_apuracao.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 subsidio_sppo_apuracao.run_config = KubernetesRun(
