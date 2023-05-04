@@ -216,15 +216,16 @@ def run_model_prediction(
         dfr["predictions"] = predictions.predictions
         dfr["id_h3"] = id_hex
         dfr["bairro"] = bairro
-        dfr["last_update"] = pd.to_datetime(
+        dfr["data_medicao"] = pd.to_datetime(
             prediction_dt_str, format="%Y%m%d %H%M%S", utc=True
         )
-        dfr["last_update"] = (
-            dfr["last_update"]
+        dfr["data_medicao"] = (
+            dfr["data_medicao"]
             .dt.tz_convert("America/Sao_Paulo")
             .dt.strftime("%Y-%m-%d %H:%M:%S")
         )
-        last_update = dfr["last_update"].max()
-        log(f"DEBUUUUUUGGG last_update: {last_update}")
+        data_medicao = dfr["data_medicao"].max()
+        log(f"DEBUUUUUUGGG data_medicao: {data_medicao}")
         log(f"DEBUUUUUUGGG {dfr.head()}")
-        dfr.to_csv(output_path / f"predictions_{last_update}.csv", index=False)
+        # dfr.to_csv(output_path / f"predictions_{data_medicao}.csv", index=False)
+        return dfr, output_path

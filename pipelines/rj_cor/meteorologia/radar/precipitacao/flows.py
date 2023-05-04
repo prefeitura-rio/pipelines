@@ -18,6 +18,7 @@ from pipelines.rj_cor.meteorologia.radar.precipitacao.tasks import (
     change_predict_rain_specs,
     download_files_storage,
     get_filenames_storage,
+    save_data,
     run_model,
 )
 from pipelines.rj_cor.tasks import (
@@ -70,16 +71,15 @@ with Flow(
         destination_path=f"{BASE_PATH}radar_data/",
     )
     download_files_task.set_upstream(change_json_task)
-    run_model_task = run_model()
-    run_model_task.set_upstream(download_files_task)
+    dfr = run_model(wait=download_files_task)
+    # dfr.set_upstream(download_files_task)
     # run_model_task.set_upstream(change_json_task)
-
+    save_data_path = save_data(dfr)
     upload_table = create_table_and_upload_to_gcs(
-        data_path=f"{BASE_PATH}predictions/",
+        data_path=save_data_path,
         dataset_id=DATASET_ID,
         table_id=TABLE_ID,
         dump_mode=DUMP_MODE,
-        wait=run_model_task,
     )
     # upload_table.set_upstream(run_model_task)
 

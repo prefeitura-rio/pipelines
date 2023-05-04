@@ -12,7 +12,7 @@ class constants(Enum):  # pylint: disable=c0103
     """
 
     DATASET_ID = "clima_radar"
-    TABLE_ID = "taxa_precipitacao_guaratiba"
+    TABLE_ID = "taxa_precipitacao_guaratiba_temp"
     RAIN_DASHBOARD_FLOW_NAME = (
         "EMD: Atualizar dados de chuva provinientes de radar na api.dados.rio"
     )

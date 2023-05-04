@@ -1,17 +1,22 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=W0612, W0102, W1514
+# pylint: disable=W0612, W0613, W0102, W1514
 # flake8: noqa: F841
 """
 Tasks for setting rain dashboard using radar data.
 """
+from datetime import timedelta
 import json
-from pathlib import Path
 import os
+from pathlib import Path
+from typing import Union, Tuple
+
+import pandas as pd
 import pendulum
 from prefect import task
 from prefect.engine.signals import ENDRUN
 from prefect.engine.state import Skipped
 
+from pipelines.constants import constants
 from pipelines.rj_cor.meteorologia.radar.precipitacao.utils import (
     download_blob,
     list_blobs_with_prefix,
@@ -19,7 +24,7 @@ from pipelines.rj_cor.meteorologia.radar.precipitacao.utils import (
 from pipelines.rj_cor.meteorologia.radar.precipitacao.src.predict_rain import (
     run_model_prediction,
 )
-from pipelines.utils.utils import log
+from pipelines.utils.utils import log, parse_date_columns, to_partitions
 
 
 @task()
@@ -98,8 +103,12 @@ def change_predict_rain_specs(files_to_model: list, destination_path: str) -> No
         json.dump(predict_specs, file)
 
 
-@task()
-def run_model():
+@task(
+    nout=2,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def run_model(wait=None) -> Tuple[pd.DataFrame, Union[str, Path]]:
     """
     Call a shell task to run model
     https://github.com/BioBD/sgwfc-gene-python/blob/7dadf7b854a7a37405ee203331671f8cd61b114b/workflow/modules.py
@@ -113,6 +122,36 @@ def run_model():
     else:
         os.makedirs(data_path, exist_ok=True)
 
-    run_model_prediction(base_path=base_path)
+    dfr, output_path = run_model_prediction(base_path=base_path)
 
     log("[DEBUG] End runing model")
+
+    return dfr, output_path
+
+
+@task
+def save_data(dfr: pd.DataFrame) -> Union[str, Path]:
+    """
+    Save treated data in csv partitioned by date
+    """
+
+    prepath = Path("/tmp/precipitacao_radar/")
+    prepath.mkdir(parents=True, exist_ok=True)
+
+    partition_column = "data_medicao"
+    dataframe, partitions = parse_date_columns(dfr, partition_column)
+    suffix = (
+        pd.to_datetime(dataframe[partition_column]).max().dt.strftime("%Y%m%d%H%M%S")
+    )
+    log(f"[DEBUG] SUFFIX {suffix}")
+
+    # Cria partições a partir da data
+    to_partitions(
+        data=dataframe,
+        partition_columns=partitions,
+        savepath=prepath,
+        data_type="csv",
+        suffix=suffix,
+    )
+    log(f"[DEBUG] Files saved on {prepath}")
+    return prepath
