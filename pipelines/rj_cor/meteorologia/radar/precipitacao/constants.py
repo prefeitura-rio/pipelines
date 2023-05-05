@@ -12,7 +12,7 @@ class constants(Enum):  # pylint: disable=c0103
     """
 
     DATASET_ID = "clima_radar"
-    TABLE_ID = "taxa_precipitacao_guaratiba_temp"
+    TABLE_ID = "taxa_precipitacao_guaratiba"
     RAIN_DASHBOARD_FLOW_NAME = (
         "EMD: Atualizar dados de chuva provinientes de radar na api.dados.rio"
     )
@@ -24,7 +24,7 @@ class constants(Enum):  # pylint: disable=c0103
         last_update_date AS (
             SELECT
                 MAX(data_medicao) AS last_update
-            FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba_temp`
+            FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba`
             WHERE data_particao>= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
         ),
         final_table AS (
@@ -33,7 +33,7 @@ class constants(Enum):  # pylint: disable=c0103
                 bairro,
                 CAST(predictions AS FLOAT64) AS chuva_15min,
                 "Guaratiba" AS estacoes,
-            FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba_temp` tx
+            FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba` tx
             INNER JOIN last_update_date lud ON lud.last_update = tx.data_medicao
         )
         SELECT
@@ -61,7 +61,7 @@ class constants(Enum):  # pylint: disable=c0103
         "query_update": """
         SELECT
             DATETIME(MAX(data_medicao)) AS last_update
-        FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba_temp`
+        FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba`
         WHERE data_particao>= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
         """,
     }
@@ -74,7 +74,7 @@ class constants(Enum):  # pylint: disable=c0103
         last_update_date AS (
             SELECT
                 CAST(MAX(data_medicao) AS DATETIME) AS last_update
-            FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba_temp`
+            FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba`
             WHERE data_particao>= CAST(DATE_SUB(CURRENT_DATETIME('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
         ),
         select_data_each_15_min AS (
@@ -85,7 +85,7 @@ class constants(Enum):  # pylint: disable=c0103
                     CAST(predictions AS FLOAT64) <= 0.2
                     THEN 0.0 ELSE CAST(predictions AS FLOAT64) END AS chuva_15min, -- retira ruídos antes de somar
                 ROW_NUMBER() OVER (PARTITION BY id_h3, bairro ORDER BY data_medicao DESC) as row_num
-            FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba_temp` tx
+            FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba` tx
             INNER JOIN last_update_date lup ON 1=1
             WHERE tx.data_particao>= CAST(DATE_SUB(CURRENT_DATETIME('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
               AND CAST(tx.data_medicao AS DATETIME)>= DATE_SUB(lup.last_update, INTERVAL 2 HOUR)
@@ -124,7 +124,7 @@ class constants(Enum):  # pylint: disable=c0103
         "query_update": """
         SELECT
             DATETIME(MAX(data_medicao)) AS last_update
-        FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba_temp`
+        FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba`
         WHERE data_particao>= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
         """,
     }
