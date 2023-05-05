@@ -17,28 +17,26 @@ class constants(Enum):  # pylint: disable=c0103
         "redis_update_key": "data_update_chuva_passado_alertario",
         "query_data": """
         WITH
-            alertario AS ( -- seleciona as últimas 8 medições do alertario que deveriam ser das últimas 2h
+            last_update_date AS (
+            SELECT
+                CAST(MAX(data_particao) AS DATETIME) AS last_update
+            FROM `rj-cor.clima_pluviometro.taxa_precipitacao_alertario`
+            WHERE data_particao >= DATE_SUB(CURRENT_DATETIME('America/Sao_Paulo'), INTERVAL 2 DAY)
+        ),
+            alertario AS ( -- seleciona as últimas 2h de medição antes da última atualização
             SELECT
                 id_estacao,
                 acumulado_chuva_15_min,
                 CURRENT_DATE('America/Sao_Paulo') as data,
-                data_update
-            FROM (
-                SELECT
-                id_estacao,
-                acumulado_chuva_15_min,
                 data_particao,
                 DATETIME(CONCAT(data_particao," ", horario)) AS data_update,
-                ROW_NUMBER() OVER (
-                    PARTITION BY id_estacao ORDER BY DATETIME(CONCAT(data_particao," ", horario)) DESC
-                ) AS row_num
                 FROM `rj-cor.clima_pluviometro.taxa_precipitacao_alertario`
-                WHERE data_particao>= DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY)
-            )AS a
-            WHERE a.row_num <= 8
+                INNER JOIN last_update_date lup ON 1=1
+                WHERE data_particao >= DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 2 DAY)
+                  AND CAST(CONCAT(data_particao, " ", horario) AS DATETIME) >= DATE_SUB(lup.last_update, INTERVAL 2 HOUR)
             ),
 
-            last_measurements AS (-- concatena medições do alertario e websirene e soma dados das últimas 2h
+            last_measurements AS (-- soma a quantidade chuva das últimas 2h
             SELECT
                 a.id_estacao,
                 "alertario" AS sistema,

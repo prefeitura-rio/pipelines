@@ -216,6 +216,7 @@ def run_model_prediction(
         dfr["predictions"] = predictions.predictions
         dfr["id_h3"] = id_hex
         dfr["bairro"] = bairro
+        dfr["bairro"] = dfr["bairro"].str.replace("\n", "")
         dfr["data_medicao"] = pd.to_datetime(
             prediction_dt_str, format="%Y%m%d %H%M%S", utc=True
         )
