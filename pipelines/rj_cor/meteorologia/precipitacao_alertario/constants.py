@@ -1,48 +1,49 @@
 # -*- coding: utf-8 -*-
 # flake8: noqa: E501
 """
-Constants for the rain dashboard pipeline
+Constant values for the rj_cor.meteorologia.precipitacao_alertario project
 """
+
 from enum import Enum
 
 
 class constants(Enum):  # pylint: disable=c0103
     """
-    Constants for the rain dashboard pipeline
+    Constant values for the precipitacao_alertario project
     """
 
-    RAIN_DASHBOARD_FLOW_NAME = "EMD: Atualizar dados de chuva na api.dados.rio"
-    RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS = {
+    RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS = {
+        "redis_data_key": "data_chuva_passado_alertario",
+        "redis_update_key": "data_update_chuva_passado_alertario",
         "query_data": """
         WITH
-            alertario AS ( -- seleciona a última medição do alertario
+            last_update_date AS (
+            SELECT
+                CAST(MAX(data_particao) AS DATETIME) AS last_update
+            FROM `rj-cor.clima_pluviometro.taxa_precipitacao_alertario`
+            WHERE data_particao >= DATE_SUB(CURRENT_DATETIME('America/Sao_Paulo'), INTERVAL 2 DAY)
+        ),
+            alertario AS ( -- seleciona as últimas 2h de medição antes da última atualização
             SELECT
                 id_estacao,
                 acumulado_chuva_15_min,
                 CURRENT_DATE('America/Sao_Paulo') as data,
-                data_update
-            FROM (
-                SELECT
-                id_estacao,
-                acumulado_chuva_15_min,
                 data_particao,
                 DATETIME(CONCAT(data_particao," ", horario)) AS data_update,
-                ROW_NUMBER() OVER (
-                    PARTITION BY id_estacao ORDER BY DATETIME(CONCAT(data_particao," ", horario)) DESC
-                ) AS row_num
                 FROM `rj-cor.clima_pluviometro.taxa_precipitacao_alertario`
-                WHERE data_particao> DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY)
-            )AS a
-            WHERE a.row_num = 1
+                INNER JOIN last_update_date lup ON 1=1
+                WHERE data_particao >= DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 2 DAY)
+                  AND CAST(CONCAT(data_particao, " ", horario) AS DATETIME) >= DATE_SUB(lup.last_update, INTERVAL 2 HOUR)
             ),
 
-            last_measurements AS (-- concatena medições do alertario e websirene
+            last_measurements AS (-- soma a quantidade chuva das últimas 2h
             SELECT
                 a.id_estacao,
-                a.data_update,
                 "alertario" AS sistema,
-                a.acumulado_chuva_15_min,
+                MAX(a.data_update) AS data_update,
+                SUM(a.acumulado_chuva_15_min) AS acumulado_chuva_15_min,
             FROM alertario a
+            GROUP BY a.id_estacao, sistema
             ),
 
             h3_chuvas AS ( -- calcula qnt de chuva para cada h3
@@ -70,7 +71,7 @@ class constants(Enum):  # pylint: disable=c0103
                     FROM `rj-cor.clima_pluviometro.estacoes_alertario`
                 ),
 
-                estacoes_mais_proximas AS (
+                estacoes_mais_proximas AS ( -- calcula distância das estações para cada centróide do h3
                     SELECT AS VALUE s
                     FROM (
                         SELECT
@@ -120,8 +121,8 @@ class constants(Enum):  # pylint: disable=c0103
             final_table AS (
             SELECT
                 h3_media.id_h3,
+                h3_media.estacoes,
                 nome AS bairro,
-                estacoes,
                 cast(round(h3_media.chuva_15min,2) AS decimal) AS chuva_15min,
             FROM h3_media
             LEFT JOIN `rj-cor.dados_mestres.h3_grid_res8` h3_grid
@@ -136,17 +137,17 @@ class constants(Enum):  # pylint: disable=c0103
         chuva_15min,
         estacoes,
         CASE
-            WHEN chuva_15min> 0     AND chuva_15min<= 1.25 THEN 'chuva fraca'
-            WHEN chuva_15min> 1.25  AND chuva_15min<= 6.25 THEN 'chuva moderada'
-            WHEN chuva_15min> 6.25  AND chuva_15min<= 12.5 THEN 'chuva forte'
-            WHEN chuva_15min> 12.5                         THEN 'chuva muito forte'
+            WHEN chuva_15min> 0   AND chuva_15min<= 10  THEN 'chuva fraca'
+            WHEN chuva_15min> 10  AND chuva_15min<= 50  THEN 'chuva moderada'
+            WHEN chuva_15min> 50  AND chuva_15min<= 100 THEN 'chuva forte'
+            WHEN chuva_15min> 100                       THEN 'chuva muito forte'
             ELSE 'sem chuva'
         END AS status,
         CASE
-            WHEN chuva_15min> 0     AND chuva_15min<= 1.25 THEN '#DAECFB'--'#00CCFF'
-            WHEN chuva_15min> 1.25  AND chuva_15min<= 6.25 THEN '#A9CBE8'--'#BFA230'
-            WHEN chuva_15min> 6.25  AND chuva_15min<= 12.5 THEN '#77A9D5'--'#E0701F'
-            WHEN chuva_15min> 12.5                         THEN '#125999'--'#FF0000'
+            WHEN chuva_15min> 0  AND chuva_15min<= 10  THEN '#DAECFB'--'#00CCFF'
+            WHEN chuva_15min> 1  AND chuva_15min<= 50  THEN '#A9CBE8'--'#BFA230'
+            WHEN chuva_15min> 50 AND chuva_15min<= 100 THEN '#77A9D5'--'#E0701F'
+            WHEN chuva_15min> 100                      THEN '#125999'--'#FF0000'
             ELSE '#ffffff'
         END AS color
         FROM final_table
