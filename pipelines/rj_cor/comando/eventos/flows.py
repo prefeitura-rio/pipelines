@@ -270,6 +270,28 @@ with Flow(
             raise_final_state=False,
         )
 
+        # Trigger rain dashboard update last 2h flow run
+        rain_radar_dashboard_last_2h_update_flow = create_flow_run(
+            flow_name=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_NAME.value,
+            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+            parameters=comando_constants.RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS.value,  # noqa
+            labels=[
+                "rj-cor",
+            ],
+            run_name="Update radar rain dashboard data (triggered by cor_comando flow for last 2h)",  # noqa
+            task_args=dict(
+                skip_on_upstream_skip=False,
+            ),
+        )
+        rain_radar_dashboard_last_2h_update_flow.set_upstream(task_upload_eventos)
+
+        wait_for_rain_dashboard_last_2h_update = wait_for_flow_run(
+            flow_run_id=rain_radar_dashboard_last_2h_update_flow,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=False,
+        )
+
 rj_cor_comando_eventos_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 rj_cor_comando_eventos_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
