@@ -47,8 +47,11 @@ def get_filenames_storage(
     for i in filter_partition_days:
         base_path = "raw/meio_ambiente_clima/inea_radar_hdf5/"
         prefix = base_path + f"radar={radar}/produto=ppi/data_particao={i}/"
+        log(f"DEBUG prefix {prefix}")
         files_on_storage = list_blobs_with_prefix(bucket_name, prefix, delimiter=None)
+        log(f"debug files on storage {files_on_storage}")
         files_on_storage_list.extend([blob.name for blob in files_on_storage])
+        log(f"debug files on storage list {files_on_storage_list[-3:]}")
 
     files_on_storage_list = list(set(files_on_storage_list))
     files_on_storage_list.sort()
