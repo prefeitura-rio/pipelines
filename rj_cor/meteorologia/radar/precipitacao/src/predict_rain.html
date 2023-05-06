@@ -244,18 +244,20 @@ def run_model_prediction(
         dfr[&#34;predictions&#34;] = predictions.predictions
         dfr[&#34;id_h3&#34;] = id_hex
         dfr[&#34;bairro&#34;] = bairro
-        dfr[&#34;last_update&#34;] = pd.to_datetime(
+        dfr[&#34;bairro&#34;] = dfr[&#34;bairro&#34;].str.replace(&#34;\n&#34;, &#34;&#34;)
+        dfr[&#34;data_medicao&#34;] = pd.to_datetime(
             prediction_dt_str, format=&#34;%Y%m%d %H%M%S&#34;, utc=True
         )
-        dfr[&#34;last_update&#34;] = (
-            dfr[&#34;last_update&#34;]
+        dfr[&#34;data_medicao&#34;] = (
+            dfr[&#34;data_medicao&#34;]
             .dt.tz_convert(&#34;America/Sao_Paulo&#34;)
             .dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
         )
-        last_update = dfr[&#34;last_update&#34;].max()
-        log(f&#34;DEBUUUUUUGGG last_update: {last_update}&#34;)
+        data_medicao = dfr[&#34;data_medicao&#34;].max()
+        log(f&#34;DEBUUUUUUGGG data_medicao: {data_medicao}&#34;)
         log(f&#34;DEBUUUUUUGGG {dfr.head()}&#34;)
-        dfr.to_csv(output_path / f&#34;predictions_{last_update}.csv&#34;, index=False)</code></pre>
+        # dfr.to_csv(output_path / f&#34;predictions_{data_medicao}.csv&#34;, index=False)
+        return dfr</code></pre>
 </details>
 </section>
 <section>
@@ -454,18 +456,20 @@ def run_model_prediction(
         dfr[&#34;predictions&#34;] = predictions.predictions
         dfr[&#34;id_h3&#34;] = id_hex
         dfr[&#34;bairro&#34;] = bairro
-        dfr[&#34;last_update&#34;] = pd.to_datetime(
+        dfr[&#34;bairro&#34;] = dfr[&#34;bairro&#34;].str.replace(&#34;\n&#34;, &#34;&#34;)
+        dfr[&#34;data_medicao&#34;] = pd.to_datetime(
             prediction_dt_str, format=&#34;%Y%m%d %H%M%S&#34;, utc=True
         )
-        dfr[&#34;last_update&#34;] = (
-            dfr[&#34;last_update&#34;]
+        dfr[&#34;data_medicao&#34;] = (
+            dfr[&#34;data_medicao&#34;]
             .dt.tz_convert(&#34;America/Sao_Paulo&#34;)
             .dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
         )
-        last_update = dfr[&#34;last_update&#34;].max()
-        log(f&#34;DEBUUUUUUGGG last_update: {last_update}&#34;)
+        data_medicao = dfr[&#34;data_medicao&#34;].max()
+        log(f&#34;DEBUUUUUUGGG data_medicao: {data_medicao}&#34;)
         log(f&#34;DEBUUUUUUGGG {dfr.head()}&#34;)
-        dfr.to_csv(output_path / f&#34;predictions_{last_update}.csv&#34;, index=False)</code></pre>
+        # dfr.to_csv(output_path / f&#34;predictions_{data_medicao}.csv&#34;, index=False)
+        return dfr</code></pre>
 </details>
 </dd>
 </dl>

@@ -52,8 +52,9 @@ class constants(Enum):  # pylint: disable=c0103
         WITH
         last_update_date AS (
             SELECT
-                MAX(last_update) AS last_update
+                MAX(data_medicao) AS last_update
             FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba`
+            WHERE data_particao&gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
         ),
         final_table AS (
             SELECT
@@ -62,7 +63,7 @@ class constants(Enum):  # pylint: disable=c0103
                 CAST(predictions AS FLOAT64) AS chuva_15min,
                 &#34;Guaratiba&#34; AS estacoes,
             FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba` tx
-            INNER JOIN last_update_date lud ON lud.last_update = tx.last_update
+            INNER JOIN last_update_date lud ON lud.last_update = tx.data_medicao
         )
         SELECT
             id_h3,
@@ -88,8 +89,72 @@ class constants(Enum):  # pylint: disable=c0103
         &#34;&#34;&#34;,
         &#34;query_update&#34;: &#34;&#34;&#34;
         SELECT
-            DATETIME(MAX(last_update)) AS last_update
+            DATETIME(MAX(data_medicao)) AS last_update
         FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba`
+        WHERE data_particao&gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+        &#34;&#34;&#34;,
+    }
+    # Modificar query para últimas 2h
+    RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS = {
+        &#34;redis_data_key&#34;: &#34;data_chuva_passado_radar_inea&#34;,
+        &#34;redis_update_key&#34;: &#34;data_update_chuva_passado_radar_inea&#34;,
+        &#34;query_data&#34;: &#34;&#34;&#34;
+        WITH
+        last_update_date AS (
+            SELECT
+                CAST(MAX(data_medicao) AS DATETIME) AS last_update
+            FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba`
+            WHERE data_particao&gt;= CAST(DATE_SUB(CURRENT_DATETIME(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+        ),
+        select_data_each_15_min AS (
+            SELECT distinct
+                id_h3,
+                bairro,
+                CASE WHEN
+                    CAST(predictions AS FLOAT64) &lt;= 0.2
+                    THEN 0.0 ELSE CAST(predictions AS FLOAT64) END AS chuva_15min, -- retira ruídos antes de somar
+                ROW_NUMBER() OVER (PARTITION BY id_h3, bairro ORDER BY data_medicao DESC) as row_num
+            FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba` tx
+            INNER JOIN last_update_date lup ON 1=1
+            WHERE tx.data_particao&gt;= CAST(DATE_SUB(CURRENT_DATETIME(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+              AND CAST(tx.data_medicao AS DATETIME)&gt;= DATE_SUB(lup.last_update, INTERVAL 2 HOUR)
+        ),
+        final_table AS (
+            SELECT
+                id_h3,
+                bairro,
+                SUM(chuva_15min) AS chuva_15min,
+                &#34;Guaratiba&#34; AS estacoes,
+            FROM select_data_each_15_min
+            WHERE row_num in (1, 4, 7, 10)
+            GROUP BY id_h3, bairro, estacoes
+        )
+        SELECT
+            id_h3,
+            bairro,
+            ROUND(chuva_15min, 2) AS chuva_15min,
+            estacoes,
+            CASE
+                WHEN chuva_15min&gt; 0   AND chuva_15min&lt;= 10  THEN &#39;chuva fraca&#39;
+                WHEN chuva_15min&gt; 10  AND chuva_15min&lt;= 50  THEN &#39;chuva moderada&#39;
+                WHEN chuva_15min&gt; 50  AND chuva_15min&lt;= 100 THEN &#39;chuva forte&#39;
+                WHEN chuva_15min&gt; 100                       THEN &#39;chuva muito forte&#39;
+                ELSE &#39;sem chuva&#39;
+            END AS status,
+            CASE
+                WHEN chuva_15min&gt; 0  AND chuva_15min&lt;= 10  THEN &#39;#DAECFB&#39;--&#39;#00CCFF&#39;
+                WHEN chuva_15min&gt; 1  AND chuva_15min&lt;= 50  THEN &#39;#A9CBE8&#39;--&#39;#BFA230&#39;
+                WHEN chuva_15min&gt; 50 AND chuva_15min&lt;= 100 THEN &#39;#77A9D5&#39;--&#39;#E0701F&#39;
+                WHEN chuva_15min&gt; 100                      THEN &#39;#125999&#39;--&#39;#FF0000&#39;
+                ELSE &#39;#ffffff&#39;
+            END AS color
+        FROM final_table
+        &#34;&#34;&#34;,
+        &#34;query_update&#34;: &#34;&#34;&#34;
+        SELECT
+            DATETIME(MAX(data_medicao)) AS last_update
+        FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba`
+        WHERE data_particao&gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
         &#34;&#34;&#34;,
     }</code></pre>
 </details>
@@ -130,8 +195,9 @@ class constants(Enum):  # pylint: disable=c0103
         WITH
         last_update_date AS (
             SELECT
-                MAX(last_update) AS last_update
+                MAX(data_medicao) AS last_update
             FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba`
+            WHERE data_particao&gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
         ),
         final_table AS (
             SELECT
@@ -140,7 +206,7 @@ class constants(Enum):  # pylint: disable=c0103
                 CAST(predictions AS FLOAT64) AS chuva_15min,
                 &#34;Guaratiba&#34; AS estacoes,
             FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba` tx
-            INNER JOIN last_update_date lud ON lud.last_update = tx.last_update
+            INNER JOIN last_update_date lud ON lud.last_update = tx.data_medicao
         )
         SELECT
             id_h3,
@@ -166,8 +232,72 @@ class constants(Enum):  # pylint: disable=c0103
         &#34;&#34;&#34;,
         &#34;query_update&#34;: &#34;&#34;&#34;
         SELECT
-            DATETIME(MAX(last_update)) AS last_update
+            DATETIME(MAX(data_medicao)) AS last_update
         FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba`
+        WHERE data_particao&gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+        &#34;&#34;&#34;,
+    }
+    # Modificar query para últimas 2h
+    RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS = {
+        &#34;redis_data_key&#34;: &#34;data_chuva_passado_radar_inea&#34;,
+        &#34;redis_update_key&#34;: &#34;data_update_chuva_passado_radar_inea&#34;,
+        &#34;query_data&#34;: &#34;&#34;&#34;
+        WITH
+        last_update_date AS (
+            SELECT
+                CAST(MAX(data_medicao) AS DATETIME) AS last_update
+            FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba`
+            WHERE data_particao&gt;= CAST(DATE_SUB(CURRENT_DATETIME(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+        ),
+        select_data_each_15_min AS (
+            SELECT distinct
+                id_h3,
+                bairro,
+                CASE WHEN
+                    CAST(predictions AS FLOAT64) &lt;= 0.2
+                    THEN 0.0 ELSE CAST(predictions AS FLOAT64) END AS chuva_15min, -- retira ruídos antes de somar
+                ROW_NUMBER() OVER (PARTITION BY id_h3, bairro ORDER BY data_medicao DESC) as row_num
+            FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba` tx
+            INNER JOIN last_update_date lup ON 1=1
+            WHERE tx.data_particao&gt;= CAST(DATE_SUB(CURRENT_DATETIME(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+              AND CAST(tx.data_medicao AS DATETIME)&gt;= DATE_SUB(lup.last_update, INTERVAL 2 HOUR)
+        ),
+        final_table AS (
+            SELECT
+                id_h3,
+                bairro,
+                SUM(chuva_15min) AS chuva_15min,
+                &#34;Guaratiba&#34; AS estacoes,
+            FROM select_data_each_15_min
+            WHERE row_num in (1, 4, 7, 10)
+            GROUP BY id_h3, bairro, estacoes
+        )
+        SELECT
+            id_h3,
+            bairro,
+            ROUND(chuva_15min, 2) AS chuva_15min,
+            estacoes,
+            CASE
+                WHEN chuva_15min&gt; 0   AND chuva_15min&lt;= 10  THEN &#39;chuva fraca&#39;
+                WHEN chuva_15min&gt; 10  AND chuva_15min&lt;= 50  THEN &#39;chuva moderada&#39;
+                WHEN chuva_15min&gt; 50  AND chuva_15min&lt;= 100 THEN &#39;chuva forte&#39;
+                WHEN chuva_15min&gt; 100                       THEN &#39;chuva muito forte&#39;
+                ELSE &#39;sem chuva&#39;
+            END AS status,
+            CASE
+                WHEN chuva_15min&gt; 0  AND chuva_15min&lt;= 10  THEN &#39;#DAECFB&#39;--&#39;#00CCFF&#39;
+                WHEN chuva_15min&gt; 1  AND chuva_15min&lt;= 50  THEN &#39;#A9CBE8&#39;--&#39;#BFA230&#39;
+                WHEN chuva_15min&gt; 50 AND chuva_15min&lt;= 100 THEN &#39;#77A9D5&#39;--&#39;#E0701F&#39;
+                WHEN chuva_15min&gt; 100                      THEN &#39;#125999&#39;--&#39;#FF0000&#39;
+                ELSE &#39;#ffffff&#39;
+            END AS color
+        FROM final_table
+        &#34;&#34;&#34;,
+        &#34;query_update&#34;: &#34;&#34;&#34;
+        SELECT
+            DATETIME(MAX(data_medicao)) AS last_update
+        FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba`
+        WHERE data_particao&gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
         &#34;&#34;&#34;,
     }</code></pre>
 </details>
@@ -186,6 +316,10 @@ class constants(Enum):  # pylint: disable=c0103
 <div class="desc"></div>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.constants.constants.RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS"><code class="name">var <span class="ident">RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.constants.constants.RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS"><code class="name">var <span class="ident">RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -263,6 +397,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_cor.meteorologia.radar.precipitacao.constants.constants.DATASET_ID" href="#pipelines.rj_cor.meteorologia.radar.precipitacao.constants.constants.DATASET_ID">DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.radar.precipitacao.constants.constants.RAIN_DASHBOARD_FLOW_NAME" href="#pipelines.rj_cor.meteorologia.radar.precipitacao.constants.constants.RAIN_DASHBOARD_FLOW_NAME">RAIN_DASHBOARD_FLOW_NAME</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.radar.precipitacao.constants.constants.RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS" href="#pipelines.rj_cor.meteorologia.radar.precipitacao.constants.constants.RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS">RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.radar.precipitacao.constants.constants.RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS" href="#pipelines.rj_cor.meteorologia.radar.precipitacao.constants.constants.RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS">RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.radar.precipitacao.constants.constants.TABLE_ID" href="#pipelines.rj_cor.meteorologia.radar.precipitacao.constants.constants.TABLE_ID">TABLE_ID</a></code></li>
 </ul>
 </li>
