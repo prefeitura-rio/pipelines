@@ -206,7 +206,7 @@ with Flow(
             raise_final_state=True,
         )
 
-        SMTR_MATERIALIZIZE_TO_DATARIO_VIAGEM_SPPO_RUN = create_flow_run(
+        SMTR_MATERIALIZE_TO_DATARIO_VIAGEM_SPPO_RUN = create_flow_run(
             flow_name=smtr_materialize_to_datario_viagem_sppo_flow.name,
             project_name=constants.PREFECT_DEFAULT_PROJECT.value,
             labels=[
@@ -221,8 +221,15 @@ with Flow(
             },
         )
 
+        wait_for_flow_run(
+            SMTR_MATERIALIZE_TO_DATARIO_VIAGEM_SPPO_RUN,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+
         SUBSIDIO_SPPO_DASHBOARD_RUN.set_downstream(
-            SMTR_MATERIALIZIZE_TO_DATARIO_VIAGEM_SPPO_RUN
+            SMTR_MATERIALIZE_TO_DATARIO_VIAGEM_SPPO_RUN
         )
 
 subsidio_sppo_apuracao.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
