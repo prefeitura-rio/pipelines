@@ -116,7 +116,14 @@ def list_vol_files(
     # Open SSH client
     ssh_client = SSHClient()
     ssh_client.load_system_host_keys()
-    ssh_client.connect(hostname="a9921", username="root", password=ssh_password)
+    ssh_client.connect(
+        hostname="a9921",
+        username="root",
+        password=ssh_password,
+        timeout=120,
+        auth_timeout=120,
+        banner_timeout=120,
+    )
 
     # List remote files
     log("Listing remote files...")
@@ -172,7 +179,14 @@ def fetch_vol_file(
     # Open SSH client
     ssh_client = SSHClient()
     ssh_client.load_system_host_keys()
-    ssh_client.connect(hostname="a9921", username="root", password=ssh_password)
+    ssh_client.connect(
+        hostname="a9921",
+        username="root",
+        password=ssh_password,
+        timeout=120,
+        auth_timeout=120,
+        banner_timeout=120,
+    )
 
     # Open SCP client
     scp = SCPClient(ssh_client.get_transport(), sanitize=lambda x: x)
