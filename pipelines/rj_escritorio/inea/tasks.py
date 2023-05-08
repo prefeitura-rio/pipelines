@@ -120,9 +120,9 @@ def list_vol_files(
         hostname="a9921",
         username="root",
         password=ssh_password,
-        timeout=120,
-        auth_timeout=120,
-        banner_timeout=120,
+        timeout=300,
+        auth_timeout=300,
+        banner_timeout=300,
     )
 
     # List remote files
@@ -183,9 +183,9 @@ def fetch_vol_file(
         hostname="a9921",
         username="root",
         password=ssh_password,
-        timeout=120,
-        auth_timeout=120,
-        banner_timeout=120,
+        timeout=300,
+        auth_timeout=300,
+        banner_timeout=300,
     )
 
     # Open SCP client
