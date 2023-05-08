@@ -20,19 +20,19 @@ from pipelines.utils.utils import set_default_parameters
 #
 # 1746 dump db flow
 #
-rj_iplanrio_formacao_dump_flow = deepcopy(dump_sql_flow)
-rj_iplanrio_formacao_dump_flow.name = (
+rj_iplanrio_formacao_joao_dump_flow = deepcopy(dump_sql_flow)
+rj_iplanrio_formacao_joao_dump_flow.name = (
     "IPLANRIO Formacao_Joao - Ingerir tabelas de banco SQL"
 )
-rj_iplanrio_formacao_dump_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-rj_iplanrio_formacao_dump_flow.run_config = KubernetesRun(
+rj_iplanrio_formacao_joao_dump_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+rj_iplanrio_formacao_joao_dump_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[
         constants.RJ_IPLANRIO_AGENT_LABEL.value,
     ],
 )
 
-rj_iplanrio_formacao_dump_default_parameters = {
+rj_iplanrio_formacao_joao_dump_default_parameters = {
     "db_database": "REPLICA1746",
     "db_host": "10.70.1.34",
     "db_port": "1433",
@@ -41,9 +41,9 @@ rj_iplanrio_formacao_dump_default_parameters = {
     "vault_secret_path": "clustersql2",  # credencial
     #   "lower_bound_date": "2021-01-01", #materialização
 }
-rj_iplanrio_formacao_dump_flow = set_default_parameters(
-    rj_iplanrio_formacao_dump_flow,
-    default_parameters=rj_iplanrio_formacao_dump_default_parameters,
+rj_iplanrio_formacao_joao_dump_flow = set_default_parameters(
+    rj_iplanrio_formacao_joao_dump_flow,
+    default_parameters=rj_iplanrio_formacao_joao_dump_default_parameters,
 )
 
-rj_iplanrio_formacao_dump_flow.schedule = _1746_weekly_update_schedule
+rj_iplanrio_formacao_joao_dump_flow.schedule = _1746_weekly_update_schedule
