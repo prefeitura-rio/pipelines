@@ -113,7 +113,6 @@ with Flow(
     stu_data_versao = Parameter("stu_data_versao", default="")
     materialize_sppo_veiculo_dia = Parameter("materialize_sppo_veiculo_dia", True)
     publish = Parameter("publish", False)
-    change_view_end_date = Parameter("change_view_end_date", False)
 
     run_dates = get_run_dates(start_date, end_date)
 
@@ -162,39 +161,21 @@ with Flow(
         # 3. CALCULATE #
         # TODO: Check if sppo_veiculo_dia was really materialized
         # (could be a fail in capture or in materialize)
-        with case(change_view_end_date, True):
-            SUBSIDIO_SPPO_APURACAO_RUN = run_dbt_model(
-                dbt_client=dbt_client,
-                dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
-                _vars=_vars,
-            )
-
-        with case(change_view_end_date, False):
-            SUBSIDIO_SPPO_APURACAO_RUN = run_dbt_model(
-                dbt_client=dbt_client,
-                dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
-                exclude="config.materialized:view",
-                _vars=_vars,
-            )
+        SUBSIDIO_SPPO_APURACAO_RUN = run_dbt_model(
+            dbt_client=dbt_client,
+            dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
+            _vars=_vars,
+        )
 
         SPPO_VEICULO_DIA_RUN.set_downstream(SUBSIDIO_SPPO_APURACAO_RUN)
 
     with case(materialize_sppo_veiculo_dia, False):
         # 3. CALCULATE #
-        with case(change_view_end_date, True):
-            SUBSIDIO_SPPO_DASHBOARD_RUN = run_dbt_model(
-                dbt_client=dbt_client,
-                dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
-                _vars=_vars,
-            )
-
-        with case(change_view_end_date, False):
-            SUBSIDIO_SPPO_DASHBOARD_RUN = run_dbt_model(
-                dbt_client=dbt_client,
-                dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
-                exclude="config.materialized:view",
-                _vars=_vars,
-            )
+        SUBSIDIO_SPPO_DASHBOARD_RUN = run_dbt_model(
+            dbt_client=dbt_client,
+            dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
+            _vars=_vars,
+        )
 
     # 4. PUBLISH #
     with case(publish, True):
