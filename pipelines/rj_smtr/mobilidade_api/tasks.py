@@ -122,7 +122,7 @@ def pre_treatment_mobilidade_api_gtfs(tables: Dict[str, pd.DataFrame]) -> dict:
         # Save local for later import
         Path("./treated").mkdir(parents=True, exist_ok=True)
         filepath = f"./treated/{table_name}.csv"
-        table.to_csv(filepath,sep=",",index=False,na_rep="")
+        table.to_csv(filepath, sep=",", index=False, na_rep="")
         table_paths[table_name] = filepath
 
     return table_paths
