@@ -112,7 +112,7 @@ with Flow(
     end_date = Parameter("end_date", default=get_previous_date.run(5))
     stu_data_versao = Parameter("stu_data_versao", default="")
     materialize_sppo_veiculo_dia = Parameter("materialize_sppo_veiculo_dia", True)
-    publish = Parameter("publish", True)
+    publish = Parameter("publish", False)
     change_view_end_date = Parameter("change_view_end_date", False)
 
     run_dates = get_run_dates(start_date, end_date)
