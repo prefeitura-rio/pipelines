@@ -30,41 +30,7 @@
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
 Tasks for projeto_subsidio_sppo
-&#34;&#34;&#34;
-
-from typing import List
-import pandas as pd
-from prefect import task
-
-from pipelines.utils.tasks import log, get_now_date
-
-
-@task
-def get_run_dates(date_range_start: str, date_range_end: str) -&gt; List:
-    &#34;&#34;&#34;
-    Generates a list of dates between date_range_start and date_range_end.
-    &#34;&#34;&#34;
-    if (date_range_start is False) or (date_range_end is False):
-        dates = [{&#34;run_date&#34;: get_now_date.run()}]
-    else:
-        dates = [
-            {&#34;run_date&#34;: d.strftime(&#34;%Y-%m-%d&#34;)}
-            for d in pd.date_range(start=date_range_start, end=date_range_end)
-        ]
-    log(f&#34;Will run the following dates: {dates}&#34;)
-    return dates
-
-
-@task
-def get_join_dict(dict_list: list, new_dict: dict) -&gt; List:
-    &#34;&#34;&#34;
-    Updates a list of dictionaries with a new dictionary.
-    &#34;&#34;&#34;
-    for dict_temp in dict_list:
-        dict_temp.update(new_dict)
-
-    log(f&#34;get_join_dict: {dict_list}&#34;)
-    return dict_list</code></pre>
+&#34;&#34;&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -72,55 +38,6 @@ def get_join_dict(dict_list: list, new_dict: dict) -&gt; List:
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-functions">Functions</h2>
-<dl>
-<dt id="pipelines.rj_smtr.projeto_subsidio_sppo.tasks.get_join_dict"><code class="name flex">
-<span>def <span class="ident">get_join_dict</span></span>(<span>dict_list: list, new_dict: dict) ‑> List</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Updates a list of dictionaries with a new dictionary.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task
-def get_join_dict(dict_list: list, new_dict: dict) -&gt; List:
-    &#34;&#34;&#34;
-    Updates a list of dictionaries with a new dictionary.
-    &#34;&#34;&#34;
-    for dict_temp in dict_list:
-        dict_temp.update(new_dict)
-
-    log(f&#34;get_join_dict: {dict_list}&#34;)
-    return dict_list</code></pre>
-</details>
-</dd>
-<dt id="pipelines.rj_smtr.projeto_subsidio_sppo.tasks.get_run_dates"><code class="name flex">
-<span>def <span class="ident">get_run_dates</span></span>(<span>date_range_start: str, date_range_end: str) ‑> List</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Generates a list of dates between date_range_start and date_range_end.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task
-def get_run_dates(date_range_start: str, date_range_end: str) -&gt; List:
-    &#34;&#34;&#34;
-    Generates a list of dates between date_range_start and date_range_end.
-    &#34;&#34;&#34;
-    if (date_range_start is False) or (date_range_end is False):
-        dates = [{&#34;run_date&#34;: get_now_date.run()}]
-    else:
-        dates = [
-            {&#34;run_date&#34;: d.strftime(&#34;%Y-%m-%d&#34;)}
-            for d in pd.date_range(start=date_range_start, end=date_range_end)
-        ]
-    log(f&#34;Will run the following dates: {dates}&#34;)
-    return dates</code></pre>
-</details>
-</dd>
-</dl>
 </section>
 <section>
 </section>
@@ -180,12 +97,6 @@ setTimeout(() => input.focus(), 100);
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="pipelines.rj_smtr.projeto_subsidio_sppo" href="index.html">pipelines.rj_smtr.projeto_subsidio_sppo</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="pipelines.rj_smtr.projeto_subsidio_sppo.tasks.get_join_dict" href="#pipelines.rj_smtr.projeto_subsidio_sppo.tasks.get_join_dict">get_join_dict</a></code></li>
-<li><code><a title="pipelines.rj_smtr.projeto_subsidio_sppo.tasks.get_run_dates" href="#pipelines.rj_smtr.projeto_subsidio_sppo.tasks.get_run_dates">get_run_dates</a></code></li>
 </ul>
 </li>
 </ul>

@@ -28,17 +28,17 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
+# pylint: disable=W0703, W0511
 &#34;&#34;&#34;
 Tasks for rj_smtr
 &#34;&#34;&#34;
-# pylint: disable=W0703
 
 from datetime import datetime, timedelta
 import json
 import os
 from pathlib import Path
 import traceback
-from typing import Dict
+from typing import Dict, List
 import io
 
 from basedosdados import Storage, Table
@@ -60,6 +60,8 @@ from pipelines.rj_smtr.utils import (
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
+
+from pipelines.utils.tasks import get_now_date
 
 ###############
 #
@@ -759,7 +761,45 @@ def fetch_dataset_sha(dataset_id: str):
         return None
 
     dataset_version = response.json()[0][&#34;sha&#34;]
-    return {&#34;version&#34;: dataset_version}</code></pre>
+    return {&#34;version&#34;: dataset_version}
+
+
+@task
+def get_run_dates(date_range_start: str, date_range_end: str) -&gt; List:
+    &#34;&#34;&#34;
+    Generates a list of dates between date_range_start and date_range_end.
+    &#34;&#34;&#34;
+    if (date_range_start is False) or (date_range_end is False):
+        dates = [{&#34;run_date&#34;: get_now_date.run()}]
+    else:
+        dates = [
+            {&#34;run_date&#34;: d.strftime(&#34;%Y-%m-%d&#34;)}
+            for d in pd.date_range(start=date_range_start, end=date_range_end)
+        ]
+    log(f&#34;Will run the following dates: {dates}&#34;)
+    return dates
+
+
+@task
+def get_join_dict(dict_list: list, new_dict: dict) -&gt; List:
+    &#34;&#34;&#34;
+    Updates a list of dictionaries with a new dictionary.
+    &#34;&#34;&#34;
+    for dict_temp in dict_list:
+        dict_temp.update(new_dict)
+
+    log(f&#34;get_join_dict: {dict_list}&#34;)
+    return dict_list
+
+
+@task
+def get_previous_date(days):
+    &#34;&#34;&#34;
+    Returns the date of {days} days ago in YYYY-MM-DD.
+    &#34;&#34;&#34;
+    now = pendulum.now(pendulum.timezone(&#34;America/Sao_Paulo&#34;)).subtract(days=days)
+
+    return now.to_date_string()</code></pre>
 </details>
 </section>
 <section>
@@ -1251,6 +1291,27 @@ def get_current_timestamp(
     return timestamp</code></pre>
 </details>
 </dd>
+<dt id="pipelines.rj_smtr.tasks.get_join_dict"><code class="name flex">
+<span>def <span class="ident">get_join_dict</span></span>(<span>dict_list: list, new_dict: dict) ‑> List</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Updates a list of dictionaries with a new dictionary.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_join_dict(dict_list: list, new_dict: dict) -&gt; List:
+    &#34;&#34;&#34;
+    Updates a list of dictionaries with a new dictionary.
+    &#34;&#34;&#34;
+    for dict_temp in dict_list:
+        dict_temp.update(new_dict)
+
+    log(f&#34;get_join_dict: {dict_list}&#34;)
+    return dict_list</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_smtr.tasks.get_local_dbt_client"><code class="name flex">
 <span>def <span class="ident">get_local_dbt_client</span></span>(<span>host: str, port: int)</span>
 </code></dt>
@@ -1397,6 +1458,25 @@ def get_materialization_date_range(  # pylint: disable=R0913
     return date_range</code></pre>
 </details>
 </dd>
+<dt id="pipelines.rj_smtr.tasks.get_previous_date"><code class="name flex">
+<span>def <span class="ident">get_previous_date</span></span>(<span>days)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the date of {days} days ago in YYYY-MM-DD.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_previous_date(days):
+    &#34;&#34;&#34;
+    Returns the date of {days} days ago in YYYY-MM-DD.
+    &#34;&#34;&#34;
+    now = pendulum.now(pendulum.timezone(&#34;America/Sao_Paulo&#34;)).subtract(days=days)
+
+    return now.to_date_string()</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_smtr.tasks.get_raw"><code class="name flex">
 <span>def <span class="ident">get_raw</span></span>(<span>url: str, headers: str = None, filetype: str = 'json', csv_args: dict = None) ‑> Dict</span>
 </code></dt>
@@ -1478,6 +1558,31 @@ def get_raw(  # pylint: disable=R0912
         log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
 
     return {&#34;data&#34;: data, &#34;error&#34;: error}</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.tasks.get_run_dates"><code class="name flex">
+<span>def <span class="ident">get_run_dates</span></span>(<span>date_range_start: str, date_range_end: str) ‑> List</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generates a list of dates between date_range_start and date_range_end.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_run_dates(date_range_start: str, date_range_end: str) -&gt; List:
+    &#34;&#34;&#34;
+    Generates a list of dates between date_range_start and date_range_end.
+    &#34;&#34;&#34;
+    if (date_range_start is False) or (date_range_end is False):
+        dates = [{&#34;run_date&#34;: get_now_date.run()}]
+    else:
+        dates = [
+            {&#34;run_date&#34;: d.strftime(&#34;%Y-%m-%d&#34;)}
+            for d in pd.date_range(start=date_range_start, end=date_range_end)
+        ]
+    log(f&#34;Will run the following dates: {dates}&#34;)
+    return dates</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.parse_timestamp_to_string"><code class="name flex">
@@ -1932,9 +2037,12 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.tasks.delay_now_time" href="#pipelines.rj_smtr.tasks.delay_now_time">delay_now_time</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.fetch_dataset_sha" href="#pipelines.rj_smtr.tasks.fetch_dataset_sha">fetch_dataset_sha</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_current_timestamp" href="#pipelines.rj_smtr.tasks.get_current_timestamp">get_current_timestamp</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.get_join_dict" href="#pipelines.rj_smtr.tasks.get_join_dict">get_join_dict</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_local_dbt_client" href="#pipelines.rj_smtr.tasks.get_local_dbt_client">get_local_dbt_client</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_materialization_date_range" href="#pipelines.rj_smtr.tasks.get_materialization_date_range">get_materialization_date_range</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.get_previous_date" href="#pipelines.rj_smtr.tasks.get_previous_date">get_previous_date</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_raw" href="#pipelines.rj_smtr.tasks.get_raw">get_raw</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.get_run_dates" href="#pipelines.rj_smtr.tasks.get_run_dates">get_run_dates</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.parse_timestamp_to_string" href="#pipelines.rj_smtr.tasks.parse_timestamp_to_string">parse_timestamp_to_string</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.query_logs" href="#pipelines.rj_smtr.tasks.query_logs">query_logs</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.save_raw_local" href="#pipelines.rj_smtr.tasks.save_raw_local">save_raw_local</a></code></li>
