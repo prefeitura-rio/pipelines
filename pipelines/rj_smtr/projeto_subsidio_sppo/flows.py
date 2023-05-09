@@ -199,13 +199,6 @@ with Flow(
     # 4. PUBLISH #
     with case(publish, True):
 
-        wait_for_flow_run(
-            SUBSIDIO_SPPO_DASHBOARD_RUN,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
-        )
-
         SMTR_MATERIALIZE_TO_DATARIO_VIAGEM_SPPO_RUN = create_flow_run(
             flow_name=smtr_materialize_to_datario_viagem_sppo_flow.name,
             project_name=constants.PREFECT_DEFAULT_PROJECT.value,
