@@ -152,7 +152,7 @@ with Flow(
     transport_mode = Parameter("transport_mode", "SPPO")
     report_type = Parameter("report_type", "RDO")
     dump = Parameter("dump", False)
-    table_id = Parameter("table_id", constants.SPPO_RHO_TABLE_ID.value)
+    table_id = Parameter("table_id", constants.SPPO_RDO_TABLE_ID.value)
     materialize = Parameter("materialize", False)
 
     rename_run = rename_current_flow_run_now_time(
