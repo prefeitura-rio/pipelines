@@ -7,11 +7,11 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 from pipelines.rj_smtr.mobilidade_api.tasks import (
-    get_gtfs_zipfiles,
+    get_gtfs_zipfile,
     extract_gtfs,
     execute_update,
-    treat_gtfs_tables,
-    concat_gtfs,
+    pre_treatment_mobilidade_api_gtfs,
+    read_gtfs,
 )
 from pipelines.utils.decorators import Flow
 from pipelines.constants import constants as emd_constants
@@ -19,10 +19,10 @@ from pipelines.constants import constants as emd_constants
 
 with Flow("SMTR - Update DB - Postgres", code_owners=["caio"]) as update_db:
 
-    gtfs_paths = get_gtfs_zipfiles()
-    gtfs_dirs = extract_gtfs.map(zip_path=gtfs_paths)
-    tables = concat_gtfs(dir_paths=gtfs_dirs)  # change args to single list?
-    table_paths = treat_gtfs_tables(tables=tables)
+    zip_path = get_gtfs_zipfile()
+    extracted_path = extract_gtfs(zip_path=zip_path)
+    tables = read_gtfs(gtfs_path=extracted_path)
+    table_paths = pre_treatment_mobilidade_api_gtfs(tables=tables)
     execute_update(table_paths=table_paths)
 
 update_db.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
