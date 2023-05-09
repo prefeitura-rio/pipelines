@@ -97,9 +97,9 @@ sppo_rho_materialize.run_config = KubernetesRun(
 )
 
 with Flow(
-    "SMTR: RDO - Captura",
+    "SMTR: RHO - Captura",
     code_owners=["caio", "fernanda"],
-) as captura_ftp:
+) as captura_sppo_rho:
     # SETUP
     transport_mode = Parameter("transport_mode", "SPPO")
     report_type = Parameter("report_type", "RHO")
@@ -137,12 +137,60 @@ with Flow(
         download_files=download_files, table_id=table_id, errors=errors
     )
 
-captura_ftp.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-captura_ftp.run_config = KubernetesRun(
+captura_sppo_rho.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+captura_sppo_rho.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-captura_ftp.schedule = every_day
+captura_sppo_rho.schedule = every_day
+
+with Flow(
+    "SMTR: RDO - Captura",
+    code_owners=["caio", "fernanda"],
+) as captura_sppo_rdo:
+    # SETUP
+    transport_mode = Parameter("transport_mode", "SPPO")
+    report_type = Parameter("report_type", "RDO")
+    dump = Parameter("dump", False)
+    table_id = Parameter("table_id", constants.SPPO_RHO_TABLE_ID.value)
+    materialize = Parameter("materialize", False)
+
+    rename_run = rename_current_flow_run_now_time(
+        prefix=f"Captura FTP - {transport_mode.run()}-{report_type.run()} ",
+        now_time=get_current_timestamp(),
+        wait=None,
+    )
+    # EXTRACT
+    files = get_file_paths_from_ftp(
+        transport_mode=transport_mode, report_type=report_type, dump=dump
+    )
+    download_files = check_files_for_download(
+        files=files, dataset_id=constants.RDO_DATASET_ID.value, table_id=table_id
+    )
+    updated_info = download_and_save_local_from_ftp.map(file_info=download_files)
+    # TRANSFORM
+    treated_path, raw_path, partitions, status = pre_treatment_br_rj_riodejaneiro_rdo(
+        files=updated_info
+    )
+    # LOAD
+    errors = bq_upload.map(
+        dataset_id=unmapped(constants.RDO_DATASET_ID.value),
+        table_id=unmapped(table_id),
+        filepath=treated_path,
+        raw_filepath=raw_path,
+        partitions=partitions,
+        status=status,
+    )
+    set_redis = update_rdo_redis(
+        download_files=download_files, table_id=table_id, errors=errors
+    )
+
+captura_sppo_rdo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+captura_sppo_rdo.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+captura_sppo_rdo.schedule = every_day
 
 
 # captura_sppo_rho = deepcopy(captura_sppo_rdo)
