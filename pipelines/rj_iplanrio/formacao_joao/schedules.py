@@ -15,12 +15,12 @@ from pipelines.utils.utils import untuple_clocks as untuple
 
 #####################################
 #
-# 1746 Schedules
+# sicop Schedules
 #
 #####################################
 
 
-QUERY_CHAMADO_1746 = """
+QUERY_SICOP_INFRA = """
 select
     distinct ch.id_chamado,
     CONVERT (
@@ -200,7 +200,6 @@ from
 where
     uo.id_instituicao_fk = 3
     and id_categoria in (2)
-    and ch.dt_inicio >= '2023-03-01'
 group by
     ch.id_chamado,
     CONVERT (
@@ -284,31 +283,35 @@ group by
     chs.dt_alvo_diagnostico,
     cl.dt_real_diagnostico,
     no_justificativa
-        """
+"""
 
-_1746_queries = {
-    "chamados": {
+
+# alterei o nome da query
+_sicop_infra_query = {
+    "chamado_1746": {
         "partition_columns": "dt_inicio",
-        "materialize_after_dump": False,
-        "materialize_to_datario": False,
-        "dump_to_gcs": False,
+        "lower_bound_date": "2021-01-01",
+        "materialize_after_dump": True,
+        "materialization_mode": "dev",
+        "materialize_to_datario": True,
+        "dump_to_gcs": True,
         "dump_mode": "append",
-        "execute_query": QUERY_CHAMADO_1746,
-    },
+        "execute_query": QUERY_SICOP_INFRA,
+    }
 }
-_1746_clocks = generate_dump_db_schedules(
-    interval=timedelta(days=7),
-    start_date=datetime(2023, 5, 8, 20, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+_sicop_infra_clocks = generate_dump_db_schedules(
+    interval=timedelta(days=1),
+    start_date=datetime(2022, 3, 21, 2, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
-        constants.RJ_IPLANRIO_AGENT_LABEL.value,
+        constants.RJ_SEGOVI_AGENT_LABEL.value,
     ],
+    db_database="REPLICA1746",
     db_host="10.70.1.34",
     db_port="1433",
     db_type="sql_server",
-    db_database="REPLICA1746",
-    dataset_id="formacao_1746_joao",
+    dataset_id="administracao_servicos_publicos",  # trocar o dataset_id
     vault_secret_path="clustersql2",
-    table_parameters=_1746_queries,
+    table_parameters=_sicop_infra_query,
 )
 
-_1746_weekly_update_schedule = Schedule(clocks=untuple(_1746_clocks))
+_sicop_infra_daily_update_schedule = Schedule(clocks=untuple(_sicop_infra_clocks))
