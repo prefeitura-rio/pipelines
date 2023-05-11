@@ -24,6 +24,7 @@ setur_seeketing_tables = {
     "caged": "caged",
     "rede_hoteleira_ocupacao_eventos": "rede_hoteleira_ocupacao_eventos",
     "rede_hoteleira_ocupacao_geral": "rede_hoteleira_ocupacao_geral",
+    "rodoviarias": "rodoviarias",
 }
 
 setur_seeketing_clocks = [
