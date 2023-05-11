@@ -149,7 +149,7 @@ def list_vol_files(
         if get_only_last_file:
             remote_files.sort()
             log(f"Remote files sort: {remote_files}")
-            remote_files = remote_files[-1]
+            remote_files = list(remote_files[-1])
             log(f"Remote files last one: {remote_files}")
 
     # Filter files with same filename
