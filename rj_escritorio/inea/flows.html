@@ -28,6 +28,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
+# pylint: disable=C0103, C0330
 &#34;&#34;&#34;
 Flows for INEA.
 &#34;&#34;&#34;
@@ -57,21 +58,25 @@ with Flow(
     skip_if_running=True,
 ) as inea_radar_flow:
     date = Parameter(&#34;date&#34;, default=None, required=False)
-    bucket_name = Parameter(&#34;bucket_name&#34;)
-    prefix = Parameter(&#34;prefix&#34;)
+    bucket_name = Parameter(&#34;bucket_name&#34;, default=&#34;rj-escritorio-dev&#34;, required=False)
+    prefix = Parameter(
+        &#34;prefix&#34;, default=&#34;raw/meio_ambiente_clima/inea_radar_hdf5&#34;, required=False
+    )
     mode = Parameter(&#34;mode&#34;, default=&#34;prod&#34;, required=False)
-    radar = Parameter(&#34;radar&#34;)
-    product = Parameter(&#34;product&#34;)
-    output_format = Parameter(&#34;output_format&#34;, default=&#34;NetCDF&#34;, required=False)
+    radar = Parameter(&#34;radar&#34;, default=&#34;gua&#34;, required=False)
+    product = Parameter(&#34;product&#34;, default=&#34;ppi&#34;, required=False)
+    output_format = Parameter(&#34;output_format&#34;, default=&#34;HDF5&#34;, required=False)
     convert_params = Parameter(
         &#34;convert_params&#34;,
-        default=&#34;-f=Whole -k=CFext -r=Short -p=Radar -M=All -z&#34;,
+        default=&#34;-k=ODIM2.1 -M=All&#34;,
         required=False,
     )
     greater_than = Parameter(&#34;greater_than&#34;, default=None, required=False)
     vols_remote_directory = Parameter(
         &#34;vols_remote_directory&#34;, default=&#34;/var/opt/edge/vols&#34;, required=False
     )
+    get_only_last_file = Parameter(&#34;get_only_last_file&#34;, default=True, required=False)
+
     remote_files, output_directory = list_vol_files(
         date=date,
         greater_than=greater_than,
@@ -79,6 +84,7 @@ with Flow(
         prefix=prefix,
         radar=radar,
         product=product,
+        get_only_last_file=get_only_last_file,
         mode=mode,
         output_format=output_format,
         vols_remote_directory=vols_remote_directory,

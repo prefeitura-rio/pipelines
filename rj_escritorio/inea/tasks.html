@@ -28,6 +28,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
+# pylint: disable=C0103, C0330, R0915
 &#34;&#34;&#34;
 Tasks for INEA.
 &#34;&#34;&#34;
@@ -70,8 +71,9 @@ def list_vol_files(
     product: str,
     date: str = None,
     greater_than: str = None,
+    get_only_last_file: bool = True,
     mode: str = &#34;prod&#34;,
-    output_format: str = &#34;NetCDF&#34;,
+    output_format: str = &#34;HDF5&#34;,
     output_directory: str = &#34;/var/escritoriodedados/temp/&#34;,
     vols_remote_directory: str = &#34;/var/opt/edge/vols&#34;,
 ) -&gt; Tuple[List[str], str]:
@@ -82,6 +84,7 @@ def list_vol_files(
         date (str): Date of the files to be fetched (e.g. 20220125)
         greater_than (str): Fetch files with a date greater than this one
         output_directory (str): Directory where the files will be saved
+        get_only_last_file (bool): Treat only the last file available
     &#34;&#34;&#34;
 
     # If none of `date` or `greater_than` are provided, find blob with the latest date
@@ -145,7 +148,14 @@ def list_vol_files(
     # Open SSH client
     ssh_client = SSHClient()
     ssh_client.load_system_host_keys()
-    ssh_client.connect(hostname=&#34;a9921&#34;, username=&#34;root&#34;, password=ssh_password)
+    ssh_client.connect(
+        hostname=&#34;a9921&#34;,
+        username=&#34;root&#34;,
+        password=ssh_password,
+        timeout=300,
+        auth_timeout=300,
+        banner_timeout=300,
+    )
 
     # List remote files
     log(&#34;Listing remote files...&#34;)
@@ -164,12 +174,18 @@ def list_vol_files(
             for file in all_files
             if file.split(&#34;/&#34;)[-1][: len(greater_than) + 7] &gt;= f&#34;9921GUA{greater_than}&#34;
         ]
+        log(f&#34;Remote files identified: {remote_files}&#34;)
+        if get_only_last_file:
+            remote_files.sort()
+            remote_files = [remote_files[-1]]
+            log(f&#34;Last remote file: {remote_files}&#34;)
 
     # Filter files with same filename
     filenames = set()
     filtered_remote_files = []
     for file in remote_files:
         filename = file.split(&#34;/&#34;)[-1]
+        log(f&#34;filename split: {filename}&#34;)
         if filename not in filenames:
             filtered_remote_files.append(file)
             filenames.add(filename)
@@ -201,7 +217,14 @@ def fetch_vol_file(
     # Open SSH client
     ssh_client = SSHClient()
     ssh_client.load_system_host_keys()
-    ssh_client.connect(hostname=&#34;a9921&#34;, username=&#34;root&#34;, password=ssh_password)
+    ssh_client.connect(
+        hostname=&#34;a9921&#34;,
+        username=&#34;root&#34;,
+        password=ssh_password,
+        timeout=300,
+        auth_timeout=300,
+        banner_timeout=300,
+    )
 
     # Open SCP client
     scp = SCPClient(ssh_client.get_transport(), sanitize=lambda x: x)
@@ -219,11 +242,14 @@ def fetch_vol_file(
 @task
 def convert_vol_file(
     downloaded_file: str,
-    output_format: str = &#34;NetCDF&#34;,
-    convert_params: str = &#34;-f=Whole -k=CFext -r=Short -p=Radar -M=All -z&#34;,
+    output_format: str = &#34;HDF5&#34;,
+    convert_params: str = &#34;-k=ODIM2.1 -M=All&#34;,
 ) -&gt; List[str]:
     &#34;&#34;&#34;
     Convert VOL files to NetCDF using the `volconvert` CLI tool.
+    For output_format = &#34;NetCDF&#34; convert_params must be
+      &#34;-f=Whole -k=CFext -r=Short -p=Radar -M=All -z&#34;
+    For output_format = &#34;HDF5&#34; convert_params must be &#34;-k=ODIM2.1 -M=All&#34; for all products
     &#34;&#34;&#34;
     # Run volconvert
     log(f&#34;Converting file {downloaded_file} to {output_format}...&#34;)
@@ -340,10 +366,13 @@ def execute_shell_command(
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pipelines.rj_escritorio.inea.tasks.convert_vol_file"><code class="name flex">
-<span>def <span class="ident">convert_vol_file</span></span>(<span>downloaded_file: str, output_format: str = 'NetCDF', convert_params: str = '-f=Whole -k=CFext -r=Short -p=Radar -M=All -z') ‑> List[str]</span>
+<span>def <span class="ident">convert_vol_file</span></span>(<span>downloaded_file: str, output_format: str = 'HDF5', convert_params: str = '-k=ODIM2.1 -M=All') ‑> List[str]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Convert VOL files to NetCDF using the <code>volconvert</code> CLI tool.</p></div>
+<div class="desc"><p>Convert VOL files to NetCDF using the <code>volconvert</code> CLI tool.
+For output_format = "NetCDF" convert_params must be
+"-f=Whole -k=CFext -r=Short -p=Radar -M=All -z"
+For output_format = "HDF5" convert_params must be "-k=ODIM2.1 -M=All" for all products</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -351,11 +380,14 @@ def execute_shell_command(
 <pre><code class="python">@task
 def convert_vol_file(
     downloaded_file: str,
-    output_format: str = &#34;NetCDF&#34;,
-    convert_params: str = &#34;-f=Whole -k=CFext -r=Short -p=Radar -M=All -z&#34;,
+    output_format: str = &#34;HDF5&#34;,
+    convert_params: str = &#34;-k=ODIM2.1 -M=All&#34;,
 ) -&gt; List[str]:
     &#34;&#34;&#34;
     Convert VOL files to NetCDF using the `volconvert` CLI tool.
+    For output_format = &#34;NetCDF&#34; convert_params must be
+      &#34;-f=Whole -k=CFext -r=Short -p=Radar -M=All -z&#34;
+    For output_format = &#34;HDF5&#34; convert_params must be &#34;-k=ODIM2.1 -M=All&#34; for all products
     &#34;&#34;&#34;
     # Run volconvert
     log(f&#34;Converting file {downloaded_file} to {output_format}...&#34;)
@@ -464,7 +496,14 @@ def fetch_vol_file(
     # Open SSH client
     ssh_client = SSHClient()
     ssh_client.load_system_host_keys()
-    ssh_client.connect(hostname=&#34;a9921&#34;, username=&#34;root&#34;, password=ssh_password)
+    ssh_client.connect(
+        hostname=&#34;a9921&#34;,
+        username=&#34;root&#34;,
+        password=ssh_password,
+        timeout=300,
+        auth_timeout=300,
+        banner_timeout=300,
+    )
 
     # Open SCP client
     scp = SCPClient(ssh_client.get_transport(), sanitize=lambda x: x)
@@ -480,7 +519,7 @@ def fetch_vol_file(
 </details>
 </dd>
 <dt id="pipelines.rj_escritorio.inea.tasks.list_vol_files"><code class="name flex">
-<span>def <span class="ident">list_vol_files</span></span>(<span>bucket_name: str, prefix: str, radar: str, product: str, date: str = None, greater_than: str = None, mode: str = 'prod', output_format: str = 'NetCDF', output_directory: str = '/var/escritoriodedados/temp/', vols_remote_directory: str = '/var/opt/edge/vols') ‑> Tuple[List[str], str]</span>
+<span>def <span class="ident">list_vol_files</span></span>(<span>bucket_name: str, prefix: str, radar: str, product: str, date: str = None, greater_than: str = None, get_only_last_file: bool = True, mode: str = 'prod', output_format: str = 'HDF5', output_directory: str = '/var/escritoriodedados/temp/', vols_remote_directory: str = '/var/opt/edge/vols') ‑> Tuple[List[str], str]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>List files from INEA server</p>
@@ -492,6 +531,8 @@ def fetch_vol_file(
 <dd>Fetch files with a date greater than this one</dd>
 <dt><strong><code>output_directory</code></strong> :&ensp;<code>str</code></dt>
 <dd>Directory where the files will be saved</dd>
+<dt><strong><code>get_only_last_file</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Treat only the last file available</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -510,8 +551,9 @@ def list_vol_files(
     product: str,
     date: str = None,
     greater_than: str = None,
+    get_only_last_file: bool = True,
     mode: str = &#34;prod&#34;,
-    output_format: str = &#34;NetCDF&#34;,
+    output_format: str = &#34;HDF5&#34;,
     output_directory: str = &#34;/var/escritoriodedados/temp/&#34;,
     vols_remote_directory: str = &#34;/var/opt/edge/vols&#34;,
 ) -&gt; Tuple[List[str], str]:
@@ -522,6 +564,7 @@ def list_vol_files(
         date (str): Date of the files to be fetched (e.g. 20220125)
         greater_than (str): Fetch files with a date greater than this one
         output_directory (str): Directory where the files will be saved
+        get_only_last_file (bool): Treat only the last file available
     &#34;&#34;&#34;
 
     # If none of `date` or `greater_than` are provided, find blob with the latest date
@@ -585,7 +628,14 @@ def list_vol_files(
     # Open SSH client
     ssh_client = SSHClient()
     ssh_client.load_system_host_keys()
-    ssh_client.connect(hostname=&#34;a9921&#34;, username=&#34;root&#34;, password=ssh_password)
+    ssh_client.connect(
+        hostname=&#34;a9921&#34;,
+        username=&#34;root&#34;,
+        password=ssh_password,
+        timeout=300,
+        auth_timeout=300,
+        banner_timeout=300,
+    )
 
     # List remote files
     log(&#34;Listing remote files...&#34;)
@@ -604,12 +654,18 @@ def list_vol_files(
             for file in all_files
             if file.split(&#34;/&#34;)[-1][: len(greater_than) + 7] &gt;= f&#34;9921GUA{greater_than}&#34;
         ]
+        log(f&#34;Remote files identified: {remote_files}&#34;)
+        if get_only_last_file:
+            remote_files.sort()
+            remote_files = [remote_files[-1]]
+            log(f&#34;Last remote file: {remote_files}&#34;)
 
     # Filter files with same filename
     filenames = set()
     filtered_remote_files = []
     for file in remote_files:
         filename = file.split(&#34;/&#34;)[-1]
+        log(f&#34;filename split: {filename}&#34;)
         if filename not in filenames:
             filtered_remote_files.append(file)
             filenames.add(filename)
