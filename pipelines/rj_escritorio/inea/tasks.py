@@ -145,12 +145,11 @@ def list_vol_files(
             for file in all_files
             if file.split("/")[-1][: len(greater_than) + 7] >= f"9921GUA{greater_than}"
         ]
-        log(f"Remote files00: {remote_files}")
+        log(f"Remote files identified: {remote_files}")
         if get_only_last_file:
             remote_files.sort()
-            log(f"Remote files sort: {remote_files}")
             remote_files = [remote_files[-1]]
-            log(f"Remote files last one: {remote_files}")
+            log(f"Last remote file: {remote_files}")
 
     # Filter files with same filename
     filenames = set()
