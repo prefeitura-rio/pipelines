@@ -19,7 +19,7 @@ from pipelines.utils.utils import set_default_parameters
 # sicop dump db flow
 #
 dump_formacao_joao_infra = deepcopy(dump_sql_flow)
-dump_formacao_joao_infra.name = "formacao_joao Joao - Ingerir tabelas de banco SQL"
+dump_formacao_joao_infra.name = "formacao_joao - Ingerir tabelas de banco SQL"
 dump_formacao_joao_infra.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_formacao_joao_infra.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
