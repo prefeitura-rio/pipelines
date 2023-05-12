@@ -26,7 +26,7 @@ class constants(Enum):  # pylint: disable=c0103
             cemaden AS ( -- seleciona as últimas 2h de medição antes da última atualização
             SELECT
                 id_estacao,
-                acumulado_chuva_15_min,
+                acumulado_chuva_1_h,
                 CURRENT_DATE('America/Sao_Paulo') as data,
                 data_particao,
                 DATETIME(CONCAT(data_particao," ", horario)) AS data_update,
@@ -41,7 +41,7 @@ class constants(Enum):  # pylint: disable=c0103
                 a.id_estacao,
                 "cemaden" AS sistema,
                 MAX(a.data_update) AS data_update,
-                SUM(a.acumulado_chuva_15_min) AS acumulado_chuva_15_min,
+                SUM(a.acumulado_chuva_1_h) AS acumulado_chuva_1_h,
             FROM cemaden a
             GROUP BY a.id_estacao, sistema
             ),
@@ -50,8 +50,8 @@ class constants(Enum):  # pylint: disable=c0103
             SELECT
                 h3.*,
                 lm.id_estacao,
-                lm.acumulado_chuva_15_min,
-                lm.acumulado_chuva_15_min/power(h3.dist,5) AS p1_15min,
+                lm.acumulado_chuva_1_h,
+                lm.acumulado_chuva_1_h/power(h3.dist,5) AS p1_1h,
                 1/power(h3.dist,5) AS inv_dist
             FROM (
                 WITH centroid_h3 AS (
@@ -111,7 +111,7 @@ class constants(Enum):  # pylint: disable=c0103
             h3_media AS ( -- calcula média de chuva para as 3 estações mais próximas
             SELECT
                 id_h3,
-                CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL) AS chuva_15min,
+                CAST(sum(p1_1h)/sum(inv_dist) AS DECIMAL) AS chuva_1h,
                 STRING_AGG(estacao ORDER BY estacao) estacoes
             FROM h3_chuvas
             -- WHERE ranking < 4
@@ -123,7 +123,7 @@ class constants(Enum):  # pylint: disable=c0103
                 h3_media.id_h3,
                 h3_media.estacoes,
                 nome AS bairro,
-                cast(round(h3_media.chuva_15min,2) AS decimal) AS chuva_15min,
+                cast(round(h3_media.chuva_1h,2) AS decimal) AS chuva_1h,
             FROM h3_media
             LEFT JOIN `rj-cor.dados_mestres.h3_grid_res8` h3_grid
                 ON h3_grid.id=h3_media.id_h3
@@ -134,20 +134,20 @@ class constants(Enum):  # pylint: disable=c0103
         SELECT
         final_table.id_h3,
         bairro,
-        chuva_15min,
+        chuva_1h,
         estacoes,
         CASE
-            WHEN chuva_15min> 0   AND chuva_15min<= 10  THEN 'chuva fraca'
-            WHEN chuva_15min> 10  AND chuva_15min<= 50  THEN 'chuva moderada'
-            WHEN chuva_15min> 50  AND chuva_15min<= 100 THEN 'chuva forte'
-            WHEN chuva_15min> 100                       THEN 'chuva muito forte'
+            WHEN chuva_1h> 0   AND chuva_1h<= 10  THEN 'chuva fraca'
+            WHEN chuva_1h> 10  AND chuva_1h<= 50  THEN 'chuva moderada'
+            WHEN chuva_1h> 50  AND chuva_1h<= 100 THEN 'chuva forte'
+            WHEN chuva_1h> 100                       THEN 'chuva muito forte'
             ELSE 'sem chuva'
         END AS status,
         CASE
-            WHEN chuva_15min> 0  AND chuva_15min<= 10  THEN '#DAECFB'--'#00CCFF'
-            WHEN chuva_15min> 1  AND chuva_15min<= 50  THEN '#A9CBE8'--'#BFA230'
-            WHEN chuva_15min> 50 AND chuva_15min<= 100 THEN '#77A9D5'--'#E0701F'
-            WHEN chuva_15min> 100                      THEN '#125999'--'#FF0000'
+            WHEN chuva_1h> 0  AND chuva_1h<= 10  THEN '#DAECFB'--'#00CCFF'
+            WHEN chuva_1h> 1  AND chuva_1h<= 50  THEN '#A9CBE8'--'#BFA230'
+            WHEN chuva_1h> 50 AND chuva_1h<= 100 THEN '#77A9D5'--'#E0701F'
+            WHEN chuva_1h> 100                   THEN '#125999'--'#FF0000'
             ELSE '#ffffff'
         END AS color
         FROM final_table
