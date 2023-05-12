@@ -87,7 +87,7 @@ def tratar_dados(
     log(f"DEBUG: data {dados[see_cols]}")
 
     # Alterando valores '-' e np.nan para NULL
-    dados.replace(["-", np.nan], [None], inplace=True)
+    dados.replace(["-", np.nan], [None, None], inplace=True)
 
     # Altera valores negativos para None
     float_cols = [
