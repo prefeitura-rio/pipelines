@@ -48,12 +48,12 @@ def tratar_dados(
         "uf",
         "codibge",
         "cidade",
+        "nomeestacao",
         "tipoestacao",
         "status",
     ]
     rename_cols = {
         "idestacao": "id_estacao",
-        "nomeestacao": "nome_estacao",
         "ultimovalor": "instantaneo_chuva",
         "datahoraUltimovalor": "data_medicao_utc",
         "acc1hr": "acumulado_chuva_1_h",
@@ -135,7 +135,6 @@ def tratar_dados(
         [
             "data_medicao",
             "id_estacao",
-            "nome_estacao",
             "instantaneo_chuva",
             "acumulado_chuva_1_h",
             "acumulado_chuva_3_h",
