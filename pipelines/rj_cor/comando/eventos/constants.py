@@ -54,6 +54,7 @@ class constants(Enum):  # pylint: disable=c0103
         SELECT
             id_h3,
             bairro,
+            qnt_alagamentos,
             CASE
                 WHEN tipo = 3 THEN "Alagamento"
                 WHEN tipo = 2 THEN "Bolsão d'água"
@@ -69,7 +70,7 @@ class constants(Enum):  # pylint: disable=c0103
         FROM final_table
         """,
         "query_update": """
-        SELECT date_trunc(current_datetime("America/Sao_Paulo"), minute)
+        SELECT date_trunc(current_datetime("America/Sao_Paulo"), minute) AS last_update
         """,
     }
     RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS = {
@@ -108,6 +109,7 @@ class constants(Enum):  # pylint: disable=c0103
         SELECT
             id_h3,
             bairro,
+            qnt_alagamentos,
             CASE
                 WHEN tipo = 3 THEN "Alagamento"
                 WHEN tipo = 2 THEN "Bolsão d'água"
@@ -123,6 +125,6 @@ class constants(Enum):  # pylint: disable=c0103
         FROM final_table
         """,
         "query_update": """
-        SELECT date_trunc(current_datetime("America/Sao_Paulo"), minute)
+        SELECT date_trunc(current_datetime("America/Sao_Paulo"), minute) AS last_update
         """,
     }
