@@ -176,7 +176,7 @@ def tratar_dados(dados: pd.DataFrame, backfill: bool = 0) -> pd.DataFrame:
         # Seleciona apenas dados daquele dia (devido à UTC)
         dados = dados[dados["data"] == br_timezone]
 
-    print(">>>> max hora ", dados[~dados.temperatura.isna()].horario.max())
+    log(f">>>> max hora {dados[~dados.temperatura.isna()].data.max()}")
     return dados
 
 
