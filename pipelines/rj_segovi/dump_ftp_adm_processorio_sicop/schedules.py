@@ -19,7 +19,7 @@ every_week_schedule = Schedule(
             ],
             parameter_defaults={
                 "pattern": "ARQ2001",
-                "dataset_id": "adm_processorio_sicop",
+                "dataset_id": "adm_sicop_sicop",
                 "table_id": "processo",
                 "dump_mode": "overwrite",
                 "materialize_after_dump": True,
@@ -36,7 +36,7 @@ every_week_schedule = Schedule(
             ],
             parameter_defaults={
                 "pattern": "ARQ2296",
-                "dataset_id": "adm_processorio_sicop",
+                "dataset_id": "adm_sicop_sicop",
                 "table_id": "expediente",
                 "dump_mode": "overwrite",
                 "materialize_after_dump": True,

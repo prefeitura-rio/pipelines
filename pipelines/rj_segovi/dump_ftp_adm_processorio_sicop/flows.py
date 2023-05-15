@@ -12,16 +12,16 @@ from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 
 from pipelines.constants import constants
-from pipelines.rj_segovi.dump_ftp_adm_processorio_sicop.constants import (
-    constants as dump_ftp_processorio_constants,
+from pipelines.rj_segovi.dump_ftp_adm_sicop_sicop.constants import (
+    constants as dump_ftp_sicop_constants,
 )
-from pipelines.rj_segovi.dump_ftp_adm_processorio_sicop.tasks import (
+from pipelines.rj_segovi.dump_ftp_adm_sicop_sicop.tasks import (
     get_ftp_client,
     get_files_to_download,
     download_files,
     parse_save_dataframe,
 )
-from pipelines.rj_segovi.dump_ftp_adm_processorio_sicop.schedules import (
+from pipelines.rj_segovi.dump_ftp_adm_sicop_sicop.schedules import (
     every_week_schedule,
 )
 from pipelines.utils.constants import constants as utils_constants
@@ -44,7 +44,7 @@ with Flow(
     pattern = Parameter(
         "pattern", default="ARQ2001", required=True
     )  # # ARQ2001 or ARQ2296
-    dataset_id = Parameter("dataset_id", default="adm_processorio_sicop", required=True)
+    dataset_id = Parameter("dataset_id", default="adm_sicop_sicop", required=True)
     table_id = Parameter("table_id", default="processo", required=True)
 
     # Dump to GCS after? Should only dump to GCS if materializing to datario
@@ -134,10 +134,10 @@ with Flow(
                 raise_final_state=True,
             )
             wait_for_materialization.max_retries = (
-                dump_ftp_processorio_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
+                dump_ftp_sicop_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
             )
             wait_for_materialization.retry_delay = timedelta(
-                seconds=dump_ftp_processorio_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
+                seconds=dump_ftp_sicop_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
             )
 
             with case(dump_to_gcs, True):
@@ -176,7 +176,7 @@ dump_ftp_sicop.run_config = KubernetesRun(
 
 dump_ftp_sicop_default_parameters = {
     "pattern": "ARQ2001",  # ARQ2001 or ARQ2296
-    "dataset_id": "adm_processorio_sicop",
+    "dataset_id": "adm_sicop_sicop",
     "table_id": "processo",
 }
 

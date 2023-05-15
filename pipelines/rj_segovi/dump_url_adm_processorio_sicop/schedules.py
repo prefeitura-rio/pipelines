@@ -27,7 +27,7 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "materialize_to_datario": False,
         "dump_to_gcs": False,
-        "dataset_id": "adm_processorio_sicop",
+        "dataset_id": "adm_sicop_sicop",
     },
     "assunto": {
         "dump_mode": "overwrite",
@@ -37,7 +37,7 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "materialize_to_datario": False,
         "dump_to_gcs": False,
-        "dataset_id": "adm_processorio_sicop",
+        "dataset_id": "adm_sicop_sicop",
     },
     "sici": {
         "dump_mode": "overwrite",
@@ -47,7 +47,7 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "materialize_to_datario": False,
         "dump_to_gcs": False,
-        "dataset_id": "adm_processorio_sicop",
+        "dataset_id": "adm_sicop_sicop",
     },
     "codigo_sicop": {
         "dump_mode": "overwrite",
