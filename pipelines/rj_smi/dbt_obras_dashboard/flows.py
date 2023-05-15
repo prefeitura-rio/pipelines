@@ -25,6 +25,7 @@ run_dbt_smi_dashboard_obras_flow.run_config = KubernetesRun(
 smi_dashboard_obras_default_parameters = {
     "dataset_id": "infraestrutura_siscob_obras_dashboard",
     "upstream": True,
+    "dbt_alias": True,
 }
 run_dbt_smi_dashboard_obras_flow = set_default_parameters(
     run_dbt_smi_dashboard_obras_flow,
