@@ -56,15 +56,15 @@ class constants(Enum):  # pylint: disable=c0103
             bairro,
             tipo AS qnt_alagamentos,
             CASE
-                WHEN tipo = 3 THEN "muito crítico" --"Alagamento"
+                WHEN tipo = 3 THEN "extremamente crítico" --"Alagamento"
                 WHEN tipo = 2 THEN "crítico" -- "Bolsão d'água"
                 WHEN tipo = 1 THEN "pouco crítico" --"Lâmina d'água"
                 ELSE "sem alagamento"
                 END AS status,
             CASE
-                WHEN tipo = 3 THEN '#DAECFB'--'#00CCFF'
+                WHEN tipo = 1 THEN '#DAECFB'--'#00CCFF'
                 WHEN tipo = 2 THEN '#A9CBE8'--'#BFA230'
-                WHEN tipo = 1 THEN '#77A9D5'--'#E0701F'
+                WHEN tipo = 3 THEN '#125999'--'#E0701F'
                 ELSE '#ffffff'
             END AS color
         FROM final_table
@@ -119,15 +119,15 @@ class constants(Enum):  # pylint: disable=c0103
                 ELSE "sem alagamento"
                 END AS qnt_alagamentos,
             CASE
-                WHEN tipo = 3 THEN "muito crítico" --"Alagamento"
+                WHEN tipo = 3 THEN "extremamente crítico" --"Alagamento"
                 WHEN tipo = 2 THEN "crítico" -- "Bolsão d'água"
                 WHEN tipo = 1 THEN "pouco crítico" --"Lâmina d'água"
                 ELSE "sem alagamento"
                 END AS status,
             CASE
-                WHEN tipo = 3 THEN '#DAECFB'--'#00CCFF'
+                WHEN tipo = 1 THEN '#DAECFB'--'#00CCFF'
                 WHEN tipo = 2 THEN '#A9CBE8'--'#BFA230'
-                WHEN tipo = 1 THEN '#77A9D5'--'#E0701F'
+                WHEN tipo = 3 THEN '#125999'--'#E0701F'
                 ELSE '#ffffff'
             END AS color
         FROM final_table
