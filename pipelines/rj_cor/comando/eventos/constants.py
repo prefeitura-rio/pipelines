@@ -112,7 +112,12 @@ class constants(Enum):  # pylint: disable=c0103
         SELECT
             id_h3,
             bairro,
-            tipo AS qnt_alagamentos,
+            CASE
+                WHEN tipo = 3 THEN "Alagamento"
+                WHEN tipo = 2 THEN "Bolsão d'água"
+                WHEN tipo = 1 THEN "Lâmina d'água"
+                ELSE "sem alagamento"
+                END AS qnt_alagamentos,
             CASE
                 WHEN tipo = 3 THEN "muito crítico" --"Alagamento"
                 WHEN tipo = 2 THEN "crítico" -- "Bolsão d'água"
