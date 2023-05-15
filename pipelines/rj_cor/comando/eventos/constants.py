@@ -54,7 +54,7 @@ class constants(Enum):  # pylint: disable=c0103
         SELECT
             id_h3,
             bairro,
-            qnt_alagamentos,
+            tipo AS qnt_alagamentos,
             CASE
                 WHEN tipo = 3 THEN "Alagamento"
                 WHEN tipo = 2 THEN "Bolsão d'água"
@@ -89,8 +89,11 @@ class constants(Enum):  # pylint: disable=c0103
                 CAST(latitude AS FLOAT64)) AS geometry
             FROM `rj-cor.adm_cor_comando_staging.ocorrencias`
             WHERE id_pop IN ("5", "6", "31", "32", "33")
-                AND data_particao >= DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 120 MINUTE), day)
-                AND (CAST(data_fim AS DATETIME) >= TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 120 MINUTE)
+            --    AND data_particao >= DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 120 MINUTE), day)
+            --    AND (CAST(data_fim AS DATETIME) >= TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 120 MINUTE)
+            --        OR data_fim IS NULL)
+                AND data_particao >= DATE_TRUNC(TIMESTAMP_SUB(CAST("2022-04-01 04:39:15" as datetime), INTERVAL 120 MINUTE), day)
+                AND (CAST(data_fim AS DATETIME) >= TIMESTAMP_SUB(CAST("2022-04-01 04:39:15" as datetime), INTERVAL 120 MINUTE)
                     OR data_fim IS NULL)
             ),
             final_table AS (
@@ -109,7 +112,7 @@ class constants(Enum):  # pylint: disable=c0103
         SELECT
             id_h3,
             bairro,
-            qnt_alagamentos,
+            tipo AS qnt_alagamentos,
             CASE
                 WHEN tipo = 3 THEN "Alagamento"
                 WHEN tipo = 2 THEN "Bolsão d'água"
