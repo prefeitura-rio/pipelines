@@ -208,7 +208,13 @@ def set_redis_rdo_files(redis_client, dataset_id: str, table_id: str):
     Returns:
         bool: if the key was properly set
     """
-    content = redis_client.get(f"{dataset_id}.{table_id}")
+    try:
+        content = redis_client.get(f"{dataset_id}.{table_id}")["files"]
+    except (TypeError) as e:
+        log(f"Caught error {e}. Will set unexisting key")
+        # set key to empty dict for filling later
+        redis_client.set(f"{dataset_id}.{table_id}", {"files": []})
+        content = redis_client.get(f"{dataset_id}.{table_id}")
     # update content
     st_client = bd.Storage(dataset_id=dataset_id, table_id=table_id)
     blob_names = [
@@ -218,6 +224,7 @@ def set_redis_rdo_files(redis_client, dataset_id: str, table_id: str):
         )
     ]
     files = [blob_name.split("/")[-1].replace(".csv", "") for blob_name in blob_names]
+    log(f"When setting key, found {len(files)} files. Will register on redis...")
     content["files"] = files
     # set key
     return redis_client.set(f"{dataset_id}.{table_id}", content)

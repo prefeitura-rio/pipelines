@@ -119,6 +119,26 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "dataset_id": "turismo_fluxo_visitantes",
     },
+    "santos_dumont": {
+        "dump_mode": "overwrite",
+        "url": "https://docs.google.com/spreadsheets/d/1wio45Se6HXo1nFeyY2GXxa-fduJlnICVW1p_Rg4UbjI\
+            /edit#gid=722381052",
+        "url_type": "google_sheet",
+        "gsheets_sheet_name": "SDU",
+        "gsheets_sheet_range": "A5:B1000",
+        "materialize_after_dump": True,
+        "dataset_id": "turismo_fluxo_visitantes",
+    },
+    "novo_rio": {
+        "dump_mode": "overwrite",
+        "url": "https://docs.google.com/spreadsheets/d/1wio45Se6HXo1nFeyY2GXxa-fduJlnICVW1p_Rg4UbjI\
+            /edit#gid=722381052",
+        "url_type": "google_sheet",
+        "gsheets_sheet_name": "Novo Rio",
+        "gsheets_sheet_range": "A5:B1000",
+        "materialize_after_dump": True,
+        "dataset_id": "turismo_fluxo_visitantes",
+    },
 }
 
 
