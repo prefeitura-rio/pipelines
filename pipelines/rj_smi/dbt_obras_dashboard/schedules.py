@@ -27,9 +27,9 @@ smi_dashboard_obras_tables = {
 
 smi_dashboard_obras_clocks = [
     IntervalClock(
-        interval=timedelta(days=1),
+        interval=timedelta(days=30),
         start_date=datetime(
-            2023, 4, 20, 18, 0, tzinfo=pytz.timezone("America/Sao_Paulo")
+            2023, 5, 20, 0, 0, tzinfo=pytz.timezone("America/Sao_Paulo")
         )
         + timedelta(minutes=2 * count),
         labels=[
@@ -43,6 +43,6 @@ smi_dashboard_obras_clocks = [
     )
     for count, (_, table_id) in enumerate(smi_dashboard_obras_tables.items())
 ]
-smi_dashboard_obras_daily_update_schedule = Schedule(
+smi_dashboard_obras_monthly_update_schedule = Schedule(
     clocks=untuple(smi_dashboard_obras_clocks)
 )
