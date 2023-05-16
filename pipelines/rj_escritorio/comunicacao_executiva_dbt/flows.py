@@ -15,9 +15,13 @@ from pipelines.rj_escritorio.comunicacao_executiva_dbt.schedules import (
 from pipelines.utils.execute_dbt_model.flows import utils_run_dbt_model_flow
 
 run_dbt_comunicacao_executiva_flow = deepcopy(utils_run_dbt_model_flow)
-run_dbt_comunicacao_executiva_flow.name = "EMD: Comunicação Executiva - Materializar tabelas"
+run_dbt_comunicacao_executiva_flow.name = (
+    "EMD: Comunicação Executiva - Materializar tabelas"
+)
 run_dbt_comunicacao_executiva_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 run_dbt_comunicacao_executiva_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value
 )
-run_dbt_comunicacao_executiva_flow.schedule = comunicacao_executiva_daily_update_schedule
+run_dbt_comunicacao_executiva_flow.schedule = (
+    comunicacao_executiva_daily_update_schedule
+)
