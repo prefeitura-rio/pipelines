@@ -34,8 +34,8 @@ class constants(Enum):  # pylint: disable=c0103
                 CAST(latitude AS FLOAT64)) AS geometry
             FROM `rj-cor.adm_cor_comando_staging.ocorrencias`
             WHERE id_pop IN ("5", "6", "31", "32", "33")
-                AND data_particao >= DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 2 day), day)
-                AND CAST(data_inicio AS DATETIME) >= TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 2 day)
+                AND data_particao >= DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 1 day), day)
+                AND CAST(data_inicio AS DATETIME) >= TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 1 day)
                 AND data_fim IS NULL
             ),
             final_table AS (
