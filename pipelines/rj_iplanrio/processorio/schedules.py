@@ -96,7 +96,7 @@ _processorio_infra_query = {
     },
 }
 
-_processorio_infra_clocks = generate_dump_db_schedules(
+processorio_infra_clocks = generate_dump_db_schedules(
     interval=timedelta(days=1),
     start_date=datetime(2022, 3, 21, 2, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
@@ -111,6 +111,6 @@ _processorio_infra_clocks = generate_dump_db_schedules(
     table_parameters=_processorio_infra_query,
 )
 
-_processorio_infra_daily_update_schedule = Schedule(
-    clocks=untuple(_processorio_infra_clocks)
+processorio_infra_daily_update_schedule = Schedule(
+    clocks=untuple(processorio_infra_clocks)
 )
