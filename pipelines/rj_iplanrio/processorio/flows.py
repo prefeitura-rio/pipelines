@@ -19,7 +19,7 @@ from pipelines.utils.utils import set_default_parameters
 # processorio dump db flow
 #
 dump_processorio_infra = deepcopy(dump_sql_flow)
-dump_processorio_infra.name = "Processorio - Ingerir tabelas de banco SQL"
+dump_processorio_infra.name = "IPLANRIO: processorio - Ingerir tabelas de banco SQL"
 dump_processorio_infra.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_processorio_infra.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
