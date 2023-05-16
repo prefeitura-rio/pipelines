@@ -104,13 +104,13 @@ with Flow(
             _vars=[date_range, dataset_sha],
             flags="--full-refresh",
         )
-        set_last_run_timestamp(
-            dataset_id=dataset_id,
-            table_id=table_id,
-            timestamp=date_range["date_range_end"],
-            wait=RUN,
-            mode=MODE,
-        )
+        # set_last_run_timestamp(
+        #     dataset_id=dataset_id,
+        #     table_id=table_id,
+        #     timestamp=date_range["date_range_end"],
+        #     wait=RUN,
+        #     mode=MODE,
+        # )
     with case(rebuild, False):
         RUN = run_dbt_model(
             dbt_client=dbt_client,
@@ -120,13 +120,13 @@ with Flow(
             exclude="+data_versao_efetiva",
             _vars=[date_range, dataset_sha],
         )
-        set_last_run_timestamp(
-            dataset_id=dataset_id,
-            table_id=table_id,
-            timestamp=date_range["date_range_end"],
-            wait=RUN,
-            mode=MODE,
-        )
+        # set_last_run_timestamp(
+        #     dataset_id=dataset_id,
+        #     table_id=table_id,
+        #     timestamp=date_range["date_range_end"],
+        #     wait=RUN,
+        #     mode=MODE,
+        # )
 
 materialize_brt.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 materialize_brt.run_config = KubernetesRun(
