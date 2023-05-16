@@ -75,7 +75,7 @@ with Flow(
     MODE = get_current_flow_mode(LABELS)
 
     # Set dbt client #
-    dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
+    dbt_client = get_k8s_dbt_client(mode="dev", wait=rename_flow_run)
     # Use the command below to get the dbt client in dev mode:
     # dbt_client = get_local_dbt_client(host="localhost", port=3001)
 
@@ -131,7 +131,7 @@ with Flow(
 materialize_brt.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 materialize_brt.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 # materialize_brt.schedule = every_hour
 
