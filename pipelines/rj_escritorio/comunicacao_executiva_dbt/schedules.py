@@ -26,7 +26,9 @@ comunicacao_executiva_tables = {
 comunicacao_executiva_clocks = [
     IntervalClock(
         interval=timedelta(days=1),
-        start_date=datetime(2023, 5, 16, 17, 0, tzinfo=pytz.timezone("America/Sao_Paulo"))
+        start_date=datetime(
+            2023, 5, 16, 17, 0, tzinfo=pytz.timezone("America/Sao_Paulo")
+        )
         + timedelta(minutes=1 * count),
         labels=[
             constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
