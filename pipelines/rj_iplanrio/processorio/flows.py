@@ -28,14 +28,23 @@ dump_processorio_infra.run_config = KubernetesRun(
     ],
 )
 
+
+# Processo.rio
+# - vault_secret_path: processorio-sql
+# - Database: SIGADOC.PCRJ
+# - IP: 10.70.6.63 (srv000763.infra.rio.gov.br)
+# - Porta: 1521
+# - SGBD: Oracle
+
+
 _processorio__infra_default_parameters = {
-    "db_database": "REPLICA1746",
-    "db_host": "10.70.1.34",
-    "db_port": "1433",
-    "db_type": "sql_server",
+    "db_database": "SIGADOC.PCRJ",
+    "db_host": "10.70.6.63",
+    "db_port": "1521",
+    "db_type": "oracle",
     "dataset_id": "administracao_servicos_publicos",
-    "vault_secret_path": "clustersql2",
-    "lower_bound_date": "2021-01-01",
+    "vault_secret_path": "processorio-sql",
+    # "lower_bound_date": "2021-01-01",
 }
 dump_processorio_infra = set_default_parameters(
     dump_processorio_infra, default_parameters=_processorio__infra_default_parameters
