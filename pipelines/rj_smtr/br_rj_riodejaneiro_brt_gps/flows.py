@@ -51,7 +51,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks import (
 # Flows #
 
 with Flow(
-    "SMTR: GPS BRT - Materialização",
+    "[Teste] SMTR: GPS BRT - Materialização",
     code_owners=["caio", "fernanda"],
 ) as materialize_brt:
 
