@@ -11,7 +11,9 @@ from prefect.storage import GCS
 from pipelines.constants import constants
 
 # importa o schedule
-from pipelines.rj_iplanrio import _processorio_infra_daily_update_schedule
+from pipelines.rj_iplanrio.processorio.schedules import (
+    _processorio_infra_daily_update_schedule,
+)
 from pipelines.utils.dump_db.flows import dump_sql_flow
 from pipelines.utils.utils import set_default_parameters
 
@@ -27,15 +29,6 @@ dump_processorio_infra.run_config = KubernetesRun(
         constants.RJ_IPLANRIO_AGENT_LABEL.value,  # label do agente
     ],
 )
-
-
-# Processo.rio
-# - vault_secret_path: processorio-sql
-# - Database: SIGADOC.PCRJ
-# - IP: 10.70.6.63 (srv000763.infra.rio.gov.br)
-# - Porta: 1521
-# - SGBD: Oracle
-
 
 _processorio__infra_default_parameters = {
     "db_database": "SIGADOC.PCRJ",
