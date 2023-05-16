@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_smi.dbt_obras_dashboard.schedules API documentation</title>
-<meta name="description" content="Schedules for the database dump pipeline" />
+<title>pipelines.rj_escritorio.comunicacao_executiva_dbt.flows API documentation</title>
+<meta name="description" content="DBT-related flows." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,61 +19,40 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_smi.dbt_obras_dashboard.schedules</code></h1>
+<h1 class="title">Module <code>pipelines.rj_escritorio.comunicacao_executiva_dbt.flows</code></h1>
 </header>
 <section id="section-intro">
-<p>Schedules for the database dump pipeline</p>
+<p>DBT-related flows.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Schedules for the database dump pipeline
+DBT-related flows.
 &#34;&#34;&#34;
 
-from datetime import datetime, timedelta
+from copy import deepcopy
 
-from prefect.schedules import Schedule
-from prefect.schedules.clocks import IntervalClock
-import pytz
+from prefect.run_configs import KubernetesRun
+from prefect.storage import GCS
 
 from pipelines.constants import constants
-from pipelines.utils.utils import untuple_clocks as untuple
+from pipelines.rj_escritorio.comunicacao_executiva_dbt.schedules import (
+    comunicacao_executiva_daily_update_schedule,
+)
+from pipelines.utils.execute_dbt_model.flows import utils_run_dbt_model_flow
 
-#####################################
-#
-# SMI Dashboard de Obras Schedules
-#
-#####################################
-
-smi_dashboard_obras_tables = {
-    &#34;localizacao&#34;: &#34;localizacao&#34;,
-    &#34;medicao&#34;: &#34;medicao&#34;,
-    &#34;obra&#34;: &#34;obra&#34;,
-    &#34;programa_fonte&#34;: &#34;programa_fonte&#34;,
-}
-
-smi_dashboard_obras_clocks = [
-    IntervalClock(
-        interval=timedelta(days=30),
-        start_date=datetime(
-            2023, 5, 20, 0, 0, tzinfo=pytz.timezone(&#34;America/Sao_Paulo&#34;)
-        )
-        + timedelta(minutes=2 * count),
-        labels=[
-            constants.RJ_SMI_AGENT_LABEL.value,
-        ],
-        parameter_defaults={
-            &#34;dataset_id&#34;: &#34;infraestrutura_siscob_obras_dashboard&#34;,
-            &#34;table_id&#34;: table_id,
-            &#34;mode&#34;: &#34;prod&#34;,
-        },
-    )
-    for count, (_, table_id) in enumerate(smi_dashboard_obras_tables.items())
-]
-smi_dashboard_obras_monthly_update_schedule = Schedule(
-    clocks=untuple(smi_dashboard_obras_clocks)
+run_dbt_comunicacao_executiva_flow = deepcopy(utils_run_dbt_model_flow)
+run_dbt_comunicacao_executiva_flow.name = (
+    &#34;EMD: Comunicação Executiva - Materializar tabelas&#34;
+)
+run_dbt_comunicacao_executiva_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+run_dbt_comunicacao_executiva_flow.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value
+)
+run_dbt_comunicacao_executiva_flow.schedule = (
+    comunicacao_executiva_daily_update_schedule
 )</code></pre>
 </details>
 </section>
@@ -140,7 +119,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines.rj_smi.dbt_obras_dashboard" href="index.html">pipelines.rj_smi.dbt_obras_dashboard</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.comunicacao_executiva_dbt" href="index.html">pipelines.rj_escritorio.comunicacao_executiva_dbt</a></code></li>
 </ul>
 </li>
 </ul>
