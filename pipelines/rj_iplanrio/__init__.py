@@ -2,4 +2,4 @@
 """
 Prefect flows for rj_iplanrio project in RJ
 """
-from pipelines.rj_iplanrio.sicop import *
+from pipelines.rj_iplanrio.sicop.flows import *
