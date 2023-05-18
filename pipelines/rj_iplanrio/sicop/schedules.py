@@ -93,7 +93,7 @@ _sicop_queries = {
         "execute_query": QUERY_SICOP_TRAMITACAO,
     },
 }
-_sicop_infra_clocks = generate_dump_db_schedules(
+sicop_infra_clocks = generate_dump_db_schedules(
     interval=timedelta(days=1),
     start_date=datetime(2023, 5, 14, 2, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
@@ -108,4 +108,4 @@ _sicop_infra_clocks = generate_dump_db_schedules(
     table_parameters=_sicop_queries,
 )
 
-_sicop_infra_daily_update_schedule = Schedule(clocks=untuple(_sicop_infra_clocks))
+sicop_infra_daily_update_schedule = Schedule(clocks=untuple(sicop_infra_clocks))
