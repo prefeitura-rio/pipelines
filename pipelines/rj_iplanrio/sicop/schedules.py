@@ -108,4 +108,4 @@ _sicop_infra_clocks = generate_dump_db_schedules(
     table_parameters=_sicop_queries,
 )
 
-_processorio_infra_daily_update_schedule = Schedule(clocks=untuple(_sicop_infra_clocks))
+_sicop_infra_daily_update_schedule = Schedule(clocks=untuple(_sicop_infra_clocks))

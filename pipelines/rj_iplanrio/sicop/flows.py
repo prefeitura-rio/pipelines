@@ -28,7 +28,7 @@ dump_sicop_infra.run_config = KubernetesRun(
     ],
 )
 
-_sicop__infra_default_parameters = {
+_sicop_infra_default_parameters = {
     "db_database": "CP01.smf",
     "db_host": "10.90.31.22",
     "db_port": "1521",
@@ -37,7 +37,7 @@ _sicop__infra_default_parameters = {
     "vault_secret_path": "sicop-sql",
 }
 dump_sicop_infra = set_default_parameters(
-    dump_sicop_infra, default_parameters=_sicop__infra_default_parameters
+    dump_sicop_infra, default_parameters=_sicop_infra_default_parameters
 )
 
 dump_sicop_infra.schedule = _sicop_infra_daily_update_schedule
