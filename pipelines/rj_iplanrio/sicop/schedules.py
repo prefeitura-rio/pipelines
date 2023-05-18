@@ -106,7 +106,6 @@ _sicop_infra_clocks = generate_dump_db_schedules(
     dataset_id="adm_processo_interno_sicop",  # trocar o dataset_id
     vault_secret_path="sicop-sql",
     table_parameters=_sicop_queries,
-    #
 )
 
 _processorio_infra_daily_update_schedule = Schedule(clocks=untuple(_sicop_infra_clocks))

@@ -35,7 +35,6 @@ _sicop__infra_default_parameters = {
     "db_type": "oracle",
     "dataset_id": "adm_processo_interno_sicop",
     "vault_secret_path": "sicop-sql",
-    #   "lower_bound_date": "2021-01-01",
 }
 dump_sicop_infra = set_default_parameters(
     dump_sicop_infra, default_parameters=_sicop__infra_default_parameters

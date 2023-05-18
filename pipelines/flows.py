@@ -20,3 +20,4 @@ from pipelines.rj_smi import *
 from pipelines.rj_smtr import *
 from pipelines.rj_sms import *
 from pipelines.utils import *
+from pipelines.rj_iplanrio.sicop import *
