@@ -83,6 +83,7 @@ def download(data_inicio: str, data_fim: str) -> pd.DataFrame:
         for data in range(data_inicio_int, data_fim_int + 1):
             for hora in range(24):
                 url = f"{base_url}&localidade={id_estacao}&datahora={data:06}{hora:02}"
+                log(f"Carregando localidade={id_estacao}&datahora={data:06}{hora:02}")
                 res = requests.get(url)
                 if res.status_code != 200:
                     log(f"Problema no id: {id_estacao}, {res.status_code}, {url}")
@@ -95,6 +96,7 @@ def download(data_inicio: str, data_fim: str) -> pd.DataFrame:
                     # Datas no futuro retornam apenas a informação da estação,
                     # sem os campos de meteorologia, inclusive o campo "data".
                     # Não requisitar as horas seguintes.
+                    log("Dados nao retornados")
                     break
                 raw.append(res_data)
 
