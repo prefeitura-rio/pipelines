@@ -95,7 +95,7 @@ _sicop_queries = {
 }
 sicop_infra_clocks = generate_dump_db_schedules(
     interval=timedelta(days=1),
-    start_date=datetime(2023, 5, 14, 2, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2023, 5, 18, 13, 30, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_IPLANRIO_AGENT_LABEL.value,
     ],
