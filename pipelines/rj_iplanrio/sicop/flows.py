@@ -21,7 +21,7 @@ from pipelines.utils.utils import set_default_parameters
 # sicop dump db flow
 #
 rj_iplanrio_sicop_flow = deepcopy(dump_sql_flow)
-rj_iplanrio_sicop_flow.name = "Sicop - Ingerir tabelas de banco SQL"
+rj_iplanrio_sicop_flow.name = "IPLANRIO: sicopi - Ingerir tabelas de banco SQL"
 rj_iplanrio_sicop_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 rj_iplanrio_sicop_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
