@@ -100,7 +100,7 @@ _sicop_queries = {
                                 STATUS
                                 FROM SICOP.VW_PROCESSO""",
     },
-    "tramitacao": {
+    "tramitacao_documento": {
         "materialize_after_dump": False,
         "materialization_mode": "prod",
         "materialize_to_datario": False,
