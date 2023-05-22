@@ -3,8 +3,6 @@
 """
 Tasks for rj_smtr
 """
-import prefect.utilities
-
 from datetime import datetime, timedelta
 import json
 import os
@@ -21,6 +19,8 @@ import pendulum
 from prefect import task
 from pytz import timezone
 import requests
+
+import prefect.utilities
 
 from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.utils import (
