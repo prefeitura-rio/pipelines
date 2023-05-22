@@ -139,7 +139,7 @@ siscor_queries = {
 }
 
 siscor_clocks = generate_dump_db_schedules(
-    interval=timedelta(minutes=3),
+    interval=timedelta(days=1),
     start_date=datetime(2022, 12, 19, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_SECONSERVA_AGENT_LABEL.value,
