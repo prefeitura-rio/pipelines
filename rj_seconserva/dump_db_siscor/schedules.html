@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.flows API documentation</title>
-<meta name="description" content="Imports all flows for every project so we can register all of them." />
+<title>pipelines.rj_seconserva.dump_db_siscor.schedules API documentation</title>
+<meta name="description" content="Schedules for the database dump pipeline" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,37 +19,170 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.flows</code></h1>
+<h1 class="title">Module <code>pipelines.rj_seconserva.dump_db_siscor.schedules</code></h1>
 </header>
 <section id="section-intro">
-<p>Imports all flows for every project so we can register all of them.</p>
+<p>Schedules for the database dump pipeline</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Imports all flows for every project so we can register all of them.
+Schedules for the database dump pipeline
 &#34;&#34;&#34;
-# pylint: disable=W0401,W0614,W0611
-###############################################################################
-# Automatically managed, please do not touch                                  #
-###############################################################################
-from pipelines.datario import *
-from pipelines.rj_cor import *
-from pipelines.rj_cetrio import *
-from pipelines.rj_escritorio import *
-from pipelines.rj_rioaguas import *
-from pipelines.rj_seconserva import *
-from pipelines.rj_segovi import *
-from pipelines.rj_seop import *
-from pipelines.rj_setur import *
-from pipelines.rj_sme import *
-from pipelines.rj_smfp import *
-from pipelines.rj_smi import *
-from pipelines.rj_smtr import *
-from pipelines.rj_sms import *
-from pipelines.utils import *</code></pre>
+
+from datetime import timedelta, datetime
+
+from prefect.schedules import Schedule
+import pytz
+
+from pipelines.constants import constants
+from pipelines.utils.dump_db.utils import generate_dump_db_schedules
+from pipelines.utils.utils import untuple_clocks as untuple
+
+
+#####################################
+#
+# SISCOR Schedules
+#
+#####################################
+
+siscor_queries = {
+    &#34;processo_autorizacao_obra&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;
+            SELECT
+                distinct &#39;26&#39; as Secretaria,
+                STR(po.nmr_processo, 6, 0) + &#39;/&#39; + po.ano_processo as Processo,
+                po.sqnc_processo,
+                case po.sqncl_tp_processo when 0 then tpr.tp_processo
+                    else STR(po.sqncl_tp_processo,1)
+                    + &#39;° &#39; + tpr.tp_processo
+                    END AS dscr_tp_processo,
+                po.dt_protocolo,
+                po.dt_inicio_obra,
+                po.dt_fim_obra,
+                po.area_ocupacao,
+                po.observacao,
+                po.prz_execucao,
+                po.dt_aprovacao,
+                nat.natureza_obra,
+                tpo.tp_obra,
+                lco.lcl_obra,
+                vpfj.cpfcgc as &#39;Cgc_Requerente&#39;,
+                vpfj.nome as requerente,
+                lo.cdg_logradouro,
+                lo.nm_lgrdr,
+                po.dt_plenario,
+                tps.dscr_situacao,
+                tpp.dscr_parecer,
+                po.nmr_licenca,
+                pj.cgc as &#39;cgc_executor&#39;,
+                pj.nm_fantasia as executor
+            FROM PROCESSO_OCOR po
+            INNER JOIN     NATUREZA_OBRA     nat ON
+                po.cdg_natureza = nat.cdg_natureza
+            INNER JOIN     TIPO_OBRA tpo         ON
+                po.cdg_tp_obra = tpo.cdg_tp_obra
+            INNER JOIN     TIPO_PROCESSO tpr    ON
+                po.cdg_tp_processo = tpr.cdg_tp_processo
+            INNER JOIN     TIPO_PARECER tpp    ON
+                po.cdg_parecer = tpp.cdg_parecer
+            INNER JOIN     TIPO_SITUACAO tps    ON
+                po.cdg_situacao = tps.cdg_situacao
+            INNER JOIN     LOCAL_OBRA lco        ON
+                po.cdg_lcl_obra = lco.cdg_lcl_obra
+            INNER join V_LOCALIZACAO lo on
+                lo.nmr_processo = po.nmr_processo
+                and lo.ano_processo = po.ano_processo
+                left join requerente rp on
+                rp.nmr_processo = po.nmr_processo
+                and rp.ano_processo = po.ano_processo
+                left join executor ex
+                on ex.nmr_processo = po.nmr_processo
+                and ex.ano_processo = po.ano_processo
+                left join pessoa_juridica pj
+                on pj.sqnc_pessoa = ex.sqnc_pessoa_executor
+                left join v_ps_FscJrdc vpfj
+                on vpfj.sqnc_pessoa = rp.sqnc_pessoa_requerente
+            union
+            SELECT
+                distinct &#39;06&#39; as Secretaria,
+                STR(po.nmr_processo, 6, 0) + &#39;/&#39; + po.ano_processo as Processo,
+                po.sqnc_processo,
+                case po.sqncl_tp_processo when 0 then tpr.tp_processo
+                    else STR(po.sqncl_tp_processo,1)
+                    + &#39;° &#39; + tpr.tp_processo
+                    END AS dscr_tp_processo,
+                po.dt_protocolo,
+                po.dt_inicio_obra,
+                po.dt_fim_obra,
+                po.area_ocupacao,
+                po.observacao,
+                po.prz_execucao,
+                po.dt_aprovacao,
+                nat.natureza_obra,
+                tpo.tp_obra,
+                lco.lcl_obra,
+                vpfj.cpfcgc as &#39;Cgc_Requerente&#39;,
+                vpfj.nome as requerente,
+                lo.cdg_logradouro,
+                lo.nm_lgrdr,
+                po.dt_plenario,
+                tps.dscr_situacao,
+                tpp.dscr_parecer,
+                po.nmr_licenca,
+                pj.cgc as &#39;cgc_executor&#39;,
+                pj.nm_fantasia as executor
+            FROM siscor.dbo.PROCESSO_OCOR po
+            INNER JOIN     siscor.dbo.NATUREZA_OBRA     nat ON
+                po.cdg_natureza = nat.cdg_natureza
+            INNER JOIN     siscor.dbo.TIPO_OBRA tpo         ON
+                po.cdg_tp_obra = tpo.cdg_tp_obra
+            INNER JOIN     siscor.dbo.TIPO_PROCESSO tpr    ON
+                po.cdg_tp_processo = tpr.cdg_tp_processo
+            INNER JOIN     siscor.dbo.TIPO_PARECER tpp    ON
+                po.cdg_parecer = tpp.cdg_parecer
+            INNER JOIN     siscor.dbo.TIPO_SITUACAO tps    ON
+                po.cdg_situacao = tps.cdg_situacao
+            INNER JOIN     siscor.dbo.LOCAL_OBRA lco        ON
+                po.cdg_lcl_obra = lco.cdg_lcl_obra
+                INNER join siscor.dbo.V_LOCALIZACAO lo on
+                lo.nmr_processo = po.nmr_processo
+                and lo.ano_processo = po.ano_processo
+                left join siscor.dbo.requerente rp on
+                rp.nmr_processo = po.nmr_processo
+                and rp.ano_processo = po.ano_processo
+                left join siscor.dbo.executor ex
+                on ex.nmr_processo = po.nmr_processo
+                and ex.ano_processo = po.ano_processo
+                left join siscor.dbo.pessoa_juridica pj
+                on pj.sqnc_pessoa = ex.sqnc_pessoa_executor
+                left join siscor.dbo.v_ps_FscJrdc vpfj
+                on vpfj.sqnc_pessoa = rp.sqnc_pessoa_requerente
+            &#34;&#34;&#34;,
+    },
+}
+
+siscor_clocks = generate_dump_db_schedules(
+    interval=timedelta(days=1),
+    start_date=datetime(2022, 12, 19, 1, 0, tzinfo=pytz.timezone(&#34;America/Sao_Paulo&#34;)),
+    labels=[
+        constants.RJ_SECONSERVA_AGENT_LABEL.value,
+    ],
+    db_database=&#34;siscor_seconserva&#34;,
+    db_host=&#34;10.70.11.61&#34;,
+    db_port=&#34;1433&#34;,
+    db_type=&#34;sql_server&#34;,
+    dataset_id=&#34;infraestrutura_siscor_obras&#34;,
+    vault_secret_path=&#34;db_siscor&#34;,
+    table_parameters=siscor_queries,
+)
+
+siscor_update_schedule = Schedule(clocks=untuple(siscor_clocks))</code></pre>
 </details>
 </section>
 <section>
@@ -96,7 +229,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -115,7 +248,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines" href="index.html">pipelines</a></code></li>
+<li><code><a title="pipelines.rj_seconserva.dump_db_siscor" href="index.html">pipelines.rj_seconserva.dump_db_siscor</a></code></li>
 </ul>
 </li>
 </ul>

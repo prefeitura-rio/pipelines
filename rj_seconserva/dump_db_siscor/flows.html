@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.flows API documentation</title>
-<meta name="description" content="Imports all flows for every project so we can register all of them." />
+<title>pipelines.rj_seconserva.dump_db_siscor.flows API documentation</title>
+<meta name="description" content="Database dumping flows for segovi project (SISCOR)" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,37 +19,55 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.flows</code></h1>
+<h1 class="title">Module <code>pipelines.rj_seconserva.dump_db_siscor.flows</code></h1>
 </header>
 <section id="section-intro">
-<p>Imports all flows for every project so we can register all of them.</p>
+<p>Database dumping flows for segovi project (SISCOR)</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Imports all flows for every project so we can register all of them.
+Database dumping flows for segovi project (SISCOR)
 &#34;&#34;&#34;
-# pylint: disable=W0401,W0614,W0611
-###############################################################################
-# Automatically managed, please do not touch                                  #
-###############################################################################
-from pipelines.datario import *
-from pipelines.rj_cor import *
-from pipelines.rj_cetrio import *
-from pipelines.rj_escritorio import *
-from pipelines.rj_rioaguas import *
-from pipelines.rj_seconserva import *
-from pipelines.rj_segovi import *
-from pipelines.rj_seop import *
-from pipelines.rj_setur import *
-from pipelines.rj_sme import *
-from pipelines.rj_smfp import *
-from pipelines.rj_smi import *
-from pipelines.rj_smtr import *
-from pipelines.rj_sms import *
-from pipelines.utils import *</code></pre>
+
+from copy import deepcopy
+
+from prefect.run_configs import KubernetesRun
+from prefect.storage import GCS
+
+from pipelines.constants import constants
+from pipelines.rj_seconserva.dump_db_siscor.schedules import (
+    siscor_update_schedule,
+)
+from pipelines.utils.dump_db.flows import dump_sql_flow
+from pipelines.utils.utils import set_default_parameters
+
+
+dump_siscor_flow = deepcopy(dump_sql_flow)
+dump_siscor_flow.name = &#34;SMI: SISCOR - Ingerir tabelas de banco SQL&#34;
+dump_siscor_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+dump_siscor_flow.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[
+        constants.RJ_SECONSERVA_AGENT_LABEL.value,
+    ],
+)
+
+siscor_default_parameters = {
+    &#34;db_database&#34;: &#34;siscor_seconserva&#34;,
+    &#34;db_host&#34;: &#34;10.70.11.61&#34;,
+    &#34;db_port&#34;: &#34;1433&#34;,
+    &#34;db_type&#34;: &#34;sql_server&#34;,
+    &#34;vault_secret_path&#34;: &#34;db_siscor&#34;,
+    &#34;dataset_id&#34;: &#34;infraestrutura_siscor_obras&#34;,
+}
+dump_siscor_flow = set_default_parameters(
+    dump_siscor_flow, default_parameters=siscor_default_parameters
+)
+
+dump_siscor_flow.schedule = siscor_update_schedule</code></pre>
 </details>
 </section>
 <section>
@@ -96,7 +114,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -115,7 +133,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines" href="index.html">pipelines</a></code></li>
+<li><code><a title="pipelines.rj_seconserva.dump_db_siscor" href="index.html">pipelines.rj_seconserva.dump_db_siscor</a></code></li>
 </ul>
 </li>
 </ul>
