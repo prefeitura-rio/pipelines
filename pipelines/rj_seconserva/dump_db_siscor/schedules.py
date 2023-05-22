@@ -20,7 +20,7 @@ from pipelines.utils.utils import untuple_clocks as untuple
 #####################################
 
 siscor_queries = {
-    "processo_para_autorizacao_de_obra": {
+    "processo_autorizacao_obra": {
         "materialize_after_dump": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
