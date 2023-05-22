@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=W0703, W0511
 """
 Tasks for rj_smtr
 """
-# pylint: disable=W0703
-
 from datetime import datetime, timedelta
 import json
 import os
 from pathlib import Path
 import traceback
-from typing import Dict
+from typing import Dict, List
 import io
 
 from basedosdados import Storage, Table
@@ -21,6 +20,8 @@ from prefect import task
 from pytz import timezone
 import requests
 
+import prefect.utilities
+
 from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.utils import (
     create_or_append_table,
@@ -31,6 +32,8 @@ from pipelines.rj_smtr.utils import (
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
+
+from pipelines.utils.tasks import get_now_date
 
 ###############
 #
@@ -731,3 +734,41 @@ def fetch_dataset_sha(dataset_id: str):
 
     dataset_version = response.json()[0]["sha"]
     return {"version": dataset_version}
+
+
+@task
+def get_run_dates(date_range_start: str, date_range_end: str) -> List:
+    """
+    Generates a list of dates between date_range_start and date_range_end.
+    """
+    if (date_range_start is False) or (date_range_end is False):
+        dates = [{"run_date": get_now_date.run()}]
+    else:
+        dates = [
+            {"run_date": d.strftime("%Y-%m-%d")}
+            for d in pd.date_range(start=date_range_start, end=date_range_end)
+        ]
+    log(f"Will run the following dates: {dates}")
+    return dates
+
+
+@task
+def get_join_dict(dict_list: list, new_dict: dict) -> List:
+    """
+    Updates a list of dictionaries with a new dictionary.
+    """
+    for dict_temp in dict_list:
+        dict_temp.update(new_dict)
+
+    log(f"get_join_dict: {dict_list}")
+    return dict_list
+
+
+@prefect.task(checkpoint=False)
+def get_previous_date(days):
+    """
+    Returns the date of {days} days ago in YYYY-MM-DD.
+    """
+    now = pendulum.now(pendulum.timezone("America/Sao_Paulo")).subtract(days=days)
+
+    return now.to_date_string()
