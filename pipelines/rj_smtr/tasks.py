@@ -3,6 +3,7 @@
 """
 Tasks for rj_smtr
 """
+import prefect.utilities
 
 from datetime import datetime, timedelta
 import json
@@ -763,7 +764,7 @@ def get_join_dict(dict_list: list, new_dict: dict) -> List:
     return dict_list
 
 
-@task
+@prefect.task(checkpoint=False)
 def get_previous_date(days):
     """
     Returns the date of {days} days ago in YYYY-MM-DD.
