@@ -24,7 +24,7 @@ from pipelines.utils.decorators import Flow
 with Flow(
     "INEA: Captura dados de radar",
     code_owners=[
-        "gabriel",
+        "paty",
     ],
     skip_if_running=True,
 ) as inea_radar_flow:
