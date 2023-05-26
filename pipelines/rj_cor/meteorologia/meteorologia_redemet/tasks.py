@@ -98,6 +98,7 @@ def download(data_inicio: str, data_fim: str) -> pd.DataFrame:
 
     # converte para dados
     dados = pd.DataFrame(raw)
+    log(f"Dados base:\n{dados}")
 
     return dados
 
@@ -166,6 +167,8 @@ def tratar_dados(dados: pd.DataFrame, backfill: bool = 0) -> pd.DataFrame:
             "visibilidade",
         ]
     ]
+
+    log(f"Dados antes do filtro dia:\n{dados}")
 
     if not backfill:
         # Seleciona apenas dados daquele dia (devido à UTC)
