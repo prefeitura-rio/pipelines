@@ -24,7 +24,7 @@ _processorio_infra_query = {
         # "partition_columns": "dt_inicio",
         # "lower_bound_date": "2021-01-01",
         "biglake_table": True,
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "materialize_to_datario": False,
         "dump_to_gcs": False,
@@ -33,7 +33,7 @@ _processorio_infra_query = {
     },
     "documento_tempo": {
         "biglake_table": True,
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "materialize_to_datario": False,
         "dump_to_gcs": False,
@@ -42,7 +42,7 @@ _processorio_infra_query = {
     },
     "forma_documento": {
         "biglake_table": True,
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "materialize_to_datario": False,
         "dump_to_gcs": False,
@@ -51,7 +51,7 @@ _processorio_infra_query = {
     },
     "lotacao": {
         "biglake_table": True,
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "materialize_to_datario": False,
         "dump_to_gcs": False,
@@ -60,7 +60,7 @@ _processorio_infra_query = {
     },
     "mobil": {
         "biglake_table": True,
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "materialize_to_datario": False,
         "dump_to_gcs": False,
@@ -69,7 +69,7 @@ _processorio_infra_query = {
     },
     "modelo": {
         "biglake_table": True,
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "materialize_to_datario": False,
         "dump_to_gcs": False,
@@ -78,7 +78,7 @@ _processorio_infra_query = {
     },
     "movimentacao": {
         "biglake_table": True,
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "materialize_to_datario": False,
         "dump_to_gcs": False,
@@ -87,7 +87,7 @@ _processorio_infra_query = {
     },
     "nivel_acesso": {
         "biglake_table": True,
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "materialize_to_datario": False,
         "dump_to_gcs": False,
@@ -96,7 +96,7 @@ _processorio_infra_query = {
     },
     "orgao_usuario": {
         "biglake_table": True,
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "materialize_to_datario": False,
         "dump_to_gcs": False,
