@@ -91,6 +91,9 @@ def download(data_inicio: str, data_fim: str) -> pd.DataFrame:
                 if res_data["status"] is not True:
                     log(f"Problema no id: {id_estacao}, {res_data['message']}, {url}")
                     continue
+                elif "data" not in res_data["data"]:
+                    # Sem dados para esse horario
+                    continue
                 raw.append(res_data)
 
     # Extrai objetos de dados
@@ -98,7 +101,6 @@ def download(data_inicio: str, data_fim: str) -> pd.DataFrame:
 
     # converte para dados
     dados = pd.DataFrame(raw)
-    log(f"Dados base:\n{dados}")
 
     return dados
 
@@ -146,8 +148,12 @@ def tratar_dados(dados: pd.DataFrame, backfill: bool = 0) -> pd.DataFrame:
     dados = dados[chaves_primarias + demais_cols]
 
     # Converte variáveis que deveriam ser int para int
-    dados["temperatura"] = dados["temperatura"].apply(lambda x: int(x[:-2]))
-    dados["umidade"] = dados["umidade"].apply(lambda x: int(x[:-1]))
+    dados["temperatura"] = dados["temperatura"].apply(
+        lambda x: None if x[:-2] == "NIL" else int(x[:-2])
+    )
+    dados["umidade"] = dados["umidade"].apply(
+        lambda x: None if "%" not in x else int(x[:-1])
+    )
 
     dados["data"] = pd.to_datetime(dados.data, format="%d/%m/%Y %H:%M(%Z)")
 
