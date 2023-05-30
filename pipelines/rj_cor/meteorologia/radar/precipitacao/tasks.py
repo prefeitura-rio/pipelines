@@ -102,6 +102,11 @@ def change_predict_rain_specs(files_to_model: list, destination_path: str) -> No
     with open(json_file, "w") as file:
         json.dump(predict_specs, file)
 
+    # verifica arquivo
+    with open(json_file, "r") as file:
+        predict_specs_valida = json.load(file)
+    log(f"predict_specs como ficou: {predict_specs_valida}")
+
 
 @task(
     nout=2,
