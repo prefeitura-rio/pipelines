@@ -6,6 +6,7 @@ General purpose functions for rj_smtr
 from ftplib import FTP
 from pathlib import Path
 
+import io
 import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
@@ -124,7 +125,7 @@ def get_table_min_max_value(  # pylint: disable=R0913
     return result.iloc[0][0]
 
 
-def get_last_run_timestamp(dataset_id: str, table_id: str, mode: str = "prod"):
+def get_last_run_timestamp(dataset_id: str, table_id: str, mode: str = "prod") -> str:
     """
     Query redis to retrive the time for when the last materialization
     ran.
@@ -141,6 +142,7 @@ def get_last_run_timestamp(dataset_id: str, table_id: str, mode: str = "prod"):
     """
     redis_client = get_redis_client()
     key = dataset_id + "." + table_id
+    log(f"Fetching key {key} from redis, working on mode {mode}")
     if mode == "dev":
         key = f"{mode}.{key}"
     runs = redis_client.get(key)
@@ -152,6 +154,7 @@ def get_last_run_timestamp(dataset_id: str, table_id: str, mode: str = "prod"):
         return None
     except TypeError:
         return None
+    log(f"Got value {last_run_timestamp}")
     return last_run_timestamp
 
 
@@ -164,9 +167,7 @@ def map_dict_keys(data: dict, mapping: dict) -> None:
     return data
 
 
-def connect_ftp(
-    secret_path: str = constants.FTPS_SECRET_PATH.value, secure: bool = True
-):
+def connect_ftp(secret_path: str = None, secure: bool = True):
     """Connect to FTP
 
     Returns:
@@ -193,3 +194,193 @@ def safe_cast(val, to_type, default=None):
         return to_type(val)
     except ValueError:
         return default
+
+
+def set_redis_rdo_files(redis_client, dataset_id: str, table_id: str):
+    """
+    Register downloaded files to Redis
+
+    Args:
+        redis_client (_type_): _description_
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+
+    Returns:
+        bool: if the key was properly set
+    """
+    try:
+        content = redis_client.get(f"{dataset_id}.{table_id}")["files"]
+    except (TypeError) as e:
+        log(f"Caught error {e}. Will set unexisting key")
+        # set key to empty dict for filling later
+        redis_client.set(f"{dataset_id}.{table_id}", {"files": []})
+        content = redis_client.get(f"{dataset_id}.{table_id}")
+    # update content
+    st_client = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+    blob_names = [
+        blob.name
+        for blob in st_client.client["storage_staging"].list_blobs(
+            st_client.bucket, prefix=f"staging/{dataset_id}/{table_id}"
+        )
+    ]
+    files = [blob_name.split("/")[-1].replace(".csv", "") for blob_name in blob_names]
+    log(f"When setting key, found {len(files)} files. Will register on redis...")
+    content["files"] = files
+    # set key
+    return redis_client.set(f"{dataset_id}.{table_id}", content)
+
+
+# PRE TREAT #
+
+
+def check_not_null(data: pd.DataFrame, columns: list, subset_query: str = None):
+    """
+    Check if there are null values in columns.
+
+    Args:
+        columns (list): list of columns to check
+        subset_query (str): query to check if there are important data
+        being removed
+
+    Returns:
+        None
+    """
+
+    for col in columns:
+        remove = data.query(f"{col} != {col}")  # null values
+        log(
+            f"[data-check] There are {len(remove)} rows with null values in '{col}'",
+            level="info",
+        )
+
+        if subset_query is not None:
+            # Check if there are important data being removed
+            remove = remove.query(subset_query)
+            if len(remove) > 0:
+                log(
+                    f"""[data-check] There are {len(remove)} critical rows with
+                    null values in '{col}' (query: {subset_query})""",
+                    level="warning",
+                )
+
+
+def filter_null(data: pd.DataFrame, columns: list, subset_query: str = None):
+    """
+    Filter null values in columns.
+
+    Args:
+        columns (list): list of columns to check
+        subset_query (str): query to check if there are important data
+        being removed
+
+    Returns:
+        pandas.DataFrame: data without null values
+    """
+
+    for col in columns:
+        remove = data.query(f"{col} != {col}")  # null values
+        data = data.drop(remove.index)
+        log(
+            f"[data-filter] Removed {len(remove)} rows with null '{col}'",
+            level="info",
+        )
+
+        if subset_query is not None:
+            # Check if there are important data being removed
+            remove = remove.query(subset_query)
+            if len(remove) > 0:
+                log(
+                    f"[data-filter] Removed {len(remove)} critical rows with null '{col}'",
+                    level="warning",
+                )
+
+    return data
+
+
+def filter_data(data: pd.DataFrame, filters: list, subset_query: str = None):
+    """
+    Filter data from a dataframe
+
+    Args:
+        data (pd.DataFrame): data DataFrame
+        filters (list): list of queries to filter data
+
+    Returns:
+        pandas.DataFrame: data without filter data
+    """
+    for item in filters:
+        remove = data.query(item)
+        data = data.drop(remove.index)
+        log(
+            f"[data-filter] Removed {len(remove)} rows from filter: {item}",
+            level="info",
+        )
+
+        if subset_query is not None:
+            # Check if there are important data being removed
+            remove = remove.query(subset_query)
+            if len(remove) > 0:
+                log(
+                    f"""[data-filter] Removed {len(remove)} critical rows
+                    from filter: {item} (subquery: {subset_query})""",
+                    level="warning",
+                )
+
+    return data
+
+
+def check_relation(data: pd.DataFrame, columns: list):
+    """
+    Check relation between collumns.
+
+    Args:
+        data (pd.DataFrame): dataframe to be modified
+        columns (list): list of lists of columns to be checked
+
+    Returns:
+        None
+    """
+
+    for cols in columns:
+        df_dup = (
+            data[~data.duplicated(subset=cols)]
+            .groupby(cols)
+            .count()
+            .reset_index()
+            .iloc[:, :1]
+        )
+
+        for col in cols:
+            df_dup_col = (
+                data[~data.duplicated(subset=col)]
+                .groupby(col)
+                .count()
+                .reset_index()
+                .iloc[:, :1]
+            )
+
+            if len(df_dup_col[~df_dup_col[col].duplicated()]) == len(df_dup):
+                log(
+                    f"[data-check] Comparing '{col}' in '{cols}', there are no duplicated values",
+                    level="info",
+                )
+            else:
+                log(
+                    f"[data-check] Comparing '{col}' in '{cols}', there are duplicated values",
+                    level="warning",
+                )
+
+
+def data_info_str(data: pd.DataFrame):
+    """
+    Return dataframe info as a str to log
+
+    Args:
+        data (pd.DataFrame): dataframe
+
+    Returns:
+        data.info() as a string
+    """
+    buffer = io.StringIO()
+    data.info(buf=buffer)
+    return buffer.getvalue()

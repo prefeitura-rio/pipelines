@@ -35,13 +35,25 @@ class constants(Enum):  # pylint: disable=c0103
 
     RJ_SEGOVI_AGENT_LABEL = "rj-segovi"
 
+    RJ_SEOP_AGENT_LABEL = "rj-seop"
+
     RJ_COR_AGENT_LABEL = "rj-cor"
 
+    RJ_RIOAGUAS_AGENT_LABEL = "rj-rioaguas"
+
     RJ_SMFP_AGENT_LABEL = "rj-smfp"
+
+    RJ_SMS_AGENT_LABEL = "rj-sms"
 
     RJ_SMI_AGENT_LABEL = "rj-smi"
 
     RJ_SECONSERVA_AGENT_LABEL = "rj-seconserva"
+
+    RJ_CETRIO_AGENT_LABEL = "rj-cetrio"
+
+    RJ_SETUR_AGENT_LABEL = "rj-setur"
+
+    RJ_IPLANRIO_AGENT_LABEL = "rj-iplanrio"
 
     ######################################
     # Other constants
@@ -100,6 +112,10 @@ class constants(Enum):  # pylint: disable=c0103
         },
         "anderson": {
             "user_id": "553786261677015040",
+            "type": "user_nickname",
+        },
+        "rodrigo": {
+            "user_id": "1031636163804545094",
             "type": "user_nickname",
         },
     }

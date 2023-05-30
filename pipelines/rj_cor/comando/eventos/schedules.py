@@ -10,7 +10,7 @@ from pipelines.constants import constants
 every_hour = Schedule(
     clocks=[
         IntervalClock(
-            interval=timedelta(hours=1),
+            interval=timedelta(minutes=15),
             start_date=datetime(2022, 7, 19, 12, 50, 0),
             labels=[
                 constants.RJ_COR_AGENT_LABEL.value,

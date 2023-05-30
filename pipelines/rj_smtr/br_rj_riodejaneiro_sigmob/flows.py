@@ -21,7 +21,7 @@ from pipelines.utils.tasks import rename_current_flow_run_now_time, get_now_time
 
 from pipelines.rj_smtr.constants import constants
 
-from pipelines.rj_smtr.schedules import every_day
+# from pipelines.rj_smtr.schedules import every_day
 from pipelines.rj_smtr.tasks import (
     bq_upload_from_dict,
     build_incremental_model,
@@ -55,7 +55,7 @@ with Flow(
     with case(backfill, True):
         RUN = run_dbt_model(
             dbt_client=dbt_client,
-            model=dataset_id,
+            dataset_id=dataset_id,
             flags="--full-refresh",
         )
         INCREMENTAL_RUN = build_incremental_model(
@@ -67,20 +67,20 @@ with Flow(
         )
         LAST_RUN = run_dbt_model(
             dbt_client=dbt_client,
-            model="data_versao_efetiva",
+            dataset_id=dataset_id,
+            table_id="data_versao_efetiva",
             flags="--full-refresh",
-            wait=INCREMENTAL_RUN,
         )
         # TESTS = run_dbt_model(
-        #     command="test", dbt_client=dbt_client, model=dataset_id, wait=LAST_RUN
+        #     command="test", dbt_client=dbt_client, dataset_id=dataset_id, wait=LAST_RUN
         # )
     with case(backfill, False):
         RUN = run_dbt_model(
             dbt_client=dbt_client,
-            model=dataset_id,
+            dataset_id=dataset_id,
         )
         # TESTS = run_dbt_model(
-        #     command="test", dbt_client=dbt_client, model=dataset_id, wait=RUN
+        #     command="test", dbt_client=dbt_client, dataset_id=dataset_id, wait=RUN
         # )
 
     materialize_sigmob.set_dependencies(
@@ -131,7 +131,7 @@ materialize_sigmob.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-materialize_sigmob.schedule = every_day
+# materialize_sigmob.schedule = every_day
 
 
 captura_sigmob.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)

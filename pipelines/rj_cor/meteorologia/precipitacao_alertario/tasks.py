@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0103
 """
 Tasks for precipitacao_alertario
 """
 from datetime import timedelta
-import ftplib
-import os
 from pathlib import Path
-import socket
 from typing import Union, Tuple
 
 import numpy as np
@@ -14,9 +12,23 @@ import pandas as pd
 import pendulum
 from prefect import task
 
+import pandas_read_xml as pdx
+
+# from prefect import context
+
 from pipelines.constants import constants
-from pipelines.rj_cor.meteorologia.utils import save_updated_rows_on_redis
-from pipelines.utils.utils import get_vault_secret, log
+from pipelines.rj_cor.meteorologia.precipitacao_alertario.utils import (
+    parse_date_columns,
+    treat_date_col,
+)
+from pipelines.utils.utils import (
+    build_redis_key,
+    compare_dates_between_tables_redis,
+    log,
+    to_partitions,
+    save_str_on_redis,
+    save_updated_rows_on_redis,
+)
 
 
 @task(
@@ -24,112 +36,55 @@ from pipelines.utils.utils import get_vault_secret, log
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def download() -> Tuple[pd.DataFrame, str]:
-    """
-    Faz o request e salva dados localmente
-    """
-
-    # Acessar FTP Riomidia
-    dirname = "/alertario/"
-    filename = "EstacoesMapa.txt"
-
-    # Acessar username e password
-    dicionario = get_vault_secret("riomidia")
-    host = dicionario["data"]["host"]
-    username = dicionario["data"]["username"]
-    password = dicionario["data"]["password"]
-
-    # Cria pasta para salvar arquivo de download
-    base_path = os.path.join(os.getcwd(), "data", "precipitacao_alertario", "input")
-
-    if not os.path.exists(base_path):
-        os.makedirs(base_path)
-
-    save_on = os.path.join(base_path, filename)
-
-    try:
-        ftp = ftplib.FTP(host)
-    except (socket.error, socket.gaierror):
-        log(f"ERROR: cannot reach {host}")
-        raise
-    log(f"*** Connected to host {host}")
-
-    try:
-        ftp.login(username, password)
-    except ftplib.error_perm:
-        log("ERROR: cannot login")
-        ftp.quit()
-        raise
-    log("*** Logged in successfully")
-
-    try:
-        ftp.cwd(dirname)
-    except ftplib.error_perm:
-        log(f"ERROR: cannot CD to {dirname}")
-        ftp.quit()
-        raise
-    log(f"*** Changed to folder: {dirname}")
-
-    try:
-        with open(save_on, "wb") as file:
-            log("Getting " + filename)
-            ftp.retrbinary("RETR " + filename, file.write)
-        log(f"File downloaded to {save_on}")
-    except ftplib.error_perm:
-        log(f"ERROR: cannot read file {filename}")
-        raise
-
-    ftp.quit()
-
-    # Hora atual no formato YYYYMMDDHHmm para criar partições
-    current_time = pendulum.now("America/Sao_Paulo").strftime("%Y%m%d%H%M")
-
-    return save_on, current_time
-
-
-@task(nout=2)
 def tratar_dados(
-    filename: Union[str, Path], dataset_id: str, table_id: str
+    dataset_id: str, table_id: str, mode: str = "dev"
 ) -> Tuple[pd.DataFrame, bool]:
     """
     Renomeia colunas e filtra dados com a hora e minuto do timestamp
     de execução mais próximo à este
     """
 
-    colunas = [
-        "id_estacao",
-        "estacao",
-        "localizacao",
-        "data_medicao",
-        "latitude",
-        "longitude",
-        "acumulado_chuva_15_min",
-        "acumulado_chuva_1_h",
-        "acumulado_chuva_4_h",
-        "acumulado_chuva_24_h",
-        "acumulado_chuva_96_h",
-        "acumulado_chuva_mes",
+    url = "http://alertario.rio.rj.gov.br/upload/xml/Chuvas.xml"
+    dados = pdx.read_xml(url, ["estacoes"])
+    dados = pdx.fully_flatten(dados)
+
+    drop_cols = [
+        "@hora",
+        "estacao|@nome",
+        "estacao|@type",
+        "estacao|localizacao|@bacia",
+        "estacao|localizacao|@latitude",
+        "estacao|localizacao|@longitude",
     ]
+    rename_cols = {
+        "estacao|@id": "id_estacao",
+        "estacao|chuvas|@h01": "acumulado_chuva_1_h",
+        "estacao|chuvas|@h04": "acumulado_chuva_4_h",
+        "estacao|chuvas|@h24": "acumulado_chuva_24_h",
+        "estacao|chuvas|@h96": "acumulado_chuva_96_h",
+        "estacao|chuvas|@hora": "data_medicao_utc",
+        "estacao|chuvas|@m15": "acumulado_chuva_15_min",
+        "estacao|chuvas|@mes": "acumulado_chuva_mes",
+    }
 
-    dados = pd.read_csv(filename, skiprows=1, sep=";", names=colunas, decimal=",")
+    dados = pdx.fully_flatten(dados).drop(drop_cols, axis=1).rename(rename_cols, axis=1)
+    log(f"\n[DEBUG]: df.head() {dados.head()}")
 
-    # Adequando formato de data
-    dados["data_medicao"] = pd.to_datetime(
-        dados["data_medicao"], format="%H:%M - %d/%m/%Y"
-    )
+    # Converte de UTC para horário São Paulo
+    dados["data_medicao_utc"] = pd.to_datetime(dados["data_medicao_utc"])
 
-    # Ordenação de variáveis
-    cols_order = [
-        "data_medicao",
-        "id_estacao",
-        "acumulado_chuva_15_min",
-        "acumulado_chuva_1_h",
-        "acumulado_chuva_4_h",
-        "acumulado_chuva_24_h",
-        "acumulado_chuva_96_h",
-    ]
+    see_cols = ["data_medicao_utc", "id_estacao", "acumulado_chuva_15_min"]
+    log(f"DEBUG: data utc {dados[see_cols]}")
 
-    dados = dados[cols_order]
+    date_format = "%Y-%m-%d %H:%M:%S"
+    dados["data_medicao"] = dados["data_medicao_utc"].dt.strftime(date_format)
+
+    log(f"DEBUG: df dtypes {dados.dtypes}")
+    see_cols = ["data_medicao", "id_estacao", "acumulado_chuva_15_min"]
+    log(f"DEBUG: data antes {dados[see_cols]}")
+
+    dados.data_medicao = dados.data_medicao.apply(treat_date_col)
+    log(f"DEBUG: data dps {dados[see_cols]}")
 
     # Alterando valores ND, '-' e np.nan para NULL
     dados.replace(["ND", "-", np.nan], [None, None, None], inplace=True)
@@ -144,7 +99,7 @@ def tratar_dados(
     ]
     dados[float_cols] = dados[float_cols].apply(pd.to_numeric, errors="coerce")
 
-    # Altera valores negativos para 0
+    # Altera valores negativos para None
     dados[float_cols] = np.where(dados[float_cols] < 0, None, dados[float_cols])
 
     # Elimina linhas em que o id_estacao é igual mantendo a de menor valor nas colunas float
@@ -154,9 +109,26 @@ def tratar_dados(
     log(f"uniquesss df >>>, {type(dados.id_estacao.unique()[0])}")
     dados["id_estacao"] = dados["id_estacao"].astype(str)
 
-    dados = save_updated_rows_on_redis(dados, dataset_id, table_id, mode="dev")
+    dados = save_updated_rows_on_redis(
+        dados,
+        dataset_id,
+        table_id,
+        unique_id="id_estacao",
+        date_column="data_medicao",
+        date_format=date_format,
+        mode=mode,
+    )
 
-    dados["id_estacao"] = dados["id_estacao"].astype(int)
+    # If df is empty stop flow on flows.py
+    empty_data = dados.shape[0] == 0
+    log(f"[DEBUG]: dataframe is empty: {empty_data}")
+
+    # Save max date on redis to compare this with last dbt run
+    if not empty_data:
+        max_date = str(dados["data_medicao"].max())
+        redis_key = build_redis_key(dataset_id, table_id, name="last_update", mode=mode)
+        log(f"[DEBUG]: dataframe is not empty key: {redis_key} {max_date}")
+        save_str_on_redis(redis_key, "date", max_date)
 
     # Fixar ordem das colunas
     dados = dados[
@@ -171,32 +143,72 @@ def tratar_dados(
         ]
     ]
 
-    # If df is empty stop flow
-    empty_data = dados.shape[0] == 0
-
     return dados, empty_data
 
 
 @task
-def salvar_dados(dados: pd.DataFrame, current_time: str) -> Union[str, Path]:
+def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
     """
     Salvar dados tratados em csv para conseguir subir pro GCP
     """
 
-    ano = current_time[:4]
-    mes = str(int(current_time[4:6]))
-    dia = str(int(current_time[6:8]))
-    partitions = os.path.join(f"ano={ano}", f"mes={mes}", f"dia={dia}")
+    prepath = Path("/tmp/precipitacao_alertario/")
+    prepath.mkdir(parents=True, exist_ok=True)
 
-    base_path = os.path.join(os.getcwd(), "data", "precipitacao_alertario", "output")
+    partition_column = "data_medicao"
+    dataframe, partitions = parse_date_columns(dados, partition_column)
+    current_time = pendulum.now("America/Sao_Paulo").strftime("%Y%m%d%H%M")
 
-    partition_path = os.path.join(base_path, partitions)
+    # Cria partições a partir da data
+    to_partitions(
+        data=dataframe,
+        partition_columns=partitions,
+        savepath=prepath,
+        data_type="csv",
+        suffix=current_time,
+    )
+    log(f"[DEBUG] Files saved on {prepath}")
+    return prepath
 
-    if not os.path.exists(partition_path):
-        os.makedirs(partition_path)
 
-    filename = os.path.join(partition_path, f"dados_{current_time}.csv")
+@task
+def save_last_dbt_update(
+    dataset_id: str,
+    table_id: str,
+    mode: str = "dev",
+    wait=None,  # pylint: disable=unused-argument
+) -> None:
+    """
+    Save on dbt last timestamp where it was updated
+    """
+    now = pendulum.now("America/Sao_Paulo").to_datetime_string()
+    redis_key = build_redis_key(dataset_id, table_id, name="dbt_last_update", mode=mode)
+    log(f">>>>> debug saving actual date on dbt redis {redis_key} {now}")
+    save_str_on_redis(redis_key, "date", now)
 
-    log(f"Saving {filename}")
-    dados.to_csv(filename, index=False)
-    return base_path
+
+@task(skip_on_upstream_skip=False)
+def check_to_run_dbt(
+    dataset_id: str,
+    table_id: str,
+    mode: str = "dev",
+) -> bool:
+    """
+    It will run even if its upstream tasks skip.
+    """
+
+    key_table_1 = build_redis_key(
+        dataset_id, table_id, name="dbt_last_update", mode=mode
+    )
+    key_table_2 = build_redis_key(dataset_id, table_id, name="last_update", mode=mode)
+
+    format_date_table_1 = "YYYY-MM-DD HH:mm:SS"
+    format_date_table_2 = "YYYY-MM-DD HH:mm:SS"
+
+    # Returns true if date saved on table_2 (alertario) is bigger than
+    # the date saved on table_1 (dbt).
+    run_dbt = compare_dates_between_tables_redis(
+        key_table_1, format_date_table_1, key_table_2, format_date_table_2
+    )
+    log(f">>>> debug data alertario > data dbt: {run_dbt}")
+    return run_dbt

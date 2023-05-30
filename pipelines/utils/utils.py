@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0103, C0302
 """
 General utilities for all pipelines.
 """
@@ -22,6 +23,7 @@ from google.oauth2 import service_account
 import hvac
 import numpy as np
 import pandas as pd
+import pendulum
 import prefect
 from prefect.client import Client
 from prefect.engine.state import Skipped, State
@@ -57,6 +59,14 @@ def log(msg: Any, level: str = "info") -> None:
     prefect.context.logger.log(levels[level], msg)  # pylint: disable=E1101
 
 
+def log_mod(msg: str, index: int, mod: int):
+    """
+    Only logs a message if the index is a multiple of mod.
+    """
+    if index % mod == 0 or index == 1:
+        log(msg)
+
+
 ###############
 #
 # Datetime utils
@@ -82,9 +92,7 @@ def determine_whether_to_execute_or_not(
         cron_expression, datetime_last_execution
     )
     next_cron_expression_time = cron_expression_iterator.get_next(datetime)
-    if next_cron_expression_time <= datetime_now:
-        return True
-    return False
+    return next_cron_expression_time <= datetime_now
 
 
 ###############
@@ -244,9 +252,7 @@ def run_local(flow: prefect.Flow, parameters: Dict[str, Any] = None):
     flow.schedule = None
 
     # Run flow
-    if parameters:
-        return flow.run(parameters=parameters)
-    return flow.run()
+    return flow.run(parameters=parameters) if parameters else flow.run()
 
 
 def run_cloud(
@@ -760,6 +766,16 @@ def upload_files_to_storage(
             blob.upload_from_filename(file)
 
 
+def is_date(date_string: str, date_format: str = "%Y-%m-%d") -> Union[datetime, bool]:
+    """
+    Checks whether a string is a valid date.
+    """
+    try:
+        return datetime.strptime(date_string, date_format).strftime(date_format)
+    except ValueError:
+        return False
+
+
 def parser_blobs_to_partition_dict(blobs: list) -> dict:
     """
     Extracts the partition information from the blobs.
@@ -845,10 +861,28 @@ def parse_date_columns(
     for col in cols:
         if col in dataframe.columns:
             raise ValueError(f"Column {col} already exists, please review your model.")
+
     dataframe[partition_date_column] = dataframe[partition_date_column].astype(str)
-    dataframe[data_col] = pd.to_datetime(dataframe[partition_date_column])
-    dataframe[ano_col] = dataframe[data_col].dt.year
-    dataframe[mes_col] = dataframe[data_col].dt.month
+    dataframe[data_col] = pd.to_datetime(
+        dataframe[partition_date_column], errors="coerce"
+    )
+
+    dataframe[ano_col] = (
+        dataframe[data_col]
+        .dt.year.fillna(-1)
+        .astype(int)
+        .astype(str)
+        .replace("-1", np.nan)
+    )
+
+    dataframe[mes_col] = (
+        dataframe[data_col]
+        .dt.month.fillna(-1)
+        .astype(int)
+        .astype(str)
+        .replace("-1", np.nan)
+    )
+
     dataframe[data_col] = dataframe[data_col].dt.date
 
     return dataframe, [ano_col, mes_col, data_col]
@@ -865,3 +899,157 @@ def final_column_treatment(column: str) -> str:
     except ValueError:  # pylint: disable=bare-except
         non_alpha_removed = re.sub(r"[\W]+", "", column)
         return non_alpha_removed
+
+
+def build_redis_key(
+    dataset_id: str, table_id: str, name: str = None, mode: str = "prod"
+):
+    """
+    Helper function for building a key to redis
+    """
+    key = dataset_id + "." + table_id
+    if name:
+        key = key + "." + name
+    if mode == "dev":
+        key = f"{mode}.{key}"
+    return key
+
+
+def save_str_on_redis(
+    redis_key: str,
+    key: str,
+    value: str,
+):
+    """
+    Function to save a string on redis
+    """
+
+    redis_client = get_redis_client()
+    redis_client.hset(redis_key, key, value)
+
+
+def treat_redis_output(text):
+    """
+    Redis returns a dict where both key and value are byte string
+    Example: {b'date': b'2023-02-27 07:29:04'}
+    """
+    return {k.decode("utf-8"): v.decode("utf-8") for k, v in text.items()}
+
+
+def compare_dates_between_tables_redis(
+    key_table_1: str,
+    format_date_table_1: str,
+    key_table_2: str,
+    format_date_table_2: str,
+):
+    """
+    Function that checks if the date saved on the second
+    table is bigger then the first one
+    """
+
+    redis_client = get_redis_client()
+
+    # get saved date on redis
+    date_1 = redis_client.hgetall(key_table_1)
+    date_2 = redis_client.hgetall(key_table_2)
+
+    if (len(date_1) == 0) | (len(date_2) == 0):
+        return True
+
+    date_1 = treat_redis_output(date_1)
+    date_2 = treat_redis_output(date_2)
+
+    # Convert date to pendulum
+    date_1 = pendulum.from_format(date_1["date"], format_date_table_1)
+    date_2 = pendulum.from_format(date_2["date"], format_date_table_2)
+
+    return date_1 < date_2
+
+
+# pylint: disable=W0106
+def save_updated_rows_on_redis(
+    dataframe: pd.DataFrame,
+    dataset_id: str,
+    table_id: str,
+    unique_id: str = "id_estacao",
+    date_column: str = "data_medicao",
+    date_format: str = "%Y-%m-%d %H:%M:%S",
+    mode: str = "prod",
+) -> pd.DataFrame:
+    """
+    Acess redis to get the last time each unique_id was updated, return
+    updated unique_id as a DataFrame and save new dates on redis
+    """
+
+    redis_client = get_redis_client()
+
+    key = dataset_id + "." + table_id
+    if mode == "dev":
+        key = f"{mode}.{key}"
+
+    # Access all data saved on redis with this key
+    last_updates = redis_client.hgetall(key)
+
+    # Convert data in dictionary in format with unique_id in key and last updated time as value
+    # Example > {"12": "2022-06-06 14:45:00"}
+    last_updates = {
+        k.decode("utf-8"): v.decode("utf-8") for k, v in last_updates.items()
+    }
+
+    # Convert dictionary to dataframe
+    last_updates = pd.DataFrame(
+        last_updates.items(), columns=[unique_id, "last_update"]
+    )
+
+    # dataframe and last_updates need to have the same index, in our case unique_id
+    missing_in_dfr = [
+        i
+        for i in last_updates[unique_id].unique()
+        if i not in dataframe[unique_id].unique()
+    ]
+    missing_in_updates = [
+        i
+        for i in dataframe[unique_id].unique()
+        if i not in last_updates[unique_id].unique()
+    ]
+
+    # If unique_id doesn't exists on updates we create a fake date for this station on updates
+    if len(missing_in_updates) > 0:
+        for i in missing_in_updates:
+            last_updates = last_updates.append(
+                {unique_id: i, "last_update": "1900-01-01 00:00:00"},
+                ignore_index=True,
+            )
+
+    # If unique_id doesn't exists on dataframe we remove this stations from last_updates
+    if len(missing_in_dfr) > 0:
+        last_updates = last_updates[~last_updates[unique_id].isin(missing_in_dfr)]
+
+    # Merge dfs using unique_id
+    dataframe = dataframe.merge(last_updates, how="left", on=unique_id)
+
+    # Keep on dataframe only the stations that has a time after the one that is saved on redis
+    dataframe[date_column] = dataframe[date_column].apply(
+        pd.to_datetime, format=date_format
+    )
+    dataframe["last_update"] = dataframe["last_update"].apply(
+        pd.to_datetime, format="%Y-%m-%d %H:%M:%S"
+    )
+    dataframe = dataframe[dataframe[date_column] > dataframe["last_update"]].dropna(
+        subset=[unique_id]
+    )
+
+    # Keep only the last date for each unique_id
+    keep_cols = [unique_id, date_column]
+    new_updates = dataframe[keep_cols].sort_values(keep_cols)
+    new_updates = new_updates.groupby(unique_id, as_index=False).tail(1)
+    new_updates[date_column] = new_updates[date_column].astype(str)
+
+    # Convert stations with the new updates dates in a dictionary
+    new_updates = dict(zip(new_updates[unique_id], new_updates[date_column]))
+    log(f">>> data to save in redis as a dict: {new_updates}")
+
+    # Save this new information on redis
+    [redis_client.hset(key, k, v) for k, v in new_updates.items()]
+
+    return dataframe.reset_index()
