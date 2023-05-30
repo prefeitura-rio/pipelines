@@ -22,7 +22,7 @@ _sicop_queries = {
     "apenso": {
         #        "partition_columns": "dt_inicio",
         #        "lower_bound_date": "2021-01-01",
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "materialize_to_datario": False,
         "dump_to_gcs": False,
@@ -35,7 +35,7 @@ _sicop_queries = {
                                 FROM SICOP.VW_APENSO""",
     },
     "assunto": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "materialize_to_datario": False,
         "dump_to_gcs": False,
@@ -43,7 +43,7 @@ _sicop_queries = {
         "execute_query": "SELECT IDENT, COD, SEQ, DESC_ASSUNTO FROM SICOP.VW_ASSUNTO",
     },
     "documento": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "materialize_to_datario": False,
         "dump_to_gcs": False,
@@ -64,7 +64,7 @@ _sicop_queries = {
                                 FROM SICOP.VW_DOCUMENTO""",
     },
     "orgao": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "materialize_to_datario": False,
         "dump_to_gcs": False,
@@ -75,7 +75,7 @@ _sicop_queries = {
                                 FROM SICOP.VW_ORGAO""",
     },
     "processo": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "materialize_to_datario": False,
         "dump_to_gcs": False,
@@ -93,7 +93,7 @@ _sicop_queries = {
                                 FROM SICOP.VW_PROCESSO""",
     },
     "tramitacao_documento": {
-        "materialize_after_dump": False,
+        "materialize_after_dump": True,
         "materialization_mode": "prod",
         "materialize_to_datario": False,
         "dump_to_gcs": False,
