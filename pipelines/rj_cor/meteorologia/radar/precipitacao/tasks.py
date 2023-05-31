@@ -43,6 +43,8 @@ def get_filenames_storage(
     else:
         filter_partition_days = [last_30min[:11], today]
 
+    log(f"filter_partition_days: {filter_partition_days}")
+
     files_on_storage_list = []
     for i in filter_partition_days:
         base_path = "raw/meio_ambiente_clima/inea_radar_hdf5/"
