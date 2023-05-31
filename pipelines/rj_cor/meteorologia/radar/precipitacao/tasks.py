@@ -38,7 +38,7 @@ def get_filenames_storage(
     today = pendulum.now("UTC").format("YYYY-MM-DD")
 
     # Get data from yesterday if the date from last_30min is different from today
-    if today == last_30min[:11]:
+    if today == last_30min[:10]:
         filter_partition_days = [today]
     else:
         filter_partition_days = [last_30min[:10], today]
