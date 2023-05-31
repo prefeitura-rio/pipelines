@@ -20,8 +20,6 @@ from prefect import task
 from pytz import timezone
 import requests
 
-import prefect.utilities
-
 from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.utils import (
     create_or_append_table,
@@ -764,7 +762,7 @@ def get_join_dict(dict_list: list, new_dict: dict) -> List:
     return dict_list
 
 
-@prefect.task(checkpoint=False)
+@task(checkpoint=False)
 def get_previous_date(days):
     """
     Returns the date of {days} days ago in YYYY-MM-DD.
