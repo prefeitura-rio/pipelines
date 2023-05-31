@@ -21,6 +21,7 @@ from pipelines.utils.utils import untuple_clocks as untuple
 comunicacao_executiva_tables = {
     "data_atualizacao": "data_atualizacao",
     "performance_subprefeituras_1746": "performance_subprefeituras_1746",
+    "performance_geral_1746": "performance_geral_1746",
 }
 
 comunicacao_executiva_clocks = [
