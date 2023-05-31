@@ -41,7 +41,7 @@ def get_filenames_storage(
     if today == last_30min[:11]:
         filter_partition_days = [today]
     else:
-        filter_partition_days = [last_30min[:11], today]
+        filter_partition_days = [last_30min[:10], today]
 
     log(f"filter_partition_days: {filter_partition_days}")
 
