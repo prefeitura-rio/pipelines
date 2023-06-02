@@ -112,11 +112,11 @@ processorio_infra_clocks = generate_dump_db_schedules(
         constants.RJ_IPLANRIO_AGENT_LABEL.value,
     ],
     db_database="SIGADOC.PCRJ",
-    db_host="10.70.6.63",
+    db_host="10.70.6.64",
     db_port="1521",
     db_type="oracle",
     dataset_id="adm_processo_interno_processorio",
-    vault_secret_path="processorio-sql",
+    vault_secret_path="processorio-prod",
     table_parameters=_processorio_infra_query,
 )
 
