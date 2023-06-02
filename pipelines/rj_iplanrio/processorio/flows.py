@@ -35,11 +35,11 @@ rj_iplanrio_processorio_flow.run_config = KubernetesRun(
 
 processorio_default_parameters = {
     "db_database": "SIGADOC.PCRJ",
-    "db_host": "10.70.6.63",
+    "db_host": "10.70.6.64",
     "db_port": "1521",
     "db_type": "oracle",
     "dataset_id": "administracao_servicos_publicos",
-    "vault_secret_path": "processorio-sql",
+    "vault_secret_path": "processorio-prod",
 }
 
 rj_iplanrio_processorio_flow = set_default_parameters(
