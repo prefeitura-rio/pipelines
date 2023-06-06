@@ -59,11 +59,20 @@ class constants(Enum):  # pylint: disable=c0103
         final_table AS (
             SELECT
                 id_h3,
-                bairro,
+                case
+                when id_h3 = &#34;88a8a07735fffff&#34; then &#34;Barra da Tijuca&#34;
+                when id_h3 = &#34;88a8a07ab5fffff&#34; then &#34;Ipanema&#34;
+                when id_h3 = &#34;88a8a078e1fffff&#34; then &#34;Copacabana&#34;
+                when id_h3 = &#34;88a8a03959fffff&#34; then &#34;Barra de Guaratiba&#34;
+                when id_h3 = &#34;88a8a039d1fffff&#34; then &#34;Guaratiba&#34;
+                when id_h3 = &#34;88a8a06817fffff&#34; then &#34;Ribeira&#34;
+                when id_h3 = &#34;88a8a068e9fffff&#34; then &#34;Zumbi&#34;
+                else bairro end as bairro,
                 CAST(predictions AS FLOAT64) AS chuva_15min,
                 &#34;Guaratiba&#34; AS estacoes,
             FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba` tx
             INNER JOIN last_update_date lud ON lud.last_update = tx.data_medicao
+            WHERE id_h3 not in (&#34;88a8a079ddfffff&#34;, &#34;88a8a068e5fffff&#34;, &#34;88a8a06995fffff&#34;)
         )
         SELECT
             id_h3,
@@ -109,7 +118,15 @@ class constants(Enum):  # pylint: disable=c0103
         select_data_each_15_min AS (
             SELECT distinct
                 id_h3,
-                bairro,
+                case
+                when id_h3 = &#34;88a8a07735fffff&#34; then &#34;Barra da Tijuca&#34;
+                when id_h3 = &#34;88a8a07ab5fffff&#34; then &#34;Ipanema&#34;
+                when id_h3 = &#34;88a8a078e1fffff&#34; then &#34;Copacabana&#34;
+                when id_h3 = &#34;88a8a03959fffff&#34; then &#34;Barra de Guaratiba&#34;
+                when id_h3 = &#34;88a8a039d1fffff&#34; then &#34;Guaratiba&#34;
+                when id_h3 = &#34;88a8a06817fffff&#34; then &#34;Ribeira&#34;
+                when id_h3 = &#34;88a8a068e9fffff&#34; then &#34;Zumbi&#34;
+                else bairro end as bairro,
                 CASE WHEN
                     CAST(predictions AS FLOAT64) &lt;= 0.2
                     THEN 0.0 ELSE CAST(predictions AS FLOAT64) END AS chuva_15min, -- retira ruídos antes de somar
@@ -118,6 +135,7 @@ class constants(Enum):  # pylint: disable=c0103
             INNER JOIN last_update_date lup ON 1=1
             WHERE tx.data_particao&gt;= CAST(DATE_SUB(CURRENT_DATETIME(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
               AND CAST(tx.data_medicao AS DATETIME)&gt;= DATE_SUB(lup.last_update, INTERVAL 2 HOUR)
+              AND id_h3 not in (&#34;88a8a079ddfffff&#34;, &#34;88a8a068e5fffff&#34;, &#34;88a8a06995fffff&#34;)
         ),
         final_table AS (
             SELECT
@@ -202,11 +220,20 @@ class constants(Enum):  # pylint: disable=c0103
         final_table AS (
             SELECT
                 id_h3,
-                bairro,
+                case
+                when id_h3 = &#34;88a8a07735fffff&#34; then &#34;Barra da Tijuca&#34;
+                when id_h3 = &#34;88a8a07ab5fffff&#34; then &#34;Ipanema&#34;
+                when id_h3 = &#34;88a8a078e1fffff&#34; then &#34;Copacabana&#34;
+                when id_h3 = &#34;88a8a03959fffff&#34; then &#34;Barra de Guaratiba&#34;
+                when id_h3 = &#34;88a8a039d1fffff&#34; then &#34;Guaratiba&#34;
+                when id_h3 = &#34;88a8a06817fffff&#34; then &#34;Ribeira&#34;
+                when id_h3 = &#34;88a8a068e9fffff&#34; then &#34;Zumbi&#34;
+                else bairro end as bairro,
                 CAST(predictions AS FLOAT64) AS chuva_15min,
                 &#34;Guaratiba&#34; AS estacoes,
             FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba` tx
             INNER JOIN last_update_date lud ON lud.last_update = tx.data_medicao
+            WHERE id_h3 not in (&#34;88a8a079ddfffff&#34;, &#34;88a8a068e5fffff&#34;, &#34;88a8a06995fffff&#34;)
         )
         SELECT
             id_h3,
@@ -252,7 +279,15 @@ class constants(Enum):  # pylint: disable=c0103
         select_data_each_15_min AS (
             SELECT distinct
                 id_h3,
-                bairro,
+                case
+                when id_h3 = &#34;88a8a07735fffff&#34; then &#34;Barra da Tijuca&#34;
+                when id_h3 = &#34;88a8a07ab5fffff&#34; then &#34;Ipanema&#34;
+                when id_h3 = &#34;88a8a078e1fffff&#34; then &#34;Copacabana&#34;
+                when id_h3 = &#34;88a8a03959fffff&#34; then &#34;Barra de Guaratiba&#34;
+                when id_h3 = &#34;88a8a039d1fffff&#34; then &#34;Guaratiba&#34;
+                when id_h3 = &#34;88a8a06817fffff&#34; then &#34;Ribeira&#34;
+                when id_h3 = &#34;88a8a068e9fffff&#34; then &#34;Zumbi&#34;
+                else bairro end as bairro,
                 CASE WHEN
                     CAST(predictions AS FLOAT64) &lt;= 0.2
                     THEN 0.0 ELSE CAST(predictions AS FLOAT64) END AS chuva_15min, -- retira ruídos antes de somar
@@ -261,6 +296,7 @@ class constants(Enum):  # pylint: disable=c0103
             INNER JOIN last_update_date lup ON 1=1
             WHERE tx.data_particao&gt;= CAST(DATE_SUB(CURRENT_DATETIME(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
               AND CAST(tx.data_medicao AS DATETIME)&gt;= DATE_SUB(lup.last_update, INTERVAL 2 HOUR)
+              AND id_h3 not in (&#34;88a8a079ddfffff&#34;, &#34;88a8a068e5fffff&#34;, &#34;88a8a06995fffff&#34;)
         ),
         final_table AS (
             SELECT

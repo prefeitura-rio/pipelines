@@ -76,7 +76,7 @@ def run_model_prediction(
 
     with open(prediction_specs_filepath, &#34;r&#34;) as json_file:
         prediction_specs_dict = json.load(json_file)
-    log(&#34;[DEBUG] read json ok&#34;)
+    log(f&#34;[DEBUG] read json ok: {prediction_specs_dict}&#34;)
     input_hdfs = prediction_specs_dict[&#34;radar_ppi_hdfs&#34;]
     coordinates_filepath = prediction_specs_dict[&#34;coordinates&#34;]
     radar_cal_specs_dicts_filepath = prediction_specs_dict[&#34;radar_cal_specs&#34;]
@@ -288,7 +288,7 @@ def run_model_prediction(
 
     with open(prediction_specs_filepath, &#34;r&#34;) as json_file:
         prediction_specs_dict = json.load(json_file)
-    log(&#34;[DEBUG] read json ok&#34;)
+    log(f&#34;[DEBUG] read json ok: {prediction_specs_dict}&#34;)
     input_hdfs = prediction_specs_dict[&#34;radar_ppi_hdfs&#34;]
     coordinates_filepath = prediction_specs_dict[&#34;coordinates&#34;]
     radar_cal_specs_dicts_filepath = prediction_specs_dict[&#34;radar_cal_specs&#34;]

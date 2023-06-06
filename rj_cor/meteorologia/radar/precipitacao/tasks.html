@@ -67,17 +67,23 @@ def get_filenames_storage(
     today = pendulum.now(&#34;UTC&#34;).format(&#34;YYYY-MM-DD&#34;)
 
     # Get data from yesterday if the date from last_30min is different from today
-    if today == last_30min[:11]:
+    log(f&#34;day of last 30 min: {last_30min[:10]}&#34;)
+    if today == last_30min[:10]:
         filter_partition_days = [today]
     else:
-        filter_partition_days = [last_30min[:11], today]
+        filter_partition_days = [last_30min[:10], today]
+
+    log(f&#34;filter_partition_days: {filter_partition_days}&#34;)
 
     files_on_storage_list = []
     for i in filter_partition_days:
         base_path = &#34;raw/meio_ambiente_clima/inea_radar_hdf5/&#34;
         prefix = base_path + f&#34;radar={radar}/produto=ppi/data_particao={i}/&#34;
+        log(f&#34;DEBUG prefix {prefix}&#34;)
         files_on_storage = list_blobs_with_prefix(bucket_name, prefix, delimiter=None)
+        log(f&#34;debug files on storage {files_on_storage}&#34;)
         files_on_storage_list.extend([blob.name for blob in files_on_storage])
+        log(f&#34;debug files on storage list {files_on_storage_list[-3:]}&#34;)
 
     files_on_storage_list = list(set(files_on_storage_list))
     files_on_storage_list.sort()
@@ -130,6 +136,11 @@ def change_predict_rain_specs(files_to_model: list, destination_path: str) -&gt;
     log(f&#34;predict_specs : {predict_specs}&#34;)
     with open(json_file, &#34;w&#34;) as file:
         json.dump(predict_specs, file)
+
+    # verifica arquivo
+    with open(json_file, &#34;r&#34;) as file:
+        predict_specs_valida = json.load(file)
+    log(f&#34;predict_specs after updates: {predict_specs_valida}&#34;)
 
 
 @task(
@@ -215,7 +226,12 @@ def change_predict_rain_specs(files_to_model: list, destination_path: str) -&gt;
     predict_specs[&#34;radar_ppi_hdfs&#34;] = filenames
     log(f&#34;predict_specs : {predict_specs}&#34;)
     with open(json_file, &#34;w&#34;) as file:
-        json.dump(predict_specs, file)</code></pre>
+        json.dump(predict_specs, file)
+
+    # verifica arquivo
+    with open(json_file, &#34;r&#34;) as file:
+        predict_specs_valida = json.load(file)
+    log(f&#34;predict_specs after updates: {predict_specs_valida}&#34;)</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.tasks.download_files_storage"><code class="name flex">
@@ -263,17 +279,23 @@ def get_filenames_storage(
     today = pendulum.now(&#34;UTC&#34;).format(&#34;YYYY-MM-DD&#34;)
 
     # Get data from yesterday if the date from last_30min is different from today
-    if today == last_30min[:11]:
+    log(f&#34;day of last 30 min: {last_30min[:10]}&#34;)
+    if today == last_30min[:10]:
         filter_partition_days = [today]
     else:
-        filter_partition_days = [last_30min[:11], today]
+        filter_partition_days = [last_30min[:10], today]
+
+    log(f&#34;filter_partition_days: {filter_partition_days}&#34;)
 
     files_on_storage_list = []
     for i in filter_partition_days:
         base_path = &#34;raw/meio_ambiente_clima/inea_radar_hdf5/&#34;
         prefix = base_path + f&#34;radar={radar}/produto=ppi/data_particao={i}/&#34;
+        log(f&#34;DEBUG prefix {prefix}&#34;)
         files_on_storage = list_blobs_with_prefix(bucket_name, prefix, delimiter=None)
+        log(f&#34;debug files on storage {files_on_storage}&#34;)
         files_on_storage_list.extend([blob.name for blob in files_on_storage])
+        log(f&#34;debug files on storage list {files_on_storage_list[-3:]}&#34;)
 
     files_on_storage_list = list(set(files_on_storage_list))
     files_on_storage_list.sort()
