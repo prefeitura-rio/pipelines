@@ -47,13 +47,26 @@ from pipelines.utils.utils import untuple_clocks as untuple
 #
 #####################################
 
-comunicacao_executiva_tables = {
+# comunicacao_executiva_tables = {
+#     &#34;data_atualizacao&#34;: &#34;data_atualizacao&#34;,
+#     &#34;performance_subprefeituras_1746&#34;: &#34;performance_subprefeituras_1746&#34;,
+#     &#34;performance_geral_1746&#34;: &#34;performance_geral_1746&#34;,
+# }
+
+diariamente = {
     &#34;data_atualizacao&#34;: &#34;data_atualizacao&#34;,
+}
+
+mensalmente_dia_1 = {
     &#34;performance_subprefeituras_1746&#34;: &#34;performance_subprefeituras_1746&#34;,
     &#34;performance_geral_1746&#34;: &#34;performance_geral_1746&#34;,
 }
 
-comunicacao_executiva_clocks = [
+mensalmente_dia_20 = {
+    &#34;pontos_turisticos&#34;: &#34;pontos_turisticos&#34;,
+}
+
+diario_clocks = [
     IntervalClock(
         interval=timedelta(days=1),
         start_date=datetime(
@@ -69,8 +82,49 @@ comunicacao_executiva_clocks = [
             &#34;mode&#34;: &#34;dev&#34;,
         },
     )
-    for count, (_, table_id) in enumerate(comunicacao_executiva_tables.items())
+    for count, (_, table_id) in enumerate(diariamente.items())
 ]
+
+mensal_1_clocks = [
+    IntervalClock(
+        interval=timedelta(days=30),
+        start_date=datetime(
+            2023, 6, 1, 23, 50, tzinfo=pytz.timezone(&#34;America/Sao_Paulo&#34;)
+        )
+        + timedelta(minutes=1 * count),
+        labels=[
+            constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
+        ],
+        parameter_defaults={
+            &#34;dataset_id&#34;: &#34;comunicacao_executiva&#34;,
+            &#34;table_id&#34;: table_id,
+            &#34;mode&#34;: &#34;dev&#34;,
+        },
+    )
+    for count, (_, table_id) in enumerate(mensalmente_dia_1.items())
+]
+
+mensal_20_clocks = [
+    IntervalClock(
+        interval=timedelta(days=30),
+        start_date=datetime(
+            2023, 6, 20, 23, 0, tzinfo=pytz.timezone(&#34;America/Sao_Paulo&#34;)
+        )
+        + timedelta(minutes=1 * count),
+        labels=[
+            constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
+        ],
+        parameter_defaults={
+            &#34;dataset_id&#34;: &#34;comunicacao_executiva&#34;,
+            &#34;table_id&#34;: table_id,
+            &#34;mode&#34;: &#34;dev&#34;,
+        },
+    )
+    for count, (_, table_id) in enumerate(mensalmente_dia_20.items())
+]
+
+comunicacao_executiva_clocks = diario_clocks + mensal_1_clocks + mensal_20_clocks
+
 comunicacao_executiva_daily_update_schedule = Schedule(
     clocks=untuple(comunicacao_executiva_clocks)
 )</code></pre>
