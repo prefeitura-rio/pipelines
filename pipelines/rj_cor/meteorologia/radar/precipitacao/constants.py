@@ -30,11 +30,20 @@ class constants(Enum):  # pylint: disable=c0103
         final_table AS (
             SELECT
                 id_h3,
-                bairro,
+                case
+                when id_h3 = "88a8a07735fffff" then "Barra da Tijuca"
+                when id_h3 = "88a8a07ab5fffff" then "Ipanema"
+                when id_h3 = "88a8a078e1fffff" then "Copacabana"
+                when id_h3 = "88a8a03959fffff" then "Barra de Guaratiba"
+                when id_h3 = "88a8a039d1fffff" then "Guaratiba"
+                when id_h3 = "88a8a06817fffff" then "Ribeira"
+                when id_h3 = "88a8a068e9fffff" then "Zumbi"
+                else bairro end as bairro,
                 CAST(predictions AS FLOAT64) AS chuva_15min,
                 "Guaratiba" AS estacoes,
             FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba` tx
             INNER JOIN last_update_date lud ON lud.last_update = tx.data_medicao
+            WHERE id_h3 not in ("88a8a079ddfffff", "88a8a068e5fffff", "88a8a06995fffff")
         )
         SELECT
             id_h3,
@@ -80,7 +89,15 @@ class constants(Enum):  # pylint: disable=c0103
         select_data_each_15_min AS (
             SELECT distinct
                 id_h3,
-                bairro,
+                case
+                when id_h3 = "88a8a07735fffff" then "Barra da Tijuca"
+                when id_h3 = "88a8a07ab5fffff" then "Ipanema"
+                when id_h3 = "88a8a078e1fffff" then "Copacabana"
+                when id_h3 = "88a8a03959fffff" then "Barra de Guaratiba"
+                when id_h3 = "88a8a039d1fffff" then "Guaratiba"
+                when id_h3 = "88a8a06817fffff" then "Ribeira"
+                when id_h3 = "88a8a068e9fffff" then "Zumbi"
+                else bairro end as bairro,
                 CASE WHEN
                     CAST(predictions AS FLOAT64) <= 0.2
                     THEN 0.0 ELSE CAST(predictions AS FLOAT64) END AS chuva_15min, -- retira ruídos antes de somar
@@ -89,6 +106,7 @@ class constants(Enum):  # pylint: disable=c0103
             INNER JOIN last_update_date lup ON 1=1
             WHERE tx.data_particao>= CAST(DATE_SUB(CURRENT_DATETIME('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
               AND CAST(tx.data_medicao AS DATETIME)>= DATE_SUB(lup.last_update, INTERVAL 2 HOUR)
+              AND id_h3 not in ("88a8a079ddfffff", "88a8a068e5fffff", "88a8a06995fffff")
         ),
         final_table AS (
             SELECT
