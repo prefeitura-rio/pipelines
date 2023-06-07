@@ -109,21 +109,21 @@ with Flow(
     # 1. SETUP #
 
     # Get default parameters #
-    start_date_param = Parameter("start_date", default="")
-    end_date_param = Parameter("end_date", default="")
+    start_date_param = Parameter("start_date", default=None)
+    end_date_param = Parameter("end_date", default=None)
 
-    with case(start_date_param == "", True):
+    with case(start_date_param is None, True):
         start_date_get = get_previous_date.run(5)
 
-    with case(start_date_param == "", False):
+    with case(start_date_param is None, False):
         start_date_def = start_date_param
 
     start_date = merge(start_date_get, start_date_def)
 
-    with case(end_date_param == "", True):
+    with case(end_date_param is None, True):
         end_date_get = get_previous_date.run(5)
 
-    with case(end_date_param == "", False):
+    with case(end_date_param is None, False):
         end_date_def = end_date_param
 
     end_date = merge(end_date_get, end_date_def)
