@@ -50,6 +50,8 @@ from pipelines.rj_smtr.schedules import (
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
+from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import check_param
+
 # Flows #
 
 with Flow(
@@ -112,18 +114,22 @@ with Flow(
     start_date_param = Parameter("start_date", default=None)
     end_date_param = Parameter("end_date", default=None)
 
-    with case(start_date_param is None, True):
-        start_date_get = get_previous_date.run(5)
+    start_date_cond = check_param(start_date_param)
 
-    with case(start_date_param is None, False):
+    with case(start_date_cond, True):
+        start_date_get = get_previous_date(5)
+
+    with case(start_date_cond, False):
         start_date_def = start_date_param
 
     start_date = merge(start_date_get, start_date_def)
 
-    with case(end_date_param is None, True):
-        end_date_get = get_previous_date.run(5)
+    end_date_cond = check_param(end_date_param)
 
-    with case(end_date_param is None, False):
+    with case(end_date_cond, True):
+        end_date_get = get_previous_date(5)
+
+    with case(end_date_cond, False):
         end_date_def = end_date_param
 
     end_date = merge(end_date_get, end_date_def)
