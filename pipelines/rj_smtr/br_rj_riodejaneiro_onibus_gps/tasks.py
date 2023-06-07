@@ -22,6 +22,97 @@ from pipelines.rj_smtr.constants import constants
 
 
 @task
+def create_api_url_onibus_realocacao(
+    interval_minutes: int = 10,
+    timestamp: datetime = None,
+    secret_path: str = constants.GPS_SPPO_REALOCACAO_SECRET_PATH.value,
+) -> str:
+    """
+    start_date: datahora mínima do sinal de GPS avaliado
+    end_date: datahora máxima do sinal de GPS avaliado
+    """
+
+    # Configura parametros da URL
+    date_range = {
+        "date_range_start": (timestamp - timedelta(minutes=interval_minutes)).strftime(
+            "%Y-%m-%dT%H:%M:%S"
+        ),
+        "date_range_end": timestamp.strftime("%Y-%m-%dT%H:%M:%S"),
+    }
+    url = "http://ccomobility.com.br/WebServices/Binder/wsconecta/EnvioViagensRetroativasSMTR?"
+
+    headers = get_vault_secret(secret_path)["data"]
+    key = list(headers)[0]
+    url = f"{url}{key}={{secret}}"
+
+    url += f"&dataInicial={date_range['date_range_start']}&dataFinal={date_range['date_range_end']}"
+
+    log(f"Request data from URL:\n{url}")
+    return url.format(secret=headers[key])
+
+
+@task
+def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
+    status: dict, timestamp: datetime
+) -> Dict:
+    """Basic data treatment for bus gps relocation data. Converts unix time to datetime,
+    and apply filtering to stale data that may populate the API response.
+
+    Args:
+        status (dict): dict containing the status of the request made to the
+        API. Must contain keys: data and error
+
+    Returns:
+        df_realocacao: pandas.core.DataFrame containing the treated data.
+    """
+
+    if status["error"] is not None:
+        return {"data": pd.DataFrame(), "error": status["error"]}
+
+    if status["data"] == []:
+        log("Data is empty, skipping treatment...")
+        return {"data": pd.DataFrame(), "error": status["error"]}
+
+    log(f"Data received to treat: \n{status['data'][:5]}")
+    df_realocacao = pd.DataFrame(status["data"])  # pylint: disable=c0103
+    # df_realocacao["timestamp_captura"] = timestamp
+    df_realocacao["timestamp_captura"] = timestamp.isoformat()
+    # log(f"Before converting, datahora is: \n{df_realocacao['datahora']}")
+
+    # Ajusta tipos de data
+    dt_cols = [
+        "dataEntrada",
+        "dataOperacao",
+        "dataSaida",
+        "dataProcessado",
+    ]
+    for col in dt_cols:
+        log(f"Converting column {col}")
+        df_realocacao[col] = pd.to_datetime(df_realocacao[col]).dt.tz_localize(
+            tz=constants.TIMEZONE.value
+        )
+
+    # Ajusta tempo máximo da realocação
+    df_realocacao.loc[
+        df_realocacao.dataSaida == "1971-01-01 00:00:00", "dataSaida"
+    ] = ""
+
+    # Renomeia colunas
+    cols = {
+        "veiculo": "id_veiculo",
+        "dataOperacao": "datetime_operacao",
+        "linha": "servico",
+        "dataEntrada": "datetime_entrada",
+        "dataSaida": "datetime_saida",
+        "dataProcessado": "timestamp_processamento",
+    }
+
+    df_realocacao = df_realocacao.rename(columns=cols)
+
+    return {"data": df_realocacao.drop_duplicates(), "error": None}
+
+
+@task
 def create_api_url_onibus_gps(version: str, timestamp: datetime = None) -> str:
     """
     Generates the complete URL to get data from API.
@@ -70,7 +161,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
         timestamp (str): Capture data timestamp.
 
     Returns:
-        df: pandas.core.DataFrame containing the treated data.
+        df_gps: pandas.core.DataFrame containing the treated data.
     """
     if status["error"] is not None:
         return {"data": pd.DataFrame(), "error": status["error"]}
@@ -83,9 +174,9 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
     timezone = constants.TIMEZONE.value
 
     log(f"Data received to treat: \n{status['data'][:5]}")
-    df = pd.DataFrame(status["data"])  # pylint: disable=c0103
-    df["timestamp_captura"] = timestamp
-    log(f"Before converting, datahora is: \n{df['datahora']}")
+    df_gps = pd.DataFrame(status["data"])  # pylint: disable=c0103
+    df_gps["timestamp_captura"] = timestamp
+    log(f"Before converting, datahora is: \n{df_gps['datahora']}")
 
     # Remove timezone and force it to be config timezone
     if version == 1:
@@ -95,17 +186,17 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
     if recapture:
         timestamp_cols.append("datahoraservidor")
     for col in timestamp_cols:
-        print(f"Before converting, {col} is: \n{df[col].head()}")  # log
-        df[col] = (
-            pd.to_datetime(df[col].astype(float), unit="ms")
+        print(f"Before converting, {col} is: \n{df_gps[col].head()}")  # log
+        df_gps[col] = (
+            pd.to_datetime(df_gps[col].astype(float), unit="ms")
             .dt.tz_localize(tz="UTC")
             .dt.tz_convert(timezone)
         )
-        log(f"After converting the timezone, {col} is: \n{df[col].head()}")
+        log(f"After converting the timezone, {col} is: \n{df_gps[col].head()}")
 
     # Filter data
     try:
-        log(f"Shape before filtering: {df.shape}")
+        log(f"Shape before filtering: {df_gps.shape}")
         if version == 1:
             filter_col = "timestamp_captura"
             time_delay = constants.GPS_SPPO_CAPTURE_DELAY_V1.value
@@ -113,12 +204,12 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
             filter_col = "datahoraenvio"
             time_delay = constants.GPS_SPPO_CAPTURE_DELAY_V2.value
         if recapture:
-            server_mask = (df["datahoraenvio"] - df["datahoraservidor"]) <= timedelta(
-                minutes=constants.GPS_SPPO_RECAPTURE_DELAY_V2.value
-            )
-            df = df[server_mask]  # pylint: disable=c0103
+            server_mask = (
+                df_gps["datahoraenvio"] - df_gps["datahoraservidor"]
+            ) <= timedelta(minutes=constants.GPS_SPPO_RECAPTURE_DELAY_V2.value)
+            df_gps = df_gps[server_mask]  # pylint: disable=c0103
 
-        mask = (df[filter_col] - df["datahora"]).apply(
+        mask = (df_gps[filter_col] - df_gps["datahora"]).apply(
             lambda x: timedelta(seconds=0) <= x <= timedelta(minutes=time_delay)
         )
 
@@ -132,17 +223,17 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
             "linha",
             "timestamp_captura",
         ]
-        df = df[mask][cols]  # pylint: disable=c0103
-        df = df.drop_duplicates(  # pylint: disable=c0103
+        df_gps = df_gps[mask][cols]  # pylint: disable=c0103
+        df_gps = df_gps.drop_duplicates(  # pylint: disable=c0103
             ["ordem", "latitude", "longitude", "datahora", "timestamp_captura"]
         )
 
-        log(f"Shape after filtering: {df.shape}")
-        if df.shape[0] == 0:
+        log(f"Shape after filtering: {df_gps.shape}")
+        if df_gps.shape[0] == 0:
             error = ValueError("After filtering, the dataframe is empty!")
             log(f"[CATCHED] Task failed with error: \n{error}", level="error")
     except Exception:  # pylint: disable = W0703
         error = traceback.format_exc()
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
-    return {"data": df, "error": error}
+    return {"data": df_gps, "error": error}

@@ -18,6 +18,7 @@ pipelines:
       owners:
         - hellcassius
         - fernandascovino
+        - eng-rodrigocunha
     rj_escritorio:
       owners:
         - gabriel-milan

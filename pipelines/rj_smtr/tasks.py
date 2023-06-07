@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=W0703, W0511
 """
 Tasks for rj_smtr
 """
-# pylint: disable=W0703
-
 from datetime import datetime, timedelta
 import json
 import os
 from pathlib import Path
 import traceback
-from typing import Dict
+from typing import Dict, List
+import io
 
 from basedosdados import Storage, Table
 import basedosdados as bd
@@ -29,7 +29,9 @@ from pipelines.rj_smtr.utils import (
     log_critical,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
-from pipelines.utils.utils import log, get_redis_client
+from pipelines.utils.utils import log, get_redis_client, get_vault_secret
+
+from pipelines.utils.tasks import get_now_date
 
 ###############
 #
@@ -156,6 +158,14 @@ def create_date_hour_partition(timestamp: datetime) -> str:
 
 
 @task
+def create_date_partition(timestamp: datetime) -> str:
+    """
+    Get date hour Hive partition structure from timestamp.
+    """
+    return f"data={timestamp.date()}"
+
+
+@task
 def parse_timestamp_to_string(timestamp: datetime, pattern="%Y-%m-%d-%H-%M-%S") -> str:
     """
     Parse timestamp to string pattern.
@@ -219,14 +229,12 @@ def create_local_partition_path(
 def save_raw_local(file_path: str, status: dict, mode: str = "raw") -> str:
     """
     Saves json response from API to .json file.
-
     Args:
         file_path (str): Path which to save raw file
         status (dict): Must contain keys
-          * `data`: json returned from API
-          * `error`: error catched from API request
+          * data: json returned from API
+          * error: error catched from API request
         mode (str, optional): Folder to save locally, later folder which to upload to GCS.
-
     Returns:
         str: Path to the saved file
     """
@@ -360,41 +368,61 @@ def query_logs(
             log_critical(message)
             results = results[:max_recaptures]
         return True, results["timestamp_captura"].to_list(), results["erro"].to_list()
-    return False, []
+    return False, [], []
 
 
 @task
-def get_raw(url: str, headers: dict = None) -> Dict:
+def get_raw(  # pylint: disable=R0912
+    url: str, headers: str = None, filetype: str = "json", csv_args: dict = None
+) -> Dict:
     """
-    Request data from a url API.
+    Request data from URL API
 
     Args:
-        url (str): URL to send request to
-        headers (dict, optional): Aditional fields to send along the request.
+        url (str): URL to send request
+        headers (str, optional): Path to headers guardeded on Vault, if needed.
+        filetype (str, optional): Filetype to be formatted (supported only: json, csv and txt)
+        csv_args (dict, optional): Arguments for read_csv, if needed
     Returns:
         dict: Conatining keys
-          * `data`: json returned from API
-          * `error`: error catched from API request
+          * `data` (json): data result
+          * `error` (str): catched error, if any. Otherwise, returns None
     """
     data = None
+    error = None
 
-    # Get data from API
     try:
+        if headers is not None:
+            headers = get_vault_secret(headers)["data"]
+
         response = requests.get(
             url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
         )
-        error = None
+
+        if response.ok:  # status code is less than 400
+            if filetype == "json":
+                data = response.json()
+
+                # todo: move to data check on specfic API # pylint: disable=W0102
+                if isinstance(data, dict) and "DescricaoErro" in data.keys():
+                    error = data["DescricaoErro"]
+
+            elif filetype in ("txt", "csv"):
+                if csv_args is None:
+                    csv_args = {}
+                data = pd.read_csv(io.StringIO(response.text), **csv_args).to_dict(
+                    orient="records"
+                )
+            else:
+                error = (
+                    "Unsupported raw file extension. Supported only: json, csv and txt"
+                )
+
     except Exception as exp:
         error = exp
-        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
-        return {"data": None, "error": error}
 
-    # Check data results
-    if response.ok:  # status code is less than 400
-        data = response.json()
-        if isinstance(data, dict) and "DescricaoErro" in data.keys():
-            error = data["DescricaoErro"]
-            log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+    if error is not None:
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return {"data": data, "error": error}
 
@@ -564,7 +592,7 @@ def upload_logs_to_bq(  # pylint: disable=R0913
     create_or_append_table(
         dataset_id=dataset_id,
         table_id=table_id,
-        path=str(filepath),
+        path=filepath.as_posix(),
         partitions=partition,
     )
     if error is not None:
@@ -642,6 +670,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
         .strftime(timestr)
     )
     date_range = {"date_range_start": start_ts, "date_range_end": end_ts}
+    log(f"Got date_range as: {date_range}")
     return date_range
 
 
@@ -669,10 +698,9 @@ def set_last_run_timestamp(
     key = dataset_id + "." + table_id
     if mode == "dev":
         key = f"{mode}.{key}"
-    value = {
-        "last_run_timestamp": timestamp,
-    }
-    redis_client.set(key, value)
+    content = redis_client.get(key)
+    content["last_run_timestamp"] = timestamp
+    redis_client.set(key, content)
     return True
 
 
@@ -704,3 +732,41 @@ def fetch_dataset_sha(dataset_id: str):
 
     dataset_version = response.json()[0]["sha"]
     return {"version": dataset_version}
+
+
+@task
+def get_run_dates(date_range_start: str, date_range_end: str) -> List:
+    """
+    Generates a list of dates between date_range_start and date_range_end.
+    """
+    if (date_range_start is False) or (date_range_end is False):
+        dates = [{"run_date": get_now_date.run()}]
+    else:
+        dates = [
+            {"run_date": d.strftime("%Y-%m-%d")}
+            for d in pd.date_range(start=date_range_start, end=date_range_end)
+        ]
+    log(f"Will run the following dates: {dates}")
+    return dates
+
+
+@task
+def get_join_dict(dict_list: list, new_dict: dict) -> List:
+    """
+    Updates a list of dictionaries with a new dictionary.
+    """
+    for dict_temp in dict_list:
+        dict_temp.update(new_dict)
+
+    log(f"get_join_dict: {dict_list}")
+    return dict_list
+
+
+@task(checkpoint=False)
+def get_previous_date(days):
+    """
+    Returns the date of {days} days ago in YYYY-MM-DD.
+    """
+    now = pendulum.now(pendulum.timezone("America/Sao_Paulo")).subtract(days=days)
+
+    return now.to_date_string()

@@ -48,6 +48,16 @@ def get_now_time():
     return f"{now.hour}:{f'0{now.minute}' if len(str(now.minute))==1 else now.minute}"
 
 
+@prefect.task(checkpoint=False)
+def get_now_date():
+    """
+    Returns the current date in YYYY-MM-DD.
+    """
+    now = pendulum.now(pendulum.timezone("America/Sao_Paulo"))
+
+    return now.to_date_string()
+
+
 @task
 def get_current_flow_labels() -> List[str]:
     """
@@ -100,6 +110,16 @@ def rename_current_flow_run_dataset_table(
     return client.set_flow_run_name(flow_run_id, f"{prefix}{dataset_id}.{table_id}")
 
 
+@task
+def rename_current_flow_run_msg(msg: str, wait=None) -> None:
+    """
+    Rename the current flow run.
+    """
+    flow_run_id = prefect.context.get("flow_run_id")
+    client = Client()
+    return client.set_flow_run_name(flow_run_id, msg)
+
+
 ##################
 #
 # Hashicorp Vault
@@ -132,6 +152,7 @@ def create_table_and_upload_to_gcs(
     dataset_id: str,
     table_id: str,
     dump_mode: str,
+    biglake_table: bool = False,
     wait=None,  # pylint: disable=unused-argument
 ) -> None:
     """
@@ -175,6 +196,7 @@ def create_table_and_upload_to_gcs(
                 if_storage_data_exists="replace",
                 if_table_config_exists="replace",
                 if_table_exists="replace",
+                biglake_table=biglake_table,
                 dataset_is_public=dataset_is_public,
             )
 
@@ -225,6 +247,7 @@ def create_table_and_upload_to_gcs(
             if_storage_data_exists="replace",
             if_table_config_exists="replace",
             if_table_exists="replace",
+            biglake_table=biglake_table,
             dataset_is_public=dataset_is_public,
         )
 
@@ -260,6 +283,8 @@ def create_table_and_upload_to_gcs(
     else:
         # pylint: disable=C0301
         log("STEP UPLOAD: Table does not exist in STAGING, need to create first")
+
+    return data_path
 
 
 @task(

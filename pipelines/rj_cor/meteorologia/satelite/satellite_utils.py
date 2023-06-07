@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=too-many-locals
+# pylint: disable=too-many-locals, R0913
 """
 Funções úteis no tratamento de dados de satélite
 """
@@ -15,7 +15,7 @@ Funções úteis no tratamento de dados de satélite
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # General Public License for more details.
 # You should have received a copy of the GNU General Public License
-# along with this program. If not, see http://www.gnu.org/licenses/.
+# along with this program. If not, see http://www.gnu.org/licenses/..
 ####################################################################
 
 # ===================================================================
@@ -64,6 +64,7 @@ Funções úteis no tratamento de dados de satélite
 import datetime
 import os
 from pathlib import Path
+import re
 from typing import Tuple, Union
 
 from google.cloud import storage
@@ -128,10 +129,11 @@ def converte_timezone(datetime_save: str) -> str:
     Recebe o formato de data hora em 'YYYYMMDD HHmm' no UTC e
     retorna no mesmo formato no horário São Paulo
     """
-    log(f">>>>>>> {datetime_save}")
-    datahora = pendulum.from_format(datetime_save, "YYYYMMDD HHmm")
+    log(f">>>>>>> datetime_save {datetime_save}")
+    datahora = pendulum.from_format(datetime_save, "YYYYMMDD HHmmss")
+    log(f">>>>>>> datahora {datahora}")
     datahora = datahora.in_tz("America/Sao_Paulo")
-    return datahora.format("YYYYMMDD HHmm")
+    return datahora.format("YYYYMMDD HHmmss")
 
 
 def extract_julian_day_and_hour_from_filename(filename: str):
@@ -154,7 +156,7 @@ def extract_julian_day_and_hour_from_filename(filename: str):
     julian_day = int(start[4:7])
 
     # Time (UTC) as string
-    hour_utc = start[7:11]
+    hour_utc = start[7:13]
 
     # Time of the start of the Scan
     # time = start[7:9] + ":" + start[9:11] + ":" + start[11:13] + " UTC"
@@ -202,12 +204,12 @@ def get_info(path: str) -> Tuple[dict, str]:
     # Detect the product type
     # =====================================================================
     procura_m = path.find("-M6")
+    # Se não encontra o termo "M6" tenta encontrar "M3" e depois "M4"
     if procura_m == -1:
         procura_m = path.find("-M3")
     if procura_m == -1:
         procura_m = path.find("-M4")
     product = path[path.find("L2-") + 3 : procura_m]
-    print(product)
 
     # Nem todos os produtos foram adicionados no dicionário de características
     # dos produtos. Olhar arquivo original caso o produto não estaja aqui
@@ -367,8 +369,10 @@ def get_info(path: str) -> Tuple[dict, str]:
 
     if variable == "CMI":
         # Search for the GOES-16 channel in the file name
+        regex = "-M\\dC\\d"  # noqa: W605
+        find_expression = re.findall(regex, path)[0]
         product_caracteristics["band"] = int(
-            (path[path.find("M6C") + 3 : path.find("_G16")])
+            (path[path.find(find_expression) + 4 : path.find("_G16")])
         )
     else:
         product_caracteristics["band"] = np.nan
@@ -402,6 +406,7 @@ def remap_g16(
     resolution: int,
     variable: str,
     datetime_save: str,
+    mode_redis: str = "prod",
 ):
     """
     the GOES-16 image is reprojected to the rectangular projection in the extent region
@@ -432,11 +437,11 @@ def remap_g16(
         f"ano_particao={year}",
         f"mes_particao={month}",
         f"data_particao={data}",
-        f"hora={time_save}",
+        f"hora_particao={time_save}",
     )
 
     tif_path = os.path.join(
-        os.getcwd(), "data", "satelite", variable, "temp", partitions
+        os.getcwd(), mode_redis, "data", "satelite", variable, "temp", partitions
     )
 
     if not os.path.exists(tif_path):
@@ -519,7 +524,7 @@ def treat_data(
 
 
 def save_data_in_file(
-    variable: str, datetime_save: str, file_path: str
+    variable: str, datetime_save: str, file_path: str, mode_redis: str = "prod"
 ) -> Union[str, Path]:
     """
     Save data in parquet
@@ -535,13 +540,20 @@ def save_data_in_file(
         f"ano_particao={year}",
         f"mes_particao={month}",
         f"data_particao={date}",
-        f"hora={time_save}",
+        f"hora_particao={time_save}",
     )
 
     tif_data = os.path.join(
-        os.getcwd(), "data", "satelite", variable, "temp", partitions, "dados.tif"
+        os.getcwd(),
+        mode_redis,
+        "data",
+        "satelite",
+        variable,
+        "temp",
+        partitions,
+        "dados.tif",
     )
-
+    log(f"debug path >>>>>>{tif_data}")
     data = xr.open_dataset(tif_data, engine="rasterio")
     # print('>>>>>>>>>>>>>>> data', data['band_data'].values)
 
@@ -561,25 +573,31 @@ def save_data_in_file(
     )
 
     # cria pasta de partições se elas não existem
-    output_path = os.path.join(os.getcwd(), "data", "satelite", variable, "output")
+    output_path = os.path.join(
+        os.getcwd(), mode_redis, "data", "satelite", variable, "output"
+    )
     parquet_path = os.path.join(output_path, partitions)
 
     if not os.path.exists(parquet_path):
         os.makedirs(parquet_path)
 
+    # Guarda horário do arquivo na coluna
+    data["horario"] = pendulum.from_format(
+        datetime_save, "YYYYMMDD HHmmss"
+    ).to_time_string()
     # Fixa ordem das colunas
-    data = data[["longitude", "latitude", variable.lower()]]
+    data = data[["longitude", "latitude", "horario", variable.lower()]]
 
     # salva em csv
     filename = file_path.split("/")[-1].replace(".nc", "")
-    log(f"Saving {filename} on {parquet_path}")
+    log(f"\n\n[DEGUB]: Saving {filename} on {parquet_path}\n\n")
     log(f"Data_save: {date_save}, time_save: {time_save}")
     file_path = os.path.join(parquet_path, f"{filename}.csv")
     data.to_csv(file_path, index=False)
     return output_path
 
 
-def main(path: Union[str, Path]):
+def main(path: Union[str, Path], mode_redis: str = "prod"):
     """
     Função principal para converter dados x,y em lon,lat
     """
@@ -620,6 +638,7 @@ def main(path: Union[str, Path]):
         resolution,
         product_caracteristics["variable"],
         datetime_save,
+        mode_redis,
     )
 
     info = {
