@@ -43,7 +43,7 @@ class constants(Enum):  # pylint: disable=c0103
                 "Guaratiba" AS estacoes,
             FROM `rj-cor.clima_radar_staging.taxa_precipitacao_guaratiba` tx
             INNER JOIN last_update_date lud ON lud.last_update = tx.data_medicao
-            WHERE id_h3 not in ("88a8a079ddfffff", "88a8a068e5fffff", "88a8a06995fffff")
+            WHERE id_h3 not in ("88a8a079ddfffff", "88a8a068e5fffff", "88a8a06995fffff", "88a8a07a5dfffff")
         )
         SELECT
             id_h3,
@@ -106,7 +106,7 @@ class constants(Enum):  # pylint: disable=c0103
             INNER JOIN last_update_date lup ON 1=1
             WHERE tx.data_particao>= CAST(DATE_SUB(CURRENT_DATETIME('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
               AND CAST(tx.data_medicao AS DATETIME)>= DATE_SUB(lup.last_update, INTERVAL 2 HOUR)
-              AND id_h3 not in ("88a8a079ddfffff", "88a8a068e5fffff", "88a8a06995fffff")
+              AND id_h3 not in ("88a8a079ddfffff", "88a8a068e5fffff", "88a8a06995fffff", "88a8a07a5dfffff")
         ),
         final_table AS (
             SELECT
