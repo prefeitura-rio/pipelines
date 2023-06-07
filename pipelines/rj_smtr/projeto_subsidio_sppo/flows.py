@@ -5,6 +5,7 @@ Flows for projeto_subsidio_sppo
 """
 
 from prefect import Parameter, case
+from prefect.tasks.control_flow import merge
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
@@ -108,8 +109,25 @@ with Flow(
     # 1. SETUP #
 
     # Get default parameters #
-    start_date = Parameter("start_date", default=get_previous_date.run(5))
-    end_date = Parameter("end_date", default=get_previous_date.run(5))
+    start_date_param = Parameter("start_date", default="")
+    end_date_param = Parameter("end_date", default="")
+
+    with case(start_date_param == "", True):
+        start_date_get = get_previous_date.run(5)
+
+    with case(start_date_param == "", False):
+        start_date_def = start_date_param
+
+    start_date = merge(start_date_get, start_date_def)
+
+    with case(end_date_param == "", True):
+        end_date_get = get_previous_date.run(5)
+
+    with case(end_date_param == "", False):
+        end_date_def = end_date_param
+
+    end_date = merge(end_date_get, end_date_def)
+
     stu_data_versao = Parameter("stu_data_versao", default="")
     materialize_sppo_veiculo_dia = Parameter("materialize_sppo_veiculo_dia", True)
     publish = Parameter("publish", False)
@@ -151,7 +169,7 @@ with Flow(
             parameters=parameters,
         )
 
-        wait_for_flow_run(
+        SPPO_VEICULO_DIA_RUN_WAIT = wait_for_flow_run(
             SPPO_VEICULO_DIA_RUN,
             stream_states=True,
             stream_logs=True,
@@ -167,7 +185,7 @@ with Flow(
             _vars=_vars,
         )
 
-        SPPO_VEICULO_DIA_RUN.set_downstream(SUBSIDIO_SPPO_APURACAO_RUN)
+        SUBSIDIO_SPPO_APURACAO_RUN.set_upstream(SPPO_VEICULO_DIA_RUN_WAIT)
 
     with case(materialize_sppo_veiculo_dia, False):
         # 3. CALCULATE #
@@ -202,8 +220,8 @@ with Flow(
             raise_final_state=True,
         )
 
-        SUBSIDIO_SPPO_DASHBOARD_RUN.set_downstream(
-            SMTR_MATERIALIZE_TO_DATARIO_VIAGEM_SPPO_RUN
+        SMTR_MATERIALIZE_TO_DATARIO_VIAGEM_SPPO_RUN.set_upstream(
+            SUBSIDIO_SPPO_DASHBOARD_RUN
         )
 
 subsidio_sppo_apuracao.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
