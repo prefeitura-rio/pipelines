@@ -30,7 +30,17 @@
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
 Tasks for projeto_subsidio_sppo
-&#34;&#34;&#34;</code></pre>
+&#34;&#34;&#34;
+
+from prefect import task
+
+
+@task
+def check_param(param: str) -&gt; bool:
+    &#34;&#34;&#34;
+    Check if param is None
+    &#34;&#34;&#34;
+    return param is None</code></pre>
 </details>
 </section>
 <section>
@@ -38,6 +48,26 @@ Tasks for projeto_subsidio_sppo
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pipelines.rj_smtr.projeto_subsidio_sppo.tasks.check_param"><code class="name flex">
+<span>def <span class="ident">check_param</span></span>(<span>param: str) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check if param is None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def check_param(param: str) -&gt; bool:
+    &#34;&#34;&#34;
+    Check if param is None
+    &#34;&#34;&#34;
+    return param is None</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -97,6 +127,11 @@ setTimeout(() => input.focus(), 100);
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="pipelines.rj_smtr.projeto_subsidio_sppo" href="index.html">pipelines.rj_smtr.projeto_subsidio_sppo</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pipelines.rj_smtr.projeto_subsidio_sppo.tasks.check_param" href="#pipelines.rj_smtr.projeto_subsidio_sppo.tasks.check_param">check_param</a></code></li>
 </ul>
 </li>
 </ul>
