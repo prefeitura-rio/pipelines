@@ -95,6 +95,74 @@ smtr_materialize_to_datario_daily_flow.run_config = KubernetesRun(
 )
 smtr_materialize_to_datario_daily_flow.schedule = (
     smtr_materialize_to_datario_daily_schedule
+)
+
+# # VIAGEM PLANEJADA SPPO #
+
+smtr_materialize_to_datario_viagem_planejada_sppo_flow = deepcopy(
+    utils_run_dbt_model_flow
+)
+
+smtr_materialize_to_datario_viagem_planejada_sppo_flow.name = (
+    &#34;SMTR: Viagens Planejadas SPPO - Publicação `datario`&#34;
+)
+smtr_materialize_to_datario_viagem_planejada_sppo_flow.storage = GCS(
+    constants.GCS_FLOWS_BUCKET.value
+)
+smtr_materialize_to_datario_viagem_planejada_sppo_flow.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[
+        constants.RJ_DATARIO_AGENT_LABEL.value,
+    ],
+)
+
+smtr_materialize_to_datario_viagem_planejada_sppo_parameters = {
+    &#34;dataset_id&#34;: &#34;transporte_rodoviario_municipal&#34;,
+    &#34;table_id&#34;: &#34;viagem_planejada_onibus&#34;,
+    &#34;mode&#34;: &#34;prod&#34;,
+    &#34;materialize_to_datario&#34;: True,
+    &#34;dbt_model_parameters&#34;: {
+        &#34;date_range_end&#34;: get_previous_date.run(1),
+        &#34;date_range_start&#34;: None,
+    },
+}
+
+smtr_materialize_to_datario_viagem_planejada_sppo_flow = set_default_parameters(
+    smtr_materialize_to_datario_viagem_planejada_sppo_flow,
+    default_parameters=smtr_materialize_to_datario_viagem_planejada_sppo_parameters,
+)
+
+# # SUBSIDIO SPPO #
+
+smtr_materialize_to_datario_subsidio_sppo_flow = deepcopy(utils_run_dbt_model_flow)
+
+smtr_materialize_to_datario_subsidio_sppo_flow.name = (
+    &#34;SMTR: Subsídio SPPO - Publicação `datario`&#34;
+)
+smtr_materialize_to_datario_subsidio_sppo_flow.storage = GCS(
+    constants.GCS_FLOWS_BUCKET.value
+)
+smtr_materialize_to_datario_subsidio_sppo_flow.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[
+        constants.RJ_DATARIO_AGENT_LABEL.value,
+    ],
+)
+
+smtr_materialize_to_datario_subsidio_sppo_parameters = {
+    &#34;dataset_id&#34;: &#34;transporte_rodoviario_municipal&#34;,
+    &#34;table_id&#34;: &#34;subsidio_onibus&#34;,
+    &#34;mode&#34;: &#34;prod&#34;,
+    &#34;materialize_to_datario&#34;: True,
+    &#34;dbt_model_parameters&#34;: {
+        &#34;date_range_end&#34;: get_previous_date.run(1),
+        &#34;date_range_start&#34;: None,
+    },
+}
+
+smtr_materialize_to_datario_subsidio_sppo_flow = set_default_parameters(
+    smtr_materialize_to_datario_subsidio_sppo_flow,
+    default_parameters=smtr_materialize_to_datario_subsidio_sppo_parameters,
 )</code></pre>
 </details>
 </section>
