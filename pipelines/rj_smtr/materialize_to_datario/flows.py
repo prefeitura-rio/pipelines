@@ -89,6 +89,7 @@ smtr_materialize_to_datario_viagem_planejada_sppo_parameters = {
     "dataset_id": "transporte_rodoviario_municipal",
     "table_id": "viagem_planejada_onibus",
     "mode": "prod",
+    "materialize_to_datario": True,
     "dbt_model_parameters": {
         "date_range_end": get_previous_date.run(1),
         "date_range_start": None,
@@ -121,6 +122,7 @@ smtr_materialize_to_datario_subsidio_sppo_parameters = {
     "dataset_id": "transporte_rodoviario_municipal",
     "table_id": "subsidio_onibus",
     "mode": "prod",
+    "materialize_to_datario": True,    
     "dbt_model_parameters": {
         "date_range_end": get_previous_date.run(1),
         "date_range_start": None,
