@@ -70,7 +70,9 @@ smtr_materialize_to_datario_daily_flow.schedule = (
 
 # # VIAGEM PLANEJADA SPPO #
 
-smtr_materialize_to_datario_viagem_planejada_sppo_flow = deepcopy(utils_run_dbt_model_flow)
+smtr_materialize_to_datario_viagem_planejada_sppo_flow = deepcopy(
+    utils_run_dbt_model_flow
+)
 
 smtr_materialize_to_datario_viagem_planejada_sppo_flow.name = (
     "SMTR: Viagens Planejadas SPPO - Publicação `datario`"
