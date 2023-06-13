@@ -67,3 +67,71 @@ smtr_materialize_to_datario_daily_flow.run_config = KubernetesRun(
 smtr_materialize_to_datario_daily_flow.schedule = (
     smtr_materialize_to_datario_daily_schedule
 )
+
+# # VIAGEM PLANEJADA SPPO #
+
+smtr_materialize_to_datario_viagem_planejada_sppo_flow = deepcopy(
+    utils_run_dbt_model_flow
+)
+
+smtr_materialize_to_datario_viagem_planejada_sppo_flow.name = (
+    "SMTR: Viagens Planejadas SPPO - Publicação `datario`"
+)
+smtr_materialize_to_datario_viagem_planejada_sppo_flow.storage = GCS(
+    constants.GCS_FLOWS_BUCKET.value
+)
+smtr_materialize_to_datario_viagem_planejada_sppo_flow.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[
+        constants.RJ_DATARIO_AGENT_LABEL.value,
+    ],
+)
+
+smtr_materialize_to_datario_viagem_planejada_sppo_parameters = {
+    "dataset_id": "transporte_rodoviario_municipal",
+    "table_id": "viagem_planejada_onibus",
+    "mode": "prod",
+    "materialize_to_datario": True,
+    "dbt_model_parameters": {
+        "date_range_end": get_previous_date.run(1),
+        "date_range_start": None,
+    },
+}
+
+smtr_materialize_to_datario_viagem_planejada_sppo_flow = set_default_parameters(
+    smtr_materialize_to_datario_viagem_planejada_sppo_flow,
+    default_parameters=smtr_materialize_to_datario_viagem_planejada_sppo_parameters,
+)
+
+# # SUBSIDIO SPPO #
+
+smtr_materialize_to_datario_subsidio_sppo_flow = deepcopy(utils_run_dbt_model_flow)
+
+smtr_materialize_to_datario_subsidio_sppo_flow.name = (
+    "SMTR: Subsídio SPPO - Publicação `datario`"
+)
+smtr_materialize_to_datario_subsidio_sppo_flow.storage = GCS(
+    constants.GCS_FLOWS_BUCKET.value
+)
+smtr_materialize_to_datario_subsidio_sppo_flow.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[
+        constants.RJ_DATARIO_AGENT_LABEL.value,
+    ],
+)
+
+smtr_materialize_to_datario_subsidio_sppo_parameters = {
+    "dataset_id": "transporte_rodoviario_municipal",
+    "table_id": "subsidio_onibus",
+    "mode": "prod",
+    "materialize_to_datario": True,
+    "dbt_model_parameters": {
+        "date_range_end": get_previous_date.run(1),
+        "date_range_start": None,
+    },
+}
+
+smtr_materialize_to_datario_subsidio_sppo_flow = set_default_parameters(
+    smtr_materialize_to_datario_subsidio_sppo_flow,
+    default_parameters=smtr_materialize_to_datario_subsidio_sppo_parameters,
+)
