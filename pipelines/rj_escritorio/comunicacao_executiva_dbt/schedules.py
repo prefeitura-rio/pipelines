@@ -35,6 +35,7 @@ mensalmente_dia_1 = {
 
 mensalmente_dia_20 = {
     "pontos_turisticos": "pontos_turisticos",
+    "aeroportos": "aeroportos",
 }
 
 diario_clocks = [
