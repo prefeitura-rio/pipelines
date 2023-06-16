@@ -174,13 +174,12 @@ def tratar_dados(dados: pd.DataFrame, backfill: bool = 0) -> pd.DataFrame:
         ]
     ]
 
-    log(f"Dados antes do filtro dia:\n{dados[['id_estacao', 'data']]}")
+    # log(f"Dados antes do filtro dia:\n{dados[['id_estacao', 'data']]}")
+    log(dados.to_csv())
 
     if not backfill:
         # Seleciona apenas dados daquele dia (devido à UTC)
-        dados = dados[dados["data"] == br_timezone]
-
-    log(f"Dados depois do filtro dia:\n{dados[['id_estacao', 'data']]}")
+        dados = dados[dados["data"].dt.date.astype(str) == br_timezone]
 
     log(f">>>> min hora {dados[~dados.temperatura.isna()].data.min()}")
     log(f">>>> max hora {dados[~dados.temperatura.isna()].data.max()}")
