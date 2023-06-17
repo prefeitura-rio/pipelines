@@ -112,6 +112,9 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
             else bool(&#34;C/AR&#34; in x.replace(&#34; &#34;, &#34;&#34;))
         )
 
+        log(&#34;Update status...&#34;, level=&#34;info&#34;)
+        data[&#34;status&#34;] = &#34;Licenciado&#34;
+
         log(
             f&#34;Finished cleaning! Pre-treated data:\n{data_info_str(data)}&#34;, level=&#34;info&#34;
         )
@@ -415,6 +418,9 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
             if not isinstance(x, str)
             else bool(&#34;C/AR&#34; in x.replace(&#34; &#34;, &#34;&#34;))
         )
+
+        log(&#34;Update status...&#34;, level=&#34;info&#34;)
+        data[&#34;status&#34;] = &#34;Licenciado&#34;
 
         log(
             f&#34;Finished cleaning! Pre-treated data:\n{data_info_str(data)}&#34;, level=&#34;info&#34;
