@@ -2,3 +2,5 @@
 """
 Prefect flows for rj_iplanrio project in RJ
 """
+
+from pipelines.rj_iplanrio.processorio.flows import *

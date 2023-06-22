@@ -3,7 +3,6 @@
 """
 Tasks for rj_smtr
 """
-
 from datetime import datetime, timedelta
 import json
 import os
@@ -763,7 +762,7 @@ def get_join_dict(dict_list: list, new_dict: dict) -> List:
     return dict_list
 
 
-@task
+@task(checkpoint=False)
 def get_previous_date(days):
     """
     Returns the date of {days} days ago in YYYY-MM-DD.
