@@ -217,6 +217,8 @@ def fetch_vol_file(
         env_variable = "INEA_MAC_SSH_PASSWORD"
         hostname = "a9915"
 
+    # APAGAR LOG
+    log(f"Radar: {radar} env {env_variable}")
     # Get SSH password from env
     ssh_password = getenv(env_variable)
 
