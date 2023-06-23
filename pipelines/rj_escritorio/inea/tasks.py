@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=C0103, C0330, R0915
+# pylint: disable=C0103, R0915
 
 """
 Tasks for INEA.
