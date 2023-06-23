@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0103, C0330
 """
 Flows for INEA.
 """
@@ -23,26 +24,30 @@ from pipelines.utils.decorators import Flow
 with Flow(
     "INEA: Captura dados de radar",
     code_owners=[
-        "gabriel",
+        "paty",
     ],
     skip_if_running=True,
 ) as inea_radar_flow:
     date = Parameter("date", default=None, required=False)
-    bucket_name = Parameter("bucket_name")
-    prefix = Parameter("prefix")
+    bucket_name = Parameter("bucket_name", default="rj-escritorio-dev", required=False)
+    prefix = Parameter(
+        "prefix", default="raw/meio_ambiente_clima/inea_radar_hdf5", required=False
+    )
     mode = Parameter("mode", default="prod", required=False)
-    radar = Parameter("radar")
-    product = Parameter("product")
-    output_format = Parameter("output_format", default="NetCDF", required=False)
+    radar = Parameter("radar", default="gua", required=False)
+    product = Parameter("product", default="ppi", required=False)
+    output_format = Parameter("output_format", default="HDF5", required=False)
     convert_params = Parameter(
         "convert_params",
-        default="-f=Whole -k=CFext -r=Short -p=Radar -M=All -z",
+        default="-k=ODIM2.1 -M=All",
         required=False,
     )
     greater_than = Parameter("greater_than", default=None, required=False)
     vols_remote_directory = Parameter(
         "vols_remote_directory", default="/var/opt/edge/vols", required=False
     )
+    get_only_last_file = Parameter("get_only_last_file", default=True, required=False)
+
     remote_files, output_directory = list_vol_files(
         date=date,
         greater_than=greater_than,
@@ -50,6 +55,7 @@ with Flow(
         prefix=prefix,
         radar=radar,
         product=product,
+        get_only_last_file=get_only_last_file,
         mode=mode,
         output_format=output_format,
         vols_remote_directory=vols_remote_directory,
