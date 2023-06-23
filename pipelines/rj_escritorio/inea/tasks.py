@@ -155,7 +155,7 @@ def list_vol_files(
     log("Listing remote files...")
     if date:
         _, stdout, _ = ssh_client.exec_command(
-            f"find {vols_remote_directory} -name '{startswith}-{date}*.vol'"
+            f"find {vols_remote_directory} -name '{startswith}{date}*.vol'"
         )
         remote_files = stdout.read().decode("utf-8").splitlines()
     else:
