@@ -239,7 +239,7 @@ def update_rdo_redis(
     download_files: list,
     table_id: str,
     dataset_id: str = constants.RDO_DATASET_ID.value,
-    errors=None,
+    errors: list = None,
     wait=None,  # pylint: disable=W0613
 ):
     """
@@ -260,7 +260,7 @@ def update_rdo_redis(
     redis_client = get_redis_client()
     content = redis_client.get(key)  # get current redis state
     if errors:
-        log(f"Received errors:\n {errors}")
+        log(f"Received {len(errors)} errors:\n {errors[:10]}\n...")
         merge_file_info_and_errors(download_files, errors)
     log(f"content is:\n{content['files'][:5]}")
     insert_content = [
