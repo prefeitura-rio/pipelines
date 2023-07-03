@@ -83,6 +83,9 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
             else bool("C/AR" in x.replace(" ", ""))
         )
 
+        log("Update status...", level="info")
+        data["status"] = "Licenciado"
+
         log(
             f"Finished cleaning! Pre-treated data:\n{data_info_str(data)}", level="info"
         )
