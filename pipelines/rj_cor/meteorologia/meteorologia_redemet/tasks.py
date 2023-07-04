@@ -2,7 +2,7 @@
 """
 Tasks for meteorologia_redemet
 """
-from datetime import datetime, timedelta
+from datetime import timedelta
 import json
 from pathlib import Path
 from typing import Tuple, Union
@@ -71,7 +71,6 @@ def download(data_inicio: str, data_fim: str) -> pd.DataFrame:
     ]
 
     dicionario = get_vault_secret("redemet-token")
-    token = dicionario["data"]["token"]
 
     # Converte datas em int para cálculo de faixas.
     data_inicio_int = int(data_inicio.replace("-", ""))
@@ -79,7 +78,7 @@ def download(data_inicio: str, data_fim: str) -> pd.DataFrame:
 
     raw = []
     for id_estacao in estacoes_unicas:
-        base_url = f"https://api-redemet.decea.mil.br/aerodromos/info?api_key={token}"
+        base_url = f"https://api-redemet.decea.mil.br/aerodromos/info?api_key={dicionario['data']['token']}"  # noqa
         for data in range(data_inicio_int, data_fim_int + 1):
             for hora in range(24):
                 url = f"{base_url}&localidade={id_estacao}&datahora={data:06}{hora:02}"
@@ -91,7 +90,7 @@ def download(data_inicio: str, data_fim: str) -> pd.DataFrame:
                 if res_data["status"] is not True:
                     log(f"Problema no id: {id_estacao}, {res_data['message']}, {url}")
                     continue
-                elif "data" not in res_data["data"]:
+                if "data" not in res_data["data"]:
                     # Sem dados para esse horario
                     continue
                 raw.append(res_data)
