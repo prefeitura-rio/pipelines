@@ -15,8 +15,7 @@ minute_schedule = Schedule(
             interval=timedelta(minutes=1),
             start_date=datetime(2023, 1, 1, 0, 0, 30),
             labels=[
-                # constants.RJ_COR_AGENT_LABEL.value,
-                constants.RJ_IPLANRIO_AGENT_LABEL.value,
+                constants.RJ_COR_AGENT_LABEL.value,
             ],
             parameter_defaults={
                 # "trigger_rain_dashboard_update": True,

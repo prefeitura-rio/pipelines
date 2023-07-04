@@ -208,7 +208,6 @@ with Flow(
 cor_meteorologia_precipitacao_cemaden.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 cor_meteorologia_precipitacao_cemaden.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
-    # labels=[constants.RJ_COR_AGENT_LABEL.value],
-    labels=[constants.RJ_IPLANRIO_AGENT_LABEL.value],
+    labels=[constants.RJ_COR_AGENT_LABEL.value],
 )
 cor_meteorologia_precipitacao_cemaden.schedule = minute_schedule
