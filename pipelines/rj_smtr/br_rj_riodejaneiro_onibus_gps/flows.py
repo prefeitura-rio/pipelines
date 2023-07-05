@@ -283,7 +283,9 @@ captura_sppo_v2.run_config = KubernetesRun(
 captura_sppo_v2.schedule = every_minute
 
 
-with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda", "boris", "rodrigo"]) as recaptura:
+with Flow(
+    "SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda", "boris", "rodrigo"]
+) as recaptura:
 
     version = Parameter("version", default=2)
     datetime_filter = Parameter("datetime_filter", default=None)
