@@ -57,7 +57,7 @@ from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 sppo_licenciamento_captura_name = f"SMTR: Captura - {constants.DATASET_ID.value}.{constants.SPPO_LICENCIAMENTO_TABLE_ID.value}"
 with Flow(
     sppo_licenciamento_captura_name,
-    code_owners=["rodrigo", "fernanda"],
+    code_owners=["rodrigo", "fernanda", "boris", "rodrigo"],
 ) as sppo_licenciamento_captura:
 
     timestamp = get_current_timestamp()
@@ -127,7 +127,7 @@ sppo_licenciamento_captura.schedule = every_day_hour_five
 sppo_infracao_captura_name = f"SMTR: Captura - {constants.DATASET_ID.value}.{constants.SPPO_INFRACAO_TABLE_ID.value}"
 with Flow(
     sppo_infracao_captura_name,
-    code_owners=["rodrigo", "fernanda"],
+    code_owners=["rodrigo", "fernanda", "boris", "rodrigo"],
 ) as sppo_infracao_captura:
 
     timestamp = get_current_timestamp()
@@ -196,7 +196,7 @@ sppo_infracao_captura.schedule = every_day_hour_five
 sppo_veiculo_dia_name = f"SMTR: Materialização - {constants.DATASET_ID.value}.{constants.SPPO_VEICULO_DIA_TABLE_ID.value}"
 with Flow(
     sppo_veiculo_dia_name,
-    code_owners=["rodrigo", "fernanda"],
+    code_owners=["rodrigo", "fernanda", "boris", "rodrigo"],
 ) as sppo_veiculo_dia:
 
     # 1. SETUP #
