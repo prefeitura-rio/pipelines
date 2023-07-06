@@ -40,7 +40,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks import (
 
 with Flow(
     "SMTR: GPS STPL - Captura",
-    code_owners=["caio", "rodrigo"],
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as captura_stpl:
 
     # DEFAULT PARAMETERS #
