@@ -56,7 +56,7 @@ from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import check_param
 
 with Flow(
     "SMTR: Viagens SPPO",
-    code_owners=["rodrigo", "fernanda"],
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as viagens_sppo:
 
     # Rename flow run
