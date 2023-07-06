@@ -184,6 +184,10 @@ def tratar_dados(dados: pd.DataFrame, backfill: bool = 0) -> pd.DataFrame:
 
     log(f">>>> min hora {dados[~dados.temperatura.isna()].data.min()}")
     log(f">>>> max hora {dados[~dados.temperatura.isna()].data.max()}")
+
+    # Remover fuso horário
+    dados["data"] = dados["data"].dt.strftime("%Y-%m-%d %H:%M:%S")
+
     return dados
 
 
