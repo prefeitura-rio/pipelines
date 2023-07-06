@@ -52,7 +52,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks import (
 
 with Flow(
     "SMTR: GPS BRT - Materialização",
-    code_owners=["caio", "fernanda"],
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as materialize_brt:
 
     # Rename flow run
@@ -138,7 +138,7 @@ materialize_brt.schedule = every_hour
 
 with Flow(
     "SMTR: GPS BRT - Captura",
-    code_owners=["caio", "fernanda"],
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as captura_brt:
 
     timestamp = get_current_timestamp()
