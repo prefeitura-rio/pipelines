@@ -195,7 +195,7 @@ captura_sppo_rdo.schedule = every_day
 
 with Flow(
     "SMTR: STPL RHO - Captura",
-    code_owners=["caio", "fernanda"],
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as captura_stpl_rho:
     # SETUP
     transport_mode = Parameter("transport_mode", "STPL")
