@@ -63,7 +63,7 @@ from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
 with Flow(
     &#34;SMTR: SIGMOB - Materialização&#34;,
-    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;],
+    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
 ) as materialize_sigmob:
 
     # Rename Flow Run
@@ -119,7 +119,7 @@ with Flow(
 
 with Flow(
     &#34;SMTR: SIGMOB - Captura&#34;,
-    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;],
+    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
 ) as captura_sigmob:
 
     # Get default parameters #

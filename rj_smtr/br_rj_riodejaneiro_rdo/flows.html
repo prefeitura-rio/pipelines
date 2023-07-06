@@ -127,7 +127,7 @@ sppo_rho_materialize.run_config = KubernetesRun(
 
 with Flow(
     &#34;SMTR: RHO - Captura&#34;,
-    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;],
+    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
 ) as captura_sppo_rho:
     # SETUP
     transport_mode = Parameter(&#34;transport_mode&#34;, &#34;SPPO&#34;)
@@ -175,7 +175,7 @@ captura_sppo_rho.schedule = every_day
 
 with Flow(
     &#34;SMTR: RDO - Captura&#34;,
-    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;],
+    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
 ) as captura_sppo_rdo:
     # SETUP
     transport_mode = Parameter(&#34;transport_mode&#34;, &#34;SPPO&#34;)
