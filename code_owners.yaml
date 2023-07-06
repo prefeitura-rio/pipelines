@@ -19,6 +19,7 @@ pipelines:
         - hellcassius
         - fernandascovino
         - eng-rodrigocunha
+        - borismarinho
     rj_escritorio:
       owners:
         - gabriel-milan
