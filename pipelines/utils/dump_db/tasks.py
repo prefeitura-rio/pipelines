@@ -210,9 +210,9 @@ def format_partitioned_query(
     )
 
     if lower_bound_date:
-        last_date = min(lower_bound_date, last_partition_date)
+        last_date = min(str(lower_bound_date), str(last_partition_date))
     else:
-        last_date = last_partition_date
+        last_date = str(last_partition_date)
 
     # Using the last partition date, get the partitioned query.
     # `aux_name` must be unique and start with a letter, for better compatibility with
@@ -224,7 +224,6 @@ def format_partitioned_query(
         "with partitioned columns and filters"
     )
     if database_type == "oracle":
-
         oracle_date_format = "YYYY-MM-DD" if date_format == "%Y-%m-%d" else date_format
 
         return f"""
