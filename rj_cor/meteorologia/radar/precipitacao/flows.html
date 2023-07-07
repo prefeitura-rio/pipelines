@@ -167,6 +167,10 @@ cor_meteorologia_precipitacao_radar_flow.storage = GCS(constants.GCS_FLOWS_BUCKE
 cor_meteorologia_precipitacao_radar_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_COR_AGENT_LABEL.value],
+    cpu_request=1,
+    cpu_limit=1,
+    memory_request=&#34;2Gi&#34;,
+    memory_limit=&#34;3Gi&#34;,
 )
 
 cor_meteorologia_precipitacao_radar_flow.schedule = TIME_SCHEDULE</code></pre>
