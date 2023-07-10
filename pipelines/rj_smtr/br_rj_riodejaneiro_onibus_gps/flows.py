@@ -60,7 +60,7 @@ from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
 with Flow(
     "SMTR: GPS SPPO - Realocação (captura)",
-    code_owners=["rodrigo", "caio"],
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as realocacao_sppo:
 
     # SETUP #
@@ -137,7 +137,7 @@ realocacao_sppo.schedule = every_10_minutes
 
 with Flow(
     "SMTR: GPS SPPO - Materialização",
-    code_owners=["caio", "fernanda"],
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as materialize_sppo:
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
@@ -221,7 +221,7 @@ materialize_sppo.run_config = KubernetesRun(
 
 with Flow(
     "SMTR: GPS SPPO - Captura",
-    code_owners=["caio", "fernanda"],
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as captura_sppo_v2:
 
     version = Parameter("version", default=2)
@@ -283,7 +283,9 @@ captura_sppo_v2.run_config = KubernetesRun(
 captura_sppo_v2.schedule = every_minute
 
 
-with Flow("SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda"]) as recaptura:
+with Flow(
+    "SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda", "boris", "rodrigo"]
+) as recaptura:
 
     version = Parameter("version", default=2)
     datetime_filter = Parameter("datetime_filter", default=None)

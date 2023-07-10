@@ -37,6 +37,8 @@ with Flow(
     name="COR: Meteorologia - Precipitacao RADAR",
     code_owners=[
         "paty",
+        "joao",
+        "gabriel",
     ],
     # skip_if_running=True,
 ) as cor_meteorologia_precipitacao_radar_flow:
@@ -136,6 +138,10 @@ cor_meteorologia_precipitacao_radar_flow.storage = GCS(constants.GCS_FLOWS_BUCKE
 cor_meteorologia_precipitacao_radar_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_COR_AGENT_LABEL.value],
+    cpu_request=1,
+    cpu_limit=1,
+    memory_request="2Gi",
+    memory_limit="3Gi",
 )
 
 cor_meteorologia_precipitacao_radar_flow.schedule = TIME_SCHEDULE
