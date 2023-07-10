@@ -301,13 +301,17 @@ def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -> pd.DataFrame:
         if "error" in response.keys() and tentativa > 5:
             continue
 
-        row_template = {
-            "pop_titulo": response["pop"],
-            "id_pop": pop_id,
-            "sigla": "",
-            "orgao": "",
-            "acao": "",
-        }
+        try:
+            row_template = {
+                "pop_titulo": response["pop"],
+                "id_pop": pop_id,
+                "sigla": "",
+                "orgao": "",
+                "acao": "",
+            }
+        except:
+            log(f"Problem on response {response}")
+
         for activity in response["atividades"]:
             row = deepcopy(row_template)
             row["sigla"] = activity["sigla"]
