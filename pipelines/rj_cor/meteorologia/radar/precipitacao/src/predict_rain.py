@@ -11,6 +11,7 @@ import h5py
 import joblib, pickle
 import numpy as np
 import pandas as pd
+import sklearn
 
 from pipelines.rj_cor.meteorologia.radar.precipitacao.src.data.PredictedData import (
     PredictedData,
