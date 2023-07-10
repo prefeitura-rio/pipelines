@@ -8,7 +8,7 @@ import json
 import pathlib
 
 import h5py
-import joblib
+import joblib, pickle
 import numpy as np
 import pandas as pd
 
@@ -184,10 +184,11 @@ def run_model_prediction(
     # Make predictions
 
     log(f"Check joblib version {joblib.__version__}")
+    log(f"Check sklearn version {sklearn.__version__}")
     try:
         pipe = joblib.load(open(model_filepath, "rb"))
     except:
-        pipe = joblib.load(model_filepath)
+        pipe = pickle.load(model_filepath)
     y_pred = pipe.predict(X)
 
     log("Predictions made successfully.")
