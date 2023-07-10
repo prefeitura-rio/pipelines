@@ -183,7 +183,11 @@ def run_model_prediction(
 
     # Make predictions
 
-    pipe = joblib.load(open(model_filepath, "rb"))
+    log(f"Check joblib version {joblib.__version}")
+    try:
+        pipe = joblib.load(open(model_filepath, "rb"))
+    except:
+        pipe = joblib.load(model_filepath)
     y_pred = pipe.predict(X)
 
     log("Predictions made successfully.")
