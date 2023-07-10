@@ -290,7 +290,9 @@ def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -> pd.DataFrame:
         response = get_url(url=url + f"?popId={pop_id}", token=auth_token)
 
         tentativa = 0
-        while "error" in response.keys() and tentativa <= 5:
+        while (
+            "error" in response.keys() or response == {"response": None}
+        ) and tentativa <= 5:
             log(
                 f">>>>>>> Requesting POP's activities for pop_id: {pop_id} Time: {tentativa+1}"
             )
@@ -298,7 +300,9 @@ def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -> pd.DataFrame:
             response = get_url(url=url + f"?popId={pop_id}", token=auth_token)
             tentativa += 1
 
-        if "error" in response.keys() and tentativa > 5:
+        if (
+            "error" in response.keys() or response == {"response": None}
+        ) and tentativa > 5:
             continue
 
         try:

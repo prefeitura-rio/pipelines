@@ -8,7 +8,7 @@ import json
 import pathlib
 
 import h5py
-import joblib, pickle
+import joblib, dill
 import numpy as np
 import pandas as pd
 import sklearn
@@ -187,9 +187,11 @@ def run_model_prediction(
     log(f"Check joblib version {joblib.__version__}")
     log(f"Check sklearn version {sklearn.__version__}")
     try:
-        pipe = joblib.load(open(model_filepath, "rb"))
+        log("Opening pipeline with dill")
+        pipe = dill.load(open(model_filepath, "rb"))
     except:
-        pipe = pickle.load(model_filepath)
+        pipe = joblib.load(model_filepath)
+        log("Opening pipeline with joblib")
     y_pred = pipe.predict(X)
 
     log("Predictions made successfully.")
