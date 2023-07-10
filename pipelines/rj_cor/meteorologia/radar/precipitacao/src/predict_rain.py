@@ -183,7 +183,7 @@ def run_model_prediction(
 
     # Make predictions
 
-    log(f"Check joblib version {joblib.__version}")
+    log(f"Check joblib version {joblib.__version__}")
     try:
         pipe = joblib.load(open(model_filepath, "rb"))
     except:
