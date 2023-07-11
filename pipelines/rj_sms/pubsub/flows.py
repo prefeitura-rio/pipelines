@@ -34,10 +34,12 @@ with Flow(
     )
 
     # Log messages
-    log_message.map(message=messages)
+    logged_messages = log_message.map(message=messages)
 
     # Acknowledge messages
-    acknowledge_message.map(message=messages, subscription=unmapped(subscription))
+    acknowledge_message.map(
+        message=logged_messages, subscription=unmapped(subscription)
+    )
 
 rj_sms_pubsub_print_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 rj_sms_pubsub_print_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
