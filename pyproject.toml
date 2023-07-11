@@ -59,6 +59,7 @@ opencv-python = "^4.6.0"
 kaleido = "0.2.1"
 haversine = "^2.6.0"
 plotly = "^5.14.0"
+google-cloud-pubsub = "^2.17.1"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.12.2"
