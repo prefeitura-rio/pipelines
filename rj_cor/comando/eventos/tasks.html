@@ -291,7 +291,9 @@ def get_pops() -&gt; pd.DataFrame:
 
     pops = pd.DataFrame(response[&#34;objeto&#34;])
     pops[&#34;id&#34;] = pops[&#34;id&#34;].astype(&#34;int&#34;)
-    pops = pops.rename({&#34;id&#34;: &#34;id_pop&#34;, &#34;titulo&#34;: &#34;pop_titulo&#34;}, axis=1)
+    pops = pops.rename({&#34;id&#34;: &#34;id_pop&#34;, &#34;titulo&#34;: &#34;pop_titulo&#34;}, axis=1).sort_values(
+        &#34;id_pop&#34;
+    )
     pops[&#34;pop_titulo&#34;] = pops[
         &#34;pop_titulo&#34;
     ].str.capitalize()  # pylint: disable=unsubscriptable-object, E1137
@@ -313,13 +315,18 @@ def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -&gt; pd.DataFrame
 
     pop_ids = pops[&#34;id_pop&#34;].unique()
 
+    # remove pop_id 0
+    pop_ids = [i for i in pop_ids if i not in [0, &#34;0&#34;]]
+
     atividades_pops = []
     for pop_id in pop_ids:
         log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting POP&#39;s activities for pop_id: {pop_id}&#34;)
         response = get_url(url=url + f&#34;?popId={pop_id}&#34;, token=auth_token)
 
         tentativa = 0
-        while &#34;error&#34; in response.keys() and tentativa &lt;= 5:
+        while (
+            &#34;error&#34; in response.keys() or response == {&#34;response&#34;: None}
+        ) and tentativa &lt;= 5:
             log(
                 f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting POP&#39;s activities for pop_id: {pop_id} Time: {tentativa+1}&#34;
             )
@@ -327,16 +334,22 @@ def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -&gt; pd.DataFrame
             response = get_url(url=url + f&#34;?popId={pop_id}&#34;, token=auth_token)
             tentativa += 1
 
-        if &#34;error&#34; in response.keys() and tentativa &gt; 5:
+        if (
+            &#34;error&#34; in response.keys() or response == {&#34;response&#34;: None}
+        ) and tentativa &gt; 5:
             continue
 
-        row_template = {
-            &#34;pop_titulo&#34;: response[&#34;pop&#34;],
-            &#34;id_pop&#34;: pop_id,
-            &#34;sigla&#34;: &#34;&#34;,
-            &#34;orgao&#34;: &#34;&#34;,
-            &#34;acao&#34;: &#34;&#34;,
-        }
+        try:
+            row_template = {
+                &#34;pop_titulo&#34;: response[&#34;pop&#34;],
+                &#34;id_pop&#34;: pop_id,
+                &#34;sigla&#34;: &#34;&#34;,
+                &#34;orgao&#34;: &#34;&#34;,
+                &#34;acao&#34;: &#34;&#34;,
+            }
+        except:
+            log(f&#34;Problem on response {response}&#34;)
+
         for activity in response[&#34;atividades&#34;]:
             row = deepcopy(row_template)
             row[&#34;sigla&#34;] = activity[&#34;sigla&#34;]
@@ -345,6 +358,7 @@ def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -&gt; pd.DataFrame
             atividades_pops.append(row)
 
     dataframe = pd.DataFrame(atividades_pops)
+    dataframe = dataframe.sort_values([&#34;id_pop&#34;, &#34;sigla&#34;, &#34;acao&#34;])
 
     for i in [&#34;sigla&#34;, &#34;orgao&#34;, &#34;acao&#34;]:
         dataframe[i] = dataframe[i].str.capitalize()
@@ -609,13 +623,18 @@ def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -&gt; pd.DataFrame
 
     pop_ids = pops[&#34;id_pop&#34;].unique()
 
+    # remove pop_id 0
+    pop_ids = [i for i in pop_ids if i not in [0, &#34;0&#34;]]
+
     atividades_pops = []
     for pop_id in pop_ids:
         log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting POP&#39;s activities for pop_id: {pop_id}&#34;)
         response = get_url(url=url + f&#34;?popId={pop_id}&#34;, token=auth_token)
 
         tentativa = 0
-        while &#34;error&#34; in response.keys() and tentativa &lt;= 5:
+        while (
+            &#34;error&#34; in response.keys() or response == {&#34;response&#34;: None}
+        ) and tentativa &lt;= 5:
             log(
                 f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting POP&#39;s activities for pop_id: {pop_id} Time: {tentativa+1}&#34;
             )
@@ -623,16 +642,22 @@ def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -&gt; pd.DataFrame
             response = get_url(url=url + f&#34;?popId={pop_id}&#34;, token=auth_token)
             tentativa += 1
 
-        if &#34;error&#34; in response.keys() and tentativa &gt; 5:
+        if (
+            &#34;error&#34; in response.keys() or response == {&#34;response&#34;: None}
+        ) and tentativa &gt; 5:
             continue
 
-        row_template = {
-            &#34;pop_titulo&#34;: response[&#34;pop&#34;],
-            &#34;id_pop&#34;: pop_id,
-            &#34;sigla&#34;: &#34;&#34;,
-            &#34;orgao&#34;: &#34;&#34;,
-            &#34;acao&#34;: &#34;&#34;,
-        }
+        try:
+            row_template = {
+                &#34;pop_titulo&#34;: response[&#34;pop&#34;],
+                &#34;id_pop&#34;: pop_id,
+                &#34;sigla&#34;: &#34;&#34;,
+                &#34;orgao&#34;: &#34;&#34;,
+                &#34;acao&#34;: &#34;&#34;,
+            }
+        except:
+            log(f&#34;Problem on response {response}&#34;)
+
         for activity in response[&#34;atividades&#34;]:
             row = deepcopy(row_template)
             row[&#34;sigla&#34;] = activity[&#34;sigla&#34;]
@@ -641,6 +666,7 @@ def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -&gt; pd.DataFrame
             atividades_pops.append(row)
 
     dataframe = pd.DataFrame(atividades_pops)
+    dataframe = dataframe.sort_values([&#34;id_pop&#34;, &#34;sigla&#34;, &#34;acao&#34;])
 
     for i in [&#34;sigla&#34;, &#34;orgao&#34;, &#34;acao&#34;]:
         dataframe[i] = dataframe[i].str.capitalize()
@@ -750,7 +776,9 @@ def get_pops() -&gt; pd.DataFrame:
 
     pops = pd.DataFrame(response[&#34;objeto&#34;])
     pops[&#34;id&#34;] = pops[&#34;id&#34;].astype(&#34;int&#34;)
-    pops = pops.rename({&#34;id&#34;: &#34;id_pop&#34;, &#34;titulo&#34;: &#34;pop_titulo&#34;}, axis=1)
+    pops = pops.rename({&#34;id&#34;: &#34;id_pop&#34;, &#34;titulo&#34;: &#34;pop_titulo&#34;}, axis=1).sort_values(
+        &#34;id_pop&#34;
+    )
     pops[&#34;pop_titulo&#34;] = pops[
         &#34;pop_titulo&#34;
     ].str.capitalize()  # pylint: disable=unsubscriptable-object, E1137
