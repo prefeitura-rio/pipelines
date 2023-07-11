@@ -286,6 +286,9 @@ def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -> pd.DataFrame:
 
     pop_ids = pops["id_pop"].unique()
 
+    # remove pop_id 0
+    pop_ids = [i for i in pop_ids if i not in [0, "0"]]
+
     atividades_pops = []
     for pop_id in pop_ids:
         log(f">>>>>>> Requesting POP's activities for pop_id: {pop_id}")
@@ -303,9 +306,7 @@ def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -> pd.DataFrame:
             tentativa += 1
 
         if (
-            "error" in response.keys()
-            or response == {"response": None}
-            or response == {"retorno": "O POP 0 não possui atividades."}
+            "error" in response.keys() or response == {"response": None}
         ) and tentativa > 5:
             continue
 
