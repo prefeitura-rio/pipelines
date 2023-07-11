@@ -18,7 +18,7 @@ jobs:
           pip install -U pip poetry
       - name: Install flows
         run: |
-          pip install --prefer-binary .
+          poetry install
       - name: Lint with flake8
         run: |
-          flake8 pipelines/**/*.py
+          poetry run lint
