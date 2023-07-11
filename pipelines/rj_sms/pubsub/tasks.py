@@ -8,7 +8,7 @@ from pipelines.rj_sms.pubsub.utils import ack_received_message, fetch_messages
 from pipelines.utils.utils import log
 
 
-@task
+@task(checkpoint=False)
 def get_messages_from_pubsub(
     subscription: str, max_messages: int = 1000
 ) -> MutableSequence[ReceivedMessage]:
@@ -18,7 +18,7 @@ def get_messages_from_pubsub(
     return fetch_messages(subscription=subscription, max_messages=max_messages)
 
 
-@task
+@task(checkpoint=False)
 def log_message(message: ReceivedMessage) -> ReceivedMessage:
     """
     Log a message from a Google Cloud Pub/Sub subscription
