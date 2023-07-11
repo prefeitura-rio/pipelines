@@ -262,7 +262,9 @@ def get_pops() -> pd.DataFrame:
 
     pops = pd.DataFrame(response["objeto"])
     pops["id"] = pops["id"].astype("int")
-    pops = pops.rename({"id": "id_pop", "titulo": "pop_titulo"}, axis=1)
+    pops = pops.rename({"id": "id_pop", "titulo": "pop_titulo"}, axis=1).sort_values(
+        "id_pop"
+    )
     pops["pop_titulo"] = pops[
         "pop_titulo"
     ].str.capitalize()  # pylint: disable=unsubscriptable-object, E1137
@@ -326,6 +328,7 @@ def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -> pd.DataFrame:
             atividades_pops.append(row)
 
     dataframe = pd.DataFrame(atividades_pops)
+    dataframe = dataframe.sort_values(["id_pop", "sigla", "acao"])
 
     for i in ["sigla", "orgao", "acao"]:
         dataframe[i] = dataframe[i].str.capitalize()
