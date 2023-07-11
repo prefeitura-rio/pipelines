@@ -8,10 +8,9 @@ import json
 import pathlib
 
 import h5py
-import joblib, dill
+import joblib
 import numpy as np
 import pandas as pd
-import sklearn
 
 from pipelines.rj_cor.meteorologia.radar.precipitacao.src.data.PredictedData import (
     PredictedData,
@@ -184,14 +183,9 @@ def run_model_prediction(
 
     # Make predictions
 
-    log(f"Check joblib version {joblib.__version__}")
-    log(f"Check sklearn version {sklearn.__version__}")
-    try:
-        log("Opening pipeline with dill")
-        pipe = dill.load(open(model_filepath, "rb"))
-    except:
-        pipe = joblib.load(model_filepath)
-        log("Opening pipeline with joblib")
+    log("Opening pipeline with joblib")
+    pipe = joblib.load(open(model_filepath, "rb"))
+
     y_pred = pipe.predict(X)
 
     log("Predictions made successfully.")
