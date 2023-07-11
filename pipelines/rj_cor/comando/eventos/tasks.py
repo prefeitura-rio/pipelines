@@ -301,20 +301,12 @@ def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -> pd.DataFrame:
             tentativa += 1
 
         if (
-            "error" in response.keys() or response == {"response": None}
+            "error" in response.keys()
+            or response == {"response": None}
+            or response == {"retorno": "O POP 0 não possui atividades."}
         ) and tentativa > 5:
             continue
 
-        log(f">>>>DEBUG response {response} from pop {pop_id}")
-        if response == {"retorno": "O POP 0 não possui atividades."}:
-            response["pop"] = "Indefinido"
-            response["atividades"] = [
-                {
-                    "sigla": "",
-                    "orgao": "",
-                    "acao": "O POP 0 não possui atividades.",
-                }
-            ]
         try:
             row_template = {
                 "pop_titulo": response["pop"],
