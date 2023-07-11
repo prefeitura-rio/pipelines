@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_sms API documentation</title>
-<meta name="description" content="Prefect flows for rj_sms project" />
+<title>pipelines.rj_sms.pubsub.tasks API documentation</title>
+<meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,39 +19,114 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_sms</code></h1>
+<h1 class="title">Module <code>pipelines.rj_sms.pubsub.tasks</code></h1>
 </header>
 <section id="section-intro">
-<p>Prefect flows for rj_sms project</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
-&#34;&#34;&#34;
-Prefect flows for rj_sms project
-&#34;&#34;&#34;
+from typing import MutableSequence
 
-from pipelines.rj_sms.dump_db_sivep.flows import *
-from pipelines.rj_sms.pubsub.flows import *</code></pre>
+from google.pubsub_v1.types.pubsub import ReceivedMessage
+from prefect import task
+
+from pipelines.rj_sms.pubsub.utils import ack_received_message, fetch_messages
+from pipelines.utils.utils import log
+
+
+@task(checkpoint=False)
+def get_messages_from_pubsub(
+    subscription: str, max_messages: int = 1000
+) -&gt; MutableSequence[ReceivedMessage]:
+    &#34;&#34;&#34;
+    Get messages from a Google Cloud Pub/Sub subscription
+    &#34;&#34;&#34;
+    return fetch_messages(subscription=subscription, max_messages=max_messages)
+
+
+@task(checkpoint=False)
+def log_message(message: ReceivedMessage) -&gt; ReceivedMessage:
+    &#34;&#34;&#34;
+    Log a message from a Google Cloud Pub/Sub subscription
+    &#34;&#34;&#34;
+    log(f&#34;Message: {message.message.data.decode(&#39;utf-8&#39;)}&#34;)
+    return message
+
+
+@task
+def acknowledge_message(message: ReceivedMessage, subscription: str):
+    &#34;&#34;&#34;
+    Acknowledge a message from a Google Cloud Pub/Sub subscription
+    &#34;&#34;&#34;
+    log(f&#34;Acknowledging message: {message.message.data.decode(&#39;utf-8&#39;)}&#34;)
+    ack_received_message(message=message, subscription=subscription)</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt><code class="name"><a title="pipelines.rj_sms.dump_db_sivep" href="dump_db_sivep/index.html">pipelines.rj_sms.dump_db_sivep</a></code></dt>
+<dt id="pipelines.rj_sms.pubsub.tasks.acknowledge_message"><code class="name flex">
+<span>def <span class="ident">acknowledge_message</span></span>(<span>message: google.cloud.pubsub_v1.types.ReceivedMessage, subscription: str)</span>
+</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Acknowledge a message from a Google Cloud Pub/Sub subscription</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def acknowledge_message(message: ReceivedMessage, subscription: str):
+    &#34;&#34;&#34;
+    Acknowledge a message from a Google Cloud Pub/Sub subscription
+    &#34;&#34;&#34;
+    log(f&#34;Acknowledging message: {message.message.data.decode(&#39;utf-8&#39;)}&#34;)
+    ack_received_message(message=message, subscription=subscription)</code></pre>
+</details>
 </dd>
-<dt><code class="name"><a title="pipelines.rj_sms.pubsub" href="pubsub/index.html">pipelines.rj_sms.pubsub</a></code></dt>
+<dt id="pipelines.rj_sms.pubsub.tasks.get_messages_from_pubsub"><code class="name flex">
+<span>def <span class="ident">get_messages_from_pubsub</span></span>(<span>subscription: str, max_messages: int = 1000) ‑> MutableSequence[google.cloud.pubsub_v1.types.ReceivedMessage]</span>
+</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Get messages from a Google Cloud Pub/Sub subscription</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(checkpoint=False)
+def get_messages_from_pubsub(
+    subscription: str, max_messages: int = 1000
+) -&gt; MutableSequence[ReceivedMessage]:
+    &#34;&#34;&#34;
+    Get messages from a Google Cloud Pub/Sub subscription
+    &#34;&#34;&#34;
+    return fetch_messages(subscription=subscription, max_messages=max_messages)</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_sms.pubsub.tasks.log_message"><code class="name flex">
+<span>def <span class="ident">log_message</span></span>(<span>message: google.cloud.pubsub_v1.types.ReceivedMessage) ‑> google.cloud.pubsub_v1.types.ReceivedMessage</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Log a message from a Google Cloud Pub/Sub subscription</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(checkpoint=False)
+def log_message(message: ReceivedMessage) -&gt; ReceivedMessage:
+    &#34;&#34;&#34;
+    Log a message from a Google Cloud Pub/Sub subscription
+    &#34;&#34;&#34;
+    log(f&#34;Message: {message.message.data.decode(&#39;utf-8&#39;)}&#34;)
+    return message</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
 </section>
 <section>
 </section>
@@ -91,7 +166,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -110,13 +185,14 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines" href="../index.html">pipelines</a></code></li>
+<li><code><a title="pipelines.rj_sms.pubsub" href="index.html">pipelines.rj_sms.pubsub</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="pipelines.rj_sms.dump_db_sivep" href="dump_db_sivep/index.html">pipelines.rj_sms.dump_db_sivep</a></code></li>
-<li><code><a title="pipelines.rj_sms.pubsub" href="pubsub/index.html">pipelines.rj_sms.pubsub</a></code></li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pipelines.rj_sms.pubsub.tasks.acknowledge_message" href="#pipelines.rj_sms.pubsub.tasks.acknowledge_message">acknowledge_message</a></code></li>
+<li><code><a title="pipelines.rj_sms.pubsub.tasks.get_messages_from_pubsub" href="#pipelines.rj_sms.pubsub.tasks.get_messages_from_pubsub">get_messages_from_pubsub</a></code></li>
+<li><code><a title="pipelines.rj_sms.pubsub.tasks.log_message" href="#pipelines.rj_sms.pubsub.tasks.log_message">log_message</a></code></li>
 </ul>
 </li>
 </ul>
