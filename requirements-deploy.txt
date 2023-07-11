@@ -1,7 +1,7 @@
 google-cloud-storage==1.42.3
 loguru==0.6.0
 poetry==1.1.13
-prefect==1.4.1
+prefect==0.15.9
 typer==0.4.0
 networkx==2.6.3
 pytest-cov==3.0.0

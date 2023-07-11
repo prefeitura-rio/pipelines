@@ -1,4 +1,4 @@
 networkx==2.6.3
 pytest-cov==3.0.0
 pyyaml
-prefect==1.4.1
+prefect==0.15.9
