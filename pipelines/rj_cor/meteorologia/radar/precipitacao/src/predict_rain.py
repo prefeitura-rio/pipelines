@@ -183,7 +183,9 @@ def run_model_prediction(
 
     # Make predictions
 
+    log("Opening pipeline with joblib")
     pipe = joblib.load(open(model_filepath, "rb"))
+
     y_pred = pipe.predict(X)
 
     log("Predictions made successfully.")
