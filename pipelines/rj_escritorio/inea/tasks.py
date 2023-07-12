@@ -14,6 +14,8 @@ from google.cloud import storage
 from paramiko import SSHClient
 import pexpect
 from prefect import task
+from prefect.engine.signals import ENDRUN
+from prefect.engine.state import Skipped
 from scp import SCPClient
 
 from pipelines.utils.utils import get_credentials_from_env, list_blobs_with_prefix, log
@@ -143,13 +145,18 @@ def list_vol_files(
         remote_files = [
             file
             for file in all_files
-            if file.split("/")[-1][: len(greater_than) + 7] >= f"9921GUA{greater_than}"
+            if file.split("/")[-1][: len(greater_than) + 7] > f"9921GUA{greater_than}"
         ]
         log(f"Remote files identified: {remote_files}")
         if get_only_last_file:
             remote_files.sort()
             remote_files = [remote_files[-1]]
             log(f"Last remote file: {remote_files}")
+
+    # Stop flow if there is no new file
+    if len(remote_files) == 0:
+        skip = Skipped("No new available files")
+        raise ENDRUN(state=skip)
 
     # Filter files with same filename
     filenames = set()
