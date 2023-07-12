@@ -33,10 +33,10 @@ def get_birthdays_by_date(date: str) -> List[str]:
     """
     Get birthdays by date.
     """
-    birthdays_url = (
-        f"http://bot-rio-api.bot-rio.svc.cluster.local/users/?birthday={date}"
-    )
-    response = requests.get(birthdays_url)
+    birthdays_url = f"https://bot.dados.rio/users/?birthday={date}"
+    secret = get_vault_secret("bot-rio-api-token")
+    token = secret["data"]["token"]
+    response = requests.get(birthdays_url, headers={"Authorization": f"Token {token}"})
     response.raise_for_status()
     return [item["name"] for item in response.json()["results"]]
 
