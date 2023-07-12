@@ -164,7 +164,7 @@ class constants(Enum):  # pylint: disable=c0103
     SUBSIDIO_SPPO_DASHBOARD_TABLE_ID = "sumario_servico_dia"
 
     # GTFS
-    GTFS_DATASET_ID = "gtfs"
+    GTFS_DATASET_ID = "br_rj_riodejaneiro_gtfs"
     GTFS_TABLES = [
         "agency",
         "calendar_dates",
@@ -177,5 +177,7 @@ class constants(Enum):  # pylint: disable=c0103
         "stops",
         "stop_times",
         "trips",
+        "fare_attributes",
+        "fare_rules",
     ]
     GTFS_RAW_PATH = "./gtfs"
