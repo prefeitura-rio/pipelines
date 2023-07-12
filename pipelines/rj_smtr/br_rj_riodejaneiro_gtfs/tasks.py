@@ -11,8 +11,10 @@ import shutil
 import traceback
 import pandas as pd
 from functools import reduce
+from datetime import datetime
 
 from pipelines.rj_smtr.constants import constants as smtr_constants
+from pipelines.rj_smtr.tasks import get_current_timestamp
 
 from pipelines.utils.utils import (
     get_storage_blobs,
@@ -21,7 +23,14 @@ from pipelines.utils.utils import (
 
 
 @task
-def get_raw(
+def get_current_timestamp_from_date(
+    date: str,
+) -> datetime:
+    return get_current_timestamp.run(datetime.strptime(date, "%Y-%m-%d"))
+
+
+@task
+def get_raw_gtfs(
     dataset_id: str = smtr_constants.GTFS_DATASET_ID.value,
 ) -> Dict:
     """
@@ -67,6 +76,7 @@ def get_raw(
             with zipfile.ZipFile(filename, "r") as zip_ref:
                 zip_ref.extractall(dirpath)
 
+    log([blob.time_created for blob in blobs])
     gtfs_last_modified = max([blob.time_created for blob in blobs])
     log(f"GTFS time created on GCS: {gtfs_last_modified}")
 
@@ -75,7 +85,7 @@ def get_raw(
 
 
 @task
-def save_raw_local(filepath: str, status: dict, mode: str = "raw") -> str:
+def save_raw_local_gtfs(filepath: str, status: dict, mode: str = "raw") -> str:
     """
     Saves json response from API to .json file.
 
@@ -96,7 +106,7 @@ def save_raw_local(filepath: str, status: dict, mode: str = "raw") -> str:
     log(f"Set partitioned path: {_file_path}")
 
     if status["error"] is None:
-        table_id = _file_path.split("/")[-4]
+        table_id = _file_path.split("/")[-3]
         raw_table_path = f"{smtr_constants.GTFS_RAW_PATH.value}/{table_id}.txt"
         shutil.move(raw_table_path, _file_path)
         log(f"File {table_id}.txt saved to: {_file_path}")
@@ -214,7 +224,7 @@ def pre_treatment_gtfs(status: Dict, filepath: str, timestamp: str) -> Dict:
         error = traceback.format_exc()
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
-    table_id = filepath.split("/")[-4]
+    table_id = filepath.split("/")[-3]
 
     if table_id == "quadro":
         log(f"Treating table: {table_id}")

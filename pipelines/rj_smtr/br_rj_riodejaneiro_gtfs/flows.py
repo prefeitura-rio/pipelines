@@ -2,7 +2,7 @@
 """
 Flows for gtfs
 """
-
+from datetime import datetime
 from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
@@ -13,14 +13,17 @@ from prefect.utilities.edges import unmapped
 from pipelines.constants import constants
 from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
+    get_current_flow_mode,
+    get_current_flow_labels,
 )
+
 from pipelines.utils.decorators import Flow
 
 # SMTR Imports #
 
 from pipelines.rj_smtr.constants import constants as smtr_constants
 from pipelines.rj_smtr.tasks import (
-    create_date_hour_partition,
+    create_date_partition,
     create_local_partition_path,
     # fetch_dataset_sha,
     get_current_timestamp,
@@ -28,14 +31,15 @@ from pipelines.rj_smtr.tasks import (
     parse_timestamp_to_string,
     # save_raw_local,
     save_treated_local,
-    # set_last_run_timestamp,
+    set_last_run_timestamp,
     upload_logs_to_bq,
     bq_upload,
 )
-from pipelines.rj_smtr.gtfs.tasks import (
-    get_raw,
-    save_raw_local,
+from pipelines.rj_smtr.br_rj_riodejaneiro_gtfs.tasks import (
+    get_raw_gtfs,
+    save_raw_local_gtfs,
     pre_treatment_gtfs,
+    get_current_timestamp_from_date,
 )
 
 # from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
@@ -43,18 +47,24 @@ from pipelines.rj_smtr.gtfs.tasks import (
 #     every_fortnight,
 # )
 
-with Flow("SMTR - GTFS: Captura", code_owners=["fernanda"]) as gtfs_captura:
+with Flow(
+    "[TESTE] SMTR - GTFS: Captura",
+    code_owners=["rodrigo"],
+) as gtfs_captura:  # "caio", "fernanda", "boris",
 
     # SETUP
-    timestamp = Parameter("timestamp", default=None)
+    date = Parameter("date", default=None)
 
-    timestamp = get_current_timestamp(timestamp)
+    LABELS = get_current_flow_labels()
+    MODE = get_current_flow_mode(LABELS)
 
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SMTR - GTFS Captura:", now_time=timestamp
-    )
+    timestamp = get_current_timestamp_from_date(date)
 
-    partitions = create_date_hour_partition(timestamp)
+    # rename_flow_run = rename_current_flow_run_now_time(
+    #     prefix="SMTR - GTFS Captura:", now_time=timestamp
+    # )
+
+    partitions = create_date_partition(timestamp, date_var="data_versao")
 
     filename = parse_timestamp_to_string(timestamp)
 
@@ -66,9 +76,11 @@ with Flow("SMTR - GTFS: Captura", code_owners=["fernanda"]) as gtfs_captura:
     )
 
     # Get data from GCS
-    raw_status = get_raw()
+    raw_status = get_raw_gtfs()
 
-    raw_filepath = save_raw_local.map(filepath=filepath, status=unmapped(raw_status))
+    raw_filepath = save_raw_local_gtfs.map(
+        filepath=filepath, status=unmapped(raw_status)
+    )
 
     treated_status = pre_treatment_gtfs.map(
         status=unmapped(raw_status),
@@ -88,13 +100,24 @@ with Flow("SMTR - GTFS: Captura", code_owners=["fernanda"]) as gtfs_captura:
         status=treated_status,
     )
 
-    upload_logs_to_bq.map(
+    UPLOAD_LOGS = upload_logs_to_bq.map(
         dataset_id=unmapped(smtr_constants.GTFS_DATASET_ID.value),
         parent_table_id=smtr_constants.GTFS_TABLES.value,
         error=error,
         timestamp=unmapped(timestamp),
     )
 
+    set_last_run_timestamp.map(
+        dataset_id=unmapped(smtr_constants.GTFS_DATASET_ID.value),
+        table_id=smtr_constants.GTFS_TABLES.value,
+        timestamp=unmapped(raw_status["gtfs_last_modified"]),
+        wait=unmapped(UPLOAD_LOGS),
+        mode=unmapped(MODE),
+    )
+
 gtfs_captura.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-gtfs_captura.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+gtfs_captura.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+)
 # flow.schedule = fortnight
