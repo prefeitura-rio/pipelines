@@ -146,7 +146,7 @@ with Flow(
     start_date_cond = check_param(start_date_param)
 
     with case(start_date_cond, True):
-        start_date_get = get_previous_date(5)
+        start_date_get = get_previous_date(7)
 
     with case(start_date_cond, False):
         start_date_def = start_date_param
@@ -156,7 +156,7 @@ with Flow(
     end_date_cond = check_param(end_date_param)
 
     with case(end_date_cond, True):
-        end_date_get = get_previous_date(5)
+        end_date_get = get_previous_date(7)
 
     with case(end_date_cond, False):
         end_date_def = end_date_param
