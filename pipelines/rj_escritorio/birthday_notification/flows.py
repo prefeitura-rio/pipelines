@@ -8,8 +8,8 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 from pipelines.constants import constants
-from pipelines.rj_escritorio.birthdays.schedules import daily_at_9am
-from pipelines.rj_escritorio.birthdays.tasks import (
+from pipelines.rj_escritorio.birthday_notification.schedules import daily_at_9am
+from pipelines.rj_escritorio.birthday_notification.tasks import (
     get_birthdays_by_date,
     get_todays_date,
     send_birthday_message,
