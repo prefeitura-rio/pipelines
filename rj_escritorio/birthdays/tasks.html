@@ -62,10 +62,10 @@ def get_birthdays_by_date(date: str) -&gt; List[str]:
     &#34;&#34;&#34;
     Get birthdays by date.
     &#34;&#34;&#34;
-    birthdays_url = (
-        f&#34;http://bot-rio-api.bot-rio.svc.cluster.local/users/?birthday={date}&#34;
-    )
-    response = requests.get(birthdays_url)
+    birthdays_url = f&#34;https://bot.dados.rio/users/?birthday={date}&#34;
+    secret = get_vault_secret(&#34;bot-rio-api-token&#34;)
+    token = secret[&#34;data&#34;][&#34;token&#34;]
+    response = requests.get(birthdays_url, headers={&#34;Authorization&#34;: f&#34;Token {token}&#34;})
     response.raise_for_status()
     return [item[&#34;name&#34;] for item in response.json()[&#34;results&#34;]]
 
@@ -103,10 +103,10 @@ def get_birthdays_by_date(date: str) -&gt; List[str]:
     &#34;&#34;&#34;
     Get birthdays by date.
     &#34;&#34;&#34;
-    birthdays_url = (
-        f&#34;http://bot-rio-api.bot-rio.svc.cluster.local/users/?birthday={date}&#34;
-    )
-    response = requests.get(birthdays_url)
+    birthdays_url = f&#34;https://bot.dados.rio/users/?birthday={date}&#34;
+    secret = get_vault_secret(&#34;bot-rio-api-token&#34;)
+    token = secret[&#34;data&#34;][&#34;token&#34;]
+    response = requests.get(birthdays_url, headers={&#34;Authorization&#34;: f&#34;Token {token}&#34;})
     response.raise_for_status()
     return [item[&#34;name&#34;] for item in response.json()[&#34;results&#34;]]</code></pre>
 </details>
