@@ -262,7 +262,9 @@ def get_pops() -> pd.DataFrame:
 
     pops = pd.DataFrame(response["objeto"])
     pops["id"] = pops["id"].astype("int")
-    pops = pops.rename({"id": "id_pop", "titulo": "pop_titulo"}, axis=1)
+    pops = pops.rename({"id": "id_pop", "titulo": "pop_titulo"}, axis=1).sort_values(
+        "id_pop"
+    )
     pops["pop_titulo"] = pops[
         "pop_titulo"
     ].str.capitalize()  # pylint: disable=unsubscriptable-object, E1137
@@ -284,13 +286,18 @@ def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -> pd.DataFrame:
 
     pop_ids = pops["id_pop"].unique()
 
+    # remove pop_id 0
+    pop_ids = [i for i in pop_ids if i not in [0, "0"]]
+
     atividades_pops = []
     for pop_id in pop_ids:
         log(f">>>>>>> Requesting POP's activities for pop_id: {pop_id}")
         response = get_url(url=url + f"?popId={pop_id}", token=auth_token)
 
         tentativa = 0
-        while "error" in response.keys() and tentativa <= 5:
+        while (
+            "error" in response.keys() or response == {"response": None}
+        ) and tentativa <= 5:
             log(
                 f">>>>>>> Requesting POP's activities for pop_id: {pop_id} Time: {tentativa+1}"
             )
@@ -298,16 +305,22 @@ def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -> pd.DataFrame:
             response = get_url(url=url + f"?popId={pop_id}", token=auth_token)
             tentativa += 1
 
-        if "error" in response.keys() and tentativa > 5:
+        if (
+            "error" in response.keys() or response == {"response": None}
+        ) and tentativa > 5:
             continue
 
-        row_template = {
-            "pop_titulo": response["pop"],
-            "id_pop": pop_id,
-            "sigla": "",
-            "orgao": "",
-            "acao": "",
-        }
+        try:
+            row_template = {
+                "pop_titulo": response["pop"],
+                "id_pop": pop_id,
+                "sigla": "",
+                "orgao": "",
+                "acao": "",
+            }
+        except:
+            log(f"Problem on response {response}")
+
         for activity in response["atividades"]:
             row = deepcopy(row_template)
             row["sigla"] = activity["sigla"]
@@ -316,6 +329,7 @@ def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -> pd.DataFrame:
             atividades_pops.append(row)
 
     dataframe = pd.DataFrame(atividades_pops)
+    dataframe = dataframe.sort_values(["id_pop", "sigla", "acao"])
 
     for i in ["sigla", "orgao", "acao"]:
         dataframe[i] = dataframe[i].str.capitalize()
