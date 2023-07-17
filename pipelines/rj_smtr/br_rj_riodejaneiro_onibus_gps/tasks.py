@@ -210,7 +210,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
             df_gps = df_gps[server_mask]  # pylint: disable=c0103
 
         mask = (df_gps[filter_col] - df_gps["datahora"]).apply(
-            lambda x: timedelta(seconds=0) <= x <= timedelta(minutes=time_delay)
+            lambda x: timedelta(seconds=-20) <= x <= timedelta(minutes=time_delay)
         )
 
         # Select and drop duplicated data
