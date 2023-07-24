@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Database dumping flows for processorio formacao infra project
+Database dumping flows for processorio formacao 
 """
 
 from copy import deepcopy
