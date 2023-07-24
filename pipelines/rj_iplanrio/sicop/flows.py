@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Database dumping flows for sicop formacao infra project
+Database dumping flows for processo.rio sicop
 """
 
 from copy import deepcopy
@@ -21,7 +21,9 @@ from pipelines.utils.utils import set_default_parameters
 # sicop dump db flow
 #
 rj_iplanrio_sicop_flow = deepcopy(dump_sql_flow)
-rj_iplanrio_sicop_flow.name = "IPLANRIO: SICOP- Ingerir tabelas de banco SQL"
+rj_iplanrio_sicop_flow.name = (
+    "IPLANRIO: processo.rio - SICOP - Ingerir tabelas de banco SQL"
+)
 rj_iplanrio_sicop_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 rj_iplanrio_sicop_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
