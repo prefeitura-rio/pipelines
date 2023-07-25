@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_iplanrio.processorio.flows API documentation</title>
-<meta name="description" content="Database dumping flows for processorio formacao" />
+<title>pipelines.rj_iplanrio.sicop.schedules API documentation</title>
+<meta name="description" content="Schedules for the database dump pipeline" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,64 +19,144 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_iplanrio.processorio.flows</code></h1>
+<h1 class="title">Module <code>pipelines.rj_iplanrio.sicop.schedules</code></h1>
 </header>
 <section id="section-intro">
-<p>Database dumping flows for processorio formacao</p>
+<p>Schedules for the database dump pipeline</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Database dumping flows for processorio formacao
+Schedules for the database dump pipeline
 &#34;&#34;&#34;
 
-from copy import deepcopy
+from datetime import timedelta, datetime
 
-from prefect.run_configs import KubernetesRun
-from prefect.storage import GCS
+from prefect.schedules import Schedule
+import pytz
 
 from pipelines.constants import constants
+from pipelines.utils.dump_db.utils import generate_dump_db_schedules
+from pipelines.utils.utils import untuple_clocks as untuple
 
-# importa o schedule
-from pipelines.rj_iplanrio.processorio.schedules import (
-    processorio_infra_daily_update_schedule,
-)
-from pipelines.utils.dump_db.flows import dump_sql_flow
-from pipelines.utils.utils import set_default_parameters
-
+#####################################
 #
-# processorio dump db flow
+# Processorio Schedules
 #
-rj_iplanrio_processorio_flow = deepcopy(dump_sql_flow)
-rj_iplanrio_processorio_flow.name = (
-    &#34;IPLANRIO: processo.rio - Ingerir tabelas de banco SQL&#34;
-)
-rj_iplanrio_processorio_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+#####################################
 
-rj_iplanrio_processorio_flow.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value,
-    labels=[
-        constants.RJ_IPLANRIO_AGENT_LABEL.value,  # label do agente
-    ],
-)
-
-processorio_default_parameters = {
-    &#34;db_database&#34;: &#34;SIGADOC.PCRJ&#34;,
-    &#34;db_host&#34;: &#34;10.70.6.64&#34;,
-    &#34;db_port&#34;: &#34;1521&#34;,
-    &#34;db_type&#34;: &#34;oracle&#34;,
-    &#34;dataset_id&#34;: &#34;administracao_servicos_publicos&#34;,
-    &#34;vault_secret_path&#34;: &#34;processorio-prod&#34;,
+_sicop_queries = {
+    &#34;apenso&#34;: {
+        #        &#34;partition_columns&#34;: &#34;dt_inicio&#34;,
+        #        &#34;lower_bound_date&#34;: &#34;2021-01-01&#34;,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;materialize_to_datario&#34;: False,
+        &#34;dump_to_gcs&#34;: False,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;SELECT
+                                CHAVE,
+                                NUM_PROCESSO_PRINCIPAL,
+                                NUM_PROCESSO_APENSADO,
+                                I22005_COD_OPER
+                                FROM SICOP.VW_APENSO&#34;&#34;&#34;,
+    },
+    &#34;assunto&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;materialize_to_datario&#34;: False,
+        &#34;dump_to_gcs&#34;: False,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;SELECT IDENT, COD, SEQ, DESC_ASSUNTO FROM SICOP.VW_ASSUNTO&#34;,
+    },
+    &#34;documento&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;materialize_to_datario&#34;: False,
+        &#34;dump_to_gcs&#34;: False,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;SELECT
+                                ORG_RESP,
+                                ORG_TRANSC,
+                                TIPO_DOC,
+                                SEC_SIST2,
+                                ANO_SIST2,
+                                MES_SIST2,
+                                DIA_SIST2,
+                                NUM_DOCUMENTO,
+                                REQUERENTE,
+                                COD_ASSUN,
+                                MAT_TRANSC,
+                                ASSUN_COMP
+                                FROM SICOP.VW_DOCUMENTO&#34;&#34;&#34;,
+    },
+    &#34;orgao&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;materialize_to_datario&#34;: False,
+        &#34;dump_to_gcs&#34;: False,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;SELECT
+                                ORG_SICOP,
+                                COD_ORCTO
+                                FROM SICOP.VW_ORGAO&#34;&#34;&#34;,
+    },
+    &#34;processo&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;materialize_to_datario&#34;: False,
+        &#34;dump_to_gcs&#34;: False,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;SELECT
+                                ORG_TRANSC,     NUM_PROCESSO,
+                                CPF_CGC,        IDENT,
+                                REQUERENTE,     DIA_PROC2,
+                                MES_PROC2,      SEC_PROC2,
+                                ANO_PROC2,      COD_ASSU_P,
+                                ANO_SIST2,      SEC_SIST2,
+                                MES_SIST2,      DIA_SIST2,
+                                DESC_ASSUN,     MAT_TRANSC,
+                                STATUS
+                                FROM SICOP.VW_PROCESSO&#34;&#34;&#34;,
+    },
+    &#34;tramitacao_documento&#34;: {
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;materialize_to_datario&#34;: False,
+        &#34;dump_to_gcs&#34;: False,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;&#34;&#34;SELECT
+                                ORG_RESP,
+                                TIPO_DOC,
+                                NUM_DOCUMENTO,
+                                SEQ,
+                                SEC_REMES2,
+                                ANO_REMES2,
+                                MES_REMES2,
+                                DIA_REMES2,
+                                DESTINO,
+                                COD_DESP
+                                FROM SICOP.VW_TRAMITACAO_DOCUMENTO&#34;&#34;&#34;,
+    },
 }
-
-rj_iplanrio_processorio_flow = set_default_parameters(
-    rj_iplanrio_processorio_flow,
-    default_parameters=processorio_default_parameters,
+sicop_infra_clocks = generate_dump_db_schedules(
+    interval=timedelta(days=1),
+    start_date=datetime(2023, 5, 19, 2, 0, tzinfo=pytz.timezone(&#34;America/Sao_Paulo&#34;)),
+    labels=[
+        constants.RJ_IPLANRIO_AGENT_LABEL.value,
+    ],
+    db_database=&#34;CP01.smf&#34;,
+    db_host=&#34;10.90.31.22&#34;,
+    db_port=&#34;1521&#34;,
+    db_type=&#34;oracle&#34;,
+    dataset_id=&#34;adm_processo_interno_sicop&#34;,
+    vault_secret_path=&#34;sicop-sql&#34;,
+    table_parameters=_sicop_queries,
 )
 
-rj_iplanrio_processorio_flow.schedule = processorio_infra_daily_update_schedule</code></pre>
+sicop_infra_daily_update_schedule = Schedule(clocks=untuple(sicop_infra_clocks))</code></pre>
 </details>
 </section>
 <section>
@@ -142,7 +222,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines.rj_iplanrio.processorio" href="index.html">pipelines.rj_iplanrio.processorio</a></code></li>
+<li><code><a title="pipelines.rj_iplanrio.sicop" href="index.html">pipelines.rj_iplanrio.sicop</a></code></li>
 </ul>
 </li>
 </ul>

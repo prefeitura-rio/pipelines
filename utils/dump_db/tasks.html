@@ -225,7 +225,7 @@ def format_partitioned_query(
     table = bd.Table(dataset_id, table_id)
 
     # If it doesn&#39;t, return the query as is, so we can fetch the whole table.
-    if not table.table_exists(&#34;staging&#34;):
+    if not table.table_exists(mode=&#34;staging&#34;):
         log(&#34;NO tables was found. Returning query as is&#34;)
         return query
 
@@ -1007,7 +1007,7 @@ def format_partitioned_query(
     table = bd.Table(dataset_id, table_id)
 
     # If it doesn&#39;t, return the query as is, so we can fetch the whole table.
-    if not table.table_exists(&#34;staging&#34;):
+    if not table.table_exists(mode=&#34;staging&#34;):
         log(&#34;NO tables was found. Returning query as is&#34;)
         return query
 
