@@ -83,5 +83,5 @@ jobs:
           verbose: true
 
       - name: Register Prefect flows
-        run: |- 
+        run: |-
           python .github/workflows/scripts/register_flows.py --project $PREFECT__SERVER__PROJECT --path pipelines/ --schedule
