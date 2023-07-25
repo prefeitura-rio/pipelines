@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Database dumping flows for processorio formacao infra project
+Database dumping flows for processorio formacao
 """
 
 from copy import deepcopy
@@ -22,7 +22,7 @@ from pipelines.utils.utils import set_default_parameters
 #
 rj_iplanrio_processorio_flow = deepcopy(dump_sql_flow)
 rj_iplanrio_processorio_flow.name = (
-    "IPLANRIO: processorio - Ingerir tabelas de banco SQL"
+    "IPLANRIO: processo.rio - Ingerir tabelas de banco SQL"
 )
 rj_iplanrio_processorio_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 
