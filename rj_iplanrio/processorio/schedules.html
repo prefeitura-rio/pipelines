@@ -132,6 +132,16 @@ _processorio_infra_query = {
         &#34;dump_mode&#34;: &#34;overwrite&#34;,
         &#34;execute_query&#34;: &#34;SELECT ID_ORGAO_USU, NM_ORGAO_USU, SIGLA_ORGAO_USU, COD_ORGAO_USU, IS_EXTERNO_ORGAO_USU, HIS_ATIVO, IS_PETICIONAMENTO FROM CORPORATIVO.VW_ORGAO_USUARIO&#34;,  # noqa
     },
+    &#34;documento&#34;: {
+        &#34;biglake_table&#34;: True,
+        &#34;materialize_after_dump&#34;: True,
+        &#34;materialization_mode&#34;: &#34;prod&#34;,
+        &#34;materialize_to_datario&#34;: False,
+        &#34;dump_to_gcs&#34;: False,
+        &#34;dump_mode&#34;: &#34;overwrite&#34;,
+        &#34;execute_query&#34;: &#34;select * from siga.vw_ex_documento&#34;,  # noqa
+        &#34;dbt_alias&#34;: True,
+    },
 }
 
 processorio_infra_clocks = generate_dump_db_schedules(
