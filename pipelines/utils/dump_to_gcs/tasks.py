@@ -7,6 +7,7 @@ from datetime import datetime
 from time import sleep
 from typing import Union
 
+import basedosdados as bd
 from basedosdados.download.base import google_client
 from basedosdados.upload.base import Base
 from google.cloud import bigquery
@@ -42,8 +43,12 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
     if not project_id:
         log("Project ID was not provided, trying to get it from environment variable")
         try:
+            log(f"Using basedosdados version: {bd.__version__}")
             bd_base = Base()
-            project_id = bd_base.config["gcloud-projects"][bd_project_mode]["name"]
+            bd_config = bd_base.config
+            log(f"Basedosdados Config: {bd_config}")
+            project_id = bd_config["gcloud-projects"][bd_project_mode]["name"]
+            log(f"Project ID: {project_id}")
         except KeyError:
             pass
         if not project_id:
@@ -91,10 +96,12 @@ def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
             "Billing project ID was not provided, trying to get it from environment variable"
         )
         try:
+            log(f"Using basedosdados version: {bd.__version__}")
             bd_base = Base()
-            billing_project_id = bd_base.config["gcloud-projects"][bd_project_mode][
-                "name"
-            ]
+            bd_config = bd_base.config
+            log(f"Basedosdados Config: {bd_config}")
+            billing_project_id = bd_config["gcloud-projects"][bd_project_mode]["name"]
+            log(f"Billing project ID: {billing_project_id}")
         except KeyError:
             pass
         if not billing_project_id:
@@ -176,8 +183,13 @@ def get_project_id(
         return project_id
     log("Project ID was not provided, trying to get it from environment variable")
     try:
+        log(f"Using basedosdados version: {bd.__version__}")
         bd_base = Base()
-        project_id = bd_base.config["gcloud-projects"][bd_project_mode]["name"]
+        bd_config = bd_base.config
+        log(f"Basedosdados Config: {bd_config}")
+        project_id = bd_config["gcloud-projects"][bd_project_mode]["name"]
+        log(f"Project ID: {project_id}")
+
     except KeyError:
         pass
     if not project_id:
