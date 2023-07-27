@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Flows  for dumping data directly from BigQuery to GCS.
+Flows for dumping data directly from BigQuery to  GCS.
 """
 from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
