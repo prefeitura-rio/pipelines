@@ -210,7 +210,7 @@ def set_redis_rdo_files(redis_client, dataset_id: str, table_id: str):
     """
     try:
         content = redis_client.get(f"{dataset_id}.{table_id}")["files"]
-    except (TypeError) as e:
+    except TypeError as e:
         log(f"Caught error {e}. Will set unexisting key")
         # set key to empty dict for filling later
         redis_client.set(f"{dataset_id}.{table_id}", {"files": []})

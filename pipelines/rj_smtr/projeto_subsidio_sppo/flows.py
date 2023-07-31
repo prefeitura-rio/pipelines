@@ -58,7 +58,6 @@ with Flow(
     "SMTR: Viagens SPPO",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as viagens_sppo:
-
     # Rename flow run
     current_date = get_now_date()
 
@@ -107,7 +106,6 @@ with Flow(
     SUBSIDIO_SPPO_APURACAO_NAME,
     code_owners=["rodrigo"],
 ) as subsidio_sppo_apuracao:
-
     # 1. SETUP #
 
     # Get default parameters #
