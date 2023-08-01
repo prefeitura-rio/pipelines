@@ -158,11 +158,11 @@ def create_date_hour_partition(timestamp: datetime) -> str:
 
 
 @task
-def create_date_partition(timestamp: datetime) -> str:
+def create_date_partition(timestamp: datetime, date_var: str = "data") -> str:
     """
     Get date hour Hive partition structure from timestamp.
     """
-    return f"data={timestamp.date()}"
+    return f"{date_var}={timestamp.date()}"
 
 
 @task
@@ -560,7 +560,7 @@ def upload_logs_to_bq(  # pylint: disable=R0913
     """
     table_id = parent_table_id + "_logs"
     # Create partition directory
-    filename = f"{table_id}_{timestamp.isoformat()}"
+    filename = f"{table_id}_{timestamp.isoformat()}".replace(":", "-")
     partition = f"data={timestamp.date()}"
     filepath = Path(
         f"""data/staging/{dataset_id}/{table_id}/{partition}/{filename}.csv"""

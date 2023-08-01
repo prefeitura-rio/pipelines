@@ -166,12 +166,12 @@ class constants(Enum):  # pylint: disable=c0103
     # GTFS
     GTFS_DATASET_ID = "br_rj_riodejaneiro_gtfs"
     GTFS_TABLES = [
+        "quadro_horario",
         "agency",
         "calendar_dates",
         "calendar",
         "feed_info",
         "frequencies",
-        "quadro",
         "routes",
         "shapes",
         "stops",
