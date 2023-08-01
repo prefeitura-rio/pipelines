@@ -88,9 +88,9 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
     ]
     for col in dt_cols:
         log(f"Converting column {col}")
-        df_realocacao[col] = pd.to_datetime(df_realocacao[col]).dt.tz_localize(
-            tz=constants.TIMEZONE.value
-        )
+        df_realocacao[col] = pd.to_datetime(
+            df_realocacao[col], format="ISO8601"
+        ).dt.tz_localize(tz=constants.TIMEZONE.value)
 
     # Ajusta tempo máximo da realocação
     df_realocacao.loc[
