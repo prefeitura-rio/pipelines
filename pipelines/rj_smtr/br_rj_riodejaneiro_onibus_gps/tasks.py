@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=W0702, W0718
 """
 Tasks for br_rj_riodejaneiro_onibus_gps
 """
@@ -88,9 +89,15 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
     ]
     for col in dt_cols:
         log(f"Converting column {col}")
-        df_realocacao[col] = pd.to_datetime(
-            df_realocacao[col], format="ISO8601"
-        ).dt.tz_localize(tz=constants.TIMEZONE.value)
+        try:
+            df_realocacao[col] = pd.to_datetime(
+                df_realocacao[col], format="%Y-%m-%dT%H:%M:%S"
+            ).dt.tz_localize(tz=constants.TIMEZONE.value)
+        except Exception as e:
+            log(f"[CATCHED] {e} - Dealing with miliseconds")
+            df_realocacao[col] = pd.to_datetime(
+                df_realocacao[col], format="%Y-%m-%dT%H:%M:%S.%f"
+            ).dt.tz_localize(tz=constants.TIMEZONE.value)
 
     # Ajusta tempo máximo da realocação
     df_realocacao.loc[

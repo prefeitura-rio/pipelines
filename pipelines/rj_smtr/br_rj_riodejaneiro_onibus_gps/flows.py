@@ -59,7 +59,7 @@ from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 # Flows #
 
 with Flow(
-    "SMTR: GPS SPPO - Realocação (captura)",
+    "[Teste] SMTR: GPS SPPO - Realocação (captura)",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as realocacao_sppo:
 
