@@ -95,15 +95,13 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
         temp_time_col_sec = pd.to_datetime(
             df_realocacao[col], format="%Y-%m-%dT%H:%M:%S", errors="coerce"
         ).dt.tz_localize(tz=constants.TIMEZONE.value)
-        temp_time_col_msec = (
-            pd.to_datetime(
-                df_realocacao[col], format="%Y-%m-%dT%H:%M:%S.%f", errors="coerce"
-            )
-            .dt.tz_localize(tz=constants.TIMEZONE.value)
-            .strftime("%Y-%m-%d %H:%M:%S%z")
-        )
+        temp_time_col_msec = pd.to_datetime(
+            df_realocacao[col], format="%Y-%m-%dT%H:%M:%S.%f", errors="coerce"
+        ).dt.tz_localize(tz=constants.TIMEZONE.value)
 
-        df_realocacao[col] = temp_time_col_sec.fillna(temp_time_col_msec)
+        df_realocacao[col] = temp_time_col_sec.fillna(temp_time_col_msec).dt.strftime(
+            "%Y-%m-%d %H:%M:%S%z"
+        )
 
         if df_realocacao[col].isna().sum() > 0:
             error = ValueError("After treating, there is null values!")
