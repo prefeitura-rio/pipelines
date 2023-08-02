@@ -84,7 +84,6 @@ def create_or_append_table(
             path=dirpath,
             if_table_exists=&#34;pass&#34;,
             if_storage_data_exists=&#34;replace&#34;,
-            if_table_config_exists=&#34;replace&#34;,
         )
         log(&#34;Table created in STAGING&#34;)
     else:
@@ -636,7 +635,6 @@ Defaults to 'bigquery_prod'.</p>
             path=dirpath,
             if_table_exists=&#34;pass&#34;,
             if_storage_data_exists=&#34;replace&#34;,
-            if_table_config_exists=&#34;replace&#34;,
         )
         log(&#34;Table created in STAGING&#34;)
     else:
