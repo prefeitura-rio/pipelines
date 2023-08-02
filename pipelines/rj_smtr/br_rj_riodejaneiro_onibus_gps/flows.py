@@ -59,7 +59,7 @@ from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 # Flows #
 
 with Flow(
-    "[Teste] SMTR: GPS SPPO - Realocação (captura)",
+    "SMTR: GPS SPPO - Realocação (captura)",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as realocacao_sppo:
 
@@ -130,7 +130,7 @@ with Flow(
 realocacao_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 realocacao_sppo.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 realocacao_sppo.schedule = every_10_minutes
 
