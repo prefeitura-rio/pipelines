@@ -91,10 +91,10 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
         log(f"Converting column {col}")
         log(f"Data received to treat: \n{df_realocacao[col]}")
         temp_time_col_sec = pd.to_datetime(
-            df_realocacao[col], format="%Y-%m-%dT%H:%M:%S", erros="coerce"
+            df_realocacao[col], format="%Y-%m-%dT%H:%M:%S", errors="coerce"
         ).dt.tz_localize(tz=constants.TIMEZONE.value)
         temp_time_col_msec = pd.to_datetime(
-            df_realocacao[col], format="%Y-%m-%dT%H:%M:%S.%f", erros="coerce"
+            df_realocacao[col], format="%Y-%m-%dT%H:%M:%S.%f", errors="coerce"
         ).dt.tz_localize(tz=constants.TIMEZONE.value)
 
         df_realocacao[col] = temp_time_col_sec.fillna(temp_time_col_msec)
