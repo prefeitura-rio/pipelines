@@ -95,9 +95,13 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
         temp_time_col_sec = pd.to_datetime(
             df_realocacao[col], format="%Y-%m-%dT%H:%M:%S", errors="coerce"
         ).dt.tz_localize(tz=constants.TIMEZONE.value)
-        temp_time_col_msec = pd.to_datetime(
-            df_realocacao[col], format="%Y-%m-%dT%H:%M:%S.%f", errors="coerce"
-        ).dt.tz_localize(tz=constants.TIMEZONE.value)
+        temp_time_col_msec = (
+            pd.to_datetime(
+                df_realocacao[col], format="%Y-%m-%dT%H:%M:%S.%f", errors="coerce"
+            )
+            .dt.tz_localize(tz=constants.TIMEZONE.value)
+            .strftime("%Y-%m-%d %H:%M:%S%z")
+        )
 
         df_realocacao[col] = temp_time_col_sec.fillna(temp_time_col_msec)
 
