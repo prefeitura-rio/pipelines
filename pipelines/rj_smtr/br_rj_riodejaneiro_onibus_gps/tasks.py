@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=W0702, W0718
 """
 Tasks for br_rj_riodejaneiro_onibus_gps
 """
@@ -87,17 +86,24 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
         "dataSaida",
         "dataProcessado",
     ]
+
     for col in dt_cols:
         log(f"Converting column {col}")
-        try:
-            df_realocacao[col] = pd.to_datetime(
-                df_realocacao[col], format="%Y-%m-%dT%H:%M:%S"
-            ).dt.tz_localize(tz=constants.TIMEZONE.value)
-        except Exception as e:
-            log(f"[CATCHED] {e} - Dealing with miliseconds")
-            df_realocacao[col] = pd.to_datetime(
-                df_realocacao[col], format="%Y-%m-%dT%H:%M:%S.%f"
-            ).dt.tz_localize(tz=constants.TIMEZONE.value)
+        log(f"Data received to treat: \n{df_realocacao[col]}")
+        temp_time_col_sec = pd.to_datetime(
+            df_realocacao[col], format="%Y-%m-%dT%H:%M:%S", erros="coerce"
+        ).dt.tz_localize(tz=constants.TIMEZONE.value)
+        temp_time_col_msec = pd.to_datetime(
+            df_realocacao[col], format="%Y-%m-%dT%H:%M:%S.%f", erros="coerce"
+        ).dt.tz_localize(tz=constants.TIMEZONE.value)
+
+        df_realocacao[col] = temp_time_col_sec.fillna(temp_time_col_msec)
+
+        if df_realocacao[col].isna().sum() > 0:
+            error = ValueError("After treating, there is null values!")
+            log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+
+        log(f"Treated data: \n{df_realocacao[col]}")
 
     # Ajusta tempo máximo da realocação
     df_realocacao.loc[

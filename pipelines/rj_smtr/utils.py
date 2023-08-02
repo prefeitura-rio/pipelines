@@ -55,7 +55,7 @@ def create_or_append_table(
             path=dirpath,
             if_table_exists="pass",
             if_storage_data_exists="replace",
-            if_table_config_exists="replace",
+            # if_table_config_exists="replace",
         )
         log("Table created in STAGING")
     else:
