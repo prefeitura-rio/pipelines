@@ -111,7 +111,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
 
     # Ajusta tempo máximo da realocação
     df_realocacao.loc[
-        df_realocacao.dataSaida == "1971-01-01 00:00:00", "dataSaida"
+        df_realocacao.dataSaida == "1971-01-01 00:00:00-0300", "dataSaida"
     ] = ""
 
     # Renomeia colunas
