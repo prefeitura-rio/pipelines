@@ -122,7 +122,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
 
     df_realocacao = df_realocacao.rename(columns=cols)
 
-    return {"data": df_realocacao.drop_duplicates(), "error": None}
+    return {"data": df_realocacao.drop_duplicates(), "error": error}
 
 
 @task
