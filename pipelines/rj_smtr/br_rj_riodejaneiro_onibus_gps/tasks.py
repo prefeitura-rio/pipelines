@@ -73,6 +73,8 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
         log("Data is empty, skipping treatment...")
         return {"data": pd.DataFrame(), "error": status["error"]}
 
+    error = None
+
     log(f"Data received to treat: \n{status['data'][:5]}")
     df_realocacao = pd.DataFrame(status["data"])  # pylint: disable=c0103
     # df_realocacao["timestamp_captura"] = timestamp
