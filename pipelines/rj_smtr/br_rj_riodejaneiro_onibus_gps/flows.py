@@ -62,8 +62,8 @@ from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 # Flows #
 
 with Flow(
-    "[Teste] SMTR: GPS SPPO - Realocação (captura)",
-    code_owners=["rodrigo"],  # ["caio", "fernanda", "boris", "rodrigo"],
+    "SMTR: GPS SPPO - Realocação (captura)",
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as realocacao_sppo:
 
     # SETUP #
@@ -150,10 +150,10 @@ realocacao_sppo.run_config = KubernetesRun(
 )
 realocacao_sppo.schedule = every_10_minutes
 
-REALOCACAO_SPPO_RECAPTURA_NAME = "[Teste] SMTR: GPS SPPO - Realocação (recaptura)"
+REALOCACAO_SPPO_RECAPTURA_NAME = "SMTR: GPS SPPO - Realocação (recaptura)"
 with Flow(
     REALOCACAO_SPPO_RECAPTURA_NAME,
-    code_owners=["rodrigo"],
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as realocacao_sppo_recaptura:
 
     start_date = Parameter("start_date", default="")
