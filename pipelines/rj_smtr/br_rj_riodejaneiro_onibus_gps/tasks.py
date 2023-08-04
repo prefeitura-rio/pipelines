@@ -303,7 +303,7 @@ def get_realocacao_recapture_timestamps(start_date: str, end_date: str) -> List:
         timestamps = timestamps + timestamps_temp
         previous_errors = previous_errors + previous_errors_temp
 
-    timestamps = [timestamp.strftime("%Y-%m-%d %H:%M:%S%z") for timestamp in timestamps]
+    timestamps = [timestamp.strftime("%Y-%m-%d %H:%M:%S") for timestamp in timestamps]
 
     log(
         f"""From {start_date} to {end_date}, there are {len(timestamps)} recapture timestamps: \n
