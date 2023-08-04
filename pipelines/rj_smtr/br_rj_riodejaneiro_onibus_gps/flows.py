@@ -155,11 +155,6 @@ with Flow(
     start_date = Parameter("start_date", default="")
     end_date = Parameter("end_date", default="")
 
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix=f"{REALOCACAO_SPPO_RECAPTURA_NAME}: ",
-        now_time=f"{get_current_timestamp.run(start_date)}-{get_current_timestamp.run(end_date)}",
-    )
-
     timestamps = get_realocacao_recapture_timestamps(start_date, end_date)
 
     GPS_SPPO_REALOCACAO_RUN = create_flow_run.map(
