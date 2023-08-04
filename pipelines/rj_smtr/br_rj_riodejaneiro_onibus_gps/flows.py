@@ -159,16 +159,18 @@ with Flow(
 
     GPS_SPPO_REALOCACAO_RUN = create_flow_run.map(
         flow_name=unmapped(realocacao_sppo.name),
-        project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+        project_name=unmapped(
+            "staging"
+        ),  # unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
         run_name=unmapped(realocacao_sppo.name),
         parameters=timestamps,
     )
 
-    wait_for_flow_run(
+    wait_for_flow_run.map(
         GPS_SPPO_REALOCACAO_RUN,
-        stream_states=True,
-        stream_logs=True,
-        raise_final_state=True,
+        stream_states=unmapped(True),
+        stream_logs=unmapped(True),
+        raise_final_state=unmapped(True),
     )
 
 realocacao_sppo_recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
