@@ -142,8 +142,10 @@ def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -> datet
     """
     if not timestamp:
         timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
-    if isinstance(timestamp) is str:
-        timestamp = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+    if isinstance(timestamp, str):
+        timestamp = timezone(constants.TIMEZONE.value).localize(
+            datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+        )
     if truncate_minute:
         return timestamp.replace(second=0, microsecond=0)
     return timestamp
