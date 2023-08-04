@@ -770,3 +770,11 @@ def get_previous_date(days):
     now = pendulum.now(pendulum.timezone("America/Sao_Paulo")).subtract(days=days)
 
     return now.to_date_string()
+
+
+@task
+def check_param(param: str) -> bool:
+    """
+    Check if param is None
+    """
+    return param is None
