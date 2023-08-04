@@ -321,37 +321,37 @@ def query_logs(
         timestamp_array < '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}' ),
     logs_table AS (
         SELECT
-        SAFE_CAST(DATETIME(TIMESTAMP(timestamp_captura),
-                  "America/Sao_Paulo") AS DATETIME) timestamp_captura,
-        SAFE_CAST(sucesso AS BOOLEAN) sucesso,
-        SAFE_CAST(erro AS STRING) erro,
-        SAFE_CAST(DATA AS DATE) DATA
+            SAFE_CAST(DATETIME(TIMESTAMP(timestamp_captura),
+                    "America/Sao_Paulo") AS DATETIME) timestamp_captura,
+            SAFE_CAST(sucesso AS BOOLEAN) sucesso,
+            SAFE_CAST(erro AS STRING) erro,
+            SAFE_CAST(DATA AS DATE) DATA
         FROM
-        rj-smtr-staging.{dataset_id}_staging.{table_id}_logs AS t
+            rj-smtr-staging.{dataset_id}_staging.{table_id}_logs AS t
     ),
     logs AS (
+        SELECT
+            *,
+            TIMESTAMP_TRUNC(timestamp_captura, minute) AS timestamp_array
+        FROM
+            logs_table
+        WHERE
+            DATA BETWEEN DATE(DATETIME_SUB('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}',
+                            INTERVAL 1 day))
+            AND DATE('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}')
+            AND timestamp_captura BETWEEN
+                DATETIME_SUB('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}', INTERVAL 1 day)
+            AND '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
+        ORDER BY
+            timestamp_captura )
     SELECT
-        *,
-        TIMESTAMP_TRUNC(timestamp_captura, minute) AS timestamp_array
-    FROM
-        logs_table
-    WHERE
-        DATA BETWEEN DATE(DATETIME_SUB('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}',
-                          INTERVAL 1 day))
-        AND DATE('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}')
-        AND timestamp_captura BETWEEN
-            DATETIME_SUB('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}', INTERVAL 1 day)
-        AND '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
-    ORDER BY
-        timestamp_captura )
-    SELECT
-    CASE
-        WHEN logs.timestamp_captura IS NOT NULL THEN logs.timestamp_captura
-    ELSE
-        t.timestamp_array
-    END
-        AS timestamp_captura,
-        logs.erro
+        CASE
+            WHEN logs.timestamp_captura IS NOT NULL THEN logs.timestamp_captura
+        ELSE
+            t.timestamp_array
+        END
+            AS timestamp_captura,
+            logs.erro
     FROM
         t
     LEFT JOIN
