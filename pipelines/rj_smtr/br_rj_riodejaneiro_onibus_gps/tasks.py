@@ -295,9 +295,14 @@ def get_realocacao_recapture_timestamps(start_date: str, end_date: str) -> List:
                             data={date}/
                             hora={hora:02}/
                             {date}-{hora:02}-{minuto:02}-00.json"""
+
+                log(f"Getting blobs with prefix: {prefix}", level="info")
+
                 blobs_list = list_blobs_with_prefix(
                     bucket_name="rj-smtr-staging", prefix=prefix, mode="staging"
                 )
+
+                log(f"Found {len(blobs_list)} blobs", level="info")
 
                 if len(blobs_list) == 0:
                     timestamps.append(f"{date} {hora:02}:{minuto:02}:00")
