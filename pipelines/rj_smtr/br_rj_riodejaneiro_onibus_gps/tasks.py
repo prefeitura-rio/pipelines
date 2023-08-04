@@ -292,9 +292,18 @@ def get_realocacao_recapture_timestamps(start_date: str, end_date: str) -> List:
             interval_minutes=10,
         )
 
+        if timestamps_temp == []:
+            log(
+                f"""From {date}, there are no recapture timestamps""",
+                level="info",
+            )
+            continue
+
         errors = errors + ([errors_temp] * len(timestamps_temp))
         timestamps = timestamps + timestamps_temp
         previous_errors = previous_errors + previous_errors_temp
+
+    timestamps = [timestamp.strftime("%Y-%m-%d %H:%M:%S%z") for timestamp in timestamps]
 
     log(
         f"""From {start_date} to {end_date}, there are {len(timestamps)} recapture timestamps: \n
@@ -309,6 +318,7 @@ def get_realocacao_recapture_timestamps(start_date: str, end_date: str) -> List:
             "error": error,
             "timestamp": timestamp,
             "previous_error": previous_error,
+            "recapture": True,
         }
 
         combined_data.append(data)
