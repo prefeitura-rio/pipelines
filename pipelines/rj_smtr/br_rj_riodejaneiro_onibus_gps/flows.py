@@ -4,6 +4,7 @@ Flows for br_rj_riodejaneiro_onibus_gps
 """
 
 from prefect import Parameter, case
+from prefect.tasks.control_flow import merge
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
@@ -41,6 +42,7 @@ from pipelines.rj_smtr.tasks import (
     set_last_run_timestamp,
     upload_logs_to_bq,
     bq_upload,
+    check_param,
 )
 from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
     pre_treatment_br_rj_riodejaneiro_onibus_gps,
@@ -78,9 +80,18 @@ with Flow(
         "table_id", default=constants.GPS_SPPO_REALOCACAO_TREATED_TABLE_ID.value
     )
     rebuild = Parameter("rebuild", False)
+    timestamp_param = Parameter("timestamp", None)
 
     # SETUP
-    timestamp = Parameter("timestamp", default=get_current_timestamp.run())
+    timestamp_cond = check_param(timestamp_param)
+
+    with case(timestamp_cond, True):
+        timestamp_get = get_current_timestamp()
+
+    with case(timestamp_cond, False):
+        timestamp_def = get_current_timestamp(timestamp_param)
+
+    timestamp = merge(timestamp_get, timestamp_def)
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix="GPS SPPO - Realocação: ", now_time=timestamp
@@ -135,14 +146,19 @@ realocacao_sppo.run_config = KubernetesRun(
 )
 realocacao_sppo.schedule = every_10_minutes
 
-
+REALOCACAO_SPPO_RECAPTURA_NAME = "[Teste] SMTR: GPS SPPO - Realocação (recaptura)"
 with Flow(
-    "[Teste] SMTR: GPS SPPO - Realocação (recaptura)",
+    REALOCACAO_SPPO_RECAPTURA_NAME,
     code_owners=["rodrigo"],
 ) as realocacao_sppo_recaptura:
 
     start_date = Parameter("start_date", default="")
     end_date = Parameter("end_date", default="")
+
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix=f"{REALOCACAO_SPPO_RECAPTURA_NAME}: ",
+        now_time=f"{start_date}-{end_date}",
+    )
 
     timestamps = get_realocacao_recapture_timestamps(start_date, end_date)
 
