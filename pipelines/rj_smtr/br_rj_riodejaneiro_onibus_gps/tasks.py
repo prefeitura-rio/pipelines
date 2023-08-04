@@ -265,8 +265,14 @@ def get_realocacao_recapture_timestamps(start_date: str, end_date: str) -> List:
         end_date (str): End date in format YYYY-MM-DD
 
     Returns:
-        timestamps (list): List of timestamps in format YYYY-MM-DD HH:MM:SS
+        timestamps (list): List of dictionaries containing the timestamps
+        to recapture in format YYYY-MM-DD HH:MM:SS.
     """
+
+    log(
+        f"Getting timestamps to recapture between {start_date} and {end_date}",
+        level="info",
+    )
 
     timestamps = []
 
@@ -279,10 +285,9 @@ def get_realocacao_recapture_timestamps(start_date: str, end_date: str) -> List:
 
     for date in dates:
         # horas = range(0,24)
-        horas = [0]
+        horas = [7]
         for hora in horas:
-            # minutos = range(0,60,10)
-            minutos = [0]
+            minutos = range(0, 60, 10)
             for minuto in minutos:
                 prefix = f"""raw/
                             {dataset_id}/
@@ -291,7 +296,7 @@ def get_realocacao_recapture_timestamps(start_date: str, end_date: str) -> List:
                             hora={hora:02}/
                             {date}-{hora:02}-{minuto:02}-00.json"""
                 blobs_list = list_blobs_with_prefix(
-                    bucket_name="rj-smtr-dev", prefix=prefix, mode="staging"
+                    bucket_name="rj-smtr-staging", prefix=prefix, mode="staging"
                 )
 
                 if len(blobs_list) == 0:
@@ -299,7 +304,10 @@ def get_realocacao_recapture_timestamps(start_date: str, end_date: str) -> List:
 
     log(
         f"""From {start_date} to {end_date}, there are {len(timestamps)} recapture timestamps: \n
-            {timestamps}"""
+            {timestamps}""",
+        level="info",
     )
+
+    timestamps = [{"timestamp": d} for d in timestamps]
 
     return timestamps
