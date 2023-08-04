@@ -12,11 +12,12 @@ import pendulum
 
 # EMD Imports #
 
-from pipelines.utils.utils import log, get_vault_secret, list_blobs_with_prefix
+from pipelines.utils.utils import log, get_vault_secret
 
 # SMTR Imports #
 
 from pipelines.rj_smtr.constants import constants
+from pipelines.rj_smtr.tasks import query_logs, get_current_timestamp
 
 # Tasks #
 
@@ -265,8 +266,7 @@ def get_realocacao_recapture_timestamps(start_date: str, end_date: str) -> List:
         end_date (str): End date in format YYYY-MM-DD
 
     Returns:
-        timestamps (list): List of dictionaries containing the timestamps
-        to recapture in format YYYY-MM-DD HH:MM:SS.
+        List: List of dicts containing the timestamps to recapture
     """
 
     log(
@@ -274,38 +274,27 @@ def get_realocacao_recapture_timestamps(start_date: str, end_date: str) -> List:
         level="info",
     )
 
+    errors = []
     timestamps = []
+    previous_errors = []
 
     dates = pd.date_range(start=start_date, end=end_date)
-
-    dataset_id = constants.GPS_SPPO_RAW_DATASET_ID.value
-    table_id = constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value
 
     dates = dates.strftime("%Y-%m-%d").to_list()
 
     for date in dates:
-        # horas = range(0,24)
-        horas = [7]
-        for hora in horas:
-            minutos = range(0, 60, 10)
-            for minuto in minutos:
-                prefix = f"""raw/
-                            {dataset_id}/
-                            {table_id}/
-                            data={date}/
-                            hora={hora:02}/
-                            {date}-{hora:02}-{minuto:02}-00.json"""
+        datetime_filter = get_current_timestamp.run(f"{date} 00:00:00")
+        errors_temp, timestamps_temp, previous_errors_temp = query_logs.run(
+            dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
+            table_id=constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
+            datetime_filter=datetime_filter,
+            max_recaptures=2 ^ 63 - 1,
+            interval_minutes=10,
+        )
 
-                log(f"Getting blobs with prefix: {prefix}", level="info")
-
-                blobs_list = list_blobs_with_prefix(
-                    bucket_name="rj-smtr-staging", prefix=prefix, mode="staging"
-                )
-
-                log(f"Found {len(blobs_list)} blobs", level="info")
-
-                if len(blobs_list) == 0:
-                    timestamps.append(f"{date} {hora:02}:{minuto:02}:00")
+        errors = errors + errors_temp
+        timestamps = timestamps + timestamps_temp
+        previous_errors = previous_errors + previous_errors_temp
 
     log(
         f"""From {start_date} to {end_date}, there are {len(timestamps)} recapture timestamps: \n
@@ -313,6 +302,21 @@ def get_realocacao_recapture_timestamps(start_date: str, end_date: str) -> List:
         level="info",
     )
 
-    timestamps = [{"timestamp": d} for d in timestamps]
+    combined_data = []
 
-    return timestamps
+    for error, timestamp, previous_error in zip(errors, timestamps, previous_errors):
+        data = {
+            "error": error,
+            "timestamp": timestamp,
+            "previous_error": previous_error,
+        }
+
+        combined_data.append(data)
+
+    log(
+        f"""Combined data: \n
+            {combined_data}""",
+        level="info",
+    )
+
+    return combined_data
