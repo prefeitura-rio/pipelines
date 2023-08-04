@@ -297,7 +297,9 @@ def query_logs(
         interval_minutes (int, optional): interval in minutes between each recapture
 
     Returns:
-        lists: errors, timestamps, previous_errors
+        lists: errors (bool),
+        timestamps (list of pendulum.datetime.DateTime),
+        previous_errors (list of previous errors)
     """
 
     if not datetime_filter:
