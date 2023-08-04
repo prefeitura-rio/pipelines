@@ -157,7 +157,7 @@ with Flow(
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=f"{REALOCACAO_SPPO_RECAPTURA_NAME}: ",
-        now_time=f"{start_date}-{end_date}",
+        now_time=f"{get_current_timestamp.run(start_date)}-{get_current_timestamp.run(end_date)}",
     )
 
     timestamps = get_realocacao_recapture_timestamps(start_date, end_date)
@@ -166,7 +166,7 @@ with Flow(
         flow_name=unmapped(realocacao_sppo.name),
         project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
         run_name=unmapped(realocacao_sppo.name),
-        parameters=dict(timestamp=timestamps),
+        parameters=timestamps,
     )
 
     wait_for_flow_run(
