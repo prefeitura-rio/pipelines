@@ -292,7 +292,7 @@ def get_realocacao_recapture_timestamps(start_date: str, end_date: str) -> List:
             interval_minutes=10,
         )
 
-        errors = errors + [errors_temp] * len(timestamps_temp)
+        errors = errors + ([errors_temp] * len(timestamps_temp))
         timestamps = timestamps + timestamps_temp
         previous_errors = previous_errors + previous_errors_temp
 
