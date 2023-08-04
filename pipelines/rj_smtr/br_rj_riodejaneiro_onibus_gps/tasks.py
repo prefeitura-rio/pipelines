@@ -258,7 +258,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
 
 @task
 def get_realocacao_recapture_timestamps(start_date: str, end_date: str) -> List:
-    """Get all timestamps from realocacao recapture files in a given date range.
+    """Get timestamps with no file in realocacao to recapture it in a given date range.
 
     Args:
         start_date (str): Start date in format YYYY-MM-DD
