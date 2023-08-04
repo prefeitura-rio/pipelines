@@ -62,8 +62,8 @@ from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 # Flows #
 
 with Flow(
-    "SMTR: GPS SPPO - Realocação (captura)",
-    code_owners=["caio", "fernanda", "boris", "rodrigo"],
+    "[Teste] SMTR: GPS SPPO - Realocação (captura)",
+    code_owners=["rodrigo"],  # ["caio", "fernanda", "boris", "rodrigo"],
 ) as realocacao_sppo:
 
     # SETUP #
@@ -81,6 +81,8 @@ with Flow(
     )
     rebuild = Parameter("rebuild", False)
     timestamp_param = Parameter("timestamp", None)
+    recapture = Parameter("recapture", False)
+    previous_error = Parameter("previous_error", None)
 
     # SETUP
     timestamp_cond = check_param(timestamp_param)
@@ -137,6 +139,8 @@ with Flow(
         parent_table_id=constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
         error=error,
         timestamp=timestamp,
+        previous_error=previous_error,
+        recapture=recapture,
     )
 
 realocacao_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
