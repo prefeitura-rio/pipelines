@@ -32,6 +32,7 @@ from pipelines.rj_smtr.tasks import (
     get_run_dates,
     get_join_dict,
     get_previous_date,
+    check_param,
     # get_local_dbt_client,
     # set_last_run_timestamp,
 )
@@ -49,8 +50,6 @@ from pipelines.rj_smtr.schedules import (
     # every_dayofmonth_one_and_sixteen,
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
-
-from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import check_param
 
 # Flows #
 
