@@ -136,14 +136,14 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
 
 
 @task
-def get_current_timestamp(
-    timestamp: datetime = None, truncate_minute: bool = True
-) -> datetime:
+def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -> datetime:
     """
     Get current timestamp for flow run.
     """
     if not timestamp:
         timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
+    if isinstance(timestamp) is str:
+        timestamp = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
     if truncate_minute:
         return timestamp.replace(second=0, microsecond=0)
     return timestamp
@@ -276,7 +276,11 @@ def save_treated_local(file_path: str, status: dict, mode: str = "staging") -> s
 ###############
 @task(nout=3)
 def query_logs(
-    dataset_id: str, table_id: str, datetime_filter=None, max_recaptures: int = 60
+    dataset_id: str,
+    table_id: str,
+    datetime_filter=None,
+    max_recaptures: int = 60,
+    interval_minutes: int = 1,
 ):
     """
     Queries capture logs to check for errors
@@ -287,9 +291,11 @@ def query_logs(
         datetime_filter (pendulum.datetime.DateTime, optional):
         filter passed to query. This task will query the logs table
         for the last 1 day before datetime_filter
+        max_recaptures (int, optional): maximum number of recaptures to be done
+        interval_minutes (int, optional): interval in minutes between each recapture
 
     Returns:
-        list: containing timestamps for which the capture failed
+        lists: errors, timestamps, previous_errors
     """
 
     if not datetime_filter:
@@ -298,49 +304,61 @@ def query_logs(
         )
 
     query = f"""
-    with t as (
-    select
-        datetime(timestamp_array) as timestamp_array
-    from
-        unnest(GENERATE_TIMESTAMP_ARRAY(
-            timestamp_sub('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}', interval 1 day),
-            timestamp('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'),
-            interval 1 minute)
-        ) as timestamp_array
-    where timestamp_array < '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
+    WITH
+    t AS (
+    SELECT
+        DATETIME(timestamp_array) AS timestamp_array
+    FROM
+        UNNEST(
+            GENERATE_TIMESTAMP_ARRAY(
+                TIMESTAMP_SUB('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}', INTERVAL 1 day),
+                TIMESTAMP('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'),
+                INTERVAL {interval_minutes} minute) )
+        AS timestamp_array
+    WHERE
+        timestamp_array < '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}' ),
+    logs_table AS (
+        SELECT
+        SAFE_CAST(DATETIME(TIMESTAMP(timestamp_captura),
+                  "America/Sao_Paulo") AS DATETIME) timestamp_captura,
+        SAFE_CAST(sucesso AS BOOLEAN) sucesso,
+        SAFE_CAST(erro AS STRING) erro,
+        SAFE_CAST(DATA AS DATE) DATA
+        FROM
+        rj-smtr-staging.{dataset_id}_staging.{table_id}_logs AS t
     ),
-    logs as (
-        select
-            *,
-            timestamp_trunc(timestamp_captura, minute) as timestamp_array
-        from
-            rj-smtr.{dataset_id}.{table_id}_logs
-        where
-            data between
-                date(datetime_sub('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}',
-                interval 1 day))
-                and date('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}')
-        and
-            timestamp_captura between
-                datetime_sub('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}', interval 1 day)
-                and '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
-        order by timestamp_captura
-    )
-    select
-        case
-            when logs.timestamp_captura is not null then logs.timestamp_captura
-            else t.timestamp_array
-        end as timestamp_captura,
+    logs AS (
+    SELECT
+        *,
+        TIMESTAMP_TRUNC(timestamp_captura, minute) AS timestamp_array
+    FROM
+        logs_table
+    WHERE
+        DATA BETWEEN DATE(DATETIME_SUB('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}',
+                          INTERVAL 1 day))
+        AND DATE('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}')
+        AND timestamp_captura BETWEEN
+            DATETIME_SUB('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}', INTERVAL 1 day)
+        AND '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
+    ORDER BY
+        timestamp_captura )
+    SELECT
+    CASE
+        WHEN logs.timestamp_captura IS NOT NULL THEN logs.timestamp_captura
+    ELSE
+        t.timestamp_array
+    END
+        AS timestamp_captura,
         logs.erro
-    from
+    FROM
         t
-    left join
+    LEFT JOIN
         logs
-    on
+    ON
         logs.timestamp_array = t.timestamp_array
-    where
-        logs.sucesso is not True
-    order by
+    WHERE
+        logs.sucesso IS NOT TRUE
+    ORDER BY
         timestamp_captura
     """
     log(f"Run query to check logs:\n{query}")
