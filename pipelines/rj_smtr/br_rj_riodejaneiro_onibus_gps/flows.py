@@ -47,6 +47,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
     create_api_url_onibus_gps,
     create_api_url_onibus_realocacao,
     pre_treatment_br_rj_riodejaneiro_onibus_realocacao,
+    get_realocacao_recapture_timestamps,
 )
 
 from pipelines.rj_smtr.schedules import (
@@ -79,7 +80,7 @@ with Flow(
     rebuild = Parameter("rebuild", False)
 
     # SETUP
-    timestamp = get_current_timestamp()
+    timestamp = Parameter("timestamp", default=get_current_timestamp.run())
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix="GPS SPPO - Realocação: ", now_time=timestamp
@@ -130,9 +131,40 @@ with Flow(
 realocacao_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 realocacao_sppo.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 realocacao_sppo.schedule = every_10_minutes
+
+
+with Flow(
+    "[Teste] SMTR: GPS SPPO - Realocação (recaptura)",
+    code_owners=["rodrigo"],
+) as realocacao_sppo_recaptura:
+
+    start_date = Parameter("start_date", default="")
+    end_date = Parameter("end_date", default="")
+
+    timestamps = get_realocacao_recapture_timestamps(start_date, end_date)
+
+    GPS_SPPO_REALOCACAO_RUN = create_flow_run.map(
+        flow_name=unmapped(realocacao_sppo.name),
+        project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+        run_name=unmapped(realocacao_sppo.name),
+        parameters=dict(timestamp=timestamps),
+    )
+
+    wait_for_flow_run(
+        GPS_SPPO_REALOCACAO_RUN,
+        stream_states=True,
+        stream_logs=True,
+        raise_final_state=True,
+    )
+
+realocacao_sppo_recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+realocacao_sppo_recaptura.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+)
 
 
 with Flow(

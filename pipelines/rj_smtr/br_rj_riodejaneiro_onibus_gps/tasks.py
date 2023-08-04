@@ -5,14 +5,14 @@ Tasks for br_rj_riodejaneiro_onibus_gps
 
 import traceback
 from datetime import datetime, timedelta
-from typing import Dict
+from typing import Dict, List
 import pandas as pd
 from prefect import task
 import pendulum
 
 # EMD Imports #
 
-from pipelines.utils.utils import log, get_vault_secret
+from pipelines.utils.utils import log, get_vault_secret, list_blobs_with_prefix
 
 # SMTR Imports #
 
@@ -254,3 +254,52 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return {"data": df_gps, "error": error}
+
+
+@task
+def get_realocacao_recapture_timestamps(start_date: str, end_date: str) -> List:
+    """Get all timestamps from realocacao recapture files in a given date range.
+
+    Args:
+        start_date (str): Start date in format YYYY-MM-DD
+        end_date (str): End date in format YYYY-MM-DD
+
+    Returns:
+        timestamps (list): List of timestamps in format YYYY-MM-DD HH:MM:SS
+    """
+
+    timestamps = []
+
+    dates = pd.date_range(start=start_date, end=end_date)
+
+    dataset_id = constants.GPS_SPPO_RAW_DATASET_ID.value
+    table_id = constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value
+
+    dates = dates.strftime("%Y-%m-%d").to_list()
+
+    for date in dates:
+        # horas = range(0,24)
+        horas = [0]
+        for hora in horas:
+            # minutos = range(0,60,10)
+            minutos = [0]
+            for minuto in minutos:
+                prefix = f"""raw/
+                            {dataset_id}/
+                            {table_id}/
+                            data={date}/
+                            hora={hora:02}/
+                            {date}-{hora:02}-{minuto:02}-00.json"""
+                blobs_list = list_blobs_with_prefix(
+                    bucket_name="rj-smtr-dev", prefix=prefix, mode="staging"
+                )
+
+                if len(blobs_list) == 0:
+                    timestamps.append(f"{date} {hora:02}:{minuto:02}:00")
+
+    log(
+        f"""From {start_date} to {end_date}, there are {len(timestamps)} recapture timestamps: \n
+            {timestamps}"""
+    )
+
+    return timestamps
