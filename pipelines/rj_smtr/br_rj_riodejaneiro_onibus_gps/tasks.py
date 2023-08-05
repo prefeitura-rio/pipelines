@@ -286,9 +286,17 @@ def get_realocacao_recapture_timestamps(start_date: str, end_date: str) -> List:
     for date in dates:
         datetime_filter = get_current_timestamp.run(f"{date} 00:00:00")
 
-        if datetime_filter > get_current_timestamp.run():
+        current_timestamp = get_current_timestamp.run()
+
+        if datetime_filter > current_timestamp:
             flag_break = True
-            datetime_filter = get_current_timestamp.run()
+
+            # Round down to the nearest 10 minutes
+            current_timestamp = current_timestamp.replace(
+                second=0, microsecond=0, minute=((current_timestamp.minute // 10) * 10)
+            )
+
+            datetime_filter = current_timestamp
             log(
                 """Datetime filter is greater than current timestamp,
                    using current timestamp instead""",
