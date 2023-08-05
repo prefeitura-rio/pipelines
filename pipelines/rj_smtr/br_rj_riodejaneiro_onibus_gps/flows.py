@@ -44,6 +44,7 @@ from pipelines.rj_smtr.tasks import (
     bq_upload,
     check_param,
 )
+
 from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
     pre_treatment_br_rj_riodejaneiro_onibus_gps,
     create_api_url_onibus_gps,
@@ -57,7 +58,10 @@ from pipelines.rj_smtr.schedules import (
     every_minute,
     every_10_minutes,
 )
+
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
+
+from pipelines.rj_smtr.utils import get_project_name
 
 # Flows #
 
@@ -159,13 +163,15 @@ with Flow(
     start_date = Parameter("start_date", default="")
     end_date = Parameter("end_date", default="")
 
+    LABELS = get_current_flow_labels()
+    MODE = get_current_flow_mode(LABELS)
+    PROJECT_NAME = get_project_name(MODE)
+
     timestamps = get_realocacao_recapture_timestamps(start_date, end_date)
 
     GPS_SPPO_REALOCACAO_RUN = create_flow_run.map(
         flow_name=unmapped(realocacao_sppo.name),
-        project_name=unmapped(
-            "staging"
-        ),  # unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+        project_name=unmapped(PROJECT_NAME),
         run_name=unmapped(realocacao_sppo.name),
         parameters=timestamps,
     )
