@@ -383,3 +383,10 @@ def data_info_str(data: pd.DataFrame):
     buffer = io.StringIO()
     data.info(buf=buffer)
     return buffer.getvalue()
+
+
+def get_project_name(project_name: str):
+    if project_name == "prod":
+        return constants.PREFECT_DEFAULT_PROJECT.value
+    else:
+        return "staging"
