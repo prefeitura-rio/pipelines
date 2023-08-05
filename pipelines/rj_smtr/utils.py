@@ -385,8 +385,18 @@ def data_info_str(data: pd.DataFrame):
     return buffer.getvalue()
 
 
-def get_project_name(project_name: str):
-    if project_name == "prod":
+def get_project_name(mode: str):
+    """
+    Get project name based on mode
+
+    Args:
+        mode (str): mode
+
+    Returns:
+        str: project name
+    """
+
+    if mode == "prod":
         return constants.PREFECT_DEFAULT_PROJECT.value
     else:
         return "staging"
