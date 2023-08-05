@@ -298,8 +298,8 @@ def get_realocacao_recapture_timestamps(start_date: str, end_date: str) -> List:
 
             datetime_filter = current_timestamp
             log(
-                """Datetime filter is greater than current timestamp,
-                   using current timestamp instead""",
+                f"""Datetime filter is greater than current timestamp,
+                   using current timestamp instead ({datetime_filter})""",
                 level="warning",
             )
 
