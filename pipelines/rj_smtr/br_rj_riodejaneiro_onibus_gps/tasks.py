@@ -277,6 +277,7 @@ def get_realocacao_recapture_timestamps(start_date: str, end_date: str) -> List:
     errors = []
     timestamps = []
     previous_errors = []
+    flag_break = False
 
     dates = pd.date_range(start=start_date, end=end_date)
 
@@ -284,6 +285,16 @@ def get_realocacao_recapture_timestamps(start_date: str, end_date: str) -> List:
 
     for date in dates:
         datetime_filter = get_current_timestamp.run(f"{date} 00:00:00")
+
+        if datetime_filter > get_current_timestamp.run():
+            flag_break = True
+            datetime_filter = get_current_timestamp.run()
+            log(
+                """Datetime filter is greater than current timestamp,
+                   using current timestamp instead""",
+                level="warning",
+            )
+
         errors_temp, timestamps_temp, previous_errors_temp = query_logs.run(
             dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
             table_id=constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
@@ -302,6 +313,13 @@ def get_realocacao_recapture_timestamps(start_date: str, end_date: str) -> List:
         errors = errors + ([errors_temp] * len(timestamps_temp))
         timestamps = timestamps + timestamps_temp
         previous_errors = previous_errors + previous_errors_temp
+
+        if flag_break:
+            log(
+                "Breaking loop because datetime filter is greater than current timestamp",
+                level="warning",
+            )
+            break
 
     timestamps = [timestamp.strftime("%Y-%m-%d %H:%M:%S") for timestamp in timestamps]
 
