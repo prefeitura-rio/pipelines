@@ -209,10 +209,23 @@ def format_partitioned_query(
         storage_partitions_dict, date_format
     )
 
+    if lower_bound_date == "last_year":
+        lower_bound_date = datetime.now().replace(month=1, day=1).strftime("%Y-%m-%d")
+        log(f"Using lower_bound_date last_year: {lower_bound_date}")
+    elif lower_bound_date == "last_month":
+        lower_bound_date = datetime.now().replace(day=1).strftime("%Y-%m-%d")
+        log(f"Using lower_bound_date last_month: {lower_bound_date}")
+    elif lower_bound_date == "last_day":
+        lower_bound_date = datetime.now().strftime("%Y-%m-%d")
+        log(f"Using lower_bound_date last_day: {lower_bound_date}")
+
     if lower_bound_date:
         last_date = min(str(lower_bound_date), str(last_partition_date))
+        log(f"Using lower_bound_date: {last_date}")
+
     else:
         last_date = str(last_partition_date)
+        log(f"Using last_date from storage: {last_date}")
 
     # Using the last partition date, get the partitioned query.
     # `aux_name` must be unique and start with a letter, for better compatibility with
