@@ -16,6 +16,7 @@ from pipelines.rj_smtr.tasks import get_previous_date
 
 from pipelines.rj_smtr.materialize_to_datario.schedules import (
     smtr_materialize_to_datario_daily_schedule,
+    smtr_materialize_to_datario_parameters,
 )
 
 # # VIAGEM SPPO #
@@ -35,19 +36,9 @@ smtr_materialize_to_datario_viagem_sppo_flow.run_config = KubernetesRun(
     ],
 )
 
-smtr_materialize_to_datario_viagem_sppo_parameters = {
-    "dataset_id": "transporte_rodoviario_municipal",
-    "table_id": "viagem_onibus",
-    "mode": "prod",
-    "dbt_model_parameters": {
-        "date_range_end": get_previous_date.run(1),
-        "date_range_start": None,
-    },
-}
-
 smtr_materialize_to_datario_viagem_sppo_flow = set_default_parameters(
     smtr_materialize_to_datario_viagem_sppo_flow,
-    default_parameters=smtr_materialize_to_datario_viagem_sppo_parameters,
+    default_parameters=smtr_materialize_to_datario_parameters["viagem_onibus"],
 )
 
 # # DAILY SCHEDULED DATA #
@@ -87,20 +78,11 @@ smtr_materialize_to_datario_viagem_planejada_sppo_flow.run_config = KubernetesRu
     ],
 )
 
-smtr_materialize_to_datario_viagem_planejada_sppo_parameters = {
-    "dataset_id": "transporte_rodoviario_municipal",
-    "table_id": "viagem_planejada_onibus",
-    "mode": "prod",
-    "materialize_to_datario": True,
-    "dbt_model_parameters": {
-        "date_range_end": get_previous_date.run(1),
-        "date_range_start": None,
-    },
-}
-
 smtr_materialize_to_datario_viagem_planejada_sppo_flow = set_default_parameters(
     smtr_materialize_to_datario_viagem_planejada_sppo_flow,
-    default_parameters=smtr_materialize_to_datario_viagem_planejada_sppo_parameters,
+    default_parameters=smtr_materialize_to_datario_parameters[
+        "viagem_planejada_onibus"
+    ],
 )
 
 # # SUBSIDIO SPPO #
