@@ -8,7 +8,7 @@ import json
 import os
 from pathlib import Path
 import traceback
-from typing import Dict, List
+from typing import Dict, List, Union
 import io
 
 from basedosdados import Storage, Table
@@ -28,6 +28,7 @@ from pipelines.rj_smtr.utils import (
     get_last_run_timestamp,
     log_critical,
 )
+from pipelines.rj_escritorio.notify_flooding.utils import send_email
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
 
@@ -469,6 +470,7 @@ def bq_upload(
     partitions = {partitions}, type = {type(partitions)}
     """
     )
+
     if status["error"] is not None:
         return status["error"]
 
@@ -770,3 +772,53 @@ def get_previous_date(days):
     now = pendulum.now(pendulum.timezone("America/Sao_Paulo")).subtract(days=days)
 
     return now.to_date_string()
+
+
+###############
+# Notify
+###############
+
+
+@task
+def email_on_failure(
+    email_config_secret_path: str,
+    to_email: Union[str, List[str]],
+    api: str,
+    api_nickname: str,
+    error: str,
+):
+    """
+    Send a notification via email for pipeline failures
+    """
+    if not error:
+        return error
+    time = pendulum.now("America/Sao_Paulo").time().strftime("%H:%M")
+    subject = f"Erro na captura da api {api_nickname}"
+    message = f"""
+                                    ------- SMTR Automail Bot----------
+                                Notificação de falha na captura de dados:
+
+
+    A captura da api {api} programada para {time}
+    do dia {pendulum.now("America/Sao_Paulo").date().isoformat()}
+    falhou com o seguinte erro:
+    ---
+    {error}
+    ----
+    Pedimos que comuniquem os responsáveis sobre a falha.
+    **** Não responder a esse email ****
+"""
+
+    secret = get_vault_secret(email_config_secret_path)["data"]
+    send_email(
+        from_address=secret["smtp_username"],
+        to_address=to_email,
+        subject=subject,
+        body=message,
+        smtp_server=secret["smtp_server"],
+        smtp_port=int(secret["smtp_port"]),
+        smtp_username=secret["smtp_username"],
+        smtp_password=secret["smtp_password"],
+        tls=True,
+    )
+    return error

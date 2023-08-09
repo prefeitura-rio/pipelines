@@ -24,7 +24,7 @@ from pipelines.utils.tasks import (
 # SMTR Imports #
 
 from pipelines.rj_smtr.veiculo.constants import constants
-
+from pipelines.rj_smtr.constants import constants as generic_constants
 from pipelines.rj_smtr.schedules import (
     every_day_hour_five,
 )
@@ -42,6 +42,7 @@ from pipelines.rj_smtr.tasks import (
     get_run_dates,
     get_join_dict,
     get_previous_date,
+    email_on_failure,
 )
 
 from pipelines.rj_smtr.veiculo.tasks import (
@@ -106,6 +107,13 @@ with Flow(
         raw_filepath=raw_filepath,
         partitions=partitions,
         status=treated_status,
+    )
+    error = email_on_failure(
+        email_config_secret_path=generic_constants.NOTIFY_MAIL_SECRET_PATH.value,
+        to_email=generic_constants.STU_EMAILS.value,
+        api=constants.SPPO_LICENCIAMENTO_URL.value,
+        api_nickname="Licenciamento SPPO",
+        error=error,
     )
     upload_logs_to_bq(
         dataset_id=constants.DATASET_ID.value,
@@ -175,15 +183,22 @@ with Flow(
         partitions=partitions,
         status=treated_status,
     )
-    upload_logs_to_bq(
-        dataset_id=constants.DATASET_ID.value,
-        parent_table_id=constants.SPPO_INFRACAO_TABLE_ID.value,
-        timestamp=timestamp,
+    error = email_on_failure(
+        email_config_secret_path=generic_constants.NOTIFY_MAIL_SECRET_PATH.value,
+        to_email=generic_constants.STU_EMAILS.value,
+        api=constants.SPPO_INFRACAO_URL.value,
+        api_nickname="Infração SPPO",
         error=error,
     )
-    sppo_infracao_captura.set_dependencies(
-        task=partitions, upstream_tasks=[rename_flow_run]
-    )
+    # upload_logs_to_bq(
+    #     dataset_id=constants.DATASET_ID.value,
+    #     parent_table_id=constants.SPPO_INFRACAO_TABLE_ID.value,
+    #     timestamp=timestamp,
+    #     error=error,
+    # )
+    # sppo_infracao_captura.set_dependencies(
+    #     task=partitions, upstream_tasks=[rename_flow_run]
+    # )
 
 sppo_infracao_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_infracao_captura.run_config = KubernetesRun(
