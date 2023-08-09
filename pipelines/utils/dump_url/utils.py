@@ -135,6 +135,10 @@ def generate_dump_url_schedules(  # pylint: disable=too-many-arguments,too-many-
             parameter_defaults["materialize_to_datario"] = parameters[
                 "materialize_to_datario"
             ]
+        if "encoding" in parameters:
+            parameter_defaults["encoding"] = parameters[
+                "encoding"
+            ]
         # if "dbt_model_secret_parameters" in parameters:
         #     parameter_defaults["dbt_model_secret_parameters"] = parameters[
         #         "dbt_model_secret_parameters"
