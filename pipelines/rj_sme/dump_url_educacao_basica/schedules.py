@@ -40,6 +40,7 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "dataset_id": "educacao_basica_avaliacao",
         "encoding": "latin-1",
+        "on_bad_lines": "skip",
     },
     "bimestral_2021": {
         "dump_mode": "overwrite",
