@@ -155,7 +155,7 @@ def dump_files(
     on_bad_lines: str = "error",
 ) -> None:
     """
-    Dump files according to chunk size
+    Dump files according to chunk size and read mode
     """
     event_id = datetime.now().strftime("%Y%m%d-%H%M%S")
     for idx, chunk in enumerate(
