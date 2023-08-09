@@ -41,6 +41,7 @@ gsheets_urls = {
         "dataset_id": "educacao_basica_avaliacao",
         "encoding": "latin-1",
         "on_bad_lines": "skip",
+        "separator": ";",
     },
     "bimestral_2021": {
         "dump_mode": "overwrite",

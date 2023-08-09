@@ -153,6 +153,7 @@ def dump_files(
     dataframe_key_column: str = None,
     encoding: str = "utf-8",
     on_bad_lines: str = "error",
+    separator: str = ',',
 ) -> None:
     """
     Dump files according to chunk size and read mode
@@ -164,6 +165,7 @@ def dump_files(
             chunksize=chunksize,
             encoding=encoding,
             on_bad_lines=on_bad_lines,
+            sep=separator,
         )
     ):
         log(f"Dumping batch {idx} with size {chunksize}")

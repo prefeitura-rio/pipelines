@@ -50,6 +50,7 @@ with Flow(
     partition_columns = Parameter("partition_columns", required=False, default="")
     encoding = Parameter("encoding", required=False, default="utf-8")
     on_bad_lines = Parameter("on_bad_lines", required=False, default="error")
+    separator = Parameter("separator", required=False, default=",")
 
     # Materialization parameters
     materialize_after_dump = Parameter(
@@ -125,6 +126,7 @@ with Flow(
         dataframe_key_column=dataframe_key_column,
         encoding=encoding,
         on_bad_lines=on_bad_lines,
+        separator=separator,
     )
     DUMP_CHUNKS_TASK.set_upstream(DOWNLOAD_URL_TASK)
 
