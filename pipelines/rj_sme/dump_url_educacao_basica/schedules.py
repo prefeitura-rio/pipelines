@@ -39,6 +39,7 @@ gsheets_urls = {
         "url_type": "google_drive",
         "materialize_after_dump": True,
         "dataset_id": "educacao_basica_avaliacao",
+        "encoding": "latin-1",
     },
     "bimestral_2021": {
         "dump_mode": "overwrite",
@@ -46,6 +47,7 @@ gsheets_urls = {
         "url_type": "google_drive",
         "materialize_after_dump": True,
         "dataset_id": "educacao_basica_avaliacao",
+        "encoding": "latin-1",
     },
     "bimestral_2019": {
         "dump_mode": "overwrite",

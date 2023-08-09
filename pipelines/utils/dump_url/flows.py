@@ -48,6 +48,7 @@ with Flow(
 
     # Table parameters
     partition_columns = Parameter("partition_columns", required=False, default="")
+    encoding = Parameter("encoding", required=False, default="utf-8")
 
     # Materialization parameters
     materialize_after_dump = Parameter(
@@ -121,6 +122,7 @@ with Flow(
         save_path=DUMP_DATA_PATH,
         build_json_dataframe=build_json_dataframe,
         dataframe_key_column=dataframe_key_column,
+        encoding=encoding,
     )
     DUMP_CHUNKS_TASK.set_upstream(DOWNLOAD_URL_TASK)
 
