@@ -2,4 +2,4 @@
 """
 Prefect flows for formacao
 """
-from pipelines.formacao.exemplo.flow import *
+from pipelines.formacao.exemplo.flows import *
