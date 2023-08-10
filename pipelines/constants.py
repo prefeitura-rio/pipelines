@@ -45,6 +45,8 @@ class constants(Enum):  # pylint: disable=c0103
 
     RJ_SMS_AGENT_LABEL = "rj-sms"
 
+    RJ_SMS_DEV_AGENT_LABEL = "rj-sms-dev"
+
     RJ_SMI_AGENT_LABEL = "rj-smi"
 
     RJ_SECONSERVA_AGENT_LABEL = "rj-seconserva"
@@ -124,6 +126,14 @@ class constants(Enum):  # pylint: disable=c0103
         },
         "boris": {
             "user_id": "1109195532884262934",
+            "type": "user_nickname",
+        },
+        "thiago": {
+            "user_id": "404716070088343552",
+            "type": "user_nickname",
+        },
+        "andre": {
+            "user_id": "369657115012366336",
             "type": "user_nickname",
         },
     }
