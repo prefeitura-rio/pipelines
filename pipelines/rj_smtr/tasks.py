@@ -806,6 +806,11 @@ def email_on_failure(
     {error}
     ----
     Pedimos que comuniquem os responsáveis sobre a falha.
+
+    Para maiores informações, entre em contato com:
+    • Rodrigo Cunha (rodrigo.fcunha@rio.rj.gov.br); ou
+    • Fernanda Scovino (fernanda.scovino@rio.rj.gov.br).
+
     **** Não responder a esse email ****
 """
 
