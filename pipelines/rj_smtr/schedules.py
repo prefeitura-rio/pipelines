@@ -113,6 +113,20 @@ every_day_hour_five = Schedule(
     ]
 )
 
+every_day_hour_four_thirty = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(days=1),
+            start_date=datetime(
+                2022, 11, 30, 4, 30, tzinfo=timezone(constants.TIMEZONE.value)
+            ),
+            labels=[
+                emd_constants.RJ_SMTR_AGENT_LABEL.value,
+            ],
+        ),
+    ]
+)
+
 every_dayofmonth_one_and_sixteen = Schedule(
     clocks=[
         CronClock(
