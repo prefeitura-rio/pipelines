@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=C0103
+# pylint: disable=C0103,R0914
 """
 Tasks for precipitacao_alertario
 """
@@ -109,6 +109,17 @@ def tratar_dados(
     log(f"uniquesss df >>>, {type(dados.id_estacao.unique()[0])}")
     dados["id_estacao"] = dados["id_estacao"].astype(str)
 
+    # Ajustando dados da meia-noite que vem sem o horário
+    for index, row in dados.iterrows():
+        try:
+            date = pd.to_datetime(row["data_medicao"], format="%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            date = pd.to_datetime(row["data_medicao"]) + pd.DateOffset(hours=0)
+
+        dados.at[index, "data_medicao"] = date.strftime("%Y-%m-%d %H:%M:%S")
+
+    log(f"Dataframe before comparing with last data saved on redis {dados.head()}")
+
     dados = save_updated_rows_on_redis(
         dados,
         dataset_id,
@@ -118,6 +129,8 @@ def tratar_dados(
         date_format=date_format,
         mode=mode,
     )
+
+    log(f"Dataframe after comparing with last data saved on redis {dados.head()}")
 
     # If df is empty stop flow on flows.py
     empty_data = dados.shape[0] == 0

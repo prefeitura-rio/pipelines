@@ -967,7 +967,7 @@ def compare_dates_between_tables_redis(
 
 
 # pylint: disable=W0106
-def save_updated_rows_on_redis(
+def save_updated_rows_on_redis(  # pylint: disable=R0914
     dataframe: pd.DataFrame,
     dataset_id: str,
     table_id: str,
@@ -1032,9 +1032,19 @@ def save_updated_rows_on_redis(
     dataframe[date_column] = dataframe[date_column].apply(
         pd.to_datetime, format=date_format
     )
-    dataframe["last_update"] = dataframe["last_update"].apply(
-        pd.to_datetime, format="%Y-%m-%d %H:%M:%S"
-    )
+
+    # Iterate through each row and modify the date format
+    for index, row in dataframe.iterrows():
+        try:
+            date = pd.to_datetime(row["last_update"], format="%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            date = pd.to_datetime(row["last_update"]) + pd.DateOffset(hours=0)
+
+        dataframe.at[index, "last_update"] = date.strftime("%Y-%m-%d %H:%M:%S")
+    log(f"DEBUG >>>>>>>>>>>>> {dataframe.head()}")
+    # dataframe["last_update"] = dataframe["last_update"].apply(
+    #     pd.to_datetime, format="%Y-%m-%d %H:%M:%S"
+    # )
     dataframe = dataframe[dataframe[date_column] > dataframe["last_update"]].dropna(
         subset=[unique_id]
     )
