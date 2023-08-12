@@ -90,7 +90,6 @@ with Flow(
         csv_args=constants.SPPO_LICENCIAMENTO_CSV_ARGS.value,
         max_retries=5,
         retry_delay=timedelta(minutes=5),
-        retry_on=True,
     )
 
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
@@ -163,7 +162,6 @@ with Flow(
         csv_args=constants.SPPO_INFRACAO_CSV_ARGS.value,
         max_retries=5,
         retry_delay=timedelta(minutes=5),
-        retry_on=True,
     )
 
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
