@@ -8,6 +8,7 @@ from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.utilities.edges import unmapped
+from datetime import timedelta
 
 # EMD Imports #
 
@@ -87,6 +88,9 @@ with Flow(
         url=constants.SPPO_LICENCIAMENTO_URL.value,
         filetype="txt",
         csv_args=constants.SPPO_LICENCIAMENTO_CSV_ARGS.value,
+        max_retries=5,
+        retry_delay=timedelta(minutes=5),
+        retry_on=True,
     )
 
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
@@ -157,6 +161,9 @@ with Flow(
         url=constants.SPPO_INFRACAO_URL.value,
         filetype="txt",
         csv_args=constants.SPPO_INFRACAO_CSV_ARGS.value,
+        max_retries=5,
+        retry_delay=timedelta(minutes=5),
+        retry_on=True,
     )
 
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
