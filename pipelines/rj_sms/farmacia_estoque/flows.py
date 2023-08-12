@@ -24,11 +24,11 @@ with Flow(
     ]
 
     # Set Parameters
-    ## Azure
+    #  Azure
     container_name = Parameter("container_name", default="tpc")
     blob_name = Parameter("blob_name", default="report.csv")
     destination_folder_path = os.path.expanduser("~")
-    ## GCP
+    #  GCP
     dataset_id = "estoque"
     table_id = "tpc_current"
     dump_mode = "append"  # append or overwrite
