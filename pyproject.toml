@@ -60,6 +60,7 @@ statsmodels = "^0.13.0"
 tweepy = "4.4"
 xarray = "^2022.6.0"
 xgboost = "^1.7.4"
+azure-storage-blob = "^12.17.0"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.12.2"
