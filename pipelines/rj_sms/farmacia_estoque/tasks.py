@@ -2,6 +2,7 @@
 from prefect import task
 from pipelines.utils.utils import log
 from azure.storage.blob import BlobServiceClient
+from datetime import timezone
 
 
 @task
@@ -31,18 +32,19 @@ def download_azure_blob(
 
 
 @task
-def list_azure_blobs(connection_string, container_name):
-    """
-    List blobs inside a container in Azure Blob Storage.
-
-    :param connection_string: Azure Blob Storage connection string
-    :param container_name: Name of the container to list blobs from
-    """
+def list_blobs_after_time(connection_string, container_name, after_time) -> list:
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
     container_client = blob_service_client.get_container_client(container_name)
+    
+    blobs = container_client.list_blobs()
+    
+    filtered_blobs = []
+    after_time = after_time.replace(tzinfo=timezone.utc)
+    
+    for blob in blobs:
+        if blob.last_modified >= after_time:
+            filtered_blobs.append(blob.name)
+    
+    log(f"Blobs created or updated after the specified time: {filtered_blobs}")
 
-    blob_list = container_client.list_blobs()
-
-    log(f"Blobs in container '{container_name}':")
-    for blob in blob_list:
-        print(blob.name)
+    return filtered_blobs

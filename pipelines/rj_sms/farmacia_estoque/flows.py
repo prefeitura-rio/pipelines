@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 from prefect import Parameter, Flow
-
+from prefect.tasks.core.operators import GetAttr
 # from pipelines.utils.decorators import Flow
 from pipelines.utils.utils import (
-    get_vault_secret,
+    get_vault_secret,log
 )
 from pipelines.utils.tasks import (
     create_table_and_upload_to_gcs,
 )
 from pipelines.rj_sms.farmacia_estoque.tasks import (
     download_azure_blob,
+    list_blobs_after_time
 )
 import os
-
+from datetime import datetime
 
 with Flow(
     name="SMS: Farmacia - Captura de dados TPC",
@@ -29,6 +30,7 @@ with Flow(
     blob_name = Parameter("blob_name", default="report.csv")
     destination_folder_path = os.path.expanduser("~")
     #  GCP
+    # TODO: passar como parâmetros
     dataset_id = "estoque"
     table_id = "tpc_current"
     dump_mode = "append"  # append or overwrite
@@ -38,6 +40,7 @@ with Flow(
         connection_string, container_name, blob_name, destination_folder_path
     )
 
+    # TODO: ler o nome do arquivo a partir do parâmtro blob_name
     data_path = destination_folder_path + "/report.csv"
 
     upload_task = create_table_and_upload_to_gcs(
@@ -48,6 +51,18 @@ with Flow(
         biglake_table=True,
         wait=None,
     )
+    upload_task.set_upstream(download_task)
 
-    # Set taks dependencies
-    download_task.set_downstream(upload_task)
+
+
+with Flow("Lista Arquivos") as lista_blob:
+    # Replace these values with your own
+    connection_string =  get_vault_secret(secret_path="estoque_tpc")["data"][
+        "connection_string"
+    ]
+    container_name = "tpc"
+    after_time = datetime(2023, 8, 11)  # Replace with your desired time
+
+    blob_list = list_blobs_after_time(connection_string, container_name, after_time)
+
+
