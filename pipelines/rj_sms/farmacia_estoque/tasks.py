@@ -35,16 +35,16 @@ def download_azure_blob(
 def list_blobs_after_time(connection_string, container_name, after_time) -> list:
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
     container_client = blob_service_client.get_container_client(container_name)
-    
+
     blobs = container_client.list_blobs()
-    
+
     filtered_blobs = []
     after_time = after_time.replace(tzinfo=timezone.utc)
-    
+
     for blob in blobs:
         if blob.last_modified >= after_time:
             filtered_blobs.append(blob.name)
-    
+
     log(f"Blobs created or updated after the specified time: {filtered_blobs}")
 
     return filtered_blobs

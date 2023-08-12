@@ -14,5 +14,5 @@ if args.flow == "captura_tpc":
     run_local(
         captura_tpc, parameters={"container_name": "tpc", "blob_name": "report.csv"}
     )
-elif args.flow == 'lista_blob':
+elif args.flow == "lista_blob":
     run_local(lista_blob)
