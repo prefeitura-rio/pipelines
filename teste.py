@@ -1,4 +1,5 @@
-from pipelines.utils.utils import(
+# -*- coding: utf-8 -*-
+from pipelines.utils.utils import (
     get_vault_secret,
 )
 
