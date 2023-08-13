@@ -85,6 +85,7 @@ _processorio_infra_query = {
         "dump_mode": "append",
         "partition_columns": "DT_MOV",
         "partition_date_format": "%Y-%m-%d",
+        "lower_bound_date": "current_month",
         "execute_query": "SELECT ID_MOV, ID_TP_MOV, ID_CADASTRANTE, ID_LOTA_CADASTRANTE, DT_MOV, DT_FIM_MOV, ID_MOV_REF, ID_MOBIL FROM SIGA.VW_MOVIMENTACAO",  # noqa
     },
     "nivel_acesso": {
@@ -114,6 +115,7 @@ _processorio_infra_query = {
         "dump_mode": "append",
         "partition_columns": "DT_DOC",
         "partition_date_format": "%Y-%m-%d",
+        "lower_bound_date": "current_month",
         "execute_query": "select * from siga.vw_ex_documento",  # noqa
         "dbt_alias": True,
     },
