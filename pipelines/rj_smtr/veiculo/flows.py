@@ -161,6 +161,7 @@ with Flow(
         filetype="txt",
         csv_args=constants.SPPO_INFRACAO_CSV_ARGS.value,
         max_retries=5,
+        retry_delay=timedelta(minutes=5),
     )
 
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
