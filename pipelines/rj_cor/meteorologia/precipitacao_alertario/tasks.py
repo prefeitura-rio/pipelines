@@ -140,7 +140,9 @@ def tratar_dados(
     if not empty_data:
         max_date = str(dados["data_medicao"].max())
         redis_key = build_redis_key(dataset_id, table_id, name="last_update", mode=mode)
-        log(f"[DEBUG]: dataframe is not empty key: {redis_key} {max_date}")
+        log(
+            f"[DEBUG]: dataframe is not empty. Redis key: {redis_key} and new date: {max_date}"
+        )
         save_str_on_redis(redis_key, "date", max_date)
 
     # Fixar ordem das colunas
