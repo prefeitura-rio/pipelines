@@ -32,7 +32,9 @@ with Flow(
     dump_mode = "append"  # append or overwrite
 
     # Declare tasks
-    download_task = download_azure_blob(container_name, blob_name, destination_folder_path)
+    download_task = download_azure_blob(
+        container_name, blob_name, destination_folder_path
+    )
 
     # TODO: ler o nome do arquivo a partir do parâmtro blob_name
     data_path = destination_folder_path + "/report.csv"
@@ -59,4 +61,3 @@ with Flow("Lista Arquivos") as lista_blob:
 
 lista_blob.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 lista_blob.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
-

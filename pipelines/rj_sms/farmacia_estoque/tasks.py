@@ -6,9 +6,7 @@ from datetime import timezone
 
 
 @task
-def download_azure_blob(
-    container_name, blob_name, destination_folder_path
-):
+def download_azure_blob(container_name, blob_name, destination_folder_path):
     """
     Download a blob from Azure Blob Storage to a local file.
 
@@ -17,7 +15,9 @@ def download_azure_blob(
     :param blob_name: Name of the blob to download
     :param destination_folder_path: Local folder path to save the downloaded blob
     """
-    connection_string = get_vault_secret(secret_path="estoque_tpc")["data"]["connection_string"]
+    connection_string = get_vault_secret(secret_path="estoque_tpc")["data"][
+        "connection_string"
+    ]
 
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
     blob_client = blob_service_client.get_blob_client(
@@ -35,8 +35,10 @@ def download_azure_blob(
 
 @task
 def list_blobs_after_time(container_name, after_time) -> list:
-    
-    connection_string = get_vault_secret(secret_path="estoque_tpc")["data"]["connection_string"]
+
+    connection_string = get_vault_secret(secret_path="estoque_tpc")["data"][
+        "connection_string"
+    ]
 
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
     container_client = blob_service_client.get_container_client(container_name)
