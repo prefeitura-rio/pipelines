@@ -9,7 +9,7 @@ from prefect.storage import GCS
 from pipelines.utils.decorators import Flow
 from pipelines.constants import constants as emd_constants
 
-from pipelines.rj_smtr.test_errors.tasks import test_value_error
+from pipelines.rj_smtr.test_errors.tasks import test_value_error, test_type_eror
 from pipelines.rj_smtr.test_errors.schedules import (
     every_minute,
     every_10_minutes,
@@ -20,7 +20,8 @@ from pipelines.rj_smtr.test_errors.schedules import (
 with Flow(
     "SMTR - Test Errors for Notification", code_owners=["boris", "caio"]
 ) as test_error_flow:
-    test_value_error()
+    value = test_value_error()
+    test_type_eror(wait=value)
 
 test_error_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 test_error_flow.run_config = KubernetesRun(
