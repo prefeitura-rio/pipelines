@@ -15,8 +15,7 @@ import os
 from datetime import datetime
 
 with Flow(
-    name="SMS: Farmacia - Captura de dados TPC",
-    code_owners=["thiago", "andre"]
+    name="SMS: Farmacia - Captura de dados TPC", code_owners=["thiago", "andre"]
 ) as captura_tpc:
 
     # Set Parameters
@@ -54,17 +53,17 @@ captura_tpc.run_config = KubernetesRun(
     labels=[
         constants.RJ_SMS_DEV_AGENT_LABEL.value,
     ],
-    )
+)
 
-#with Flow(
+# with Flow(
 #    name="SMS: Farmacia - Lista dados Azure",
 #    code_owners=["thiago", "andre"]
-#) as lista_blob:
+# ) as lista_blob:
 #    # Replace these values with your own
 #    container_name = "tpc"
 #    after_time = datetime(2023, 8, 11)  # Replace with your desired time
 #
 #    blob_list = list_blobs_after_time(container_name, after_time)
 #
-#lista_blob.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-#lista_blob.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+# lista_blob.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+# lista_blob.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
