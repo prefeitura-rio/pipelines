@@ -9,7 +9,7 @@ from pipelines.utils.tasks import (
 )
 from pipelines.rj_sms.farmacia_estoque.tasks import (
     download_azure_blob,
-    set_destination_path,
+    set_destination_file_path,
     list_blobs_after_time,
 )
 from datetime import datetime
@@ -30,7 +30,7 @@ with Flow(
     dump_mode = "append"  # append or overwrite
 
     # Start run
-    file_path_task = set_destination_path(blob_name)
+    file_path_task = set_destination_file_path(blob_name)
 
     download_task = download_azure_blob(container_name, blob_name, file_path_task)
     download_task.set_upstream(file_path_task)

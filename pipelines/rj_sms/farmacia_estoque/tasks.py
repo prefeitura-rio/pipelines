@@ -7,7 +7,7 @@ import os
 
 
 @task
-def download_azure_blob(container_name, blob_name, destination_folder_path):
+def download_azure_blob(container_name, blob_name, destination_file_path):
     """
     Download a blob from Azure Blob Storage to a local file.
 
@@ -24,8 +24,6 @@ def download_azure_blob(container_name, blob_name, destination_folder_path):
     blob_client = blob_service_client.get_blob_client(
         container=container_name, blob=blob_name
     )
-
-    destination_file_path = f"{destination_folder_path}/{blob_name}"
 
     with open(destination_file_path, "wb") as blob_file:
         blob_data = blob_client.download_blob()
@@ -59,5 +57,5 @@ def list_blobs_after_time(container_name, after_time) -> list:
 
 
 @task
-def set_destination_path(file):
+def set_destination_file_path(file):
     return os.path.expanduser("~") + file
