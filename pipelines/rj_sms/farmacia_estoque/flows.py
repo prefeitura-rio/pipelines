@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from prefect import Parameter, Flow
-from prefect.tasks.core.operators import GetAttr
-
-# from pipelines.utils.decorators import Flow
+from pipelines.utils.decorators import Flow
 from pipelines.constants import constants
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
@@ -18,6 +16,7 @@ from datetime import datetime
 
 with Flow(
     name="SMS: Farmacia - Captura de dados TPC",
+    code_owners=["thiago", "andre"]
 ) as captura_tpc:
 
     # Set Parameters
@@ -50,14 +49,22 @@ with Flow(
     upload_task.set_upstream(download_task)
 
 captura_tpc.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-captura_tpc.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+captura_tpc.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[
+        constants.RJ_SMS_DEV_AGENT_LABEL.value,
+    ],
+    )
 
-with Flow("Lista Arquivos") as lista_blob:
-    # Replace these values with your own
-    container_name = "tpc"
-    after_time = datetime(2023, 8, 11)  # Replace with your desired time
-
-    blob_list = list_blobs_after_time(container_name, after_time)
-
-lista_blob.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-lista_blob.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+#with Flow(
+#    name="SMS: Farmacia - Lista dados Azure",
+#    code_owners=["thiago", "andre"]
+#) as lista_blob:
+#    # Replace these values with your own
+#    container_name = "tpc"
+#    after_time = datetime(2023, 8, 11)  # Replace with your desired time
+#
+#    blob_list = list_blobs_after_time(container_name, after_time)
+#
+#lista_blob.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+#lista_blob.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
