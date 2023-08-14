@@ -18,11 +18,6 @@ with Flow(
     name="SMS: Farmacia - Captura de dados TPC",
 ) as captura_tpc:
 
-    # Get crendetials
-    connection_string = get_vault_secret(secret_path="estoque_tpc")["data"][
-        "connection_string"
-    ]
-
     # Set Parameters
     #  Azure
     container_name = Parameter("container_name", default="tpc")
@@ -35,9 +30,7 @@ with Flow(
     dump_mode = "append"  # append or overwrite
 
     # Declare tasks
-    download_task = download_azure_blob(
-        connection_string, container_name, blob_name, destination_folder_path
-    )
+    download_task = download_azure_blob(container_name, blob_name, destination_folder_path)
 
     # TODO: ler o nome do arquivo a partir do parâmtro blob_name
     data_path = destination_folder_path + "/report.csv"

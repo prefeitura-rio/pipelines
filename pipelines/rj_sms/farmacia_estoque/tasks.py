@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 from prefect import task
-from pipelines.utils.utils import log
+from pipelines.utils.utils import log, get_vault_secret
 from azure.storage.blob import BlobServiceClient
 from datetime import timezone
 
 
 @task
 def download_azure_blob(
-    connection_string, container_name, blob_name, destination_folder_path
+    container_name, blob_name, destination_folder_path
 ):
     """
     Download a blob from Azure Blob Storage to a local file.
@@ -17,6 +17,8 @@ def download_azure_blob(
     :param blob_name: Name of the blob to download
     :param destination_folder_path: Local folder path to save the downloaded blob
     """
+    connection_string = get_vault_secret(secret_path="estoque_tpc")["data"]["connection_string"]
+
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
     blob_client = blob_service_client.get_blob_client(
         container=container_name, blob=blob_name
