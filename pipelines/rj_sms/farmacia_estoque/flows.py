@@ -3,7 +3,9 @@ from prefect import Parameter, Flow
 from prefect.tasks.core.operators import GetAttr
 
 # from pipelines.utils.decorators import Flow
-from pipelines.utils.utils import get_vault_secret, log
+from pipelines.constants import constants
+from prefect.run_configs import KubernetesRun
+from prefect.storage import GCS
 from pipelines.utils.tasks import (
     create_table_and_upload_to_gcs,
 )
@@ -45,13 +47,16 @@ with Flow(
     )
     upload_task.set_upstream(download_task)
 
+captura_tpc.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+captura_tpc.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
 
 with Flow("Lista Arquivos") as lista_blob:
     # Replace these values with your own
-    connection_string = get_vault_secret(secret_path="estoque_tpc")["data"][
-        "connection_string"
-    ]
     container_name = "tpc"
     after_time = datetime(2023, 8, 11)  # Replace with your desired time
 
-    blob_list = list_blobs_after_time(connection_string, container_name, after_time)
+    blob_list = list_blobs_after_time(container_name, after_time)
+
+lista_blob.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+lista_blob.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+

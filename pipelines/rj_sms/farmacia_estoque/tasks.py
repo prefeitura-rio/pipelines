@@ -34,7 +34,10 @@ def download_azure_blob(
 
 
 @task
-def list_blobs_after_time(connection_string, container_name, after_time) -> list:
+def list_blobs_after_time(container_name, after_time) -> list:
+    
+    connection_string = get_vault_secret(secret_path="estoque_tpc")["data"]["connection_string"]
+
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
     container_client = blob_service_client.get_container_client(container_name)
 
