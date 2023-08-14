@@ -28,7 +28,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
-# pylint: disable=C0103
+# pylint: disable=C0103,R0914
 &#34;&#34;&#34;
 Tasks for precipitacao_alertario
 &#34;&#34;&#34;
@@ -108,12 +108,9 @@ def tratar_dados(
     date_format = &#34;%Y-%m-%d %H:%M:%S&#34;
     dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao_utc&#34;].dt.strftime(date_format)
 
-    log(f&#34;DEBUG: df dtypes {dados.dtypes}&#34;)
     see_cols = [&#34;data_medicao&#34;, &#34;id_estacao&#34;, &#34;acumulado_chuva_15_min&#34;]
-    log(f&#34;DEBUG: data antes {dados[see_cols]}&#34;)
 
     dados.data_medicao = dados.data_medicao.apply(treat_date_col)
-    log(f&#34;DEBUG: data dps {dados[see_cols]}&#34;)
 
     # Alterando valores ND, &#39;-&#39; e np.nan para NULL
     dados.replace([&#34;ND&#34;, &#34;-&#34;, np.nan], [None, None, None], inplace=True)
@@ -135,8 +132,18 @@ def tratar_dados(
     dados.sort_values([&#34;id_estacao&#34;, &#34;data_medicao&#34;] + float_cols, inplace=True)
     dados.drop_duplicates(subset=[&#34;id_estacao&#34;, &#34;data_medicao&#34;], keep=&#34;first&#34;)
 
-    log(f&#34;uniquesss df &gt;&gt;&gt;, {type(dados.id_estacao.unique()[0])}&#34;)
     dados[&#34;id_estacao&#34;] = dados[&#34;id_estacao&#34;].astype(str)
+
+    # Ajustando dados da meia-noite que vem sem o horário
+    for index, row in dados.iterrows():
+        try:
+            date = pd.to_datetime(row[&#34;data_medicao&#34;], format=&#34;%Y-%m-%d %H:%M:%S&#34;)
+        except ValueError:
+            date = pd.to_datetime(row[&#34;data_medicao&#34;]) + pd.DateOffset(hours=0)
+
+        dados.at[index, &#34;data_medicao&#34;] = date.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+
+    log(f&#34;Dataframe before comparing with last data saved on redis {dados.head()}&#34;)
 
     dados = save_updated_rows_on_redis(
         dados,
@@ -148,15 +155,17 @@ def tratar_dados(
         mode=mode,
     )
 
+    log(f&#34;Dataframe after comparing with last data saved on redis {dados.head()}&#34;)
+
     # If df is empty stop flow on flows.py
     empty_data = dados.shape[0] == 0
-    log(f&#34;[DEBUG]: dataframe is empty: {empty_data}&#34;)
+    log(&#34;Dataframe is empty.&#34;)
 
     # Save max date on redis to compare this with last dbt run
     if not empty_data:
         max_date = str(dados[&#34;data_medicao&#34;].max())
         redis_key = build_redis_key(dataset_id, table_id, name=&#34;last_update&#34;, mode=mode)
-        log(f&#34;[DEBUG]: dataframe is not empty key: {redis_key} {max_date}&#34;)
+        log(f&#34;Dataframe is not empty. Redis key: {redis_key} and new date: {max_date}&#34;)
         save_str_on_redis(redis_key, &#34;date&#34;, max_date)
 
     # Fixar ordem das colunas
@@ -196,7 +205,7 @@ def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
         data_type=&#34;csv&#34;,
         suffix=current_time,
     )
-    log(f&#34;[DEBUG] Files saved on {prepath}&#34;)
+    log(f&#34;Files saved on {prepath}&#34;)
     return prepath
 
 
@@ -212,7 +221,6 @@ def save_last_dbt_update(
     &#34;&#34;&#34;
     now = pendulum.now(&#34;America/Sao_Paulo&#34;).to_datetime_string()
     redis_key = build_redis_key(dataset_id, table_id, name=&#34;dbt_last_update&#34;, mode=mode)
-    log(f&#34;&gt;&gt;&gt;&gt;&gt; debug saving actual date on dbt redis {redis_key} {now}&#34;)
     save_str_on_redis(redis_key, &#34;date&#34;, now)
 
 
@@ -316,7 +324,7 @@ def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
         data_type=&#34;csv&#34;,
         suffix=current_time,
     )
-    log(f&#34;[DEBUG] Files saved on {prepath}&#34;)
+    log(f&#34;Files saved on {prepath}&#34;)
     return prepath</code></pre>
 </details>
 </dd>
@@ -341,7 +349,6 @@ def save_last_dbt_update(
     &#34;&#34;&#34;
     now = pendulum.now(&#34;America/Sao_Paulo&#34;).to_datetime_string()
     redis_key = build_redis_key(dataset_id, table_id, name=&#34;dbt_last_update&#34;, mode=mode)
-    log(f&#34;&gt;&gt;&gt;&gt;&gt; debug saving actual date on dbt redis {redis_key} {now}&#34;)
     save_str_on_redis(redis_key, &#34;date&#34;, now)</code></pre>
 </details>
 </dd>
@@ -403,12 +410,9 @@ def tratar_dados(
     date_format = &#34;%Y-%m-%d %H:%M:%S&#34;
     dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao_utc&#34;].dt.strftime(date_format)
 
-    log(f&#34;DEBUG: df dtypes {dados.dtypes}&#34;)
     see_cols = [&#34;data_medicao&#34;, &#34;id_estacao&#34;, &#34;acumulado_chuva_15_min&#34;]
-    log(f&#34;DEBUG: data antes {dados[see_cols]}&#34;)
 
     dados.data_medicao = dados.data_medicao.apply(treat_date_col)
-    log(f&#34;DEBUG: data dps {dados[see_cols]}&#34;)
 
     # Alterando valores ND, &#39;-&#39; e np.nan para NULL
     dados.replace([&#34;ND&#34;, &#34;-&#34;, np.nan], [None, None, None], inplace=True)
@@ -430,8 +434,18 @@ def tratar_dados(
     dados.sort_values([&#34;id_estacao&#34;, &#34;data_medicao&#34;] + float_cols, inplace=True)
     dados.drop_duplicates(subset=[&#34;id_estacao&#34;, &#34;data_medicao&#34;], keep=&#34;first&#34;)
 
-    log(f&#34;uniquesss df &gt;&gt;&gt;, {type(dados.id_estacao.unique()[0])}&#34;)
     dados[&#34;id_estacao&#34;] = dados[&#34;id_estacao&#34;].astype(str)
+
+    # Ajustando dados da meia-noite que vem sem o horário
+    for index, row in dados.iterrows():
+        try:
+            date = pd.to_datetime(row[&#34;data_medicao&#34;], format=&#34;%Y-%m-%d %H:%M:%S&#34;)
+        except ValueError:
+            date = pd.to_datetime(row[&#34;data_medicao&#34;]) + pd.DateOffset(hours=0)
+
+        dados.at[index, &#34;data_medicao&#34;] = date.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+
+    log(f&#34;Dataframe before comparing with last data saved on redis {dados.head()}&#34;)
 
     dados = save_updated_rows_on_redis(
         dados,
@@ -443,15 +457,17 @@ def tratar_dados(
         mode=mode,
     )
 
+    log(f&#34;Dataframe after comparing with last data saved on redis {dados.head()}&#34;)
+
     # If df is empty stop flow on flows.py
     empty_data = dados.shape[0] == 0
-    log(f&#34;[DEBUG]: dataframe is empty: {empty_data}&#34;)
+    log(&#34;Dataframe is empty.&#34;)
 
     # Save max date on redis to compare this with last dbt run
     if not empty_data:
         max_date = str(dados[&#34;data_medicao&#34;].max())
         redis_key = build_redis_key(dataset_id, table_id, name=&#34;last_update&#34;, mode=mode)
-        log(f&#34;[DEBUG]: dataframe is not empty key: {redis_key} {max_date}&#34;)
+        log(f&#34;Dataframe is not empty. Redis key: {redis_key} and new date: {max_date}&#34;)
         save_str_on_redis(redis_key, &#34;date&#34;, max_date)
 
     # Fixar ordem das colunas

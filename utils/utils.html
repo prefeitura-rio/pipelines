@@ -996,7 +996,7 @@ def compare_dates_between_tables_redis(
 
 
 # pylint: disable=W0106
-def save_updated_rows_on_redis(
+def save_updated_rows_on_redis(  # pylint: disable=R0914
     dataframe: pd.DataFrame,
     dataset_id: str,
     table_id: str,
@@ -1029,6 +1029,7 @@ def save_updated_rows_on_redis(
     last_updates = pd.DataFrame(
         last_updates.items(), columns=[unique_id, &#34;last_update&#34;]
     )
+    log(f&#34;Redis key: {key}\nRedis actual values: {last_updates}&#34;)
 
     # dataframe and last_updates need to have the same index, in our case unique_id
     missing_in_dfr = [
@@ -1061,6 +1062,7 @@ def save_updated_rows_on_redis(
     dataframe[date_column] = dataframe[date_column].apply(
         pd.to_datetime, format=date_format
     )
+
     dataframe[&#34;last_update&#34;] = dataframe[&#34;last_update&#34;].apply(
         pd.to_datetime, format=&#34;%Y-%m-%d %H:%M:%S&#34;
     )
@@ -1994,7 +1996,7 @@ updated unique_id as a DataFrame and save new dates on redis</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def save_updated_rows_on_redis(
+<pre><code class="python">def save_updated_rows_on_redis(  # pylint: disable=R0914
     dataframe: pd.DataFrame,
     dataset_id: str,
     table_id: str,
@@ -2027,6 +2029,7 @@ updated unique_id as a DataFrame and save new dates on redis</p></div>
     last_updates = pd.DataFrame(
         last_updates.items(), columns=[unique_id, &#34;last_update&#34;]
     )
+    log(f&#34;Redis key: {key}\nRedis actual values: {last_updates}&#34;)
 
     # dataframe and last_updates need to have the same index, in our case unique_id
     missing_in_dfr = [
@@ -2059,6 +2062,7 @@ updated unique_id as a DataFrame and save new dates on redis</p></div>
     dataframe[date_column] = dataframe[date_column].apply(
         pd.to_datetime, format=date_format
     )
+
     dataframe[&#34;last_update&#34;] = dataframe[&#34;last_update&#34;].apply(
         pd.to_datetime, format=&#34;%Y-%m-%d %H:%M:%S&#34;
     )
