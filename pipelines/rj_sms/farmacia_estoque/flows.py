@@ -32,9 +32,7 @@ with Flow(
     # Start run
     file_path_task = set_destination_path(blob_name)
 
-    download_task = download_azure_blob(
-        container_name, blob_name, file_path_task
-    )
+    download_task = download_azure_blob(container_name, blob_name, file_path_task)
     download_task.set_upstream(file_path_task)
 
     upload_task = create_table_and_upload_to_gcs(
