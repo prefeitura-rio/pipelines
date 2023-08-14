@@ -18,7 +18,7 @@ from pipelines.rj_smtr.test_errors.schedules import (
 )
 
 with Flow(
-    "SMTR - Test Errors for Notification", code_owners=["boris", "caio"]
+    "SMTR - Test Errors for Notification - 1 minute", code_owners=["boris", "caio"]
 ) as test_error_flow:
     value = test_value_error()
     test_type_eror(wait=value)
@@ -32,9 +32,12 @@ test_error_flow.schedule = every_minute
 
 test_error_10_minutes = deepcopy(test_error_flow)
 test_error_10_minutes.schedule = every_10_minutes
+test_error_10_minutes.name = "SMTR - Test Errors for Notification - 10 minutes"
 
 test_error_hourly = deepcopy(test_error_flow)
 test_error_hourly.schedule = every_hour
+test_error_hourly.name = "SMTR - Test Errors for Notification - Hourly"
 
 test_error_daily = deepcopy(test_error_flow)
 test_error_daily.schedule = every_day
+test_error_daily.name = "SMTR - Test Errors for Notification - Daily"
