@@ -79,12 +79,9 @@ def tratar_dados(
     date_format = "%Y-%m-%d %H:%M:%S"
     dados["data_medicao"] = dados["data_medicao_utc"].dt.strftime(date_format)
 
-    log(f"DEBUG: df dtypes {dados.dtypes}")
     see_cols = ["data_medicao", "id_estacao", "acumulado_chuva_15_min"]
-    log(f"DEBUG: data antes {dados[see_cols]}")
 
     dados.data_medicao = dados.data_medicao.apply(treat_date_col)
-    log(f"DEBUG: data dps {dados[see_cols]}")
 
     # Alterando valores ND, '-' e np.nan para NULL
     dados.replace(["ND", "-", np.nan], [None, None, None], inplace=True)
@@ -106,7 +103,6 @@ def tratar_dados(
     dados.sort_values(["id_estacao", "data_medicao"] + float_cols, inplace=True)
     dados.drop_duplicates(subset=["id_estacao", "data_medicao"], keep="first")
 
-    log(f"uniquesss df >>>, {type(dados.id_estacao.unique()[0])}")
     dados["id_estacao"] = dados["id_estacao"].astype(str)
 
     # Ajustando dados da meia-noite que vem sem o horário
@@ -134,15 +130,13 @@ def tratar_dados(
 
     # If df is empty stop flow on flows.py
     empty_data = dados.shape[0] == 0
-    log(f"[DEBUG]: dataframe is empty: {empty_data}")
+    log("Dataframe is empty.")
 
     # Save max date on redis to compare this with last dbt run
     if not empty_data:
         max_date = str(dados["data_medicao"].max())
         redis_key = build_redis_key(dataset_id, table_id, name="last_update", mode=mode)
-        log(
-            f"[DEBUG]: dataframe is not empty. Redis key: {redis_key} and new date: {max_date}"
-        )
+        log(f"Dataframe is not empty. Redis key: {redis_key} and new date: {max_date}")
         save_str_on_redis(redis_key, "date", max_date)
 
     # Fixar ordem das colunas
@@ -182,7 +176,7 @@ def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
         data_type="csv",
         suffix=current_time,
     )
-    log(f"[DEBUG] Files saved on {prepath}")
+    log(f"Files saved on {prepath}")
     return prepath
 
 
@@ -198,7 +192,6 @@ def save_last_dbt_update(
     """
     now = pendulum.now("America/Sao_Paulo").to_datetime_string()
     redis_key = build_redis_key(dataset_id, table_id, name="dbt_last_update", mode=mode)
-    log(f">>>>> debug saving actual date on dbt redis {redis_key} {now}")
     save_str_on_redis(redis_key, "date", now)
 
 

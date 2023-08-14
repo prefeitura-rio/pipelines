@@ -1000,7 +1000,7 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
     last_updates = pd.DataFrame(
         last_updates.items(), columns=[unique_id, "last_update"]
     )
-    log(f"Redis key: {key}\nRedis values: {last_updates}")
+    log(f"Redis key: {key}\nRedis actual values: {last_updates}")
 
     # dataframe and last_updates need to have the same index, in our case unique_id
     missing_in_dfr = [
