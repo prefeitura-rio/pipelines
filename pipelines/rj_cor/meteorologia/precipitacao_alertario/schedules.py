@@ -21,7 +21,7 @@ minute_schedule = Schedule(
                 # "trigger_rain_dashboard_update": True,
                 "materialize_after_dump": True,
                 "mode": "prod",
-                "materialize_to_datario": False,
+                "materialize_to_datario": True,
                 "dump_to_gcs": False,
             },
         ),
