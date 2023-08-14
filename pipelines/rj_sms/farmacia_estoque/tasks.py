@@ -3,7 +3,7 @@ from prefect import task
 from pipelines.utils.utils import log, get_vault_secret
 from azure.storage.blob import BlobServiceClient
 from datetime import timezone
-
+import os
 
 @task
 def download_azure_blob(container_name, blob_name, destination_folder_path):
@@ -55,3 +55,7 @@ def list_blobs_after_time(container_name, after_time) -> list:
     log(f"Blobs created or updated after the specified time: {filtered_blobs}")
 
     return filtered_blobs
+
+@task
+def set_destination_path(file):
+    return os.path.expanduser("~") + file

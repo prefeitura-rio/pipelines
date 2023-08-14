@@ -9,9 +9,9 @@ from pipelines.utils.tasks import (
 )
 from pipelines.rj_sms.farmacia_estoque.tasks import (
     download_azure_blob,
+    set_destination_path,
     list_blobs_after_time,
 )
-import os
 from datetime import datetime
 
 with Flow(
@@ -22,23 +22,23 @@ with Flow(
     #  Azure
     container_name = Parameter("container_name", default="tpc")
     blob_name = Parameter("blob_name", default="report.csv")
-    destination_folder_path = os.path.expanduser("~")
+
     #  GCP
     # TODO: passar como parâmetros
     dataset_id = "estoque"
     table_id = "tpc_current"
     dump_mode = "append"  # append or overwrite
 
-    # Declare tasks
-    download_task = download_azure_blob(
-        container_name, blob_name, destination_folder_path
-    )
+    # Start run
+    file_path_task = set_destination_path(blob_name)
 
-    # TODO: ler o nome do arquivo a partir do parâmtro blob_name
-    data_path = destination_folder_path + "/report.csv"
+    download_task = download_azure_blob(
+        container_name, blob_name, file_path_task
+    )
+    download_task.set_upstream(file_path_task)
 
     upload_task = create_table_and_upload_to_gcs(
-        data_path=data_path,
+        data_path=file_path_task,
         dataset_id=dataset_id,
         table_id=table_id,
         dump_mode=dump_mode,
