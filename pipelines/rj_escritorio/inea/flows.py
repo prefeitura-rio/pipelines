@@ -11,7 +11,7 @@ from prefect.storage import GCS
 from prefect.utilities.edges import unmapped
 
 from pipelines.constants import constants
-from pipelines.rj_escritorio.inea.schedules import every_5_minutes
+from pipelines.rj_escritorio.inea.schedules import every_5_minutes, every_5_minutes_mac
 from pipelines.rj_escritorio.inea.tasks import (
     convert_vol_file,
     execute_shell_command,
@@ -83,6 +83,12 @@ with Flow(
 inea_radar_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 inea_radar_flow.run_config = LocalRun(labels=[constants.INEA_AGENT_LABEL.value])
 inea_radar_flow.schedule = every_5_minutes
+
+inea_radar_flow_mac = deepcopy(inea_radar_flow)
+inea_radar_flow_mac.name = "INEA: Captura dados de radar (Macaé)"
+inea_radar_flow_mac.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+inea_radar_flow_mac.run_config = LocalRun(labels=[constants.INEA_AGENT_LABEL.value])
+inea_radar_flow_mac.schedule = every_5_minutes_mac
 
 inea_backfill_radar_flow = deepcopy(inea_radar_flow)
 inea_backfill_radar_flow.name = "INEA: Captura dados de radar (backfill)"

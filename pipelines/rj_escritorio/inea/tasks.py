@@ -169,7 +169,7 @@ def list_vol_files(
             remote_files.sort()
             remote_files = set(remote_files)
             log(
-                f"Remote files identified when specified date was not found: {remote_files}"
+                f"Remote dates identified when specified date was not found: {remote_files}"
             )
             skip = Skipped(f"No files where found for date {date}")
             raise ENDRUN(state=skip)
