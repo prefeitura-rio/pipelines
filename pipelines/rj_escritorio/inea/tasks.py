@@ -160,6 +160,16 @@ def list_vol_files(
             f"find {vols_remote_directory} -name '{startswith}{date}*.vol'"
         )
         remote_files = stdout.read().decode("utf-8").splitlines()
+        if len(remote_files) == 0:
+            _, stdout, _ = ssh_client.exec_command(
+                f"find {vols_remote_directory} -name '*{startswith}*.vol'"
+            )
+            remote_files = stdout.read().decode("utf-8").splitlines()
+            log(f"Remote files identified qund deu zero primeiros: {remote_files[:10]}")
+            log(f"Remote files identified qund deu zero ultimos: {remote_files[-10:]}")
+            skip = Skipped("No new available files qund deu zero")
+            raise ENDRUN(state=skip)
+        log(f"Remote files identified: {remote_files}")
     else:
         _, stdout, _ = ssh_client.exec_command(
             f"find {vols_remote_directory} -name '{startswith}*.vol'"
