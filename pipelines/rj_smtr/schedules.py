@@ -113,12 +113,12 @@ every_day_hour_five = Schedule(
     ]
 )
 
-every_day_hour_four_thirty = Schedule(
+every_day_hour_seven = Schedule(
     clocks=[
         IntervalClock(
             interval=timedelta(days=1),
             start_date=datetime(
-                2022, 11, 30, 4, 30, tzinfo=timezone(constants.TIMEZONE.value)
+                2022, 11, 30, 7, 0, tzinfo=timezone(constants.TIMEZONE.value)
             ),
             labels=[
                 emd_constants.RJ_SMTR_AGENT_LABEL.value,
