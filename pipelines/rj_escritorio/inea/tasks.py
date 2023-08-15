@@ -165,9 +165,13 @@ def list_vol_files(
                 f"find {vols_remote_directory} -name '*{startswith}*.vol'"
             )
             remote_files = stdout.read().decode("utf-8").splitlines()
-            log(f"Remote files identified qund deu zero primeiros: {remote_files[:10]}")
-            log(f"Remote files identified qund deu zero ultimos: {remote_files[-10:]}")
-            skip = Skipped("No new available files qund deu zero")
+            remote_files = [i[26:34] for i in remote_files]
+            remote_files.sort()
+            remote_files = set(remote_files)
+            log(
+                f"Remote files identified when specified date was not found: {remote_files}"
+            )
+            skip = Skipped(f"No files where found for date {date}")
             raise ENDRUN(state=skip)
         log(f"Remote files identified: {remote_files}")
     else:
