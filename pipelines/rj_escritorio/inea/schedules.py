@@ -27,7 +27,6 @@ every_5_minutes = Schedule(
                 "output_format": "HDF5",
                 "prefix": "raw/meio_ambiente_clima/inea_radar_hdf5",
                 "product": "ppi",
-                "radar": "gua",
                 "vols_remote_directory": "/var/opt/edge/vols",
             },
         ),

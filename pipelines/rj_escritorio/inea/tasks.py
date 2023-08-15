@@ -152,7 +152,7 @@ def list_vol_files(
     )
 
     # List remote files
-    log("Listing remote files...")
+    log(f"Listing remote files for radar {startswith}...")
     if date:
         _, stdout, _ = ssh_client.exec_command(
             f"find {vols_remote_directory} -name '{startswith}{date}*.vol'"
