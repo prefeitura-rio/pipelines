@@ -28,11 +28,11 @@ _processorio_infra_query = {
         "dump_to_gcs": False,
         "dump_mode": "overwrite",
         "execute_query": """
-            SELECT 
-                ID_CLASSIFICACAO, 
-                DESCR_CLASSIFICACAO, 
-                HIS_ATIVO, 
-                CODIFICACAO 
+            SELECT
+                ID_CLASSIFICACAO,
+                DESCR_CLASSIFICACAO,
+                HIS_ATIVO,
+                CODIFICACAO
             FROM SIGA.VW_CLASSIFICACAO
         """,  # noqa
     },
@@ -44,17 +44,17 @@ _processorio_infra_query = {
         "dump_to_gcs": False,
         "dump_mode": "overwrite",
         "execute_query": """
-            SELECT 
-                SIGLA_DOC, 
-                DT_PRIMEIRAASSINATURA, 
-                ULTIMO_ID_MOV, 
-                DT_FINALIZACAO, 
-                ARQUIVADO, 
-                ID_MOBIL, 
+            SELECT
+                SIGLA_DOC,
+                DT_PRIMEIRAASSINATURA,
+                ULTIMO_ID_MOV,
+                DT_FINALIZACAO,
+                ARQUIVADO,
+                ID_MOBIL,
                 TEMPO_TRAMITACAO,
                 ID_LOTA_RESP,
                 LOTACAO_RESP,
-                DATA_COM_RESP_ATUAL 
+                DATA_COM_RESP_ATUAL
             FROM SIGA.DOCUMENTOS_TEMPO
         """,  # noqa
     },
@@ -66,11 +66,11 @@ _processorio_infra_query = {
         "dump_to_gcs": False,
         "dump_mode": "overwrite",
         "execute_query": """
-            SELECT 
-                ID_FORMA_DOC, 
-                DESCR_FORMA_DOC, 
-                SIGLA_FORMA_DOC, 
-                ID_TIPO_FORMA_DOC 
+            SELECT
+                ID_FORMA_DOC,
+                DESCR_FORMA_DOC,
+                SIGLA_FORMA_DOC,
+                ID_TIPO_FORMA_DOC
             FROM SIGA.VW_FORMA_DOCUMENTO
         """,  # noqa
     },
@@ -82,14 +82,14 @@ _processorio_infra_query = {
         "dump_to_gcs": False,
         "dump_mode": "overwrite",
         "execute_query": """
-            SELECT 
-                ID_LOTACAO, 
-                DATA_INI_LOT, 
-                DATA_FIM_LOT, 
+            SELECT
+                ID_LOTACAO,
+                DATA_INI_LOT,
+                DATA_FIM_LOT,
                 NOME_LOTACAO, I
-                D_LOTACAO_PAI, SIGLA_LOTACAO, 
-                ID_ORGAO_USU, 
-                IS_EXTERNA_LOTACAO 
+                D_LOTACAO_PAI, SIGLA_LOTACAO,
+                ID_ORGAO_USU,
+                IS_EXTERNA_LOTACAO
             FROM CORPORATIVO.VW_LOTACAO
         """,  # noqa
     },
@@ -101,9 +101,9 @@ _processorio_infra_query = {
         "dump_to_gcs": False,
         "dump_mode": "overwrite",
         "execute_query": """
-            SELECT 
-                ID_MOBIL, 
-                ID_DOC 
+            SELECT
+                ID_MOBIL,
+                ID_DOC
             FROM SIGA.VW_MOBIL
         """,  # noqa
     },
@@ -115,8 +115,8 @@ _processorio_infra_query = {
         "dump_to_gcs": False,
         "dump_mode": "overwrite",
         "execute_query": """
-            SELECT 
-                * 
+            SELECT
+                *
             FROM SIGA.VW_TIPO_MOBIL
         """,  # noqa
         "dbt_alias": True,
@@ -129,15 +129,15 @@ _processorio_infra_query = {
         "dump_to_gcs": False,
         "dump_mode": "overwrite",
         "execute_query": """
-            SELECT 
-                ID_MOD, 
-                NM_MOD, 
-                DESC_MOD, 
-                HIS_ID_INI, 
-                HIS_IDC_INI, 
-                HIS_IDC_FIM, 
-                HIS_ATIVO, 
-                IS_PETICIONAMENTO 
+            SELECT
+                ID_MOD,
+                NM_MOD,
+                DESC_MOD,
+                HIS_ID_INI,
+                HIS_IDC_INI,
+                HIS_IDC_FIM,
+                HIS_ATIVO,
+                IS_PETICIONAMENTO
             FROM SIGA.VW_MODELO
         """,  # noqa
     },
@@ -152,15 +152,15 @@ _processorio_infra_query = {
         "partition_date_format": "%Y-%m-%d",
         "lower_bound_date": "current_month",
         "execute_query": """
-            SELECT 
-                ID_MOV, 
-                ID_TP_MOV, 
-                ID_CADASTRANTE, 
-                ID_LOTA_CADASTRANTE, 
-                CAST(CAST(DT_MOV AS VARCHAR(23)) AS DATE) DT_MOV, 
-                CAST(CAST(DT_FIM_MOV AS VARCHAR(23)) AS DATE) DT_FIM_MOV, 
-                ID_MOV_REF, 
-                ID_MOBIL 
+            SELECT
+                ID_MOV,
+                ID_TP_MOV,
+                ID_CADASTRANTE,
+                ID_LOTA_CADASTRANTE,
+                CAST(CAST(DT_MOV AS VARCHAR(23)) AS DATE) DT_MOV,
+                CAST(CAST(DT_FIM_MOV AS VARCHAR(23)) AS DATE) DT_FIM_MOV,
+                ID_MOV_REF,
+                ID_MOBIL
             FROM SIGA.VW_MOVIMENTACAO
         """,  # noqa
     },
@@ -173,8 +173,8 @@ _processorio_infra_query = {
         "dump_mode": "overwrite",
         "dbt_alias": True,
         "execute_query": """
-            SELECT 
-                * 
+            SELECT
+                *
             FROM SIGA.VW_TIPO_MOVIMENTACAO
         """,  # noqa
     },
@@ -186,9 +186,9 @@ _processorio_infra_query = {
         "dump_to_gcs": False,
         "dump_mode": "overwrite",
         "execute_query": """
-            SELECT 
-                ID_NIVEL_ACESSO, 
-                NM_NIVEL_ACESSO 
+            SELECT
+                ID_NIVEL_ACESSO,
+                NM_NIVEL_ACESSO
             FROM SIGA.VW_NIVEL_ACESSO
         """,  # noqa
     },
@@ -200,14 +200,14 @@ _processorio_infra_query = {
         "dump_to_gcs": False,
         "dump_mode": "overwrite",
         "execute_query": """
-            SELECT 
-                ID_ORGAO_USU, 
-                NM_ORGAO_USU, 
-                SIGLA_ORGAO_USU, 
-                COD_ORGAO_USU, 
-                IS_EXTERNO_ORGAO_USU, 
-                HIS_ATIVO, 
-                IS_PETICIONAMENTO 
+            SELECT
+                ID_ORGAO_USU,
+                NM_ORGAO_USU,
+                SIGLA_ORGAO_USU,
+                COD_ORGAO_USU,
+                IS_EXTERNO_ORGAO_USU,
+                HIS_ATIVO,
+                IS_PETICIONAMENTO
             FROM CORPORATIVO.VW_ORGAO_USUARIO
         """,  # noqa
     },
@@ -222,8 +222,8 @@ _processorio_infra_query = {
         "partition_date_format": "%Y-%m-%d",
         "lower_bound_date": "current_month",
         "execute_query": """
-            SELECT 
-                * 
+            SELECT
+                *
             FROM SIGA.VW_DOCUMENTO
         """,  # noqa
         "dbt_alias": True,
