@@ -120,7 +120,6 @@ _processorio_infra_query = {
                 *
             FROM SIGA.VW_TIPO_MOBIL
         """,  # noqa
-        "dbt_alias": True,
     },
     "modelo": {
         "biglake_table": True,
@@ -172,7 +171,6 @@ _processorio_infra_query = {
         "materialize_to_datario": False,
         "dump_to_gcs": False,
         "dump_mode": "overwrite",
-        "dbt_alias": True,
         "execute_query": """
             SELECT
                 *
