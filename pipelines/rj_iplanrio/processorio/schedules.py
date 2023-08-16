@@ -82,15 +82,15 @@ _processorio_infra_query = {
         "dump_to_gcs": False,
         "dump_mode": "overwrite",
         "execute_query": """
-            SELECT 
-                ID_LOTACAO, 
-                DATA_INI_LOT, 
-                DATA_FIM_LOT, 
-                NOME_LOTACAO, 
-                ID_LOTACAO_PAI, 
-                SIGLA_LOTACAO, 
-                ID_ORGAO_USU, 
-                IS_EXTERNA_LOTACAO 
+            SELECT
+                ID_LOTACAO,
+                DATA_INI_LOT,
+                DATA_FIM_LOT,
+                NOME_LOTACAO,
+                ID_LOTACAO_PAI,
+                SIGLA_LOTACAO,
+                ID_ORGAO_USU,
+                IS_EXTERNA_LOTACAO
             FROM CORPORATIVO.VW_LOTACAO
         """,  # noqa
     },
