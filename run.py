@@ -12,4 +12,3 @@ args = parser.parse_args()
 
 if args.flow == "captura_tpc":
     run_local(captura_tpc)
-

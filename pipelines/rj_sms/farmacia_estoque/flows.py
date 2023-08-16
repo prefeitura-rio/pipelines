@@ -17,12 +17,14 @@ from datetime import datetime
 with Flow(
     name="SMS: Farmacia - Captura de dados TPC", code_owners=["thiago", "andre"]
 ) as captura_tpc:
-
     # Set Parameters
     #  Azure
     container_name = Parameter("container_name", default="datalaketpc")
-    blob_path = Parameter("blob_path", default = "gold/logistico/cliente=prefeitura_rio/planta=sms_rio/estoque_local/")
-    blob_name = Parameter("blob_name", default= "estoque_local.csv")
+    blob_path = Parameter(
+        "blob_path",
+        default="gold/logistico/cliente=prefeitura_rio/planta=sms_rio/estoque_local/",
+    )
+    blob_name = Parameter("blob_name", default="estoque_local.csv")
 
     #  GCP
     # TODO: passar como parâmetros
@@ -33,7 +35,9 @@ with Flow(
     # Start run
     file_path_task = set_destination_file_path(blob_name)
 
-    download_task = download_azure_blob(container_name, blob_path + blob_name , file_path_task)
+    download_task = download_azure_blob(
+        container_name, blob_path + blob_name, file_path_task
+    )
     download_task.set_upstream(file_path_task)
 
     fix_payload_task = fix_payload_tpc(file_path_task)
