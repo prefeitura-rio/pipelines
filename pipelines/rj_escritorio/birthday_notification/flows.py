@@ -22,7 +22,6 @@ with Flow(
         "gabriel",
     ],
 ) as rj_escritorio_birthdays_birthday_flow:
-
     secret_path = Parameter("secret_path")
 
     today = get_todays_date()

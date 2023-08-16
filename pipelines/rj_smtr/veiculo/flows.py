@@ -61,7 +61,6 @@ with Flow(
     sppo_licenciamento_captura_name,
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as sppo_licenciamento_captura:
-
     timestamp = get_current_timestamp()
 
     LABELS = get_current_flow_labels()
@@ -138,7 +137,6 @@ with Flow(
     sppo_infracao_captura_name,
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as sppo_infracao_captura:
-
     timestamp = get_current_timestamp()
 
     LABELS = get_current_flow_labels()
@@ -214,7 +212,6 @@ with Flow(
     sppo_veiculo_dia_name,
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as sppo_veiculo_dia:
-
     # 1. SETUP #
 
     # Get default parameters #
