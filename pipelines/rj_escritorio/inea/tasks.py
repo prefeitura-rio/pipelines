@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=C0103, C0330, R0915
+# pylint: disable=C0103, R0915
+
 """
 Tasks for INEA.
 """
@@ -14,9 +15,16 @@ from google.cloud import storage
 from paramiko import SSHClient
 import pexpect
 from prefect import task
+from prefect.engine.signals import ENDRUN
+from prefect.engine.state import Skipped
 from scp import SCPClient
 
-from pipelines.utils.utils import get_credentials_from_env, list_blobs_with_prefix, log
+from pipelines.utils.utils import (
+    get_credentials_from_env,
+    get_vault_secret,
+    list_blobs_with_prefix,
+    log,
+)
 
 
 @task
@@ -42,6 +50,7 @@ def list_vol_files(
     product: str,
     date: str = None,
     greater_than: str = None,
+    # less_than: str = None,
     get_only_last_file: bool = True,
     mode: str = "prod",
     output_format: str = "HDF5",
@@ -52,13 +61,18 @@ def list_vol_files(
     List files from INEA server
 
     Args:
+        product (str): "ppi"
         date (str): Date of the files to be fetched (e.g. 20220125)
         greater_than (str): Fetch files with a date greater than this one
+        less_than (str): Fetch files with a date less than this one
+        output_format (str): "NetCDF" or "HDF5"
         output_directory (str): Directory where the files will be saved
+        radar (str): Radar name. Must be `gua` or `mac`
         get_only_last_file (bool): Treat only the last file available
     """
 
-    # If none of `date` or `greater_than` are provided, find blob with the latest date
+    # If none of `date`, `greater_than` or `less_than` are provided, find blob with the latest date
+    # if date is None and greater_than is None and less_than is None:
     if date is None and greater_than is None:
         log("No date or greater_than provided. Finding latest blob...")
         # First, we build the search prefix
@@ -113,14 +127,25 @@ def list_vol_files(
     output_directory_path.mkdir(parents=True, exist_ok=True)
     log(f"Temporary directory created: {output_directory_path}")
 
+    # Create vars based on radar name
+    if radar == "gua":
+        env_variable = "INEA_SSH_PASSWORD"
+        hostname = "a9921"
+        startswith = "9921GUA"
+    elif radar == "mac":
+        dicionario = get_vault_secret("inea_mac_ssh_password")
+        env_variable = dicionario["data"]["password"]
+        hostname = "a9915"
+        startswith = "9915MAC"
+
     # Get SSH password from env
-    ssh_password = getenv("INEA_SSH_PASSWORD")
+    ssh_password = getenv(env_variable)
 
     # Open SSH client
     ssh_client = SSHClient()
     ssh_client.load_system_host_keys()
     ssh_client.connect(
-        hostname="a9921",
+        hostname=hostname,
         username="root",
         password=ssh_password,
         timeout=300,
@@ -129,27 +154,47 @@ def list_vol_files(
     )
 
     # List remote files
-    log("Listing remote files...")
+    log(f"Listing remote files for radar {startswith}...")
     if date:
         _, stdout, _ = ssh_client.exec_command(
-            f"find {vols_remote_directory} -name '9921GUA{date}*.vol'"
+            f"find {vols_remote_directory} -name '{startswith}{date}*.vol'"
         )
         remote_files = stdout.read().decode("utf-8").splitlines()
+        if len(remote_files) == 0:
+            _, stdout, _ = ssh_client.exec_command(
+                f"find {vols_remote_directory} -name '*{startswith}*.vol'"
+            )
+            remote_files = stdout.read().decode("utf-8").splitlines()
+            remote_files = [i[26:34] for i in remote_files]
+            remote_files.sort()
+            remote_files = set(remote_files)
+            log(
+                f"Remote dates identified when specified date was not found: {remote_files}"
+            )
+            skip = Skipped(f"No files where found for date {date}")
+            raise ENDRUN(state=skip)
+        log(f"Remote files identified: {remote_files}")
     else:
         _, stdout, _ = ssh_client.exec_command(
-            f"find {vols_remote_directory} -name '9921GUA*.vol'"
+            f"find {vols_remote_directory} -name '{startswith}*.vol'"
         )
         all_files = stdout.read().decode("utf-8").splitlines()
         remote_files = [
             file
             for file in all_files
-            if file.split("/")[-1][: len(greater_than) + 7] >= f"9921GUA{greater_than}"
+            if file.split("/")[-1][: len(greater_than) + 7]
+            > f"{startswith}{greater_than}"
         ]
         log(f"Remote files identified: {remote_files}")
         if get_only_last_file:
             remote_files.sort()
             remote_files = [remote_files[-1]]
             log(f"Last remote file: {remote_files}")
+
+    # Stop flow if there is no new file
+    if len(remote_files) == 0:
+        skip = Skipped("No new available files")
+        raise ENDRUN(state=skip)
 
     # Filter files with same filename
     filenames = set()
@@ -173,6 +218,7 @@ def list_vol_files(
 )
 def fetch_vol_file(
     remote_file: str,
+    radar: str,
     output_directory: str = "/var/escritoriodedados/temp/",
 ):
     """
@@ -180,16 +226,28 @@ def fetch_vol_file(
 
     Args:
         remote_file (str): Remote file to be fetched
+        radar (str): Radar name. Must be `gua` or `mac`
         output_directory (str): Directory where the files will be saved
     """
+
+    # Create vars based on radar name
+    if radar == "gua":
+        env_variable = "INEA_SSH_PASSWORD"
+        hostname = "a9921"
+    elif radar == "mac":
+        env_variable = "INEA_MAC_SSH_PASSWORD"
+        hostname = "a9915"
+
+    # APAGAR LOG
+    log(f"Radar: {radar} env {env_variable}")
     # Get SSH password from env
-    ssh_password = getenv("INEA_SSH_PASSWORD")
+    ssh_password = getenv(env_variable)
 
     # Open SSH client
     ssh_client = SSHClient()
     ssh_client.load_system_host_keys()
     ssh_client.connect(
-        hostname="a9921",
+        hostname=hostname,
         username="root",
         password=ssh_password,
         timeout=300,
