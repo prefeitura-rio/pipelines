@@ -209,15 +209,15 @@ def format_partitioned_query(
         storage_partitions_dict, date_format
     )
 
-    if lower_bound_date == "last_year":
+    if lower_bound_date == "current_year":
         lower_bound_date = datetime.now().replace(month=1, day=1).strftime("%Y-%m-%d")
-        log(f"Using lower_bound_date last_year: {lower_bound_date}")
-    elif lower_bound_date == "last_month":
+        log(f"Using lower_bound_date current_year: {lower_bound_date}")
+    elif lower_bound_date == "current_month":
         lower_bound_date = datetime.now().replace(day=1).strftime("%Y-%m-%d")
-        log(f"Using lower_bound_date last_month: {lower_bound_date}")
-    elif lower_bound_date == "last_day":
+        log(f"Using lower_bound_date current_month: {lower_bound_date}")
+    elif lower_bound_date == "current_day":
         lower_bound_date = datetime.now().strftime("%Y-%m-%d")
-        log(f"Using lower_bound_date last_day: {lower_bound_date}")
+        log(f"Using lower_bound_date current_day: {lower_bound_date}")
 
     if lower_bound_date:
         last_date = min(str(lower_bound_date), str(last_partition_date))
