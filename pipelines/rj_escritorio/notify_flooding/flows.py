@@ -26,7 +26,6 @@ with Flow(
         "gabriel",
     ],
 ) as rj_escritorio_notify_flooding_flow:
-
     # Parameters
     api_url = Parameter(
         "api_url",
