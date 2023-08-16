@@ -29,7 +29,7 @@ with Flow(
     #  GCP
     # TODO: passar como parâmetros
     dataset_id = "estoque"
-    table_id = "tpc_current"
+    table_id = "tpc"
     dump_mode = "overwrite"  # append or overwrite
 
     # Start run
@@ -51,7 +51,7 @@ with Flow(
         biglake_table=True,
         wait=None,
     )
-    upload_task.set_upstream(fix_payload_tpc)
+    upload_task.set_upstream(fix_payload_task)
 
 captura_tpc.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 captura_tpc.run_config = KubernetesRun(
