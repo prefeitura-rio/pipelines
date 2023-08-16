@@ -23,7 +23,6 @@ with Flow(
         "gabriel",
     ],
 ) as rj_sms_pubsub_print_flow:
-
     # Parameters
     subscription = Parameter("subscription", required=True)
     max_messages = Parameter("max_messages", default=1000)
