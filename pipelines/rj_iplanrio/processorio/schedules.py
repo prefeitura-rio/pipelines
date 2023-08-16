@@ -86,8 +86,9 @@ _processorio_infra_query = {
                 ID_LOTACAO, 
                 DATA_INI_LOT, 
                 DATA_FIM_LOT, 
-                NOME_LOTACAO, I
-                D_LOTACAO_PAI, SIGLA_LOTACAO, 
+                NOME_LOTACAO, 
+                ID_LOTACAO_PAI, 
+                SIGLA_LOTACAO, 
                 ID_ORGAO_USU, 
                 IS_EXTERNA_LOTACAO 
             FROM CORPORATIVO.VW_LOTACAO
