@@ -8,6 +8,7 @@ from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.utilities.edges import unmapped
+from datetime import timedelta
 
 # EMD Imports #
 
@@ -26,7 +27,7 @@ from pipelines.utils.tasks import (
 from pipelines.rj_smtr.veiculo.constants import constants
 
 from pipelines.rj_smtr.schedules import (
-    every_day_hour_five,
+    every_day_hour_seven,
 )
 from pipelines.rj_smtr.tasks import (
     create_date_partition,
@@ -122,7 +123,7 @@ sppo_licenciamento_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-sppo_licenciamento_captura.schedule = every_day_hour_five
+sppo_licenciamento_captura.schedule = every_day_hour_seven
 
 sppo_infracao_captura_name = f"SMTR: Captura - {constants.DATASET_ID.value}.{constants.SPPO_INFRACAO_TABLE_ID.value}"
 with Flow(
@@ -190,7 +191,7 @@ sppo_infracao_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-sppo_infracao_captura.schedule = every_day_hour_five
+sppo_infracao_captura.schedule = every_day_hour_seven
 
 # flake8: noqa: E501
 sppo_veiculo_dia_name = f"SMTR: Materialização - {constants.DATASET_ID.value}.{constants.SPPO_VEICULO_DIA_TABLE_ID.value}"
