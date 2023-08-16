@@ -37,7 +37,6 @@ with Flow(
     "RIOAGUAS: Lamina de água em via",
     code_owners=["JP"],
 ) as rioaguas_lamina_agua:
-
     # Parâmetros para a Materialização
     materialize_after_dump = Parameter(
         "materialize_after_dump", default=False, required=False

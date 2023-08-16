@@ -42,7 +42,6 @@ with Flow(
     ],
     # skip_if_running=True,
 ) as cor_meteorologia_precipitacao_radar_flow:
-
     # Prefect Parameters
     MODE = Parameter("mode", default="prod")
     RADAR_NAME = Parameter("radar_name", default="gua")

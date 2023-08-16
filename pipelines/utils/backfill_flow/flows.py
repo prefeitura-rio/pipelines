@@ -25,7 +25,6 @@ with Flow(
         "gabriel",
     ],
 ) as backfill_flow_definition:
-
     # Parameters
     agent_label = Parameter("agent_label")
     backfill_end = Parameter("backfill_end")
