@@ -33,3 +33,24 @@ every_5_minutes = Schedule(
         ),
     ]
 )
+every_5_minutes_mac = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(minutes=5),
+            start_date=datetime(2021, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo")),
+            labels=[
+                constants.INEA_AGENT_LABEL.value,
+            ],
+            parameter_defaults={
+                "bucket_name": "rj-escritorio-dev",
+                "convert_params": "-k=ODIM2.1 -M=All",
+                "mode": "prod",
+                "output_format": "HDF5",
+                "prefix": "raw/meio_ambiente_clima/inea_radar_hdf5",
+                "product": "ppi",
+                "radar": "mac",
+                "vols_remote_directory": "/var/opt/edge/vols",
+            },
+        ),
+    ]
+)
