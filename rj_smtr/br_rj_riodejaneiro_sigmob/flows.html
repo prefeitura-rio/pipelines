@@ -65,7 +65,6 @@ with Flow(
     &#34;SMTR: SIGMOB - Materialização&#34;,
     code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
 ) as materialize_sigmob:
-
     # Rename Flow Run
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=&#34;SMTR: SIGMOB - Materialização - &#34;, now_time=get_now_time()
@@ -121,7 +120,6 @@ with Flow(
     &#34;SMTR: SIGMOB - Captura&#34;,
     code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
 ) as captura_sigmob:
-
     # Get default parameters #
     endpoints = Parameter(&#34;endpoints&#34;, default=constants.SIGMOB_ENDPOINTS.value)
     dataset_id = Parameter(&#34;dataset_id&#34;, default=constants.SIGMOB_DATASET_ID.value)

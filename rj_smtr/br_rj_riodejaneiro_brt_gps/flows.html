@@ -83,7 +83,6 @@ with Flow(
     &#34;SMTR: GPS BRT - Materialização&#34;,
     code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
 ) as materialize_brt:
-
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=&#34;GPS BRT - Materialização: &#34;, now_time=get_now_time()
@@ -169,7 +168,6 @@ with Flow(
     &#34;SMTR: GPS BRT - Captura&#34;,
     code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
 ) as captura_brt:
-
     timestamp = get_current_timestamp()
 
     # Rename flow run

@@ -167,7 +167,6 @@ def fecth_waze(areas: pd.DataFrame, wait=None) -&gt; list:
 
     res = []
     for coord in coords:
-
         url = base_url.format(**coord)
 
         response = requests.request(&#34;GET&#34;, url, headers=headers, data=payload)
@@ -188,7 +187,6 @@ def normalize_data(responses: list, wait=None) -&gt; pd.DataFrame:
     for data in responses:
         alerts = data.get(&#34;alerts&#34;, [])
         for dictionary in alerts:
-
             normalized.append(
                 {
                     &#34;date&#34;: datetime.fromisoformat(data[&#34;startTime&#34;][:10]),
@@ -303,7 +301,6 @@ def fecth_waze(areas: pd.DataFrame, wait=None) -&gt; list:
 
     res = []
     for coord in coords:
-
         url = base_url.format(**coord)
 
         response = requests.request(&#34;GET&#34;, url, headers=headers, data=payload)
@@ -446,7 +443,6 @@ def normalize_data(responses: list, wait=None) -&gt; pd.DataFrame:
     for data in responses:
         alerts = data.get(&#34;alerts&#34;, [])
         for dictionary in alerts:
-
             normalized.append(
                 {
                     &#34;date&#34;: datetime.fromisoformat(data[&#34;startTime&#34;][:10]),

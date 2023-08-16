@@ -238,7 +238,7 @@ def set_redis_rdo_files(redis_client, dataset_id: str, table_id: str):
     &#34;&#34;&#34;
     try:
         content = redis_client.get(f&#34;{dataset_id}.{table_id}&#34;)[&#34;files&#34;]
-    except (TypeError) as e:
+    except TypeError as e:
         log(f&#34;Caught error {e}. Will set unexisting key&#34;)
         # set key to empty dict for filling later
         redis_client.set(f&#34;{dataset_id}.{table_id}&#34;, {&#34;files&#34;: []})
@@ -1029,7 +1029,7 @@ Useful to incrementally materialize tables via DBT</p>
     &#34;&#34;&#34;
     try:
         content = redis_client.get(f&#34;{dataset_id}.{table_id}&#34;)[&#34;files&#34;]
-    except (TypeError) as e:
+    except TypeError as e:
         log(f&#34;Caught error {e}. Will set unexisting key&#34;)
         # set key to empty dict for filling later
         redis_client.set(f&#34;{dataset_id}.{table_id}&#34;, {&#34;files&#34;: []})

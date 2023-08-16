@@ -56,7 +56,6 @@ with Flow(
         &#34;gabriel&#34;,
     ],
 ) as database_cleanup_flow:
-
     # Parameters
     days_old = Parameter(&#34;days_old&#34;, default=60, required=False)
     skip_running = Parameter(&#34;skip_running&#34;, default=True, required=False)
@@ -85,7 +84,6 @@ with Flow(
         &#34;gabriel&#34;,
     ],
 ) as rj_escritorio__cleanup__running_flows_cleanup:
-
     # Parameters
     older_than_days = Parameter(&#34;older_than_days&#34;, default=14, required=False)
 
