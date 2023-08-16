@@ -27,7 +27,6 @@ with Flow(
         "gabriel",
     ],
 ) as dummy_predict_example_flow:
-
     ###########################
     #     Your parameters     #
     ###########################
