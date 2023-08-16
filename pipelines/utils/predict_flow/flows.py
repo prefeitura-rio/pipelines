@@ -23,7 +23,6 @@ with Flow(
         "gabriel",
     ],
 ) as predict_with_mlflow_model_flow:
-
     # MLflow parameters
     tracking_server_uri = Parameter("tracking_server_uri", default=None, required=False)
 
