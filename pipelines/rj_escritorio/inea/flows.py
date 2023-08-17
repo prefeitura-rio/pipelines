@@ -57,7 +57,6 @@ with Flow(
         product=product,
         get_only_last_file=get_only_last_file,
         mode=mode,
-        output_format=output_format,
         vols_remote_directory=vols_remote_directory,
     )
     downloaded_files = fetch_vol_file.map(
