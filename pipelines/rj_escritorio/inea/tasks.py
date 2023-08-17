@@ -42,7 +42,7 @@ def print_environment_variables():
     max_retries=2,
     retry_delay=timedelta(seconds=10),
 )
-# pylint: disable=too-many-arguments,too-many-locals
+# pylint: disable=too-many-arguments,too-many-locals, too-many-branches
 def list_vol_files(
     bucket_name: str,
     prefix: str,
@@ -50,10 +50,8 @@ def list_vol_files(
     product: str,
     date: str = None,
     greater_than: str = None,
-    # less_than: str = None,
     get_only_last_file: bool = True,
     mode: str = "prod",
-    output_format: str = "HDF5",
     output_directory: str = "/var/escritoriodedados/temp/",
     vols_remote_directory: str = "/var/opt/edge/vols",
 ) -> Tuple[List[str], str]:
@@ -65,59 +63,81 @@ def list_vol_files(
         date (str): Date of the files to be fetched (e.g. 20220125)
         greater_than (str): Fetch files with a date greater than this one
         less_than (str): Fetch files with a date less than this one
-        output_format (str): "NetCDF" or "HDF5"
         output_directory (str): Directory where the files will be saved
         radar (str): Radar name. Must be `gua` or `mac`
         get_only_last_file (bool): Treat only the last file available
+
+    How to use:
+        to get real time data:
+            let `greater_than` and `date` as None and `get_only_last_file` as True
+            This will prevent the flow to be stucked treating all files when something happend
+            and stoped the flow. Otherwise the flow will take a long time to treat all files
+            and came back to real time.
+        to fill missing files up to two days ago:
+            let `greater_than` and `date` as None and `get_only_last_file` as False
+        for backfill or to fill missing files for dates greather than two days ago:
+            add a `greater_than` date and let `date` as None and `get_only_last_file` as False
+        get all files for one day
+            let `greater_than` as None and `get_only_last_file` as False and fill `date`
     """
 
-    # If none of `date`, `greater_than` or `less_than` are provided, find blob with the latest date
-    # if date is None and greater_than is None and less_than is None:
-    if date is None and greater_than is None:
-        log("No date or greater_than provided. Finding latest blob...")
+    # If none of `date`, `greater_than` are provided, find blob with the latest date
+    if date is None:
         # First, we build the search prefix
         search_prefix = f"{prefix}/radar={radar}/produto={product}"
-        # Then, we add the current date partition
-        current_date = datetime.now()
-        current_date_str = current_date.strftime("%Y-%m-%d")
-        today_blobs = list_blobs_with_prefix(
-            bucket_name=bucket_name,
-            prefix=f"{search_prefix}/data_particao={current_date_str}",
-            mode=mode,
-        )
-        log(
-            f"Searched for blobs with prefix {search_prefix}/data_particao={current_date_str}"
-        )
-        # Next, we get past day blobs
-        past_date = current_date - timedelta(days=1)
-        past_date_str = past_date.strftime("%Y-%m-%d")
-        past_blobs = list_blobs_with_prefix(
-            bucket_name=bucket_name,
-            prefix=f"{search_prefix}/data_particao={past_date_str}",
-            mode=mode,
-        )
-        log(
-            f"Searched for blobs with prefix {search_prefix}/data_particao={past_date_str}"
-        )
-        # Then, we merge the two lists
-        blobs = today_blobs + past_blobs
+        if greater_than is None:
+            log("No date or greater_than provided. Finding latest blob...")
+            # Then, we add the current date partition
+            current_date = datetime.now()
+            current_date_str = current_date.strftime("%Y-%m-%d")
+            today_blobs = list_blobs_with_prefix(
+                bucket_name=bucket_name,
+                prefix=f"{search_prefix}/data_particao={current_date_str}",
+                mode=mode,
+            )
+            log(
+                f"Searched for blobs with prefix {search_prefix}/data_particao={current_date_str}"
+            )
+            # Next, we get past day blobs
+            past_date = current_date - timedelta(days=1)
+            past_date_str = past_date.strftime("%Y-%m-%d")
+            past_blobs = list_blobs_with_prefix(
+                bucket_name=bucket_name,
+                prefix=f"{search_prefix}/data_particao={past_date_str}",
+                mode=mode,
+            )
+            log(
+                f"Searched for blobs with prefix {search_prefix}/data_particao={past_date_str}"
+            )
+            # Then, we merge the two lists
+            blobs = today_blobs + past_blobs
+        else:
+            blobs = list_blobs_with_prefix(
+                bucket_name=bucket_name,
+                prefix=f"{search_prefix}/",
+                mode=mode,
+            )
+
         # Now, we sort it by `blob.name`
         blobs.sort(key=lambda blob: blob.name)
-        # Finally, we get the latest blob
-        latest_blob = blobs[-1]
-        log(f"Latest blob found: {latest_blob.name}")
-        # And we get the greater_than from its name (differs for every output_format)
-        if output_format == "NetCDF":
-            # Format of the name is 9921GUA-20221017-070010-PPIVol-0000.nc.gz
-            # We need to join 20221017 and 070010
-            fname = latest_blob.name.split("/")[-1]
-            greater_than = fname.split("-")[1] + fname.split("-")[2]
-        elif output_format == "HDF5":
-            # Format of the name is 9921GUA-PPIVol-20220930-121010-0004.hdf
-            # We need to join 20220930 and 121010
-            fname = latest_blob.name.split("/")[-1]
-            greater_than = fname.split("-")[2] + fname.split("-")[3]
-        log(f"Latest blob date: {greater_than}")
+        # Get only the filenames
+        datalake_files = [blob.name.split("/")[-1] for blob in blobs]
+        # Format of the name is 9921GUA-20221017-070010-PPIVol-0000.nc.gz
+        # We need to join 20221017 and 070010
+        # Format of the name is 9921GUA-PPIVol-20220930-121010-0004.hdf
+        # We need to join 20220930 and 121010
+        datalake_files = [fname.replace("-PPIVol", "") for fname in datalake_files]
+        datalake_files = [
+            fname.split("-")[1] + fname.split("-")[2] for fname in datalake_files
+        ]
+        if greater_than is None:
+            # Finally, we get the latest date
+            greater_than = datalake_files[-1]
+            log(f"Latest blob found: {datalake_files[-1]}")
+            log(f"Latest blob date: {greater_than}")
+
+    # Adjust greather_than if user didn't gave hour, minutes and seconds
+    greater_than = greater_than.ljust(14, "0")
 
     # Creating temporary directory
     if date:
@@ -190,6 +210,14 @@ def list_vol_files(
             remote_files.sort()
             remote_files = [remote_files[-1]]
             log(f"Last remote file: {remote_files}")
+        else:
+            # Remove from remote_files files that are already on datalake
+            remote_files = [
+                item1
+                for item1 in remote_files
+                if not any(item2 in item1 for item2 in datalake_files)
+            ]
+            log(f"Remote files missing on datalake: {remote_files}")
 
     # Stop flow if there is no new file
     if len(remote_files) == 0:
@@ -207,8 +235,8 @@ def list_vol_files(
             filenames.add(filename)
     remote_files = filtered_remote_files
 
-    log(f"Found {len(remote_files)} files.")
-    log(f"Remote files: {remote_files}")
+    log(f"Found {len(remote_files)} files to be treated.")
+    log(f"Remote files to be treated: {remote_files}")
     return remote_files, output_directory_path
 
 
@@ -279,6 +307,8 @@ def convert_vol_file(
     For output_format = "NetCDF" convert_params must be
       "-f=Whole -k=CFext -r=Short -p=Radar -M=All -z"
     For output_format = "HDF5" convert_params must be "-k=ODIM2.1 -M=All" for all products
+    Args:
+        output_format (str): "NetCDF" or "HDF5"
     """
     # Run volconvert
     log(f"Converting file {downloaded_file} to {output_format}...")
