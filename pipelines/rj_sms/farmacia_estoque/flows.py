@@ -108,15 +108,16 @@ captura_vitai.run_config = KubernetesRun(
 with Flow(
     name="SMS: Farmacia - Upload Organization", code_owners=["thiago", "andre"]
 ) as upload_organizations:
-
-    origin = Parameter("origin", default="/home/thiagotrabach/tmp/tbEstabelecimento202307_REV.csv")
+    origin = Parameter(
+        "origin", default="/home/thiagotrabach/tmp/tbEstabelecimento202307_REV.csv"
+    )
     #  GCP
     dataset_id = "dump_cnes"
     table_id = "tbEstabelecimento"
     dump_mode = "overwrite"  # append or overwrite
 
     upload_task = create_table_and_upload_to_gcs(
-        data_path= origin,
+        data_path=origin,
         dataset_id=dataset_id,
         table_id=table_id,
         dump_mode=dump_mode,
