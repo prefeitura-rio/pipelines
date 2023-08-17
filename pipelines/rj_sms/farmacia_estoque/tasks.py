@@ -8,7 +8,6 @@ import requests
 from datetime import date
 
 
-
 @task
 def download_azure_blob(container_name, blob_name, destination_file_path):
     """
@@ -35,23 +34,29 @@ def download_azure_blob(container_name, blob_name, destination_file_path):
 
     log(f"Blob '{blob_name}' downloaded to '{destination_file_path}'.")
 
+
 @task
 def download_api(url: str, destination_file_path, source: str):
-
-    if source == 'vitai':
+    if source == "vitai":
         auth_token = get_vault_secret(secret_path="estoque_vitai")["data"]["token"]
     else:
-        raise Exception('Source must be filled')
-    headers = {'Authorization': f'Bearer {auth_token}'}
+        raise Exception("Source must be filled")
+    headers = {"Authorization": f"Bearer {auth_token}"}
 
     try:
         response = requests.get(url, headers=headers)
 
         if response.status_code == 200:
-
             df = pd.DataFrame(response.json())
-            df['_data_carga'] = date.today()
-            df.to_csv(destination_file_path, index=False, sep=";", encoding="utf-8", quoting=0, decimal=".")
+            df["_data_carga"] = date.today()
+            df.to_csv(
+                destination_file_path,
+                index=False,
+                sep=";",
+                encoding="utf-8",
+                quoting=0,
+                decimal=".",
+            )
 
         else:
             log("Error:", response.status_code, response.text)
@@ -60,12 +65,16 @@ def download_api(url: str, destination_file_path, source: str):
         log("An error occurred:", e)
 
 
-
-
 @task
 def set_destination_file_path(file):
-
-    return os.path.expanduser("~") + "/" + file[:file.find('.')] + "_" + str(date.today()) + file[file.find('.'):]
+    return (
+        os.path.expanduser("~")
+        + "/"
+        + file[: file.find(".")]
+        + "_"
+        + str(date.today())
+        + file[file.find(".") :]
+    )
 
 
 @task
@@ -97,7 +106,6 @@ def fix_payload_tpc(filepath: str):
 
 @task
 def fix_payload_vitai(filepath: str):
-
     df = pd.read_csv(filepath, sep=";", keep_default_na=False)
 
     # remove caracteres que confundem o parser

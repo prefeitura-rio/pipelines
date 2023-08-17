@@ -65,7 +65,6 @@ captura_tpc.run_config = KubernetesRun(
 with Flow(
     name="SMS: Farmacia - Captura de dados Vitai", code_owners=["thiago", "andre"]
 ) as captura_vitai:
-    
     # Set Parameters
     file_name = Parameter("file_name", default="estoque_vitai.csv")
     source = Parameter("source", default="vitai")
@@ -80,12 +79,12 @@ with Flow(
     download_task = download_api(
         url="https://apidw.vitai.care/api/dw/v1/produtos/saldoAtual",
         destination_file_path=file_path_task,
-        source = source)
+        source=source,
+    )
     download_task.set_upstream(file_path_task)
 
     fix_payload_task = fix_payload_vitai(file_path_task)
     fix_payload_task.set_upstream(download_task)
-
 
     upload_task = create_table_and_upload_to_gcs(
         data_path=file_path_task,
