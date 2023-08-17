@@ -132,12 +132,11 @@ def list_vol_files(
         ]
         if greater_than is None:
             # Finally, we get the latest date
-            greater_than = datalake_files[-1]
-            log(f"Latest blob found: {datalake_files[-1]}")
+            greater_than = datalake_files[-1][:8]
             log(f"Latest blob date: {greater_than}")
 
-    # Adjust greather_than if user didn't gave hour, minutes and seconds
-    greater_than = greater_than.ljust(14, "0")
+    # # Adjust greather_than if user didn't gave hour, minutes and seconds
+    # greater_than = greater_than.ljust(14, "0")
 
     # Creating temporary directory
     if date:
@@ -203,7 +202,7 @@ def list_vol_files(
             file
             for file in all_files
             if file.split("/")[-1][: len(greater_than) + 7]
-            > f"{startswith}{greater_than}"
+            >= f"{startswith}{greater_than}"
         ]
         log(f"Remote files identified: {remote_files}")
         if get_only_last_file:
