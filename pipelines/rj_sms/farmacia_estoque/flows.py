@@ -19,6 +19,7 @@ with Flow(
     name="SMS: Farmacia - Captura de dados TPC", code_owners=["thiago", "andre"]
 ) as captura_tpc:
     # Set Parameters
+    file_name = Parameter("file_name", default="estoque_tpc.csv")
     #  Azure
     container_name = Parameter("container_name", default="datalaketpc")
     blob_path = Parameter(
@@ -30,10 +31,10 @@ with Flow(
     #  GCP
     dataset_id = "estoque"
     table_id = "tpc"
-    dump_mode = "append"  # append or overwrite
+    dump_mode = "overwrite"  # append or overwrite
 
     # Start run
-    file_path_task = set_destination_file_path(blob_name)
+    file_path_task = set_destination_file_path(file_name)
 
     download_task = download_azure_blob(
         container_name, blob_path + blob_name, file_path_task
@@ -66,12 +67,12 @@ with Flow(
 ) as captura_vitai:
     
     # Set Parameters
-    file_name = Parameter("file_name", default="estoque.csv")
+    file_name = Parameter("file_name", default="estoque_vitai.csv")
     source = Parameter("source", default="vitai")
     #  GCP
     dataset_id = "estoque"
     table_id = "vitai"
-    dump_mode = "append"  # append or overwrite
+    dump_mode = "overwrite"  # append or overwrite
 
     # Start run
     file_path_task = set_destination_file_path(file_name)

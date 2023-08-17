@@ -64,7 +64,8 @@ def download_api(url: str, destination_file_path, source: str):
 
 @task
 def set_destination_file_path(file):
-    return os.path.expanduser("~") + "/" + file
+
+    return os.path.expanduser("~") + "/" + file[:file.find('.')] + "_" + str(date.today()) + file[file.find('.'):]
 
 
 @task
@@ -96,7 +97,7 @@ def fix_payload_tpc(filepath: str):
 
 @task
 def fix_payload_vitai(filepath: str):
-    
+
     df = pd.read_csv(filepath, sep=";", keep_default_na=False)
 
     # remove caracteres que confundem o parser
