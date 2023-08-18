@@ -31,7 +31,7 @@ with Flow(
     #  GCP
     dataset_id = "estoque"
     table_id = "tpc"
-    dump_mode = "overwrite"  # append or overwrite
+    dump_mode = "append"  # append or overwrite
 
     # Start run
     file_path_task = set_destination_file_path(file_name)
