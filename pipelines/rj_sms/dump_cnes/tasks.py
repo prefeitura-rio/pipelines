@@ -16,4 +16,3 @@ def set_destination_file_path(file):
         + str(date.today())
         + file[file.find(".") :]
     )
-

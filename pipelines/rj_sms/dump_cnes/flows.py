@@ -12,14 +12,13 @@ from pipelines.utils.tasks import (
 with Flow(
     name="SMS: Farmacia - Upload Organization", code_owners=["thiago", "andre"]
 ) as upload_organizations:
-
     #  GCP
     dataset_id = "dump_cnes"
     table_id = "tbEstabelecimento"
     dump_mode = "overwrite"  # append or overwrite
 
     upload_task = create_table_and_upload_to_gcs(
-        data_path= "~\tmp\tbEstabelecimento202307_REV.parquet",
+        data_path="~\tmp\tbEstabelecimento202307_REV.parquet",
         dataset_id=dataset_id,
         table_id=table_id,
         dump_mode=dump_mode,
