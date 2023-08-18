@@ -71,7 +71,7 @@ with Flow(
     #  GCP
     dataset_id = "estoque"
     table_id = "vitai"
-    dump_mode = "overwrite"  # append or overwrite
+    dump_mode = "append"  # append or overwrite
 
     # Start run
     file_path_task = set_destination_file_path(file_name)
@@ -114,7 +114,7 @@ with Flow(
     #  GCP
     dataset_id = "dump_cnes"
     table_id = "tbEstabelecimento"
-    dump_mode = "overwrite"  # append or overwrite
+    dump_mode = "append"  # append or overwrite
 
     upload_task = create_table_and_upload_to_gcs(
         data_path=origin,
