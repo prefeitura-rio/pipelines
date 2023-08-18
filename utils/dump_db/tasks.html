@@ -238,10 +238,23 @@ def format_partitioned_query(
         storage_partitions_dict, date_format
     )
 
+    if lower_bound_date == &#34;current_year&#34;:
+        lower_bound_date = datetime.now().replace(month=1, day=1).strftime(&#34;%Y-%m-%d&#34;)
+        log(f&#34;Using lower_bound_date current_year: {lower_bound_date}&#34;)
+    elif lower_bound_date == &#34;current_month&#34;:
+        lower_bound_date = datetime.now().replace(day=1).strftime(&#34;%Y-%m-%d&#34;)
+        log(f&#34;Using lower_bound_date current_month: {lower_bound_date}&#34;)
+    elif lower_bound_date == &#34;current_day&#34;:
+        lower_bound_date = datetime.now().strftime(&#34;%Y-%m-%d&#34;)
+        log(f&#34;Using lower_bound_date current_day: {lower_bound_date}&#34;)
+
     if lower_bound_date:
         last_date = min(str(lower_bound_date), str(last_partition_date))
+        log(f&#34;Using lower_bound_date: {last_date}&#34;)
+
     else:
         last_date = str(last_partition_date)
+        log(f&#34;Using last_date from storage: {last_date}&#34;)
 
     # Using the last partition date, get the partitioned query.
     # `aux_name` must be unique and start with a letter, for better compatibility with
@@ -1020,10 +1033,23 @@ def format_partitioned_query(
         storage_partitions_dict, date_format
     )
 
+    if lower_bound_date == &#34;current_year&#34;:
+        lower_bound_date = datetime.now().replace(month=1, day=1).strftime(&#34;%Y-%m-%d&#34;)
+        log(f&#34;Using lower_bound_date current_year: {lower_bound_date}&#34;)
+    elif lower_bound_date == &#34;current_month&#34;:
+        lower_bound_date = datetime.now().replace(day=1).strftime(&#34;%Y-%m-%d&#34;)
+        log(f&#34;Using lower_bound_date current_month: {lower_bound_date}&#34;)
+    elif lower_bound_date == &#34;current_day&#34;:
+        lower_bound_date = datetime.now().strftime(&#34;%Y-%m-%d&#34;)
+        log(f&#34;Using lower_bound_date current_day: {lower_bound_date}&#34;)
+
     if lower_bound_date:
         last_date = min(str(lower_bound_date), str(last_partition_date))
+        log(f&#34;Using lower_bound_date: {last_date}&#34;)
+
     else:
         last_date = str(last_partition_date)
+        log(f&#34;Using last_date from storage: {last_date}&#34;)
 
     # Using the last partition date, get the partitioned query.
     # `aux_name` must be unique and start with a letter, for better compatibility with
