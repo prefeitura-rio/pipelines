@@ -48,9 +48,11 @@ def download_api(url: str, destination_file_path, source: str):
 
         if response.status_code == 200:
             if source == "vitai":
-                type_dict = {"cnes": "str",}
+                type_dict = {
+                    "cnes": "str",
+                }
                 df = pd.DataFrame(response.json(), dtype=type_dict)
-            else:    
+            else:
                 df = pd.DataFrame(response.jon())
             df["_data_carga"] = date.today()
             df.to_csv(
