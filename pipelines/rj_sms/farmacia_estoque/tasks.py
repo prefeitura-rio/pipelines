@@ -112,8 +112,7 @@ def fix_payload_tpc(filepath: str):
 
 @task
 def fix_payload_vitai(filepath: str):
-    type_dict = {"cnes": "str"}
-    df = pd.read_csv(filepath, sep=";", keep_default_na=False, dtype=type_dict)
+    df = pd.read_csv(filepath, sep=";", keep_default_na=False, dtype={"cnes": "str"})
 
     # remove caracteres que confundem o parser
     df["descricao"] = df.descricao.apply(lambda x: x.replace('"', ""))
