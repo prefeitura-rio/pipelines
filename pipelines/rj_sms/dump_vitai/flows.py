@@ -7,9 +7,7 @@ from prefect.storage import GCS
 from pipelines.utils.tasks import (
     create_table_and_upload_to_gcs,
 )
-from pipelines.rj_sms.utils import (
-    clean_ascii, 
-    convert_to_parquet)
+from pipelines.rj_sms.utils import clean_ascii, convert_to_parquet
 from pipelines.rj_sms.dump_vitai.tasks import (
     download_api,
 )
@@ -28,14 +26,15 @@ with Flow(
     # Start run
     download_task = download_api(
         url="https://apidw.vitai.care/api/dw/v1/produtos/saldoAtual",
-        file_name = file_name,
+        file_name=file_name,
     )
 
-    clean_task = clean_ascii(input_file_path = download_task)
+    clean_task = clean_ascii(input_file_path=download_task)
     clean_task.set_upstream(download_task)
 
-    to_parquet_task = convert_to_parquet(input_file_path = clean_task,
-                                         schema = {"cnes": "str"})
+    to_parquet_task = convert_to_parquet(
+        input_file_path=clean_task, schema={"cnes": "str"}
+    )
     to_parquet_task.set_upstream(clean_task)
 
     upload_task = create_table_and_upload_to_gcs(
