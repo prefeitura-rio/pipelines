@@ -242,12 +242,8 @@ def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
         atividades_eventos_datas_cols
     ].fillna("1970-01-01 00:00:00")
 
-    # Treat id_pop cols
-    log(
-        f">>>>>> types[DEBUG] eventos:\n{eventos.dtypes}\natividades_evento\n{atividades_evento.dtypes}"
-    )
+    # Treat id_pop col
     eventos["id_pop"] = eventos["id_pop"].astype(float).astype(int)
-    atividades_evento["id_pop"] = atividades_evento["id_pop"].astype(float).astype(int)
 
     # Fixa colunas e ordem
     eventos = eventos[eventos_cols].drop_duplicates()
