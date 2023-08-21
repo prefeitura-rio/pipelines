@@ -1053,7 +1053,7 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
     # Keep only the last date for each unique_id
     keep_cols = [unique_id, date_column]
     new_updates = dataframe[keep_cols].sort_values(keep_cols)
-    new_updates = new_updates.groupby(unique_id, as_group=False).tail(1)
+    new_updates = new_updates.groupby(unique_id, as_index=False).tail(1)
     new_updates[date_column] = new_updates[date_column].dt.strftime("%Y-%m-%d %H:%M:%S")
     log(f">>> Updated df: {new_updates.head(10)}")
 
