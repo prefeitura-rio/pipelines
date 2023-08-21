@@ -999,7 +999,8 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
     last_updates = pd.DataFrame(
         last_updates.items(), columns=[unique_id, "last_update"]
     )
-    log(f"Redis key: {key}\nRedis actual values: {last_updates}")
+
+    log(f"Redis key: {key}\nRedis actual values:\n {last_updates}")
 
     # dataframe and last_updates need to have the same index, in our case unique_id
     missing_in_dfr = [
@@ -1036,6 +1037,7 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
     dataframe["last_update"] = dataframe["last_update"].apply(
         pd.to_datetime, format="%Y-%m-%d %H:%M:%S"
     )
+
     dataframe = dataframe[dataframe[date_column] > dataframe["last_update"]].dropna(
         subset=[unique_id]
     )
@@ -1044,7 +1046,8 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
     keep_cols = [unique_id, date_column]
     new_updates = dataframe[keep_cols].sort_values(keep_cols)
     new_updates = new_updates.groupby(unique_id, as_index=False).tail(1)
-    new_updates[date_column] = new_updates[date_column].astype(str)
+    new_updates[date_column] = new_updates[date_column].dt.strftime("%Y-%m-%d %H:%M:%S")
+    log(f">>> Updated df: {new_updates.head(10)}")
 
     # Convert stations with the new updates dates in a dictionary
     new_updates = dict(zip(new_updates[unique_id], new_updates[date_column]))
