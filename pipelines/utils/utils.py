@@ -1000,14 +1000,6 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
         last_updates.items(), columns=[unique_id, "last_update"]
     )
 
-    for index, row in last_updates.iterrows():  # remover
-        try:
-            date = pd.to_datetime(row["last_update"], format="%Y-%m-%d %H:%M:%S")
-        except ValueError:
-            date = pd.to_datetime(row["last_update"]) + pd.DateOffset(hours=0)
-
-        last_updates.at[index, "last_update"] = date.strftime("%Y-%m-%d %H:%M:%S")
-
     log(f"Redis key: {key}\nRedis actual values:\n {last_updates}")
 
     # dataframe and last_updates need to have the same index, in our case unique_id
