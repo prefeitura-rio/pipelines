@@ -47,13 +47,7 @@ def download_api(url: str, destination_file_path, source: str):
         response = requests.get(url, headers=headers)
 
         if response.status_code == 200:
-            if source == "vitai":
-                type_dict = {
-                    "cnes": "str",
-                }
-                df = pd.DataFrame(response.json(), dtype=type_dict)
-            else:
-                df = pd.DataFrame(response.jon())
+            df = pd.DataFrame(response.jon())
             df["_data_carga"] = date.today()
             df.to_csv(
                 destination_file_path,
@@ -112,7 +106,7 @@ def fix_payload_tpc(filepath: str):
 
 @task
 def fix_payload_vitai(filepath: str):
-    df = pd.read_csv(filepath, sep=";", keep_default_na=False, dtype={"cnes": "str"})
+    df = pd.read_csv(filepath, sep=";", keep_default_na=False)
 
     # remove caracteres que confundem o parser
     df["descricao"] = df.descricao.apply(lambda x: x.replace('"', ""))
