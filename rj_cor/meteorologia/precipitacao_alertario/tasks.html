@@ -157,9 +157,7 @@ def tratar_dados(
 
     log(f&#34;Dataframe after comparing with last data saved on redis {dados.head()}&#34;)
 
-    # If df is empty stop flow on flows.py
     empty_data = dados.shape[0] == 0
-    log(&#34;Dataframe is empty.&#34;)
 
     # Save max date on redis to compare this with last dbt run
     if not empty_data:
@@ -167,6 +165,9 @@ def tratar_dados(
         redis_key = build_redis_key(dataset_id, table_id, name=&#34;last_update&#34;, mode=mode)
         log(f&#34;Dataframe is not empty. Redis key: {redis_key} and new date: {max_date}&#34;)
         save_str_on_redis(redis_key, &#34;date&#34;, max_date)
+    else:
+        # If df is empty stop flow on flows.py
+        log(f&#34;Dataframe is empty. Skipping update flow for datetime {date}.&#34;)
 
     # Fixar ordem das colunas
     dados = dados[
@@ -459,9 +460,7 @@ def tratar_dados(
 
     log(f&#34;Dataframe after comparing with last data saved on redis {dados.head()}&#34;)
 
-    # If df is empty stop flow on flows.py
     empty_data = dados.shape[0] == 0
-    log(&#34;Dataframe is empty.&#34;)
 
     # Save max date on redis to compare this with last dbt run
     if not empty_data:
@@ -469,6 +468,9 @@ def tratar_dados(
         redis_key = build_redis_key(dataset_id, table_id, name=&#34;last_update&#34;, mode=mode)
         log(f&#34;Dataframe is not empty. Redis key: {redis_key} and new date: {max_date}&#34;)
         save_str_on_redis(redis_key, &#34;date&#34;, max_date)
+    else:
+        # If df is empty stop flow on flows.py
+        log(f&#34;Dataframe is empty. Skipping update flow for datetime {date}.&#34;)
 
     # Fixar ordem das colunas
     dados = dados[

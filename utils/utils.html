@@ -1028,7 +1028,8 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
     last_updates = pd.DataFrame(
         last_updates.items(), columns=[unique_id, &#34;last_update&#34;]
     )
-    log(f&#34;Redis key: {key}\nRedis actual values: {last_updates}&#34;)
+
+    log(f&#34;Redis key: {key}\nRedis actual values:\n {last_updates}&#34;)
 
     # dataframe and last_updates need to have the same index, in our case unique_id
     missing_in_dfr = [
@@ -1065,6 +1066,7 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
     dataframe[&#34;last_update&#34;] = dataframe[&#34;last_update&#34;].apply(
         pd.to_datetime, format=&#34;%Y-%m-%d %H:%M:%S&#34;
     )
+
     dataframe = dataframe[dataframe[date_column] &gt; dataframe[&#34;last_update&#34;]].dropna(
         subset=[unique_id]
     )
@@ -1073,7 +1075,8 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
     keep_cols = [unique_id, date_column]
     new_updates = dataframe[keep_cols].sort_values(keep_cols)
     new_updates = new_updates.groupby(unique_id, as_index=False).tail(1)
-    new_updates[date_column] = new_updates[date_column].astype(str)
+    new_updates[date_column] = new_updates[date_column].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+    log(f&#34;&gt;&gt;&gt; Updated df: {new_updates.head(10)}&#34;)
 
     # Convert stations with the new updates dates in a dictionary
     new_updates = dict(zip(new_updates[unique_id], new_updates[date_column]))
@@ -2028,7 +2031,8 @@ updated unique_id as a DataFrame and save new dates on redis</p></div>
     last_updates = pd.DataFrame(
         last_updates.items(), columns=[unique_id, &#34;last_update&#34;]
     )
-    log(f&#34;Redis key: {key}\nRedis actual values: {last_updates}&#34;)
+
+    log(f&#34;Redis key: {key}\nRedis actual values:\n {last_updates}&#34;)
 
     # dataframe and last_updates need to have the same index, in our case unique_id
     missing_in_dfr = [
@@ -2065,6 +2069,7 @@ updated unique_id as a DataFrame and save new dates on redis</p></div>
     dataframe[&#34;last_update&#34;] = dataframe[&#34;last_update&#34;].apply(
         pd.to_datetime, format=&#34;%Y-%m-%d %H:%M:%S&#34;
     )
+
     dataframe = dataframe[dataframe[date_column] &gt; dataframe[&#34;last_update&#34;]].dropna(
         subset=[unique_id]
     )
@@ -2073,7 +2078,8 @@ updated unique_id as a DataFrame and save new dates on redis</p></div>
     keep_cols = [unique_id, date_column]
     new_updates = dataframe[keep_cols].sort_values(keep_cols)
     new_updates = new_updates.groupby(unique_id, as_index=False).tail(1)
-    new_updates[date_column] = new_updates[date_column].astype(str)
+    new_updates[date_column] = new_updates[date_column].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+    log(f&#34;&gt;&gt;&gt; Updated df: {new_updates.head(10)}&#34;)
 
     # Convert stations with the new updates dates in a dictionary
     new_updates = dict(zip(new_updates[unique_id], new_updates[date_column]))
