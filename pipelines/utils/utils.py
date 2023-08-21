@@ -995,6 +995,11 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
         k.decode("utf-8"): v.decode("utf-8") for k, v in last_updates.items()
     }
 
+    # Convert dictionary to dataframe
+    last_updates = pd.DataFrame(
+        last_updates.items(), columns=[unique_id, "last_update"]
+    )
+
     for index, row in last_updates.iterrows():  # remover
         try:
             date = pd.to_datetime(row["last_update"], format="%Y-%m-%d %H:%M:%S")
@@ -1003,11 +1008,7 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
 
         last_updates.at[index, "last_update"] = date.strftime("%Y-%m-%d %H:%M:%S")
 
-    # Convert dictionary to dataframe
-    last_updates = pd.DataFrame(
-        last_updates.items(), columns=[unique_id, "last_update"]
-    )
-    log(f"Redis key: {key}\nRedis actual values: {last_updates}")
+    log(f"Redis key: {key}\nRedis actual values:\n {last_updates}")
 
     # dataframe and last_updates need to have the same index, in our case unique_id
     missing_in_dfr = [
