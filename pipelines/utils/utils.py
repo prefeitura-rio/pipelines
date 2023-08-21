@@ -1036,6 +1036,15 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
     dataframe["last_update"] = dataframe["last_update"].apply(
         pd.to_datetime, format="%Y-%m-%d %H:%M:%S"
     )
+
+    for index, row in dataframe.iterrows():  # remover
+        try:
+            date = pd.to_datetime(row["last_update"], format="%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            date = pd.to_datetime(row["last_update"]) + pd.DateOffset(hours=0)
+
+        dataframe.at[index, "last_update"] = date.strftime("%Y-%m-%d %H:%M:%S")
+
     dataframe = dataframe[dataframe[date_column] > dataframe["last_update"]].dropna(
         subset=[unique_id]
     )
@@ -1043,8 +1052,9 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
     # Keep only the last date for each unique_id
     keep_cols = [unique_id, date_column]
     new_updates = dataframe[keep_cols].sort_values(keep_cols)
-    new_updates = new_updates.groupby(unique_id, as_index=False).tail(1)
-    new_updates[date_column] = new_updates[date_column].astype(str)
+    new_updates = new_updates.groupby(unique_id, as_group=False).tail(1)
+    new_updates[date_column] = new_updates[date_column].dt.strftime("%Y-%m-%d %H:%M:%S")
+    log(f">>> Updated df: {new_updates.head(10)}")
 
     # Convert stations with the new updates dates in a dictionary
     new_updates = dict(zip(new_updates[unique_id], new_updates[date_column]))

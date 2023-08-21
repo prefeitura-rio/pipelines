@@ -11,6 +11,8 @@ import numpy as np
 import pandas as pd
 import pendulum
 from prefect import task
+from prefect.engine.signals import ENDRUN
+from prefect.engine.state import Skipped
 
 import pandas_read_xml as pdx
 
@@ -128,9 +130,7 @@ def tratar_dados(
 
     log(f"Dataframe after comparing with last data saved on redis {dados.head()}")
 
-    # If df is empty stop flow on flows.py
     empty_data = dados.shape[0] == 0
-    log("Dataframe is empty.")
 
     # Save max date on redis to compare this with last dbt run
     if not empty_data:
@@ -138,6 +138,9 @@ def tratar_dados(
         redis_key = build_redis_key(dataset_id, table_id, name="last_update", mode=mode)
         log(f"Dataframe is not empty. Redis key: {redis_key} and new date: {max_date}")
         save_str_on_redis(redis_key, "date", max_date)
+    else:
+        # If df is empty stop flow on flows.py
+        log(f"Dataframe is empty. Skipping update flow for datetime {date}.")
 
     # Fixar ordem das colunas
     dados = dados[
