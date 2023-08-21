@@ -130,13 +130,15 @@ def list_vol_files(
         datalake_files = [
             fname.split("-")[1] + fname.split("-")[2] for fname in datalake_files
         ]
+        # Define greater_than depending if you want last file or fill missing files
         if greater_than is None:
-            # Finally, we get the latest date
-            greater_than = datalake_files[-1][:8]
+            if get_only_last_file:
+                # Finally, we get the latest date
+                greater_than = datalake_files[-1][:8]
+            else:
+                # Keep all files since last day to be compared with remote files
+                greater_than = past_date_str.replace("-", "")
             log(f"Latest blob date: {greater_than}")
-
-    # # Adjust greather_than if user didn't gave hour, minutes and seconds
-    # greater_than = greater_than.ljust(14, "0")
 
     # Creating temporary directory
     if date:
@@ -198,6 +200,8 @@ def list_vol_files(
             f"find {vols_remote_directory} -name '{startswith}*.vol'"
         )
         all_files = stdout.read().decode("utf-8").splitlines()
+        # Adjust greather_than if user didn't gave hour, minutes and seconds
+        greater_than = greater_than.ljust(14, "0")
         remote_files = [
             file
             for file in all_files
