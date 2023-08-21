@@ -995,6 +995,14 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
         k.decode("utf-8"): v.decode("utf-8") for k, v in last_updates.items()
     }
 
+    for index, row in last_updates.iterrows():  # remover
+        try:
+            date = pd.to_datetime(row["last_update"], format="%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            date = pd.to_datetime(row["last_update"]) + pd.DateOffset(hours=0)
+
+        last_updates.at[index, "last_update"] = date.strftime("%Y-%m-%d %H:%M:%S")
+
     # Convert dictionary to dataframe
     last_updates = pd.DataFrame(
         last_updates.items(), columns=[unique_id, "last_update"]
@@ -1036,14 +1044,6 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
     dataframe["last_update"] = dataframe["last_update"].apply(
         pd.to_datetime, format="%Y-%m-%d %H:%M:%S"
     )
-
-    for index, row in dataframe.iterrows():  # remover
-        try:
-            date = pd.to_datetime(row["last_update"], format="%Y-%m-%d %H:%M:%S")
-        except ValueError:
-            date = pd.to_datetime(row["last_update"]) + pd.DateOffset(hours=0)
-
-        dataframe.at[index, "last_update"] = date.strftime("%Y-%m-%d %H:%M:%S")
 
     dataframe = dataframe[dataframe[date_column] > dataframe["last_update"]].dropna(
         subset=[unique_id]
