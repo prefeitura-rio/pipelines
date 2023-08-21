@@ -47,7 +47,7 @@ def download_api(url: str, destination_file_path, source: str):
         response = requests.get(url, headers=headers)
 
         if response.status_code == 200:
-            df = pd.DataFrame(response.jon())
+            df = pd.DataFrame(response.json())
             df["_data_carga"] = date.today()
             df.to_csv(
                 destination_file_path,
