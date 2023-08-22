@@ -7,10 +7,8 @@ from prefect.storage import GCS
 from pipelines.utils.tasks import (
     create_table_and_upload_to_gcs,
 )
-from pipelines.rj_sms.utils import clean_ascii, convert_to_parquet
-from pipelines.rj_sms.dump_vitai.tasks import (
-    download_api,
-)
+from pipelines.rj_sms.utils import clean_ascii, download_api
+from pipelines.rj_sms.dump_vitai.tasks import fix_payload_vitai
 
 
 with Flow(
@@ -18,34 +16,36 @@ with Flow(
 ) as dump_vitai:
     # Set Parameters
     file_name = Parameter("file_name", default="estoque")
+    vault_secret_path = "estoque_vitai"
+    vault_secret_key = "token"
     #  GCP
     dataset_id = "dump_vitai"
-    table_id = "riosaude_estoque_posicao"
+    table_id = "estoque_posicao"
     dump_mode = "append"  # append or overwrite
 
     # Start run
     download_task = download_api(
         url="https://apidw.vitai.care/api/dw/v1/produtos/saldoAtual",
-        file_name=file_name,
+        vault_secret_path = vault_secret_path,
+        vault_secret_key = vault_secret_key,
+        destination_file_name = file_name,
     )
 
     clean_task = clean_ascii(input_file_path=download_task)
     clean_task.set_upstream(download_task)
 
-    to_parquet_task = convert_to_parquet(
-        input_file_path=clean_task, schema={"cnes": "str"}
-    )
-    to_parquet_task.set_upstream(clean_task)
+    fix_payload_task = fix_payload_vitai(clean_task)
+    fix_payload_task.set_upstream(clean_task)
 
     upload_task = create_table_and_upload_to_gcs(
-        data_path=to_parquet_task,
+        data_path=fix_payload_task,
         dataset_id=dataset_id,
         table_id=table_id,
         dump_mode=dump_mode,
         biglake_table=True,
         wait=None,
     )
-    upload_task.set_upstream(to_parquet_task)
+    upload_task.set_upstream(fix_payload_task)
 
 
 dump_vitai.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
