@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Database dumping flows for dam divida_ativa  
+Database dumping flows for dam divida_ativa
 """
 
 from copy import deepcopy
