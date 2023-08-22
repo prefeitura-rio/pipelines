@@ -41,6 +41,7 @@ from os import getenv, walk
 from os.path import join
 from pathlib import Path
 import re
+import textwrap
 from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
 
@@ -371,7 +372,16 @@ def query_to_line(query: str) -&gt; str:
     &#34;&#34;&#34;
     Converts a query to a line.
     &#34;&#34;&#34;
+    query = textwrap.dedent(query)
     return &#34; &#34;.join([line.strip() for line in query.split(&#34;\n&#34;)])
+
+
+def remove_tabs_from_query(query: str) -&gt; str:
+    &#34;&#34;&#34;
+    Removes tabs from a query.
+    &#34;&#34;&#34;
+    query = query_to_line(query)
+    return re.sub(r&#34;\s+&#34;, &#34; &#34;, query).strip()
 
 
 def send_discord_message(
@@ -1805,6 +1815,7 @@ Mode needs to be "prod" or "staging"</p></div>
     &#34;&#34;&#34;
     Converts a query to a line.
     &#34;&#34;&#34;
+    query = textwrap.dedent(query)
     return &#34; &#34;.join([line.strip() for line in query.split(&#34;\n&#34;)])</code></pre>
 </details>
 </dd>
@@ -1841,6 +1852,23 @@ Mode needs to be "prod" or "staging"</p></div>
         .str.lower()
         .map(final_column_treatment)
     )</code></pre>
+</details>
+</dd>
+<dt id="pipelines.utils.utils.remove_tabs_from_query"><code class="name flex">
+<span>def <span class="ident">remove_tabs_from_query</span></span>(<span>query: str) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Removes tabs from a query.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def remove_tabs_from_query(query: str) -&gt; str:
+    &#34;&#34;&#34;
+    Removes tabs from a query.
+    &#34;&#34;&#34;
+    query = query_to_line(query)
+    return re.sub(r&#34;\s+&#34;, &#34; &#34;, query).strip()</code></pre>
 </details>
 </dd>
 <dt id="pipelines.utils.utils.run_cloud"><code class="name flex">
@@ -2576,6 +2604,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.utils.utils.parser_blobs_to_partition_dict" href="#pipelines.utils.utils.parser_blobs_to_partition_dict">parser_blobs_to_partition_dict</a></code></li>
 <li><code><a title="pipelines.utils.utils.query_to_line" href="#pipelines.utils.utils.query_to_line">query_to_line</a></code></li>
 <li><code><a title="pipelines.utils.utils.remove_columns_accents" href="#pipelines.utils.utils.remove_columns_accents">remove_columns_accents</a></code></li>
+<li><code><a title="pipelines.utils.utils.remove_tabs_from_query" href="#pipelines.utils.utils.remove_tabs_from_query">remove_tabs_from_query</a></code></li>
 <li><code><a title="pipelines.utils.utils.run_cloud" href="#pipelines.utils.utils.run_cloud">run_cloud</a></code></li>
 <li><code><a title="pipelines.utils.utils.run_local" href="#pipelines.utils.utils.run_local">run_local</a></code></li>
 <li><code><a title="pipelines.utils.utils.run_registered" href="#pipelines.utils.utils.run_registered">run_registered</a></code></li>
