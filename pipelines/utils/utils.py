@@ -12,6 +12,7 @@ from os import getenv, walk
 from os.path import join
 from pathlib import Path
 import re
+import textwrap
 from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
 
@@ -342,7 +343,16 @@ def query_to_line(query: str) -> str:
     """
     Converts a query to a line.
     """
+    query = textwrap.dedent(query)
     return " ".join([line.strip() for line in query.split("\n")])
+
+
+def remove_tabs_from_query(query: str) -> str:
+    """
+    Removes tabs from a query.
+    """
+    query = query_to_line(query)
+    return re.sub(r"\s+", " ", query).strip()
 
 
 def send_discord_message(
