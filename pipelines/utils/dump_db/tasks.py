@@ -38,6 +38,7 @@ from pipelines.utils.utils import (
     clean_dataframe,
     to_partitions,
     parser_blobs_to_partition_dict,
+    query_to_line,
     get_storage_blobs,
     remove_columns_accents,
 )
@@ -115,8 +116,9 @@ def database_execute(
     """
     start_time = time()
     query = textwrap.dedent(query)
-    log(f"Executing query: {query}")
-
+    log(f"Query parsed: {query}")
+    query = query_to_line(query)
+    log(f"Executing query line: {query}")
     database.execute_query(query)
     time_elapsed = time() - start_time
     doc = format_document(
