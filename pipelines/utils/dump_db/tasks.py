@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from queue import Empty, Queue
 from pathlib import Path
 from threading import Event, Thread
+import textwrap
 from time import sleep, time
 from typing import Dict, List, Union
 from uuid import uuid4
@@ -113,7 +114,9 @@ def database_execute(
         query: The query to execute.
     """
     start_time = time()
+    query = textwrap.dedent(query)
     log(f"Executing query: {query}")
+
     database.execute_query(query)
     time_elapsed = time() - start_time
     doc = format_document(
