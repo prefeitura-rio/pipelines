@@ -28,10 +28,10 @@ _dam_queries = {
         "dump_to_gcs": False,
         "dump_mode": "overwrite",
         "execute_query": """
-            SELECT 
-                Nome, 
-                Cpf_Cnpj, 
-                anoInscricao, 
+            SELECT
+                Nome,
+                Cpf_Cnpj,
+                anoInscricao,
                 valDebito
             FROM DAM_PRD.dbo.vwInscritosDividaAtiva;
         """,  # noqa
