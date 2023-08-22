@@ -344,9 +344,15 @@ def query_to_line(query: str) -> str:
     Converts a query to a line.
     """
     query = textwrap.dedent(query)
-    query = "".join([line.strip() for line in query.split("\n")])
-    log("Tranformed query to line:\n" + query)
-    return query
+    return " ".join([line.strip() for line in query.split("\n")])
+
+
+def remove_tabs_from_query(query: str) -> str:
+    """
+    Removes tabs from a query.
+    """
+    query = query_to_line(query)
+    return re.sub(r"\s+", " ", query).strip()
 
 
 def send_discord_message(
