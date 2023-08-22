@@ -36,7 +36,7 @@ _dam_queries = {
                 Cpf_Cnpj,
                 anoInscricao,
                 valDebito
-            FROM DAM_PRD.dbo.vwInscritosDividaAtiva;
+            FROM DAM_PRD.dbo.vwInscritosDividaAtiva
         """,  # noqa
     },
 }
