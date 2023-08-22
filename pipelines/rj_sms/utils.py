@@ -46,9 +46,11 @@ def convert_to_parquet(input_file_path: str, schema: str):
                     df = pd.DataFrame(data)
                     log("Dados carregados sem schema")
 
+        # TODO: adicionar coluna com a data da carga (_data_carga)
+        
             destination_path = input_file_path.replace(".json", ".parquet")
 
         except Exception as e:
             log("An error occurred:", e)
 
-    df.to_parquet(destination_path)
+    df.to_parquet(destination_path, index = False)
