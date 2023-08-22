@@ -19,7 +19,7 @@ from pipelines.utils.utils import set_default_parameters
 
 rj_pgm_dump_db_divida_ativa_flow = deepcopy(dump_sql_flow)
 rj_pgm_dump_db_divida_ativa_flow.name = (
-    "SMFP: DAM - divida ativa - Ingerir tabelas de banco SQL"
+    "PGM: DAM - divida ativa - Ingerir tabelas de banco SQL"
 )
 rj_pgm_dump_db_divida_ativa_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 

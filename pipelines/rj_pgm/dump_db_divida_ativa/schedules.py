@@ -26,7 +26,10 @@ _dam_queries = {
         "materialization_mode": "prod",
         "materialize_to_datario": False,
         "dump_to_gcs": False,
-        "dump_mode": "overwrite",
+        "dump_mode": "append",
+        "partition_columns": "anoInscricao",
+        "partition_date_format": "%Y",
+        "lower_bound_date": "current_year",
         "execute_query": """
             SELECT 
                 Nome, 
