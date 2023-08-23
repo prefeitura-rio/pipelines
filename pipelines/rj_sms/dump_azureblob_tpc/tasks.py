@@ -3,6 +3,7 @@ from prefect import task
 import pandas as pd
 from pipelines.utils.utils import log
 
+
 @task
 def fix_payload_tpc(filepath: str):
     df = pd.read_csv(filepath, sep=";", keep_default_na=False)
