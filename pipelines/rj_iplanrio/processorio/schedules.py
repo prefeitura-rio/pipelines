@@ -227,6 +227,21 @@ _processorio_infra_query = {
         """,  # noqa
         "dbt_alias": True,
     },
+    "documentos_hora": {
+        "biglake_table": True,
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "materialize_to_datario": False,
+        "dump_to_gcs": False,
+        "dump_mode": "overwrite",
+        "execute_query": """
+            SELECT
+            HORA,
+            QTD_HORA
+            FROM SIGA.VW_MOVIMENTOS_POR_HORA
+        """,  # noqa
+        "dbt_alias": False,
+    },
 }
 
 processorio_infra_clocks = generate_dump_db_schedules(
