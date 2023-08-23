@@ -35,7 +35,7 @@ rj_pgm_dump_db_divida_ativa_default_parameters = {
     "db_host": "10.2.221.127",
     "db_port": "1433",
     "db_type": "sql_server",
-    "dataset_id": "adm_financas_dam",
+    "dataset_id": "adm_financas_divida_ativa",
     "vault_secret_path": "dam-prod",
 }
 
