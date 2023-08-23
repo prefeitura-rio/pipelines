@@ -10,11 +10,15 @@ from azure.storage.blob import BlobServiceClient
 
 @task
 def download_api(
-    url: str, destination_file_name: str, vault_secret_path: str, vault_secret_key: str
+    url: str, destination_file_name: str, vault_path: str, vault_key: str
 ):
-    auth_token = get_vault_secret(secret_path=vault_secret_path)["data"][
-        vault_secret_key
-    ]
+
+    try:
+        auth_token = get_vault_secret(secret_path=vault_path)["data"][vault_key]
+        log("Vault secret retrieved")
+    except:
+        log("Not able to retrieve Vault secret")
+
 
     headers = {"Authorization": f"Bearer {auth_token}"}
 
@@ -23,19 +27,19 @@ def download_api(
 
         if response.status_code == 200:
             # The response contains the data from the API
-            # api_data = response.json()
+            api_data = response.json()
 
             # Save the API data to a local file
-            destination_file_path = f"{os.path.expanduser('~')}/{destination_file_name}_{str(date.today())}.csv"
+            destination_file_path = f"{os.path.expanduser('~')}/{destination_file_name}_{str(date.today())}.json"
 
-            df = pd.DataFrame(response.json(), dtype="str")
-            df["_data_carga"] = date.today()
-            df.to_csv(destination_file_path, index=False, sep=";", encoding="utf-8")
+            #df = pd.DataFrame(response.json(), dtype="str")
+            #df["_data_carga"] = date.today()
+            #df.to_csv(destination_file_path, index=False, sep=";", encoding="utf-8")
 
             # Save the API data to a local file
 
-            # with open(destination_file_path, "w") as file:
-            #    file.write(str(api_data))
+            with open(destination_file_path, "w") as file:
+               file.write(str(api_data))
 
             log("API data saved")
 
@@ -56,7 +60,11 @@ def download_azure_blob(
     vault_path: str,
     vault_token,
 ):
-    credential = get_vault_secret(secret_path=vault_path)["data"][vault_token]
+    try:
+        credential = get_vault_secret(secret_path=vault_path)["data"][vault_token]
+        log("Vault secret retrieved")
+    except:
+         log("Not able to retrieve Vault secret")
 
     blob_service_client = BlobServiceClient(
         account_url="https://datalaketpcgen2.blob.core.windows.net/",
@@ -109,12 +117,32 @@ def set_destination_file_path(file):
         + file[file.find(".") :]
     )
 
+@task
+def from_json_to_csv(input_path, sep = ";"):
+    try:
+        with open(input_path, 'r') as file:
+            json_data = file.read()
+            data = eval(json_data)  # Convert JSON string to Python dictionary
+
+
+            output_path = input_path.replace(".json", ".csv")
+            # Assuming the JSON structure is a list of dictionaries
+            df = pd.DataFrame(data, dtype = "str")
+            df.to_csv(output_path, index=False, sep=sep , encoding="utf-8")
+            
+            log("JSON converted to CSV")
+            return output_path
+
+    except Exception as e:
+        print("An error occurred:", e)
+        return None
+
 
 @task
-def convert_to_parquet(input_file_path: str, schema: str):
-    if ".json" in input_file_path:
+def from_text_to_parquet(input_path: str, schema: str):
+    if ".json" in input_path:
         try:
-            with open(input_file_path, "r") as file:
+            with open(input_path, "r") as file:
                 json_data = file.read()
                 data = eval(json_data)  # Convert JSON string to Python dictionary
 
@@ -128,7 +156,7 @@ def convert_to_parquet(input_file_path: str, schema: str):
 
             # TODO: adicionar coluna com a data da carga (_data_carga)
 
-            destination_path = input_file_path.replace(".json", ".parquet")
+            destination_path = input_path.replace(".json", ".parquet")
 
         except Exception as e:
             log("An error occurred:", e)

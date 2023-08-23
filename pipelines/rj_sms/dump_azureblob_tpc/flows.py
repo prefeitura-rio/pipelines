@@ -12,11 +12,11 @@ from pipelines.rj_sms.utils import (
 )
 
 from pipelines.rj_sms.dump_azureblob_tpc.tasks import (
-    fix_payload_tpc,
+    conform_csv_to_gcp,
 )
 
-
-with Flow(name="SMS: Dump - Captura de dados TPC", code_owners=["thiago"]) as dump_tpc:
+# TODO: mudar método de passar o path do arquivo. Deixar igual vitai
+with Flow(name="SMS: Dump TPC - Captura de dados TPC", code_owners=["thiago"]) as dump_tpc:
     # Set Parameters
     #  Vault
     vault_path = "estoque_tpc"
@@ -44,8 +44,8 @@ with Flow(name="SMS: Dump - Captura de dados TPC", code_owners=["thiago"]) as du
     )
     download_task.set_upstream(file_path_task)
 
-    fix_payload_task = fix_payload_tpc(file_path_task)
-    fix_payload_task.set_upstream(download_task)
+    conform_task = conform_csv_to_gcp(file_path_task)
+    conform_task.set_upstream(download_task)
 
     upload_task = create_table_and_upload_to_gcs(
         data_path=file_path_task,
@@ -55,7 +55,7 @@ with Flow(name="SMS: Dump - Captura de dados TPC", code_owners=["thiago"]) as du
         biglake_table=True,
         wait=None,
     )
-    upload_task.set_upstream(fix_payload_task)
+    upload_task.set_upstream(conform_task)
 
 dump_tpc.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_tpc.run_config = KubernetesRun(

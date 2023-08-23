@@ -5,7 +5,7 @@ from pipelines.utils.utils import log
 
 
 @task
-def fix_payload_tpc(filepath: str):
+def conform_csv_to_gcp(filepath: str):
     df = pd.read_csv(filepath, sep=";", keep_default_na=False)
 
     # remove registros errados
@@ -30,4 +30,4 @@ def fix_payload_tpc(filepath: str):
 
     df.to_csv(filepath, index=False, sep=",", encoding="utf-8", quoting=0, decimal=".")
 
-    log(f"Payload fixed: {filepath}")
+    log("CSV now conform")
