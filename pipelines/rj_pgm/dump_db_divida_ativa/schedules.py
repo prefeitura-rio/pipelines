@@ -34,8 +34,10 @@ _dam_queries = {
             SELECT
                 Nome,
                 Cpf_Cnpj,
+                Cpf_Cnpj_formatado,
                 anoInscricao,
-                valDebito
+                valDebito,
+                ultima_atualizacao
             FROM DAM_PRD.dbo.vwInscritosDividaAtiva
         """,  # noqa
     },
@@ -51,7 +53,7 @@ dam_infra_clocks = generate_dump_db_schedules(
     db_host="10.2.221.127",
     db_port="1433",
     db_type="sql_server",
-    dataset_id="adm_financas_dam",
+    dataset_id="adm_financas_divida_ativa",
     vault_secret_path="dam-prod",
     table_parameters=_dam_queries,
 )
