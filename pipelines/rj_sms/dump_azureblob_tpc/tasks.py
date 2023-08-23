@@ -2,6 +2,7 @@
 from prefect import task
 import pandas as pd
 from pipelines.utils.utils import log
+from datetime import date
 
 
 @task
