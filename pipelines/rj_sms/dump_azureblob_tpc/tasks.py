@@ -28,6 +28,9 @@ def conform_csv_to_gcp(filepath: str):
         lambda x: x[-4:] + "-" + x[3:5] + "-" + x[:2]
     )
 
+    # add data da carga
+    df["_data_carga"] = date.today()
+
     df.to_csv(filepath, index=False, sep=",", encoding="utf-8", quoting=0, decimal=".")
 
     log("CSV now conform")
