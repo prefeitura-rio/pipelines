@@ -26,9 +26,9 @@ with Flow(
     # Start run
     download_task = download_api(
         url="https://apidw.vitai.care/api/dw/v1/produtos/saldoAtual",
-        vault_secret_path = vault_secret_path,
-        vault_secret_key = vault_secret_key,
-        destination_file_name = file_name,
+        vault_secret_path=vault_secret_path,
+        vault_secret_key=vault_secret_key,
+        destination_file_name=file_name,
     )
 
     clean_task = clean_ascii(input_file_path=download_task)

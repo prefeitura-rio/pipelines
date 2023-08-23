@@ -16,33 +16,31 @@ from pipelines.rj_sms.dump_azureblob_tpc.tasks import (
 )
 
 
-with Flow(
-    name="SMS: Dump - Captura de dados TPC", code_owners=["thiago"]
-) as dump_tpc:
-
+with Flow(name="SMS: Dump - Captura de dados TPC", code_owners=["thiago"]) as dump_tpc:
     # Set Parameters
     #  Vault
     vault_path = "estoque_tpc"
     vault_token = "credential"
     #  Azure
     container_name = "datalaketpc"
-    blob_folder_path = "gold/logistico/cliente=prefeitura_rio/planta=sms_rio/estoque_local/"
+    blob_folder_path = (
+        "gold/logistico/cliente=prefeitura_rio/planta=sms_rio/estoque_local/"
+    )
     blob_file_name = "estoque_local.csv"
     #  GCP
     dataset_id = "dump_tpc"
     table_id = "estoque_posicao"
     dump_mode = "append"  # append or overwrite
 
-
     # Start run
     file_path_task = set_destination_file_path(blob_file_name)
 
     download_task = download_azure_blob(
-        container_name = container_name,
-        blob_path = blob_folder_path + blob_file_name,
-        destination_file_path =  file_path_task,
-        vault_path = vault_path,
-        vault_token = vault_token
+        container_name=container_name,
+        blob_path=blob_folder_path + blob_file_name,
+        destination_file_path=file_path_task,
+        vault_path=vault_path,
+        vault_token=vault_token,
     )
     download_task.set_upstream(file_path_task)
 

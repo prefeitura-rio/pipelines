@@ -6,7 +6,6 @@ from datetime import date
 
 @task
 def fix_payload_vitai(filepath: str):
-
     df = pd.read_csv(filepath, sep=";", keep_default_na=False, dtype="str")
 
     # remove caracteres que confundem o parser

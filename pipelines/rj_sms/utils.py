@@ -9,9 +9,12 @@ from azure.storage.blob import BlobServiceClient
 
 
 @task
-def download_api(url: str, destination_file_name: str, vault_secret_path: str, vault_secret_key: str):
-    
-    auth_token = get_vault_secret(secret_path=vault_secret_path)["data"][vault_secret_key]
+def download_api(
+    url: str, destination_file_name: str, vault_secret_path: str, vault_secret_key: str
+):
+    auth_token = get_vault_secret(secret_path=vault_secret_path)["data"][
+        vault_secret_key
+    ]
 
     headers = {"Authorization": f"Bearer {auth_token}"}
 
@@ -20,27 +23,18 @@ def download_api(url: str, destination_file_name: str, vault_secret_path: str, v
 
         if response.status_code == 200:
             # The response contains the data from the API
-            #api_data = response.json()
+            # api_data = response.json()
 
             # Save the API data to a local file
-            destination_file_path = (
-                f"{os.path.expanduser('~')}/{destination_file_name}_{str(date.today())}.csv"
-            )
+            destination_file_path = f"{os.path.expanduser('~')}/{destination_file_name}_{str(date.today())}.csv"
 
-            df = pd.DataFrame(response.json(), dtype = "str")
+            df = pd.DataFrame(response.json(), dtype="str")
             df["_data_carga"] = date.today()
-            df.to_csv(
-                destination_file_path,
-                index=False,
-                sep=";",
-                encoding="utf-8"
-            )
+            df.to_csv(destination_file_path, index=False, sep=";", encoding="utf-8")
 
-            
             # Save the API data to a local file
-            
 
-            #with open(destination_file_path, "w") as file:
+            # with open(destination_file_path, "w") as file:
             #    file.write(str(api_data))
 
             log("API data saved")
@@ -55,8 +49,13 @@ def download_api(url: str, destination_file_name: str, vault_secret_path: str, v
 
 
 @task
-def download_azure_blob(container_name: str, blob_path: str, destination_file_path: str, vault_path: str, vault_token):
-
+def download_azure_blob(
+    container_name: str,
+    blob_path: str,
+    destination_file_path: str,
+    vault_path: str,
+    vault_token,
+):
     credential = get_vault_secret(secret_path=vault_path)["data"][vault_token]
 
     blob_service_client = BlobServiceClient(
@@ -72,6 +71,7 @@ def download_azure_blob(container_name: str, blob_path: str, destination_file_pa
         blob_data.readinto(blob_file)
 
     log(f"Blob downloaded to '{destination_file_path}'.")
+
 
 @task
 def clean_ascii(input_file_path):
@@ -97,6 +97,7 @@ def clean_ascii(input_file_path):
     except Exception as e:
         log("An error occurred:", e)
 
+
 @task
 def set_destination_file_path(file):
     return (
@@ -107,6 +108,7 @@ def set_destination_file_path(file):
         + str(date.today())
         + file[file.find(".") :]
     )
+
 
 @task
 def convert_to_parquet(input_file_path: str, schema: str):
