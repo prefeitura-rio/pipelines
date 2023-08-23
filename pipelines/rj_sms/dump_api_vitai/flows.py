@@ -8,7 +8,7 @@ from pipelines.utils.tasks import (
     create_table_and_upload_to_gcs,
 )
 from pipelines.rj_sms.utils import clean_ascii, download_api
-from pipelines.rj_sms.dump_vitai.tasks import fix_payload_vitai
+from pipelines.rj_sms.dump_api_vitai.tasks import fix_payload_vitai
 
 
 with Flow(

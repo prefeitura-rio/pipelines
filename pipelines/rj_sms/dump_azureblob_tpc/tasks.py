@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from prefect import task
 import pandas as pd
-
+from pipelines.utils.utils import log
 
 @task
 def fix_payload_tpc(filepath: str):
@@ -28,3 +28,5 @@ def fix_payload_tpc(filepath: str):
     )
 
     df.to_csv(filepath, index=False, sep=",", encoding="utf-8", quoting=0, decimal=".")
+
+    log(f"Payload fixed: {filepath}")
