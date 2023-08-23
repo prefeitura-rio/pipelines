@@ -234,6 +234,7 @@ _processorio_infra_query = {
         "materialize_to_datario": False,
         "dump_to_gcs": False,
         "dump_mode": "overwrite",
+        "interval": timedelta(hours=1),
         "execute_query": """
             SELECT
             HORA,
