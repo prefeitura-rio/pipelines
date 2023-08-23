@@ -31,12 +31,12 @@ _dam_queries = {
         "partition_date_format": "%Y",
         "lower_bound_date": "current_year",
         "execute_query": """
-            SELECT 
-                Nome, 
-                Cpf_Cnpj, 
-                Cpf_Cnpj_formatado, 
-                anoInscricao, 
-                valDebito, 
+            SELECT
+                Nome,
+                Cpf_Cnpj,
+                Cpf_Cnpj_formatado,
+                anoInscricao,
+                valDebito,
                 ultima_atualizacao
             FROM DAM_PRD.dbo.vwInscritosDividaAtiva
         """,  # noqa
