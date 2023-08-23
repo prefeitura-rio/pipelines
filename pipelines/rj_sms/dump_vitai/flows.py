@@ -21,7 +21,7 @@ with Flow(
     #  GCP
     dataset_id = "dump_vitai"
     table_id = "estoque_posicao"
-    dump_mode = "append"  # append or overwrite
+    dump_mode = "overwrite"  # append or overwrite
 
     # Start run
     download_task = download_api(

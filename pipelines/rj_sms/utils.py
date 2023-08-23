@@ -5,6 +5,7 @@ import os
 import requests
 import pandas as pd
 from datetime import date
+from azure.storage.blob import BlobServiceClient
 
 
 @task
@@ -19,15 +20,28 @@ def download_api(url: str, destination_file_name: str, vault_secret_path: str, v
 
         if response.status_code == 200:
             # The response contains the data from the API
-            api_data = response.json()
+            #api_data = response.json()
 
             # Save the API data to a local file
             destination_file_path = (
-                f"{os.path.expanduser('~')}/{destination_file_name}_{str(date.today())}.json"
+                f"{os.path.expanduser('~')}/{destination_file_name}_{str(date.today())}.csv"
             )
 
-            with open(destination_file_path, "w") as file:
-                file.write(str(api_data))
+            df = pd.DataFrame(response.json(), dtype = "str")
+            df["_data_carga"] = date.today()
+            df.to_csv(
+                destination_file_path,
+                index=False,
+                sep=";",
+                encoding="utf-8"
+            )
+
+            
+            # Save the API data to a local file
+            
+
+            #with open(destination_file_path, "w") as file:
+            #    file.write(str(api_data))
 
             log("API data saved")
 
@@ -39,6 +53,25 @@ def download_api(url: str, destination_file_name: str, vault_secret_path: str, v
 
     return destination_file_path
 
+
+@task
+def download_azure_blob(container_name: str, blob_path: str, destination_file_path: str, vault_path: str, vault_token):
+
+    credential = get_vault_secret(secret_path=vault_path)["data"][vault_token]
+
+    blob_service_client = BlobServiceClient(
+        account_url="https://datalaketpcgen2.blob.core.windows.net/",
+        credential=credential,
+    )
+    blob_client = blob_service_client.get_blob_client(
+        container=container_name, blob=blob_path
+    )
+
+    with open(destination_file_path, "wb") as blob_file:
+        blob_data = blob_client.download_blob()
+        blob_data.readinto(blob_file)
+
+    log(f"Blob downloaded to '{destination_file_path}'.")
 
 @task
 def clean_ascii(input_file_path):
@@ -64,6 +97,16 @@ def clean_ascii(input_file_path):
     except Exception as e:
         log("An error occurred:", e)
 
+@task
+def set_destination_file_path(file):
+    return (
+        os.path.expanduser("~")
+        + "/"
+        + file[: file.find(".")]
+        + "_"
+        + str(date.today())
+        + file[file.find(".") :]
+    )
 
 @task
 def convert_to_parquet(input_file_path: str, schema: str):
