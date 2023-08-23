@@ -16,7 +16,9 @@ from pipelines.rj_sms.dump_azureblob_tpc.tasks import (
 )
 
 # TODO: mudar método de passar o path do arquivo. Deixar igual vitai
-with Flow(name="SMS: Dump TPC - Captura de dados TPC", code_owners=["thiago"]) as dump_tpc:
+with Flow(
+    name="SMS: Dump TPC - Captura de dados TPC", code_owners=["thiago"]
+) as dump_tpc:
     # Set Parameters
     #  Vault
     vault_path = "estoque_tpc"

@@ -28,16 +28,16 @@ with Flow(
 
     # Start run
     download_task = download_api(
-        url="https://apidw.vitai.care/api/dw/v1/produtos/saldoAtual",   
+        url="https://apidw.vitai.care/api/dw/v1/produtos/saldoAtual",
         destination_file_name=table_id,
         vault_path=vault_path,
         vault_key=vault_key,
     )
 
-    conversion_task = from_json_to_csv(input_path = download_task, sep=";")
+    conversion_task = from_json_to_csv(input_path=download_task, sep=";")
     conversion_task.set_upstream(download_task)
 
-    conform_task = conform_csv_to_gcp(input_path = conversion_task)
+    conform_task = conform_csv_to_gcp(input_path=conversion_task)
     conform_task.set_upstream(conversion_task)
 
     upload_task = create_table_and_upload_to_gcs(

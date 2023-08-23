@@ -9,16 +9,12 @@ from azure.storage.blob import BlobServiceClient
 
 
 @task
-def download_api(
-    url: str, destination_file_name: str, vault_path: str, vault_key: str
-):
-
+def download_api(url: str, destination_file_name: str, vault_path: str, vault_key: str):
     try:
         auth_token = get_vault_secret(secret_path=vault_path)["data"][vault_key]
         log("Vault secret retrieved")
     except:
         log("Not able to retrieve Vault secret")
-
 
     headers = {"Authorization": f"Bearer {auth_token}"}
 
@@ -32,14 +28,14 @@ def download_api(
             # Save the API data to a local file
             destination_file_path = f"{os.path.expanduser('~')}/{destination_file_name}_{str(date.today())}.json"
 
-            #df = pd.DataFrame(response.json(), dtype="str")
-            #df["_data_carga"] = date.today()
-            #df.to_csv(destination_file_path, index=False, sep=";", encoding="utf-8")
+            # df = pd.DataFrame(response.json(), dtype="str")
+            # df["_data_carga"] = date.today()
+            # df.to_csv(destination_file_path, index=False, sep=";", encoding="utf-8")
 
             # Save the API data to a local file
 
             with open(destination_file_path, "w") as file:
-               file.write(str(api_data))
+                file.write(str(api_data))
 
             log("API data saved")
 
@@ -64,7 +60,7 @@ def download_azure_blob(
         credential = get_vault_secret(secret_path=vault_path)["data"][vault_token]
         log("Vault secret retrieved")
     except:
-         log("Not able to retrieve Vault secret")
+        log("Not able to retrieve Vault secret")
 
     blob_service_client = BlobServiceClient(
         account_url="https://datalaketpcgen2.blob.core.windows.net/",
@@ -117,19 +113,19 @@ def set_destination_file_path(file):
         + file[file.find(".") :]
     )
 
+
 @task
-def from_json_to_csv(input_path, sep = ";"):
+def from_json_to_csv(input_path, sep=";"):
     try:
-        with open(input_path, 'r') as file:
+        with open(input_path, "r") as file:
             json_data = file.read()
             data = eval(json_data)  # Convert JSON string to Python dictionary
 
-
             output_path = input_path.replace(".json", ".csv")
             # Assuming the JSON structure is a list of dictionaries
-            df = pd.DataFrame(data, dtype = "str")
-            df.to_csv(output_path, index=False, sep=sep , encoding="utf-8")
-            
+            df = pd.DataFrame(data, dtype="str")
+            df.to_csv(output_path, index=False, sep=sep, encoding="utf-8")
+
             log("JSON converted to CSV")
             return output_path
 
