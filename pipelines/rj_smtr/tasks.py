@@ -640,11 +640,9 @@ def get_materialization_date_range(  # pylint: disable=R0913
     last_run = get_last_run_timestamp(
         dataset_id=dataset_id, table_id=table_id, mode=mode
     )
-    log("Got last_run from redis: " + str(last_run))
     # if there's no timestamp set on redis, get max timestamp on source table
     if last_run is None:
         if Table(dataset_id=dataset_id, table_id=table_id).table_exists("prod"):
-            log("Table exists on prod")
             last_run = get_table_min_max_value(
                 query_project_id=bq_project(),
                 dataset_id=dataset_id,
@@ -653,7 +651,6 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 kind="max",
             )
         else:
-            log("Table does not exist on prod")
             last_run = get_table_min_max_value(
                 query_project_id=bq_project(),
                 dataset_id=raw_dataset_id,
@@ -662,15 +659,11 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 kind="max",
             )
     else:
-        log("last_run is None")
         last_run = datetime.strptime(last_run, timestr)
 
-    log(f"last_run type: {str(type(last_run))}")
-    log(f"Got last_run as: {last_run.strftime(timestr)}")
     # set start to last run hour (H)
     start_ts = last_run.replace(minute=0, second=0, microsecond=0).strftime(timestr)
 
-    log("Got start_ts as: " + start_ts)
     # set end to now - delay
     now_ts = pendulum.now(constants.TIMEZONE.value).replace(
         tzinfo=None, minute=0, second=0, microsecond=0
