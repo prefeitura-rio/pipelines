@@ -135,8 +135,8 @@ realocacao_sppo.schedule = every_10_minutes
 
 
 with Flow(
-    "SMTR: GPS SPPO - Materialização",
-    code_owners=["caio", "fernanda", "boris", "rodrigo"],
+    "[Teste] SMTR: GPS SPPO - Materialização",
+    code_owners=["rodrigo"],  # ["caio", "fernanda", "boris", "rodrigo"],
 ) as materialize_sppo:
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
@@ -214,7 +214,7 @@ with Flow(
 materialize_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 materialize_sppo.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 
 
