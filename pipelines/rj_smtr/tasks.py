@@ -276,7 +276,10 @@ def save_treated_local(file_path: str, status: dict, mode: str = "staging") -> s
 ###############
 @task(nout=3)
 def query_logs(
-    dataset_id: str, table_id: str, datetime_filter=None, max_recaptures: int = 60
+    dataset_id: str,
+    table_id: str,
+    datetime_filter=None,
+    max_recaptures: int = 60,
 ):
     """
     Queries capture logs to check for errors
@@ -296,6 +299,8 @@ def query_logs(
         datetime_filter = pendulum.now(constants.TIMEZONE.value).replace(
             second=0, microsecond=0
         )
+    elif isinstance(datetime_filter, str):
+        datetime_filter = datetime.fromisoformat(datetime_filter)
 
     query = f"""
     with t as (
@@ -716,6 +721,8 @@ def set_last_run_timestamp(
     if mode == "dev":
         key = f"{mode}.{key}"
     content = redis_client.get(key)
+    if not content:
+        content = {}
     content["last_run_timestamp"] = timestamp
     redis_client.set(key, content)
     return True
