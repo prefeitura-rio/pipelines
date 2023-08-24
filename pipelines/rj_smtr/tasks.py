@@ -638,6 +638,9 @@ def get_materialization_date_range(  # pylint: disable=R0913
     )
     # if there's no timestamp set on redis, get max timestamp on source table
     if last_run is None:
+        print(
+            "Failed to fetch key from Redis...\n Querying tables for last suceeded run"
+        )
         if Table(dataset_id=dataset_id, table_id=table_id).table_exists("prod"):
             last_run = get_table_min_max_value(
                 query_project_id=bq_project(),
@@ -645,6 +648,13 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 table_id=table_id,
                 field_name=table_date_column_name,
                 kind="max",
+            )
+            print(
+                f"""
+            Queried last run from {dataset_id}.{table_id}
+            Got:
+            {last_run} as type {type(last_run)}
+            """
             )
         else:
             last_run = get_table_min_max_value(
@@ -654,6 +664,13 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 field_name=table_date_column_name,
                 kind="max",
             )
+        print(
+            f"""
+            Queried last run from {raw_dataset_id}.{raw_table_id}
+            Got:
+            {last_run} as type {type(last_run)}
+            """
+        )
     else:
         last_run = datetime.strptime(last_run, timestr)
 
