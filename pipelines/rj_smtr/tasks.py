@@ -296,6 +296,10 @@ def query_logs(
         datetime_filter = pendulum.now(constants.TIMEZONE.value).replace(
             second=0, microsecond=0
         )
+    else:
+        datetime_filter = datetime.strptime(
+            datetime_filter, "%Y-%m-%d %H:%M:%S"
+        ).replace(second=0, microsecond=0)
 
     query = f"""
     with t as (
