@@ -9,7 +9,6 @@ from typing import Union, Tuple
 
 import numpy as np
 import pandas as pd
-import pendulum
 from prefect import task
 
 # from prefect import context
@@ -19,12 +18,8 @@ from pipelines.rj_cor.meteorologia.precipitacao_cemaden.utils import (
     parse_date_columns,
 )
 from pipelines.utils.utils import (
-    build_redis_key,
-    compare_dates_between_tables_redis,
     log,
     to_partitions,
-    save_str_on_redis,
-    save_updated_rows_on_redis,
 )
 
 
@@ -33,9 +28,7 @@ from pipelines.utils.utils import (
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def tratar_dados(
-    dataset_id: str, table_id: str, mode: str = "dev"
-) -> Tuple[pd.DataFrame, bool]:
+def tratar_dados() -> Tuple[pd.DataFrame, bool]:
     """
     Renomeia colunas e filtra dados com a hora e minuto do timestamp
     de execução mais próximo à este
@@ -54,7 +47,7 @@ def tratar_dados(
     ]
     rename_cols = {
         "idestacao": "id_estacao",
-        "ultimovalor": "instantaneo_chuva",
+        "ultimovalor": "acumulado_chuva_10_min",
         "datahoraUltimovalor": "data_medicao_utc",
         "acc1hr": "acumulado_chuva_1_h",
         "acc3hr": "acumulado_chuva_3_h",
@@ -91,6 +84,7 @@ def tratar_dados(
 
     # Altera valores negativos para None
     float_cols = [
+        "acumulado_chuva_10_min",
         "acumulado_chuva_1_h",
         "acumulado_chuva_3_h",
         "acumulado_chuva_6_h",
@@ -106,36 +100,12 @@ def tratar_dados(
     dados.sort_values(["id_estacao", "data_medicao"] + float_cols, inplace=True)
     dados.drop_duplicates(subset=["id_estacao", "data_medicao"], keep="first")
 
-    log(f"uniquesss df >>>, {type(dados.id_estacao.unique()[0])}")
-    dados["id_estacao"] = dados["id_estacao"].astype(str)
-
-    dados = save_updated_rows_on_redis(
-        dados,
-        dataset_id,
-        table_id,
-        unique_id="id_estacao",
-        date_column="data_medicao",
-        date_format=date_format,
-        mode=mode,
-    )
-
-    # If df is empty stop flow on flows.py
-    empty_data = dados.shape[0] == 0
-    log(f"[DEBUG]: dataframe is empty: {empty_data}")
-
-    # Save max date on redis to compare this with last dbt run
-    if not empty_data:
-        max_date = str(dados["data_medicao"].max())
-        redis_key = build_redis_key(dataset_id, table_id, name="last_update", mode=mode)
-        log(f"[DEBUG]: dataframe is not empty key: {redis_key} {max_date}")
-        save_str_on_redis(redis_key, "date", max_date)
-
     # Fixar ordem das colunas
     dados = dados[
         [
-            "data_medicao",
             "id_estacao",
-            "instantaneo_chuva",
+            "data_medicao",
+            "acumulado_chuva_10_min",
             "acumulado_chuva_1_h",
             "acumulado_chuva_3_h",
             "acumulado_chuva_6_h",
@@ -147,7 +117,7 @@ def tratar_dados(
         ]
     ]
 
-    return dados, empty_data
+    return dados
 
 
 @task
@@ -161,7 +131,6 @@ def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
 
     partition_column = "data_medicao"
     dataframe, partitions = parse_date_columns(dados, partition_column)
-    current_time = pendulum.now("America/Sao_Paulo").strftime("%Y%m%d%H%M")
 
     # Cria partições a partir da data
     to_partitions(
@@ -169,50 +138,6 @@ def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
         partition_columns=partitions,
         savepath=prepath,
         data_type="csv",
-        suffix=current_time,
     )
     log(f"[DEBUG] Files saved on {prepath}")
     return prepath
-
-
-@task
-def save_last_dbt_update(
-    dataset_id: str,
-    table_id: str,
-    mode: str = "dev",
-    wait=None,  # pylint: disable=unused-argument
-) -> None:
-    """
-    Save on dbt last timestamp where it was updated
-    """
-    now = pendulum.now("America/Sao_Paulo").to_datetime_string()
-    redis_key = build_redis_key(dataset_id, table_id, name="dbt_last_update", mode=mode)
-    log(f">>>>> debug saving actual date on dbt redis {redis_key} {now}")
-    save_str_on_redis(redis_key, "date", now)
-
-
-@task(skip_on_upstream_skip=False)
-def check_to_run_dbt(
-    dataset_id: str,
-    table_id: str,
-    mode: str = "dev",
-) -> bool:
-    """
-    It will run even if its upstream tasks skip.
-    """
-
-    key_table_1 = build_redis_key(
-        dataset_id, table_id, name="dbt_last_update", mode=mode
-    )
-    key_table_2 = build_redis_key(dataset_id, table_id, name="last_update", mode=mode)
-
-    format_date_table_1 = "YYYY-MM-DD HH:mm:SS"
-    format_date_table_2 = "YYYY-MM-DD HH:mm:SS"
-
-    # Returns true if date saved on table_2 (cemaden) is bigger than
-    # the date saved on table_1 (dbt).
-    run_dbt = compare_dates_between_tables_redis(
-        key_table_1, format_date_table_1, key_table_2, format_date_table_2
-    )
-    log(f">>>> debug data cemaden > data dbt: {run_dbt}")
-    return run_dbt

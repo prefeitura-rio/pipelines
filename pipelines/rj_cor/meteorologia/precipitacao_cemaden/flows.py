@@ -17,10 +17,8 @@ from pipelines.rj_cor.meteorologia.precipitacao_cemaden.constants import (
     constants as cemaden_constants,
 )
 from pipelines.rj_cor.meteorologia.precipitacao_cemaden.tasks import (
-    check_to_run_dbt,
     tratar_dados,
     salvar_dados,
-    save_last_dbt_update,
 )
 from pipelines.rj_cor.meteorologia.precipitacao_cemaden.schedules import (
     minute_schedule,
@@ -44,10 +42,10 @@ with Flow(
     name="COR: Meteorologia - Precipitacao CEMADEN",
     code_owners=[
         "richardg867",
+        "paty",
     ],
     # skip_if_running=True,
 ) as cor_meteorologia_precipitacao_cemaden:
-
     DATASET_ID = "clima_pluviometro"
     TABLE_ID = "taxa_precipitacao_cemaden"
     DUMP_MODE = "append"
@@ -73,136 +71,112 @@ with Flow(
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
 
-    dados, empty_data = tratar_dados(
+    dados = tratar_dados()
+    path = salvar_dados(dados=dados)
+
+    # Create table in BigQuery
+    UPLOAD_TABLE = create_table_and_upload_to_gcs(
+        data_path=path,
         dataset_id=DATASET_ID,
         table_id=TABLE_ID,
-        mode=MATERIALIZATION_MODE,
+        dump_mode=DUMP_MODE,
+        wait=path,
     )
 
-    with case(empty_data, False):
-        path = salvar_dados(dados=dados)
-        # Create table in BigQuery
-        UPLOAD_TABLE = create_table_and_upload_to_gcs(
-            data_path=path,
-            dataset_id=DATASET_ID,
-            table_id=TABLE_ID,
-            dump_mode=DUMP_MODE,
-            wait=path,
+    # Trigger DBT flow run
+    with case(MATERIALIZE_AFTER_DUMP, True):
+        current_flow_labels = get_current_flow_labels()
+        materialization_flow = create_flow_run(
+            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+            parameters={
+                "dataset_id": DATASET_ID,
+                "table_id": TABLE_ID,
+                "mode": MATERIALIZATION_MODE,
+                "materialize_to_datario": MATERIALIZE_TO_DATARIO,
+            },
+            labels=current_flow_labels,
+            run_name=f"Materialize {DATASET_ID}.{TABLE_ID}",
         )
 
-    run_dbt = check_to_run_dbt(
-        dataset_id=DATASET_ID,
-        table_id=TABLE_ID,
-        mode=MATERIALIZATION_MODE,
-    )
-    run_dbt.set_upstream(UPLOAD_TABLE)
+        materialization_flow.set_upstream(current_flow_labels)
 
-    with case(run_dbt, True):
-        # Trigger DBT flow run
-        with case(MATERIALIZE_AFTER_DUMP, True):
-            current_flow_labels = get_current_flow_labels()
-            materialization_flow = create_flow_run(
-                flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+        wait_for_materialization = wait_for_flow_run_with_2min_timeout(
+            flow_run_id=materialization_flow,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+        wait_for_materialization.max_retries = (
+            dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
+        )
+        wait_for_materialization.retry_delay = timedelta(
+            seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
+        )
+
+        with case(TRIGGER_RAIN_DASHBOARD_UPDATE, True):
+            # Trigger rain dashboard update flow run
+            rain_dashboard_update_flow = create_flow_run(
+                flow_name=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_NAME.value,
                 project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-                parameters={
-                    "dataset_id": DATASET_ID,
-                    "table_id": TABLE_ID,
-                    "mode": MATERIALIZATION_MODE,
-                    "materialize_to_datario": MATERIALIZE_TO_DATARIO,
-                },
-                labels=current_flow_labels,
-                run_name=f"Materialize {DATASET_ID}.{TABLE_ID}",
+                parameters=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS.value,  # noqa
+                labels=[
+                    "rj-escritorio-dev",
+                ],
+                run_name="Update rain dashboard data (triggered by precipitacao_cemaden flow)",  # noqa
+            )
+            rain_dashboard_update_flow.set_upstream(wait_for_materialization)
+
+            wait_for_rain_dashboard_update = wait_for_flow_run(
+                flow_run_id=rain_dashboard_update_flow,
+                stream_states=True,
+                stream_logs=True,
+                raise_final_state=False,
             )
 
-            current_flow_labels.set_upstream(run_dbt)
-            materialization_flow.set_upstream(current_flow_labels)
+            # Trigger rain dashboard update last 2h flow run
+            rain_dashboard_last_2h_update_flow = create_flow_run(
+                flow_name=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_NAME.value,
+                project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                parameters=cemaden_constants.RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS.value,  # noqa
+                labels=[
+                    "rj-escritorio-dev",
+                ],
+                run_name="Update rain dashboard data (triggered by precipitacao_cemaden last 2h flow)",  # noqa
+            )
+            rain_dashboard_last_2h_update_flow.set_upstream(wait_for_materialization)
 
-            wait_for_materialization = wait_for_flow_run_with_2min_timeout(
-                flow_run_id=materialization_flow,
+            wait_for_rain_dashboard_last_2h_update = wait_for_flow_run(
+                flow_run_id=rain_dashboard_last_2h_update_flow,
+                stream_states=True,
+                stream_logs=True,
+                raise_final_state=False,
+            )
+
+        with case(DUMP_TO_GCS, True):
+            # Trigger Dump to GCS flow run with project id as datario
+            dump_to_gcs_flow = create_flow_run(
+                flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
+                project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                parameters={
+                    "project_id": "datario",
+                    "dataset_id": DATASET_ID,
+                    "table_id": TABLE_ID,
+                    "maximum_bytes_processed": MAXIMUM_BYTES_PROCESSED,
+                },
+                labels=[
+                    "datario",
+                ],
+                run_name=f"Dump to GCS {DATASET_ID}.{TABLE_ID}",
+            )
+            dump_to_gcs_flow.set_upstream(wait_for_materialization)
+
+            wait_for_dump_to_gcs = wait_for_flow_run_with_2min_timeout(
+                flow_run_id=dump_to_gcs_flow,
                 stream_states=True,
                 stream_logs=True,
                 raise_final_state=True,
             )
-
-            last_dbt_update = save_last_dbt_update(
-                dataset_id=DATASET_ID,
-                table_id=TABLE_ID,
-                mode=MATERIALIZATION_MODE,
-                wait=wait_for_materialization,
-            )
-
-            wait_for_materialization.max_retries = (
-                dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
-            )
-            wait_for_materialization.retry_delay = timedelta(
-                seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
-            )
-
-            with case(TRIGGER_RAIN_DASHBOARD_UPDATE, True):
-                # Trigger rain dashboard update flow run
-                rain_dashboard_update_flow = create_flow_run(
-                    flow_name=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_NAME.value,
-                    project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-                    parameters=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS.value,  # noqa
-                    labels=[
-                        "rj-escritorio-dev",
-                    ],
-                    run_name="Update rain dashboard data (triggered by precipitacao_cemaden flow)",  # noqa
-                )
-                rain_dashboard_update_flow.set_upstream(wait_for_materialization)
-
-                wait_for_rain_dashboard_update = wait_for_flow_run(
-                    flow_run_id=rain_dashboard_update_flow,
-                    stream_states=True,
-                    stream_logs=True,
-                    raise_final_state=False,
-                )
-
-                # Trigger rain dashboard update last 2h flow run
-                rain_dashboard_last_2h_update_flow = create_flow_run(
-                    flow_name=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_NAME.value,
-                    project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-                    parameters=cemaden_constants.RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS.value,  # noqa
-                    labels=[
-                        "rj-escritorio-dev",
-                    ],
-                    run_name="Update rain dashboard data (triggered by precipitacao_cemaden last 2h flow)",  # noqa
-                )
-                rain_dashboard_last_2h_update_flow.set_upstream(
-                    wait_for_materialization
-                )
-
-                wait_for_rain_dashboard_last_2h_update = wait_for_flow_run(
-                    flow_run_id=rain_dashboard_last_2h_update_flow,
-                    stream_states=True,
-                    stream_logs=True,
-                    raise_final_state=False,
-                )
-
-            with case(DUMP_TO_GCS, True):
-                # Trigger Dump to GCS flow run with project id as datario
-                dump_to_gcs_flow = create_flow_run(
-                    flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
-                    project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-                    parameters={
-                        "project_id": "datario",
-                        "dataset_id": DATASET_ID,
-                        "table_id": TABLE_ID,
-                        "maximum_bytes_processed": MAXIMUM_BYTES_PROCESSED,
-                    },
-                    labels=[
-                        "datario",
-                    ],
-                    run_name=f"Dump to GCS {DATASET_ID}.{TABLE_ID}",
-                )
-                dump_to_gcs_flow.set_upstream(wait_for_materialization)
-
-                wait_for_dump_to_gcs = wait_for_flow_run_with_2min_timeout(
-                    flow_run_id=dump_to_gcs_flow,
-                    stream_states=True,
-                    stream_logs=True,
-                    raise_final_state=True,
-                )
 
 # para rodar na cloud
 cor_meteorologia_precipitacao_cemaden.storage = GCS(constants.GCS_FLOWS_BUCKET.value)

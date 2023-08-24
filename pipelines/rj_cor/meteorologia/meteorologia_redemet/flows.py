@@ -33,9 +33,9 @@ with Flow(
     name="COR: Meteorologia - Meteorologia REDEMET",
     code_owners=[
         "richardg867",
+        "paty",
     ],
 ) as cor_meteorologia_meteorologia_redemet:
-
     DATASET_ID = "clima_estacao_meteorologica"
     TABLE_ID = "meteorologia_redemet"
     DUMP_MODE = "append"
