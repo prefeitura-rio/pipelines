@@ -168,7 +168,7 @@ with Flow(
         table_id=table_id,
         raw_dataset_id=raw_dataset_id,
         raw_table_id=raw_table_id,
-        table_date_column_name="data",
+        table_date_column_name="timestamp_gps",
         mode=MODE,
         delay_hours=constants.GPS_SPPO_MATERIALIZE_DELAY_HOURS.value,
     )
