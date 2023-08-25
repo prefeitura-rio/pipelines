@@ -27,7 +27,6 @@ with Flow(
         "diego",
     ],
 ) as rj_escritorio_data_catalog_flow:
-
     # Parameters
     project_ids = Parameter("project_ids")
     spreadsheet_url = Parameter("spreadsheet_url")

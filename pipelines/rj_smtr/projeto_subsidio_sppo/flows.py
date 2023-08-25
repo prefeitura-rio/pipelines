@@ -44,10 +44,7 @@ from pipelines.rj_smtr.veiculo.flows import (
     sppo_veiculo_dia,
 )
 
-from pipelines.rj_smtr.schedules import (
-    every_day_hour_five,
-    # every_dayofmonth_one_and_sixteen,
-)
+from pipelines.rj_smtr.schedules import every_day_hour_five, every_day_hour_seven
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
 from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import check_param
@@ -58,7 +55,6 @@ with Flow(
     "SMTR: Viagens SPPO",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as viagens_sppo:
-
     # Rename flow run
     current_date = get_now_date()
 
@@ -107,7 +103,6 @@ with Flow(
     SUBSIDIO_SPPO_APURACAO_NAME,
     code_owners=["rodrigo"],
 ) as subsidio_sppo_apuracao:
-
     # 1. SETUP #
 
     # Get default parameters #
@@ -236,4 +231,4 @@ subsidio_sppo_apuracao.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 subsidio_sppo_apuracao.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value, labels=[constants.RJ_SMTR_AGENT_LABEL.value]
 )
-subsidio_sppo_apuracao.schedule = every_day_hour_five
+subsidio_sppo_apuracao.schedule = every_day_hour_seven
