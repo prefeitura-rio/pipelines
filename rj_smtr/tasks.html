@@ -305,7 +305,10 @@ def save_treated_local(file_path: str, status: dict, mode: str = &#34;staging&#3
 ###############
 @task(nout=3)
 def query_logs(
-    dataset_id: str, table_id: str, datetime_filter=None, max_recaptures: int = 60
+    dataset_id: str,
+    table_id: str,
+    datetime_filter=None,
+    max_recaptures: int = 60,
 ):
     &#34;&#34;&#34;
     Queries capture logs to check for errors
@@ -323,6 +326,10 @@ def query_logs(
 
     if not datetime_filter:
         datetime_filter = pendulum.now(constants.TIMEZONE.value).replace(
+            second=0, microsecond=0
+        )
+    elif isinstance(datetime_filter, str):
+        datetime_filter = datetime.fromisoformat(datetime_filter).replace(
             second=0, microsecond=0
         )
 
@@ -638,7 +645,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
     table_id: str,
     raw_dataset_id: str,
     raw_table_id: str,
-    table_date_column_name: str = None,
+    table_run_datetime_column_name: str = None,
     mode: str = &#34;prod&#34;,
     delay_hours: int = 0,
 ):
@@ -667,22 +674,37 @@ def get_materialization_date_range(  # pylint: disable=R0913
     )
     # if there&#39;s no timestamp set on redis, get max timestamp on source table
     if last_run is None:
+        log(&#34;Failed to fetch key from Redis...\n Querying tables for last suceeded run&#34;)
         if Table(dataset_id=dataset_id, table_id=table_id).table_exists(&#34;prod&#34;):
             last_run = get_table_min_max_value(
                 query_project_id=bq_project(),
                 dataset_id=dataset_id,
                 table_id=table_id,
-                field_name=table_date_column_name,
+                field_name=table_run_datetime_column_name,
                 kind=&#34;max&#34;,
+            )
+            log(
+                f&#34;&#34;&#34;
+            Queried last run from {dataset_id}.{table_id}
+            Got:
+            {last_run} as type {type(last_run)}
+            &#34;&#34;&#34;
             )
         else:
             last_run = get_table_min_max_value(
                 query_project_id=bq_project(),
                 dataset_id=raw_dataset_id,
                 table_id=raw_table_id,
-                field_name=table_date_column_name,
+                field_name=table_run_datetime_column_name,
                 kind=&#34;max&#34;,
             )
+        log(
+            f&#34;&#34;&#34;
+            Queried last run from {raw_dataset_id}.{raw_table_id}
+            Got:
+            {last_run} as type {type(last_run)}
+            &#34;&#34;&#34;
+        )
     else:
         last_run = datetime.strptime(last_run, timestr)
 
@@ -728,6 +750,8 @@ def set_last_run_timestamp(
     if mode == &#34;dev&#34;:
         key = f&#34;{mode}.{key}&#34;
     content = redis_client.get(key)
+    if not content:
+        content = {}
     content[&#34;last_run_timestamp&#34;] = timestamp
     redis_client.set(key, content)
     return True
@@ -1349,7 +1373,7 @@ def get_local_dbt_client(host: str, port: int):
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.get_materialization_date_range"><code class="name flex">
-<span>def <span class="ident">get_materialization_date_range</span></span>(<span>dataset_id: str, table_id: str, raw_dataset_id: str, raw_table_id: str, table_date_column_name: str = None, mode: str = 'prod', delay_hours: int = 0)</span>
+<span>def <span class="ident">get_materialization_date_range</span></span>(<span>dataset_id: str, table_id: str, raw_dataset_id: str, raw_table_id: str, table_run_datetime_column_name: str = None, mode: str = 'prod', delay_hours: int = 0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Task for generating dict with variables to be passed to the
@@ -1392,7 +1416,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
     table_id: str,
     raw_dataset_id: str,
     raw_table_id: str,
-    table_date_column_name: str = None,
+    table_run_datetime_column_name: str = None,
     mode: str = &#34;prod&#34;,
     delay_hours: int = 0,
 ):
@@ -1421,22 +1445,37 @@ def get_materialization_date_range(  # pylint: disable=R0913
     )
     # if there&#39;s no timestamp set on redis, get max timestamp on source table
     if last_run is None:
+        log(&#34;Failed to fetch key from Redis...\n Querying tables for last suceeded run&#34;)
         if Table(dataset_id=dataset_id, table_id=table_id).table_exists(&#34;prod&#34;):
             last_run = get_table_min_max_value(
                 query_project_id=bq_project(),
                 dataset_id=dataset_id,
                 table_id=table_id,
-                field_name=table_date_column_name,
+                field_name=table_run_datetime_column_name,
                 kind=&#34;max&#34;,
+            )
+            log(
+                f&#34;&#34;&#34;
+            Queried last run from {dataset_id}.{table_id}
+            Got:
+            {last_run} as type {type(last_run)}
+            &#34;&#34;&#34;
             )
         else:
             last_run = get_table_min_max_value(
                 query_project_id=bq_project(),
                 dataset_id=raw_dataset_id,
                 table_id=raw_table_id,
-                field_name=table_date_column_name,
+                field_name=table_run_datetime_column_name,
                 kind=&#34;max&#34;,
             )
+        log(
+            f&#34;&#34;&#34;
+            Queried last run from {raw_dataset_id}.{raw_table_id}
+            Got:
+            {last_run} as type {type(last_run)}
+            &#34;&#34;&#34;
+        )
     else:
         last_run = datetime.strptime(last_run, timestr)
 
@@ -1627,7 +1666,10 @@ for the last 1 day before datetime_filter</p>
 </summary>
 <pre><code class="python">@task(nout=3)
 def query_logs(
-    dataset_id: str, table_id: str, datetime_filter=None, max_recaptures: int = 60
+    dataset_id: str,
+    table_id: str,
+    datetime_filter=None,
+    max_recaptures: int = 60,
 ):
     &#34;&#34;&#34;
     Queries capture logs to check for errors
@@ -1645,6 +1687,10 @@ def query_logs(
 
     if not datetime_filter:
         datetime_filter = pendulum.now(constants.TIMEZONE.value).replace(
+            second=0, microsecond=0
+        )
+    elif isinstance(datetime_filter, str):
+        datetime_filter = datetime.fromisoformat(datetime_filter).replace(
             second=0, microsecond=0
         )
 
@@ -1870,6 +1916,8 @@ def set_last_run_timestamp(
     if mode == &#34;dev&#34;:
         key = f&#34;{mode}.{key}&#34;
     content = redis_client.get(key)
+    if not content:
+        content = {}
     content[&#34;last_run_timestamp&#34;] = timestamp
     redis_client.set(key, content)
     return True</code></pre>

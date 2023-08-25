@@ -143,11 +143,13 @@ def get_table_min_max_value(  # pylint: disable=R0913
         field_name (str): column name to query
         kind (str): which value to get. Accepts min and max
     &#34;&#34;&#34;
+    log(f&#34;Getting {kind} value for {table_id}&#34;)
     query = f&#34;&#34;&#34;
         SELECT
             {kind}({field_name})
         FROM {query_project_id}.{dataset_id}.{table_id}
     &#34;&#34;&#34;
+    log(f&#34;Will run query:\n{query}&#34;)
     result = bd.read_sql(query=query, billing_project_id=bq_project())
 
     return result.iloc[0][0]
@@ -915,11 +917,13 @@ Useful to incrementally materialize tables via DBT</p>
         field_name (str): column name to query
         kind (str): which value to get. Accepts min and max
     &#34;&#34;&#34;
+    log(f&#34;Getting {kind} value for {table_id}&#34;)
     query = f&#34;&#34;&#34;
         SELECT
             {kind}({field_name})
         FROM {query_project_id}.{dataset_id}.{table_id}
     &#34;&#34;&#34;
+    log(f&#34;Will run query:\n{query}&#34;)
     result = bd.read_sql(query=query, billing_project_id=bq_project())
 
     return result.iloc[0][0]</code></pre>
