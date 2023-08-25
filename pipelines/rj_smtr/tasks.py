@@ -300,7 +300,9 @@ def query_logs(
             second=0, microsecond=0
         )
     elif isinstance(datetime_filter, str):
-        datetime_filter = datetime.fromisoformat(datetime_filter)
+        datetime_filter = datetime.fromisoformat(datetime_filter).replace(
+            second=0, microsecond=0
+        )
 
     query = f"""
     with t as (
@@ -614,7 +616,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
     table_id: str,
     raw_dataset_id: str,
     raw_table_id: str,
-    table_date_column_name: str = None,
+    table_run_datetime_column_name: str = None,
     mode: str = "prod",
     delay_hours: int = 0,
 ):
@@ -649,7 +651,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 query_project_id=bq_project(),
                 dataset_id=dataset_id,
                 table_id=table_id,
-                field_name=table_date_column_name,
+                field_name=table_run_datetime_column_name,
                 kind="max",
             )
             log(
@@ -664,7 +666,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
                 query_project_id=bq_project(),
                 dataset_id=raw_dataset_id,
                 table_id=raw_table_id,
-                field_name=table_date_column_name,
+                field_name=table_run_datetime_column_name,
                 kind="max",
             )
         log(
