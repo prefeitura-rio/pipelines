@@ -14,6 +14,7 @@ from pipelines.rj_sms.utils import (
 from pipelines.rj_sms.dump_azureblob_tpc.tasks import (
     conform_csv_to_gcp,
 )
+from pipelines.rj_sms.dump_azureblob_tpc.scheduler import every_day_at_six_am
 
 # TODO: mudar método de passar o path do arquivo. Deixar igual vitai
 with Flow(
@@ -66,3 +67,5 @@ dump_tpc.run_config = KubernetesRun(
         constants.RJ_SMS_DEV_AGENT_LABEL.value,
     ],
 )
+
+dump_tpc.schedule = every_day_at_six_am

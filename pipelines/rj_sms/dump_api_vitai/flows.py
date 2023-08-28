@@ -12,6 +12,7 @@ from pipelines.rj_sms.utils import (
     from_json_to_csv,
 )
 from pipelines.rj_sms.dump_api_vitai.tasks import conform_csv_to_gcp
+from pipelines.rj_sms.dump_api_vitai.scheduler import every_day_at_six_am
 
 
 with Flow(
@@ -58,3 +59,5 @@ dump_vitai.run_config = KubernetesRun(
         constants.RJ_SMS_DEV_AGENT_LABEL.value,
     ],
 )
+
+dump_vitai.schedule = every_day_at_six_am
