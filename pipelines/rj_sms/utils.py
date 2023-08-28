@@ -26,7 +26,9 @@ def download_api(url: str, destination_file_name: str, vault_path: str, vault_ke
             api_data = response.json()
 
             # Save the API data to a local file
-            destination_file_path = f"{os.path.expanduser('~')}/{destination_file_name}.json"
+            destination_file_path = (
+                f"{os.path.expanduser('~')}/{destination_file_name}.json"
+            )
 
             # df = pd.DataFrame(response.json(), dtype="str")
             # df["_data_carga"] = date.today()
