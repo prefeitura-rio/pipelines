@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from prefect import Parameter, Flow
+from prefect import Flow
 from pipelines.utils.decorators import Flow
 from pipelines.constants import constants
 from prefect.run_configs import KubernetesRun
