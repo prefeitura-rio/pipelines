@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from prefect import Flow
+from prefect import Parameter
 from pipelines.utils.decorators import Flow
 from pipelines.constants import constants
 from prefect.run_configs import KubernetesRun
@@ -25,7 +25,7 @@ with Flow(
     #  GCP
     dataset_id = "dump_vitai"
     table_id = "estoque_posicao"
-    dump_mode = "append"  # append or overwrite
+    dump_mode = Parameter("dump_mode", default="append") # append / overwrite
 
     # Start run
     download_task = download_api(
