@@ -13,7 +13,7 @@ minute_schedule = Schedule(
     clocks=[
         IntervalClock(
             interval=timedelta(minutes=5),
-            start_date=datetime(2023, 1, 1, 0, 0, 30),
+            start_date=datetime(2023, 1, 1, 0, 1, 0),
             labels=[
                 constants.RJ_COR_AGENT_LABEL.value,
             ],

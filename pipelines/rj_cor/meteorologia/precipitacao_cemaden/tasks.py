@@ -9,7 +9,10 @@ from typing import Union, Tuple
 
 import numpy as np
 import pandas as pd
+import pendulum
 from prefect import task
+from prefect.engine.signals import ENDRUN
+from prefect.engine.state import Skipped
 
 # from prefect import context
 
@@ -20,6 +23,7 @@ from pipelines.rj_cor.meteorologia.precipitacao_cemaden.utils import (
 from pipelines.utils.utils import (
     log,
     to_partitions,
+    save_updated_rows_on_redis,
 )
 
 
@@ -28,7 +32,9 @@ from pipelines.utils.utils import (
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def tratar_dados() -> Tuple[pd.DataFrame, bool]:
+def tratar_dados(
+    dataset_id: str, table_id: str, mode: str = "dev"
+) -> Tuple[pd.DataFrame, bool]:
     """
     Renomeia colunas e filtra dados com a hora e minuto do timestamp
     de execução mais próximo à este
@@ -80,7 +86,7 @@ def tratar_dados() -> Tuple[pd.DataFrame, bool]:
     log(f"DEBUG: data {dados[see_cols]}")
 
     # Alterando valores '-' e np.nan para NULL
-    dados.replace(["-", np.nan], [None, None], inplace=True)
+    dados.replace(["-", np.nan], [0, None], inplace=True)
 
     # Altera valores negativos para None
     float_cols = [
@@ -99,6 +105,35 @@ def tratar_dados() -> Tuple[pd.DataFrame, bool]:
     # Elimina linhas em que o id_estacao é igual mantendo a de menor valor nas colunas float
     dados.sort_values(["id_estacao", "data_medicao"] + float_cols, inplace=True)
     dados.drop_duplicates(subset=["id_estacao", "data_medicao"], keep="first")
+
+    # Ajustando dados da meia-noite que vem sem o horário
+    for index, row in dados.iterrows():
+        try:
+            date = pd.to_datetime(row["data_medicao"], format="%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            date = pd.to_datetime(row["data_medicao"]) + pd.DateOffset(hours=0)
+
+        dados.at[index, "data_medicao"] = date.strftime("%Y-%m-%d %H:%M:%S")
+
+    log(f"Dataframe before comparing with last data saved on redis {dados.head()}")
+
+    dados = save_updated_rows_on_redis(
+        dados,
+        dataset_id,
+        table_id,
+        unique_id="id_estacao",
+        date_column="data_medicao",
+        date_format=date_format,
+        mode=mode,
+    )
+
+    log(f"Dataframe after comparing with last data saved on redis {dados.head()}")
+
+    # If df is empty stop flow
+    if dados.shape[0] == 0:
+        skip_text = "No new data available on API"
+        log(skip_text)
+        raise ENDRUN(state=Skipped(skip_text))
 
     # Fixar ordem das colunas
     dados = dados[
@@ -131,6 +166,7 @@ def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
 
     partition_column = "data_medicao"
     dataframe, partitions = parse_date_columns(dados, partition_column)
+    current_time = pendulum.now("America/Sao_Paulo").strftime("%Y%m%d%H%M")
 
     # Cria partições a partir da data
     to_partitions(
@@ -138,6 +174,7 @@ def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
         partition_columns=partitions,
         savepath=prepath,
         data_type="csv",
+        suffix=current_time,
     )
     log(f"[DEBUG] Files saved on {prepath}")
     return prepath

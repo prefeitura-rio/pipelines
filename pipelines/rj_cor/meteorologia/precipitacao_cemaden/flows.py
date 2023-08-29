@@ -71,7 +71,11 @@ with Flow(
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
 
-    dados = tratar_dados()
+    dados = tratar_dados(
+        dataset_id=DATASET_ID,
+        table_id=TABLE_ID,
+        mode=MATERIALIZATION_MODE,
+    )
     path = salvar_dados(dados=dados)
 
     # Create table in BigQuery
