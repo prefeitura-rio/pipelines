@@ -31,7 +31,7 @@ _sigma_queries = {
         # "partition_date_format": "%Y",
         # "lower_bound_date": "current_year",
         "execute_query": """
-            SELECT 
+            SELECT
                 CPF_CNPJ,
                 RAZAO_SOCIAL,
                 NR_ORDEM,
