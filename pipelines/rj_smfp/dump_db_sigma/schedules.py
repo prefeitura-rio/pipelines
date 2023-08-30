@@ -20,7 +20,7 @@ from pipelines.utils.utils import untuple_clocks as untuple
 #####################################
 
 _sigma_queries = {
-    "inscritos_divida_ativa": {
+    "sancao_fornecedor": {
         "biglake_table": True,
         # "materialize_after_dump": True,
         # "materialization_mode": "prod",
