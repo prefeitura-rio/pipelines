@@ -39,7 +39,7 @@ medicamentos_flow = set_default_parameters(
     medicamentos_flow, default_parameters=medicamentos_flow_parameters
 )
 
-#medicamentos_flow.schedule = gsheets_one_minute_update_schedule
+# medicamentos_flow.schedule = gsheets_one_minute_update_schedule
 
 unidade_saude_flow = deepcopy(dump_url_flow)
 unidade_saude_flow.name = "SMS: Dump Unidades de Saude - Ingerir tabela auxiliar"
@@ -61,5 +61,5 @@ unidade_saude_flow_parameters = {
 }
 
 unidade_saude_flow = set_default_parameters(
-    unidade_saude_flow , default_parameters = unidade_saude_flow_parameters
+    unidade_saude_flow, default_parameters=unidade_saude_flow_parameters
 )
