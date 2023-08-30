@@ -15,21 +15,18 @@ from pipelines.utils.utils import untuple_clocks as untuple
 
 #####################################
 #
-# Processorio Schedules
+# SMFP SIGMA Schedules
 #
 #####################################
 
 _sigma_queries = {
     "sancao_fornecedor": {
         "biglake_table": True,
-        # "materialize_after_dump": True,
-        # "materialization_mode": "prod",
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
         "materialize_to_datario": False,
         "dump_to_gcs": False,
         "dump_mode": "overwrite",
-        # "partition_columns": "anoInscricao",
-        # "partition_date_format": "%Y",
-        # "lower_bound_date": "current_year",
         "execute_query": """
             SELECT
                 CPF_CNPJ,
