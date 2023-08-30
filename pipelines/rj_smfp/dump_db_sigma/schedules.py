@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Schedules for the database dump pipeline
+Schedules for the SMFP SIGMA dump_db pipeline.
 """
 
 from datetime import timedelta, datetime
@@ -24,8 +24,6 @@ _sigma_queries = {
         "biglake_table": True,
         "materialize_after_dump": True,
         "materialization_mode": "prod",
-        "materialize_to_datario": False,
-        "dump_to_gcs": False,
         "dump_mode": "overwrite",
         "execute_query": """
             SELECT
