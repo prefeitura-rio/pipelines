@@ -16,7 +16,7 @@ from pipelines.rj_smtr.constants import constants
 @task(checkpoint=False)
 def get_datetime_range(
     timestamp: datetime,
-    interval_minutes: int = 1,
+    interval_minutes: int = 10,
 ) -> dict:
     """
     Task to get datetime range
@@ -36,7 +36,7 @@ def get_datetime_range(
     return {"start": start, "end": end}
 
 
-@task(checkpoint=False, nout=2)
+@task(checkpoint=False, nout=3)
 def get_bilhetagem_url(
     datetime_range: dict,
     engine: str = "postgres",
@@ -53,9 +53,14 @@ def get_bilhetagem_url(
         tuple: bilhetagem url and params
     """
 
-    base_params = get_vault_secret(constants.BILHETAGEM_SECRET_PATH.value)["data"]
+    secrets = get_vault_secret(constants.BILHETAGEM_SECRET_PATH.value)["data"]
 
-    base_params["vpn_url"] = base_params["vpn_url"] + engine
+    url = secrets["vpn_url"] + engine
+
+    base_params = {
+        "host": secrets["host"],
+        "database": secrets["database"],
+    }
 
     params = {
         "query": f"""   SELECT COUNT(*)
@@ -64,7 +69,10 @@ def get_bilhetagem_url(
                         AND '{datetime_range["end"]}'"""
     }
 
-    return base_params, params
+    log(f"params: {params}")
+    log(f"url: {url}")
+
+    return base_params, params, url
 
 
 @task(checkpoint=False)
@@ -104,5 +112,7 @@ def get_bilhetagem_params(
                                 OFFSET {offset}"""
             }
         )
+
+    log(query_params)
 
     return query_params
