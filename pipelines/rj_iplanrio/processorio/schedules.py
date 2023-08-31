@@ -265,7 +265,10 @@ _processorio_infra_query = {
         "materialization_mode": "prod",
         "materialize_to_datario": False,
         "dump_to_gcs": False,
-        "dump_mode": "overwrite",
+        "partition_columns": "DATA_INI_PESSOA",
+        "partition_date_format": "%Y-%m-%d",
+        "lower_bound_date": "current_month",
+        "dump_mode": "append",
         "execute_query": """
             SELECT
                 ID_PESSOA,
