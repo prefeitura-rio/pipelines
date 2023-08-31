@@ -13,10 +13,32 @@ from pipelines.utils.utils import log, get_vault_secret
 from pipelines.rj_smtr.constants import constants
 
 
-@task(checkpoint=False, nout=2)
-def get_bilhetagem_url(
+@task(checkpoint=False)
+def get_datetime_range(
     timestamp: datetime,
     interval_minutes: int = 1,
+) -> dict:
+    """
+    Task to get datetime range
+
+    Args:
+        timestamp (datetime): timestamp to get datetime range
+        interval_minutes (int): interval in minutes to get datetime range (optional)
+
+    Returns:
+        dict: datetime range
+    """
+    start = (timestamp - timedelta(minutes=interval_minutes)).strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+    end = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+
+    return {"start": start, "end": end}
+
+
+@task(checkpoint=False, nout=2)
+def get_bilhetagem_url(
+    datetime_range: dict,
     engine: str = "postgres",
 ) -> tuple:
     """
@@ -35,16 +57,11 @@ def get_bilhetagem_url(
 
     base_params["vpn_url"] = base_params["vpn_url"] + engine
 
-    datetime_range_start = (timestamp - timedelta(minutes=interval_minutes)).strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
-    datetime_range_end = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-
     params = {
         "query": f"""   SELECT COUNT(*)
                         FROM transacao
-                        WHERE data_processamento BETWEEN '{datetime_range_start}'
-                        AND '{datetime_range_end}'"""
+                        WHERE data_processamento BETWEEN '{datetime_range["start"]}'
+                        AND '{datetime_range["end"]}'"""
     }
 
     return base_params, params
@@ -53,9 +70,8 @@ def get_bilhetagem_url(
 @task(checkpoint=False)
 def get_bilhetagem_params(
     count_rows: dict,
-    timestamp: datetime,
+    datetime_range: dict,
     limit: int = 1000,
-    interval_minutes: int = 1,
 ) -> list:
     """
     Task to get bilhetagem params
@@ -70,11 +86,6 @@ def get_bilhetagem_params(
         list: bilhetagem query params
     """
 
-    datetime_range_start = (timestamp - timedelta(minutes=interval_minutes)).strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
-    datetime_range_end = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-
     count_rows = pd.DataFrame(count_rows["data"]).iloc[0, 0]
 
     if count_rows == 0:
@@ -85,10 +96,10 @@ def get_bilhetagem_params(
     for i in range(0, count_rows, limit):
         query_params.append(
             {
-                "query": f"""SELECT *
+                "query": f"""   SELECT *
                                 FROM transacao
-                                WHERE data_processamento BETWEEN '{datetime_range_start}'
-                                AND '{datetime_range_end}'
+                                WHERE data_processamento BETWEEN '{datetime_range["start"]}'
+                                AND '{datetime_range["end"]}'
                                 LIMIT {limit}
                                 OFFSET {i}"""
             }

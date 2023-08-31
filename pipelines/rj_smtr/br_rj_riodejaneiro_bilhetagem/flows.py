@@ -37,6 +37,7 @@ from pipelines.rj_smtr.schedules import (
 from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.tasks import (
     get_bilhetagem_params,
     get_bilhetagem_url,
+    get_datetime_range,
 )
 
 # Flows #
@@ -56,6 +57,8 @@ with Flow(
     # SETUP
     timestamp = get_current_timestamp()
 
+    datetime_range = get_datetime_range(timestamp)
+
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=BILHETAGEM_FLOW_NAME + ": ", now_time=timestamp
     )
@@ -72,7 +75,7 @@ with Flow(
     )
 
     # EXTRACT #
-    base_params, params = get_bilhetagem_url(timestamp)
+    base_params, params = get_bilhetagem_url(datetime_range)
 
     count_rows = get_raw(
         url=base_params["vpn_url"],
@@ -81,7 +84,7 @@ with Flow(
         params=params,
     )
 
-    params = get_bilhetagem_params(count_rows, timestamp)
+    params = get_bilhetagem_params(count_rows, datetime_range)
 
     raw_status = get_raw.map(
         url=unmapped(base_params["vpn_url"]),
