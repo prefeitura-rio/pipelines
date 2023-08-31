@@ -31,7 +31,8 @@ from pipelines.rj_smtr.tasks import (
 )
 
 from pipelines.rj_smtr.schedules import (
-    every_minute,
+    # every_minute,
+    every_10_minutes,
 )
 
 from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.tasks import (
@@ -75,10 +76,10 @@ with Flow(
     )
 
     # EXTRACT #
-    base_params, params = get_bilhetagem_url(datetime_range)
+    base_params, params, url = get_bilhetagem_url(datetime_range)
 
     count_rows = get_raw(
-        url=base_params["vpn_url"],
+        url=url,
         headers=constants.BILHETAGEM_SECRET_PATH.value,
         base_params=base_params,
         params=params,
@@ -87,7 +88,7 @@ with Flow(
     params = get_bilhetagem_params(count_rows, datetime_range)
 
     raw_status = get_raw.map(
-        url=unmapped(base_params["vpn_url"]),
+        url=unmapped(url),
         headers=unmapped(constants.BILHETAGEM_SECRET_PATH.value),
         base_params=unmapped(base_params),
         params=params,
@@ -104,8 +105,8 @@ with Flow(
 
     # LOAD #
     error = bq_upload(
-        dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
-        table_id=constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
+        dataset_id=dataset_id,
+        table_id=table_id,
         filepath=treated_filepath,
         raw_filepath=raw_filepath,
         partitions=partitions,
@@ -113,8 +114,8 @@ with Flow(
     )
 
     upload_logs_to_bq(
-        dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
-        parent_table_id=constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
+        dataset_id=dataset_id,
+        parent_table_id=table_id,
         error=error,
         timestamp=timestamp,
     )
@@ -124,4 +125,4 @@ bilhetagem_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-bilhetagem_captura.schedule = every_minute
+bilhetagem_captura.schedule = every_10_minutes
