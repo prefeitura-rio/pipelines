@@ -34,7 +34,10 @@ from pipelines.rj_smtr.schedules import (
     every_minute,
 )
 
-from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.tasks import get_bilhetagem_params
+from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.tasks import (
+    get_bilhetagem_params,
+    get_bilhetagem_url,
+)
 
 # Flows #
 
@@ -69,10 +72,19 @@ with Flow(
     )
 
     # EXTRACT #
-    base_params, params, url = get_bilhetagem_params(timestamp)
+    base_params, params = get_bilhetagem_url(timestamp)
+
+    count_rows = get_raw(
+        url=base_params["vpn_url"],
+        headers=constants.BILHETAGEM_SECRET_PATH.value,
+        base_params=base_params,
+        params=params,
+    )
+
+    params = get_bilhetagem_params(count_rows, timestamp)
 
     raw_status = get_raw.map(
-        url=unmapped(url),
+        url=unmapped(base_params["vpn_url"]),
         headers=unmapped(constants.BILHETAGEM_SECRET_PATH.value),
         base_params=unmapped(base_params),
         params=params,
@@ -103,8 +115,6 @@ with Flow(
         error=error,
         timestamp=timestamp,
     )
-
-    bilhetagem_captura.set_dependencies(task=raw_status, upstream_tasks=[params])
 
 bilhetagem_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 bilhetagem_captura.run_config = KubernetesRun(

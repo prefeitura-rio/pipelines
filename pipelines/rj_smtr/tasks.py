@@ -28,6 +28,7 @@ from pipelines.rj_smtr.utils import (
     get_last_run_timestamp,
     log_critical,
     data_info_str,
+    get_single_dict,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
@@ -239,6 +240,7 @@ def save_raw_local(file_path: str, status: dict, mode: str = "raw") -> str:
     Returns:
         str: Path to the saved file
     """
+    status = get_single_dict(status)
     _file_path = file_path.format(mode=mode, filetype="json")
     Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
     if status["error"] is None:
@@ -407,6 +409,13 @@ def get_raw(  # pylint: disable=R0912
     try:
         if headers is not None:
             headers = get_vault_secret(headers)["data"]
+
+            if set(["token", "user", "password"]).issubset(headers.keys()):
+                headers = {
+                    "token": headers["token"],
+                    "user": headers["user"],
+                    "password": headers["password"],
+                }
 
         if base_params is not None:
             params = base_params | params
@@ -827,13 +836,15 @@ def pre_treatment_nest_data(
             * `error` (str): catched error, if any. Otherwise, returns None
     """
 
+    status = get_single_dict(status)
+
     # Check previous error
     if status["error"] is not None:
         return {"data": pd.DataFrame(), "error": status["error"]}
 
     try:
         error = None
-        data = pd.json_normalize(status["data"])
+        data = pd.DataFrame(status["data"])
 
         log(
             f"""
