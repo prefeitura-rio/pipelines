@@ -35,9 +35,6 @@ def get_bilhetagem_url(
                         AND '{datetime_range_end}'"""
     }
 
-    log(base_params)
-    log(params)
-
     return base_params, params
 
 

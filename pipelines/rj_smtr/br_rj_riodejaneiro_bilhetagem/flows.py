@@ -92,7 +92,7 @@ with Flow(
 
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
 
-    # CLEAN #
+    # TREAT & CLEAN #
     treated_status = pre_treatment_nest_data(
         status=raw_status, timestamp=timestamp, primary_key=["id"]
     )
