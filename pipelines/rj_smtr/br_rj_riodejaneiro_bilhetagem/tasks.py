@@ -93,7 +93,7 @@ def get_bilhetagem_params(
 
     query_params = []
 
-    for i in range(0, count_rows, limit):
+    for offset in range(0, count_rows, limit):
         query_params.append(
             {
                 "query": f"""   SELECT *
@@ -101,7 +101,7 @@ def get_bilhetagem_params(
                                 WHERE data_processamento BETWEEN '{datetime_range["start"]}'
                                 AND '{datetime_range["end"]}'
                                 LIMIT {limit}
-                                OFFSET {i}"""
+                                OFFSET {offset}"""
             }
         )
 
