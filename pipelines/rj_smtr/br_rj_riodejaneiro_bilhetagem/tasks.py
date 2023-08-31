@@ -18,7 +18,19 @@ def get_bilhetagem_url(
     timestamp: datetime,
     interval_minutes: int = 1,
     engine: str = "postgres",
-) -> dict:
+) -> tuple:
+    """
+    Task to get bilhetagem url
+
+    Args:
+        timestamp (datetime): timestamp to get bilhetagem url
+        interval_minutes (int): interval in minutes to get bilhetagem url (optional)
+        engine (str): engine to get bilhetagem url (optional)
+
+    Returns:
+        tuple: bilhetagem url and params
+    """
+
     base_params = get_vault_secret(constants.BILHETAGEM_SECRET_PATH.value)["data"]
 
     base_params["vpn_url"] = base_params["vpn_url"] + engine
@@ -49,12 +61,13 @@ def get_bilhetagem_params(
     Task to get bilhetagem params
 
     Args:
+        count_rows (dict): count rows from bilhetagem
         timestamp (datetime): timestamp to get bilhetagem params
-        interval_minutes (int): interval in minutes to get bilhetagem params
-        limit (int): limit of rows to get bilhetagem params
+        limit (int): limit to get bilhetagem params (optional)
+        interval_minutes (int): interval in minutes to get bilhetagem params (optional)
 
     Returns:
-        dict: bilhetagem params
+        list: bilhetagem query params
     """
 
     datetime_range_start = (timestamp - timedelta(minutes=interval_minutes)).strftime(

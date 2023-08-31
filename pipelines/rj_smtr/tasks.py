@@ -398,6 +398,9 @@ def get_raw(  # pylint: disable=R0912
         headers (str, optional): Path to headers guardeded on Vault, if needed.
         filetype (str, optional): Filetype to be formatted (supported only: json, csv and txt)
         csv_args (dict, optional): Arguments for read_csv, if needed
+        base_params (dict, optional): Base params to be sent on request
+        params (dict, optional): Params to be sent on request
+
     Returns:
         dict: Conatining keys
           * `data` (json): data result
@@ -410,6 +413,7 @@ def get_raw(  # pylint: disable=R0912
         if headers is not None:
             headers = get_vault_secret(headers)["data"]
 
+            # treatment for bilhetagem
             if set(["token", "user", "password"]).issubset(headers.keys()):
                 headers = {
                     "token": headers["token"],
@@ -821,7 +825,7 @@ def get_previous_date(days):
 def pre_treatment_nest_data(
     status: dict, timestamp: datetime, primary_key: list = None
 ):
-    """Builds a nested structure from a dataframe
+    """Pre-treatment for nested data.
 
     Args:
         status (dict): Must contain keys

@@ -387,7 +387,16 @@ def data_info_str(data: pd.DataFrame):
     return buffer.getvalue()
 
 
-def get_single_dict(status):
+def get_single_dict(status: list) -> dict:
+    """
+    Get single dict from list of dicts
+
+    Args:
+        status (list): list of dicts
+
+    Returns:
+        dict: single dict
+    """
     if isinstance(status, list):
         status_final = {"data": [], "error": []}
 
