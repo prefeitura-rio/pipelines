@@ -162,3 +162,8 @@ class constants(Enum):  # pylint: disable=c0103
     # SUBSÍDIO DASHBOARD
     SUBSIDIO_SPPO_DASHBOARD_DATASET_ID = "dashboard_subsidio_sppo"
     SUBSIDIO_SPPO_DASHBOARD_TABLE_ID = "sumario_servico_dia"
+
+    # BILHETAGEM
+    BILHETAGEM_DATASET_ID = "br_rj_riodejaneiro_bilhetagem"
+    BILHETAGEM_TABLE_ID = "transacao"
+    BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"

@@ -27,6 +27,7 @@ from pipelines.rj_smtr.utils import (
     get_table_min_max_value,
     get_last_run_timestamp,
     log_critical,
+    data_info_str,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
@@ -380,7 +381,12 @@ def query_logs(
 
 @task
 def get_raw(  # pylint: disable=R0912
-    url: str, headers: str = None, filetype: str = "json", csv_args: dict = None
+    url: str,
+    headers: str = None,
+    filetype: str = "json",
+    csv_args: dict = None,
+    base_params: dict = None,
+    params: dict = None,
 ) -> Dict:
     """
     Request data from URL API
@@ -402,8 +408,14 @@ def get_raw(  # pylint: disable=R0912
         if headers is not None:
             headers = get_vault_secret(headers)["data"]
 
+        if base_params is not None:
+            params = base_params | params
+
         response = requests.get(
-            url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
+            url,
+            headers=headers,
+            timeout=constants.MAX_TIMEOUT_SECONDS.value,
+            params=params,
         )
 
         if response.ok:  # status code is less than 400
@@ -794,3 +806,75 @@ def get_previous_date(days):
     now = pendulum.now(pendulum.timezone("America/Sao_Paulo")).subtract(days=days)
 
     return now.to_date_string()
+
+
+@task
+def pre_treatment_nest_data(
+    status: dict, timestamp: datetime, primary_key: list = None
+):
+    """Builds a nested structure from a dataframe
+
+    Args:
+        status (dict): Must contain keys
+            * `data`: dataframe returned from treatement
+            * `error`: error catched from data treatement
+        timestamp (datetime): timestamp of the capture
+        primary_key (list, optional): List of primary keys to be used for nesting.
+
+    Returns:
+        dict: Conatining keys
+            * `data` (json): data result
+            * `error` (str): catched error, if any. Otherwise, returns None
+    """
+
+    # Check previous error
+    if status["error"] is not None:
+        return {"data": pd.DataFrame(), "error": status["error"]}
+
+    try:
+        error = None
+        data = pd.json_normalize(status["data"])
+
+        log(
+            f"""
+        Received inputs:
+        - timestamp:\n{timestamp}
+        - data:\n{data.head()}"""
+        )
+
+        log(f"Raw data:\n{data_info_str(data)}", level="info")
+
+        log("Adding captured timestamp column...", level="info")
+        data["timestamp_captura"] = timestamp
+
+        log("Striping string columns...", level="info")
+        for col in data.columns[data.dtypes == "object"].to_list():
+            data[col] = data[col].str.strip()
+
+        log(
+            f"Finished cleaning! Pre-treated data:\n{data_info_str(data)}", level="info"
+        )
+
+        log("Creating nested structure...", level="info")
+        pk_cols = primary_key + ["timestamp_captura"]
+        data = (
+            data.groupby(pk_cols)
+            .apply(
+                lambda x: x[data.columns.difference(pk_cols)].to_json(orient="records")
+            )
+            .str.strip("[]")
+            .reset_index(name="content")[primary_key + ["content", "timestamp_captura"]]
+        )
+
+        log(
+            f"Finished nested structure! Pre-treated data:\n{data_info_str(data)}",
+            level="info",
+        )
+
+    except Exception as exp:  # pylint: disable=W0703
+        error = exp
+
+    if error is not None:
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+
+    return {"data": data, "error": error}
