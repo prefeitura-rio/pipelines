@@ -421,8 +421,10 @@ def get_raw(  # pylint: disable=R0912
                     "password": headers["password"],
                 }
 
-        if base_params is not None:
-            params = base_params | params
+        if base_params is not None and params is not None:
+            params |= base_params
+        elif base_params is not None:
+            params = base_params
 
         response = requests.get(
             url,
