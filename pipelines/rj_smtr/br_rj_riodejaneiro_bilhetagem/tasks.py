@@ -112,6 +112,7 @@ def get_bilhetagem_params(
                                 FROM transacao
                                 WHERE data_processamento BETWEEN '{datetime_range["start"]}'
                                 AND '{datetime_range["end"]}'
+                                ORDER BY data_processamento
                                 LIMIT {limit}
                                 OFFSET {offset}"""
             }
