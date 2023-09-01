@@ -3,10 +3,11 @@
 Tasks for br_rj_riodejaneiro_bilhetagem
 """
 
+from prefect import task
+
 from datetime import timedelta, datetime
 import pandas as pd
-
-from prefect import task
+from pytz import timezone
 
 from pipelines.utils.utils import log, get_vault_secret
 
@@ -19,7 +20,7 @@ def get_datetime_range(
     interval_minutes: int = 1,
 ) -> dict:
     """
-    Task to get datetime range
+    Task to get datetime range in UTC
 
     Args:
         timestamp (datetime): timestamp to get datetime range
@@ -28,10 +29,13 @@ def get_datetime_range(
     Returns:
         dict: datetime range
     """
-    start = (timestamp - timedelta(minutes=interval_minutes)).strftime(
-        "%Y-%m-%d %H:%M:%S"
+    start = (
+        (timestamp - timedelta(minutes=interval_minutes))
+        .astimezone(tz=timezone("UTC"))
+        .strftime("%Y-%m-%d %H:%M:%S")
     )
-    end = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+
+    end = timestamp.astimezone(tz=timezone("UTC")).strftime("%Y-%m-%d %H:%M:%S")
 
     return {"start": start, "end": end}
 
