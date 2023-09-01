@@ -44,6 +44,8 @@ def get_datetime_range(
 def get_bilhetagem_url(
     datetime_range: dict,
     engine: str = "postgres",
+    table_name: str = "transacao",
+    table_column: str = "data_processamento",
 ) -> tuple:
     """
     Task to get bilhetagem url
@@ -51,6 +53,8 @@ def get_bilhetagem_url(
     Args:
         datetime_range (dict): datetime range to get bilhetagem url
         engine (str): engine to get bilhetagem url (optional)
+        table_name (str): table name to get bilhetagem url (optional)
+        table_column (str): table column to get bilhetagem url (optional)
 
     Returns:
         tuple: bilhetagem url and params
@@ -67,8 +71,8 @@ def get_bilhetagem_url(
 
     params = {
         "query": f"""   SELECT COUNT(*)
-                        FROM transacao
-                        WHERE data_processamento BETWEEN '{datetime_range["start"]}'
+                        FROM {table_name}
+                        WHERE {table_column} BETWEEN '{datetime_range["start"]}'
                         AND '{datetime_range["end"]}'"""
     }
 
@@ -82,6 +86,8 @@ def get_bilhetagem_url(
 def get_bilhetagem_params(
     count_rows: dict,
     datetime_range: dict,
+    table_name: str = "transacao",
+    table_column: str = "data_processamento",
     limit: int = 1000,
 ) -> tuple:
     """
@@ -90,6 +96,8 @@ def get_bilhetagem_params(
     Args:
         count_rows (dict): count rows from bilhetagem
         timestamp (datetime): timestamp to get bilhetagem params
+        table_name (str): table name to get bilhetagem params (optional)
+        table_column (str): table column to get bilhetagem params (optional)
         limit (int): limit to get bilhetagem params (optional)
 
     Returns:
@@ -109,10 +117,10 @@ def get_bilhetagem_params(
         query_params.append(
             {
                 "query": f"""   SELECT *
-                                FROM transacao
-                                WHERE data_processamento BETWEEN '{datetime_range["start"]}'
+                                FROM {table_name}
+                                WHERE {table_column} BETWEEN '{datetime_range["start"]}'
                                 AND '{datetime_range["end"]}'
-                                ORDER BY data_processamento
+                                ORDER BY {table_column}
                                 LIMIT {limit}
                                 OFFSET {offset}"""
             }
