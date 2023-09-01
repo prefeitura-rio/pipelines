@@ -49,8 +49,7 @@ def get_bilhetagem_url(
     Task to get bilhetagem url
 
     Args:
-        timestamp (datetime): timestamp to get bilhetagem url
-        interval_minutes (int): interval in minutes to get bilhetagem url (optional)
+        datetime_range (dict): datetime range to get bilhetagem url
         engine (str): engine to get bilhetagem url (optional)
 
     Returns:
@@ -92,7 +91,6 @@ def get_bilhetagem_params(
         count_rows (dict): count rows from bilhetagem
         timestamp (datetime): timestamp to get bilhetagem params
         limit (int): limit to get bilhetagem params (optional)
-        interval_minutes (int): interval in minutes to get bilhetagem params (optional)
 
     Returns:
         flag_get_data (bool): flag to get bilhetagem params
@@ -119,6 +117,7 @@ def get_bilhetagem_params(
             }
         )
 
+    log(f"{str(count_rows)} rows to get")
     log(query_params)
 
     return True, query_params
