@@ -16,7 +16,7 @@ from pipelines.rj_smtr.constants import constants
 @task(checkpoint=False)
 def get_datetime_range(
     timestamp: datetime,
-    interval_minutes: int = 10,
+    interval_minutes: int = 1,
 ) -> dict:
     """
     Task to get datetime range
@@ -75,12 +75,12 @@ def get_bilhetagem_url(
     return base_params, params, url
 
 
-@task(checkpoint=False)
+@task(checkpoint=False, nout=2)
 def get_bilhetagem_params(
     count_rows: dict,
     datetime_range: dict,
     limit: int = 1000,
-) -> list:
+) -> tuple:
     """
     Task to get bilhetagem params
 
@@ -91,13 +91,15 @@ def get_bilhetagem_params(
         interval_minutes (int): interval in minutes to get bilhetagem params (optional)
 
     Returns:
-        list: bilhetagem query params
+        flag_get_data (bool): flag to get bilhetagem params
+        list: bilhetagem params
     """
 
     count_rows = pd.DataFrame(count_rows["data"]).iloc[0, 0]
 
     if count_rows == 0:
-        count_rows = 1
+        log("No data to get")
+        return False, []
 
     query_params = []
 
@@ -115,4 +117,4 @@ def get_bilhetagem_params(
 
     log(query_params)
 
-    return query_params
+    return True, query_params
