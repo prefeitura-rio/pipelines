@@ -413,13 +413,9 @@ def get_raw(  # pylint: disable=R0912
         if headers is not None:
             headers = get_vault_secret(headers)["data"]
 
-            # treatment for bilhetagem
-            if set(["token", "user", "password"]).issubset(headers.keys()):
-                headers = {
-                    "token": headers["token"],
-                    "user": headers["user"],
-                    "password": headers["password"],
-                }
+            # remove host from headers, if present
+            if "host" in list(headers.keys()):
+                del headers["host"]
 
         if base_params is not None and params is not None:
             params |= base_params
