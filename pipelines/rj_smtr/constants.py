@@ -165,5 +165,6 @@ class constants(Enum):  # pylint: disable=c0103
 
     # BILHETAGEM
     BILHETAGEM_DATASET_ID = "br_rj_riodejaneiro_bilhetagem"
-    BILHETAGEM_TABLE_ID = "transacao"
+    BILHETAGEM_TRANSACAO_TABLE_ID = "transacao"
+    BILHETAGEM_PRINCIPAL_TRANSACAO_TABLES_ID = "linha"
     BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"

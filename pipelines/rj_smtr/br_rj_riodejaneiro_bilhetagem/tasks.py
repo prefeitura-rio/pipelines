@@ -43,18 +43,21 @@ def get_datetime_range(
 @task(checkpoint=False, nout=3)
 def get_bilhetagem_url(
     datetime_range: dict,
-    engine: str = "postgres",
+    database: str = "transacao_db",
     table_name: str = "transacao",
     table_column: str = "data_processamento",
+    method: str = "between",
 ) -> tuple:
     """
     Task to get bilhetagem url
 
     Args:
         datetime_range (dict): datetime range to get bilhetagem url
+        database (str): database to get bilhetagem url (optional)
         engine (str): engine to get bilhetagem url (optional)
         table_name (str): table name to get bilhetagem url (optional)
         table_column (str): table column to get bilhetagem url (optional)
+        method (str): method to get bilhetagem url (optional)
 
     Returns:
         tuple: bilhetagem url and params
@@ -62,18 +65,25 @@ def get_bilhetagem_url(
 
     secrets = get_vault_secret(constants.BILHETAGEM_SECRET_PATH.value)["data"]
 
-    url = secrets["vpn_url"] + engine
+    database_secrets = secrets["databases"][database]
+
+    url = secrets["vpn_url"] + database_secrets["engine"]
 
     base_params = {
-        "host": secrets["host"],
-        "database": secrets["database"],
+        "host": database_secrets["host"],
+        "database": database_secrets["database"],
     }
+
+    if method == "between":
+        time_cond = f"""WHERE {table_column} BETWEEN '{datetime_range["start"]}'
+                        AND '{datetime_range["end"]}'"""
+    else:
+        time_cond = f"""WHERE {table_column} {method} '{datetime_range["start"]}'"""
 
     params = {
         "query": f"""   SELECT COUNT(*)
                         FROM {table_name}
-                        WHERE {table_column} BETWEEN '{datetime_range["start"]}'
-                        AND '{datetime_range["end"]}'"""
+                        {time_cond}"""
     }
 
     log(f"params: {params}")
@@ -88,6 +98,7 @@ def get_bilhetagem_params(
     datetime_range: dict,
     table_name: str = "transacao",
     table_column: str = "data_processamento",
+    method: str = "between",
     limit: int = 1000,
 ) -> tuple:
     """
@@ -98,6 +109,7 @@ def get_bilhetagem_params(
         timestamp (datetime): timestamp to get bilhetagem params
         table_name (str): table name to get bilhetagem params (optional)
         table_column (str): table column to get bilhetagem params (optional)
+        method (str): method to get bilhetagem params (optional)
         limit (int): limit to get bilhetagem params (optional)
 
     Returns:
@@ -113,13 +125,19 @@ def get_bilhetagem_params(
 
     query_params = []
 
+    if method == "between":
+        time_cond = f"""WHERE {table_column} BETWEEN '{datetime_range["start"]}'
+                        AND '{datetime_range["end"]}'"""
+    else:
+        time_cond = f"""WHERE {table_column} {method} '{datetime_range["start"]}'"""
+
+    log(f"time_cond: {time_cond}")
     for offset in range(0, count_rows, limit):
         query_params.append(
             {
                 "query": f"""   SELECT *
                                 FROM {table_name}
-                                WHERE {table_column} BETWEEN '{datetime_range["start"]}'
-                                AND '{datetime_range["end"]}'
+                                {time_cond}
                                 ORDER BY {table_column}
                                 LIMIT {limit}
                                 OFFSET {offset}"""
