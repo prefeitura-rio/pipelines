@@ -10,6 +10,8 @@ import io
 import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
+import pendulum
+from datetime import datetime
 from pipelines.rj_smtr.implicit_ftp import ImplicitFtpTls
 
 from pipelines.utils.utils import log
@@ -385,6 +387,143 @@ def data_info_str(data: pd.DataFrame):
     buffer = io.StringIO()
     data.info(buf=buffer)
     return buffer.getvalue()
+
+
+def get_project_name(mode: str):
+    """
+    Get project name based on mode
+
+    Args:
+        mode (str): mode
+
+    Returns:
+        str: project name
+    """
+
+    if mode == "prod":
+        return constants.PREFECT_DEFAULT_PROJECT.value
+    else:
+        return "staging"
+
+
+def query_logs_func(
+    dataset_id: str,
+    table_id: str,
+    datetime_filter=None,
+    max_recaptures: int = 60,
+    interval_minutes: int = 1,
+):
+    """
+    Queries capture logs to check for errors
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+        datetime_filter (pendulum.datetime.DateTime, optional):
+        filter passed to query. This task will query the logs table
+        for the last 1 day before datetime_filter
+        max_recaptures (int, optional): maximum number of recaptures to be done
+        interval_minutes (int, optional): interval in minutes between each recapture
+
+    Returns:
+        lists: errors (bool),
+        timestamps (list of pendulum.datetime.DateTime),
+        previous_errors (list of previous errors)
+    """
+
+    if not datetime_filter:
+        datetime_filter = pendulum.now(constants.TIMEZONE.value).replace(
+            second=0, microsecond=0
+        )
+    elif isinstance(datetime_filter, str):
+        datetime_filter = datetime.fromisoformat(datetime_filter).replace(
+            second=0, microsecond=0
+        )
+
+    query = f"""
+    WITH
+    t AS (
+    SELECT
+        DATETIME(timestamp_array) AS timestamp_array
+    FROM
+        UNNEST(
+            GENERATE_TIMESTAMP_ARRAY(
+                TIMESTAMP_SUB('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}', INTERVAL 1 day),
+                TIMESTAMP('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'),
+                INTERVAL {interval_minutes} minute) )
+        AS timestamp_array
+    WHERE
+        timestamp_array < '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}' ),
+    logs_table AS (
+        SELECT
+            SAFE_CAST(DATETIME(TIMESTAMP(timestamp_captura),
+                    "America/Sao_Paulo") AS DATETIME) timestamp_captura,
+            SAFE_CAST(sucesso AS BOOLEAN) sucesso,
+            SAFE_CAST(erro AS STRING) erro,
+            SAFE_CAST(DATA AS DATE) DATA
+        FROM
+            rj-smtr-staging.{dataset_id}_staging.{table_id}_logs AS t
+    ),
+    logs AS (
+        SELECT
+            *,
+            TIMESTAMP_TRUNC(timestamp_captura, minute) AS timestamp_array
+        FROM
+            logs_table
+        WHERE
+            DATA BETWEEN DATE(DATETIME_SUB('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}',
+                            INTERVAL 1 day))
+            AND DATE('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}')
+            AND timestamp_captura BETWEEN
+                DATETIME_SUB('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}', INTERVAL 1 day)
+            AND '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
+        ORDER BY
+            timestamp_captura )
+    SELECT
+        CASE
+            WHEN logs.timestamp_captura IS NOT NULL THEN logs.timestamp_captura
+        ELSE
+            t.timestamp_array
+        END
+            AS timestamp_captura,
+            logs.erro
+    FROM
+        t
+    LEFT JOIN
+        logs
+    ON
+        logs.timestamp_array = t.timestamp_array
+    WHERE
+        logs.sucesso IS NOT TRUE
+    ORDER BY
+        timestamp_captura
+    """
+    log(f"Run query to check logs:\n{query}")
+    results = bd.read_sql(query=query, billing_project_id=bq_project())
+    if len(results) > 0:
+        results["timestamp_captura"] = (
+            pd.to_datetime(results["timestamp_captura"])
+            .dt.tz_localize(constants.TIMEZONE.value)
+            .to_list()
+        )
+        log(f"Recapture data for the following {len(results)} timestamps:\n{results}")
+        if len(results) > max_recaptures:
+            message = f"""
+            [SPPO - Recaptures]
+            Encontradas {len(results)} timestamps para serem recapturadas.
+            Essa run processará as seguintes:
+            #####
+            {results[:max_recaptures]}
+            #####
+            Sobraram as seguintes para serem recapturadas na próxima run:
+            #####
+            {results[max_recaptures:]}
+            #####
+            """
+            log_critical(message)
+            results = results[:max_recaptures]
+        return True, results["timestamp_captura"].to_list(), results["erro"].to_list()
+    return False, [], []
 
 
 def get_single_dict(status: list) -> dict:

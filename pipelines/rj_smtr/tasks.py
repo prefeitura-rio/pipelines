@@ -26,7 +26,7 @@ from pipelines.rj_smtr.utils import (
     bq_project,
     get_table_min_max_value,
     get_last_run_timestamp,
-    log_critical,
+    query_logs_func,
     data_info_str,
     get_single_dict,
 )
@@ -138,14 +138,16 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
 
 
 @task
-def get_current_timestamp(
-    timestamp: datetime = None, truncate_minute: bool = True
-) -> datetime:
+def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -> datetime:
     """
     Get current timestamp for flow run.
     """
     if not timestamp:
         timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
+    if isinstance(timestamp, str):
+        timestamp = timezone(constants.TIMEZONE.value).localize(
+            datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+        )
     if truncate_minute:
         return timestamp.replace(second=0, microsecond=0)
     return timestamp
@@ -283,6 +285,7 @@ def query_logs(
     table_id: str,
     datetime_filter=None,
     max_recaptures: int = 60,
+    interval_minutes: int = 1,
 ):
     """
     Queries capture logs to check for errors
@@ -293,92 +296,22 @@ def query_logs(
         datetime_filter (pendulum.datetime.DateTime, optional):
         filter passed to query. This task will query the logs table
         for the last 1 day before datetime_filter
+        max_recaptures (int, optional): maximum number of recaptures to be done
+        interval_minutes (int, optional): interval in minutes between each recapture
 
     Returns:
-        list: containing timestamps for which the capture failed
+        lists: errors (bool),
+        timestamps (list of pendulum.datetime.DateTime),
+        previous_errors (list of previous errors)
     """
 
-    if not datetime_filter:
-        datetime_filter = pendulum.now(constants.TIMEZONE.value).replace(
-            second=0, microsecond=0
-        )
-    elif isinstance(datetime_filter, str):
-        datetime_filter = datetime.fromisoformat(datetime_filter).replace(
-            second=0, microsecond=0
-        )
-
-    query = f"""
-    with t as (
-    select
-        datetime(timestamp_array) as timestamp_array
-    from
-        unnest(GENERATE_TIMESTAMP_ARRAY(
-            timestamp_sub('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}', interval 1 day),
-            timestamp('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'),
-            interval 1 minute)
-        ) as timestamp_array
-    where timestamp_array < '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
-    ),
-    logs as (
-        select
-            *,
-            timestamp_trunc(timestamp_captura, minute) as timestamp_array
-        from
-            rj-smtr.{dataset_id}.{table_id}_logs
-        where
-            data between
-                date(datetime_sub('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}',
-                interval 1 day))
-                and date('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}')
-        and
-            timestamp_captura between
-                datetime_sub('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}', interval 1 day)
-                and '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
-        order by timestamp_captura
+    return query_logs_func(
+        dataset_id=dataset_id,
+        table_id=table_id,
+        datetime_filter=datetime_filter,
+        max_recaptures=max_recaptures,
+        interval_minutes=interval_minutes,
     )
-    select
-        case
-            when logs.timestamp_captura is not null then logs.timestamp_captura
-            else t.timestamp_array
-        end as timestamp_captura,
-        logs.erro
-    from
-        t
-    left join
-        logs
-    on
-        logs.timestamp_array = t.timestamp_array
-    where
-        logs.sucesso is not True
-    order by
-        timestamp_captura
-    """
-    log(f"Run query to check logs:\n{query}")
-    results = bd.read_sql(query=query, billing_project_id=bq_project())
-    if len(results) > 0:
-        results["timestamp_captura"] = (
-            pd.to_datetime(results["timestamp_captura"])
-            .dt.tz_localize(constants.TIMEZONE.value)
-            .to_list()
-        )
-        log(f"Recapture data for the following {len(results)} timestamps:\n{results}")
-        if len(results) > max_recaptures:
-            message = f"""
-            [SPPO - Recaptures]
-            Encontradas {len(results)} timestamps para serem recapturadas.
-            Essa run processará as seguintes:
-            #####
-            {results[:max_recaptures]}
-            #####
-            Sobraram as seguintes para serem recapturadas na próxima run:
-            #####
-            {results[max_recaptures:]}
-            #####
-            """
-            log_critical(message)
-            results = results[:max_recaptures]
-        return True, results["timestamp_captura"].to_list(), results["erro"].to_list()
-    return False, [], []
 
 
 @task
@@ -819,6 +752,130 @@ def get_previous_date(days):
     now = pendulum.now(pendulum.timezone("America/Sao_Paulo")).subtract(days=days)
 
     return now.to_date_string()
+
+
+@task
+def check_param(param: str) -> bool:
+    """
+    Check if param is None
+    """
+    return param is None
+
+
+@task
+def get_recapture_timestamps(
+    current_timestamp: datetime,
+    start_date: str,
+    end_date: str,
+    dataset_id: str,
+    table_id: str,
+    interval_minutes: int = 10,
+) -> List:
+    """Get timestamps with no file to recapture it in a given date range.
+
+    Args:
+        current_timestamp (datetime): Current timestamp
+        start_date (str): Start date in format YYYY-MM-DD
+        end_date (str): End date in format YYYY-MM-DD
+        dataset_id (str): Dataset id
+        table_id (str): Table id
+        interval_minutes (int, optional): Interval in minutes to recapture. Defaults to 10.
+
+    Returns:
+        List: List of dicts containing the timestamps to recapture
+    """
+
+    log(
+        f"Getting timestamps to recapture between {start_date} and {end_date}",
+        level="info",
+    )
+
+    errors = []
+    timestamps = []
+    previous_errors = []
+    flag_break = False
+
+    dates = pd.date_range(start=start_date, end=end_date)
+
+    dates = dates.strftime("%Y-%m-%d").to_list()
+
+    for date in dates:
+        datetime_filter = datetime.now(tz=timezone(constants.TIMEZONE.value)).replace(
+            second=0, microsecond=0
+        )
+
+        if datetime_filter > current_timestamp:
+            flag_break = True
+
+            # Round down to the nearest interval_minutes minutes
+            current_timestamp = current_timestamp.replace(
+                second=0,
+                microsecond=0,
+                minute=(
+                    (current_timestamp.minute // interval_minutes) * interval_minutes
+                ),
+            )
+
+            datetime_filter = current_timestamp
+            log(
+                f"""Datetime filter is greater than current timestamp,
+                   using current timestamp instead ({datetime_filter})""",
+                level="warning",
+            )
+
+        errors_temp, timestamps_temp, previous_errors_temp = query_logs_func(
+            dataset_id=dataset_id,
+            table_id=table_id,
+            datetime_filter=datetime_filter,
+            max_recaptures=2 ^ 63 - 1,
+            interval_minutes=interval_minutes,
+        )
+
+        if timestamps_temp == []:
+            log(
+                f"""From {date}, there are no recapture timestamps""",
+                level="info",
+            )
+            continue
+
+        errors = errors + ([errors_temp] * len(timestamps_temp))
+        timestamps = timestamps + timestamps_temp
+        previous_errors = previous_errors + previous_errors_temp
+
+        if flag_break:
+            log(
+                "Breaking loop because datetime filter is greater than current timestamp",
+                level="warning",
+            )
+            break
+
+    timestamps = [timestamp.strftime("%Y-%m-%d %H:%M:%S") for timestamp in timestamps]
+
+    log(
+        f"""From {start_date} to {end_date}, there are {len(timestamps)} recapture timestamps: \n
+            {timestamps}""",
+        level="info",
+    )
+
+    combined_data = []
+
+    for error, timestamp, previous_error in zip(errors, timestamps, previous_errors):
+        data = {
+            "error": error,
+            "timestamp": timestamp,
+            "previous_error": previous_error,
+            "recapture": True,
+        }
+
+        combined_data.append(data)
+
+    log(
+        f"""Combined data: \n
+            {combined_data}""",
+        level="info",
+    )
+
+    return combined_data
 
 
 @task
