@@ -43,6 +43,7 @@ from pipelines.rj_smtr.tasks import (
     upload_logs_to_bq,
     bq_upload,
     check_param,
+    get_recapture_timestamps,
 )
 
 from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
@@ -50,7 +51,6 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
     create_api_url_onibus_gps,
     create_api_url_onibus_realocacao,
     pre_treatment_br_rj_riodejaneiro_onibus_realocacao,
-    get_realocacao_recapture_timestamps,
 )
 
 from pipelines.rj_smtr.schedules import (
@@ -165,7 +165,15 @@ with Flow(
     MODE = get_current_flow_mode(LABELS)
     PROJECT_NAME = get_project_name(MODE)
 
-    timestamps = get_realocacao_recapture_timestamps(start_date, end_date)
+    current_timestamp = get_current_timestamp()
+
+    timestamps = get_recapture_timestamps(
+        current_timestamp=current_timestamp,
+        start_date=start_date,
+        end_date=end_date,
+        dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
+        table_id=constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
+    )
 
     GPS_SPPO_REALOCACAO_RUN = create_flow_run.map(
         flow_name=unmapped(realocacao_sppo.name),
