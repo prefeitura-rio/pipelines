@@ -6,7 +6,7 @@ Flows for br_rj_riodejaneiro_bilhetagem
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.utilities.edges import unmapped
-from prefect import case
+from prefect import case, Parameter
 
 # EMD Imports #
 
@@ -52,10 +52,14 @@ with Flow(
 
     dataset_id = constants.BILHETAGEM_DATASET_ID.value
     table_id = constants.BILHETAGEM_TRANSACAO_TABLE_ID.value
+    timestamp_param = Parameter("timestamp", default=None)
+    interval_minutes_param = Parameter("interval_minutes", default=10)
 
-    timestamp = get_current_timestamp()
+    timestamp = get_current_timestamp(timestamp_param)
 
-    datetime_range = get_datetime_range(timestamp)
+    datetime_range = get_datetime_range(
+        timestamp, interval_minutes=interval_minutes_param
+    )
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=BILHETAGEM_TRANSACAO_FLOW_NAME + ": ", now_time=timestamp

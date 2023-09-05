@@ -144,6 +144,8 @@ def get_current_timestamp(
     """
     Get current timestamp for flow run.
     """
+    if isinstance(timestamp, str):
+        timestamp = datetime.fromisoformat(timestamp)
     if not timestamp:
         timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
     if truncate_minute:
