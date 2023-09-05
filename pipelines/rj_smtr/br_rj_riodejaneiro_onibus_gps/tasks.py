@@ -5,7 +5,7 @@ Tasks for br_rj_riodejaneiro_onibus_gps
 
 import traceback
 from datetime import datetime, timedelta
-from typing import Dict, List
+from typing import Dict
 import pandas as pd
 from prefect import task
 import pendulum
@@ -17,7 +17,6 @@ from pipelines.utils.utils import log, get_vault_secret
 # SMTR Imports #
 
 from pipelines.rj_smtr.constants import constants
-from pipelines.rj_smtr.tasks import query_logs, get_current_timestamp
 
 # Tasks #
 
@@ -255,104 +254,3 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return {"data": df_gps, "error": error}
-
-
-@task
-def get_realocacao_recapture_timestamps(start_date: str, end_date: str) -> List:
-    """Get timestamps with no file in realocacao to recapture it in a given date range.
-
-    Args:
-        start_date (str): Start date in format YYYY-MM-DD
-        end_date (str): End date in format YYYY-MM-DD
-
-    Returns:
-        List: List of dicts containing the timestamps to recapture
-    """
-
-    log(
-        f"Getting timestamps to recapture between {start_date} and {end_date}",
-        level="info",
-    )
-
-    errors = []
-    timestamps = []
-    previous_errors = []
-    flag_break = False
-
-    dates = pd.date_range(start=start_date, end=end_date)
-
-    dates = dates.strftime("%Y-%m-%d").to_list()
-
-    for date in dates:
-        datetime_filter = get_current_timestamp.run(f"{date} 00:00:00")
-
-        current_timestamp = get_current_timestamp.run()
-
-        if datetime_filter > current_timestamp:
-            flag_break = True
-
-            # Round down to the nearest 10 minutes
-            current_timestamp = current_timestamp.replace(
-                second=0, microsecond=0, minute=((current_timestamp.minute // 10) * 10)
-            )
-
-            datetime_filter = current_timestamp
-            log(
-                f"""Datetime filter is greater than current timestamp,
-                   using current timestamp instead ({datetime_filter})""",
-                level="warning",
-            )
-
-        errors_temp, timestamps_temp, previous_errors_temp = query_logs.run(
-            dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
-            table_id=constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
-            datetime_filter=datetime_filter,
-            max_recaptures=2 ^ 63 - 1,
-            interval_minutes=10,
-        )
-
-        if timestamps_temp == []:
-            log(
-                f"""From {date}, there are no recapture timestamps""",
-                level="info",
-            )
-            continue
-
-        errors = errors + ([errors_temp] * len(timestamps_temp))
-        timestamps = timestamps + timestamps_temp
-        previous_errors = previous_errors + previous_errors_temp
-
-        if flag_break:
-            log(
-                "Breaking loop because datetime filter is greater than current timestamp",
-                level="warning",
-            )
-            break
-
-    timestamps = [timestamp.strftime("%Y-%m-%d %H:%M:%S") for timestamp in timestamps]
-
-    log(
-        f"""From {start_date} to {end_date}, there are {len(timestamps)} recapture timestamps: \n
-            {timestamps}""",
-        level="info",
-    )
-
-    combined_data = []
-
-    for error, timestamp, previous_error in zip(errors, timestamps, previous_errors):
-        data = {
-            "error": error,
-            "timestamp": timestamp,
-            "previous_error": previous_error,
-            "recapture": True,
-        }
-
-        combined_data.append(data)
-
-    log(
-        f"""Combined data: \n
-            {combined_data}""",
-        level="info",
-    )
-
-    return combined_data
