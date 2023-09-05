@@ -19,6 +19,7 @@ from pipelines.utils.tasks import rename_current_flow_run_now_time
 from pipelines.rj_smtr.constants import constants
 
 from pipelines.rj_smtr.tasks import (
+    create_date_partition,
     create_date_hour_partition,
     create_local_partition_path,
     get_current_timestamp,
@@ -31,9 +32,7 @@ from pipelines.rj_smtr.tasks import (
     pre_treatment_nest_data,
 )
 
-from pipelines.rj_smtr.schedules import (
-    every_minute,
-)
+from pipelines.rj_smtr.schedules import every_minute, every_day
 
 from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.tasks import (
     get_bilhetagem_params,
@@ -173,7 +172,7 @@ with Flow(
     )
 
     with case(flag_get_data, True):
-        partitions = create_date_hour_partition(timestamp)
+        partitions = create_date_partition(timestamp)
 
         filename = parse_timestamp_to_string(timestamp)
 
@@ -222,4 +221,4 @@ bilhetagem_principal_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-bilhetagem_principal_captura.schedule = every_minute
+bilhetagem_principal_captura.schedule = every_day
