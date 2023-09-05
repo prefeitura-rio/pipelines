@@ -153,7 +153,7 @@ with Flow(
         database="principal_db",
         table_name="LINHA",
         table_column="DT_INCLUSAO",
-        method="<=",
+        method=">=",
     )
 
     count_rows = get_raw(
@@ -168,7 +168,7 @@ with Flow(
         datetime_range=datetime_range,
         table_name="LINHA",
         table_column="DT_INCLUSAO",
-        method="<=",
+        method=">=",
     )
 
     with case(flag_get_data, True):
