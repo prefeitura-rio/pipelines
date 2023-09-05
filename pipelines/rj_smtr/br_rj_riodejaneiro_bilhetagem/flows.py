@@ -6,13 +6,18 @@ Flows for br_rj_riodejaneiro_bilhetagem
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.utilities.edges import unmapped
-from prefect import case
+from prefect import case, Parameter
+from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 
 # EMD Imports #
 
 from pipelines.constants import constants as emd_constants
 from pipelines.utils.decorators import Flow
-from pipelines.utils.tasks import rename_current_flow_run_now_time
+from pipelines.utils.tasks import (
+    rename_current_flow_run_now_time,
+    get_current_flow_labels,
+    get_current_flow_mode,
+)
 
 # SMTR Imports #
 
@@ -30,9 +35,12 @@ from pipelines.rj_smtr.tasks import (
     upload_logs_to_bq,
     bq_upload,
     pre_treatment_nest_data,
+    get_recapture_timestamps,
 )
 
-from pipelines.rj_smtr.schedules import every_minute, every_day
+from pipelines.rj_smtr.utils import get_project_name
+
+from pipelines.rj_smtr.schedules import every_10_minutes
 
 from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.tasks import (
     get_bilhetagem_params,
@@ -42,183 +50,46 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.tasks import (
 
 # Flows #
 
-BILHETAGEM_TRANSACAO_FLOW_NAME = "SMTR: Bilhetagem Transação (captura)"
+BILHETAGEM_TRANSACAO_RECAPTURA_FLOW_NAME = "SMTR: Bilhetagem Transação (recaptura)"
 
 with Flow(
-    BILHETAGEM_TRANSACAO_FLOW_NAME,
+    BILHETAGEM_TRANSACAO_RECAPTURA_FLOW_NAME,
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
-) as bilhetagem_transacao_captura:
-    # SETUP #
+) as bilhetagem_transacao_recaptura:
+    start_date = Parameter("start_date", default="")
+    end_date = Parameter("end_date", default="")
 
-    dataset_id = constants.BILHETAGEM_DATASET_ID.value
-    table_id = constants.BILHETAGEM_TRANSACAO_TABLE_ID.value
+    LABELS = get_current_flow_labels()
+    MODE = get_current_flow_mode(LABELS)
+    PROJECT_NAME = get_project_name(MODE)
 
-    timestamp = get_current_timestamp()
+    current_timestamp = get_current_timestamp()
 
-    datetime_range = get_datetime_range(timestamp)
-
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix=BILHETAGEM_TRANSACAO_FLOW_NAME + ": ", now_time=timestamp
+    timestamps = get_recapture_timestamps(
+        current_timestamp=current_timestamp,
+        start_date=start_date,
+        end_date=end_date,
+        dataset_id=constants.BILHETAGEM_DATASET_ID.value,
+        table_id=constants.BILHETAGEM_TRANSACAO_TABLE_ID.value,
     )
 
-    # EXTRACT #
-    base_params, params, url = get_bilhetagem_url(datetime_range)
-
-    count_rows = get_raw(
-        url=url,
-        headers=constants.BILHETAGEM_SECRET_PATH.value,
-        base_params=base_params,
-        params=params,
+    BILHETAGEM_TRANSACAO_RECAPTURA_RUN = create_flow_run.map(
+        flow_name=unmapped("SMTR: Bilhetagem Transação (captura)"),
+        project_name=unmapped(PROJECT_NAME),
+        run_name=unmapped("SMTR: Bilhetagem Transação (captura)"),
+        parameters=timestamps,
     )
 
-    flag_get_data, params = get_bilhetagem_params(count_rows, datetime_range)
+    wait_for_flow_run.map(
+        BILHETAGEM_TRANSACAO_RECAPTURA_RUN,
+        stream_states=unmapped(True),
+        stream_logs=unmapped(True),
+        raise_final_state=unmapped(True),
+    )
 
-    with case(flag_get_data, True):
-        partitions = create_date_hour_partition(timestamp)
-
-        filename = parse_timestamp_to_string(timestamp)
-
-        filepath = create_local_partition_path(
-            dataset_id=dataset_id,
-            table_id=table_id,
-            filename=filename,
-            partitions=partitions,
-        )
-
-        raw_status = get_raw.map(
-            url=unmapped(url),
-            headers=unmapped(constants.BILHETAGEM_SECRET_PATH.value),
-            base_params=unmapped(base_params),
-            params=params,
-        )
-
-        raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
-
-        # TREAT & CLEAN #
-        treated_status = pre_treatment_nest_data(
-            status=raw_status, timestamp=timestamp, primary_key=["id"]
-        )
-
-        treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
-
-        # LOAD #
-        error = bq_upload(
-            dataset_id=dataset_id,
-            table_id=table_id,
-            filepath=treated_filepath,
-            raw_filepath=raw_filepath,
-            partitions=partitions,
-            status=treated_status,
-        )
-
-        upload_logs_to_bq(
-            dataset_id=dataset_id,
-            parent_table_id=table_id,
-            error=error,
-            timestamp=timestamp,
-        )
-
-bilhetagem_transacao_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-bilhetagem_transacao_captura.run_config = KubernetesRun(
+bilhetagem_transacao_recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bilhetagem_transacao_recaptura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-bilhetagem_transacao_captura.schedule = every_minute
-
-
-BILHETAGEM_PRINCIPAL_FLOW_NAME = "SMTR: Bilhetagem Principal (captura)"
-
-with Flow(
-    BILHETAGEM_PRINCIPAL_FLOW_NAME,
-    code_owners=["caio", "fernanda", "boris", "rodrigo"],
-) as bilhetagem_principal_captura:
-    # SETUP #
-
-    dataset_id = constants.BILHETAGEM_DATASET_ID.value
-    # TODO: change to tables_id and get some tables
-    # (the constant should be a dict with all needed data)
-    table_id = constants.BILHETAGEM_PRINCIPAL_TRANSACAO_TABLES_ID.value
-
-    timestamp = get_current_timestamp()
-
-    datetime_range = get_datetime_range(timestamp=timestamp, interval_minutes=1440)
-
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix=BILHETAGEM_PRINCIPAL_FLOW_NAME + ": ", now_time=timestamp
-    )
-
-    # EXTRACT #
-    base_params, params, url = get_bilhetagem_url(
-        datetime_range=datetime_range,
-        database="principal_db",
-        table_name="LINHA",
-        table_column="DT_INCLUSAO",
-        method=">=",
-    )
-
-    count_rows = get_raw(
-        url=url,
-        headers=constants.BILHETAGEM_SECRET_PATH.value,
-        base_params=base_params,
-        params=params,
-    )
-
-    flag_get_data, params = get_bilhetagem_params(
-        count_rows=count_rows,
-        datetime_range=datetime_range,
-        table_name="LINHA",
-        table_column="DT_INCLUSAO",
-        method=">=",
-    )
-
-    with case(flag_get_data, True):
-        partitions = create_date_partition(timestamp)
-
-        filename = parse_timestamp_to_string(timestamp)
-
-        filepath = create_local_partition_path(
-            dataset_id=dataset_id,
-            table_id=table_id,
-            filename=filename,
-            partitions=partitions,
-        )
-
-        raw_status = get_raw.map(
-            url=unmapped(url),
-            headers=unmapped(constants.BILHETAGEM_SECRET_PATH.value),
-            base_params=unmapped(base_params),
-            params=params,
-        )
-
-        raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
-
-        # TREAT & CLEAN #
-        treated_status = pre_treatment_nest_data(
-            status=raw_status, timestamp=timestamp, primary_key=["CD_LINHA"]
-        )
-
-        treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
-
-        # LOAD #
-        error = bq_upload(
-            dataset_id=dataset_id,
-            table_id=table_id,
-            filepath=treated_filepath,
-            raw_filepath=raw_filepath,
-            partitions=partitions,
-            status=treated_status,
-        )
-
-        upload_logs_to_bq(
-            dataset_id=dataset_id,
-            parent_table_id=table_id,
-            error=error,
-            timestamp=timestamp,
-        )
-
-bilhetagem_principal_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-bilhetagem_principal_captura.run_config = KubernetesRun(
-    image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
-)
-bilhetagem_principal_captura.schedule = every_day
+bilhetagem_transacao_recaptura.schedule = every_10_minutes
