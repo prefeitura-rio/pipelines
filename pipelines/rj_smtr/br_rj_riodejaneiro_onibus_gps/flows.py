@@ -158,7 +158,6 @@ with Flow(
     REALOCACAO_SPPO_RECAPTURA_NAME,
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as realocacao_sppo_recaptura:
-
     start_date = Parameter("start_date", default="")
     end_date = Parameter("end_date", default="")
 
