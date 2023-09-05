@@ -114,11 +114,13 @@ def get_table_min_max_value(  # pylint: disable=R0913
         field_name (str): column name to query
         kind (str): which value to get. Accepts min and max
     """
+    log(f"Getting {kind} value for {table_id}")
     query = f"""
         SELECT
             {kind}({field_name})
         FROM {query_project_id}.{dataset_id}.{table_id}
     """
+    log(f"Will run query:\n{query}")
     result = bd.read_sql(query=query, billing_project_id=bq_project())
 
     return result.iloc[0][0]

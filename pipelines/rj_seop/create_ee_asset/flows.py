@@ -10,9 +10,7 @@ from prefect.storage import GCS
 
 from pipelines.constants import constants
 
-# from pipelines.rj_seop.create_ee_asset.schedules import (
-#     ee_daily_update_schedule,
-# )
+
 from pipelines.utils.dump_earth_engine_asset.flows import dump_earth_engine_asset_flow
 from pipelines.utils.utils import set_default_parameters
 
@@ -39,5 +37,3 @@ seop_ee_default_parameters = {
 seop_ee_flow = set_default_parameters(
     seop_ee_flow, default_parameters=seop_ee_default_parameters
 )
-
-# seop_ee_flow.schedule = ee_daily_update_schedule

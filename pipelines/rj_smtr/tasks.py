@@ -306,6 +306,10 @@ def query_logs(
         datetime_filter = pendulum.now(constants.TIMEZONE.value).replace(
             second=0, microsecond=0
         )
+    elif isinstance(datetime_filter, str):
+        datetime_filter = datetime.fromisoformat(datetime_filter).replace(
+            second=0, microsecond=0
+        )
 
     query = f"""
     WITH
@@ -631,7 +635,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
     table_id: str,
     raw_dataset_id: str,
     raw_table_id: str,
-    table_date_column_name: str = None,
+    table_run_datetime_column_name: str = None,
     mode: str = "prod",
     delay_hours: int = 0,
 ):
@@ -660,22 +664,37 @@ def get_materialization_date_range(  # pylint: disable=R0913
     )
     # if there's no timestamp set on redis, get max timestamp on source table
     if last_run is None:
+        log("Failed to fetch key from Redis...\n Querying tables for last suceeded run")
         if Table(dataset_id=dataset_id, table_id=table_id).table_exists("prod"):
             last_run = get_table_min_max_value(
                 query_project_id=bq_project(),
                 dataset_id=dataset_id,
                 table_id=table_id,
-                field_name=table_date_column_name,
+                field_name=table_run_datetime_column_name,
                 kind="max",
+            )
+            log(
+                f"""
+            Queried last run from {dataset_id}.{table_id}
+            Got:
+            {last_run} as type {type(last_run)}
+            """
             )
         else:
             last_run = get_table_min_max_value(
                 query_project_id=bq_project(),
                 dataset_id=raw_dataset_id,
                 table_id=raw_table_id,
-                field_name=table_date_column_name,
+                field_name=table_run_datetime_column_name,
                 kind="max",
             )
+        log(
+            f"""
+            Queried last run from {raw_dataset_id}.{raw_table_id}
+            Got:
+            {last_run} as type {type(last_run)}
+            """
+        )
     else:
         last_run = datetime.strptime(last_run, timestr)
 
@@ -721,6 +740,8 @@ def set_last_run_timestamp(
     if mode == "dev":
         key = f"{mode}.{key}"
     content = redis_client.get(key)
+    if not content:
+        content = {}
     content["last_run_timestamp"] = timestamp
     redis_client.set(key, content)
     return True
