@@ -148,3 +148,37 @@ def get_bilhetagem_params(
     log(query_params)
 
     return True, query_params
+
+
+@task(checkpoint=False)
+def generate_bilhetagem_flow_params(
+    timestamp: datetime, datetime_range: dict, tables_params: dict
+) -> list:
+    """
+    Task to generate bilhetagem flow params
+
+    Args:
+        timestamp (datetime): timestamp to generate bilhetagem flow params
+        datetime_range (dict): datetime range to generate bilhetagem flow params
+        tables_params (dict): tables params to generate bilhetagem flow params
+
+    Returns:
+        list: bilhetagem flow params
+    """
+
+    flow_params = []
+
+    log(tables_params)
+
+    for table_id in tables_params:
+        flow_params.append(
+            {
+                "timestamp": timestamp,
+                "datetime_range": datetime_range,
+                "tables_params": tables_params[table_id] | {"table_id": table_id},
+            }
+        )
+
+    log(flow_params)
+
+    return flow_params
