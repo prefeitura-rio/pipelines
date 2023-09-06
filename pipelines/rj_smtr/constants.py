@@ -188,5 +188,12 @@ class constants(Enum):  # pylint: disable=c0103
             "method": ">=",
             "primary_key": ["CD_GRUPO", "CD_LINHA"],
         },
+        "matriz_integracao": {
+            "database": "principal_db",
+            "table_name": "GRUPO_LINHA",
+            "table_column": "DT_INCLUSAO",
+            "method": "<",
+            "primary_key": ["CD_GRUPO", "CD_LINHA"],
+        },
     }
     BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
