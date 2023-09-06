@@ -166,5 +166,27 @@ class constants(Enum):  # pylint: disable=c0103
     # BILHETAGEM
     BILHETAGEM_DATASET_ID = "br_rj_riodejaneiro_bilhetagem"
     BILHETAGEM_TRANSACAO_TABLE_ID = "transacao"
-    BILHETAGEM_PRINCIPAL_TRANSACAO_TABLES_ID = "linha"
+    BILHETAGEM_PRINCIPAL_TRANSACAO_TABLES_PARAMS = {
+        "linha": {
+            "database": "principal_db",
+            "table_name": "LINHA",
+            "table_column": "DT_INCLUSAO",
+            "method": ">=",
+            "primary_key": ["CD_LINHA"],
+        },
+        "grupo": {
+            "database": "principal_db",
+            "table_name": "GRUPO",
+            "table_column": "DT_INCLUSAO",
+            "method": "<",
+            "primary_key": ["CD_GRUPO"],
+        },
+        "grupo_linha": {
+            "database": "principal_db",
+            "table_name": "GRUPO_LINHA",
+            "table_column": "DT_INCLUSAO",
+            "method": "<",
+            "primary_key": ["CD_GRUPO", "CD_LINHA"],
+        },
+    }
     BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
