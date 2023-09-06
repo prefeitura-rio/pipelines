@@ -178,14 +178,14 @@ class constants(Enum):  # pylint: disable=c0103
             "database": "principal_db",
             "table_name": "GRUPO",
             "table_column": "DT_INCLUSAO",
-            "method": "<",
+            "method": ">=",
             "primary_key": ["CD_GRUPO"],
         },
         "grupo_linha": {
             "database": "principal_db",
             "table_name": "GRUPO_LINHA",
             "table_column": "DT_INCLUSAO",
-            "method": "<",
+            "method": ">=",
             "primary_key": ["CD_GRUPO", "CD_LINHA"],
         },
     }
