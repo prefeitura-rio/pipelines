@@ -192,7 +192,7 @@ class constants(Enum):  # pylint: disable=c0103
             "database": "tarifa_db",
             "table_name": "matriz_integracao",
             "table_column": "dt_inclusao",
-            "method": "<",
+            "method": ">=",
             "primary_key": ["cd_versao_matriz", "cd_integracao"],
         },
     }
