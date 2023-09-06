@@ -57,8 +57,8 @@ with Flow(
 ) as bilhetagem_transacao_captura:
     # SETUP #
 
-    dataset_id = constants.BILHETAGEM_DATASET_ID.value
-    table_id = constants.BILHETAGEM_TRANSACAO_TABLE_ID.value
+    DATASET_ID = constants.BILHETAGEM_DATASET_ID.value
+    TABLE_ID = constants.BILHETAGEM_TRANSACAO_TABLE_ID.value
     timestamp_param = Parameter("timestamp", default=None)
     interval_minutes_param = Parameter("interval_minutes", default=10)
 
@@ -90,8 +90,8 @@ with Flow(
         filename = parse_timestamp_to_string(timestamp)
 
         filepath = create_local_partition_path(
-            dataset_id=dataset_id,
-            table_id=table_id,
+            dataset_id=DATASET_ID,
+            table_id=TABLE_ID,
             filename=filename,
             partitions=partitions,
         )
@@ -114,8 +114,8 @@ with Flow(
 
         # LOAD #
         error = bq_upload(
-            dataset_id=dataset_id,
-            table_id=table_id,
+            dataset_id=DATASET_ID,
+            table_id=TABLE_ID,
             filepath=treated_filepath,
             raw_filepath=raw_filepath,
             partitions=partitions,
@@ -123,8 +123,8 @@ with Flow(
         )
 
         upload_logs_to_bq(
-            dataset_id=dataset_id,
-            parent_table_id=table_id,
+            dataset_id=DATASET_ID,
+            parent_table_id=TABLE_ID,
             error=error,
             timestamp=timestamp,
         )
@@ -146,8 +146,10 @@ with Flow(
 
     tables_params = Parameter("tables_params")
     datetime_range = Parameter("datetime_range")
-    timestamp = Parameter("timestamp")
-    dataset_id = constants.BILHETAGEM_DATASET_ID.value
+    timestamp_param = Parameter("timestamp")
+
+    timestamp = get_current_timestamp(timestamp_param)
+    DATASET_ID = constants.BILHETAGEM_DATASET_ID.value
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=BILHETAGEM_PRINCIPAL_FLOW_NAME + " " + tables_params["table_id"] + ": ",
@@ -183,7 +185,7 @@ with Flow(
         filename = parse_timestamp_to_string(timestamp)
 
         filepath = create_local_partition_path(
-            dataset_id=dataset_id,
+            dataset_id=DATASET_ID,
             table_id=tables_params["table_id"],
             filename=filename,
             partitions=partitions,
@@ -209,7 +211,7 @@ with Flow(
 
         # LOAD #
         error = bq_upload(
-            dataset_id=dataset_id,
+            dataset_id=DATASET_ID,
             table_id=tables_params["table_id"],
             filepath=treated_filepath,
             raw_filepath=raw_filepath,
@@ -218,7 +220,7 @@ with Flow(
         )
 
         upload_logs_to_bq(
-            dataset_id=dataset_id,
+            dataset_id=DATASET_ID,
             parent_table_id=tables_params["table_id"],
             error=error,
             timestamp=timestamp,
@@ -243,7 +245,7 @@ with Flow(
     # PROJECT_NAME = get_project_name(MODE)
     PROJECT_NAME = "staging"
 
-    dataset_id = constants.BILHETAGEM_DATASET_ID.value
+    DATASET_ID = constants.BILHETAGEM_DATASET_ID.value
     tables_params = constants.BILHETAGEM_PRINCIPAL_TRANSACAO_TABLES_PARAMS.value
 
     timestamp = get_current_timestamp()

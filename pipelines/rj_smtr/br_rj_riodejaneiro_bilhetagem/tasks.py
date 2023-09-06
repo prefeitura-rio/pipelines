@@ -2,10 +2,10 @@
 """
 Tasks for br_rj_riodejaneiro_bilhetagem
 """
+from datetime import timedelta, datetime
 
 from prefect import task
 
-from datetime import timedelta, datetime
 import pandas as pd
 from pytz import timezone
 
@@ -173,7 +173,7 @@ def generate_bilhetagem_flow_params(
     for table_id in tables_params:
         flow_params.append(
             {
-                "timestamp": timestamp,
+                "timestamp": timestamp.strftime("%Y-%m-%d %H:%M:%S"),
                 "datetime_range": datetime_range,
                 "tables_params": tables_params[table_id] | {"table_id": table_id},
             }
