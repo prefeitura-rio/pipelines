@@ -20,6 +20,7 @@ from prefect import task
 from pytz import timezone
 import requests
 
+from pipelines.constants import constants as emd_constants
 from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.utils import (
     create_or_append_table,
@@ -895,3 +896,19 @@ def pre_treatment_nest_data(
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return {"data": data, "error": error}
+
+
+@task(checkpoint=False)
+def get_project_name(mode: str):
+    """
+    Get project name based on mode
+    Args:
+        mode (str): mode
+    Returns:
+        str: project name
+    """
+
+    if mode == "prod":
+        return emd_constants.PREFECT_DEFAULT_PROJECT.value
+    else:
+        return "staging"
