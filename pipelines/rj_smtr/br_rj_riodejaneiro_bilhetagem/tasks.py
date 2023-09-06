@@ -71,7 +71,7 @@ def get_bilhetagem_url(
 
     base_params = {
         "host": database_secrets["host"],
-        "database": database_secrets["database"],
+        "database": database,
     }
 
     if method == "between":
