@@ -242,8 +242,7 @@ with Flow(
 
     LABELS = get_current_flow_labels()
     MODE = get_current_flow_mode(LABELS)
-    # PROJECT_NAME = get_project_name(MODE)
-    PROJECT_NAME = "staging"
+    PROJECT_NAME = get_project_name(MODE)
 
     DATASET_ID = constants.BILHETAGEM_DATASET_ID.value
     tables_params = constants.BILHETAGEM_PRINCIPAL_TRANSACAO_TABLES_PARAMS.value
