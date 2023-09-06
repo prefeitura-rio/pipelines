@@ -7,12 +7,17 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.utilities.edges import unmapped
 from prefect import case, Parameter
+from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 
 # EMD Imports #
 
 from pipelines.constants import constants as emd_constants
 from pipelines.utils.decorators import Flow
-from pipelines.utils.tasks import rename_current_flow_run_now_time
+from pipelines.utils.tasks import (
+    rename_current_flow_run_now_time,
+    get_current_flow_labels,
+    get_current_flow_mode,
+)
 
 # SMTR Imports #
 
@@ -30,6 +35,7 @@ from pipelines.rj_smtr.tasks import (
     upload_logs_to_bq,
     bq_upload,
     pre_treatment_nest_data,
+    get_project_name,
 )
 
 from pipelines.rj_smtr.schedules import every_minute, every_day
@@ -38,6 +44,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.tasks import (
     get_bilhetagem_params,
     get_bilhetagem_url,
     get_datetime_range,
+    generate_bilhetagem_flow_params,
 )
 
 # Flows #
@@ -129,8 +136,7 @@ bilhetagem_transacao_captura.run_config = KubernetesRun(
 )
 bilhetagem_transacao_captura.schedule = every_minute
 
-
-BILHETAGEM_PRINCIPAL_FLOW_NAME = "SMTR: Bilhetagem Principal (captura)"
+BILHETAGEM_PRINCIPAL_FLOW_NAME = "SMTR: Bilhetagem Principal Auxiliar (captura)"
 
 with Flow(
     BILHETAGEM_PRINCIPAL_FLOW_NAME,
@@ -138,26 +144,22 @@ with Flow(
 ) as bilhetagem_principal_captura:
     # SETUP #
 
+    tables_params = Parameter("tables_params")
+    datetime_range = Parameter("datetime_range")
+    timestamp = Parameter("timestamp")
     dataset_id = constants.BILHETAGEM_DATASET_ID.value
-    # TODO: change to tables_id and get some tables
-    # (the constant should be a dict with all needed data)
-    table_id = constants.BILHETAGEM_PRINCIPAL_TRANSACAO_TABLES_ID.value
-
-    timestamp = get_current_timestamp()
-
-    datetime_range = get_datetime_range(timestamp=timestamp, interval_minutes=1440)
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=BILHETAGEM_PRINCIPAL_FLOW_NAME + ": ", now_time=timestamp
+        prefix=BILHETAGEM_PRINCIPAL_FLOW_NAME + " " + tables_params["table_id"] + ": ",
+        now_time=timestamp,
     )
 
-    # EXTRACT #
     base_params, params, url = get_bilhetagem_url(
         datetime_range=datetime_range,
-        database="principal_db",
-        table_name="LINHA",
-        table_column="DT_INCLUSAO",
-        method=">=",
+        database=tables_params["database"],
+        table_name=tables_params["table_name"],
+        table_column=tables_params["table_column"],
+        method=tables_params["method"],
     )
 
     count_rows = get_raw(
@@ -170,9 +172,9 @@ with Flow(
     flag_get_data, params = get_bilhetagem_params(
         count_rows=count_rows,
         datetime_range=datetime_range,
-        table_name="LINHA",
-        table_column="DT_INCLUSAO",
-        method=">=",
+        table_name=tables_params["table_name"],
+        table_column=tables_params["table_column"],
+        method=tables_params["method"],
     )
 
     with case(flag_get_data, True):
@@ -182,7 +184,7 @@ with Flow(
 
         filepath = create_local_partition_path(
             dataset_id=dataset_id,
-            table_id=table_id,
+            table_id=tables_params["table_id"],
             filename=filename,
             partitions=partitions,
         )
@@ -198,7 +200,9 @@ with Flow(
 
         # TREAT & CLEAN #
         treated_status = pre_treatment_nest_data(
-            status=raw_status, timestamp=timestamp, primary_key=["CD_LINHA"]
+            status=raw_status,
+            timestamp=timestamp,
+            primary_key=tables_params["primary_key"],
         )
 
         treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
@@ -206,7 +210,7 @@ with Flow(
         # LOAD #
         error = bq_upload(
             dataset_id=dataset_id,
-            table_id=table_id,
+            table_id=tables_params["table_id"],
             filepath=treated_filepath,
             raw_filepath=raw_filepath,
             partitions=partitions,
@@ -215,7 +219,7 @@ with Flow(
 
         upload_logs_to_bq(
             dataset_id=dataset_id,
-            parent_table_id=table_id,
+            parent_table_id=tables_params["table_id"],
             error=error,
             timestamp=timestamp,
         )
@@ -225,4 +229,54 @@ bilhetagem_principal_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-bilhetagem_principal_captura.schedule = every_day
+
+BILHETAGEM_PRINCIPAL_MAIN_FLOW_NAME = "SMTR: Bilhetagem Principal Geral (captura)"
+
+with Flow(
+    BILHETAGEM_PRINCIPAL_MAIN_FLOW_NAME,
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
+) as bilhetagem_principal_geral_captura:
+    # SETUP #
+
+    LABELS = get_current_flow_labels()
+    MODE = get_current_flow_mode(LABELS)
+    PROJECT_NAME = get_project_name(MODE)
+
+    dataset_id = constants.BILHETAGEM_DATASET_ID.value
+    tables_params = constants.BILHETAGEM_PRINCIPAL_TRANSACAO_TABLES_PARAMS.value
+
+    timestamp = get_current_timestamp()
+
+    datetime_range = get_datetime_range(timestamp=timestamp, interval_minutes=1440)
+
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix=BILHETAGEM_PRINCIPAL_MAIN_FLOW_NAME + ": ", now_time=timestamp
+    )
+
+    # EXTRACT #
+    flow_params = generate_bilhetagem_flow_params(
+        timestamp=timestamp,
+        datetime_range=datetime_range,
+        tables_params=tables_params,
+    )
+
+    BILHETAGEM_PRINCIPAL_CAPTURA_RUN = create_flow_run.map(
+        flow_name=unmapped(BILHETAGEM_PRINCIPAL_FLOW_NAME),
+        project_name=unmapped(PROJECT_NAME),
+        run_name=unmapped(BILHETAGEM_PRINCIPAL_FLOW_NAME),
+        parameters=flow_params,
+    )
+
+    wait_for_flow_run.map(
+        BILHETAGEM_PRINCIPAL_CAPTURA_RUN,
+        stream_states=unmapped(True),
+        stream_logs=unmapped(True),
+        raise_final_state=unmapped(True),
+    )
+
+bilhetagem_principal_geral_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bilhetagem_principal_geral_captura.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+bilhetagem_principal_geral_captura.schedule = every_day
