@@ -60,7 +60,7 @@ with Flow(
     DATASET_ID = constants.BILHETAGEM_DATASET_ID.value
     TABLE_ID = constants.BILHETAGEM_TRANSACAO_TABLE_ID.value
     timestamp_param = Parameter("timestamp", default=None)
-    interval_minutes_param = Parameter("interval_minutes", default=10)
+    interval_minutes_param = Parameter("interval_minutes", default=1)
 
     timestamp = get_current_timestamp(timestamp_param)
 
