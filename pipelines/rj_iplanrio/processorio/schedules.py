@@ -320,6 +320,36 @@ _processorio_infra_query = {
             FROM CORPORATIVO.VW_DP_PESSOA
         """,
     },
+    "cp_identidade": {
+        "biglake_table": True,
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "materialize_to_datario": False,
+        "dump_to_gcs": False,
+        "dump_mode": "overwrite",
+        "execute_query": """
+        SELECT
+            ID_IDENTIDADE,
+            ID_TP_IDENTIDADE,
+            ID_PESSOA,
+            DATA_CRIACAO_IDENTIDADE,
+            DATA_EXPIRACAO_IDENTIDADE,
+            DATA_CANCELAMENTO_IDENTIDADE,
+            ID_ORGAO_USU,
+            LOGIN_IDENTIDADE,
+            SENHA_IDENTIDADE,
+            SENHA_IDENTIDADE_CRIPTO,
+            SENHA_IDENTIDADE_CRIPTO_SINC,
+            HIS_ID_INI,
+            HIS_DT_INI,
+            HIS_IDC_INI,
+            HIS_DT_FIM,
+            HIS_IDC_FIM,
+            HIS_ATIVO,
+            PIN_IDENTIDADE
+        FROM CORPORATIVO.CP_IDENTIDADE
+    """,
+    },
 }
 
 processorio_infra_clocks = generate_dump_db_schedules(
