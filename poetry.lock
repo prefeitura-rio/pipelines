@@ -637,30 +637,34 @@ tzdata = ["tzdata"]
 
 [[package]]
 name = "basedosdados"
-version = "2.0.0b5"
+version = "2.0.0b13"
 description = "Organizar e facilitar o acesso a dados brasileiros através de tabelas públicas no BigQuery."
 optional = false
-python-versions = ">=3.8,<3.11"
+python-versions = ">=3.8.1,<4"
 files = [
-    {file = "basedosdados-2.0.0b5-py3-none-any.whl", hash = "sha256:a15fdbaa41d621094dabde3f2f14bcc4842b87f59f16a7a6c7a293351f841be5"},
-    {file = "basedosdados-2.0.0b5.tar.gz", hash = "sha256:e4bdf3a0018f7208aa57adac9bb9340d07076a3c18d875e80c488cb4b80f0959"},
+    {file = "basedosdados-2.0.0b13-py3-none-any.whl", hash = "sha256:0cd014af88f5613743583b5b9e8fff2550714e59660da2c95171942299df2f4a"},
+    {file = "basedosdados-2.0.0b13.tar.gz", hash = "sha256:d32ca661b42e8c59f610daf269146e51d7e61eed1a0f9f849a6e32d56f5bf08d"},
 ]
 
 [package.dependencies]
-google-api-python-client = ">=2.86.0,<3.0.0"
-google-cloud-bigquery = ">=3.10.0,<4.0.0"
-google-cloud-bigquery-connection = ">=1.12.0,<2.0.0"
-google-cloud-bigquery-storage = ">=2.19.1,<3.0.0"
-google-cloud-storage = ">=2.9.0,<3.0.0"
-gql = ">=3.4.1,<4.0.0"
-loguru = ">=0.7.0,<0.8.0"
-pandas = ">=2.0.1,<3.0.0"
-pandas-gbq = ">=0.19.2,<0.20.0"
-pandavro = ">=1.7.2,<2.0.0"
-pydata-google-auth = ">=1.8.0,<2.0.0"
-requests-toolbelt = ">=1.0.0,<2.0.0"
-tomlkit = ">=0.11.8,<0.12.0"
-tqdm = ">=4.65.0,<5.0.0"
+google-api-python-client = ">=2.86,<3.0"
+google-cloud-bigquery = ">=3.10,<4.0"
+google-cloud-bigquery-connection = ">=1.12,<2.0"
+google-cloud-bigquery-storage = ">=2.19,<3.0"
+google-cloud-storage = ">=2.9,<3.0"
+gql = {version = ">=3.4,<4.0", optional = true, markers = "extra == \"upload\""}
+loguru = "0.7.0"
+pandas = ">=2.0,<3.0"
+pandas-gbq = ">=0.19,<0.20"
+pydata-google-auth = ">=1.8,<2.0"
+requests-toolbelt = {version = ">=1,<2", optional = true, markers = "extra == \"upload\""}
+tomlkit = ">=0.11,<0.12"
+tqdm = ">=4,<5"
+
+[package.extras]
+avro = ["pandavro (>=1.7,<2.0)"]
+cli = ["click (>=8.1,<9)"]
+upload = ["gql (>=3.4,<4.0)", "requests-toolbelt (>=1,<2)"]
 
 [[package]]
 name = "bcrypt"
@@ -1544,38 +1548,6 @@ all = ["email-validator (>=1.1.1)", "httpx (>=0.23.0)", "itsdangerous (>=1.1.0)"
 dev = ["pre-commit (>=2.17.0,<3.0.0)", "ruff (==0.0.138)", "uvicorn[standard] (>=0.12.0,<0.21.0)"]
 doc = ["mdx-include (>=1.4.1,<2.0.0)", "mkdocs (>=1.1.2,<2.0.0)", "mkdocs-markdownextradata-plugin (>=0.1.7,<0.3.0)", "mkdocs-material (>=8.1.4,<9.0.0)", "pyyaml (>=5.3.1,<7.0.0)", "typer[all] (>=0.6.1,<0.8.0)"]
 test = ["anyio[trio] (>=3.2.1,<4.0.0)", "black (==22.10.0)", "coverage[toml] (>=6.5.0,<8.0)", "databases[sqlite] (>=0.3.2,<0.7.0)", "email-validator (>=1.1.1,<2.0.0)", "flask (>=1.1.2,<3.0.0)", "httpx (>=0.23.0,<0.24.0)", "isort (>=5.0.6,<6.0.0)", "mypy (==0.982)", "orjson (>=3.2.1,<4.0.0)", "passlib[bcrypt] (>=1.7.2,<2.0.0)", "peewee (>=3.13.3,<4.0.0)", "pytest (>=7.1.3,<8.0.0)", "python-jose[cryptography] (>=3.3.0,<4.0.0)", "python-multipart (>=0.0.5,<0.0.6)", "pyyaml (>=5.3.1,<7.0.0)", "ruff (==0.0.138)", "sqlalchemy (>=1.3.18,<1.4.43)", "types-orjson (==3.6.2)", "types-ujson (==5.6.0.0)", "ujson (>=4.0.1,!=4.0.2,!=4.1.0,!=4.2.0,!=4.3.0,!=5.0.0,!=5.1.0,<6.0.0)"]
-
-[[package]]
-name = "fastavro"
-version = "1.5.4"
-description = "Fast read/write of AVRO files"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "fastavro-1.5.4-cp310-cp310-macosx_10_14_x86_64.whl", hash = "sha256:d316cc476b2b24ef06402b8bfa047f8f72a9d6df2de777bb30d9ededda7e3a02"},
-    {file = "fastavro-1.5.4-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:8459faec46e34f2dfeb9b70ee8c36e935e626cff8608d675724718987a5f9ce5"},
-    {file = "fastavro-1.5.4-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:cd44636d7ff8365a57b88707b747371fffb676c8c1f68c0d423ec36623888668"},
-    {file = "fastavro-1.5.4-cp310-cp310-win_amd64.whl", hash = "sha256:2402428b26d3c08a58acfa723833e19fb75077872bcb2475a4c81195cdae6a5d"},
-    {file = "fastavro-1.5.4-cp37-cp37m-macosx_10_15_x86_64.whl", hash = "sha256:5afc14398f4191d1a807aa59d2fba5ed869b31343679ec43dbc289db0a8e35c5"},
-    {file = "fastavro-1.5.4-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5217e9713a3ea03205532394fba4d743749155b04b10b12a12fc26d225b89792"},
-    {file = "fastavro-1.5.4-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2e93a5eecb28cc35d670c9c4df70223fa9bcd6d9ca21b38b1b7ae13ece60c7fb"},
-    {file = "fastavro-1.5.4-cp37-cp37m-win_amd64.whl", hash = "sha256:1a2f2465efd0e7de557c4034e8d4d88a132750cfa51e1582362a1b3a1a9fa911"},
-    {file = "fastavro-1.5.4-cp38-cp38-macosx_10_15_x86_64.whl", hash = "sha256:f7d5bc76c03c692d9acea0e5d5baceec19e1c059b26cb8ae9f4481e842be95a5"},
-    {file = "fastavro-1.5.4-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:80fe920229ab1f40eccb1b4918481cdd8a20e5e7dce19308ab38b23732da8a70"},
-    {file = "fastavro-1.5.4-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a3d190aee86ab73caa1aa550eba850be2ca5dd29d814b38720f4e300184e01d5"},
-    {file = "fastavro-1.5.4-cp38-cp38-win_amd64.whl", hash = "sha256:b6c30299a49b11f42251cb81c8e15db67750642eac7ba5c194a5ee95c83ebb11"},
-    {file = "fastavro-1.5.4-cp39-cp39-macosx_10_15_x86_64.whl", hash = "sha256:1f7685f3a3c38352abab432bad2f9f2229a0e5f5f8548831e887c30f8396f2e9"},
-    {file = "fastavro-1.5.4-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:bd021ec850fd30020b7c4fa868466fb7f95450f1f06eac92bd2204cbd8e45fb8"},
-    {file = "fastavro-1.5.4-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:06a7b5602dfa032c92f20ca90b8bde88251573773e501bedf5e8b76b9feb14a3"},
-    {file = "fastavro-1.5.4-cp39-cp39-win_amd64.whl", hash = "sha256:18250aa2ab0f7a095b1865565cf9976ea4605c201129636e6defe24ec3ef112c"},
-    {file = "fastavro-1.5.4.tar.gz", hash = "sha256:d86f72c966713fb699570a18f7960cf4110b069c70681d7538be8d671c9db7c8"},
-]
-
-[package.extras]
-codecs = ["lz4", "python-snappy", "zstandard"]
-lz4 = ["lz4"]
-snappy = ["python-snappy"]
-zstandard = ["zstandard"]
 
 [[package]]
 name = "filelock"
@@ -4155,25 +4127,6 @@ requests = "*"
 urllib3 = ">=1.26.3"
 xmltodict = "*"
 zipfile36 = "*"
-
-[[package]]
-name = "pandavro"
-version = "1.7.2"
-description = "The interface between Avro and pandas DataFrame"
-optional = false
-python-versions = ">=3.6.1"
-files = [
-    {file = "pandavro-1.7.2-py3-none-any.whl", hash = "sha256:5b4a2fbc86fb2b102e5b2b24490084e4775a5ac546fc8981931abecf6bb4a34b"},
-    {file = "pandavro-1.7.2.tar.gz", hash = "sha256:4f2b7b6823522f54e8bfe33c091fb29898349892b70634f46c928e6a42a76e69"},
-]
-
-[package.dependencies]
-fastavro = ">=1.5.1,<1.6.0"
-numpy = ">=1.15.4"
-pandas = ">=1.1"
-
-[package.extras]
-tests = ["pytest (==7.1.2)"]
 
 [[package]]
 name = "paramiko"
@@ -7143,5 +7096,5 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 
 [metadata]
 lock-version = "2.0"
-python-versions = ">=3.8,<3.11"
-content-hash = "b461917e91ad3a32ff6fba597490d3ddfef35fcc93ec633537b8d7b28cc8a9a6"
+python-versions = ">=3.8.1,<3.11"
+content-hash = "c9aec49da3bc83907543ff1458f44ea98bcaa08960fdae7f428c8c5ec32bfe04"

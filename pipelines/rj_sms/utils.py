@@ -10,42 +10,43 @@ from azure.storage.blob import BlobServiceClient
 
 @task
 def download_api(url: str, destination_file_name: str, vault_path: str, vault_key: str):
-    try:
-        auth_token = get_vault_secret(secret_path=vault_path)["data"][vault_key]
-        log("Vault secret retrieved")
-    except:
-        log("Not able to retrieve Vault secret")
+    
+    if vault_key != "": 
+        try:
+            auth_token = get_vault_secret(secret_path=vault_path)["data"][vault_key]
+            log("Vault secret retrieved")
+        except:
+            log("Not able to retrieve Vault secret")
 
-    headers = {"Authorization": f"Bearer {auth_token}"}
-
-    try:
+        log("Downloading data from API")
+        headers = {"Authorization": f"Bearer {auth_token}"}
         response = requests.get(url, headers=headers)
+    else:
+        log("Downloading data from API") 
+        response = requests.get(url)
 
-        if response.status_code == 200:
-            # The response contains the data from the API
-            api_data = response.json()
+    if response.status_code == 200:
+        # The response contains the data from the API
+        api_data = response.json()
 
-            # Save the API data to a local file
-            destination_file_path = (
-                f"{os.path.expanduser('~')}/{destination_file_name}.json"
-            )
+        # Save the API data to a local file
+        destination_file_path = (
+            f"{os.path.expanduser('~')}/{destination_file_name}.json"
+        )
 
-            # df = pd.DataFrame(response.json(), dtype="str")
-            # df["_data_carga"] = date.today()
-            # df.to_csv(destination_file_path, index=False, sep=";", encoding="utf-8")
+        # df = pd.DataFrame(response.json(), dtype="str")
+        # df["_data_carga"] = date.today()
+        # df.to_csv(destination_file_path, index=False, sep=";", encoding="utf-8")
 
-            # Save the API data to a local file
+        # Save the API data to a local file
+        with open(destination_file_path, "w") as file:
+            file.write(str(api_data))
 
-            with open(destination_file_path, "w") as file:
-                file.write(str(api_data))
+        log("API data saved")
 
-            log("API data saved")
+    else:
+        log(f"Error: {response.status_code} - {response.reason}")
 
-        else:
-            log(f"Error: {response.status_code} - {response.reason}")
-
-    except requests.exceptions.RequestException as e:
-        log(f"An error occurred: {e}")
 
     return destination_file_path
 
