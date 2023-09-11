@@ -11,7 +11,10 @@ from pipelines.rj_sms.utils import (
     download_api,
     from_json_to_csv,
 )
-from pipelines.rj_sms.dump_api_vitacare.tasks import conform_csv_to_gcp, upload_to_datalake
+from pipelines.rj_sms.dump_api_vitacare.tasks import (
+    conform_csv_to_gcp,
+    upload_to_datalake,
+)
 from pipelines.rj_sms.dump_api_vitacare.scheduler import every_day_at_six_am
 from datetime import date
 
@@ -24,7 +27,7 @@ with Flow(
     vault_path = ""
     vault_key = ""
     # VitaCare
-    date = Parameter("date", default = str(date.today())) # format YYYY-MM-DD
+    date = Parameter("date", default=str(date.today()))  # format YYYY-MM-DD
     #  GCP
     dataset_id = "dump_vitacare"
     table_id = "estoque_posicao"
@@ -38,8 +41,6 @@ with Flow(
         vault_key=vault_key,
     )
 
-    
-
     conversion_task = from_json_to_csv(input_path=download_task, sep=";")
     conversion_task.set_upstream(download_task)
 
@@ -47,19 +48,18 @@ with Flow(
     conform_task.set_upstream(conversion_task)
 
     upload_task = upload_to_datalake(
-        input_path = conform_task,
-        dataset_id = dataset_id,
-        table_id = table_id)
+        input_path=conform_task, dataset_id=dataset_id, table_id=table_id
+    )
     upload_task.set_upstream(conform_task)
-    #upload_task = create_table_and_upload_to_gcs(
+    # upload_task = create_table_and_upload_to_gcs(
     #    data_path=conform_task,
     #    dataset_id=dataset_id,
     #    table_id=table_id,
     #    dump_mode=dump_mode,
     #    biglake_table=True,
     #    wait=None,
-    #)
-    #upload_task.set_upstream(conform_task)
+    # )
+    # upload_task.set_upstream(conform_task)
 
 
 dump_vitacare.storage = GCS(constants.GCS_FLOWS_BUCKET.value)

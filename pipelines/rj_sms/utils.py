@@ -10,8 +10,7 @@ from azure.storage.blob import BlobServiceClient
 
 @task
 def download_api(url: str, destination_file_name: str, vault_path: str, vault_key: str):
-    
-    if vault_key != "": 
+    if vault_key != "":
         try:
             auth_token = get_vault_secret(secret_path=vault_path)["data"][vault_key]
             log("Vault secret retrieved")
@@ -22,7 +21,7 @@ def download_api(url: str, destination_file_name: str, vault_path: str, vault_ke
         headers = {"Authorization": f"Bearer {auth_token}"}
         response = requests.get(url, headers=headers)
     else:
-        log("Downloading data from API") 
+        log("Downloading data from API")
         response = requests.get(url)
 
     if response.status_code == 200:
@@ -46,7 +45,6 @@ def download_api(url: str, destination_file_name: str, vault_path: str, vault_ke
 
     else:
         log(f"Error: {response.status_code} - {response.reason}")
-
 
     return destination_file_path
 
