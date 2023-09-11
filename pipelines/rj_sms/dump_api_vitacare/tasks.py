@@ -8,9 +8,8 @@ import basedosdados as bd
 
 
 @task
-def get_current_date():
-    return str(date.today())
-
+def build_params():
+    return {"date": str(date.today())}
 
 @task
 def conform_csv_to_gcp(input_path: str):

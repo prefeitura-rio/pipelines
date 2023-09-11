@@ -8,7 +8,7 @@ from pipelines.rj_sms.utils import from_json_to_csv, download_api
 from pipelines.rj_sms.dump_api_vitacare.tasks import (
     conform_csv_to_gcp,
     upload_to_datalake,
-    get_current_date,
+    build_params
 )
 from pipelines.rj_sms.dump_api_vitacare.scheduler import every_day_at_six_am
 
@@ -24,20 +24,18 @@ with Flow(
     table_id = "estoque_posicao"
     dump_mode = Parameter("dump_mode", default="append")  # append / overwrite
 
-    date_task = get_current_date()
-
-    print(
-        f"URL: http://consolidado-ap10.pepvitacare.com:8088/reports/pharmacy/stocks?date={date_task}"
-    )
     # Start run
+    build_params_task = build_params()
+
     download_task = download_api(
-        url=f"http://consolidado-ap10.pepvitacare.com:8088/reports/pharmacy/stocks?date={date_task}",
+        url="http://consolidado-ap10.pepvitacare.com:8088/reports/pharmacy/stocks",
+        params = build_params_task,
         destination_file_name=table_id,
         vault_path=vault_path,
         vault_key=vault_key,
         add_load_date_to_filename=True,
     )
-    download_task.set_upstream(date_task)
+    download_task.set_upstream(build_params_task)
 
     conversion_task = from_json_to_csv(input_path=download_task, sep=";")
     conversion_task.set_upstream(download_task)
@@ -49,15 +47,6 @@ with Flow(
         input_path=conform_task, dataset_id=dataset_id, table_id=table_id
     )
     upload_task.set_upstream(conform_task)
-    # upload_task = create_table_and_upload_to_gcs(
-    #    data_path=conform_task,
-    #    dataset_id=dataset_id,
-    #    table_id=table_id,
-    #    dump_mode=dump_mode,
-    #    biglake_table=True,
-    #    wait=None,
-    # )
-    # upload_task.set_upstream(conform_task)
 
 
 dump_vitacare.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
