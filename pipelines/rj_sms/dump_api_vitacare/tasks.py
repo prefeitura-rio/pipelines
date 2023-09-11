@@ -5,12 +5,13 @@ from pipelines.rj_sms.utils import download_api
 import pandas as pd
 from datetime import date
 import basedosdados as bd
+from loguru import logger
 
 
 @task
 def build_params():
     params = {"date": str(date.today())}
-    log(f"Params built: {params}")
+    logger.success(f"Params built: {params}")
     return params
 
 
@@ -26,7 +27,7 @@ def conform_csv_to_gcp(input_path: str):
     df["_data_carga"] = date.today()
 
     df.to_csv(input_path, index=False, sep="Æ", encoding="utf-8")
-    log("CSV now conform")
+    logger.success("CSV now conform")
 
     return input_path
 

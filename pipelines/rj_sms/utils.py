@@ -6,6 +6,7 @@ import requests
 import pandas as pd
 from datetime import date
 from azure.storage.blob import BlobServiceClient
+from loguru import logger
 
 
 @task
@@ -21,11 +22,11 @@ def download_api(
     if not vault_key is None:
         try:
             auth_token = get_vault_secret(secret_path=vault_path)["data"][vault_key]
-            log("Vault secret retrieved")
+            logger.success("Vault secret retrieved")
         except:
-            log("Not able to retrieve Vault secret")
+            logger.error("Not able to retrieve Vault secret")
 
-    log("Downloading data from API")
+    logger.info("Downloading data from API")
     headers = {} if auth_token == "" else {"Authorization": f"Bearer {auth_token}"}
     params = {} if params is None else params
     response = requests.get(url, headers=headers, params=params)
@@ -50,10 +51,10 @@ def download_api(
         with open(destination_file_path, "w") as file:
             file.write(str(api_data))
 
-        log(f"API data downloaded to {destination_file_path}")
+        logger.success(f"API data downloaded to {destination_file_path}")
 
     else:
-        log(f"Error: {response.status_code} - {response.reason}")
+        logger.error(f"Error: {response.status_code} - {response.reason}")
 
     return destination_file_path
 
@@ -68,9 +69,9 @@ def download_azure_blob(
 ):
     try:
         credential = get_vault_secret(secret_path=vault_path)["data"][vault_token]
-        log("Vault secret retrieved")
+        logger.success("Vault secret retrieved")
     except:
-        log("Not able to retrieve Vault secret")
+        logger.error("Not able to retrieve Vault secret")
 
     blob_service_client = BlobServiceClient(
         account_url="https://datalaketpcgen2.blob.core.windows.net/",
@@ -84,7 +85,7 @@ def download_azure_blob(
         blob_data = blob_client.download_blob()
         blob_data.readinto(blob_file)
 
-    log(f"Blob downloaded to '{destination_file_path}'.")
+    logger.success(f"Blob downloaded to '{destination_file_path}'.")
 
 
 @task
@@ -136,11 +137,11 @@ def from_json_to_csv(input_path, sep=";"):
             df = pd.DataFrame(data, dtype="str")
             df.to_csv(output_path, index=False, sep=sep, encoding="utf-8")
 
-            log("JSON converted to CSV")
+            logger.success("JSON converted to CSV")
             return output_path
 
     except Exception as e:
-        print("An error occurred:", e)
+        logger.error(f"An error occurred: {e}")
         return None
 
 

@@ -3,6 +3,7 @@ from prefect import task
 import pandas as pd
 from pipelines.utils.utils import log
 from datetime import date
+from loguru import logger
 
 
 @task
@@ -34,4 +35,4 @@ def conform_csv_to_gcp(filepath: str):
 
     df.to_csv(filepath, index=False, sep=",", encoding="utf-8", quoting=0, decimal=".")
 
-    log("CSV now conform")
+    logger.success("CSV now conform")
