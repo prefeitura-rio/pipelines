@@ -6,9 +6,11 @@ import pandas as pd
 from datetime import date
 import basedosdados as bd
 
+
 @task
 def get_current_date():
     return str(date.today())
+
 
 @task
 def conform_csv_to_gcp(input_path: str):

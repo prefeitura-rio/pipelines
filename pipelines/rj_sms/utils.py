@@ -9,8 +9,13 @@ from azure.storage.blob import BlobServiceClient
 
 
 @task
-def download_api(url: str, destination_file_name: str, vault_path = None, vault_key = None, add_load_date_to_filename = False):
-    
+def download_api(
+    url: str,
+    destination_file_name: str,
+    vault_path=None,
+    vault_key=None,
+    add_load_date_to_filename=False,
+):
     auth_token = ""
     if not vault_key is None:
         try:
@@ -31,7 +36,9 @@ def download_api(url: str, destination_file_name: str, vault_path = None, vault_
         if add_load_date_to_filename:
             destination_file_path = f"{os.path.expanduser('~')}/{destination_file_name}_{str(date.today())}.json"
         else:
-            destination_file_path = f"{os.path.expanduser('~')}/{destination_file_name}.json"
+            destination_file_path = (
+                f"{os.path.expanduser('~')}/{destination_file_name}.json"
+            )
 
         # df = pd.DataFrame(response.json(), dtype="str")
         # df["_data_carga"] = date.today()

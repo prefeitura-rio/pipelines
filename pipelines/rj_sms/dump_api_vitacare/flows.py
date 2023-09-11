@@ -32,10 +32,9 @@ with Flow(
         destination_file_name=table_id,
         vault_path=vault_path,
         vault_key=vault_key,
-        add_load_date_to_filename = True,
+        add_load_date_to_filename=True,
     )
     download_task.set_upstream(date_task)
- 
 
     conversion_task = from_json_to_csv(input_path=download_task, sep=";")
     conversion_task.set_upstream(download_task)
