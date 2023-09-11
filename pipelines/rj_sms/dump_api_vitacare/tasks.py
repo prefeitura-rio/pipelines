@@ -9,7 +9,9 @@ import basedosdados as bd
 
 @task
 def build_params():
-    return {"date": str(date.today())}
+    params = {"date": str(date.today())}
+    log(f"Params built: {params}")
+    return params
 
 
 @task
