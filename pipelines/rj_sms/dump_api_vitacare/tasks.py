@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 from prefect import task
 from pipelines.utils.utils import log
+from pipelines.rj_sms.utils import download_api
 import pandas as pd
 from datetime import date
 import basedosdados as bd
 
+@task
+def get_current_date():
+    return str(date.today())
 
 @task
 def conform_csv_to_gcp(input_path: str):

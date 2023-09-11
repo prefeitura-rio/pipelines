@@ -9,27 +9,29 @@ from azure.storage.blob import BlobServiceClient
 
 
 @task
-def download_api(url: str, destination_file_name: str, vault_path: str, vault_key: str):
-    if vault_key != "":
+def download_api(url: str, destination_file_name: str, vault_path = None, vault_key = None, add_load_date_to_filename = False):
+    
+    auth_token = ""
+    if not vault_key is None:
         try:
             auth_token = get_vault_secret(secret_path=vault_path)["data"][vault_key]
             log("Vault secret retrieved")
         except:
             log("Not able to retrieve Vault secret")
 
-        log("Downloading data from API")
-        headers = {"Authorization": f"Bearer {auth_token}"}
-        response = requests.get(url, headers=headers)
-    else:
-        log("Downloading data from API")
-        response = requests.get(url)
+    log("Downloading data from API")
+    headers = {"Authorization": f"Bearer {auth_token}"} if auth_token != "" else {}
+    response = requests.get(url, headers=headers)
 
     if response.status_code == 200:
         # The response contains the data from the API
         api_data = response.json()
 
         # Save the API data to a local file
-        destination_file_path = f"{os.path.expanduser('~')}/{destination_file_name}_{str(date.today())}.json"
+        if add_load_date_to_filename:
+            destination_file_path = f"{os.path.expanduser('~')}/{destination_file_name}_{str(date.today())}.json"
+        else:
+            destination_file_path = f"{os.path.expanduser('~')}/{destination_file_name}.json"
 
         # df = pd.DataFrame(response.json(), dtype="str")
         # df["_data_carga"] = date.today()
@@ -39,7 +41,7 @@ def download_api(url: str, destination_file_name: str, vault_path: str, vault_ke
         with open(destination_file_path, "w") as file:
             file.write(str(api_data))
 
-        log("API data saved")
+        log(f"API data downloaded to {destination_file_path}")
 
     else:
         log(f"Error: {response.status_code} - {response.reason}")
