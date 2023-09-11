@@ -8,7 +8,7 @@ from pipelines.rj_sms.utils import from_json_to_csv, download_api
 from pipelines.rj_sms.dump_api_vitacare.tasks import (
     conform_csv_to_gcp,
     upload_to_datalake,
-    build_params
+    build_params,
 )
 from pipelines.rj_sms.dump_api_vitacare.scheduler import every_day_at_six_am
 
@@ -29,7 +29,7 @@ with Flow(
 
     download_task = download_api(
         url="http://consolidado-ap10.pepvitacare.com:8088/reports/pharmacy/stocks",
-        params = build_params_task,
+        params=build_params_task,
         destination_file_name=table_id,
         vault_path=vault_path,
         vault_key=vault_key,

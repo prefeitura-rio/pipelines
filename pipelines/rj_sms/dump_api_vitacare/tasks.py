@@ -11,6 +11,7 @@ import basedosdados as bd
 def build_params():
     return {"date": str(date.today())}
 
+
 @task
 def conform_csv_to_gcp(input_path: str):
     df = pd.read_csv(input_path, sep=";", keep_default_na=False, dtype="str")

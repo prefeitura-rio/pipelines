@@ -12,7 +12,7 @@ from azure.storage.blob import BlobServiceClient
 def download_api(
     url: str,
     destination_file_name: str,
-    params = None,
+    params=None,
     vault_path=None,
     vault_key=None,
     add_load_date_to_filename=False,
@@ -26,9 +26,9 @@ def download_api(
             log("Not able to retrieve Vault secret")
 
     log("Downloading data from API")
-    headers = {} if  auth_token == "" else {"Authorization": f"Bearer {auth_token}"}
+    headers = {} if auth_token == "" else {"Authorization": f"Bearer {auth_token}"}
     params = {} if params is None else params
-    response = requests.get(url, headers=headers, params = params)
+    response = requests.get(url, headers=headers, params=params)
 
     if response.status_code == 200:
         # The response contains the data from the API
