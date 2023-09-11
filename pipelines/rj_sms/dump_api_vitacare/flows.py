@@ -26,8 +26,9 @@ with Flow(
 
     date_task = get_current_date()
 
-
-    print(f"URL: http://consolidado-ap10.pepvitacare.com:8088/reports/pharmacy/stocks?date={date_task}")
+    print(
+        f"URL: http://consolidado-ap10.pepvitacare.com:8088/reports/pharmacy/stocks?date={date_task}"
+    )
     # Start run
     download_task = download_api(
         url=f"http://consolidado-ap10.pepvitacare.com:8088/reports/pharmacy/stocks?date={date_task}",
