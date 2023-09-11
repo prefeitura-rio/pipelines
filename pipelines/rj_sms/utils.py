@@ -29,7 +29,10 @@ def download_api(
     logger.info("Downloading data from API")
     headers = {} if auth_token == "" else {"Authorization": f"Bearer {auth_token}"}
     params = {} if params is None else params
-    response = requests.get(url, headers=headers, params=params)
+    try:
+        response = requests.get(url, headers=headers, params=params)
+    except:
+        logger.error(f"An error occurred: {Exception}")
 
     if response.status_code == 200:
         # The response contains the data from the API
