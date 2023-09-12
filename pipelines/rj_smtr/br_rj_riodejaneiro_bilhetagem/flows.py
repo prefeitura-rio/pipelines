@@ -6,7 +6,7 @@ Flows for br_rj_riodejaneiro_bilhetagem
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.utilities.edges import unmapped
-from prefect import case, Parameter
+from prefect import Parameter
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 
 # EMD Imports #
@@ -38,7 +38,7 @@ from pipelines.rj_smtr.tasks import (
     get_project_name,
 )
 
-from pipelines.rj_smtr.schedules import every_minute, every_day
+from pipelines.rj_smtr.schedules import every_minute, every_day, every_minute_dev
 
 from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.tasks import (
     get_bilhetagem_params,
@@ -121,9 +121,9 @@ with Flow(
 bilhetagem_transacao_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 bilhetagem_transacao_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
-bilhetagem_transacao_captura.schedule = every_minute
+bilhetagem_transacao_captura.schedule = every_minute_dev
 
 BILHETAGEM_PRINCIPAL_FLOW_NAME = "SMTR: Bilhetagem Principal Auxiliar (captura)"
 
