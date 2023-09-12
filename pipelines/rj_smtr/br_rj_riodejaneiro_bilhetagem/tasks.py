@@ -6,7 +6,6 @@ from datetime import timedelta, datetime
 
 from prefect import task
 
-import pandas as pd
 from pytz import timezone
 
 from pipelines.utils.utils import log, get_vault_secret
@@ -40,8 +39,8 @@ def get_datetime_range(
     return {"start": start, "end": end}
 
 
-@task(checkpoint=False, nout=3)
-def get_bilhetagem_params(
+@task(checkpoint=False, nout=2)
+def get_bilhetagem_request_params(
     datetime_range: dict,
     database: str = "transacao_db",
     table_name: str = "transacao",
@@ -49,7 +48,7 @@ def get_bilhetagem_params(
     method: str = "between",
 ) -> tuple:
     """
-    Task to get bilhetagem params
+    Task to get bilhetagem request params
 
     Args:
         datetime_range (dict): datetime range to get bilhetagem params
@@ -59,7 +58,8 @@ def get_bilhetagem_params(
         method (str): method to get bilhetagem params (optional)
 
     Returns:
-        tuple: bilhetagem params
+        params: host, database and query to request data
+        url: url to request data
     """
 
     secrets = get_vault_secret(constants.BILHETAGEM_SECRET_PATH.value)["data"]
@@ -67,11 +67,6 @@ def get_bilhetagem_params(
     database_secrets = secrets["databases"][database]
 
     url = secrets["vpn_url"] + database_secrets["engine"]
-
-    base_params = {
-        "host": database_secrets["host"],
-        "database": database,
-    }
 
     if method == "between":
         time_cond = f"""WHERE
@@ -82,17 +77,21 @@ def get_bilhetagem_params(
                             {table_column} {method} '{datetime_range["start"]}'"""
 
     params = {
+        "host": database_secrets["host"],
+        "database": database,
         "query": f"""   SELECT
                             *
                         FROM
                             {table_name}
                         {time_cond}
                         ORDER BY
-                            {table_column}"""
+                            {table_column}""",
     }
+
     log(f"params: {params}")
     log(f"url: {url}")
-    return base_params, params, url
+
+    return params, url
 
 
 @task(checkpoint=False)
