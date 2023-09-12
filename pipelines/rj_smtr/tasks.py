@@ -390,7 +390,6 @@ def get_raw(  # pylint: disable=R0912
     headers: str = None,
     filetype: str = "json",
     csv_args: dict = None,
-    base_params: dict = None,
     params: dict = None,
 ) -> Dict:
     """
@@ -401,7 +400,6 @@ def get_raw(  # pylint: disable=R0912
         headers (str, optional): Path to headers guardeded on Vault, if needed.
         filetype (str, optional): Filetype to be formatted (supported only: json, csv and txt)
         csv_args (dict, optional): Arguments for read_csv, if needed
-        base_params (dict, optional): Base params to be sent on request
         params (dict, optional): Params to be sent on request
 
     Returns:
@@ -421,11 +419,6 @@ def get_raw(  # pylint: disable=R0912
             for remove_header in remove_headers:
                 if remove_header in list(headers.keys()):
                     del headers[remove_header]
-
-        if base_params is not None and params is not None:
-            params |= base_params
-        elif base_params is not None:
-            params = base_params
 
         response = requests.get(
             url,
