@@ -350,6 +350,21 @@ _processorio_infra_query = {
         FROM CORPORATIVO.CP_IDENTIDADE
     """,
     },
+    "ex_tipo_forma_documento": {
+        "biglake_table": True,
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "materialize_to_datario": False,
+        "dump_to_gcs": False,
+        "dump_mode": "overwrite",
+        "execute_query": """
+        SELECT
+            ID_TIPO_FORMA_DOC,
+            DESC_TIPO_FORMA_DOC,
+            NUMERACAO_UNICA
+        FROM SIGA.EX_TIPO_FORMA_DOCUMENTO
+""",
+    },
 }
 
 processorio_infra_clocks = generate_dump_db_schedules(
