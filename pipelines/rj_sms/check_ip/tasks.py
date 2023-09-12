@@ -13,7 +13,6 @@ def get_public_ip():
         if response.status_code == 200:
             data = response.json()
             log(f"IP: {data['ip']}")
-            return data["ip"]
         else:
             log(f"Failed to retrieve IP address. Status Code: {response.status_code}")
     except Exception as e:

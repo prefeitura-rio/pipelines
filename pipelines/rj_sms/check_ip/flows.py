@@ -5,7 +5,6 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.rj_sms.check_ip.tasks import get_public_ip
 
-@Flow
 with Flow(
     name="SMS: Check IP - Verifica ip do cluster", code_owners=["thiago"]
 ) as check_ip:
