@@ -9,7 +9,7 @@ from pipelines.rj_sms.dump_api_vitacare.tasks import (
     conform_csv_to_gcp,
     upload_to_datalake,
     build_params,
-    get_public_ip
+    get_public_ip,
 )
 from pipelines.rj_sms.dump_api_vitacare.scheduler import every_day_at_six_am
 

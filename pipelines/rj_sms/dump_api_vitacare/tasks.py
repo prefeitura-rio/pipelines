@@ -9,6 +9,7 @@ from loguru import logger
 import requests
 from pipelines.utils.utils import log
 
+
 @task
 def build_params():
     params = {"date": str(date.today())}
