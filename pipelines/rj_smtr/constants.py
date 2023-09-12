@@ -165,8 +165,16 @@ class constants(Enum):  # pylint: disable=c0103
 
     # BILHETAGEM
     BILHETAGEM_DATASET_ID = "br_rj_riodejaneiro_bilhetagem"
-    BILHETAGEM_TRANSACAO_TABLE_ID = "transacao"
-    BILHETAGEM_PRINCIPAL_TRANSACAO_TABLES_PARAMS = {
+    BILHETAGEM_TRANSACAO_TABLE_PARAMS = {
+        "transacao": {
+            "database": "transacao_db",
+            "table_name": "transacao",
+            "table_column": "data_processamento",
+            "method": "between",
+            "primary_key": ["id"],
+        },
+    }
+    BILHETAGEM_TABLES_PARAMS = {
         "linha": {
             "database": "principal_db",
             "table_name": "LINHA",
