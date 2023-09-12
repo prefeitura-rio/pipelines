@@ -414,7 +414,7 @@ def get_raw(  # pylint: disable=R0912
         if headers is not None:
             headers = get_vault_secret(headers)["data"]
 
-            # remove host from headers, if present
+            # remove host and databases from headers, if present
             remove_headers = ["host", "databases"]
             for remove_header in remove_headers:
                 if remove_header in list(headers.keys()):
@@ -825,7 +825,7 @@ def get_previous_date(days):
 def pre_treatment_nested_data(
     status: dict, timestamp: datetime, primary_key: list = None
 ):
-    """Pre-treatment for nested data.
+    """Pre-treatment to nest data.
 
     Args:
         status (dict): Must contain keys
@@ -836,7 +836,7 @@ def pre_treatment_nested_data(
 
     Returns:
         dict: Conatining keys
-            * `data` (json): data result
+            * `data` (json): nested data
             * `error` (str): catched error, if any. Otherwise, returns None
     """
 
