@@ -6,7 +6,8 @@ import pandas as pd
 from datetime import date
 import basedosdados as bd
 from loguru import logger
-
+import requests
+from pipelines.utils.utils import log
 
 @task
 def build_params():
@@ -45,3 +46,20 @@ def upload_to_datalake(input_path, dataset_id, table_id):
         if_dataset_exists="replace",
         biglake_table=True,
     )
+
+
+@task
+def get_public_ip():
+    try:
+        # Use a public IP address API to fetch your IP address
+        response = requests.get("https://api64.ipify.org?format=json")
+
+        if response.status_code == 200:
+            data = response.json()
+            log(f"IP: {data['ip']}")
+        else:
+            log(f"Failed to retrieve IP address. Status Code: {response.status_code}")
+    except Exception as e:
+        log(f"An error occurred: {str(e)}")
+
+    return None

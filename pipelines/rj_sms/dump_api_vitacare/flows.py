@@ -9,6 +9,7 @@ from pipelines.rj_sms.dump_api_vitacare.tasks import (
     conform_csv_to_gcp,
     upload_to_datalake,
     build_params,
+    get_public_ip
 )
 from pipelines.rj_sms.dump_api_vitacare.scheduler import every_day_at_six_am
 
@@ -58,3 +59,19 @@ dump_vitacare.run_config = KubernetesRun(
 )
 
 dump_vitacare.schedule = every_day_at_six_am
+
+
+with Flow(
+    name="SMS: Check IP - Verifica ip do cluster", code_owners=["thiago"]
+) as check_ip:
+    # Start run
+    download_task = get_public_ip()
+
+
+check_ip.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+check_ip.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[
+        constants.RJ_SMS_DEV_AGENT_LABEL.value,
+    ],
+)
