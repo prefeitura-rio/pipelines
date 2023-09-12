@@ -414,7 +414,7 @@ def get_raw(  # pylint: disable=R0912
         if headers is not None:
             headers = get_vault_secret(headers)["data"]
 
-            # remove host and databases from headers, if present
+            # remove from headers, if present
             remove_headers = ["host", "databases"]
             for remove_header in remove_headers:
                 if remove_header in list(headers.keys()):
