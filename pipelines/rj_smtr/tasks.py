@@ -507,6 +507,10 @@ def bq_upload(
     if status["error"] is not None:
         return status["error"]
 
+    if len(status["data"]) == 0:
+        log("Empty dataframe, skipping upload")
+        return None
+
     error = None
     try:
         # Upload raw to staging
@@ -825,7 +829,7 @@ def get_previous_date(days):
 
 
 @task
-def pre_treatment_nest_data(
+def pre_treatment_nested_data(
     status: dict, timestamp: datetime, primary_key: list = None
 ):
     """Pre-treatment for nested data.
@@ -847,6 +851,11 @@ def pre_treatment_nest_data(
 
     # Check previous error
     if status["error"] is not None:
+        return {"data": pd.DataFrame(), "error": status["error"]}
+
+    # Check empty dataframe
+    if len(status["data"]) == 0:
+        log("Empty dataframe, skipping pre-treatment")
         return {"data": pd.DataFrame(), "error": status["error"]}
 
     try:

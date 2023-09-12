@@ -34,7 +34,7 @@ from pipelines.rj_smtr.tasks import (
     save_treated_local,
     upload_logs_to_bq,
     bq_upload,
-    pre_treatment_nest_data,
+    pre_treatment_nested_data,
     get_project_name,
 )
 
@@ -42,7 +42,6 @@ from pipelines.rj_smtr.schedules import every_minute, every_day
 
 from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.tasks import (
     get_bilhetagem_params,
-    get_bilhetagem_url,
     get_datetime_range,
     generate_bilhetagem_flow_params,
 )
@@ -73,61 +72,51 @@ with Flow(
     )
 
     # EXTRACT #
-    base_params, params, url = get_bilhetagem_url(datetime_range)
+    base_params, params, url = get_bilhetagem_params(datetime_range)
 
-    count_rows = get_raw(
+    partitions = create_date_hour_partition(timestamp)
+
+    filename = parse_timestamp_to_string(timestamp)
+
+    filepath = create_local_partition_path(
+        dataset_id=DATASET_ID,
+        table_id=TABLE_ID,
+        filename=filename,
+        partitions=partitions,
+    )
+
+    raw_status = get_raw(
         url=url,
         headers=constants.BILHETAGEM_SECRET_PATH.value,
         base_params=base_params,
         params=params,
     )
 
-    flag_get_data, params = get_bilhetagem_params(count_rows, datetime_range)
+    raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
 
-    with case(flag_get_data, True):
-        partitions = create_date_hour_partition(timestamp)
+    # TREAT & CLEAN #
+    treated_status = pre_treatment_nested_data(
+        status=raw_status, timestamp=timestamp, primary_key=["id"]
+    )
 
-        filename = parse_timestamp_to_string(timestamp)
+    treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
 
-        filepath = create_local_partition_path(
-            dataset_id=DATASET_ID,
-            table_id=TABLE_ID,
-            filename=filename,
-            partitions=partitions,
-        )
+    # LOAD #
+    error = bq_upload(
+        dataset_id=DATASET_ID,
+        table_id=TABLE_ID,
+        filepath=treated_filepath,
+        raw_filepath=raw_filepath,
+        partitions=partitions,
+        status=treated_status,
+    )
 
-        raw_status = get_raw.map(
-            url=unmapped(url),
-            headers=unmapped(constants.BILHETAGEM_SECRET_PATH.value),
-            base_params=unmapped(base_params),
-            params=params,
-        )
-
-        raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
-
-        # TREAT & CLEAN #
-        treated_status = pre_treatment_nest_data(
-            status=raw_status, timestamp=timestamp, primary_key=["id"]
-        )
-
-        treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
-
-        # LOAD #
-        error = bq_upload(
-            dataset_id=DATASET_ID,
-            table_id=TABLE_ID,
-            filepath=treated_filepath,
-            raw_filepath=raw_filepath,
-            partitions=partitions,
-            status=treated_status,
-        )
-
-        upload_logs_to_bq(
-            dataset_id=DATASET_ID,
-            parent_table_id=TABLE_ID,
-            error=error,
-            timestamp=timestamp,
-        )
+    upload_logs_to_bq(
+        dataset_id=DATASET_ID,
+        parent_table_id=TABLE_ID,
+        error=error,
+        timestamp=timestamp,
+    )
 
 bilhetagem_transacao_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 bilhetagem_transacao_captura.run_config = KubernetesRun(
@@ -156,7 +145,7 @@ with Flow(
         now_time=timestamp,
     )
 
-    base_params, params, url = get_bilhetagem_url(
+    base_params, params, url = get_bilhetagem_params(
         datetime_range=datetime_range,
         database=tables_params["database"],
         table_name=tables_params["table_name"],
@@ -164,67 +153,51 @@ with Flow(
         method=tables_params["method"],
     )
 
-    count_rows = get_raw(
+    partitions = create_date_partition(timestamp)
+
+    filename = parse_timestamp_to_string(timestamp)
+
+    filepath = create_local_partition_path(
+        dataset_id=DATASET_ID,
+        table_id=tables_params["table_id"],
+        filename=filename,
+        partitions=partitions,
+    )
+
+    raw_status = get_raw(
         url=url,
         headers=constants.BILHETAGEM_SECRET_PATH.value,
         base_params=base_params,
         params=params,
     )
 
-    flag_get_data, params = get_bilhetagem_params(
-        count_rows=count_rows,
-        datetime_range=datetime_range,
-        table_name=tables_params["table_name"],
-        table_column=tables_params["table_column"],
-        method=tables_params["method"],
+    raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
+
+    # TREAT & CLEAN #
+    treated_status = pre_treatment_nested_data(
+        status=raw_status,
+        timestamp=timestamp,
+        primary_key=tables_params["primary_key"],
     )
 
-    with case(flag_get_data, True):
-        partitions = create_date_partition(timestamp)
+    treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
 
-        filename = parse_timestamp_to_string(timestamp)
+    # LOAD #
+    error = bq_upload(
+        dataset_id=DATASET_ID,
+        table_id=tables_params["table_id"],
+        filepath=treated_filepath,
+        raw_filepath=raw_filepath,
+        partitions=partitions,
+        status=treated_status,
+    )
 
-        filepath = create_local_partition_path(
-            dataset_id=DATASET_ID,
-            table_id=tables_params["table_id"],
-            filename=filename,
-            partitions=partitions,
-        )
-
-        raw_status = get_raw.map(
-            url=unmapped(url),
-            headers=unmapped(constants.BILHETAGEM_SECRET_PATH.value),
-            base_params=unmapped(base_params),
-            params=params,
-        )
-
-        raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
-
-        # TREAT & CLEAN #
-        treated_status = pre_treatment_nest_data(
-            status=raw_status,
-            timestamp=timestamp,
-            primary_key=tables_params["primary_key"],
-        )
-
-        treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
-
-        # LOAD #
-        error = bq_upload(
-            dataset_id=DATASET_ID,
-            table_id=tables_params["table_id"],
-            filepath=treated_filepath,
-            raw_filepath=raw_filepath,
-            partitions=partitions,
-            status=treated_status,
-        )
-
-        upload_logs_to_bq(
-            dataset_id=DATASET_ID,
-            parent_table_id=tables_params["table_id"],
-            error=error,
-            timestamp=timestamp,
-        )
+    upload_logs_to_bq(
+        dataset_id=DATASET_ID,
+        parent_table_id=tables_params["table_id"],
+        error=error,
+        timestamp=timestamp,
+    )
 
 bilhetagem_principal_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 bilhetagem_principal_captura.run_config = KubernetesRun(
@@ -245,7 +218,10 @@ with Flow(
     PROJECT_NAME = get_project_name(MODE)
 
     DATASET_ID = constants.BILHETAGEM_DATASET_ID.value
-    tables_params = constants.BILHETAGEM_PRINCIPAL_TRANSACAO_TABLES_PARAMS.value
+    tables_params = Parameter(
+        "tables_params",
+        default=constants.BILHETAGEM_PRINCIPAL_TRANSACAO_TABLES_PARAMS.value,
+    )
 
     timestamp = get_current_timestamp()
 

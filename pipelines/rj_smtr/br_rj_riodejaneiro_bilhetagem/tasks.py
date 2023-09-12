@@ -41,7 +41,7 @@ def get_datetime_range(
 
 
 @task(checkpoint=False, nout=3)
-def get_bilhetagem_url(
+def get_bilhetagem_params(
     datetime_range: dict,
     database: str = "transacao_db",
     table_name: str = "transacao",
@@ -49,18 +49,17 @@ def get_bilhetagem_url(
     method: str = "between",
 ) -> tuple:
     """
-    Task to get bilhetagem url
+    Task to get bilhetagem params
 
     Args:
-        datetime_range (dict): datetime range to get bilhetagem url
-        database (str): database to get bilhetagem url (optional)
-        engine (str): engine to get bilhetagem url (optional)
-        table_name (str): table name to get bilhetagem url (optional)
-        table_column (str): table column to get bilhetagem url (optional)
-        method (str): method to get bilhetagem url (optional)
+        datetime_range (dict): datetime range to get bilhetagem params
+        database (str): database to get bilhetagem params (optional)
+        table_name (str): table name to get bilhetagem params (optional)
+        table_column (str): table column to get bilhetagem params (optional)
+        method (str): method to get bilhetagem params (optional)
 
     Returns:
-        tuple: bilhetagem url and params
+        tuple: bilhetagem params
     """
 
     secrets = get_vault_secret(constants.BILHETAGEM_SECRET_PATH.value)["data"]
@@ -75,79 +74,25 @@ def get_bilhetagem_url(
     }
 
     if method == "between":
-        time_cond = f"""WHERE {table_column} BETWEEN '{datetime_range["start"]}'
-                        AND '{datetime_range["end"]}'"""
+        time_cond = f"""WHERE
+                            {table_column} BETWEEN '{datetime_range["start"]}'
+                            AND '{datetime_range["end"]}'"""
     else:
-        time_cond = f"""WHERE {table_column} {method} '{datetime_range["start"]}'"""
+        time_cond = f"""WHERE
+                            {table_column} {method} '{datetime_range["start"]}'"""
 
     params = {
-        "query": f"""   SELECT COUNT(*)
-                        FROM {table_name}
-                        {time_cond}"""
+        "query": f"""   SELECT
+                            *
+                        FROM
+                            {table_name}
+                        {time_cond}
+                        ORDER BY
+                            {table_column}"""
     }
-
     log(f"params: {params}")
     log(f"url: {url}")
-
     return base_params, params, url
-
-
-@task(checkpoint=False, nout=2)
-def get_bilhetagem_params(
-    count_rows: dict,
-    datetime_range: dict,
-    table_name: str = "transacao",
-    table_column: str = "data_processamento",
-    method: str = "between",
-    limit: int = 1000,
-) -> tuple:
-    """
-    Task to get bilhetagem params
-
-    Args:
-        count_rows (dict): count rows from bilhetagem
-        timestamp (datetime): timestamp to get bilhetagem params
-        table_name (str): table name to get bilhetagem params (optional)
-        table_column (str): table column to get bilhetagem params (optional)
-        method (str): method to get bilhetagem params (optional)
-        limit (int): limit to get bilhetagem params (optional)
-
-    Returns:
-        flag_get_data (bool): flag to get bilhetagem params
-        list: bilhetagem params
-    """
-
-    count_rows = pd.DataFrame(count_rows["data"]).iloc[0, 0]
-
-    if count_rows == 0:
-        log("No data to get")
-        return False, []
-
-    query_params = []
-
-    if method == "between":
-        time_cond = f"""WHERE {table_column} BETWEEN '{datetime_range["start"]}'
-                        AND '{datetime_range["end"]}'"""
-    else:
-        time_cond = f"""WHERE {table_column} {method} '{datetime_range["start"]}'"""
-
-    log(f"time_cond: {time_cond}")
-    for offset in range(0, count_rows, limit):
-        query_params.append(
-            {
-                "query": f"""   SELECT *
-                                FROM {table_name}
-                                {time_cond}
-                                ORDER BY {table_column}
-                                LIMIT {limit}
-                                OFFSET {offset}"""
-            }
-        )
-
-    log(f"{str(count_rows)} rows to get")
-    log(query_params)
-
-    return True, query_params
 
 
 @task(checkpoint=False)
