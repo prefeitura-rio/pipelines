@@ -9,7 +9,6 @@ from pipelines.rj_sms.check_ip.tasks import get_public_ip
 with Flow(
     name="SMS: Check IP - Verifica ip do cluster", code_owners=["thiago"]
 ) as check_ip:
-
     # Start run
     download_task = get_public_ip()
 
