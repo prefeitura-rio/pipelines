@@ -637,13 +637,13 @@ tzdata = ["tzdata"]
 
 [[package]]
 name = "basedosdados"
-version = "2.0.0b13"
+version = "2.0.0b14"
 description = "Organizar e facilitar o acesso a dados brasileiros através de tabelas públicas no BigQuery."
 optional = false
 python-versions = ">=3.8.1,<4"
 files = [
-    {file = "basedosdados-2.0.0b13-py3-none-any.whl", hash = "sha256:0cd014af88f5613743583b5b9e8fff2550714e59660da2c95171942299df2f4a"},
-    {file = "basedosdados-2.0.0b13.tar.gz", hash = "sha256:d32ca661b42e8c59f610daf269146e51d7e61eed1a0f9f849a6e32d56f5bf08d"},
+    {file = "basedosdados-2.0.0b14-py3-none-any.whl", hash = "sha256:4cde3d771bdc0cd25d1fb25a38852bdbba269df62589b417c5e3d76d052e44ff"},
+    {file = "basedosdados-2.0.0b14.tar.gz", hash = "sha256:77b05776961e930003eb6e367e38b258aab83449c7eaa9d1a441531200a1fe8b"},
 ]
 
 [package.dependencies]
@@ -652,16 +652,17 @@ google-cloud-bigquery = ">=3.10,<4.0"
 google-cloud-bigquery-connection = ">=1.12,<2.0"
 google-cloud-bigquery-storage = ">=2.19,<3.0"
 google-cloud-storage = ">=2.9,<3.0"
-gql = {version = ">=3.4,<4.0", optional = true, markers = "extra == \"upload\""}
+gql = {version = ">=3.4,<4.0", optional = true, markers = "extra == \"all\" or extra == \"upload\""}
 loguru = "0.7.0"
 pandas = ">=2.0,<3.0"
 pandas-gbq = ">=0.19,<0.20"
 pydata-google-auth = ">=1.8,<2.0"
-requests-toolbelt = {version = ">=1,<2", optional = true, markers = "extra == \"upload\""}
+requests-toolbelt = {version = ">=1,<2", optional = true, markers = "extra == \"all\" or extra == \"upload\""}
 tomlkit = ">=0.11,<0.12"
 tqdm = ">=4,<5"
 
 [package.extras]
+all = ["click (>=8.1,<9)", "gql (>=3.4,<4.0)", "pandavro (>=1.7,<2.0)", "requests-toolbelt (>=1,<2)"]
 avro = ["pandavro (>=1.7,<2.0)"]
 cli = ["click (>=8.1,<9)"]
 upload = ["gql (>=3.4,<4.0)", "requests-toolbelt (>=1,<2)"]
@@ -5327,20 +5328,20 @@ six = "*"
 
 [[package]]
 name = "rasterio"
-version = "1.2.10"
+version = "1.3a3"
 description = "Fast and direct raster I/O for use with Numpy and SciPy"
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "rasterio-1.2.10-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:f86efb0e4989201f244d6818575d442b716ce81af6cd969c3caead76b9690837"},
-    {file = "rasterio-1.2.10-cp36-cp36m-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:831b6dbefb409c3ece23fa219d8446a7534e30c69a075fd366e72742b1f94c58"},
-    {file = "rasterio-1.2.10-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:42a1a6364313c384fcd631d850792621301e930449b47f72ced048c415c9c84e"},
-    {file = "rasterio-1.2.10-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:1572003273225162933d4c88729076ac39050e7becd9de7d31988d1dd40942c1"},
-    {file = "rasterio-1.2.10-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:8f9867a3b6663396260fc5bdfbea372cac9202074b709478db741767f40dfffc"},
-    {file = "rasterio-1.2.10-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:ba95aa3221814e364ef49cf8dd8ca4a73e2ea702bd9228a3a845e197091792ae"},
-    {file = "rasterio-1.2.10-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:2394ce0ae1e7b49b456ddc6bbf00ce6840656e926046c1a5a54cd0f66ea67dc4"},
-    {file = "rasterio-1.2.10-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:c73248b4ba0564798bf64df869834821a7b823a4c9ceda3de9b772d69c3f5405"},
-    {file = "rasterio-1.2.10.tar.gz", hash = "sha256:6062456047ba6494fe18bd0da98a383b6fad5306b16cd52a22e76c59172a2b5f"},
+    {file = "rasterio-1.3a3-cp310-cp310-macosx_10_10_x86_64.whl", hash = "sha256:9d6fe343f6a74b6d8b5190f55f393a2bb9fa8c31b7fab006b13e6ece871fe7ec"},
+    {file = "rasterio-1.3a3-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5362a09299d2137b2cd9ff05dc6e93e63c5560277a3feca52e78d42435837220"},
+    {file = "rasterio-1.3a3-cp37-cp37m-macosx_10_10_x86_64.whl", hash = "sha256:1092f94d603fd06ae82103b5874a2e3f5e0e07037ee66db4da4cfa64a979939a"},
+    {file = "rasterio-1.3a3-cp37-cp37m-manylinux2014_x86_64.whl", hash = "sha256:3f3c4ad13a80c809bf4c561b6f1b897416de1f7c9fbd39c9424d653469101486"},
+    {file = "rasterio-1.3a3-cp38-cp38-macosx_10_10_x86_64.whl", hash = "sha256:5f19a6b5796fa58b9c2c089f52c4c8590019d54230e2735167cb41ab7e9915de"},
+    {file = "rasterio-1.3a3-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2dde141a0c2b5b32d3467c4560c27e476c4d666bdf2f983b0bc35a834ededbb0"},
+    {file = "rasterio-1.3a3-cp39-cp39-macosx_10_10_x86_64.whl", hash = "sha256:e909f06feed33974846aa24f3f897ece59bbb1373e5324302056ee60f6d0afcd"},
+    {file = "rasterio-1.3a3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e78f1c663e76f3fc27d82a5470785aeb3392999e3313c9b311669e98046925b7"},
+    {file = "rasterio-1.3a3.tar.gz", hash = "sha256:79f0b5386a71c07086ea9a123538e3fd050a22791525563835b2284462e0d3ed"},
 ]
 
 [package.dependencies]
@@ -7097,4 +7098,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8.1,<3.11"
-content-hash = "c9aec49da3bc83907543ff1458f44ea98bcaa08960fdae7f428c8c5ec32bfe04"
+content-hash = "eebf94a4420ed4d1c6bfc94cc848d1a4c16184fca379fbe5b40a50399b58117d"
