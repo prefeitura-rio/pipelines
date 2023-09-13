@@ -6,6 +6,7 @@ General purpose tasks for dumping database data.
 from datetime import datetime, timedelta
 from queue import Empty, Queue
 from pathlib import Path
+import re
 from threading import Event, Thread
 from time import sleep, time
 from typing import Dict, List, Union
@@ -37,6 +38,7 @@ from pipelines.utils.utils import (
     clean_dataframe,
     to_partitions,
     parser_blobs_to_partition_dict,
+    remove_tabs_from_query,
     get_storage_blobs,
     remove_columns_accents,
 )
@@ -113,7 +115,9 @@ def database_execute(
         query: The query to execute.
     """
     start_time = time()
-    log(f"Executing query: {query}")
+    log(f"Query parsed: {query}")
+    query = remove_tabs_from_query(query)
+    log(f"Executing query line: {query}")
     database.execute_query(query)
     time_elapsed = time() - start_time
     doc = format_document(
