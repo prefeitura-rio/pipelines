@@ -6,9 +6,31 @@ import requests
 import pandas as pd
 from datetime import date
 from azure.storage.blob import BlobServiceClient
-from loguru import logger
+import re
+import shutil
+from datetime import datetime
+from pathlib import Path
 
 
+@task
+def create_folders():
+    try:
+
+        if os.path.exists(os.path.expanduser("~") + "/data"):
+            shutil.rmtree(os.path.expanduser("~") + "/data", ignore_errors=True)
+        else:
+            os.makedirs(os.path.expanduser("~") + "/data")
+
+        if os.path.exists(os.path.expanduser("~") + "/partition_directory"):
+            shutil.rmtree(os.path.expanduser("~") + "/partition_directory", ignore_errors=True)
+        else:
+            os.makedirs(os.path.expanduser("~") + "/partition_directory")
+        
+        log("Folders created", level="success")
+
+    except:
+        log("Folders could not be created", level="error")
+  
 @task
 def download_api(
     url: str,
@@ -19,20 +41,20 @@ def download_api(
     add_load_date_to_filename=False,
 ):
     auth_token = ""
-    if not vault_key is None:
+    if vault_key is not None: 
         try:
             auth_token = get_vault_secret(secret_path=vault_path)["data"][vault_key]
-            logger.success("Vault secret retrieved")
+            log("Vault secret retrieved", level="success")
         except:
-            logger.error("Not able to retrieve Vault secret")
+            log("Not able to retrieve Vault secret", level="error")
 
-    logger.info("Downloading data from API")
+    log("Downloading data from API", level="info")
     headers = {} if auth_token == "" else {"Authorization": f"Bearer {auth_token}"}
     params = {} if params is None else params
     try:
         response = requests.get(url, headers=headers, params=params)
     except:
-        logger.error(f"An error occurred: {Exception}")
+        log(f"An error occurred: {Exception}", level="error")
 
     if response.status_code == 200:
         # The response contains the data from the API
@@ -40,24 +62,19 @@ def download_api(
 
         # Save the API data to a local file
         if add_load_date_to_filename:
-            destination_file_path = f"{os.path.expanduser('~')}/{destination_file_name}_{str(date.today())}.json"
+            destination_file_path = f"{os.path.expanduser('~')}/data/{destination_file_name}_{str(date.today())}.json"
         else:
-            destination_file_path = (
-                f"{os.path.expanduser('~')}/{destination_file_name}.json"
-            )
-
-        # df = pd.DataFrame(response.json(), dtype="str")
-        # df["_data_carga"] = date.today()
-        # df.to_csv(destination_file_path, index=False, sep=";", encoding="utf-8")
+            destination_file_path = f"{os.path.expanduser('~')}/data/{destination_file_name}.json"
+            
 
         # Save the API data to a local file
         with open(destination_file_path, "w") as file:
             file.write(str(api_data))
 
-        logger.success(f"API data downloaded to {destination_file_path}")
+        log(f"API data downloaded to {destination_file_path}", level="success")
 
     else:
-        logger.error(f"Error: {response.status_code} - {response.reason}")
+        log(f"Error: {response.status_code} - {response.reason}", level="error")
 
     return destination_file_path
 
@@ -149,26 +166,36 @@ def from_json_to_csv(input_path, sep=";"):
 
 
 @task
-def from_text_to_parquet(input_path: str, schema: str):
-    if ".json" in input_path:
-        try:
-            with open(input_path, "r") as file:
-                json_data = file.read()
-                data = eval(json_data)  # Convert JSON string to Python dictionary
+def create_partitions(data_path: str | Path, partition_directory: str | Path):
+    
+    # Check if partition directory exists, if not create it
+    if not os.path.exists(partition_directory):
+        os.makedirs(partition_directory)
 
-                # Assuming the JSON structure is a list of dictionaries
-                try:
-                    df = pd.DataFrame(data, dtype=schema)
-                    log("Dados carregados com schema")
-                except:
-                    df = pd.DataFrame(data)
-                    log("Dados carregados sem schema")
+    # Clean partition directory
+    shutil.rmtree(partition_directory, ignore_errors=True)
+    
+    # Load data
+    files = data_path.glob("*.csv")
 
-            # TODO: adicionar coluna com a data da carga (_data_carga)
+    # Create partition directory
+    for file_name in files:
+        date_str = re.search(r"\d{4}-\d{2}-\d{2}", str(file_name)).group()
+        parsed_date = datetime.strptime(date_str, "%Y-%m-%d")
+        ano_particao = parsed_date.strftime("%Y")
+        mes_particao = parsed_date.strftime("%m")
+        data_particao = parsed_date.strftime("%Y-%m-%d")
 
-            destination_path = input_path.replace(".json", ".parquet")
+        output_directory = (
+            partition_directory
+            / f"ano_particao={int(ano_particao)}"
+            / f"mes_particao={int(mes_particao)}"
+            / f"data_particao={data_particao}"
+        )
 
-        except Exception as e:
-            log("An error occurred:", e)
+        output_directory.mkdir(parents=True, exist_ok=True)
 
-    df.to_parquet(destination_path, index=False)
+        # Copy file(s) to partition directory
+        shutil.copy(file_name, output_directory)
+
+
