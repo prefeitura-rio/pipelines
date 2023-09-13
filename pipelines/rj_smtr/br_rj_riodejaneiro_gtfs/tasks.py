@@ -57,7 +57,6 @@ def get_raw_gtfs(
     log(f"Retrieved blobs: {blobs}")
 
     for blob in blobs:
-
         filename = blob.name.split("/")[-1]
 
         # Download single CSV file
@@ -173,7 +172,6 @@ def _treat_quadro(data: pd.DataFrame):
     df_trip = []
 
     for col, direction_cols in km_trip_cols.items():
-
         df_trip.append(
             data[key_columns + list(direction_cols.keys())]
             .melt(key_columns, var_name="direction_id", value_name=col)

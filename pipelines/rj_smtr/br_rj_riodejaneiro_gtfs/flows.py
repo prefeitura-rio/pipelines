@@ -51,7 +51,6 @@ with Flow(
     "[TESTE] SMTR - GTFS: Captura",
     code_owners=["rodrigo"],
 ) as gtfs_captura:  # "caio", "fernanda", "boris",
-
     # SETUP
     date = Parameter("date", default=None)
 
