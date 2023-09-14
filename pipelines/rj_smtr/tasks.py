@@ -796,6 +796,7 @@ def get_previous_date(days):
 
     return now.to_date_string()
 
+
 @task
 def pre_treatment_nest_data(
     status: dict, timestamp: datetime, primary_key: list = None
