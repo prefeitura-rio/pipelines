@@ -26,7 +26,6 @@ def generate_execute_bilhetagem_schedules(  # pylint: disable=too-many-arguments
         parameter_defaults = {
             "tables_params": parameters | {"table_id": table_id},
         }
-        log(f"parameter_defaults: {parameter_defaults}")
         clocks.append(
             IntervalClock(
                 interval=interval,
