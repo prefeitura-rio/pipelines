@@ -8,8 +8,6 @@ from typing import List
 
 from prefect.schedules.clocks import IntervalClock
 
-from pipelines.utils.utils import log
-
 
 def generate_execute_bilhetagem_schedules(  # pylint: disable=too-many-arguments,too-many-locals
     interval: timedelta,

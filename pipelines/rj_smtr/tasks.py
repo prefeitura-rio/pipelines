@@ -20,7 +20,6 @@ from prefect import task
 from pytz import timezone
 import requests
 
-from pipelines.constants import constants as emd_constants
 from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.utils import (
     create_or_append_table,
@@ -29,7 +28,6 @@ from pipelines.rj_smtr.utils import (
     get_last_run_timestamp,
     log_critical,
     data_info_str,
-    get_single_dict,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
