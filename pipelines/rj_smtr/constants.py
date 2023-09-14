@@ -166,6 +166,16 @@ class constants(Enum):  # pylint: disable=c0103
     # BILHETAGEM
     BILHETAGEM_DATASET_ID = "br_rj_riodejaneiro_bilhetagem"
     BILHETAGEM_TRANSACAO_TABLE_ID = "transacao"
+    BILHETAGEM_TRANSACAO_TABLE_PARAMS = {
+        "transacao": {
+            "database": "transacao_db",
+            "table_name": "transacao",
+            "table_column": "data_processamento",
+            "method": "between",
+            "primary_key": ["id"],
+            "flag_date_partition": False,
+        },
+    }
     BILHETAGEM_TABLES_PARAMS = {
         "linha": {
             "database": "principal_db",
@@ -173,6 +183,7 @@ class constants(Enum):  # pylint: disable=c0103
             "table_column": "DT_INCLUSAO",
             "method": ">=",
             "primary_key": ["CD_LINHA"],
+            "flag_date_partition": True,
         },
         "grupo": {
             "database": "principal_db",
@@ -180,6 +191,7 @@ class constants(Enum):  # pylint: disable=c0103
             "table_column": "DT_INCLUSAO",
             "method": ">=",
             "primary_key": ["CD_GRUPO"],
+            "flag_date_partition": True,
         },
         "grupo_linha": {
             "database": "principal_db",
@@ -187,6 +199,7 @@ class constants(Enum):  # pylint: disable=c0103
             "table_column": "DT_INCLUSAO",
             "method": ">=",
             "primary_key": ["CD_GRUPO", "CD_LINHA"],
+            "flag_date_partition": True,
         },
         "matriz_integracao": {
             "database": "tarifa_db",
@@ -194,6 +207,7 @@ class constants(Enum):  # pylint: disable=c0103
             "table_column": "dt_inclusao",
             "method": ">=",
             "primary_key": ["cd_versao_matriz", "cd_integracao"],
+            "flag_date_partition": True,
         },
     }
     BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
