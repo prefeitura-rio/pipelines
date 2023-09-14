@@ -96,14 +96,14 @@ def get_bilhetagem_request_params(
 
 @task(checkpoint=False)
 def generate_bilhetagem_flow_params(
-    timestamp: datetime, datetime_range: dict, tables_params: dict
+    timestamp: datetime, interval_minutes: int, tables_params: dict
 ) -> list:
     """
     Task to generate bilhetagem flow params
 
     Args:
         timestamp (datetime): timestamp to generate bilhetagem flow params
-        datetime_range (dict): datetime range to generate bilhetagem flow params
+        interval_minutes (int): interval in minutes to generate bilhetagem flow params
         tables_params (dict): tables params to generate bilhetagem flow params
 
     Returns:
@@ -118,7 +118,7 @@ def generate_bilhetagem_flow_params(
         flow_params.append(
             {
                 "timestamp": timestamp.strftime("%Y-%m-%d %H:%M:%S"),
-                "datetime_range": datetime_range,
+                "interval_minutes": interval_minutes,
                 "tables_params": tables_params[table_id] | {"table_id": table_id},
             }
         )
