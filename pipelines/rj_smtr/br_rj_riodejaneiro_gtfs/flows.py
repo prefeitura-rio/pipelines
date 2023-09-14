@@ -34,6 +34,7 @@ from pipelines.rj_smtr.tasks import (
     set_last_run_timestamp,
     upload_logs_to_bq,
     bq_upload,
+    pre_treatment_nest_data,
 )
 from pipelines.rj_smtr.br_rj_riodejaneiro_gtfs.tasks import (
     get_raw_gtfs,
@@ -77,17 +78,19 @@ with Flow(
     # Get data from GCS
     raw_status = get_raw_gtfs()
 
-    raw_filepath = save_raw_local_gtfs.map(
-        filepath=filepath, status=unmapped(raw_status)
-    )
-
-    treated_status = pre_treatment_gtfs.map(
+    pre_treated_status = pre_treatment_gtfs.map(
         status=unmapped(raw_status),
         filepath=raw_filepath,
         timestamp=unmapped(timestamp),
     )
 
-    treated_filepath = save_treated_local.map(status=treated_status, file_path=filepath)
+    treated_data = pre_treatment_nest_data.map(
+        status=unmapped(pre_treated_status),
+        timestamp=unmapped(timestamp),
+        primary_key=unmapped(["*_id"]),
+    )
+
+    treated_filepath = save_treated_local.map(status=treated_data, file_path=filepath)
 
     # LOAD #
     error = bq_upload.map(
