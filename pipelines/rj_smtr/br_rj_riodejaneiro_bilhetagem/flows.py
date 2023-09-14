@@ -5,9 +5,7 @@ Flows for br_rj_riodejaneiro_bilhetagem
 
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
-from prefect.utilities.edges import unmapped
 from prefect import case, Parameter
-from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect.tasks.control_flow import merge
 
 from copy import deepcopy
@@ -19,8 +17,6 @@ from pipelines.utils.utils import set_default_parameters
 from pipelines.utils.decorators import Flow
 from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
-    get_current_flow_labels,
-    get_current_flow_mode,
 )
 
 # SMTR Imports #
@@ -39,7 +35,6 @@ from pipelines.rj_smtr.tasks import (
     upload_logs_to_bq,
     bq_upload,
     transform_to_nested_structure,
-    get_project_name,
 )
 
 from pipelines.rj_smtr.schedules import every_minute, every_day, every_minute_dev
@@ -47,7 +42,6 @@ from pipelines.rj_smtr.schedules import every_minute, every_day, every_minute_de
 from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.tasks import (
     get_bilhetagem_request_params,
     get_datetime_range,
-    generate_bilhetagem_flow_params,
 )
 
 from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.schedules import (
