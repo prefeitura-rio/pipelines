@@ -822,10 +822,10 @@ def get_previous_date(days):
 
 
 @task
-def pre_treatment_nested_data(
+def transform_to_nested_structure(
     status: dict, timestamp: datetime, primary_key: list = None
 ):
-    """Pre-treatment to nest data.
+    """Transform dataframe to nested structure
 
     Args:
         status (dict): Must contain keys
@@ -848,7 +848,7 @@ def pre_treatment_nested_data(
 
     # Check empty dataframe
     if len(status["data"]) == 0:
-        log("Empty dataframe, skipping pre-treatment")
+        log("Empty dataframe, skipping transformation")
         return {"data": pd.DataFrame(), "error": status["error"]}
 
     try:
@@ -871,9 +871,7 @@ def pre_treatment_nested_data(
         for col in data.columns[data.dtypes == "object"].to_list():
             data[col] = data[col].str.strip()
 
-        log(
-            f"Finished cleaning! Pre-treated data:\n{data_info_str(data)}", level="info"
-        )
+        log(f"Finished cleaning! Data:\n{data_info_str(data)}", level="info")
 
         log("Creating nested structure...", level="info")
         pk_cols = primary_key + ["timestamp_captura"]
@@ -887,7 +885,7 @@ def pre_treatment_nested_data(
         )
 
         log(
-            f"Finished nested structure! Pre-treated data:\n{data_info_str(data)}",
+            f"Finished nested structure! Data:\n{data_info_str(data)}",
             level="info",
         )
 
