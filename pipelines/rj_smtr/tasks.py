@@ -243,7 +243,6 @@ def save_raw_local(file_path: str, status: dict, mode: str = "raw") -> str:
     Returns:
         str: Path to the saved file
     """
-    status = get_single_dict(status)
     _file_path = file_path.format(mode=mode, filetype="json")
     Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
     if status["error"] is None:
@@ -840,8 +839,6 @@ def transform_to_nested_structure(
             * `error` (str): catched error, if any. Otherwise, returns None
     """
 
-    status = get_single_dict(status)
-
     # Check previous error
     if status["error"] is not None:
         return {"data": pd.DataFrame(), "error": status["error"]}
@@ -896,19 +893,3 @@ def transform_to_nested_structure(
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return {"data": data, "error": error}
-
-
-@task(checkpoint=False)
-def get_project_name(mode: str):
-    """
-    Get project name based on mode
-    Args:
-        mode (str): mode
-    Returns:
-        str: project name
-    """
-
-    if mode == "prod":
-        return emd_constants.PREFECT_DEFAULT_PROJECT.value
-    else:
-        return "staging"
