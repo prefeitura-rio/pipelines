@@ -8,6 +8,7 @@ from prefect.storage import GCS
 from prefect.utilities.edges import unmapped
 from prefect import case, Parameter
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
+from prefect.tasks.control_flow import merge
 
 from copy import deepcopy
 
@@ -37,7 +38,7 @@ from pipelines.rj_smtr.tasks import (
     save_treated_local,
     upload_logs_to_bq,
     bq_upload,
-    pre_treatment_nested_data,
+    transform_to_nested_structure,
     get_project_name,
 )
 
@@ -47,6 +48,10 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.tasks import (
     get_bilhetagem_request_params,
     get_datetime_range,
     generate_bilhetagem_flow_params,
+)
+
+from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.schedules import (
+    bilhetagem_daily_schedule,
 )
 
 # Flows #
@@ -96,7 +101,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.tasks import (
 #     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
 
 #     # TREAT & CLEAN #
-#     treated_status = pre_treatment_nested_data(
+#     treated_status = transform_to_nested_structure(
 #         status=raw_status, timestamp=timestamp, primary_key=["id"]
 #     )
 
@@ -134,15 +139,23 @@ with Flow(
 ) as bilhetagem_auxiliar_captura:
     # SETUP #
 
-    tables_params = Parameter("tables_params")
-    datetime_range = Parameter("datetime_range")
-    timestamp_param = Parameter("timestamp")
+    tables_params = Parameter("tables_params", default=None)
+    timestamp_param = Parameter("timestamp", default=None)
+    interval_minutes_param = Parameter("interval_minutes", default=1440)
 
     timestamp = get_current_timestamp(timestamp_param)
+
+    datetime_range = get_datetime_range(
+        timestamp, interval_minutes=interval_minutes_param
+    )
+
     DATASET_ID = constants.BILHETAGEM_DATASET_ID.value
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=BILHETAGEM_AUXILIAR_FLOW_NAME + " " + tables_params["table_id"] + ": ",
+        prefix=bilhetagem_auxiliar_captura.name
+        + " "
+        + tables_params["table_id"]
+        + ": ",
         now_time=timestamp,
     )
 
@@ -155,10 +168,12 @@ with Flow(
     )
 
     with case(tables_params["flag_date_partition"], True):
-        partitions = create_date_partition(timestamp)
+        date_partitions = create_date_partition(timestamp)
 
     with case(tables_params["flag_date_partition"], False):
-        partitions = create_date_hour_partition(timestamp)
+        date_hour_partitions = create_date_hour_partition(timestamp)
+
+    partitions = merge(date_partitions, date_hour_partitions)
 
     filename = parse_timestamp_to_string(timestamp)
 
@@ -178,7 +193,7 @@ with Flow(
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
 
     # TREAT & CLEAN #
-    treated_status = pre_treatment_nested_data(
+    treated_status = transform_to_nested_structure(
         status=raw_status,
         timestamp=timestamp,
         primary_key=tables_params["primary_key"],
@@ -209,65 +224,61 @@ bilhetagem_auxiliar_captura.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 
-BILHETAGEM_PRINCIPAL_FLOW_NAME = "SMTR: Bilhetagem Principal (captura)"
+# BILHETAGEM_PRINCIPAL_FLOW_NAME = "SMTR: Bilhetagem Principal (captura)"
 
-with Flow(
-    BILHETAGEM_PRINCIPAL_FLOW_NAME,
-    code_owners=["caio", "fernanda", "boris", "rodrigo"],
-) as bilhetagem_principal_captura:
-    # SETUP #
+# with Flow(
+#     BILHETAGEM_PRINCIPAL_FLOW_NAME,
+#     code_owners=["caio", "fernanda", "boris", "rodrigo"],
+# ) as bilhetagem_principal_captura:
+#     # SETUP #
 
-    LABELS = get_current_flow_labels()
-    MODE = get_current_flow_mode(LABELS)
-    PROJECT_NAME = get_project_name(MODE)
+#     LABELS = get_current_flow_labels()
+#     MODE = get_current_flow_mode(LABELS)
+#     PROJECT_NAME = get_project_name(MODE)
 
-    DATASET_ID = constants.BILHETAGEM_DATASET_ID.value
-    tables_params = Parameter(
-        "tables_params",
-        default=constants.BILHETAGEM_TABLES_PARAMS.value,
-    )
-    timestamp_param = Parameter("timestamp", default=None)
-    interval_minutes_param = Parameter("interval_minutes", default=1440)
+#     DATASET_ID = constants.BILHETAGEM_DATASET_ID.value
+#     tables_params = Parameter(
+#         "tables_params",
+#         default=constants.BILHETAGEM_TABLES_PARAMS.value,
+#     )
+#     timestamp_param = Parameter("timestamp", default=None)
+#     interval_minutes_param = Parameter("interval_minutes", default=1440)
 
-    timestamp = get_current_timestamp(timestamp_param)
+#     timestamp = get_current_timestamp(timestamp_param)
 
-    datetime_range = get_datetime_range(
-        timestamp, interval_minutes=interval_minutes_param
-    )
+#     rename_flow_run = rename_current_flow_run_now_time(
+#         prefix=BILHETAGEM_PRINCIPAL_FLOW_NAME + ": ", now_time=timestamp
+#     )
 
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix=BILHETAGEM_PRINCIPAL_FLOW_NAME + ": ", now_time=timestamp
-    )
+#     # EXTRACT #
+#     flow_params = generate_bilhetagem_flow_params(
+#         timestamp=timestamp,
+#         interval_minutes=interval_minutes_param,
+#         tables_params=tables_params,
+#     )
 
-    # EXTRACT #
-    flow_params = generate_bilhetagem_flow_params(
-        timestamp=timestamp,
-        datetime_range=datetime_range,
-        tables_params=tables_params,
-    )
+#     BILHETAGEM_PRINCIPAL_CAPTURA_RUN = create_flow_run.map(
+#         flow_name=unmapped(BILHETAGEM_AUXILIAR_FLOW_NAME),
+#         project_name=unmapped(PROJECT_NAME),
+#         run_name=unmapped(BILHETAGEM_AUXILIAR_FLOW_NAME),
+#         parameters=flow_params,
+#     )
 
-    BILHETAGEM_PRINCIPAL_CAPTURA_RUN = create_flow_run.map(
-        flow_name=unmapped(BILHETAGEM_AUXILIAR_FLOW_NAME),
-        project_name=unmapped(PROJECT_NAME),
-        run_name=unmapped(BILHETAGEM_AUXILIAR_FLOW_NAME),
-        parameters=flow_params,
-    )
+#     wait_for_flow_run.map(
+#         BILHETAGEM_PRINCIPAL_CAPTURA_RUN,
+#         stream_states=unmapped(True),
+#         stream_logs=unmapped(True),
+#         raise_final_state=unmapped(True),
+#     )
 
-    wait_for_flow_run.map(
-        BILHETAGEM_PRINCIPAL_CAPTURA_RUN,
-        stream_states=unmapped(True),
-        stream_logs=unmapped(True),
-        raise_final_state=unmapped(True),
-    )
-
-bilhetagem_principal_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-bilhetagem_principal_captura.run_config = KubernetesRun(
-    image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
-)
+# bilhetagem_principal_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+# bilhetagem_principal_captura.run_config = KubernetesRun(
+#     image=emd_constants.DOCKER_IMAGE.value,
+#     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+# )
 # bilhetagem_principal_captura.schedule = every_day
 
-bilhetagem_transacao_captura = deepcopy(bilhetagem_principal_captura)
+bilhetagem_transacao_captura = deepcopy(bilhetagem_auxiliar_captura)
 
 bilhetagem_transacao_captura.name = "SMTR: Bilhetagem Transação (captura)"
 
@@ -289,3 +300,13 @@ bilhetagem_transacao_captura = set_default_parameters(
 )
 
 bilhetagem_transacao_captura.schedule = every_minute_dev
+
+bilhetagem_principal_captura = deepcopy(bilhetagem_auxiliar_captura)
+
+bilhetagem_principal_captura.name = "SMTR: Bilhetagem Principal (captura)"
+bilhetagem_principal_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bilhetagem_principal_captura.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+)
+bilhetagem_principal_captura.schedule = bilhetagem_daily_schedule
