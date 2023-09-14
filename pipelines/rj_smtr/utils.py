@@ -386,6 +386,7 @@ def data_info_str(data: pd.DataFrame):
     data.info(buf=buffer)
     return buffer.getvalue()
 
+
 def get_single_dict(status: list) -> dict:
     """
     Get single dict from list of dicts
