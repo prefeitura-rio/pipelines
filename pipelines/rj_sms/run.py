@@ -5,7 +5,7 @@ from pipelines.utils.utils import run_local
 run_local(dump_vitacare)
 
 
-#import basedosdados as bd
+#
 #
 #
 #

@@ -10,68 +10,78 @@ import re
 import shutil
 from datetime import datetime
 from pathlib import Path
+import basedosdados as bd
+import sys
 
 
 @task
 def create_folders():
+
     try:
+        if os.path.exists("./data/raw"):
+            shutil.rmtree("./data/raw", ignore_errors=False)
+        os.makedirs("./data/raw")
 
-        if os.path.exists(os.path.expanduser("~") + "/data"):
-            shutil.rmtree(os.path.expanduser("~") + "/data", ignore_errors=True)
-        else:
-            os.makedirs(os.path.expanduser("~") + "/data")
+        #if os.path.exists(os.path.expanduser("~") + "/data"):
+        #    shutil.rmtree(os.path.expanduser("~") + "/data", ignore_errors=False)
+        #os.makedirs(os.path.expanduser("~") + "/data")
 
-        if os.path.exists(os.path.expanduser("~") + "/partition_directory"):
-            shutil.rmtree(os.path.expanduser("~") + "/partition_directory", ignore_errors=True)
-        else:
-            os.makedirs(os.path.expanduser("~") + "/partition_directory")
-        
-        log("Folders created", level="success")
+        if os.path.exists("./data/partition_directory"):
+            shutil.rmtree("./data/partition_directory", ignore_errors=False)
+        os.makedirs("./data/partition_directory")
 
-    except:
-        log("Folders could not be created", level="error")
-  
+        #if os.path.exists(os.path.expanduser("~") + "/partition_directory"):
+        #    shutil.rmtree(os.path.expanduser("~") + "/partition_directory", ignore_errors=False)
+        #os.makedirs(os.path.expanduser("~") + "/partition_directory")
+
+        log("Folders created")
+        return {"data": "./data/raw",
+                "partition_directory": "./data/partition_directory"}
+
+    except Exception as e:
+        sys.exit(f"Failed to create folders: {e}")
+
 @task
-def download_api(
+def download_from_api(
     url: str,
-    destination_file_name: str,
+    file_folder: str,
+    file_name: str,
     params=None,
     vault_path=None,
     vault_key=None,
     add_load_date_to_filename=False,
 ):
+    # Retrieve the API key from Vault
     auth_token = ""
-    if vault_key is not None: 
+    if vault_key is not None:
         try:
             auth_token = get_vault_secret(secret_path=vault_path)["data"][vault_key]
-            log("Vault secret retrieved", level="success")
+            log("Vault secret retrieved")
         except:
             log("Not able to retrieve Vault secret", level="error")
 
-    log("Downloading data from API", level="info")
+    # Download data from API
+    log("Downloading data from API")
     headers = {} if auth_token == "" else {"Authorization": f"Bearer {auth_token}"}
     params = {} if params is None else params
     try:
         response = requests.get(url, headers=headers, params=params)
-    except:
-        log(f"An error occurred: {Exception}", level="error")
+    except Exception as e:
+        log(f"An error occurred: {e}", level="error")
 
     if response.status_code == 200:
-        # The response contains the data from the API
         api_data = response.json()
 
         # Save the API data to a local file
         if add_load_date_to_filename:
-            destination_file_path = f"{os.path.expanduser('~')}/data/{destination_file_name}_{str(date.today())}.json"
+            destination_file_path = f"./data/raw/{file_name}_{str(date.today())}.json"   
         else:
-            destination_file_path = f"{os.path.expanduser('~')}/data/{destination_file_name}.json"
+            destination_file_path = f"./data/raw/{file_name}.json"
             
-
-        # Save the API data to a local file
         with open(destination_file_path, "w") as file:
             file.write(str(api_data))
 
-        log(f"API data downloaded to {destination_file_path}", level="success")
+        log(f"API data downloaded to {destination_file_path}")
 
     else:
         log(f"Error: {response.status_code} - {response.reason}", level="error")
@@ -144,6 +154,16 @@ def set_destination_file_path(file):
         + file[file.find(".") :]
     )
 
+@task
+def add_load_date_column(input_path: str, sep =";"):
+    df = pd.read_csv(input_path, sep=sep, keep_default_na=False, dtype="str")
+
+    df["_data_carga"] = date.today()
+
+    df.to_csv(input_path, index=False, sep=sep, encoding="utf-8")
+    log(f"Column added to {input_path}")
+
+    return input_path
 
 @task
 def from_json_to_csv(input_path, sep=";"):
@@ -157,28 +177,23 @@ def from_json_to_csv(input_path, sep=";"):
             df = pd.DataFrame(data, dtype="str")
             df.to_csv(output_path, index=False, sep=sep, encoding="utf-8")
 
-            logger.success("JSON converted to CSV")
+            log("JSON converted to CSV")
             return output_path
 
     except Exception as e:
-        logger.error(f"An error occurred: {e}")
+        log(f"An error occurred: {e}", level="error")
         return None
 
 
 @task
-def create_partitions(data_path: str | Path, partition_directory: str | Path):
+def create_partitions(data_path: str , partition_directory: str):
     
-    # Check if partition directory exists, if not create it
-    if not os.path.exists(partition_directory):
-        os.makedirs(partition_directory)
-
-    # Clean partition directory
-    shutil.rmtree(partition_directory, ignore_errors=True)
-    
-    # Load data
+    data_path = Path(data_path)
+    partition_directory = partition_directory
+    ## Load data
     files = data_path.glob("*.csv")
-
-    # Create partition directory
+    #
+    ## Create partition directories for each file
     for file_name in files:
         date_str = re.search(r"\d{4}-\d{2}-\d{2}", str(file_name)).group()
         parsed_date = datetime.strptime(date_str, "%Y-%m-%d")
@@ -186,16 +201,48 @@ def create_partitions(data_path: str | Path, partition_directory: str | Path):
         mes_particao = parsed_date.strftime("%m")
         data_particao = parsed_date.strftime("%Y-%m-%d")
 
-        output_directory = (
-            partition_directory
-            / f"ano_particao={int(ano_particao)}"
-            / f"mes_particao={int(mes_particao)}"
-            / f"data_particao={data_particao}"
-        )
+        output_directory = f"{partition_directory}/ano_particao={int(ano_particao)}/mes_particao={int(mes_particao)}/data_particao={data_particao}"
 
-        output_directory.mkdir(parents=True, exist_ok=True)
+        # Create partition directory
+        os.makedirs(output_directory, exist_ok=False)
 
         # Copy file(s) to partition directory
         shutil.copy(file_name, output_directory)
+        log("Partitions created successfully")
+#
+#
+@task
+def upload_to_datalake(
+    input_path: str,
+    dataset_id: str,
+    table_id: str,
+    if_exists: str = "replace",
+    csv_delimiter: str = ";",
+    if_storage_data_exists: str = "replace",
+    biglake_table: bool = True,
+):
+    
+    tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
+    table_exists = tb.table_exists(mode="staging")
+
+    try:
+        if not table_exists:
+            log(f"CREATING TABLE: {dataset_id}.{table_id}")
+            tb.create(
+                path=input_path,
+                csv_delimiter=csv_delimiter,
+                if_storage_data_exists=if_storage_data_exists,
+                biglake_table=biglake_table,
+            )
+        else:
+            log(
+                f"TABLE ALREADY EXISTS APPENDING DATA TO STORAGE: {dataset_id}.{table_id}"
+            )
+
+            tb.append(filepath=input_path, if_exists=if_exists)
+        log("Data uploaded to BigQuery")
+    except Exception as e:
+        log(f"An error occurred: {e}", level="error")
 
 
+# remove contents of a directory
