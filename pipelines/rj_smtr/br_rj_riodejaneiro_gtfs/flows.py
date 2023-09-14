@@ -80,7 +80,7 @@ with Flow(
 
     pre_treated_status = pre_treatment_gtfs.map(
         status=unmapped(raw_status),
-        filepath=raw_filepath,
+        filepath=filepath,
         timestamp=unmapped(timestamp),
     )
 
@@ -97,9 +97,9 @@ with Flow(
         dataset_id=unmapped(smtr_constants.GTFS_DATASET_ID.value),
         table_id=smtr_constants.GTFS_TABLES.value,
         filepath=treated_filepath,
-        raw_filepath=raw_filepath,
+        raw_filepath=filepath,
         partitions=unmapped(partitions),
-        status=treated_status,
+        status=treated_data,
     )
 
     UPLOAD_LOGS = upload_logs_to_bq.map(
