@@ -48,6 +48,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_gtfs.tasks import (
 #     every_fortnight,
 # )
 
+
 with Flow(
     "[TESTE] SMTR - GTFS: Captura",
     code_owners=["rodrigo"],
@@ -85,7 +86,7 @@ with Flow(
     )
 
     treated_data = pre_treatment_nest_data.map(
-        status=unmapped(pre_treated_status),
+        status=pre_treated_status,
         timestamp=unmapped(timestamp),
         primary_key=unmapped(["*_id"]),
     )

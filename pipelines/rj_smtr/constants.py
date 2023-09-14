@@ -181,3 +181,6 @@ class constants(Enum):  # pylint: disable=c0103
         "fare_rules",
     ]
     GTFS_RAW_PATH = "./gtfs"
+
+
+# criar constant para as primary keys, função para transformar em lista

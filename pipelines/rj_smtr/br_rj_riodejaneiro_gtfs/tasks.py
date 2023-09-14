@@ -231,4 +231,6 @@ def pre_treatment_gtfs(status: Dict, filepath: str, timestamp: str) -> Dict:
     # Add timestamp_captura
     data["timestamp_captura"] = timestamp
 
+    # copiar a parte da pre treatment nest nesta função e usar o dict de primary key
+
     return {"data": data, "error": error}
