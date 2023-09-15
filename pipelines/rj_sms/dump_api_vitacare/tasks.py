@@ -2,7 +2,6 @@
 from prefect import task
 from pipelines.utils.utils import log
 from datetime import date
-from pipelines.utils.utils import log
 
 @task
 def build_params():

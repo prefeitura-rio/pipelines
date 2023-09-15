@@ -42,6 +42,7 @@ def download_from_api(
     vault_path=None,
     vault_key=None,
     add_load_date_to_filename=False,
+    load_date=None,
 ):
     # Retrieve the API key from Vault
     auth_token = ""
@@ -66,9 +67,12 @@ def download_from_api(
 
         # Save the API data to a local file
         if add_load_date_to_filename:
-            destination_file_path = f"./data/raw/{file_name}_{str(date.today())}.json"   
+            if load_date is None:
+                destination_file_path = f"{file_folder}/{file_name}_{str(date.today())}.json"
+            else:
+                destination_file_path = f"{file_folder}/{file_name}_{load_date}.json"
         else:
-            destination_file_path = f"./data/raw/{file_name}.json"
+            destination_file_path = f"{file_folder}/{file_name}.json"
             
         with open(destination_file_path, "w") as file:
             file.write(str(api_data))
@@ -147,10 +151,13 @@ def set_destination_file_path(file):
     )
 
 @task
-def add_load_date_column(input_path: str, sep =";"):
+def add_load_date_column(input_path: str, sep =";", load_date = None):
     df = pd.read_csv(input_path, sep=sep, keep_default_na=False, dtype="str")
 
-    df["_data_carga"] = date.today()
+    if load_date is None:
+        df["_data_carga"] = str(date.today())
+    else:
+        df["_data_carga"] = load_date
 
     df.to_csv(input_path, index=False, sep=sep, encoding="utf-8")
     log(f"Column added to {input_path}")

@@ -1,8 +1,9 @@
 #-*- coding: utf-8 -*-
-from pipelines.rj_sms.dump_api_vitacare.flows import dump_vitacare
+from pipelines.rj_sms.dump_api_vitacare.flows import dump_vitacare_posicao
+from pipelines.rj_sms.dump_api_vitai.flows import dump_vitai_posicao, dump_vitai_movimentos
 from pipelines.utils.utils import run_local
 
-run_local(dump_vitacare)
+run_local(dump_vitai_movimentos)
 
 
 #
