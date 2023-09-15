@@ -18,7 +18,7 @@ from pipelines.rj_smtr.utils import (
 bilhetagem_principal_clocks = generate_execute_schedules(
     interval=timedelta(days=1),
     labels=[
-        emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value,
+        emd_constants.RJ_SMTR_AGENT_LABEL.value,
     ],
     table_parameters=constants.BILHETAGEM_TABLES_PARAMS.value,
     dataset_id=constants.BILHETAGEM_DATASET_ID.value,
@@ -31,7 +31,7 @@ bilhetagem_principal_schedule = Schedule(clocks=untuple(bilhetagem_principal_clo
 bilhetagem_transacao_clocks = generate_execute_schedules(
     interval=timedelta(minutes=1),
     labels=[
-        emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value,
+        emd_constants.RJ_SMTR_AGENT_LABEL.value,
     ],
     table_parameters=constants.BILHETAGEM_TRANSACAO_TABLE_PARAMS.value,
     dataset_id=constants.BILHETAGEM_DATASET_ID.value,
