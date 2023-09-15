@@ -10,7 +10,7 @@ from datetime import date, timedelta
 
 # create a list of dates between start and end date. Dates like YYYY-MM-DD
 start_date = date(2023, 2, 1)
-end_date = date(2023, 2, 10)
+end_date = date(2023, 9, 13)
 delta = end_date - start_date
 dates = []
 for i in range(delta.days + 1):
