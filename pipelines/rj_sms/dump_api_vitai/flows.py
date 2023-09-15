@@ -90,7 +90,7 @@ with Flow(
     vault_key = "token"
     #  GCP
     dataset_id = "dump_vitai"
-    table_id = "estoque_movimentos_new"
+    table_id = "estoque_movimentos"
 
     # Start run
     create_folders_task = create_folders()
