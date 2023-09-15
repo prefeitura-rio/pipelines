@@ -13,7 +13,7 @@ from pipelines.rj_sms.utils import (
     create_partitions,
     upload_to_datalake)
 from pipelines.rj_sms.dump_api_vitai.tasks import (
-    build_movimentos_date, build_movimentos_url, is_none
+    build_movimentos_date, build_movimentos_url
 )
 from pipelines.rj_sms.scheduler import every_day_at_six_am
 
@@ -26,7 +26,7 @@ with Flow(
     vault_key = "token"
     #  GCP
     dataset_id = "dump_vitai"
-    table_id = "estoque_posicao_new"
+    table_id = "estoque_posicao"
 
     # Start run
     create_folders_task = create_folders()
@@ -115,31 +115,31 @@ with Flow(
     )
     download_task.set_upstream(build_url_task)
 
-    #conversion_task = from_json_to_csv(
-    #    input_path=download_task,
-    #      sep=";")
-    #conversion_task.set_upstream(download_task)
-#
-    #add_load_date_column_task = add_load_date_column(
-    #    input_path=conversion_task,
-    #    sep = ";",
-    #    load_date = build_movimentos_args["date"])	
-    #add_load_date_column_task.set_upstream(conversion_task) 
-#
-    #create_partitions_task = create_partitions(
-    #    data_path =  "./data/raw", 
-    #    partition_directory = "./data/partition_directory")
-    #create_partitions_task.set_upstream(add_load_date_column_task)
-    #
-    #upload_to_datalake_task = upload_to_datalake(
-    #    input_path="./data/partition_directory",
-    #    dataset_id=dataset_id,
-    #    table_id=table_id,
-    #    if_exists= "replace",
-    #    csv_delimiter= ";",
-    #    if_storage_data_exists= "replace",
-    #    biglake_table= True)
-    #upload_to_datalake_task.set_upstream(create_partitions_task)    
+    conversion_task = from_json_to_csv(
+        input_path=download_task,
+          sep=";")
+    conversion_task.set_upstream(download_task)
+
+    add_load_date_column_task = add_load_date_column(
+        input_path=conversion_task,
+        sep = ";",
+        load_date = build_date_task)	
+    add_load_date_column_task.set_upstream(conversion_task) 
+
+    create_partitions_task = create_partitions(
+        data_path =  "./data/raw", 
+        partition_directory = "./data/partition_directory")
+    create_partitions_task.set_upstream(add_load_date_column_task)
+    
+    upload_to_datalake_task = upload_to_datalake(
+        input_path="./data/partition_directory",
+        dataset_id=dataset_id,
+        table_id=table_id,
+        if_exists= "replace",
+        csv_delimiter= ";",
+        if_storage_data_exists= "replace",
+        biglake_table= True)
+    upload_to_datalake_task.set_upstream(create_partitions_task)    
 
 
 dump_vitai_movimentos.storage = GCS(constants.GCS_FLOWS_BUCKET.value)

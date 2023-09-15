@@ -12,6 +12,7 @@ from datetime import datetime
 from pathlib import Path
 import basedosdados as bd
 import sys
+from loguru import logger
 
 
 @task
@@ -26,7 +27,7 @@ def create_folders():
             shutil.rmtree("./data/partition_directory", ignore_errors=False)
         os.makedirs("./data/partition_directory")
 
-        log("Folders created")
+        logger("Folders created")
         return {"data": "./data/raw",
                 "partition_directory": "./data/partition_directory"}
 
