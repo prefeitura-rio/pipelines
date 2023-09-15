@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# flake8: noqa: E501
 """
 General purpose functions for rj_smtr
 """
@@ -6,19 +7,28 @@ General purpose functions for rj_smtr
 from ftplib import FTP
 from pathlib import Path
 
+from datetime import timedelta, datetime
+from typing import List, Callable
 import io
 import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
-from pipelines.rj_smtr.implicit_ftp import ImplicitFtpTls
+import pytz
 
-from pipelines.utils.utils import log
+from prefect.schedules.clocks import IntervalClock
+
+from pipelines.constants import constants as emd_constants
+
+from pipelines.rj_smtr.implicit_ftp import ImplicitFtpTls
+from pipelines.rj_smtr.constants import constants
+
 from pipelines.utils.utils import (
+    log,
     get_vault_secret,
     send_discord_message,
     get_redis_client,
 )
-from pipelines.rj_smtr.constants import constants
+
 
 # Set BD config to run on cloud #
 bd.config.from_file = True
@@ -385,3 +395,56 @@ def data_info_str(data: pd.DataFrame):
     buffer = io.StringIO()
     data.info(buf=buffer)
     return buffer.getvalue()
+
+
+def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-locals
+    interval: timedelta,
+    labels: List[str],
+    table_parameters: list,
+    dataset_id: str,
+    secret_path: str,
+    create_request_params_func: Callable,
+    runs_interval_minutes: int = 15,
+    start_date: datetime = datetime(
+        2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)
+    ),
+) -> List[IntervalClock]:
+    """
+    Generates multiple schedules
+
+    Args:
+        interval (timedelta): The interval to run the schedule
+        labels (List[str]): The labels to be added to the schedule
+        table_parameters (list): The table parameters
+        dataset_id (str): The dataset_id to be used in the schedule
+        secret_path (str): The secret path to be used in the schedule
+        create_request_params_func (Callable): The function to be used to create the request params
+        runs_interval_minutes (int, optional): The interval between each schedule. Defaults to 15.
+        start_date (datetime, optional): The start date of the schedule.
+            Defaults to datetime(2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)).
+
+    Returns:
+        List[IntervalClock]: The list of schedules
+
+    """
+
+    clocks = []
+    for count, parameters in enumerate(table_parameters):
+        parameter_defaults = {
+            "table_params": parameters,
+            "dataset_id": dataset_id,
+            "secret_path": secret_path,
+            "interval": interval,
+            "create_request_params_func": create_request_params_func,
+        }
+        log(f"parameter_defaults: {parameter_defaults}")
+        clocks.append(
+            IntervalClock(
+                interval=interval,
+                start_date=start_date
+                + timedelta(minutes=runs_interval_minutes * count),
+                labels=labels,
+                parameter_defaults=parameter_defaults,
+            )
+        )
+    return clocks

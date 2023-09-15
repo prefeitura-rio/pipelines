@@ -1,36 +1,53 @@
 # -*- coding: utf-8 -*-
+# flake8: noqa: E501
 """
-Useful functions for br_rj_riodejaneiro_bilhetagem
+General purpose functions for br_rj_riodejaneiro_bilhetagem
 """
 
-from datetime import timedelta, datetime
-from typing import List
-
-from prefect.schedules.clocks import IntervalClock
+from pipelines.utils.utils import get_vault_secret
 
 
-def generate_execute_bilhetagem_schedules(  # pylint: disable=too-many-arguments,too-many-locals
-    interval: timedelta,
-    start_date: datetime,
-    labels: List[str],
-    table_parameters: dict,
-    runs_interval_minutes: int = 15,
-) -> List[IntervalClock]:
+def create_bilhetagem_request_params(  # pylint: disable=too-many-arguments,too-many-locals
+    datetime_range: dict,
+    table_params: dict,
+    secret_path: str,
+) -> tuple:
     """
-    Generates multiple schedules for executing the bilhetagem pipeline
+    Creates the request parameters for the bilhetagem tables
+
+    Args:
+        datetime_range (dict): The datetime range to be used in the query
+        table_params (dict): The table parameters
+        secret_path (str): The secret path to get the database credentials
+
+    Returns:
+        tuple: The request parameters and the url
     """
-    clocks = []
-    for count, (table_id, parameters) in enumerate(table_parameters.items()):
-        parameter_defaults = {
-            "tables_params": parameters | {"table_id": table_id},
-        }
-        clocks.append(
-            IntervalClock(
-                interval=interval,
-                start_date=start_date
-                + timedelta(minutes=runs_interval_minutes * count),
-                labels=labels,
-                parameter_defaults=parameter_defaults,
-            )
-        )
-    return clocks
+
+    secrets = get_vault_secret(secret_path)["data"]
+
+    database_secrets = secrets["databases"][table_params["database"]]
+
+    url = secrets["vpn_url"] + database_secrets["engine"]
+
+    if table_params["method"] == "between":
+        time_cond = f"""WHERE
+                            {table_params["table_column"]} BETWEEN '{datetime_range["start"]}'
+                            AND '{datetime_range["end"]}'"""
+    else:
+        time_cond = f"""WHERE
+                            {table_params["table_column"]} {table_params["method"]} '{datetime_range["start"]}'"""
+
+    params = {
+        "host": database_secrets["host"],
+        "database": table_params["database"],
+        "query": f"""   SELECT
+                            *
+                        FROM
+                            {table_params["table_name"]}
+                        {time_cond}
+                        ORDER BY
+                            {table_params["table_column"]}""",
+    }
+
+    return params, url
