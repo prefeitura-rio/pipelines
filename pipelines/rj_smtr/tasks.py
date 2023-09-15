@@ -896,25 +896,21 @@ def transform_to_nested_structure(
 @task(checkpoint=False)
 def get_datetime_range(
     timestamp: datetime,
-    interval,
+    interval: int,
 ) -> dict:
     """
     Task to get datetime range in UTC
 
     Args:
         timestamp (datetime): timestamp to get datetime range
-        interval: interval to get datetime range (optionally,
-            interval can be specified as string in minutes)
+        interval (int): interval in seconds
 
     Returns:
         dict: datetime range
     """
 
-    if isinstance(interval, str):
-        interval = timedelta(minutes=int(interval))
-
     start = (
-        (timestamp - interval)
+        (timestamp - timedelta(seconds=interval))
         .astimezone(tz=timezone("UTC"))
         .strftime("%Y-%m-%d %H:%M:%S")
     )
