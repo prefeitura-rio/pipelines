@@ -8,7 +8,7 @@ import json
 import os
 from pathlib import Path
 import traceback
-from typing import Dict, List, Callable
+from typing import Dict, List
 import io
 
 from basedosdados import Storage, Table
@@ -137,11 +137,16 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
 
 
 @task
-def get_current_timestamp(
-    timestamp: datetime = None, truncate_minute: bool = True
-) -> datetime:
+def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -> datetime:
     """
     Get current timestamp for flow run.
+
+    Args:
+        timestamp: timestamp to be used as reference (optionally, it can be a string)
+        truncate_minute: whether to truncate the timestamp to the minute or not
+
+    Returns:
+        datetime: timestamp for flow run
     """
     if isinstance(timestamp, str):
         timestamp = datetime.fromisoformat(timestamp)
@@ -847,6 +852,9 @@ def transform_to_nested_structure(
         return {"data": pd.DataFrame(), "error": status["error"]}
 
     try:
+        if primary_key is None:
+            primary_key = []
+
         error = None
         data = pd.DataFrame(status["data"])
 
@@ -931,13 +939,7 @@ def create_request_params(
         datetime_range (dict): datetime range to get params
         table_params (dict): table params to get params
         secret_path (str): secret path to get params
-        create_request_params_func (Callable): function to create request params
-            create_request_params_func must have the following signature:
-                create_request_params_func(
-                    datetime_range: dict,
-                    secret_path: str,
-                    table_params: dict)
-                -> tuple
+        dataset_id (str): dataset id to get params
 
     Returns:
         request_params: host, database and query to request data
@@ -952,7 +954,7 @@ def create_request_params(
         request_url = secrets["vpn_url"] + database_secrets["engine"]
 
         request_params = {
-            "host": database_secrets["host"],
+            "host": database_secrets["host"],  # TODO: exibir no log em ambiente fechado
             "database": table_params["database"],
             "query": table_params["query"].format(**datetime_range),
         }
