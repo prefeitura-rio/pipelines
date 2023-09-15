@@ -37,12 +37,11 @@ from pipelines.rj_smtr.tasks import (
     get_datetime_range,
 )
 
-CAPTURA_GENERICO_FLOW_NAME = "SMTR: Captura Genérico"
 
 with Flow(
-    CAPTURA_GENERICO_FLOW_NAME,
+    "SMTR: Captura",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
-) as captura_generico:
+) as default_capture_flow:
     # SETUP #
 
     table_params = Parameter("table_params", default=None)
@@ -57,7 +56,7 @@ with Flow(
     datetime_range = get_datetime_range(timestamp, interval=interval)
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=captura_generico.name + " " + table_params["table_id"] + ": ",
+        prefix=default_capture_flow.name + " " + table_params["table_id"] + ": ",
         now_time=timestamp,
     )
 
@@ -119,8 +118,8 @@ with Flow(
         timestamp=timestamp,
     )
 
-captura_generico.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-captura_generico.run_config = KubernetesRun(
+default_capture_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+default_capture_flow.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )

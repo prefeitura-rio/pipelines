@@ -14,7 +14,7 @@ from pipelines.constants import constants as emd_constants
 
 # SMTR Imports #
 
-from pipelines.rj_smtr.flows import captura_generico
+from pipelines.rj_smtr.flows import default_capture_flow
 
 from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.schedules import (
     bilhetagem_principal_schedule,
@@ -25,7 +25,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.schedules import (
 
 # BILHETAGEM TRANSAÇÃO - CAPTURA A CADA MINUTO #
 
-bilhetagem_transacao_captura = deepcopy(captura_generico)
+bilhetagem_transacao_captura = deepcopy(default_capture_flow)
 bilhetagem_transacao_captura.name = "SMTR: Bilhetagem Transação (captura)"
 bilhetagem_transacao_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 bilhetagem_transacao_captura.run_config = KubernetesRun(
@@ -36,7 +36,7 @@ bilhetagem_transacao_captura.schedule = bilhetagem_transacao_schedule
 
 # BILHETAGEM PRINCIPAL - CAPTURA DIÁRIA DE DIVERSAS TABELAS #
 
-bilhetagem_principal_captura = deepcopy(captura_generico)
+bilhetagem_principal_captura = deepcopy(default_capture_flow)
 bilhetagem_principal_captura.name = "SMTR: Bilhetagem Principal (captura)"
 bilhetagem_principal_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 bilhetagem_principal_captura.run_config = KubernetesRun(
