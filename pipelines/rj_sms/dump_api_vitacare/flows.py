@@ -10,7 +10,8 @@ from pipelines.rj_sms.utils import (
     download_from_api,
     add_load_date_column,
     create_partitions,
-    upload_to_datalake)
+    upload_to_datalake,
+)
 from pipelines.rj_sms.dump_api_vitacare.tasks import (
     build_params,
 )
@@ -34,40 +35,39 @@ with Flow(
     build_params_task.set_upstream(create_folders_task)
 
     download_task = download_from_api(
-        url = "http://consolidado-ap10.pepvitacare.com:8088/reports/pharmacy/stocks",
-        params = build_params_task,
-        file_folder = "./data/raw",
-        file_name = table_id,
-        vault_path = vault_path,
-        vault_key = vault_key,
-        add_load_date_to_filename = True,
+        url="http://consolidado-ap10.pepvitacare.com:8088/reports/pharmacy/stocks",
+        params=build_params_task,
+        file_folder="./data/raw",
+        file_name=table_id,
+        vault_path=vault_path,
+        vault_key=vault_key,
+        add_load_date_to_filename=True,
     )
     download_task.set_upstream(build_params_task)
 
-    conversion_task = from_json_to_csv(
-        input_path=download_task,
-          sep=";")
+    conversion_task = from_json_to_csv(input_path=download_task, sep=";")
     conversion_task.set_upstream(download_task)
 
     add_load_date_column_task = add_load_date_column(
-        input_path=conversion_task,
-        sep = ";")	
-    add_load_date_column_task.set_upstream(conversion_task) 
+        input_path=conversion_task, sep=";"
+    )
+    add_load_date_column_task.set_upstream(conversion_task)
 
     create_partitions_task = create_partitions(
-        data_path =  "./data/raw", 
-        partition_directory = "./data/partition_directory")
+        data_path="./data/raw", partition_directory="./data/partition_directory"
+    )
     create_partitions_task.set_upstream(add_load_date_column_task)
-    
+
     upload_to_datalake_task = upload_to_datalake(
         input_path="./data/partition_directory",
         dataset_id=dataset_id,
         table_id=table_id,
-        if_exists= "replace",
-        csv_delimiter= ";",
-        if_storage_data_exists= "replace",
-        biglake_table= True)
-    upload_to_datalake_task.set_upstream(create_partitions_task)    
+        if_exists="replace",
+        csv_delimiter=";",
+        if_storage_data_exists="replace",
+        biglake_table=True,
+    )
+    upload_to_datalake_task.set_upstream(create_partitions_task)
 
 
 dump_vitacare_posicao.storage = GCS(constants.GCS_FLOWS_BUCKET.value)

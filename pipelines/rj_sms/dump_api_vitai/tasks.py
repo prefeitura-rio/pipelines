@@ -3,9 +3,9 @@ from prefect import task
 from pipelines.utils.utils import log
 from datetime import date, timedelta
 
-@task
-def build_movimentos_url(date_param = None):
 
+@task
+def build_movimentos_url(date_param=None):
     if date_param is None:
         date_param = (date.today() + timedelta(days=-1)).strftime("%Y-%m-%d")
 
@@ -13,9 +13,9 @@ def build_movimentos_url(date_param = None):
     log(f"URL built: {url}")
     return url
 
-@task  
-def build_movimentos_date(date_param = None):
 
+@task
+def build_movimentos_date(date_param=None):
     if date_param is None:
         date_param = (date.today() + timedelta(days=-1)).strftime("%Y-%m-%d")
 

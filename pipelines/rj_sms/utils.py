@@ -17,7 +17,6 @@ from loguru import logger
 
 @task
 def create_folders():
-
     try:
         if os.path.exists("./data/raw"):
             shutil.rmtree("./data/raw", ignore_errors=False)
@@ -28,11 +27,14 @@ def create_folders():
         os.makedirs("./data/partition_directory")
 
         logger("Folders created")
-        return {"data": "./data/raw",
-                "partition_directory": "./data/partition_directory"}
+        return {
+            "data": "./data/raw",
+            "partition_directory": "./data/partition_directory",
+        }
 
     except Exception as e:
         sys.exit(f"Failed to create folders: {e}")
+
 
 @task
 def download_from_api(
@@ -71,19 +73,24 @@ def download_from_api(
         # Save the API data to a local file
         if add_load_date_to_filename:
             if load_date is None:
-                destination_file_path = f"{file_folder}/{file_name}_{str(date.today())}.json"
+                destination_file_path = (
+                    f"{file_folder}/{file_name}_{str(date.today())}.json"
+                )
             else:
                 destination_file_path = f"{file_folder}/{file_name}_{load_date}.json"
         else:
             destination_file_path = f"{file_folder}/{file_name}.json"
-            
+
         with open(destination_file_path, "w") as file:
             file.write(str(api_data))
 
         log(f"API data downloaded to {destination_file_path}")
 
     else:
-        log(f"API call failed. Error: {response.status_code} - {response.reason}", level="error")
+        log(
+            f"API call failed. Error: {response.status_code} - {response.reason}",
+            level="error",
+        )
 
     return destination_file_path
 
@@ -153,8 +160,9 @@ def set_destination_file_path(file):
         + file[file.find(".") :]
     )
 
+
 @task
-def add_load_date_column(input_path: str, sep =";", load_date = None):
+def add_load_date_column(input_path: str, sep=";", load_date=None):
     df = pd.read_csv(input_path, sep=sep, keep_default_na=False, dtype="str")
 
     if load_date is None:
@@ -166,6 +174,7 @@ def add_load_date_column(input_path: str, sep =";", load_date = None):
     log(f"Column added to {input_path}")
 
     return input_path
+
 
 @task
 def from_json_to_csv(input_path, sep=";"):
@@ -188,8 +197,7 @@ def from_json_to_csv(input_path, sep=";"):
 
 
 @task
-def create_partitions(data_path: str , partition_directory: str):
-    
+def create_partitions(data_path: str, partition_directory: str):
     data_path = Path(data_path)
     partition_directory = partition_directory
     ## Load data
@@ -211,6 +219,8 @@ def create_partitions(data_path: str , partition_directory: str):
         # Copy file(s) to partition directory
         shutil.copy(file_name, output_directory)
         log("Partitions created successfully")
+
+
 #
 #
 @task
@@ -223,7 +233,6 @@ def upload_to_datalake(
     if_storage_data_exists: str = "replace",
     biglake_table: bool = True,
 ):
-    
     tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
     table_exists = tb.table_exists(mode="staging")
 
