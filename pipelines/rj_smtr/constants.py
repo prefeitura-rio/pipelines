@@ -169,10 +169,18 @@ class constants(Enum):  # pylint: disable=c0103
         {
             "table_id": "transacao",
             "database": "transacao_db",
-            "table_name": "transacao",
-            "table_column": "data_processamento",
-            "method": "between",
-            "primary_key": ["id"],
+            "query": """
+                SELECT
+                    *
+                FROM
+                    transacao
+                WHERE
+                    data_processamento BETWEEN '{start}' 
+                    AND '{end}'
+                ORDER BY
+                    data_processamento
+            """,
+            "primary_key": ["id"], # id column to nest data on
             "flag_date_partition": False,
         },
     ]
@@ -180,37 +188,65 @@ class constants(Enum):  # pylint: disable=c0103
         {
             "table_id": "linha",
             "database": "principal_db",
-            "table_name": "LINHA",
-            "table_column": "DT_INCLUSAO",
-            "method": ">=",
-            "primary_key": ["CD_LINHA"],
+            "query": """
+                SELECT
+                    *
+                FROM
+                    LINHA
+                WHERE
+                    DT_INCLUSAO >= '{start}'
+                ORDER BY
+                    DT_INCLUSAO
+            """,
+            "primary_key": ["CD_LINHA"], # id column to nest data on
             "flag_date_partition": True,
         },
         {
             "table_id": "grupo",
             "database": "principal_db",
-            "table_name": "GRUPO",
-            "table_column": "DT_INCLUSAO",
-            "method": ">=",
+            "query": """
+                SELECT
+                    *
+                FROM
+                    GRUPO
+                WHERE
+                    DT_INCLUSAO >= '{start}'
+                ORDER BY
+                    DT_INCLUSAO
+            """,
             "primary_key": ["CD_GRUPO"],
             "flag_date_partition": True,
         },
         {
             "table_id": "grupo_linha",
             "database": "principal_db",
-            "table_name": "GRUPO_LINHA",
-            "table_column": "DT_INCLUSAO",
-            "method": ">=",
-            "primary_key": ["CD_GRUPO", "CD_LINHA"],
+            "query": """
+                SELECT
+                    *
+                FROM
+                    GRUPO_LINHA
+                WHERE
+                    DT_INCLUSAO >= '{start}'
+                ORDER BY
+                    DT_INCLUSAO
+            """,
+            "primary_key": ["CD_GRUPO", "CD_LINHA"], # id column to nest data on
             "flag_date_partition": True,
         },
         {
             "table_id": "matriz_integracao",
             "database": "tarifa_db",
-            "table_name": "matriz_integracao",
-            "table_column": "dt_inclusao",
-            "method": ">=",
-            "primary_key": ["cd_versao_matriz", "cd_integracao"],
+            "query": """
+                SELECT
+                    *
+                FROM
+                    matriz_integracao
+                WHERE
+                    dt_inclusao >= '{start}'
+                ORDER BY
+                    dt_inclusao
+            """,
+            "primary_key": ["cd_versao_matriz", "cd_integracao"], # id column to nest data on
             "flag_date_partition": True,
         },
     ]

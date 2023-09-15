@@ -27,7 +27,6 @@ bilhetagem_principal_clocks = generate_execute_schedules(
     table_parameters=constants.BILHETAGEM_TABLES_PARAMS.value,
     dataset_id=constants.BILHETAGEM_DATASET_ID.value,
     secret_path=constants.BILHETAGEM_SECRET_PATH.value,
-    create_request_params_func=create_bilhetagem_request_params,
     runs_interval_minutes=15,
 )
 
@@ -41,7 +40,6 @@ bilhetagem_transacao_clocks = generate_execute_schedules(
     table_parameters=constants.BILHETAGEM_TRANSACAO_TABLE_PARAMS.value,
     dataset_id=constants.BILHETAGEM_DATASET_ID.value,
     secret_path=constants.BILHETAGEM_SECRET_PATH.value,
-    create_request_params_func=create_bilhetagem_request_params,
     runs_interval_minutes=0,
 )
 
