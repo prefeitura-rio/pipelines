@@ -30,24 +30,10 @@ def create_bilhetagem_request_params(  # pylint: disable=too-many-arguments,too-
 
     url = secrets["vpn_url"] + database_secrets["engine"]
 
-    if table_params["method"] == "between":
-        time_cond = f"""WHERE
-                            {table_params["table_column"]} BETWEEN '{datetime_range["start"]}'
-                            AND '{datetime_range["end"]}'"""
-    else:
-        time_cond = f"""WHERE
-                            {table_params["table_column"]} {table_params["method"]} '{datetime_range["start"]}'"""
-
     params = {
         "host": database_secrets["host"],
         "database": table_params["database"],
-        "query": f"""   SELECT
-                            *
-                        FROM
-                            {table_params["table_name"]}
-                        {time_cond}
-                        ORDER BY
-                            {table_params["table_column"]}""",
+        "query": table_params["query"].format(**datetime_range)
     }
 
     return params, url

@@ -403,7 +403,6 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
     table_parameters: list,
     dataset_id: str,
     secret_path: str,
-    create_request_params_func: Callable,
     runs_interval_minutes: int = 15,
     start_date: datetime = datetime(
         2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)
@@ -434,8 +433,7 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
             "table_params": parameters,
             "dataset_id": dataset_id,
             "secret_path": secret_path,
-            "interval": interval.total_seconds(),
-            "create_request_params_func": create_request_params_func,
+            "interval": interval.total_seconds()
         }
         log(f"parameter_defaults: {parameter_defaults}")
         clocks.append(

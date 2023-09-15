@@ -925,7 +925,7 @@ def create_request_params(
     datetime_range: dict,
     table_params: dict,
     secret_path: str,
-    create_request_params_func: Callable,
+    dataset_id: str
 ) -> tuple:
     """
     Task to create request params
@@ -943,9 +943,22 @@ def create_request_params(
                 -> tuple
 
     Returns:
-        params: host, database and query to request data
-        url: url to request data
-
-
+        request_params: host, database and query to request data
+        request_url: url to request data
     """
-    return create_request_params_func(datetime_range, secret_path, table_params)
+
+    if dataset_id == constants.BILHETAGEM_DATASET_ID.value:
+
+        secrets = get_vault_secret(secret_path)["data"]
+
+        database_secrets = secrets["databases"][table_params["database"]]
+
+        request_url = secrets["vpn_url"] + database_secrets["engine"]
+
+        request_params = {
+            "host": database_secrets["host"],
+            "database": table_params["database"],
+            "query": table_params["query"].format(**datetime_range)
+        }
+
+    return request_params, request_url

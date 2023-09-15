@@ -47,7 +47,6 @@ with Flow(
     table_params = Parameter("table_params", default=None)
     timestamp_param = Parameter("timestamp", default=None)
     interval = Parameter("interval", default=None)
-    create_request_params_func = Parameter("create_request_params_func", default=None)
     dataset_id = Parameter("dataset_id", default=None)
     secret_path = Parameter("secret_path", default=None)
 
@@ -60,11 +59,11 @@ with Flow(
         now_time=timestamp,
     )
 
-    request_params, url = create_request_params(
+    request_params, request_url = create_request_params(
         datetime_range=datetime_range,
         table_params=table_params,
         secret_path=secret_path,
-        create_request_params_func=create_request_params_func,
+        dataset_id=dataset_id
     )
 
     with case(table_params["flag_date_partition"], True):
@@ -85,7 +84,7 @@ with Flow(
     )
 
     raw_status = get_raw(
-        url=url,
+        url=request_url,
         headers=secret_path,
         params=request_params,
     )
