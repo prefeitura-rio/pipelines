@@ -15,10 +15,6 @@ from pipelines.rj_smtr.utils import (
     generate_execute_schedules,
 )
 
-from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.utils import (
-    create_bilhetagem_request_params,
-)
-
 bilhetagem_principal_clocks = generate_execute_schedules(
     interval=timedelta(days=1),
     labels=[
