@@ -28,6 +28,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
+# flake8: noqa: E501
 &#34;&#34;&#34;
 General purpose functions for rj_smtr
 &#34;&#34;&#34;
@@ -35,19 +36,28 @@ General purpose functions for rj_smtr
 from ftplib import FTP
 from pathlib import Path
 
+from datetime import timedelta, datetime
+from typing import List
 import io
 import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
-from pipelines.rj_smtr.implicit_ftp import ImplicitFtpTls
+import pytz
 
-from pipelines.utils.utils import log
+from prefect.schedules.clocks import IntervalClock
+
+from pipelines.constants import constants as emd_constants
+
+from pipelines.rj_smtr.implicit_ftp import ImplicitFtpTls
+from pipelines.rj_smtr.constants import constants
+
 from pipelines.utils.utils import (
+    log,
     get_vault_secret,
     send_discord_message,
     get_redis_client,
 )
-from pipelines.rj_smtr.constants import constants
+
 
 # Set BD config to run on cloud #
 bd.config.from_file = True
@@ -413,7 +423,57 @@ def data_info_str(data: pd.DataFrame):
     &#34;&#34;&#34;
     buffer = io.StringIO()
     data.info(buf=buffer)
-    return buffer.getvalue()</code></pre>
+    return buffer.getvalue()
+
+
+def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-locals
+    interval: timedelta,
+    labels: List[str],
+    table_parameters: list,
+    dataset_id: str,
+    secret_path: str,
+    runs_interval_minutes: int = 15,
+    start_date: datetime = datetime(
+        2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)
+    ),
+) -&gt; List[IntervalClock]:
+    &#34;&#34;&#34;
+    Generates multiple schedules
+
+    Args:
+        interval (timedelta): The interval to run the schedule
+        labels (List[str]): The labels to be added to the schedule
+        table_parameters (list): The table parameters
+        dataset_id (str): The dataset_id to be used in the schedule
+        secret_path (str): The secret path to be used in the schedule
+        runs_interval_minutes (int, optional): The interval between each schedule. Defaults to 15.
+        start_date (datetime, optional): The start date of the schedule.
+            Defaults to datetime(2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)).
+
+    Returns:
+        List[IntervalClock]: The list of schedules
+
+    &#34;&#34;&#34;
+
+    clocks = []
+    for count, parameters in enumerate(table_parameters):
+        parameter_defaults = {
+            &#34;table_params&#34;: parameters,
+            &#34;dataset_id&#34;: dataset_id,
+            &#34;secret_path&#34;: secret_path,
+            &#34;interval&#34;: interval.total_seconds(),
+        }
+        log(f&#34;parameter_defaults: {parameter_defaults}&#34;)
+        clocks.append(
+            IntervalClock(
+                interval=interval,
+                start_date=start_date
+                + timedelta(minutes=runs_interval_minutes * count),
+                labels=labels,
+                parameter_defaults=parameter_defaults,
+            )
+        )
+    return clocks</code></pre>
 </details>
 </section>
 <section>
@@ -820,6 +880,88 @@ Defaults to 'bigquery_prod'.</p>
     dataframe.to_csv(fname, index=False)</code></pre>
 </details>
 </dd>
+<dt id="pipelines.rj_smtr.utils.generate_execute_schedules"><code class="name flex">
+<span>def <span class="ident">generate_execute_schedules</span></span>(<span>interval: datetime.timedelta, labels: List[str], table_parameters: list, dataset_id: str, secret_path: str, runs_interval_minutes: int = 15, start_date: datetime.datetime = datetime.datetime(2020, 1, 1, 0, 0, tzinfo=&lt;DstTzInfo &#x27;America/Sao_Paulo&#x27; LMT-1 day, 20:54:00 STD&gt;)) ‑> List[prefect.schedules.clocks.IntervalClock]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generates multiple schedules</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>interval</code></strong> :&ensp;<code>timedelta</code></dt>
+<dd>The interval to run the schedule</dd>
+<dt><strong><code>labels</code></strong> :&ensp;<code>List[str]</code></dt>
+<dd>The labels to be added to the schedule</dd>
+<dt><strong><code>table_parameters</code></strong> :&ensp;<code>list</code></dt>
+<dd>The table parameters</dd>
+<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>The dataset_id to be used in the schedule</dd>
+<dt><strong><code>secret_path</code></strong> :&ensp;<code>str</code></dt>
+<dd>The secret path to be used in the schedule</dd>
+<dt><strong><code>runs_interval_minutes</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>The interval between each schedule. Defaults to 15.</dd>
+<dt><strong><code>start_date</code></strong> :&ensp;<code>datetime</code>, optional</dt>
+<dd>The start date of the schedule.
+Defaults to datetime(2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[IntervalClock]</code></dt>
+<dd>The list of schedules</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-locals
+    interval: timedelta,
+    labels: List[str],
+    table_parameters: list,
+    dataset_id: str,
+    secret_path: str,
+    runs_interval_minutes: int = 15,
+    start_date: datetime = datetime(
+        2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)
+    ),
+) -&gt; List[IntervalClock]:
+    &#34;&#34;&#34;
+    Generates multiple schedules
+
+    Args:
+        interval (timedelta): The interval to run the schedule
+        labels (List[str]): The labels to be added to the schedule
+        table_parameters (list): The table parameters
+        dataset_id (str): The dataset_id to be used in the schedule
+        secret_path (str): The secret path to be used in the schedule
+        runs_interval_minutes (int, optional): The interval between each schedule. Defaults to 15.
+        start_date (datetime, optional): The start date of the schedule.
+            Defaults to datetime(2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)).
+
+    Returns:
+        List[IntervalClock]: The list of schedules
+
+    &#34;&#34;&#34;
+
+    clocks = []
+    for count, parameters in enumerate(table_parameters):
+        parameter_defaults = {
+            &#34;table_params&#34;: parameters,
+            &#34;dataset_id&#34;: dataset_id,
+            &#34;secret_path&#34;: secret_path,
+            &#34;interval&#34;: interval.total_seconds(),
+        }
+        log(f&#34;parameter_defaults: {parameter_defaults}&#34;)
+        clocks.append(
+            IntervalClock(
+                interval=interval,
+                start_date=start_date
+                + timedelta(minutes=runs_interval_minutes * count),
+                labels=labels,
+                parameter_defaults=parameter_defaults,
+            )
+        )
+    return clocks</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_smtr.utils.get_last_run_timestamp"><code class="name flex">
 <span>def <span class="ident">get_last_run_timestamp</span></span>(<span>dataset_id: str, table_id: str, mode: str = 'prod') ‑> str</span>
 </code></dt>
@@ -1126,6 +1268,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.utils.filter_data" href="#pipelines.rj_smtr.utils.filter_data">filter_data</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.filter_null" href="#pipelines.rj_smtr.utils.filter_null">filter_null</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.generate_df_and_save" href="#pipelines.rj_smtr.utils.generate_df_and_save">generate_df_and_save</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.generate_execute_schedules" href="#pipelines.rj_smtr.utils.generate_execute_schedules">generate_execute_schedules</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.get_last_run_timestamp" href="#pipelines.rj_smtr.utils.get_last_run_timestamp">get_last_run_timestamp</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.get_table_min_max_value" href="#pipelines.rj_smtr.utils.get_table_min_max_value">get_table_min_max_value</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.log_critical" href="#pipelines.rj_smtr.utils.log_critical">log_critical</a></code></li>

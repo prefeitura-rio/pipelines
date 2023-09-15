@@ -56,6 +56,7 @@ from pipelines.rj_smtr.utils import (
     get_table_min_max_value,
     get_last_run_timestamp,
     log_critical,
+    data_info_str,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
@@ -165,12 +166,19 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
 
 
 @task
-def get_current_timestamp(
-    timestamp: datetime = None, truncate_minute: bool = True
-) -&gt; datetime:
+def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -&gt; datetime:
     &#34;&#34;&#34;
     Get current timestamp for flow run.
+
+    Args:
+        timestamp: timestamp to be used as reference (optionally, it can be a string)
+        truncate_minute: whether to truncate the timestamp to the minute or not
+
+    Returns:
+        datetime: timestamp for flow run
     &#34;&#34;&#34;
+    if isinstance(timestamp, str):
+        timestamp = datetime.fromisoformat(timestamp)
     if not timestamp:
         timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
     if truncate_minute:
@@ -409,7 +417,11 @@ def query_logs(
 
 @task
 def get_raw(  # pylint: disable=R0912
-    url: str, headers: str = None, filetype: str = &#34;json&#34;, csv_args: dict = None
+    url: str,
+    headers: str = None,
+    filetype: str = &#34;json&#34;,
+    csv_args: dict = None,
+    params: dict = None,
 ) -&gt; Dict:
     &#34;&#34;&#34;
     Request data from URL API
@@ -419,6 +431,8 @@ def get_raw(  # pylint: disable=R0912
         headers (str, optional): Path to headers guardeded on Vault, if needed.
         filetype (str, optional): Filetype to be formatted (supported only: json, csv and txt)
         csv_args (dict, optional): Arguments for read_csv, if needed
+        params (dict, optional): Params to be sent on request
+
     Returns:
         dict: Conatining keys
           * `data` (json): data result
@@ -431,8 +445,17 @@ def get_raw(  # pylint: disable=R0912
         if headers is not None:
             headers = get_vault_secret(headers)[&#34;data&#34;]
 
+            # remove from headers, if present
+            remove_headers = [&#34;host&#34;, &#34;databases&#34;]
+            for remove_header in remove_headers:
+                if remove_header in list(headers.keys()):
+                    del headers[remove_header]
+
         response = requests.get(
-            url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
+            url,
+            headers=headers,
+            timeout=constants.MAX_TIMEOUT_SECONDS.value,
+            params=params,
         )
 
         if response.ok:  # status code is less than 400
@@ -507,6 +530,10 @@ def bq_upload(
     )
     if status[&#34;error&#34;] is not None:
         return status[&#34;error&#34;]
+
+    if len(status[&#34;data&#34;]) == 0:
+        log(&#34;Empty dataframe, skipping upload&#34;)
+        return None
 
     error = None
     try:
@@ -822,7 +849,146 @@ def get_previous_date(days):
     &#34;&#34;&#34;
     now = pendulum.now(pendulum.timezone(&#34;America/Sao_Paulo&#34;)).subtract(days=days)
 
-    return now.to_date_string()</code></pre>
+    return now.to_date_string()
+
+
+@task
+def transform_to_nested_structure(
+    status: dict, timestamp: datetime, primary_key: list = None
+):
+    &#34;&#34;&#34;Transform dataframe to nested structure
+
+    Args:
+        status (dict): Must contain keys
+            * `data`: dataframe returned from treatement
+            * `error`: error catched from data treatement
+        timestamp (datetime): timestamp of the capture
+        primary_key (list, optional): List of primary keys to be used for nesting.
+
+    Returns:
+        dict: Conatining keys
+            * `data` (json): nested data
+            * `error` (str): catched error, if any. Otherwise, returns None
+    &#34;&#34;&#34;
+
+    # Check previous error
+    if status[&#34;error&#34;] is not None:
+        return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
+
+    # Check empty dataframe
+    if len(status[&#34;data&#34;]) == 0:
+        log(&#34;Empty dataframe, skipping transformation&#34;)
+        return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
+
+    try:
+        if primary_key is None:
+            primary_key = []
+
+        error = None
+        data = pd.DataFrame(status[&#34;data&#34;])
+
+        log(
+            f&#34;&#34;&#34;
+        Received inputs:
+        - timestamp:\n{timestamp}
+        - data:\n{data.head()}&#34;&#34;&#34;
+        )
+
+        log(f&#34;Raw data:\n{data_info_str(data)}&#34;, level=&#34;info&#34;)
+
+        log(&#34;Adding captured timestamp column...&#34;, level=&#34;info&#34;)
+        data[&#34;timestamp_captura&#34;] = timestamp
+
+        log(&#34;Striping string columns...&#34;, level=&#34;info&#34;)
+        for col in data.columns[data.dtypes == &#34;object&#34;].to_list():
+            data[col] = data[col].str.strip()
+
+        log(f&#34;Finished cleaning! Data:\n{data_info_str(data)}&#34;, level=&#34;info&#34;)
+
+        log(&#34;Creating nested structure...&#34;, level=&#34;info&#34;)
+        pk_cols = primary_key + [&#34;timestamp_captura&#34;]
+        data = (
+            data.groupby(pk_cols)
+            .apply(
+                lambda x: x[data.columns.difference(pk_cols)].to_json(orient=&#34;records&#34;)
+            )
+            .str.strip(&#34;[]&#34;)
+            .reset_index(name=&#34;content&#34;)[primary_key + [&#34;content&#34;, &#34;timestamp_captura&#34;]]
+        )
+
+        log(
+            f&#34;Finished nested structure! Data:\n{data_info_str(data)}&#34;,
+            level=&#34;info&#34;,
+        )
+
+    except Exception as exp:  # pylint: disable=W0703
+        error = exp
+
+    if error is not None:
+        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+
+    return {&#34;data&#34;: data, &#34;error&#34;: error}
+
+
+@task(checkpoint=False)
+def get_datetime_range(
+    timestamp: datetime,
+    interval: int,
+) -&gt; dict:
+    &#34;&#34;&#34;
+    Task to get datetime range in UTC
+
+    Args:
+        timestamp (datetime): timestamp to get datetime range
+        interval (int): interval in seconds
+
+    Returns:
+        dict: datetime range
+    &#34;&#34;&#34;
+
+    start = (
+        (timestamp - timedelta(seconds=interval))
+        .astimezone(tz=timezone(&#34;UTC&#34;))
+        .strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+    )
+
+    end = timestamp.astimezone(tz=timezone(&#34;UTC&#34;)).strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+
+    return {&#34;start&#34;: start, &#34;end&#34;: end}
+
+
+@task(checkpoint=False, nout=2)
+def create_request_params(
+    datetime_range: dict, table_params: dict, secret_path: str, dataset_id: str
+) -&gt; tuple:
+    &#34;&#34;&#34;
+    Task to create request params
+
+    Args:
+        datetime_range (dict): datetime range to get params
+        table_params (dict): table params to get params
+        secret_path (str): secret path to get params
+        dataset_id (str): dataset id to get params
+
+    Returns:
+        request_params: host, database and query to request data
+        request_url: url to request data
+    &#34;&#34;&#34;
+
+    if dataset_id == constants.BILHETAGEM_DATASET_ID.value:
+        secrets = get_vault_secret(secret_path)[&#34;data&#34;]
+
+        database_secrets = secrets[&#34;databases&#34;][table_params[&#34;database&#34;]]
+
+        request_url = secrets[&#34;vpn_url&#34;] + database_secrets[&#34;engine&#34;]
+
+        request_params = {
+            &#34;host&#34;: database_secrets[&#34;host&#34;],  # TODO: exibir no log em ambiente fechado
+            &#34;database&#34;: table_params[&#34;database&#34;],
+            &#34;query&#34;: table_params[&#34;query&#34;].format(**datetime_range),
+        }
+
+    return request_params, request_url</code></pre>
 </details>
 </section>
 <section>
@@ -897,6 +1063,10 @@ def bq_upload(
     )
     if status[&#34;error&#34;] is not None:
         return status[&#34;error&#34;]
+
+    if len(status[&#34;data&#34;]) == 0:
+        log(&#34;Empty dataframe, skipping upload&#34;)
+        return None
 
     error = None
     try:
@@ -1231,6 +1401,67 @@ def create_local_partition_path(
     return file_path</code></pre>
 </details>
 </dd>
+<dt id="pipelines.rj_smtr.tasks.create_request_params"><code class="name flex">
+<span>def <span class="ident">create_request_params</span></span>(<span>datetime_range: dict, table_params: dict, secret_path: str, dataset_id: str) ‑> tuple</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Task to create request params</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>datetime_range</code></strong> :&ensp;<code>dict</code></dt>
+<dd>datetime range to get params</dd>
+<dt><strong><code>table_params</code></strong> :&ensp;<code>dict</code></dt>
+<dd>table params to get params</dd>
+<dt><strong><code>secret_path</code></strong> :&ensp;<code>str</code></dt>
+<dd>secret path to get params</dd>
+<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>dataset id to get params</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>request_params</code></dt>
+<dd>host, database and query to request data</dd>
+<dt><code>request_url</code></dt>
+<dd>url to request data</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(checkpoint=False, nout=2)
+def create_request_params(
+    datetime_range: dict, table_params: dict, secret_path: str, dataset_id: str
+) -&gt; tuple:
+    &#34;&#34;&#34;
+    Task to create request params
+
+    Args:
+        datetime_range (dict): datetime range to get params
+        table_params (dict): table params to get params
+        secret_path (str): secret path to get params
+        dataset_id (str): dataset id to get params
+
+    Returns:
+        request_params: host, database and query to request data
+        request_url: url to request data
+    &#34;&#34;&#34;
+
+    if dataset_id == constants.BILHETAGEM_DATASET_ID.value:
+        secrets = get_vault_secret(secret_path)[&#34;data&#34;]
+
+        database_secrets = secrets[&#34;databases&#34;][table_params[&#34;database&#34;]]
+
+        request_url = secrets[&#34;vpn_url&#34;] + database_secrets[&#34;engine&#34;]
+
+        request_params = {
+            &#34;host&#34;: database_secrets[&#34;host&#34;],  # TODO: exibir no log em ambiente fechado
+            &#34;database&#34;: table_params[&#34;database&#34;],
+            &#34;query&#34;: table_params[&#34;query&#34;].format(**datetime_range),
+        }
+
+    return request_params, request_url</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_smtr.tasks.delay_now_time"><code class="name flex">
 <span>def <span class="ident">delay_now_time</span></span>(<span>timestamp: str, delay_minutes=6)</span>
 </code></dt>
@@ -1292,26 +1523,93 @@ def fetch_dataset_sha(dataset_id: str):
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.get_current_timestamp"><code class="name flex">
-<span>def <span class="ident">get_current_timestamp</span></span>(<span>timestamp: datetime.datetime = None, truncate_minute: bool = True) ‑> datetime.datetime</span>
+<span>def <span class="ident">get_current_timestamp</span></span>(<span>timestamp=None, truncate_minute: bool = True) ‑> datetime.datetime</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Get current timestamp for flow run.</p></div>
+<div class="desc"><p>Get current timestamp for flow run.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>timestamp</code></strong></dt>
+<dd>timestamp to be used as reference (optionally, it can be a string)</dd>
+<dt><strong><code>truncate_minute</code></strong></dt>
+<dd>whether to truncate the timestamp to the minute or not</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>datetime</code></dt>
+<dd>timestamp for flow run</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def get_current_timestamp(
-    timestamp: datetime = None, truncate_minute: bool = True
-) -&gt; datetime:
+def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -&gt; datetime:
     &#34;&#34;&#34;
     Get current timestamp for flow run.
+
+    Args:
+        timestamp: timestamp to be used as reference (optionally, it can be a string)
+        truncate_minute: whether to truncate the timestamp to the minute or not
+
+    Returns:
+        datetime: timestamp for flow run
     &#34;&#34;&#34;
+    if isinstance(timestamp, str):
+        timestamp = datetime.fromisoformat(timestamp)
     if not timestamp:
         timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
     if truncate_minute:
         return timestamp.replace(second=0, microsecond=0)
     return timestamp</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.tasks.get_datetime_range"><code class="name flex">
+<span>def <span class="ident">get_datetime_range</span></span>(<span>timestamp: datetime.datetime, interval: int) ‑> dict</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Task to get datetime range in UTC</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>timestamp</code></strong> :&ensp;<code>datetime</code></dt>
+<dd>timestamp to get datetime range</dd>
+<dt><strong><code>interval</code></strong> :&ensp;<code>int</code></dt>
+<dd>interval in seconds</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>datetime range</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(checkpoint=False)
+def get_datetime_range(
+    timestamp: datetime,
+    interval: int,
+) -&gt; dict:
+    &#34;&#34;&#34;
+    Task to get datetime range in UTC
+
+    Args:
+        timestamp (datetime): timestamp to get datetime range
+        interval (int): interval in seconds
+
+    Returns:
+        dict: datetime range
+    &#34;&#34;&#34;
+
+    start = (
+        (timestamp - timedelta(seconds=interval))
+        .astimezone(tz=timezone(&#34;UTC&#34;))
+        .strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+    )
+
+    end = timestamp.astimezone(tz=timezone(&#34;UTC&#34;)).strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+
+    return {&#34;start&#34;: start, &#34;end&#34;: end}</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.get_join_dict"><code class="name flex">
@@ -1516,7 +1814,7 @@ def get_previous_date(days):
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.get_raw"><code class="name flex">
-<span>def <span class="ident">get_raw</span></span>(<span>url: str, headers: str = None, filetype: str = 'json', csv_args: dict = None) ‑> Dict</span>
+<span>def <span class="ident">get_raw</span></span>(<span>url: str, headers: str = None, filetype: str = 'json', csv_args: dict = None, params: dict = None) ‑> Dict</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Request data from URL API</p>
@@ -1530,6 +1828,8 @@ def get_previous_date(days):
 <dd>Filetype to be formatted (supported only: json, csv and txt)</dd>
 <dt><strong><code>csv_args</code></strong> :&ensp;<code>dict</code>, optional</dt>
 <dd>Arguments for read_csv, if needed</dd>
+<dt><strong><code>params</code></strong> :&ensp;<code>dict</code>, optional</dt>
+<dd>Params to be sent on request</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -1544,7 +1844,11 @@ def get_previous_date(days):
 </summary>
 <pre><code class="python">@task
 def get_raw(  # pylint: disable=R0912
-    url: str, headers: str = None, filetype: str = &#34;json&#34;, csv_args: dict = None
+    url: str,
+    headers: str = None,
+    filetype: str = &#34;json&#34;,
+    csv_args: dict = None,
+    params: dict = None,
 ) -&gt; Dict:
     &#34;&#34;&#34;
     Request data from URL API
@@ -1554,6 +1858,8 @@ def get_raw(  # pylint: disable=R0912
         headers (str, optional): Path to headers guardeded on Vault, if needed.
         filetype (str, optional): Filetype to be formatted (supported only: json, csv and txt)
         csv_args (dict, optional): Arguments for read_csv, if needed
+        params (dict, optional): Params to be sent on request
+
     Returns:
         dict: Conatining keys
           * `data` (json): data result
@@ -1566,8 +1872,17 @@ def get_raw(  # pylint: disable=R0912
         if headers is not None:
             headers = get_vault_secret(headers)[&#34;data&#34;]
 
+            # remove from headers, if present
+            remove_headers = [&#34;host&#34;, &#34;databases&#34;]
+            for remove_header in remove_headers:
+                if remove_header in list(headers.keys()):
+                    del headers[remove_header]
+
         response = requests.get(
-            url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
+            url,
+            headers=headers,
+            timeout=constants.MAX_TIMEOUT_SECONDS.value,
+            params=params,
         )
 
         if response.ok:  # status code is less than 400
@@ -1923,6 +2238,111 @@ def set_last_run_timestamp(
     return True</code></pre>
 </details>
 </dd>
+<dt id="pipelines.rj_smtr.tasks.transform_to_nested_structure"><code class="name flex">
+<span>def <span class="ident">transform_to_nested_structure</span></span>(<span>status: dict, timestamp: datetime.datetime, primary_key: list = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Transform dataframe to nested structure</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>status</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Must contain keys
+* <code>data</code>: dataframe returned from treatement
+* <code>error</code>: error catched from data treatement</dd>
+<dt><strong><code>timestamp</code></strong> :&ensp;<code>datetime</code></dt>
+<dd>timestamp of the capture</dd>
+<dt><strong><code>primary_key</code></strong> :&ensp;<code>list</code>, optional</dt>
+<dd>List of primary keys to be used for nesting.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>Conatining keys
+* <code>data</code> (json): nested data
+* <code>error</code> (str): catched error, if any. Otherwise, returns None</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def transform_to_nested_structure(
+    status: dict, timestamp: datetime, primary_key: list = None
+):
+    &#34;&#34;&#34;Transform dataframe to nested structure
+
+    Args:
+        status (dict): Must contain keys
+            * `data`: dataframe returned from treatement
+            * `error`: error catched from data treatement
+        timestamp (datetime): timestamp of the capture
+        primary_key (list, optional): List of primary keys to be used for nesting.
+
+    Returns:
+        dict: Conatining keys
+            * `data` (json): nested data
+            * `error` (str): catched error, if any. Otherwise, returns None
+    &#34;&#34;&#34;
+
+    # Check previous error
+    if status[&#34;error&#34;] is not None:
+        return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
+
+    # Check empty dataframe
+    if len(status[&#34;data&#34;]) == 0:
+        log(&#34;Empty dataframe, skipping transformation&#34;)
+        return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
+
+    try:
+        if primary_key is None:
+            primary_key = []
+
+        error = None
+        data = pd.DataFrame(status[&#34;data&#34;])
+
+        log(
+            f&#34;&#34;&#34;
+        Received inputs:
+        - timestamp:\n{timestamp}
+        - data:\n{data.head()}&#34;&#34;&#34;
+        )
+
+        log(f&#34;Raw data:\n{data_info_str(data)}&#34;, level=&#34;info&#34;)
+
+        log(&#34;Adding captured timestamp column...&#34;, level=&#34;info&#34;)
+        data[&#34;timestamp_captura&#34;] = timestamp
+
+        log(&#34;Striping string columns...&#34;, level=&#34;info&#34;)
+        for col in data.columns[data.dtypes == &#34;object&#34;].to_list():
+            data[col] = data[col].str.strip()
+
+        log(f&#34;Finished cleaning! Data:\n{data_info_str(data)}&#34;, level=&#34;info&#34;)
+
+        log(&#34;Creating nested structure...&#34;, level=&#34;info&#34;)
+        pk_cols = primary_key + [&#34;timestamp_captura&#34;]
+        data = (
+            data.groupby(pk_cols)
+            .apply(
+                lambda x: x[data.columns.difference(pk_cols)].to_json(orient=&#34;records&#34;)
+            )
+            .str.strip(&#34;[]&#34;)
+            .reset_index(name=&#34;content&#34;)[primary_key + [&#34;content&#34;, &#34;timestamp_captura&#34;]]
+        )
+
+        log(
+            f&#34;Finished nested structure! Data:\n{data_info_str(data)}&#34;,
+            level=&#34;info&#34;,
+        )
+
+    except Exception as exp:  # pylint: disable=W0703
+        error = exp
+
+    if error is not None:
+        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+
+    return {&#34;data&#34;: data, &#34;error&#34;: error}</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_smtr.tasks.upload_logs_to_bq"><code class="name flex">
 <span>def <span class="ident">upload_logs_to_bq</span></span>(<span>dataset_id: str, parent_table_id: str, timestamp: str, error: str = None, previous_error: str = None, recapture: bool = False)</span>
 </code></dt>
@@ -2081,9 +2501,11 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.tasks.create_date_hour_partition" href="#pipelines.rj_smtr.tasks.create_date_hour_partition">create_date_hour_partition</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.create_date_partition" href="#pipelines.rj_smtr.tasks.create_date_partition">create_date_partition</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.create_local_partition_path" href="#pipelines.rj_smtr.tasks.create_local_partition_path">create_local_partition_path</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.create_request_params" href="#pipelines.rj_smtr.tasks.create_request_params">create_request_params</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.delay_now_time" href="#pipelines.rj_smtr.tasks.delay_now_time">delay_now_time</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.fetch_dataset_sha" href="#pipelines.rj_smtr.tasks.fetch_dataset_sha">fetch_dataset_sha</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_current_timestamp" href="#pipelines.rj_smtr.tasks.get_current_timestamp">get_current_timestamp</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.get_datetime_range" href="#pipelines.rj_smtr.tasks.get_datetime_range">get_datetime_range</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_join_dict" href="#pipelines.rj_smtr.tasks.get_join_dict">get_join_dict</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_local_dbt_client" href="#pipelines.rj_smtr.tasks.get_local_dbt_client">get_local_dbt_client</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_materialization_date_range" href="#pipelines.rj_smtr.tasks.get_materialization_date_range">get_materialization_date_range</a></code></li>
@@ -2095,6 +2517,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.tasks.save_raw_local" href="#pipelines.rj_smtr.tasks.save_raw_local">save_raw_local</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.save_treated_local" href="#pipelines.rj_smtr.tasks.save_treated_local">save_treated_local</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.set_last_run_timestamp" href="#pipelines.rj_smtr.tasks.set_last_run_timestamp">set_last_run_timestamp</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.transform_to_nested_structure" href="#pipelines.rj_smtr.tasks.transform_to_nested_structure">transform_to_nested_structure</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.upload_logs_to_bq" href="#pipelines.rj_smtr.tasks.upload_logs_to_bq">upload_logs_to_bq</a></code></li>
 </ul>
 </li>

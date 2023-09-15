@@ -190,7 +190,99 @@ class constants(Enum):  # pylint: disable=c0103
 
     # SUBSÍDIO DASHBOARD
     SUBSIDIO_SPPO_DASHBOARD_DATASET_ID = &#34;dashboard_subsidio_sppo&#34;
-    SUBSIDIO_SPPO_DASHBOARD_TABLE_ID = &#34;sumario_servico_dia&#34;</code></pre>
+    SUBSIDIO_SPPO_DASHBOARD_TABLE_ID = &#34;sumario_servico_dia&#34;
+
+    # BILHETAGEM
+    BILHETAGEM_DATASET_ID = &#34;br_rj_riodejaneiro_bilhetagem&#34;
+    BILHETAGEM_TRANSACAO_TABLE_PARAMS = [
+        {
+            &#34;table_id&#34;: &#34;transacao&#34;,
+            &#34;database&#34;: &#34;transacao_db&#34;,
+            &#34;query&#34;: &#34;&#34;&#34;
+                SELECT
+                    *
+                FROM
+                    transacao
+                WHERE
+                    data_processamento BETWEEN &#39;{start}&#39;
+                    AND &#39;{end}&#39;
+                ORDER BY
+                    data_processamento
+            &#34;&#34;&#34;,
+            &#34;primary_key&#34;: [&#34;id&#34;],  # id column to nest data on
+            &#34;flag_date_partition&#34;: False,
+        },
+    ]
+    BILHETAGEM_TABLES_PARAMS = [
+        {
+            &#34;table_id&#34;: &#34;linha&#34;,
+            &#34;database&#34;: &#34;principal_db&#34;,
+            &#34;query&#34;: &#34;&#34;&#34;
+                SELECT
+                    *
+                FROM
+                    LINHA
+                WHERE
+                    DT_INCLUSAO &gt;= &#39;{start}&#39;
+                ORDER BY
+                    DT_INCLUSAO
+            &#34;&#34;&#34;,
+            &#34;primary_key&#34;: [&#34;CD_LINHA&#34;],  # id column to nest data on
+            &#34;flag_date_partition&#34;: True,
+        },
+        {
+            &#34;table_id&#34;: &#34;grupo&#34;,
+            &#34;database&#34;: &#34;principal_db&#34;,
+            &#34;query&#34;: &#34;&#34;&#34;
+                SELECT
+                    *
+                FROM
+                    GRUPO
+                WHERE
+                    DT_INCLUSAO &gt;= &#39;{start}&#39;
+                ORDER BY
+                    DT_INCLUSAO
+            &#34;&#34;&#34;,
+            &#34;primary_key&#34;: [&#34;CD_GRUPO&#34;],
+            &#34;flag_date_partition&#34;: True,
+        },
+        {
+            &#34;table_id&#34;: &#34;grupo_linha&#34;,
+            &#34;database&#34;: &#34;principal_db&#34;,
+            &#34;query&#34;: &#34;&#34;&#34;
+                SELECT
+                    *
+                FROM
+                    GRUPO_LINHA
+                WHERE
+                    DT_INCLUSAO &gt;= &#39;{start}&#39;
+                ORDER BY
+                    DT_INCLUSAO
+            &#34;&#34;&#34;,
+            &#34;primary_key&#34;: [&#34;CD_GRUPO&#34;, &#34;CD_LINHA&#34;],  # id column to nest data on
+            &#34;flag_date_partition&#34;: True,
+        },
+        {
+            &#34;table_id&#34;: &#34;matriz_integracao&#34;,
+            &#34;database&#34;: &#34;tarifa_db&#34;,
+            &#34;query&#34;: &#34;&#34;&#34;
+                SELECT
+                    *
+                FROM
+                    matriz_integracao
+                WHERE
+                    dt_inclusao &gt;= &#39;{start}&#39;
+                ORDER BY
+                    dt_inclusao
+            &#34;&#34;&#34;,
+            &#34;primary_key&#34;: [
+                &#34;cd_versao_matriz&#34;,
+                &#34;cd_integracao&#34;,
+            ],  # id column to nest data on
+            &#34;flag_date_partition&#34;: True,
+        },
+    ]
+    BILHETAGEM_SECRET_PATH = &#34;smtr_jae_access_data&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -367,7 +459,99 @@ class constants(Enum):  # pylint: disable=c0103
 
     # SUBSÍDIO DASHBOARD
     SUBSIDIO_SPPO_DASHBOARD_DATASET_ID = &#34;dashboard_subsidio_sppo&#34;
-    SUBSIDIO_SPPO_DASHBOARD_TABLE_ID = &#34;sumario_servico_dia&#34;</code></pre>
+    SUBSIDIO_SPPO_DASHBOARD_TABLE_ID = &#34;sumario_servico_dia&#34;
+
+    # BILHETAGEM
+    BILHETAGEM_DATASET_ID = &#34;br_rj_riodejaneiro_bilhetagem&#34;
+    BILHETAGEM_TRANSACAO_TABLE_PARAMS = [
+        {
+            &#34;table_id&#34;: &#34;transacao&#34;,
+            &#34;database&#34;: &#34;transacao_db&#34;,
+            &#34;query&#34;: &#34;&#34;&#34;
+                SELECT
+                    *
+                FROM
+                    transacao
+                WHERE
+                    data_processamento BETWEEN &#39;{start}&#39;
+                    AND &#39;{end}&#39;
+                ORDER BY
+                    data_processamento
+            &#34;&#34;&#34;,
+            &#34;primary_key&#34;: [&#34;id&#34;],  # id column to nest data on
+            &#34;flag_date_partition&#34;: False,
+        },
+    ]
+    BILHETAGEM_TABLES_PARAMS = [
+        {
+            &#34;table_id&#34;: &#34;linha&#34;,
+            &#34;database&#34;: &#34;principal_db&#34;,
+            &#34;query&#34;: &#34;&#34;&#34;
+                SELECT
+                    *
+                FROM
+                    LINHA
+                WHERE
+                    DT_INCLUSAO &gt;= &#39;{start}&#39;
+                ORDER BY
+                    DT_INCLUSAO
+            &#34;&#34;&#34;,
+            &#34;primary_key&#34;: [&#34;CD_LINHA&#34;],  # id column to nest data on
+            &#34;flag_date_partition&#34;: True,
+        },
+        {
+            &#34;table_id&#34;: &#34;grupo&#34;,
+            &#34;database&#34;: &#34;principal_db&#34;,
+            &#34;query&#34;: &#34;&#34;&#34;
+                SELECT
+                    *
+                FROM
+                    GRUPO
+                WHERE
+                    DT_INCLUSAO &gt;= &#39;{start}&#39;
+                ORDER BY
+                    DT_INCLUSAO
+            &#34;&#34;&#34;,
+            &#34;primary_key&#34;: [&#34;CD_GRUPO&#34;],
+            &#34;flag_date_partition&#34;: True,
+        },
+        {
+            &#34;table_id&#34;: &#34;grupo_linha&#34;,
+            &#34;database&#34;: &#34;principal_db&#34;,
+            &#34;query&#34;: &#34;&#34;&#34;
+                SELECT
+                    *
+                FROM
+                    GRUPO_LINHA
+                WHERE
+                    DT_INCLUSAO &gt;= &#39;{start}&#39;
+                ORDER BY
+                    DT_INCLUSAO
+            &#34;&#34;&#34;,
+            &#34;primary_key&#34;: [&#34;CD_GRUPO&#34;, &#34;CD_LINHA&#34;],  # id column to nest data on
+            &#34;flag_date_partition&#34;: True,
+        },
+        {
+            &#34;table_id&#34;: &#34;matriz_integracao&#34;,
+            &#34;database&#34;: &#34;tarifa_db&#34;,
+            &#34;query&#34;: &#34;&#34;&#34;
+                SELECT
+                    *
+                FROM
+                    matriz_integracao
+                WHERE
+                    dt_inclusao &gt;= &#39;{start}&#39;
+                ORDER BY
+                    dt_inclusao
+            &#34;&#34;&#34;,
+            &#34;primary_key&#34;: [
+                &#34;cd_versao_matriz&#34;,
+                &#34;cd_integracao&#34;,
+            ],  # id column to nest data on
+            &#34;flag_date_partition&#34;: True,
+        },
+    ]
+    BILHETAGEM_SECRET_PATH = &#34;smtr_jae_access_data&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -375,6 +559,22 @@ class constants(Enum):  # pylint: disable=c0103
 </ul>
 <h3>Class variables</h3>
 <dl>
+<dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_DATASET_ID"><code class="name">var <span class="ident">BILHETAGEM_DATASET_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_SECRET_PATH"><code class="name">var <span class="ident">BILHETAGEM_SECRET_PATH</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_TABLES_PARAMS"><code class="name">var <span class="ident">BILHETAGEM_TABLES_PARAMS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_TRANSACAO_TABLE_PARAMS"><code class="name">var <span class="ident">BILHETAGEM_TRANSACAO_TABLE_PARAMS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH"><code class="name">var <span class="ident">CRITICAL_SECRET_PATH</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -674,6 +874,10 @@ setTimeout(() => input.focus(), 100);
 <li>
 <h4><code><a title="pipelines.rj_smtr.constants.constants" href="#pipelines.rj_smtr.constants.constants">constants</a></code></h4>
 <ul class="">
+<li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_DATASET_ID">BILHETAGEM_DATASET_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_SECRET_PATH">BILHETAGEM_SECRET_PATH</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_TABLES_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_TABLES_PARAMS">BILHETAGEM_TABLES_PARAMS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_TRANSACAO_TABLE_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_TRANSACAO_TABLE_PARAMS">BILHETAGEM_TRANSACAO_TABLE_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH">CRITICAL_SECRET_PATH</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_API_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_API_SECRET_PATH">GPS_BRT_API_SECRET_PATH</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_API_URL" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_API_URL">GPS_BRT_API_URL</a></code></li>

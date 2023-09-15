@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_smtr.flows API documentation</title>
-<meta name="description" content="Flows for rj_smtr" />
+<title>pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.flows API documentation</title>
+<meta name="description" content="Flows for br_rj_riodejaneiro_bilhetagem" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,138 +19,60 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_smtr.flows</code></h1>
+<h1 class="title">Module <code>pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.flows</code></h1>
 </header>
 <section id="section-intro">
-<p>Flows for rj_smtr</p>
+<p>Flows for br_rj_riodejaneiro_bilhetagem</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Flows for rj_smtr
+Flows for br_rj_riodejaneiro_bilhetagem
 &#34;&#34;&#34;
+
+from copy import deepcopy
 
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
-from prefect import case, Parameter
-from prefect.tasks.control_flow import merge
 
 # EMD Imports #
 
 from pipelines.constants import constants as emd_constants
-from pipelines.utils.decorators import Flow
-from pipelines.utils.tasks import (
-    rename_current_flow_run_now_time,
-)
 
 # SMTR Imports #
 
-from pipelines.rj_smtr.tasks import (
-    create_date_partition,
-    create_date_hour_partition,
-    create_local_partition_path,
-    get_current_timestamp,
-    get_raw,
-    parse_timestamp_to_string,
-    save_raw_local,
-    save_treated_local,
-    upload_logs_to_bq,
-    bq_upload,
-    transform_to_nested_structure,
+from pipelines.rj_smtr.flows import default_capture_flow
+
+from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.schedules import (
+    bilhetagem_principal_schedule,
+    bilhetagem_transacao_schedule,
 )
 
-from pipelines.rj_smtr.tasks import (
-    create_request_params,
-    get_datetime_range,
-)
+# Flows #
 
+# BILHETAGEM TRANSAÇÃO - CAPTURA A CADA MINUTO #
 
-with Flow(
-    &#34;SMTR: Captura&#34;,
-    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
-) as default_capture_flow:
-    # SETUP #
-
-    table_params = Parameter(&#34;table_params&#34;, default=None)
-    timestamp_param = Parameter(&#34;timestamp&#34;, default=None)
-    interval = Parameter(&#34;interval&#34;, default=None)
-    dataset_id = Parameter(&#34;dataset_id&#34;, default=None)
-    secret_path = Parameter(&#34;secret_path&#34;, default=None)
-
-    timestamp = get_current_timestamp(timestamp_param)
-
-    datetime_range = get_datetime_range(timestamp, interval=interval)
-
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix=default_capture_flow.name + &#34; &#34; + table_params[&#34;table_id&#34;] + &#34;: &#34;,
-        now_time=timestamp,
-    )
-
-    request_params, request_url = create_request_params(
-        datetime_range=datetime_range,
-        table_params=table_params,
-        secret_path=secret_path,
-        dataset_id=dataset_id,
-    )
-
-    with case(table_params[&#34;flag_date_partition&#34;], True):
-        date_partitions = create_date_partition(timestamp)
-
-    with case(table_params[&#34;flag_date_partition&#34;], False):
-        date_hour_partitions = create_date_hour_partition(timestamp)
-
-    partitions = merge(date_partitions, date_hour_partitions)
-
-    filename = parse_timestamp_to_string(timestamp)
-
-    filepath = create_local_partition_path(
-        dataset_id=dataset_id,
-        table_id=table_params[&#34;table_id&#34;],
-        filename=filename,
-        partitions=partitions,
-    )
-
-    raw_status = get_raw(
-        url=request_url,
-        headers=secret_path,
-        params=request_params,
-    )
-
-    raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
-
-    # TREAT &amp; CLEAN #
-    treated_status = transform_to_nested_structure(
-        status=raw_status,
-        timestamp=timestamp,
-        primary_key=table_params[&#34;primary_key&#34;],
-    )
-
-    treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
-
-    # LOAD #
-    error = bq_upload(
-        dataset_id=dataset_id,
-        table_id=table_params[&#34;table_id&#34;],
-        filepath=treated_filepath,
-        raw_filepath=raw_filepath,
-        partitions=partitions,
-        status=treated_status,
-    )
-
-    upload_logs_to_bq(
-        dataset_id=dataset_id,
-        parent_table_id=table_params[&#34;table_id&#34;],
-        error=error,
-        timestamp=timestamp,
-    )
-
-default_capture_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-default_capture_flow.run_config = KubernetesRun(
+bilhetagem_transacao_captura = deepcopy(default_capture_flow)
+bilhetagem_transacao_captura.name = &#34;SMTR: Bilhetagem Transação (captura)&#34;
+bilhetagem_transacao_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bilhetagem_transacao_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
-)</code></pre>
+)
+bilhetagem_transacao_captura.schedule = bilhetagem_transacao_schedule
+
+# BILHETAGEM PRINCIPAL - CAPTURA DIÁRIA DE DIVERSAS TABELAS #
+
+bilhetagem_principal_captura = deepcopy(default_capture_flow)
+bilhetagem_principal_captura.name = &#34;SMTR: Bilhetagem Principal (captura)&#34;
+bilhetagem_principal_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bilhetagem_principal_captura.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+bilhetagem_principal_captura.schedule = bilhetagem_principal_schedule</code></pre>
 </details>
 </section>
 <section>
@@ -197,7 +119,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -216,7 +138,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines.rj_smtr" href="index.html">pipelines.rj_smtr</a></code></li>
+<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem" href="index.html">pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem</a></code></li>
 </ul>
 </li>
 </ul>
