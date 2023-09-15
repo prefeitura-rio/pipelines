@@ -8,7 +8,7 @@ import json
 import os
 from pathlib import Path
 import traceback
-from typing import Dict, List
+from typing import Dict, List, Callable
 import io
 
 from basedosdados import Storage, Table
@@ -891,3 +891,65 @@ def transform_to_nested_structure(
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return {"data": data, "error": error}
+
+
+@task(checkpoint=False)
+def get_datetime_range(
+    timestamp: datetime,
+    interval,
+) -> dict:
+    """
+    Task to get datetime range in UTC
+
+    Args:
+        timestamp (datetime): timestamp to get datetime range
+        interval: interval to get datetime range (optionally,
+            interval can be specified as string in minutes)
+
+    Returns:
+        dict: datetime range
+    """
+
+    if isinstance(interval, str):
+        interval = timedelta(minutes=int(interval))
+
+    start = (
+        (timestamp - interval)
+        .astimezone(tz=timezone("UTC"))
+        .strftime("%Y-%m-%d %H:%M:%S")
+    )
+
+    end = timestamp.astimezone(tz=timezone("UTC")).strftime("%Y-%m-%d %H:%M:%S")
+
+    return {"start": start, "end": end}
+
+
+@task(checkpoint=False, nout=2)
+def create_request_params(
+    datetime_range: dict,
+    table_params: dict,
+    secret_path: str,
+    create_request_params_func: Callable,
+) -> tuple:
+    """
+    Task to create request params
+
+    Args:
+        datetime_range (dict): datetime range to get params
+        table_params (dict): table params to get params
+        secret_path (str): secret path to get params
+        create_request_params_func (Callable): function to create request params
+            create_request_params_func must have the following signature:
+                create_request_params_func(
+                    datetime_range: dict,
+                    secret_path: str,
+                    table_params: dict)
+                -> tuple
+
+    Returns:
+        params: host, database and query to request data
+        url: url to request data
+
+
+    """
+    return create_request_params_func(datetime_range, secret_path, table_params)
