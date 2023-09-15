@@ -22,17 +22,9 @@ def create_folders():
             shutil.rmtree("./data/raw", ignore_errors=False)
         os.makedirs("./data/raw")
 
-        #if os.path.exists(os.path.expanduser("~") + "/data"):
-        #    shutil.rmtree(os.path.expanduser("~") + "/data", ignore_errors=False)
-        #os.makedirs(os.path.expanduser("~") + "/data")
-
         if os.path.exists("./data/partition_directory"):
             shutil.rmtree("./data/partition_directory", ignore_errors=False)
         os.makedirs("./data/partition_directory")
-
-        #if os.path.exists(os.path.expanduser("~") + "/partition_directory"):
-        #    shutil.rmtree(os.path.expanduser("~") + "/partition_directory", ignore_errors=False)
-        #os.makedirs(os.path.expanduser("~") + "/partition_directory")
 
         log("Folders created")
         return {"data": "./data/raw",
@@ -243,6 +235,3 @@ def upload_to_datalake(
         log("Data uploaded to BigQuery")
     except Exception as e:
         log(f"An error occurred: {e}", level="error")
-
-
-# remove contents of a directory
