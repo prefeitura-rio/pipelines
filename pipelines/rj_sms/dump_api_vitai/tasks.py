@@ -6,7 +6,7 @@ from datetime import date
 
 
 @task
-def conform_csv_to_gcp(input_path: str):
+def conform_csv_to_gcp(input_path: str, date: None):
     df = pd.read_csv(input_path, sep=";", keep_default_na=False, dtype="str")
 
     # remove caracteres que confundem o parser
@@ -14,7 +14,10 @@ def conform_csv_to_gcp(input_path: str):
     df["descricao"] = df.descricao.apply(lambda x: x.replace(",", ""))
 
     # add data da carga
-    df["_data_carga"] = date.today()
+    if date is not None:
+        df["_data_carga"] = date
+    else:
+        df["_data_carga"] = date.today()
 
     df.to_csv(input_path, index=False, sep=",", encoding="utf-8")
     log("CSV now conform")

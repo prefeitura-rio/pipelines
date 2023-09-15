@@ -172,3 +172,59 @@ def from_text_to_parquet(input_path: str, schema: str):
             log("An error occurred:", e)
 
     df.to_parquet(destination_path, index=False)
+
+
+@task
+def download_api_hist(
+    url: str,
+    destination_file_name: str,
+    params=None,
+    vault_path=None,
+    vault_key=None,
+    add_load_date_to_filename=False,
+):
+    auth_token = ""
+    if not vault_key is None:
+        try:
+            auth_token = get_vault_secret(secret_path=vault_path)["data"][vault_key]
+            logger.success("Vault secret retrieved")
+        except:
+            logger.error("Not able to retrieve Vault secret")
+
+    logger.info("Downloading data from API")
+    headers = {} if auth_token == "" else {"Authorization": f"Bearer {auth_token}"}
+    #params = {} if params is None else params
+
+    url = f"{url}/{params}"
+
+    try:
+        response = requests.get(url, headers=headers)
+    except:
+        logger.error(f"An error occurred: {Exception}")
+
+    if response.status_code == 200:
+        # The response contains the data from the API
+        api_data = response.json()
+
+        # Save the API data to a local file
+        if add_load_date_to_filename:
+            destination_file_path = f"{os.path.expanduser('~')}/{destination_file_name}_{params}.json"
+        else:
+            destination_file_path = (
+                f"{os.path.expanduser('~')}/{destination_file_name}.json"
+            )
+
+        # df = pd.DataFrame(response.json(), dtype="str")
+        # df["_data_carga"] = date.today()
+        # df.to_csv(destination_file_path, index=False, sep=";", encoding="utf-8")
+
+        # Save the API data to a local file
+        with open(destination_file_path, "w") as file:
+            file.write(str(api_data))
+
+        logger.success(f"API data downloaded to {destination_file_path}")
+
+    else:
+        logger.error(f"Error: {response.status_code} - {response.reason}")
+
+    return destination_file_path
