@@ -402,7 +402,7 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
     labels: List[str],
     table_parameters: list,
     dataset_id: str,
-    secret_path: str,
+    secret_path: str = None,
     runs_interval_minutes: int = 15,
     start_date: datetime = datetime(
         2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)

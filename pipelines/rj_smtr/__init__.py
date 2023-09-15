@@ -17,3 +17,4 @@ from pipelines.rj_smtr.projeto_subsidio_sppo.flows import *
 from pipelines.rj_smtr.veiculo.flows import *
 from pipelines.rj_smtr.example.flows import *
 from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.flows import *
+from pipelines.rj_smtr.br_rj_riodejaneiro_gtfs.flows import *

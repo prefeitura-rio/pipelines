@@ -254,3 +254,22 @@ class constants(Enum):  # pylint: disable=c0103
         },
     ]
     BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
+
+    GTFS_DATASET_ID = "br_rj_riodejaneiro_gtfs"
+    GTFS_TABLES = [
+        "quadro_horario",
+        "agency",
+        "calendar_dates",
+        "calendar",
+        "feed_info",
+        "frequencies",
+        "routes",
+        "shapes",
+        "stops",
+        "stop_times",
+        "trips",
+        "fare_attributes",
+        "fare_rules",
+    ]
+    # TODO: Adicionar parametros do flow default
+    GTFS_RAW_PATH = "./gtfs"
