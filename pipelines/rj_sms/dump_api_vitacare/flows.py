@@ -18,8 +18,8 @@ from pipelines.rj_sms.dump_api_vitacare.scheduler import every_day_at_six_am
 from pipelines.utils.utils import log
 
 with Flow(
-    name="SMS: Dump VitaCare - Captura de dados VitaCare", code_owners=["thiago"]
-) as dump_vitacare:
+    name="SMS: Dump VitaCare - Captura Posição de Estoque", code_owners=["thiago"]
+) as dump_vitacare_posicao:
     # Set Parameters
     #  Vault
     vault_path = None
@@ -27,7 +27,6 @@ with Flow(
     #  GCP
     dataset_id = "dump_vitacare"
     table_id = "estoque_posicao"
-    dump_mode = Parameter("dump_mode", default="append")  # append / overwrite
 
     # Start run
     create_folders_task = create_folders()
@@ -72,12 +71,12 @@ with Flow(
     upload_to_datalake_task.set_upstream(create_partitions_task)    
 
 
-dump_vitacare.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-dump_vitacare.run_config = KubernetesRun(
+dump_vitacare_posicao.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+dump_vitacare_posicao.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[
         constants.RJ_SMS_DEV_AGENT_LABEL.value,
     ],
 )
 
-dump_vitacare.schedule = every_day_at_six_am
+dump_vitacare_posicao.schedule = every_day_at_six_am
