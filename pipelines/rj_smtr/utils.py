@@ -8,7 +8,7 @@ from ftplib import FTP
 from pathlib import Path
 
 from datetime import timedelta, datetime
-from typing import List, Callable
+from typing import List
 import io
 import basedosdados as bd
 from basedosdados import Table
@@ -417,7 +417,6 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
         table_parameters (list): The table parameters
         dataset_id (str): The dataset_id to be used in the schedule
         secret_path (str): The secret path to be used in the schedule
-        create_request_params_func (Callable): The function to be used to create the request params
         runs_interval_minutes (int, optional): The interval between each schedule. Defaults to 15.
         start_date (datetime, optional): The start date of the schedule.
             Defaults to datetime(2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)).
