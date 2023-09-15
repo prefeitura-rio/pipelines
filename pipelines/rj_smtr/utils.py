@@ -434,7 +434,7 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
             "table_params": parameters,
             "dataset_id": dataset_id,
             "secret_path": secret_path,
-            "interval": interval,
+            "interval": interval.total_seconds(),
             "create_request_params_func": create_request_params_func,
         }
         log(f"parameter_defaults: {parameter_defaults}")
