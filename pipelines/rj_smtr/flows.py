@@ -63,7 +63,7 @@ with Flow(
         datetime_range=datetime_range,
         table_params=table_params,
         secret_path=secret_path,
-        dataset_id=dataset_id
+        dataset_id=dataset_id,
     )
 
     with case(table_params["flag_date_partition"], True):

@@ -33,7 +33,7 @@ def create_bilhetagem_request_params(  # pylint: disable=too-many-arguments,too-
     params = {
         "host": database_secrets["host"],
         "database": table_params["database"],
-        "query": table_params["query"].format(**datetime_range)
+        "query": table_params["query"].format(**datetime_range),
     }
 
     return params, url

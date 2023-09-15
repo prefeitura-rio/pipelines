@@ -433,7 +433,7 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
             "table_params": parameters,
             "dataset_id": dataset_id,
             "secret_path": secret_path,
-            "interval": interval.total_seconds()
+            "interval": interval.total_seconds(),
         }
         log(f"parameter_defaults: {parameter_defaults}")
         clocks.append(

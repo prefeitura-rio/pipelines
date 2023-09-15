@@ -922,10 +922,7 @@ def get_datetime_range(
 
 @task(checkpoint=False, nout=2)
 def create_request_params(
-    datetime_range: dict,
-    table_params: dict,
-    secret_path: str,
-    dataset_id: str
+    datetime_range: dict, table_params: dict, secret_path: str, dataset_id: str
 ) -> tuple:
     """
     Task to create request params
@@ -948,7 +945,6 @@ def create_request_params(
     """
 
     if dataset_id == constants.BILHETAGEM_DATASET_ID.value:
-
         secrets = get_vault_secret(secret_path)["data"]
 
         database_secrets = secrets["databases"][table_params["database"]]
@@ -958,7 +954,7 @@ def create_request_params(
         request_params = {
             "host": database_secrets["host"],
             "database": table_params["database"],
-            "query": table_params["query"].format(**datetime_range)
+            "query": table_params["query"].format(**datetime_range),
         }
 
     return request_params, request_url

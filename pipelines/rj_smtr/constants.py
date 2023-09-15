@@ -175,12 +175,12 @@ class constants(Enum):  # pylint: disable=c0103
                 FROM
                     transacao
                 WHERE
-                    data_processamento BETWEEN '{start}' 
+                    data_processamento BETWEEN '{start}'
                     AND '{end}'
                 ORDER BY
                     data_processamento
             """,
-            "primary_key": ["id"], # id column to nest data on
+            "primary_key": ["id"],  # id column to nest data on
             "flag_date_partition": False,
         },
     ]
@@ -198,7 +198,7 @@ class constants(Enum):  # pylint: disable=c0103
                 ORDER BY
                     DT_INCLUSAO
             """,
-            "primary_key": ["CD_LINHA"], # id column to nest data on
+            "primary_key": ["CD_LINHA"],  # id column to nest data on
             "flag_date_partition": True,
         },
         {
@@ -230,7 +230,7 @@ class constants(Enum):  # pylint: disable=c0103
                 ORDER BY
                     DT_INCLUSAO
             """,
-            "primary_key": ["CD_GRUPO", "CD_LINHA"], # id column to nest data on
+            "primary_key": ["CD_GRUPO", "CD_LINHA"],  # id column to nest data on
             "flag_date_partition": True,
         },
         {
@@ -246,7 +246,10 @@ class constants(Enum):  # pylint: disable=c0103
                 ORDER BY
                     dt_inclusao
             """,
-            "primary_key": ["cd_versao_matriz", "cd_integracao"], # id column to nest data on
+            "primary_key": [
+                "cd_versao_matriz",
+                "cd_integracao",
+            ],  # id column to nest data on
             "flag_date_partition": True,
         },
     ]
