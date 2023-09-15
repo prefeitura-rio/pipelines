@@ -47,14 +47,14 @@ with Flow(
 
     table_params = Parameter("table_params", default=None)
     timestamp_param = Parameter("timestamp", default=None)
-    interval_param = Parameter("interval", default=None)
+    interval = Parameter("interval", default=None)
     create_request_params_func = Parameter("create_request_params_func", default=None)
     dataset_id = Parameter("dataset_id", default=None)
     secret_path = Parameter("secret_path", default=None)
 
     timestamp = get_current_timestamp(timestamp_param)
 
-    datetime_range = get_datetime_range(timestamp, interval=interval_param)
+    datetime_range = get_datetime_range(timestamp, interval=interval)
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=captura_generico.name + " " + table_params["table_id"] + ": ",
