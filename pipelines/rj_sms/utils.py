@@ -44,6 +44,8 @@ def download_from_api(
     add_load_date_to_filename=False,
     load_date=None,
 ):
+    log(url)
+    log(load_date)
     # Retrieve the API key from Vault
     auth_token = ""
     if vault_key is not None:
@@ -80,7 +82,7 @@ def download_from_api(
         log(f"API data downloaded to {destination_file_path}")
 
     else:
-        log(f"Error: {response.status_code} - {response.reason}", level="error")
+        log(f"API call failed. Error: {response.status_code} - {response.reason}", level="error")
 
     return destination_file_path
 
