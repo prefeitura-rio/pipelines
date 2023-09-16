@@ -39,6 +39,7 @@ class constants(Enum):  # pylint: disable=c0103
         "ano_fabricacao": "ano_fabricacao",
         "wifi": "indicador_wifi",
         "usb": "indicador_usb",
+        "data_inicio_vinculo": "data_inicio_vinculo",
     }
     SPPO_LICENCIAMENTO_CSV_ARGS = {
         "sep": ";",
