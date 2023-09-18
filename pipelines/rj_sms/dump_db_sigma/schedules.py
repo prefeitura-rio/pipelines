@@ -26,10 +26,10 @@ _sigma_queries = {
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
-            SELECT 
-                CD_GRUPO, 
-                CD_CLASSE, 
-                DS_CLASSE, 
+            SELECT
+                CD_GRUPO,
+                CD_CLASSE,
+                DS_CLASSE,
                 ST_STATUS
             FROM SIGMA.VW_CLASSE
         """,  # noqa
@@ -40,7 +40,7 @@ _sigma_queries = {
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
-            SELECT 
+            SELECT
                 CPF_CNPJ,
                 TIPO_CPF_CNPJ,
                 INSCRICAO_MUNICIPAL,
@@ -78,7 +78,7 @@ _sigma_queries = {
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
-            SELECT 
+            SELECT
                 CPF_CNPJ,
                 TIPO_CPF_CNPJ,
                 NOME,
@@ -93,9 +93,9 @@ _sigma_queries = {
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
-            SELECT 
-                CD_GRUPO, 
-                DS_GRUPO, 
+            SELECT
+                CD_GRUPO,
+                DS_GRUPO,
                 ST_STATUS
             FROM SIGMA.VW_GRUPO
         """,  # noqa
@@ -106,7 +106,7 @@ _sigma_queries = {
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
-            SELECT 
+            SELECT
                 CD_MATERIAL,
                 CD_GRUPO,
                 CD_CLASSE,
@@ -130,7 +130,7 @@ _sigma_queries = {
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
-            SELECT 
+            SELECT
                 CD_MATERIAL,
                 CNPJ_FORNECEDOR,
                 NOTA_FISCAL,
@@ -163,9 +163,9 @@ _sigma_queries = {
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
-            SELECT 
-                CD_RAMO, 
-                DS_RAMO, 
+            SELECT
+                CD_RAMO,
+                DS_RAMO,
                 ST_RAMO
             FROM SIGMA.VW_RAMO_ATIVIDADE
         """,  # noqa
@@ -176,7 +176,7 @@ _sigma_queries = {
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
-            SELECT 
+            SELECT
                 CD_SERV,
                 CD_SEQ,
                 CD_SERVICO,
@@ -191,7 +191,7 @@ _sigma_queries = {
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
-            SELECT 
+            SELECT
                 CD_GRUPO,
                 CD_CLASSE,
                 CD_SUBCLASSE,
@@ -206,8 +206,8 @@ _sigma_queries = {
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
-            SELECT 
-                UNIDADE, 
+            SELECT
+                UNIDADE,
                 DS_UNIDADE
             FROM SIGMA.VW_UNIDADE
         """,  # noqa
