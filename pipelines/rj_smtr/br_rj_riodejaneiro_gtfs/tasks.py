@@ -3,32 +3,48 @@
 Tasks for gtfs
 """
 
-from prefect import task
-from typing import Dict
-from pathlib import Path
+import traceback
 import zipfile
+from pathlib import Path
+from typing import Dict
+from datetime import datetime
+
 import pandas as pd
+from prefect import task
 
 from pipelines.rj_smtr.constants import constants
+from pipelines.utils.utils import get_storage_blobs, log
 
-from pipelines.utils.utils import (
-    get_storage_blobs,
-    log,
-)
+from pipelines.rj_smtr.tasks import get_current_timestamp
+
+
+@task
+def get_current_timestamp_from_date(
+    date: str,
+) -> datetime:
+    """
+    Get current timestamp from date
+    Args:
+        date (str): Date in format YYYY-MM-DD
+    Returns:
+        datetime: Current timestamp
+    """
+
+    return get_current_timestamp.run(datetime.strptime(date, "%Y-%m-%d"))
 
 
 @task
 def download_gtfs(
     dataset_id: str = constants.GTFS_DATASET_ID.value,
-    feed_start_date: str = None,
-    feed_end_date: str = None,
+    # feed_start_date: str = None,
+    # feed_end_date: str = None,
 ) -> Dict:
     """
     Retrieve GTFS data from GCS and saves locally without partitioning.
     Args:
         dataset_id (str, optional): Dataset ID on GCS/BigQuery
-        feed_start_date (str): 
-        feed_end_date (str): 
+        feed_start_date (str):
+        feed_end_date (str):
     Returns:
         list: Containing dicts with the following keys for each gtfs table:
           * `table_id`: Table ID
@@ -43,9 +59,8 @@ def download_gtfs(
     dirpath = Path(constants.GTFS_RAW_PATH.value)
     dirpath.mkdir(parents=True, exist_ok=True)
 
-    blobs = get_storage_blobs(
-        dataset_id=dataset_id, table_id="upload", mode="development"
-    )
+    blobs = get_storage_blobs(dataset_id=dataset_id, table_id="upload")
+
     log(f"Retrieved blobs: {blobs}")
 
     for blob in blobs:
@@ -68,25 +83,24 @@ def download_gtfs(
             with zipfile.ZipFile(filename, "r") as zip_ref:
                 zip_ref.extractall(dirpath)
 
-    mapped_tables_status = {
-        "table_id": [],
-        "status": []
-    }
+    mapped_tables_status = {"table_id": [], "status": []}
 
     for table_id in constants.GTFS_TABLES.value:
-
         try:
             data = pd.read_csv(f"gtfs/{table_id}.txt")
             # Corrige data de inicio e final do feed
+            """
             if table_id == "feed_info":
                 if feed_start_date:
                     data["feed_start_date"] = feed_start_date
                 if feed_end_date:
                     data["feed_end_date"] = feed_end_date
-        # TODO: Adicionar catch + log de erro
-        except:
-            error = None
-            pass
+            """
+        # Adicionar catch + log de erro
+        except Exception:
+            error = traceback.format_exc()
+
+            log(f"[CATCHED ERROR]: \n{error}")
 
         mapped_tables_status["table_id"].append(table_id)
         mapped_tables_status["status"].append({"data": data, "error": error})

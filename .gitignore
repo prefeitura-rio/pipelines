@@ -148,3 +148,9 @@ dmypy.json
 # Backfill stuff
 backfill.csv
 REVIEW.md
+
+# GTFS local files
+
+gtfs/
+gtfs.zip
+log_gtfs.txt

@@ -257,7 +257,7 @@ class constants(Enum):  # pylint: disable=c0103
 
     GTFS_DATASET_ID = "br_rj_riodejaneiro_gtfs"
     GTFS_TABLES = [
-        "quadro_horario",
+        # "quadro_horario",
         "agency",
         "calendar_dates",
         "calendar",
@@ -271,5 +271,20 @@ class constants(Enum):  # pylint: disable=c0103
         "fare_attributes",
         "fare_rules",
     ]
-    # TODO: Adicionar parametros do flow default
+    # Adicionar parametros do flow default
     GTFS_RAW_PATH = "./gtfs"
+    GTFS_TABLE_PARAMS = [
+        {"table_id": "agency", "primary_key": "trip_id"},
+        {"table_id": "agency", "primary_key": "agency_id"},
+        {"table_id": "calendar_dates", "primary_key": "service_id"},
+        {"table_id": "calendar", "primary_key": "service_id"},
+        {"table_id": "feed_info", "primary_key": "feed_publisher_name"},
+        {"table_id": "frequencies", "primary_key": "trip_id"},
+        {"table_id": "routes", "primary_key": "route_id"},
+        {"table_id": "shapes", "primary_key": "shape_id"},
+        {"table_id": "stops", "primary_key": "stop_id"},
+        {"table_id": "stop_times", "primary_key": "trip_id"},
+        {"table_id": "trips", "primary_key": "trip_id"},
+        {"table_id": "fare_attributes", "primary_key": "fare_id"},
+        {"table_id": "fare_rules", "primary_key": "fare_id"},
+    ]
