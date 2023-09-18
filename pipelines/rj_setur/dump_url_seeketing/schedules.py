@@ -139,6 +139,26 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "dataset_id": "turismo_fluxo_visitantes",
     },
+    "pao_de_acucar": {
+        "dump_mode": "overwrite",
+        "url": "https://docs.google.com/spreadsheets/d/1wio45Se6HXo1nFeyY2GXxa-fduJlnICVW1p_Rg4UbjI\
+            /edit#gid=722381052",
+        "url_type": "google_sheet",
+        "gsheets_sheet_name": "Parque Bondinho - Pão de Açucar",
+        "gsheets_sheet_range": "A4:B1000",
+        "materialize_after_dump": True,
+        "dataset_id": "turismo_fluxo_visitantes",
+    },
+    "museu_nacional": {
+        "dump_mode": "overwrite",
+        "url": "https://docs.google.com/spreadsheets/d/1wio45Se6HXo1nFeyY2GXxa-fduJlnICVW1p_Rg4UbjI\
+            /edit#gid=722381052",
+        "url_type": "google_sheet",
+        "gsheets_sheet_name": "Museu Histórico Nacional",
+        "gsheets_sheet_range": "A5:B1000",
+        "materialize_after_dump": True,
+        "dataset_id": "turismo_fluxo_visitantes",
+    },
 }
 
 
