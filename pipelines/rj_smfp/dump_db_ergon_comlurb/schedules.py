@@ -23,6 +23,7 @@ from pipelines.utils.utils import untuple_clocks as untuple
 ergon_queries = {
     "cargo": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "dbt_alias": True,
@@ -105,6 +106,7 @@ ergon_queries = {
     },
     "dependente": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "dbt_alias": True,
@@ -216,6 +218,7 @@ ergon_queries = {
     },
     "funcionario_evento": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "dbt_alias": True,
@@ -333,6 +336,7 @@ ergon_queries = {
     },
     "ficha_financeira": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "dbt_alias": True,
@@ -359,8 +363,10 @@ ergon_queries = {
     },
     "fita_banco": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "append",
+        "lower_bound_date": "current_month",
         "partition_columns": "MES_ANO",
         "dbt_alias": True,
         "execute_query": """
@@ -449,6 +455,7 @@ ergon_queries = {
     },
     "frequencia": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "dbt_alias": True,
@@ -524,6 +531,7 @@ ergon_queries = {
     },
     "funcionario": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "dbt_alias": True,
@@ -729,6 +737,7 @@ ergon_queries = {
     },
     "setor_h": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "dbt_alias": True,
@@ -739,6 +748,7 @@ ergon_queries = {
     },
     "licenca_afastamento": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "dbt_alias": True,
@@ -829,6 +839,7 @@ ergon_queries = {
     },
     "setor": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "dbt_alias": True,
@@ -882,6 +893,7 @@ ergon_queries = {
     },
     "vantagens": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "dbt_alias": True,
@@ -958,6 +970,7 @@ ergon_queries = {
     },
     "vinculo": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "dbt_alias": True,
@@ -1121,7 +1134,7 @@ ergon_queries = {
 ergon_clocks = generate_dump_db_schedules(
     interval=timedelta(days=1),
     start_date=datetime(
-        2022, 10, 25, 18, 30, tzinfo=pytz.timezone("America/Sao_Paulo")
+        2022, 10, 25, 23, 30, tzinfo=pytz.timezone("America/Sao_Paulo")
     ),
     labels=[
         constants.RJ_SMFP_AGENT_LABEL.value,
