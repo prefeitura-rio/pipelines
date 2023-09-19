@@ -36,8 +36,8 @@ def get_current_timestamp_from_date(
 @task
 def download_gtfs(
     dataset_id: str = constants.GTFS_DATASET_ID.value,
-    # feed_start_date: str = None,
-    # feed_end_date: str = None,
+    feed_start_date: str = None,
+    feed_end_date: str = None,
 ) -> Dict:
     """
     Retrieve GTFS data from GCS and saves locally without partitioning.
@@ -59,12 +59,18 @@ def download_gtfs(
     dirpath = Path(constants.GTFS_RAW_PATH.value)
     dirpath.mkdir(parents=True, exist_ok=True)
 
-    blobs = get_storage_blobs(dataset_id=dataset_id, table_id="upload")
+    log(f"Path criado: {dirpath.as_posix()}")
+
+    blobs = get_storage_blobs(
+        dataset_id=dataset_id, table_id="upload", mode="development"
+    )
 
     log(f"Retrieved blobs: {blobs}")
 
     for blob in blobs:
         filename = blob.name.split("/")[-1]
+
+        log(f"Filename: {filename}")
 
         # Download arquivo de quadro horário
         if filename == "quadro.csv":
@@ -82,20 +88,23 @@ def download_gtfs(
             # Extract ZIP file
             with zipfile.ZipFile(filename, "r") as zip_ref:
                 zip_ref.extractall(dirpath)
+                log(f"Extracted file {zip_ref.filename}")
 
     mapped_tables_status = {"table_id": [], "status": []}
 
+    # mudar para json a saída de dados e aplicar o raw path
     for table_id in constants.GTFS_TABLES.value:
         try:
-            data = pd.read_csv(f"gtfs/{table_id}.txt")
+            data = pd.read_csv(dirpath.as_posix() + "/" + str(table_id) + ".txt")
+
             # Corrige data de inicio e final do feed
-            """
+
             if table_id == "feed_info":
                 if feed_start_date:
                     data["feed_start_date"] = feed_start_date
                 if feed_end_date:
                     data["feed_end_date"] = feed_end_date
-            """
+
         # Adicionar catch + log de erro
         except Exception:
             error = traceback.format_exc()
@@ -104,5 +113,7 @@ def download_gtfs(
 
         mapped_tables_status["table_id"].append(table_id)
         mapped_tables_status["status"].append({"data": data, "error": error})
+
+    log(f"Table {mapped_tables_status['table_id']} mapped")
 
     return mapped_tables_status

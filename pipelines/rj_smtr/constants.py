@@ -257,7 +257,6 @@ class constants(Enum):  # pylint: disable=c0103
 
     GTFS_DATASET_ID = "br_rj_riodejaneiro_gtfs"
     GTFS_TABLES = [
-        # "quadro_horario",
         "agency",
         "calendar_dates",
         "calendar",
@@ -271,6 +270,7 @@ class constants(Enum):  # pylint: disable=c0103
         "fare_attributes",
         "fare_rules",
     ]
+
     # Adicionar parametros do flow default
     GTFS_RAW_PATH = "./gtfs"
     GTFS_TABLE_PARAMS = [

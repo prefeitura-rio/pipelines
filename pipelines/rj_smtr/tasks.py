@@ -269,11 +269,15 @@ def save_treated_local(file_path: str, status: dict, mode: str = "staging") -> s
     Returns:
         str: Path to the saved file
     """
+    log(f"Saving treated data to: {file_path},{status}")
+
     _file_path = file_path.format(mode=mode, filetype="csv")
+
     Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
     if status["error"] is None:
         status["data"].to_csv(_file_path, index=False)
         log(f"Treated data saved to: {_file_path}")
+
     return _file_path
 
 

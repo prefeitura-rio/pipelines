@@ -20,6 +20,8 @@ from pipelines.rj_smtr.tasks import (
     parse_timestamp_to_string,
     upload_logs_to_bq,
     bq_upload,
+    save_raw_local,
+    save_treated_local,
 )
 from pipelines.rj_smtr.br_rj_riodejaneiro_gtfs.tasks import (
     download_gtfs,
@@ -68,11 +70,18 @@ with Flow(
         partitions=unmapped(partitions),
     )
 
+    # mudar para save_raw_local
+    treated_filepath = save_treated_local.map(
+        file_path=filepath,
+        status=mapped_tables_status["status"],
+        mode=unmapped("raw"),
+    )
+
     # LOAD #
-    error = bq_upload.map(
+    errors = bq_upload.map(
+        raw_filepath=treated_filepath,
         dataset_id=unmapped(constants.GTFS_DATASET_ID.value),
         table_id=mapped_tables_status["table_id"],
-        filepath=filepath,
         partitions=unmapped(partitions),
         status=mapped_tables_status["status"],
     )
@@ -80,7 +89,7 @@ with Flow(
     UPLOAD_LOGS = upload_logs_to_bq.map(
         dataset_id=unmapped(constants.GTFS_DATASET_ID.value),
         parent_table_id=constants.GTFS_TABLES.value,
-        error=error,
+        error=errors,
         timestamp=unmapped(timestamp),
     )
 
