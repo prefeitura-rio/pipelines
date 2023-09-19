@@ -24,7 +24,7 @@ gtfs_clocks = generate_execute_schedules(
     table_parameters=constants.GTFS_TABLES_PARAMS.value,
     dataset_id=constants.GTFS_DATASET_ID.value,
     runs_interval_minutes=15,
-    start_date=None
+    start_date=None,
 )
 
 gtfs_captura_schedule = Schedule(clocks=untuple(gtfs_clocks))
