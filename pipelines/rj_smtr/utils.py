@@ -446,6 +446,7 @@ def data_info_str(data: pd.DataFrame):
 #         )
 #     return clocks
 
+
 def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-locals
     clock_interval: timedelta,
     labels: List[str],
@@ -454,7 +455,7 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
     start_date: datetime = datetime(
         2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)
     ),
-    **general_flow_params
+    **general_flow_params,
 ) -> List[IntervalClock]:
     """
     Generates multiple schedules
@@ -475,7 +476,7 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
     clocks = []
     for count, parameters in enumerate(table_parameters):
         parameter_defaults = {"table_params": parameters} | general_flow_params
-        
+
         log(f"parameter_defaults: {parameter_defaults}")
         clocks.append(
             IntervalClock(

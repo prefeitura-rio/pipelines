@@ -16,7 +16,7 @@ from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
     get_now_time,
     get_current_flow_labels,
-    get_current_flow_mode
+    get_current_flow_mode,
 )
 from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
 
@@ -36,7 +36,7 @@ from pipelines.rj_smtr.tasks import (
     transform_to_nested_structure,
     create_dbt_run_vars,
     set_last_run_timestamp,
-    treat_dbt_table_params
+    treat_dbt_table_params,
 )
 
 from pipelines.rj_smtr.tasks import (
@@ -135,18 +135,21 @@ with Flow(
     "SMTR: Materialização",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as default_materialization_flow:
-
     # SETUP #
 
     dataset_id = Parameter("dataset_id", default=None)
     table_params = Parameter("table_params", default=dict())
 
-    treated_table_params = treat_dbt_table_params(dataset_id=dataset_id, table_params=table_params)
+    treated_table_params = treat_dbt_table_params(
+        dataset_id=dataset_id, table_params=table_params
+    )
 
     # Rename flow run
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=f"{default_materialization_flow.name} {treated_table_params['flow_name']}: ", now_time=get_now_time(), wait=treated_table_params
+        prefix=f"{default_materialization_flow.name} {treated_table_params['flow_name']}: ",
+        now_time=get_now_time(),
+        wait=treated_table_params,
     )
 
     LABELS = get_current_flow_labels()
@@ -160,7 +163,7 @@ with Flow(
         table_id=treated_table_params["table_id"],
         raw_dataset_id=dataset_id,
         raw_table_id=treated_table_params["raw_table_id"],
-        mode=MODE
+        mode=MODE,
     )
 
     RUN = run_dbt_model(
@@ -172,11 +175,10 @@ with Flow(
         upstream=treated_table_params["upstream"],
         downstream=treated_table_params["downstream"],
         exclude=treated_table_params["exclude"],
-        flags=treated_table_params["flags"]
+        flags=treated_table_params["flags"],
     )
 
     with case(date_range["flag_date_range"], True):
-
         set_last_run_timestamp(
             dataset_id=dataset_id,
             table_id=treated_table_params["table_id"],
@@ -189,5 +191,5 @@ with Flow(
 default_materialization_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 default_materialization_flow.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )

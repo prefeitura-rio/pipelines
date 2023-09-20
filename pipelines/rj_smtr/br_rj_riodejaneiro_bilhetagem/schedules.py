@@ -44,4 +44,3 @@ bilhetagem_transacao_clocks = generate_execute_schedules(
 )
 
 bilhetagem_transacao_schedule = Schedule(clocks=untuple(bilhetagem_transacao_clocks))
-
