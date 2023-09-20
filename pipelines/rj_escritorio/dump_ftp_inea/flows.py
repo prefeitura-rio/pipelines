@@ -26,7 +26,7 @@ from pipelines.utils.decorators import Flow
 
 
 with Flow(
-    "INEA: Captura dados de radar (Guaratiba)",
+    "INEA: Captura FTP dados de radar (Guaratiba)",
     code_owners=[
         "paty",
     ],
@@ -67,7 +67,7 @@ inea_ftp_radar_flow.run_config = LocalRun(labels=[constants.INEA_AGENT_LABEL.val
 inea_ftp_radar_flow.schedule = every_5_minutes
 
 inea_ftp_radar_flow_mac = deepcopy(inea_ftp_radar_flow)
-inea_ftp_radar_flow_mac.name = "INEA: Captura dados de radar (Macaé)"
+inea_ftp_radar_flow_mac.name = "INEA: Captura FTP dados de radar (Macaé)"
 inea_ftp_radar_flow_mac.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 inea_ftp_radar_flow_mac.run_config = LocalRun(labels=[constants.INEA_AGENT_LABEL.value])
 inea_ftp_radar_flow_mac.schedule = every_5_minutes_mac
