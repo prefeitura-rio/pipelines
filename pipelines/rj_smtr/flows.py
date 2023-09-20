@@ -14,7 +14,11 @@ from pipelines.constants import constants as emd_constants
 from pipelines.utils.decorators import Flow
 from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
+    get_now_time,
+    get_current_flow_labels,
+    get_current_flow_mode
 )
+from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
 
 # SMTR Imports #
 
@@ -30,6 +34,9 @@ from pipelines.rj_smtr.tasks import (
     upload_logs_to_bq,
     bq_upload,
     transform_to_nested_structure,
+    create_dbt_run_vars,
+    set_last_run_timestamp,
+    treat_dbt_table_params
 )
 
 from pipelines.rj_smtr.tasks import (
@@ -37,6 +44,7 @@ from pipelines.rj_smtr.tasks import (
     get_datetime_range,
 )
 
+from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
 with Flow(
     "SMTR: Captura",
@@ -122,3 +130,57 @@ default_capture_flow.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
+
+with Flow(
+    "SMTR: Materialização",
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
+) as default_materialization_flow:
+
+    # SETUP #
+
+    dataset_id = Parameter("dataset_id", default=None)
+    table_params = Parameter("table_params", default=dict())
+
+    treated_table_params = treat_dbt_table_params(dataset_id=dataset_id, table_params=table_params)
+
+    # Rename flow run
+
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix=f"{default_materialization_flow.name} {treated_table_params['flow_name']}: ", now_time=get_now_time(), wait=treated_table_params
+    )
+
+    LABELS = get_current_flow_labels()
+    MODE = get_current_flow_mode(LABELS)
+
+    dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
+
+    _vars, date_range = create_dbt_run_vars(
+        dataset_id=dataset_id,
+        var_params=treated_table_params["var_params"],
+        table_id=treated_table_params["table_id"],
+        raw_dataset_id=dataset_id,
+        raw_table_id=treated_table_params["raw_table_id"],
+        mode=MODE
+    )
+
+    RUN = run_dbt_model(
+        dbt_client=dbt_client,
+        dataset_id=dataset_id,
+        table_id=treated_table_params["table_id"],
+        _vars=_vars,
+        dbt_alias=treated_table_params["dbt_alias"],
+        upstream=treated_table_params["upstream"],
+        downstream=treated_table_params["downstream"],
+        exclude=treated_table_params["exclude"],
+        flags=treated_table_params["flags"]
+    )
+
+    with case(date_range["flag_date_range"], True):
+
+        set_last_run_timestamp(
+            dataset_id=dataset_id,
+            table_id=treated_table_params["table_id"],
+            timestamp=date_range["date_range_end"],
+            wait=RUN,
+            mode=MODE,
+        )
