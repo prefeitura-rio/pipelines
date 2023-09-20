@@ -8,10 +8,10 @@ import zipfile
 from pathlib import Path
 from typing import Dict
 from datetime import datetime
-
+import json
 import pandas as pd
 from prefect import task
-
+import io
 from pipelines.rj_smtr.constants import constants
 from pipelines.utils.utils import get_storage_blobs, log
 
@@ -38,7 +38,7 @@ def download_gtfs(
     dataset_id: str = constants.GTFS_DATASET_ID.value,
     feed_start_date: str = None,
     feed_end_date: str = None,
-) -> Dict:
+) -> str:
     """
     Retrieve GTFS data from GCS and saves locally without partitioning.
     Args:
@@ -95,7 +95,9 @@ def download_gtfs(
     # mudar para json a saída de dados e aplicar o raw path
     for table_id in constants.GTFS_TABLES.value:
         try:
-            data = pd.read_csv(dirpath.as_posix() + "/" + str(table_id) + ".txt")
+            data = pd.read_csv(
+                io.StringIO(dirpath.as_posix() + "/" + str(table_id) + ".txt")
+            ).to_dict(orient="records")
 
             # Corrige data de inicio e final do feed
 
@@ -114,6 +116,15 @@ def download_gtfs(
         mapped_tables_status["table_id"].append(table_id)
         mapped_tables_status["status"].append({"data": data, "error": error})
 
-    log(f"Table {mapped_tables_status['table_id']} mapped")
+        # mapped_tables = pd.DataFrame.from_records([mapped_tables_status])
+
+        # mapped_tables = pd.DataFrame(mapped_tables_status)
+        # mapped_tables_json = mapped_tables.to_json(orient="records", lines=True)'])
+        # mapped_tables_json = mapped_tables.to_json(orient="records", lines=True)
+
+        # with open('mapped_tables.json', 'w') as json_file:
+        #    json.dump(mapped_tables_json, json_file)
+
+    log(f"Table {list(mapped_tables_status)} mapped")
 
     return mapped_tables_status

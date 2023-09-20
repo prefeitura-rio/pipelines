@@ -69,7 +69,7 @@ with Flow(
         filename=unmapped(filename),
         partitions=unmapped(partitions),
     )
-
+    """
     # mudar para save_raw_local
     treated_filepath = save_treated_local.map(
         file_path=filepath,
@@ -92,7 +92,7 @@ with Flow(
         error=errors,
         timestamp=unmapped(timestamp),
     )
-
+"""
 download_gtfs_flow.storage = GCS(constants_emd.GCS_FLOWS_BUCKET.value)
 download_gtfs_flow.run_config = KubernetesRun(
     image=constants_emd.DOCKER_IMAGE.value,

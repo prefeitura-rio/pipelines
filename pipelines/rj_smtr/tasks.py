@@ -409,7 +409,7 @@ def get_raw(  # pylint: disable=R0912
         params (dict, optional): Params to be sent on request
 
     Returns:
-        dict: Conatining keys
+        dict: Containing keys
           * `data` (json): data result
           * `error` (str): catched error, if any. Otherwise, returns None
     """
@@ -841,7 +841,7 @@ def transform_to_nested_structure(
         primary_key (list, optional): List of primary keys to be used for nesting.
 
     Returns:
-        dict: Conatining keys
+        dict: Containing keys
             * `data` (json): nested data
             * `error` (str): catched error, if any. Otherwise, returns None
     """
