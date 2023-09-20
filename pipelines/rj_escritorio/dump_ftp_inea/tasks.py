@@ -71,6 +71,8 @@ def download_files(client, files, radar):
         client.download(remote_path=file, local_path=file_path)
         files_downloaded.append(file_path)
     log(f"files_downloaded: {files_downloaded}")
+    file = Path(files_downloaded[0])
+    log(f"DEBUGGGG: {file.name}")
     return files_downloaded
 
 
@@ -103,7 +105,8 @@ def upload_file_to_gcs(
             # Converted file path is in the format:
             # /var/opt/edge/.../YYYYMMDD/<filename>.nc.gz
             # We need to get the datetime for the file
-            date_str = file.parent.name
+            log(f"DEBUG: {file} e {file.name}")
+            date_str = file.split("-")[2]
             date = datetime.strptime(date_str, "%Y%m%d").strftime("%Y-%m-%d")
             blob_name = f"{prefix}/radar={radar}/produto={product}/data_particao={date}/{file.name}"
             blob_name = blob_name.replace("//", "/")
