@@ -467,7 +467,7 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
         runs_interval_minutes (int, optional): The interval between each schedule. Defaults to 15.
         start_date (datetime, optional): The start date of the schedule.
             Defaults to datetime(2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)).
-        genereal_flow_params: Any param that you want to pass to the flow
+        general_flow_params: Any param that you want to pass to the flow
     Returns:
         List[IntervalClock]: The list of schedules
 
