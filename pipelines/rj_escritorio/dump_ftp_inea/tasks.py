@@ -99,25 +99,22 @@ def upload_file_to_gcs(
 
     bucket = storage_client.bucket(bucket_name)
 
-    file = Path(file_to_upload)
-    if file.is_file():
-        if task_mode == "partitioned":
-            # Converted file path is in the format:
-            # /var/opt/edge/.../YYYYMMDD/<filename>.nc.gz
-            # We need to get the datetime for the file
-            log(f"DEBUG: {file} e {file.name}")
-            date_str = file.split("-")[2]
-            date = datetime.strptime(date_str, "%Y%m%d").strftime("%Y-%m-%d")
-            blob_name = f"{prefix}/radar={radar}/produto={product}/data_particao={date}/{file.name}"
-            blob_name = blob_name.replace("//", "/")
-        elif task_mode == "raw":
-            blob_name = f"{prefix}/{file.name}"
-        else:
-            raise ValueError(f"Invalid task_mode: {task_mode}")
-        log(f"Uploading file {file} to GCS...")
+    if task_mode == "partitioned":
+        # We need to get the datetime for the file
+        log(f"DEBUG: {file_to_upload} e {file_to_upload.name}")
+        date_str = file_to_upload.split("-")[2]
+        date = datetime.strptime(date_str, "%Y%m%d").strftime("%Y-%m-%d")
+        blob_name = (
+            f"{prefix}/radar={radar}/produto={product}/"
+            f"data_particao={date}/{file_to_upload.name}"
+        )
+        blob_name = blob_name.replace("//", "/")
+    elif task_mode == "raw":
+        blob_name = f"{prefix}/{file_to_upload.name}"
+        log(f"Uploading file {file_to_upload} to GCS...")
         log(f"Blob name will be {blob_name}")
         blob = bucket.blob(blob_name)
-        blob.upload_from_filename(file)
-        log(f"File {file} uploaded to GCS.")
+        blob.upload_from_filename(file_to_upload)
+        log(f"File {file_to_upload} uploaded to GCS.")
         if unlink:
-            file.unlink()
+            file_to_upload.unlink()
