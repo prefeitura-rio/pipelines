@@ -14,7 +14,9 @@ from pipelines.constants import constants as emd_constants
 
 # SMTR Imports #
 
-from pipelines.rj_smtr.flows import default_capture_flow
+from pipelines.rj_smtr.flows import (
+    default_capture_flow,
+)
 
 from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.schedules import (
     bilhetagem_principal_schedule,
@@ -44,3 +46,5 @@ bilhetagem_principal_captura.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 bilhetagem_principal_captura.schedule = bilhetagem_principal_schedule
+
+# MATERIALIZAÇÃO
