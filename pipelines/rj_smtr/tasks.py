@@ -960,3 +960,86 @@ def create_request_params(
         }
 
     return request_params, request_url
+
+@task(checkpoint=False, nout=2)
+def create_dbt_run_vars( 
+    dataset_id:str,
+    var_params:dict,
+    table_id:str,
+    raw_dataset_id:str,
+    raw_table_id:str,
+    mode:str,
+    wait=None # pylint: disable=unused-argument
+) -> tuple[list[dict], dict]:
+    
+    log(f"Creating DBT variables. Parameter received: {var_params}")
+    
+    if (not var_params) or (not table_id):
+        log("var_params or table_id are blank. Skiping task")
+        return
+    
+    final_vars = []
+    date_range = {}
+    flag_date_range = False
+
+    if "date_range" in var_params.keys():
+
+        log("Creating date_range variable")
+
+        raw_table_id = raw_table_id or table_id
+
+        date_range = get_materialization_date_range(
+            dataset_id=dataset_id,
+            table_id=table_id,
+            raw_dataset_id=raw_dataset_id,
+            raw_table_id=raw_table_id,
+            table_run_datetime_column_name=var_params['date_range'].get("table_run_datetime_column_name"),
+            mode=mode,
+            delay_hours=var_params['date_range'].get("delay_hours", 0),
+        )
+
+        final_vars.append(date_range)
+        log(f"date_range created: {date_range}")
+
+        flag_date_range = True
+    
+    date_range['flag_date_range'] = flag_date_range
+    
+    if "version" in var_params.keys():
+
+        log("Creating version variable")
+        dataset_sha = fetch_dataset_sha(dataset_id=dataset_id)
+
+        final_vars.append(dataset_sha)
+        log(f"version created: {dataset_sha}")
+    
+    log(f"All variables was created, final value is: {final_vars}")
+    
+    return final_vars, date_range
+
+@task(checkpoint=False)
+def treat_dbt_table_params(dataset_id:str, table_params:dict, wait=None) -> dict: # pylint: disable=unused-argument
+
+    possible_keys = {
+        "table_id":None,
+        "raw_table_id": None,
+        "dbt_alias": False,
+        "upstream": None,
+        "downstream": None,
+        "exclude": None,
+        "flags": None,
+        "var_params": None
+    }
+
+    treated_dict = {}
+
+    log(f"Params received to treat: {table_params}")
+
+    for key, value in possible_keys.items():
+
+        treated_dict[key] = table_params.get(key, value)
+    
+    treated_dict['flow_name'] = treated_dict.get('table_id', dataset_id)
+
+    log(f"Treated params: {treated_dict}")
+    return treated_dict
