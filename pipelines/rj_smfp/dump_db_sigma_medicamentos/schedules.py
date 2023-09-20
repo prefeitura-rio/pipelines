@@ -218,13 +218,13 @@ sigma_infra_clocks = generate_dump_db_schedules(
     interval=timedelta(days=1),
     start_date=datetime(2022, 3, 21, 1, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
-        constants.RJ_SMS_AGENT_LABEL.value,
+        constants.RJ_SMFP_AGENT_LABEL.value,
     ],
     db_database="CP01.SMF",
     db_host="10.90.31.22",
     db_port="1521",
     db_type="oracle",
-    dataset_id="saude_estoque_medicamentos_sigma",
+    dataset_id="saude_medicamentos_sigma",
     vault_secret_path="db-sigma",
     table_parameters=_sigma_queries,
 )
