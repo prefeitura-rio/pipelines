@@ -1008,7 +1008,7 @@ def create_dbt_run_vars(
 
     if "version" in var_params.keys():
         log("Creating version variable")
-        dataset_sha = fetch_dataset_sha(dataset_id=dataset_id).run()
+        dataset_sha = fetch_dataset_sha.run(dataset_id=dataset_id)
 
         final_vars.append(dataset_sha)
         log(f"version created: {dataset_sha}")
