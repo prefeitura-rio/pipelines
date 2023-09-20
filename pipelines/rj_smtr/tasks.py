@@ -1007,7 +1007,10 @@ def create_dbt_run_vars(
 
     elif "run_date" in var_params.keys():
         log("Creating run_date variable")
-        run_dates = get_run_dates.run(var_params["run_date"].get("date_range_start"), var_params["run_date"].get("date_range_end"))
+        run_dates = get_run_dates.run(
+            var_params["run_date"].get("date_range_start"),
+            var_params["run_date"].get("date_range_end"),
+        )
         final_vars.append(run_dates)
 
         log(f"run_date created: {run_dates}")
@@ -1026,11 +1029,10 @@ def create_dbt_run_vars(
 
     return final_vars, date_range
 
+
 @task(checkpoint=False)
 def treat_dbt_table_params(
-    dataset_id: str,
-    table_params: dict,
-    wait=None # pylint: disable=unused-argument
+    dataset_id: str, table_params: dict, wait=None  # pylint: disable=unused-argument
 ) -> dict:
     possible_keys = {
         "table_id": None,
