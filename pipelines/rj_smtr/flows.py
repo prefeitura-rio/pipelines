@@ -7,6 +7,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect import case, Parameter
 from prefect.tasks.control_flow import merge
+from prefect.utilities.edges import unmapped
 
 # EMD Imports #
 
@@ -147,9 +148,8 @@ with Flow(
     # Rename flow run
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=f"{default_materialization_flow.name} {treated_table_params['flow_name']}: ",
+        prefix=default_materialization_flow.name + treated_table_params['flow_name']+ ": ",
         now_time=get_now_time(),
-        wait=treated_table_params,
     )
 
     LABELS = get_current_flow_labels()
@@ -166,16 +166,16 @@ with Flow(
         mode=MODE,
     )
 
-    RUN = run_dbt_model(
-        dbt_client=dbt_client,
-        dataset_id=dataset_id,
-        table_id=treated_table_params["table_id"],
+    RUNS = run_dbt_model.map(
+        dbt_client=unmapped(dbt_client),
+        dataset_id=unmapped(dataset_id),
+        table_id=unmapped(treated_table_params["table_id"]),
         _vars=_vars,
-        dbt_alias=treated_table_params["dbt_alias"],
-        upstream=treated_table_params["upstream"],
-        downstream=treated_table_params["downstream"],
-        exclude=treated_table_params["exclude"],
-        flags=treated_table_params["flags"],
+        dbt_alias=unmapped(treated_table_params["dbt_alias"]),
+        upstream=unmapped(treated_table_params["upstream"]),
+        downstream=unmapped(treated_table_params["downstream"]),
+        exclude=unmapped(treated_table_params["exclude"]),
+        flags=unmapped(treated_table_params["flags"]),
     )
 
     with case(date_range["flag_date_range"], True):
@@ -183,7 +183,7 @@ with Flow(
             dataset_id=dataset_id,
             table_id=treated_table_params["table_id"],
             timestamp=date_range["date_range_end"],
-            wait=RUN,
+            wait=RUNS,
             mode=MODE,
         )
 

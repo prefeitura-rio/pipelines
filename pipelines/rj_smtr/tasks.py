@@ -1000,28 +1000,38 @@ def create_dbt_run_vars(
         )
 
         final_vars.append(date_range)
+
         log(f"date_range created: {date_range}")
 
         flag_date_range = True
 
-    date_range["flag_date_range"] = flag_date_range
+    elif "run_date" in var_params.keys():
+        log("Creating run_date variable")
+        run_dates = get_run_dates.run(var_params["run_date"].get("date_range_start"), var_params["run_date"].get("date_range_end"))
+        final_vars.append(run_dates)
+
+        log(f"run_date created: {run_dates}")
 
     if "version" in var_params.keys():
         log("Creating version variable")
         dataset_sha = fetch_dataset_sha.run(dataset_id=dataset_id)
 
-        final_vars.append(dataset_sha)
+        final_vars = get_join_dict.run(dict_list=final_vars, new_dict=dataset_sha)
+
         log(f"version created: {dataset_sha}")
 
     log(f"All variables was created, final value is: {final_vars}")
 
-    return final_vars, date_range
+    date_range["flag_date_range"] = flag_date_range
 
+    return final_vars, date_range
 
 @task(checkpoint=False)
 def treat_dbt_table_params(
-    dataset_id: str, table_params: dict, wait=None
-) -> dict:  # pylint: disable=unused-argument
+    dataset_id: str,
+    table_params: dict,
+    wait=None # pylint: disable=unused-argument
+) -> dict:
     possible_keys = {
         "table_id": None,
         "raw_table_id": None,
