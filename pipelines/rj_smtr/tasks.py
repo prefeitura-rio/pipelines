@@ -987,7 +987,7 @@ def create_dbt_run_vars(
 
         raw_table_id = raw_table_id or table_id
 
-        date_range = get_materialization_date_range(
+        date_range = get_materialization_date_range.run(
             dataset_id=dataset_id,
             table_id=table_id,
             raw_dataset_id=raw_dataset_id,
@@ -1008,7 +1008,7 @@ def create_dbt_run_vars(
 
     if "version" in var_params.keys():
         log("Creating version variable")
-        dataset_sha = fetch_dataset_sha(dataset_id=dataset_id)
+        dataset_sha = fetch_dataset_sha(dataset_id=dataset_id).run()
 
         final_vars.append(dataset_sha)
         log(f"version created: {dataset_sha}")
