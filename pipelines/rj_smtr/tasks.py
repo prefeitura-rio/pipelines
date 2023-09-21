@@ -963,8 +963,11 @@ def create_request_params(
     return request_params, request_url
 
 @task(checkpoint=False)
-def coalesce_task(*values):
-    return next(value for value in values if value is not None)
+def coalesce_task(value_1, value_2):
+    if value_1 is not None:
+        return value_1
+    return value_2
+    # return next(value for value in values if value is not None)
 
 @task(checkpoint=False, nout=3)
 def create_dbt_run_vars(
