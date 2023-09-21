@@ -14,6 +14,7 @@ from prefect.utilities.edges import unmapped
 from pipelines.constants import constants
 from pipelines.rj_escritorio.dump_ftp_inea.tasks import (
     get_ftp_client,
+    get_files_datalake,
     get_files_to_download,
     download_files,
     upload_file_to_gcs,
@@ -36,6 +37,9 @@ with Flow(
     ],
 ) as inea_ftp_radar_flow:
     bucket_name = Parameter("bucket_name", default="rj-escritorio-dev", required=False)
+    date = Parameter("date", default=None, required=False)
+    get_only_last_file = Parameter("get_only_last_file", default=True, required=False)
+    greater_than = Parameter("greater_than", default=None, required=False)
     prefix = Parameter(
         "prefix", default="raw/meio_ambiente_clima/inea_radar_hdf5", required=False
     )
@@ -49,10 +53,21 @@ with Flow(
         dataset_id="meio_ambiente_clima", table_id=radar, mode=mode
     )
 
+    datalake_files = get_files_datalake(
+        bucket_name=bucket_name,
+        prefix=prefix,
+        radar=radar,
+        product=product,
+        date=date,
+        mode=mode,
+    )
+
     files_to_download = get_files_to_download(
         client=client,
         radar=radar,
         redis_files=redis_files,
+        datalake_files=datalake_files,
+        get_only_last_file=get_only_last_file,
     )
 
     files_to_upload = download_files(
