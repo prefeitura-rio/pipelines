@@ -985,25 +985,36 @@ def create_dbt_run_vars(
     if "date_range" in var_params.keys():
         log("Creating date_range variable")
 
-        raw_table_id = raw_table_id or table_id
+        if "date_range_start" in var_params["date_range"].keys() and "date_range_end" in var_params["date_range"].keys():
 
-        date_range = get_materialization_date_range.run(
-            dataset_id=dataset_id,
-            table_id=table_id,
-            raw_dataset_id=raw_dataset_id,
-            raw_table_id=raw_table_id,
-            table_run_datetime_column_name=var_params["date_range"].get(
-                "table_run_datetime_column_name"
-            ),
-            mode=mode,
-            delay_hours=var_params["date_range"].get("delay_hours", 0),
-        )
+            date_range = {
+                "date_range_start": var_params["date_range"]["date_range_start"], 
+                "date_range_end": var_params["date_range"]["date_range_end"]
+            }
 
-        final_vars.append(date_range)
+        else:
+
+            raw_table_id = raw_table_id or table_id
+
+            date_range = get_materialization_date_range.run(
+                dataset_id=dataset_id,
+                table_id=table_id,
+                raw_dataset_id=raw_dataset_id,
+                raw_table_id=raw_table_id,
+                table_run_datetime_column_name=var_params["date_range"].get(
+                    "table_run_datetime_column_name"
+                ),
+                mode=mode,
+                delay_hours=var_params["date_range"].get("delay_hours", 0),
+            )
+
+            final_vars.append(date_range)
+            
+            flag_date_range = True
 
         log(f"date_range created: {date_range}")
 
-        flag_date_range = True
+        
 
     elif "run_date" in var_params.keys():
         log("Creating run_date variable")
