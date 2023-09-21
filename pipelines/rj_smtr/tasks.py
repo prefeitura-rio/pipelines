@@ -985,15 +985,16 @@ def create_dbt_run_vars(
     if "date_range" in var_params.keys():
         log("Creating date_range variable")
 
-        if "date_range_start" in var_params["date_range"].keys() and "date_range_end" in var_params["date_range"].keys():
-
+        if (
+            "date_range_start" in var_params["date_range"].keys()
+            and "date_range_end" in var_params["date_range"].keys()
+        ):
             date_range = {
-                "date_range_start": var_params["date_range"]["date_range_start"], 
-                "date_range_end": var_params["date_range"]["date_range_end"]
+                "date_range_start": var_params["date_range"]["date_range_start"],
+                "date_range_end": var_params["date_range"]["date_range_end"],
             }
 
         else:
-
             raw_table_id = raw_table_id or table_id
 
             date_range = get_materialization_date_range.run(
@@ -1013,8 +1014,6 @@ def create_dbt_run_vars(
             flag_date_range = True
 
         log(f"date_range created: {date_range}")
-
-        
 
     elif "run_date" in var_params.keys():
         log("Creating run_date variable")
