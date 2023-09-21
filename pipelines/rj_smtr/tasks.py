@@ -1009,7 +1009,7 @@ def create_dbt_run_vars(
             )
 
             final_vars.append(date_range)
-            
+
             flag_date_range = True
 
         log(f"date_range created: {date_range}")
@@ -1063,7 +1063,7 @@ def treat_dbt_table_params(
     for key, value in possible_keys.items():
         treated_dict[key] = table_params.get(key, value)
 
-    treated_dict["flow_name"] = treated_dict.get("table_id", dataset_id)
+    treated_dict["flow_name"] = table_params.get("table_id", dataset_id)
 
     log(f"Treated params: {treated_dict}")
     return treated_dict

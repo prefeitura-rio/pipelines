@@ -149,6 +149,7 @@ with Flow(
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=default_materialization_flow.name
+        + " "
         + treated_table_params["flow_name"]
         + ": ",
         now_time=get_now_time(),
