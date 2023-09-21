@@ -22,6 +22,10 @@ from pipelines.rj_escritorio.dump_ftp_inea.schedules import (
     every_5_minutes,
     every_5_minutes_mac,
 )
+from pipelines.rj_cor.tasks import (
+    get_on_redis,
+    save_on_redis,
+)
 from pipelines.utils.decorators import Flow
 
 
@@ -41,9 +45,14 @@ with Flow(
 
     client = get_ftp_client()
 
+    redis_files = get_on_redis(
+        dataset_id="meio_ambiente_clima", table_id=radar, mode=mode
+    )
+
     files_to_download = get_files_to_download(
         client=client,
         radar=radar,
+        redis_files=redis_files,
     )
 
     files_to_upload = download_files(
@@ -52,7 +61,7 @@ with Flow(
         radar=radar,
     )
 
-    upload_file_to_gcs.map(
+    upload_files = upload_file_to_gcs.map(
         file_to_upload=files_to_upload,
         bucket_name=unmapped(bucket_name),
         prefix=unmapped(prefix),
@@ -61,6 +70,13 @@ with Flow(
         product=unmapped(product),
     )
 
+    save_on_redis(
+        dataset_id="meio_ambiente_clima",
+        table_id=radar,
+        mode=mode,
+        files=files_to_upload,
+        wait=upload_files,
+    )
 
 inea_ftp_radar_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 inea_ftp_radar_flow.run_config = KubernetesRun(
