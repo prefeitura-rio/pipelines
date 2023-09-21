@@ -8,6 +8,8 @@ from pathlib import Path
 
 from google.cloud import storage
 from prefect import task
+from prefect.engine.signals import ENDRUN
+from prefect.engine.state import Skipped
 
 from pipelines.utils.ftp.client import FTPClient
 from pipelines.utils.utils import (
@@ -38,15 +40,25 @@ def get_ftp_client(wait=None):
     max_retries=3,
     retry_delay=timedelta(seconds=30),
 )
-def get_files_to_download(client, radar):
+def get_files_to_download(client, radar, redis_files):
     """
     Get files to download FTP and GCS
     """
 
     client.connect()
     files = client.list_files(path=f"./{radar.upper()}/")
-    files = files[-4:]
-    log(f"files: {files}")
+    log(f"\n\nAvailable files on FTP: {files}")
+    log(f"\nFiles already saved on redis_files: {redis_files}")
+    files = [file for file in files if file not in redis_files]
+    log(f"\nFiles to be downloaded: {files}")
+    files = files[-4:]  # remover
+    log(f"\nFiles to be downloaded: {files}")
+
+    # Skip task if there is no new file
+    if len(files) == 0:
+        log("No new available files")
+        skip = Skipped("No new available files")
+        raise ENDRUN(state=skip)
 
     return files
 
