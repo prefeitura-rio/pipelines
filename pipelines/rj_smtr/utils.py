@@ -489,7 +489,8 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
         )
     return clocks
 
-def dict_contains_keys(input_dict:dict, keys:list[str]) -> bool:
+
+def dict_contains_keys(input_dict: dict, keys: list[str]) -> bool:
     """
     Test if the input dict has all keys present in the list
 

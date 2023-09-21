@@ -28,7 +28,7 @@ from pipelines.rj_smtr.utils import (
     get_last_run_timestamp,
     log_critical,
     data_info_str,
-    dict_contains_keys
+    dict_contains_keys,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
@@ -962,9 +962,11 @@ def create_request_params(
 
     return request_params, request_url
 
+
 @task(checkpoint=False)
 def coalesce_task(*values):
     return next(value for value in values if value is not None)
+
 
 @task(checkpoint=False, nout=3)
 def create_dbt_run_vars(
@@ -989,8 +991,8 @@ def create_dbt_run_vars(
     if "date_range" in var_params.keys():
         log("Creating date_range variable")
 
-        if (
-            dict_contains_keys(var_params["date_range"], ["date_range_start", "date_range_end"])
+        if dict_contains_keys(
+            var_params["date_range"], ["date_range_start", "date_range_end"]
         ):
             date_var = {
                 "date_range_start": var_params["date_range"]["date_range_start"],
@@ -1042,9 +1044,10 @@ def create_dbt_run_vars(
 
     return final_vars, date_var, flag_date_range
 
+
 @task(checkpoint=False)
 def treat_dbt_table_params(
-   table_params: dict, wait=None  # pylint: disable=unused-argument
+    table_params: dict, wait=None  # pylint: disable=unused-argument
 ) -> dict:
     possible_keys = {
         "table_id": None,
@@ -1066,4 +1069,3 @@ def treat_dbt_table_params(
 
     log(f"Treated params: {treated_dict}")
     return treated_dict
-
