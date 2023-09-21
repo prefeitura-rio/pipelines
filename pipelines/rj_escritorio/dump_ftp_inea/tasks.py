@@ -72,7 +72,7 @@ def download_files(client, files, radar):
         files_downloaded.append(file_path)
     log(f"files_downloaded: {files_downloaded}")
     file = Path(files_downloaded[0])
-    log(f"DEBUGGGG: {file.name}")
+    log(f"DEBUGGGG: {file.name.split('-')[2]}")
     return files_downloaded
 
 
@@ -99,22 +99,21 @@ def upload_file_to_gcs(
 
     bucket = storage_client.bucket(bucket_name)
 
+    file = Path(file_to_upload)
     if task_mode == "partitioned":
-        # We need to get the datetime for the file
-        log(f"DEBUG: {file_to_upload} e {file_to_upload.name}")
-        date_str = file_to_upload.split("-")[2]
+        log(f"DEBUG: {file} e {file.name}")
+        date_str = file.name.split("-")[2]
         date = datetime.strptime(date_str, "%Y%m%d").strftime("%Y-%m-%d")
         blob_name = (
-            f"{prefix}/radar={radar}/produto={product}/"
-            f"data_particao={date}/{file_to_upload.name}"
+            f"{prefix}/radar={radar}/produto={product}/data_particao={date}/{file.name}"
         )
         blob_name = blob_name.replace("//", "/")
     elif task_mode == "raw":
-        blob_name = f"{prefix}/{file_to_upload.name}"
-        log(f"Uploading file {file_to_upload} to GCS...")
+        blob_name = f"{prefix}/{file.name}"
+        log(f"Uploading file {file} to GCS...")
         log(f"Blob name will be {blob_name}")
         blob = bucket.blob(blob_name)
-        blob.upload_from_filename(file_to_upload)
-        log(f"File {file_to_upload} uploaded to GCS.")
+        blob.upload_from_filename(file)
+        log(f"File {file} uploaded to GCS.")
         if unlink:
-            file_to_upload.unlink()
+            file.unlink()
