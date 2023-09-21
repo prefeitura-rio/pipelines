@@ -8,7 +8,7 @@ import json
 import os
 from pathlib import Path
 import traceback
-from typing import Dict, List
+from typing import Dict, List, Union
 import io
 
 from basedosdados import Storage, Table
@@ -28,11 +28,12 @@ from pipelines.rj_smtr.utils import (
     get_last_run_timestamp,
     log_critical,
     data_info_str,
+    dict_contains_keys
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
 
-from pipelines.utils.tasks import get_now_date
+from pipelines.utils.tasks import get_now_date, get_now_time
 
 ###############
 #
@@ -961,8 +962,11 @@ def create_request_params(
 
     return request_params, request_url
 
+@task(checkpoint=False)
+def coalesce_task(*values):
+    return next(value for value in values if value is not None)
 
-@task(checkpoint=False, nout=2)
+@task(checkpoint=False, nout=3)
 def create_dbt_run_vars(
     dataset_id: str,
     var_params: dict,
@@ -971,25 +975,24 @@ def create_dbt_run_vars(
     raw_table_id: str,
     mode: str,
     wait=None,  # pylint: disable=unused-argument
-) -> tuple[list[dict], dict]:
+) -> tuple[list[dict], Union[list[dict], dict, None], bool]:
     log(f"Creating DBT variables. Parameter received: {var_params}")
 
     if (not var_params) or (not table_id):
         log("var_params or table_id are blank. Skiping task")
-        return [None], {"flag_date_range": False}
+        return [None], None, False
 
     final_vars = []
-    date_range = {}
+    date_var = None
     flag_date_range = False
 
     if "date_range" in var_params.keys():
         log("Creating date_range variable")
 
         if (
-            "date_range_start" in var_params["date_range"].keys()
-            and "date_range_end" in var_params["date_range"].keys()
+            dict_contains_keys(var_params["date_range"], ["date_range_start", "date_range_end"])
         ):
-            date_range = {
+            date_var = {
                 "date_range_start": var_params["date_range"]["date_range_start"],
                 "date_range_end": var_params["date_range"]["date_range_end"],
             }
@@ -997,7 +1000,7 @@ def create_dbt_run_vars(
         else:
             raw_table_id = raw_table_id or table_id
 
-            date_range = get_materialization_date_range.run(
+            date_var = get_materialization_date_range.run(
                 dataset_id=dataset_id,
                 table_id=table_id,
                 raw_dataset_id=raw_dataset_id,
@@ -1009,40 +1012,39 @@ def create_dbt_run_vars(
                 delay_hours=var_params["date_range"].get("delay_hours", 0),
             )
 
-            final_vars.append(date_range)
+            final_vars.append(date_var)
 
             flag_date_range = True
 
-        log(f"date_range created: {date_range}")
+        log(f"date_range created: {date_var}")
 
     elif "run_date" in var_params.keys():
         log("Creating run_date variable")
-        run_dates = get_run_dates.run(
+
+        date_var = get_run_dates.run(
             var_params["run_date"].get("date_range_start"),
             var_params["run_date"].get("date_range_end"),
         )
-        final_vars.append(run_dates)
+        final_vars.append(date_var)
 
-        log(f"run_date created: {run_dates}")
+        log(f"run_date created: {date_var}")
 
     if "version" in var_params.keys():
         log("Creating version variable")
         dataset_sha = fetch_dataset_sha.run(dataset_id=dataset_id)
 
-        final_vars = get_join_dict.run(dict_list=final_vars, new_dict=dataset_sha)
+        if final_vars:
+            final_vars = get_join_dict.run(dict_list=final_vars, new_dict=dataset_sha)
 
         log(f"version created: {dataset_sha}")
 
     log(f"All variables was created, final value is: {final_vars}")
 
-    date_range["flag_date_range"] = flag_date_range
-
-    return final_vars, date_range
-
+    return final_vars, date_var, flag_date_range
 
 @task(checkpoint=False)
 def treat_dbt_table_params(
-    dataset_id: str, table_params: dict, wait=None  # pylint: disable=unused-argument
+   table_params: dict, wait=None  # pylint: disable=unused-argument
 ) -> dict:
     possible_keys = {
         "table_id": None,
@@ -1052,17 +1054,16 @@ def treat_dbt_table_params(
         "downstream": None,
         "exclude": None,
         "flags": None,
-        "var_params": None,
+        "var_params": {},
     }
 
     treated_dict = {}
 
     log(f"Params received to treat: {table_params}")
 
-    for key, value in possible_keys.items():
-        treated_dict[key] = table_params.get(key, value)
-
-    treated_dict["flow_name"] = table_params.get("table_id", dataset_id)
+    for key, default_value in possible_keys.items():
+        treated_dict[key] = table_params.get(key, default_value)
 
     log(f"Treated params: {treated_dict}")
     return treated_dict
+
