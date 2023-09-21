@@ -110,10 +110,11 @@ def upload_file_to_gcs(
         blob_name = blob_name.replace("//", "/")
     elif task_mode == "raw":
         blob_name = f"{prefix}/{file.name}"
-        log(f"Uploading file {file} to GCS...")
-        log(f"Blob name will be {blob_name}")
-        blob = bucket.blob(blob_name)
-        blob.upload_from_filename(file)
-        log(f"File {file} uploaded to GCS.")
-        if unlink:
-            file.unlink()
+
+    log(f"Uploading file {file} to GCS...")
+    log(f"Blob name will be {blob_name}")
+    blob = bucket.blob(blob_name)
+    blob.upload_from_filename(file)
+    log(f"File {file} uploaded to GCS.")
+    if unlink:
+        file.unlink()
