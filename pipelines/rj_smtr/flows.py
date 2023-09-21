@@ -160,9 +160,9 @@ with Flow(
 
     # Rename flow run
 
-    flow_name_prefix = coalesce_task(treated_table_params["table_id"], dataset_id)
+    flow_name_prefix = coalesce_task([treated_table_params["table_id"], dataset_id])
 
-    flow_name_now_time = coalesce_task(date_var, get_now_time())
+    flow_name_now_time = coalesce_task([date_var, get_now_time()])
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=default_materialization_flow.name + " " + flow_name_prefix + ": ",
