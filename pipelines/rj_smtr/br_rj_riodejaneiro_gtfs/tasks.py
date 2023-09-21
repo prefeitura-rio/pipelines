@@ -6,12 +6,9 @@ Tasks for gtfs
 import traceback
 import zipfile
 from pathlib import Path
-from typing import Dict
 from datetime import datetime
-import json
 import pandas as pd
 from prefect import task
-import io
 from pipelines.rj_smtr.constants import constants
 from pipelines.utils.utils import get_storage_blobs, log
 
@@ -70,8 +67,6 @@ def download_gtfs(
     for blob in blobs:
         filename = blob.name.split("/")[-1]
 
-        log(f"Filename: {filename}")
-
         # Download arquivo de quadro horário
         if filename == "quadro.csv":
             blob.download_to_filename(
@@ -83,12 +78,10 @@ def download_gtfs(
         elif filename == "gtfs.zip":
             # Download ZIP file
             blob.download_to_filename(filename)
-            log(f"Downloaded file {filename}")
 
             # Extract ZIP file
             with zipfile.ZipFile(filename, "r") as zip_ref:
                 zip_ref.extractall(dirpath)
-                log(f"Extracted file {zip_ref.filename}")
 
     mapped_tables_status = {"table_id": [], "status": []}
 
@@ -96,7 +89,7 @@ def download_gtfs(
     for table_id in constants.GTFS_TABLES.value:
         try:
             data = pd.read_csv(
-                io.StringIO(dirpath.as_posix() + "/" + str(table_id) + ".txt")
+                dirpath.as_posix() + "/" + str(table_id) + ".txt"
             ).to_dict(orient="records")
 
             # Corrige data de inicio e final do feed
@@ -115,15 +108,6 @@ def download_gtfs(
 
         mapped_tables_status["table_id"].append(table_id)
         mapped_tables_status["status"].append({"data": data, "error": error})
-
-        # mapped_tables = pd.DataFrame.from_records([mapped_tables_status])
-
-        # mapped_tables = pd.DataFrame(mapped_tables_status)
-        # mapped_tables_json = mapped_tables.to_json(orient="records", lines=True)'])
-        # mapped_tables_json = mapped_tables.to_json(orient="records", lines=True)
-
-        # with open('mapped_tables.json', 'w') as json_file:
-        #    json.dump(mapped_tables_json, json_file)
 
     log(f"Table {list(mapped_tables_status)} mapped")
 

@@ -21,7 +21,6 @@ from pipelines.rj_smtr.tasks import (
     upload_logs_to_bq,
     bq_upload,
     save_raw_local,
-    save_treated_local,
 )
 from pipelines.rj_smtr.br_rj_riodejaneiro_gtfs.tasks import (
     download_gtfs,
@@ -69,17 +68,23 @@ with Flow(
         filename=unmapped(filename),
         partitions=unmapped(partitions),
     )
-    """
-    # mudar para save_raw_local
-    treated_filepath = save_treated_local.map(
+
+    treated_raw_filepath = save_raw_local.map(
         file_path=filepath,
         status=mapped_tables_status["status"],
         mode=unmapped("raw"),
     )
+    """
+    treated_filepath = save_treated_local.map(
+        file_path=treated_raw_filepath,
+        status = mapped_tables_status["status"],
+        mode=unmapped("staging"),
+    )
+    """
 
     # LOAD #
     errors = bq_upload.map(
-        raw_filepath=treated_filepath,
+        filepath=treated_raw_filepath,
         dataset_id=unmapped(constants.GTFS_DATASET_ID.value),
         table_id=mapped_tables_status["table_id"],
         partitions=unmapped(partitions),
@@ -92,7 +97,7 @@ with Flow(
         error=errors,
         timestamp=unmapped(timestamp),
     )
-"""
+
 download_gtfs_flow.storage = GCS(constants_emd.GCS_FLOWS_BUCKET.value)
 download_gtfs_flow.run_config = KubernetesRun(
     image=constants_emd.DOCKER_IMAGE.value,
