@@ -976,7 +976,7 @@ def create_dbt_run_vars(
 
     if (not var_params) or (not table_id):
         log("var_params or table_id are blank. Skiping task")
-        return [None], {}
+        return [None], {"flag_date_range": False}
 
     final_vars = []
     date_range = {}
