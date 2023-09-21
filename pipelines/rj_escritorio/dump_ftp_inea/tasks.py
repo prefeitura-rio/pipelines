@@ -76,12 +76,12 @@ def get_files_datalake(
     )
 
     if greater_than is None:
-        greater_than = current_date - timedelta(days=1)
+        past_date = current_date - timedelta(days=1)
     else:
-        greater_than = datetime.strptime(greater_than, "%Y-%m-%d")
+        past_date = datetime.strptime(greater_than, "%Y-%m-%d")
+        past_date = past_date.date()
 
     # Next, we get past day's blobs
-    past_date = greater_than.date()
     while past_date < current_date:
         past_date_str = past_date.strftime("%Y-%m-%d")
         past_blobs = list_blobs_with_prefix(
