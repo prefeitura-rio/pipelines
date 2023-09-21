@@ -38,6 +38,7 @@ from pipelines.rj_smtr.tasks import (
     create_dbt_run_vars,
     set_last_run_timestamp,
     treat_dbt_table_params,
+    coalesce_task,
 )
 
 from pipelines.rj_smtr.tasks import (
@@ -142,17 +143,7 @@ with Flow(
     table_params = Parameter("table_params", default=dict())
 
     treated_table_params = treat_dbt_table_params(
-        dataset_id=dataset_id, table_params=table_params
-    )
-
-    # Rename flow run
-
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix=default_materialization_flow.name
-        + " "
-        + treated_table_params["flow_name"]
-        + ": ",
-        now_time=get_now_time(),
+        table_params=table_params
     )
 
     LABELS = get_current_flow_labels()
@@ -160,13 +151,27 @@ with Flow(
 
     dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
 
-    _vars, date_range = create_dbt_run_vars(
+    _vars, date_var, flag_date_range = create_dbt_run_vars(
         dataset_id=dataset_id,
         var_params=treated_table_params["var_params"],
         table_id=treated_table_params["table_id"],
         raw_dataset_id=dataset_id,
         raw_table_id=treated_table_params["raw_table_id"],
         mode=MODE,
+    )
+
+    # Rename flow run
+
+    flow_name_prefix = coalesce_task(treated_table_params['table_id'], dataset_id)
+
+    flow_name_now_time = coalesce_task(date_var, get_now_time())
+
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix=default_materialization_flow.name
+        + " "
+        + flow_name_prefix
+        + ": ",
+        now_time=flow_name_now_time,
     )
 
     RUNS = run_dbt_model.map(
@@ -181,11 +186,11 @@ with Flow(
         flags=unmapped(treated_table_params["flags"]),
     )
 
-    with case(date_range["flag_date_range"], True):
+    with case(flag_date_range, True):
         set_last_run_timestamp(
             dataset_id=dataset_id,
             table_id=treated_table_params["table_id"],
-            timestamp=date_range["date_range_end"],
+            timestamp=date_var["date_range_end"],
             wait=RUNS,
             mode=MODE,
         )
