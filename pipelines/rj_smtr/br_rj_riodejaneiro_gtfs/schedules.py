@@ -10,6 +10,7 @@ from prefect.schedules import Schedule
 from pipelines.constants import constants as emd_constants
 from pipelines.utils.utils import untuple_clocks as untuple
 
+
 from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.utils import (
     generate_execute_schedules,
@@ -21,7 +22,7 @@ gtfs_clocks = generate_execute_schedules(
     labels=[
         emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value,
     ],
-    table_parameters=constants.GTFS_TABLES_PARAMS.value,
+    table_parameters=constants.GTFS_TABLE_PARAMS.value,
     dataset_id=constants.GTFS_DATASET_ID.value,
     runs_interval_minutes=15,
     start_date=None,

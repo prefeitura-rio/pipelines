@@ -2,12 +2,16 @@
 """
 Flows for gtfs
 """
-from prefect import Parameter
+from copy import deepcopy
+
+from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.utilities.edges import unmapped
 
 # EMD Imports #
+
+from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from pipelines.constants import constants as constants_emd
 from pipelines.utils.decorators import Flow
 
@@ -27,7 +31,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_gtfs.tasks import (
     get_current_timestamp_from_date,
 )
 
-# from pipelines.rj_smtr.flows import default_capture_flow
+from pipelines.rj_smtr.flows import default_capture_flow
 
 # FLOW 1: Captura zip, download, unzip e disponibiliza numa URL (GCS) -> Simula uma API
 
@@ -36,7 +40,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_gtfs.tasks import (
 with Flow(
     "SMTR: GTFS (pré-captura)",
     code_owners=["rodrigo", "carol"],
-) as download_gtfs_flow:  # TBD nome mais explicito
+) as download_gtfs_flow:
     # SETUP
     date = Parameter("date", default=None)  # "data da captura"
     feed_start_date = Parameter("feed_start_date", default=None)
@@ -74,13 +78,6 @@ with Flow(
         status=mapped_tables_status["status"],
         mode=unmapped("raw"),
     )
-    """
-    treated_filepath = save_treated_local.map(
-        file_path=treated_raw_filepath,
-        status = mapped_tables_status["status"],
-        mode=unmapped("staging"),
-    )
-    """
 
     # LOAD #
     errors = bq_upload.map(
@@ -124,3 +121,37 @@ download_gtfs_flow.run_config = KubernetesRun(
 # )
 # gtfs_captura.schedule = gtfs_captura_schedule
 """
+
+# testar e checar que se a construção do flow funciona corretamente #
+
+with Flow(
+    "SMTR - Captura e tratamento de dados",
+    code_owners=["rodrigo", "carol"],
+) as gtfs_captura:
+    # SETUP
+
+    gtfs_captura = deepcopy(default_capture_flow)
+    gtfs_captura.name = "SMTR: GTFS (captura)"
+    gtfs_captura.storage = GCS(constants_emd.GCS_FLOWS_BUCKET.value)
+    gtfs_captura.run_config = KubernetesRun(
+        image=constants_emd.DOCKER_IMAGE.value,
+        labels=[constants_emd.RJ_SMTR_DEV_AGENT_LABEL.value],
+    )
+
+    with case(download_gtfs, True):
+        parameters = {
+            "date": Parameter("date", default=None),
+            "feed_start_date": Parameter("feed_start_date", default=None),
+            "feed_end_date": Parameter("feed_end_date", default=None),
+        }
+        GTFS_CAPTURA_RUN = create_flow_run(
+            flow_name=download_gtfs.name,
+            project_name=constants.GTFS_DATASET_ID.value,
+            run_name=download_gtfs.name,
+            parameters=parameters,
+        )
+        GTFS_CAPTURA_WAIT = wait_for_flow_run(
+            GTFS_CAPTURA_RUN,
+            stream_logs=True,
+            stream_states=True,
+        )
