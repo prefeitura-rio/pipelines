@@ -8,7 +8,7 @@ import json
 import os
 from pathlib import Path
 import traceback
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Iterable
 import io
 
 from basedosdados import Storage, Table
@@ -33,7 +33,7 @@ from pipelines.rj_smtr.utils import (
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
 
-from pipelines.utils.tasks import get_now_date, get_now_time
+from pipelines.utils.tasks import get_now_date
 
 ###############
 #
@@ -572,7 +572,7 @@ def bq_upload_from_dict(paths: dict, dataset_id: str, partition_levels: int = 1)
 
 
 @task
-def upload_logs_to_bq(  # pylint: disable=R0913
+def upload_logs_to_bq(  # pylint: disable=R0913, broad-exception-raised
     dataset_id: str,
     parent_table_id: str,
     timestamp: str,
@@ -630,7 +630,7 @@ def upload_logs_to_bq(  # pylint: disable=R0913
         path=filepath.as_posix(),
         partitions=partition,
     )
-    if error is not None:
+    if error is not None: 
         raise Exception(f"Pipeline failed with error: {error}")
 
 
@@ -964,8 +964,20 @@ def create_request_params(
 
 
 @task(checkpoint=False)
-def coalesce_task(value_list: list):
-    return next(value for value in value_list if value is not None)
+def coalesce_task(value_list: Iterable):
+    """
+    Task to get the first non None value of a list
+
+    Args:
+        value_list (Iterable): a iterable object with the values
+    Returns:
+        any: value_list's first non None item 
+    """
+
+    try:
+        return next(value for value in value_list if value is not None)
+    except StopIteration:
+        return
 
 
 @task(checkpoint=False, nout=3)
@@ -978,6 +990,24 @@ def create_dbt_run_vars(
     mode: str,
     wait=None,  # pylint: disable=unused-argument
 ) -> tuple[list[dict], Union[list[dict], dict, None], bool]:
+    """
+    Create the variables to be used in dbt materialization based on a dict
+
+    Args:
+        dataset_id (str): the dataset_id to get the variables
+        var_params (dict): dict containing the parameters
+        table_id (str): the table_id get the date_range variable
+        raw_dataset_id (str): the raw_dataset_id get the date_range variable
+        raw_table_id (str): the raw_table_id get the date_range variable
+        mode (str): the mode to get the date_range variable
+        wait (Task, optional): the tasks to wait before execute
+    
+    Returns:
+        tuple[list[dict]: the variables to be used in DBT
+        Union[list[dict], dict, None]: the date variable (date_range or run_date)
+        bool: a flag that indicates if the date_range variable came from Redis
+    """
+
     log(f"Creating DBT variables. Parameter received: {var_params}")
 
     if (not var_params) or (not table_id):
@@ -991,6 +1021,7 @@ def create_dbt_run_vars(
     if "date_range" in var_params.keys():
         log("Creating date_range variable")
 
+        # Set date_range variable manually 
         if dict_contains_keys(
             var_params["date_range"], ["date_range_start", "date_range_end"]
         ):
@@ -998,7 +1029,7 @@ def create_dbt_run_vars(
                 "date_range_start": var_params["date_range"]["date_range_start"],
                 "date_range_end": var_params["date_range"]["date_range_end"],
             }
-
+        # Create date_range using Redis
         else:
             raw_table_id = raw_table_id or table_id
 
@@ -1034,9 +1065,12 @@ def create_dbt_run_vars(
     if "version" in var_params.keys():
         log("Creating version variable")
         dataset_sha = fetch_dataset_sha.run(dataset_id=dataset_id)
-
+        
+        # if there are other variables inside the list, update each item adding the version variable
         if final_vars:
             final_vars = get_join_dict.run(dict_list=final_vars, new_dict=dataset_sha)
+        else:
+            final_vars.append(dataset_sha)
 
         log(f"version created: {dataset_sha}")
 
@@ -1049,6 +1083,17 @@ def create_dbt_run_vars(
 def treat_dbt_table_params(
     table_params: dict, wait=None  # pylint: disable=unused-argument
 ) -> dict:
+    """
+        Task to add all the possible keys to table_params dict (default materialization flow)
+
+        Args:
+            table_params (dict): the flow's table_params
+            wait (Task, optional): the Tasks to wait before the execution
+        Returns:
+            dict: the treated dict
+    """
+
+    # key: default_value
     possible_keys = {
         "table_id": None,
         "raw_table_id": None,
@@ -1064,6 +1109,7 @@ def treat_dbt_table_params(
 
     log(f"Params received to treat: {table_params}")
 
+    # add the key to treated_dict getting the value from table_params if exists, otherwise get the default value
     for key, default_value in possible_keys.items():
         treated_dict[key] = table_params.get(key, default_value)
 
