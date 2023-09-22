@@ -147,8 +147,6 @@ with Flow(
     LABELS = get_current_flow_labels()
     MODE = get_current_flow_mode(LABELS)
 
-    dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
-
     _vars, date_var, flag_date_range = create_dbt_run_vars(
         dataset_id=dataset_id,
         var_params=treated_table_params["var_params"],
@@ -169,6 +167,8 @@ with Flow(
         now_time=flow_name_now_time,
         wait=flow_name_prefix
     )
+
+    dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
 
     RUNS = run_dbt_model.map(
         dbt_client=unmapped(dbt_client),
