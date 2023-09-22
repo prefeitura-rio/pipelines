@@ -170,7 +170,7 @@ def get_files_to_download(
         files = files[-20:]  # remover
 
     if get_only_last_file:
-        files = list(files[-1])
+        files = [files[-1]]
     log(f"\nFiles to be downloaded: {files}")
     return files
 
