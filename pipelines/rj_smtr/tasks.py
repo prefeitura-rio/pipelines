@@ -1109,7 +1109,8 @@ def treat_dbt_table_params(
 
     log(f"Params received to treat: {table_params}")
 
-    # add the key to treated_dict getting the value from table_params if exists, otherwise get the default value
+    # add the key to treated_dict getting the value from table_params if exists 
+    # otherwise get the default value
     for key, default_value in possible_keys.items():
         treated_dict[key] = table_params.get(key, default_value)
 
