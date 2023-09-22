@@ -572,7 +572,7 @@ def bq_upload_from_dict(paths: dict, dataset_id: str, partition_levels: int = 1)
 
 
 @task
-def upload_logs_to_bq(  # pylint: disable=R0913, broad-exception-raised
+def upload_logs_to_bq(  # pylint: disable=R0913
     dataset_id: str,
     parent_table_id: str,
     timestamp: str,
@@ -988,7 +988,6 @@ def create_dbt_run_vars(
     raw_dataset_id: str,
     raw_table_id: str,
     mode: str,
-    wait=None,  # pylint: disable=unused-argument
 ) -> tuple[list[dict], Union[list[dict], dict, None], bool]:
     """
     Create the variables to be used in dbt materialization based on a dict
@@ -1000,7 +999,6 @@ def create_dbt_run_vars(
         raw_dataset_id (str): the raw_dataset_id get the date_range variable
         raw_table_id (str): the raw_table_id get the date_range variable
         mode (str): the mode to get the date_range variable
-        wait (Task, optional): the tasks to wait before execute
 
     Returns:
         tuple[list[dict]: the variables to be used in DBT
@@ -1080,15 +1078,12 @@ def create_dbt_run_vars(
 
 
 @task(checkpoint=False)
-def treat_dbt_table_params(
-    table_params: dict, wait=None  # pylint: disable=unused-argument
-) -> dict:
+def treat_dbt_table_params(table_params: dict) -> dict:
     """
     Task to add all the possible keys to table_params dict (default materialization flow)
 
     Args:
         table_params (dict): the flow's table_params
-        wait (Task, optional): the Tasks to wait before the execution
     Returns:
         dict: the treated dict
     """

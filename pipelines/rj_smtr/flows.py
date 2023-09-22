@@ -165,7 +165,6 @@ with Flow(
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=default_materialization_flow.name + " " + flow_name_prefix + ": ",
         now_time=flow_name_now_time,
-        wait=flow_name_prefix,
     )
 
     dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
