@@ -630,7 +630,7 @@ def upload_logs_to_bq(  # pylint: disable=R0913, broad-exception-raised
         path=filepath.as_posix(),
         partitions=partition,
     )
-    if error is not None: 
+    if error is not None:
         raise Exception(f"Pipeline failed with error: {error}")
 
 
@@ -971,7 +971,7 @@ def coalesce_task(value_list: Iterable):
     Args:
         value_list (Iterable): a iterable object with the values
     Returns:
-        any: value_list's first non None item 
+        any: value_list's first non None item
     """
 
     try:
@@ -1001,7 +1001,7 @@ def create_dbt_run_vars(
         raw_table_id (str): the raw_table_id get the date_range variable
         mode (str): the mode to get the date_range variable
         wait (Task, optional): the tasks to wait before execute
-    
+
     Returns:
         tuple[list[dict]: the variables to be used in DBT
         Union[list[dict], dict, None]: the date variable (date_range or run_date)
@@ -1021,7 +1021,7 @@ def create_dbt_run_vars(
     if "date_range" in var_params.keys():
         log("Creating date_range variable")
 
-        # Set date_range variable manually 
+        # Set date_range variable manually
         if dict_contains_keys(
             var_params["date_range"], ["date_range_start", "date_range_end"]
         ):
@@ -1065,7 +1065,7 @@ def create_dbt_run_vars(
     if "version" in var_params.keys():
         log("Creating version variable")
         dataset_sha = fetch_dataset_sha.run(dataset_id=dataset_id)
-        
+
         # if there are other variables inside the list, update each item adding the version variable
         if final_vars:
             final_vars = get_join_dict.run(dict_list=final_vars, new_dict=dataset_sha)
@@ -1084,13 +1084,13 @@ def treat_dbt_table_params(
     table_params: dict, wait=None  # pylint: disable=unused-argument
 ) -> dict:
     """
-        Task to add all the possible keys to table_params dict (default materialization flow)
+    Task to add all the possible keys to table_params dict (default materialization flow)
 
-        Args:
-            table_params (dict): the flow's table_params
-            wait (Task, optional): the Tasks to wait before the execution
-        Returns:
-            dict: the treated dict
+    Args:
+        table_params (dict): the flow's table_params
+        wait (Task, optional): the Tasks to wait before the execution
+    Returns:
+        dict: the treated dict
     """
 
     # key: default_value
