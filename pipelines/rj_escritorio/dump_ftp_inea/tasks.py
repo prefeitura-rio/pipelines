@@ -170,9 +170,8 @@ def get_files_to_download(
         files = files[-20:]  # remover
 
     if get_only_last_file:
-        files = files[-1]
+        files = list(files[-1])
     log(f"\nFiles to be downloaded: {files}")
-
     return files
 
 
@@ -191,11 +190,12 @@ def download_files(client, files, radar):
     client.connect()
     files_downloaded = []
     for file in files:
+        log(f"Downloading file: {file}")
         # file_path = save_path / file
         file_path = file
         client.download(remote_path=file, local_path=file_path)
         files_downloaded.append(file_path)
-    log(f"files_downloaded: {files_downloaded}")
+    log(f"Downloaded: {files_downloaded}")
     file = Path(files_downloaded[0])
     log(f"DEBUGGGG: {file.name.split('-')[2]}")
     return files_downloaded
