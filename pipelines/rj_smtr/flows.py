@@ -167,6 +167,7 @@ with Flow(
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=default_materialization_flow.name + " " + flow_name_prefix + ": ",
         now_time=flow_name_now_time,
+        wait=flow_name_prefix
     )
 
     RUNS = run_dbt_model.map(
