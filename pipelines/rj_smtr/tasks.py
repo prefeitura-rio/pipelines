@@ -962,8 +962,9 @@ def create_request_params(
 
     return request_params, request_url
 
+
 @task(checkpoint=False)
-def coalesce_task(value_list:list):
+def coalesce_task(value_list: list):
     return next(value for value in value_list if value is not None)
 
 
