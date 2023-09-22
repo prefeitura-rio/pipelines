@@ -30,6 +30,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_gtfs.tasks import (
     download_gtfs,
     get_current_timestamp_from_date,
 )
+from pipelines.rj_smtr.schedules import *
 
 from pipelines.rj_smtr.flows import default_capture_flow
 
@@ -78,6 +79,14 @@ with Flow(
         status=mapped_tables_status["status"],
         mode=unmapped("raw"),
     )
+
+    """
+    pre_treatment = transform_to_nested_structure.map(
+        status=mapped_tables_status,
+        timestamp=timestamp,
+        primary_key=constants.GTFS_TABLE_PARAMS.value,
+    )
+    """
 
     # LOAD #
     errors = bq_upload.map(
@@ -155,3 +164,7 @@ with Flow(
             stream_logs=True,
             stream_states=True,
         )
+
+# download_gtfs.schedule = None
+
+# gtfs_captura.schedule = None

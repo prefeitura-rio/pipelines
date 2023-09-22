@@ -35,7 +35,7 @@ def download_gtfs(
     dataset_id: str = constants.GTFS_DATASET_ID.value,
     feed_start_date: str = None,
     feed_end_date: str = None,
-) -> str:
+) -> dict:
     """
     Retrieve GTFS data from GCS and saves locally without partitioning.
     Args:
