@@ -505,6 +505,7 @@ def bq_upload(
     error = None
     try:
         # Check if data exists
+        log(f"os.path.getsize(filepath) = {os.path.getsize(filepath)}")
         if os.path.getsize(filepath) == 0:
             log("Empty dataframe, skipping upload...")
             return error
@@ -849,7 +850,7 @@ def transform_to_nested_structure(
 
     # Check empty dataframe
     if len(status["data"]) == 0:
-        log("Empty dataframe, skipping transformation")
+        log("Empty dataframe, skipping transformation...")
         return {"data": pd.DataFrame(), "error": status["error"]}
 
     try:
