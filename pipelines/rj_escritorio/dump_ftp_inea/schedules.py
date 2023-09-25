@@ -17,9 +17,7 @@ every_5_minutes = Schedule(
         IntervalClock(
             interval=timedelta(minutes=5),
             start_date=datetime(2021, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo")),
-            labels=[
-                constants.INEA_AGENT_LABEL.value,
-            ],
+            labels=[constants.INEA_AGENT_LABEL.value],
             parameter_defaults={
                 "bucket_name": "rj-escritorio-dev",
                 "convert_params": "-k=ODIM2.1 -M=All",
@@ -30,7 +28,7 @@ every_5_minutes = Schedule(
                 "radar": "gua",
                 "vols_remote_directory": "/var/opt/edge/vols",
             },
-        ),
+        )
     ]
 )
 every_5_minutes_mac = Schedule(
@@ -38,9 +36,7 @@ every_5_minutes_mac = Schedule(
         IntervalClock(
             interval=timedelta(minutes=5),
             start_date=datetime(2021, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo")),
-            labels=[
-                constants.INEA_AGENT_LABEL.value,
-            ],
+            labels=[constants.INEA_AGENT_LABEL.value],
             parameter_defaults={
                 "bucket_name": "rj-escritorio-dev",
                 "convert_params": "-k=ODIM2.1 -M=All",
@@ -51,7 +47,7 @@ every_5_minutes_mac = Schedule(
                 "radar": "mac",
                 "vols_remote_directory": "/var/opt/edge/vols",
             },
-        ),
+        )
     ]
 )
 every_1_day = Schedule(
@@ -59,9 +55,7 @@ every_1_day = Schedule(
         IntervalClock(
             interval=timedelta(days=1),
             start_date=datetime(2021, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo")),
-            labels=[
-                constants.INEA_AGENT_LABEL.value,
-            ],
+            labels=[constants.INEA_AGENT_LABEL.value],
             parameter_defaults={
                 "bucket_name": "rj-escritorio-dev",
                 "convert_params": "-k=ODIM2.1 -M=All",
@@ -73,7 +67,7 @@ every_1_day = Schedule(
                 "get_only_last_file": False,
                 "vols_remote_directory": "/var/opt/edge/vols",
             },
-        ),
+        )
     ]
 )
 every_1_day_mac = Schedule(
@@ -81,9 +75,7 @@ every_1_day_mac = Schedule(
         IntervalClock(
             interval=timedelta(days=1),
             start_date=datetime(2021, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo")),
-            labels=[
-                constants.INEA_AGENT_LABEL.value,
-            ],
+            labels=[constants.INEA_AGENT_LABEL.value],
             parameter_defaults={
                 "bucket_name": "rj-escritorio-dev",
                 "convert_params": "-k=ODIM2.1 -M=All",
@@ -95,6 +87,6 @@ every_1_day_mac = Schedule(
                 "get_only_last_file": False,
                 "vols_remote_directory": "/var/opt/edge/vols",
             },
-        ),
+        )
     ]
 )
