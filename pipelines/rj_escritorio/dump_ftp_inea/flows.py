@@ -43,7 +43,7 @@ with Flow(
         "prefix", default="raw/meio_ambiente_clima/inea_radar_hdf5", required=False
     )
     mode = Parameter("mode", default="prod", required=False)
-    radar = Parameter("radar", default="mac", required=False)
+    radar = Parameter("radar", default="gua", required=False)
     product = Parameter("product", default="ppi", required=False)
 
     client = get_ftp_client()
