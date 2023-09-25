@@ -165,8 +165,8 @@ def create_date_hour_partition(
     Get date hour Hive partition structure from timestamp.
     """
     partition = f"data={timestamp.strftime('%Y-%m-%d')}"
-    if partition_date_only:
-        parition += f"/hora={timestamp.strftime('%H')}"
+    if not partition_date_only:
+        partition += f"/hora={timestamp.strftime('%H')}"
     return partition
 
 
