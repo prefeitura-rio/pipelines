@@ -97,7 +97,7 @@ sppo_rho_materialize.run_config = KubernetesRun(
 )
 
 with Flow(
-    "SMTR: RHO - Captura",
+    "SMTR: SPPO RHO - Captura",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as captura_sppo_rho:
     # SETUP
@@ -145,7 +145,7 @@ captura_sppo_rho.run_config = KubernetesRun(
 captura_sppo_rho.schedule = every_day
 
 with Flow(
-    "SMTR: RDO - Captura",
+    "SMTR: SPPO RDO - Captura",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as captura_sppo_rdo:
     # SETUP
@@ -230,14 +230,14 @@ with Flow(
         partitions=partitions,
         status=status,
     )
-    set_redis = update_rdo_redis(
-        download_files=download_files, table_id=table_id, errors=errors
-    )
+    # set_redis = update_rdo_redis(
+    #     download_files=download_files, table_id=table_id, errors=errors
+    # )
 
 captura_stpl_rho.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_stpl_rho.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 captura_stpl_rho.schedule = every_day
 
@@ -278,14 +278,14 @@ with Flow(
         partitions=partitions,
         status=status,
     )
-    set_redis = update_rdo_redis(
-        download_files=download_files, table_id=table_id, errors=errors
-    )
+    # set_redis = update_rdo_redis(
+    #     download_files=download_files, table_id=table_id, errors=errors
+    # )
 
 captura_stpl_rdo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 captura_stpl_rdo.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 captura_stpl_rdo.schedule = every_day
 
