@@ -506,7 +506,7 @@ def bq_upload(
     try:
         # Check if data exists
         if os.path.getsize(filepath) == 0:
-            log("Empty dataframe, skipping upload")
+            log("Empty dataframe, skipping upload...")
             return error
 
         # Upload raw to staging
