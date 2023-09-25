@@ -62,7 +62,6 @@ with Flow(
     "SMTR: GPS SPPO - Realocação (captura)",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as realocacao_sppo:
-
     # SETUP #
 
     # Get default parameters #
@@ -169,7 +168,7 @@ with Flow(
         table_id=table_id,
         raw_dataset_id=raw_dataset_id,
         raw_table_id=raw_table_id,
-        table_date_column_name="data",
+        table_run_datetime_column_name="timestamp_gps",
         mode=MODE,
         delay_hours=constants.GPS_SPPO_MATERIALIZE_DELAY_HOURS.value,
     )
@@ -223,7 +222,6 @@ with Flow(
     "SMTR: GPS SPPO - Captura",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as captura_sppo_v2:
-
     version = Parameter("version", default=2)
 
     # SETUP #
@@ -286,7 +284,6 @@ captura_sppo_v2.schedule = every_minute
 with Flow(
     "SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda", "boris", "rodrigo"]
 ) as recaptura:
-
     version = Parameter("version", default=2)
     datetime_filter = Parameter("datetime_filter", default=None)
     materialize = Parameter("materialize", default=True)

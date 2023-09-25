@@ -54,7 +54,6 @@ with Flow(
     "SMTR: GPS BRT - Materialização",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as materialize_brt:
-
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
         prefix="GPS BRT - Materialização: ", now_time=get_now_time()
@@ -85,7 +84,7 @@ with Flow(
         table_id=table_id,
         raw_dataset_id=raw_dataset_id,
         raw_table_id=raw_table_id,
-        table_date_column_name="data",
+        table_run_datetime_column_name="timestamp_gps",
         mode=MODE,
         delay_hours=constants.GPS_BRT_MATERIALIZE_DELAY_HOURS.value,
     )
@@ -140,7 +139,6 @@ with Flow(
     "SMTR: GPS BRT - Captura",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as captura_brt:
-
     timestamp = get_current_timestamp()
 
     # Rename flow run

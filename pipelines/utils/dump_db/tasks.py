@@ -6,6 +6,7 @@ General purpose tasks for dumping database data.
 from datetime import datetime, timedelta
 from queue import Empty, Queue
 from pathlib import Path
+import re
 from threading import Event, Thread
 from time import sleep, time
 from typing import Dict, List, Union
@@ -37,6 +38,7 @@ from pipelines.utils.utils import (
     clean_dataframe,
     to_partitions,
     parser_blobs_to_partition_dict,
+    remove_tabs_from_query,
     get_storage_blobs,
     remove_columns_accents,
 )
@@ -113,7 +115,9 @@ def database_execute(
         query: The query to execute.
     """
     start_time = time()
-    log(f"Executing query: {query}")
+    log(f"Query parsed: {query}")
+    query = remove_tabs_from_query(query)
+    log(f"Executing query line: {query}")
     database.execute_query(query)
     time_elapsed = time() - start_time
     doc = format_document(
@@ -209,10 +213,23 @@ def format_partitioned_query(
         storage_partitions_dict, date_format
     )
 
+    if lower_bound_date == "current_year":
+        lower_bound_date = datetime.now().replace(month=1, day=1).strftime("%Y-%m-%d")
+        log(f"Using lower_bound_date current_year: {lower_bound_date}")
+    elif lower_bound_date == "current_month":
+        lower_bound_date = datetime.now().replace(day=1).strftime("%Y-%m-%d")
+        log(f"Using lower_bound_date current_month: {lower_bound_date}")
+    elif lower_bound_date == "current_day":
+        lower_bound_date = datetime.now().strftime("%Y-%m-%d")
+        log(f"Using lower_bound_date current_day: {lower_bound_date}")
+
     if lower_bound_date:
         last_date = min(str(lower_bound_date), str(last_partition_date))
+        log(f"Using lower_bound_date: {last_date}")
+
     else:
         last_date = str(last_partition_date)
+        log(f"Using last_date from storage: {last_date}")
 
     # Using the last partition date, get the partitioned query.
     # `aux_name` must be unique and start with a letter, for better compatibility with

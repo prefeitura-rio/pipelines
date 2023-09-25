@@ -49,7 +49,6 @@ with Flow(
         "paty",
     ],
 ) as rj_cor_comando_eventos_flow:
-
     dump_mode = Parameter("dump_mode", default="append", required=False)
 
     # Materialization parameters

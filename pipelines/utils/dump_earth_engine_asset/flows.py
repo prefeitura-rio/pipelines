@@ -26,7 +26,6 @@ with Flow(
         "gabriel",
     ],
 ) as dump_earth_engine_asset_flow:
-
     project_id = Parameter("project_id", required=False)
     query = Parameter("query", required=False)
     bd_project_mode = Parameter(

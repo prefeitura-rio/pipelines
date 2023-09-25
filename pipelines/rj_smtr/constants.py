@@ -162,3 +162,95 @@ class constants(Enum):  # pylint: disable=c0103
     # SUBSÍDIO DASHBOARD
     SUBSIDIO_SPPO_DASHBOARD_DATASET_ID = "dashboard_subsidio_sppo"
     SUBSIDIO_SPPO_DASHBOARD_TABLE_ID = "sumario_servico_dia"
+
+    # BILHETAGEM
+    BILHETAGEM_DATASET_ID = "br_rj_riodejaneiro_bilhetagem"
+    BILHETAGEM_TRANSACAO_TABLE_PARAMS = [
+        {
+            "table_id": "transacao",
+            "database": "transacao_db",
+            "query": """
+                SELECT
+                    *
+                FROM
+                    transacao
+                WHERE
+                    data_processamento BETWEEN '{start}'
+                    AND '{end}'
+                ORDER BY
+                    data_processamento
+            """,
+            "primary_key": ["id"],  # id column to nest data on
+            "flag_date_partition": False,
+        },
+    ]
+    BILHETAGEM_TABLES_PARAMS = [
+        {
+            "table_id": "linha",
+            "database": "principal_db",
+            "query": """
+                SELECT
+                    *
+                FROM
+                    LINHA
+                WHERE
+                    DT_INCLUSAO >= '{start}'
+                ORDER BY
+                    DT_INCLUSAO
+            """,
+            "primary_key": ["CD_LINHA"],  # id column to nest data on
+            "flag_date_partition": True,
+        },
+        {
+            "table_id": "grupo",
+            "database": "principal_db",
+            "query": """
+                SELECT
+                    *
+                FROM
+                    GRUPO
+                WHERE
+                    DT_INCLUSAO >= '{start}'
+                ORDER BY
+                    DT_INCLUSAO
+            """,
+            "primary_key": ["CD_GRUPO"],
+            "flag_date_partition": True,
+        },
+        {
+            "table_id": "grupo_linha",
+            "database": "principal_db",
+            "query": """
+                SELECT
+                    *
+                FROM
+                    GRUPO_LINHA
+                WHERE
+                    DT_INCLUSAO >= '{start}'
+                ORDER BY
+                    DT_INCLUSAO
+            """,
+            "primary_key": ["CD_GRUPO", "CD_LINHA"],  # id column to nest data on
+            "flag_date_partition": True,
+        },
+        {
+            "table_id": "matriz_integracao",
+            "database": "tarifa_db",
+            "query": """
+                SELECT
+                    *
+                FROM
+                    matriz_integracao
+                WHERE
+                    dt_inclusao >= '{start}'
+                ORDER BY
+                    dt_inclusao
+            """,
+            "primary_key": [
+                "cd_versao_matriz",
+                "cd_integracao",
+            ],  # id column to nest data on
+            "flag_date_partition": True,
+        },
+    ]
+    BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
