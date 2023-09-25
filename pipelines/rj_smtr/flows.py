@@ -5,8 +5,7 @@ Flows for rj_smtr
 
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
-from prefect import case, Parameter
-from prefect.tasks.control_flow import merge
+from prefect import Parameter
 
 # EMD Imports #
 
@@ -19,7 +18,6 @@ from pipelines.utils.tasks import (
 # SMTR Imports #
 
 from pipelines.rj_smtr.tasks import (
-    create_date_partition,
     create_date_hour_partition,
     create_local_partition_path,
     get_current_timestamp,
@@ -66,13 +64,7 @@ with Flow(
         dataset_id=dataset_id,
     )
 
-    with case(table_params["flag_date_partition"], True):
-        date_partitions = create_date_partition(timestamp)
-
-    with case(table_params["flag_date_partition"], False):
-        date_hour_partitions = create_date_hour_partition(timestamp)
-
-    partitions = merge(date_partitions, date_hour_partitions)
+    partitions = create_date_hour_partition(timestamp, partition_date_only=table_params["partition_date_only"])
 
     filename = parse_timestamp_to_string(timestamp)
 

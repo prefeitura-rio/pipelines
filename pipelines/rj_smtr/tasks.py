@@ -158,19 +158,14 @@ def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -> datet
 
 
 @task
-def create_date_hour_partition(timestamp: datetime) -> str:
+def create_date_hour_partition(timestamp: datetime, partition_date_only: bool = False) -> str:
     """
     Get date hour Hive partition structure from timestamp.
     """
-    return f"data={timestamp.strftime('%Y-%m-%d')}/hora={timestamp.strftime('%H')}"
-
-
-@task
-def create_date_partition(timestamp: datetime) -> str:
-    """
-    Get date hour Hive partition structure from timestamp.
-    """
-    return f"data={timestamp.date()}"
+    partition = f"data={timestamp.strftime('%Y-%m-%d')}"
+    if partition_date_only:
+        parition += f"/hora={timestamp.strftime('%H')}"
+    return partition
 
 
 @task
