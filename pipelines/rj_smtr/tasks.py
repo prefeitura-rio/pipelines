@@ -158,7 +158,9 @@ def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -> datet
 
 
 @task
-def create_date_hour_partition(timestamp: datetime, partition_date_only: bool = False) -> str:
+def create_date_hour_partition(
+    timestamp: datetime, partition_date_only: bool = False
+) -> str:
     """
     Get date hour Hive partition structure from timestamp.
     """

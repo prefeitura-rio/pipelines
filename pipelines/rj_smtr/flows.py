@@ -64,7 +64,9 @@ with Flow(
         dataset_id=dataset_id,
     )
 
-    partitions = create_date_hour_partition(timestamp, partition_date_only=table_params["partition_date_only"])
+    partitions = create_date_hour_partition(
+        timestamp, partition_date_only=table_params["partition_date_only"]
+    )
 
     filename = parse_timestamp_to_string(timestamp)
 

@@ -180,7 +180,7 @@ class constants(Enum):  # pylint: disable=c0103
                 ORDER BY
                     data_processamento
             """,
-            "primary_key": ["id"]  # id column to nest data on
+            "primary_key": ["id"],  # id column to nest data on
         },
     ]
     BILHETAGEM_TABLES_PARAMS = [
