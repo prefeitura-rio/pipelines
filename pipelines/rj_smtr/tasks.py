@@ -502,12 +502,14 @@ def bq_upload(
     if status["error"] is not None:
         return status["error"]
 
-    if len(status["data"]) == 0:
-        log("Empty dataframe, skipping upload")
-        return None
-
     error = None
     try:
+        # Check if data exists
+        data = pd.read_csv(filepath)
+        if len(data) == 0:
+            log("Empty dataframe, skipping upload")
+            return error
+
         # Upload raw to staging
         if raw_filepath:
             st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
