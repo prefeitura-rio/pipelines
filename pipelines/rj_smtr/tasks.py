@@ -505,8 +505,7 @@ def bq_upload(
     error = None
     try:
         # Check if data exists
-        data = pd.read_csv(filepath)
-        if len(data) == 0:
+        if os.path.getsize(filepath) == 0:
             log("Empty dataframe, skipping upload")
             return error
 
