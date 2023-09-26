@@ -69,6 +69,9 @@ def get_file_paths_from_ftp(
                 files.append(file_info)
     # except Exception as e:  # pylint: disable=W0703
     #     return [{"error": e}]
+
+    files = files[:10]
+
     log(f"There are {len(files)} files at the FTP")
     return files
 
