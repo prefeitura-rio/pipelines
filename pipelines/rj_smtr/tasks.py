@@ -30,6 +30,7 @@ from pipelines.rj_smtr.utils import (
     data_info_str,
     get_raw_data_api,
     get_raw_data_gcs,
+    upload_run_logs_to_bq
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
@@ -601,6 +602,69 @@ def upload_logs_to_bq(  # pylint: disable=R0913
         raise Exception(f"Pipeline failed with error: {error}")
 
 
+@task
+def upload_raw_data_to_gcs(
+    error: bool, raw_filepath: str, timestamp: datetime, table_id: str, dataset_id: str, partitions: list
+):
+    if not error:
+        try:
+            st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
+            log(
+                f"""Uploading raw file to bucket {st_obj.bucket_name} at
+                {st_obj.bucket_name}/{dataset_id}/{table_id}"""
+            )
+            st_obj.upload(
+                path=raw_filepath,
+                partitions=partitions,
+                mode="raw",
+                if_exists="replace",
+            )
+        except Exception:
+            error = traceback.format_exc()
+            log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+    
+    upload_run_logs_to_bq(
+        dataset_id=dataset_id,
+        parent_table_id=table_id,
+        error=error,
+        timestamp=timestamp,
+        mode="raw"
+    )
+
+
+@task
+def upload_staging_data_to_gcs(
+    error: bool, staging_filepath: str, timestamp: datetime, table_id: str, dataset_id: str, partitions: list
+):
+    if not error:
+        try:
+            # Creates and publish table if it does not exist, append to it otherwise
+            create_or_append_table(
+                dataset_id=dataset_id,
+                table_id=table_id,
+                path=staging_filepath,
+                partitions=partitions
+            )
+        except Exception:
+            error = traceback.format_exc()
+            log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+    
+    upload_run_logs_to_bq(
+        dataset_id=dataset_id,
+        parent_table_id=table_id,
+        error=error,
+        timestamp=timestamp,
+        mode="staging"
+    )
+    
+
+###############
+#
+# Daterange tasks
+#
+###############
+
+
 @task(
     checkpoint=False,
     max_retries=constants.MAX_RETRIES.value,
@@ -791,9 +855,16 @@ def get_previous_date(days):
     return now.to_date_string()
 
 
+###############
+#
+# Pretreat data
+#
+###############
+
+
 @task
-def transform_to_nested_structure(
-    status: dict, timestamp: datetime, primary_key: list = None
+def transform_raw_to_nested_structure(
+    filepath: str, error: bool, timestamp: datetime, primary_key: list = None
 ):
     """Transform dataframe to nested structure
 
@@ -810,21 +881,29 @@ def transform_to_nested_structure(
             * `error` (str): catched error, if any. Otherwise, returns None
     """
 
+    # ORGANIZAR:
+    # json_status = transform_data_to_json(
+    #     status=raw_status,
+    #     file_type=table_params["pre-treatment"]["file_type"],
+    #     csv_args=table_params["pre-treatment"]["csv_args"],
+    # )
+
     # Check previous error
-    if status["error"] is not None:
-        return {"data": pd.DataFrame(), "error": status["error"]}
+    if error is not None:
+        return {"data": pd.DataFrame(), "error": error}
 
     # Check empty dataframe
-    if len(status["data"]) == 0:
-        log("Empty dataframe, skipping transformation...")
-        return {"data": pd.DataFrame(), "error": status["error"]}
+    # if len(status["data"]) == 0:
+    #     log("Empty dataframe, skipping transformation...")
+    #     return {"data": pd.DataFrame(), "error": error}
 
     try:
         if primary_key is None:
             primary_key = []
 
         error = None
-        data = pd.DataFrame(status["data"])
+        # leitura do dado raw
+        # data = pd.DataFrame(status["data"])
 
         log(
             f"""
@@ -860,40 +939,43 @@ def transform_to_nested_structure(
             level="info",
         )
 
+        # save treated local
+        filepath = _save_trated_local(data=data, filepath=filepath)
+
     except Exception as exp:  # pylint: disable=W0703
         error = exp
 
     if error is not None:
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
-    return {"data": data, "error": error}
+    return error, filepath
 
 
-@task(checkpoint=False)
-def get_datetime_range(
-    timestamp: datetime,
-    interval: int,
-) -> dict:
-    """
-    Task to get datetime range in UTC
+# @task(checkpoint=False)
+# def get_datetime_range(
+#     timestamp: datetime,
+#     interval: int,
+# ) -> dict:
+#     """
+#     Task to get datetime range in UTC
 
-    Args:
-        timestamp (datetime): timestamp to get datetime range
-        interval (int): interval in seconds
+#     Args:
+#         timestamp (datetime): timestamp to get datetime range
+#         interval (int): interval in seconds
 
-    Returns:
-        dict: datetime range
-    """
+#     Returns:
+#         dict: datetime range
+#     """
 
-    start = (
-        (timestamp - timedelta(seconds=interval))
-        .astimezone(tz=timezone("UTC"))
-        .strftime("%Y-%m-%d %H:%M:%S")
-    )
+#     start = (
+#         (timestamp - timedelta(seconds=interval))
+#         .astimezone(tz=timezone("UTC"))
+#         .strftime("%Y-%m-%d %H:%M:%S")
+#     )
 
-    end = timestamp.astimezone(tz=timezone("UTC")).strftime("%Y-%m-%d %H:%M:%S")
+#     end = timestamp.astimezone(tz=timezone("UTC")).strftime("%Y-%m-%d %H:%M:%S")
 
-    return {"start": start, "end": end}
+#     return {"start": start, "end": end}
 
 
 @task(checkpoint=False, nout=2)
@@ -916,11 +998,8 @@ def create_request_params(
 
     if dataset_id == constants.BILHETAGEM_DATASET_ID.value:
         secrets = get_vault_secret(secret_path)["data"]
-
         database_secrets = secrets["databases"][table_params["extraction"]["database"]]
-
         request_url = secrets["vpn_url"] + database_secrets["engine"]
-
         request_params = {
             "host": database_secrets["host"],  # TODO: exibir no log em ambiente fechado
             "database": table_params["extraction"]["database"],
@@ -932,47 +1011,40 @@ def create_request_params(
 
 @task(checkpoint=False)
 def get_raw_from_sources(
-    source: str,
-    url: str,
-    dataset_id: str = None,
-    table_id: str = None,
-    file_name: str = None,
-    partitions: str = None,
-    zip_file_name: str = None,
-    mode: str = None,
-    headers: str = None,
-    params: dict = None,
+    source_type: str,
+    source_path: str = None,
+    zip_filename: str = None,
+    secret_path: str = None,
+    api_params: dict = None,
 ):
-    if source == "api":
-        return get_raw_data_api(url=url, headers=headers, params=params)
-    if source == "gcs":
+    if source_type == "api":
+        return get_raw_data_api(url=source_path, secret_path=secret_path, params=api_params)
+    if source_type == "gcs":
         return get_raw_data_gcs(
-            dataset_id=dataset_id,
-            table_id=table_id,
-            file_name=file_name,
-            mode=mode,
-            partitions=partitions,
-            zip_file_name=zip_file_name,
+            gcs_path=source_path,
+            mode="raw",
+            zip_filename=zip_filename,
         )
 
 
-@task(checkpoint=False)
-def transform_data_to_json(status: dict, file_type: str, csv_args: dict):
-    data = status["data"]
-    error = status["error"]
+# TODO: passar para função para dentro da transform_raw_to_nested_structure
+# @task(checkpoint=False)
+# def transform_data_to_json(status: dict, file_type: str, csv_args: dict):
+#     data = status["data"]
+#     error = status["error"]
 
-    if file_type == "json":
-        pass
+#     if file_type == "json":
+#         pass
 
-        # todo: move to data check on specfic API # pylint: disable=W0102
-        # if isinstance(data, dict) and "DescricaoErro" in data.keys():
-        #     error = data["DescricaoErro"]
+#         # todo: move to data check on specfic API # pylint: disable=W0102
+#         # if isinstance(data, dict) and "DescricaoErro" in data.keys():
+#         #     error = data["DescricaoErro"]
 
-    elif file_type in ("txt", "csv"):
-        if csv_args is None:
-            csv_args = {}
-        data = pd.read_csv(io.StringIO(data), **csv_args).to_dict(orient="records")
-    else:
-        error = "Unsupported raw file extension. Supported only: json, csv and txt"
+#     elif file_type in ("txt", "csv"):
+#         if csv_args is None:
+#             csv_args = {}
+#         data = pd.read_csv(io.StringIO(data), **csv_args).to_dict(orient="records")
+#     else:
+#         error = "Unsupported raw file extension. Supported only: json, csv and txt"
 
-    return {"data": data, "error": error}
+#     return {"data": data, "error": error}

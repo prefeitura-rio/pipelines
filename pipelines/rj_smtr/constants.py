@@ -262,3 +262,6 @@ class constants(Enum):  # pylint: disable=c0103
         },
     ]
     BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
+
+    # GTFS
+    

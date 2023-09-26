@@ -451,17 +451,47 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
     return clocks
 
 
+def _save_raw_local(data: dict, file_path: str, mode: str = "raw", filetype: str = "json") -> str:
+    """
+    Saves json response from API to .json file.
+    Args:
+        file_path (str): Path which to save raw file
+        status (dict): Must contain keys
+          * data: json returned from API
+          * error: error catched from API request
+        mode (str, optional): Folder to save locally, later folder which to upload to GCS.
+    Returns:
+        str: Path to the saved file
+    """
+
+    # diferentes tipos de arquivos para salvar
+    _file_path = file_path.format(mode=mode, filetype=filetype)
+    Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
+
+    if filetype == "json":
+        json.dump(data, Path(_file_path).open("w", encoding="utf-8"))
+
+    if filetype == "csv":
+        pass
+    if filetype == "txt":
+        pass
+
+    log(f"Raw data saved to: {_file_path}")
+    return _file_path
+
+
 def get_raw_data_api(  # pylint: disable=R0912
     url: str,
-    headers: str = None,
-    params: dict = None,
+    secret_path: str = None,
+    api_params: dict = None,
+    filepath: str = None
 ) -> list[dict]:
     """
     Request data from URL API
 
     Args:
         url (str): URL to send request
-        headers (str, optional): Path to headers guardeded on Vault, if needed.
+        secret_path (str, optional): Path to secrets guardeded on Vault, if needed.
         params (dict, optional): Params to be sent on request
 
     Returns:
@@ -469,57 +499,44 @@ def get_raw_data_api(  # pylint: disable=R0912
           * `data` (json): data result
           * `error` (str): catched error, if any. Otherwise, returns None
     """
-    data = None
     error = None
-
     try:
-        if headers is not None:
-            headers = get_vault_secret(headers)["data"]
-
-            # remove from headers, if present
-            remove_headers = ["host", "databases"]
-            for remove_header in remove_headers:
-                if remove_header in list(headers.keys()):
-                    del headers[remove_header]
+        if secret_path is None:
+            headers = secret_path
+        else:
+            headers = get_vault_secret(secret_path)["data"]
 
         response = requests.get(
             url,
             headers=headers,
             timeout=constants.MAX_TIMEOUT_SECONDS.value,
-            params=params,
+            params=api_params,
         )
 
         response.raise_for_status()
-
-        data = response.text
+        filepath = _save_raw_local(data=response.text, filepath=filepath)
 
     except Exception as exp:
         error = exp
-
-    if error is not None:
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
-    return {"data": data, "error": error}
+    return error, filepath
 
 
 def get_raw_data_gcs(
-    dataset_id: str,
-    table_id: str,
-    file_name: str,
-    mode: str,
-    partitions: str = None,
+    gcs_path: str,
     zip_extracted_file: str = None,
 ) -> dict:
+    
     error = None
-    data = None
+
     try:
         blob = get_storage_blob(
-            dataset_id=dataset_id,
-            table_id=table_id,
-            file_name=file_name,
-            partitions=partitions,
-            mode=mode,
+            gcs_path=gcs_path,
+            mode="raw",
         )
+
+        data = blob.download_as_bytes()
 
         if zip_extracted_file:
             compressed_data = blob.download_as_bytes()
@@ -528,7 +545,93 @@ def get_raw_data_gcs(
                 data = zipped_file.read(zip_extracted_file).decode(encoding="utf-8")
         else:
             data = blob.download_as_string()
+
     except Exception as exp:
         error = exp
 
     return {"data": data, "error": error}
+
+
+def _save_treated_local(file_path: str, status: dict, mode: str = "staging") -> str:
+    """
+    Save treated file to CSV.
+
+    Args:
+        file_path (str): Path which to save treated file
+        status (dict): Must contain keys
+          * `data`: dataframe returned from treatement
+          * `error`: error catched from data treatement
+        mode (str, optional): Folder to save locally, later folder which to upload to GCS.
+
+    Returns:
+        str: Path to the saved file
+    """
+    _file_path = file_path.format(mode=mode, filetype="csv")
+    Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
+    if status["error"] is None:
+        status["data"].to_csv(_file_path, index=False)
+        log(f"Treated data saved to: {_file_path}")
+    return _file_path
+
+
+def upload_run_logs_to_bq(  # pylint: disable=R0913
+    dataset_id: str,
+    parent_table_id: str,
+    timestamp: str,
+    error: str = None,
+    previous_error: str = None,
+    recapture: bool = False,
+    mode: str = "raw"
+):
+    """
+    Upload execution status table to BigQuery.
+    Table is uploaded to the same dataset, named {parent_table_id}_logs.
+    If passing status_dict, should not pass timestamp and error.
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        parent_table_id (str): Parent table id related to the status table
+        timestamp (str): ISO formatted timestamp string
+        error (str, optional): String associated with error caught during execution
+    Returns:
+        None
+    """
+    table_id = parent_table_id + "_logs"
+    # Create partition directory
+    filename = f"{table_id}_{timestamp.isoformat()}"
+    partition = f"data={timestamp.date()}"
+    filepath = Path(
+        f"""data/{mode}/{dataset_id}/{table_id}/{partition}/{filename}.csv"""
+    )
+    filepath.parent.mkdir(exist_ok=True, parents=True)
+    # Create dataframe to be uploaded
+    if not error and recapture is True:
+        # if the recapture is succeeded, update the column erro
+        dataframe = pd.DataFrame(
+            {
+                "timestamp_captura": [timestamp],
+                "sucesso": [True],
+                "erro": [f"[recapturado]{previous_error}"],
+            }
+        )
+        log(f"Recapturing {timestamp} with previous error:\n{error}")
+    else:
+        # not recapturing or error during flow execution
+        dataframe = pd.DataFrame(
+            {
+                "timestamp_captura": [timestamp],
+                "sucesso": [error is None],
+                "erro": [error],
+            }
+        )
+    # Save data local
+    dataframe.to_csv(filepath, index=False)
+    # Upload to Storage
+    create_or_append_table(
+        dataset_id=dataset_id,
+        table_id=table_id,
+        path=filepath.as_posix(),
+        partitions=partition,
+    )
+    if error is not None:
+        raise Exception(f"Pipeline failed with error: {error}")
