@@ -58,16 +58,6 @@ def get_now_date():
     return now.to_date_string()
 
 
-@prefect.task(checkpoint=False)
-def get_yesterday():
-    """
-    Returns the previous date in YYYY-MM-DD.
-    """
-    now = pendulum.yesterday(pendulum.timezone("America/Sao_Paulo"))
-
-    return now.to_date_string()
-
-
 @task
 def get_current_flow_labels() -> List[str]:
     """
@@ -162,12 +152,14 @@ def create_table_and_upload_to_gcs(
     dataset_id: str,
     table_id: str,
     dump_mode: str,
-    biglake_table: bool = False,
+    biglake_table: bool = True,
     wait=None,  # pylint: disable=unused-argument
 ) -> None:
     """
     Create table using BD+ and upload to GCS.
     """
+    bd_version = bd.__version__
+    log(f"USING BASEDOSDADOS {bd_version}")
     # pylint: disable=C0103
     tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
     table_staging = f"{tb.table_full_name['staging']}"
@@ -204,7 +196,6 @@ def create_table_and_upload_to_gcs(
             tb.create(
                 path=header_path,
                 if_storage_data_exists="replace",
-                if_table_config_exists="replace",
                 if_table_exists="replace",
                 biglake_table=biglake_table,
                 dataset_is_public=dataset_is_public,
@@ -255,7 +246,6 @@ def create_table_and_upload_to_gcs(
         tb.create(
             path=header_path,
             if_storage_data_exists="replace",
-            if_table_config_exists="replace",
             if_table_exists="replace",
             biglake_table=biglake_table,
             dataset_is_public=dataset_is_public,

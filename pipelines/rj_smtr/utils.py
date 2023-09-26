@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# flake8: noqa: E501
 """
 General purpose functions for rj_smtr
 """
@@ -6,19 +7,28 @@ General purpose functions for rj_smtr
 from ftplib import FTP
 from pathlib import Path
 
+from datetime import timedelta, datetime
+from typing import List
 import io
 import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
-from pipelines.rj_smtr.implicit_ftp import ImplicitFtpTls
+import pytz
 
-from pipelines.utils.utils import log
+from prefect.schedules.clocks import IntervalClock
+
+from pipelines.constants import constants as emd_constants
+
+from pipelines.rj_smtr.implicit_ftp import ImplicitFtpTls
+from pipelines.rj_smtr.constants import constants
+
 from pipelines.utils.utils import (
+    log,
     get_vault_secret,
     send_discord_message,
     get_redis_client,
 )
-from pipelines.rj_smtr.constants import constants
+
 
 # Set BD config to run on cloud #
 bd.config.from_file = True
@@ -55,7 +65,6 @@ def create_or_append_table(
             path=dirpath,
             if_table_exists="pass",
             if_storage_data_exists="replace",
-            if_table_config_exists="replace",
         )
         log("Table created in STAGING")
     else:
@@ -115,11 +124,13 @@ def get_table_min_max_value(  # pylint: disable=R0913
         field_name (str): column name to query
         kind (str): which value to get. Accepts min and max
     """
+    log(f"Getting {kind} value for {table_id}")
     query = f"""
         SELECT
             {kind}({field_name})
         FROM {query_project_id}.{dataset_id}.{table_id}
     """
+    log(f"Will run query:\n{query}")
     result = bd.read_sql(query=query, billing_project_id=bq_project())
 
     return result.iloc[0][0]
@@ -208,7 +219,13 @@ def set_redis_rdo_files(redis_client, dataset_id: str, table_id: str):
     Returns:
         bool: if the key was properly set
     """
-    content = redis_client.get(f"{dataset_id}.{table_id}")
+    try:
+        content = redis_client.get(f"{dataset_id}.{table_id}")["files"]
+    except TypeError as e:
+        log(f"Caught error {e}. Will set unexisting key")
+        # set key to empty dict for filling later
+        redis_client.set(f"{dataset_id}.{table_id}", {"files": []})
+        content = redis_client.get(f"{dataset_id}.{table_id}")
     # update content
     st_client = bd.Storage(dataset_id=dataset_id, table_id=table_id)
     blob_names = [
@@ -218,6 +235,7 @@ def set_redis_rdo_files(redis_client, dataset_id: str, table_id: str):
         )
     ]
     files = [blob_name.split("/")[-1].replace(".csv", "") for blob_name in blob_names]
+    log(f"When setting key, found {len(files)} files. Will register on redis...")
     content["files"] = files
     # set key
     return redis_client.set(f"{dataset_id}.{table_id}", content)
@@ -377,3 +395,53 @@ def data_info_str(data: pd.DataFrame):
     buffer = io.StringIO()
     data.info(buf=buffer)
     return buffer.getvalue()
+
+
+def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-locals
+    interval: timedelta,
+    labels: List[str],
+    table_parameters: list,
+    dataset_id: str,
+    secret_path: str,
+    runs_interval_minutes: int = 15,
+    start_date: datetime = datetime(
+        2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)
+    ),
+) -> List[IntervalClock]:
+    """
+    Generates multiple schedules
+
+    Args:
+        interval (timedelta): The interval to run the schedule
+        labels (List[str]): The labels to be added to the schedule
+        table_parameters (list): The table parameters
+        dataset_id (str): The dataset_id to be used in the schedule
+        secret_path (str): The secret path to be used in the schedule
+        runs_interval_minutes (int, optional): The interval between each schedule. Defaults to 15.
+        start_date (datetime, optional): The start date of the schedule.
+            Defaults to datetime(2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)).
+
+    Returns:
+        List[IntervalClock]: The list of schedules
+
+    """
+
+    clocks = []
+    for count, parameters in enumerate(table_parameters):
+        parameter_defaults = {
+            "table_params": parameters,
+            "dataset_id": dataset_id,
+            "secret_path": secret_path,
+            "interval": interval.total_seconds(),
+        }
+        log(f"parameter_defaults: {parameter_defaults}")
+        clocks.append(
+            IntervalClock(
+                interval=interval,
+                start_date=start_date
+                + timedelta(minutes=runs_interval_minutes * count),
+                labels=labels,
+                parameter_defaults=parameter_defaults,
+            )
+        )
+    return clocks

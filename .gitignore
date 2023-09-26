@@ -10,7 +10,8 @@ test/*.ipynb
 test/*.csv
 setup.py
 .vscode/*
-
+*.hdf
+*.DS_Store
 
 
 # Byte-compiled / optimized / DLL files

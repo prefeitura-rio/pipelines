@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=W0511
 """
 Flows for veiculos
 """
 
-# from prefect import Parameter, case
+from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
+from prefect.utilities.edges import unmapped
+from datetime import timedelta
 
 # EMD Imports #
 
 from pipelines.constants import constants as emd_constants
 from pipelines.utils.decorators import Flow
+from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
 
 from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
@@ -23,7 +27,7 @@ from pipelines.utils.tasks import (
 from pipelines.rj_smtr.veiculo.constants import constants
 
 from pipelines.rj_smtr.schedules import (
-    every_day_hour_five,
+    every_day_hour_seven,
 )
 from pipelines.rj_smtr.tasks import (
     create_date_partition,
@@ -35,6 +39,10 @@ from pipelines.rj_smtr.tasks import (
     save_treated_local,
     upload_logs_to_bq,
     bq_upload,
+    fetch_dataset_sha,
+    get_run_dates,
+    get_join_dict,
+    get_previous_date,
 )
 
 from pipelines.rj_smtr.veiculo.tasks import (
@@ -42,15 +50,16 @@ from pipelines.rj_smtr.veiculo.tasks import (
     pre_treatment_sppo_infracao,
 )
 
+from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
+
 # Flows #
 
 # flake8: noqa: E501
 sppo_licenciamento_captura_name = f"SMTR: Captura - {constants.DATASET_ID.value}.{constants.SPPO_LICENCIAMENTO_TABLE_ID.value}"
 with Flow(
     sppo_licenciamento_captura_name,
-    code_owners=["rodrigo", "fernanda"],
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as sppo_licenciamento_captura:
-
     timestamp = get_current_timestamp()
 
     LABELS = get_current_flow_labels()
@@ -113,14 +122,13 @@ sppo_licenciamento_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-sppo_licenciamento_captura.schedule = every_day_hour_five
+sppo_licenciamento_captura.schedule = every_day_hour_seven
 
 sppo_infracao_captura_name = f"SMTR: Captura - {constants.DATASET_ID.value}.{constants.SPPO_INFRACAO_TABLE_ID.value}"
 with Flow(
     sppo_infracao_captura_name,
-    code_owners=["rodrigo", "fernanda"],
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as sppo_infracao_captura:
-
     timestamp = get_current_timestamp()
 
     LABELS = get_current_flow_labels()
@@ -181,4 +189,57 @@ sppo_infracao_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-sppo_infracao_captura.schedule = every_day_hour_five
+sppo_infracao_captura.schedule = every_day_hour_seven
+
+# flake8: noqa: E501
+sppo_veiculo_dia_name = f"SMTR: Materialização - {constants.DATASET_ID.value}.{constants.SPPO_VEICULO_DIA_TABLE_ID.value}"
+with Flow(
+    sppo_veiculo_dia_name,
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
+) as sppo_veiculo_dia:
+    # 1. SETUP #
+
+    # Get default parameters #
+    start_date = Parameter("start_date", default=get_previous_date.run(1))
+    end_date = Parameter("end_date", default=get_previous_date.run(1))
+    stu_data_versao = Parameter("stu_data_versao", default="")
+
+    run_dates = get_run_dates(start_date, end_date)
+
+    # Rename flow run #
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix=sppo_veiculo_dia_name + ": ",
+        now_time=run_dates,
+    )
+
+    # Set dbt client #
+    LABELS = get_current_flow_labels()
+    MODE = get_current_flow_mode(LABELS)
+
+    dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
+    # Use the command below to get the dbt client in dev mode:
+    # dbt_client = get_local_dbt_client(host="localhost", port=3001)
+
+    # Get models version #
+    # TODO: include version in a column in the table
+    dataset_sha = fetch_dataset_sha(
+        dataset_id=constants.DATASET_ID.value,
+    )
+
+    dict_list = get_join_dict(dict_list=run_dates, new_dict=dataset_sha)
+    _vars = get_join_dict(
+        dict_list=dict_list, new_dict={"stu_data_versao": stu_data_versao}
+    )
+
+    # 2. TREAT #
+    run_dbt_model.map(
+        dbt_client=unmapped(dbt_client),
+        dataset_id=unmapped(constants.DATASET_ID.value),
+        _vars=_vars,
+    )
+
+sppo_veiculo_dia.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+sppo_veiculo_dia.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)

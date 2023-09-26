@@ -13,6 +13,9 @@ from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.custom import wait_for_flow_run_with_timeout
+from pipelines.rj_cor.meteorologia.precipitacao_alertario.constants import (
+    constants as alertario_constants,
+)
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks import (
     check_to_run_dbt,
     tratar_dados,
@@ -42,9 +45,8 @@ with Flow(
     code_owners=[
         "paty",
     ],
-    skip_if_running=True,
+    # skip_if_running=True,
 ) as cor_meteorologia_precipitacao_alertario:
-
     DATASET_ID = "clima_pluviometro"
     TABLE_ID = "taxa_precipitacao_alertario"
     DUMP_MODE = "append"
@@ -150,6 +152,27 @@ with Flow(
 
                 wait_for_rain_dashboard_update = wait_for_flow_run(
                     flow_run_id=rain_dashboard_update_flow,
+                    stream_states=True,
+                    stream_logs=True,
+                    raise_final_state=False,
+                )
+
+                # Trigger rain dashboard update last 2h flow run
+                rain_dashboard_last_2h_update_flow = create_flow_run(
+                    flow_name=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_NAME.value,
+                    project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                    parameters=alertario_constants.RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS.value,  # noqa
+                    labels=[
+                        "rj-escritorio-dev",
+                    ],
+                    run_name="Update rain dashboard data (triggered by precipitacao_alertario last 2h flow)",  # noqa
+                )
+                rain_dashboard_last_2h_update_flow.set_upstream(
+                    wait_for_materialization
+                )
+
+                wait_for_rain_dashboard_last_2h_update = wait_for_flow_run(
+                    flow_run_id=rain_dashboard_last_2h_update_flow,
                     stream_states=True,
                     stream_logs=True,
                     raise_final_state=False,

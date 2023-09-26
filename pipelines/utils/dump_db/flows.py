@@ -40,7 +40,6 @@ with Flow(
         "gabriel",
     ],
 ) as dump_sql_flow:
-
     #####################################
     #
     # Parameters
@@ -179,7 +178,6 @@ with Flow(
     data_exists = greater_than(num_batches, 0)
 
     with case(data_exists, True):
-
         upload_table = create_table_and_upload_to_gcs(
             data_path=batches_path,
             dataset_id=dataset_id,

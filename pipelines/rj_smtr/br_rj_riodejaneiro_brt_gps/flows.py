@@ -25,7 +25,7 @@ from pipelines.rj_smtr.constants import constants
 
 from pipelines.rj_smtr.schedules import (
     every_minute,
-    # every_hour,
+    every_hour,
 )
 from pipelines.rj_smtr.tasks import (
     create_date_hour_partition,
@@ -52,9 +52,8 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks import (
 
 with Flow(
     "SMTR: GPS BRT - Materialização",
-    code_owners=["caio", "fernanda"],
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as materialize_brt:
-
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
         prefix="GPS BRT - Materialização: ", now_time=get_now_time()
@@ -85,7 +84,7 @@ with Flow(
         table_id=table_id,
         raw_dataset_id=raw_dataset_id,
         raw_table_id=raw_table_id,
-        table_date_column_name="data",
+        table_run_datetime_column_name="timestamp_gps",
         mode=MODE,
         delay_hours=constants.GPS_BRT_MATERIALIZE_DELAY_HOURS.value,
     )
@@ -133,14 +132,13 @@ materialize_brt.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-# materialize_brt.schedule = every_hour
+materialize_brt.schedule = every_hour
 
 
 with Flow(
     "SMTR: GPS BRT - Captura",
-    code_owners=["caio", "fernanda"],
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as captura_brt:
-
     timestamp = get_current_timestamp()
 
     # Rename flow run

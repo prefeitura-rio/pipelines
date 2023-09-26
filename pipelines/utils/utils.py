@@ -12,6 +12,7 @@ from os import getenv, walk
 from os.path import join
 from pathlib import Path
 import re
+import textwrap
 from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
 
@@ -342,7 +343,16 @@ def query_to_line(query: str) -> str:
     """
     Converts a query to a line.
     """
+    query = textwrap.dedent(query)
     return " ".join([line.strip() for line in query.split("\n")])
+
+
+def remove_tabs_from_query(query: str) -> str:
+    """
+    Removes tabs from a query.
+    """
+    query = query_to_line(query)
+    return re.sub(r"\s+", " ", query).strip()
 
 
 def send_discord_message(
@@ -585,7 +595,6 @@ def to_partitions(
     """
 
     if isinstance(data, (pd.core.frame.DataFrame)):
-
         savepath = Path(savepath)
 
         # create unique combinations between partition columns
@@ -967,7 +976,7 @@ def compare_dates_between_tables_redis(
 
 
 # pylint: disable=W0106
-def save_updated_rows_on_redis(
+def save_updated_rows_on_redis(  # pylint: disable=R0914
     dataframe: pd.DataFrame,
     dataset_id: str,
     table_id: str,
@@ -1001,6 +1010,8 @@ def save_updated_rows_on_redis(
         last_updates.items(), columns=[unique_id, "last_update"]
     )
 
+    log(f"Redis key: {key}\nRedis actual values:\n {last_updates}")
+
     # dataframe and last_updates need to have the same index, in our case unique_id
     missing_in_dfr = [
         i
@@ -1032,9 +1043,11 @@ def save_updated_rows_on_redis(
     dataframe[date_column] = dataframe[date_column].apply(
         pd.to_datetime, format=date_format
     )
+
     dataframe["last_update"] = dataframe["last_update"].apply(
         pd.to_datetime, format="%Y-%m-%d %H:%M:%S"
     )
+
     dataframe = dataframe[dataframe[date_column] > dataframe["last_update"]].dropna(
         subset=[unique_id]
     )
@@ -1043,7 +1056,8 @@ def save_updated_rows_on_redis(
     keep_cols = [unique_id, date_column]
     new_updates = dataframe[keep_cols].sort_values(keep_cols)
     new_updates = new_updates.groupby(unique_id, as_index=False).tail(1)
-    new_updates[date_column] = new_updates[date_column].astype(str)
+    new_updates[date_column] = new_updates[date_column].dt.strftime("%Y-%m-%d %H:%M:%S")
+    log(f">>> Updated df: {new_updates.head(10)}")
 
     # Convert stations with the new updates dates in a dictionary
     new_updates = dict(zip(new_updates[unique_id], new_updates[date_column]))

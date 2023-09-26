@@ -98,9 +98,8 @@ def check_files_for_download(
 
     try:
         exclude_files = redis_client.get(key)["files"]
-    except TypeError:
+    except (TypeError, KeyError):
         set_redis_rdo_files(redis_client, dataset_id, table_id)
-        exclude_files = redis_client.get(key)["files"]
 
     log(f"There are {len(exclude_files)} already downloaded")
     download_files = [

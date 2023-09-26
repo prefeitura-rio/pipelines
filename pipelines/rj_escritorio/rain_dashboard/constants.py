@@ -15,13 +15,7 @@ class constants(Enum):  # pylint: disable=c0103
     RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS = {
         "query_data": """
         WITH
-            max_timestamps AS (
-            SELECT
-                MAX(data_particao) AS max_data_particao
-            FROM `rj-cor.clima_pluviometro.taxa_precipitacao_alertario`
-            ),
-
-            alertario AS (
+            alertario AS ( -- seleciona a última medição do alertario
             SELECT
                 id_estacao,
                 acumulado_chuva_15_min,
@@ -39,20 +33,10 @@ class constants(Enum):  # pylint: disable=c0103
                 FROM `rj-cor.clima_pluviometro.taxa_precipitacao_alertario`
                 WHERE data_particao> DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY)
             )AS a
-            JOIN max_timestamps b
-                ON  a.data_particao = b.max_data_particao
             WHERE a.row_num = 1
-
-            -- MAX FROM AFTER A GIVEN DATE
-            -- SELECT
-            --   id_estacao,
-            --   MAX(acumulado_chuva_15_min) AS acumulado_chuva_15_min,
-            -- FROM `rj-cor.clima_pluviometro.taxa_precipitacao_alertario` t1
-            -- WHERE TRUE
-            --     AND DATE_TRUNC(t1.data_particao, day) > '2023-02-07'
-            -- GROUP BY id_estacao
             ),
-            last_measurements AS (
+
+            last_measurements AS (-- concatena medições do alertario e websirene
             SELECT
                 a.id_estacao,
                 a.data_update,
@@ -61,8 +45,7 @@ class constants(Enum):  # pylint: disable=c0103
             FROM alertario a
             ),
 
-
-            h3_chuvas AS (
+            h3_chuvas AS ( -- calcula qnt de chuva para cada h3
             SELECT
                 h3.*,
                 lm.id_estacao,
@@ -80,6 +63,7 @@ class constants(Enum):  # pylint: disable=c0103
                 estacoes_pluviometricas AS (
                     SELECT
                         id_estacao AS id,
+                        estacao,
                         "alertario" AS sistema,
                         ST_GEOGPOINT(CAST(longitude AS FLOAT64),
                         CAST(latitude AS FLOAT64)) AS geom
@@ -93,9 +77,10 @@ class constants(Enum):  # pylint: disable=c0103
                             ARRAY_AGG(
                                 STRUCT<id_h3 STRING,
                                 id_estacao STRING,
+                                estacao STRING,
                                 dist FLOAT64,
                                 sistema STRING>(
-                                a.id, b.id,
+                                a.id, b.id, b.estacao,
                                 ST_DISTANCE(a.geom, b.geom),
                                 b.sistema
                                 )
@@ -103,7 +88,7 @@ class constants(Enum):  # pylint: disable=c0103
                             ) AS ar
                         FROM (SELECT id, geom FROM centroid_h3) a
                         CROSS JOIN(
-                            SELECT id, sistema, geom
+                            SELECT id, estacao, sistema, geom
                             FROM estacoes_pluviometricas
                             WHERE geom is not null
                         ) b
@@ -122,13 +107,13 @@ class constants(Enum):  # pylint: disable=c0103
                     ON lm.id_estacao=h3.id_estacao AND lm.sistema=h3.sistema
             ),
 
-
-
-            h3_media AS (
+            h3_media AS ( -- calcula média de chuva para as 3 estações mais próximas
             SELECT
                 id_h3,
                 CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL) AS chuva_15min,
+                STRING_AGG(estacao ORDER BY estacao) estacoes
             FROM h3_chuvas
+            -- WHERE ranking < 4
             GROUP BY id_h3
             ),
 
@@ -136,29 +121,20 @@ class constants(Enum):  # pylint: disable=c0103
             SELECT
                 h3_media.id_h3,
                 nome AS bairro,
+                estacoes,
                 cast(round(h3_media.chuva_15min,2) AS decimal) AS chuva_15min,
             FROM h3_media
             LEFT JOIN `rj-cor.dados_mestres.h3_grid_res8` h3_grid
                 ON h3_grid.id=h3_media.id_h3
             INNER JOIN `rj-cor.dados_mestres.bairro`
                 ON ST_CONTAINS(`rj-cor.dados_mestres.bairro`.geometry, ST_CENTROID(h3_grid.geometry))
-            ),
-
-        estacao_por_h3  as (
-            SELECT
-            h3_grid.id as id_h3,
-            STRING_AGG(estacao ORDER BY estacao) estacoes
-            FROM `rj-cor.dados_mestres.h3_grid_res8` h3_grid
-            INNER JOIN `rj-cor.clima_pluviometro.estacoes_alertario` alertario
-                ON ST_CONTAINS(h3_grid.geometry, ST_GEOGPOINT(CAST(alertario.longitude AS FLOAT64), CAST(alertario.latitude AS FLOAT64)))
-            GROUP BY h3_grid.id
             )
 
         SELECT
         final_table.id_h3,
         bairro,
         chuva_15min,
-        estacao_por_h3.estacoes,
+        estacoes,
         CASE
             WHEN chuva_15min> 0     AND chuva_15min<= 1.25 THEN 'chuva fraca'
             WHEN chuva_15min> 1.25  AND chuva_15min<= 6.25 THEN 'chuva moderada'
@@ -174,7 +150,6 @@ class constants(Enum):  # pylint: disable=c0103
             ELSE '#ffffff'
         END AS color
         FROM final_table
-        LEFT JOIN estacao_por_h3 ON final_table.id_h3 = estacao_por_h3.id_h3
         """,
         "query_update": """
         SELECT

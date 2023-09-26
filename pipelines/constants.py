@@ -45,6 +45,8 @@ class constants(Enum):  # pylint: disable=c0103
 
     RJ_SMS_AGENT_LABEL = "rj-sms"
 
+    RJ_SMS_DEV_AGENT_LABEL = "rj-sms-dev"
+
     RJ_SMI_AGENT_LABEL = "rj-smi"
 
     RJ_SECONSERVA_AGENT_LABEL = "rj-seconserva"
@@ -52,6 +54,10 @@ class constants(Enum):  # pylint: disable=c0103
     RJ_CETRIO_AGENT_LABEL = "rj-cetrio"
 
     RJ_SETUR_AGENT_LABEL = "rj-setur"
+
+    RJ_IPLANRIO_AGENT_LABEL = "rj-iplanrio"
+
+    RJ_PGM_AGENT_LABEL = "rj-pgm"
 
     ######################################
     # Other constants
@@ -92,6 +98,10 @@ class constants(Enum):  # pylint: disable=c0103
             "user_id": "272581753829326849",
             "type": "user_nickname",
         },
+        "joao": {
+            "user_id": "692742616416256019",
+            "type": "user_nickname",
+        },
         "fernanda": {
             "user_id": "692709168221650954",
             "type": "user_nickname",
@@ -113,7 +123,19 @@ class constants(Enum):  # pylint: disable=c0103
             "type": "user_nickname",
         },
         "rodrigo": {
-            "user_id": "21031636163804545094",
+            "user_id": "1031636163804545094",
+            "type": "user_nickname",
+        },
+        "boris": {
+            "user_id": "1109195532884262934",
+            "type": "user_nickname",
+        },
+        "thiago": {
+            "user_id": "404716070088343552",
+            "type": "user_nickname",
+        },
+        "andre": {
+            "user_id": "369657115012366336",
             "type": "user_nickname",
         },
     }

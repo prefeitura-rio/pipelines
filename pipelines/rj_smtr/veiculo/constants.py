@@ -39,6 +39,7 @@ class constants(Enum):  # pylint: disable=c0103
         "ano_fabricacao": "ano_fabricacao",
         "wifi": "indicador_wifi",
         "usb": "indicador_usb",
+        "data_inicio_vinculo": "data_inicio_vinculo",
     }
     SPPO_LICENCIAMENTO_CSV_ARGS = {
         "sep": ";",
@@ -65,3 +66,6 @@ class constants(Enum):  # pylint: disable=c0103
         "names": SPPO_INFRACAO_MAPPING_KEYS.keys(),  # pylint: disable=e1101
     }
     SPPO_INFRACAO_TABLE_ID = "sppo_infracao"
+
+    # VEÍCULO DIA
+    SPPO_VEICULO_DIA_TABLE_ID = "sppo_veiculo_dia"

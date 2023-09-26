@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=W0703, W0511
 """
 Tasks for rj_smtr
 """
-# pylint: disable=W0703
-
 from datetime import datetime, timedelta
 import json
 import os
 from pathlib import Path
 import traceback
-from typing import Dict
+from typing import Dict, List
 import io
 
 from basedosdados import Storage, Table
@@ -28,9 +27,12 @@ from pipelines.rj_smtr.utils import (
     get_table_min_max_value,
     get_last_run_timestamp,
     log_critical,
+    data_info_str,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
+
+from pipelines.utils.tasks import get_now_date
 
 ###############
 #
@@ -135,12 +137,19 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
 
 
 @task
-def get_current_timestamp(
-    timestamp: datetime = None, truncate_minute: bool = True
-) -> datetime:
+def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -> datetime:
     """
     Get current timestamp for flow run.
+
+    Args:
+        timestamp: timestamp to be used as reference (optionally, it can be a string)
+        truncate_minute: whether to truncate the timestamp to the minute or not
+
+    Returns:
+        datetime: timestamp for flow run
     """
+    if isinstance(timestamp, str):
+        timestamp = datetime.fromisoformat(timestamp)
     if not timestamp:
         timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
     if truncate_minute:
@@ -275,7 +284,10 @@ def save_treated_local(file_path: str, status: dict, mode: str = "staging") -> s
 ###############
 @task(nout=3)
 def query_logs(
-    dataset_id: str, table_id: str, datetime_filter=None, max_recaptures: int = 60
+    dataset_id: str,
+    table_id: str,
+    datetime_filter=None,
+    max_recaptures: int = 60,
 ):
     """
     Queries capture logs to check for errors
@@ -293,6 +305,10 @@ def query_logs(
 
     if not datetime_filter:
         datetime_filter = pendulum.now(constants.TIMEZONE.value).replace(
+            second=0, microsecond=0
+        )
+    elif isinstance(datetime_filter, str):
+        datetime_filter = datetime.fromisoformat(datetime_filter).replace(
             second=0, microsecond=0
         )
 
@@ -372,7 +388,11 @@ def query_logs(
 
 @task
 def get_raw(  # pylint: disable=R0912
-    url: str, headers: str = None, filetype: str = "json", csv_args: dict = None
+    url: str,
+    headers: str = None,
+    filetype: str = "json",
+    csv_args: dict = None,
+    params: dict = None,
 ) -> Dict:
     """
     Request data from URL API
@@ -382,6 +402,8 @@ def get_raw(  # pylint: disable=R0912
         headers (str, optional): Path to headers guardeded on Vault, if needed.
         filetype (str, optional): Filetype to be formatted (supported only: json, csv and txt)
         csv_args (dict, optional): Arguments for read_csv, if needed
+        params (dict, optional): Params to be sent on request
+
     Returns:
         dict: Conatining keys
           * `data` (json): data result
@@ -394,8 +416,17 @@ def get_raw(  # pylint: disable=R0912
         if headers is not None:
             headers = get_vault_secret(headers)["data"]
 
+            # remove from headers, if present
+            remove_headers = ["host", "databases"]
+            for remove_header in remove_headers:
+                if remove_header in list(headers.keys()):
+                    del headers[remove_header]
+
         response = requests.get(
-            url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
+            url,
+            headers=headers,
+            timeout=constants.MAX_TIMEOUT_SECONDS.value,
+            params=params,
         )
 
         if response.ok:  # status code is less than 400
@@ -472,6 +503,7 @@ def bq_upload(
         return status["error"]
 
     error = None
+
     try:
         # Upload raw to staging
         if raw_filepath:
@@ -608,7 +640,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
     table_id: str,
     raw_dataset_id: str,
     raw_table_id: str,
-    table_date_column_name: str = None,
+    table_run_datetime_column_name: str = None,
     mode: str = "prod",
     delay_hours: int = 0,
 ):
@@ -637,22 +669,37 @@ def get_materialization_date_range(  # pylint: disable=R0913
     )
     # if there's no timestamp set on redis, get max timestamp on source table
     if last_run is None:
+        log("Failed to fetch key from Redis...\n Querying tables for last suceeded run")
         if Table(dataset_id=dataset_id, table_id=table_id).table_exists("prod"):
             last_run = get_table_min_max_value(
                 query_project_id=bq_project(),
                 dataset_id=dataset_id,
                 table_id=table_id,
-                field_name=table_date_column_name,
+                field_name=table_run_datetime_column_name,
                 kind="max",
+            )
+            log(
+                f"""
+            Queried last run from {dataset_id}.{table_id}
+            Got:
+            {last_run} as type {type(last_run)}
+            """
             )
         else:
             last_run = get_table_min_max_value(
                 query_project_id=bq_project(),
                 dataset_id=raw_dataset_id,
                 table_id=raw_table_id,
-                field_name=table_date_column_name,
+                field_name=table_run_datetime_column_name,
                 kind="max",
             )
+        log(
+            f"""
+            Queried last run from {raw_dataset_id}.{raw_table_id}
+            Got:
+            {last_run} as type {type(last_run)}
+            """
+        )
     else:
         last_run = datetime.strptime(last_run, timestr)
 
@@ -697,10 +744,11 @@ def set_last_run_timestamp(
     key = dataset_id + "." + table_id
     if mode == "dev":
         key = f"{mode}.{key}"
-    # get content to update only the required key
+
     content = redis_client.get(key)
+    if not content:
+        content = {}
     content["last_run_timestamp"] = timestamp
-    # set on redis
     redis_client.set(key, content)
     return True
 
@@ -733,3 +781,180 @@ def fetch_dataset_sha(dataset_id: str):
 
     dataset_version = response.json()[0]["sha"]
     return {"version": dataset_version}
+
+
+@task
+def get_run_dates(date_range_start: str, date_range_end: str) -> List:
+    """
+    Generates a list of dates between date_range_start and date_range_end.
+    """
+    if (date_range_start is False) or (date_range_end is False):
+        dates = [{"run_date": get_now_date.run()}]
+    else:
+        dates = [
+            {"run_date": d.strftime("%Y-%m-%d")}
+            for d in pd.date_range(start=date_range_start, end=date_range_end)
+        ]
+    log(f"Will run the following dates: {dates}")
+    return dates
+
+
+@task
+def get_join_dict(dict_list: list, new_dict: dict) -> List:
+    """
+    Updates a list of dictionaries with a new dictionary.
+    """
+    for dict_temp in dict_list:
+        dict_temp.update(new_dict)
+
+    log(f"get_join_dict: {dict_list}")
+    return dict_list
+
+
+@task(checkpoint=False)
+def get_previous_date(days):
+    """
+    Returns the date of {days} days ago in YYYY-MM-DD.
+    """
+    now = pendulum.now(pendulum.timezone("America/Sao_Paulo")).subtract(days=days)
+
+    return now.to_date_string()
+
+
+@task
+def transform_to_nested_structure(
+    status: dict, timestamp: datetime, primary_key: list = None
+):
+    """Transform dataframe to nested structure
+
+    Args:
+        status (dict): Must contain keys
+            * `data`: dataframe returned from treatement
+            * `error`: error catched from data treatement
+        timestamp (datetime): timestamp of the capture
+        primary_key (list, optional): List of primary keys to be used for nesting.
+
+    Returns:
+        dict: Conatining keys
+            * `data` (json): nested data
+            * `error` (str): catched error, if any. Otherwise, returns None
+    """
+
+    # Check previous error
+    if status["error"] is not None:
+        return {"data": pd.DataFrame(), "error": status["error"]}
+
+    # Check empty dataframe
+    if len(status["data"]) == 0:
+        log("Empty dataframe, skipping transformation...")
+        return {"data": pd.DataFrame(), "error": status["error"]}
+
+    try:
+        if primary_key is None:
+            primary_key = []
+
+        error = None
+        data = pd.DataFrame(status["data"])
+
+        log(
+            f"""
+        Received inputs:
+        - timestamp:\n{timestamp}
+        - data:\n{data.head()}"""
+        )
+
+        log(f"Raw data:\n{data_info_str(data)}", level="info")
+
+        log("Adding captured timestamp column...", level="info")
+        data["timestamp_captura"] = timestamp
+
+        log("Striping string columns...", level="info")
+        for col in data.columns[data.dtypes == "object"].to_list():
+            data[col] = data[col].str.strip()
+
+        log(f"Finished cleaning! Data:\n{data_info_str(data)}", level="info")
+
+        log("Creating nested structure...", level="info")
+        pk_cols = primary_key + ["timestamp_captura"]
+        data = (
+            data.groupby(pk_cols)
+            .apply(
+                lambda x: x[data.columns.difference(pk_cols)].to_json(orient="records")
+            )
+            .str.strip("[]")
+            .reset_index(name="content")[primary_key + ["content", "timestamp_captura"]]
+        )
+
+        log(
+            f"Finished nested structure! Data:\n{data_info_str(data)}",
+            level="info",
+        )
+
+    except Exception as exp:  # pylint: disable=W0703
+        error = exp
+
+    if error is not None:
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+
+    return {"data": data, "error": error}
+
+
+@task(checkpoint=False)
+def get_datetime_range(
+    timestamp: datetime,
+    interval: int,
+) -> dict:
+    """
+    Task to get datetime range in UTC
+
+    Args:
+        timestamp (datetime): timestamp to get datetime range
+        interval (int): interval in seconds
+
+    Returns:
+        dict: datetime range
+    """
+
+    start = (
+        (timestamp - timedelta(seconds=interval))
+        .astimezone(tz=timezone("UTC"))
+        .strftime("%Y-%m-%d %H:%M:%S")
+    )
+
+    end = timestamp.astimezone(tz=timezone("UTC")).strftime("%Y-%m-%d %H:%M:%S")
+
+    return {"start": start, "end": end}
+
+
+@task(checkpoint=False, nout=2)
+def create_request_params(
+    datetime_range: dict, table_params: dict, secret_path: str, dataset_id: str
+) -> tuple:
+    """
+    Task to create request params
+
+    Args:
+        datetime_range (dict): datetime range to get params
+        table_params (dict): table params to get params
+        secret_path (str): secret path to get params
+        dataset_id (str): dataset id to get params
+
+    Returns:
+        request_params: host, database and query to request data
+        request_url: url to request data
+    """
+
+    if dataset_id == constants.BILHETAGEM_DATASET_ID.value:
+        secrets = get_vault_secret(secret_path)["data"]
+
+        database_secrets = secrets["databases"][table_params["database"]]
+
+        request_url = secrets["vpn_url"] + database_secrets["engine"]
+
+        request_params = {
+            "host": database_secrets["host"],  # TODO: exibir no log em ambiente fechado
+            "database": table_params["database"],
+            "query": table_params["query"].format(**datetime_range),
+        }
+
+    return request_params, request_url
