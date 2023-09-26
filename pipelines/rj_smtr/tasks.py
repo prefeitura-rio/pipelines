@@ -504,14 +504,10 @@ def bq_upload(
 
     error = None
 
-    # Check if data exists
     try:
+        # Open dataframe to check if data exists
         pd.read_csv(filepath)
-    except pd.errors.EmptyDataError:
-        log("Empty dataframe, skipping upload...")
-        return error
 
-    try:
         # Upload raw to staging
         if raw_filepath:
             st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
@@ -533,6 +529,9 @@ def bq_upload(
             path=filepath,
             partitions=partitions,
         )
+    except pd.errors.EmptyDataError:
+        log("Empty dataframe, skipping upload...")
+        return error
     except Exception:
         error = traceback.format_exc()
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
