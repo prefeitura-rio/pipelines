@@ -14,6 +14,8 @@ import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
 import pytz
+import requests
+import zipfile
 
 from prefect.schedules.clocks import IntervalClock
 
@@ -27,6 +29,8 @@ from pipelines.utils.utils import (
     get_vault_secret,
     send_discord_message,
     get_redis_client,
+    get_storage_blobs,
+    get_storage_blob,
 )
 
 
@@ -445,3 +449,100 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
             )
         )
     return clocks
+
+
+def get_raw_data_api(  # pylint: disable=R0912
+    url: str,
+    headers: str = None,
+    filetype: str = "json",
+    csv_args: dict = None,
+    params: dict = None,
+) -> list[dict]:
+    """
+    Request data from URL API
+
+    Args:
+        url (str): URL to send request
+        headers (str, optional): Path to headers guardeded on Vault, if needed.
+        filetype (str, optional): Filetype to be formatted (supported only: json, csv and txt)
+        csv_args (dict, optional): Arguments for read_csv, if needed
+        params (dict, optional): Params to be sent on request
+
+    Returns:
+        dict: Conatining keys
+          * `data` (json): data result
+          * `error` (str): catched error, if any. Otherwise, returns None
+    """
+    data = None
+    error = None
+
+    try:
+        if headers is not None:
+            headers = get_vault_secret(headers)["data"]
+
+            # remove from headers, if present
+            remove_headers = ["host", "databases"]
+            for remove_header in remove_headers:
+                if remove_header in list(headers.keys()):
+                    del headers[remove_header]
+
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=constants.MAX_TIMEOUT_SECONDS.value,
+            params=params,
+        )
+
+        if response.ok:  # status code is less than 400
+            if filetype == "json":
+                data = response.json()
+
+                # todo: move to data check on specfic API # pylint: disable=W0102
+                if isinstance(data, dict) and "DescricaoErro" in data.keys():
+                    error = data["DescricaoErro"]
+
+            elif filetype in ("txt", "csv"):
+                if csv_args is None:
+                    csv_args = {}
+                data = pd.read_csv(io.StringIO(response.text), **csv_args).to_dict(
+                    orient="records"
+                )
+            else:
+                error = (
+                    "Unsupported raw file extension. Supported only: json, csv and txt"
+                )
+
+    except Exception as exp:
+        error = exp
+
+    if error is not None:
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+
+    return {"data": data, "error": error}
+
+
+def get_raw_data_gcs(
+    dataset_id: str, table_id: str, file_name: str, mode: str, zip_file_name: str = None
+) -> dict:
+    error = None
+    data = None
+    try:
+        if zip_file_name:
+            blob = get_storage_blob(
+                dataset_id=dataset_id,
+                table_id=table_id,
+                file_name=zip_file_name,
+                mode=mode,
+            )
+            compressed_data = blob.download_as_bytes()
+            with zipfile.ZipFile(io.BytesIO(compressed_data), "r") as zipped_file:
+                data = zipped_file.read(file_name).decode(encoding="utf-8")
+        else:
+            blob = get_storage_blob(
+                dataset_id=dataset_id, table_id=table_id, file_name=file_name, mode=mode
+            )
+            data = blob.download_as_string()
+    except Exception as exp:
+        error = exp
+
+    return {"data": data, "error": error}

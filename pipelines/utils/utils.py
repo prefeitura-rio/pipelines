@@ -711,7 +711,7 @@ def get_credentials_from_env(
     return cred
 
 
-def get_storage_blobs(dataset_id: str, table_id: str) -> list:
+def get_storage_blobs(dataset_id: str, table_id: str, mode: str = "staging") -> list:
     """
     Get all blobs from a table in a dataset.
     """
@@ -720,7 +720,18 @@ def get_storage_blobs(dataset_id: str, table_id: str) -> list:
     return list(
         bd_storage.client["storage_staging"]
         .bucket(bd_storage.bucket_name)
-        .list_blobs(prefix=f"staging/{bd_storage.dataset_id}/{bd_storage.table_id}/")
+        .list_blobs(prefix=f"{mode}/{bd_storage.dataset_id}/{bd_storage.table_id}/")
+    )
+
+
+def get_storage_blob(
+    dataset_id: str, table_id: str, file_name: str, mode: str = "staging"
+):
+    bd_storage = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+    return (
+        bd_storage.client["storage_staging"]
+        .bucket(bd_storage.bucket_name)
+        .get_blob(blob_name=f"{mode}/{dataset_id}/{table_id}/{file_name}")
     )
 
 

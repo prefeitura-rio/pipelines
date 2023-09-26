@@ -182,6 +182,7 @@ class constants(Enum):  # pylint: disable=c0103
             """,
             "primary_key": ["id"],  # id column to nest data on
             "flag_date_partition": False,
+            "source": "api",
         },
     ]
     BILHETAGEM_TABLES_PARAMS = [

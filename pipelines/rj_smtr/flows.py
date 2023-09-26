@@ -23,19 +23,27 @@ from pipelines.rj_smtr.tasks import (
     create_date_hour_partition,
     create_local_partition_path,
     get_current_timestamp,
-    get_raw,
     parse_timestamp_to_string,
     save_raw_local,
     save_treated_local,
     upload_logs_to_bq,
     bq_upload,
     transform_to_nested_structure,
+    get_raw,
 )
 
 from pipelines.rj_smtr.tasks import (
     create_request_params,
     get_datetime_range,
 )
+
+with Flow(
+    "SMTR: Pre-Treatment",
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
+) as default_pre_treatment_flow:
+    # SETUP #
+    table_params = Parameter("table_params", default=None)
+    dataset_id = Parameter("dataset_id", default=None)
 
 
 with Flow(
@@ -59,13 +67,6 @@ with Flow(
         now_time=timestamp,
     )
 
-    request_params, request_url = create_request_params(
-        datetime_range=datetime_range,
-        table_params=table_params,
-        secret_path=secret_path,
-        dataset_id=dataset_id,
-    )
-
     with case(table_params["flag_date_partition"], True):
         date_partitions = create_date_partition(timestamp)
 
@@ -83,11 +84,28 @@ with Flow(
         partitions=partitions,
     )
 
-    raw_status = get_raw(
-        url=request_url,
-        headers=secret_path,
-        params=request_params,
-    )
+    raw_status_list = []
+
+    with case(table_params["source"], "api"):
+        request_params, request_url = create_request_params(
+            datetime_range=datetime_range,
+            table_params=table_params,
+            secret_path=secret_path,
+            dataset_id=dataset_id,
+        )
+
+        api_raw_status = get_raw(
+            url=request_url,
+            headers=secret_path,
+            params=request_params,
+        )
+
+        raw_status_list.append(api_raw_status)
+
+    with case(table_params["source"], "gcs"):
+        pass
+
+    raw_status = merge(*raw_status_list)
 
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
 

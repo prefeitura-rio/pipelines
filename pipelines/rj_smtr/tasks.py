@@ -28,6 +28,7 @@ from pipelines.rj_smtr.utils import (
     get_last_run_timestamp,
     log_critical,
     data_info_str,
+    get_raw_data_api,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
@@ -960,3 +961,47 @@ def create_request_params(
         }
 
     return request_params, request_url
+
+
+# @task(checkpoint=False)
+# def get_raw_from_sources(
+#     source: str,
+#     url:str,
+#     dataset_id:str = None,
+#     table_id:str = None,
+#     mode:str = None,
+#     headers: str = None,
+#     filetype: str = "json",
+#     csv_args: dict = None,
+#     params: dict = None,
+# ):
+#     if source == "api":
+#         return get_raw_data_api(
+#             url=url,
+#             headers=headers,
+#             filetype=filetype,
+#             csv_args=csv_args,
+#             params=params
+#         )
+#     if source == "gcs":
+#         file =
+
+
+@task(checkpoint=False)
+def save_raw_storage(
+    dataset_id: str,
+    table_id: str,
+    raw_filepath: str,
+    partitions: str = None,
+):
+    st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
+    log(
+        f"""Uploading raw file to bucket {st_obj.bucket_name} at
+        {st_obj.bucket_name}/{dataset_id}/{table_id}"""
+    )
+    st_obj.upload(
+        path=raw_filepath,
+        partitions=partitions,
+        mode="raw",
+        if_exists="replace",
+    )
