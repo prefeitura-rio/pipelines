@@ -176,11 +176,16 @@ def get_files_to_download(
     files = [file for file in files if file not in redis_files]
 
     # Check if files are already on datalake
+    # Some datalake files use the pattern "9915MAC-PPIVol-20230921-123000-0000.hdf"
+    # Files from FTP use the pattern "./MAC/9915MAC-PPIVol-20230921-123000-3f28.hdf"
+    # We are going to compare "9915MAC-PPIVol-20230921-123000" from both places
     if len(datalake_files) > 0:
+        log("Removing files that are already on datalake")
         files = [
             file
             for file in files
-            if "-".join(file.split("-")[:-1]) not in datalake_files
+            if "-".join(file.split("/")[-1].split("-")[:-1])
+            not in ["-".join(dfile.split("-")[:-1]) for dfile in datalake_files]
         ]
 
     # Skip task if there is no new file
