@@ -167,7 +167,7 @@ class constants(Enum):  # pylint: disable=c0103
     BILHETAGEM_DATASET_ID = "br_rj_riodejaneiro_bilhetagem"
     BILHETAGEM_TRANSACAO_TABLE_PARAMS = [
         {
-            "flag_date_partition": False,
+            "partition_date_only": False,
             "flow_run_name": "transacao",
             "extraction": {
                 "table_id": "transacao",
@@ -207,7 +207,7 @@ class constants(Enum):  # pylint: disable=c0103
                     DT_INCLUSAO
             """,
             "primary_key": ["CD_LINHA"],  # id column to nest data on
-            "flag_date_partition": True,
+            "partition_date_only": True,
         },
         {
             "table_id": "grupo",
@@ -223,7 +223,7 @@ class constants(Enum):  # pylint: disable=c0103
                     DT_INCLUSAO
             """,
             "primary_key": ["CD_GRUPO"],
-            "flag_date_partition": True,
+            "partition_date_only": True,
         },
         {
             "table_id": "grupo_linha",
@@ -239,7 +239,7 @@ class constants(Enum):  # pylint: disable=c0103
                     DT_INCLUSAO
             """,
             "primary_key": ["CD_GRUPO", "CD_LINHA"],  # id column to nest data on
-            "flag_date_partition": True,
+            "partition_date_only": True,
         },
         {
             "table_id": "matriz_integracao",
@@ -258,7 +258,7 @@ class constants(Enum):  # pylint: disable=c0103
                 "cd_versao_matriz",
                 "cd_integracao",
             ],  # id column to nest data on
-            "flag_date_partition": True,
+            "partition_date_only": True,
         },
     ]
     BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"

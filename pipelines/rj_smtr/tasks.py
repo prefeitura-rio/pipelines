@@ -160,19 +160,16 @@ def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -> datet
 
 
 @task
-def create_date_hour_partition(timestamp: datetime) -> str:
+def create_date_hour_partition(
+    timestamp: datetime, partition_date_only: bool = False
+) -> str:
     """
     Get date hour Hive partition structure from timestamp.
     """
-    return f"data={timestamp.strftime('%Y-%m-%d')}/hora={timestamp.strftime('%H')}"
-
-
-@task
-def create_date_partition(timestamp: datetime) -> str:
-    """
-    Get date hour Hive partition structure from timestamp.
-    """
-    return f"data={timestamp.date()}"
+    partition = f"data={timestamp.strftime('%Y-%m-%d')}"
+    if not partition_date_only:
+        partition += f"/hora={timestamp.strftime('%H')}"
+    return partition
 
 
 @task
@@ -181,34 +178,6 @@ def parse_timestamp_to_string(timestamp: datetime, pattern="%Y-%m-%d-%H-%M-%S") 
     Parse timestamp to string pattern.
     """
     return timestamp.strftime(pattern)
-
-
-@task
-def create_current_date_hour_partition(capture_time=None):
-    """Create partitioned directory structure to save data locally based
-    on capture time.
-
-    Args:
-        capture_time(pendulum.datetime.DateTime, optional):
-            if recapturing data, will create partitions based
-            on the failed timestamps being recaptured
-
-    Returns:
-        dict: "filename" contains the name which to upload the csv, "partitions" contains
-        the partitioned directory path
-    """
-    if capture_time is None:
-        capture_time = datetime.now(tz=constants.TIMEZONE.value).replace(
-            minute=0, second=0, microsecond=0
-        )
-    date = capture_time.strftime("%Y-%m-%d")
-    hour = capture_time.strftime("%H")
-
-    return {
-        "filename": capture_time.strftime("%Y-%m-%d-%H-%M-%S"),
-        "partitions": f"data={date}/hora={hour}",
-        "timestamp": capture_time,
-    }
 
 
 @task
