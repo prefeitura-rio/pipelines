@@ -145,5 +145,5 @@ class constants(Enum):  # pylint: disable=c0103
         "carolinagomes": {
             "user_id": "620000269392019469",
             "type": "user_nickname",
-        }
+        },
     }
