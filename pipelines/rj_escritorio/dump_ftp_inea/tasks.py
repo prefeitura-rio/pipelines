@@ -5,7 +5,7 @@ Tasks to dump data from a INEA FTP to BigQuery
 # pylint: disable=E0702,E1137,E1136,E1101,W0613,bad-continuation
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import List, Tuple
+from typing import List
 
 from google.cloud import storage
 from prefect import task
@@ -32,7 +32,7 @@ def get_files_datalake(
     greater_than: str = None,
     check_datalake_files: bool = True,
     mode: str = "prod",
-) -> Tuple[List[str], str]:
+) -> List[str]:
     """
     List files from INEA saved on datalake
 
@@ -95,9 +95,11 @@ def get_files_datalake(
         # Format of the name is 9921GUA-PPIVol-20220930-121010-0004.hdf
         # We need remove the last characters to stay with 9921GUA-PPIVol-20220930-121010
         datalake_files = ["-".join(fname.split("-")[:-1]) for fname in datalake_files]
+        log(f"Last 5 datalake files: {datalake_files[-5:]}")
 
     else:
         datalake_files = []
+        log("This run is not considering datalake files")
 
     return datalake_files
 
@@ -119,13 +121,13 @@ def get_ftp_client(wait=None):
 # pylint: disable=too-many-arguments
 def get_files_to_download(
     client,
-    radar,
-    redis_files,
-    datalake_files,
+    radar: str,
+    redis_files: list,
+    datalake_files: list,
     date: str = None,
     greater_than: str = None,
     get_only_last_file: bool = True,
-):
+) -> List[str]:
     """
     List and get files to download FTP
 
@@ -196,7 +198,7 @@ def get_files_to_download(
 
 
 @task(max_retries=3, retry_delay=timedelta(seconds=30))
-def download_files(client, files, radar):
+def download_files(client, files, radar) -> List[str]:
     """
     Download files from FTP
     """

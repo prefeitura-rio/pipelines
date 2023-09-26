@@ -68,6 +68,8 @@ with Flow(
         radar=radar,
         redis_files=redis_files,
         datalake_files=datalake_files,
+        date=date,
+        greater_than=greater_than,
         get_only_last_file=get_only_last_file,
     )
 
