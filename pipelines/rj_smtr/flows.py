@@ -7,6 +7,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect import case, Parameter
 from prefect.tasks.control_flow import merge
+from prefect.utilities.collections import DotDict
 
 # EMD Imports #
 
@@ -29,21 +30,11 @@ from pipelines.rj_smtr.tasks import (
     upload_logs_to_bq,
     bq_upload,
     transform_to_nested_structure,
-    get_raw,
-)
-
-from pipelines.rj_smtr.tasks import (
+    get_raw_from_sources,
+    transform_data_to_json,
     create_request_params,
     get_datetime_range,
 )
-
-with Flow(
-    "SMTR: Pre-Treatment",
-    code_owners=["caio", "fernanda", "boris", "rodrigo"],
-) as default_pre_treatment_flow:
-    # SETUP #
-    table_params = Parameter("table_params", default=None)
-    dataset_id = Parameter("dataset_id", default=None)
 
 
 with Flow(
@@ -63,7 +54,7 @@ with Flow(
     datetime_range = get_datetime_range(timestamp, interval=interval)
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=default_capture_flow.name + " " + table_params["table_id"] + ": ",
+        prefix=default_capture_flow.name + " " + table_params["flow_run_name"] + ": ",
         now_time=timestamp,
     )
 
@@ -79,41 +70,44 @@ with Flow(
 
     filepath = create_local_partition_path(
         dataset_id=dataset_id,
-        table_id=table_params["table_id"],
+        table_id=table_params["pre-treatment"]["table_id"],
         filename=filename,
         partitions=partitions,
     )
 
-    raw_status_list = []
+    # CAPTURA
+    request_params, request_url = create_request_params(
+        datetime_range=datetime_range,
+        table_params=table_params,
+        secret_path=secret_path,
+        dataset_id=dataset_id,
+    )
 
-    with case(table_params["source"], "api"):
-        request_params, request_url = create_request_params(
-            datetime_range=datetime_range,
-            table_params=table_params,
-            secret_path=secret_path,
-            dataset_id=dataset_id,
-        )
-
-        api_raw_status = get_raw(
-            url=request_url,
-            headers=secret_path,
-            params=request_params,
-        )
-
-        raw_status_list.append(api_raw_status)
-
-    with case(table_params["source"], "gcs"):
-        pass
-
-    raw_status = merge(*raw_status_list)
+    raw_status = get_raw_from_sources(
+        source=table_params["extraction"]["source"],
+        url=request_url,
+        dataset_id=dataset_id,
+        table_id=table_params["extraction"]["table_id"],
+        file_name=table_params["extraction"]["file_name"],
+        zip_file_name=table_params["extraction"]["zip_file_name"],
+        mode=table_params["extraction"]["mode"],
+        headers=secret_path,
+        params=request_params,
+    )
 
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
 
     # TREAT & CLEAN #
-    treated_status = transform_to_nested_structure(
+    json_status = transform_data_to_json(
         status=raw_status,
+        file_type=table_params["pre-treatment"]["file_type"],
+        csv_args=table_params["pre-treatment"]["csv_args"],
+    )
+
+    treated_status = transform_to_nested_structure(
+        status=json_status,
         timestamp=timestamp,
-        primary_key=table_params["primary_key"],
+        primary_key=table_params["pre-treatment"]["primary_key"],
     )
 
     treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
@@ -121,7 +115,7 @@ with Flow(
     # LOAD #
     error = bq_upload(
         dataset_id=dataset_id,
-        table_id=table_params["table_id"],
+        table_id=table_params["pre-treatment"]["table_id"],
         filepath=treated_filepath,
         raw_filepath=raw_filepath,
         partitions=partitions,
@@ -130,7 +124,7 @@ with Flow(
 
     upload_logs_to_bq(
         dataset_id=dataset_id,
-        parent_table_id=table_params["table_id"],
+        parent_table_id=table_params["pre-treatment"]["table_id"],
         error=error,
         timestamp=timestamp,
     )

@@ -725,13 +725,24 @@ def get_storage_blobs(dataset_id: str, table_id: str, mode: str = "staging") -> 
 
 
 def get_storage_blob(
-    dataset_id: str, table_id: str, file_name: str, mode: str = "staging"
+    dataset_id: str,
+    table_id: str,
+    file_name: str,
+    partitions: str = None,
+    mode: str = "staging",
 ):
+    path = f"{mode}/{dataset_id}/{table_id}/"
+
+    if partitions:
+        path += f"{partitions}/"
+
+    path += file_name
+
     bd_storage = bd.Storage(dataset_id=dataset_id, table_id=table_id)
     return (
         bd_storage.client["storage_staging"]
         .bucket(bd_storage.bucket_name)
-        .get_blob(blob_name=f"{mode}/{dataset_id}/{table_id}/{file_name}")
+        .get_blob(blob_name=path)
     )
 
 

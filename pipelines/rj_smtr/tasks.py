@@ -29,6 +29,7 @@ from pipelines.rj_smtr.utils import (
     log_critical,
     data_info_str,
     get_raw_data_api,
+    get_raw_data_gcs,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
@@ -950,58 +951,62 @@ def create_request_params(
     if dataset_id == constants.BILHETAGEM_DATASET_ID.value:
         secrets = get_vault_secret(secret_path)["data"]
 
-        database_secrets = secrets["databases"][table_params["database"]]
+        database_secrets = secrets["databases"][table_params["extraction"]["database"]]
 
         request_url = secrets["vpn_url"] + database_secrets["engine"]
 
         request_params = {
             "host": database_secrets["host"],  # TODO: exibir no log em ambiente fechado
-            "database": table_params["database"],
-            "query": table_params["query"].format(**datetime_range),
+            "database": table_params["extraction"]["database"],
+            "query": table_params["extraction"]["query"].format(**datetime_range),
         }
 
     return request_params, request_url
 
 
-# @task(checkpoint=False)
-# def get_raw_from_sources(
-#     source: str,
-#     url:str,
-#     dataset_id:str = None,
-#     table_id:str = None,
-#     mode:str = None,
-#     headers: str = None,
-#     filetype: str = "json",
-#     csv_args: dict = None,
-#     params: dict = None,
-# ):
-#     if source == "api":
-#         return get_raw_data_api(
-#             url=url,
-#             headers=headers,
-#             filetype=filetype,
-#             csv_args=csv_args,
-#             params=params
-#         )
-#     if source == "gcs":
-#         file =
+@task(checkpoint=False)
+def get_raw_from_sources(
+    source: str,
+    url: str,
+    dataset_id: str = None,
+    table_id: str = None,
+    file_name: str = None,
+    partitions: str = None,
+    zip_file_name: str = None,
+    mode: str = None,
+    headers: str = None,
+    params: dict = None,
+):
+    if source == "api":
+        return get_raw_data_api(url=url, headers=headers, params=params)
+    if source == "gcs":
+        return get_raw_data_gcs(
+            dataset_id=dataset_id,
+            table_id=table_id,
+            file_name=file_name,
+            mode=mode,
+            partitions=partitions,
+            zip_file_name=zip_file_name,
+        )
 
 
 @task(checkpoint=False)
-def save_raw_storage(
-    dataset_id: str,
-    table_id: str,
-    raw_filepath: str,
-    partitions: str = None,
-):
-    st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
-    log(
-        f"""Uploading raw file to bucket {st_obj.bucket_name} at
-        {st_obj.bucket_name}/{dataset_id}/{table_id}"""
-    )
-    st_obj.upload(
-        path=raw_filepath,
-        partitions=partitions,
-        mode="raw",
-        if_exists="replace",
-    )
+def transform_data_to_json(status: dict, file_type: str, csv_args: dict):
+    data = status["data"]
+    error = status["error"]
+
+    if file_type == "json":
+        pass
+
+        # todo: move to data check on specfic API # pylint: disable=W0102
+        # if isinstance(data, dict) and "DescricaoErro" in data.keys():
+        #     error = data["DescricaoErro"]
+
+    elif file_type in ("txt", "csv"):
+        if csv_args is None:
+            csv_args = {}
+        data = pd.read_csv(io.StringIO(data), **csv_args).to_dict(orient="records")
+    else:
+        error = "Unsupported raw file extension. Supported only: json, csv and txt"
+
+    return {"data": data, "error": error}

@@ -454,8 +454,6 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
 def get_raw_data_api(  # pylint: disable=R0912
     url: str,
     headers: str = None,
-    filetype: str = "json",
-    csv_args: dict = None,
     params: dict = None,
 ) -> list[dict]:
     """
@@ -464,8 +462,6 @@ def get_raw_data_api(  # pylint: disable=R0912
     Args:
         url (str): URL to send request
         headers (str, optional): Path to headers guardeded on Vault, if needed.
-        filetype (str, optional): Filetype to be formatted (supported only: json, csv and txt)
-        csv_args (dict, optional): Arguments for read_csv, if needed
         params (dict, optional): Params to be sent on request
 
     Returns:
@@ -493,24 +489,9 @@ def get_raw_data_api(  # pylint: disable=R0912
             params=params,
         )
 
-        if response.ok:  # status code is less than 400
-            if filetype == "json":
-                data = response.json()
+        response.raise_for_status()
 
-                # todo: move to data check on specfic API # pylint: disable=W0102
-                if isinstance(data, dict) and "DescricaoErro" in data.keys():
-                    error = data["DescricaoErro"]
-
-            elif filetype in ("txt", "csv"):
-                if csv_args is None:
-                    csv_args = {}
-                data = pd.read_csv(io.StringIO(response.text), **csv_args).to_dict(
-                    orient="records"
-                )
-            else:
-                error = (
-                    "Unsupported raw file extension. Supported only: json, csv and txt"
-                )
+        data = response.text
 
     except Exception as exp:
         error = exp
@@ -522,25 +503,30 @@ def get_raw_data_api(  # pylint: disable=R0912
 
 
 def get_raw_data_gcs(
-    dataset_id: str, table_id: str, file_name: str, mode: str, zip_file_name: str = None
+    dataset_id: str,
+    table_id: str,
+    file_name: str,
+    mode: str,
+    partitions: str = None,
+    zip_extracted_file: str = None,
 ) -> dict:
     error = None
     data = None
     try:
-        if zip_file_name:
-            blob = get_storage_blob(
-                dataset_id=dataset_id,
-                table_id=table_id,
-                file_name=zip_file_name,
-                mode=mode,
-            )
+        blob = get_storage_blob(
+            dataset_id=dataset_id,
+            table_id=table_id,
+            file_name=file_name,
+            partitions=partitions,
+            mode=mode,
+        )
+
+        if zip_extracted_file:
             compressed_data = blob.download_as_bytes()
+
             with zipfile.ZipFile(io.BytesIO(compressed_data), "r") as zipped_file:
-                data = zipped_file.read(file_name).decode(encoding="utf-8")
+                data = zipped_file.read(zip_extracted_file).decode(encoding="utf-8")
         else:
-            blob = get_storage_blob(
-                dataset_id=dataset_id, table_id=table_id, file_name=file_name, mode=mode
-            )
             data = blob.download_as_string()
     except Exception as exp:
         error = exp

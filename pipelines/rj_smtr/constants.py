@@ -167,23 +167,30 @@ class constants(Enum):  # pylint: disable=c0103
     BILHETAGEM_DATASET_ID = "br_rj_riodejaneiro_bilhetagem"
     BILHETAGEM_TRANSACAO_TABLE_PARAMS = [
         {
-            "table_id": "transacao",
-            "database": "transacao_db",
-            "query": """
-                SELECT
-                    *
-                FROM
-                    transacao
-                WHERE
-                    data_processamento BETWEEN '{start}'
-                    AND '{end}'
-                ORDER BY
-                    data_processamento
-            """,
-            "primary_key": ["id"],  # id column to nest data on
             "flag_date_partition": False,
-            "source": "api",
-        },
+            "flow_run_name": "transacao",
+            "extraction": {
+                "table_id": "transacao",
+                "database": "transacao_db",
+                "query": """
+                    SELECT
+                        *
+                    FROM
+                        transacao
+                    WHERE
+                        data_processamento BETWEEN '{start}'
+                        AND '{end}'
+                    ORDER BY
+                        data_processamento
+                """,
+                "source": "api",
+            },
+            "pre-treatment": {
+                "table_id": "transacao",
+                "file_type": "json",
+                "primary_key": ["id"],  # id column to nest data on
+            },
+        }
     ]
     BILHETAGEM_TABLES_PARAMS = [
         {
