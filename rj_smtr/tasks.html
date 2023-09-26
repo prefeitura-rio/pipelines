@@ -531,11 +531,8 @@ def bq_upload(
     if status[&#34;error&#34;] is not None:
         return status[&#34;error&#34;]
 
-    if len(status[&#34;data&#34;]) == 0:
-        log(&#34;Empty dataframe, skipping upload&#34;)
-        return None
-
     error = None
+
     try:
         # Upload raw to staging
         if raw_filepath:
@@ -877,7 +874,7 @@ def transform_to_nested_structure(
 
     # Check empty dataframe
     if len(status[&#34;data&#34;]) == 0:
-        log(&#34;Empty dataframe, skipping transformation&#34;)
+        log(&#34;Empty dataframe, skipping transformation...&#34;)
         return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
 
     try:
@@ -1064,11 +1061,8 @@ def bq_upload(
     if status[&#34;error&#34;] is not None:
         return status[&#34;error&#34;]
 
-    if len(status[&#34;data&#34;]) == 0:
-        log(&#34;Empty dataframe, skipping upload&#34;)
-        return None
-
     error = None
+
     try:
         # Upload raw to staging
         if raw_filepath:
@@ -2290,7 +2284,7 @@ def transform_to_nested_structure(
 
     # Check empty dataframe
     if len(status[&#34;data&#34;]) == 0:
-        log(&#34;Empty dataframe, skipping transformation&#34;)
+        log(&#34;Empty dataframe, skipping transformation...&#34;)
         return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
 
     try:
