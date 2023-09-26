@@ -505,6 +505,8 @@ def bq_upload(
     error = None
     try:
         # Check if data exists
+        f = open(filepath, "r")
+        log(f"arquivo = '{f.read()}' | {len(f.read())}")
         log(f"os.path.getsize(filepath) = {os.path.getsize(filepath)}")
         if os.path.getsize(filepath) == 0:
             log("Empty dataframe, skipping upload...")
