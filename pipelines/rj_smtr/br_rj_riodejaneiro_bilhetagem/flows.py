@@ -30,7 +30,7 @@ bilhetagem_transacao_captura.name = "SMTR: Bilhetagem Transação (captura)"
 bilhetagem_transacao_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 bilhetagem_transacao_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 bilhetagem_transacao_captura.schedule = bilhetagem_transacao_schedule
 
