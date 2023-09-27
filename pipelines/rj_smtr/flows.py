@@ -44,7 +44,7 @@ with Flow(
 
     table_id = Parameter("table_id", default=None)
     partition_date_only = Parameter("partition_date_only", default=None)
-    request_params = Parameter("request_params", default=None)
+    extract_params = Parameter("extract_params", default=None)
     dataset_id = Parameter("dataset_id", default=None)
     secret_path = Parameter("secret_path", default=None)
     primary_key = Parameter("primary_key", default=None)
@@ -71,11 +71,9 @@ with Flow(
     )
 
     # Extração #
-    # é necessária task ou função dentro da extract_raw_data?
     request_params, request_path = create_request_params(
-        secret_path=secret_path,
         dataset_id=dataset_id,
-        request_params=request_params,
+        extract_params=extract_params,
         table_id=table_id,
         timestamp=timestamp,
     )

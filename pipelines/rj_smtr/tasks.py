@@ -879,7 +879,7 @@ def get_previous_date(days):
 def transform_raw_to_nested_structure(
     raw_filepath: str,
     filepath: str,
-    error: bool,
+    error: str,
     timestamp: datetime,
     primary_key: list = None,
 ):
@@ -898,6 +898,10 @@ def transform_raw_to_nested_structure(
             * `error` (str): catched error, if any. Otherwise, returns None
     """
 
+    # Check previous error
+    if error is not None:
+        return error, None
+
     with open(raw_filepath, "r", encoding="utf-8") as file:
         data = file.read()
 
@@ -906,10 +910,6 @@ def transform_raw_to_nested_structure(
         data=data,
         file_type=raw_filepath.split(".")[-1],
     )
-
-    # Check previous error
-    if error is not None:
-        return error, None
 
     # Check empty dataframe
     # if len(status["data"]) == 0:
@@ -999,11 +999,8 @@ def transform_raw_to_nested_structure(
 
 @task(checkpoint=False, nout=2)
 def create_request_params(
-    # datetime_range: dict,
-    # table_params: dict,
-    request_params: dict,
+    extract_params: dict,
     table_id: str,
-    secret_path: str,
     dataset_id: str,
     timestamp: datetime,
 ) -> tuple:
@@ -1020,28 +1017,27 @@ def create_request_params(
         request_params: host, database and query to request data
         request_url: url to request data
     """
+    request_params = None
 
     if dataset_id == constants.BILHETAGEM_DATASET_ID.value:
-        secrets = get_vault_secret(secret_path)["data"]
-
-        database_secrets = secrets["databases"][request_params["database"]]
-        request_url = secrets["vpn_url"] + database_secrets["engine"]
+        database = constants.BILHETAGEM_DATABASES.value[extract_params["database"]]
+        request_url = constants.BILHETAGEM_VPN_URL.value + database["engine"]
 
         datetime_range = get_datetime_range(
-            timestamp=timestamp, interval=request_params["run_interval"]
+            timestamp=timestamp, interval=extract_params["run_interval"]
         )
+
         request_params = {
-            "host": database_secrets["host"],  # TODO: exibir no log em ambiente fechado
-            "database": request_params["database"],
-            "query": request_params["query"].format(**datetime_range),
+            "host": database["host"],  # TODO: exibir no log em ambiente fechado
+            "database": extract_params["database"],
+            "query": extract_params["query"].format(**datetime_range),
         }
 
     elif dataset_id == constants.GTFS_DATASET_ID.value:
-        gtfs_base_path = "development/br_rj_riodejaneiro_gtfs/upload"
-        if table_id == constants.GTFS_QUADRO_TABLE_ID.value:
-            request_url = f"{gtfs_base_path}/quadro.csv"
+        if table_id == constants.GTFS_QUADRO_CAPTURE_PARAMS.value["table_id"]:
+            request_url = f"{constants.GTFS_BASE_GCS_PATH.value}/{table_id}.csv"
         else:
-            request_url = f"{gtfs_base_path}/gtfs.zip"
+            request_url = f"{constants.GTFS_BASE_GCS_PATH.value}/gtfs.zip"
 
     return request_params, request_url
 
