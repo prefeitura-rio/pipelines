@@ -673,15 +673,18 @@ def get_datetime_range(
     return {"start": start, "end": end}
 
 
-def transform_data_to_json(data: str, file_type: str, csv_args: dict = {}):
+def read_raw_data(filepath: str, csv_args: dict = {}) -> tuple[str, pd.DataFrame]:
     try:
+        file_type = filepath.split(".")[-1]
+
         if file_type == "json":
-            data = json.loads(data)
+            data = pd.read_json(filepath)
+            # data = json.loads(data)
 
         elif file_type in ("txt", "csv"):
             if csv_args is None:
                 csv_args = {}
-            data = pd.read_csv(io.StringIO(data), **csv_args).to_dict(orient="records")
+            data = pd.read_csv(filepath, **csv_args)
         else:
             error = "Unsupported raw file extension. Supported only: json, csv and txt"
 
