@@ -875,7 +875,7 @@ def get_previous_date(days):
 ###############
 
 
-@task
+@task(nout=2)
 def transform_raw_to_nested_structure(
     raw_filepath: str,
     filepath: str,
@@ -1040,7 +1040,7 @@ def create_request_params(
     return request_params, request_url
 
 
-@task(checkpoint=False)
+@task(checkpoint=False, nout=2)
 def get_raw_from_sources(
     source_type: str,
     local_filepath: str,

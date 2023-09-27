@@ -485,7 +485,7 @@ def get_raw_data_api(  # pylint: disable=R0912
     api_params: dict = None,
     filepath: str = None,
     filetype: str = None,
-) -> list[dict]:
+) -> tuple[str, str]:
     """
     Request data from URL API
 
@@ -529,7 +529,7 @@ def get_raw_data_gcs(
     gcs_path: str,
     local_filepath: str,
     filename_to_unzip: str = None,
-) -> dict:
+) -> tuple[str, str]:
     error = None
 
     try:
@@ -673,7 +673,7 @@ def get_datetime_range(
     return {"start": start, "end": end}
 
 
-def read_raw_data(filepath: str, csv_args: dict = {}) -> tuple[str, pd.DataFrame]:
+def read_raw_data(filepath: str, csv_args: dict = dict()) -> tuple[str, pd.DataFrame]:
     try:
         file_type = filepath.split(".")[-1]
 
