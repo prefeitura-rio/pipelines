@@ -32,6 +32,7 @@ def get_files_datalake(
     greater_than: str = None,
     check_datalake_files: bool = True,
     mode: str = "prod",
+    wait=None,  # pylint: disable=unused-argument
 ) -> List[str]:
     """
     List files from INEA saved on datalake
