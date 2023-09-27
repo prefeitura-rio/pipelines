@@ -155,6 +155,13 @@ def get_files_to_download(
 
     client.connect()
     files = client.list_files(path=f"./{radar.upper()}/")
+
+    # Skip task if there is no new file on FTP
+    if len(files) == 0:
+        log("No new available files on FTP")
+        skip = Skipped("No new available files on FTP")
+        raise ENDRUN(state=skip)
+
     # log(f"\n\nAvailable files on FTP: {files}")
     # log(f"\nFiles already saved on redis_files: {redis_files}")
 
