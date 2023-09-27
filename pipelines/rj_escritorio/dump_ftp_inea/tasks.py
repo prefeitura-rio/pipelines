@@ -119,9 +119,32 @@ def get_ftp_client(wait=None):
 
 @task(max_retries=3, retry_delay=timedelta(seconds=30))
 # pylint: disable=too-many-arguments
-def get_files_to_download(
+def get_files_from_ftp(
     client,
     radar: str,
+) -> List[str]:
+    """
+    List and get files to download FTP
+    """
+
+    client.connect()
+    files = client.list_files(path=f"./{radar.upper()}/")
+
+    # Skip task if there is no new file on FTP
+    if len(files) == 0:
+        log("No new available files on FTP")
+        skip = Skipped("No new available files on FTP")
+        raise ENDRUN(state=skip)
+
+    log(f"Last 10 files on FTP: {files[-10:]} {len(files)}")
+
+    return files
+
+
+@task(max_retries=3, retry_delay=timedelta(seconds=30))
+# pylint: disable=too-many-arguments
+def select_files_to_download(
+    files: list,
     redis_files: list,
     datalake_files: list,
     date: str = None,
@@ -129,7 +152,7 @@ def get_files_to_download(
     get_only_last_file: bool = True,
 ) -> List[str]:
     """
-    List and get files to download FTP
+    Select files to download
 
     Args:
         radar (str): Radar name. Must be `gua` or `mac`
@@ -152,15 +175,6 @@ def get_files_to_download(
         get all files for one day
             let `greater_than` as None and `get_only_last_file` as False and fill `date`
     """
-
-    client.connect()
-    files = client.list_files(path=f"./{radar.upper()}/")
-
-    # Skip task if there is no new file on FTP
-    if len(files) == 0:
-        log("No new available files on FTP")
-        skip = Skipped("No new available files on FTP")
-        raise ENDRUN(state=skip)
 
     # log(f"\n\nAvailable files on FTP: {files}")
     # log(f"\nFiles already saved on redis_files: {redis_files}")
