@@ -33,7 +33,7 @@ bilhetagem_principal_schedule = Schedule(clocks=untuple(bilhetagem_principal_clo
 
 bilhetagem_transacao_clocks = generate_execute_schedules(
     clock_interval=timedelta(
-        constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["transacao_run_interval"]
+        **constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["transacao_run_interval"]
     ),
     labels=[
         emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value,
