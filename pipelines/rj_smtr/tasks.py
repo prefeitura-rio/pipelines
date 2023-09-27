@@ -1051,22 +1051,28 @@ def get_raw_from_sources(
 ):
     source_type, filetype = source_type.split("-", maxsplit=1)
 
-    if source_type == "api":
-        error, filepath = get_raw_data_api(
-            url=source_path,
-            secret_path=secret_path,
-            api_params=api_params,
-            filepath=local_filepath,
-            filetype=filetype,
-        )
-    elif source_type == "gcs":
-        error, filepath = get_raw_data_gcs(
-            gcs_path=source_path,
-            filename_to_unzip=table_id,
-            local_filepath=local_filepath,
-        )
-    else:
-        raise NotImplementedError(f"{source_type} not supported")
+    log(f"Source type: {source_type}")
+
+    try:
+        if source_type == "api":
+            error, filepath = get_raw_data_api(
+                url=source_path,
+                secret_path=secret_path,
+                api_params=api_params,
+                filepath=local_filepath,
+                filetype=filetype,
+            )
+        elif source_type == "gcs":
+            error, filepath = get_raw_data_gcs(
+                gcs_path=source_path,
+                filename_to_unzip=table_id,
+                local_filepath=local_filepath,
+            )
+        else:
+            raise NotImplementedError(f"{source_type} not supported")
+    except NotImplementedError as exp:
+        error = exp
+        filepath = None
 
     return error, filepath
 
