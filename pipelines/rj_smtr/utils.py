@@ -8,7 +8,7 @@ from ftplib import FTP
 from pathlib import Path
 
 from datetime import timedelta, datetime
-from typing import List
+from typing import List, Union
 import io
 import json
 import zipfile
@@ -31,7 +31,6 @@ from pipelines.utils.utils import (
     get_vault_secret,
     send_discord_message,
     get_redis_client,
-    get_storage_blobs,
     get_storage_blob,
 )
 
@@ -404,46 +403,41 @@ def data_info_str(data: pd.DataFrame):
 
 
 def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-locals
-    interval: timedelta,
+    clock_interval: timedelta,
     labels: List[str],
-    table_parameters: list,
-    dataset_id: str,
-    secret_path: str,
+    table_parameters: Union[list[dict], dict],
     runs_interval_minutes: int = 15,
     start_date: datetime = datetime(
         2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)
     ),
+    **general_flow_params,
 ) -> List[IntervalClock]:
     """
     Generates multiple schedules
 
     Args:
-        interval (timedelta): The interval to run the schedule
+        clock_interval (timedelta): The interval to run the schedule
         labels (List[str]): The labels to be added to the schedule
-        table_parameters (list): The table parameters
-        dataset_id (str): The dataset_id to be used in the schedule
-        secret_path (str): The secret path to be used in the schedule
+        table_parameters (list): The table parameters to iterate over
         runs_interval_minutes (int, optional): The interval between each schedule. Defaults to 15.
         start_date (datetime, optional): The start date of the schedule.
             Defaults to datetime(2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)).
-
+        general_flow_params: Any param that you want to pass to the flow
     Returns:
         List[IntervalClock]: The list of schedules
 
     """
+    if isinstance(table_parameters, dict):
+        table_parameters = [table_parameters]
 
     clocks = []
     for count, parameters in enumerate(table_parameters):
-        parameter_defaults = {
-            "table_params": parameters,
-            "dataset_id": dataset_id,
-            "secret_path": secret_path,
-            "interval": interval.total_seconds(),
-        }
+        parameter_defaults = parameters | general_flow_params
+
         log(f"parameter_defaults: {parameter_defaults}")
         clocks.append(
             IntervalClock(
-                interval=interval,
+                interval=clock_interval,
                 start_date=start_date
                 + timedelta(minutes=runs_interval_minutes * count),
                 labels=labels,
@@ -486,7 +480,11 @@ def save_raw_local_func(
 
 
 def get_raw_data_api(  # pylint: disable=R0912
-    url: str, secret_path: str = None, api_params: dict = None, filepath: str = None
+    url: str,
+    secret_path: str = None,
+    api_params: dict = None,
+    filepath: str = None,
+    filetype: str = None,
 ) -> list[dict]:
     """
     Request data from URL API
@@ -517,8 +515,8 @@ def get_raw_data_api(  # pylint: disable=R0912
 
         response.raise_for_status()
         filepath = save_raw_local_func(
-            data=response.text, filepath=filepath
-        )  # TODO: mudar filetype
+            data=response.text, filepath=filepath, filetype=filetype
+        )
 
     except Exception as exp:
         error = exp

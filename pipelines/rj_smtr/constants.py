@@ -165,117 +165,142 @@ class constants(Enum):  # pylint: disable=c0103
 
     # BILHETAGEM
     BILHETAGEM_DATASET_ID = "br_rj_riodejaneiro_bilhetagem"
-    BILHETAGEM_DATABASES = {
-        "principal_db": {
-            "engine": "mysql",
-            "host": "principal-database-replica.internal",
+
+    BILHETAGEM_GENERAL_CAPTURE_PARAMS = {
+        "databases": {
+            "principal_db": {
+                "engine": "mysql",
+                "host": "principal-database-replica.internal",
+            },
+            "tarifa_db": {
+                "engine": "postgres",
+                "host": "tarifa-database-replica.internal",
+            },
+            "transacao_db": {
+                "engine": "postgres",
+                "host": "transacao-database-replica.internal",
+            },
         },
-        "tarifa_db": {"engine": "postgres", "host": "tarifa-database-replica.internal"},
-        "transacao_db": {
-            "engine": "postgres",
-            "host": "transacao-database-replica.internal",
-        },
+        "vpn_url": "http://vpn-jae.mobilidade.rio/",
+        "source_type": "api-json",
+        "transacao_run_interval": {"minutes": 1},
+        "principal_run_interval": {"days": 1},
     }
-    BILHETAGEM_VPN_URL = "http://vpn-jae.mobilidade.rio/"
-    BILHETAGEM_TRANSACAO_TABLE_PARAMS = [
+
+    BILHETAGEM_TRANSACAO_CAPTURE_PARAMS = {
+        "table_id": "transacao",
+        "partition_date_only": False,
+        "extract_params": {
+            "database": "transacao_db",
+            "query": """
+                SELECT
+                    *
+                FROM
+                    transacao
+                WHERE
+                    data_processamento BETWEEN '{start}'
+                    AND '{end}'
+                ORDER BY
+                    data_processamento
+            """,
+            "run_interval": BILHETAGEM_GENERAL_CAPTURE_PARAMS["transacao_run_interval"],
+        },
+        "primary_key": ["id"],
+    }
+
+    BILHETAGEM_CAPTURE_PARAMS = [
         {
-            "partition_date_only": False,
-            "flow_run_name": "transacao",
-            "extraction": {
-                "table_id": "transacao",
-                "database": "transacao_db",
+            "table_id": "linha",
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "principal_db",
                 "query": """
                     SELECT
                         *
                     FROM
-                        transacao
+                        LINHA
                     WHERE
-                        data_processamento BETWEEN '{start}'
-                        AND '{end}'
+                        DT_INCLUSAO >= '{start}'
                     ORDER BY
-                        data_processamento
+                        DT_INCLUSAO
                 """,
-                "source": "api",
+                "run_interval": BILHETAGEM_GENERAL_CAPTURE_PARAMS[
+                    "principal_run_interval"
+                ],
             },
-            "pre-treatment": {
-                "table_id": "transacao",
-                "file_type": "json",
-                "primary_key": ["id"],  # id column to nest data on
-            },
-        }
-    ]
-    BILHETAGEM_TABLES_PARAMS = [
-        {
-            "table_id": "linha",
-            "database": "principal_db",
-            "query": """
-                SELECT
-                    *
-                FROM
-                    LINHA
-                WHERE
-                    DT_INCLUSAO >= '{start}'
-                ORDER BY
-                    DT_INCLUSAO
-            """,
             "primary_key": ["CD_LINHA"],  # id column to nest data on
-            "partition_date_only": True,
         },
         {
             "table_id": "grupo",
-            "database": "principal_db",
-            "query": """
-                SELECT
-                    *
-                FROM
-                    GRUPO
-                WHERE
-                    DT_INCLUSAO >= '{start}'
-                ORDER BY
-                    DT_INCLUSAO
-            """,
-            "primary_key": ["CD_GRUPO"],
             "partition_date_only": True,
+            "extract_params": {
+                "database": "principal_db",
+                "query": """
+                    SELECT
+                        *
+                    FROM
+                        GRUPO
+                    WHERE
+                        DT_INCLUSAO >= '{start}'
+                    ORDER BY
+                        DT_INCLUSAO
+                """,
+                "run_interval": BILHETAGEM_GENERAL_CAPTURE_PARAMS[
+                    "principal_run_interval"
+                ],
+            },
+            "primary_key": ["CD_GRUPO"],
         },
         {
             "table_id": "grupo_linha",
-            "database": "principal_db",
-            "query": """
-                SELECT
-                    *
-                FROM
-                    GRUPO_LINHA
-                WHERE
-                    DT_INCLUSAO >= '{start}'
-                ORDER BY
-                    DT_INCLUSAO
-            """,
-            "primary_key": ["CD_GRUPO", "CD_LINHA"],  # id column to nest data on
             "partition_date_only": True,
+            "extract_params": {
+                "database": "principal_db",
+                "query": """
+                    SELECT
+                        *
+                    FROM
+                        GRUPO_LINHA
+                    WHERE
+                        DT_INCLUSAO >= '{start}'
+                    ORDER BY
+                        DT_INCLUSAO
+                """,
+                "run_interval": BILHETAGEM_GENERAL_CAPTURE_PARAMS[
+                    "principal_run_interval"
+                ],
+            },
+            "primary_key": ["CD_GRUPO", "CD_LINHA"],  # id column to nest data on
         },
         {
             "table_id": "matriz_integracao",
-            "database": "tarifa_db",
-            "query": """
-                SELECT
-                    *
-                FROM
-                    matriz_integracao
-                WHERE
-                    dt_inclusao >= '{start}'
-                ORDER BY
-                    dt_inclusao
-            """,
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "tarifa_db",
+                "query": """
+                    SELECT
+                        *
+                    FROM
+                        matriz_integracao
+                    WHERE
+                        dt_inclusao >= '{start}'
+                    ORDER BY
+                        dt_inclusao
+                """,
+                "run_interval": BILHETAGEM_GENERAL_CAPTURE_PARAMS[
+                    "principal_run_interval"
+                ],
+            },
             "primary_key": [
                 "cd_versao_matriz",
                 "cd_integracao",
             ],  # id column to nest data on
-            "partition_date_only": True,
         },
     ]
     BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
 
     # GTFS
+    GTFS_DATASET_ID = "br_rj_riodejaneiro_gtfs"
     GTFS_CAPTURE_PARAMS = [
         {"table_id": "agency", "primary_key": ["agency_id"]},
         {"table_id": "calendar_dates", "primary_key": ["service_id"]},
@@ -289,11 +314,6 @@ class constants(Enum):  # pylint: disable=c0103
         {"table_id": "fare_attributes", "primary_key": ["fare_id"]},
         {"table_id": "fare_rules", "primary_key": ["fare_id"]},
     ]
-
     GTFS_GENERAL_CAPTURE_PARAMS = {"partition_date_only": True, "source_type": "gcs"}
-
     GTFS_QUADRO_CAPTURE_PARAMS = {"table_id": "quadro", "primary_key": "servico"}
-
-    GTFS_DATASET_ID = "br_rj_riodejaneiro_gtfs"
-
     GTFS_BASE_GCS_PATH = "development/br_rj_riodejaneiro_gtfs/upload"

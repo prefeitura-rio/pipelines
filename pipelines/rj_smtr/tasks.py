@@ -1020,11 +1020,16 @@ def create_request_params(
     request_params = None
 
     if dataset_id == constants.BILHETAGEM_DATASET_ID.value:
-        database = constants.BILHETAGEM_DATABASES.value[extract_params["database"]]
-        request_url = constants.BILHETAGEM_VPN_URL.value + database["engine"]
+        database = constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["databases"][
+            extract_params["database"]
+        ]
+        request_url = (
+            constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["vpn_url"]
+            + database["engine"]
+        )
 
         datetime_range = get_datetime_range(
-            timestamp=timestamp, interval=extract_params["run_interval"]
+            timestamp=timestamp, interval=timedelta(**extract_params["run_interval"])
         )
 
         request_params = {
@@ -1051,12 +1056,15 @@ def get_raw_from_sources(
     secret_path: str = None,
     api_params: dict = None,
 ):
+    source_type, filetype = source_type.split("-", maxsplit=1)
+
     if source_type == "api":
         return get_raw_data_api(
             url=source_path,
             secret_path=secret_path,
             api_params=api_params,
             filepath=local_filepath,
+            filetype=filetype,
         )
     if source_type == "gcs":
         return get_raw_data_gcs(
