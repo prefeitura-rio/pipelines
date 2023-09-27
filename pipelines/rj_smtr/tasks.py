@@ -32,7 +32,7 @@ from pipelines.rj_smtr.utils import (
     get_raw_data_gcs,
     upload_run_logs_to_bq,
     get_datetime_range,
-    transform_data_to_json,
+    read_raw_data,
     save_treated_local_func,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
@@ -899,17 +899,11 @@ def transform_raw_to_nested_structure(
     """
 
     # Check previous error
+
     if error is not None:
         return error, None
 
-    with open(raw_filepath, "r", encoding="utf-8") as file:
-        data = file.read()
-
     # ORGANIZAR:
-    error, data = transform_data_to_json(
-        data=data,
-        file_type=raw_filepath.split(".")[-1],
-    )
 
     # Check empty dataframe
     # if len(status["data"]) == 0:
@@ -917,12 +911,11 @@ def transform_raw_to_nested_structure(
     #     return {"data": pd.DataFrame(), "error": error}
 
     try:
+        # leitura do dado raw
+        error, data = read_raw_data(filepath=raw_filepath)
+
         if primary_key is None:
             primary_key = []
-
-        error = None
-        # leitura do dado raw
-        data = pd.DataFrame(data)
 
         log(
             f"""
