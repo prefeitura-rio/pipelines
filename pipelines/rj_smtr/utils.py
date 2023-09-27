@@ -531,6 +531,7 @@ def get_raw_data_gcs(
     filename_to_unzip: str = None,
 ) -> tuple[str, str]:
     error = None
+    raw_filepath = None
 
     try:
         blob = get_storage_blob(gcs_path=gcs_path)
