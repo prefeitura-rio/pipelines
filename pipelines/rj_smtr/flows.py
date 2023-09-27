@@ -104,6 +104,7 @@ with Flow(
         error=error,
         timestamp=timestamp,
         primary_key=primary_key,
+        upstream_tasks=[RAW_UPLOADED],
     )
 
     STAGING_UPLOADED = upload_staging_data_to_gcs(

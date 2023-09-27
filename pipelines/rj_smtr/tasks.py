@@ -1052,19 +1052,23 @@ def get_raw_from_sources(
     source_type, filetype = source_type.split("-", maxsplit=1)
 
     if source_type == "api":
-        return get_raw_data_api(
+        error, filepath = get_raw_data_api(
             url=source_path,
             secret_path=secret_path,
             api_params=api_params,
             filepath=local_filepath,
             filetype=filetype,
         )
-    if source_type == "gcs":
-        return get_raw_data_gcs(
+    elif source_type == "gcs":
+        error, filepath = get_raw_data_gcs(
             gcs_path=source_path,
             filename_to_unzip=table_id,
             local_filepath=local_filepath,
         )
+    else:
+        raise NotImplementedError(f"{source_type} not supported")
+
+    return error, filepath
 
 
 # TODO: passar para função para dentro da transform_raw_to_nested_structure
