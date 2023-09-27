@@ -1097,7 +1097,15 @@ def get_raw_from_sources(
     Returns:
         error: error
     """
-    source_type, filetype = source_type.split("-", maxsplit=1)
+    error = None
+    filepath = None
+
+    source_values = source_type.split("-", maxsplit=1)
+    source_type = source_values[0]
+    try:
+        filetype = source_values[1]
+    except IndexError:
+        filetype = None
 
     log(f"Source type: {source_type}")
 
@@ -1120,8 +1128,9 @@ def get_raw_from_sources(
             raise NotImplementedError(f"{source_type} not supported")
     except NotImplementedError as exp:
         error = exp
-        filepath = None
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
+    log(f"Raw extraction ended returned values: {error}, {filepath}")
     return error, filepath
 
 

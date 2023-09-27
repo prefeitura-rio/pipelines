@@ -699,6 +699,7 @@ def read_raw_data(filepath: str, csv_args: dict = dict()) -> tuple[str, pd.DataF
     Returns:
         tuple[str, pd.DataFrame]: error and data
     """
+    error = None
     try:
         file_type = filepath.split(".")[-1]
 
