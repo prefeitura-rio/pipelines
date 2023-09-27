@@ -82,9 +82,9 @@ with Flow(
         source_type=source_type,  # parametro de extracao, onde ficar?
         local_filepath=filepath,
         source_path=request_path,
-        zip_filename=table_id,
+        table_id=table_id,
         secret_path=secret_path,
-        request_params=request_params,
+        api_params=request_params,
     )
 
     RAW_UPLOADED = upload_raw_data_to_gcs(
