@@ -15,8 +15,9 @@ from pipelines.constants import constants
 from pipelines.rj_escritorio.dump_ftp_inea.tasks import (
     get_ftp_client,
     get_files_datalake,
-    get_files_to_download,
+    get_files_from_ftp,
     download_files,
+    select_files_to_download,
     upload_file_to_gcs,
 )
 from pipelines.rj_escritorio.dump_ftp_inea.schedules import (
@@ -48,8 +49,16 @@ with Flow(
 
     client = get_ftp_client()
 
+    files = get_files_from_ftp(
+        client=client,
+        radar=radar,
+    )
+
     redis_files = get_on_redis(
-        dataset_id="meio_ambiente_clima", table_id=radar, mode=mode
+        dataset_id="meio_ambiente_clima",
+        table_id=radar,
+        mode=mode,
+        wait=files,
     )
 
     datalake_files = get_files_datalake(
@@ -61,11 +70,11 @@ with Flow(
         greater_than=greater_than,
         check_datalake_files=check_datalake_files,
         mode=mode,
+        wait=files,
     )
 
-    files_to_download = get_files_to_download(
-        client=client,
-        radar=radar,
+    files_to_download = select_files_to_download(
+        files=files,
         redis_files=redis_files,
         datalake_files=datalake_files,
         date=date,
