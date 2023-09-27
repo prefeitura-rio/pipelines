@@ -726,9 +726,8 @@ def get_storage_blobs(dataset_id: str, table_id: str, mode: str = "staging") -> 
 
 def get_storage_blob(
     gcs_path: str,
-    mode: str = "staging",
 ):
-    bucket = bd.Storage()
+    bucket = bd.Storage(dataset_id="", table_id="")
     return (
         bucket.client["storage_staging"]
         .bucket(bucket.bucket_name)
