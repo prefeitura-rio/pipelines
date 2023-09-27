@@ -301,6 +301,7 @@ class constants(Enum):  # pylint: disable=c0103
 
     # GTFS
     GTFS_DATASET_ID = "br_rj_riodejaneiro_gtfs"
+    GTFS_GENERAL_CAPTURE_PARAMS = {"partition_date_only": True, "source_type": "gcs"}
     GTFS_CAPTURE_PARAMS = [
         {"table_id": "agency", "primary_key": ["agency_id"]},
         {"table_id": "calendar_dates", "primary_key": ["service_id"]},
@@ -314,6 +315,5 @@ class constants(Enum):  # pylint: disable=c0103
         {"table_id": "fare_attributes", "primary_key": ["fare_id"]},
         {"table_id": "fare_rules", "primary_key": ["fare_id"]},
     ]
-    GTFS_GENERAL_CAPTURE_PARAMS = {"partition_date_only": True, "source_type": "gcs"}
     GTFS_QUADRO_CAPTURE_PARAMS = {"table_id": "quadro", "primary_key": "servico"}
-    GTFS_BASE_GCS_PATH = "raw/development/br_rj_riodejaneiro_gtfs/upload"
+    GTFS_BASE_GCS_PATH = "development/br_rj_riodejaneiro_gtfs/upload"
