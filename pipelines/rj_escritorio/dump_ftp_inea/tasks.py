@@ -95,7 +95,7 @@ def get_files_datalake(
         # Format of the name is 9921GUA-PPIVol-20220930-121010-0004.hdf
         # We need remove the last characters to stay with 9921GUA-PPIVol-20220930-121010
         datalake_files = ["-".join(fname.split("-")[:-1]) for fname in datalake_files]
-        log(f"Last 5 datalake files: {datalake_files[-5:]}")
+        log(f"Last 10 datalake files: {datalake_files[-10:]}")
 
     else:
         datalake_files = []
@@ -165,15 +165,21 @@ def get_files_to_download(
     # Get specific files based on date and greater_than parameters
     if date:
         files = [file for file in files if file.split("-")[2] == date.replace("-", "")]
+        log(f"Last 10 files on FTP for date {date}: {files[-10:]}")
+
     if greater_than:
         files = [
             file
             for file in files
             if file.split("-")[2] >= greater_than.replace("-", "")
         ]
+        log(
+            f"Last 10 files on FTP for date  greater than {greater_than}: {files[-10:]}"
+        )
 
     # Check if files are already on redis
     files = [file for file in files if file not in redis_files]
+    log(f"Last 10 files on FTP that are not on redis: {files[-10:]}")
 
     # Check if files are already on datalake
     # Some datalake files use the pattern "9915MAC-PPIVol-20230921-123000-0000.hdf"
