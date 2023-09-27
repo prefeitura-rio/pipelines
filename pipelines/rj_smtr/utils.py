@@ -533,10 +533,7 @@ def get_raw_data_gcs(
     error = None
 
     try:
-        blob = get_storage_blob(
-            gcs_path=gcs_path,
-            mode="raw",
-        )
+        blob = get_storage_blob(gcs_path=gcs_path)
 
         data = blob.download_as_bytes()
 
