@@ -490,14 +490,14 @@ def get_raw_data_api(  # pylint: disable=R0912
     Request data from URL API
 
     Args:
-        url (str): URL to send request
-        secret_path (str, optional): Path to secrets guardeded on Vault, if needed.
-        params (dict, optional): Params to be sent on request
+        url (str): URL to request data
+        secret_path (str, optional): Secret path to get headers. Defaults to None.
+        api_params (dict, optional): Parameters to pass to API. Defaults to None.
+        filepath (str, optional): Path to save raw file. Defaults to None.
+        filetype (str, optional): Filetype to save raw file. Defaults to None.
 
     Returns:
-        dict: Conatining keys
-          * `data` (json): data result
-          * `error` (str): catched error, if any. Otherwise, returns None
+        tuple[str, str]: Error and filepath
     """
     error = None
     try:
@@ -530,6 +530,17 @@ def get_raw_data_gcs(
     local_filepath: str,
     filename_to_unzip: str = None,
 ) -> tuple[str, str]:
+    """
+    Get raw data from GCS
+
+    Args:
+        gcs_path (str): GCS path to get data
+        local_filepath (str): Local filepath to save raw data
+        filename_to_unzip (str, optional): Filename to unzip. Defaults to None.
+
+    Returns:
+        tuple[str, str]: Error and filepath
+    """
     error = None
     raw_filepath = None
 
@@ -568,10 +579,9 @@ def save_treated_local_func(
     Save treated file to CSV.
 
     Args:
-        filepath (str): Path which to save treated file
-        status (dict): Must contain keys
-          * `data`: dataframe returned from treatement
-          * `error`: error catched from data treatement
+        filepath (str): Path to save file
+        data (pd.DataFrame): Dataframe to save
+        error (str): Error catched during execution
         mode (str, optional): Folder to save locally, later folder which to upload to GCS.
 
     Returns:
@@ -601,9 +611,13 @@ def upload_run_logs_to_bq(  # pylint: disable=R0913
 
     Args:
         dataset_id (str): dataset_id on BigQuery
-        parent_table_id (str): Parent table id related to the status table
-        timestamp (str): ISO formatted timestamp string
-        error (str, optional): String associated with error caught during execution
+        parent_table_id (str): table_id on BigQuery
+        timestamp (str): timestamp to get datetime range
+        error (str): error catched during execution
+        previous_error (str): previous error catched during execution
+        recapture (bool): if the execution was a recapture
+        mode (str): folder to save locally, later folder which to upload to GCS
+
     Returns:
         None
     """
@@ -675,6 +689,16 @@ def get_datetime_range(
 
 
 def read_raw_data(filepath: str, csv_args: dict = dict()) -> tuple[str, pd.DataFrame]:
+    """
+    Read raw data from file
+
+    Args:
+        filepath (str): filepath to read
+        csv_args (dict): arguments to pass to pandas.read_csv
+
+    Returns:
+        tuple[str, pd.DataFrame]: error and data
+    """
     try:
         file_type = filepath.split(".")[-1]
 

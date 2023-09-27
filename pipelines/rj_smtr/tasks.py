@@ -168,7 +168,14 @@ def create_date_hour_partition(
     timestamp: datetime, partition_date_only: bool = False
 ) -> str:
     """
-    Get date hour Hive partition structure from timestamp.
+    Generate partition string for date and hour.
+
+    Args:
+        timestamp (datetime): timestamp to be used as reference
+        partition_date_only (bool, optional): whether to add hour partition or not
+
+    Returns:
+        str: partition string
     """
     partition = f"data={timestamp.strftime('%Y-%m-%d')}"
     if not partition_date_only:
@@ -614,6 +621,20 @@ def upload_raw_data_to_gcs(
     dataset_id: str,
     partitions: list,
 ):
+    """
+    Upload raw data to GCS.
+
+    Args:
+        error (bool): whether the upstream tasks failed or not
+        raw_filepath (str): Path to the saved raw .json file
+        timestamp (datetime): timestamp for flow run
+        table_id (str): table_id on BigQuery
+        dataset_id (str): dataset_id on BigQuery
+        partitions (list): list of partition strings
+
+    Returns:
+        None
+    """
     if not error:
         try:
             st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
@@ -649,6 +670,20 @@ def upload_staging_data_to_gcs(
     dataset_id: str,
     partitions: list,
 ):
+    """
+    Upload staging data to GCS.
+
+    Args:
+        error (bool): whether the upstream tasks failed or not
+        staging_filepath (str): Path to the saved treated .csv file
+        timestamp (datetime): timestamp for flow run
+        table_id (str): table_id on BigQuery
+        dataset_id (str): dataset_id on BigQuery
+        partitions (list): list of partition strings
+
+    Returns:
+        None
+    """
     if not error:
         try:
             # Creates and publish table if it does not exist, append to it otherwise
@@ -883,19 +918,18 @@ def transform_raw_to_nested_structure(
     timestamp: datetime,
     primary_key: list = None,
 ):
-    """Transform dataframe to nested structure
+    """
+    Task to transform raw data to nested structure
 
     Args:
-        status (dict): Must contain keys
-            * `data`: dataframe returned from treatement
-            * `error`: error catched from data treatement
-        timestamp (datetime): timestamp of the capture
-        primary_key (list, optional): List of primary keys to be used for nesting.
+        raw_filepath (str): Path to the saved raw .json file
+        filepath (str): Path to the saved treated .csv file
+        error (str): Error catched from upstream tasks
+        timestamp (datetime): timestamp for flow run
+        primary_key (list, optional): Primary key to be used on nested structure
 
     Returns:
-        dict: Conatining keys
-            * `data` (json): nested data
-            * `error` (str): catched error, if any. Otherwise, returns None
+        str: Path to the saved treated .csv file
     """
 
     # Check previous error
@@ -1001,10 +1035,10 @@ def create_request_params(
     Task to create request params
 
     Args:
-        datetime_range (dict): datetime range to get params
-        table_params (dict): table params to get params
-        secret_path (str): secret path to get params
-        dataset_id (str): dataset id to get params
+        extract_params (dict): extract parameters
+        table_id (str): table_id on BigQuery
+        dataset_id (str): dataset_id on BigQuery
+        timestamp (datetime): timestamp for flow run
 
     Returns:
         request_params: host, database and query to request data
@@ -1049,6 +1083,20 @@ def get_raw_from_sources(
     secret_path: str = None,
     api_params: dict = None,
 ):
+    """
+    Task to get raw data from sources
+
+    Args:
+        source_type (str): source type
+        local_filepath (str): local filepath
+        source_path (str, optional): source path. Defaults to None.
+        table_id (str, optional): table_id on BigQuery. Defaults to None.
+        secret_path (str, optional): secret path. Defaults to None.
+        api_params (dict, optional): api parameters. Defaults to None.
+
+    Returns:
+        error: error
+    """
     source_type, filetype = source_type.split("-", maxsplit=1)
 
     log(f"Source type: {source_type}")
