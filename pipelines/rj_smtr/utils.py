@@ -11,9 +11,9 @@ from datetime import timedelta, datetime
 from typing import List
 import io
 import json
+import zipfile
 import pytz
 import requests
-import zipfile
 import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
@@ -453,13 +453,13 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
     return clocks
 
 
-def _save_raw_local(
-    data: dict, file_path: str, mode: str = "raw", filetype: str = "json"
+def save_raw_local_func(
+    data: dict, filepath: str, mode: str = "raw", filetype: str = "json"
 ) -> str:
     """
     Saves json response from API to .json file.
     Args:
-        file_path (str): Path which to save raw file
+        filepath (str): Path which to save raw file
         status (dict): Must contain keys
           * data: json returned from API
           * error: error catched from API request
@@ -469,20 +469,20 @@ def _save_raw_local(
     """
 
     # diferentes tipos de arquivos para salvar
-    _file_path = file_path.format(mode=mode, filetype=filetype)
-    Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
+    _filepath = filepath.format(mode=mode, filetype=filetype)
+    Path(_filepath).parent.mkdir(parents=True, exist_ok=True)
 
     if filetype == "json":
-        json.dump(data, Path(_file_path).open("w", encoding="utf-8"))
+        json.dump(data, Path(_filepath).open("w", encoding="utf-8"))
 
     # if filetype == "csv":
     #     pass
     if filetype == "txt":
-        with open(_file_path, "w", encoding="utf-8") as file:
+        with open(_filepath, "w", encoding="utf-8") as file:
             file.write(data)
 
-    log(f"Raw data saved to: {_file_path}")
-    return _file_path
+    log(f"Raw data saved to: {_filepath}")
+    return _filepath
 
 
 def get_raw_data_api(  # pylint: disable=R0912
@@ -516,7 +516,9 @@ def get_raw_data_api(  # pylint: disable=R0912
         )
 
         response.raise_for_status()
-        filepath = _save_raw_local(data=response.text, filepath=filepath)
+        filepath = save_raw_local_func(
+            data=response.text, filepath=filepath
+        )  # TODO: mudar filetype
 
     except Exception as exp:
         error = exp
@@ -550,9 +552,9 @@ def get_raw_data_gcs(
         else:
             filename = blob.name
 
-        raw_filepath = _save_raw_local(
+        raw_filepath = save_raw_local_func(
             data=data.decode(encoding="utf-8"),
-            file_path=local_filepath,
+            filepath=local_filepath,
             filetype=filename.split(".")[-1],
         )
 
@@ -563,12 +565,14 @@ def get_raw_data_gcs(
     return error, raw_filepath
 
 
-def _save_treated_local(file_path: str, status: dict, mode: str = "staging") -> str:
+def save_treated_local_func(
+    filepath: str, data: pd.DataFrame, error: str, mode: str = "staging"
+) -> str:
     """
     Save treated file to CSV.
 
     Args:
-        file_path (str): Path which to save treated file
+        filepath (str): Path which to save treated file
         status (dict): Must contain keys
           * `data`: dataframe returned from treatement
           * `error`: error catched from data treatement
@@ -577,12 +581,12 @@ def _save_treated_local(file_path: str, status: dict, mode: str = "staging") -> 
     Returns:
         str: Path to the saved file
     """
-    _file_path = file_path.format(mode=mode, filetype="csv")
-    Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
-    if status["error"] is None:
-        status["data"].to_csv(_file_path, index=False)
-        log(f"Treated data saved to: {_file_path}")
-    return _file_path
+    _filepath = filepath.format(mode=mode, filetype="csv")
+    Path(_filepath).parent.mkdir(parents=True, exist_ok=True)
+    if error is None:
+        data.to_csv(_filepath, index=False)
+        log(f"Treated data saved to: {_filepath}")
+    return _filepath
 
 
 def upload_run_logs_to_bq(  # pylint: disable=R0913
@@ -646,3 +650,48 @@ def upload_run_logs_to_bq(  # pylint: disable=R0913
     )
     if error is not None:
         raise Exception(f"Pipeline failed with error: {error}")
+
+
+def get_datetime_range(
+    timestamp: datetime,
+    interval: int,
+) -> dict:
+    """
+    Task to get datetime range in UTC
+
+    Args:
+        timestamp (datetime): timestamp to get datetime range
+        interval (int): interval in seconds
+
+    Returns:
+        dict: datetime range
+    """
+
+    start = (
+        (timestamp - timedelta(seconds=interval))
+        .astimezone(tz=pytz.timezone("UTC"))
+        .strftime("%Y-%m-%d %H:%M:%S")
+    )
+
+    end = timestamp.astimezone(tz=pytz.timezone("UTC")).strftime("%Y-%m-%d %H:%M:%S")
+
+    return {"start": start, "end": end}
+
+
+def transform_data_to_json(data: str, file_type: str, csv_args: dict = {}):
+    try:
+        if file_type == "json":
+            data = json.loads(data)
+
+        elif file_type in ("txt", "csv"):
+            if csv_args is None:
+                csv_args = {}
+            data = pd.read_csv(io.StringIO(data), **csv_args).to_dict(orient="records")
+        else:
+            error = "Unsupported raw file extension. Supported only: json, csv and txt"
+
+    except Exception as exp:
+        error = exp
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+
+    return error, data

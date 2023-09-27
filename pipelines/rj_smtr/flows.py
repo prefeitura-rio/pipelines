@@ -40,8 +40,7 @@ with Flow(
     "SMTR: Captura",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as default_capture_flow:
-    
-    ### Configuração ###
+    # Configuração #
 
     table_id = Parameter("table_id", default=None)
     partition_date_only = Parameter("partition_date_only", default=None)
@@ -71,15 +70,19 @@ with Flow(
         partitions=partitions,
     )
 
-    ### Extração ###
+    # Extração #
     # é necessária task ou função dentro da extract_raw_data?
     request_params, request_path = create_request_params(
         secret_path=secret_path,
         dataset_id=dataset_id,
+        request_params=request_params,
+        table_id=table_id,
+        timestamp=timestamp,
     )
 
     error, raw_filepath = get_raw_from_sources(
-        source_type=source_type, # parametro de extracao, onde ficar?
+        source_type=source_type,  # parametro de extracao, onde ficar?
+        local_filepath=filepath,
         source_path=request_path,
         zip_filename=table_id,
         secret_path=secret_path,
@@ -87,40 +90,32 @@ with Flow(
     )
 
     RAW_UPLOADED = upload_raw_data_to_gcs(
-        error=error, 
-        filepath=raw_filepath, 
-        timestamp=timestamp, 
-        partitions=partitions
+        error=error,
+        raw_filepath=raw_filepath,
+        timestamp=timestamp,
+        table_id=table_id,
+        dataset_id=dataset_id,
+        partitions=partitions,
     )
 
-    ### Pré-tratamento ###
+    # Pré-tratamento #
 
     error, staging_filepath = transform_raw_to_nested_structure(
         raw_filepath=raw_filepath,
+        filepath=filepath,
+        error=error,
         timestamp=timestamp,
         primary_key=primary_key,
     )
 
-    STAGING_UPLOADED = upload_staging_data_to_gcs(error=error, filepath=staging_filepath, timestamp=timestamp)
-
-    # treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
-
-    # LOAD #
-    # error = bq_upload(
-    #     dataset_id=dataset_id,
-    #     table_id=table_params["pre-treatment"]["table_id"],
-    #     filepath=treated_filepath,
-    #     raw_filepath=raw_filepath,
-    #     partitions=partitions,
-    #     status=treated_status,
-    # )
-
-    # upload_logs_to_bq(
-    #     dataset_id=dataset_id,
-    #     parent_table_id=table_params["pre-treatment"]["table_id"],
-    #     error=error,
-    #     timestamp=timestamp,
-    # )
+    STAGING_UPLOADED = upload_staging_data_to_gcs(
+        error=error,
+        staging_filepath=staging_filepath,
+        timestamp=timestamp,
+        table_id=table_id,
+        dataset_id=dataset_id,
+        partitions=partitions,
+    )
 
 default_capture_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 default_capture_flow.run_config = KubernetesRun(

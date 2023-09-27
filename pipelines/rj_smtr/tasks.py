@@ -31,6 +31,9 @@ from pipelines.rj_smtr.utils import (
     get_raw_data_api,
     get_raw_data_gcs,
     upload_run_logs_to_bq,
+    get_datetime_range,
+    transform_data_to_json,
+    save_treated_local_func,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
@@ -874,7 +877,11 @@ def get_previous_date(days):
 
 @task
 def transform_raw_to_nested_structure(
-    filepath: str, error: bool, timestamp: datetime, primary_key: list = None
+    raw_filepath: str,
+    filepath: str,
+    error: bool,
+    timestamp: datetime,
+    primary_key: list = None,
 ):
     """Transform dataframe to nested structure
 
@@ -891,16 +898,18 @@ def transform_raw_to_nested_structure(
             * `error` (str): catched error, if any. Otherwise, returns None
     """
 
+    with open(raw_filepath, "r", encoding="utf-8") as file:
+        data = file.read()
+
     # ORGANIZAR:
-    # json_status = transform_data_to_json(
-    #     status=raw_status,
-    #     file_type=table_params["pre-treatment"]["file_type"],
-    #     csv_args=table_params["pre-treatment"]["csv_args"],
-    # )
+    error, data = transform_data_to_json(
+        data=data,
+        file_type=raw_filepath.split(".")[-1],
+    )
 
     # Check previous error
     if error is not None:
-        return {"data": pd.DataFrame(), "error": error}
+        return error, None
 
     # Check empty dataframe
     # if len(status["data"]) == 0:
@@ -913,8 +922,8 @@ def transform_raw_to_nested_structure(
 
         error = None
         # leitura do dado raw
-        # data = pd.DataFrame(status["data"])
-        data = None
+        data = pd.DataFrame(data)
+
         log(
             f"""
         Received inputs:
@@ -950,7 +959,7 @@ def transform_raw_to_nested_structure(
         )
 
         # save treated local
-        # filepath = _save_trated_local(data=data, filepath=filepath)
+        filepath = save_treated_local_func(data=data, error=error, filepath=filepath)
 
     except Exception as exp:  # pylint: disable=W0703
         error = exp
@@ -992,9 +1001,11 @@ def transform_raw_to_nested_structure(
 def create_request_params(
     # datetime_range: dict,
     # table_params: dict,
+    request_params: dict,
     table_id: str,
     secret_path: str,
     dataset_id: str,
+    timestamp: datetime,
 ) -> tuple:
     """
     Task to create request params
@@ -1009,25 +1020,25 @@ def create_request_params(
         request_params: host, database and query to request data
         request_url: url to request data
     """
-    request_params = None  # TODO: retirar essa linha
+
     if dataset_id == constants.BILHETAGEM_DATASET_ID.value:
         secrets = get_vault_secret(secret_path)["data"]
 
-        # TODO: RETIRAR ESSA LINHA
-        request_params = secrets
+        database_secrets = secrets["databases"][request_params["database"]]
+        request_url = secrets["vpn_url"] + database_secrets["engine"]
 
-        # TODO: mudar modo de pegar os parametros
-        # database_secrets = secrets["databases"][table_params["extraction"]["database"]]
-        # request_url = secrets["vpn_url"] + database_secrets["engine"]
-        # request_params = {
-        #     "host": database_secrets["host"],  # TODO: exibir no log em ambiente fechado
-        #     "database": table_params["extraction"]["database"],
-        #     "query": table_params["extraction"]["query"].format(**datetime_range),
-        # }
+        datetime_range = get_datetime_range(
+            timestamp=timestamp, interval=request_params["run_interval"]
+        )
+        request_params = {
+            "host": database_secrets["host"],  # TODO: exibir no log em ambiente fechado
+            "database": request_params["database"],
+            "query": request_params["query"].format(**datetime_range),
+        }
 
     elif dataset_id == constants.GTFS_DATASET_ID.value:
         gtfs_base_path = "development/br_rj_riodejaneiro_gtfs/upload"
-        if table_id == constants.GTFS_QUADRO_ID.value:
+        if table_id == constants.GTFS_QUADRO_TABLE_ID.value:
             request_url = f"{gtfs_base_path}/quadro.csv"
         else:
             request_url = f"{gtfs_base_path}/gtfs.zip"
@@ -1038,22 +1049,25 @@ def create_request_params(
 @task(checkpoint=False)
 def get_raw_from_sources(
     source_type: str,
+    local_filepath: str,
     source_path: str = None,
     table_id: str = None,
     secret_path: str = None,
     api_params: dict = None,
 ):
-    pass
-    # TODO: descomentar linhas abaixo, passando argumentos corretos
-    # if source_type == "api":
-    #     return get_raw_data_api(
-    #         url=source_path, secret_path=secret_path, params=api_params
-    #     )
-    # if source_type == "gcs":
-    #     return get_raw_data_gcs(
-    #         gcs_path=source_path,
-    #         filename_to_unzip=table_id,
-    #     )
+    if source_type == "api":
+        return get_raw_data_api(
+            url=source_path,
+            secret_path=secret_path,
+            api_params=api_params,
+            filepath=local_filepath,
+        )
+    if source_type == "gcs":
+        return get_raw_data_gcs(
+            gcs_path=source_path,
+            filename_to_unzip=table_id,
+            local_filepath=local_filepath,
+        )
 
 
 # TODO: passar para função para dentro da transform_raw_to_nested_structure
