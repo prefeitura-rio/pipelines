@@ -2,7 +2,7 @@
 """
 Tasks to dump data from a INEA FTP to BigQuery
 """
-# pylint: disable=E0702,E1137,E1136,E1101,W0613,bad-continuation
+# pylint: disable=E0702,E1137,E1136,E1101,W0613
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List
@@ -184,8 +184,7 @@ def get_files_to_download(
         files = [
             file
             for file in files
-            if "-".join(file.split("/")[-1].split("-")[:-1])
-            not in ["-".join(dfile.split("-")[:-1]) for dfile in datalake_files]
+            if "-".join(file.split("/")[-1].split("-")[:-1]) not in datalake_files
         ]
 
     # Skip task if there is no new file
