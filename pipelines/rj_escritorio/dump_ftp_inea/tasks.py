@@ -138,6 +138,7 @@ def get_files_from_ftp(
         raise ENDRUN(state=skip)
 
     log(f"Last 10 files on FTP: {files[-10:]} {len(files)}")
+    log(f"files on FTP: {files}")
 
     return files
 
