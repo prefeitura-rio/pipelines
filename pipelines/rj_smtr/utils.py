@@ -10,12 +10,14 @@ from pathlib import Path
 from datetime import timedelta, datetime
 from typing import List
 import io
-import basedosdados as bd
-from basedosdados import Table
-import pandas as pd
+import json
 import pytz
 import requests
 import zipfile
+import basedosdados as bd
+from basedosdados import Table
+import pandas as pd
+
 
 from prefect.schedules.clocks import IntervalClock
 
@@ -451,7 +453,9 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
     return clocks
 
 
-def _save_raw_local(data: dict, file_path: str, mode: str = "raw", filetype: str = "json") -> str:
+def _save_raw_local(
+    data: dict, file_path: str, mode: str = "raw", filetype: str = "json"
+) -> str:
     """
     Saves json response from API to .json file.
     Args:
@@ -471,20 +475,18 @@ def _save_raw_local(data: dict, file_path: str, mode: str = "raw", filetype: str
     if filetype == "json":
         json.dump(data, Path(_file_path).open("w", encoding="utf-8"))
 
-    if filetype == "csv":
-        pass
+    # if filetype == "csv":
+    #     pass
     if filetype == "txt":
-        pass
+        with open(_file_path, "w", encoding="utf-8") as file:
+            file.write(data)
 
     log(f"Raw data saved to: {_file_path}")
     return _file_path
 
 
 def get_raw_data_api(  # pylint: disable=R0912
-    url: str,
-    secret_path: str = None,
-    api_params: dict = None,
-    filepath: str = None
+    url: str, secret_path: str = None, api_params: dict = None, filepath: str = None
 ) -> list[dict]:
     """
     Request data from URL API
@@ -525,9 +527,9 @@ def get_raw_data_api(  # pylint: disable=R0912
 
 def get_raw_data_gcs(
     gcs_path: str,
-    zip_extracted_file: str = None,
+    local_filepath: str,
+    filename_to_unzip: str = None,
 ) -> dict:
-    
     error = None
 
     try:
@@ -538,18 +540,27 @@ def get_raw_data_gcs(
 
         data = blob.download_as_bytes()
 
-        if zip_extracted_file:
-            compressed_data = blob.download_as_bytes()
-
-            with zipfile.ZipFile(io.BytesIO(compressed_data), "r") as zipped_file:
-                data = zipped_file.read(zip_extracted_file).decode(encoding="utf-8")
+        if filename_to_unzip:
+            with zipfile.ZipFile(io.BytesIO(data), "r") as zipped_file:
+                filenames = zipped_file.namelist()
+                filename = list(
+                    filter(lambda x: x.split(".")[0] == filename_to_unzip, filenames)
+                )[0]
+                data = zipped_file.read(filename)
         else:
-            data = blob.download_as_string()
+            filename = blob.name
+
+        raw_filepath = _save_raw_local(
+            data=data.decode(encoding="utf-8"),
+            file_path=local_filepath,
+            filetype=filename.split(".")[-1],
+        )
 
     except Exception as exp:
         error = exp
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
-    return {"data": data, "error": error}
+    return error, raw_filepath
 
 
 def _save_treated_local(file_path: str, status: dict, mode: str = "staging") -> str:
@@ -581,7 +592,7 @@ def upload_run_logs_to_bq(  # pylint: disable=R0913
     error: str = None,
     previous_error: str = None,
     recapture: bool = False,
-    mode: str = "raw"
+    mode: str = "raw",
 ):
     """
     Upload execution status table to BigQuery.

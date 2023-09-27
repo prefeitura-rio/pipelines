@@ -264,4 +264,14 @@ class constants(Enum):  # pylint: disable=c0103
     BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
 
     # GTFS
-    
+    GTFS_DATASET_ID = "br_rj_riodejaneiro_gtfs"
+
+    GTFS_SOURCE_TYPE = "gcs"
+
+    GTFS_AGENCY_REQUEST_PARAMS = {
+        "filepath": "development/br_rj_riodejaneiro_gtfs/upload/gtfs.zip"
+    }
+
+    GTFS_AGENCY_TABLE_ID = "agency"
+
+    GTFS_QUADRO_TABLE_ID = "quadro"

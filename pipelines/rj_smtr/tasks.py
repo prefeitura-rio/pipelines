@@ -30,7 +30,7 @@ from pipelines.rj_smtr.utils import (
     data_info_str,
     get_raw_data_api,
     get_raw_data_gcs,
-    upload_run_logs_to_bq
+    upload_run_logs_to_bq,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
@@ -604,7 +604,12 @@ def upload_logs_to_bq(  # pylint: disable=R0913
 
 @task
 def upload_raw_data_to_gcs(
-    error: bool, raw_filepath: str, timestamp: datetime, table_id: str, dataset_id: str, partitions: list
+    error: bool,
+    raw_filepath: str,
+    timestamp: datetime,
+    table_id: str,
+    dataset_id: str,
+    partitions: list,
 ):
     if not error:
         try:
@@ -622,19 +627,24 @@ def upload_raw_data_to_gcs(
         except Exception:
             error = traceback.format_exc()
             log(f"[CATCHED] Task failed with error: \n{error}", level="error")
-    
+
     upload_run_logs_to_bq(
         dataset_id=dataset_id,
         parent_table_id=table_id,
         error=error,
         timestamp=timestamp,
-        mode="raw"
+        mode="raw",
     )
 
 
 @task
 def upload_staging_data_to_gcs(
-    error: bool, staging_filepath: str, timestamp: datetime, table_id: str, dataset_id: str, partitions: list
+    error: bool,
+    staging_filepath: str,
+    timestamp: datetime,
+    table_id: str,
+    dataset_id: str,
+    partitions: list,
 ):
     if not error:
         try:
@@ -643,20 +653,20 @@ def upload_staging_data_to_gcs(
                 dataset_id=dataset_id,
                 table_id=table_id,
                 path=staging_filepath,
-                partitions=partitions
+                partitions=partitions,
             )
         except Exception:
             error = traceback.format_exc()
             log(f"[CATCHED] Task failed with error: \n{error}", level="error")
-    
+
     upload_run_logs_to_bq(
         dataset_id=dataset_id,
         parent_table_id=table_id,
         error=error,
         timestamp=timestamp,
-        mode="staging"
+        mode="staging",
     )
-    
+
 
 ###############
 #
@@ -904,7 +914,7 @@ def transform_raw_to_nested_structure(
         error = None
         # leitura do dado raw
         # data = pd.DataFrame(status["data"])
-
+        data = None
         log(
             f"""
         Received inputs:
@@ -940,7 +950,7 @@ def transform_raw_to_nested_structure(
         )
 
         # save treated local
-        filepath = _save_trated_local(data=data, filepath=filepath)
+        # filepath = _save_trated_local(data=data, filepath=filepath)
 
     except Exception as exp:  # pylint: disable=W0703
         error = exp
@@ -980,7 +990,11 @@ def transform_raw_to_nested_structure(
 
 @task(checkpoint=False, nout=2)
 def create_request_params(
-    datetime_range: dict, table_params: dict, secret_path: str, dataset_id: str
+    # datetime_range: dict,
+    # table_params: dict,
+    table_id: str,
+    secret_path: str,
+    dataset_id: str,
 ) -> tuple:
     """
     Task to create request params
@@ -995,16 +1009,28 @@ def create_request_params(
         request_params: host, database and query to request data
         request_url: url to request data
     """
-
+    request_params = None  # TODO: retirar essa linha
     if dataset_id == constants.BILHETAGEM_DATASET_ID.value:
         secrets = get_vault_secret(secret_path)["data"]
-        database_secrets = secrets["databases"][table_params["extraction"]["database"]]
-        request_url = secrets["vpn_url"] + database_secrets["engine"]
-        request_params = {
-            "host": database_secrets["host"],  # TODO: exibir no log em ambiente fechado
-            "database": table_params["extraction"]["database"],
-            "query": table_params["extraction"]["query"].format(**datetime_range),
-        }
+
+        # TODO: RETIRAR ESSA LINHA
+        request_params = secrets
+
+        # TODO: mudar modo de pegar os parametros
+        # database_secrets = secrets["databases"][table_params["extraction"]["database"]]
+        # request_url = secrets["vpn_url"] + database_secrets["engine"]
+        # request_params = {
+        #     "host": database_secrets["host"],  # TODO: exibir no log em ambiente fechado
+        #     "database": table_params["extraction"]["database"],
+        #     "query": table_params["extraction"]["query"].format(**datetime_range),
+        # }
+
+    elif dataset_id == constants.GTFS_DATASET_ID.value:
+        gtfs_base_path = "development/br_rj_riodejaneiro_gtfs/upload"
+        if table_id == constants.GTFS_QUADRO_ID.value:
+            request_url = f"{gtfs_base_path}/quadro.csv"
+        else:
+            request_url = f"{gtfs_base_path}/gtfs.zip"
 
     return request_params, request_url
 
@@ -1013,18 +1039,21 @@ def create_request_params(
 def get_raw_from_sources(
     source_type: str,
     source_path: str = None,
-    zip_filename: str = None,
+    table_id: str = None,
     secret_path: str = None,
     api_params: dict = None,
 ):
-    if source_type == "api":
-        return get_raw_data_api(url=source_path, secret_path=secret_path, params=api_params)
-    if source_type == "gcs":
-        return get_raw_data_gcs(
-            gcs_path=source_path,
-            mode="raw",
-            zip_filename=zip_filename,
-        )
+    pass
+    # TODO: descomentar linhas abaixo, passando argumentos corretos
+    # if source_type == "api":
+    #     return get_raw_data_api(
+    #         url=source_path, secret_path=secret_path, params=api_params
+    #     )
+    # if source_type == "gcs":
+    #     return get_raw_data_gcs(
+    #         gcs_path=source_path,
+    #         filename_to_unzip=table_id,
+    #     )
 
 
 # TODO: passar para função para dentro da transform_raw_to_nested_structure
