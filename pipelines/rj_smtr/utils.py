@@ -678,7 +678,7 @@ def get_datetime_range(
     """
 
     start = (
-        (timestamp - timedelta(interval))
+        (timestamp - interval)
         .astimezone(tz=pytz.timezone("UTC"))
         .strftime("%Y-%m-%d %H:%M:%S")
     )
