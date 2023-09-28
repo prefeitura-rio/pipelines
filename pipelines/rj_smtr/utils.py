@@ -448,7 +448,7 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
 
 
 def save_raw_local_func(
-    data: dict, filepath: str, mode: str = "raw", filetype: str = "json"
+    data: Union[dict, str], filepath: str, mode: str = "raw", filetype: str = "json"
 ) -> str:
     """
     Saves json response from API to .json file.
@@ -467,6 +467,8 @@ def save_raw_local_func(
     Path(_filepath).parent.mkdir(parents=True, exist_ok=True)
 
     if filetype == "json":
+        if isinstance(data, dict):
+            data = json.loads(data)
         json.dump(data, Path(_filepath).open("w", encoding="utf-8"))
 
     # if filetype == "csv":
