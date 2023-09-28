@@ -185,6 +185,8 @@ class constants(Enum):  # pylint: disable=c0103
         "source_type": "api-json",
         "transacao_run_interval": {"minutes": 1},
         "principal_run_interval": {"days": 1},
+        "transacao_runs_interval_minutes": 0,
+        "principal_runs_interval_minutes": 15,
     }
 
     BILHETAGEM_TRANSACAO_CAPTURE_PARAMS = {
@@ -205,7 +207,7 @@ class constants(Enum):  # pylint: disable=c0103
             """,
             "run_interval": BILHETAGEM_GENERAL_CAPTURE_PARAMS["transacao_run_interval"],
         },
-        "primary_key": ["id"],
+        "primary_key": ["id"],  # id column to nest data on
     }
 
     BILHETAGEM_CAPTURE_PARAMS = [
@@ -249,7 +251,7 @@ class constants(Enum):  # pylint: disable=c0103
                     "principal_run_interval"
                 ],
             },
-            "primary_key": ["CD_GRUPO"],
+            "primary_key": ["CD_GRUPO"],  # id column to nest data on
         },
         {
             "table_id": "grupo_linha",
