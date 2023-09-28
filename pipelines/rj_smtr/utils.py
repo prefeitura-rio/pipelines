@@ -8,12 +8,18 @@ from ftplib import FTP
 from pathlib import Path
 
 from datetime import timedelta, datetime
-from typing import List
+from typing import List, Union
+import traceback
+import sys
 import io
+import json
+import zipfile
+import pytz
+import requests
 import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
-import pytz
+
 
 from prefect.schedules.clocks import IntervalClock
 
@@ -27,6 +33,7 @@ from pipelines.utils.utils import (
     get_vault_secret,
     send_discord_message,
     get_redis_client,
+    get_storage_blob,
 )
 
 
@@ -398,46 +405,41 @@ def data_info_str(data: pd.DataFrame):
 
 
 def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-locals
-    interval: timedelta,
+    clock_interval: timedelta,
     labels: List[str],
-    table_parameters: list,
-    dataset_id: str,
-    secret_path: str,
+    table_parameters: Union[list[dict], dict],
     runs_interval_minutes: int = 15,
     start_date: datetime = datetime(
         2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)
     ),
+    **general_flow_params,
 ) -> List[IntervalClock]:
     """
     Generates multiple schedules
 
     Args:
-        interval (timedelta): The interval to run the schedule
+        clock_interval (timedelta): The interval to run the schedule
         labels (List[str]): The labels to be added to the schedule
-        table_parameters (list): The table parameters
-        dataset_id (str): The dataset_id to be used in the schedule
-        secret_path (str): The secret path to be used in the schedule
+        table_parameters (list): The table parameters to iterate over
         runs_interval_minutes (int, optional): The interval between each schedule. Defaults to 15.
         start_date (datetime, optional): The start date of the schedule.
             Defaults to datetime(2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)).
-
+        general_flow_params: Any param that you want to pass to the flow
     Returns:
         List[IntervalClock]: The list of schedules
 
     """
+    if isinstance(table_parameters, dict):
+        table_parameters = [table_parameters]
 
     clocks = []
     for count, parameters in enumerate(table_parameters):
-        parameter_defaults = {
-            "table_params": parameters,
-            "dataset_id": dataset_id,
-            "secret_path": secret_path,
-            "interval": interval.total_seconds(),
-        }
+        parameter_defaults = parameters | general_flow_params
+
         log(f"parameter_defaults: {parameter_defaults}")
         clocks.append(
             IntervalClock(
-                interval=interval,
+                interval=clock_interval,
                 start_date=start_date
                 + timedelta(minutes=runs_interval_minutes * count),
                 labels=labels,
@@ -445,3 +447,291 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
             )
         )
     return clocks
+
+
+def save_raw_local_func(
+    data: Union[dict, str], filepath: str, mode: str = "raw", filetype: str = "json"
+) -> str:
+    """
+    Saves json response from API to .json file.
+    Args:
+        filepath (str): Path which to save raw file
+        status (dict): Must contain keys
+          * data: json returned from API
+          * error: error catched from API request
+        mode (str, optional): Folder to save locally, later folder which to upload to GCS.
+    Returns:
+        str: Path to the saved file
+    """
+
+    # diferentes tipos de arquivos para salvar
+    _filepath = filepath.format(mode=mode, filetype=filetype)
+    Path(_filepath).parent.mkdir(parents=True, exist_ok=True)
+
+    if filetype == "json":
+        if isinstance(data, dict):
+            data = json.loads(data)
+        json.dump(data, Path(_filepath).open("w", encoding="utf-8"))
+
+    # if filetype == "csv":
+    #     pass
+    if filetype == "txt":
+        with open(_filepath, "w", encoding="utf-8") as file:
+            file.write(data)
+
+    log(f"Raw data saved to: {_filepath}")
+    return _filepath
+
+
+def get_raw_data_api(  # pylint: disable=R0912
+    url: str,
+    secret_path: str = None,
+    api_params: dict = None,
+    filepath: str = None,
+    filetype: str = None,
+) -> tuple[str, str]:
+    """
+    Request data from URL API
+
+    Args:
+        url (str): URL to request data
+        secret_path (str, optional): Secret path to get headers. Defaults to None.
+        api_params (dict, optional): Parameters to pass to API. Defaults to None.
+        filepath (str, optional): Path to save raw file. Defaults to None.
+        filetype (str, optional): Filetype to save raw file. Defaults to None.
+
+    Returns:
+        tuple[str, str]: Error and filepath
+    """
+    error = None
+    try:
+        if secret_path is None:
+            headers = secret_path
+        else:
+            headers = get_vault_secret(secret_path)["data"]
+
+        # remove from headers, if present
+        # TODO: remove this before merge to master
+        remove_headers = ["host", "databases"]
+        for remove_header in remove_headers:
+            if remove_header in list(headers.keys()):
+                del headers[remove_header]
+
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=constants.MAX_TIMEOUT_SECONDS.value,
+            params=api_params,
+        )
+
+        response.raise_for_status()
+
+        if filetype == "json":
+            data = response.json()
+        else:
+            data = response.text
+
+        filepath = save_raw_local_func(data=data, filepath=filepath, filetype=filetype)
+
+    except Exception as exp:
+        error = traceback.format_exc()
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+
+    return error, filepath
+
+
+def get_raw_data_gcs(
+    gcs_path: str,
+    local_filepath: str,
+    filename_to_unzip: str = None,
+) -> tuple[str, str]:
+    """
+    Get raw data from GCS
+
+    Args:
+        gcs_path (str): GCS path to get data
+        local_filepath (str): Local filepath to save raw data
+        filename_to_unzip (str, optional): Filename to unzip. Defaults to None.
+
+    Returns:
+        tuple[str, str]: Error and filepath
+    """
+    error = None
+    raw_filepath = None
+
+    try:
+        blob = get_storage_blob(gcs_path=gcs_path)
+
+        data = blob.download_as_bytes()
+
+        if filename_to_unzip:
+            with zipfile.ZipFile(io.BytesIO(data), "r") as zipped_file:
+                filenames = zipped_file.namelist()
+                filename = list(
+                    filter(lambda x: x.split(".")[0] == filename_to_unzip, filenames)
+                )[0]
+                data = zipped_file.read(filename)
+        else:
+            filename = blob.name
+
+        raw_filepath = save_raw_local_func(
+            data=data.decode(encoding="utf-8"),
+            filepath=local_filepath,
+            filetype=filename.split(".")[-1],
+        )
+
+    except Exception as exp:
+        error = traceback.format_exc()
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+
+    return error, raw_filepath
+
+
+def save_treated_local_func(
+    filepath: str, data: pd.DataFrame, error: str, mode: str = "staging"
+) -> str:
+    """
+    Save treated file to CSV.
+
+    Args:
+        filepath (str): Path to save file
+        data (pd.DataFrame): Dataframe to save
+        error (str): Error catched during execution
+        mode (str, optional): Folder to save locally, later folder which to upload to GCS.
+
+    Returns:
+        str: Path to the saved file
+    """
+    _filepath = filepath.format(mode=mode, filetype="csv")
+    Path(_filepath).parent.mkdir(parents=True, exist_ok=True)
+    if error is None:
+        data.to_csv(_filepath, index=False)
+        log(f"Treated data saved to: {_filepath}")
+    return _filepath
+
+
+def upload_run_logs_to_bq(  # pylint: disable=R0913
+    dataset_id: str,
+    parent_table_id: str,
+    timestamp: str,
+    error: str = None,
+    previous_error: str = None,
+    recapture: bool = False,
+    mode: str = "raw",
+):
+    """
+    Upload execution status table to BigQuery.
+    Table is uploaded to the same dataset, named {parent_table_id}_logs.
+    If passing status_dict, should not pass timestamp and error.
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        parent_table_id (str): table_id on BigQuery
+        timestamp (str): timestamp to get datetime range
+        error (str): error catched during execution
+        previous_error (str): previous error catched during execution
+        recapture (bool): if the execution was a recapture
+        mode (str): folder to save locally, later folder which to upload to GCS
+
+    Returns:
+        None
+    """
+    table_id = parent_table_id + "_logs"
+    # Create partition directory
+    filename = f"{table_id}_{timestamp.isoformat()}"
+    partition = f"data={timestamp.date()}"
+    filepath = Path(
+        f"""data/{mode}/{dataset_id}/{table_id}/{partition}/{filename}.csv"""
+    )
+    filepath.parent.mkdir(exist_ok=True, parents=True)
+    # Create dataframe to be uploaded
+    if not error and recapture is True:
+        # if the recapture is succeeded, update the column erro
+        dataframe = pd.DataFrame(
+            {
+                "timestamp_captura": [timestamp],
+                "sucesso": [True],
+                "erro": [f"[recapturado]{previous_error}"],
+            }
+        )
+        log(f"Recapturing {timestamp} with previous error:\n{error}")
+    else:
+        # not recapturing or error during flow execution
+        dataframe = pd.DataFrame(
+            {
+                "timestamp_captura": [timestamp],
+                "sucesso": [error is None],
+                "erro": [error],
+            }
+        )
+    # Save data local
+    dataframe.to_csv(filepath, index=False)
+    # Upload to Storage
+    create_or_append_table(
+        dataset_id=dataset_id,
+        table_id=table_id,
+        path=filepath.as_posix(),
+        partitions=partition,
+    )
+    if error is not None:
+        raise Exception(f"Pipeline failed with error: {error}")
+
+
+def get_datetime_range(
+    timestamp: datetime,
+    interval: timedelta,
+) -> dict:
+    """
+    Task to get datetime range in UTC
+
+    Args:
+        timestamp (datetime): timestamp to get datetime range
+        interval (timedelta): interval to get datetime range
+
+    Returns:
+        dict: datetime range
+    """
+
+    start = (
+        (timestamp - interval)
+        .astimezone(tz=pytz.timezone("UTC"))
+        .strftime("%Y-%m-%d %H:%M:%S")
+    )
+
+    end = timestamp.astimezone(tz=pytz.timezone("UTC")).strftime("%Y-%m-%d %H:%M:%S")
+
+    return {"start": start, "end": end}
+
+
+def read_raw_data(filepath: str, csv_args: dict = dict()) -> tuple[str, pd.DataFrame]:
+    """
+    Read raw data from file
+
+    Args:
+        filepath (str): filepath to read
+        csv_args (dict): arguments to pass to pandas.read_csv
+
+    Returns:
+        tuple[str, pd.DataFrame]: error and data
+    """
+    error = None
+    data = None
+    try:
+        file_type = filepath.split(".")[-1]
+
+        if file_type == "json":
+            data = pd.read_json(filepath)
+
+            # data = json.loads(data)
+        elif file_type in ("txt", "csv"):
+            if csv_args is None:
+                csv_args = {}
+            data = pd.read_csv(filepath, **csv_args)
+        else:
+            error = "Unsupported raw file extension. Supported only: json, csv and txt"
+
+    except Exception as exp:
+        error = traceback.format_exc()
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+
+    return error, data
