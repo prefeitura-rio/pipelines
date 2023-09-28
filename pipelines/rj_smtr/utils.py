@@ -707,11 +707,14 @@ def read_raw_data(filepath: str, csv_args: dict = dict()) -> tuple[str, pd.DataF
         tuple[str, pd.DataFrame]: error and data
     """
     error = None
+    data = None
     try:
         file_type = filepath.split(".")[-1]
 
         if file_type == "json":
-            data = pd.read_json(filepath)
+            with open(filepath, "r") as file:
+                data = json.load(file)
+            data = pd.DataFrame(data)
             # data = json.loads(data)
 
         elif file_type in ("txt", "csv"):
