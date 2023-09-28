@@ -34,7 +34,6 @@ from pipelines.rj_smtr.utils import (
     get_datetime_range,
     read_raw_data,
     save_treated_local_func,
-    log_error,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
@@ -431,11 +430,9 @@ def get_raw(  # pylint: disable=R0912
                     "Unsupported raw file extension. Supported only: json, csv and txt"
                 )
 
-    except Exception as exp:
-        error = exp
-
-    if error is not None:
-        log_error(error=error)
+    except Exception:
+        error = traceback.format_exc()
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return {"data": data, "error": error}
 
@@ -989,11 +986,9 @@ def transform_raw_to_nested_structure(
         # save treated local
         filepath = save_treated_local_func(data=data, error=error, filepath=filepath)
 
-    except Exception as exp:  # pylint: disable=W0703
-        error = exp
-
-    if error is not None:
-        log_error(error=error)
+    except Exception:  # pylint: disable=W0703
+        error = traceback.format_exc()
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return error, filepath
 
@@ -1126,9 +1121,9 @@ def get_raw_from_sources(
             )
         else:
             raise NotImplementedError(f"{source_type} not supported")
-    except NotImplementedError as exp:
-        error = exp
-        log_error(error=error)
+    except NotImplementedError:
+        error = traceback.format_exc()
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     log(f"Raw extraction ended returned values: {error}, {filepath}")
     return error, filepath

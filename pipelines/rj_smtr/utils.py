@@ -54,14 +54,6 @@ def log_critical(message: str, secret_path: str = constants.CRITICAL_SECRET_PATH
     return send_discord_message(message=message, webhook_url=url)
 
 
-def log_error(error: str):
-    error = traceback.format_exc()
-    log(
-        f"[CATCHED] Task failed with error: \n{error}",
-        level="error",
-    )
-
-
 def create_or_append_table(
     dataset_id: str, table_id: str, path: str, partitions: str = None
 ):
@@ -542,8 +534,8 @@ def get_raw_data_api(  # pylint: disable=R0912
         filepath = save_raw_local_func(data=data, filepath=filepath, filetype=filetype)
 
     except Exception as exp:
-        error = exp
-        log_error(error=error)
+        error = traceback.format_exc()
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return error, filepath
 
@@ -589,8 +581,8 @@ def get_raw_data_gcs(
         )
 
     except Exception as exp:
-        error = exp
-        log_error(error=error)
+        error = traceback.format_exc()
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return error, raw_filepath
 
@@ -739,8 +731,7 @@ def read_raw_data(filepath: str, csv_args: dict = dict()) -> tuple[str, pd.DataF
             error = "Unsupported raw file extension. Supported only: json, csv and txt"
 
     except Exception as exp:
-        error = exp
-        log_error(error=error)
-        # log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+        error = traceback.format_exc()
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return error, data
