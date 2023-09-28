@@ -664,21 +664,21 @@ def upload_run_logs_to_bq(  # pylint: disable=R0913
 
 def get_datetime_range(
     timestamp: datetime,
-    interval: int,
+    interval: timedelta,
 ) -> dict:
     """
     Task to get datetime range in UTC
 
     Args:
         timestamp (datetime): timestamp to get datetime range
-        interval (int): interval in seconds
+        interval (timedelta): interval to get datetime range
 
     Returns:
         dict: datetime range
     """
 
     start = (
-        (timestamp - timedelta(seconds=interval))
+        (timestamp - timedelta(interval))
         .astimezone(tz=pytz.timezone("UTC"))
         .strftime("%Y-%m-%d %H:%M:%S")
     )
