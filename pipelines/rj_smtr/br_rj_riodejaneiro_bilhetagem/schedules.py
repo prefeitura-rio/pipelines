@@ -26,7 +26,9 @@ bilhetagem_principal_clocks = generate_execute_schedules(
     dataset_id=constants.BILHETAGEM_DATASET_ID.value,
     secret_path=constants.BILHETAGEM_SECRET_PATH.value,
     source_type=constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["source_type"],
-    runs_interval_minutes=15,
+    runs_interval_minutes=constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value[
+        "principal_runs_interval_minutes"
+    ],
 )
 
 bilhetagem_principal_schedule = Schedule(clocks=untuple(bilhetagem_principal_clocks))
@@ -42,7 +44,9 @@ bilhetagem_transacao_clocks = generate_execute_schedules(
     dataset_id=constants.BILHETAGEM_DATASET_ID.value,
     secret_path=constants.BILHETAGEM_SECRET_PATH.value,
     source_type=constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["source_type"],
-    runs_interval_minutes=0,
+    runs_interval_minutes=constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value[
+        "transacao_runs_interval_minutes"
+    ],
 )
 
 bilhetagem_transacao_schedule = Schedule(clocks=untuple(bilhetagem_transacao_clocks))
