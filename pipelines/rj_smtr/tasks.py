@@ -1100,14 +1100,13 @@ def get_raw_from_sources(
     error = None
     filepath = None
 
-    source_values = source_type.split("-", maxsplit=1)
-    source_type = source_values[0]
-    try:
-        filetype = source_values[1]
-    except IndexError:
-        filetype = None
+    source_values = source_type.split("-", 1)
 
-    log(f"Source type: {source_type}")
+    source_type, filetype = (
+        source_values if len(source_values) == 2 else (source_values[0], None)
+    )
+
+    log(f"Getting raw data from source type: {source_type}")
 
     try:
         if source_type == "api":
@@ -1132,26 +1131,3 @@ def get_raw_from_sources(
 
     log(f"Raw extraction ended returned values: {error}, {filepath}")
     return error, filepath
-
-
-# TODO: passar para função para dentro da transform_raw_to_nested_structure
-# @task(checkpoint=False)
-# def transform_data_to_json(status: dict, file_type: str, csv_args: dict):
-#     data = status["data"]
-#     error = status["error"]
-
-#     if file_type == "json":
-#         pass
-
-#         # todo: move to data check on specfic API # pylint: disable=W0102
-#         # if isinstance(data, dict) and "DescricaoErro" in data.keys():
-#         #     error = data["DescricaoErro"]
-
-#     elif file_type in ("txt", "csv"):
-#         if csv_args is None:
-#             csv_args = {}
-#         data = pd.read_csv(io.StringIO(data), **csv_args).to_dict(orient="records")
-#     else:
-#         error = "Unsupported raw file extension. Supported only: json, csv and txt"
-
-#     return {"data": data, "error": error}
