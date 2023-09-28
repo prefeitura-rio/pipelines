@@ -55,14 +55,9 @@ def log_critical(message: str, secret_path: str = constants.CRITICAL_SECRET_PATH
 
 
 def log_error(error: str):
-    tb = sys.exc_info()[-1]
-    frame = traceback.extract_tb(tb, 1)[0]
-    file_name = frame[0]
-    function_name = frame[2]
-    line_no = frame[1]
-
+    error = traceback.format_exc()
     log(
-        f"[CATCHED] Task failed in file {file_name} - ({function_name}) line: {line_no} with error: \n{error}",
+        f"[CATCHED] Task failed with error: \n{error}",
         level="error",
     )
 
@@ -733,11 +728,9 @@ def read_raw_data(filepath: str, csv_args: dict = dict()) -> tuple[str, pd.DataF
         file_type = filepath.split(".")[-1]
 
         if file_type == "json":
-            with open(filepath, "r") as file:
-                data = pd.DataFrame.from_dict(json.load(file), orient="records")
+            data = pd.read_json(filepath)
 
             # data = json.loads(data)
-
         elif file_type in ("txt", "csv"):
             if csv_args is None:
                 csv_args = {}
