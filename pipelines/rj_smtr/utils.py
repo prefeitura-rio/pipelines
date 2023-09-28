@@ -506,6 +506,13 @@ def get_raw_data_api(  # pylint: disable=R0912
         else:
             headers = get_vault_secret(secret_path)["data"]
 
+        # remove from headers, if present
+        # TODO: remove this before merge to master
+        remove_headers = ["host", "databases"]
+        for remove_header in remove_headers:
+            if remove_header in list(headers.keys()):
+                del headers[remove_header]
+
         response = requests.get(
             url,
             headers=headers,
