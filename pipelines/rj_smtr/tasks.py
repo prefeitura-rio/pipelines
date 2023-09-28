@@ -34,6 +34,7 @@ from pipelines.rj_smtr.utils import (
     get_datetime_range,
     read_raw_data,
     save_treated_local_func,
+    log_error,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
@@ -434,7 +435,7 @@ def get_raw(  # pylint: disable=R0912
         error = exp
 
     if error is not None:
-        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+        log_error(error=error)
 
     return {"data": data, "error": error}
 
@@ -992,7 +993,7 @@ def transform_raw_to_nested_structure(
         error = exp
 
     if error is not None:
-        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+        log_error(error=error)
 
     return error, filepath
 
@@ -1127,7 +1128,7 @@ def get_raw_from_sources(
             raise NotImplementedError(f"{source_type} not supported")
     except NotImplementedError as exp:
         error = exp
-        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+        log_error(error=error)
 
     log(f"Raw extraction ended returned values: {error}, {filepath}")
     return error, filepath

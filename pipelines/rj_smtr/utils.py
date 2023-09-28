@@ -538,13 +538,17 @@ def get_raw_data_api(  # pylint: disable=R0912
         )
 
         response.raise_for_status()
-        filepath = save_raw_local_func(
-            data=response.text, filepath=filepath, filetype=filetype
-        )
+
+        if filetype == "json":
+            data = response.json()
+        else:
+            data = response.text
+
+        filepath = save_raw_local_func(data=data, filepath=filepath, filetype=filetype)
 
     except Exception as exp:
         error = exp
-        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+        log_error(error=error)
 
     return error, filepath
 
@@ -591,7 +595,7 @@ def get_raw_data_gcs(
 
     except Exception as exp:
         error = exp
-        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+        log_error(error=error)
 
     return error, raw_filepath
 
