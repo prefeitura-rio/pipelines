@@ -9,6 +9,8 @@ from pathlib import Path
 
 from datetime import timedelta, datetime
 from typing import List, Union
+import traceback
+import sys
 import io
 import json
 import zipfile
@@ -50,6 +52,19 @@ def log_critical(message: str, secret_path: str = constants.CRITICAL_SECRET_PATH
     """
     url = get_vault_secret(secret_path=secret_path)["data"]["url"]
     return send_discord_message(message=message, webhook_url=url)
+
+
+def log_error(error: str):
+    tb = sys.exc_info()[-1]
+    frame = traceback.extract_tb(tb, 1)[0]
+    file_name = frame[0]
+    function_name = frame[2]
+    line_no = frame[1]
+
+    log(
+        f"[CATCHED] Task failed in file {file_name} - ({function_name}) line: {line_no} with error: \n{error}",
+        level="error",
+    )
 
 
 def create_or_append_table(
@@ -728,6 +743,7 @@ def read_raw_data(filepath: str, csv_args: dict = dict()) -> tuple[str, pd.DataF
 
     except Exception as exp:
         error = exp
-        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+        log_error(error=error)
+        # log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return error, data
