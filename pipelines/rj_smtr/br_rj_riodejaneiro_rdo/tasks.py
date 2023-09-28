@@ -172,7 +172,18 @@ def pre_treatment_br_rj_riodejaneiro_rdo(
     log(f"Received {len(files)} to treat")
     for file_info in files:
         log(f"Processing file {files.index(file_info)}")
+
+        log(
+            f"""rdo_constants.RDO_PRE_TREATMENT_CONFIG is:\n
+            {rdo_constants.RDO_PRE_TREATMENT_CONFIG.value}"""
+        )
+        log(f"File info is:\n{file_info}")
+
         try:
+            with open(file_info["raw_path"], "r") as raw_file:
+                log(f"Opened raw file {file_info['raw_path']}")
+                log(f"raw_file is:\n{raw_file}")
+
             config = rdo_constants.RDO_PRE_TREATMENT_CONFIG.value[
                 file_info["transport_mode"]
             ][file_info["report_type"]]
@@ -234,6 +245,12 @@ def pre_treatment_br_rj_riodejaneiro_rdo(
             raw_paths.append(None)
             partitions.append(None)
             status.append({"error": e})
+
+    log(f"Returning treated paths:\n {treated_paths}")
+    log(f"Returning raw paths:\n {raw_paths}")
+    log(f"Returning partitions:\n {partitions}")
+    log(f"Returning status:\n {status}")
+
     return treated_paths, raw_paths, partitions, status
 
 
