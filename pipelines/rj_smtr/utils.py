@@ -713,8 +713,8 @@ def read_raw_data(filepath: str, csv_args: dict = dict()) -> tuple[str, pd.DataF
 
         if file_type == "json":
             with open(filepath, "r") as file:
-                data = json.load(file)
-            data = pd.DataFrame(data)
+                data = pd.DataFrame.from_dict(json.load(file), orient="records")
+
             # data = json.loads(data)
 
         elif file_type in ("txt", "csv"):
