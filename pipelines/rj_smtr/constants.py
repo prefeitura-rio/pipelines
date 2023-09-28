@@ -202,8 +202,6 @@ class constants(Enum):  # pylint: disable=c0103
                 WHERE
                     data_processamento BETWEEN '{start}'
                     AND '{end}'
-                ORDER BY
-                    data_processamento
             """,
             "run_interval": BILHETAGEM_GENERAL_CAPTURE_PARAMS["transacao_run_interval"],
         },
@@ -223,8 +221,6 @@ class constants(Enum):  # pylint: disable=c0103
                         LINHA
                     WHERE
                         DT_INCLUSAO >= '{start}'
-                    ORDER BY
-                        DT_INCLUSAO
                 """,
                 "run_interval": BILHETAGEM_GENERAL_CAPTURE_PARAMS[
                     "principal_run_interval"
@@ -244,8 +240,6 @@ class constants(Enum):  # pylint: disable=c0103
                         GRUPO
                     WHERE
                         DT_INCLUSAO >= '{start}'
-                    ORDER BY
-                        DT_INCLUSAO
                 """,
                 "run_interval": BILHETAGEM_GENERAL_CAPTURE_PARAMS[
                     "principal_run_interval"
@@ -265,8 +259,6 @@ class constants(Enum):  # pylint: disable=c0103
                         GRUPO_LINHA
                     WHERE
                         DT_INCLUSAO >= '{start}'
-                    ORDER BY
-                        DT_INCLUSAO
                 """,
                 "run_interval": BILHETAGEM_GENERAL_CAPTURE_PARAMS[
                     "principal_run_interval"
@@ -286,8 +278,6 @@ class constants(Enum):  # pylint: disable=c0103
                         matriz_integracao
                     WHERE
                         dt_inclusao >= '{start}'
-                    ORDER BY
-                        dt_inclusao
                 """,
                 "run_interval": BILHETAGEM_GENERAL_CAPTURE_PARAMS[
                     "principal_run_interval"
