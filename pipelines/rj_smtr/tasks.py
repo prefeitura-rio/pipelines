@@ -919,7 +919,7 @@ def transform_raw_to_nested_structure(
     error: str,
     timestamp: datetime,
     primary_key: list = None,
-):
+) -> tuple(str, str):
     """
     Task to transform raw data to nested structure
 
@@ -931,6 +931,7 @@ def transform_raw_to_nested_structure(
         primary_key (list, optional): Primary key to be used on nested structure
 
     Returns:
+        str: Error traceback
         str: Path to the saved treated .csv file
     """
 
