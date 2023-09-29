@@ -34,6 +34,7 @@ from pipelines.rj_smtr.utils import (
     get_datetime_range,
     read_raw_data,
     save_treated_local_func,
+    save_raw_local_func,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
@@ -667,6 +668,7 @@ def upload_staging_data_to_gcs(
     table_id: str,
     dataset_id: str,
     partitions: list,
+    flag_empty_data: bool,
 ):
     """
     Upload staging data to GCS.
@@ -682,7 +684,9 @@ def upload_staging_data_to_gcs(
     Returns:
         None
     """
-    if not error:
+    if flag_empty_data:
+        log("Empty dataframe, skipping upload")
+    elif not error:
         try:
             # Creates and publish table if it does not exist, append to it otherwise
             create_or_append_table(
@@ -908,7 +912,7 @@ def get_previous_date(days):
 ###############
 
 
-@task(nout=2)
+@task(nout=3)
 def transform_raw_to_nested_structure(
     raw_filepath: str,
     filepath: str,
@@ -931,9 +935,9 @@ def transform_raw_to_nested_structure(
     """
 
     # Check previous error
-
+    flag_empty_data = False
     if error is not None:
-        return error, None
+        return error, None, flag_empty_data
 
     # ORGANIZAR:
 
@@ -953,6 +957,7 @@ def transform_raw_to_nested_structure(
 
         # Check empty dataframe
         if data.empty:
+            flag_empty_data = True
             log("Empty dataframe, skipping transformation...")
         else:
             log(f"Raw data:\n{data_info_str(data)}", level="info")
@@ -993,7 +998,7 @@ def transform_raw_to_nested_structure(
         error = traceback.format_exc()
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
-    return error, filepath
+    return error, filepath, flag_empty_data
 
 
 # @task(checkpoint=False)
@@ -1098,6 +1103,7 @@ def get_raw_from_sources(
     """
     error = None
     filepath = None
+    data = None
 
     source_values = source_type.split("-", 1)
 
@@ -1109,21 +1115,24 @@ def get_raw_from_sources(
 
     try:
         if source_type == "api":
-            error, filepath = get_raw_data_api(
+            error, data, filetype = get_raw_data_api(
                 url=source_path,
                 secret_path=secret_path,
                 api_params=api_params,
-                filepath=local_filepath,
                 filetype=filetype,
             )
         elif source_type == "gcs":
-            error, filepath = get_raw_data_gcs(
+            error, data, filetype = get_raw_data_gcs(
                 gcs_path=source_path,
                 filename_to_unzip=table_id,
-                local_filepath=local_filepath,
             )
         else:
             raise NotImplementedError(f"{source_type} not supported")
+
+        filepath = save_raw_local_func(
+            data=data, filepath=local_filepath, filetype=filetype
+        )
+
     except NotImplementedError:
         error = traceback.format_exc()
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")

@@ -487,9 +487,8 @@ def get_raw_data_api(  # pylint: disable=R0912
     url: str,
     secret_path: str = None,
     api_params: dict = None,
-    filepath: str = None,
     filetype: str = None,
-) -> tuple[str, str]:
+) -> tuple[str, str, str]:
     """
     Request data from URL API
 
@@ -504,6 +503,7 @@ def get_raw_data_api(  # pylint: disable=R0912
         tuple[str, str]: Error and filepath
     """
     error = None
+    data = None
     try:
         if secret_path is None:
             headers = secret_path
@@ -531,20 +531,17 @@ def get_raw_data_api(  # pylint: disable=R0912
         else:
             data = response.text
 
-        filepath = save_raw_local_func(data=data, filepath=filepath, filetype=filetype)
-
-    except Exception as exp:
+    except Exception:
         error = traceback.format_exc()
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
-    return error, filepath
+    return error, data, filetype
 
 
 def get_raw_data_gcs(
     gcs_path: str,
-    local_filepath: str,
     filename_to_unzip: str = None,
-) -> tuple[str, str]:
+) -> tuple[str, str, str]:
     """
     Get raw data from GCS
 
@@ -557,7 +554,8 @@ def get_raw_data_gcs(
         tuple[str, str]: Error and filepath
     """
     error = None
-    raw_filepath = None
+    data = None
+    filetype = None
 
     try:
         blob = get_storage_blob(gcs_path=gcs_path)
@@ -574,17 +572,14 @@ def get_raw_data_gcs(
         else:
             filename = blob.name
 
-        raw_filepath = save_raw_local_func(
-            data=data.decode(encoding="utf-8"),
-            filepath=local_filepath,
-            filetype=filename.split(".")[-1],
-        )
+        data = data.decode(encoding="utf-8")
+        filetype = filename.split(".")[-1]
 
-    except Exception as exp:
+    except Exception:
         error = traceback.format_exc()
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
-    return error, raw_filepath
+    return error, data, filetype
 
 
 def save_treated_local_func(
