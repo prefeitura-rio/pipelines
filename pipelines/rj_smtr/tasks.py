@@ -1110,30 +1110,3 @@ def transform_raw_to_nested_structure(
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return error, filepath
-
-
-# @task(checkpoint=False)
-# def get_datetime_range(
-#     timestamp: datetime,
-#     interval: int,
-# ) -> dict:
-#     """
-#     Task to get datetime range in UTC
-
-#     Args:
-#         timestamp (datetime): timestamp to get datetime range
-#         interval (int): interval in seconds
-
-#     Returns:
-#         dict: datetime range
-#     """
-
-#     start = (
-#         (timestamp - timedelta(seconds=interval))
-#         .astimezone(tz=timezone("UTC"))
-#         .strftime("%Y-%m-%d %H:%M:%S")
-#     )
-
-#     end = timestamp.astimezone(tz=timezone("UTC")).strftime("%Y-%m-%d %H:%M:%S")
-
-#     return {"start": start, "end": end}
