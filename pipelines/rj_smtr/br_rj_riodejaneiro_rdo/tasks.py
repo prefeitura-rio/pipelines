@@ -34,7 +34,7 @@ from pipelines.utils.utils import log, get_redis_client
 
 @task
 def get_file_paths_from_ftp(
-    transport_mode: str, report_type: str, wait=None, dump=False
+    transport_mode: str, report_type: str, wait=None, dump=False, ftp_client=None
 ):  # pylint: disable=W0613
     """
     Search for files inside previous interval (days) from current date,
@@ -44,7 +44,9 @@ def get_file_paths_from_ftp(
     min_timestamp = datetime(2022, 1, 1).timestamp()  # set min timestamp for search
     # Connect to FTP & search files
     # try:
-    ftp_client = connect_ftp(constants.RDO_FTPS_SECRET_PATH.value)
+    if ftp_client is None:
+        ftp_client = connect_ftp(constants.RDO_FTPS_SECRET_PATH.value)
+
     files_updated_times = {
         file: datetime.timestamp(parser.parse(info["modify"]))
         for file, info in ftp_client.mlsd(transport_mode)
@@ -105,7 +107,7 @@ def check_files_for_download(files: list, dataset_id: str, table_id: str):
 
 
 @task
-def download_and_save_local_from_ftp(file_info: dict):
+def download_and_save_local_from_ftp(file_info: dict, ftp_client=None):
     """
     Downloads file from FTP and saves to data/raw/<dataset_id>/<table_id>.
     """
@@ -122,6 +124,8 @@ def download_and_save_local_from_ftp(file_info: dict):
         mode=file_info["transport_mode"], report_type=file_info["report_type"]
     )
 
+    ftp_client_quit_flag = False
+
     # Set general local path to save file (bucket_modes: raw or staging)
     file_info[
         "local_path"
@@ -133,14 +137,20 @@ def download_and_save_local_from_ftp(file_info: dict):
     Path(file_info["raw_path"]).parent.mkdir(parents=True, exist_ok=True)
     try:
         # Get data from FTP - TODO: create get_raw() error alike
-        ftp_client = connect_ftp(constants.RDO_FTPS_SECRET_PATH.value)
+        if ftp_client is None:
+            ftp_client_quit_flag = True
+            ftp_client = connect_ftp(constants.RDO_FTPS_SECRET_PATH.value)
+
         if not Path(file_info["raw_path"]).is_file():
             with open(file_info["raw_path"], "wb") as raw_file:
                 ftp_client.retrbinary(
                     "RETR " + file_info["ftp_path"],
                     raw_file.write,
                 )
-        ftp_client.quit()
+
+        if ftp_client_quit_flag:
+            ftp_client.quit()
+
         # Get timestamp of download time
         file_info["timestamp_captura"] = pendulum.now(
             constants.TIMEZONE.value

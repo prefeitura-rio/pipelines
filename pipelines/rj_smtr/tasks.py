@@ -34,6 +34,7 @@ from pipelines.rj_smtr.utils import (
     get_datetime_range,
     read_raw_data,
     save_treated_local_func,
+    connect_ftp,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
@@ -1127,3 +1128,18 @@ def get_raw_from_sources(
 
     log(f"Raw extraction ended returned values: {error}, {filepath}")
     return error, filepath
+
+
+@task(checkpoint=False)
+def connect_ftp_task(
+    secret_path: str = None,
+    secure: bool = True,
+    connect_flag: bool = False,
+    ftp_client=None,
+    disconnect_flag: bool = False,
+):
+    if connect_flag:
+        return connect_ftp(secret_path, secure)
+
+    if disconnect_flag:
+        ftp_client.quit()

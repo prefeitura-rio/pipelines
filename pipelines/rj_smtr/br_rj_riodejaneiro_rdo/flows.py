@@ -23,6 +23,7 @@ from pipelines.rj_smtr.tasks import (
     bq_upload,
     get_current_timestamp,
     set_last_run_timestamp,
+    connect_ftp_task,
 )
 from pipelines.rj_smtr.schedules import every_day
 
@@ -210,13 +211,24 @@ with Flow(
         wait=None,
     )
     # EXTRACT
+    ftp_client = connect_ftp_task(
+        secret_path=constants.RDO_FTPS_SECRET_PATH.value, connect_flag=True
+    )
+
     files = get_file_paths_from_ftp(
-        transport_mode=transport_mode, report_type=report_type, dump=dump
+        transport_mode=transport_mode,
+        report_type=report_type,
+        dump=dump,
+        ftp_client=ftp_client,
     )
     download_files = check_files_for_download(
         files=files, dataset_id=constants.RDO_DATASET_ID.value, table_id=table_id
     )
-    updated_info = download_and_save_local_from_ftp.map(file_info=download_files)
+    updated_info = download_and_save_local_from_ftp.map(
+        file_info=download_files, ftp_client=ftp_client
+    )
+
+    connect_ftp_task(ftp_client=ftp_client, disconnect_flag=True)
     # TRANSFORM
     treated_path, raw_path, partitions, status = pre_treatment_br_rj_riodejaneiro_rdo(
         files=updated_info
@@ -258,13 +270,25 @@ with Flow(
         wait=None,
     )
     # EXTRACT
+    ftp_client = connect_ftp_task(
+        secret_path=constants.RDO_FTPS_SECRET_PATH.value, connect_flag=True
+    )
+
     files = get_file_paths_from_ftp(
-        transport_mode=transport_mode, report_type=report_type, dump=dump
+        transport_mode=transport_mode,
+        report_type=report_type,
+        dump=dump,
+        ftp_client=ftp_client,
     )
     download_files = check_files_for_download(
         files=files, dataset_id=constants.RDO_DATASET_ID.value, table_id=table_id
     )
-    updated_info = download_and_save_local_from_ftp.map(file_info=download_files)
+    updated_info = download_and_save_local_from_ftp.map(
+        file_info=download_files, ftp_client=ftp_client
+    )
+
+    connect_ftp_task(ftp_client=ftp_client, disconnect_flag=True)
+
     # TRANSFORM
     treated_path, raw_path, partitions, status = pre_treatment_br_rj_riodejaneiro_rdo(
         files=updated_info
@@ -288,8 +312,3 @@ captura_stpl_rdo.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 captura_stpl_rdo.schedule = every_day
-
-
-# captura_sppo_rho = deepcopy(captura_sppo_rdo)
-# captura_sppo_rho.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-# captura_sppo_rho.run_config = KubernetesRun(image=emd_constants.DOCKER_IMAGE.value)
