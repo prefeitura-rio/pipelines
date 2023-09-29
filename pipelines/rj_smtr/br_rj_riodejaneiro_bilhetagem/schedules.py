@@ -16,27 +16,37 @@ from pipelines.rj_smtr.utils import (
 )
 
 bilhetagem_principal_clocks = generate_execute_schedules(
-    interval=timedelta(days=1),
+    clock_interval=timedelta(
+        **constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["principal_run_interval"]
+    ),
     labels=[
-        emd_constants.RJ_SMTR_AGENT_LABEL.value,
+        emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value,
     ],
-    table_parameters=constants.BILHETAGEM_TABLES_PARAMS.value,
+    table_parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
     dataset_id=constants.BILHETAGEM_DATASET_ID.value,
     secret_path=constants.BILHETAGEM_SECRET_PATH.value,
-    runs_interval_minutes=15,
+    source_type=constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["source_type"],
+    runs_interval_minutes=constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value[
+        "principal_runs_interval_minutes"
+    ],
 )
 
 bilhetagem_principal_schedule = Schedule(clocks=untuple(bilhetagem_principal_clocks))
 
 bilhetagem_transacao_clocks = generate_execute_schedules(
-    interval=timedelta(minutes=1),
+    clock_interval=timedelta(
+        **constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["transacao_run_interval"]
+    ),
     labels=[
-        emd_constants.RJ_SMTR_AGENT_LABEL.value,
+        emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value,
     ],
-    table_parameters=constants.BILHETAGEM_TRANSACAO_TABLE_PARAMS.value,
+    table_parameters=constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value,
     dataset_id=constants.BILHETAGEM_DATASET_ID.value,
     secret_path=constants.BILHETAGEM_SECRET_PATH.value,
-    runs_interval_minutes=0,
+    source_type=constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["source_type"],
+    runs_interval_minutes=constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value[
+        "transacao_runs_interval_minutes"
+    ],
 )
 
 bilhetagem_transacao_schedule = Schedule(clocks=untuple(bilhetagem_transacao_clocks))
