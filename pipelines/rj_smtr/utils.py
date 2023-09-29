@@ -699,7 +699,7 @@ def get_datetime_range(
     return {"start": start, "end": end}
 
 
-def read_raw_data(filepath: str, csv_args: dict = dict()) -> tuple[str, pd.DataFrame]:
+def read_raw_data(filepath: str, csv_args: dict = None) -> tuple[str, pd.DataFrame]:
     """
     Read raw data from file
 
@@ -726,7 +726,7 @@ def read_raw_data(filepath: str, csv_args: dict = dict()) -> tuple[str, pd.DataF
         else:
             error = "Unsupported raw file extension. Supported only: json, csv and txt"
 
-    except Exception as exp:
+    except Exception:
         error = traceback.format_exc()
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
