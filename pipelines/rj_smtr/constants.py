@@ -307,6 +307,6 @@ class constants(Enum):  # pylint: disable=c0103
         {"table_id": "fare_attributes", "primary_key": ["fare_id"]},
         {"table_id": "fare_rules", "primary_key": ["fare_id"]},
     ]
-    GTFS_QUADRO_CAPTURE_PARAMS = {"table_id": "quadro", "primary_key": "servico"}
+    GTFS_QUADRO_CAPTURE_PARAMS = {"table_id": "quadro", "primary_key": ["servico"]}
     GTFS_BASE_GCS_PATH = "development/br_rj_riodejaneiro_gtfs/upload"
     GTFS_ZIP_NAME = "gtfs.zip"
