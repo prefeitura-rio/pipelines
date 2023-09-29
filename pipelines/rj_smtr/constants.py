@@ -309,3 +309,4 @@ class constants(Enum):  # pylint: disable=c0103
     ]
     GTFS_QUADRO_CAPTURE_PARAMS = {"table_id": "quadro", "primary_key": "servico"}
     GTFS_BASE_GCS_PATH = "development/br_rj_riodejaneiro_gtfs/upload"
+    GTFS_ZIP_FILENAME = "gtfs.zip"
