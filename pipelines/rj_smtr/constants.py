@@ -181,6 +181,7 @@ class constants(Enum):  # pylint: disable=c0103
                     data_processamento
             """,
             "primary_key": ["id"],  # id column to nest data on
+            "partition_date_only": False,
         },
     ]
     BILHETAGEM_TABLES_PARAMS = [
