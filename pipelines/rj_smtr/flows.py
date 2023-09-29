@@ -76,9 +76,10 @@ with Flow(
         source_type=source_type,
         local_filepath=filepath,
         source_path=request_path,
+        dataset_id=dataset_id,
         table_id=table_id,
         secret_path=secret_path,
-        api_params=request_params,
+        request_params=request_params,
     )
 
     RAW_UPLOADED = upload_raw_data_to_gcs(

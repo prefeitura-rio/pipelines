@@ -459,6 +459,7 @@ def create_request_params(
         request_url: url to request data
     """
     request_params = None
+    request_url = None
 
     if dataset_id == constants.BILHETAGEM_DATASET_ID.value:
         database = constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["databases"][
@@ -480,12 +481,8 @@ def create_request_params(
         }
 
     elif dataset_id == constants.GTFS_DATASET_ID.value:
-        if table_id == constants.GTFS_QUADRO_CAPTURE_PARAMS.value["table_id"]:
-            request_url = f"{constants.GTFS_BASE_GCS_PATH.value}/{table_id}.csv"
-        else:
-            request_url = (
-                f"{constants.GTFS_BASE_GCS_PATH.value}/{constants.GTFS_ZIP_NAME.value}"
-            )
+        if table_id != constants.GTFS_QUADRO_CAPTURE_PARAMS.value["table_id"]:
+            request_params = constants.GTFS_ZIP_NAME.value
 
     return request_params, request_url
 
@@ -495,9 +492,10 @@ def get_raw_from_sources(
     source_type: str,
     local_filepath: str,
     source_path: str = None,
+    dataset_id: str = None,
     table_id: str = None,
     secret_path: str = None,
-    api_params: dict = None,
+    request_params: dict = None,
 ):
     """
     Task to get raw data from sources
@@ -506,9 +504,10 @@ def get_raw_from_sources(
         source_type (str): source type
         local_filepath (str): local filepath
         source_path (str, optional): source path. Defaults to None.
+        dataset_id (str, optional): dataset_id on BigQuery. Defaults to None.
         table_id (str, optional): table_id on BigQuery. Defaults to None.
         secret_path (str, optional): secret path. Defaults to None.
-        api_params (dict, optional): api parameters. Defaults to None.
+        request_params (dict, optional): request parameters. Defaults to None.
 
     Returns:
         error: error
@@ -530,13 +529,12 @@ def get_raw_from_sources(
             error, data, filetype = get_raw_data_api(
                 url=source_path,
                 secret_path=secret_path,
-                api_params=api_params,
+                api_params=request_params,
                 filetype=filetype,
             )
         elif source_type == "gcs":
             error, data, filetype = get_raw_data_gcs(
-                gcs_path=source_path,
-                filename_to_unzip=table_id,
+                dataset_id=dataset_id, table_id=table_id, zip_filename=request_params
             )
         else:
             raise NotImplementedError(f"{source_type} not supported")
