@@ -560,9 +560,11 @@ def get_raw_data_gcs(
     try:
         blob = get_storage_blob(gcs_path=gcs_path)
 
+        blob_type = blob.name.split(".")[-1]
+
         data = blob.download_as_bytes()
 
-        if filename_to_unzip:
+        if blob_type == "zip":
             with zipfile.ZipFile(io.BytesIO(data), "r") as zipped_file:
                 filenames = zipped_file.namelist()
                 filename = list(
