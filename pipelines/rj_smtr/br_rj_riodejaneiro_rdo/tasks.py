@@ -177,12 +177,21 @@ def pre_treatment_br_rj_riodejaneiro_rdo(
             f"""rdo_constants.RDO_PRE_TREATMENT_CONFIG is:\n
             {rdo_constants.RDO_PRE_TREATMENT_CONFIG.value}"""
         )
+
         log(f"File info is:\n{file_info}")
 
         try:
+            if file_info["error"] is not None:
+                log(f"Pre Treatment failed with error: {file_info['error']}")
+                treated_paths.append(None)
+                raw_paths.append(None)
+                partitions.append(None)
+                status.append({"error": file_info["error"]})
+                continue
+
             with open(file_info["raw_path"], "r") as raw_file:
                 log(f"Opened raw file {file_info['raw_path']}")
-                log(f"raw_file is:\n{raw_file}")
+                log(f"raw_file is:\n{raw_file.read()}")
 
             config = rdo_constants.RDO_PRE_TREATMENT_CONFIG.value[
                 file_info["transport_mode"]
