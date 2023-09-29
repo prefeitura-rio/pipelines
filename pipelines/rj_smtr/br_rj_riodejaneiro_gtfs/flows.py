@@ -19,7 +19,7 @@ from pipelines.utils.decorators import Flow
 
 from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.tasks import (
-    create_date_partition,
+    create_date_hour_partition,
     create_local_partition_path,
     parse_timestamp_to_string,
     upload_logs_to_bq,
@@ -37,7 +37,7 @@ from pipelines.rj_smtr.flows import default_capture_flow
 # FLOW 1: Captura zip, download, unzip e disponibiliza numa URL (GCS) -> Simula uma API
 
 # Testar para ver se está funcionando OK!
-
+'''
 with Flow(
     "SMTR: GTFS (pré-captura)",
     code_owners=["rodrigo", "carol"],
@@ -60,7 +60,7 @@ with Flow(
     #     prefix="SMTR - GTFS Captura:", now_time=timestamp
     # )
     """
-    partitions = create_date_partition(timestamp)
+    partitions = create_date_hour_partition(timestamp)
 
     filename = parse_timestamp_to_string(timestamp)
 
@@ -109,7 +109,7 @@ download_gtfs_flow.run_config = KubernetesRun(
     image=constants_emd.DOCKER_IMAGE.value,
     labels=[constants_emd.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
-
+'''
 """
 # FLOW 2: Captura e aninhamento do dado
 
@@ -134,19 +134,19 @@ download_gtfs_flow.run_config = KubernetesRun(
 # testar e checar que se a construção do flow funciona corretamente #
 
 with Flow(
-    "SMTR - Captura e tratamento de dados",
+    "SMTR - Captura e tratamento de dados do GTFS",
     code_owners=["rodrigo", "carol"],
 ) as gtfs_captura:
     # SETUP
 
     gtfs_captura = deepcopy(default_capture_flow)
-    gtfs_captura.name = "SMTR: GTFS (captura)"
+    gtfs_captura.name = "SMTR - Captura e tratamento de dados do GTFS"
     gtfs_captura.storage = GCS(constants_emd.GCS_FLOWS_BUCKET.value)
     gtfs_captura.run_config = KubernetesRun(
         image=constants_emd.DOCKER_IMAGE.value,
         labels=[constants_emd.RJ_SMTR_DEV_AGENT_LABEL.value],
     )
-
+    """
     with case(download_gtfs, True):
         parameters = {
             "date": Parameter("date", default=None),
@@ -164,7 +164,7 @@ with Flow(
             stream_logs=True,
             stream_states=True,
         )
-
+    """
 # download_gtfs.schedule = None
 
 # gtfs_captura.schedule = None
