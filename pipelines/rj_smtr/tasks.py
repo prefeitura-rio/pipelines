@@ -483,7 +483,9 @@ def create_request_params(
         if table_id == constants.GTFS_QUADRO_CAPTURE_PARAMS.value["table_id"]:
             request_url = f"{constants.GTFS_BASE_GCS_PATH.value}/{table_id}.csv"
         else:
-            request_url = f"{constants.GTFS_BASE_GCS_PATH.value}/gtfs.zip"
+            request_url = (
+                f"{constants.GTFS_BASE_GCS_PATH.value}/{constants.GTFS_ZIP_NAME.value}"
+            )
 
     return request_params, request_url
 
