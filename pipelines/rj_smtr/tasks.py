@@ -937,11 +937,6 @@ def transform_raw_to_nested_structure(
 
     # ORGANIZAR:
 
-    # Check empty dataframe
-    # if len(status["data"]) == 0:
-    #     log("Empty dataframe, skipping transformation...")
-    #     return {"data": pd.DataFrame(), "error": error}
-
     try:
         # leitura do dado raw
         error, data = read_raw_data(filepath=raw_filepath)
@@ -956,32 +951,40 @@ def transform_raw_to_nested_structure(
         - data:\n{data.head()}"""
         )
 
-        log(f"Raw data:\n{data_info_str(data)}", level="info")
+        # Check empty dataframe
+        if data.empty:
+            log("Empty dataframe, skipping transformation...")
+        else:
+            log(f"Raw data:\n{data_info_str(data)}", level="info")
 
-        log("Adding captured timestamp column...", level="info")
-        data["timestamp_captura"] = timestamp
+            log("Adding captured timestamp column...", level="info")
+            data["timestamp_captura"] = timestamp
 
-        log("Striping string columns...", level="info")
-        for col in data.columns[data.dtypes == "object"].to_list():
-            data[col] = data[col].str.strip()
+            log("Striping string columns...", level="info")
+            for col in data.columns[data.dtypes == "object"].to_list():
+                data[col] = data[col].str.strip()
 
-        log(f"Finished cleaning! Data:\n{data_info_str(data)}", level="info")
+            log(f"Finished cleaning! Data:\n{data_info_str(data)}", level="info")
 
-        log("Creating nested structure...", level="info")
-        pk_cols = primary_key + ["timestamp_captura"]
-        data = (
-            data.groupby(pk_cols)
-            .apply(
-                lambda x: x[data.columns.difference(pk_cols)].to_json(orient="records")
+            log("Creating nested structure...", level="info")
+            pk_cols = primary_key + ["timestamp_captura"]
+            data = (
+                data.groupby(pk_cols)
+                .apply(
+                    lambda x: x[data.columns.difference(pk_cols)].to_json(
+                        orient="records"
+                    )
+                )
+                .str.strip("[]")
+                .reset_index(name="content")[
+                    primary_key + ["content", "timestamp_captura"]
+                ]
             )
-            .str.strip("[]")
-            .reset_index(name="content")[primary_key + ["content", "timestamp_captura"]]
-        )
 
-        log(
-            f"Finished nested structure! Data:\n{data_info_str(data)}",
-            level="info",
-        )
+            log(
+                f"Finished nested structure! Data:\n{data_info_str(data)}",
+                level="info",
+            )
 
         # save treated local
         filepath = save_treated_local_func(data=data, error=error, filepath=filepath)
