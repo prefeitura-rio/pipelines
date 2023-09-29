@@ -781,7 +781,6 @@ def upload_staging_data_to_gcs(
     table_id: str,
     dataset_id: str,
     partitions: list,
-    flag_empty_data: bool,
 ):
     """
     Upload staging data to GCS.
@@ -797,9 +796,7 @@ def upload_staging_data_to_gcs(
     Returns:
         None
     """
-    if flag_empty_data:
-        log("Empty dataframe, skipping upload")
-    elif not error:
+    if not error:
         try:
             # Creates and publish table if it does not exist, append to it otherwise
             create_or_append_table(
