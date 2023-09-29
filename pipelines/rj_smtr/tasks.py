@@ -759,7 +759,7 @@ def upload_raw_data_to_gcs(
         except Exception:
             error = traceback.format_exc()
             log(f"[CATCHED] Task failed with error: \n{error}", level="error")
-    
+
     return error
 
 
@@ -1087,7 +1087,9 @@ def transform_raw_to_nested_structure(
                 )
 
             # save treated local
-            filepath = save_treated_local_func(data=data, error=error, filepath=filepath)
+            filepath = save_treated_local_func(
+                data=data, error=error, filepath=filepath
+            )
 
         except Exception:  # pylint: disable=W0703
             error = traceback.format_exc()
