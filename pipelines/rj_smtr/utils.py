@@ -546,7 +546,6 @@ def get_raw_data_gcs(
 
     Args:
         gcs_path (str): GCS path to get data
-        local_filepath (str): Local filepath to save raw data
         filename_to_unzip (str, optional): Filename to unzip. Defaults to None.
 
     Returns:
