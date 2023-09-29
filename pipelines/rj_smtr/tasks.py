@@ -480,10 +480,6 @@ def create_request_params(
             "query": extract_params["query"].format(**datetime_range),
         }
 
-    elif dataset_id == constants.GTFS_DATASET_ID.value:
-        if table_id != constants.GTFS_QUADRO_CAPTURE_PARAMS.value["table_id"]:
-            request_params = constants.GTFS_ZIP_NAME.value
-
     return request_params, request_url
 
 
