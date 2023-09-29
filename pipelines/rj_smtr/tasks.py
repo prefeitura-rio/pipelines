@@ -442,6 +442,121 @@ def get_raw(  # pylint: disable=R0912
     return {"data": data, "error": error}
 
 
+@task(checkpoint=False, nout=2)
+def create_request_params(
+    extract_params: dict,
+    table_id: str,
+    dataset_id: str,
+    timestamp: datetime,
+) -> tuple:
+    """
+    Task to create request params
+
+    Args:
+        extract_params (dict): extract parameters
+        table_id (str): table_id on BigQuery
+        dataset_id (str): dataset_id on BigQuery
+        timestamp (datetime): timestamp for flow run
+
+    Returns:
+        request_params: host, database and query to request data
+        request_url: url to request data
+    """
+    request_params = None
+
+    if dataset_id == constants.BILHETAGEM_DATASET_ID.value:
+        database = constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["databases"][
+            extract_params["database"]
+        ]
+        request_url = (
+            constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["vpn_url"]
+            + database["engine"]
+        )
+
+        datetime_range = get_datetime_range(
+            timestamp=timestamp, interval=timedelta(**extract_params["run_interval"])
+        )
+
+        request_params = {
+            "host": database["host"],  # TODO: exibir no log em ambiente fechado
+            "database": extract_params["database"],
+            "query": extract_params["query"].format(**datetime_range),
+        }
+
+    elif dataset_id == constants.GTFS_DATASET_ID.value:
+        if table_id == constants.GTFS_QUADRO_CAPTURE_PARAMS.value["table_id"]:
+            request_url = f"{constants.GTFS_BASE_GCS_PATH.value}/{table_id}.csv"
+        else:
+            request_url = (
+                f"{constants.GTFS_BASE_GCS_PATH.value}/{constants.GTFS_ZIP_NAME.value}"
+            )
+
+    return request_params, request_url
+
+
+@task(checkpoint=False, nout=2)
+def get_raw_from_sources(
+    source_type: str,
+    local_filepath: str,
+    source_path: str = None,
+    table_id: str = None,
+    secret_path: str = None,
+    api_params: dict = None,
+):
+    """
+    Task to get raw data from sources
+
+    Args:
+        source_type (str): source type
+        local_filepath (str): local filepath
+        source_path (str, optional): source path. Defaults to None.
+        table_id (str, optional): table_id on BigQuery. Defaults to None.
+        secret_path (str, optional): secret path. Defaults to None.
+        api_params (dict, optional): api parameters. Defaults to None.
+
+    Returns:
+        error: error
+    """
+    error = None
+    filepath = None
+    data = None
+
+    source_values = source_type.split("-", 1)
+
+    source_type, filetype = (
+        source_values if len(source_values) == 2 else (source_values[0], None)
+    )
+
+    log(f"Getting raw data from source type: {source_type}")
+
+    try:
+        if source_type == "api":
+            error, data, filetype = get_raw_data_api(
+                url=source_path,
+                secret_path=secret_path,
+                api_params=api_params,
+                filetype=filetype,
+            )
+        elif source_type == "gcs":
+            error, data, filetype = get_raw_data_gcs(
+                gcs_path=source_path,
+                filename_to_unzip=table_id,
+            )
+        else:
+            raise NotImplementedError(f"{source_type} not supported")
+
+        filepath = save_raw_local_func(
+            data=data, filepath=local_filepath, filetype=filetype
+        )
+
+    except NotImplementedError:
+        error = traceback.format_exc()
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+
+    log(f"Raw extraction ended returned values: {error}, {filepath}")
+    return error, filepath
+
+
 ###############
 #
 # Load data
@@ -672,7 +787,6 @@ def upload_staging_data_to_gcs(
     table_id: str,
     dataset_id: str,
     partitions: list,
-    flag_empty_data: bool,
 ):
     """
     Upload staging data to GCS.
@@ -688,9 +802,7 @@ def upload_staging_data_to_gcs(
     Returns:
         None
     """
-    if flag_empty_data:
-        log("Empty dataframe, skipping upload")
-    elif not error:
+    if not error:
         try:
             # Creates and publish table if it does not exist, append to it otherwise
             create_or_append_table(
@@ -916,14 +1028,14 @@ def get_previous_date(days):
 ###############
 
 
-@task(nout=3)
+@task(nout=2)
 def transform_raw_to_nested_structure(
     raw_filepath: str,
     filepath: str,
     error: str,
     timestamp: datetime,
     primary_key: list = None,
-):
+) -> tuple[str, str]:
     """
     Task to transform raw data to nested structure
 
@@ -935,13 +1047,13 @@ def transform_raw_to_nested_structure(
         primary_key (list, optional): Primary key to be used on nested structure
 
     Returns:
+        str: Error traceback
         str: Path to the saved treated .csv file
     """
 
     # Check previous error
-    flag_empty_data = False
     if error is not None:
-        return error, None, flag_empty_data
+        return error, None
 
     # ORGANIZAR:
 
@@ -961,7 +1073,6 @@ def transform_raw_to_nested_structure(
 
         # Check empty dataframe
         if data.empty:
-            flag_empty_data = True
             log("Empty dataframe, skipping transformation...")
         else:
             log(f"Raw data:\n{data_info_str(data)}", level="info")
@@ -1002,144 +1113,4 @@ def transform_raw_to_nested_structure(
         error = traceback.format_exc()
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
-    return error, filepath, flag_empty_data
-
-
-# @task(checkpoint=False)
-# def get_datetime_range(
-#     timestamp: datetime,
-#     interval: int,
-# ) -> dict:
-#     """
-#     Task to get datetime range in UTC
-
-#     Args:
-#         timestamp (datetime): timestamp to get datetime range
-#         interval (int): interval in seconds
-
-#     Returns:
-#         dict: datetime range
-#     """
-
-#     start = (
-#         (timestamp - timedelta(seconds=interval))
-#         .astimezone(tz=timezone("UTC"))
-#         .strftime("%Y-%m-%d %H:%M:%S")
-#     )
-
-#     end = timestamp.astimezone(tz=timezone("UTC")).strftime("%Y-%m-%d %H:%M:%S")
-
-#     return {"start": start, "end": end}
-
-
-@task(checkpoint=False, nout=2)
-def create_request_params(
-    extract_params: dict,
-    table_id: str,
-    dataset_id: str,
-    timestamp: datetime,
-) -> tuple:
-    """
-    Task to create request params
-
-    Args:
-        extract_params (dict): extract parameters
-        table_id (str): table_id on BigQuery
-        dataset_id (str): dataset_id on BigQuery
-        timestamp (datetime): timestamp for flow run
-
-    Returns:
-        request_params: host, database and query to request data
-        request_url: url to request data
-    """
-    request_params = None
-
-    if dataset_id == constants.BILHETAGEM_DATASET_ID.value:
-        database = constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["databases"][
-            extract_params["database"]
-        ]
-        request_url = (
-            constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["vpn_url"]
-            + database["engine"]
-        )
-
-        datetime_range = get_datetime_range(
-            timestamp=timestamp, interval=timedelta(**extract_params["run_interval"])
-        )
-
-        request_params = {
-            "host": database["host"],  # TODO: exibir no log em ambiente fechado
-            "database": extract_params["database"],
-            "query": extract_params["query"].format(**datetime_range),
-        }
-
-    elif dataset_id == constants.GTFS_DATASET_ID.value:
-        if table_id == constants.GTFS_QUADRO_CAPTURE_PARAMS.value["table_id"]:
-            request_url = f"{constants.GTFS_BASE_GCS_PATH.value}/{table_id}.csv"
-        else:
-            request_url = f"{constants.GTFS_BASE_GCS_PATH.value}/gtfs.zip"
-
-    return request_params, request_url
-
-
-@task(checkpoint=False, nout=2)
-def get_raw_from_sources(
-    source_type: str,
-    local_filepath: str,
-    source_path: str = None,
-    table_id: str = None,
-    secret_path: str = None,
-    api_params: dict = None,
-):
-    """
-    Task to get raw data from sources
-
-    Args:
-        source_type (str): source type
-        local_filepath (str): local filepath
-        source_path (str, optional): source path. Defaults to None.
-        table_id (str, optional): table_id on BigQuery. Defaults to None.
-        secret_path (str, optional): secret path. Defaults to None.
-        api_params (dict, optional): api parameters. Defaults to None.
-
-    Returns:
-        error: error
-    """
-    error = None
-    filepath = None
-    data = None
-
-    source_values = source_type.split("-", 1)
-
-    source_type, filetype = (
-        source_values if len(source_values) == 2 else (source_values[0], None)
-    )
-
-    log(f"Getting raw data from source type: {source_type}")
-
-    try:
-        if source_type == "api":
-            error, data, filetype = get_raw_data_api(
-                url=source_path,
-                secret_path=secret_path,
-                api_params=api_params,
-                filetype=filetype,
-            )
-        elif source_type == "gcs":
-            error, data, filetype = get_raw_data_gcs(
-                gcs_path=source_path,
-                filename_to_unzip=table_id,
-            )
-        else:
-            raise NotImplementedError(f"{source_type} not supported")
-
-        filepath = save_raw_local_func(
-            data=data, filepath=local_filepath, filetype=filetype
-        )
-
-    except NotImplementedError:
-        error = traceback.format_exc()
-        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
-
-    log(f"Raw extraction ended returned values: {error}, {filepath}")
     return error, filepath

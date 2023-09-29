@@ -22,17 +22,11 @@ from pipelines.rj_smtr.tasks import (
     create_local_partition_path,
     get_current_timestamp,
     parse_timestamp_to_string,
-    # save_raw_local,
-    # save_treated_local,
-    # upload_logs_to_bq,
-    # bq_upload,
     upload_raw_data_to_gcs,
     upload_staging_data_to_gcs,
     transform_raw_to_nested_structure,
     get_raw_from_sources,
-    # transform_data_to_json,
     create_request_params,
-    # get_datetime_range,
 )
 
 
@@ -79,7 +73,7 @@ with Flow(
     )
 
     error, raw_filepath = get_raw_from_sources(
-        source_type=source_type,  # parametro de extracao, onde ficar?
+        source_type=source_type,
         local_filepath=filepath,
         source_path=request_path,
         table_id=table_id,
@@ -98,7 +92,7 @@ with Flow(
 
     # Pré-tratamento #
 
-    error, staging_filepath, flag_empty_data = transform_raw_to_nested_structure(
+    error, staging_filepath = transform_raw_to_nested_structure(
         raw_filepath=raw_filepath,
         filepath=filepath,
         error=error,
@@ -114,7 +108,6 @@ with Flow(
         table_id=table_id,
         dataset_id=dataset_id,
         partitions=partitions,
-        flag_empty_data=flag_empty_data,
     )
 
 default_capture_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)

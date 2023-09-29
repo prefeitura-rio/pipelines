@@ -475,7 +475,7 @@ def save_raw_local_func(
 
     # if filetype == "csv":
     #     pass
-    if filetype == "txt":
+    if filetype in ("txt", "csv"):
         with open(_filepath, "w", encoding="utf-8") as file:
             file.write(data)
 
@@ -496,7 +496,6 @@ def get_raw_data_api(  # pylint: disable=R0912
         url (str): URL to request data
         secret_path (str, optional): Secret path to get headers. Defaults to None.
         api_params (dict, optional): Parameters to pass to API. Defaults to None.
-        filepath (str, optional): Path to save raw file. Defaults to None.
         filetype (str, optional): Filetype to save raw file. Defaults to None.
 
     Returns:
@@ -547,7 +546,6 @@ def get_raw_data_gcs(
 
     Args:
         gcs_path (str): GCS path to get data
-        local_filepath (str): Local filepath to save raw data
         filename_to_unzip (str, optional): Filename to unzip. Defaults to None.
 
     Returns:
@@ -560,20 +558,21 @@ def get_raw_data_gcs(
     try:
         blob = get_storage_blob(gcs_path=gcs_path)
 
+        filename = blob.name
+        filetype = filename.split(".")[-1]
+
         data = blob.download_as_bytes()
 
-        if filename_to_unzip:
+        if filetype == "zip":
             with zipfile.ZipFile(io.BytesIO(data), "r") as zipped_file:
                 filenames = zipped_file.namelist()
                 filename = list(
                     filter(lambda x: x.split(".")[0] == filename_to_unzip, filenames)
                 )[0]
+                filetype = filename.split(".")[-1]
                 data = zipped_file.read(filename)
-        else:
-            filename = blob.name
 
         data = data.decode(encoding="utf-8")
-        filetype = filename.split(".")[-1]
 
     except Exception:
         error = traceback.format_exc()
@@ -698,7 +697,7 @@ def get_datetime_range(
     return {"start": start, "end": end}
 
 
-def read_raw_data(filepath: str, csv_args: dict = dict()) -> tuple[str, pd.DataFrame]:
+def read_raw_data(filepath: str, csv_args: dict = None) -> tuple[str, pd.DataFrame]:
     """
     Read raw data from file
 
@@ -725,7 +724,7 @@ def read_raw_data(filepath: str, csv_args: dict = dict()) -> tuple[str, pd.DataF
         else:
             error = "Unsupported raw file extension. Supported only: json, csv and txt"
 
-    except Exception as exp:
+    except Exception:
         error = traceback.format_exc()
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
