@@ -187,19 +187,16 @@ def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -&gt; da
 
 
 @task
-def create_date_hour_partition(timestamp: datetime) -&gt; str:
+def create_date_hour_partition(
+    timestamp: datetime, partition_date_only: bool = False
+) -&gt; str:
     &#34;&#34;&#34;
     Get date hour Hive partition structure from timestamp.
     &#34;&#34;&#34;
-    return f&#34;data={timestamp.strftime(&#39;%Y-%m-%d&#39;)}/hora={timestamp.strftime(&#39;%H&#39;)}&#34;
-
-
-@task
-def create_date_partition(timestamp: datetime) -&gt; str:
-    &#34;&#34;&#34;
-    Get date hour Hive partition structure from timestamp.
-    &#34;&#34;&#34;
-    return f&#34;data={timestamp.date()}&#34;
+    partition = f&#34;data={timestamp.strftime(&#39;%Y-%m-%d&#39;)}&#34;
+    if not partition_date_only:
+        partition += f&#34;/hora={timestamp.strftime(&#39;%H&#39;)}&#34;
+    return partition
 
 
 @task
@@ -208,34 +205,6 @@ def parse_timestamp_to_string(timestamp: datetime, pattern=&#34;%Y-%m-%d-%H-%M-%
     Parse timestamp to string pattern.
     &#34;&#34;&#34;
     return timestamp.strftime(pattern)
-
-
-@task
-def create_current_date_hour_partition(capture_time=None):
-    &#34;&#34;&#34;Create partitioned directory structure to save data locally based
-    on capture time.
-
-    Args:
-        capture_time(pendulum.datetime.DateTime, optional):
-            if recapturing data, will create partitions based
-            on the failed timestamps being recaptured
-
-    Returns:
-        dict: &#34;filename&#34; contains the name which to upload the csv, &#34;partitions&#34; contains
-        the partitioned directory path
-    &#34;&#34;&#34;
-    if capture_time is None:
-        capture_time = datetime.now(tz=constants.TIMEZONE.value).replace(
-            minute=0, second=0, microsecond=0
-        )
-    date = capture_time.strftime(&#34;%Y-%m-%d&#34;)
-    hour = capture_time.strftime(&#34;%H&#34;)
-
-    return {
-        &#34;filename&#34;: capture_time.strftime(&#34;%Y-%m-%d-%H-%M-%S&#34;),
-        &#34;partitions&#34;: f&#34;data={date}/hora={hour}&#34;,
-        &#34;timestamp&#34;: capture_time,
-    }
 
 
 @task
@@ -1262,56 +1231,8 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
     return False</code></pre>
 </details>
 </dd>
-<dt id="pipelines.rj_smtr.tasks.create_current_date_hour_partition"><code class="name flex">
-<span>def <span class="ident">create_current_date_hour_partition</span></span>(<span>capture_time=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Create partitioned directory structure to save data locally based
-on capture time.</p>
-<h2 id="args">Args</h2>
-<p>capture_time(pendulum.datetime.DateTime, optional):
-if recapturing data, will create partitions based
-on the failed timestamps being recaptured</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>dict</code></dt>
-<dd>"filename" contains the name which to upload the csv, "partitions" contains</dd>
-</dl>
-<p>the partitioned directory path</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task
-def create_current_date_hour_partition(capture_time=None):
-    &#34;&#34;&#34;Create partitioned directory structure to save data locally based
-    on capture time.
-
-    Args:
-        capture_time(pendulum.datetime.DateTime, optional):
-            if recapturing data, will create partitions based
-            on the failed timestamps being recaptured
-
-    Returns:
-        dict: &#34;filename&#34; contains the name which to upload the csv, &#34;partitions&#34; contains
-        the partitioned directory path
-    &#34;&#34;&#34;
-    if capture_time is None:
-        capture_time = datetime.now(tz=constants.TIMEZONE.value).replace(
-            minute=0, second=0, microsecond=0
-        )
-    date = capture_time.strftime(&#34;%Y-%m-%d&#34;)
-    hour = capture_time.strftime(&#34;%H&#34;)
-
-    return {
-        &#34;filename&#34;: capture_time.strftime(&#34;%Y-%m-%d-%H-%M-%S&#34;),
-        &#34;partitions&#34;: f&#34;data={date}/hora={hour}&#34;,
-        &#34;timestamp&#34;: capture_time,
-    }</code></pre>
-</details>
-</dd>
 <dt id="pipelines.rj_smtr.tasks.create_date_hour_partition"><code class="name flex">
-<span>def <span class="ident">create_date_hour_partition</span></span>(<span>timestamp: datetime.datetime) ‑> str</span>
+<span>def <span class="ident">create_date_hour_partition</span></span>(<span>timestamp: datetime.datetime, partition_date_only: bool = False) ‑> str</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get date hour Hive partition structure from timestamp.</p></div>
@@ -1320,28 +1241,16 @@ def create_current_date_hour_partition(capture_time=None):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def create_date_hour_partition(timestamp: datetime) -&gt; str:
+def create_date_hour_partition(
+    timestamp: datetime, partition_date_only: bool = False
+) -&gt; str:
     &#34;&#34;&#34;
     Get date hour Hive partition structure from timestamp.
     &#34;&#34;&#34;
-    return f&#34;data={timestamp.strftime(&#39;%Y-%m-%d&#39;)}/hora={timestamp.strftime(&#39;%H&#39;)}&#34;</code></pre>
-</details>
-</dd>
-<dt id="pipelines.rj_smtr.tasks.create_date_partition"><code class="name flex">
-<span>def <span class="ident">create_date_partition</span></span>(<span>timestamp: datetime.datetime) ‑> str</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Get date hour Hive partition structure from timestamp.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task
-def create_date_partition(timestamp: datetime) -&gt; str:
-    &#34;&#34;&#34;
-    Get date hour Hive partition structure from timestamp.
-    &#34;&#34;&#34;
-    return f&#34;data={timestamp.date()}&#34;</code></pre>
+    partition = f&#34;data={timestamp.strftime(&#39;%Y-%m-%d&#39;)}&#34;
+    if not partition_date_only:
+        partition += f&#34;/hora={timestamp.strftime(&#39;%H&#39;)}&#34;
+    return partition</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.create_local_partition_path"><code class="name flex">
@@ -2491,9 +2400,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.tasks.bq_upload" href="#pipelines.rj_smtr.tasks.bq_upload">bq_upload</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.bq_upload_from_dict" href="#pipelines.rj_smtr.tasks.bq_upload_from_dict">bq_upload_from_dict</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.build_incremental_model" href="#pipelines.rj_smtr.tasks.build_incremental_model">build_incremental_model</a></code></li>
-<li><code><a title="pipelines.rj_smtr.tasks.create_current_date_hour_partition" href="#pipelines.rj_smtr.tasks.create_current_date_hour_partition">create_current_date_hour_partition</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.create_date_hour_partition" href="#pipelines.rj_smtr.tasks.create_date_hour_partition">create_date_hour_partition</a></code></li>
-<li><code><a title="pipelines.rj_smtr.tasks.create_date_partition" href="#pipelines.rj_smtr.tasks.create_date_partition">create_date_partition</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.create_local_partition_path" href="#pipelines.rj_smtr.tasks.create_local_partition_path">create_local_partition_path</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.create_request_params" href="#pipelines.rj_smtr.tasks.create_request_params">create_request_params</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.delay_now_time" href="#pipelines.rj_smtr.tasks.delay_now_time">delay_now_time</a></code></li>

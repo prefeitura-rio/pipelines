@@ -59,7 +59,7 @@ from pipelines.rj_smtr.schedules import (
     every_day_hour_seven,
 )
 from pipelines.rj_smtr.tasks import (
-    create_date_partition,
+    create_date_hour_partition,
     create_local_partition_path,
     get_current_timestamp,
     get_raw,
@@ -100,7 +100,7 @@ with Flow(
     )
 
     # SETUP #
-    partitions = create_date_partition(timestamp)
+    partitions = create_date_hour_partition(timestamp, partition_date_only=True)
 
     filename = parse_timestamp_to_string(timestamp)
 
@@ -169,7 +169,7 @@ with Flow(
     )
 
     # SETUP #
-    partitions = create_date_partition(timestamp)
+    partitions = create_date_hour_partition(timestamp, partition_date_only=True)
 
     filename = parse_timestamp_to_string(timestamp)
 

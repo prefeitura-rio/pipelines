@@ -210,7 +210,6 @@ class constants(Enum):  # pylint: disable=c0103
                     data_processamento
             &#34;&#34;&#34;,
             &#34;primary_key&#34;: [&#34;id&#34;],  # id column to nest data on
-            &#34;flag_date_partition&#34;: False,
         },
     ]
     BILHETAGEM_TABLES_PARAMS = [
@@ -228,7 +227,7 @@ class constants(Enum):  # pylint: disable=c0103
                     DT_INCLUSAO
             &#34;&#34;&#34;,
             &#34;primary_key&#34;: [&#34;CD_LINHA&#34;],  # id column to nest data on
-            &#34;flag_date_partition&#34;: True,
+            &#34;partition_date_only&#34;: True,
         },
         {
             &#34;table_id&#34;: &#34;grupo&#34;,
@@ -244,7 +243,7 @@ class constants(Enum):  # pylint: disable=c0103
                     DT_INCLUSAO
             &#34;&#34;&#34;,
             &#34;primary_key&#34;: [&#34;CD_GRUPO&#34;],
-            &#34;flag_date_partition&#34;: True,
+            &#34;partition_date_only&#34;: True,
         },
         {
             &#34;table_id&#34;: &#34;grupo_linha&#34;,
@@ -260,7 +259,7 @@ class constants(Enum):  # pylint: disable=c0103
                     DT_INCLUSAO
             &#34;&#34;&#34;,
             &#34;primary_key&#34;: [&#34;CD_GRUPO&#34;, &#34;CD_LINHA&#34;],  # id column to nest data on
-            &#34;flag_date_partition&#34;: True,
+            &#34;partition_date_only&#34;: True,
         },
         {
             &#34;table_id&#34;: &#34;matriz_integracao&#34;,
@@ -279,7 +278,7 @@ class constants(Enum):  # pylint: disable=c0103
                 &#34;cd_versao_matriz&#34;,
                 &#34;cd_integracao&#34;,
             ],  # id column to nest data on
-            &#34;flag_date_partition&#34;: True,
+            &#34;partition_date_only&#34;: True,
         },
     ]
     BILHETAGEM_SECRET_PATH = &#34;smtr_jae_access_data&#34;</code></pre>
@@ -479,7 +478,6 @@ class constants(Enum):  # pylint: disable=c0103
                     data_processamento
             &#34;&#34;&#34;,
             &#34;primary_key&#34;: [&#34;id&#34;],  # id column to nest data on
-            &#34;flag_date_partition&#34;: False,
         },
     ]
     BILHETAGEM_TABLES_PARAMS = [
@@ -497,7 +495,7 @@ class constants(Enum):  # pylint: disable=c0103
                     DT_INCLUSAO
             &#34;&#34;&#34;,
             &#34;primary_key&#34;: [&#34;CD_LINHA&#34;],  # id column to nest data on
-            &#34;flag_date_partition&#34;: True,
+            &#34;partition_date_only&#34;: True,
         },
         {
             &#34;table_id&#34;: &#34;grupo&#34;,
@@ -513,7 +511,7 @@ class constants(Enum):  # pylint: disable=c0103
                     DT_INCLUSAO
             &#34;&#34;&#34;,
             &#34;primary_key&#34;: [&#34;CD_GRUPO&#34;],
-            &#34;flag_date_partition&#34;: True,
+            &#34;partition_date_only&#34;: True,
         },
         {
             &#34;table_id&#34;: &#34;grupo_linha&#34;,
@@ -529,7 +527,7 @@ class constants(Enum):  # pylint: disable=c0103
                     DT_INCLUSAO
             &#34;&#34;&#34;,
             &#34;primary_key&#34;: [&#34;CD_GRUPO&#34;, &#34;CD_LINHA&#34;],  # id column to nest data on
-            &#34;flag_date_partition&#34;: True,
+            &#34;partition_date_only&#34;: True,
         },
         {
             &#34;table_id&#34;: &#34;matriz_integracao&#34;,
@@ -548,7 +546,7 @@ class constants(Enum):  # pylint: disable=c0103
                 &#34;cd_versao_matriz&#34;,
                 &#34;cd_integracao&#34;,
             ],  # id column to nest data on
-            &#34;flag_date_partition&#34;: True,
+            &#34;partition_date_only&#34;: True,
         },
     ]
     BILHETAGEM_SECRET_PATH = &#34;smtr_jae_access_data&#34;</code></pre>
