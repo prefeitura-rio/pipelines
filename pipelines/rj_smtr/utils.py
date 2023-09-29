@@ -496,7 +496,6 @@ def get_raw_data_api(  # pylint: disable=R0912
         url (str): URL to request data
         secret_path (str, optional): Secret path to get headers. Defaults to None.
         api_params (dict, optional): Parameters to pass to API. Defaults to None.
-        filepath (str, optional): Path to save raw file. Defaults to None.
         filetype (str, optional): Filetype to save raw file. Defaults to None.
 
     Returns:
