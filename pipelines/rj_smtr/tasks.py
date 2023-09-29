@@ -169,7 +169,7 @@ def create_date_hour_partition(
     timestamp: datetime, partition_date_only: bool = False
 ) -> str:
     """
-    Generate partition string for date and hour.
+    Create a date (and hour) Hive partition structure from timestamp.
 
     Args:
         timestamp (datetime): timestamp to be used as reference
