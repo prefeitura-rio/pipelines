@@ -287,6 +287,7 @@ class constants(Enum):  # pylint: disable=c0103
                 "cd_versao_matriz",
                 "cd_integracao",
             ],  # id column to nest data on
+            "partition_date_only": True,
         },
     ]
     BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
