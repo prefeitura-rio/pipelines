@@ -82,7 +82,7 @@ with Flow(
         request_params=request_params,
     )
 
-    RAW_UPLOADED = upload_raw_data_to_gcs(
+    error = upload_raw_data_to_gcs(
         error=error,
         raw_filepath=raw_filepath,
         timestamp=timestamp,
@@ -99,7 +99,6 @@ with Flow(
         error=error,
         timestamp=timestamp,
         primary_key=primary_key,
-        upstream_tasks=[RAW_UPLOADED],
     )
 
     STAGING_UPLOADED = upload_staging_data_to_gcs(

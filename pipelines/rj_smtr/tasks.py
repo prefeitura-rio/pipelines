@@ -743,7 +743,7 @@ def upload_raw_data_to_gcs(
     Returns:
         None
     """
-    if not error:
+    if error is None:
         try:
             st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
             log(
@@ -759,14 +759,8 @@ def upload_raw_data_to_gcs(
         except Exception:
             error = traceback.format_exc()
             log(f"[CATCHED] Task failed with error: \n{error}", level="error")
-
-    upload_run_logs_to_bq(
-        dataset_id=dataset_id,
-        parent_table_id=table_id,
-        error=error,
-        timestamp=timestamp,
-        mode="raw",
-    )
+    
+    return error
 
 
 @task
@@ -792,7 +786,7 @@ def upload_staging_data_to_gcs(
     Returns:
         None
     """
-    if not error:
+    if error is None:
         try:
             # Creates and publish table if it does not exist, append to it otherwise
             create_or_append_table(
@@ -812,6 +806,8 @@ def upload_staging_data_to_gcs(
         timestamp=timestamp,
         mode="staging",
     )
+
+    return error
 
 
 ###############
@@ -1040,67 +1036,61 @@ def transform_raw_to_nested_structure(
         str: Error traceback
         str: Path to the saved treated .csv file
     """
+    if error is None:
+        try:
+            # leitura do dado raw
+            error, data = read_raw_data(filepath=raw_filepath)
 
-    # Check previous error
-    if error is not None:
-        return error, None
-
-    # ORGANIZAR:
-
-    try:
-        # leitura do dado raw
-        error, data = read_raw_data(filepath=raw_filepath)
-
-        if primary_key is None:
-            primary_key = []
-
-        log(
-            f"""
-        Received inputs:
-        - timestamp:\n{timestamp}
-        - data:\n{data.head()}"""
-        )
-
-        # Check empty dataframe
-        if data.empty:
-            log("Empty dataframe, skipping transformation...")
-        else:
-            log(f"Raw data:\n{data_info_str(data)}", level="info")
-
-            log("Adding captured timestamp column...", level="info")
-            data["timestamp_captura"] = timestamp
-
-            log("Striping string columns...", level="info")
-            for col in data.columns[data.dtypes == "object"].to_list():
-                data[col] = data[col].str.strip()
-
-            log(f"Finished cleaning! Data:\n{data_info_str(data)}", level="info")
-
-            log("Creating nested structure...", level="info")
-            pk_cols = primary_key + ["timestamp_captura"]
-            data = (
-                data.groupby(pk_cols)
-                .apply(
-                    lambda x: x[data.columns.difference(pk_cols)].to_json(
-                        orient="records"
-                    )
-                )
-                .str.strip("[]")
-                .reset_index(name="content")[
-                    primary_key + ["content", "timestamp_captura"]
-                ]
-            )
+            if primary_key is None:
+                primary_key = []
 
             log(
-                f"Finished nested structure! Data:\n{data_info_str(data)}",
-                level="info",
+                f"""
+            Received inputs:
+            - timestamp:\n{timestamp}
+            - data:\n{data.head()}"""
             )
 
-        # save treated local
-        filepath = save_treated_local_func(data=data, error=error, filepath=filepath)
+            # Check empty dataframe
+            if data.empty:
+                log("Empty dataframe, skipping transformation...")
+            else:
+                log(f"Raw data:\n{data_info_str(data)}", level="info")
 
-    except Exception:  # pylint: disable=W0703
-        error = traceback.format_exc()
-        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+                log("Adding captured timestamp column...", level="info")
+                data["timestamp_captura"] = timestamp
+
+                log("Striping string columns...", level="info")
+                for col in data.columns[data.dtypes == "object"].to_list():
+                    data[col] = data[col].str.strip()
+
+                log(f"Finished cleaning! Data:\n{data_info_str(data)}", level="info")
+
+                log("Creating nested structure...", level="info")
+                pk_cols = primary_key + ["timestamp_captura"]
+                data = (
+                    data.groupby(pk_cols)
+                    .apply(
+                        lambda x: x[data.columns.difference(pk_cols)].to_json(
+                            orient="records"
+                        )
+                    )
+                    .str.strip("[]")
+                    .reset_index(name="content")[
+                        primary_key + ["content", "timestamp_captura"]
+                    ]
+                )
+
+                log(
+                    f"Finished nested structure! Data:\n{data_info_str(data)}",
+                    level="info",
+                )
+
+            # save treated local
+            filepath = save_treated_local_func(data=data, error=error, filepath=filepath)
+
+        except Exception:  # pylint: disable=W0703
+            error = traceback.format_exc()
+            log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return error, filepath
