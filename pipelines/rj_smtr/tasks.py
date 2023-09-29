@@ -1032,7 +1032,7 @@ def transform_raw_to_nested_structure(
     error: str,
     timestamp: datetime,
     primary_key: list = None,
-) -> tuple(str, str):
+) -> tuple[str, str]:
     """
     Task to transform raw data to nested structure
 
