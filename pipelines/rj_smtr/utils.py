@@ -475,7 +475,7 @@ def save_raw_local_func(
 
     # if filetype == "csv":
     #     pass
-    if filetype == "txt":
+    if filetype in ("txt", "csv"):
         with open(_filepath, "w", encoding="utf-8") as file:
             file.write(data)
 
@@ -560,22 +560,21 @@ def get_raw_data_gcs(
     try:
         blob = get_storage_blob(gcs_path=gcs_path)
 
-        blob_type = blob.name.split(".")[-1]
+        filename = blob.name
+        filetype = filename.split(".")[-1]
 
         data = blob.download_as_bytes()
 
-        if blob_type == "zip":
+        if filetype == "zip":
             with zipfile.ZipFile(io.BytesIO(data), "r") as zipped_file:
                 filenames = zipped_file.namelist()
                 filename = list(
                     filter(lambda x: x.split(".")[0] == filename_to_unzip, filenames)
                 )[0]
+                filetype = filename.split(".")[-1]
                 data = zipped_file.read(filename)
-        else:
-            filename = blob.name
 
         data = data.decode(encoding="utf-8")
-        filetype = filename.split(".")[-1]
 
     except Exception:
         error = traceback.format_exc()
