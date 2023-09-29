@@ -912,7 +912,7 @@ def get_previous_date(days):
 ###############
 
 
-@task(nout=3)
+@task(nout=2)
 def transform_raw_to_nested_structure(
     raw_filepath: str,
     filepath: str,
@@ -935,9 +935,8 @@ def transform_raw_to_nested_structure(
     """
 
     # Check previous error
-    flag_empty_data = False
     if error is not None:
-        return error, None, flag_empty_data
+        return error, None
 
     # ORGANIZAR:
 
@@ -957,7 +956,6 @@ def transform_raw_to_nested_structure(
 
         # Check empty dataframe
         if data.empty:
-            flag_empty_data = True
             log("Empty dataframe, skipping transformation...")
         else:
             log(f"Raw data:\n{data_info_str(data)}", level="info")
@@ -998,7 +996,7 @@ def transform_raw_to_nested_structure(
         error = traceback.format_exc()
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
-    return error, filepath, flag_empty_data
+    return error, filepath
 
 
 # @task(checkpoint=False)

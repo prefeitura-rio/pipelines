@@ -98,7 +98,7 @@ with Flow(
 
     # Pré-tratamento #
 
-    error, staging_filepath, flag_empty_data = transform_raw_to_nested_structure(
+    error, staging_filepath = transform_raw_to_nested_structure(
         raw_filepath=raw_filepath,
         filepath=filepath,
         error=error,
@@ -114,7 +114,6 @@ with Flow(
         table_id=table_id,
         dataset_id=dataset_id,
         partitions=partitions,
-        flag_empty_data=flag_empty_data,
     )
 
 default_capture_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
