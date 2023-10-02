@@ -34,7 +34,6 @@ from pipelines.rj_smtr.utils import (
     get_datetime_range,
     read_raw_data,
     save_treated_local_func,
-    connect_ftp,
     save_raw_local_func,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
@@ -1096,18 +1095,3 @@ def transform_raw_to_nested_structure(
             log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return error, filepath
-
-
-@task(checkpoint=False)
-def connect_ftp_task(
-    secret_path: str = None,
-    secure: bool = True,
-    connect_flag: bool = False,
-    ftp_client=None,
-    disconnect_flag: bool = False,
-):
-    if connect_flag:
-        return connect_ftp(secret_path, secure)
-
-    if disconnect_flag:
-        ftp_client.quit()
