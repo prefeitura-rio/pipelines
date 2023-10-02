@@ -17,30 +17,38 @@ from pipelines.rj_smtr.utils import (
 
 BILHETAGEM_PRINCIPAL_INTERVAL = timedelta(days=1)
 bilhetagem_principal_clocks = generate_execute_schedules(
-    clock_interval=BILHETAGEM_PRINCIPAL_INTERVAL,
+    clock_interval=timedelta(
+        **constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["principal_run_interval"]
+    ),
     labels=[
         emd_constants.RJ_SMTR_AGENT_LABEL.value,
     ],
-    runs_interval_minutes=15,
-    table_parameters=constants.BILHETAGEM_TABLES_PARAMS.value,
-    interval=BILHETAGEM_PRINCIPAL_INTERVAL.total_seconds(),
+    table_parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
     dataset_id=constants.BILHETAGEM_DATASET_ID.value,
     secret_path=constants.BILHETAGEM_SECRET_PATH.value,
+    source_type=constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["source_type"],
+    runs_interval_minutes=constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value[
+        "principal_runs_interval_minutes"
+    ],
 )
 
 bilhetagem_principal_schedule = Schedule(clocks=untuple(bilhetagem_principal_clocks))
 
 BILHETAGEM_TRANSACAO_INTERVAL = timedelta(minutes=1)
 bilhetagem_transacao_clocks = generate_execute_schedules(
-    clock_interval=BILHETAGEM_TRANSACAO_INTERVAL,
+    clock_interval=timedelta(
+        **constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["transacao_run_interval"]
+    ),
     labels=[
         emd_constants.RJ_SMTR_AGENT_LABEL.value,
     ],
-    runs_interval_minutes=0,
-    table_parameters=constants.BILHETAGEM_TRANSACAO_TABLE_PARAMS.value,
-    interval=BILHETAGEM_TRANSACAO_INTERVAL.total_seconds(),
+    table_parameters=constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value,
     dataset_id=constants.BILHETAGEM_DATASET_ID.value,
     secret_path=constants.BILHETAGEM_SECRET_PATH.value,
+    source_type=constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["source_type"],
+    runs_interval_minutes=constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value[
+        "transacao_runs_interval_minutes"
+    ],
 )
 
 bilhetagem_transacao_schedule = Schedule(clocks=untuple(bilhetagem_transacao_clocks))
