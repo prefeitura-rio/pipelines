@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# flake8: noqa: E501
 """
 Tasks for br_rj_riodejaneiro_rdo
 """
@@ -32,7 +33,7 @@ from pipelines.rj_smtr.utils import (
 from pipelines.utils.utils import log, get_redis_client
 
 
-@task(nout=2)
+@task
 def get_file_paths_from_ftp(
     transport_mode: str, report_type: str, wait=None, dump=False
 ):  # pylint: disable=W0613
@@ -74,7 +75,9 @@ def get_file_paths_from_ftp(
     files = files[:10]
 
     log(f"There are {len(files)} files at the FTP")
-    return files, ftp_client
+    ftp_client.quit()
+
+    return files
 
 
 @task
@@ -337,3 +340,61 @@ def get_rdo_date_range(dataset_id: str, table_id: str, mode: str = "prod"):
         "date_range_start": last_run_date,
         "date_range_end": pendulum.now(constants.TIMEZONE.value).date().isoformat(),
     }
+
+
+@task
+def download_and_save_list_local_from_ftp(files_info: list) -> list:
+    """
+    Downloads files from FTP and saves to data/raw/<dataset_id>/<table_id>.
+    """
+
+    file_info_list = []
+    ftp_client = connect_ftp(constants.RDO_FTPS_SECRET_PATH.value)
+
+    try:
+        for file_info in files_info:
+            if file_info["error"] is not None:
+                file_info_list.append(file_info)
+                continue
+
+            dataset_id = constants.RDO_DATASET_ID.value
+            base_path = f'{os.getcwd()}/{os.getenv("DATA_FOLDER", "data")}/{{bucket_mode}}/{dataset_id}'
+
+            table_id = build_table_id(  # mudar pra task
+                mode=file_info["transport_mode"], report_type=file_info["report_type"]
+            )
+
+            # Set general local path to save file (bucket_modes: raw or staging)
+            file_info[
+                "local_path"
+            ] = f"{base_path}/{table_id}/{file_info['partitions']}/{file_info['filename']}.{{file_ext}}"
+            # Get raw data
+            file_info["raw_path"] = file_info["local_path"].format(
+                bucket_mode="raw", file_ext="txt"
+            )
+            Path(file_info["raw_path"]).parent.mkdir(parents=True, exist_ok=True)
+
+            if not Path(file_info["raw_path"]).is_file():
+                with open(file_info["raw_path"], "wb") as raw_file:
+                    ftp_client.retrbinary(
+                        "RETR " + file_info["ftp_path"],
+                        raw_file.write,
+                    )
+
+            # Get timestamp of download time
+            file_info["timestamp_captura"] = pendulum.now(
+                constants.TIMEZONE.value
+            ).isoformat()
+
+            log(f"Timestamp captura is {file_info['timestamp_captura']}")
+            log(f"Update file info: {file_info}")
+
+            file_info_list.append(file_info)
+
+        ftp_client.quit()
+
+    except Exception as error:  # pylint: disable=W0703
+        file_info["error"] = error
+        file_info_list.append(file_info)
+
+    return file_info_list

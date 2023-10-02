@@ -17,13 +17,13 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.tasks import (
     pre_treatment_br_rj_riodejaneiro_rdo,
     get_rdo_date_range,
     update_rdo_redis,
+    download_and_save_list_local_from_ftp,
 )
 from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.tasks import (
     bq_upload,
     get_current_timestamp,
     set_last_run_timestamp,
-    connect_ftp_task,
 )
 from pipelines.rj_smtr.schedules import every_day
 
@@ -210,12 +210,8 @@ with Flow(
         now_time=get_current_timestamp(),
         wait=None,
     )
-    # EXTRACT
-    # ftp_client = connect_ftp_task(
-    #     secret_path=constants.RDO_FTPS_SECRET_PATH.value, connect_flag=True
-    # )
 
-    files, ftp_client = get_file_paths_from_ftp(
+    files = get_file_paths_from_ftp(
         transport_mode=transport_mode,
         report_type=report_type,
         dump=dump,
@@ -223,11 +219,11 @@ with Flow(
     download_files = check_files_for_download(
         files=files, dataset_id=constants.RDO_DATASET_ID.value, table_id=table_id
     )
-    updated_info = download_and_save_local_from_ftp.map(
-        file_info=download_files, ftp_client=ftp_client
-    )
+    # updated_info = download_and_save_local_from_ftp.map(
+    #     file_info=download_files
+    # )
+    updated_info = download_and_save_list_local_from_ftp(files_info=download_files)
 
-    connect_ftp_task(ftp_client=ftp_client, disconnect_flag=True)
     # TRANSFORM
     treated_path, raw_path, partitions, status = pre_treatment_br_rj_riodejaneiro_rdo(
         files=updated_info
@@ -268,12 +264,8 @@ with Flow(
         now_time=get_current_timestamp(),
         wait=None,
     )
-    # EXTRACT
-    # ftp_client = connect_ftp_task(
-    #     secret_path=constants.RDO_FTPS_SECRET_PATH.value, connect_flag=True
-    # )
 
-    files, ftp_client = get_file_paths_from_ftp(
+    files = get_file_paths_from_ftp(
         transport_mode=transport_mode,
         report_type=report_type,
         dump=dump,
@@ -281,11 +273,10 @@ with Flow(
     download_files = check_files_for_download(
         files=files, dataset_id=constants.RDO_DATASET_ID.value, table_id=table_id
     )
-    updated_info = download_and_save_local_from_ftp.map(
-        file_info=download_files, ftp_client=ftp_client
-    )
-
-    connect_ftp_task(ftp_client=ftp_client, disconnect_flag=True)
+    # updated_info = download_and_save_local_from_ftp.map(
+    #     file_info=download_files
+    # )
+    updated_info = download_and_save_list_local_from_ftp(files_info=download_files)
 
     # TRANSFORM
     treated_path, raw_path, partitions, status = pre_treatment_br_rj_riodejaneiro_rdo(
