@@ -485,12 +485,6 @@ def create_request_params(
         }
 
     elif dataset_id == constants.GTFS_DATASET_ID.value:
-        if table_id == constants.GTFS_QUADRO_CAPTURE_PARAMS.value["table_id"]:
-            request_url = f"{constants.GTFS_BASE_GCS_PATH.value}/{table_id}.csv"
-        else:
-            request_url = (
-                f"{constants.GTFS_BASE_GCS_PATH.value}/{constants.GTFS_ZIP_NAME.value}"
-            )
         if table_id != constants.GTFS_QUADRO_CAPTURE_PARAMS.value["table_id"]:
             request_params = constants.GTFS_ZIP_NAME.value
 
