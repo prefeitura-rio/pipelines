@@ -186,7 +186,7 @@ class constants(Enum):  # pylint: disable=c0103
         "transacao_run_interval": {"minutes": 1},
         "principal_run_interval": {"days": 1},
         "transacao_runs_interval_minutes": 0,
-        "principal_runs_interval_minutes": 15,
+        "principal_runs_interval_minutes": 5,
     }
 
     BILHETAGEM_TRANSACAO_CAPTURE_PARAMS = {
@@ -290,23 +290,3 @@ class constants(Enum):  # pylint: disable=c0103
         },
     ]
     BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
-
-    # GTFS
-    GTFS_DATASET_ID = "br_rj_riodejaneiro_gtfs"
-    GTFS_GENERAL_CAPTURE_PARAMS = {"partition_date_only": True, "source_type": "gcs"}
-    GTFS_CAPTURE_PARAMS = [
-        {"table_id": "agency", "primary_key": ["agency_id"]},
-        {"table_id": "calendar_dates", "primary_key": ["service_id", "date"]},
-        {"table_id": "calendar", "primary_key": ["service_id"]},
-        {"table_id": "feed_info", "primary_key": ["feed_publisher_name"]},
-        {"table_id": "frequencies", "primary_key": ["trip_id", "start_time"]},
-        {"table_id": "routes", "primary_key": ["route_id"]},
-        {"table_id": "shapes", "primary_key": ["shape_id", "shape_pt_sequence"]},
-        {"table_id": "stops", "primary_key": ["stop_id"]},
-        {"table_id": "trips", "primary_key": ["trip_id"]},
-        {"table_id": "fare_attributes", "primary_key": ["fare_id"]},
-        {"table_id": "fare_rules", "primary_key": []},
-    ]
-    GTFS_QUADRO_CAPTURE_PARAMS = {"table_id": "quadro", "primary_key": ["servico"]}
-    GTFS_BASE_GCS_PATH = "development/br_rj_riodejaneiro_gtfs/upload"
-    GTFS_ZIP_NAME = "gtfs.zip"

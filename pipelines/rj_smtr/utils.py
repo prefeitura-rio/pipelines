@@ -10,7 +10,6 @@ from pathlib import Path
 from datetime import timedelta, datetime
 from typing import List, Union
 import traceback
-import sys
 import io
 import json
 import zipfile
@@ -33,7 +32,6 @@ from pipelines.utils.utils import (
     get_vault_secret,
     send_discord_message,
     get_redis_client,
-    get_storage_blob,
 )
 
 
@@ -509,13 +507,6 @@ def get_raw_data_api(  # pylint: disable=R0912
         else:
             headers = get_vault_secret(secret_path)["data"]
 
-        # remove from headers, if present
-        # TODO: remove this before merge to master
-        remove_headers = ["host", "databases"]
-        for remove_header in remove_headers:
-            if remove_header in list(headers.keys()):
-                del headers[remove_header]
-
         response = requests.get(
             url,
             headers=headers,
@@ -537,16 +528,42 @@ def get_raw_data_api(  # pylint: disable=R0912
     return error, data, filetype
 
 
+def get_upload_storage_blob(
+    dataset_id: str,
+    filename: str,
+):
+    """
+    Get a blob from upload zone in storage
+
+    Args:
+        dataset_id (str): The dataset id on BigQuery.
+        filename (str): The filename in GCS.
+
+
+    Returns:
+        Blob: blob object
+    """
+    bucket = bd.Storage(dataset_id="", table_id="")
+    blob_list = list(
+        bucket.client["storage_staging"]
+        .bucket(bucket.bucket_name)
+        .list_blobs(prefix=f"upload/{dataset_id}/{filename}.")
+    )
+    return blob_list[0]
+
+
 def get_raw_data_gcs(
-    gcs_path: str,
-    filename_to_unzip: str = None,
+    dataset_id: str,
+    table_id: str,
+    zip_filename: str = None,
 ) -> tuple[str, str, str]:
     """
     Get raw data from GCS
 
     Args:
-        gcs_path (str): GCS path to get data
-        filename_to_unzip (str, optional): Filename to unzip. Defaults to None.
+        dataset_id (str): The dataset id on BigQuery.
+        table_id (str): The table id on BigQuery.
+        zip_filename (str, optional): The zip file name. Defaults to None.
 
     Returns:
         tuple[str, str]: Error and filepath
@@ -556,7 +573,8 @@ def get_raw_data_gcs(
     filetype = None
 
     try:
-        blob = get_storage_blob(gcs_path=gcs_path)
+        blob_search_name = zip_filename or table_id
+        blob = get_upload_storage_blob(dataset_id=dataset_id, filename=blob_search_name)
 
         filename = blob.name
         filetype = filename.split(".")[-1]
@@ -567,7 +585,7 @@ def get_raw_data_gcs(
             with zipfile.ZipFile(io.BytesIO(data), "r") as zipped_file:
                 filenames = zipped_file.namelist()
                 filename = list(
-                    filter(lambda x: x.split(".")[0] == filename_to_unzip, filenames)
+                    filter(lambda x: x.split(".")[0] == table_id, filenames)
                 )[0]
                 filetype = filename.split(".")[-1]
                 data = zipped_file.read(filename)

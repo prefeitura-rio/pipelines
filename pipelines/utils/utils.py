@@ -732,26 +732,6 @@ def get_storage_blobs(dataset_id: str, table_id: str, mode: str = "staging") -> 
     )
 
 
-def get_storage_blob(
-    gcs_path: str,
-):
-    """
-    Get a blob from a path.
-
-    Args:
-        gcs_path (str): path to blob
-
-    Returns:
-        Blob: blob object
-    """
-    bucket = bd.Storage(dataset_id="", table_id="")
-    return (
-        bucket.client["storage_staging"]
-        .bucket(bucket.bucket_name)
-        .get_blob(blob_name=gcs_path)
-    )
-
-
 def list_blobs_with_prefix(
     bucket_name: str, prefix: str, mode: str = "prod"
 ) -> List[Blob]:

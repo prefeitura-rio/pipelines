@@ -8,7 +8,7 @@ import json
 import os
 from pathlib import Path
 import traceback
-from typing import Dict, List
+from typing import Dict, List, Union
 import io
 
 from basedosdados import Storage, Table
@@ -169,7 +169,7 @@ def create_date_hour_partition(
     timestamp: datetime, partition_date_only: bool = False
 ) -> str:
     """
-    Generate partition string for date and hour.
+    Create a date (and hour) Hive partition structure from timestamp.
 
     Args:
         timestamp (datetime): timestamp to be used as reference
@@ -448,7 +448,7 @@ def create_request_params(
     table_id: str,
     dataset_id: str,
     timestamp: datetime,
-) -> tuple:
+) -> tuple[str, str]:
     """
     Task to create request params
 
@@ -463,6 +463,7 @@ def create_request_params(
         request_url: url to request data
     """
     request_params = None
+    request_url = None
 
     if dataset_id == constants.BILHETAGEM_DATASET_ID.value:
         database = constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["databases"][
@@ -483,14 +484,6 @@ def create_request_params(
             "query": extract_params["query"].format(**datetime_range),
         }
 
-    elif dataset_id == constants.GTFS_DATASET_ID.value:
-        if table_id == constants.GTFS_QUADRO_CAPTURE_PARAMS.value["table_id"]:
-            request_url = f"{constants.GTFS_BASE_GCS_PATH.value}/{table_id}.csv"
-        else:
-            request_url = (
-                f"{constants.GTFS_BASE_GCS_PATH.value}/{constants.GTFS_ZIP_NAME.value}"
-            )
-
     return request_params, request_url
 
 
@@ -499,10 +492,11 @@ def get_raw_from_sources(
     source_type: str,
     local_filepath: str,
     source_path: str = None,
+    dataset_id: str = None,
     table_id: str = None,
     secret_path: str = None,
-    api_params: dict = None,
-):
+    request_params: dict = None,
+) -> tuple[str, str]:
     """
     Task to get raw data from sources
 
@@ -510,12 +504,14 @@ def get_raw_from_sources(
         source_type (str): source type
         local_filepath (str): local filepath
         source_path (str, optional): source path. Defaults to None.
+        dataset_id (str, optional): dataset_id on BigQuery. Defaults to None.
         table_id (str, optional): table_id on BigQuery. Defaults to None.
         secret_path (str, optional): secret path. Defaults to None.
-        api_params (dict, optional): api parameters. Defaults to None.
+        request_params (dict, optional): request parameters. Defaults to None.
 
     Returns:
-        error: error
+        error: error catched from upstream tasks
+        filepath: filepath to raw data
     """
     error = None
     filepath = None
@@ -534,13 +530,12 @@ def get_raw_from_sources(
             error, data, filetype = get_raw_data_api(
                 url=source_path,
                 secret_path=secret_path,
-                api_params=api_params,
+                api_params=request_params,
                 filetype=filetype,
             )
         elif source_type == "gcs":
             error, data, filetype = get_raw_data_gcs(
-                gcs_path=source_path,
-                filename_to_unzip=table_id,
+                dataset_id=dataset_id, table_id=table_id, zip_filename=request_params
             )
         else:
             raise NotImplementedError(f"{source_type} not supported")
@@ -732,28 +727,26 @@ def upload_logs_to_bq(  # pylint: disable=R0913
 
 @task
 def upload_raw_data_to_gcs(
-    error: bool,
+    error: str,
     raw_filepath: str,
-    timestamp: datetime,
     table_id: str,
     dataset_id: str,
     partitions: list,
-):
+) -> Union[str, None]:
     """
     Upload raw data to GCS.
 
     Args:
-        error (bool): whether the upstream tasks failed or not
+        error (str): Error catched from upstream tasks.
         raw_filepath (str): Path to the saved raw .json file
-        timestamp (datetime): timestamp for flow run
         table_id (str): table_id on BigQuery
         dataset_id (str): dataset_id on BigQuery
         partitions (list): list of partition strings
 
     Returns:
-        None
+        Union[str, None]: if there is an error returns it traceback, otherwise returns None
     """
-    if not error:
+    if error is None:
         try:
             st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
             log(
@@ -770,39 +763,33 @@ def upload_raw_data_to_gcs(
             error = traceback.format_exc()
             log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
-    upload_run_logs_to_bq(
-        dataset_id=dataset_id,
-        parent_table_id=table_id,
-        error=error,
-        timestamp=timestamp,
-        mode="raw",
-    )
+    return error
 
 
 @task
 def upload_staging_data_to_gcs(
-    error: bool,
+    error: str,
     staging_filepath: str,
     timestamp: datetime,
     table_id: str,
     dataset_id: str,
     partitions: list,
-):
+) -> Union[str, None]:
     """
     Upload staging data to GCS.
 
     Args:
-        error (bool): whether the upstream tasks failed or not
-        staging_filepath (str): Path to the saved treated .csv file
-        timestamp (datetime): timestamp for flow run
-        table_id (str): table_id on BigQuery
-        dataset_id (str): dataset_id on BigQuery
-        partitions (list): list of partition strings
+        error (str): Error catched from upstream tasks.
+        staging_filepath (str): Path to the saved treated .csv file.
+        timestamp (datetime): timestamp for flow run.
+        table_id (str): table_id on BigQuery.
+        dataset_id (str): dataset_id on BigQuery.
+        partitions (list): list of partition strings.
 
     Returns:
-        None
+        Union[str, None]: if there is an error returns it traceback, otherwise returns None
     """
-    if not error:
+    if error is None:
         try:
             # Creates and publish table if it does not exist, append to it otherwise
             create_or_append_table(
@@ -822,6 +809,8 @@ def upload_staging_data_to_gcs(
         timestamp=timestamp,
         mode="staging",
     )
+
+    return error
 
 
 ###############
@@ -1050,67 +1039,63 @@ def transform_raw_to_nested_structure(
         str: Error traceback
         str: Path to the saved treated .csv file
     """
+    if error is None:
+        try:
+            # leitura do dado raw
+            error, data = read_raw_data(filepath=raw_filepath)
 
-    # Check previous error
-    if error is not None:
-        return error, None
-
-    # ORGANIZAR:
-
-    try:
-        # leitura do dado raw
-        error, data = read_raw_data(filepath=raw_filepath)
-
-        if primary_key is None:
-            primary_key = []
-
-        log(
-            f"""
-        Received inputs:
-        - timestamp:\n{timestamp}
-        - data:\n{data.head()}"""
-        )
-
-        # Check empty dataframe
-        if data.empty:
-            log("Empty dataframe, skipping transformation...")
-        else:
-            log(f"Raw data:\n{data_info_str(data)}", level="info")
-
-            log("Adding captured timestamp column...", level="info")
-            data["timestamp_captura"] = timestamp
-
-            log("Striping string columns...", level="info")
-            for col in data.columns[data.dtypes == "object"].to_list():
-                data[col] = data[col].str.strip()
-
-            log(f"Finished cleaning! Data:\n{data_info_str(data)}", level="info")
-
-            log("Creating nested structure...", level="info")
-            pk_cols = primary_key + ["timestamp_captura"]
-            data = (
-                data.groupby(pk_cols)
-                .apply(
-                    lambda x: x[data.columns.difference(pk_cols)].to_json(
-                        orient="records"
-                    )
-                )
-                .str.strip("[]")
-                .reset_index(name="content")[
-                    primary_key + ["content", "timestamp_captura"]
-                ]
-            )
+            if primary_key is None:
+                primary_key = []
 
             log(
-                f"Finished nested structure! Data:\n{data_info_str(data)}",
-                level="info",
+                f"""
+            Received inputs:
+            - timestamp:\n{timestamp}
+            - data:\n{data.head()}"""
             )
 
-        # save treated local
-        filepath = save_treated_local_func(data=data, error=error, filepath=filepath)
+            # Check empty dataframe
+            if data.empty:
+                log("Empty dataframe, skipping transformation...")
+            else:
+                log(f"Raw data:\n{data_info_str(data)}", level="info")
 
-    except Exception:  # pylint: disable=W0703
-        error = traceback.format_exc()
-        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+                log("Adding captured timestamp column...", level="info")
+                data["timestamp_captura"] = timestamp
+
+                log("Striping string columns...", level="info")
+                for col in data.columns[data.dtypes == "object"].to_list():
+                    data[col] = data[col].str.strip()
+
+                log(f"Finished cleaning! Data:\n{data_info_str(data)}", level="info")
+
+                log("Creating nested structure...", level="info")
+                pk_cols = primary_key + ["timestamp_captura"]
+                data = (
+                    data.groupby(pk_cols)
+                    .apply(
+                        lambda x: x[data.columns.difference(pk_cols)].to_json(
+                            orient="records"
+                        )
+                    )
+                    .str.strip("[]")
+                    .reset_index(name="content")[
+                        primary_key + ["content", "timestamp_captura"]
+                    ]
+                )
+
+                log(
+                    f"Finished nested structure! Data:\n{data_info_str(data)}",
+                    level="info",
+                )
+
+            # save treated local
+            filepath = save_treated_local_func(
+                data=data, error=error, filepath=filepath
+            )
+
+        except Exception:  # pylint: disable=W0703
+            error = traceback.format_exc()
+            log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return error, filepath

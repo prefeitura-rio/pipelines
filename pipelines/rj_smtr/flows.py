@@ -76,15 +76,15 @@ with Flow(
         source_type=source_type,
         local_filepath=filepath,
         source_path=request_path,
+        dataset_id=dataset_id,
         table_id=table_id,
         secret_path=secret_path,
-        api_params=request_params,
+        request_params=request_params,
     )
 
-    RAW_UPLOADED = upload_raw_data_to_gcs(
+    error = upload_raw_data_to_gcs(
         error=error,
         raw_filepath=raw_filepath,
-        timestamp=timestamp,
         table_id=table_id,
         dataset_id=dataset_id,
         partitions=partitions,
@@ -98,7 +98,6 @@ with Flow(
         error=error,
         timestamp=timestamp,
         primary_key=primary_key,
-        upstream_tasks=[RAW_UPLOADED],
     )
 
     STAGING_UPLOADED = upload_staging_data_to_gcs(
@@ -113,5 +112,5 @@ with Flow(
 default_capture_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 default_capture_flow.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
