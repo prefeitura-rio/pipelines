@@ -22,6 +22,7 @@ from pipelines.rj_smtr.flows import (
 from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.schedules import (
     bilhetagem_principal_schedule,
     bilhetagem_transacao_schedule,
+    bilhetagem_materializacao_schedule,
 )
 
 # Flows #
@@ -56,3 +57,4 @@ bilhetagem_materializacao.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
+bilhetagem_materializacao.schedule = bilhetagem_materializacao_schedule
