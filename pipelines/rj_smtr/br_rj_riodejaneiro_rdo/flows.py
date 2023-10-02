@@ -211,15 +211,14 @@ with Flow(
         wait=None,
     )
     # EXTRACT
-    ftp_client = connect_ftp_task(
-        secret_path=constants.RDO_FTPS_SECRET_PATH.value, connect_flag=True
-    )
+    # ftp_client = connect_ftp_task(
+    #     secret_path=constants.RDO_FTPS_SECRET_PATH.value, connect_flag=True
+    # )
 
-    files = get_file_paths_from_ftp(
+    files, ftp_client = get_file_paths_from_ftp(
         transport_mode=transport_mode,
         report_type=report_type,
         dump=dump,
-        ftp_client=ftp_client,
     )
     download_files = check_files_for_download(
         files=files, dataset_id=constants.RDO_DATASET_ID.value, table_id=table_id
@@ -270,15 +269,14 @@ with Flow(
         wait=None,
     )
     # EXTRACT
-    ftp_client = connect_ftp_task(
-        secret_path=constants.RDO_FTPS_SECRET_PATH.value, connect_flag=True
-    )
+    # ftp_client = connect_ftp_task(
+    #     secret_path=constants.RDO_FTPS_SECRET_PATH.value, connect_flag=True
+    # )
 
-    files = get_file_paths_from_ftp(
+    files, ftp_client = get_file_paths_from_ftp(
         transport_mode=transport_mode,
         report_type=report_type,
         dump=dump,
-        ftp_client=ftp_client,
     )
     download_files = check_files_for_download(
         files=files, dataset_id=constants.RDO_DATASET_ID.value, table_id=table_id

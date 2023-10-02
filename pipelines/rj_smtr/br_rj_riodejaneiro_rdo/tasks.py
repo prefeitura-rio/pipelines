@@ -32,9 +32,9 @@ from pipelines.rj_smtr.utils import (
 from pipelines.utils.utils import log, get_redis_client
 
 
-@task
+@task(nout=2)
 def get_file_paths_from_ftp(
-    transport_mode: str, report_type: str, wait=None, dump=False, ftp_client=None
+    transport_mode: str, report_type: str, wait=None, dump=False
 ):  # pylint: disable=W0613
     """
     Search for files inside previous interval (days) from current date,
@@ -44,8 +44,7 @@ def get_file_paths_from_ftp(
     min_timestamp = datetime(2022, 1, 1).timestamp()  # set min timestamp for search
     # Connect to FTP & search files
     # try:
-    if ftp_client is None:
-        ftp_client = connect_ftp(constants.RDO_FTPS_SECRET_PATH.value)
+    ftp_client = connect_ftp(constants.RDO_FTPS_SECRET_PATH.value)
 
     files_updated_times = {
         file: datetime.timestamp(parser.parse(info["modify"]))
@@ -75,7 +74,7 @@ def get_file_paths_from_ftp(
     files = files[:10]
 
     log(f"There are {len(files)} files at the FTP")
-    return files
+    return files, ftp_client
 
 
 @task
