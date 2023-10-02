@@ -295,7 +295,7 @@ class constants(Enum):  # pylint: disable=c0103
         {
             "table_id": BILHETAGEM_TRANSACAO_CAPTURE_PARAMS["table_id"],
             "upstream": True,
-            "var_params": {
+            "dbt_vars": {
                 "date_range": {
                     "table_run_datetime_column_name": "datetime_transacao",
                     "delay_hours": 1,

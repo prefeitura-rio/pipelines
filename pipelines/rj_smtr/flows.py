@@ -138,7 +138,7 @@ with Flow(
     downstream = Parameter("downstream", default=None)
     exclude = Parameter("exclude", default=None)
     flags = Parameter("flags", default=None)
-    var_params = Parameter("var_params", default=dict())
+    dbt_vars = Parameter("dbt_vars", default=dict())
 
     # treated_table_params = treat_dbt_table_params(table_params=table_params)
 
@@ -147,7 +147,7 @@ with Flow(
 
     _vars, date_var, flag_date_range = create_dbt_run_vars(
         dataset_id=dataset_id,
-        var_params=var_params,
+        dbt_vars=dbt_vars,
         table_id=table_id,
         raw_dataset_id=dataset_id,
         raw_table_id=raw_table_id,

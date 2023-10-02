@@ -1118,7 +1118,7 @@ def coalesce_task(value_list: Iterable):
 @task(checkpoint=False, nout=3)
 def create_dbt_run_vars(
     dataset_id: str,
-    var_params: dict,
+    dbt_vars: dict,
     table_id: str,
     raw_dataset_id: str,
     raw_table_id: str,
@@ -1129,7 +1129,7 @@ def create_dbt_run_vars(
 
     Args:
         dataset_id (str): the dataset_id to get the variables
-        var_params (dict): dict containing the parameters
+        dbt_vars (dict): dict containing the parameters
         table_id (str): the table_id get the date_range variable
         raw_dataset_id (str): the raw_dataset_id get the date_range variable
         raw_table_id (str): the raw_table_id get the date_range variable
@@ -1141,26 +1141,26 @@ def create_dbt_run_vars(
         bool: a flag that indicates if the date_range variable came from Redis
     """
 
-    log(f"Creating DBT variables. Parameter received: {var_params}")
+    log(f"Creating DBT variables. Parameter received: {dbt_vars}")
 
-    if (not var_params) or (not table_id):
-        log("var_params or table_id are blank. Skiping task")
+    if (not dbt_vars) or (not table_id):
+        log("dbt_vars or table_id are blank. Skiping task")
         return [None], None, False
 
     final_vars = []
     date_var = None
     flag_date_range = False
 
-    if "date_range" in var_params.keys():
+    if "date_range" in dbt_vars.keys():
         log("Creating date_range variable")
 
         # Set date_range variable manually
         if dict_contains_keys(
-            var_params["date_range"], ["date_range_start", "date_range_end"]
+            dbt_vars["date_range"], ["date_range_start", "date_range_end"]
         ):
             date_var = {
-                "date_range_start": var_params["date_range"]["date_range_start"],
-                "date_range_end": var_params["date_range"]["date_range_end"],
+                "date_range_start": dbt_vars["date_range"]["date_range_start"],
+                "date_range_end": dbt_vars["date_range"]["date_range_end"],
             }
         # Create date_range using Redis
         else:
@@ -1171,11 +1171,11 @@ def create_dbt_run_vars(
                 table_id=table_id,
                 raw_dataset_id=raw_dataset_id,
                 raw_table_id=raw_table_id,
-                table_run_datetime_column_name=var_params["date_range"].get(
+                table_run_datetime_column_name=dbt_vars["date_range"].get(
                     "table_run_datetime_column_name"
                 ),
                 mode=mode,
-                delay_hours=var_params["date_range"].get("delay_hours", 0),
+                delay_hours=dbt_vars["date_range"].get("delay_hours", 0),
             )
 
             flag_date_range = True
@@ -1184,18 +1184,18 @@ def create_dbt_run_vars(
 
         log(f"date_range created: {date_var}")
 
-    elif "run_date" in var_params.keys():
+    elif "run_date" in dbt_vars.keys():
         log("Creating run_date variable")
 
         date_var = get_run_dates.run(
-            var_params["run_date"].get("date_range_start"),
-            var_params["run_date"].get("date_range_end"),
+            dbt_vars["run_date"].get("date_range_start"),
+            dbt_vars["run_date"].get("date_range_end"),
         )
         final_vars.append(date_var)
 
         log(f"run_date created: {date_var}")
 
-    if "version" in var_params.keys():
+    if "version" in dbt_vars.keys():
         log("Creating version variable")
         dataset_sha = fetch_dataset_sha.run(dataset_id=dataset_id)
 
