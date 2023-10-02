@@ -32,7 +32,7 @@ def get_current_timestamp_from_date(
 
 @task
 def download_gtfs(
-    dataset_id: str = constants.GTFS_DATASET_ID.value,
+    dataset_id: str,
     feed_start_date: str = None,
     feed_end_date: str = None,
 ) -> dict:
