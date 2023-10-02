@@ -497,7 +497,6 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
     return clocks
 
 
-
 def dict_contains_keys(input_dict: dict, keys: list[str]) -> bool:
     """
     Test if the input dict has all keys present in the list
@@ -509,6 +508,7 @@ def dict_contains_keys(input_dict: dict, keys: list[str]) -> bool:
         bool: True if the input_dict has all the keys otherwise False
     """
     return all(x in input_dict.keys() for x in keys)
+
 
 def save_raw_local_func(
     data: Union[dict, str], filepath: str, mode: str = "raw", filetype: str = "json"

@@ -374,7 +374,8 @@ select
         case when cv.ic_vinculo = 'O'
         or cv.ic_vinculo = 'S' then cv.id_chamado_pai_fk end
     ) as 'reclamacoes',
-    no_justificativa
+    no_justificativa,
+    oc.id_origem_ocorrencia
 from
     tb_chamado as ch
     inner join (
@@ -550,7 +551,8 @@ group by
     chs.dt_alvo_finalizacao,
     chs.dt_alvo_diagnostico,
     cl.dt_real_diagnostico,
-    no_justificativa
+    no_justificativa,
+    oc.id_origem_ocorrencia
         """
 
 _1746_queries = {
