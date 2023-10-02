@@ -297,7 +297,7 @@ class constants(Enum):  # pylint: disable=c0103
             "upstream": True,
             "var_params": {
                 "date_range": {
-                    "table_run_datetime_column_name": "data_transacao",
+                    "table_run_datetime_column_name": "datetime_transacao",
                     "delay_hours": 1,
                 },
                 "version": {},
