@@ -1045,9 +1045,9 @@ def transform_raw_to_nested_structure(
 
             log(
                 f"""
-            Received inputs:
-            - timestamp:\n{timestamp}
-            - data:\n{data.head()}"""
+                Received inputs:
+                - timestamp:\n{timestamp}
+                - data:\n{data.head()}"""
             )
 
             # Check empty dataframe
