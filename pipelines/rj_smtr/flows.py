@@ -85,7 +85,6 @@ with Flow(
     error = upload_raw_data_to_gcs(
         error=error,
         raw_filepath=raw_filepath,
-        timestamp=timestamp,
         table_id=table_id,
         dataset_id=dataset_id,
         partitions=partitions,

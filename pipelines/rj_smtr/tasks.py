@@ -8,7 +8,7 @@ import json
 import os
 from pathlib import Path
 import traceback
-from typing import Dict, List
+from typing import Dict, List, Union
 import io
 
 from basedosdados import Storage, Table
@@ -722,26 +722,24 @@ def upload_logs_to_bq(  # pylint: disable=R0913
 
 @task
 def upload_raw_data_to_gcs(
-    error: bool,
+    error: str,
     raw_filepath: str,
-    timestamp: datetime,
     table_id: str,
     dataset_id: str,
     partitions: list,
-):
+) -> Union[str, None]:
     """
     Upload raw data to GCS.
 
     Args:
-        error (bool): whether the upstream tasks failed or not
+        error (str): Error catched from upstream tasks.
         raw_filepath (str): Path to the saved raw .json file
-        timestamp (datetime): timestamp for flow run
         table_id (str): table_id on BigQuery
         dataset_id (str): dataset_id on BigQuery
         partitions (list): list of partition strings
 
     Returns:
-        None
+        Union[str, None]: if there is an error returns it traceback, otherwise returns None
     """
     if error is None:
         try:
@@ -765,26 +763,26 @@ def upload_raw_data_to_gcs(
 
 @task
 def upload_staging_data_to_gcs(
-    error: bool,
+    error: str,
     staging_filepath: str,
     timestamp: datetime,
     table_id: str,
     dataset_id: str,
     partitions: list,
-):
+) -> Union[str, None]:
     """
     Upload staging data to GCS.
 
     Args:
-        error (bool): whether the upstream tasks failed or not
-        staging_filepath (str): Path to the saved treated .csv file
-        timestamp (datetime): timestamp for flow run
-        table_id (str): table_id on BigQuery
-        dataset_id (str): dataset_id on BigQuery
-        partitions (list): list of partition strings
+        error (str): Error catched from upstream tasks.
+        staging_filepath (str): Path to the saved treated .csv file.
+        timestamp (datetime): timestamp for flow run.
+        table_id (str): table_id on BigQuery.
+        dataset_id (str): dataset_id on BigQuery.
+        partitions (list): list of partition strings.
 
     Returns:
-        None
+        Union[str, None]: if there is an error returns it traceback, otherwise returns None
     """
     if error is None:
         try:
