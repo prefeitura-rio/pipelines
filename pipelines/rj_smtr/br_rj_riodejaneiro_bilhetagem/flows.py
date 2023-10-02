@@ -16,6 +16,7 @@ from pipelines.constants import constants as emd_constants
 
 from pipelines.rj_smtr.flows import (
     default_capture_flow,
+    default_materialization_flow,
 )
 
 from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.schedules import (
@@ -48,3 +49,10 @@ bilhetagem_principal_captura.run_config = KubernetesRun(
 bilhetagem_principal_captura.schedule = bilhetagem_principal_schedule
 
 # MATERIALIZAÇÃO
+bilhetagem_materializacao = deepcopy(default_materialization_flow)
+bilhetagem_materializacao.name = "SMTR: Bilhetagem Materialização"
+bilhetagem_materializacao.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bilhetagem_materializacao.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+)

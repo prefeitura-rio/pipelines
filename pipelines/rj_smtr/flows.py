@@ -37,7 +37,6 @@ from pipelines.rj_smtr.tasks import (
     transform_to_nested_structure,
     create_dbt_run_vars,
     set_last_run_timestamp,
-    treat_dbt_table_params,
     coalesce_task,
 )
 
@@ -140,25 +139,32 @@ with Flow(
     # SETUP #
 
     dataset_id = Parameter("dataset_id", default=None)
-    table_params = Parameter("table_params", default=dict())
+    table_id = Parameter("table_id", default=None)
+    raw_table_id = Parameter("raw_table_id", default=None)
+    dbt_alias = Parameter("dbt_alias", default=False)
+    upstream = Parameter("upstream", default=None)
+    downstream = Parameter("downstream", default=None)
+    exclude = Parameter("exclude", default=None)
+    flags = Parameter("flags", default=None)
+    var_params = Parameter("var_params", default=dict())
 
-    treated_table_params = treat_dbt_table_params(table_params=table_params)
+    # treated_table_params = treat_dbt_table_params(table_params=table_params)
 
     LABELS = get_current_flow_labels()
     MODE = get_current_flow_mode(LABELS)
 
     _vars, date_var, flag_date_range = create_dbt_run_vars(
         dataset_id=dataset_id,
-        var_params=treated_table_params["var_params"],
-        table_id=treated_table_params["table_id"],
+        var_params=var_params,
+        table_id=table_id,
         raw_dataset_id=dataset_id,
-        raw_table_id=treated_table_params["raw_table_id"],
+        raw_table_id=raw_table_id,
         mode=MODE,
     )
 
     # Rename flow run
 
-    flow_name_prefix = coalesce_task([treated_table_params["table_id"], dataset_id])
+    flow_name_prefix = coalesce_task([table_id, dataset_id])
 
     flow_name_now_time = coalesce_task([date_var, get_now_time()])
 
@@ -172,19 +178,19 @@ with Flow(
     RUNS = run_dbt_model.map(
         dbt_client=unmapped(dbt_client),
         dataset_id=unmapped(dataset_id),
-        table_id=unmapped(treated_table_params["table_id"]),
+        table_id=unmapped(table_id),
         _vars=_vars,
-        dbt_alias=unmapped(treated_table_params["dbt_alias"]),
-        upstream=unmapped(treated_table_params["upstream"]),
-        downstream=unmapped(treated_table_params["downstream"]),
-        exclude=unmapped(treated_table_params["exclude"]),
-        flags=unmapped(treated_table_params["flags"]),
+        dbt_alias=unmapped(dbt_alias),
+        upstream=unmapped(upstream),
+        downstream=unmapped(downstream),
+        exclude=unmapped(exclude),
+        flags=unmapped(flags),
     )
 
     with case(flag_date_range, True):
         set_last_run_timestamp(
             dataset_id=dataset_id,
-            table_id=treated_table_params["table_id"],
+            table_id=table_id,
             timestamp=date_var["date_range_end"],
             wait=RUNS,
             mode=MODE,

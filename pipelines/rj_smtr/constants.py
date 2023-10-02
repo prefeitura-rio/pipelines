@@ -254,3 +254,10 @@ class constants(Enum):  # pylint: disable=c0103
         },
     ]
     BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
+    BILHETAGEM_MATERIALIZACAO_VAR_PARAMS = {
+        "date_range": {
+            "table_run_datetime_column_name": "data_transacao",
+            "delay_hours": "",
+        },
+        "version": {},
+    }

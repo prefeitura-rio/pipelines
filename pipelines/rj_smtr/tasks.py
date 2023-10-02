@@ -1077,37 +1077,37 @@ def create_dbt_run_vars(
     return final_vars, date_var, flag_date_range
 
 
-@task(checkpoint=False)
-def treat_dbt_table_params(table_params: dict) -> dict:
-    """
-    Task to add all the possible keys to table_params dict (default materialization flow)
+# @task(checkpoint=False)
+# def treat_dbt_table_params(table_params: dict) -> dict:
+#     """
+#     Task to add all the possible keys to table_params dict (default materialization flow)
 
-    Args:
-        table_params (dict): the flow's table_params
-    Returns:
-        dict: the treated dict
-    """
+#     Args:
+#         table_params (dict): the flow's table_params
+#     Returns:
+#         dict: the treated dict
+#     """
 
-    # key: default_value
-    possible_keys = {
-        "table_id": None,
-        "raw_table_id": None,
-        "dbt_alias": False,
-        "upstream": None,
-        "downstream": None,
-        "exclude": None,
-        "flags": None,
-        "var_params": {},
-    }
+#     # key: default_value
+#     possible_keys = {
+#         "table_id": None,
+#         "raw_table_id": None,
+#         "dbt_alias": False,
+#         "upstream": None,
+#         "downstream": None,
+#         "exclude": None,
+#         "flags": None,
+#         "var_params": {},
+#     }
 
-    treated_dict = {}
+#     treated_dict = {}
 
-    log(f"Params received to treat: {table_params}")
+#     log(f"Params received to treat: {table_params}")
 
-    # add the key to treated_dict getting the value from table_params if exists
-    # otherwise get the default value
-    for key, default_value in possible_keys.items():
-        treated_dict[key] = table_params.get(key, default_value)
+#     # add the key to treated_dict getting the value from table_params if exists
+#     # otherwise get the default value
+#     for key, default_value in possible_keys.items():
+#         treated_dict[key] = table_params.get(key, default_value)
 
-    log(f"Treated params: {treated_dict}")
-    return treated_dict
+#     log(f"Treated params: {treated_dict}")
+#     return treated_dict
