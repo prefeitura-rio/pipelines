@@ -37,12 +37,18 @@ from ftplib import FTP
 from pathlib import Path
 
 from datetime import timedelta, datetime
-from typing import List
+from typing import List, Union
+import traceback
 import io
+import json
+import zipfile
+import pytz
+import requests
 import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
-import pytz
+from google.cloud.storage.blob import Blob
+
 
 from prefect.schedules.clocks import IntervalClock
 
@@ -427,53 +433,349 @@ def data_info_str(data: pd.DataFrame):
 
 
 def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-locals
-    interval: timedelta,
+    clock_interval: timedelta,
     labels: List[str],
-    table_parameters: list,
-    dataset_id: str,
-    secret_path: str,
+    table_parameters: Union[list[dict], dict],
     runs_interval_minutes: int = 15,
     start_date: datetime = datetime(
         2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)
     ),
+    **general_flow_params,
 ) -&gt; List[IntervalClock]:
     &#34;&#34;&#34;
     Generates multiple schedules
 
     Args:
-        interval (timedelta): The interval to run the schedule
+        clock_interval (timedelta): The interval to run the schedule
         labels (List[str]): The labels to be added to the schedule
-        table_parameters (list): The table parameters
-        dataset_id (str): The dataset_id to be used in the schedule
-        secret_path (str): The secret path to be used in the schedule
+        table_parameters (list): The table parameters to iterate over
         runs_interval_minutes (int, optional): The interval between each schedule. Defaults to 15.
         start_date (datetime, optional): The start date of the schedule.
             Defaults to datetime(2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)).
-
+        general_flow_params: Any param that you want to pass to the flow
     Returns:
         List[IntervalClock]: The list of schedules
 
     &#34;&#34;&#34;
+    if isinstance(table_parameters, dict):
+        table_parameters = [table_parameters]
 
     clocks = []
     for count, parameters in enumerate(table_parameters):
-        parameter_defaults = {
-            &#34;table_params&#34;: parameters,
-            &#34;dataset_id&#34;: dataset_id,
-            &#34;secret_path&#34;: secret_path,
-            &#34;interval&#34;: interval.total_seconds(),
-        }
+        parameter_defaults = parameters | general_flow_params
+
         log(f&#34;parameter_defaults: {parameter_defaults}&#34;)
         clocks.append(
             IntervalClock(
-                interval=interval,
+                interval=clock_interval,
                 start_date=start_date
                 + timedelta(minutes=runs_interval_minutes * count),
                 labels=labels,
                 parameter_defaults=parameter_defaults,
             )
         )
-    return clocks</code></pre>
+    return clocks
+
+
+def save_raw_local_func(
+    data: Union[dict, str], filepath: str, mode: str = &#34;raw&#34;, filetype: str = &#34;json&#34;
+) -&gt; str:
+    &#34;&#34;&#34;
+    Saves json response from API to .json file.
+    Args:
+        filepath (str): Path which to save raw file
+        status (dict): Must contain keys
+          * data: json returned from API
+          * error: error catched from API request
+        mode (str, optional): Folder to save locally, later folder which to upload to GCS.
+    Returns:
+        str: Path to the saved file
+    &#34;&#34;&#34;
+
+    # diferentes tipos de arquivos para salvar
+    _filepath = filepath.format(mode=mode, filetype=filetype)
+    Path(_filepath).parent.mkdir(parents=True, exist_ok=True)
+
+    if filetype == &#34;json&#34;:
+        if isinstance(data, dict):
+            data = json.loads(data)
+        json.dump(data, Path(_filepath).open(&#34;w&#34;, encoding=&#34;utf-8&#34;))
+
+    # if filetype == &#34;csv&#34;:
+    #     pass
+    if filetype in (&#34;txt&#34;, &#34;csv&#34;):
+        with open(_filepath, &#34;w&#34;, encoding=&#34;utf-8&#34;) as file:
+            file.write(data)
+
+    log(f&#34;Raw data saved to: {_filepath}&#34;)
+    return _filepath
+
+
+def get_raw_data_api(  # pylint: disable=R0912
+    url: str,
+    secret_path: str = None,
+    api_params: dict = None,
+    filetype: str = None,
+) -&gt; tuple[str, str, str]:
+    &#34;&#34;&#34;
+    Request data from URL API
+
+    Args:
+        url (str): URL to request data
+        secret_path (str, optional): Secret path to get headers. Defaults to None.
+        api_params (dict, optional): Parameters to pass to API. Defaults to None.
+        filetype (str, optional): Filetype to save raw file. Defaults to None.
+
+    Returns:
+        tuple[str, str, str]: Error, data and filetype
+    &#34;&#34;&#34;
+    error = None
+    data = None
+    try:
+        if secret_path is None:
+            headers = secret_path
+        else:
+            headers = get_vault_secret(secret_path)[&#34;data&#34;]
+
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=constants.MAX_TIMEOUT_SECONDS.value,
+            params=api_params,
+        )
+
+        response.raise_for_status()
+
+        if filetype == &#34;json&#34;:
+            data = response.json()
+        else:
+            data = response.text
+
+    except Exception:
+        error = traceback.format_exc()
+        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+
+    return error, data, filetype
+
+
+def get_upload_storage_blob(
+    dataset_id: str,
+    filename: str,
+) -&gt; Blob:
+    &#34;&#34;&#34;
+    Get a blob from upload zone in storage
+
+    Args:
+        dataset_id (str): The dataset id on BigQuery.
+        filename (str): The filename in GCS.
+
+    Returns:
+        Blob: blob object
+    &#34;&#34;&#34;
+    bucket = bd.Storage(dataset_id=&#34;&#34;, table_id=&#34;&#34;)
+    blob_list = list(
+        bucket.client[&#34;storage_staging&#34;]
+        .bucket(bucket.bucket_name)
+        .list_blobs(prefix=f&#34;upload/{dataset_id}/{filename}.&#34;)
+    )
+    return blob_list[0]
+
+
+def get_raw_data_gcs(
+    dataset_id: str,
+    table_id: str,
+    zip_filename: str = None,
+) -&gt; tuple[str, str, str]:
+    &#34;&#34;&#34;
+    Get raw data from GCS
+
+    Args:
+        dataset_id (str): The dataset id on BigQuery.
+        table_id (str): The table id on BigQuery.
+        zip_filename (str, optional): The zip file name. Defaults to None.
+
+    Returns:
+        tuple[str, str, str]: Error, data and filetype
+    &#34;&#34;&#34;
+    error = None
+    data = None
+    filetype = None
+
+    try:
+        blob_search_name = zip_filename or table_id
+        blob = get_upload_storage_blob(dataset_id=dataset_id, filename=blob_search_name)
+
+        filename = blob.name
+        filetype = filename.split(&#34;.&#34;)[-1]
+
+        data = blob.download_as_bytes()
+
+        if filetype == &#34;zip&#34;:
+            with zipfile.ZipFile(io.BytesIO(data), &#34;r&#34;) as zipped_file:
+                filenames = zipped_file.namelist()
+                filename = list(
+                    filter(lambda x: x.split(&#34;.&#34;)[0] == table_id, filenames)
+                )[0]
+                filetype = filename.split(&#34;.&#34;)[-1]
+                data = zipped_file.read(filename)
+
+        data = data.decode(encoding=&#34;utf-8&#34;)
+
+    except Exception:
+        error = traceback.format_exc()
+        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+
+    return error, data, filetype
+
+
+def save_treated_local_func(
+    filepath: str, data: pd.DataFrame, error: str, mode: str = &#34;staging&#34;
+) -&gt; str:
+    &#34;&#34;&#34;
+    Save treated file to CSV.
+
+    Args:
+        filepath (str): Path to save file
+        data (pd.DataFrame): Dataframe to save
+        error (str): Error catched during execution
+        mode (str, optional): Folder to save locally, later folder which to upload to GCS.
+
+    Returns:
+        str: Path to the saved file
+    &#34;&#34;&#34;
+    _filepath = filepath.format(mode=mode, filetype=&#34;csv&#34;)
+    Path(_filepath).parent.mkdir(parents=True, exist_ok=True)
+    if error is None:
+        data.to_csv(_filepath, index=False)
+        log(f&#34;Treated data saved to: {_filepath}&#34;)
+    return _filepath
+
+
+def upload_run_logs_to_bq(  # pylint: disable=R0913
+    dataset_id: str,
+    parent_table_id: str,
+    timestamp: str,
+    error: str = None,
+    previous_error: str = None,
+    recapture: bool = False,
+    mode: str = &#34;raw&#34;,
+):
+    &#34;&#34;&#34;
+    Upload execution status table to BigQuery.
+    Table is uploaded to the same dataset, named {parent_table_id}_logs.
+    If passing status_dict, should not pass timestamp and error.
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        parent_table_id (str): table_id on BigQuery
+        timestamp (str): timestamp to get datetime range
+        error (str): error catched during execution
+        previous_error (str): previous error catched during execution
+        recapture (bool): if the execution was a recapture
+        mode (str): folder to save locally, later folder which to upload to GCS
+
+    Returns:
+        None
+    &#34;&#34;&#34;
+    table_id = parent_table_id + &#34;_logs&#34;
+    # Create partition directory
+    filename = f&#34;{table_id}_{timestamp.isoformat()}&#34;
+    partition = f&#34;data={timestamp.date()}&#34;
+    filepath = Path(
+        f&#34;&#34;&#34;data/{mode}/{dataset_id}/{table_id}/{partition}/{filename}.csv&#34;&#34;&#34;
+    )
+    filepath.parent.mkdir(exist_ok=True, parents=True)
+    # Create dataframe to be uploaded
+    if not error and recapture is True:
+        # if the recapture is succeeded, update the column erro
+        dataframe = pd.DataFrame(
+            {
+                &#34;timestamp_captura&#34;: [timestamp],
+                &#34;sucesso&#34;: [True],
+                &#34;erro&#34;: [f&#34;[recapturado]{previous_error}&#34;],
+            }
+        )
+        log(f&#34;Recapturing {timestamp} with previous error:\n{error}&#34;)
+    else:
+        # not recapturing or error during flow execution
+        dataframe = pd.DataFrame(
+            {
+                &#34;timestamp_captura&#34;: [timestamp],
+                &#34;sucesso&#34;: [error is None],
+                &#34;erro&#34;: [error],
+            }
+        )
+    # Save data local
+    dataframe.to_csv(filepath, index=False)
+    # Upload to Storage
+    create_or_append_table(
+        dataset_id=dataset_id,
+        table_id=table_id,
+        path=filepath.as_posix(),
+        partitions=partition,
+    )
+    if error is not None:
+        raise Exception(f&#34;Pipeline failed with error: {error}&#34;)
+
+
+def get_datetime_range(
+    timestamp: datetime,
+    interval: timedelta,
+) -&gt; dict:
+    &#34;&#34;&#34;
+    Task to get datetime range in UTC
+
+    Args:
+        timestamp (datetime): timestamp to get datetime range
+        interval (timedelta): interval to get datetime range
+
+    Returns:
+        dict: datetime range
+    &#34;&#34;&#34;
+
+    start = (
+        (timestamp - interval)
+        .astimezone(tz=pytz.timezone(&#34;UTC&#34;))
+        .strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+    )
+
+    end = timestamp.astimezone(tz=pytz.timezone(&#34;UTC&#34;)).strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+
+    return {&#34;start&#34;: start, &#34;end&#34;: end}
+
+
+def read_raw_data(filepath: str, csv_args: dict = None) -&gt; tuple[str, pd.DataFrame]:
+    &#34;&#34;&#34;
+    Read raw data from file
+
+    Args:
+        filepath (str): filepath to read
+        csv_args (dict): arguments to pass to pandas.read_csv
+
+    Returns:
+        tuple[str, pd.DataFrame]: error and data
+    &#34;&#34;&#34;
+    error = None
+    data = None
+    try:
+        file_type = filepath.split(&#34;.&#34;)[-1]
+
+        if file_type == &#34;json&#34;:
+            data = pd.read_json(filepath)
+
+            # data = json.loads(data)
+        elif file_type in (&#34;txt&#34;, &#34;csv&#34;):
+            if csv_args is None:
+                csv_args = {}
+            data = pd.read_csv(filepath, **csv_args)
+        else:
+            error = &#34;Unsupported raw file extension. Supported only: json, csv and txt&#34;
+
+    except Exception:
+        error = traceback.format_exc()
+        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+
+    return error, data</code></pre>
 </details>
 </section>
 <section>
@@ -881,27 +1183,25 @@ Defaults to 'bigquery_prod'.</p>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.utils.generate_execute_schedules"><code class="name flex">
-<span>def <span class="ident">generate_execute_schedules</span></span>(<span>interval: datetime.timedelta, labels: List[str], table_parameters: list, dataset_id: str, secret_path: str, runs_interval_minutes: int = 15, start_date: datetime.datetime = datetime.datetime(2020, 1, 1, 0, 0, tzinfo=&lt;DstTzInfo &#x27;America/Sao_Paulo&#x27; LMT-1 day, 20:54:00 STD&gt;)) ‑> List[prefect.schedules.clocks.IntervalClock]</span>
+<span>def <span class="ident">generate_execute_schedules</span></span>(<span>clock_interval: datetime.timedelta, labels: List[str], table_parameters: Union[list[dict], dict], runs_interval_minutes: int = 15, start_date: datetime.datetime = datetime.datetime(2020, 1, 1, 0, 0, tzinfo=&lt;DstTzInfo &#x27;America/Sao_Paulo&#x27; LMT-1 day, 20:54:00 STD&gt;), **general_flow_params) ‑> List[prefect.schedules.clocks.IntervalClock]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Generates multiple schedules</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>interval</code></strong> :&ensp;<code>timedelta</code></dt>
+<dt><strong><code>clock_interval</code></strong> :&ensp;<code>timedelta</code></dt>
 <dd>The interval to run the schedule</dd>
 <dt><strong><code>labels</code></strong> :&ensp;<code>List[str]</code></dt>
 <dd>The labels to be added to the schedule</dd>
 <dt><strong><code>table_parameters</code></strong> :&ensp;<code>list</code></dt>
-<dd>The table parameters</dd>
-<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code></dt>
-<dd>The dataset_id to be used in the schedule</dd>
-<dt><strong><code>secret_path</code></strong> :&ensp;<code>str</code></dt>
-<dd>The secret path to be used in the schedule</dd>
+<dd>The table parameters to iterate over</dd>
 <dt><strong><code>runs_interval_minutes</code></strong> :&ensp;<code>int</code>, optional</dt>
 <dd>The interval between each schedule. Defaults to 15.</dd>
 <dt><strong><code>start_date</code></strong> :&ensp;<code>datetime</code>, optional</dt>
 <dd>The start date of the schedule.
 Defaults to datetime(2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)).</dd>
+<dt><strong><code>general_flow_params</code></strong></dt>
+<dd>Any param that you want to pass to the flow</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -913,46 +1213,41 @@ Defaults to datetime(2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIME
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-locals
-    interval: timedelta,
+    clock_interval: timedelta,
     labels: List[str],
-    table_parameters: list,
-    dataset_id: str,
-    secret_path: str,
+    table_parameters: Union[list[dict], dict],
     runs_interval_minutes: int = 15,
     start_date: datetime = datetime(
         2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)
     ),
+    **general_flow_params,
 ) -&gt; List[IntervalClock]:
     &#34;&#34;&#34;
     Generates multiple schedules
 
     Args:
-        interval (timedelta): The interval to run the schedule
+        clock_interval (timedelta): The interval to run the schedule
         labels (List[str]): The labels to be added to the schedule
-        table_parameters (list): The table parameters
-        dataset_id (str): The dataset_id to be used in the schedule
-        secret_path (str): The secret path to be used in the schedule
+        table_parameters (list): The table parameters to iterate over
         runs_interval_minutes (int, optional): The interval between each schedule. Defaults to 15.
         start_date (datetime, optional): The start date of the schedule.
             Defaults to datetime(2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)).
-
+        general_flow_params: Any param that you want to pass to the flow
     Returns:
         List[IntervalClock]: The list of schedules
 
     &#34;&#34;&#34;
+    if isinstance(table_parameters, dict):
+        table_parameters = [table_parameters]
 
     clocks = []
     for count, parameters in enumerate(table_parameters):
-        parameter_defaults = {
-            &#34;table_params&#34;: parameters,
-            &#34;dataset_id&#34;: dataset_id,
-            &#34;secret_path&#34;: secret_path,
-            &#34;interval&#34;: interval.total_seconds(),
-        }
+        parameter_defaults = parameters | general_flow_params
+
         log(f&#34;parameter_defaults: {parameter_defaults}&#34;)
         clocks.append(
             IntervalClock(
-                interval=interval,
+                interval=clock_interval,
                 start_date=start_date
                 + timedelta(minutes=runs_interval_minutes * count),
                 labels=labels,
@@ -960,6 +1255,53 @@ Defaults to datetime(2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIME
             )
         )
     return clocks</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.utils.get_datetime_range"><code class="name flex">
+<span>def <span class="ident">get_datetime_range</span></span>(<span>timestamp: datetime.datetime, interval: datetime.timedelta) ‑> dict</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Task to get datetime range in UTC</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>timestamp</code></strong> :&ensp;<code>datetime</code></dt>
+<dd>timestamp to get datetime range</dd>
+<dt><strong><code>interval</code></strong> :&ensp;<code>timedelta</code></dt>
+<dd>interval to get datetime range</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>datetime range</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_datetime_range(
+    timestamp: datetime,
+    interval: timedelta,
+) -&gt; dict:
+    &#34;&#34;&#34;
+    Task to get datetime range in UTC
+
+    Args:
+        timestamp (datetime): timestamp to get datetime range
+        interval (timedelta): interval to get datetime range
+
+    Returns:
+        dict: datetime range
+    &#34;&#34;&#34;
+
+    start = (
+        (timestamp - interval)
+        .astimezone(tz=pytz.timezone(&#34;UTC&#34;))
+        .strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+    )
+
+    end = timestamp.astimezone(tz=pytz.timezone(&#34;UTC&#34;)).strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+
+    return {&#34;start&#34;: start, &#34;end&#34;: end}</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.utils.get_last_run_timestamp"><code class="name flex">
@@ -1021,6 +1363,148 @@ mode (str):</p>
     return last_run_timestamp</code></pre>
 </details>
 </dd>
+<dt id="pipelines.rj_smtr.utils.get_raw_data_api"><code class="name flex">
+<span>def <span class="ident">get_raw_data_api</span></span>(<span>url: str, secret_path: str = None, api_params: dict = None, filetype: str = None) ‑> tuple[str, str, str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request data from URL API</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>url</code></strong> :&ensp;<code>str</code></dt>
+<dd>URL to request data</dd>
+<dt><strong><code>secret_path</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Secret path to get headers. Defaults to None.</dd>
+<dt><strong><code>api_params</code></strong> :&ensp;<code>dict</code>, optional</dt>
+<dd>Parameters to pass to API. Defaults to None.</dd>
+<dt><strong><code>filetype</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Filetype to save raw file. Defaults to None.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>tuple[str, str, str]</code></dt>
+<dd>Error, data and filetype</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_raw_data_api(  # pylint: disable=R0912
+    url: str,
+    secret_path: str = None,
+    api_params: dict = None,
+    filetype: str = None,
+) -&gt; tuple[str, str, str]:
+    &#34;&#34;&#34;
+    Request data from URL API
+
+    Args:
+        url (str): URL to request data
+        secret_path (str, optional): Secret path to get headers. Defaults to None.
+        api_params (dict, optional): Parameters to pass to API. Defaults to None.
+        filetype (str, optional): Filetype to save raw file. Defaults to None.
+
+    Returns:
+        tuple[str, str, str]: Error, data and filetype
+    &#34;&#34;&#34;
+    error = None
+    data = None
+    try:
+        if secret_path is None:
+            headers = secret_path
+        else:
+            headers = get_vault_secret(secret_path)[&#34;data&#34;]
+
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=constants.MAX_TIMEOUT_SECONDS.value,
+            params=api_params,
+        )
+
+        response.raise_for_status()
+
+        if filetype == &#34;json&#34;:
+            data = response.json()
+        else:
+            data = response.text
+
+    except Exception:
+        error = traceback.format_exc()
+        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+
+    return error, data, filetype</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.utils.get_raw_data_gcs"><code class="name flex">
+<span>def <span class="ident">get_raw_data_gcs</span></span>(<span>dataset_id: str, table_id: str, zip_filename: str = None) ‑> tuple[str, str, str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get raw data from GCS</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>The dataset id on BigQuery.</dd>
+<dt><strong><code>table_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>The table id on BigQuery.</dd>
+<dt><strong><code>zip_filename</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>The zip file name. Defaults to None.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>tuple[str, str, str]</code></dt>
+<dd>Error, data and filetype</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_raw_data_gcs(
+    dataset_id: str,
+    table_id: str,
+    zip_filename: str = None,
+) -&gt; tuple[str, str, str]:
+    &#34;&#34;&#34;
+    Get raw data from GCS
+
+    Args:
+        dataset_id (str): The dataset id on BigQuery.
+        table_id (str): The table id on BigQuery.
+        zip_filename (str, optional): The zip file name. Defaults to None.
+
+    Returns:
+        tuple[str, str, str]: Error, data and filetype
+    &#34;&#34;&#34;
+    error = None
+    data = None
+    filetype = None
+
+    try:
+        blob_search_name = zip_filename or table_id
+        blob = get_upload_storage_blob(dataset_id=dataset_id, filename=blob_search_name)
+
+        filename = blob.name
+        filetype = filename.split(&#34;.&#34;)[-1]
+
+        data = blob.download_as_bytes()
+
+        if filetype == &#34;zip&#34;:
+            with zipfile.ZipFile(io.BytesIO(data), &#34;r&#34;) as zipped_file:
+                filenames = zipped_file.namelist()
+                filename = list(
+                    filter(lambda x: x.split(&#34;.&#34;)[0] == table_id, filenames)
+                )[0]
+                filetype = filename.split(&#34;.&#34;)[-1]
+                data = zipped_file.read(filename)
+
+        data = data.decode(encoding=&#34;utf-8&#34;)
+
+    except Exception:
+        error = traceback.format_exc()
+        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+
+    return error, data, filetype</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_smtr.utils.get_table_min_max_value"><code class="name flex">
 <span>def <span class="ident">get_table_min_max_value</span></span>(<span>query_project_id: str, dataset_id: str, table_id: str, field_name: str, kind: str, wait=None)</span>
 </code></dt>
@@ -1071,6 +1555,50 @@ Useful to incrementally materialize tables via DBT</p>
     return result.iloc[0][0]</code></pre>
 </details>
 </dd>
+<dt id="pipelines.rj_smtr.utils.get_upload_storage_blob"><code class="name flex">
+<span>def <span class="ident">get_upload_storage_blob</span></span>(<span>dataset_id: str, filename: str) ‑> google.cloud.storage.blob.Blob</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get a blob from upload zone in storage</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>The dataset id on BigQuery.</dd>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>The filename in GCS.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Blob</code></dt>
+<dd>blob object</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_upload_storage_blob(
+    dataset_id: str,
+    filename: str,
+) -&gt; Blob:
+    &#34;&#34;&#34;
+    Get a blob from upload zone in storage
+
+    Args:
+        dataset_id (str): The dataset id on BigQuery.
+        filename (str): The filename in GCS.
+
+    Returns:
+        Blob: blob object
+    &#34;&#34;&#34;
+    bucket = bd.Storage(dataset_id=&#34;&#34;, table_id=&#34;&#34;)
+    blob_list = list(
+        bucket.client[&#34;storage_staging&#34;]
+        .bucket(bucket.bucket_name)
+        .list_blobs(prefix=f&#34;upload/{dataset_id}/{filename}.&#34;)
+    )
+    return blob_list[0]</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_smtr.utils.log_critical"><code class="name flex">
 <span>def <span class="ident">log_critical</span></span>(<span>message: str, secret_path: str = 'critical_webhook')</span>
 </code></dt>
@@ -1119,6 +1647,61 @@ Useful to incrementally materialize tables via DBT</p>
     return data</code></pre>
 </details>
 </dd>
+<dt id="pipelines.rj_smtr.utils.read_raw_data"><code class="name flex">
+<span>def <span class="ident">read_raw_data</span></span>(<span>filepath: str, csv_args: dict = None) ‑> tuple[str, pandas.core.frame.DataFrame]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read raw data from file</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>filepath</code></strong> :&ensp;<code>str</code></dt>
+<dd>filepath to read</dd>
+<dt><strong><code>csv_args</code></strong> :&ensp;<code>dict</code></dt>
+<dd>arguments to pass to pandas.read_csv</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>tuple[str, pd.DataFrame]</code></dt>
+<dd>error and data</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_raw_data(filepath: str, csv_args: dict = None) -&gt; tuple[str, pd.DataFrame]:
+    &#34;&#34;&#34;
+    Read raw data from file
+
+    Args:
+        filepath (str): filepath to read
+        csv_args (dict): arguments to pass to pandas.read_csv
+
+    Returns:
+        tuple[str, pd.DataFrame]: error and data
+    &#34;&#34;&#34;
+    error = None
+    data = None
+    try:
+        file_type = filepath.split(&#34;.&#34;)[-1]
+
+        if file_type == &#34;json&#34;:
+            data = pd.read_json(filepath)
+
+            # data = json.loads(data)
+        elif file_type in (&#34;txt&#34;, &#34;csv&#34;):
+            if csv_args is None:
+                csv_args = {}
+            data = pd.read_csv(filepath, **csv_args)
+        else:
+            error = &#34;Unsupported raw file extension. Supported only: json, csv and txt&#34;
+
+    except Exception:
+        error = traceback.format_exc()
+        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+
+    return error, data</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_smtr.utils.safe_cast"><code class="name flex">
 <span>def <span class="ident">safe_cast</span></span>(<span>val, to_type, default=None)</span>
 </code></dt>
@@ -1136,6 +1719,113 @@ Useful to incrementally materialize tables via DBT</p>
         return to_type(val)
     except ValueError:
         return default</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.utils.save_raw_local_func"><code class="name flex">
+<span>def <span class="ident">save_raw_local_func</span></span>(<span>data: Union[dict, str], filepath: str, mode: str = 'raw', filetype: str = 'json') ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Saves json response from API to .json file.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>filepath</code></strong> :&ensp;<code>str</code></dt>
+<dd>Path which to save raw file</dd>
+<dt><strong><code>status</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Must contain keys
+* data: json returned from API
+* error: error catched from API request</dd>
+<dt><strong><code>mode</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Folder to save locally, later folder which to upload to GCS.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>Path to the saved file</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_raw_local_func(
+    data: Union[dict, str], filepath: str, mode: str = &#34;raw&#34;, filetype: str = &#34;json&#34;
+) -&gt; str:
+    &#34;&#34;&#34;
+    Saves json response from API to .json file.
+    Args:
+        filepath (str): Path which to save raw file
+        status (dict): Must contain keys
+          * data: json returned from API
+          * error: error catched from API request
+        mode (str, optional): Folder to save locally, later folder which to upload to GCS.
+    Returns:
+        str: Path to the saved file
+    &#34;&#34;&#34;
+
+    # diferentes tipos de arquivos para salvar
+    _filepath = filepath.format(mode=mode, filetype=filetype)
+    Path(_filepath).parent.mkdir(parents=True, exist_ok=True)
+
+    if filetype == &#34;json&#34;:
+        if isinstance(data, dict):
+            data = json.loads(data)
+        json.dump(data, Path(_filepath).open(&#34;w&#34;, encoding=&#34;utf-8&#34;))
+
+    # if filetype == &#34;csv&#34;:
+    #     pass
+    if filetype in (&#34;txt&#34;, &#34;csv&#34;):
+        with open(_filepath, &#34;w&#34;, encoding=&#34;utf-8&#34;) as file:
+            file.write(data)
+
+    log(f&#34;Raw data saved to: {_filepath}&#34;)
+    return _filepath</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.utils.save_treated_local_func"><code class="name flex">
+<span>def <span class="ident">save_treated_local_func</span></span>(<span>filepath: str, data: pandas.core.frame.DataFrame, error: str, mode: str = 'staging') ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Save treated file to CSV.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>filepath</code></strong> :&ensp;<code>str</code></dt>
+<dd>Path to save file</dd>
+<dt><strong><code>data</code></strong> :&ensp;<code>pd.DataFrame</code></dt>
+<dd>Dataframe to save</dd>
+<dt><strong><code>error</code></strong> :&ensp;<code>str</code></dt>
+<dd>Error catched during execution</dd>
+<dt><strong><code>mode</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Folder to save locally, later folder which to upload to GCS.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>Path to the saved file</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_treated_local_func(
+    filepath: str, data: pd.DataFrame, error: str, mode: str = &#34;staging&#34;
+) -&gt; str:
+    &#34;&#34;&#34;
+    Save treated file to CSV.
+
+    Args:
+        filepath (str): Path to save file
+        data (pd.DataFrame): Dataframe to save
+        error (str): Error catched during execution
+        mode (str, optional): Folder to save locally, later folder which to upload to GCS.
+
+    Returns:
+        str: Path to the saved file
+    &#34;&#34;&#34;
+    _filepath = filepath.format(mode=mode, filetype=&#34;csv&#34;)
+    Path(_filepath).parent.mkdir(parents=True, exist_ok=True)
+    if error is None:
+        data.to_csv(_filepath, index=False)
+        log(f&#34;Treated data saved to: {_filepath}&#34;)
+    return _filepath</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.utils.set_redis_rdo_files"><code class="name flex">
@@ -1193,6 +1883,103 @@ Useful to incrementally materialize tables via DBT</p>
     content[&#34;files&#34;] = files
     # set key
     return redis_client.set(f&#34;{dataset_id}.{table_id}&#34;, content)</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.utils.upload_run_logs_to_bq"><code class="name flex">
+<span>def <span class="ident">upload_run_logs_to_bq</span></span>(<span>dataset_id: str, parent_table_id: str, timestamp: str, error: str = None, previous_error: str = None, recapture: bool = False, mode: str = 'raw')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Upload execution status table to BigQuery.
+Table is uploaded to the same dataset, named {parent_table_id}_logs.
+If passing status_dict, should not pass timestamp and error.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>dataset_id on BigQuery</dd>
+<dt><strong><code>parent_table_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>table_id on BigQuery</dd>
+<dt><strong><code>timestamp</code></strong> :&ensp;<code>str</code></dt>
+<dd>timestamp to get datetime range</dd>
+<dt><strong><code>error</code></strong> :&ensp;<code>str</code></dt>
+<dd>error catched during execution</dd>
+<dt><strong><code>previous_error</code></strong> :&ensp;<code>str</code></dt>
+<dd>previous error catched during execution</dd>
+<dt><strong><code>recapture</code></strong> :&ensp;<code>bool</code></dt>
+<dd>if the execution was a recapture</dd>
+<dt><strong><code>mode</code></strong> :&ensp;<code>str</code></dt>
+<dd>folder to save locally, later folder which to upload to GCS</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def upload_run_logs_to_bq(  # pylint: disable=R0913
+    dataset_id: str,
+    parent_table_id: str,
+    timestamp: str,
+    error: str = None,
+    previous_error: str = None,
+    recapture: bool = False,
+    mode: str = &#34;raw&#34;,
+):
+    &#34;&#34;&#34;
+    Upload execution status table to BigQuery.
+    Table is uploaded to the same dataset, named {parent_table_id}_logs.
+    If passing status_dict, should not pass timestamp and error.
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        parent_table_id (str): table_id on BigQuery
+        timestamp (str): timestamp to get datetime range
+        error (str): error catched during execution
+        previous_error (str): previous error catched during execution
+        recapture (bool): if the execution was a recapture
+        mode (str): folder to save locally, later folder which to upload to GCS
+
+    Returns:
+        None
+    &#34;&#34;&#34;
+    table_id = parent_table_id + &#34;_logs&#34;
+    # Create partition directory
+    filename = f&#34;{table_id}_{timestamp.isoformat()}&#34;
+    partition = f&#34;data={timestamp.date()}&#34;
+    filepath = Path(
+        f&#34;&#34;&#34;data/{mode}/{dataset_id}/{table_id}/{partition}/{filename}.csv&#34;&#34;&#34;
+    )
+    filepath.parent.mkdir(exist_ok=True, parents=True)
+    # Create dataframe to be uploaded
+    if not error and recapture is True:
+        # if the recapture is succeeded, update the column erro
+        dataframe = pd.DataFrame(
+            {
+                &#34;timestamp_captura&#34;: [timestamp],
+                &#34;sucesso&#34;: [True],
+                &#34;erro&#34;: [f&#34;[recapturado]{previous_error}&#34;],
+            }
+        )
+        log(f&#34;Recapturing {timestamp} with previous error:\n{error}&#34;)
+    else:
+        # not recapturing or error during flow execution
+        dataframe = pd.DataFrame(
+            {
+                &#34;timestamp_captura&#34;: [timestamp],
+                &#34;sucesso&#34;: [error is None],
+                &#34;erro&#34;: [error],
+            }
+        )
+    # Save data local
+    dataframe.to_csv(filepath, index=False)
+    # Upload to Storage
+    create_or_append_table(
+        dataset_id=dataset_id,
+        table_id=table_id,
+        path=filepath.as_posix(),
+        partitions=partition,
+    )
+    if error is not None:
+        raise Exception(f&#34;Pipeline failed with error: {error}&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1269,12 +2056,20 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.utils.filter_null" href="#pipelines.rj_smtr.utils.filter_null">filter_null</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.generate_df_and_save" href="#pipelines.rj_smtr.utils.generate_df_and_save">generate_df_and_save</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.generate_execute_schedules" href="#pipelines.rj_smtr.utils.generate_execute_schedules">generate_execute_schedules</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.get_datetime_range" href="#pipelines.rj_smtr.utils.get_datetime_range">get_datetime_range</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.get_last_run_timestamp" href="#pipelines.rj_smtr.utils.get_last_run_timestamp">get_last_run_timestamp</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.get_raw_data_api" href="#pipelines.rj_smtr.utils.get_raw_data_api">get_raw_data_api</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.get_raw_data_gcs" href="#pipelines.rj_smtr.utils.get_raw_data_gcs">get_raw_data_gcs</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.get_table_min_max_value" href="#pipelines.rj_smtr.utils.get_table_min_max_value">get_table_min_max_value</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.get_upload_storage_blob" href="#pipelines.rj_smtr.utils.get_upload_storage_blob">get_upload_storage_blob</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.log_critical" href="#pipelines.rj_smtr.utils.log_critical">log_critical</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.map_dict_keys" href="#pipelines.rj_smtr.utils.map_dict_keys">map_dict_keys</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.read_raw_data" href="#pipelines.rj_smtr.utils.read_raw_data">read_raw_data</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.safe_cast" href="#pipelines.rj_smtr.utils.safe_cast">safe_cast</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.save_raw_local_func" href="#pipelines.rj_smtr.utils.save_raw_local_func">save_raw_local_func</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.save_treated_local_func" href="#pipelines.rj_smtr.utils.save_treated_local_func">save_treated_local_func</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.set_redis_rdo_files" href="#pipelines.rj_smtr.utils.set_redis_rdo_files">set_redis_rdo_files</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.upload_run_logs_to_bq" href="#pipelines.rj_smtr.utils.upload_run_logs_to_bq">upload_run_logs_to_bq</a></code></li>
 </ul>
 </li>
 </ul>

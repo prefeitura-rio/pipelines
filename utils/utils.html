@@ -740,16 +740,24 @@ def get_credentials_from_env(
     return cred
 
 
-def get_storage_blobs(dataset_id: str, table_id: str) -&gt; list:
+def get_storage_blobs(dataset_id: str, table_id: str, mode: str = &#34;staging&#34;) -&gt; list:
     &#34;&#34;&#34;
     Get all blobs from a table in a dataset.
+
+    Args:
+        dataset_id (str): dataset id
+        table_id (str): table id
+        mode (str, optional): mode to use. Defaults to &#34;staging&#34;.
+
+    Returns:
+        list: list of blobs
     &#34;&#34;&#34;
 
     bd_storage = bd.Storage(dataset_id=dataset_id, table_id=table_id)
     return list(
         bd_storage.client[&#34;storage_staging&#34;]
         .bucket(bd_storage.bucket_name)
-        .list_blobs(prefix=f&#34;staging/{bd_storage.dataset_id}/{bd_storage.table_id}/&#34;)
+        .list_blobs(prefix=f&#34;{mode}/{bd_storage.dataset_id}/{bd_storage.table_id}/&#34;)
     )
 
 
@@ -1469,24 +1477,46 @@ characters besides underlines ("_").</p></div>
 </details>
 </dd>
 <dt id="pipelines.utils.utils.get_storage_blobs"><code class="name flex">
-<span>def <span class="ident">get_storage_blobs</span></span>(<span>dataset_id: str, table_id: str) ‑> list</span>
+<span>def <span class="ident">get_storage_blobs</span></span>(<span>dataset_id: str, table_id: str, mode: str = 'staging') ‑> list</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Get all blobs from a table in a dataset.</p></div>
+<div class="desc"><p>Get all blobs from a table in a dataset.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>dataset id</dd>
+<dt><strong><code>table_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>table id</dd>
+<dt><strong><code>mode</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>mode to use. Defaults to "staging".</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code></dt>
+<dd>list of blobs</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_storage_blobs(dataset_id: str, table_id: str) -&gt; list:
+<pre><code class="python">def get_storage_blobs(dataset_id: str, table_id: str, mode: str = &#34;staging&#34;) -&gt; list:
     &#34;&#34;&#34;
     Get all blobs from a table in a dataset.
+
+    Args:
+        dataset_id (str): dataset id
+        table_id (str): table id
+        mode (str, optional): mode to use. Defaults to &#34;staging&#34;.
+
+    Returns:
+        list: list of blobs
     &#34;&#34;&#34;
 
     bd_storage = bd.Storage(dataset_id=dataset_id, table_id=table_id)
     return list(
         bd_storage.client[&#34;storage_staging&#34;]
         .bucket(bd_storage.bucket_name)
-        .list_blobs(prefix=f&#34;staging/{bd_storage.dataset_id}/{bd_storage.table_id}/&#34;)
+        .list_blobs(prefix=f&#34;{mode}/{bd_storage.dataset_id}/{bd_storage.table_id}/&#34;)
     )</code></pre>
 </details>
 </dd>
