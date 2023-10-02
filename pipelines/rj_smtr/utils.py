@@ -18,6 +18,7 @@ import requests
 import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
+from google.cloud.storage.blob import Blob
 
 
 from prefect.schedules.clocks import IntervalClock
@@ -531,7 +532,7 @@ def get_raw_data_api(  # pylint: disable=R0912
 def get_upload_storage_blob(
     dataset_id: str,
     filename: str,
-):
+) -> Blob:
     """
     Get a blob from upload zone in storage
 
