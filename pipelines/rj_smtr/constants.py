@@ -186,7 +186,7 @@ class constants(Enum):  # pylint: disable=c0103
         "transacao_run_interval": {"minutes": 1},
         "principal_run_interval": {"days": 1},
         "transacao_runs_interval_minutes": 0,
-        "principal_runs_interval_minutes": 15,
+        "principal_runs_interval_minutes": 5,
     }
 
     BILHETAGEM_TRANSACAO_CAPTURE_PARAMS = {
@@ -287,7 +287,6 @@ class constants(Enum):  # pylint: disable=c0103
                 "cd_versao_matriz",
                 "cd_integracao",
             ],  # id column to nest data on
-            "partition_date_only": True,
         },
     ]
     BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
