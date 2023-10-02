@@ -18,6 +18,7 @@ import requests
 import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
+from google.cloud.storage.blob import Blob
 
 
 from prefect.schedules.clocks import IntervalClock
@@ -497,7 +498,7 @@ def get_raw_data_api(  # pylint: disable=R0912
         filetype (str, optional): Filetype to save raw file. Defaults to None.
 
     Returns:
-        tuple[str, str]: Error and filepath
+        tuple[str, str, str]: Error, data and filetype
     """
     error = None
     data = None
@@ -531,14 +532,13 @@ def get_raw_data_api(  # pylint: disable=R0912
 def get_upload_storage_blob(
     dataset_id: str,
     filename: str,
-):
+) -> Blob:
     """
     Get a blob from upload zone in storage
 
     Args:
         dataset_id (str): The dataset id on BigQuery.
         filename (str): The filename in GCS.
-
 
     Returns:
         Blob: blob object
@@ -566,7 +566,7 @@ def get_raw_data_gcs(
         zip_filename (str, optional): The zip file name. Defaults to None.
 
     Returns:
-        tuple[str, str]: Error and filepath
+        tuple[str, str, str]: Error, data and filetype
     """
     error = None
     data = None
