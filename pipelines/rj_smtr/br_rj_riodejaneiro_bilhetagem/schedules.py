@@ -20,7 +20,7 @@ bilhetagem_principal_clocks = generate_execute_schedules(
         **constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["principal_run_interval"]
     ),
     labels=[
-        emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value,
+        emd_constants.RJ_SMTR_AGENT_LABEL.value,
     ],
     table_parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
     dataset_id=constants.BILHETAGEM_DATASET_ID.value,
@@ -38,7 +38,7 @@ bilhetagem_transacao_clocks = generate_execute_schedules(
         **constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["transacao_run_interval"]
     ),
     labels=[
-        emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value,
+        emd_constants.RJ_SMTR_AGENT_LABEL.value,
     ],
     table_parameters=constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value,
     dataset_id=constants.BILHETAGEM_DATASET_ID.value,
