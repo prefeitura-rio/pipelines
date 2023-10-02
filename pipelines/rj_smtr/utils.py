@@ -498,7 +498,7 @@ def get_raw_data_api(  # pylint: disable=R0912
         filetype (str, optional): Filetype to save raw file. Defaults to None.
 
     Returns:
-        tuple[str, str]: Error and filepath
+        tuple[str, str, str]: Error, data and filetype
     """
     error = None
     data = None
@@ -540,7 +540,6 @@ def get_upload_storage_blob(
         dataset_id (str): The dataset id on BigQuery.
         filename (str): The filename in GCS.
 
-
     Returns:
         Blob: blob object
     """
@@ -567,7 +566,7 @@ def get_raw_data_gcs(
         zip_filename (str, optional): The zip file name. Defaults to None.
 
     Returns:
-        tuple[str, str]: Error and filepath
+        tuple[str, str, str]: Error, data and filetype
     """
     error = None
     data = None
