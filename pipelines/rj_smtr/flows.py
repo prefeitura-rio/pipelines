@@ -6,7 +6,6 @@ Flows for rj_smtr
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect import case, Parameter
-from prefect.tasks.control_flow import merge
 from prefect.utilities.edges import unmapped
 
 # EMD Imports #
@@ -28,7 +27,7 @@ from pipelines.rj_smtr.tasks import (
     create_local_partition_path,
     get_current_timestamp,
     parse_timestamp_to_string,
-    transform_to_nested_structure,
+    transform_raw_to_nested_structure,
     create_dbt_run_vars,
     set_last_run_timestamp,
     coalesce_task,
