@@ -1178,9 +1178,9 @@ def create_dbt_run_vars(
                 delay_hours=var_params["date_range"].get("delay_hours", 0),
             )
 
-            final_vars.append(date_var)
-
             flag_date_range = True
+
+        final_vars.append(date_var)
 
         log(f"date_range created: {date_var}")
 
