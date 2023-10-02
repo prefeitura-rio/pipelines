@@ -744,7 +744,6 @@ def upload_raw_data_to_gcs(
         Union[str, None]: if there is an error returns it traceback, otherwise returns None
     """
     if error is None:
-
         try:
             st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
             log(
@@ -773,7 +772,6 @@ def upload_staging_data_to_gcs(
     dataset_id: str,
     partitions: list,
 ) -> Union[str, None]:
-
     """
     Upload staging data to GCS.
 
@@ -789,7 +787,6 @@ def upload_staging_data_to_gcs(
         Union[str, None]: if there is an error returns it traceback, otherwise returns None
     """
     if error is None:
-
         try:
             # Creates and publish table if it does not exist, append to it otherwise
             create_or_append_table(
@@ -811,6 +808,7 @@ def upload_staging_data_to_gcs(
     )
 
     return error
+
 
 ###############
 #
@@ -1098,6 +1096,7 @@ def transform_raw_to_nested_structure(
             log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return error, filepath
+
 
 @task(checkpoint=False)
 def connect_ftp_task(
