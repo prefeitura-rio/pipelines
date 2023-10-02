@@ -444,7 +444,7 @@ def create_request_params(
     table_id: str,
     dataset_id: str,
     timestamp: datetime,
-) -> tuple:
+) -> tuple[str, str]:
     """
     Task to create request params
 
@@ -492,7 +492,7 @@ def get_raw_from_sources(
     table_id: str = None,
     secret_path: str = None,
     request_params: dict = None,
-):
+) -> tuple[str, str]:
     """
     Task to get raw data from sources
 
@@ -506,7 +506,8 @@ def get_raw_from_sources(
         request_params (dict, optional): request parameters. Defaults to None.
 
     Returns:
-        error: error
+        error: error catched from upstream tasks
+        filepath: filepath to raw data
     """
     error = None
     filepath = None
