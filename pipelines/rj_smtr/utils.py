@@ -747,3 +747,22 @@ def read_raw_data(filepath: str, csv_args: dict = None) -> tuple[str, pd.DataFra
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return error, data
+
+
+def get_storage_blobs(dataset_id: str, table_id: str, mode: str = "staging") -> list:
+    """
+    Get all blobs from a table in a dataset.
+    Args:
+        dataset_id (str): dataset id
+        table_id (str): table id
+        mode (str, optional): mode to use. Defaults to "staging".
+    Returns:
+        list: list of blobs
+    """
+
+    bd_storage = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+    return list(
+        bd_storage.client["storage_staging"]
+        .bucket(bd_storage.bucket_name)
+        .list_blobs(prefix=f"{mode}/{bd_storage.dataset_id}/{bd_storage.table_id}/")
+    )
