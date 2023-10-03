@@ -1180,7 +1180,7 @@ def create_dbt_run_vars(
 
             flag_date_range = True
 
-        final_vars.append(date_var)
+        final_vars.append(date_var.copy())
 
         log(f"date_range created: {date_var}")
 
@@ -1191,7 +1191,7 @@ def create_dbt_run_vars(
             dbt_vars["run_date"].get("date_range_start"),
             dbt_vars["run_date"].get("date_range_end"),
         )
-        final_vars.append(date_var)
+        final_vars.append([d.copy() for d in date_var])
 
         log(f"run_date created: {date_var}")
 

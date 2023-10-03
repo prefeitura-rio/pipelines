@@ -101,7 +101,7 @@ with Flow(
     timestamp = get_current_timestamp()
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=bilhetagem_materializacao.name,
+        prefix=bilhetagem_auxiliar_materializacao.name + " ",
         now_time=timestamp,
     )
 
