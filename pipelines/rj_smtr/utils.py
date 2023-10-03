@@ -555,7 +555,7 @@ def get_upload_storage_blob(
 def get_raw_data_gcs(
     dataset_id: str,
     table_id: str,
-    zip_filename: str = None,
+    filename: str = None,
 ) -> tuple[str, str, str]:
     """
     Get raw data from GCS
@@ -573,12 +573,8 @@ def get_raw_data_gcs(
     filetype = None
 
     try:
-        blob_search_name = zip_filename or table_id
-        blob = get_upload_storage_blob(dataset_id=dataset_id, filename=blob_search_name)
-
-        filename = blob.name
-        filetype = filename.split(".")[-1]
-
+        blob = get_upload_storage_blob(dataset_id=dataset_id, filename=filename)
+        filetype = blob.name.split(".")[-1]
         data = blob.download_as_bytes()
 
         if filetype == "zip":
