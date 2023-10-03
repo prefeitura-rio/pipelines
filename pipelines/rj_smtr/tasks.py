@@ -445,7 +445,6 @@ def get_raw(  # pylint: disable=R0912
 @task(checkpoint=False, nout=2)
 def create_request_params(
     extract_params: dict,
-    table_id: str,
     dataset_id: str,
     timestamp: datetime,
 ) -> tuple[str, str]:
@@ -485,8 +484,7 @@ def create_request_params(
         }
 
     elif dataset_id == constants.GTFS_DATASET_ID.value:
-        if table_id != constants.GTFS_QUADRO_CAPTURE_PARAMS.value["table_id"]:
-            request_params = constants.GTFS_ZIP_NAME.value
+        request_params = extract_params
 
     return request_params, request_url
 
@@ -539,7 +537,7 @@ def get_raw_from_sources(
             )
         elif source_type == "gcs":
             error, data, filetype = get_raw_data_gcs(
-                dataset_id=dataset_id, table_id=table_id, zip_filename=request_params
+                dataset_id=dataset_id, table_id=table_id, filename=request_params["filename"]
             )
         else:
             raise NotImplementedError(f"{source_type} not supported")
