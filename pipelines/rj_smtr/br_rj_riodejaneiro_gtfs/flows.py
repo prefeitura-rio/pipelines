@@ -4,33 +4,27 @@ Flows for gtfs
 """
 from copy import deepcopy
 
-from prefect import Parameter, case
+# Imports #
+
+# from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
-from prefect.utilities.edges import unmapped
+
 
 # EMD Imports #
 
-from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
+# from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from pipelines.constants import constants as constants_emd
 from pipelines.utils.decorators import Flow
 
 # SMTR Imports #
 
-from pipelines.rj_smtr.constants import constants
-from pipelines.rj_smtr.tasks import (
-    create_date_hour_partition,
-    create_local_partition_path,
-    parse_timestamp_to_string,
-    upload_logs_to_bq,
-    bq_upload,
-    save_raw_local,
-)
-from pipelines.rj_smtr.br_rj_riodejaneiro_gtfs.tasks import (
-    download_gtfs,
-    get_current_timestamp_from_date,
-)
-from pipelines.rj_smtr.schedules import *
+
+# from pipelines.rj_smtr.br_rj_riodejaneiro_gtfs.tasks import (
+#    download_gtfs,
+#    get_current_timestamp_from_date,
+# )
+
 
 from pipelines.rj_smtr.flows import default_capture_flow
 

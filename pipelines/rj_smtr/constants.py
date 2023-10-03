@@ -303,20 +303,59 @@ class constants(Enum):  # pylint: disable=c0103
         {
             "table_id": "agency",
             "primary_key": ["agency_id"],
-            "extract_params": {"filename": "gtfs"},
-        }  # parametros da flow run - TODO: adicionar outras tabelas do gtfs + quadro
-        # {"table_id": "calendar_dates", "primary_key": ["service_id", "date"]},
-        # {"table_id": "calendar", "primary_key": ["service_id"]},
-        # {"table_id": "feed_info", "primary_key": ["feed_publisher_name"]},
-        # {"table_id": "frequencies", "primary_key": ["trip_id", "start_time"]},
-        # {"table_id": "routes", "primary_key": ["route_id"]},
-        # {"table_id": "shapes", "primary_key": ["shape_id", "shape_pt_sequence"]},
-        # {"table_id": "stops", "primary_key": ["stop_id"]},
-        # {"table_id": "trips", "primary_key": ["trip_id"]},
-        # {"table_id": "fare_attributes", "primary_key": ["fare_id"]},
-        # {"table_id": "fare_rules", "primary_key": []},
+            "extract_params": {"filename": "gtfs.zip"},
+        },
+        {
+            "table_id": "calendar_dates",
+            "primary_key": ["service_id", "date"],
+            "extract_params": {"filename": "gtfs.zip"},
+        },
+        {
+            "table_id": "calendar",
+            "primary_key": ["service_id"],
+            "extract_params": {"filename": "gtfs.zip"},
+        },
+        {
+            "table_id": "feed_info",
+            "primary_key": ["feed_publisher_name"],
+            "extract_params": {"filename": "gtfs.zip"},
+        },
+        {
+            "table_id": "frequencies",
+            "primary_key": ["trip_id", "start_time"],
+            "extract_params": {"filename": "gtfs.zip"},
+        },
+        {
+            "table_id": "routes",
+            "primary_key": ["route_id"],
+            "extract_params": {"filename": "gtfs.zip"},
+        },
+        {
+            "table_id": "shapes",
+            "primary_key": ["shape_id", "shape_pt_sequence"],
+            "extract_params": {"filename": "gtfs.zip"},
+        },
+        {
+            "table_id": "stops",
+            "primary_key": ["stop_id"],
+            "extract_params": {"filename": "gtfs.zip"},
+        },
+        {
+            "table_id": "trips",
+            "primary_key": ["trip_id"],
+            "extract_params": {"filename": "gtfs.zip"},
+        },
+        {
+            "table_id": "fare_attributes",
+            "primary_key": ["fare_id"],
+            "extract_params": {"filename": "gtfs.zip"},
+        },
+        {
+            "table_id": "fare_rules",
+            "primary_key": [],
+            "extract_params": {"filename": "gtfs.zip"},
+        },
+        {"table_id": "quadro", "primary_key": ["servico"]},
     ]
 
-    # GTFS_QUADRO_CAPTURE_PARAMS = {"table_id": "quadro", "primary_key": ["servico"]}
-    # GTFS_ZIP_NAME = "gtfs"
     # GTFS_DATASET_ID = "br_rj_riodejaneiro_gtfs"

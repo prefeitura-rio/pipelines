@@ -544,11 +544,13 @@ def get_upload_storage_blob(
         Blob: blob object
     """
     bucket = bd.Storage(dataset_id="", table_id="")
+
     blob_list = list(
         bucket.client["storage_staging"]
         .bucket(bucket.bucket_name)
         .list_blobs(prefix=f"upload/{dataset_id}/{filename}.")
     )
+    log(f"Blob list: {blob_list}")
     return blob_list[0]
 
 
@@ -587,6 +589,8 @@ def get_raw_data_gcs(
                 data = zipped_file.read(filename)
 
         data = data.decode(encoding="utf-8")
+
+        log(f"Data: {data}")
 
     except Exception:
         error = traceback.format_exc()
