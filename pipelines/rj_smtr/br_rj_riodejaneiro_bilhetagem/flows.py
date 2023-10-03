@@ -115,11 +115,11 @@ with Flow(
         labels=unmapped(LABELS),
     )
 
-    wait_captura = wait_for_flow_run(
+    wait_captura = wait_for_flow_run.map(
         runs_captura,
-        stream_states=True,
-        stream_logs=True,
-        raise_final_state=True,
+        stream_states=unmapped(True),
+        stream_logs=unmapped(True),
+        raise_final_state=unmapped(True),
     )
 
     # Materialização
