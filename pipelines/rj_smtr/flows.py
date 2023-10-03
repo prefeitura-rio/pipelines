@@ -34,16 +34,15 @@ with Flow(
     "SMTR: Captura",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as default_capture_flow:
-    
     # GENERAL PARAMETERS #
-    dataset_id = Parameter("dataset_id", default=None) # br_rj_riodejaneiro_gtfs
-    source_type = Parameter("source_type", default=None) # gcs
+    dataset_id = Parameter("dataset_id", default=None)  # br_rj_riodejaneiro_gtfs
+    source_type = Parameter("source_type", default=None)  # gcs
     secret_path = Parameter("secret_path", default=None)
     # TABLE PARAMETERS #
-    table_id = Parameter("table_id", default=None) # agency
-    partition_date_only = Parameter("partition_date_only", default=None) # True
-    extract_params = Parameter("extract_params", default=None) # 
-    primary_key = Parameter("primary_key", default=None) # agency_id
+    table_id = Parameter("table_id", default=None)  # agency
+    partition_date_only = Parameter("partition_date_only", default=None)  # True
+    extract_params = Parameter("extract_params", default=None)  #
+    primary_key = Parameter("primary_key", default=None)  # agency_id
 
     timestamp = get_current_timestamp()
 

@@ -293,20 +293,18 @@ class constants(Enum):  # pylint: disable=c0103
 
     # GTFS
     GTFS_DATASET_ID = "br_rj_riodejaneiro_gtfs"
-    
+
     GTFS_GENERAL_CAPTURE_PARAMS = {
-        "partition_date_only": True, 
+        "partition_date_only": True,
         "source_type": "gcs",
     }
-    
+
     GTFS_TABLE_CAPTURE_PARAMS = [
         {
-            "table_id": "agency", 
+            "table_id": "agency",
             "primary_key": ["agency_id"],
-            "extract_params": {
-                "filename": "gtfs"
-            }
-        } # parametros da flow run - TODO: adicionar outras tabelas do gtfs + quadro
+            "extract_params": {"filename": "gtfs"},
+        }  # parametros da flow run - TODO: adicionar outras tabelas do gtfs + quadro
         # {"table_id": "calendar_dates", "primary_key": ["service_id", "date"]},
         # {"table_id": "calendar", "primary_key": ["service_id"]},
         # {"table_id": "feed_info", "primary_key": ["feed_publisher_name"]},

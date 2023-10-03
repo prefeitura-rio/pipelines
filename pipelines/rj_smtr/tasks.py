@@ -537,7 +537,9 @@ def get_raw_from_sources(
             )
         elif source_type == "gcs":
             error, data, filetype = get_raw_data_gcs(
-                dataset_id=dataset_id, table_id=table_id, filename=request_params["filename"]
+                dataset_id=dataset_id,
+                table_id=table_id,
+                filename=request_params["filename"],
             )
         else:
             raise NotImplementedError(f"{source_type} not supported")
