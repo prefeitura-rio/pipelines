@@ -208,6 +208,8 @@ class constants(Enum):  # pylint: disable=c0103
         "primary_key": ["id"],  # id column to nest data on
     }
 
+    BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
+
     BILHETAGEM_CAPTURE_PARAMS = [
         {
             "table_id": "linha",
@@ -289,7 +291,18 @@ class constants(Enum):  # pylint: disable=c0103
             ],  # id column to nest data on
         },
     ]
-    BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
+
+    BILHETAGEM_MATERIALIZACAO_PARAMS = {
+        "table_id": BILHETAGEM_TRANSACAO_CAPTURE_PARAMS["table_id"],
+        "upstream": True,
+        "dbt_vars": {
+            "date_range": {
+                "table_run_datetime_column_name": "datetime_transacao",
+                "delay_hours": 1,
+            },
+            "version": {},
+        },
+    }
 
     # GTFS
     GTFS_DATASET_ID = "br_rj_riodejaneiro_gtfs"
