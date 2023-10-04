@@ -34,9 +34,7 @@ from pipelines.rj_smtr.tasks import (
 )
 
 from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.schedules import (
-    # bilhetagem_principal_schedule,
     bilhetagem_transacao_schedule,
-    # bilhetagem_materializacao_schedule,
 )
 
 from pipelines.rj_smtr.constants import constants
@@ -56,7 +54,7 @@ bilhetagem_transacao_captura.run_config = KubernetesRun(
 )
 bilhetagem_transacao_captura.schedule = bilhetagem_transacao_schedule
 
-# BILHETAGEM AUXILIAR - CAPTURA DIÁRIA DE DIVERSAS TABELAS #
+# BILHETAGEM AUXILIAR - SUBFLOW PARA RODAR ANTES DE CADA MATERIALIZAÇÃO #
 
 bilhetagem_auxiliar_captura = deepcopy(default_capture_flow)
 bilhetagem_auxiliar_captura.name = "SMTR: Bilhetagem Auxiliar - Captura (subflow)"
@@ -74,9 +72,8 @@ bilhetagem_auxiliar_captura = set_default_parameters(
         "source_type": constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["source_type"],
     },
 )
-# bilhetagem_principal_captura.schedule = bilhetagem_principal_schedule
 
-# MATERIALIZAÇÃO
+# MATERIALIZAÇÃO - SUBFLOW DE MATERIALIZAÇÃO
 bilhetagem_materializacao = deepcopy(default_materialization_flow)
 bilhetagem_materializacao.name = "SMTR: Bilhetagem Transação - Materialização (subflow)"
 bilhetagem_materializacao.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
@@ -94,6 +91,7 @@ bilhetagem_materializacao = set_default_parameters(
     default_parameters=bilhetagem_materializacao_parameters,
 )
 
+# TRATAMENTO - RODA DE HORA EM HORA, CAPTURA AUXILIAR + MATERIALIZAÇÃO
 with Flow(
     "SMTR: Bilhetagem Transação - Tratamento",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
