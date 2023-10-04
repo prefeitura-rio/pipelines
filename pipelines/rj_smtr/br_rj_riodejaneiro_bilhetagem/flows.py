@@ -48,7 +48,7 @@ from pipelines.rj_smtr.schedules import every_hour
 # BILHETAGEM TRANSAÇÃO - CAPTURA A CADA MINUTO #
 
 bilhetagem_transacao_captura = deepcopy(default_capture_flow)
-bilhetagem_transacao_captura.name = "SMTR: Bilhetagem - Captura Transação"
+bilhetagem_transacao_captura.name = "SMTR: Bilhetagem Transação - Captura"
 bilhetagem_transacao_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 bilhetagem_transacao_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
@@ -56,18 +56,18 @@ bilhetagem_transacao_captura.run_config = KubernetesRun(
 )
 bilhetagem_transacao_captura.schedule = bilhetagem_transacao_schedule
 
-# BILHETAGEM PRINCIPAL - CAPTURA DIÁRIA DE DIVERSAS TABELAS #
+# BILHETAGEM AUXILIAR - CAPTURA DIÁRIA DE DIVERSAS TABELAS #
 
-bilhetagem_principal_captura = deepcopy(default_capture_flow)
-bilhetagem_principal_captura.name = "SMTR: Bilhetagem - Captura Auxiliar"
-bilhetagem_principal_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-bilhetagem_principal_captura.run_config = KubernetesRun(
+bilhetagem_auxiliar_captura = deepcopy(default_capture_flow)
+bilhetagem_auxiliar_captura.name = "SMTR: Bilhetagem Auxiliar - Captura (subflow)"
+bilhetagem_auxiliar_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bilhetagem_auxiliar_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
-bilhetagem_principal_captura = set_default_parameters(
-    flow=bilhetagem_principal_captura,
+bilhetagem_auxiliar_captura = set_default_parameters(
+    flow=bilhetagem_auxiliar_captura,
     default_parameters={
         "dataset_id": constants.BILHETAGEM_DATASET_ID.value,
         "secret_path": constants.BILHETAGEM_SECRET_PATH.value,
@@ -78,7 +78,7 @@ bilhetagem_principal_captura = set_default_parameters(
 
 # MATERIALIZAÇÃO
 bilhetagem_materializacao = deepcopy(default_materialization_flow)
-bilhetagem_materializacao.name = "SMTR: Bilhetagem - Materialização"
+bilhetagem_materializacao.name = "SMTR: Bilhetagem Transação - Materialização (subflow)"
 bilhetagem_materializacao.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 bilhetagem_materializacao.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
@@ -95,13 +95,13 @@ bilhetagem_materializacao = set_default_parameters(
 )
 
 with Flow(
-    "SMTR: Bilhetagem - Captura Auxiliar / Materialização Transação",
+    "SMTR: Bilhetagem Transação - Tratamento",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
-) as bilhetagem_auxiliar_materializacao:
+) as bilhetagem_transacao_tratamento:
     timestamp = get_current_timestamp()
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=bilhetagem_auxiliar_materializacao.name + " ",
+        prefix=bilhetagem_transacao_tratamento.name + " ",
         now_time=timestamp,
     )
 
@@ -109,8 +109,8 @@ with Flow(
 
     # Captura
     runs_captura = create_flow_run.map(
-        flow_name=unmapped(bilhetagem_principal_captura.name),
-        project_name=unmapped("staging"),
+        flow_name=unmapped(bilhetagem_auxiliar_captura.name),
+        project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
         parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
         labels=unmapped(LABELS),
     )
@@ -125,7 +125,7 @@ with Flow(
     # Materialização
     run_materializacao = create_flow_run(
         flow_name=bilhetagem_materializacao.name,
-        project_name="staging",
+        project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
         labels=LABELS,
         upstream_tasks=[wait_captura],
     )
@@ -137,10 +137,10 @@ with Flow(
         raise_final_state=True,
     )
 
-bilhetagem_auxiliar_materializacao.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-bilhetagem_auxiliar_materializacao.run_config = KubernetesRun(
+bilhetagem_transacao_tratamento.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bilhetagem_transacao_tratamento.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
-bilhetagem_auxiliar_materializacao.schedule = every_hour
+bilhetagem_transacao_tratamento.schedule = every_hour
 # bilhetagem_materializacao.schedule = bilhetagem_materializacao_schedule
