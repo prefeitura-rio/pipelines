@@ -484,7 +484,7 @@ def create_request_params(
         }
 
     elif dataset_id == constants.GTFS_DATASET_ID.value:
-        request_params = extract_params
+        request_params = extract_params["filename"]
 
     return request_params, request_url
 
@@ -539,8 +539,7 @@ def get_raw_from_sources(
             error, data, filetype = get_raw_data_gcs(
                 dataset_id=dataset_id,
                 table_id=table_id,
-                filename=request_params
-                # filename=request_params["filename"],
+                filename=request_params,
             )
         else:
             raise NotImplementedError(f"{source_type} not supported")
