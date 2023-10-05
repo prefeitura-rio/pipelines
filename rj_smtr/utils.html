@@ -463,7 +463,6 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
     clocks = []
     for count, parameters in enumerate(table_parameters):
         parameter_defaults = parameters | general_flow_params
-
         log(f&#34;parameter_defaults: {parameter_defaults}&#34;)
         clocks.append(
             IntervalClock(
@@ -475,6 +474,19 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
             )
         )
     return clocks
+
+
+def dict_contains_keys(input_dict: dict, keys: list[str]) -&gt; bool:
+    &#34;&#34;&#34;
+    Test if the input dict has all keys present in the list
+
+    Args:
+        input_dict (dict): the dict to test if has the keys
+        keys (list[str]): the list containing the keys to check
+    Returns:
+        bool: True if the input_dict has all the keys otherwise False
+    &#34;&#34;&#34;
+    return all(x in input_dict.keys() for x in keys)
 
 
 def save_raw_local_func(
@@ -1040,6 +1052,40 @@ Defaults to 'bigquery_prod'.</p>
     return buffer.getvalue()</code></pre>
 </details>
 </dd>
+<dt id="pipelines.rj_smtr.utils.dict_contains_keys"><code class="name flex">
+<span>def <span class="ident">dict_contains_keys</span></span>(<span>input_dict: dict, keys: list[str]) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test if the input dict has all keys present in the list</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>input_dict</code></strong> :&ensp;<code>dict</code></dt>
+<dd>the dict to test if has the keys</dd>
+<dt><strong><code>keys</code></strong> :&ensp;<code>list[str]</code></dt>
+<dd>the list containing the keys to check</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bool</code></dt>
+<dd>True if the input_dict has all the keys otherwise False</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dict_contains_keys(input_dict: dict, keys: list[str]) -&gt; bool:
+    &#34;&#34;&#34;
+    Test if the input dict has all keys present in the list
+
+    Args:
+        input_dict (dict): the dict to test if has the keys
+        keys (list[str]): the list containing the keys to check
+    Returns:
+        bool: True if the input_dict has all the keys otherwise False
+    &#34;&#34;&#34;
+    return all(x in input_dict.keys() for x in keys)</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_smtr.utils.filter_data"><code class="name flex">
 <span>def <span class="ident">filter_data</span></span>(<span>data: pandas.core.frame.DataFrame, filters: list, subset_query: str = None)</span>
 </code></dt>
@@ -1243,7 +1289,6 @@ Defaults to datetime(2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIME
     clocks = []
     for count, parameters in enumerate(table_parameters):
         parameter_defaults = parameters | general_flow_params
-
         log(f&#34;parameter_defaults: {parameter_defaults}&#34;)
         clocks.append(
             IntervalClock(
@@ -2052,6 +2097,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.utils.connect_ftp" href="#pipelines.rj_smtr.utils.connect_ftp">connect_ftp</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.create_or_append_table" href="#pipelines.rj_smtr.utils.create_or_append_table">create_or_append_table</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.data_info_str" href="#pipelines.rj_smtr.utils.data_info_str">data_info_str</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.dict_contains_keys" href="#pipelines.rj_smtr.utils.dict_contains_keys">dict_contains_keys</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.filter_data" href="#pipelines.rj_smtr.utils.filter_data">filter_data</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.filter_null" href="#pipelines.rj_smtr.utils.filter_null">filter_null</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.generate_df_and_save" href="#pipelines.rj_smtr.utils.generate_df_and_save">generate_df_and_save</a></code></li>
