@@ -183,13 +183,11 @@ class constants(Enum):  # pylint: disable=c0103
         },
         "vpn_url": "http://vpn-jae.mobilidade.rio/",
         "source_type": "api-json",
-        "transacao_runs_interval_minutes": 0,
-        "principal_runs_interval_minutes": 5,
     }
 
     BILHETAGEM_CAPTURE_RUN_INTERVAL = {
         "transacao_run_interval": {"minutes": 1},
-        "principal_run_interval": {"days": 1},
+        "principal_run_interval": {"hours": 1},
     }
 
     BILHETAGEM_TRANSACAO_CAPTURE_PARAMS = {
