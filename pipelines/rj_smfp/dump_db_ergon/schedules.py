@@ -206,6 +206,7 @@ ergon_queries = {
             TOTAL_ANOS,DATA_PROXIMO,NOME_PROXIMO,EMP_CODIGO
         FROM ERGON.TOTAL_CONTA
         """,
+        "interval": timedelta(days=15),
     },
     "pre_contagem": {
         "materialize_after_dump": True,
