@@ -169,8 +169,6 @@ with Flow(
     flags = Parameter(&#34;flags&#34;, default=None)
     dbt_vars = Parameter(&#34;dbt_vars&#34;, default=dict())
 
-    # treated_table_params = treat_dbt_table_params(table_params=table_params)
-
     LABELS = get_current_flow_labels()
     MODE = get_current_flow_mode(LABELS)
 
