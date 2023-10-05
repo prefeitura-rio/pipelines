@@ -8,7 +8,7 @@ import json
 import os
 from pathlib import Path
 import traceback
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Iterable
 import io
 
 from basedosdados import Storage, Table
@@ -28,6 +28,7 @@ from pipelines.rj_smtr.utils import (
     get_last_run_timestamp,
     log_critical,
     data_info_str,
+    dict_contains_keys,
     get_raw_data_api,
     get_raw_data_gcs,
     upload_run_logs_to_bq,
@@ -1095,3 +1096,117 @@ def transform_raw_to_nested_structure(
             log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return error, filepath
+
+
+@task(checkpoint=False)
+def coalesce_task(value_list: Iterable):
+    """
+    Task to get the first non None value of a list
+
+    Args:
+        value_list (Iterable): a iterable object with the values
+    Returns:
+        any: value_list's first non None item
+    """
+
+    try:
+        return next(value for value in value_list if value is not None)
+    except StopIteration:
+        return
+
+
+@task(checkpoint=False, nout=3)
+def create_dbt_run_vars(
+    dataset_id: str,
+    dbt_vars: dict,
+    table_id: str,
+    raw_dataset_id: str,
+    raw_table_id: str,
+    mode: str,
+) -> tuple[list[dict], Union[list[dict], dict, None], bool]:
+    """
+    Create the variables to be used in dbt materialization based on a dict
+
+    Args:
+        dataset_id (str): the dataset_id to get the variables
+        dbt_vars (dict): dict containing the parameters
+        table_id (str): the table_id get the date_range variable
+        raw_dataset_id (str): the raw_dataset_id get the date_range variable
+        raw_table_id (str): the raw_table_id get the date_range variable
+        mode (str): the mode to get the date_range variable
+
+    Returns:
+        tuple[list[dict]: the variables to be used in DBT
+        Union[list[dict], dict, None]: the date variable (date_range or run_date)
+        bool: a flag that indicates if the date_range variable came from Redis
+    """
+
+    log(f"Creating DBT variables. Parameter received: {dbt_vars}")
+
+    if (not dbt_vars) or (not table_id):
+        log("dbt_vars or table_id are blank. Skiping task")
+        return [None], None, False
+
+    final_vars = []
+    date_var = None
+    flag_date_range = False
+
+    if "date_range" in dbt_vars.keys():
+        log("Creating date_range variable")
+
+        # Set date_range variable manually
+        if dict_contains_keys(
+            dbt_vars["date_range"], ["date_range_start", "date_range_end"]
+        ):
+            date_var = {
+                "date_range_start": dbt_vars["date_range"]["date_range_start"],
+                "date_range_end": dbt_vars["date_range"]["date_range_end"],
+            }
+        # Create date_range using Redis
+        else:
+            raw_table_id = raw_table_id or table_id
+
+            date_var = get_materialization_date_range.run(
+                dataset_id=dataset_id,
+                table_id=table_id,
+                raw_dataset_id=raw_dataset_id,
+                raw_table_id=raw_table_id,
+                table_run_datetime_column_name=dbt_vars["date_range"].get(
+                    "table_run_datetime_column_name"
+                ),
+                mode=mode,
+                delay_hours=dbt_vars["date_range"].get("delay_hours", 0),
+            )
+
+            flag_date_range = True
+
+        final_vars.append(date_var.copy())
+
+        log(f"date_range created: {date_var}")
+
+    elif "run_date" in dbt_vars.keys():
+        log("Creating run_date variable")
+
+        date_var = get_run_dates.run(
+            dbt_vars["run_date"].get("date_range_start"),
+            dbt_vars["run_date"].get("date_range_end"),
+        )
+        final_vars.append([d.copy() for d in date_var])
+
+        log(f"run_date created: {date_var}")
+
+    if "version" in dbt_vars.keys():
+        log("Creating version variable")
+        dataset_sha = fetch_dataset_sha.run(dataset_id=dataset_id)
+
+        # if there are other variables inside the list, update each item adding the version variable
+        if final_vars:
+            final_vars = get_join_dict.run(dict_list=final_vars, new_dict=dataset_sha)
+        else:
+            final_vars.append(dataset_sha)
+
+        log(f"version created: {dataset_sha}")
+
+    log(f"All variables was created, final value is: {final_vars}")
+
+    return final_vars, date_var, flag_date_range
