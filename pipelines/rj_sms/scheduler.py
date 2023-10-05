@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0103
+"""
+Schedules for the database dump pipeline
+"""
+
 from datetime import timedelta
 import pendulum
 from prefect.schedules import Schedule
