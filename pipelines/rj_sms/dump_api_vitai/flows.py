@@ -29,7 +29,6 @@ from pipelines.rj_sms.scheduler import every_day_at_six_am
 with Flow(
     name="SMS: Dump Vitai - Captura Posição de Estoque", code_owners=["thiago"]
 ) as dump_vitai_posicao:
-
     # Parameters
     # Parameters for Vault
     vault_path = vitai_constants.VAULT_PATH.value

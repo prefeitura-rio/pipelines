@@ -116,7 +116,7 @@ def download_from_api(
     else:
         log(
             f"API call failed. Error: {response.status_code} - {response.reason}",
-            level="error"
+            level="error",
         )
 
     return destination_file_path

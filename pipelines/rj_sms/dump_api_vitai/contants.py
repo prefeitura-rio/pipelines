@@ -7,6 +7,7 @@ class constants(Enum):
     """
     Constant values for the dump vitai flows
     """
+
     VAULT_PATH = "estoque_vitai"
     VAULT_KEY = "token"
     DATASET_ID = "dump_vitai"
