@@ -27,9 +27,7 @@ bilhetagem_transacao_clocks = generate_execute_schedules(
     dataset_id=constants.BILHETAGEM_DATASET_ID.value,
     secret_path=constants.BILHETAGEM_SECRET_PATH.value,
     source_type=constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["source_type"],
-    runs_interval_minutes=constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value[
-        "transacao_runs_interval_minutes"
-    ],
+    runs_interval_minutes=0,
 )
 
 bilhetagem_transacao_schedule = Schedule(clocks=untuple(bilhetagem_transacao_clocks))
