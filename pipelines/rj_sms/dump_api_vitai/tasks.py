@@ -9,7 +9,7 @@ def build_movimentos_url(date_param=None):
     if date_param is None:
         date_param = (date.today() + timedelta(days=-1)).strftime("%Y-%m-%d")
 
-    url = f"https://apidw.vitai.care/api/dw/v1/movimentacaoProduto/query/dataMovimentacao/{date_param}"
+    url = f"https://apidw.vitai.care/api/dw/v1/movimentacaoProduto/query/dataMovimentacao/{date_param}"  # noqa: E501
     log(f"URL built: {url}")
     return url
 

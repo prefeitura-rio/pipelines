@@ -86,7 +86,7 @@ def run_dbt_model(
 
     if table_id:
         if dbt_alias:
-            table_id = f"{dataset_id}.{dataset_id}__{table_id}"
+            table_id = f"{dataset_id}__{table_id}"
         else:
             table_id = f"{dataset_id}.{table_id}"
     else:

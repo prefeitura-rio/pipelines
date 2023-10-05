@@ -319,7 +319,7 @@ def create_partitions(data_path: str, partition_directory: str):
         mes_particao = parsed_date.strftime("%m")
         data_particao = parsed_date.strftime("%Y-%m-%d")
 
-        output_directory = f"{partition_directory}/ano_particao={int(ano_particao)}/mes_particao={int(mes_particao)}/data_particao={data_particao}"
+        output_directory = f"{partition_directory}/ano_particao={int(ano_particao)}/mes_particao={int(mes_particao)}/data_particao={data_particao}"  # noqa: E501
 
         # Create partition directory
         os.makedirs(output_directory, exist_ok=False)
