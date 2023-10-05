@@ -188,6 +188,7 @@ class constants(Enum):  # pylint: disable=c0103
     BILHETAGEM_CAPTURE_RUN_INTERVAL = {
         "transacao_run_interval": {"minutes": 1},
         "principal_run_interval": {"hours": 1},
+    }
 
     BILHETAGEM_TRANSACAO_CAPTURE_PARAMS = {
         "table_id": "transacao",
