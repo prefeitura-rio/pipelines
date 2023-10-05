@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_smfp.dump_db_sigma_medicamentos.schedules API documentation</title>
+<title>pipelines.rj_smfp.dump_db_sigma_compras_materiais.schedules API documentation</title>
 <meta name="description" content="Schedules for the SMS SIGMA dump_db pipeline." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_smfp.dump_db_sigma_medicamentos.schedules</code></h1>
+<h1 class="title">Module <code>pipelines.rj_smfp.dump_db_sigma_compras_materiais.schedules</code></h1>
 </header>
 <section id="section-intro">
 <p>Schedules for the SMS SIGMA dump_db pipeline.</p>
@@ -185,6 +185,7 @@ _sigma_queries = {
                 CNPJ_FABRICANTE
             FROM SIGMA.VW_MOVIMENTACAO
         &#34;&#34;&#34;,  # noqa
+        &#34;interval&#34;: timedelta(days=7),
     },
     &#34;ramo_atividade&#34;: {
         &#34;biglake_table&#34;: True,
@@ -253,12 +254,12 @@ sigma_infra_clocks = generate_dump_db_schedules(
     db_host=&#34;10.90.31.22&#34;,
     db_port=&#34;1521&#34;,
     db_type=&#34;oracle&#34;,
-    dataset_id=&#34;saude_medicamentos_sigma&#34;,
+    dataset_id=&#34;compras_materiais_servicos_sigma&#34;,
     vault_secret_path=&#34;db-sigma&#34;,
     table_parameters=_sigma_queries,
 )
 
-sigma_daily_update_schedule = Schedule(clocks=untuple(sigma_infra_clocks))</code></pre>
+compras_sigma_daily_update_schedule = Schedule(clocks=untuple(sigma_infra_clocks))</code></pre>
 </details>
 </section>
 <section>
@@ -324,7 +325,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines.rj_smfp.dump_db_sigma_medicamentos" href="index.html">pipelines.rj_smfp.dump_db_sigma_medicamentos</a></code></li>
+<li><code><a title="pipelines.rj_smfp.dump_db_sigma_compras_materiais" href="index.html">pipelines.rj_smfp.dump_db_sigma_compras_materiais</a></code></li>
 </ul>
 </li>
 </ul>
