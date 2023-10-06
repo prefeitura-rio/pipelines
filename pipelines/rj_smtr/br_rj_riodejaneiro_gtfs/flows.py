@@ -47,7 +47,7 @@ from pipelines.rj_smtr.flows import default_capture_flow
 
 
 with Flow(
-    "SMTR - Captura e tratamento de dados do GTFS",
+    "SMTR: GTFS - Captura/Tratamento",
     code_owners=["rodrigo", "carol"],
 ) as gtfs_captura:
     # SETUP
