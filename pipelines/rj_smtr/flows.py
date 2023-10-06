@@ -139,8 +139,6 @@ with Flow(
     flags = Parameter("flags", default=None)
     dbt_vars = Parameter("dbt_vars", default=dict())
 
-    # treated_table_params = treat_dbt_table_params(table_params=table_params)
-
     LABELS = get_current_flow_labels()
     MODE = get_current_flow_mode(LABELS)
 
@@ -191,5 +189,5 @@ with Flow(
 default_materialization_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 default_materialization_flow.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
