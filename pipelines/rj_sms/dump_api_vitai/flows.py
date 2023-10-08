@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0103
+"""
+Vitai heathrecord dumping flows
+"""
 from datetime import timedelta
 
 from prefect import case, Parameter
@@ -24,7 +27,8 @@ from pipelines.rj_sms.dump_api_vitai.tasks import (
     build_movimentos_date,
     build_movimentos_url,
 )
-from pipelines.rj_sms.scheduler import every_day_at_six_am
+from pipelines.rj_sms.dump_api_vitai.scheduler import every_day_at_six_am
+
 
 with Flow(
     name="SMS: Dump Vitai - Captura Posição de Estoque", code_owners=["thiago"]
@@ -121,7 +125,7 @@ dump_vitai_posicao.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_vitai_posicao.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[
-        constants.RJ_SMS_DEV_AGENT_LABEL.value,
+        constants.RJ_SMS_AGENT_LABEL.value,
     ],
 )
 
@@ -135,11 +139,11 @@ with Flow(
     # Vitai
     date = Parameter("date", default=None)
     #  Vault
-    vault_path = "estoque_vitai"
-    vault_key = "token"
+    vault_path = vitai_constants.VAULT_PATH.value
+    vault_key = vitai_constants.VAULT_KEY.value
     #  GCP
-    dataset_id = "dump_vitai"
-    table_id = "estoque_movimentos"
+    dataset_id = vitai_constants.DATASET_ID.value
+    table_id = vitai_constants.TABLE_MOVIMENTOS_ID.value
 
     # Start run
     create_folders_task = create_folders()
@@ -191,7 +195,7 @@ dump_vitai_movimentos.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_vitai_movimentos.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[
-        constants.RJ_SMS_DEV_AGENT_LABEL.value,
+        constants.RJ_SMS_AGENT_LABEL.value,
     ],
 )
 
