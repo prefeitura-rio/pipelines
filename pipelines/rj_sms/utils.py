@@ -29,20 +29,21 @@ def create_folders():
             - "partition_directory": "./data/partition_directory"
     """
     try:
-        # path_raw_data = os.path.join(os.getcwd(), "data", "raw")
-        # path_partionared_data  = os.path.join(os.getcwd(), "data", "partition_directory")
-        if os.path.exists("./data/raw"):
-            shutil.rmtree("./data/raw", ignore_errors=False)
-        os.makedirs("./data/raw")
+        path_raw_data = os.path.join(os.getcwd(), "data", "raw")
+        path_partionared_data = os.path.join(os.getcwd(), "data", "partition_directory")
 
-        if os.path.exists("./data/partition_directory"):
-            shutil.rmtree("./data/partition_directory", ignore_errors=False)
-        os.makedirs("./data/partition_directory")
+        if os.path.exists(path_raw_data):
+            shutil.rmtree(path_raw_data, ignore_errors=False)
+        os.makedirs(path_raw_data)
+
+        if os.path.exists(path_partionared_data):
+            shutil.rmtree(path_partionared_data, ignore_errors=False)
+        os.makedirs(path_partionared_data)
 
         log("Folders created")
         return {
-            "data": "./data/raw",
-            "partition_directory": "./data/partition_directory",
+            "data": path_raw_data,
+            "partition_directory": path_partionared_data,
         }
 
     except Exception as e:
