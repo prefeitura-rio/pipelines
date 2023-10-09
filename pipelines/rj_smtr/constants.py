@@ -381,9 +381,9 @@ class constants(Enum):  # pylint: disable=c0103
             "source_type": "gcs-txt",
         },
         {
-            "table_id": "quadro",
+            "table_id": "ordem_servico",
             "primary_key": ["servico"],
-            "extract_params": {"filename": "quadro"},
+            "extract_params": {"filename": "ordem_servico"},
             "source_type": "gcs-csv",
         },
     ]
