@@ -628,7 +628,7 @@ def get_raw_data_gcs(
     Args:
         dataset_id (str): The dataset id on BigQuery.
         table_id (str): The table id on BigQuery.
-        zip_filename (str, optional): The zip file name. Defaults to None.
+        filename (str, optional): The zip file name. Defaults to None.
 
     Returns:
         tuple[str, str, str]: Error, data and filetype
