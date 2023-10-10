@@ -282,10 +282,13 @@ captura_sppo_v2.schedule = every_minute
 
 
 with Flow(
-    "SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda", "boris", "rodrigo"]
+    "SMTR - GPS SPPO Recapturas",
+    code_owners=["rodrigo"],  # "caio", "fernanda", "boris"]
 ) as recaptura:
     version = Parameter("version", default=2)
     datetime_filter = Parameter("datetime_filter", default=None)
+    previous_days = Parameter("previous_days", default=1)
+    max_recaptures = Parameter("max_recaptures", default=1440)
     materialize = Parameter("materialize", default=True)
     # SETUP #
     LABELS = get_current_flow_labels()
@@ -294,6 +297,8 @@ with Flow(
         dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
         table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
         datetime_filter=datetime_filter,
+        previous_days=previous_days,
+        max_recaptures=max_recaptures,
     )
 
     rename_flow_run = rename_current_flow_run_now_time(

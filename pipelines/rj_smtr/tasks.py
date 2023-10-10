@@ -11,7 +11,6 @@ import traceback
 from typing import Dict, List, Union, Iterable
 import io
 
-from basedosdados import Storage, Table
 import basedosdados as bd
 from dbt_client import DbtClient
 import pandas as pd
@@ -271,7 +270,8 @@ def query_logs(
     dataset_id: str,
     table_id: str,
     datetime_filter=None,
-    max_recaptures: int = 60,
+    max_recaptures: int = 1440,
+    previous_days: int = 1,
 ):
     """
     Queries capture logs to check for errors
@@ -302,7 +302,8 @@ def query_logs(
         datetime(timestamp_array) as timestamp_array
     from
         unnest(GENERATE_TIMESTAMP_ARRAY(
-            timestamp_sub('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}', interval 1 day),
+            timestamp_sub('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}',
+                          interval {previous_days} day),
             timestamp('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'),
             interval 1 minute)
         ) as timestamp_array
@@ -321,7 +322,8 @@ def query_logs(
                 and date('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}')
         and
             timestamp_captura between
-                datetime_sub('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}', interval 1 day)
+                datetime_sub('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}',
+                             interval {previous_days} day)
                 and '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
         order by timestamp_captura
     )
@@ -599,7 +601,7 @@ def bq_upload(
     try:
         # Upload raw to staging
         if raw_filepath:
-            st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
+            st_obj = bd.Storage(table_id=table_id, dataset_id=dataset_id)
             log(
                 f"""Uploading raw file to bucket {st_obj.bucket_name} at
                 {st_obj.bucket_name}/{dataset_id}/{table_id}"""
@@ -745,7 +747,7 @@ def upload_raw_data_to_gcs(
     """
     if error is None:
         try:
-            st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
+            st_obj = bd.Storage(table_id=table_id, dataset_id=dataset_id)
             log(
                 f"""Uploading raw file to bucket {st_obj.bucket_name} at
                 {st_obj.bucket_name}/{dataset_id}/{table_id}"""
@@ -857,7 +859,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
     # if there's no timestamp set on redis, get max timestamp on source table
     if last_run is None:
         log("Failed to fetch key from Redis...\n Querying tables for last suceeded run")
-        if Table(dataset_id=dataset_id, table_id=table_id).table_exists("prod"):
+        if bd.Table(dataset_id=dataset_id, table_id=table_id).table_exists("prod"):
             last_run = get_table_min_max_value(
                 query_project_id=bq_project(),
                 dataset_id=dataset_id,
