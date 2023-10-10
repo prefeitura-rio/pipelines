@@ -993,6 +993,11 @@ def get_recapture_timestamps(
             second=0, microsecond=0
         )
 
+        # Round down to the nearest interval_minutes minutes
+        datetime_filter = datetime_filter.replace(
+            minute=(datetime_filter.minute // interval_minutes) * interval_minutes
+        )
+
         if datetime_filter > current_timestamp:
             flag_break = True
 
