@@ -4,8 +4,11 @@ Flows for br_rj_riodejaneiro_brt_gps
 """
 
 from prefect import Parameter, case
+from prefect.tasks.control_flow import merge
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
+from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
+from prefect.utilities.edges import unmapped
 
 # EMD Imports #
 
@@ -41,8 +44,12 @@ from pipelines.rj_smtr.tasks import (
     set_last_run_timestamp,
     upload_logs_to_bq,
     bq_upload,
+    check_param,
+    get_recapture_timestamps,
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
+
+from pipelines.rj_smtr.utils import get_project_name
 
 from pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.tasks import (
     pre_treatment_br_rj_riodejaneiro_brt_gps,
@@ -139,6 +146,20 @@ with Flow(
     "SMTR: GPS BRT - Captura",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as captura_brt:
+    timestamp_param = Parameter("timestamp", None)
+    recapture = Parameter("recapture", False)
+    previous_error = Parameter("previous_error", None)
+
+    # SETUP
+    timestamp_cond = check_param(timestamp_param)
+
+    with case(timestamp_cond, True):
+        timestamp_get = get_current_timestamp()
+
+    with case(timestamp_cond, False):
+        timestamp_def = get_current_timestamp(timestamp_param)
+
+    timestamp = merge(timestamp_get, timestamp_def)
     timestamp = get_current_timestamp()
 
     # Rename flow run
@@ -185,6 +206,8 @@ with Flow(
         parent_table_id=constants.GPS_BRT_RAW_TABLE_ID.value,
         timestamp=timestamp,
         error=error,
+        previous_error=previous_error,
+        recapture=recapture,
     )
     captura_brt.set_dependencies(task=partitions, upstream_tasks=[rename_flow_run])
 
@@ -194,3 +217,44 @@ captura_brt.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 captura_brt.schedule = every_minute
+
+GPS_BRT_RECAPTURA_NAME = "SMTR: GPS BRT (recaptura)"
+with Flow(
+    GPS_BRT_RECAPTURA_NAME, code_owners=["rodrigo"]  # "caio", "fernanda", "boris", ],
+) as recaptura_brt:
+    start_date = Parameter("start_date", default="")
+    end_date = Parameter("end_date", default="")
+
+    LABELS = get_current_flow_labels()
+    MODE = get_current_flow_mode(LABELS)
+    PROJECT_NAME = get_project_name(MODE)
+
+    current_timestamp = get_current_timestamp()
+
+    timestamps = get_recapture_timestamps(
+        current_timestamp=current_timestamp,
+        start_date=start_date,
+        end_date=end_date,
+        dataset_id=constants.GPS_BRT_RAW_DATASET_ID.value,
+        table_id=constants.GPS_BRT_RAW_TABLE_ID.value,
+    )
+
+    GPS_BRT_CAPTURA_RUN = create_flow_run.map(
+        flow_name=unmapped(captura_brt.name),
+        project_name=unmapped(PROJECT_NAME),
+        run_name=unmapped(captura_brt.name),
+        parameters=timestamps,
+    )
+
+    wait_for_flow_run.map(
+        GPS_BRT_CAPTURA_RUN,
+        stream_states=unmapped(True),
+        stream_logs=unmapped(True),
+        raise_final_state=unmapped(True),
+    )
+
+recaptura_brt.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+recaptura_brt.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)

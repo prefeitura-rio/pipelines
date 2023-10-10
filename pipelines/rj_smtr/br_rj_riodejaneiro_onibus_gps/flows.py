@@ -153,49 +153,6 @@ realocacao_sppo.run_config = KubernetesRun(
 )
 realocacao_sppo.schedule = every_10_minutes
 
-REALOCACAO_SPPO_RECAPTURA_NAME = "SMTR: GPS SPPO - Realocação (recaptura)"
-with Flow(
-    REALOCACAO_SPPO_RECAPTURA_NAME,
-    code_owners=["caio", "fernanda", "boris", "rodrigo"],
-) as realocacao_sppo_recaptura:
-    start_date = Parameter("start_date", default="")
-    end_date = Parameter("end_date", default="")
-
-    LABELS = get_current_flow_labels()
-    MODE = get_current_flow_mode(LABELS)
-    PROJECT_NAME = get_project_name(MODE)
-
-    current_timestamp = get_current_timestamp()
-
-    timestamps = get_recapture_timestamps(
-        current_timestamp=current_timestamp,
-        start_date=start_date,
-        end_date=end_date,
-        dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
-        table_id=constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
-    )
-
-    GPS_SPPO_REALOCACAO_RUN = create_flow_run.map(
-        flow_name=unmapped(realocacao_sppo.name),
-        project_name=unmapped(PROJECT_NAME),
-        run_name=unmapped(realocacao_sppo.name),
-        parameters=timestamps,
-    )
-
-    wait_for_flow_run.map(
-        GPS_SPPO_REALOCACAO_RUN,
-        stream_states=unmapped(True),
-        stream_logs=unmapped(True),
-        raise_final_state=unmapped(True),
-    )
-
-realocacao_sppo_recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-realocacao_sppo_recaptura.run_config = KubernetesRun(
-    image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
-)
-
-
 with Flow(
     "SMTR: GPS SPPO - Materialização",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
