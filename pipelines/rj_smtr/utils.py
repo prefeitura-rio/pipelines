@@ -458,6 +458,8 @@ def query_logs_func(
             second=0, microsecond=0
         )
 
+    datetime_filter = datetime_filter.strftime("%Y-%m-%d %H:%M:%S")
+
     query = f"""
     WITH
     t AS (
@@ -466,12 +468,12 @@ def query_logs_func(
     FROM
         UNNEST(
             GENERATE_TIMESTAMP_ARRAY(
-                TIMESTAMP_SUB('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}', INTERVAL 1 day),
-                TIMESTAMP('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'),
+                TIMESTAMP_SUB('{datetime_filter}', INTERVAL 1 day),
+                TIMESTAMP('{datetime_filter}'),
                 INTERVAL {interval_minutes} minute) )
         AS timestamp_array
     WHERE
-        timestamp_array < '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}' ),
+        timestamp_array < '{datetime_filter}' ),
     logs_table AS (
         SELECT
             SAFE_CAST(DATETIME(TIMESTAMP(timestamp_captura),
@@ -489,12 +491,12 @@ def query_logs_func(
         FROM
             logs_table
         WHERE
-            DATA BETWEEN DATE(DATETIME_SUB('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}',
+            DATA BETWEEN DATE(DATETIME_SUB('{datetime_filter}',
                             INTERVAL 1 day))
-            AND DATE('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}')
+            AND DATE('{datetime_filter}')
             AND timestamp_captura BETWEEN
-                DATETIME_SUB('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}', INTERVAL 1 day)
-            AND '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
+                DATETIME_SUB('{datetime_filter}', INTERVAL 1 day)
+            AND '{datetime_filter}'
         ORDER BY
             timestamp_captura )
     SELECT
