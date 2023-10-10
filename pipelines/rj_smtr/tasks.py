@@ -1066,6 +1066,7 @@ def get_recapture_timestamps(
 
     return combined_data
 
+
 ###############
 #
 # Pretreat data

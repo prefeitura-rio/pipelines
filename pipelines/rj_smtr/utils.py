@@ -543,6 +543,7 @@ def query_logs_func(
         return True, results["timestamp_captura"].to_list(), results["erro"].to_list()
     return False, [], []
 
+
 def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-locals
     clock_interval: timedelta,
     labels: List[str],
@@ -899,4 +900,3 @@ def read_raw_data(filepath: str, csv_args: dict = None) -> tuple[str, pd.DataFra
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return error, data
-
