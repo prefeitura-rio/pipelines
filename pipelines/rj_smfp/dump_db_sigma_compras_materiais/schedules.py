@@ -156,6 +156,7 @@ _sigma_queries = {
                 CNPJ_FABRICANTE
             FROM SIGMA.VW_MOVIMENTACAO
         """,  # noqa
+        "interval": timedelta(days=7),
     },
     "ramo_atividade": {
         "biglake_table": True,
@@ -224,9 +225,9 @@ sigma_infra_clocks = generate_dump_db_schedules(
     db_host="10.90.31.22",
     db_port="1521",
     db_type="oracle",
-    dataset_id="saude_medicamentos_sigma",
+    dataset_id="compras_materiais_servicos_sigma",
     vault_secret_path="db-sigma",
     table_parameters=_sigma_queries,
 )
 
-sigma_daily_update_schedule = Schedule(clocks=untuple(sigma_infra_clocks))
+compras_sigma_daily_update_schedule = Schedule(clocks=untuple(sigma_infra_clocks))

@@ -183,10 +183,11 @@ class constants(Enum):  # pylint: disable=c0103
         },
         "vpn_url": "http://vpn-jae.mobilidade.rio/",
         "source_type": "api-json",
+    }
+
+    BILHETAGEM_CAPTURE_RUN_INTERVAL = {
         "transacao_run_interval": {"minutes": 1},
-        "principal_run_interval": {"days": 1},
-        "transacao_runs_interval_minutes": 0,
-        "principal_runs_interval_minutes": 5,
+        "principal_run_interval": {"hours": 1},
     }
 
     BILHETAGEM_TRANSACAO_CAPTURE_PARAMS = {
@@ -203,10 +204,12 @@ class constants(Enum):  # pylint: disable=c0103
                     data_processamento BETWEEN '{start}'
                     AND '{end}'
             """,
-            "run_interval": BILHETAGEM_GENERAL_CAPTURE_PARAMS["transacao_run_interval"],
+            "run_interval": BILHETAGEM_CAPTURE_RUN_INTERVAL["transacao_run_interval"],
         },
         "primary_key": ["id"],  # id column to nest data on
     }
+
+    BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
 
     BILHETAGEM_CAPTURE_PARAMS = [
         {
@@ -222,7 +225,7 @@ class constants(Enum):  # pylint: disable=c0103
                     WHERE
                         DT_INCLUSAO >= '{start}'
                 """,
-                "run_interval": BILHETAGEM_GENERAL_CAPTURE_PARAMS[
+                "run_interval": BILHETAGEM_CAPTURE_RUN_INTERVAL[
                     "principal_run_interval"
                 ],
             },
@@ -241,7 +244,7 @@ class constants(Enum):  # pylint: disable=c0103
                     WHERE
                         DT_INCLUSAO >= '{start}'
                 """,
-                "run_interval": BILHETAGEM_GENERAL_CAPTURE_PARAMS[
+                "run_interval": BILHETAGEM_CAPTURE_RUN_INTERVAL[
                     "principal_run_interval"
                 ],
             },
@@ -260,7 +263,7 @@ class constants(Enum):  # pylint: disable=c0103
                     WHERE
                         DT_INCLUSAO >= '{start}'
                 """,
-                "run_interval": BILHETAGEM_GENERAL_CAPTURE_PARAMS[
+                "run_interval": BILHETAGEM_CAPTURE_RUN_INTERVAL[
                     "principal_run_interval"
                 ],
             },
@@ -279,7 +282,7 @@ class constants(Enum):  # pylint: disable=c0103
                     WHERE
                         dt_inclusao >= '{start}'
                 """,
-                "run_interval": BILHETAGEM_GENERAL_CAPTURE_PARAMS[
+                "run_interval": BILHETAGEM_CAPTURE_RUN_INTERVAL[
                     "principal_run_interval"
                 ],
             },
@@ -289,4 +292,15 @@ class constants(Enum):  # pylint: disable=c0103
             ],  # id column to nest data on
         },
     ]
-    BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
+
+    BILHETAGEM_MATERIALIZACAO_PARAMS = {
+        "table_id": BILHETAGEM_TRANSACAO_CAPTURE_PARAMS["table_id"],
+        "upstream": True,
+        "dbt_vars": {
+            "date_range": {
+                "table_run_datetime_column_name": "datetime_transacao",
+                "delay_hours": 1,
+            },
+            "version": {},
+        },
+    }

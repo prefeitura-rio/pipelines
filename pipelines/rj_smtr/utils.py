@@ -434,7 +434,6 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
     clocks = []
     for count, parameters in enumerate(table_parameters):
         parameter_defaults = parameters | general_flow_params
-
         log(f"parameter_defaults: {parameter_defaults}")
         clocks.append(
             IntervalClock(
@@ -446,6 +445,19 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
             )
         )
     return clocks
+
+
+def dict_contains_keys(input_dict: dict, keys: list[str]) -> bool:
+    """
+    Test if the input dict has all keys present in the list
+
+    Args:
+        input_dict (dict): the dict to test if has the keys
+        keys (list[str]): the list containing the keys to check
+    Returns:
+        bool: True if the input_dict has all the keys otherwise False
+    """
+    return all(x in input_dict.keys() for x in keys)
 
 
 def save_raw_local_func(

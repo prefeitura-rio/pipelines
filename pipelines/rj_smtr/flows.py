@@ -5,14 +5,20 @@ Flows for rj_smtr
 
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
-from prefect import Parameter, case, unmapped
-from prefect.tasks.control_flow import merge
+from prefect import case, Parameter
+from prefect.utilities.edges import unmapped
 
 # EMD Imports #
 
 from pipelines.constants import constants as emd_constants
 from pipelines.utils.decorators import Flow
-from pipelines.utils.tasks import rename_current_flow_run_now_time, get_now_time
+from pipelines.utils.tasks import (
+    rename_current_flow_run_now_time,
+    get_now_time,
+    get_current_flow_labels,
+    get_current_flow_mode,
+)
+from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
 
 # SMTR Imports #
 
@@ -21,14 +27,17 @@ from pipelines.rj_smtr.tasks import (
     create_local_partition_path,
     get_current_timestamp,
     parse_timestamp_to_string,
+    transform_raw_to_nested_structure,
+    create_dbt_run_vars,
+    set_last_run_timestamp,
+    coalesce_task,
     upload_raw_data_to_gcs,
     upload_staging_data_to_gcs,
-    transform_raw_to_nested_structure,
     get_raw_from_sources,
     create_request_params,
-    query_logs,
 )
 
+from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
 with Flow(
     "SMTR: Captura",
@@ -43,87 +52,212 @@ with Flow(
     secret_path = Parameter("secret_path", default=None)
     primary_key = Parameter("primary_key", default=None)
     source_type = Parameter("source_type", default=None)
-    recapture = Parameter("recapture", default=False)
 
-    with case(recapture, True):
-        _, recapture_timestamps, previous_errors = query_logs(
-            dataset_id=dataset_id,
-            table_id=table_id,
-        )
-
-    with case(recapture, False):
-        capture_timestamp = [get_current_timestamp()]
-        previous_errors = [None]
-
-    timestamps = merge(recapture_timestamps, capture_timestamp)
+    timestamp = get_current_timestamp()
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=default_capture_flow.name + " " + table_id + ": ",
-        now_time=get_now_time(),
+        now_time=timestamp,
     )
 
-    partitions = create_date_hour_partition.map(
-        timestamps, partition_date_only=unmapped(partition_date_only)
+    partitions = create_date_hour_partition(
+        timestamp, partition_date_only=partition_date_only
     )
 
-    filenames = parse_timestamp_to_string.map(timestamps)
+    filename = parse_timestamp_to_string(timestamp)
 
-    filepaths = create_local_partition_path.map(
-        dataset_id=unmapped(dataset_id),
-        table_id=unmapped(table_id),
-        filename=filenames,
+    filepath = create_local_partition_path(
+        dataset_id=dataset_id,
+        table_id=table_id,
+        filename=filename,
         partitions=partitions,
     )
 
     # Extração #
-    request_params, request_paths = create_request_params.map(
-        dataset_id=unmapped(dataset_id),
-        extract_params=unmapped(extract_params),
-        table_id=unmapped(table_id),
-        timestamp=timestamps,
+    request_params, request_path = create_request_params(
+        dataset_id=dataset_id,
+        extract_params=extract_params,
+        table_id=table_id,
+        timestamp=timestamp,
     )
 
-    errors, raw_filepaths = get_raw_from_sources.map(
-        source_type=unmapped(source_type),
-        local_filepath=unmapped(filepaths),
-        source_path=request_paths,
-        dataset_id=unmapped(dataset_id),
-        table_id=unmapped(table_id),
-        secret_path=unmapped(secret_path),
+    error, raw_filepath = get_raw_from_sources(
+        source_type=source_type,
+        local_filepath=filepath,
+        source_path=request_path,
+        dataset_id=dataset_id,
+        table_id=table_id,
+        secret_path=secret_path,
         request_params=request_params,
     )
 
-    errors = upload_raw_data_to_gcs.map(
-        error=errors,
-        raw_filepath=raw_filepaths,
-        table_id=unmapped(table_id),
-        dataset_id=unmapped(dataset_id),
-        partitions=unmapped(partitions),
+    error = upload_raw_data_to_gcs(
+        error=error,
+        raw_filepath=raw_filepath,
+        table_id=table_id,
+        dataset_id=dataset_id,
+        partitions=partitions,
     )
 
     # Pré-tratamento #
 
-    errors, staging_filepaths = transform_raw_to_nested_structure.map(
-        raw_filepath=raw_filepaths,
-        filepath=filepaths,
-        error=errors,
-        timestamp=timestamps,
-        primary_key=unmapped(primary_key),
+    error, staging_filepath = transform_raw_to_nested_structure(
+        raw_filepath=raw_filepath,
+        filepath=filepath,
+        error=error,
+        timestamp=timestamp,
+        primary_key=primary_key,
     )
 
-    STAGING_UPLOADED = upload_staging_data_to_gcs.map(
-        error=errors,
-        staging_filepath=staging_filepaths,
-        timestamp=timestamps,
-        table_id=unmapped(table_id),
-        dataset_id=unmapped(dataset_id),
+    STAGING_UPLOADED = upload_staging_data_to_gcs(
+        error=error,
+        staging_filepath=staging_filepath,
+        timestamp=timestamp,
+        table_id=table_id,
+        dataset_id=dataset_id,
         partitions=partitions,
-        previous_error=previous_errors,
-        recapture=recapture,
     )
 
 default_capture_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 default_capture_flow.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+)
+
+with Flow(
+    "SMTR: Materialização",
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
+) as default_materialization_flow:
+    # SETUP #
+
+    dataset_id = Parameter("dataset_id", default=None)
+    table_id = Parameter("table_id", default=None)
+    raw_table_id = Parameter("raw_table_id", default=None)
+    dbt_alias = Parameter("dbt_alias", default=False)
+    upstream = Parameter("upstream", default=None)
+    downstream = Parameter("downstream", default=None)
+    exclude = Parameter("exclude", default=None)
+    flags = Parameter("flags", default=None)
+    dbt_vars = Parameter("dbt_vars", default=dict())
+
+    LABELS = get_current_flow_labels()
+    MODE = get_current_flow_mode(LABELS)
+
+    _vars, date_var, flag_date_range = create_dbt_run_vars(
+        dataset_id=dataset_id,
+        dbt_vars=dbt_vars,
+        table_id=table_id,
+        raw_dataset_id=dataset_id,
+        raw_table_id=raw_table_id,
+        mode=MODE,
+    )
+
+    # Rename flow run
+
+    flow_name_prefix = coalesce_task([table_id, dataset_id])
+
+    flow_name_now_time = coalesce_task([date_var, get_now_time()])
+
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix=default_materialization_flow.name + " " + flow_name_prefix + ": ",
+        now_time=flow_name_now_time,
+    )
+
+    dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
+
+    RUNS = run_dbt_model.map(
+        dbt_client=unmapped(dbt_client),
+        dataset_id=unmapped(dataset_id),
+        table_id=unmapped(table_id),
+        _vars=_vars,
+        dbt_alias=unmapped(dbt_alias),
+        upstream=unmapped(upstream),
+        downstream=unmapped(downstream),
+        exclude=unmapped(exclude),
+        flags=unmapped(flags),
+    )
+
+    with case(flag_date_range, True):
+        set_last_run_timestamp(
+            dataset_id=dataset_id,
+            table_id=table_id,
+            timestamp=date_var["date_range_end"],
+            wait=RUNS,
+            mode=MODE,
+        )
+
+
+default_materialization_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+default_materialization_flow.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+
+with Flow(
+    "SMTR: Materialização",
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
+) as default_materialization_flow:
+    # SETUP #
+
+    dataset_id = Parameter("dataset_id", default=None)
+    table_id = Parameter("table_id", default=None)
+    raw_table_id = Parameter("raw_table_id", default=None)
+    dbt_alias = Parameter("dbt_alias", default=False)
+    upstream = Parameter("upstream", default=None)
+    downstream = Parameter("downstream", default=None)
+    exclude = Parameter("exclude", default=None)
+    flags = Parameter("flags", default=None)
+    dbt_vars = Parameter("dbt_vars", default=dict())
+
+    LABELS = get_current_flow_labels()
+    MODE = get_current_flow_mode(LABELS)
+
+    _vars, date_var, flag_date_range = create_dbt_run_vars(
+        dataset_id=dataset_id,
+        dbt_vars=dbt_vars,
+        table_id=table_id,
+        raw_dataset_id=dataset_id,
+        raw_table_id=raw_table_id,
+        mode=MODE,
+    )
+
+    # Rename flow run
+
+    flow_name_prefix = coalesce_task([table_id, dataset_id])
+
+    flow_name_now_time = coalesce_task([date_var, get_now_time()])
+
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix=default_materialization_flow.name + " " + flow_name_prefix + ": ",
+        now_time=flow_name_now_time,
+    )
+
+    dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
+
+    RUNS = run_dbt_model.map(
+        dbt_client=unmapped(dbt_client),
+        dataset_id=unmapped(dataset_id),
+        table_id=unmapped(table_id),
+        _vars=_vars,
+        dbt_alias=unmapped(dbt_alias),
+        upstream=unmapped(upstream),
+        downstream=unmapped(downstream),
+        exclude=unmapped(exclude),
+        flags=unmapped(flags),
+    )
+
+    with case(flag_date_range, True):
+        set_last_run_timestamp(
+            dataset_id=dataset_id,
+            table_id=table_id,
+            timestamp=date_var["date_range_end"],
+            wait=RUNS,
+            mode=MODE,
+        )
+
+
+default_materialization_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+default_materialization_flow.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
