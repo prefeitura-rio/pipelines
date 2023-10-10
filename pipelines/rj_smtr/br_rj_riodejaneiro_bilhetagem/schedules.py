@@ -15,27 +15,18 @@ from pipelines.rj_smtr.utils import (
     generate_execute_schedules,
 )
 
-bilhetagem_principal_clocks = generate_execute_schedules(
-    interval=timedelta(days=1),
-    labels=[
-        emd_constants.RJ_SMTR_AGENT_LABEL.value,
-    ],
-    table_parameters=constants.BILHETAGEM_TABLES_PARAMS.value,
-    dataset_id=constants.BILHETAGEM_DATASET_ID.value,
-    secret_path=constants.BILHETAGEM_SECRET_PATH.value,
-    runs_interval_minutes=15,
-)
-
-bilhetagem_principal_schedule = Schedule(clocks=untuple(bilhetagem_principal_clocks))
-
+BILHETAGEM_TRANSACAO_INTERVAL = timedelta(minutes=1)
 bilhetagem_transacao_clocks = generate_execute_schedules(
-    interval=timedelta(minutes=1),
+    clock_interval=timedelta(
+        **constants.BILHETAGEM_CAPTURE_RUN_INTERVAL.value["transacao_run_interval"]
+    ),
     labels=[
         emd_constants.RJ_SMTR_AGENT_LABEL.value,
     ],
-    table_parameters=constants.BILHETAGEM_TRANSACAO_TABLE_PARAMS.value,
+    table_parameters=constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value,
     dataset_id=constants.BILHETAGEM_DATASET_ID.value,
     secret_path=constants.BILHETAGEM_SECRET_PATH.value,
+    source_type=constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["source_type"],
     runs_interval_minutes=0,
 )
 
