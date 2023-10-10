@@ -237,6 +237,7 @@ with Flow(
         end_date=end_date,
         dataset_id=constants.GPS_BRT_RAW_DATASET_ID.value,
         table_id=constants.GPS_BRT_RAW_TABLE_ID.value,
+        interval_minutes=1,
     )
 
     GPS_BRT_CAPTURA_RUN = create_flow_run.map(
