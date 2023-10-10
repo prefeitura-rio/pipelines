@@ -40,18 +40,6 @@ def get_dates(data_inicio: str, data_fim: str) -> Tuple[str, str]:
     return data_inicio, data_fim, backfill
 
 
-@task()
-def slice_data(current_time: str) -> str:
-    """
-    Retorna a data e hora do timestamp de execução
-    """
-    if not isinstance(current_time, str):
-        current_time = current_time.to_datetime_string()
-
-    data = current_time[:10]
-    return data
-
-
 @task(
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
@@ -110,14 +98,7 @@ def tratar_dados(dados: pd.DataFrame, backfill: bool = 0) -> pd.DataFrame:
     Renomeia colunas e filtra dados com a hora do timestamp de execução
     """
 
-    drop_cols = [
-        "nome",
-        "cidade",
-        "lon",
-        "lat",
-        "localizacao",
-        "tempoImagem",
-    ]
+    drop_cols = ["nome", "cidade", "lon", "lat", "localizacao", "tempoImagem", "metar"]
     # Checa se todas estão no df
     drop_cols = [c for c in drop_cols if c in dados.columns]
 

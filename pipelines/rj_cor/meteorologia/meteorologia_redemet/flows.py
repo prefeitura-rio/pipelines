@@ -14,7 +14,6 @@ from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks import (
     get_dates,
-    # slice_data,
     download,
     tratar_dados,
     salvar_dados,
