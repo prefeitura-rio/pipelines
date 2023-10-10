@@ -22,125 +22,148 @@ from pipelines.utils.utils import untuple_clocks as untuple
 ergon_queries = {
     "cargo": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_CARGOS_",
     },
     "categoria": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_CATEGORIAS_",
     },
     "empresa": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_EMPRESAS",
     },
     "matricula": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_ERG_MATRICULAS",
     },
     "fita_banco": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "partition_columns": "MES_ANO",
         "dump_mode": "append",
+        "lower_bound_date": "current_month",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FITA_BANCO",
     },
     "folha_empresa": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "partition_columns": "MES_ANO",
         "dump_mode": "append",
+        "lower_bound_date": "current_month",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FOLHAS_EMP",
     },
     "forma_provimento": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FORMAS_PROV_",
     },
     "funcionario": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_FUNCIONARIOS",
     },
     "horario_trabalho": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_HORARIO_TRAB_",
     },
     "setor": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_HSETOR_",
     },
     "jornada": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_JORNADAS_",
     },
     "orgaos_externos": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_ORGAOS_EXTERNOS",
     },
     "orgaos_regime_juridico": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_ORGAOS_REGIMES_JUR_",
     },
     "provimento": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_PROVIMENTOS_EV",
     },
     "regime_juridico": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_REGIMES_JUR_",
     },
     "tipo_folha": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_TIPO_FOLHA",
     },
     "tipo_orgao": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_TIPO_ORGAO",
     },
     "tipo_vinculo": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_TIPO_VINC_",
     },
     "vinculo": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM C_ERGON.VW_DLK_ERG_VINCULOS",
     },
     "licenca_afastamento": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "partition_columns": "DTINI",
         "dump_mode": "append",
+        "lower_bound_date": "current_month",
         "execute_query": """
         SELECT NUMFUNC,NUMVINC,DTINI,DTFIM,TIPOFREQ,CODFREQ,MOTIVO,DTPREVFIM,FLEX_CAMPO_01,
             FLEX_CAMPO_02,EMP_CODIGO,FLEX_CAMPO_07
@@ -149,9 +172,11 @@ ergon_queries = {
     },
     "frequencia": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "partition_columns": "DTINI",
         "dump_mode": "append",
+        "lower_bound_date": "current_month",
         "execute_query": """
         SELECT NUMFUNC,NUMVINC,DTINI,DTFIM,TIPOFREQ,CODFREQ,OBS,EMP_CODIGO
         FROM ERGON.FREQUENCIAS
@@ -159,9 +184,11 @@ ergon_queries = {
     },
     "vantagens": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "partition_columns": "DTINI",
         "dump_mode": "append",
+        "lower_bound_date": "current_month",
         "execute_query": """
         SELECT NUMFUNC,NUMVINC,VANTAGEM,DTINI,DTFIM,VALOR,INFO,TIPO_INCORPORACAO,PERC_INC_FUNCAO,
             INC_TABELAVENC,INC_REFERENCIA,OBS,VALOR2,INFO2,VALOR3,INFO3,VALOR4,INFO4,VALOR5,INFO5,
@@ -171,6 +198,7 @@ ergon_queries = {
     },
     "total_contagem": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
@@ -178,9 +206,11 @@ ergon_queries = {
             TOTAL_ANOS,DATA_PROXIMO,NOME_PROXIMO,EMP_CODIGO
         FROM ERGON.TOTAL_CONTA
         """,
+        "interval": timedelta(days=15),
     },
     "pre_contagem": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
@@ -190,6 +220,7 @@ ergon_queries = {
     },
     "averbacoes": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
@@ -200,6 +231,7 @@ ergon_queries = {
     },
     "averbacoes_contagem": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
@@ -209,6 +241,7 @@ ergon_queries = {
     },
     "frequencia_antigo": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
@@ -218,6 +251,7 @@ ergon_queries = {
     },
     "afastamento_antigo": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
@@ -227,6 +261,7 @@ ergon_queries = {
     },
     "afastamento_antigo_nomes": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
@@ -237,6 +272,7 @@ ergon_queries = {
     },
     "tipo_tempo": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "overwrite",
         "execute_query": """
@@ -247,8 +283,10 @@ ergon_queries = {
     },
     "ficha_financeira": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "append",
+        "lower_bound_date": "current_month",
         "partition_columns": "MES_ANO_FOLHA",
         "execute_query": """
         SELECT MES_ANO_FOLHA,NUM_FOLHA,LANCAMENTO,NUMFUNC,NUMVINC,NUMPENS,MES_ANO_DIREITO,
@@ -258,8 +296,10 @@ ergon_queries = {
     },
     "ficha_financeira_contabil": {
         "materialize_after_dump": True,
+        "biglake_table": True,
         "materialization_mode": "prod",
         "dump_mode": "append",
+        "lower_bound_date": "current_month",
         "partition_columns": "MES_ANO_FOLHA",
         "execute_query": """
         SELECT MES_ANO_FOLHA,NUM_FOLHA,NUMFUNC,NUMVINC,NUMPENS,SETOR,SECRETARIA,TIPO_FUNC,
@@ -272,7 +312,7 @@ ergon_queries = {
 
 ergon_clocks = generate_dump_db_schedules(
     interval=timedelta(days=1),
-    start_date=datetime(2022, 11, 9, 10, 30, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2022, 11, 9, 22, 30, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_SMFP_AGENT_LABEL.value,
     ],
