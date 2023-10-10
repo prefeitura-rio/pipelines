@@ -770,6 +770,8 @@ def upload_staging_data_to_gcs(
     table_id: str,
     dataset_id: str,
     partitions: list,
+    previous_error: str = None,
+    recapture: bool = False,
 ) -> Union[str, None]:
     """
     Upload staging data to GCS.
@@ -803,6 +805,8 @@ def upload_staging_data_to_gcs(
         parent_table_id=table_id,
         error=error,
         timestamp=timestamp,
+        previous_error=previous_error,
+        recapture=recapture,
         mode="staging",
     )
 
