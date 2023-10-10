@@ -318,7 +318,7 @@ def query_logs(
         where
             data between
                 date(datetime_sub('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}',
-                interval 1 day))
+                interval {previous_days} day))
                 and date('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}')
         and
             timestamp_captura between
