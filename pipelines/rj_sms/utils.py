@@ -251,7 +251,7 @@ def add_load_date_column(input_path: str, sep=";", load_date=None):
     Returns:
         str: The path to the input CSV file.
     """
-    tz = pytz.timezone('Brazil/East')
+    tz = pytz.timezone("Brazil/East")
     now = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
 
     df = pd.read_csv(input_path, sep=sep, keep_default_na=False, dtype="str")

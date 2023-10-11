@@ -21,13 +21,9 @@ with Flow(
 ) as sms_materialize_datalake:
     # Parameters
     # Paramenters for GCP
-    dataset_id = Parameter(
-        "dataset_id", default="raw_prontuario_vitai", required=False
-    )
+    dataset_id = Parameter("dataset_id", default="raw_prontuario_vitai", required=False)
 
-    table_id = Parameter(
-        "table_id", default="estoque_posicao", required=False
-    )
+    table_id = Parameter("table_id", default="estoque_posicao", required=False)
     # Parameters for materialization
     materialize_after_dump = Parameter(
         "materialize_after_dump", default=True, required=False
