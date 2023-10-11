@@ -989,9 +989,16 @@ def get_recapture_timestamps(
     dates = dates.strftime("%Y-%m-%d").to_list()
 
     for date in dates:
-        datetime_filter = datetime.now(tz=timezone(constants.TIMEZONE.value)).replace(
+        datetime_filter = datetime.fromisoformat(f"{date} 23:59:00").replace(
             second=0, microsecond=0
         )
+
+        # Round down to the nearest interval_minutes minutes
+        datetime_filter = datetime_filter.replace(
+            minute=(datetime_filter.minute // interval_minutes) * interval_minutes
+        )
+
+        datetime_filter = datetime_filter.strftime("%Y-%m-%d %H:%M:%S")
 
         if datetime_filter > current_timestamp:
             flag_break = True
