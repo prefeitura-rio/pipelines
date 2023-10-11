@@ -998,8 +998,6 @@ def get_recapture_timestamps(
             minute=(datetime_filter.minute // interval_minutes) * interval_minutes
         )
 
-        datetime_filter = datetime_filter.strftime("%Y-%m-%d %H:%M:%S")
-
         if datetime_filter > current_timestamp:
             flag_break = True
 
