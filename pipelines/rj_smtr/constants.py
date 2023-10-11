@@ -363,6 +363,12 @@ class constants(Enum):  # pylint: disable=c0103
             "source_type": "gcs-txt",
         },
         {
+            "table_id": "stop_times",
+            "primary_key": ["trip_id", "stop_sequence"],
+            "extract_params": {"filename": "gtfs"},
+            "source_type": "gcs-txt",
+        },
+        {
             "table_id": "trips",
             "primary_key": ["trip_id"],
             "extract_params": {"filename": "gtfs"},
