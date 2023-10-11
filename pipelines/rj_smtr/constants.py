@@ -393,3 +393,11 @@ class constants(Enum):  # pylint: disable=c0103
             "source_type": "gcs-csv",
         },
     ]
+
+    GTFS_MATERIALIZACAO_PARAMS = (
+        {
+            "table_id": GTFS_TABLE_CAPTURE_PARAMS["table_id"],
+            "upstream": True,
+            "dbt_vars": {"date_versao_gtfs": "YYYY-MM-DD"},
+        },
+    )

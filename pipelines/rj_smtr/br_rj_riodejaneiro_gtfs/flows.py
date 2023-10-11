@@ -18,7 +18,7 @@ from pipelines.constants import constants as constants_emd
 from pipelines.utils.decorators import Flow
 
 # SMTR Imports #
-
+from pipelines.rj_smtr.constants import constants
 
 # from pipelines.rj_smtr.br_rj_riodejaneiro_gtfs.tasks import (
 #    download_gtfs,
@@ -26,7 +26,7 @@ from pipelines.utils.decorators import Flow
 # )
 
 
-from pipelines.rj_smtr.flows import default_capture_flow
+from pipelines.rj_smtr.flows import default_capture_flow, default_materialization_flow
 
 
 # FLOW 2: Captura e aninhamento do dado
@@ -46,6 +46,26 @@ from pipelines.rj_smtr.flows import default_capture_flow
 # gtfs_captura.schedule = gtfs_captura_schedule
 
 
+gtfs_materializacao = deepcopy(default_materialization_flow)
+gtfs_materializacao.name = "SMTR - Materialização dos dados do GTFS"
+gtfs_materializacao.storage = GCS(constants_emd.GCS_FLOWS_BUCKET.value)
+gtfs_materializacao.run_config = KubernetesRun(
+    image=constants_emd.DOCKER_IMAGE.value,
+    labels=[constants_emd.RJ_SMTR_DEV_AGENT_LABEL.value],
+)
+gtfs_materializacao = deepcopy(default_materialization_flow)
+gtfs_materializacao.name = "SMTR - Materialização dos dados do GTFS"
+gtfs_materializacao.storage = GCS(constants_emd.GCS_FLOWS_BUCKET.value)
+gtfs_materializacao.run_config = KubernetesRun(
+    image=constants_emd.DOCKER_IMAGE.value,
+    labels=[constants_emd.RJ_SMTR_DEV_AGENT_LABEL.value],
+)
+
+gtfs_materializacao_parameters = {
+    "dataset_id": constants.GTFS_DATASET_ID.value,
+    "dbt_vars": constants.GTFS_MATERIALIZACAO_PARAMS.value,
+}
+
 with Flow(
     "SMTR: GTFS - Captura/Tratamento",
     code_owners=["rodrigo", "carol"],
@@ -53,13 +73,15 @@ with Flow(
     # SETUP
 
     gtfs_captura = deepcopy(default_capture_flow)
-    gtfs_captura.name = "SMTR - Captura e tratamento de dados do GTFS"
+    gtfs_captura.name = "SMTR: GTFS - Captura/Tratamento"
     gtfs_captura.storage = GCS(constants_emd.GCS_FLOWS_BUCKET.value)
     gtfs_captura.run_config = KubernetesRun(
         image=constants_emd.DOCKER_IMAGE.value,
         labels=[constants_emd.RJ_SMTR_DEV_AGENT_LABEL.value],
     )
-    """
+
+
+"""
     with case(download_gtfs, True):
         parameters = {
             "date": Parameter("date", default=None),
