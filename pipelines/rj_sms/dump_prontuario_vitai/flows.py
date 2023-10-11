@@ -14,7 +14,7 @@ from pipelines.utils.decorators import Flow
 from pipelines.utils.tasks import get_current_flow_labels
 from pipelines.utils.dump_db.constants import constants as dump_db_constants
 from pipelines.constants import constants
-from pipelines.rj_sms.dump_api_vitai.contants import constants as vitai_constants
+from pipelines.rj_sms.dump_prontuario_vitai.contants import constants as vitai_constants
 from pipelines.rj_sms.utils import (
     create_folders,
     from_json_to_csv,
@@ -23,11 +23,11 @@ from pipelines.rj_sms.utils import (
     create_partitions,
     upload_to_datalake,
 )
-from pipelines.rj_sms.dump_api_vitai.tasks import (
+from pipelines.rj_sms.dump_prontuario_vitai.tasks import (
     build_movimentos_date,
     build_movimentos_url,
 )
-from pipelines.rj_sms.dump_api_vitai.scheduler import every_day_at_six_am
+from pipelines.rj_sms.dump_prontuario_vitai.scheduler import every_day_at_six_am
 
 
 with Flow(
@@ -86,39 +86,6 @@ with Flow(
         biglake_table=True,
     )
     upload_to_datalake_task.set_upstream(create_partitions_task)
-
-    # Trigger DBT flow run
-    with case(materialize_after_dump, True):
-        current_flow_labels = get_current_flow_labels()
-        materialization_flow = create_flow_run(
-            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
-            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters={
-                "dataset_id": dataset_id,
-                "table_id": table_id,
-                "mode": materialization_mode,
-                "dbt_alias": True,
-                "materialize_to_datario": materialize_to_datario,
-            },
-            labels=current_flow_labels,
-            run_name=f"Materialize {dataset_id}.{table_id}",
-        )
-
-        materialization_flow.set_upstream(upload_to_datalake_task)
-
-        wait_for_materialization = wait_for_flow_run(
-            materialization_flow,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
-        )
-
-        wait_for_materialization.max_retries = (
-            dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
-        )
-        wait_for_materialization.retry_delay = timedelta(
-            seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
-        )
 
 
 dump_vitai_posicao.storage = GCS(constants.GCS_FLOWS_BUCKET.value)

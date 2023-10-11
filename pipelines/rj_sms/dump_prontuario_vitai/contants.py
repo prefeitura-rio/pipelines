@@ -13,6 +13,6 @@ class constants(Enum):
 
     VAULT_PATH = "estoque_vitai"
     VAULT_KEY = "token"
-    DATASET_ID = "saude_prontuario_vitai"
+    DATASET_ID = "raw_prontuario_vitai"
     TABLE_POSICAO_ID = "estoque_posicao"
     TABLE_MOVIMENTOS_ID = "estoque_movimento"

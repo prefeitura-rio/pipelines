@@ -11,6 +11,7 @@ import sys
 from datetime import datetime, date
 from pathlib import Path
 import requests
+import pytz
 import pandas as pd
 import basedosdados as bd
 from azure.storage.blob import BlobServiceClient
@@ -250,10 +251,13 @@ def add_load_date_column(input_path: str, sep=";", load_date=None):
     Returns:
         str: The path to the input CSV file.
     """
+    tz = pytz.timezone('Brazil/East')
+    now = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
+
     df = pd.read_csv(input_path, sep=sep, keep_default_na=False, dtype="str")
 
     if load_date is None:
-        df["_data_carga"] = str(date.today())
+        df["_data_carga"] = now
     else:
         df["_data_carga"] = load_date
 
