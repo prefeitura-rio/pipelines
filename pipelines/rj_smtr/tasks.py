@@ -31,6 +31,7 @@ from pipelines.rj_smtr.utils import (
     dict_contains_keys,
     get_raw_data_api,
     get_raw_data_gcs,
+    get_raw_data_db,
     upload_run_logs_to_bq,
     get_datetime_range,
     read_raw_data,
@@ -534,6 +535,10 @@ def get_raw_from_sources(
             error, data, filetype = get_raw_data_gcs(
                 dataset_id=dataset_id, table_id=table_id, zip_filename=request_params
             )
+        elif source_type == "db":
+            error, data, filetype = get_raw_data_db(
+                host=source_path, secret_path=secret_path, **request_params
+            )
         else:
             raise NotImplementedError(f"{source_type} not supported")
 
@@ -771,6 +776,8 @@ def upload_staging_data_to_gcs(
     table_id: str,
     dataset_id: str,
     partitions: list,
+    previous_error: str = None,
+    recapture: bool = False,
 ) -> Union[str, None]:
     """
     Upload staging data to GCS.
@@ -805,6 +812,8 @@ def upload_staging_data_to_gcs(
         error=error,
         timestamp=timestamp,
         mode="staging",
+        previous_error=previous_error,
+        recapture=recapture,
     )
 
     return error
