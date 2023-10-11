@@ -41,11 +41,13 @@ def create_folders():
             shutil.rmtree(path_partionared_data, ignore_errors=False)
         os.makedirs(path_partionared_data)
 
-        log("Folders created")
-        return {
-            "data": path_raw_data,
+        folders = {
+            "raw": path_raw_data,
             "partition_directory": path_partionared_data,
         }
+
+        log(f"Folders created: {folders}")
+        return folders
 
     except Exception as e:
         sys.exit(f"Failed to create folders: {e}")

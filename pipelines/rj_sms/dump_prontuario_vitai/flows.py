@@ -1,18 +1,13 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0103
 """
-Vitai heathrecord dumping flows
+Vitai healthrecord dumping flows
 """
-from datetime import timedelta
 
-from prefect import case, Parameter
+from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
-from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
-from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.decorators import Flow
-from pipelines.utils.tasks import get_current_flow_labels
-from pipelines.utils.dump_db.constants import constants as dump_db_constants
 from pipelines.constants import constants
 from pipelines.rj_sms.dump_prontuario_vitai.contants import constants as vitai_constants
 from pipelines.rj_sms.utils import (
@@ -55,7 +50,7 @@ with Flow(
     download_task = download_from_api(
         url="https://apidw.vitai.care/api/dw/v1/produtos/saldoAtual",
         params=None,
-        file_folder="./data/raw",
+        file_folder=create_folders_task["raw"],
         file_name=table_id,
         vault_path=vault_path,
         vault_key=vault_key,
@@ -72,12 +67,13 @@ with Flow(
     add_load_date_column_task.set_upstream(conversion_task)
 
     create_partitions_task = create_partitions(
-        data_path="./data/raw", partition_directory="./data/partition_directory"
+        data_path=create_folders_task["raw"],
+        partition_directory=create_folders_task["partition_directory"]
     )
     create_partitions_task.set_upstream(add_load_date_column_task)
 
     upload_to_datalake_task = upload_to_datalake(
-        input_path="./data/partition_directory",
+        input_path=create_folders_task["partition_directory"],
         dataset_id=dataset_id,
         table_id=table_id,
         if_exists="replace",
@@ -124,7 +120,7 @@ with Flow(
     download_task = download_from_api(
         url=build_url_task,
         params=None,
-        file_folder="./data/raw",
+        file_folder=create_folders_task["raw"],
         file_name=table_id,
         vault_path=vault_path,
         vault_key=vault_key,
@@ -142,12 +138,13 @@ with Flow(
     add_load_date_column_task.set_upstream(conversion_task)
 
     create_partitions_task = create_partitions(
-        data_path="./data/raw", partition_directory="./data/partition_directory"
+        data_path=create_folders_task["raw"],
+        partition_directory=create_folders_task["partition_directory"]
     )
     create_partitions_task.set_upstream(add_load_date_column_task)
 
     upload_to_datalake_task = upload_to_datalake(
-        input_path="./data/partition_directory",
+        input_path=create_folders_task["partition_directory"],
         dataset_id=dataset_id,
         table_id=table_id,
         if_exists="replace",
