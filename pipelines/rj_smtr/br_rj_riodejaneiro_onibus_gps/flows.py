@@ -156,7 +156,7 @@ realocacao_sppo.schedule = every_10_minutes
 REALOCACAO_SPPO_RECAPTURA_NAME = "SMTR: GPS SPPO - Realocação (recaptura)"
 with Flow(
     REALOCACAO_SPPO_RECAPTURA_NAME,
-    code_owners=["caio", "fernanda", "boris", "rodrigo"],
+    code_owners=["rodrigo"],  # "caio", "fernanda", "boris"],
 ) as realocacao_sppo_recaptura:
     start_date = Parameter("start_date", default="")
     end_date = Parameter("end_date", default="")
