@@ -118,7 +118,7 @@ with Flow(
         raw_filepath=raw_filepaths,
         table_id=unmapped(table_id),
         dataset_id=unmapped(dataset_id),
-        partitions=unmapped(partitions),
+        partitions=partitions,
     )
 
     # Pré-tratamento #
