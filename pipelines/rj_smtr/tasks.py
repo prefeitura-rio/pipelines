@@ -903,6 +903,8 @@ def upload_staging_data_to_gcs(
             error = traceback.format_exc()
             log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
+    log(f"previous_error = {previous_error}")
+
     upload_run_logs_to_bq(
         dataset_id=dataset_id,
         parent_table_id=table_id,
