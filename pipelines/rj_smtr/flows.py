@@ -101,7 +101,7 @@ with Flow(
 
     get_raw_from_sources_returns = get_raw_from_sources.map(
         source_type=unmapped(source_type),
-        local_filepath=unmapped(filepaths),
+        local_filepath=filepaths,
         source_path=request_paths,
         dataset_id=unmapped(dataset_id),
         table_id=unmapped(table_id),
