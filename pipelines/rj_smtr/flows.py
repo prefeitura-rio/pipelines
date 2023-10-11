@@ -37,6 +37,7 @@ from pipelines.rj_smtr.tasks import (
     get_raw_from_sources,
     create_request_params,
     query_logs,
+    unpack_mapped_results_nout2,
 )
 
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
@@ -87,14 +88,18 @@ with Flow(
     )
 
     # Extração #
-    request_params, request_paths = create_request_params.map(
+    create_request_params_returns = create_request_params.map(
         dataset_id=unmapped(dataset_id),
         extract_params=unmapped(extract_params),
         table_id=unmapped(table_id),
         timestamp=timestamps,
     )
 
-    errors, raw_filepaths = get_raw_from_sources.map(
+    request_params, request_paths = unpack_mapped_results_nout2(
+        mapped_results=create_request_params_returns
+    )
+
+    get_raw_from_sources_returns = get_raw_from_sources.map(
         source_type=unmapped(source_type),
         local_filepath=unmapped(filepaths),
         source_path=request_paths,
@@ -102,6 +107,10 @@ with Flow(
         table_id=unmapped(table_id),
         secret_path=unmapped(secret_path),
         request_params=request_params,
+    )
+
+    errors, raw_filepaths = unpack_mapped_results_nout2(
+        mapped_results=get_raw_from_sources_returns
     )
 
     errors = upload_raw_data_to_gcs.map(
@@ -114,12 +123,16 @@ with Flow(
 
     # Pré-tratamento #
 
-    errors, staging_filepaths = transform_raw_to_nested_structure.map(
+    nested_structure_returns = transform_raw_to_nested_structure.map(
         raw_filepath=raw_filepaths,
         filepath=filepaths,
         error=errors,
         timestamp=timestamps,
         primary_key=unmapped(primary_key),
+    )
+
+    errors, staging_filepaths = unpack_mapped_results_nout2(
+        mapped_results=nested_structure_returns
     )
 
     STAGING_UPLOADED = upload_staging_data_to_gcs.map(
