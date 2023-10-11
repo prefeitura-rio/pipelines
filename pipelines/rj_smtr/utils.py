@@ -19,6 +19,7 @@ import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
 from google.cloud.storage.blob import Blob
+import pymysql
 
 
 from prefect.schedules.clocks import IntervalClock
@@ -480,9 +481,10 @@ def save_raw_local_func(
     Path(_filepath).parent.mkdir(parents=True, exist_ok=True)
 
     if filetype == "json":
-        if isinstance(data, dict):
+        if isinstance(data, str):
             data = json.loads(data)
-        json.dump(data, Path(_filepath).open("w", encoding="utf-8"))
+        with Path(_filepath).open("w", encoding="utf-8") as fi:
+            json.dump(data, fi)
 
     # if filetype == "csv":
     #     pass
@@ -604,6 +606,58 @@ def get_raw_data_gcs(
 
         data = data.decode(encoding="utf-8")
 
+    except Exception:
+        error = traceback.format_exc()
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+
+    return error, data, filetype
+
+
+def get_raw_data_db(
+    sql: str, dbms: str, host: str, secret_path: str, database: str
+) -> tuple[str, str, str]:
+    """
+    Get data from Databases
+
+    Args:
+        sql (str): the SQL Query to execute
+        dbms (str): The datase management system
+        host (str): The database host
+        secret_path (str): Secret path to get credentials
+        database (str): The database to connect
+
+    Returns:
+        tuple[str, str, str]: Error, data and filetype
+    """
+    connection_mapping = {
+        # 'postgresql': {'connector': psycopg2.connect, 'port': '5432', 'cursor':{'cursor_factory': psycopg2.extras.RealDictCursor}},
+        "mysql": {
+            "connector": pymysql.connect,
+            "port": "3306",
+            "cursor": {"cursor": pymysql.cursors.DictCursor},
+        }
+    }
+
+    data = None
+    error = None
+    filetype = "json"
+
+    try:
+        credentials = get_vault_secret(secret_path)["data"]
+
+        connection = connection_mapping[dbms](
+            host=host,
+            user=credentials["user"],
+            password=credentials["password"],
+            database=database,
+        )
+
+        with connection:
+            with connection.cursor(**connection_mapping[dbms]["cursor"]) as cursor:
+                cursor.execute(sql)
+                data = cursor.fetchall()
+
+        data = [dict(d) for d in data]
     except Exception:
         error = traceback.format_exc()
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
