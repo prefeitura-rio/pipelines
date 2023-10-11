@@ -143,7 +143,7 @@ with Flow(
         dataset_id=unmapped(dataset_id),
         partitions=partitions,
         previous_error=previous_errors,
-        recapture=recapture,
+        recapture=unmapped(recapture),
     )
 
 default_capture_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
