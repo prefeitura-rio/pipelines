@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
+from datetime import date, timedelta
 from prefect import task
 from pipelines.utils.utils import log
-from datetime import date, timedelta
 
 
 @task

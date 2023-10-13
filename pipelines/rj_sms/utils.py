@@ -14,6 +14,7 @@ import requests
 import pytz
 import pandas as pd
 import basedosdados as bd
+import pycurl
 from azure.storage.blob import BlobServiceClient
 from prefect import task
 from pipelines.utils.utils import log, get_vault_secret
@@ -130,41 +131,39 @@ def download_from_api(
 def download_azure_blob(
     container_name: str,
     blob_path: str,
-    destination_file_path: str,
+    file_folder: str,
+    file_name: str,
     vault_path: str,
-    vault_token,
+    vault_key: str,
+    add_load_date_to_filename=False,
+    load_date=None,
 ):
     """
-    Downloads a blob from Azure Blob Storage and saves it to the specified destination file path.
+    Downloads data from Azure Blob Storag and saves it to a local file.
 
     Args:
         container_name (str): The name of the container in the Azure Blob Storage account.
         blob_path (str): The path to the blob in the container.
-        destination_file_path (str): The path to save the downloaded blob file.
-        vault_path (str): The path to the secret in Vault.
-        vault_token (str): The token to access the secret in Vault.
+        file_folder (str): The folder where the downloaded file will be saved.
+        file_name (str): The name of the downloaded file.
+        params (dict, optional): Additional parameters to include in the API request.
+        vault_path (str, optional): The path in Vault where the authentication token is stored.
+        vault_key (str, optional): The key in Vault where the authentication token is stored.
+        add_load_date_to_filename (bool, optional): Whether to add the current date to the filename.
+        load_date (str, optional): The specific date to add to the filename.
 
     Returns:
-        None
-
-    Raises:
-        Exception: If there is an error retrieving the Vault secret.
-
-    Example Usage:
-        download_azure_blob(
-            container_name="my-container",
-            blob_path="path/to/blob",
-            destination_file_path="path/to/destination/file",
-            vault_path="path/to/vault/secret",
-            vault_token="token"
-        )
+        str: The path of the downloaded file.
     """
+    # Retrieve the API key from Vault
     try:
-        credential = get_vault_secret(secret_path=vault_path)["data"][vault_token]
+        credential = get_vault_secret(secret_path=vault_path)["data"][vault_key]
         log("Vault secret retrieved")
     except Exception as e:
         log(f"Not able to retrieve Vault secret {e}", level="error")
 
+    # Download data from Blob Storage
+    log(f"Downloading data from Azure Blob Storage: {blob_path}")
     blob_service_client = BlobServiceClient(
         account_url="https://datalaketpcgen2.blob.core.windows.net/",
         credential=credential,
@@ -173,12 +172,47 @@ def download_azure_blob(
         container=container_name, blob=blob_path
     )
 
-    with open(destination_file_path, "wb") as blob_file:
+    # Save the API data to a local file
+    if add_load_date_to_filename:
+        if load_date is None:
+            destination_file_path = (
+                f"{file_folder}/{file_name}_{str(date.today())}.csv"
+            )
+        else:
+            destination_file_path = f"{file_folder}/{file_name}_{load_date}.csv"
+    else:
+        destination_file_path = f"{file_folder}/{file_name}.csv"
+
+    with open(destination_file_path, "wb") as file:
         blob_data = blob_client.download_blob()
-        blob_data.readinto(blob_file)
+        blob_data.readinto(file)
 
-    log(f"Blob downloaded to '{destination_file_path}'.")
+    log(f"Blob downloaded to '{destination_file_path}")
 
+    return destination_file_path
+
+@task
+def download_url(url: str, file_name: str, file_folder: str) -> str:
+    """
+    Downloads a file from a given URL and saves it to the specified folder with the given name.
+
+    Args:
+        url (str): The URL of the file to download.
+        file_name (str): The name to give the downloaded file.
+        file_folder (str): The folder to save the downloaded file in.
+
+    Returns:
+        str: The full path to the downloaded file.
+    """
+    file_path = os.path.join(file_folder, file_name)
+    with open(file_path, 'wb') as f:
+        c = pycurl.Curl()
+        c.setopt(c.URL, url)
+        c.setopt(c.WRITEDATA, f)
+        c.perform()
+        c.close()
+
+    return file_path
 
 @task
 def clean_ascii(input_file_path):
@@ -216,26 +250,6 @@ def clean_ascii(input_file_path):
     except Exception as e:
         log(f"An error occurred: {e}", level="error")
 
-
-@task
-def set_destination_file_path(file):
-    """
-    Returns the destination file path based on the given file name and default path (~).
-
-    Args:
-        file (str): The name of the file.
-
-    Returns:
-        str: The constructed destination file path.
-    """
-    return (
-        os.path.expanduser("~")
-        + "/"
-        + file[: file.find(".")]
-        + "_"
-        + str(date.today())
-        + file[file.find(".") :]
-    )
 
 
 @task

@@ -9,7 +9,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.utils.decorators import Flow
 from pipelines.constants import constants
-from pipelines.rj_sms.dump_prontuario_vitai.contants import constants as vitai_constants
+from pipelines.rj_sms.dump_api_prontuario_vitai.contants import constants as vitai_constants
 from pipelines.rj_sms.utils import (
     create_folders,
     from_json_to_csv,
@@ -18,11 +18,11 @@ from pipelines.rj_sms.utils import (
     create_partitions,
     upload_to_datalake,
 )
-from pipelines.rj_sms.dump_prontuario_vitai.tasks import (
+from pipelines.rj_sms.dump_api_prontuario_vitai.tasks import (
     build_movimentos_date,
     build_movimentos_url,
 )
-from pipelines.rj_sms.dump_prontuario_vitai.scheduler import every_day_at_six_am
+from pipelines.rj_sms.dump_api_prontuario_vitai.scheduler import every_day_at_six_am
 
 
 with Flow(
@@ -35,14 +35,6 @@ with Flow(
     # Paramenters for GCP
     dataset_id = vitai_constants.DATASET_ID.value
     table_id = vitai_constants.TABLE_POSICAO_ID.value
-    # Parameters for materialization
-    materialize_after_dump = Parameter(
-        "materialize_after_dump", default=True, required=False
-    )
-    materialize_to_datario = Parameter(
-        "materialize_to_datario", default=False, required=False
-    )
-    materialization_mode = Parameter("mode", default="dev", required=False)
 
     # Start run
     create_folders_task = create_folders()
@@ -98,15 +90,15 @@ dump_vitai_posicao.schedule = every_day_at_six_am
 with Flow(
     name="SMS: Dump Vitai - Captura Movimentos de Estoque", code_owners=["thiago"]
 ) as dump_vitai_movimentos:
-    # Set Parameters
-    # Vitai
-    date = Parameter("date", default=None)
-    #  Vault
+    # Parameters
+    # Parameters for Vault
     vault_path = vitai_constants.VAULT_PATH.value
     vault_key = vitai_constants.VAULT_KEY.value
-    #  GCP
+    # Paramenters for GCP
     dataset_id = vitai_constants.DATASET_ID.value
     table_id = vitai_constants.TABLE_MOVIMENTOS_ID.value
+    # Parameters for Vitai
+    date = Parameter("date", default=None)
 
     # Start run
     create_folders_task = create_folders()
