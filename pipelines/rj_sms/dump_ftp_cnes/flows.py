@@ -9,11 +9,7 @@ from prefect.storage import GCS
 from pipelines.utils.decorators import Flow
 from pipelines.constants import constants
 from pipelines.rj_sms.dump_ftp_cnes.constants import constants as cnes_constants
-from pipelines.rj_sms.utils import (
-    download_ftp,
-    create_folders,
-    unzip_file
-)
+from pipelines.rj_sms.utils import download_ftp, create_folders, unzip_file
 from pipelines.rj_sms.dump_ftp_cnes.tasks import (
     check_newest_file_version,
     conform_csv_to_gcp,
@@ -40,7 +36,8 @@ with Flow(
         user="",
         password="",
         directory=ftp_file_path,
-        file_name=base_file)
+        file_name=base_file,
+    )
 
     create_folders_task = create_folders()
     create_folders_task.set_upstream(check_newest_file_version_task)
@@ -51,13 +48,12 @@ with Flow(
         password="",
         directory=ftp_file_path,
         file_name=check_newest_file_version_task["file"],
-        output_path=create_folders_task["raw"]
+        output_path=create_folders_task["raw"],
     )
     download_task.set_upstream(create_folders_task)
 
     unzip_task = unzip_file(
-        file_path=download_task,
-        output_path=create_folders_task["raw"]
+        file_path=download_task, output_path=create_folders_task["raw"]
     )
     unzip_task.set_upstream(download_task)
 
@@ -66,14 +62,14 @@ with Flow(
 
     add_multiple_date_column_task = add_multiple_date_column(
         directory=create_folders_task["raw"],
-        snapshot_date=check_newest_file_version_task['snapshot'],
-        sep=";")
+        snapshot_date=check_newest_file_version_task["snapshot"],
+        sep=";",
+    )
     add_multiple_date_column_task.set_upstream(conform_task)
 
     upload_to_datalake_task = upload_multiple_tables_to_datalake(
-        path_files=conform_task,
-        dataset_id=dataset_id,
-        dump_mode="overwrite")
+        path_files=conform_task, dataset_id=dataset_id, dump_mode="overwrite"
+    )
     upload_to_datalake_task.set_upstream(add_multiple_date_column_task)
 
 dump_cnes.storage = GCS(constants.GCS_FLOWS_BUCKET.value)

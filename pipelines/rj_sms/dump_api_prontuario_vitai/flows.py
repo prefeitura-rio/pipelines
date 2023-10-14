@@ -9,7 +9,9 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.utils.decorators import Flow
 from pipelines.constants import constants
-from pipelines.rj_sms.dump_api_prontuario_vitai.constants import constants as vitai_constants
+from pipelines.rj_sms.dump_api_prontuario_vitai.constants import (
+    constants as vitai_constants,
+)
 from pipelines.rj_sms.utils import (
     create_folders,
     from_json_to_csv,
@@ -60,7 +62,7 @@ with Flow(
 
     create_partitions_task = create_partitions(
         data_path=create_folders_task["raw"],
-        partition_directory=create_folders_task["partition_directory"]
+        partition_directory=create_folders_task["partition_directory"],
     )
     create_partitions_task.set_upstream(add_load_date_column_task)
 
@@ -131,7 +133,7 @@ with Flow(
 
     create_partitions_task = create_partitions(
         data_path=create_folders_task["raw"],
-        partition_directory=create_folders_task["partition_directory"]
+        partition_directory=create_folders_task["partition_directory"],
     )
     create_partitions_task.set_upstream(add_load_date_column_task)
 

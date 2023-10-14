@@ -177,9 +177,7 @@ def download_azure_blob(
     # Save the API data to a local file
     if add_load_date_to_filename:
         if load_date is None:
-            destination_file_path = (
-                f"{file_folder}/{file_name}_{str(date.today())}.csv"
-            )
+            destination_file_path = f"{file_folder}/{file_name}_{str(date.today())}.csv"
         else:
             destination_file_path = f"{file_folder}/{file_name}_{load_date}.csv"
     else:
@@ -201,7 +199,7 @@ def download_ftp(
     password: str,
     directory: str,
     file_name: str,
-    output_path: str
+    output_path: str,
 ):
     """
     Downloads a file from an FTP server and saves it to the specified output path.
@@ -226,7 +224,7 @@ def download_ftp(
     ftp.login(user, password)
 
     # Get the size of the file
-    ftp.voidcmd('TYPE I')
+    ftp.voidcmd("TYPE I")
     total_size = ftp.size(file_path)
 
     # Create a callback function to be called when each block is read
@@ -235,15 +233,15 @@ def download_ftp(
         downloaded_size += len(block)
         percent_complete = (downloaded_size / total_size) * 100
         if percent_complete // 5 > (downloaded_size - len(block)) // (total_size / 20):
-            log(f'Download is {percent_complete:.0f}% complete')
+            log(f"Download is {percent_complete:.0f}% complete")
         f.write(block)
 
     # Initialize the downloaded size
     downloaded_size = 0
 
     # Download the file
-    with open(output_path, 'wb') as f:
-        ftp.retrbinary(f'RETR {file_path}', callback)
+    with open(output_path, "wb") as f:
+        ftp.retrbinary(f"RETR {file_path}", callback)
 
     # Close the connection
     ftp.quit()
@@ -265,7 +263,7 @@ def download_url(url: str, file_name: str, file_folder: str) -> str:
         str: The full path to the downloaded file.
     """
     file_path = os.path.join(file_folder, file_name)
-    with open(file_path, 'wb') as f:
+    with open(file_path, "wb") as f:
         c = pycurl.Curl()
         c.setopt(c.URL, url)
         c.setopt(c.WRITEDATA, f)
@@ -312,7 +310,7 @@ def unzip_file(file_path: str, output_path: str):
     Returns:
         str: The path to the unzipped file.
     """
-    with zipfile.ZipFile(file_path, 'r') as zip_ref:
+    with zipfile.ZipFile(file_path, "r") as zip_ref:
         zip_ref.extractall(output_path)
 
     log(f"File unzipped to {output_path}")
@@ -464,7 +462,7 @@ def upload_to_datalake(
     csv_delimiter: str = ";",
     if_storage_data_exists: str = "replace",
     biglake_table: bool = True,
-    dump_mode: str = "append"
+    dump_mode: str = "append",
 ):
     """
     Uploads data from a file to a BigQuery table in a specified dataset.
@@ -524,8 +522,7 @@ def upload_to_datalake(
                 )  # pylint: disable=C0301
                 tb.delete(mode="all")
                 log(
-                    "MODE OVERWRITE: Sucessfully DELETED TABLE:\n"
-                    f"{table_staging}\n"
+                    "MODE OVERWRITE: Sucessfully DELETED TABLE:\n" f"{table_staging}\n"
                 )  # pylint: disable=C0301
 
                 tb.create(

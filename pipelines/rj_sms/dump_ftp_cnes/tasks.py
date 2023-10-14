@@ -13,18 +13,12 @@ import pytz
 from prefect import task
 from pipelines.utils.utils import log
 from pipelines.rj_sms.dump_ftp_cnes.constants import constants
-from pipelines.rj_sms.utils import (
-    list_files_ftp,
-    upload_to_datalake)
+from pipelines.rj_sms.utils import list_files_ftp, upload_to_datalake
 
 
 @task
 def check_newest_file_version(
-    host: str,
-    user: str,
-    password: str,
-    directory: str,
-    file_name: str
+    host: str, user: str, password: str, directory: str, file_name: str
 ):
     """
     Check the newest version of a file in a given FTP directory.
@@ -69,7 +63,7 @@ def conform_csv_to_gcp(directory: str):
         List[str]: A list of filepaths of the conformed CSV files.
     """
     # list all csv files in the directory
-    csv_files = [f for f in os.listdir(directory) if f.endswith('.csv')]
+    csv_files = [f for f in os.listdir(directory) if f.endswith(".csv")]
 
     log(f"Conforming {len(csv_files)} files...")
 
@@ -81,9 +75,9 @@ def conform_csv_to_gcp(directory: str):
         filepath = os.path.join(directory, csv_file)
 
         # create a temporary file
-        with tempfile.NamedTemporaryFile(mode='w', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as tf:
             # open the original file in read mode
-            with open(filepath, 'r', encoding='iso8859-1') as f:
+            with open(filepath, "r", encoding="iso8859-1") as f:
                 # read the first line
                 first_line = f.readline()
 
@@ -108,9 +102,7 @@ def conform_csv_to_gcp(directory: str):
 
 @task
 def upload_multiple_tables_to_datalake(
-    path_files: str,
-    dataset_id: str,
-    dump_mode: str
+    path_files: str, dataset_id: str, dump_mode: str
 ):
     """
     Uploads multiple tables to datalake.
@@ -124,7 +116,6 @@ def upload_multiple_tables_to_datalake(
         None
     """
     for n, file in enumerate(path_files):
-
         log(f"Uploading {n+1}/{len(path_files)} files to datalake...")
 
         # retrieve file name from path
@@ -142,16 +133,12 @@ def upload_multiple_tables_to_datalake(
             csv_delimiter=";",
             if_storage_data_exists="replace",
             biglake_table=True,
-            dump_mode=dump_mode
+            dump_mode=dump_mode,
         )
 
 
 @task
-def add_multiple_date_column(
-    directory: str,
-    sep=";",
-    snapshot_date=None
-):
+def add_multiple_date_column(directory: str, sep=";", snapshot_date=None):
     """
     Adds date metadata columns to all CSV files in a given directory.
 
@@ -164,11 +151,10 @@ def add_multiple_date_column(
     now = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
 
     # list all csv files in the directory
-    csv_files = [f for f in os.listdir(directory) if f.endswith('.csv')]
+    csv_files = [f for f in os.listdir(directory) if f.endswith(".csv")]
 
     # iterate over each csv file
     for n, csv_file in enumerate(csv_files):
-
         log(f"Adding date metadata to {n+1}/{len(csv_files)} files ...")
         # construct the full file path
 

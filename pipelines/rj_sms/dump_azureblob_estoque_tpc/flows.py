@@ -8,7 +8,9 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.utils.decorators import Flow
 from pipelines.constants import constants
-from pipelines.rj_sms.dump_azureblob_estoque_tpc.constants import constants as tpc_constants
+from pipelines.rj_sms.dump_azureblob_estoque_tpc.constants import (
+    constants as tpc_constants,
+)
 from pipelines.rj_sms.utils import (
     download_azure_blob,
     create_folders,
@@ -29,7 +31,7 @@ with Flow(
     vault_path = tpc_constants.VAULT_PATH.value
     vault_key = tpc_constants.VAULT_KEY.value
     # Paramenters for GCP
-    dataset_id = tpc_constants.DATASET_ID.value 
+    dataset_id = tpc_constants.DATASET_ID.value
     table_id = tpc_constants.TABLE_POSICAO_ID.value
     # Paramerters for Azure
     container_name = tpc_constants.CONTAINER_NAME.value
@@ -52,14 +54,12 @@ with Flow(
     conform_task = conform_csv_to_gcp(download_task)
     conform_task.set_upstream(download_task)
 
-    add_load_date_column_task = add_load_date_column(
-        input_path=download_task, sep=";"
-    )
+    add_load_date_column_task = add_load_date_column(input_path=download_task, sep=";")
     add_load_date_column_task.set_upstream(conform_task)
 
     create_partitions_task = create_partitions(
         data_path=create_folders_task["raw"],
-        partition_directory=create_folders_task["partition_directory"]
+        partition_directory=create_folders_task["partition_directory"],
     )
     create_partitions_task.set_upstream(add_load_date_column_task)
 

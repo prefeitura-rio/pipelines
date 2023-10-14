@@ -10,6 +10,7 @@ class constants(Enum):
     """
     Constant values for the dump vitai flows
     """
+
     FTP_SERVER = "ftp.datasus.gov.br"
     FTP_FILE_PATH = "/cnes"
     BASE_FILE = "BASE_DE_DADOS_CNES"
