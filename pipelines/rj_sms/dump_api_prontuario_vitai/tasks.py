@@ -10,6 +10,15 @@ from pipelines.utils.utils import log
 
 @task
 def build_movimentos_url(date_param=None):
+    """
+    Builds a URL for querying product movements from the Vitai API.
+
+    Args:
+        date_param (str, optional): The date to query in the format "YYYY-MM-DD". Defaults to yesterday's date.
+
+    Returns:
+        str: The URL for querying product movements from the Vitai API.
+    """
     if date_param is None:
         date_param = (date.today() + timedelta(days=-1)).strftime("%Y-%m-%d")
 
@@ -20,6 +29,15 @@ def build_movimentos_url(date_param=None):
 
 @task
 def build_movimentos_date(date_param=None):
+    """
+    Builds a date string in the format '%Y-%m-%d' based on the given date_param or yesterday's date if date_param is None.
+
+    Args:
+        date_param (str, optional): A date string in the format '%Y-%m-%d'. Defaults to None.
+
+    Returns:
+        str: A date string in the format '%Y-%m-%d'.
+    """
     if date_param is None:
         date_param = (date.today() + timedelta(days=-1)).strftime("%Y-%m-%d")
 
