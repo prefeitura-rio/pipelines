@@ -16,7 +16,6 @@ import requests
 import pytz
 import pandas as pd
 import basedosdados as bd
-import pycurl
 from azure.storage.blob import BlobServiceClient
 from prefect import task
 from pipelines.utils.utils import log, get_vault_secret
