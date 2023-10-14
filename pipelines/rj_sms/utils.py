@@ -250,30 +250,6 @@ def download_ftp(
 
 
 @task
-def download_url(url: str, file_name: str, file_folder: str) -> str:
-    """
-    Downloads a file from a given URL and saves it to the specified folder with the given name.
-
-    Args:
-        url (str): The URL of the file to download.
-        file_name (str): The name to give the downloaded file.
-        file_folder (str): The folder to save the downloaded file in.
-
-    Returns:
-        str: The full path to the downloaded file.
-    """
-    file_path = os.path.join(file_folder, file_name)
-    with open(file_path, "wb") as f:
-        c = pycurl.Curl()
-        c.setopt(c.URL, url)
-        c.setopt(c.WRITEDATA, f)
-        c.perform()
-        c.close()
-
-    return file_path
-
-
-@task
 def list_files_ftp(host, user, password, directory):
     """
     Lists all files in a given directory on a remote FTP server.

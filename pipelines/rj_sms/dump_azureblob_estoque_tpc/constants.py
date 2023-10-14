@@ -16,4 +16,4 @@ class constants(Enum):
     DATASET_ID = "brutos_estoque_central_tpc"
     TABLE_POSICAO_ID = "estoque_posicao"
     CONTAINER_NAME = "datalaketpc"
-    BLOB_PATH_POSICAO = "gold/logistico/cliente=prefeitura_rio/planta=sms_rio/estoque_local/estoque_local.csv"
+    BLOB_PATH_POSICAO = "gold/logistico/cliente=prefeitura_rio/planta=sms_rio/estoque_local/estoque_local.csv"  # noqa: E501
