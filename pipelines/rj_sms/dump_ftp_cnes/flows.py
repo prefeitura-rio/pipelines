@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0103
 """
-TPC inventory dumping flows
+CNES dumping flows
 """
 
 from prefect.run_configs import KubernetesRun
@@ -10,20 +10,17 @@ from pipelines.utils.decorators import Flow
 from pipelines.constants import constants
 from pipelines.rj_sms.dump_ftp_cnes.constants import constants as cnes_constants
 from pipelines.rj_sms.utils import (
-    list_files_ftp,
     download_ftp,
     create_folders,
-    unzip_file,
-    add_load_date_column,
-    create_partitions,
-    upload_to_datalake,
+    unzip_file
 )
 from pipelines.rj_sms.dump_ftp_cnes.tasks import (
     check_newest_file_version,
     conform_csv_to_gcp,
-    multiple_tables_upload_to_datalake
+    upload_multiple_tables_to_datalake,
+    add_multiple_date_column,
 )
-from pipelines.rj_sms.dump_azureblob_estoque_tpc.scheduler import every_day_at_six_am
+from pipelines.rj_sms.dump_ftp_cnes.schedules import every_sunday_at_six_am
 
 with Flow(
     name="SMS: Dump CNES - Captura de dados CNES", code_owners=["thiago"]
@@ -44,7 +41,7 @@ with Flow(
         password="",
         directory=ftp_file_path,
         file_name=base_file)
-    
+
     create_folders_task = create_folders()
     create_folders_task.set_upstream(check_newest_file_version_task)
 
@@ -53,35 +50,31 @@ with Flow(
         user="",
         password="",
         directory=ftp_file_path,
-        file_name=check_newest_file_version_task,
+        file_name=check_newest_file_version_task["file"],
         output_path=create_folders_task["raw"]
     )
-    # download_task.set_upstream(create_folders_task)
-    # download_task = "/home/thiagotrabach/projects/prefeitura/pipelines/pipelines/rj_sms/data/raw/BASE_DE_DADOS_CNES_202308.ZIP"
-    # output_path = "/home/thiagotrabach/projects/prefeitura/pipelines/pipelines/rj_sms/data/raw"
-    # files = ["/home/thiagotrabach/projects/prefeitura/pipelines/pipelines/rj_sms/data/raw/rlAdmGerenciaCnes202307.csv",
-    #         "/home/thiagotrabach/projects/prefeitura/pipelines/pipelines/rj_sms/data/raw/rlAtividadeObrigatoria202308.csv",
-    #         "/home/thiagotrabach/projects/prefeitura/pipelines/pipelines/rj_sms/data/raw/rlEquipeAldeia202308.csv"]
+    download_task.set_upstream(create_folders_task)
 
     unzip_task = unzip_file(
         file_path=download_task,
-        output_path=create_folders_task["raw"] #output_path
+        output_path=create_folders_task["raw"]
     )
     unzip_task.set_upstream(download_task)
 
     conform_task = conform_csv_to_gcp(create_folders_task["raw"])
     conform_task.set_upstream(unzip_task)
 
-    #add_load_date_column_task = add_load_date_column(
-    #    input_path=download_task, sep=";"
-    #)
-    #add_load_date_column_task.set_upstream(conform_task)
+    add_multiple_date_column_task = add_multiple_date_column(
+        directory=create_folders_task["raw"],
+        snapshot_date=check_newest_file_version_task['snapshot'],
+        sep=";")
+    add_multiple_date_column_task.set_upstream(conform_task)
 
-    upload_to_datalake_task = multiple_tables_upload_to_datalake(
+    upload_to_datalake_task = upload_multiple_tables_to_datalake(
         path_files=conform_task,
         dataset_id=dataset_id,
         dump_mode="overwrite")
-    upload_to_datalake_task.set_upstream(conform_task)
+    upload_to_datalake_task.set_upstream(add_multiple_date_column_task)
 
 dump_cnes.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_cnes.run_config = KubernetesRun(
@@ -91,4 +84,4 @@ dump_cnes.run_config = KubernetesRun(
     ],
 )
 
-#dump_cnes.schedule = every_day_at_six_am
+dump_cnes.schedule = every_sunday_at_six_am

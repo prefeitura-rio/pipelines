@@ -19,7 +19,7 @@ from pipelines.rj_sms.utils import (
 from pipelines.rj_sms.dump_azureblob_estoque_tpc.tasks import (
     conform_csv_to_gcp,
 )
-from pipelines.rj_sms.dump_azureblob_estoque_tpc.scheduler import every_day_at_six_am
+from pipelines.rj_sms.dump_azureblob_estoque_tpc.schedules import every_day_at_six_am
 
 with Flow(
     name="SMS: Dump TPC - Captura de dados TPC", code_owners=["thiago"]

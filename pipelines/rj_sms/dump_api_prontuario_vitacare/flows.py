@@ -15,7 +15,7 @@ from pipelines.rj_sms.utils import (
 from pipelines.rj_sms.dump_api_prontuario_vitacare.tasks import (
     build_params,
 )
-from pipelines.rj_sms.dump_api_prontuario_vitai.scheduler import every_day_at_six_am
+from pipelines.rj_sms.dump_api_prontuario_vitai.schedules import every_day_at_six_am
 
 with Flow(
     name="SMS: Dump VitaCare - Captura Posição de Estoque", code_owners=["thiago"]

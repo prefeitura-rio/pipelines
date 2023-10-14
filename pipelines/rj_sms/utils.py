@@ -308,7 +308,6 @@ def unzip_file(file_path: str, output_path: str):
     return output_path
 
 
-
 @task
 def clean_ascii(input_file_path):
     """

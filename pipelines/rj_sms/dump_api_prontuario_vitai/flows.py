@@ -22,7 +22,7 @@ from pipelines.rj_sms.dump_api_prontuario_vitai.tasks import (
     build_movimentos_date,
     build_movimentos_url,
 )
-from pipelines.rj_sms.dump_api_prontuario_vitai.scheduler import every_day_at_six_am
+from pipelines.rj_sms.dump_api_prontuario_vitai.schedules import every_day_at_six_am
 
 
 with Flow(
