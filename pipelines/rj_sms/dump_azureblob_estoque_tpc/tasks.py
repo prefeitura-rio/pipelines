@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+"""
+Tasks for dump_azublob_estoque_tpc
+"""
+
 import pandas as pd
 from prefect import task
 from pipelines.utils.utils import log

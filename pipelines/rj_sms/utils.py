@@ -11,12 +11,12 @@ import sys
 from datetime import datetime, date
 from pathlib import Path
 from ftplib import FTP
+import zipfile
 import requests
 import pytz
 import pandas as pd
 import basedosdados as bd
 import pycurl
-import zipfile
 from azure.storage.blob import BlobServiceClient
 from prefect import task
 from pipelines.utils.utils import log, get_vault_secret
@@ -277,6 +277,18 @@ def download_url(url: str, file_name: str, file_folder: str) -> str:
 
 @task
 def list_files_ftp(host, user, password, directory):
+    """
+    Lists all files in a given directory on a remote FTP server.
+
+    Args:
+        host (str): The hostname or IP address of the FTP server.
+        user (str): The username to use for authentication.
+        password (str): The password to use for authentication.
+        directory (str): The directory to list files from.
+
+    Returns:
+        list: A list of filenames in the specified directory.
+    """
     ftp = FTP(host)
     ftp.login(user, password)
     ftp.cwd(directory)
