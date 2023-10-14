@@ -14,7 +14,8 @@ def build_movimentos_url(date_param=None):
     Builds a URL for querying product movements from the Vitai API.
 
     Args:
-        date_param (str, optional): The date to query in the format "YYYY-MM-DD". Defaults to yesterday's date.
+        date_param (str, optional): The date to query in the format "YYYY-MM-DD".
+        Defaults to yesterday's date.
 
     Returns:
         str: The URL for querying product movements from the Vitai API.
@@ -30,7 +31,8 @@ def build_movimentos_url(date_param=None):
 @task
 def build_movimentos_date(date_param=None):
     """
-    Builds a date string in the format '%Y-%m-%d' based on the given date_param or yesterday's date if date_param is None.
+    Builds a date string in the format '%Y-%m-%d' based on the given date_param or yesterday's
+    date if date_param is None.
 
     Args:
         date_param (str, optional): A date string in the format '%Y-%m-%d'. Defaults to None.
