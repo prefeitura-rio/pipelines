@@ -10,11 +10,13 @@ import shutil
 import sys
 from datetime import datetime, date
 from pathlib import Path
+from ftplib import FTP
 import requests
 import pytz
 import pandas as pd
 import basedosdados as bd
 import pycurl
+import zipfile
 from azure.storage.blob import BlobServiceClient
 from prefect import task
 from pipelines.utils.utils import log, get_vault_secret
@@ -191,6 +193,64 @@ def download_azure_blob(
 
     return destination_file_path
 
+
+@task
+def download_ftp(
+    host: str,
+    user: str,
+    password: str,
+    directory: str,
+    file_name: str,
+    output_path: str
+):
+    """
+    Downloads a file from an FTP server and saves it to the specified output path.
+
+    Args:
+        host (str): The FTP server hostname.
+        user (str): The FTP server username.
+        password (str): The FTP server password.
+        directory (str): The directory on the FTP server where the file is located.
+        file_name (str): The name of the file to download.
+        output_path (str): The local path where the downloaded file should be saved.
+
+    Returns:
+        str: The local path where the downloaded file was saved.
+    """
+
+    file_path = f"{directory}/{file_name}"
+    output_path = output_path + "/" + file_name
+    log(output_path)
+    # Connect to the FTP server
+    ftp = FTP(host)
+    ftp.login(user, password)
+
+    # Get the size of the file
+    ftp.voidcmd('TYPE I')
+    total_size = ftp.size(file_path)
+
+    # Create a callback function to be called when each block is read
+    def callback(block):
+        nonlocal downloaded_size
+        downloaded_size += len(block)
+        percent_complete = (downloaded_size / total_size) * 100
+        if percent_complete // 5 > (downloaded_size - len(block)) // (total_size / 20):
+            log(f'Download is {percent_complete:.0f}% complete')
+        f.write(block)
+
+    # Initialize the downloaded size
+    downloaded_size = 0
+
+    # Download the file
+    with open(output_path, 'wb') as f:
+        ftp.retrbinary(f'RETR {file_path}', callback)
+
+    # Close the connection
+    ftp.quit()
+
+    return output_path
+
+
 @task
 def download_url(url: str, file_name: str, file_folder: str) -> str:
     """
@@ -213,6 +273,41 @@ def download_url(url: str, file_name: str, file_folder: str) -> str:
         c.close()
 
     return file_path
+
+
+@task
+def list_files_ftp(host, user, password, directory):
+    ftp = FTP(host)
+    ftp.login(user, password)
+    ftp.cwd(directory)
+
+    files = ftp.nlst()
+
+    ftp.quit()
+
+    return files
+
+
+@task
+def unzip_file(file_path: str, output_path: str):
+    """
+    Unzips a file to the specified output path.
+
+    Args:
+        file_path (str): The path to the file to be unzipped.
+        output_path (str): The path to the output directory.
+
+    Returns:
+        str: The path to the unzipped file.
+    """
+    with zipfile.ZipFile(file_path, 'r') as zip_ref:
+        zip_ref.extractall(output_path)
+
+    log(f"File unzipped to {output_path}")
+
+    return output_path
+
+
 
 @task
 def clean_ascii(input_file_path):
@@ -249,7 +344,6 @@ def clean_ascii(input_file_path):
 
     except Exception as e:
         log(f"An error occurred: {e}", level="error")
-
 
 
 @task
@@ -359,6 +453,7 @@ def upload_to_datalake(
     csv_delimiter: str = ";",
     if_storage_data_exists: str = "replace",
     biglake_table: bool = True,
+    dump_mode: str = "append"
 ):
     """
     Uploads data from a file to a BigQuery table in a specified dataset.
@@ -376,9 +471,17 @@ def upload_to_datalake(
             Defaults to True.
     """
     tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
-    table_exists = tb.table_exists(mode="staging")
+    table_staging = f"{tb.table_full_name['staging']}"
+    st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+    storage_path = f"{st.bucket_name}.staging.{dataset_id}.{table_id}"
+    storage_path_link = (
+        f"https://console.cloud.google.com/storage/browser/{st.bucket_name}"
+        f"/staging/{dataset_id}/{table_id}"
+    )
 
     try:
+        table_exists = tb.table_exists(mode="staging")
+
         if not table_exists:
             log(f"CREATING TABLE: {dataset_id}.{table_id}")
             tb.create(
@@ -388,11 +491,39 @@ def upload_to_datalake(
                 biglake_table=biglake_table,
             )
         else:
-            log(
-                f"TABLE ALREADY EXISTS APPENDING DATA TO STORAGE: {dataset_id}.{table_id}"
-            )
+            if dump_mode == "append":
+                log(
+                    f"TABLE ALREADY EXISTS APPENDING DATA TO STORAGE: {dataset_id}.{table_id}"
+                )
 
-            tb.append(filepath=input_path, if_exists=if_exists)
+                tb.append(filepath=input_path, if_exists=if_exists)
+            elif dump_mode == "overwrite":
+                log(
+                    "MODE OVERWRITE: Table ALREADY EXISTS, DELETING OLD DATA!\n"
+                    f"{storage_path}\n"
+                    f"{storage_path_link}"
+                )  # pylint: disable=C0301
+                st.delete_table(
+                    mode="staging", bucket_name=st.bucket_name, not_found_ok=True
+                )
+                log(
+                    "MODE OVERWRITE: Sucessfully DELETED OLD DATA from Storage:\n"
+                    f"{storage_path}\n"
+                    f"{storage_path_link}"
+                )  # pylint: disable=C0301
+                tb.delete(mode="all")
+                log(
+                    "MODE OVERWRITE: Sucessfully DELETED TABLE:\n"
+                    f"{table_staging}\n"
+                )  # pylint: disable=C0301
+
+                tb.create(
+                    path=input_path,
+                    csv_delimiter=csv_delimiter,
+                    if_storage_data_exists=if_storage_data_exists,
+                    biglake_table=biglake_table,
+                )
         log("Data uploaded to BigQuery")
+
     except Exception as e:
         log(f"An error occurred: {e}", level="error")

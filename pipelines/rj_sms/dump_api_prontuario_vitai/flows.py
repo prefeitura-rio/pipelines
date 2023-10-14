@@ -9,7 +9,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.utils.decorators import Flow
 from pipelines.constants import constants
-from pipelines.rj_sms.dump_api_prontuario_vitai.contants import constants as vitai_constants
+from pipelines.rj_sms.dump_api_prontuario_vitai.constants import constants as vitai_constants
 from pipelines.rj_sms.utils import (
     create_folders,
     from_json_to_csv,

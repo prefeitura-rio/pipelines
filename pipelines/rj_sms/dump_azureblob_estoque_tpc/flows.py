@@ -8,7 +8,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.utils.decorators import Flow
 from pipelines.constants import constants
-from pipelines.rj_sms.dump_azureblob_estoque_tpc.contants import constants as tpc_constants
+from pipelines.rj_sms.dump_azureblob_estoque_tpc.constants import constants as tpc_constants
 from pipelines.rj_sms.utils import (
     download_azure_blob,
     create_folders,
