@@ -27,7 +27,7 @@ unidade_saude_flow_parameters = {
     "url": "https://docs.google.com/spreadsheets/d/1EkYfxuN2bWD_q4OhHL8hJvbmQKmQKFrk0KLf6D7nKS4/edit?usp=sharing",  # noqa: E501
     "url_type": "google_sheet",
     "gsheets_sheet_name": "Sheet1",
-    "table_id": "unidade_saude_auxiliar",
+    "table_id": "estabelecimento_auxiliar",
     "dataset_id": sheets_constants.DATASET_ID.value,
     "dump_mode": "overwrite",
 }
