@@ -67,15 +67,18 @@ with Flow(
             dataset_id=dataset_id,
             table_id=table_id,
         )
+        RECAPTURE_RUNNAME_SUFIX = " Recaptura"
 
     with case(recapture, False):
         capture_timestamp = [get_current_timestamp()]
         previous_errors = [None]
+        CAPTURE_RUNNAME_SUFIX = ""
 
     timestamps = merge(recapture_timestamps, capture_timestamp)
+    runname_sufix = merge(RECAPTURE_RUNNAME_SUFIX, CAPTURE_RUNNAME_SUFIX)
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=default_capture_flow.name + " " + table_id + ": ",
+        prefix=default_capture_flow.name + " " + table_id + runname_sufix + ": ",
         now_time=get_now_time(),
     )
 
