@@ -20,6 +20,8 @@ from basedosdados import Table
 import pandas as pd
 from google.cloud.storage.blob import Blob
 import pymysql
+import psycopg2
+import psycopg2.extras
 
 
 from prefect.schedules.clocks import IntervalClock
@@ -435,7 +437,6 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
     clocks = []
     for count, parameters in enumerate(table_parameters):
         parameter_defaults = parameters | general_flow_params
-        log(f"parameter_defaults: {parameter_defaults}")
         clocks.append(
             IntervalClock(
                 interval=clock_interval,
@@ -630,12 +631,16 @@ def get_raw_data_db(
         tuple[str, str, str]: Error, data and filetype
     """
     connection_mapping = {
-        # 'postgresql': {'connector': psycopg2.connect, 'port': '5432', 'cursor':{'cursor_factory': psycopg2.extras.RealDictCursor}},
+        "postgresql": {
+            "connector": psycopg2.connect,
+            "port": "5432",
+            "cursor": {"cursor_factory": psycopg2.extras.RealDictCursor},
+        },
         "mysql": {
             "connector": pymysql.connect,
             "port": "3306",
             "cursor": {"cursor": pymysql.cursors.DictCursor},
-        }
+        },
     }
 
     data = None
