@@ -48,14 +48,19 @@ with Flow(
 ) as default_capture_flow:
     # Configuração #
 
+    # Parâmetros Gerais #
     table_id = Parameter("table_id", default=None)
-    partition_date_only = Parameter("partition_date_only", default=None)
-    extract_params = Parameter("extract_params", default=None)
     dataset_id = Parameter("dataset_id", default=None)
+    partition_date_only = Parameter("partition_date_only", default=None)
+
+    # Parâmetros Captura #
+    extract_params = Parameter("extract_params", default=None)
     secret_path = Parameter("secret_path", default=None)
-    primary_key = Parameter("primary_key", default=None)
     source_type = Parameter("source_type", default=None)
     recapture = Parameter("recapture", default=False)
+
+    # Parâmetros Pré-tratamento #
+    primary_key = Parameter("primary_key", default=None)
 
     with case(recapture, True):
         _, recapture_timestamps, previous_errors = query_logs(
