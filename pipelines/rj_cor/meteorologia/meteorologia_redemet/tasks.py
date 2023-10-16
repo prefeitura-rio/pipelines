@@ -18,6 +18,7 @@ from pipelines.rj_cor.meteorologia.precipitacao_alertario.utils import (
     parse_date_columns,
 )
 
+print("hi")
 
 @task(nout=3)
 def get_dates(data_inicio: str, data_fim: str) -> Tuple[str, str]:
