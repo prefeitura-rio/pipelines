@@ -615,14 +615,14 @@ def get_raw_data_gcs(
 
 
 def get_raw_data_db(
-    sql: str, dbms: str, host: str, secret_path: str, database: str
+    query: str, engine: str, host: str, secret_path: str, database: str
 ) -> tuple[str, str, str]:
     """
     Get data from Databases
 
     Args:
-        sql (str): the SQL Query to execute
-        dbms (str): The datase management system
+        query (str): the SQL Query to execute
+        engine (str): The datase management system
         host (str): The database host
         secret_path (str): Secret path to get credentials
         database (str): The database to connect
@@ -650,7 +650,7 @@ def get_raw_data_db(
     try:
         credentials = get_vault_secret(secret_path)["data"]
 
-        connection = connection_mapping[dbms](
+        connection = connection_mapping[engine](
             host=host,
             user=credentials["user"],
             password=credentials["password"],
@@ -658,8 +658,8 @@ def get_raw_data_db(
         )
 
         with connection:
-            with connection.cursor(**connection_mapping[dbms]["cursor"]) as cursor:
-                cursor.execute(sql)
+            with connection.cursor(**connection_mapping[engine]["cursor"]) as cursor:
+                cursor.execute(query)
                 data = cursor.fetchall()
 
         data = [dict(d) for d in data]
