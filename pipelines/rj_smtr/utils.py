@@ -650,7 +650,7 @@ def get_raw_data_db(
     try:
         credentials = get_vault_secret(secret_path)["data"]
 
-        connection = connection_mapping[engine](
+        connection = connection_mapping[engine]["connector"](
             host=host,
             user=credentials["user"],
             password=credentials["password"],
