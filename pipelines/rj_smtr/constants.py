@@ -170,19 +170,18 @@ class constants(Enum):  # pylint: disable=c0103
         "databases": {
             "principal_db": {
                 "engine": "mysql",
-                "host": "principal-database-replica.internal",
+                "host": "10.5.114.121",
             },
             "tarifa_db": {
                 "engine": "postgres",
-                "host": "tarifa-database-replica.internal",
+                "host": "10.5.113.254",
             },
             "transacao_db": {
                 "engine": "postgres",
-                "host": "transacao-database-replica.internal",
+                "host": "10.5.114.65",
             },
         },
-        "vpn_url": "http://vpn-jae.mobilidade.rio/",
-        "source_type": "api-json",
+        "source_type": "db",
     }
 
     BILHETAGEM_CAPTURE_RUN_INTERVAL = {

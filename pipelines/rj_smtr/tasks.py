@@ -564,18 +564,15 @@ def create_request_params(
         database = constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["databases"][
             extract_params["database"]
         ]
-        request_url = (
-            constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["vpn_url"]
-            + database["engine"]
-        )
+        request_url = database["host"]
 
         datetime_range = get_datetime_range(
             timestamp=timestamp, interval=timedelta(**extract_params["run_interval"])
         )
 
         request_params = {
-            "host": database["host"],  # TODO: exibir no log em ambiente fechado
             "database": extract_params["database"],
+            "engine": database["engine"],
             "query": extract_params["query"].format(**datetime_range),
         }
 
