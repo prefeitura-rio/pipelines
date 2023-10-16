@@ -173,11 +173,11 @@ class constants(Enum):  # pylint: disable=c0103
                 "host": "10.5.114.121",
             },
             "tarifa_db": {
-                "engine": "postgres",
+                "engine": "postgresql",
                 "host": "10.5.113.254",
             },
             "transacao_db": {
-                "engine": "postgres",
+                "engine": "postgresql",
                 "host": "10.5.114.65",
             },
         },
