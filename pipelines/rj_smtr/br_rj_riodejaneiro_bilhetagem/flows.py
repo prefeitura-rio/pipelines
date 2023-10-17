@@ -33,10 +33,6 @@ from pipelines.rj_smtr.tasks import (
     get_current_timestamp,
 )
 
-from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.schedules import (
-    bilhetagem_transacao_schedule,
-)
-
 from pipelines.rj_smtr.constants import constants
 
 from pipelines.rj_smtr.schedules import every_hour, every_minute
