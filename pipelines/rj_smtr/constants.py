@@ -170,15 +170,15 @@ class constants(Enum):  # pylint: disable=c0103
         "databases": {
             "principal_db": {
                 "engine": "mysql",
-                "host": "10.5.114.121",
+                "host": "principal-database-replica.internal",
             },
             "tarifa_db": {
                 "engine": "postgresql",
-                "host": "10.5.113.254",
+                "host": "tarifa-database-replica.internal",
             },
             "transacao_db": {
                 "engine": "postgresql",
-                "host": "10.5.114.65",
+                "host": "transacao-database-replica.internal",
             },
         },
         "source_type": "db",
