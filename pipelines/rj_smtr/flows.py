@@ -5,7 +5,7 @@ Flows for rj_smtr
 
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
-from prefect import case, Parameter
+from prefect import case, Parameter, task
 from prefect.utilities.edges import unmapped
 from prefect.tasks.control_flow import merge
 
@@ -62,23 +62,26 @@ with Flow(
     # Parâmetros Pré-tratamento #
     primary_key = Parameter("primary_key", default=None)
 
+    get_run_name_prefix = task(
+        lambda recap: "Recaptura" if recap else "Captura",
+        name="get_run_name_prefix",
+        checkpoint=False,
+    )
+
     with case(recapture, True):
         _, recapture_timestamps, previous_errors = query_logs(
             dataset_id=dataset_id,
             table_id=table_id,
         )
-        RECAPTURE_RUNNAME_SUFIX = " Recaptura"
 
     with case(recapture, False):
         capture_timestamp = [get_current_timestamp()]
         previous_errors = [None]
-        CAPTURE_RUNNAME_SUFIX = ""
 
     timestamps = merge(recapture_timestamps, capture_timestamp)
-    runname_sufix = merge(RECAPTURE_RUNNAME_SUFIX, CAPTURE_RUNNAME_SUFIX)
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=default_capture_flow.name + " " + table_id + runname_sufix + ": ",
+        prefix="SMTR: " + get_run_name_prefix(recap=recapture) + " " + table_id + ": ",
         now_time=get_now_time(),
     )
 
