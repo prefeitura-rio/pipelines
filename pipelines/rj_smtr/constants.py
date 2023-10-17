@@ -170,23 +170,18 @@ class constants(Enum):  # pylint: disable=c0103
         "databases": {
             "principal_db": {
                 "engine": "mysql",
-                "host": "principal-database-replica.internal",
+                "host": "10.5.114.121",
             },
             "tarifa_db": {
                 "engine": "postgresql",
-                "host": "tarifa-database-replica.internal",
+                "host": "10.5.113.254",
             },
             "transacao_db": {
                 "engine": "postgresql",
-                "host": "transacao-database-replica.internal",
+                "host": "10.5.115.1",
             },
         },
         "source_type": "db",
-    }
-
-    BILHETAGEM_CAPTURE_RUN_INTERVAL = {
-        "transacao_run_interval": {"minutes": 1},
-        "principal_run_interval": {"hours": 1},
     }
 
     BILHETAGEM_TRANSACAO_CAPTURE_PARAMS = {
@@ -203,9 +198,9 @@ class constants(Enum):  # pylint: disable=c0103
                     data_processamento BETWEEN '{start}'
                     AND '{end}'
             """,
-            "run_interval": BILHETAGEM_CAPTURE_RUN_INTERVAL["transacao_run_interval"],
         },
-        "primary_key": ["id"],  # id column to nest data on
+        "primary_key": ["id"],
+        "interval_minutes": 1,
     }
 
     BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
@@ -224,11 +219,9 @@ class constants(Enum):  # pylint: disable=c0103
                     WHERE
                         DT_INCLUSAO >= '{start}'
                 """,
-                "run_interval": BILHETAGEM_CAPTURE_RUN_INTERVAL[
-                    "principal_run_interval"
-                ],
             },
             "primary_key": ["CD_LINHA"],  # id column to nest data on
+            "interval_minutes": 60,
         },
         {
             "table_id": "grupo",
@@ -243,11 +236,9 @@ class constants(Enum):  # pylint: disable=c0103
                     WHERE
                         DT_INCLUSAO >= '{start}'
                 """,
-                "run_interval": BILHETAGEM_CAPTURE_RUN_INTERVAL[
-                    "principal_run_interval"
-                ],
             },
             "primary_key": ["CD_GRUPO"],  # id column to nest data on
+            "interval_minutes": 60,
         },
         {
             "table_id": "grupo_linha",
@@ -262,11 +253,9 @@ class constants(Enum):  # pylint: disable=c0103
                     WHERE
                         DT_INCLUSAO >= '{start}'
                 """,
-                "run_interval": BILHETAGEM_CAPTURE_RUN_INTERVAL[
-                    "principal_run_interval"
-                ],
             },
-            "primary_key": ["CD_GRUPO", "CD_LINHA"],  # id column to nest data on
+            "primary_key": ["CD_GRUPO", "CD_LINHA"],
+            "interval_minutes": 60,
         },
         {
             "table_id": "matriz_integracao",
@@ -281,14 +270,12 @@ class constants(Enum):  # pylint: disable=c0103
                     WHERE
                         dt_inclusao >= '{start}'
                 """,
-                "run_interval": BILHETAGEM_CAPTURE_RUN_INTERVAL[
-                    "principal_run_interval"
-                ],
             },
             "primary_key": [
                 "cd_versao_matriz",
                 "cd_integracao",
             ],  # id column to nest data on
+            "interval_minutes": 60,
         },
     ]
 
