@@ -179,4 +179,3 @@ bilhetagem_transacao_tratamento.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 bilhetagem_transacao_tratamento.schedule = every_hour
-# bilhetagem_materializacao.schedule = bilhetagem_materializacao_schedule
