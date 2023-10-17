@@ -104,7 +104,7 @@ with Flow(
         extract_params=unmapped(extract_params),
         table_id=unmapped(table_id),
         timestamp=timestamps,
-        interval_minutes=interval_minutes,
+        interval_minutes=unmapped(interval_minutes),
     )
 
     request_params, request_paths = unpack_mapped_results_nout2(
