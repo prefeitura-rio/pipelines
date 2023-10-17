@@ -18,8 +18,6 @@ from pipelines.rj_cor.meteorologia.precipitacao_alertario.utils import (
     parse_date_columns,
 )
 
-print("hi")
-
 @task(nout=3)
 def get_dates(data_inicio: str, data_fim: str) -> Tuple[str, str]:
     """
@@ -27,7 +25,7 @@ def get_dates(data_inicio: str, data_fim: str) -> Tuple[str, str]:
     Se nenhuma data foi passada a data_inicio corresponde a ontem
     e data_fim a hoje e não estamos fazendo backfill.
     Caso contrário, retorna as datas inputadas mos parâmetros do flow.
-    """
+    """  
     # a API sempre retorna o dado em UTC
     log(f"data de inicio e fim antes do if {data_inicio} {data_fim}")
     if data_inicio == "":
