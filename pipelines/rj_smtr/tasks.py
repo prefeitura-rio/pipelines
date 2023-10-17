@@ -309,7 +309,7 @@ def create_local_partition_path(
     either to save raw or staging files.
     """
     data_folder = os.getenv("DATA_FOLDER", "data")
-    file_path = f"{os.getcwd()}/{data_folder}/{{mode}}/{dataset_id}/{table_id}"
+    file_path = f"{os.getcwd()}/{data_folder}/{{mode}}/{dataset_id}_dev/{table_id}"
     file_path += f"/{partitions}/{filename}.{{filetype}}"
     log(f"Creating file path: {file_path}")
     return file_path
@@ -780,7 +780,7 @@ def upload_raw_data_to_gcs(
             st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
             log(
                 f"""Uploading raw file to bucket {st_obj.bucket_name} at
-                {st_obj.bucket_name}/{dataset_id}/{table_id}"""
+                {st_obj.bucket_name}/{dataset_id}_dev/{table_id}"""
             )
             st_obj.upload(
                 path=raw_filepath,
@@ -824,7 +824,7 @@ def upload_staging_data_to_gcs(
         try:
             # Creates and publish table if it does not exist, append to it otherwise
             create_or_append_table(
-                dataset_id=dataset_id,
+                dataset_id=f"{dataset_id}_dev",
                 table_id=table_id,
                 path=staging_filepath,
                 partitions=partitions,
@@ -836,7 +836,7 @@ def upload_staging_data_to_gcs(
     log(f"previous_error = {previous_error}")
 
     upload_run_logs_to_bq(
-        dataset_id=dataset_id,
+        dataset_id=f"{dataset_id}_dev",
         parent_table_id=table_id,
         error=error,
         timestamp=timestamp,
