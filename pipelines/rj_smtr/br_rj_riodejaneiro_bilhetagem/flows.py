@@ -9,6 +9,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect.utilities.edges import unmapped
+from prefect import Parameter
 
 # EMD Imports #
 
@@ -109,11 +110,14 @@ bilhetagem_materializacao = set_default_parameters(
 )
 
 
-# TRATAMENTO - RODA DE HORA EM HORA, CAPTURA AUXILIAR + MATERIALIZAÇÃO
+# TRATAMENTO - RODA DE HORA EM HORA, RECAPTURAS + CAPTURA AUXILIAR + MATERIALIZAÇÃO
 with Flow(
     "SMTR: Bilhetagem Transação - Tratamento",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as bilhetagem_transacao_tratamento:
+    # Configuração #
+    recapture_window_days = Parameter("recapture_window_days", default=1)
+
     timestamp = get_current_timestamp()
 
     rename_flow_run = rename_current_flow_run_now_time(
@@ -123,19 +127,36 @@ with Flow(
 
     LABELS = get_current_flow_labels()
 
-    # Recaptura Transações
+    # Recapturas
 
-    run_recaptura = create_flow_run(
+    run_recaptura_trasacao = create_flow_run(
         flow_name=bilhetagem_transacao_recaptura.name,
         project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
         labels=LABELS,
+        parameters={"recapture_window_days": recapture_window_days},
     )
 
-    wait_recaptura = wait_for_flow_run(
-        run_recaptura,
+    wait_recaptura_trasacao = wait_for_flow_run(
+        run_recaptura_trasacao,
         stream_states=True,
         stream_logs=True,
         raise_final_state=True,
+    )
+
+    runs_recaptura_auxiliar = create_flow_run.map(
+        flow_name=unmapped(bilhetagem_auxiliar_captura.name),
+        project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+        parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value
+        | {"recapture": True, "recapture_window_days": recapture_window_days},
+        labels=unmapped(LABELS),
+        upstream_tasks=[wait_recaptura_trasacao],
+    )
+
+    wait_recaptura_auxiliar = wait_for_flow_run.map(
+        runs_recaptura_auxiliar,
+        stream_states=unmapped(True),
+        stream_logs=unmapped(True),
+        raise_final_state=unmapped(True),
     )
 
     # Captura
@@ -144,7 +165,7 @@ with Flow(
         project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
         parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
         labels=unmapped(LABELS),
-        upstream_tasks=[wait_recaptura],
+        upstream_tasks=[wait_recaptura_auxiliar],
     )
 
     wait_captura = wait_for_flow_run.map(
