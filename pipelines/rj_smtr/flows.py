@@ -71,7 +71,7 @@ with Flow(
     )
 
     with case(recapture, True):
-        _, recapture_timestamps, previous_errors = query_logs(
+        _, recapture_timestamps, recapture_previous_errors = query_logs(
             dataset_id=dataset_id,
             table_id=table_id,
             interval_minutes=interval_minutes,
@@ -80,11 +80,12 @@ with Flow(
 
     with case(recapture, False):
         capture_timestamp = [get_current_timestamp()]
-        previous_errors = task(
+        capture_previous_errors = task(
             lambda: [None], checkpoint=False, name="assign_none_to_previous_errors"
         )()
 
     timestamps = merge(recapture_timestamps, capture_timestamp)
+    previous_errors = merge(recapture_previous_errors, capture_previous_errors)
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix="SMTR: " + get_run_name_prefix(recap=recapture) + " " + table_id + ": ",
