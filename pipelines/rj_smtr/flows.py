@@ -59,7 +59,7 @@ with Flow(
     source_type = Parameter("source_type", default=None)
     interval_minutes = Parameter("interval_minutes", default=None)
     recapture = Parameter("recapture", default=False)
-    recapture_window_days = Parameter("recapture_window_days", default=None)
+    recapture_window_days = Parameter("recapture_window_days", default=1)
 
     # Parâmetros Pré-tratamento #
     primary_key = Parameter("primary_key", default=None)
