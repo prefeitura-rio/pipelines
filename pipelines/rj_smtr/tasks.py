@@ -371,6 +371,7 @@ def query_logs(
     datetime_filter=None,
     max_recaptures: int = 60,
     interval_minutes: int = 1,
+    recapture_window_days: int = 1,
 ):
     """
     Queries capture logs to check for errors
@@ -380,9 +381,10 @@ def query_logs(
         table_id (str): table_id on BigQuery
         datetime_filter (pendulum.datetime.DateTime, optional):
         filter passed to query. This task will query the logs table
-        for the last 1 day before datetime_filter
+        for the last n (n = recapture_window_days) days before datetime_filter
         max_recaptures (int, optional): maximum number of recaptures to be done
         interval_minutes (int, optional): interval in minutes between each recapture
+        recapture_window_days (int, optional): Number of days to query for erros
 
     Returns:
         lists: errors (bool),
@@ -396,6 +398,7 @@ def query_logs(
         datetime_filter=datetime_filter,
         max_recaptures=max_recaptures,
         interval_minutes=interval_minutes,
+        recapture_window_days=recapture_window_days,
     )
 
 

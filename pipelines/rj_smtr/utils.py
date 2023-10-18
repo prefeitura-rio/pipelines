@@ -7,13 +7,13 @@ General purpose functions for rj_smtr
 from ftplib import FTP
 from pathlib import Path
 
-from datetime import timedelta, datetime, date
-import pendulum
+from datetime import timedelta, datetime
 from typing import List, Union, Any
 import traceback
 import io
 import json
 import zipfile
+import pendulum
 import pytz
 import requests
 import basedosdados as bd
