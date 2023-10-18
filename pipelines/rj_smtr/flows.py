@@ -76,7 +76,9 @@ with Flow(
 
     with case(recapture, False):
         capture_timestamp = [get_current_timestamp()]
-        previous_errors = [None]
+        previous_errors = task(
+            lambda: [None], checkpoint=False, name="assign_none_to_previous_errors"
+        )()
 
     timestamps = merge(recapture_timestamps, capture_timestamp)
 
