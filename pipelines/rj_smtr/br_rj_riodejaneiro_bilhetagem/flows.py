@@ -11,6 +11,9 @@ from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect.utilities.edges import unmapped
 from prefect import Parameter
 
+from prefect import task
+from pipelines.utils.utils import log
+
 # EMD Imports #
 
 from pipelines.constants import constants as emd_constants
@@ -150,6 +153,8 @@ with Flow(
             "recapture_window_days": recapture_window_days,
         },
     )
+
+    task(lambda x: log(x))(x=recaptura_auxiliar_params)
 
     runs_recaptura_auxiliar = create_flow_run.map(
         flow_name=unmapped(bilhetagem_auxiliar_captura.name),
