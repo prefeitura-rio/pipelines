@@ -146,8 +146,9 @@ with Flow(
         project_name=unmapped("staging"),
         parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
         labels=unmapped(LABELS),
-        upstream_tasks=unmapped([wait_recaptura_trasacao]),
     )
+
+    runs_recaptura_auxiliar.set_upstream(wait_recaptura_trasacao)
 
     wait_recaptura_auxiliar = wait_for_flow_run.map(
         runs_recaptura_auxiliar,
@@ -163,8 +164,9 @@ with Flow(
         project_name=unmapped("staging"),
         parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
         labels=unmapped(LABELS),
-        upstream_tasks=unmapped([wait_recaptura_auxiliar]),
     )
+
+    runs_captura.set_upstream(wait_recaptura_auxiliar)
 
     wait_captura = wait_for_flow_run.map(
         runs_captura,
