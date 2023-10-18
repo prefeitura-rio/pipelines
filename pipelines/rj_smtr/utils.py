@@ -874,7 +874,7 @@ def upload_run_logs_to_bq(  # pylint: disable=R0913
                 "erro": [f"[recapturado]{previous_error}"],
             }
         )
-        log(f"Recapturing {timestamp} with previous error:\n{error}")
+        log(f"Recapturing {timestamp} with previous error:\n{previous_error}")
     else:
         # not recapturing or error during flow execution
         dataframe = pd.DataFrame(
