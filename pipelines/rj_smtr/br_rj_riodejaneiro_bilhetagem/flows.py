@@ -185,20 +185,20 @@ with Flow(
     )
 
     # Materialização
-    run_materializacao = create_flow_run(
-        flow_name=bilhetagem_materializacao.name,
-        # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-        project_name="staging",
-        labels=LABELS,
-        upstream_tasks=[wait_captura],
-    )
+    # run_materializacao = create_flow_run(
+    #     flow_name=bilhetagem_materializacao.name,
+    #     # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+    #     project_name="staging",
+    #     labels=LABELS,
+    #     upstream_tasks=[wait_captura],
+    # )
 
-    wait_materializacao = wait_for_flow_run(
-        run_materializacao,
-        stream_states=True,
-        stream_logs=True,
-        raise_final_state=True,
-    )
+    # wait_materializacao = wait_for_flow_run(
+    #     run_materializacao,
+    #     stream_states=True,
+    #     stream_logs=True,
+    #     raise_final_state=True,
+    # )
 
 bilhetagem_transacao_tratamento.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 bilhetagem_transacao_tratamento.run_config = KubernetesRun(
