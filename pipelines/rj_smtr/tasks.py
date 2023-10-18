@@ -1178,3 +1178,18 @@ def unpack_mapped_results_nout2(
 
     """
     return [r[0] for r in mapped_results], [r[1] for r in mapped_results]
+
+
+@task(checkpoint=False)
+def merge_dict_with_dict_list(dict_list: list[dict], dict_to_merge: dict) -> list[dict]:
+    """
+    Task to merge a dict with every dict inside a list
+
+    Args:
+        dict_list (list[dict]): A list of dictionaries to update
+        dict_to_merge (dict): The dict that will be merged in every dict inside the list
+
+    Returns:
+        list[dict]: The updated list
+    """
+    return [inside_dict | dict_to_merge for inside_dict in dict_list]

@@ -30,9 +30,7 @@ from pipelines.rj_smtr.flows import (
     default_materialization_flow,
 )
 
-from pipelines.rj_smtr.tasks import (
-    get_current_timestamp,
-)
+from pipelines.rj_smtr.tasks import get_current_timestamp, merge_dict_with_dict_list
 
 from pipelines.rj_smtr.constants import constants
 
@@ -64,16 +62,6 @@ bilhetagem_transacao_captura = set_default_parameters(
 )
 
 bilhetagem_transacao_captura.schedule = every_minute
-
-bilhetagem_transacao_recaptura = deepcopy(default_capture_flow)
-bilhetagem_transacao_recaptura.name = "SMTR: Bilhetagem Transação - Recaptura (subflow)"
-bilhetagem_transacao_recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-bilhetagem_transacao_recaptura = set_default_parameters(
-    flow=bilhetagem_transacao_recaptura,
-    default_parameters=GENERAL_CAPTURE_DEFAULT_PARAMS
-    | constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value
-    | {"recapture": True},
-)
 
 
 # BILHETAGEM AUXILIAR - SUBFLOW PARA RODAR ANTES DE CADA MATERIALIZAÇÃO #
@@ -109,6 +97,17 @@ bilhetagem_materializacao = set_default_parameters(
     default_parameters=bilhetagem_materializacao_parameters,
 )
 
+# RECAPTURA
+
+bilhetagem_transacao_recaptura = deepcopy(default_capture_flow)
+bilhetagem_transacao_recaptura.name = "SMTR: Bilhetagem Transação - Recaptura (subflow)"
+bilhetagem_transacao_recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bilhetagem_transacao_recaptura = set_default_parameters(
+    flow=bilhetagem_transacao_recaptura,
+    default_parameters=GENERAL_CAPTURE_DEFAULT_PARAMS
+    | constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value
+    | {"recapture": True},
+)
 
 # TRATAMENTO - RODA DE HORA EM HORA, RECAPTURAS + CAPTURA AUXILIAR + MATERIALIZAÇÃO
 with Flow(
@@ -131,7 +130,8 @@ with Flow(
 
     run_recaptura_trasacao = create_flow_run(
         flow_name=bilhetagem_transacao_recaptura.name,
-        project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+        # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+        project_name="staging",
         labels=LABELS,
         parameters={"recapture_window_days": recapture_window_days},
     )
@@ -143,11 +143,19 @@ with Flow(
         raise_final_state=True,
     )
 
+    recaptura_auxiliar_params = merge_dict_with_dict_list(
+        dict_list=constants.BILHETAGEM_CAPTURE_PARAMS.value,
+        dict_to_merge={
+            "recapture": True,
+            "recapture_window_days": recapture_window_days,
+        },
+    )
+
     runs_recaptura_auxiliar = create_flow_run.map(
         flow_name=unmapped(bilhetagem_auxiliar_captura.name),
-        project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
-        parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value
-        | {"recapture": True, "recapture_window_days": recapture_window_days},
+        # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+        project_name=unmapped("staging"),
+        parameters=recaptura_auxiliar_params,
         labels=unmapped(LABELS),
         upstream_tasks=[wait_recaptura_trasacao],
     )
@@ -162,7 +170,8 @@ with Flow(
     # Captura
     runs_captura = create_flow_run.map(
         flow_name=unmapped(bilhetagem_auxiliar_captura.name),
-        project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+        # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+        project_name=unmapped("staging"),
         parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
         labels=unmapped(LABELS),
         upstream_tasks=[wait_recaptura_auxiliar],
@@ -178,7 +187,8 @@ with Flow(
     # Materialização
     run_materializacao = create_flow_run(
         flow_name=bilhetagem_materializacao.name,
-        project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+        # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+        project_name="staging",
         labels=LABELS,
         upstream_tasks=[wait_captura],
     )
