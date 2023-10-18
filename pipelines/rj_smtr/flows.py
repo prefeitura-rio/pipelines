@@ -57,8 +57,9 @@ with Flow(
     extract_params = Parameter("extract_params", default=None)
     secret_path = Parameter("secret_path", default=None)
     source_type = Parameter("source_type", default=None)
-    recapture = Parameter("recapture", default=False)
     interval_minutes = Parameter("interval_minutes", default=None)
+    recapture = Parameter("recapture", default=False)
+    recapture_window_days = Parameter("recapture_window_days", default=None)
 
     # Parâmetros Pré-tratamento #
     primary_key = Parameter("primary_key", default=None)
@@ -71,7 +72,10 @@ with Flow(
 
     with case(recapture, True):
         _, recapture_timestamps, previous_errors = query_logs(
-            dataset_id=dataset_id, table_id=table_id, interval_minutes=interval_minutes
+            dataset_id=dataset_id,
+            table_id=table_id,
+            interval_minutes=interval_minutes,
+            recapture_window_days=recapture_window_days,
         )
 
     with case(recapture, False):

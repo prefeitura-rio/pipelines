@@ -456,6 +456,7 @@ def query_logs_func(
     datetime_filter=None,
     max_recaptures: int = 60,
     interval_minutes: int = 1,
+    recapture_window_days: int = 1,
 ):
     """
     Queries capture logs to check for errors
@@ -465,9 +466,10 @@ def query_logs_func(
         table_id (str): table_id on BigQuery
         datetime_filter (pendulum.datetime.DateTime, optional):
         filter passed to query. This task will query the logs table
-        for the last 1 day before datetime_filter
+        for the last n (n = recapture_window_days) days before datetime_filter
         max_recaptures (int, optional): maximum number of recaptures to be done
         interval_minutes (int, optional): interval in minutes between each recapture
+        recapture_window_days (int, optional): Number of days to query for erros
 
     Returns:
         lists: errors (bool),
@@ -494,7 +496,7 @@ def query_logs_func(
     FROM
         UNNEST(
             GENERATE_TIMESTAMP_ARRAY(
-                TIMESTAMP_SUB('{datetime_filter}', INTERVAL 1 day),
+                TIMESTAMP_SUB('{datetime_filter}', INTERVAL {recapture_window_days} day),
                 TIMESTAMP('{datetime_filter}'),
                 INTERVAL {interval_minutes} minute) )
         AS timestamp_array
@@ -518,10 +520,10 @@ def query_logs_func(
             logs_table
         WHERE
             DATA BETWEEN DATE(DATETIME_SUB('{datetime_filter}',
-                            INTERVAL 1 day))
+                            INTERVAL {recapture_window_days} day))
             AND DATE('{datetime_filter}')
             AND timestamp_captura BETWEEN
-                DATETIME_SUB('{datetime_filter}', INTERVAL 1 day)
+                DATETIME_SUB('{datetime_filter}', INTERVAL {recapture_window_days} day)
             AND '{datetime_filter}'
         ORDER BY
             timestamp_captura )
