@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "whatsapp"
+version = "0.1.0"
+description = ""
+authors = ["André Martins <andre.martins313@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+basedosdados = {version = "2.0.0b14", extras = ["upload"]}
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
