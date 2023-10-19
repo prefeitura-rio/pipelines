@@ -66,10 +66,10 @@ with Flow(
     LABELS = get_current_flow_labels()
 
     run_captura = create_flow_run.map(
-        flow_name=unmapped(gtfs_captura.name),
-        project_name=constants_emd.PREFECT_DEFAULT_PROJECT.value,
+        flow_name=gtfs_captura.name,
+        project_name=unmapped("staging"),
         parameters=constants.GTFS_TABLE_CAPTURE_PARAMS.value,
-        labels=unmapped(LABELS),
+        labels=LABELS,
     )
 
     wait_captura = wait_for_flow_run.map(
@@ -86,7 +86,7 @@ with Flow(
 
     run_materializacao = create_flow_run(
         flow_name=unmapped(gtfs_materializacao.name),
-        project_name=constants_emd.PREFECT_DEFAULT_PROJECT.value,
+        project_name=unmapped("staging"),
         parameters=unmapped(gtfs_materializacao_parameters),
         labels=unmapped(LABELS),
         upstream_tasks=[wait_captura],
