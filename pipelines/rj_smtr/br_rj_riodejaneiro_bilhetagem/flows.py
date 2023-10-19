@@ -81,7 +81,6 @@ bilhetagem_tracking_captura = set_default_parameters(
 
 bilhetagem_tracking_captura.schedule = every_minute
 
-
 # BILHETAGEM AUXILIAR - SUBFLOW PARA RODAR ANTES DE CADA MATERIALIZAÇÃO #
 
 bilhetagem_auxiliar_captura = deepcopy(default_capture_flow)
