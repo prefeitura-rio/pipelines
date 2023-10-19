@@ -602,10 +602,6 @@ def custom_serialization(obj: Any) -> Any:
             obj = obj.tz_localize("UTC").tz_convert(
                 emd_constants.DEFAULT_TIMEZONE.value
             )
-        # if obj.tzinfo is None:
-        #     obj = obj.tz_localize(emd_constants.DEFAULT_TIMEZONE.value)
-        # else:
-        #     obj = obj.tz_convert(emd_constants.DEFAULT_TIMEZONE.value)
 
         return obj.isoformat()
 
