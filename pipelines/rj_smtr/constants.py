@@ -180,7 +180,10 @@ class constants(Enum):  # pylint: disable=c0103
                 "engine": "postgresql",
                 "host": "10.5.115.1",
             },
-            "tracking_db": {"engine": "postgresql", "host": "10.5.15.25"},
+            "tracking_db": {
+                "engine": "postgresql",
+                "host": "10.5.15.25",
+            },
         },
         "source_type": "db",
     }
