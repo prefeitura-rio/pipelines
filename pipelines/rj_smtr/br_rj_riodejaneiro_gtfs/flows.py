@@ -6,45 +6,31 @@ from copy import deepcopy
 
 # Imports #
 
-# from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
+from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
+from prefect.utilities.edges import unmapped
 
 
 # EMD Imports #
 
-# from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from pipelines.constants import constants as constants_emd
 from pipelines.utils.decorators import Flow
+from pipelines.utils.utils import set_default_parameters
+from pipelines.utils.tasks import (
+    rename_current_flow_run_now_time,
+    get_current_flow_labels,
+)
 
 # SMTR Imports #
 from pipelines.rj_smtr.constants import constants
-
-# from pipelines.rj_smtr.br_rj_riodejaneiro_gtfs.tasks import (
-#    download_gtfs,
-#    get_current_timestamp_from_date,
-# )
-
+from pipelines.rj_smtr.tasks import (
+    get_current_timestamp,
+)
 
 from pipelines.rj_smtr.flows import default_capture_flow, default_materialization_flow
 
-
-# FLOW 2: Captura e aninhamento do dado
-
-# Bucket:
-# - raw: txt na particao correta
-# - staging: csv aninhado na particao correta
-
-# BILHETAGEM PRINCIPAL - CAPTURA DIÁRIA DE DIVERSAS TABELAS #
-# gtfs_captura = deepcopy(default_capture_flow)
-# gtfs_captura.name = "SMTR: GTFS (captura)"
-# gtfs_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-# gtfs_captura.run_config = KubernetesRun(
-#     image=emd_constants.DOCKER_IMAGE.value,
-#     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
-# )
-# gtfs_captura.schedule = gtfs_captura_schedule
-
+# SETUP dos Flows
 
 gtfs_materializacao = deepcopy(default_materialization_flow)
 gtfs_materializacao.name = "SMTR - Materialização dos dados do GTFS"
@@ -66,40 +52,56 @@ gtfs_materializacao_parameters = {
     "dbt_vars": constants.GTFS_MATERIALIZACAO_PARAMS.value,
 }
 
+gtfs_materializacao = set_default_parameters(
+    flow=gtfs_materializacao,
+    default_parameters=gtfs_materializacao_parameters,
+)
+
 with Flow(
     "SMTR: GTFS - Captura/Tratamento",
     code_owners=["rodrigo", "carol"],
 ) as gtfs_captura:
     # SETUP
 
-    gtfs_captura = deepcopy(default_capture_flow)
-    gtfs_captura.name = "SMTR: GTFS - Captura/Tratamento"
+    timestamp = get_current_timestamp()
+
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix=gtfs_captura.name + " ",
+        now_time=timestamp,
+    )
+
+    LABELS = get_current_flow_labels()
+
+    run_captura = create_flow_run.map(
+        flow_name=unmapped(gtfs_captura.name),
+        project_name=unmapped(constants_emd.PREFECT_DEFAULT_PROJECT.value),
+        parameters=constants.GTFS_TABLE_CAPTURE_PARAMS.value,
+        labels=unmapped(LABELS),
+    )
+
+    wait_captura = wait_for_flow_run.map(
+        run_captura,
+        stream_states=unmapped(True),
+        stream_logs=unmapped(True),
+        raise_final_state=unmapped(True),
+    )
+
+    run_materializacao = create_flow_run(
+        flow_name=gtfs_materializacao.name,
+        project_name=constants_emd.PREFECT_DEFAULT_PROJECT.value,
+        labels=LABELS,
+        upstream_tasks=[wait_captura],
+    )
+
+    wait_materializacao = wait_for_flow_run(
+        run_materializacao,
+        stream_states=True,
+        stream_logs=True,
+        raise_final_state=True,
+    )
+
     gtfs_captura.storage = GCS(constants_emd.GCS_FLOWS_BUCKET.value)
     gtfs_captura.run_config = KubernetesRun(
         image=constants_emd.DOCKER_IMAGE.value,
-        labels=[constants_emd.RJ_SMTR_DEV_AGENT_LABEL.value],
+        labels=[constants_emd.RJ_SMTR_AGENT_LABEL.value],
     )
-
-
-"""
-    with case(download_gtfs, True):
-        parameters = {
-            "date": Parameter("date", default=None),
-            "feed_start_date": Parameter("feed_start_date", default=None),
-            "feed_end_date": Parameter("feed_end_date", default=None),
-        }
-        GTFS_CAPTURA_RUN = create_flow_run(
-            flow_name=download_gtfs.name,
-            project_name=constants.GTFS_DATASET_ID.value,
-            run_name=download_gtfs.name,
-            parameters=parameters,
-        )
-        GTFS_CAPTURA_WAIT = wait_for_flow_run(
-            GTFS_CAPTURA_RUN,
-            stream_logs=True,
-            stream_states=True,
-        )
-    """
-# download_gtfs.schedule = None
-
-# gtfs_captura.schedule = None
