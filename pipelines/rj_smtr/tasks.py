@@ -36,7 +36,7 @@ from pipelines.rj_smtr.utils import (
     read_raw_data,
     save_treated_local_func,
     save_raw_local_func,
-    query_logs_func,
+    log_critical,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
@@ -159,7 +159,7 @@ def create_dbt_run_vars(
         mode (str): the mode to get the date_range variable
 
     Returns:
-        tuple[list[dict]: the variables to be used in DBT
+        list[dict]: the variables to be used in DBT
         Union[list[dict], dict, None]: the date variable (date_range or run_date)
         bool: a flag that indicates if the date_range variable came from Redis
     """
@@ -392,14 +392,101 @@ def query_logs(
         previous_errors (list of previous errors)
     """
 
-    return query_logs_func(
-        dataset_id=dataset_id,
-        table_id=table_id,
-        datetime_filter=datetime_filter,
-        max_recaptures=max_recaptures,
-        interval_minutes=interval_minutes,
-        recapture_window_days=recapture_window_days,
-    )
+    if not datetime_filter:
+        datetime_filter = pendulum.now(constants.TIMEZONE.value).replace(
+            second=0, microsecond=0
+        )
+    elif isinstance(datetime_filter, str):
+        datetime_filter = datetime.fromisoformat(datetime_filter).replace(
+            second=0, microsecond=0
+        )
+
+    datetime_filter = datetime_filter.strftime("%Y-%m-%d %H:%M:%S")
+
+    query = f"""
+    WITH
+    t AS (
+    SELECT
+        DATETIME(timestamp_array) AS timestamp_array
+    FROM
+        UNNEST(
+            GENERATE_TIMESTAMP_ARRAY(
+                TIMESTAMP_SUB('{datetime_filter}', INTERVAL {recapture_window_days} day),
+                TIMESTAMP('{datetime_filter}'),
+                INTERVAL {interval_minutes} minute) )
+        AS timestamp_array
+    WHERE
+        timestamp_array < '{datetime_filter}' ),
+    logs_table AS (
+        SELECT
+            SAFE_CAST(DATETIME(TIMESTAMP(timestamp_captura),
+                    "America/Sao_Paulo") AS DATETIME) timestamp_captura,
+            SAFE_CAST(sucesso AS BOOLEAN) sucesso,
+            SAFE_CAST(erro AS STRING) erro,
+            SAFE_CAST(DATA AS DATE) DATA
+        FROM
+            rj-smtr-staging.{dataset_id}_staging.{table_id}_logs AS t
+    ),
+    logs AS (
+        SELECT
+            *,
+            TIMESTAMP_TRUNC(timestamp_captura, minute) AS timestamp_array
+        FROM
+            logs_table
+        WHERE
+            DATA BETWEEN DATE(DATETIME_SUB('{datetime_filter}',
+                            INTERVAL {recapture_window_days} day))
+            AND DATE('{datetime_filter}')
+            AND timestamp_captura BETWEEN
+                DATETIME_SUB('{datetime_filter}', INTERVAL {recapture_window_days} day)
+            AND '{datetime_filter}'
+        ORDER BY
+            timestamp_captura )
+    SELECT
+        CASE
+            WHEN logs.timestamp_captura IS NOT NULL THEN logs.timestamp_captura
+        ELSE
+            t.timestamp_array
+        END
+            AS timestamp_captura,
+            logs.erro
+    FROM
+        t
+    LEFT JOIN
+        logs
+    ON
+        logs.timestamp_array = t.timestamp_array
+    WHERE
+        logs.sucesso IS NOT TRUE
+    ORDER BY
+        timestamp_captura
+    """
+    log(f"Run query to check logs:\n{query}")
+    results = bd.read_sql(query=query, billing_project_id=bq_project())
+    if len(results) > 0:
+        results["timestamp_captura"] = (
+            pd.to_datetime(results["timestamp_captura"])
+            .dt.tz_localize(constants.TIMEZONE.value)
+            .to_list()
+        )
+        log(f"Recapture data for the following {len(results)} timestamps:\n{results}")
+        if len(results) > max_recaptures:
+            message = f"""
+            [SPPO - Recaptures]
+            Encontradas {len(results)} timestamps para serem recapturadas.
+            Essa run processará as seguintes:
+            #####
+            {results[:max_recaptures]}
+            #####
+            Sobraram as seguintes para serem recapturadas na próxima run:
+            #####
+            {results[max_recaptures:]}
+            #####
+            """
+            log_critical(message)
+            results = results[:max_recaptures]
+        return True, results["timestamp_captura"].to_list(), results["erro"].to_list()
+    return False, [], []
 
 
 @task
