@@ -180,6 +180,7 @@ class constants(Enum):  # pylint: disable=c0103
                 "engine": "postgresql",
                 "host": "10.5.115.1",
             },
+            "tracking_db": {"engine": "postgresql", "host": "10.5.15.25"},
         },
         "source_type": "db",
     }
@@ -196,6 +197,25 @@ class constants(Enum):  # pylint: disable=c0103
                     transacao
                 WHERE
                     data_processamento BETWEEN '{start}'
+                    AND '{end}'
+            """,
+        },
+        "primary_key": ["id"],
+        "interval_minutes": 1,
+    }
+
+    BILHETAGEM_TRACKING_CAPTURE_PARAMS = {
+        "table_id": "gps_validador",
+        "partition_date_only": False,
+        "extract_params": {
+            "database": "tracking_db",
+            "query": """
+                SELECT
+                    *
+                FROM
+                    tracking_detalhe
+                WHERE
+                    data_tracking BETWEEN '{start}'
                     AND '{end}'
             """,
         },

@@ -63,6 +63,24 @@ bilhetagem_transacao_captura = set_default_parameters(
 
 bilhetagem_transacao_captura.schedule = every_minute
 
+# BILHETAGEM GPS
+
+bilhetagem_tracking_captura = deepcopy(default_capture_flow)
+bilhetagem_tracking_captura.name = "SMTR: Bilhetagem GPS VALIDADOR - Captura"
+bilhetagem_tracking_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bilhetagem_tracking_captura.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+
+bilhetagem_tracking_captura = set_default_parameters(
+    flow=bilhetagem_tracking_captura,
+    default_parameters=GENERAL_CAPTURE_DEFAULT_PARAMS
+    | constants.BILHETAGEM_TRACKING_CAPTURE_PARAMS.value,
+)
+
+bilhetagem_tracking_captura.schedule = every_minute
+
 
 # BILHETAGEM AUXILIAR - SUBFLOW PARA RODAR ANTES DE CADA MATERIALIZAÇÃO #
 
