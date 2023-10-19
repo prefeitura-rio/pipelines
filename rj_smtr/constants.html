@@ -199,24 +199,18 @@ class constants(Enum):  # pylint: disable=c0103
         &#34;databases&#34;: {
             &#34;principal_db&#34;: {
                 &#34;engine&#34;: &#34;mysql&#34;,
-                &#34;host&#34;: &#34;principal-database-replica.internal&#34;,
+                &#34;host&#34;: &#34;10.5.114.121&#34;,
             },
             &#34;tarifa_db&#34;: {
-                &#34;engine&#34;: &#34;postgres&#34;,
-                &#34;host&#34;: &#34;tarifa-database-replica.internal&#34;,
+                &#34;engine&#34;: &#34;postgresql&#34;,
+                &#34;host&#34;: &#34;10.5.113.254&#34;,
             },
             &#34;transacao_db&#34;: {
-                &#34;engine&#34;: &#34;postgres&#34;,
-                &#34;host&#34;: &#34;transacao-database-replica.internal&#34;,
+                &#34;engine&#34;: &#34;postgresql&#34;,
+                &#34;host&#34;: &#34;10.5.115.1&#34;,
             },
         },
-        &#34;vpn_url&#34;: &#34;http://vpn-jae.mobilidade.rio/&#34;,
-        &#34;source_type&#34;: &#34;api-json&#34;,
-    }
-
-    BILHETAGEM_CAPTURE_RUN_INTERVAL = {
-        &#34;transacao_run_interval&#34;: {&#34;minutes&#34;: 1},
-        &#34;principal_run_interval&#34;: {&#34;hours&#34;: 1},
+        &#34;source_type&#34;: &#34;db&#34;,
     }
 
     BILHETAGEM_TRANSACAO_CAPTURE_PARAMS = {
@@ -233,9 +227,9 @@ class constants(Enum):  # pylint: disable=c0103
                     data_processamento BETWEEN &#39;{start}&#39;
                     AND &#39;{end}&#39;
             &#34;&#34;&#34;,
-            &#34;run_interval&#34;: BILHETAGEM_CAPTURE_RUN_INTERVAL[&#34;transacao_run_interval&#34;],
         },
-        &#34;primary_key&#34;: [&#34;id&#34;],  # id column to nest data on
+        &#34;primary_key&#34;: [&#34;id&#34;],
+        &#34;interval_minutes&#34;: 1,
     }
 
     BILHETAGEM_SECRET_PATH = &#34;smtr_jae_access_data&#34;
@@ -254,11 +248,9 @@ class constants(Enum):  # pylint: disable=c0103
                     WHERE
                         DT_INCLUSAO &gt;= &#39;{start}&#39;
                 &#34;&#34;&#34;,
-                &#34;run_interval&#34;: BILHETAGEM_CAPTURE_RUN_INTERVAL[
-                    &#34;principal_run_interval&#34;
-                ],
             },
             &#34;primary_key&#34;: [&#34;CD_LINHA&#34;],  # id column to nest data on
+            &#34;interval_minutes&#34;: 60,
         },
         {
             &#34;table_id&#34;: &#34;grupo&#34;,
@@ -273,11 +265,9 @@ class constants(Enum):  # pylint: disable=c0103
                     WHERE
                         DT_INCLUSAO &gt;= &#39;{start}&#39;
                 &#34;&#34;&#34;,
-                &#34;run_interval&#34;: BILHETAGEM_CAPTURE_RUN_INTERVAL[
-                    &#34;principal_run_interval&#34;
-                ],
             },
             &#34;primary_key&#34;: [&#34;CD_GRUPO&#34;],  # id column to nest data on
+            &#34;interval_minutes&#34;: 60,
         },
         {
             &#34;table_id&#34;: &#34;grupo_linha&#34;,
@@ -292,11 +282,9 @@ class constants(Enum):  # pylint: disable=c0103
                     WHERE
                         DT_INCLUSAO &gt;= &#39;{start}&#39;
                 &#34;&#34;&#34;,
-                &#34;run_interval&#34;: BILHETAGEM_CAPTURE_RUN_INTERVAL[
-                    &#34;principal_run_interval&#34;
-                ],
             },
-            &#34;primary_key&#34;: [&#34;CD_GRUPO&#34;, &#34;CD_LINHA&#34;],  # id column to nest data on
+            &#34;primary_key&#34;: [&#34;CD_GRUPO&#34;, &#34;CD_LINHA&#34;],
+            &#34;interval_minutes&#34;: 60,
         },
         {
             &#34;table_id&#34;: &#34;matriz_integracao&#34;,
@@ -311,14 +299,12 @@ class constants(Enum):  # pylint: disable=c0103
                     WHERE
                         dt_inclusao &gt;= &#39;{start}&#39;
                 &#34;&#34;&#34;,
-                &#34;run_interval&#34;: BILHETAGEM_CAPTURE_RUN_INTERVAL[
-                    &#34;principal_run_interval&#34;
-                ],
             },
             &#34;primary_key&#34;: [
                 &#34;cd_versao_matriz&#34;,
                 &#34;cd_integracao&#34;,
             ],  # id column to nest data on
+            &#34;interval_minutes&#34;: 60,
         },
     ]
 
@@ -518,24 +504,18 @@ class constants(Enum):  # pylint: disable=c0103
         &#34;databases&#34;: {
             &#34;principal_db&#34;: {
                 &#34;engine&#34;: &#34;mysql&#34;,
-                &#34;host&#34;: &#34;principal-database-replica.internal&#34;,
+                &#34;host&#34;: &#34;10.5.114.121&#34;,
             },
             &#34;tarifa_db&#34;: {
-                &#34;engine&#34;: &#34;postgres&#34;,
-                &#34;host&#34;: &#34;tarifa-database-replica.internal&#34;,
+                &#34;engine&#34;: &#34;postgresql&#34;,
+                &#34;host&#34;: &#34;10.5.113.254&#34;,
             },
             &#34;transacao_db&#34;: {
-                &#34;engine&#34;: &#34;postgres&#34;,
-                &#34;host&#34;: &#34;transacao-database-replica.internal&#34;,
+                &#34;engine&#34;: &#34;postgresql&#34;,
+                &#34;host&#34;: &#34;10.5.115.1&#34;,
             },
         },
-        &#34;vpn_url&#34;: &#34;http://vpn-jae.mobilidade.rio/&#34;,
-        &#34;source_type&#34;: &#34;api-json&#34;,
-    }
-
-    BILHETAGEM_CAPTURE_RUN_INTERVAL = {
-        &#34;transacao_run_interval&#34;: {&#34;minutes&#34;: 1},
-        &#34;principal_run_interval&#34;: {&#34;hours&#34;: 1},
+        &#34;source_type&#34;: &#34;db&#34;,
     }
 
     BILHETAGEM_TRANSACAO_CAPTURE_PARAMS = {
@@ -552,9 +532,9 @@ class constants(Enum):  # pylint: disable=c0103
                     data_processamento BETWEEN &#39;{start}&#39;
                     AND &#39;{end}&#39;
             &#34;&#34;&#34;,
-            &#34;run_interval&#34;: BILHETAGEM_CAPTURE_RUN_INTERVAL[&#34;transacao_run_interval&#34;],
         },
-        &#34;primary_key&#34;: [&#34;id&#34;],  # id column to nest data on
+        &#34;primary_key&#34;: [&#34;id&#34;],
+        &#34;interval_minutes&#34;: 1,
     }
 
     BILHETAGEM_SECRET_PATH = &#34;smtr_jae_access_data&#34;
@@ -573,11 +553,9 @@ class constants(Enum):  # pylint: disable=c0103
                     WHERE
                         DT_INCLUSAO &gt;= &#39;{start}&#39;
                 &#34;&#34;&#34;,
-                &#34;run_interval&#34;: BILHETAGEM_CAPTURE_RUN_INTERVAL[
-                    &#34;principal_run_interval&#34;
-                ],
             },
             &#34;primary_key&#34;: [&#34;CD_LINHA&#34;],  # id column to nest data on
+            &#34;interval_minutes&#34;: 60,
         },
         {
             &#34;table_id&#34;: &#34;grupo&#34;,
@@ -592,11 +570,9 @@ class constants(Enum):  # pylint: disable=c0103
                     WHERE
                         DT_INCLUSAO &gt;= &#39;{start}&#39;
                 &#34;&#34;&#34;,
-                &#34;run_interval&#34;: BILHETAGEM_CAPTURE_RUN_INTERVAL[
-                    &#34;principal_run_interval&#34;
-                ],
             },
             &#34;primary_key&#34;: [&#34;CD_GRUPO&#34;],  # id column to nest data on
+            &#34;interval_minutes&#34;: 60,
         },
         {
             &#34;table_id&#34;: &#34;grupo_linha&#34;,
@@ -611,11 +587,9 @@ class constants(Enum):  # pylint: disable=c0103
                     WHERE
                         DT_INCLUSAO &gt;= &#39;{start}&#39;
                 &#34;&#34;&#34;,
-                &#34;run_interval&#34;: BILHETAGEM_CAPTURE_RUN_INTERVAL[
-                    &#34;principal_run_interval&#34;
-                ],
             },
-            &#34;primary_key&#34;: [&#34;CD_GRUPO&#34;, &#34;CD_LINHA&#34;],  # id column to nest data on
+            &#34;primary_key&#34;: [&#34;CD_GRUPO&#34;, &#34;CD_LINHA&#34;],
+            &#34;interval_minutes&#34;: 60,
         },
         {
             &#34;table_id&#34;: &#34;matriz_integracao&#34;,
@@ -630,14 +604,12 @@ class constants(Enum):  # pylint: disable=c0103
                     WHERE
                         dt_inclusao &gt;= &#39;{start}&#39;
                 &#34;&#34;&#34;,
-                &#34;run_interval&#34;: BILHETAGEM_CAPTURE_RUN_INTERVAL[
-                    &#34;principal_run_interval&#34;
-                ],
             },
             &#34;primary_key&#34;: [
                 &#34;cd_versao_matriz&#34;,
                 &#34;cd_integracao&#34;,
             ],  # id column to nest data on
+            &#34;interval_minutes&#34;: 60,
         },
     ]
 
@@ -660,10 +632,6 @@ class constants(Enum):  # pylint: disable=c0103
 <h3>Class variables</h3>
 <dl>
 <dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_CAPTURE_PARAMS"><code class="name">var <span class="ident">BILHETAGEM_CAPTURE_PARAMS</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_CAPTURE_RUN_INTERVAL"><code class="name">var <span class="ident">BILHETAGEM_CAPTURE_RUN_INTERVAL</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -987,7 +955,6 @@ setTimeout(() => input.focus(), 100);
 <h4><code><a title="pipelines.rj_smtr.constants.constants" href="#pipelines.rj_smtr.constants.constants">constants</a></code></h4>
 <ul class="">
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_CAPTURE_PARAMS">BILHETAGEM_CAPTURE_PARAMS</a></code></li>
-<li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_CAPTURE_RUN_INTERVAL" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_CAPTURE_RUN_INTERVAL">BILHETAGEM_CAPTURE_RUN_INTERVAL</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_DATASET_ID">BILHETAGEM_DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS">BILHETAGEM_GENERAL_CAPTURE_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_PARAMS">BILHETAGEM_MATERIALIZACAO_PARAMS</a></code></li>
