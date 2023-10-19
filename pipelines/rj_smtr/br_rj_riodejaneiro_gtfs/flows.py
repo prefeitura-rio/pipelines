@@ -66,10 +66,10 @@ with Flow(
     LABELS = get_current_flow_labels()
 
     run_captura = create_flow_run.map(
-        flow_name=gtfs_captura.name,
+        flow_name=unmapped(gtfs_captura.name),
         project_name=unmapped("staging"),
         parameters=constants.GTFS_TABLE_CAPTURE_PARAMS.value,
-        labels=LABELS,
+        labels=unmapped(LABELS),
     )
 
     wait_captura = wait_for_flow_run.map(
