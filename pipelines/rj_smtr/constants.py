@@ -379,5 +379,3 @@ class constants(Enum):  # pylint: disable=c0103
             "source_type": "gcs-csv",
         },
     ]
-
-    GTFS_MATERIALIZACAO_PARAMS = {"date_versao_gtfs": "YYYY-MM-DD"}

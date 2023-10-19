@@ -17,7 +17,6 @@ from prefect import Parameter
 
 from pipelines.constants import constants as constants_emd
 from pipelines.utils.decorators import Flow
-from pipelines.utils.utils import set_default_parameters
 from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
     get_current_flow_labels,
@@ -49,21 +48,13 @@ gtfs_materializacao.run_config = KubernetesRun(
     labels=[constants_emd.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 
-gtfs_materializacao_parameters = {
-    "dataset_id": constants.GTFS_DATASET_ID.value,
-    "dbt_vars": constants.GTFS_MATERIALIZACAO_PARAMS.value,
-}
-
-gtfs_materializacao = set_default_parameters(
-    flow=gtfs_materializacao,
-    default_parameters=gtfs_materializacao_parameters,
-)
-
 with Flow(
     "SMTR: GTFS - Captura/Tratamento",
     code_owners=["rodrigo", "carolinagomes"],
 ) as gtfs_captura_tratamento:
     # SETUP
+
+    data_versao_gtfs = Parameter("data_versao_gtfs", default=None)
 
     timestamp = get_current_timestamp()
 
@@ -88,10 +79,15 @@ with Flow(
         raise_final_state=unmapped(True),
     )
 
+    gtfs_materializacao_parameters = {
+        "dataset_id": constants.GTFS_DATASET_ID.value,
+        "dbt_vars": {"data_versao_gtfs": data_versao_gtfs},
+    }
+
     run_materializacao = create_flow_run(
         flow_name=gtfs_materializacao.name,
         project_name=constants_emd.PREFECT_DEFAULT_PROJECT.value,
-        parameters=constants.GTFS_MATERIALIZACAO_PARAMS.value,
+        parameters=gtfs_materializacao_parameters,
         labels=LABELS,
         upstream_tasks=[wait_captura],
     )
