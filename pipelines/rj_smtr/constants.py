@@ -202,7 +202,6 @@ class constants(Enum):  # pylint: disable=c0103
         },
         "primary_key": ["id"],
         "interval_minutes": 1,
-    }
 
     BILHETAGEM_TRACKING_CAPTURE_PARAMS = {
         "table_id": "gps_validador",
