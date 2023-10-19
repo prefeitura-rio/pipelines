@@ -13,7 +13,12 @@ from prefect import task
 import requests
 
 from pipelines.constants import constants
-from pipelines.utils.utils import get_vault_secret, log, to_partitions, parse_date_columns
+from pipelines.utils.utils import (
+    get_vault_secret,
+    log,
+    to_partitions,
+    parse_date_columns,
+)
 
 
 @task(nout=3)
