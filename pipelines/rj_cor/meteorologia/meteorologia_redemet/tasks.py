@@ -13,8 +13,10 @@ from prefect import task
 import requests
 
 from pipelines.constants import constants
-from pipelines.utils.utils import get_vault_secret, log, to_partitions
-from pipelines.rj_cor.meteorologia.precipitacao_alertario.utils import (
+from pipelines.utils.utils import (
+    get_vault_secret,
+    log,
+    to_partitions,
     parse_date_columns,
 )
 
@@ -168,6 +170,9 @@ def tratar_dados(dados: pd.DataFrame, backfill: bool = 0) -> pd.DataFrame:
 
     # Remover fuso horário
     dados["data"] = dados["data"].dt.strftime("%Y-%m-%d %H:%M:%S")
+
+    # Capitalizar os dados da coluna céu
+    dados["ceu"] = dados["ceu"].capitalize()
 
     return dados
 
