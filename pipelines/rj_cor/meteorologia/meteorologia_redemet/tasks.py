@@ -170,7 +170,8 @@ def tratar_dados(dados: pd.DataFrame, backfill: bool = 0) -> pd.DataFrame:
 
     # Remover fuso horário
     dados["data"] = dados["data"].dt.strftime("%Y-%m-%d %H:%M:%S")
-
+    dados.rename(columns={"data": "data_medicao"}, inplace=True)
+    
     # Capitalizar os dados da coluna céu
     dados["ceu"] = dados["ceu"].str.capitalize()
 
