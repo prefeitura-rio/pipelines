@@ -396,8 +396,6 @@ class constants(Enum):  # pylint: disable=c0103
 
     GTFS_MATERIALIZACAO_PARAMS = (
         {
-            "table_id": "agency",
-            "upstream": True,
             "dbt_vars": {"date_versao_gtfs": "YYYY-MM-DD"},
         },
     )

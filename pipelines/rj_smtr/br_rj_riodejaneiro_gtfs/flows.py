@@ -70,7 +70,7 @@ gtfs_materializacao = set_default_parameters(
 with Flow(
     "SMTR: GTFS - Captura/Tratamento",
     code_owners=["rodrigo", "carolinagomes"],
-) as gtfs_captura:
+) as gtfs_captura_tratamento:
     # SETUP
 
     dataset_id = Parameter("dataset_id", default=None)  # br_rj_riodejaneiro_gtfs
@@ -83,7 +83,7 @@ with Flow(
     timestamp = get_current_timestamp()
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=gtfs_captura.name + " ",
+        prefix=gtfs_captura_tratamento.name + " ",
         now_time=timestamp,
     )
 
@@ -117,8 +117,8 @@ with Flow(
         raise_final_state=True,
     )
 
-gtfs_captura.storage = GCS(constants_emd.GCS_FLOWS_BUCKET.value)
-gtfs_captura.run_config = KubernetesRun(
+gtfs_captura_tratamento.storage = GCS(constants_emd.GCS_FLOWS_BUCKET.value)
+gtfs_captura_tratamento.run_config = KubernetesRun(
     image=constants_emd.DOCKER_IMAGE.value,
     labels=[constants_emd.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
