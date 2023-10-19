@@ -52,7 +52,7 @@ bilhetagem_transacao_captura.name = "SMTR: Bilhetagem Transação - Captura"
 bilhetagem_transacao_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 bilhetagem_transacao_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
 bilhetagem_transacao_captura = set_default_parameters(
@@ -71,7 +71,7 @@ bilhetagem_auxiliar_captura.name = "SMTR: Bilhetagem Auxiliar - Captura (subflow
 bilhetagem_auxiliar_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 bilhetagem_auxiliar_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
 bilhetagem_auxiliar_captura = set_default_parameters(
@@ -85,7 +85,7 @@ bilhetagem_materializacao.name = "SMTR: Bilhetagem Transação - Materializaçã
 bilhetagem_materializacao.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 bilhetagem_materializacao.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
 bilhetagem_materializacao_parameters = {
@@ -194,6 +194,6 @@ with Flow(
 bilhetagem_transacao_tratamento.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 bilhetagem_transacao_tratamento.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 bilhetagem_transacao_tratamento.schedule = every_hour
