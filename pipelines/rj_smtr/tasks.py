@@ -369,7 +369,7 @@ def query_logs(
     dataset_id: str,
     table_id: str,
     datetime_filter=None,
-    max_recaptures: int = 60,
+    max_recaptures: int = 360,
     interval_minutes: int = 1,
     recapture_window_days: int = 1,
 ):
