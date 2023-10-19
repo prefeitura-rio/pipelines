@@ -44,9 +44,12 @@ gtfs_captura.run_config = KubernetesRun(
 gtfs_captura = set_default_parameters(
     flow=gtfs_captura,
     default_parameters={
-        "dataset_id": constants.GTFS_DATASET_ID.value,
-        "source_type": "gcs",
-        "table_id": "agency",
+        "dataset_id": Parameter("dataset_id", default=None),
+        "source_type": Parameter("source_type", default=None),
+        "table_id": Parameter("table_id", default=None),  # agency
+        "partition_date_only": Parameter("partition_date_only", default=None),  # True
+        "extract_params": Parameter("extract_params", default=None),  #
+        "primary_key": Parameter("primary_key", default=None),
     },
 )
 
@@ -59,9 +62,9 @@ gtfs_materializacao.run_config = KubernetesRun(
 )
 
 gtfs_materializacao_parameters = {
-    "dataset_id": constants.GTFS_DATASET_ID.value,
-    "dbt_vars": constants.GTFS_MATERIALIZACAO_PARAMS.value,
-    "table_id": "agency",
+    "dataset_id": Parameter("dataset_id", default=None),
+    "dbt_vars": Parameter("data_versao_gtfs", default=None),
+    "table_id": Parameter("table_id", default=None),
 }
 
 gtfs_materializacao = set_default_parameters(
