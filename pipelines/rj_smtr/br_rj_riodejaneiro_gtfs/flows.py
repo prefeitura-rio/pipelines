@@ -42,12 +42,12 @@ gtfs_captura.run_config = KubernetesRun(
 )
 
 gtfs_captura_parameters = {
-    "dataset_id": Parameter("dataset_id", default=None),
-    "source_type": Parameter("source_type", default=None),
-    "table_id": Parameter("table_id", default=None),  # agency
-    "partition_date_only": Parameter("partition_date_only", default=None),  # True
-    "extract_params": Parameter("extract_params", default=None),  #
-    "primary_key": Parameter("primary_key", default=None),
+    "dataset_id": "Parameter('dataset_id', default=None)",
+    "source_type": "Parameter('source_type', default=None)",
+    "table_id": "Parameter('table_id', default=None)",  # agency
+    "partition_date_only": "Parameter('partition_date_only', default=None)",  # True
+    "extract_params": "Parameter('extract_params', default=None)",  #
+    "primary_key": "Parameter('primary_key', default=None)",
 }
 
 gtfs_captura = set_default_parameters(
