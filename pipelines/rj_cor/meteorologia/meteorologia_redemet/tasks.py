@@ -184,10 +184,10 @@ def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
     Salvar dados em csv
     """
 
-    prepath = Path("/tmp/meteorologia_redemet/")
+    prepath = Path("/tmp/meteorologia_redemeta
     prepath.mkdir(parents=True, exist_ok=True)
 
-    partition_column = "data"
+    partition_column = "data_medicao"
     dataframe, partitions = parse_date_columns(dados, partition_column)
 
     # Cria partições a partir da data
