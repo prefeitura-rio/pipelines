@@ -127,8 +127,7 @@ with Flow(
 
     run_recaptura_trasacao = create_flow_run(
         flow_name=bilhetagem_recaptura.name,
-        # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-        project_name="staging",
+        project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
         labels=LABELS,
         parameters=constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value,
     )
@@ -176,8 +175,7 @@ with Flow(
     # Materialização
     run_materializacao = create_flow_run(
         flow_name=bilhetagem_materializacao.name,
-        # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-        project_name="staging",
+        project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
         labels=LABELS,
         upstream_tasks=[wait_captura],
     )
