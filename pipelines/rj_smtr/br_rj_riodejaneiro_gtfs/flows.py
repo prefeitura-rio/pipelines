@@ -10,6 +10,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect.utilities.edges import unmapped
+from prefect import case, Parameter
 
 
 # EMD Imports #
@@ -39,6 +40,15 @@ gtfs_captura.run_config = KubernetesRun(
     image=constants_emd.DOCKER_IMAGE.value,
     labels=[constants_emd.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
+
+gtfs_captura = set_default_parameters(
+    flow=gtfs_captura,
+    default_parameters={
+        "dataset_id": constants.GTFS_DATASET_ID.value,
+        "source_type": "gcs",
+    },
+)
+
 gtfs_materializacao = deepcopy(default_materialization_flow)
 gtfs_materializacao.name = "SMTR - Materialização dos dados do GTFS"
 gtfs_materializacao.storage = GCS(constants_emd.GCS_FLOWS_BUCKET.value)
@@ -62,6 +72,13 @@ with Flow(
     code_owners=["rodrigo", "carol"],
 ) as gtfs_captura:
     # SETUP
+
+    dataset_id = Parameter("dataset_id", default=None)  # br_rj_riodejaneiro_gtfs
+    source_type = Parameter("source_type", default=None)
+    table_id = Parameter("table_id", default=None)  # agency
+    partition_date_only = Parameter("partition_date_only", default=None)  # True
+    extract_params = Parameter("extract_params", default=None)  #
+    primary_key = Parameter("primary_key", default=None)
 
     timestamp = get_current_timestamp()
 
@@ -103,5 +120,5 @@ with Flow(
     gtfs_captura.storage = GCS(constants_emd.GCS_FLOWS_BUCKET.value)
     gtfs_captura.run_config = KubernetesRun(
         image=constants_emd.DOCKER_IMAGE.value,
-        labels=[constants_emd.RJ_SMTR_AGENT_LABEL.value],
+        labels=[constants_emd.RJ_SMTR_DEV_AGENT_LABEL.value],
     )
