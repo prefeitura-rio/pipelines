@@ -41,16 +41,18 @@ gtfs_captura.run_config = KubernetesRun(
     labels=[constants_emd.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 
+gtfs_captura_parameters = {
+    "dataset_id": Parameter("dataset_id", default=None),
+    "source_type": Parameter("source_type", default=None),
+    "table_id": Parameter("table_id", default=None),  # agency
+    "partition_date_only": Parameter("partition_date_only", default=None),  # True
+    "extract_params": Parameter("extract_params", default=None),  #
+    "primary_key": Parameter("primary_key", default=None),
+}
+
 gtfs_captura = set_default_parameters(
     flow=gtfs_captura,
-    default_parameters={
-        "dataset_id": Parameter("dataset_id", default=None),
-        "source_type": Parameter("source_type", default=None),
-        "table_id": Parameter("table_id", default=None),  # agency
-        "partition_date_only": Parameter("partition_date_only", default=None),  # True
-        "extract_params": Parameter("extract_params", default=None),  #
-        "primary_key": Parameter("primary_key", default=None),
-    },
+    default_parameters=gtfs_captura_parameters,
 )
 
 gtfs_materializacao = deepcopy(default_materialization_flow)
@@ -78,13 +80,6 @@ with Flow(
 ) as gtfs_captura_tratamento:
     # SETUP
 
-    dataset_id = Parameter("dataset_id", default=None)  # br_rj_riodejaneiro_gtfs
-    source_type = Parameter("source_type", default=None)
-    table_id = Parameter("table_id", default=None)  # agency
-    partition_date_only = Parameter("partition_date_only", default=None)  # True
-    extract_params = Parameter("extract_params", default=None)  #
-    primary_key = Parameter("primary_key", default=None)
-
     timestamp = get_current_timestamp()
 
     rename_flow_run = rename_current_flow_run_now_time(
@@ -97,7 +92,7 @@ with Flow(
     run_captura = create_flow_run.map(
         flow_name=unmapped(gtfs_captura.name),
         project_name=unmapped(constants_emd.PREFECT_DEFAULT_PROJECT.value),
-        parameters=constants.GTFS_TABLE_CAPTURE_PARAMS.value,
+        parameters=gtfs_captura_parameters,
         labels=unmapped(LABELS),
     )
 
@@ -111,6 +106,7 @@ with Flow(
     run_materializacao = create_flow_run(
         flow_name=gtfs_materializacao.name,
         project_name=constants_emd.PREFECT_DEFAULT_PROJECT.value,
+        parameters=gtfs_materializacao_parameters,
         labels=LABELS,
         upstream_tasks=[wait_captura],
     )
