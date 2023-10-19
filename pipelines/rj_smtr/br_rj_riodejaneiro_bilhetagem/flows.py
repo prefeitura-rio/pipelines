@@ -66,7 +66,7 @@ bilhetagem_transacao_captura.schedule = every_minute
 # BILHETAGEM GPS
 
 bilhetagem_tracking_captura = deepcopy(default_capture_flow)
-bilhetagem_tracking_captura.name = "SMTR: Bilhetagem GPS VALIDADOR - Captura"
+bilhetagem_tracking_captura.name = "SMTR: Bilhetagem GPS Validador - Captura"
 bilhetagem_tracking_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 bilhetagem_tracking_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
