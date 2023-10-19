@@ -106,7 +106,6 @@ with Flow(
     run_materializacao = create_flow_run(
         flow_name=gtfs_materializacao.name,
         project_name=constants_emd.PREFECT_DEFAULT_PROJECT.value,
-        parameters=gtfs_materializacao_parameters,
         labels=LABELS,
         upstream_tasks=[wait_captura],
     )
