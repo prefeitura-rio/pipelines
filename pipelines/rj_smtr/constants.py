@@ -394,8 +394,4 @@ class constants(Enum):  # pylint: disable=c0103
         },
     ]
 
-    GTFS_MATERIALIZACAO_PARAMS = (
-        {
-            "dbt_vars": {"date_versao_gtfs": "YYYY-MM-DD"},
-        },
-    )
+    GTFS_MATERIALIZACAO_PARAMS = {"date_versao_gtfs": "YYYY-MM-DD"}
