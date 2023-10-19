@@ -10,6 +10,7 @@ from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect.utilities.edges import unmapped
 
+
 # EMD Imports #
 
 from pipelines.constants import constants as emd_constants
@@ -29,18 +30,18 @@ from pipelines.rj_smtr.flows import (
     default_materialization_flow,
 )
 
-from pipelines.rj_smtr.tasks import (
-    get_current_timestamp,
-)
-
-from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.schedules import (
-    bilhetagem_transacao_schedule,
-    # bilhetagem_materializacao_schedule,
-)
+from pipelines.rj_smtr.tasks import get_current_timestamp
 
 from pipelines.rj_smtr.constants import constants
 
-from pipelines.rj_smtr.schedules import every_hour
+from pipelines.rj_smtr.schedules import every_hour, every_minute
+
+
+GENERAL_CAPTURE_DEFAULT_PARAMS = {
+    "dataset_id": constants.BILHETAGEM_DATASET_ID.value,
+    "secret_path": constants.BILHETAGEM_SECRET_PATH.value,
+    "source_type": constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["source_type"],
+}
 
 # Flows #
 
@@ -53,7 +54,15 @@ bilhetagem_transacao_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-bilhetagem_transacao_captura.schedule = bilhetagem_transacao_schedule
+
+bilhetagem_transacao_captura = set_default_parameters(
+    flow=bilhetagem_transacao_captura,
+    default_parameters=GENERAL_CAPTURE_DEFAULT_PARAMS
+    | constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value,
+)
+
+bilhetagem_transacao_captura.schedule = every_minute
+
 
 # BILHETAGEM AUXILIAR - SUBFLOW PARA RODAR ANTES DE CADA MATERIALIZAÇÃO #
 
@@ -67,11 +76,7 @@ bilhetagem_auxiliar_captura.run_config = KubernetesRun(
 
 bilhetagem_auxiliar_captura = set_default_parameters(
     flow=bilhetagem_auxiliar_captura,
-    default_parameters={
-        "dataset_id": constants.BILHETAGEM_DATASET_ID.value,
-        "secret_path": constants.BILHETAGEM_SECRET_PATH.value,
-        "source_type": constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["source_type"],
-    },
+    default_parameters=GENERAL_CAPTURE_DEFAULT_PARAMS,
 )
 
 # MATERIALIZAÇÃO - SUBFLOW DE MATERIALIZAÇÃO
@@ -92,11 +97,23 @@ bilhetagem_materializacao = set_default_parameters(
     default_parameters=bilhetagem_materializacao_parameters,
 )
 
-# TRATAMENTO - RODA DE HORA EM HORA, CAPTURA AUXILIAR + MATERIALIZAÇÃO
+# RECAPTURA
+
+bilhetagem_recaptura = deepcopy(default_capture_flow)
+bilhetagem_recaptura.name = "SMTR: Bilhetagem - Recaptura (subflow)"
+bilhetagem_recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bilhetagem_recaptura = set_default_parameters(
+    flow=bilhetagem_recaptura,
+    default_parameters=GENERAL_CAPTURE_DEFAULT_PARAMS | {"recapture": True},
+)
+
+# TRATAMENTO - RODA DE HORA EM HORA, RECAPTURAS + CAPTURA AUXILIAR + MATERIALIZAÇÃO
 with Flow(
     "SMTR: Bilhetagem Transação - Tratamento",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as bilhetagem_transacao_tratamento:
+    # Configuração #
+
     timestamp = get_current_timestamp()
 
     rename_flow_run = rename_current_flow_run_now_time(
@@ -106,6 +123,38 @@ with Flow(
 
     LABELS = get_current_flow_labels()
 
+    # Recapturas
+
+    run_recaptura_trasacao = create_flow_run(
+        flow_name=bilhetagem_recaptura.name,
+        project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+        labels=LABELS,
+        parameters=constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value,
+    )
+
+    wait_recaptura_trasacao = wait_for_flow_run(
+        run_recaptura_trasacao,
+        stream_states=True,
+        stream_logs=True,
+        raise_final_state=True,
+    )
+
+    runs_recaptura_auxiliar = create_flow_run.map(
+        flow_name=unmapped(bilhetagem_recaptura.name),
+        project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+        parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
+        labels=unmapped(LABELS),
+    )
+
+    runs_recaptura_auxiliar.set_upstream(wait_recaptura_trasacao)
+
+    wait_recaptura_auxiliar = wait_for_flow_run.map(
+        runs_recaptura_auxiliar,
+        stream_states=unmapped(True),
+        stream_logs=unmapped(True),
+        raise_final_state=unmapped(True),
+    )
+
     # Captura
     runs_captura = create_flow_run.map(
         flow_name=unmapped(bilhetagem_auxiliar_captura.name),
@@ -113,6 +162,8 @@ with Flow(
         parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
         labels=unmapped(LABELS),
     )
+
+    runs_captura.set_upstream(wait_recaptura_auxiliar)
 
     wait_captura = wait_for_flow_run.map(
         runs_captura,
@@ -142,4 +193,3 @@ bilhetagem_transacao_tratamento.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 bilhetagem_transacao_tratamento.schedule = every_hour
-# bilhetagem_materializacao.schedule = bilhetagem_materializacao_schedule

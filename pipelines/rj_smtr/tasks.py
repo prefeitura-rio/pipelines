@@ -8,7 +8,7 @@ import json
 import os
 from pathlib import Path
 import traceback
-from typing import Dict, List, Union, Iterable
+from typing import Dict, List, Union, Iterable, Any
 import io
 
 from basedosdados import Storage, Table
@@ -26,16 +26,17 @@ from pipelines.rj_smtr.utils import (
     bq_project,
     get_table_min_max_value,
     get_last_run_timestamp,
-    log_critical,
     data_info_str,
     dict_contains_keys,
     get_raw_data_api,
     get_raw_data_gcs,
+    get_raw_data_db,
     upload_run_logs_to_bq,
     get_datetime_range,
     read_raw_data,
     save_treated_local_func,
     save_raw_local_func,
+    log_critical,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
@@ -135,6 +136,103 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
                 return True
     log("Did not run interval step materialization...")
     return False
+
+
+@task(checkpoint=False, nout=3)
+def create_dbt_run_vars(
+    dataset_id: str,
+    dbt_vars: dict,
+    table_id: str,
+    raw_dataset_id: str,
+    raw_table_id: str,
+    mode: str,
+) -> tuple[list[dict], Union[list[dict], dict, None], bool]:
+    """
+    Create the variables to be used in dbt materialization based on a dict
+
+    Args:
+        dataset_id (str): the dataset_id to get the variables
+        dbt_vars (dict): dict containing the parameters
+        table_id (str): the table_id get the date_range variable
+        raw_dataset_id (str): the raw_dataset_id get the date_range variable
+        raw_table_id (str): the raw_table_id get the date_range variable
+        mode (str): the mode to get the date_range variable
+
+    Returns:
+        list[dict]: the variables to be used in DBT
+        Union[list[dict], dict, None]: the date variable (date_range or run_date)
+        bool: a flag that indicates if the date_range variable came from Redis
+    """
+
+    log(f"Creating DBT variables. Parameter received: {dbt_vars}")
+
+    if (not dbt_vars) or (not table_id):
+        log("dbt_vars or table_id are blank. Skiping task")
+        return [None], None, False
+
+    final_vars = []
+    date_var = None
+    flag_date_range = False
+
+    if "date_range" in dbt_vars.keys():
+        log("Creating date_range variable")
+
+        # Set date_range variable manually
+        if dict_contains_keys(
+            dbt_vars["date_range"], ["date_range_start", "date_range_end"]
+        ):
+            date_var = {
+                "date_range_start": dbt_vars["date_range"]["date_range_start"],
+                "date_range_end": dbt_vars["date_range"]["date_range_end"],
+            }
+        # Create date_range using Redis
+        else:
+            raw_table_id = raw_table_id or table_id
+
+            date_var = get_materialization_date_range.run(
+                dataset_id=dataset_id,
+                table_id=table_id,
+                raw_dataset_id=raw_dataset_id,
+                raw_table_id=raw_table_id,
+                table_run_datetime_column_name=dbt_vars["date_range"].get(
+                    "table_run_datetime_column_name"
+                ),
+                mode=mode,
+                delay_hours=dbt_vars["date_range"].get("delay_hours", 0),
+            )
+
+            flag_date_range = True
+
+        final_vars.append(date_var.copy())
+
+        log(f"date_range created: {date_var}")
+
+    elif "run_date" in dbt_vars.keys():
+        log("Creating run_date variable")
+
+        date_var = get_run_dates.run(
+            dbt_vars["run_date"].get("date_range_start"),
+            dbt_vars["run_date"].get("date_range_end"),
+        )
+        final_vars.append([d.copy() for d in date_var])
+
+        log(f"run_date created: {date_var}")
+
+    if "version" in dbt_vars.keys():
+        log("Creating version variable")
+        dataset_sha = fetch_dataset_sha.run(dataset_id=dataset_id)
+
+        # if there are other variables inside the list, update each item adding the version variable
+        if final_vars:
+            final_vars = get_join_dict.run(dict_list=final_vars, new_dict=dataset_sha)
+        else:
+            final_vars.append(dataset_sha)
+
+        log(f"version created: {dataset_sha}")
+
+    log(f"All variables was created, final value is: {final_vars}")
+
+    return final_vars, date_var, flag_date_range
 
 
 ###############
@@ -275,7 +373,9 @@ def query_logs(
     dataset_id: str,
     table_id: str,
     datetime_filter=None,
-    max_recaptures: int = 60,
+    max_recaptures: int = 360,
+    interval_minutes: int = 1,
+    recapture_window_days: int = 1,
 ):
     """
     Queries capture logs to check for errors
@@ -285,10 +385,15 @@ def query_logs(
         table_id (str): table_id on BigQuery
         datetime_filter (pendulum.datetime.DateTime, optional):
         filter passed to query. This task will query the logs table
-        for the last 1 day before datetime_filter
+        for the last n (n = recapture_window_days) days before datetime_filter
+        max_recaptures (int, optional): maximum number of recaptures to be done
+        interval_minutes (int, optional): interval in minutes between each recapture
+        recapture_window_days (int, optional): Number of days to query for erros
 
     Returns:
-        list: containing timestamps for which the capture failed
+        lists: errors (bool),
+        timestamps (list of pendulum.datetime.DateTime),
+        previous_errors (list of previous errors)
     """
 
     if not datetime_filter:
@@ -300,50 +405,64 @@ def query_logs(
             second=0, microsecond=0
         )
 
+    datetime_filter = datetime_filter.strftime("%Y-%m-%d %H:%M:%S")
+
     query = f"""
-    with t as (
-    select
-        datetime(timestamp_array) as timestamp_array
-    from
-        unnest(GENERATE_TIMESTAMP_ARRAY(
-            timestamp_sub('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}', interval 1 day),
-            timestamp('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'),
-            interval 1 minute)
-        ) as timestamp_array
-    where timestamp_array < '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
+    WITH
+    t AS (
+    SELECT
+        DATETIME(timestamp_array) AS timestamp_array
+    FROM
+        UNNEST(
+            GENERATE_TIMESTAMP_ARRAY(
+                TIMESTAMP_SUB('{datetime_filter}', INTERVAL {recapture_window_days} day),
+                TIMESTAMP('{datetime_filter}'),
+                INTERVAL {interval_minutes} minute) )
+        AS timestamp_array
+    WHERE
+        timestamp_array < '{datetime_filter}' ),
+    logs_table AS (
+        SELECT
+            SAFE_CAST(DATETIME(TIMESTAMP(timestamp_captura),
+                    "America/Sao_Paulo") AS DATETIME) timestamp_captura,
+            SAFE_CAST(sucesso AS BOOLEAN) sucesso,
+            SAFE_CAST(erro AS STRING) erro,
+            SAFE_CAST(DATA AS DATE) DATA
+        FROM
+            rj-smtr-staging.{dataset_id}_staging.{table_id}_logs AS t
     ),
-    logs as (
-        select
+    logs AS (
+        SELECT
             *,
-            timestamp_trunc(timestamp_captura, minute) as timestamp_array
-        from
-            rj-smtr.{dataset_id}.{table_id}_logs
-        where
-            data between
-                date(datetime_sub('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}',
-                interval 1 day))
-                and date('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}')
-        and
-            timestamp_captura between
-                datetime_sub('{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}', interval 1 day)
-                and '{datetime_filter.strftime('%Y-%m-%d %H:%M:%S')}'
-        order by timestamp_captura
-    )
-    select
-        case
-            when logs.timestamp_captura is not null then logs.timestamp_captura
-            else t.timestamp_array
-        end as timestamp_captura,
-        logs.erro
-    from
+            TIMESTAMP_TRUNC(timestamp_captura, minute) AS timestamp_array
+        FROM
+            logs_table
+        WHERE
+            DATA BETWEEN DATE(DATETIME_SUB('{datetime_filter}',
+                            INTERVAL {recapture_window_days} day))
+            AND DATE('{datetime_filter}')
+            AND timestamp_captura BETWEEN
+                DATETIME_SUB('{datetime_filter}', INTERVAL {recapture_window_days} day)
+            AND '{datetime_filter}'
+        ORDER BY
+            timestamp_captura )
+    SELECT
+        CASE
+            WHEN logs.timestamp_captura IS NOT NULL THEN logs.timestamp_captura
+        ELSE
+            t.timestamp_array
+        END
+            AS timestamp_captura,
+            logs.erro
+    FROM
         t
-    left join
+    LEFT JOIN
         logs
-    on
+    ON
         logs.timestamp_array = t.timestamp_array
-    where
-        logs.sucesso is not True
-    order by
+    WHERE
+        logs.sucesso IS NOT TRUE
+    ORDER BY
         timestamp_captura
     """
     log(f"Run query to check logs:\n{query}")
@@ -448,6 +567,7 @@ def create_request_params(
     extract_params: dict,
     dataset_id: str,
     timestamp: datetime,
+    interval_minutes: int,
 ) -> tuple[str, str]:
     """
     Task to create request params
@@ -457,6 +577,7 @@ def create_request_params(
         table_id (str): table_id on BigQuery
         dataset_id (str): dataset_id on BigQuery
         timestamp (datetime): timestamp for flow run
+        interval_minutes (int): interval in minutes between each capture
 
     Returns:
         request_params: host, database and query to request data
@@ -469,18 +590,15 @@ def create_request_params(
         database = constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["databases"][
             extract_params["database"]
         ]
-        request_url = (
-            constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["vpn_url"]
-            + database["engine"]
-        )
+        request_url = database["host"]
 
         datetime_range = get_datetime_range(
-            timestamp=timestamp, interval=timedelta(**extract_params["run_interval"])
+            timestamp=timestamp, interval=timedelta(minutes=interval_minutes)
         )
 
         request_params = {
-            "host": database["host"],  # TODO: exibir no log em ambiente fechado
             "database": extract_params["database"],
+            "engine": database["engine"],
             "query": extract_params["query"].format(**datetime_range),
         }
 
@@ -541,6 +659,10 @@ def get_raw_from_sources(
                 dataset_id=dataset_id,
                 table_id=table_id,
                 filename=request_params,
+            )
+        elif source_type == "db":
+            error, data, filetype = get_raw_data_db(
+                host=source_path, secret_path=secret_path, **request_params
             )
         else:
             raise NotImplementedError(f"{source_type} not supported")
@@ -779,6 +901,8 @@ def upload_staging_data_to_gcs(
     table_id: str,
     dataset_id: str,
     partitions: list,
+    previous_error: str = None,
+    recapture: bool = False,
 ) -> Union[str, None]:
     """
     Upload staging data to GCS.
@@ -813,6 +937,8 @@ def upload_staging_data_to_gcs(
         error=error,
         timestamp=timestamp,
         mode="staging",
+        previous_error=previous_error,
+        recapture=recapture,
     )
 
     return error
@@ -1106,6 +1232,13 @@ def transform_raw_to_nested_structure(
     return error, filepath
 
 
+###############
+#
+# Utilitary tasks
+#
+###############
+
+
 @task(checkpoint=False)
 def coalesce_task(value_list: Iterable):
     """
@@ -1120,101 +1253,23 @@ def coalesce_task(value_list: Iterable):
     try:
         return next(value for value in value_list if value is not None)
     except StopIteration:
-        return
+        return None
 
 
-@task(checkpoint=False, nout=3)
-def create_dbt_run_vars(
-    dataset_id: str,
-    dbt_vars: dict,
-    table_id: str,
-    raw_dataset_id: str,
-    raw_table_id: str,
-    mode: str,
-) -> tuple[list[dict], Union[list[dict], dict, None], bool]:
+@task(checkpoint=False, nout=2)
+def unpack_mapped_results_nout2(
+    mapped_results: Iterable,
+) -> tuple[list[Any], list[Any]]:
     """
-    Create the variables to be used in dbt materialization based on a dict
+    Task to unpack the results from an nout=2 tasks in 2 lists when it is mapped
 
     Args:
-        dataset_id (str): the dataset_id to get the variables
-        dbt_vars (dict): dict containing the parameters
-        table_id (str): the table_id get the date_range variable
-        raw_dataset_id (str): the raw_dataset_id get the date_range variable
-        raw_table_id (str): the raw_table_id get the date_range variable
-        mode (str): the mode to get the date_range variable
+        mapped_results (Iterable): The mapped task return
 
     Returns:
-        tuple[list[dict]: the variables to be used in DBT
-        Union[list[dict], dict, None]: the date variable (date_range or run_date)
-        bool: a flag that indicates if the date_range variable came from Redis
+        tuple[list[Any], list[Any]]: The task original return splited in 2 lists:
+            - 1st list being all the first return
+            - 2nd list being all the second return
+
     """
-
-    log(f"Creating DBT variables. Parameter received: {dbt_vars}")
-
-    if (not dbt_vars) or (not table_id):
-        log("dbt_vars or table_id are blank. Skiping task")
-        return [None], None, False
-
-    final_vars = []
-    date_var = None
-    flag_date_range = False
-
-    if "date_range" in dbt_vars.keys():
-        log("Creating date_range variable")
-
-        # Set date_range variable manually
-        if dict_contains_keys(
-            dbt_vars["date_range"], ["date_range_start", "date_range_end"]
-        ):
-            date_var = {
-                "date_range_start": dbt_vars["date_range"]["date_range_start"],
-                "date_range_end": dbt_vars["date_range"]["date_range_end"],
-            }
-        # Create date_range using Redis
-        else:
-            raw_table_id = raw_table_id or table_id
-
-            date_var = get_materialization_date_range.run(
-                dataset_id=dataset_id,
-                table_id=table_id,
-                raw_dataset_id=raw_dataset_id,
-                raw_table_id=raw_table_id,
-                table_run_datetime_column_name=dbt_vars["date_range"].get(
-                    "table_run_datetime_column_name"
-                ),
-                mode=mode,
-                delay_hours=dbt_vars["date_range"].get("delay_hours", 0),
-            )
-
-            flag_date_range = True
-
-        final_vars.append(date_var.copy())
-
-        log(f"date_range created: {date_var}")
-
-    elif "run_date" in dbt_vars.keys():
-        log("Creating run_date variable")
-
-        date_var = get_run_dates.run(
-            dbt_vars["run_date"].get("date_range_start"),
-            dbt_vars["run_date"].get("date_range_end"),
-        )
-        final_vars.append([d.copy() for d in date_var])
-
-        log(f"run_date created: {date_var}")
-
-    if "version" in dbt_vars.keys():
-        log("Creating version variable")
-        dataset_sha = fetch_dataset_sha.run(dataset_id=dataset_id)
-
-        # if there are other variables inside the list, update each item adding the version variable
-        if final_vars:
-            final_vars = get_join_dict.run(dict_list=final_vars, new_dict=dataset_sha)
-        else:
-            final_vars.append(dataset_sha)
-
-        log(f"version created: {dataset_sha}")
-
-    log(f"All variables was created, final value is: {final_vars}")
-
-    return final_vars, date_var, flag_date_range
+    return [r[0] for r in mapped_results], [r[1] for r in mapped_results]

@@ -8,17 +8,21 @@ from ftplib import FTP
 from pathlib import Path
 
 from datetime import timedelta, datetime
-from typing import List, Union
+from typing import List, Union, Any
 import traceback
 import io
 import json
 import zipfile
+import pendulum
 import pytz
 import requests
 import basedosdados as bd
 from basedosdados import Table
 import pandas as pd
 from google.cloud.storage.blob import Blob
+import pymysql
+import psycopg2
+import psycopg2.extras
 
 
 from prefect.schedules.clocks import IntervalClock
@@ -484,7 +488,6 @@ def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-l
     clocks = []
     for count, parameters in enumerate(table_parameters):
         parameter_defaults = parameters | general_flow_params
-        log(f"parameter_defaults: {parameter_defaults}")
         clocks.append(
             IntervalClock(
                 interval=clock_interval,
@@ -510,17 +513,40 @@ def dict_contains_keys(input_dict: dict, keys: list[str]) -> bool:
     return all(x in input_dict.keys() for x in keys)
 
 
+def custom_serialization(obj: Any) -> Any:
+    """
+    Function to serialize not JSON serializable objects
+
+    Args:
+        obj (Any): Object to serialize
+
+    Returns:
+        Any: Serialized object
+    """
+    if isinstance(obj, pd.Timestamp):
+        if obj.tzinfo is None:
+            obj = obj.tz_localize("UTC").tz_convert(
+                emd_constants.DEFAULT_TIMEZONE.value
+            )
+
+        return obj.isoformat()
+
+    raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+
+
 def save_raw_local_func(
-    data: Union[dict, str], filepath: str, mode: str = "raw", filetype: str = "json"
+    data: Union[dict, str],
+    filepath: str,
+    mode: str = "raw",
+    filetype: str = "json",
 ) -> str:
     """
     Saves json response from API to .json file.
     Args:
+        data (Union[dict, str]): Raw data to save
         filepath (str): Path which to save raw file
-        status (dict): Must contain keys
-          * data: json returned from API
-          * error: error catched from API request
         mode (str, optional): Folder to save locally, later folder which to upload to GCS.
+        filetype (str, optional): The file format
     Returns:
         str: Path to the saved file
     """
@@ -530,12 +556,11 @@ def save_raw_local_func(
     Path(_filepath).parent.mkdir(parents=True, exist_ok=True)
 
     if filetype == "json":
-        if isinstance(data, dict):
+        if isinstance(data, str):
             data = json.loads(data)
-        json.dump(data, Path(_filepath).open("w", encoding="utf-8"))
+        with Path(_filepath).open("w", encoding="utf-8") as fi:
+            json.dump(data, fi, default=custom_serialization)
 
-    # if filetype == "csv":
-    #     pass
     if filetype in ("txt", "csv"):
         with open(_filepath, "w", encoding="utf-8") as file:
             file.write(data)
@@ -662,6 +687,49 @@ def get_raw_data_gcs(
     return error, data, filetype
 
 
+def get_raw_data_db(
+    query: str, engine: str, host: str, secret_path: str, database: str
+) -> tuple[str, str, str]:
+    """
+    Get data from Databases
+
+    Args:
+        query (str): the SQL Query to execute
+        engine (str): The datase management system
+        host (str): The database host
+        secret_path (str): Secret path to get credentials
+        database (str): The database to connect
+
+    Returns:
+        tuple[str, str, str]: Error, data and filetype
+    """
+    connector_mapping = {
+        "postgresql": psycopg2.connect,
+        "mysql": pymysql.connect,
+    }
+
+    data = None
+    error = None
+    filetype = "json"
+
+    try:
+        credentials = get_vault_secret(secret_path)["data"]
+
+        with connector_mapping[engine](
+            host=host,
+            user=credentials["user"],
+            password=credentials["password"],
+            database=database,
+        ) as connection:
+            data = pd.read_sql(sql=query, con=connection).to_dict(orient="records")
+
+    except Exception:
+        error = traceback.format_exc()
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+
+    return error, data, filetype
+
+
 def save_treated_local_func(
     filepath: str, data: pd.DataFrame, error: str, mode: str = "staging"
 ) -> str:
@@ -729,7 +797,7 @@ def upload_run_logs_to_bq(  # pylint: disable=R0913
                 "erro": [f"[recapturado]{previous_error}"],
             }
         )
-        log(f"Recapturing {timestamp} with previous error:\n{error}")
+        log(f"Recapturing {timestamp} with previous error:\n{previous_error}")
     else:
         # not recapturing or error during flow execution
         dataframe = pd.DataFrame(
