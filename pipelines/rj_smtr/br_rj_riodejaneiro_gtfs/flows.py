@@ -24,7 +24,7 @@ from pipelines.utils.tasks import (
 )
 
 # SMTR Imports #
-# from pipelines.rj_smtr.constants import constants
+from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.tasks import (
     get_current_timestamp,
 )
@@ -64,9 +64,9 @@ gtfs_materializacao.run_config = KubernetesRun(
 )
 
 gtfs_materializacao_parameters = {
-    "dataset_id": Parameter("dataset_id", default=None),
-    "dbt_vars": Parameter("data_versao_gtfs", default=None),
-    "table_id": Parameter("table_id", default=None),
+    "dataset_id": constants.GTFS_DATASET_ID.value,
+    "dbt_vars": constants.GTFS_MATERIALIZACAO_PARAMS.value,
+    "table_id": constants.GTFS_TABLE_CAPTURE_PARAMS.value,
 }
 
 gtfs_materializacao = set_default_parameters(
