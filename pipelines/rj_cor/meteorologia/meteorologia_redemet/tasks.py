@@ -13,7 +13,12 @@ from prefect import task
 import requests
 
 from pipelines.constants import constants
-from pipelines.utils.utils import get_vault_secret, log, to_partitions, parse_date_columns
+from pipelines.utils.utils import (
+    get_vault_secret,
+    log,
+    to_partitions,
+    parse_date_columns,
+)
 
 
 @task(nout=3)
@@ -167,7 +172,7 @@ def tratar_dados(dados: pd.DataFrame, backfill: bool = 0) -> pd.DataFrame:
     dados["data"] = dados["data"].dt.strftime("%Y-%m-%d %H:%M:%S")
 
     # Capitalizar os dados da coluna céu
-    dados["ceu"] = dados["ceu"].capitalize()
+    dados["ceu"] = dados["ceu"].str.capitalize()
 
     return dados
 
