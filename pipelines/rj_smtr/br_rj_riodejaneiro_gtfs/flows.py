@@ -24,7 +24,7 @@ from pipelines.utils.tasks import (
 )
 
 # SMTR Imports #
-from pipelines.rj_smtr.constants import constants
+# from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.tasks import (
     get_current_timestamp,
 )
