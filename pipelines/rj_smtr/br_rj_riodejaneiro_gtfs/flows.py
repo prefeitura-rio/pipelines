@@ -34,7 +34,7 @@ from pipelines.rj_smtr.flows import default_capture_flow, default_materializatio
 # SETUP dos Flows
 
 gtfs_captura = deepcopy(default_capture_flow)
-gtfs_captura.name = "SMTR - Materialização dos dados do GTFS"
+gtfs_captura.name = "SMTR - Captura dos dados do GTFS"
 gtfs_captura.storage = GCS(constants_emd.GCS_FLOWS_BUCKET.value)
 gtfs_captura.run_config = KubernetesRun(
     image=constants_emd.DOCKER_IMAGE.value,
@@ -117,8 +117,8 @@ with Flow(
         raise_final_state=True,
     )
 
-    gtfs_captura.storage = GCS(constants_emd.GCS_FLOWS_BUCKET.value)
-    gtfs_captura.run_config = KubernetesRun(
-        image=constants_emd.DOCKER_IMAGE.value,
-        labels=[constants_emd.RJ_SMTR_DEV_AGENT_LABEL.value],
-    )
+gtfs_captura.storage = GCS(constants_emd.GCS_FLOWS_BUCKET.value)
+gtfs_captura.run_config = KubernetesRun(
+    image=constants_emd.DOCKER_IMAGE.value,
+    labels=[constants_emd.RJ_SMTR_DEV_AGENT_LABEL.value],
+)
