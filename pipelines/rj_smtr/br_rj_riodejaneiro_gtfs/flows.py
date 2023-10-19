@@ -46,6 +46,7 @@ gtfs_captura = set_default_parameters(
     default_parameters={
         "dataset_id": constants.GTFS_DATASET_ID.value,
         "source_type": "gcs",
+        "table_id": constants.GTFS_TABLE_CAPTURE_PARAMS.value,
     },
 )
 
