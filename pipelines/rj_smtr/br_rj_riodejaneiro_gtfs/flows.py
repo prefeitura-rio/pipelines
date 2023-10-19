@@ -10,7 +10,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect.utilities.edges import unmapped
-from prefect import case, Parameter
+from prefect import Parameter
 
 
 # EMD Imports #
@@ -46,7 +46,7 @@ gtfs_captura = set_default_parameters(
     default_parameters={
         "dataset_id": constants.GTFS_DATASET_ID.value,
         "source_type": "gcs",
-        "table_id": constants.GTFS_TABLE_CAPTURE_PARAMS.value,
+        "table_id": "agency",
     },
 )
 
@@ -61,6 +61,7 @@ gtfs_materializacao.run_config = KubernetesRun(
 gtfs_materializacao_parameters = {
     "dataset_id": constants.GTFS_DATASET_ID.value,
     "dbt_vars": constants.GTFS_MATERIALIZACAO_PARAMS.value,
+    "table_id": "agency",
 }
 
 gtfs_materializacao = set_default_parameters(
