@@ -66,10 +66,10 @@ with Flow(
     LABELS = get_current_flow_labels()
 
     run_captura = create_flow_run.map(
-        flow_name=gtfs_captura.name,
+        flow_name=unmapped(gtfs_captura.name),
         project_name=constants_emd.PREFECT_DEFAULT_PROJECT.value,
         parameters=constants.GTFS_TABLE_CAPTURE_PARAMS.value,
-        labels=LABELS,
+        labels=unmapped(LABELS),
     )
 
     wait_captura = wait_for_flow_run.map(
@@ -85,18 +85,18 @@ with Flow(
     }
 
     run_materializacao = create_flow_run(
-        flow_name=gtfs_materializacao.name,
+        flow_name=unmapped(gtfs_materializacao.name),
         project_name=constants_emd.PREFECT_DEFAULT_PROJECT.value,
-        parameters=gtfs_materializacao_parameters,
-        labels=LABELS,
+        parameters=unmapped(gtfs_materializacao_parameters),
+        labels=unmapped(LABELS),
         upstream_tasks=[wait_captura],
     )
 
     wait_materializacao = wait_for_flow_run(
         run_materializacao,
-        stream_states=True,
-        stream_logs=True,
-        raise_final_state=True,
+        stream_states=unmapped(True),
+        stream_logs=unmapped(True),
+        raise_final_state=unmapped(True),
     )
 
 gtfs_captura_tratamento.storage = GCS(constants_emd.GCS_FLOWS_BUCKET.value)
