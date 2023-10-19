@@ -69,7 +69,7 @@ gtfs_materializacao = set_default_parameters(
 
 with Flow(
     "SMTR: GTFS - Captura/Tratamento",
-    code_owners=["rodrigo", "carol"],
+    code_owners=["rodrigo", "carolinagomes"],
 ) as gtfs_captura:
     # SETUP
 
