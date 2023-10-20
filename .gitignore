@@ -9,11 +9,9 @@ test/*
 test/*.ipynb
 test/*.csv
 setup.py
-.vscode/
-.idea/
+.vscode/*
 *.hdf
 *.DS_Store
-*.json
 
 
 # Byte-compiled / optimized / DLL files
@@ -150,9 +148,3 @@ dmypy.json
 # Backfill stuff
 backfill.csv
 REVIEW.md
-
-# GTFS local files
-
-gtfs/
-gtfs.zip
-log_gtfs.txt
