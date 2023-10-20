@@ -660,9 +660,7 @@ def get_raw_from_sources(
             )
         elif source_type == "gcs":
             error, data, filetype = get_raw_data_gcs(
-                dataset_id=dataset_id,
-                table_id=table_id,
-                filename=request_params,
+                dataset_id=dataset_id, table_id=table_id, zip_filename=request_params
             )
         elif source_type == "db":
             error, data, filetype = get_raw_data_db(
