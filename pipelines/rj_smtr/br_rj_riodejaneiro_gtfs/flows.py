@@ -68,7 +68,7 @@ with Flow(
     run_captura = create_flow_run.map(
         flow_name=unmapped(gtfs_captura.name),
         project_name=unmapped("staging"),
-        parameters=constants.GTFS_TABLE_CAPTURE_PARAMS.value,
+        parameters=unmapped(constants.GTFS_TABLE_CAPTURE_PARAMS.value),
         labels=unmapped(LABELS),
     )
 
