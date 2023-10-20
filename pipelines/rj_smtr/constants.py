@@ -297,85 +297,63 @@ class constants(Enum):  # pylint: disable=c0103
     GTFS_GENERAL_CAPTURE_PARAMS = {
         "partition_date_only": True,
         "source_type": "gcs",
+        "dataset_id": "br_rj_riodejaneiro_gtfs",
+        "extract_params": {"filename": "gtfs"},
+        "partition_date_name": "data_versao",
     }
 
     GTFS_TABLE_CAPTURE_PARAMS = [
         {
             "table_id": "agency",
             "primary_key": ["agency_id"],
-            "extract_params": {"filename": "gtfs"},
-            "source_type": "gcs-txt",
         },
         {
             "table_id": "calendar_dates",
             "primary_key": ["service_id", "date"],
-            "extract_params": {"filename": "gtfs"},
-            "source_type": "gcs-txt",
         },
         {
             "table_id": "calendar",
             "primary_key": ["service_id"],
-            "extract_params": {"filename": "gtfs"},
-            "source_type": "gcs-txt",
         },
         {
             "table_id": "feed_info",
             "primary_key": ["feed_publisher_name"],
-            "extract_params": {"filename": "gtfs"},
-            "source_type": "gcs-txt",
         },
         {
             "table_id": "frequencies",
             "primary_key": ["trip_id", "start_time"],
-            "extract_params": {"filename": "gtfs"},
-            "source_type": "gcs-txt",
         },
         {
             "table_id": "routes",
             "primary_key": ["route_id"],
-            "extract_params": {"filename": "gtfs"},
-            "source_type": "gcs-txt",
         },
         {
             "table_id": "shapes",
             "primary_key": ["shape_id", "shape_pt_sequence"],
-            "extract_params": {"filename": "gtfs"},
-            "source_type": "gcs-txt",
         },
         {
             "table_id": "stops",
             "primary_key": ["stop_id"],
-            "extract_params": {"filename": "gtfs"},
-            "source_type": "gcs-txt",
         },
         {
             "table_id": "stop_times",
             "primary_key": ["trip_id", "stop_sequence"],
-            "extract_params": {"filename": "gtfs"},
-            "source_type": "gcs-txt",
         },
         {
             "table_id": "trips",
             "primary_key": ["trip_id"],
-            "extract_params": {"filename": "gtfs"},
-            "source_type": "gcs-txt",
         },
         {
             "table_id": "fare_attributes",
             "primary_key": ["fare_id"],
-            "extract_params": {"filename": "gtfs"},
-            "source_type": "gcs-txt",
         },
         {
             "table_id": "fare_rules",
             "primary_key": [],
-            "extract_params": {"filename": "gtfs"},
-            "source_type": "gcs-txt",
         },
         {
             "table_id": "ordem_servico",
             "primary_key": ["servico"],
             "extract_params": {"filename": "ordem_servico"},
-            "source_type": "gcs-csv",
         },
     ]
