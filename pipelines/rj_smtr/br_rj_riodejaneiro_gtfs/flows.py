@@ -54,6 +54,10 @@ gtfs_materializacao.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
+gtfs_materializacao = set_default_parameters(
+    flow=gtfs_materializacao,
+    default_parameters=constants.GTFS_MATERIALIZACAO_PARAMS.value,
+)
 
 with Flow(
     "SMTR: GTFS - Captura/Tratamento",
@@ -103,7 +107,6 @@ with Flow(
 
     with case(materialize, True):
         gtfs_materializacao_parameters = {
-            "dataset_id": constants.GTFS_DATASET_ID.value,
             "dbt_vars": {
                 "data_versao_gtfs": data_versao_gtfs,
                 "version": {},

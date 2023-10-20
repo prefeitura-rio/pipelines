@@ -357,3 +357,11 @@ class constants(Enum):  # pylint: disable=c0103
             "extract_params": {"filename": "ordem_servico"},
         },
     ]
+
+    GTFS_MATERIALIZACAO_PARAMS = {
+        "dataset_id": GTFS_DATASET_ID,
+        "dbt_vars": {
+            "data_versao_gtfs": "",
+            "version": {},
+        },
+    }
