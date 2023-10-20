@@ -3,7 +3,10 @@
 """
 Tasks for generating a data catalog from BigQuery.
 """
+from typing import List
+
 from google.cloud import bigquery
+from googleapiclient import discovery
 import gspread
 import pandas as pd
 from prefect import task
@@ -13,6 +16,41 @@ from pipelines.rj_escritorio.data_catalog.utils import (
     write_data_to_gsheets,
 )
 from pipelines.utils.utils import get_credentials_from_env, log
+
+
+@task
+def list_projects(
+    mode: str = "prod",
+    exclude_dev: bool = True,
+) -> List[str]:
+    """
+    Lists all GCP projects that we have access to.
+
+    Args:
+        mode: Credentials mode.
+        exclude_dev: Exclude projects that ends with "-dev".
+
+    Returns:
+        List of project IDs.
+    """
+    credentials = get_credentials_from_env(mode=mode)
+    service = discovery.build("cloudresourcemanager", "v1", credentials=credentials)
+    request = service.projects().list()
+    projects = []
+    while request is not None:
+        response = request.execute()
+        for project in response.get("projects", []):
+            project_id = project["projectId"]
+            if exclude_dev and project_id.endswith("-dev"):
+                log(f"Excluding dev project {project_id}.")
+                continue
+            log(f"Found project {project_id}.")
+            projects.append(project_id)
+        request = service.projects().list_next(
+            previous_request=request, previous_response=response
+        )
+    log(f"Found {len(projects)} projects.")
+    return projects
 
 
 @task
@@ -68,10 +106,12 @@ def list_tables(  # pylint: disable=too-many-arguments
             if exclude_test and "test" in table_id:
                 log(f"Excluding test table {table_id}.")
                 continue
+            table_description = table.description
             table_info = {
                 "project_id": project_id,
                 "dataset_id": dataset_id,
                 "table_id": table_id,
+                "description": table_description,
                 "url": f"https://console.cloud.google.com/bigquery?p={project_id}&d={dataset_id}&t={table_id}&page=table",
                 "private": not project_id == "datario",
             }
