@@ -10,7 +10,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect.utilities.edges import unmapped
-from prefect import Parameter, case
+from prefect import Parameter, case, task
 
 
 # EMD Imports #
@@ -99,12 +99,18 @@ with Flow(
             "dbt_vars": {"data_versao_gtfs": data_versao_gtfs},
         }
 
+        get_upstream_tasks = task(
+            lambda capture: [wait_captura] if capture else [],
+            name="get_upstream_tasks",
+            checkpoint=False,
+        )
+
         run_materializacao = create_flow_run(
             flow_name=unmapped(gtfs_materializacao.name),
             project_name=unmapped("staging"),
             parameters=unmapped(gtfs_materializacao_parameters),
             labels=unmapped(LABELS),
-            upstream_tasks=[wait_captura],
+            upstream_tasks=get_upstream_tasks(capture=capture),
         )
 
         wait_materializacao = wait_for_flow_run(
