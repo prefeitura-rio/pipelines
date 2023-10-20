@@ -568,6 +568,7 @@ def get_raw(  # pylint: disable=R0912
 @task(checkpoint=False, nout=2)
 def create_request_params(
     extract_params: dict,
+    table_id: str,
     dataset_id: str,
     timestamp: datetime,
     interval_minutes: int,
