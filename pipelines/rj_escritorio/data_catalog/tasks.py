@@ -91,39 +91,39 @@ def list_tables(  # pylint: disable=too-many-arguments
     tables = []
     try:
         datasets = client.list_datasets(project=project_id)
+        for dataset in datasets:
+            dataset_id: str = dataset.dataset_id
+            if exclude_staging and dataset_id.endswith("_staging"):
+                log(f"Excluding staging dataset {dataset_id}.")
+                continue
+            if exclude_test and "test" in dataset_id:
+                log(f"Excluding test dataset {dataset_id}.")
+                continue
+            if exclude_logs and (
+                dataset_id.startswith("logs_") or dataset_id.endswith("_logs")
+            ):
+                log(f"Excluding logs dataset {dataset_id}.")
+                continue
+            for table in client.list_tables(dataset):
+                table_id = table.table_id
+                table_object = client.get_table(table.reference)
+                if exclude_test and "test" in table_id:
+                    log(f"Excluding test table {table_id}.")
+                    continue
+                table_description = table_object.description
+                table_info = {
+                    "project_id": project_id,
+                    "dataset_id": dataset_id,
+                    "table_id": table_id,
+                    "description": table_description,
+                    "url": f"https://console.cloud.google.com/bigquery?p={project_id}&d={dataset_id}&t={table_id}&page=table",
+                    "private": not project_id == "datario",
+                }
+                tables.append(table_info)
     except NotFound:
         # This will happen if BigQuery API is not enabled for this project. Just return an empty
         # list
         return tables
-    for dataset in datasets:
-        dataset_id: str = dataset.dataset_id
-        if exclude_staging and dataset_id.endswith("_staging"):
-            log(f"Excluding staging dataset {dataset_id}.")
-            continue
-        if exclude_test and "test" in dataset_id:
-            log(f"Excluding test dataset {dataset_id}.")
-            continue
-        if exclude_logs and (
-            dataset_id.startswith("logs_") or dataset_id.endswith("_logs")
-        ):
-            log(f"Excluding logs dataset {dataset_id}.")
-            continue
-        for table in client.list_tables(dataset):
-            table_id = table.table_id
-            table_object = client.get_table(table.reference)
-            if exclude_test and "test" in table_id:
-                log(f"Excluding test table {table_id}.")
-                continue
-            table_description = table_object.description
-            table_info = {
-                "project_id": project_id,
-                "dataset_id": dataset_id,
-                "table_id": table_id,
-                "description": table_description,
-                "url": f"https://console.cloud.google.com/bigquery?p={project_id}&d={dataset_id}&t={table_id}&page=table",
-                "private": not project_id == "datario",
-            }
-            tables.append(table_info)
     log(f"Found {len(tables)} tables in project {project_id}.")
     return tables
 
