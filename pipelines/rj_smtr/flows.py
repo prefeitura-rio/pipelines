@@ -60,6 +60,8 @@ with Flow(
     interval_minutes = Parameter("interval_minutes", default=None)
     recapture = Parameter("recapture", default=False)
     recapture_window_days = Parameter("recapture_window_days", default=1)
+    timestamp = Parameter("timestamp", default=None)
+    partition_date_name = Parameter("partition_date_name", default=None)
 
     # Parâmetros Pré-tratamento #
     primary_key = Parameter("primary_key", default=None)
@@ -79,7 +81,7 @@ with Flow(
         )
 
     with case(recapture, False):
-        capture_timestamp = [get_current_timestamp()]
+        capture_timestamp = [get_current_timestamp(timestamp=timestamp)]
         capture_previous_errors = task(
             lambda: [None], checkpoint=False, name="assign_none_to_previous_errors"
         )()
@@ -93,7 +95,9 @@ with Flow(
     )
 
     partitions = create_date_hour_partition.map(
-        timestamps, partition_date_only=unmapped(partition_date_only)
+        timestamps,
+        partition_date_name=unmapped(partition_date_name),
+        partition_date_only=unmapped(partition_date_only),
     )
 
     filenames = parse_timestamp_to_string.map(timestamps)
