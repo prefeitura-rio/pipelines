@@ -354,7 +354,8 @@ def save_treated_local(file_path: str, status: dict, mode: str = "staging") -> s
     Returns:
         str: Path to the saved file
     """
-    log(f"Saving treated data to: {file_path},{status}")
+
+    log(f"Saving treated data to: {file_path}, {status}")
 
     _file_path = file_path.format(mode=mode, filetype="csv")
 
