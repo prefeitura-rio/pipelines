@@ -166,8 +166,8 @@ def create_dbt_run_vars(
 
     log(f"Creating DBT variables. Parameter received: {dbt_vars}")
 
-    if (not dbt_vars) or (not table_id):
-        log("dbt_vars or table_id are blank. Skiping task")
+    if not dbt_vars:
+        log("dbt_vars are blank. Skiping task...")
         return [None], None, False
 
     final_vars = []
@@ -187,6 +187,10 @@ def create_dbt_run_vars(
             }
         # Create date_range using Redis
         else:
+            if not table_id:
+                log("table_id are blank. Skiping task...")
+                return [None], None, False
+
             raw_table_id = raw_table_id or table_id
 
             date_var = get_materialization_date_range.run(
@@ -229,6 +233,16 @@ def create_dbt_run_vars(
             final_vars.append(dataset_sha)
 
         log(f"version created: {dataset_sha}")
+
+    if "data_versao_gtfs" in dbt_vars.keys():
+        log("Creating data_versao_gtfs variable")
+
+        temp_dict = {"data_versao_gtfs": dbt_vars["data_versao_gtfs"]}
+
+        if final_vars:
+            final_vars = get_join_dict.run(dict_list=final_vars, new_dict=temp_dict)
+        else:
+            final_vars.append(temp_dict)
 
     log(f"All variables was created, final value is: {final_vars}")
 
