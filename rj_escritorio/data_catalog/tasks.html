@@ -32,7 +32,11 @@
 &#34;&#34;&#34;
 Tasks for generating a data catalog from BigQuery.
 &#34;&#34;&#34;
+from typing import List
+
+from google.api_core.exceptions import NotFound
 from google.cloud import bigquery
+from googleapiclient import discovery
 import gspread
 import pandas as pd
 from prefect import task
@@ -42,6 +46,41 @@ from pipelines.rj_escritorio.data_catalog.utils import (
     write_data_to_gsheets,
 )
 from pipelines.utils.utils import get_credentials_from_env, log
+
+
+@task
+def list_projects(
+    mode: str = &#34;prod&#34;,
+    exclude_dev: bool = True,
+) -&gt; List[str]:
+    &#34;&#34;&#34;
+    Lists all GCP projects that we have access to.
+
+    Args:
+        mode: Credentials mode.
+        exclude_dev: Exclude projects that ends with &#34;-dev&#34;.
+
+    Returns:
+        List of project IDs.
+    &#34;&#34;&#34;
+    credentials = get_credentials_from_env(mode=mode)
+    service = discovery.build(&#34;cloudresourcemanager&#34;, &#34;v1&#34;, credentials=credentials)
+    request = service.projects().list()
+    projects = []
+    while request is not None:
+        response = request.execute()
+        for project in response.get(&#34;projects&#34;, []):
+            project_id = project[&#34;projectId&#34;]
+            if exclude_dev and project_id.endswith(&#34;-dev&#34;):
+                log(f&#34;Excluding dev project {project_id}.&#34;)
+                continue
+            log(f&#34;Found project {project_id}.&#34;)
+            projects.append(project_id)
+        request = service.projects().list_next(
+            previous_request=request, previous_response=response
+        )
+    log(f&#34;Found {len(projects)} projects.&#34;)
+    return projects
 
 
 @task
@@ -79,32 +118,41 @@ def list_tables(  # pylint: disable=too-many-arguments
         client = get_bigquery_client(mode=mode)
     log(f&#34;Listing tables in project {project_id}.&#34;)
     tables = []
-    for dataset in client.list_datasets(project=project_id):
-        dataset_id: str = dataset.dataset_id
-        if exclude_staging and dataset_id.endswith(&#34;_staging&#34;):
-            log(f&#34;Excluding staging dataset {dataset_id}.&#34;)
-            continue
-        if exclude_test and &#34;test&#34; in dataset_id:
-            log(f&#34;Excluding test dataset {dataset_id}.&#34;)
-            continue
-        if exclude_logs and (
-            dataset_id.startswith(&#34;logs_&#34;) or dataset_id.endswith(&#34;_logs&#34;)
-        ):
-            log(f&#34;Excluding logs dataset {dataset_id}.&#34;)
-            continue
-        for table in client.list_tables(dataset):
-            table_id = table.table_id
-            if exclude_test and &#34;test&#34; in table_id:
-                log(f&#34;Excluding test table {table_id}.&#34;)
+    try:
+        datasets = client.list_datasets(project=project_id)
+        for dataset in datasets:
+            dataset_id: str = dataset.dataset_id
+            if exclude_staging and dataset_id.endswith(&#34;_staging&#34;):
+                log(f&#34;Excluding staging dataset {dataset_id}.&#34;)
                 continue
-            table_info = {
-                &#34;project_id&#34;: project_id,
-                &#34;dataset_id&#34;: dataset_id,
-                &#34;table_id&#34;: table_id,
-                &#34;url&#34;: f&#34;https://console.cloud.google.com/bigquery?p={project_id}&amp;d={dataset_id}&amp;t={table_id}&amp;page=table&#34;,
-                &#34;private&#34;: not project_id == &#34;datario&#34;,
-            }
-            tables.append(table_info)
+            if exclude_test and &#34;test&#34; in dataset_id:
+                log(f&#34;Excluding test dataset {dataset_id}.&#34;)
+                continue
+            if exclude_logs and (
+                dataset_id.startswith(&#34;logs_&#34;) or dataset_id.endswith(&#34;_logs&#34;)
+            ):
+                log(f&#34;Excluding logs dataset {dataset_id}.&#34;)
+                continue
+            for table in client.list_tables(dataset):
+                table_id = table.table_id
+                table_object = client.get_table(table.reference)
+                if exclude_test and &#34;test&#34; in table_id:
+                    log(f&#34;Excluding test table {table_id}.&#34;)
+                    continue
+                table_description = table_object.description
+                table_info = {
+                    &#34;project_id&#34;: project_id,
+                    &#34;dataset_id&#34;: dataset_id,
+                    &#34;table_id&#34;: table_id,
+                    &#34;description&#34;: table_description,
+                    &#34;url&#34;: f&#34;https://console.cloud.google.com/bigquery?p={project_id}&amp;d={dataset_id}&amp;t={table_id}&amp;page=table&#34;,
+                    &#34;private&#34;: not project_id == &#34;datario&#34;,
+                }
+                tables.append(table_info)
+    except NotFound:
+        # This will happen if BigQuery API is not enabled for this project. Just return an empty
+        # list
+        return tables
     log(f&#34;Found {len(tables)} tables in project {project_id}.&#34;)
     return tables
 
@@ -231,6 +279,59 @@ def generate_dataframe_from_list_of_tables(list_of_tables: list) -&gt; pd.DataFr
     return dataframe</code></pre>
 </details>
 </dd>
+<dt id="pipelines.rj_escritorio.data_catalog.tasks.list_projects"><code class="name flex">
+<span>def <span class="ident">list_projects</span></span>(<span>mode: str = 'prod', exclude_dev: bool = True) ‑> List[str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Lists all GCP projects that we have access to.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>mode</code></strong></dt>
+<dd>Credentials mode.</dd>
+<dt><strong><code>exclude_dev</code></strong></dt>
+<dd>Exclude projects that ends with "-dev".</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>List of project IDs.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def list_projects(
+    mode: str = &#34;prod&#34;,
+    exclude_dev: bool = True,
+) -&gt; List[str]:
+    &#34;&#34;&#34;
+    Lists all GCP projects that we have access to.
+
+    Args:
+        mode: Credentials mode.
+        exclude_dev: Exclude projects that ends with &#34;-dev&#34;.
+
+    Returns:
+        List of project IDs.
+    &#34;&#34;&#34;
+    credentials = get_credentials_from_env(mode=mode)
+    service = discovery.build(&#34;cloudresourcemanager&#34;, &#34;v1&#34;, credentials=credentials)
+    request = service.projects().list()
+    projects = []
+    while request is not None:
+        response = request.execute()
+        for project in response.get(&#34;projects&#34;, []):
+            project_id = project[&#34;projectId&#34;]
+            if exclude_dev and project_id.endswith(&#34;-dev&#34;):
+                log(f&#34;Excluding dev project {project_id}.&#34;)
+                continue
+            log(f&#34;Found project {project_id}.&#34;)
+            projects.append(project_id)
+        request = service.projects().list_next(
+            previous_request=request, previous_response=response
+        )
+    log(f&#34;Found {len(projects)} projects.&#34;)
+    return projects</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_escritorio.data_catalog.tasks.list_tables"><code class="name flex">
 <span>def <span class="ident">list_tables</span></span>(<span>project_id: str, client: google.cloud.bigquery.client.Client = None, mode: str = 'prod', exclude_staging: bool = True, exclude_test: bool = True, exclude_logs: bool = True)</span>
 </code></dt>
@@ -299,32 +400,41 @@ def list_tables(  # pylint: disable=too-many-arguments
         client = get_bigquery_client(mode=mode)
     log(f&#34;Listing tables in project {project_id}.&#34;)
     tables = []
-    for dataset in client.list_datasets(project=project_id):
-        dataset_id: str = dataset.dataset_id
-        if exclude_staging and dataset_id.endswith(&#34;_staging&#34;):
-            log(f&#34;Excluding staging dataset {dataset_id}.&#34;)
-            continue
-        if exclude_test and &#34;test&#34; in dataset_id:
-            log(f&#34;Excluding test dataset {dataset_id}.&#34;)
-            continue
-        if exclude_logs and (
-            dataset_id.startswith(&#34;logs_&#34;) or dataset_id.endswith(&#34;_logs&#34;)
-        ):
-            log(f&#34;Excluding logs dataset {dataset_id}.&#34;)
-            continue
-        for table in client.list_tables(dataset):
-            table_id = table.table_id
-            if exclude_test and &#34;test&#34; in table_id:
-                log(f&#34;Excluding test table {table_id}.&#34;)
+    try:
+        datasets = client.list_datasets(project=project_id)
+        for dataset in datasets:
+            dataset_id: str = dataset.dataset_id
+            if exclude_staging and dataset_id.endswith(&#34;_staging&#34;):
+                log(f&#34;Excluding staging dataset {dataset_id}.&#34;)
                 continue
-            table_info = {
-                &#34;project_id&#34;: project_id,
-                &#34;dataset_id&#34;: dataset_id,
-                &#34;table_id&#34;: table_id,
-                &#34;url&#34;: f&#34;https://console.cloud.google.com/bigquery?p={project_id}&amp;d={dataset_id}&amp;t={table_id}&amp;page=table&#34;,
-                &#34;private&#34;: not project_id == &#34;datario&#34;,
-            }
-            tables.append(table_info)
+            if exclude_test and &#34;test&#34; in dataset_id:
+                log(f&#34;Excluding test dataset {dataset_id}.&#34;)
+                continue
+            if exclude_logs and (
+                dataset_id.startswith(&#34;logs_&#34;) or dataset_id.endswith(&#34;_logs&#34;)
+            ):
+                log(f&#34;Excluding logs dataset {dataset_id}.&#34;)
+                continue
+            for table in client.list_tables(dataset):
+                table_id = table.table_id
+                table_object = client.get_table(table.reference)
+                if exclude_test and &#34;test&#34; in table_id:
+                    log(f&#34;Excluding test table {table_id}.&#34;)
+                    continue
+                table_description = table_object.description
+                table_info = {
+                    &#34;project_id&#34;: project_id,
+                    &#34;dataset_id&#34;: dataset_id,
+                    &#34;table_id&#34;: table_id,
+                    &#34;description&#34;: table_description,
+                    &#34;url&#34;: f&#34;https://console.cloud.google.com/bigquery?p={project_id}&amp;d={dataset_id}&amp;t={table_id}&amp;page=table&#34;,
+                    &#34;private&#34;: not project_id == &#34;datario&#34;,
+                }
+                tables.append(table_info)
+    except NotFound:
+        # This will happen if BigQuery API is not enabled for this project. Just return an empty
+        # list
+        return tables
     log(f&#34;Found {len(tables)} tables in project {project_id}.&#34;)
     return tables</code></pre>
 </details>
@@ -495,6 +605,7 @@ setTimeout(() => input.focus(), 100);
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="pipelines.rj_escritorio.data_catalog.tasks.generate_dataframe_from_list_of_tables" href="#pipelines.rj_escritorio.data_catalog.tasks.generate_dataframe_from_list_of_tables">generate_dataframe_from_list_of_tables</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.data_catalog.tasks.list_projects" href="#pipelines.rj_escritorio.data_catalog.tasks.list_projects">list_projects</a></code></li>
 <li><code><a title="pipelines.rj_escritorio.data_catalog.tasks.list_tables" href="#pipelines.rj_escritorio.data_catalog.tasks.list_tables">list_tables</a></code></li>
 <li><code><a title="pipelines.rj_escritorio.data_catalog.tasks.merge_list_of_list_of_tables" href="#pipelines.rj_escritorio.data_catalog.tasks.merge_list_of_list_of_tables">merge_list_of_list_of_tables</a></code></li>
 <li><code><a title="pipelines.rj_escritorio.data_catalog.tasks.update_gsheets_data_catalog" href="#pipelines.rj_escritorio.data_catalog.tasks.update_gsheets_data_catalog">update_gsheets_data_catalog</a></code></li>
