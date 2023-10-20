@@ -5,6 +5,7 @@ Tasks for generating a data catalog from BigQuery.
 """
 from typing import List
 
+from google.api_core.exceptions import NotFound
 from google.cloud import bigquery
 from googleapiclient import discovery
 import gspread
@@ -88,7 +89,13 @@ def list_tables(  # pylint: disable=too-many-arguments
         client = get_bigquery_client(mode=mode)
     log(f"Listing tables in project {project_id}.")
     tables = []
-    for dataset in client.list_datasets(project=project_id):
+    try:
+        datasets = client.list_datasets(project=project_id)
+    except NotFound:
+        # This will happen if BigQuery API is not enabled for this project. Just return an empty
+        # list
+        return tables
+    for dataset in datasets:
         dataset_id: str = dataset.dataset_id
         if exclude_staging and dataset_id.endswith("_staging"):
             log(f"Excluding staging dataset {dataset_id}.")
