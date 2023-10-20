@@ -407,56 +407,6 @@ def data_info_str(data: pd.DataFrame):
     return buffer.getvalue()
 
 
-# def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-locals
-#     interval: timedelta,
-#     labels: List[str],
-#     table_parameters: list,
-#     dataset_id: str,
-#     secret_path: str,
-#     runs_interval_minutes: int = 15,
-#     start_date: datetime = datetime(
-#         2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)
-#     ),
-# ) -> List[IntervalClock]:
-#     """
-#     Generates multiple schedules
-
-#     Args:
-#         interval (timedelta): The interval to run the schedule
-#         labels (List[str]): The labels to be added to the schedule
-#         table_parameters (list): The table parameters
-#         dataset_id (str): The dataset_id to be used in the schedule
-#         secret_path (str): The secret path to be used in the schedule
-#         runs_interval_minutes (int, optional): The interval between each schedule. Defaults to 15.
-#         start_date (datetime, optional): The start date of the schedule.
-#             Defaults to datetime(2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)).
-
-#     Returns:
-#         List[IntervalClock]: The list of schedules
-
-#     """
-
-#     clocks = []
-#     for count, parameters in enumerate(table_parameters):
-#         parameter_defaults = {
-#             "table_params": parameters,
-#             "dataset_id": dataset_id,
-#             "secret_path": secret_path,
-#             "interval": interval.total_seconds(),
-#         }
-#         log(f"parameter_defaults: {parameter_defaults}")
-#         clocks.append(
-#             IntervalClock(
-#                 interval=interval,
-#                 start_date=start_date
-#                 + timedelta(minutes=runs_interval_minutes * count),
-#                 labels=labels,
-#                 parameter_defaults=parameter_defaults,
-#             )
-#         )
-#     return clocks
-
-
 def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-locals
     clock_interval: timedelta,
     labels: List[str],
@@ -645,7 +595,7 @@ def get_upload_storage_blob(
 def get_raw_data_gcs(
     dataset_id: str,
     table_id: str,
-    filename: str = None,
+    zip_filename: str = None,
 ) -> tuple[str, str, str]:
     """
     Get raw data from GCS
@@ -653,7 +603,7 @@ def get_raw_data_gcs(
     Args:
         dataset_id (str): The dataset id on BigQuery.
         table_id (str): The table id on BigQuery.
-        filename (str, optional): The zip file name. Defaults to None.
+        zip_filename (str, optional): The zip file name. Defaults to None.
 
     Returns:
         tuple[str, str, str]: Error, data and filetype
@@ -663,8 +613,12 @@ def get_raw_data_gcs(
     filetype = None
 
     try:
-        blob = get_upload_storage_blob(dataset_id=dataset_id, filename=filename)
-        filetype = blob.name.split(".")[-1]
+        blob_search_name = zip_filename or table_id
+        blob = get_upload_storage_blob(dataset_id=dataset_id, filename=blob_search_name)
+
+        filename = blob.name
+        filetype = filename.split(".")[-1]
+
         data = blob.download_as_bytes()
 
         if filetype == "zip":
@@ -677,8 +631,6 @@ def get_raw_data_gcs(
                 data = zipped_file.read(filename)
 
         data = data.decode(encoding="utf-8")
-
-        log(f"Data: {data}")
 
     except Exception:
         error = traceback.format_exc()
