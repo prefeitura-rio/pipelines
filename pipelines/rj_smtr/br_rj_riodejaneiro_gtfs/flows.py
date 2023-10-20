@@ -104,22 +104,25 @@ with Flow(
     with case(materialize, True):
         gtfs_materializacao_parameters = {
             "dataset_id": constants.GTFS_DATASET_ID.value,
-            "dbt_vars": {"data_versao_gtfs": data_versao_gtfs},
+            "dbt_vars": {
+                "data_versao_gtfs": data_versao_gtfs,
+                "version": {},
+            },
         }
 
         run_materializacao = create_flow_run(
-            flow_name=unmapped(gtfs_materializacao.name),
-            project_name=unmapped("staging"),
-            parameters=unmapped(gtfs_materializacao_parameters),
-            labels=unmapped(LABELS),
+            flow_name=gtfs_materializacao.name,
+            project_name="staging",
+            parameters=gtfs_materializacao_parameters,
+            labels=LABELS,
             upstream_tasks=[wait_captura],
         )
 
         wait_materializacao = wait_for_flow_run(
             run_materializacao,
-            stream_states=unmapped(True),
-            stream_logs=unmapped(True),
-            raise_final_state=unmapped(True),
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
         )
 
 gtfs_captura_tratamento.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
