@@ -41,7 +41,7 @@ gsheets_urls = {
         "url": "https://docs.google.com/spreadsheets/d/1nqnwgigE0_Ac6-jkWiNwAdB4EMJfz1WV5nn0HaOhfu0\
             /edit#gid=1236673479",
         "url_type": "google_sheet",
-        "gsheets_sheet_name": "Lista Órgãos",
+        "gsheets_sheet_name": "ListaOrgaos",
         "materialize_after_dump": True,
         "dataset_id": "planejamento_gestao_dashboard_metas",
     },
