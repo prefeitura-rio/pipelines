@@ -11,6 +11,7 @@ from pipelines.constants import constants
 from pipelines.rj_escritorio.data_catalog.schedules import update_data_catalog_schedule
 from pipelines.rj_escritorio.data_catalog.tasks import (
     generate_dataframe_from_list_of_tables,
+    list_projects,
     list_tables,
     merge_list_of_list_of_tables,
     update_gsheets_data_catalog,
@@ -28,18 +29,16 @@ with Flow(
     ],
 ) as rj_escritorio_data_catalog_flow:
     # Parameters
-    project_ids = Parameter("project_ids")
     spreadsheet_url = Parameter("spreadsheet_url")
     sheet_name = Parameter("sheet_name")
     bq_client_mode = Parameter("bq_client_mode", default="prod")
+    exclude_dev_projects = Parameter("exclude_dev_projects", default=True)
     exclude_staging = Parameter("exclude_staging", default=True)
     exclude_test = Parameter("exclude_test", default=True)
     exclude_logs = Parameter("exclude_logs", default=True)
 
     # Flow
-    project_ids = parse_comma_separated_string_to_list(
-        input_text=project_ids, output_type=str
-    )
+    project_ids = list_projects(mode=bq_client_mode, exclude_dev=exclude_dev_projects)
     list_of_list_of_tables = list_tables.map(
         project_id=project_ids,
         mode=unmapped(bq_client_mode),
