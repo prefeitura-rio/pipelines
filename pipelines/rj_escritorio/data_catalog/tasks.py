@@ -103,10 +103,11 @@ def list_tables(  # pylint: disable=too-many-arguments
             continue
         for table in client.list_tables(dataset):
             table_id = table.table_id
+            table_object = client.get_table(table.reference)
             if exclude_test and "test" in table_id:
                 log(f"Excluding test table {table_id}.")
                 continue
-            table_description = table.description
+            table_description = table_object.description
             table_info = {
                 "project_id": project_id,
                 "dataset_id": dataset_id,
