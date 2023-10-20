@@ -61,6 +61,7 @@ tweepy = "4.4"
 xarray = "^2022.6.0"
 xgboost = "^1.7.4"
 psycopg2-binary = "^2.9.9"
+pymongo = "^4.5.0"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.12.2"

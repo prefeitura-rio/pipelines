@@ -18,6 +18,7 @@ from prefect import task
 
 from pipelines.utils.dump_db.db import (
     Database,
+    Mongo,
     MySql,
     Oracle,
     SqlServer,
@@ -46,6 +47,7 @@ from pipelines.constants import constants
 from pipelines.utils.utils import log
 
 DATABASE_MAPPING: Dict[str, Database] = {
+    "mongo": Mongo,
     "mysql": MySql,
     "oracle": Oracle,
     "sql_server": SqlServer,
