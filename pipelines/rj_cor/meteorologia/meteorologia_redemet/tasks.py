@@ -184,7 +184,7 @@ def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
     Salvar dados em csv
     """
 
-    prepath = Path("/tmp/meteorologia_redemeta
+    prepath = Path("/tmp/meteorologia_redemet/")
     prepath.mkdir(parents=True, exist_ok=True)
 
     partition_column = "data_medicao"
