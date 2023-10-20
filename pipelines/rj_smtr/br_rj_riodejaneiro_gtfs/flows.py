@@ -11,6 +11,7 @@ from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect.utilities.edges import unmapped
 from prefect import Parameter, case, task
+from prefect.tasks.control_flow import merge
 
 
 # EMD Imports #
@@ -86,19 +87,21 @@ with Flow(
             labels=unmapped(LABELS),
         )
 
-        wait_captura = wait_for_flow_run.map(
+        wait_captura_true = wait_for_flow_run.map(
             run_captura,
             stream_states=unmapped(True),
             stream_logs=unmapped(True),
             raise_final_state=unmapped(True),
         )
 
-    with case(materialize, True):
-        with case(capture, False):
-            wait_captura = task(
-                lambda: [None], checkpoint=False, name="assign_none_to_previous_runs"
-            )()
+    with case(capture, False):
+        wait_captura_false = task(
+            lambda: [None], checkpoint=False, name="assign_none_to_previous_runs"
+        )()
 
+    wait_captura = merge(wait_captura_true, wait_captura_false)
+
+    with case(materialize, True):
         gtfs_materializacao_parameters = {
             "dataset_id": constants.GTFS_DATASET_ID.value,
             "dbt_vars": {"data_versao_gtfs": data_versao_gtfs},
