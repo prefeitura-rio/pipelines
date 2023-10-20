@@ -113,7 +113,7 @@ with Flow(
     create_request_params_returns = create_request_params.map(
         dataset_id=unmapped(dataset_id),
         extract_params=unmapped(extract_params),
-        # table_id=unmapped(table_id),
+        table_id=unmapped(table_id),
         timestamp=timestamps,
         interval_minutes=unmapped(interval_minutes),
     )
