@@ -230,7 +230,8 @@ def create_table_and_upload_to_gcs(
                 f"{storage_path}\n"
                 f"{storage_path_link}"
             )  # pylint: disable=C0301
-            tb.delete(mode="all")
+            # delete only staging table and let DBT overwrite the prod table
+            tb.delete(mode="staging")
             log(
                 "MODE OVERWRITE: Sucessfully DELETED TABLE:\n"
                 f"{table_staging}\n"
