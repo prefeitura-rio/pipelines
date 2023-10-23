@@ -230,7 +230,7 @@ with Flow(
 
     LABELS = get_current_flow_labels()
 
-    # Recaptura Transação
+    # Recaptura GPS
 
     run_recaptura_gps = create_flow_run(
         flow_name=bilhetagem_recaptura.name,
