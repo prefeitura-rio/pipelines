@@ -60,6 +60,7 @@ statsmodels = "^0.13.0"
 tweepy = "4.4"
 xarray = "^2022.6.0"
 xgboost = "^1.7.4"
+psycopg2-binary = "^2.9.9"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.12.2"
