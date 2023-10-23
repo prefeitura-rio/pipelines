@@ -298,7 +298,7 @@ with Flow(
         flags=unmapped(flags),
     )
 
-    task(lambda x: [log(f"Saída modelo:\n{x}") for x in x])(RUNS)
+    task(lambda x: [log(f"Saída modelo:\n{x}") for x in x])(x=RUNS)
 
     with case(flag_date_range, True):
         set_last_run_timestamp(
