@@ -165,9 +165,29 @@ class constants(Enum):  # pylint: disable=c0103
 
     # BILHETAGEM
     BILHETAGEM_DATASET_ID = "br_rj_riodejaneiro_bilhetagem"
-    BILHETAGEM_TRANSACAO_TABLE_PARAMS = [
-        {
-            "table_id": "transacao",
+
+    BILHETAGEM_GENERAL_CAPTURE_PARAMS = {
+        "databases": {
+            "principal_db": {
+                "engine": "mysql",
+                "host": "10.5.114.121",
+            },
+            "tarifa_db": {
+                "engine": "postgresql",
+                "host": "10.5.113.254",
+            },
+            "transacao_db": {
+                "engine": "postgresql",
+                "host": "10.5.115.1",
+            },
+        },
+        "source_type": "db",
+    }
+
+    BILHETAGEM_TRANSACAO_CAPTURE_PARAMS = {
+        "table_id": "transacao",
+        "partition_date_only": False,
+        "extract_params": {
             "database": "transacao_db",
             "query": """
                 SELECT
@@ -177,80 +197,96 @@ class constants(Enum):  # pylint: disable=c0103
                 WHERE
                     data_processamento BETWEEN '{start}'
                     AND '{end}'
-                ORDER BY
-                    data_processamento
             """,
-            "primary_key": ["id"],  # id column to nest data on
-            "partition_date_only": False,
         },
-    ]
-    BILHETAGEM_TABLES_PARAMS = [
+        "primary_key": ["id"],
+        "interval_minutes": 1,
+    }
+
+    BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
+
+    BILHETAGEM_CAPTURE_PARAMS = [
         {
             "table_id": "linha",
-            "database": "principal_db",
-            "query": """
-                SELECT
-                    *
-                FROM
-                    LINHA
-                WHERE
-                    DT_INCLUSAO >= '{start}'
-                ORDER BY
-                    DT_INCLUSAO
-            """,
-            "primary_key": ["CD_LINHA"],  # id column to nest data on
             "partition_date_only": True,
+            "extract_params": {
+                "database": "principal_db",
+                "query": """
+                    SELECT
+                        *
+                    FROM
+                        LINHA
+                    WHERE
+                        DT_INCLUSAO >= '{start}'
+                """,
+            },
+            "primary_key": ["CD_LINHA"],  # id column to nest data on
+            "interval_minutes": 60,
         },
         {
             "table_id": "grupo",
-            "database": "principal_db",
-            "query": """
-                SELECT
-                    *
-                FROM
-                    GRUPO
-                WHERE
-                    DT_INCLUSAO >= '{start}'
-                ORDER BY
-                    DT_INCLUSAO
-            """,
-            "primary_key": ["CD_GRUPO"],
             "partition_date_only": True,
+            "extract_params": {
+                "database": "principal_db",
+                "query": """
+                    SELECT
+                        *
+                    FROM
+                        GRUPO
+                    WHERE
+                        DT_INCLUSAO >= '{start}'
+                """,
+            },
+            "primary_key": ["CD_GRUPO"],  # id column to nest data on
+            "interval_minutes": 60,
         },
         {
             "table_id": "grupo_linha",
-            "database": "principal_db",
-            "query": """
-                SELECT
-                    *
-                FROM
-                    GRUPO_LINHA
-                WHERE
-                    DT_INCLUSAO >= '{start}'
-                ORDER BY
-                    DT_INCLUSAO
-            """,
-            "primary_key": ["CD_GRUPO", "CD_LINHA"],  # id column to nest data on
             "partition_date_only": True,
+            "extract_params": {
+                "database": "principal_db",
+                "query": """
+                    SELECT
+                        *
+                    FROM
+                        GRUPO_LINHA
+                    WHERE
+                        DT_INCLUSAO >= '{start}'
+                """,
+            },
+            "primary_key": ["CD_GRUPO", "CD_LINHA"],
+            "interval_minutes": 60,
         },
         {
             "table_id": "matriz_integracao",
-            "database": "tarifa_db",
-            "query": """
-                SELECT
-                    *
-                FROM
-                    matriz_integracao
-                WHERE
-                    dt_inclusao >= '{start}'
-                ORDER BY
-                    dt_inclusao
-            """,
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "tarifa_db",
+                "query": """
+                    SELECT
+                        *
+                    FROM
+                        matriz_integracao
+                    WHERE
+                        dt_inclusao >= '{start}'
+                """,
+            },
             "primary_key": [
                 "cd_versao_matriz",
                 "cd_integracao",
             ],  # id column to nest data on
-            "partition_date_only": True,
+            "interval_minutes": 60,
         },
     ]
-    BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
+
+    BILHETAGEM_MATERIALIZACAO_PARAMS = {
+        "table_id": BILHETAGEM_TRANSACAO_CAPTURE_PARAMS["table_id"],
+        "upstream": True,
+        "dbt_vars": {
+            "date_range": {
+                "table_run_datetime_column_name": "datetime_transacao",
+                "delay_hours": 1,
+            },
+            "version": {},
+        },
+    }
