@@ -1302,3 +1302,15 @@ def unpack_mapped_results_nout2(
 
     """
     return [r[0] for r in mapped_results], [r[1] for r in mapped_results]
+
+
+@task(checkpoint=False)
+def fail_map(map_output: list):
+    """
+    Task to fail flow run when mapping a task
+
+    Args:
+        map_output (list): Result from mapped task
+    """
+
+    [log(f"Saída modelo:\n{x}") for x in map_output]

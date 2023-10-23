@@ -38,6 +38,7 @@ from pipelines.rj_smtr.tasks import (
     create_request_params,
     query_logs,
     unpack_mapped_results_nout2,
+    fail_map,
 )
 
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
@@ -298,7 +299,7 @@ with Flow(
         flags=unmapped(flags),
     )
 
-    task(lambda x: [log(f"Saída modelo:\n{x}") for x in x])(x=RUNS)
+    fail_map(map_output=RUNS)
 
     with case(flag_date_range, True):
         set_last_run_timestamp(
