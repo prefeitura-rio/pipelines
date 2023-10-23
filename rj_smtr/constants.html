@@ -351,6 +351,81 @@ class constants(Enum):  # pylint: disable=c0103
             },
             &#34;version&#34;: {},
         },
+    }
+
+    # GTFS
+    GTFS_DATASET_ID = &#34;br_rj_riodejaneiro_gtfs&#34;
+
+    GTFS_GENERAL_CAPTURE_PARAMS = {
+        &#34;partition_date_only&#34;: True,
+        &#34;source_type&#34;: &#34;gcs&#34;,
+        &#34;dataset_id&#34;: &#34;br_rj_riodejaneiro_gtfs&#34;,
+        &#34;extract_params&#34;: {&#34;filename&#34;: &#34;gtfs&#34;},
+        &#34;partition_date_name&#34;: &#34;data_versao&#34;,
+    }
+
+    GTFS_TABLE_CAPTURE_PARAMS = [
+        {
+            &#34;table_id&#34;: &#34;agency&#34;,
+            &#34;primary_key&#34;: [&#34;agency_id&#34;],
+        },
+        {
+            &#34;table_id&#34;: &#34;calendar_dates&#34;,
+            &#34;primary_key&#34;: [&#34;service_id&#34;, &#34;date&#34;],
+        },
+        {
+            &#34;table_id&#34;: &#34;calendar&#34;,
+            &#34;primary_key&#34;: [&#34;service_id&#34;],
+        },
+        {
+            &#34;table_id&#34;: &#34;feed_info&#34;,
+            &#34;primary_key&#34;: [&#34;feed_publisher_name&#34;],
+        },
+        {
+            &#34;table_id&#34;: &#34;frequencies&#34;,
+            &#34;primary_key&#34;: [&#34;trip_id&#34;, &#34;start_time&#34;],
+        },
+        {
+            &#34;table_id&#34;: &#34;routes&#34;,
+            &#34;primary_key&#34;: [&#34;route_id&#34;],
+        },
+        {
+            &#34;table_id&#34;: &#34;shapes&#34;,
+            &#34;primary_key&#34;: [&#34;shape_id&#34;, &#34;shape_pt_sequence&#34;],
+        },
+        {
+            &#34;table_id&#34;: &#34;stops&#34;,
+            &#34;primary_key&#34;: [&#34;stop_id&#34;],
+        },
+        {
+            &#34;table_id&#34;: &#34;stop_times&#34;,
+            &#34;primary_key&#34;: [&#34;trip_id&#34;, &#34;stop_sequence&#34;],
+        },
+        {
+            &#34;table_id&#34;: &#34;trips&#34;,
+            &#34;primary_key&#34;: [&#34;trip_id&#34;],
+        },
+        {
+            &#34;table_id&#34;: &#34;fare_attributes&#34;,
+            &#34;primary_key&#34;: [&#34;fare_id&#34;],
+        },
+        {
+            &#34;table_id&#34;: &#34;fare_rules&#34;,
+            &#34;primary_key&#34;: [],
+        },
+        {
+            &#34;table_id&#34;: &#34;ordem_servico&#34;,
+            &#34;primary_key&#34;: [&#34;servico&#34;],
+            &#34;extract_params&#34;: {&#34;filename&#34;: &#34;ordem_servico&#34;},
+        },
+    ]
+
+    GTFS_MATERIALIZACAO_PARAMS = {
+        &#34;dataset_id&#34;: GTFS_DATASET_ID,
+        &#34;dbt_vars&#34;: {
+            &#34;data_versao_gtfs&#34;: &#34;&#34;,
+            &#34;version&#34;: {},
+        },
     }</code></pre>
 </details>
 </section>
@@ -689,6 +764,81 @@ class constants(Enum):  # pylint: disable=c0103
             },
             &#34;version&#34;: {},
         },
+    }
+
+    # GTFS
+    GTFS_DATASET_ID = &#34;br_rj_riodejaneiro_gtfs&#34;
+
+    GTFS_GENERAL_CAPTURE_PARAMS = {
+        &#34;partition_date_only&#34;: True,
+        &#34;source_type&#34;: &#34;gcs&#34;,
+        &#34;dataset_id&#34;: &#34;br_rj_riodejaneiro_gtfs&#34;,
+        &#34;extract_params&#34;: {&#34;filename&#34;: &#34;gtfs&#34;},
+        &#34;partition_date_name&#34;: &#34;data_versao&#34;,
+    }
+
+    GTFS_TABLE_CAPTURE_PARAMS = [
+        {
+            &#34;table_id&#34;: &#34;agency&#34;,
+            &#34;primary_key&#34;: [&#34;agency_id&#34;],
+        },
+        {
+            &#34;table_id&#34;: &#34;calendar_dates&#34;,
+            &#34;primary_key&#34;: [&#34;service_id&#34;, &#34;date&#34;],
+        },
+        {
+            &#34;table_id&#34;: &#34;calendar&#34;,
+            &#34;primary_key&#34;: [&#34;service_id&#34;],
+        },
+        {
+            &#34;table_id&#34;: &#34;feed_info&#34;,
+            &#34;primary_key&#34;: [&#34;feed_publisher_name&#34;],
+        },
+        {
+            &#34;table_id&#34;: &#34;frequencies&#34;,
+            &#34;primary_key&#34;: [&#34;trip_id&#34;, &#34;start_time&#34;],
+        },
+        {
+            &#34;table_id&#34;: &#34;routes&#34;,
+            &#34;primary_key&#34;: [&#34;route_id&#34;],
+        },
+        {
+            &#34;table_id&#34;: &#34;shapes&#34;,
+            &#34;primary_key&#34;: [&#34;shape_id&#34;, &#34;shape_pt_sequence&#34;],
+        },
+        {
+            &#34;table_id&#34;: &#34;stops&#34;,
+            &#34;primary_key&#34;: [&#34;stop_id&#34;],
+        },
+        {
+            &#34;table_id&#34;: &#34;stop_times&#34;,
+            &#34;primary_key&#34;: [&#34;trip_id&#34;, &#34;stop_sequence&#34;],
+        },
+        {
+            &#34;table_id&#34;: &#34;trips&#34;,
+            &#34;primary_key&#34;: [&#34;trip_id&#34;],
+        },
+        {
+            &#34;table_id&#34;: &#34;fare_attributes&#34;,
+            &#34;primary_key&#34;: [&#34;fare_id&#34;],
+        },
+        {
+            &#34;table_id&#34;: &#34;fare_rules&#34;,
+            &#34;primary_key&#34;: [],
+        },
+        {
+            &#34;table_id&#34;: &#34;ordem_servico&#34;,
+            &#34;primary_key&#34;: [&#34;servico&#34;],
+            &#34;extract_params&#34;: {&#34;filename&#34;: &#34;ordem_servico&#34;},
+        },
+    ]
+
+    GTFS_MATERIALIZACAO_PARAMS = {
+        &#34;dataset_id&#34;: GTFS_DATASET_ID,
+        &#34;dbt_vars&#34;: {
+            &#34;data_versao_gtfs&#34;: &#34;&#34;,
+            &#34;version&#34;: {},
+        },
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -846,6 +996,22 @@ class constants(Enum):  # pylint: disable=c0103
 <div class="desc"></div>
 </dd>
 <dt id="pipelines.rj_smtr.constants.constants.GPS_STPL_TREATED_TABLE_ID"><code class="name">var <span class="ident">GPS_STPL_TREATED_TABLE_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.GTFS_DATASET_ID"><code class="name">var <span class="ident">GTFS_DATASET_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.GTFS_GENERAL_CAPTURE_PARAMS"><code class="name">var <span class="ident">GTFS_GENERAL_CAPTURE_PARAMS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.GTFS_MATERIALIZACAO_PARAMS"><code class="name">var <span class="ident">GTFS_MATERIALIZACAO_PARAMS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.GTFS_TABLE_CAPTURE_PARAMS"><code class="name">var <span class="ident">GTFS_TABLE_CAPTURE_PARAMS</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1066,6 +1232,10 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_STPL_RAW_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.GPS_STPL_RAW_DATASET_ID">GPS_STPL_RAW_DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_STPL_RAW_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.GPS_STPL_RAW_TABLE_ID">GPS_STPL_RAW_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_STPL_TREATED_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.GPS_STPL_TREATED_TABLE_ID">GPS_STPL_TREATED_TABLE_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GTFS_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.GTFS_DATASET_ID">GTFS_DATASET_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GTFS_GENERAL_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.GTFS_GENERAL_CAPTURE_PARAMS">GTFS_GENERAL_CAPTURE_PARAMS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GTFS_MATERIALIZACAO_PARAMS" href="#pipelines.rj_smtr.constants.constants.GTFS_MATERIALIZACAO_PARAMS">GTFS_MATERIALIZACAO_PARAMS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.GTFS_TABLE_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.GTFS_TABLE_CAPTURE_PARAMS">GTFS_TABLE_CAPTURE_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.MAX_RETRIES" href="#pipelines.rj_smtr.constants.constants.MAX_RETRIES">MAX_RETRIES</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.MAX_TIMEOUT_SECONDS" href="#pipelines.rj_smtr.constants.constants.MAX_TIMEOUT_SECONDS">MAX_TIMEOUT_SECONDS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.RDO_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.RDO_DATASET_ID">RDO_DATASET_ID</a></code></li>

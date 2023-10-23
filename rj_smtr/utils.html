@@ -610,11 +610,13 @@ def get_upload_storage_blob(
         Blob: blob object
     &#34;&#34;&#34;
     bucket = bd.Storage(dataset_id=&#34;&#34;, table_id=&#34;&#34;)
+    log(f&#34;Filename: {filename}, dataset_id: {dataset_id}&#34;)
     blob_list = list(
         bucket.client[&#34;storage_staging&#34;]
         .bucket(bucket.bucket_name)
         .list_blobs(prefix=f&#34;upload/{dataset_id}/{filename}.&#34;)
     )
+
     return blob_list[0]
 
 
@@ -1813,11 +1815,13 @@ Useful to incrementally materialize tables via DBT</p>
         Blob: blob object
     &#34;&#34;&#34;
     bucket = bd.Storage(dataset_id=&#34;&#34;, table_id=&#34;&#34;)
+    log(f&#34;Filename: {filename}, dataset_id: {dataset_id}&#34;)
     blob_list = list(
         bucket.client[&#34;storage_staging&#34;]
         .bucket(bucket.bucket_name)
         .list_blobs(prefix=f&#34;upload/{dataset_id}/{filename}.&#34;)
     )
+
     return blob_list[0]</code></pre>
 </details>
 </dd>
