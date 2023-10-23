@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Database dumping flows for SMFP SIGMA system
+Database dumping flows for SMFP SIGMA system.
 """
 
 from copy import deepcopy
