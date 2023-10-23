@@ -26,7 +26,7 @@ from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
 from pipelines.rj_smtr.tasks import (
     create_date_hour_partition,
     create_local_partition_path,
-    get_current_timestamp,
+    get_rounded_timestamp,
     parse_timestamp_to_string,
     transform_raw_to_nested_structure,
     create_dbt_run_vars,
@@ -52,6 +52,7 @@ with Flow(
     table_id = Parameter("table_id", default=None)
     dataset_id = Parameter("dataset_id", default=None)
     partition_date_only = Parameter("partition_date_only", default=None)
+    timestamp = Parameter("timestamp", default=None)
 
     # Parâmetros Captura #
     extract_params = Parameter("extract_params", default=None)
@@ -70,16 +71,21 @@ with Flow(
         checkpoint=False,
     )
 
+    current_timestamp = get_rounded_timestamp(
+        timestamp=timestamp, interval_minutes=interval_minutes
+    )
+
     with case(recapture, True):
         _, recapture_timestamps, recapture_previous_errors = query_logs(
             dataset_id=dataset_id,
             table_id=table_id,
+            datetime_filter=current_timestamp,
             interval_minutes=interval_minutes,
             recapture_window_days=recapture_window_days,
         )
 
     with case(recapture, False):
-        capture_timestamp = [get_current_timestamp()]
+        capture_timestamp = [current_timestamp]
         capture_previous_errors = task(
             lambda: [None], checkpoint=False, name="assign_none_to_previous_errors"
         )()

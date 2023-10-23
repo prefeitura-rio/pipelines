@@ -223,6 +223,7 @@ class constants(Enum):  # pylint: disable=c0103
             },
             "primary_key": ["CD_LINHA"],  # id column to nest data on
             "interval_minutes": 60,
+            "truncate_hour": True,
         },
         {
             "table_id": "grupo",
@@ -241,6 +242,7 @@ class constants(Enum):  # pylint: disable=c0103
             },
             "primary_key": ["CD_GRUPO"],  # id column to nest data on
             "interval_minutes": 60,
+            "truncate_hour": True,
         },
         {
             "table_id": "grupo_linha",
@@ -259,6 +261,7 @@ class constants(Enum):  # pylint: disable=c0103
             },
             "primary_key": ["CD_GRUPO", "CD_LINHA"],
             "interval_minutes": 60,
+            "truncate_hour": True,
         },
         {
             "table_id": "matriz_integracao",
@@ -280,6 +283,7 @@ class constants(Enum):  # pylint: disable=c0103
                 "cd_integracao",
             ],  # id column to nest data on
             "interval_minutes": 60,
+            "truncate_hour": True,
         },
     ]
 
