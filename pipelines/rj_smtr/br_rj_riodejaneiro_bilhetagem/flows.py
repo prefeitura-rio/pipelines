@@ -30,7 +30,7 @@ from pipelines.rj_smtr.flows import (
     default_materialization_flow,
 )
 
-from pipelines.rj_smtr.tasks import get_rounded_timestamp, join_dicts
+from pipelines.rj_smtr.tasks import get_rounded_timestamp
 
 from pipelines.rj_smtr.constants import constants
 
@@ -141,16 +141,13 @@ with Flow(
     LABELS = get_current_flow_labels()
 
     # Recaptura Transação
-    transacao_recapture_params = join_dicts(
-        original_dict=constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value,
-        dict_to_join={"timestamp": timestamp},
-    )
+
     run_recaptura_trasacao = create_flow_run(
         flow_name=bilhetagem_recaptura.name,
         # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
         project_name="staging",
         labels=LABELS,
-        parameters=transacao_recapture_params,
+        parameters=constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value,
     )
 
     wait_recaptura_trasacao = wait_for_flow_run(
@@ -162,15 +159,11 @@ with Flow(
 
     # Captura Auxiliar
 
-    auxiliar_capture_params = join_dicts(
-        original_dict=constants.BILHETAGEM_CAPTURE_PARAMS.value,
-        dict_to_join={"timestamp": timestamp},
-    )
     runs_captura = create_flow_run.map(
         flow_name=unmapped(bilhetagem_auxiliar_captura.name),
         # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
         project_name=unmapped("staging"),
-        parameters=auxiliar_capture_params,
+        parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
         labels=unmapped(LABELS),
     )
 
@@ -187,7 +180,7 @@ with Flow(
         flow_name=unmapped(bilhetagem_recaptura.name),
         # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
         project_name=unmapped("staging"),
-        parameters=auxiliar_capture_params,
+        parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
         labels=unmapped(LABELS),
     )
 

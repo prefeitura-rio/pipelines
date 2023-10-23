@@ -1309,28 +1309,3 @@ def unpack_mapped_results_nout2(
 
     """
     return [r[0] for r in mapped_results], [r[1] for r in mapped_results]
-
-
-@task(checkpoint=False)
-def join_dicts(
-    original_dict: Union[dict, list[dict]], dict_to_join: dict
-) -> Union[dict, list[dict]]:
-    """
-    Task to join a dict or list of dicts with another dict
-
-    Args:
-        original_dict (Union[dict, list[dict]]): The input dict or list of dicts
-        dict_to_join (dict): The dict to be joined with original_dict
-
-    Returns:
-        Union[dict, list[dict]]: The joined value
-    """
-
-    if isinstance(original_dict, list):
-        return [d | dict_to_join for d in original_dict]
-    elif isinstance(original_dict, dict):
-        return original_dict | dict_to_join
-    else:
-        raise ValueError(
-            f"original_dict must be dict or list, received: {type(original_dict)}"
-        )

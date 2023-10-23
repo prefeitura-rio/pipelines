@@ -52,7 +52,6 @@ with Flow(
     table_id = Parameter("table_id", default=None)
     dataset_id = Parameter("dataset_id", default=None)
     partition_date_only = Parameter("partition_date_only", default=None)
-    timestamp = Parameter("timestamp", default=None)
 
     # Parâmetros Captura #
     extract_params = Parameter("extract_params", default=None)
@@ -71,9 +70,7 @@ with Flow(
         checkpoint=False,
     )
 
-    current_timestamp = get_rounded_timestamp(
-        timestamp=timestamp, interval_minutes=interval_minutes
-    )
+    current_timestamp = get_rounded_timestamp(interval_minutes=interval_minutes)
 
     with case(recapture, True):
         _, recapture_timestamps, recapture_previous_errors = query_logs(
