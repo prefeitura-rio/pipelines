@@ -243,6 +243,44 @@ def create_dbt_run_vars(
 
 
 @task
+def get_rounded_timestamp(
+    timestamp: Union[str, datetime, None] = None,
+    interval_minutes: Union[int, None] = None,
+) -> datetime:
+    """
+    Calculate rounded timestamp for flow run.
+
+    Args:
+        timestamp (Union[str, datetime, None]): timestamp to be used as reference
+        interval_minutes (Union[int, None], optional): interval in minutes between each recapture
+
+    Returns:
+        datetime: timestamp for flow run
+    """
+    if isinstance(timestamp, str):
+        timestamp = datetime.fromisoformat(timestamp)
+
+    if not timestamp:
+        timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
+
+    timestamp = timestamp.replace(second=0, microsecond=0)
+
+    if interval_minutes:
+        if interval_minutes >= 60:
+            hours = interval_minutes / 60
+            interval_minutes = round(((hours) % 1) * 60)
+
+        if interval_minutes == 0:
+            rounded_minutes = interval_minutes
+        else:
+            rounded_minutes = (timestamp.minute // interval_minutes) * interval_minutes
+
+        timestamp = timestamp.replace(minute=rounded_minutes)
+
+    return timestamp
+
+
+@task
 def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -> datetime:
     """
     Get current timestamp for flow run.
@@ -260,7 +298,6 @@ def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -> datet
         timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
     if truncate_minute:
         return timestamp.replace(second=0, microsecond=0)
-    return timestamp
 
 
 @task
