@@ -424,7 +424,6 @@ def query_logs(
         max_recaptures (int, optional): maximum number of recaptures to be done
         interval_minutes (int, optional): interval in minutes between each recapture
         recapture_window_days (int, optional): Number of days to query for erros
-        truncate_hour: whether to truncate the timestamp to the hour or not
 
     Returns:
         lists: errors (bool),
