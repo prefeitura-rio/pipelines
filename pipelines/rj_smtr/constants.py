@@ -228,7 +228,7 @@ class constants(Enum):  # pylint: disable=c0103
 
     BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
 
-    BILHETAGEM_AUXILIAR_INTERVAL = 60
+    BILHETAGEM_TRATAMENTO_INTERVAL = 60
 
     BILHETAGEM_CAPTURE_PARAMS = [
         {
@@ -247,7 +247,7 @@ class constants(Enum):  # pylint: disable=c0103
                 """,
             },
             "primary_key": ["CD_LINHA"],  # id column to nest data on
-            "interval_minutes": BILHETAGEM_AUXILIAR_INTERVAL,
+            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
             "truncate_hour": True,
         },
         {
@@ -266,7 +266,7 @@ class constants(Enum):  # pylint: disable=c0103
                 """,
             },
             "primary_key": ["CD_GRUPO"],  # id column to nest data on
-            "interval_minutes": BILHETAGEM_AUXILIAR_INTERVAL,
+            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
             "truncate_hour": True,
         },
         {
@@ -285,7 +285,7 @@ class constants(Enum):  # pylint: disable=c0103
                 """,
             },
             "primary_key": ["CD_GRUPO", "CD_LINHA"],
-            "interval_minutes": BILHETAGEM_AUXILIAR_INTERVAL,
+            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
             "truncate_hour": True,
         },
         {
@@ -307,7 +307,7 @@ class constants(Enum):  # pylint: disable=c0103
                 "cd_versao_matriz",
                 "cd_integracao",
             ],  # id column to nest data on
-            "interval_minutes": BILHETAGEM_AUXILIAR_INTERVAL,
+            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
             "truncate_hour": True,
         },
     ]

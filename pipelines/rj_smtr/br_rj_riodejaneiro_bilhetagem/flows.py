@@ -70,7 +70,7 @@ bilhetagem_tracking_captura.name = "SMTR: Bilhetagem GPS Validador - Captura"
 bilhetagem_tracking_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 bilhetagem_tracking_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
 bilhetagem_tracking_captura = set_default_parameters(
@@ -132,7 +132,7 @@ with Flow(
     # Configuração #
 
     timestamp = get_rounded_timestamp(
-        interval_minutes=constants.BILHETAGEM_AUXILIAR_INTERVAL.value
+        interval_minutes=constants.BILHETAGEM_TRATAMENTO_INTERVAL.value
     )
 
     rename_flow_run = rename_current_flow_run_now_time(
@@ -213,3 +213,35 @@ bilhetagem_transacao_tratamento.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 bilhetagem_transacao_tratamento.schedule = every_hour
+
+
+with Flow(
+    "SMTR: Bilhetagem GPS Validador - Tratamento",
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
+) as bilhetagem_gps_tratamento:
+    timestamp = get_rounded_timestamp(
+        interval_minutes=constants.BILHETAGEM_TRATAMENTO_INTERVAL.value
+    )
+
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix=bilhetagem_transacao_tratamento.name + " ",
+        now_time=timestamp,
+    )
+
+    LABELS = get_current_flow_labels()
+
+    # Recaptura Transação
+
+    run_recaptura_gps = create_flow_run(
+        flow_name=bilhetagem_recaptura.name,
+        project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+        labels=LABELS,
+        parameters=constants.BILHETAGEM_TRACKING_CAPTURE_PARAMS.value,
+    )
+
+    wait_recaptura_gps = wait_for_flow_run(
+        run_recaptura_gps,
+        stream_states=True,
+        stream_logs=True,
+        raise_final_state=True,
+    )
