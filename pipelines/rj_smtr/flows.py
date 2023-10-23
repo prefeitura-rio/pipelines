@@ -72,7 +72,9 @@ with Flow(
         checkpoint=False,
     )
 
-    current_timestamp = get_rounded_timestamp(timestamp=timestamp, interval_minutes=interval_minutes)
+    current_timestamp = get_rounded_timestamp(
+        timestamp=timestamp, interval_minutes=interval_minutes
+    )
 
     with case(recapture, True):
         _, recapture_timestamps, recapture_previous_errors = query_logs(
