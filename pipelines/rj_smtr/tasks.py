@@ -281,16 +281,13 @@ def get_rounded_timestamp(
 
 
 @task
-def get_current_timestamp(
-    timestamp=None, truncate_minute: bool = True, truncate_hour: bool = False
-) -> datetime:
+def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -> datetime:
     """
     Get current timestamp for flow run.
 
     Args:
         timestamp: timestamp to be used as reference (optionally, it can be a string)
         truncate_minute: whether to truncate the timestamp to the minute or not
-        truncate_hour: whether to truncate the timestamp to the hour or not
 
     Returns:
         datetime: timestamp for flow run
@@ -301,8 +298,7 @@ def get_current_timestamp(
         timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
     if truncate_minute:
         timestamp = timestamp.replace(second=0, microsecond=0)
-    if truncate_hour:
-        timestamp = timestamp.replace(minute=0)
+
     return timestamp
 
 
