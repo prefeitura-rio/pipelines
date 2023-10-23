@@ -180,6 +180,10 @@ class constants(Enum):  # pylint: disable=c0103
                 "engine": "postgresql",
                 "host": "10.5.115.1",
             },
+            "tracking_db": {
+                "engine": "postgresql",
+                "host": "10.5.15.25",
+            },
         },
         "source_type": "db",
     }
@@ -203,7 +207,28 @@ class constants(Enum):  # pylint: disable=c0103
         "interval_minutes": 1,
     }
 
+    BILHETAGEM_TRACKING_CAPTURE_PARAMS = {
+        "table_id": "gps_validador",
+        "partition_date_only": False,
+        "extract_params": {
+            "database": "tracking_db",
+            "query": """
+                SELECT
+                    *
+                FROM
+                    tracking_detalhe
+                WHERE
+                    data_tracking BETWEEN '{start}'
+                    AND '{end}'
+            """,
+        },
+        "primary_key": ["id"],
+        "interval_minutes": 1,
+    }
+
     BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
+
+    BILHETAGEM_TRATAMENTO_INTERVAL = 60
 
     BILHETAGEM_CAPTURE_PARAMS = [
         {
@@ -217,11 +242,13 @@ class constants(Enum):  # pylint: disable=c0103
                     FROM
                         LINHA
                     WHERE
-                        DT_INCLUSAO >= '{start}'
+                        DT_INCLUSAO BETWEEN '{start}'
+                        AND '{end}'
                 """,
             },
             "primary_key": ["CD_LINHA"],  # id column to nest data on
-            "interval_minutes": 60,
+            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+            "truncate_hour": True,
         },
         {
             "table_id": "grupo",
@@ -234,11 +261,13 @@ class constants(Enum):  # pylint: disable=c0103
                     FROM
                         GRUPO
                     WHERE
-                        DT_INCLUSAO >= '{start}'
+                        DT_INCLUSAO BETWEEN '{start}'
+                        AND '{end}'
                 """,
             },
             "primary_key": ["CD_GRUPO"],  # id column to nest data on
-            "interval_minutes": 60,
+            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+            "truncate_hour": True,
         },
         {
             "table_id": "grupo_linha",
@@ -251,11 +280,13 @@ class constants(Enum):  # pylint: disable=c0103
                     FROM
                         GRUPO_LINHA
                     WHERE
-                        DT_INCLUSAO >= '{start}'
+                        DT_INCLUSAO BETWEEN '{start}'
+                        AND '{end}'
                 """,
             },
             "primary_key": ["CD_GRUPO", "CD_LINHA"],
-            "interval_minutes": 60,
+            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+            "truncate_hour": True,
         },
         {
             "table_id": "matriz_integracao",
@@ -268,14 +299,16 @@ class constants(Enum):  # pylint: disable=c0103
                     FROM
                         matriz_integracao
                     WHERE
-                        dt_inclusao >= '{start}'
+                        dt_inclusao BETWEEN '{start}'
+                        AND '{end}'
                 """,
             },
             "primary_key": [
                 "cd_versao_matriz",
                 "cd_integracao",
             ],  # id column to nest data on
-            "interval_minutes": 60,
+            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+            "truncate_hour": True,
         },
     ]
 
