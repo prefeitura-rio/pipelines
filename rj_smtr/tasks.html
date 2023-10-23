@@ -272,6 +272,44 @@ def create_dbt_run_vars(
 
 
 @task
+def get_rounded_timestamp(
+    timestamp: Union[str, datetime, None] = None,
+    interval_minutes: Union[int, None] = None,
+) -&gt; datetime:
+    &#34;&#34;&#34;
+    Calculate rounded timestamp for flow run.
+
+    Args:
+        timestamp (Union[str, datetime, None]): timestamp to be used as reference
+        interval_minutes (Union[int, None], optional): interval in minutes between each recapture
+
+    Returns:
+        datetime: timestamp for flow run
+    &#34;&#34;&#34;
+    if isinstance(timestamp, str):
+        timestamp = datetime.fromisoformat(timestamp)
+
+    if not timestamp:
+        timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
+
+    timestamp = timestamp.replace(second=0, microsecond=0)
+
+    if interval_minutes:
+        if interval_minutes &gt;= 60:
+            hours = interval_minutes / 60
+            interval_minutes = round(((hours) % 1) * 60)
+
+        if interval_minutes == 0:
+            rounded_minutes = interval_minutes
+        else:
+            rounded_minutes = (timestamp.minute // interval_minutes) * interval_minutes
+
+        timestamp = timestamp.replace(minute=rounded_minutes)
+
+    return timestamp
+
+
+@task
 def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -&gt; datetime:
     &#34;&#34;&#34;
     Get current timestamp for flow run.
@@ -289,7 +327,6 @@ def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -&gt; da
         timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
     if truncate_minute:
         return timestamp.replace(second=0, microsecond=0)
-    return timestamp
 
 
 @task
@@ -1999,8 +2036,7 @@ def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -&gt; da
     if not timestamp:
         timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
     if truncate_minute:
-        return timestamp.replace(second=0, microsecond=0)
-    return timestamp</code></pre>
+        return timestamp.replace(second=0, microsecond=0)</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.get_join_dict"><code class="name flex">
@@ -2402,6 +2438,65 @@ def get_raw_from_sources(
 
     log(f&#34;Raw extraction ended returned values: {error}, {filepath}&#34;)
     return error, filepath</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.tasks.get_rounded_timestamp"><code class="name flex">
+<span>def <span class="ident">get_rounded_timestamp</span></span>(<span>timestamp: Union[str, datetime.datetime, ForwardRef(None)] = None, interval_minutes: Optional[int] = None) ‑> datetime.datetime</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Calculate rounded timestamp for flow run.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>timestamp</code></strong> :&ensp;<code>Union[str, datetime, None]</code></dt>
+<dd>timestamp to be used as reference</dd>
+<dt><strong><code>interval_minutes</code></strong> :&ensp;<code>Union[int, None]</code>, optional</dt>
+<dd>interval in minutes between each recapture</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>datetime</code></dt>
+<dd>timestamp for flow run</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_rounded_timestamp(
+    timestamp: Union[str, datetime, None] = None,
+    interval_minutes: Union[int, None] = None,
+) -&gt; datetime:
+    &#34;&#34;&#34;
+    Calculate rounded timestamp for flow run.
+
+    Args:
+        timestamp (Union[str, datetime, None]): timestamp to be used as reference
+        interval_minutes (Union[int, None], optional): interval in minutes between each recapture
+
+    Returns:
+        datetime: timestamp for flow run
+    &#34;&#34;&#34;
+    if isinstance(timestamp, str):
+        timestamp = datetime.fromisoformat(timestamp)
+
+    if not timestamp:
+        timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
+
+    timestamp = timestamp.replace(second=0, microsecond=0)
+
+    if interval_minutes:
+        if interval_minutes &gt;= 60:
+            hours = interval_minutes / 60
+            interval_minutes = round(((hours) % 1) * 60)
+
+        if interval_minutes == 0:
+            rounded_minutes = interval_minutes
+        else:
+            rounded_minutes = (timestamp.minute // interval_minutes) * interval_minutes
+
+        timestamp = timestamp.replace(minute=rounded_minutes)
+
+    return timestamp</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.get_run_dates"><code class="name flex">
@@ -3227,6 +3322,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.tasks.get_previous_date" href="#pipelines.rj_smtr.tasks.get_previous_date">get_previous_date</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_raw" href="#pipelines.rj_smtr.tasks.get_raw">get_raw</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_raw_from_sources" href="#pipelines.rj_smtr.tasks.get_raw_from_sources">get_raw_from_sources</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.get_rounded_timestamp" href="#pipelines.rj_smtr.tasks.get_rounded_timestamp">get_rounded_timestamp</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_run_dates" href="#pipelines.rj_smtr.tasks.get_run_dates">get_run_dates</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.parse_timestamp_to_string" href="#pipelines.rj_smtr.tasks.parse_timestamp_to_string">parse_timestamp_to_string</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.query_logs" href="#pipelines.rj_smtr.tasks.query_logs">query_logs</a></code></li>

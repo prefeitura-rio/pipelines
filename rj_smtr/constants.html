@@ -209,6 +209,10 @@ class constants(Enum):  # pylint: disable=c0103
                 &#34;engine&#34;: &#34;postgresql&#34;,
                 &#34;host&#34;: &#34;10.5.115.1&#34;,
             },
+            &#34;tracking_db&#34;: {
+                &#34;engine&#34;: &#34;postgresql&#34;,
+                &#34;host&#34;: &#34;10.5.15.25&#34;,
+            },
         },
         &#34;source_type&#34;: &#34;db&#34;,
     }
@@ -232,7 +236,28 @@ class constants(Enum):  # pylint: disable=c0103
         &#34;interval_minutes&#34;: 1,
     }
 
+    BILHETAGEM_TRACKING_CAPTURE_PARAMS = {
+        &#34;table_id&#34;: &#34;gps_validador&#34;,
+        &#34;partition_date_only&#34;: False,
+        &#34;extract_params&#34;: {
+            &#34;database&#34;: &#34;tracking_db&#34;,
+            &#34;query&#34;: &#34;&#34;&#34;
+                SELECT
+                    *
+                FROM
+                    tracking_detalhe
+                WHERE
+                    data_tracking BETWEEN &#39;{start}&#39;
+                    AND &#39;{end}&#39;
+            &#34;&#34;&#34;,
+        },
+        &#34;primary_key&#34;: [&#34;id&#34;],
+        &#34;interval_minutes&#34;: 1,
+    }
+
     BILHETAGEM_SECRET_PATH = &#34;smtr_jae_access_data&#34;
+
+    BILHETAGEM_TRATAMENTO_INTERVAL = 60
 
     BILHETAGEM_CAPTURE_PARAMS = [
         {
@@ -246,11 +271,13 @@ class constants(Enum):  # pylint: disable=c0103
                     FROM
                         LINHA
                     WHERE
-                        DT_INCLUSAO &gt;= &#39;{start}&#39;
+                        DT_INCLUSAO BETWEEN &#39;{start}&#39;
+                        AND &#39;{end}&#39;
                 &#34;&#34;&#34;,
             },
             &#34;primary_key&#34;: [&#34;CD_LINHA&#34;],  # id column to nest data on
-            &#34;interval_minutes&#34;: 60,
+            &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
+            &#34;truncate_hour&#34;: True,
         },
         {
             &#34;table_id&#34;: &#34;grupo&#34;,
@@ -263,11 +290,13 @@ class constants(Enum):  # pylint: disable=c0103
                     FROM
                         GRUPO
                     WHERE
-                        DT_INCLUSAO &gt;= &#39;{start}&#39;
+                        DT_INCLUSAO BETWEEN &#39;{start}&#39;
+                        AND &#39;{end}&#39;
                 &#34;&#34;&#34;,
             },
             &#34;primary_key&#34;: [&#34;CD_GRUPO&#34;],  # id column to nest data on
-            &#34;interval_minutes&#34;: 60,
+            &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
+            &#34;truncate_hour&#34;: True,
         },
         {
             &#34;table_id&#34;: &#34;grupo_linha&#34;,
@@ -280,11 +309,13 @@ class constants(Enum):  # pylint: disable=c0103
                     FROM
                         GRUPO_LINHA
                     WHERE
-                        DT_INCLUSAO &gt;= &#39;{start}&#39;
+                        DT_INCLUSAO BETWEEN &#39;{start}&#39;
+                        AND &#39;{end}&#39;
                 &#34;&#34;&#34;,
             },
             &#34;primary_key&#34;: [&#34;CD_GRUPO&#34;, &#34;CD_LINHA&#34;],
-            &#34;interval_minutes&#34;: 60,
+            &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
+            &#34;truncate_hour&#34;: True,
         },
         {
             &#34;table_id&#34;: &#34;matriz_integracao&#34;,
@@ -297,14 +328,16 @@ class constants(Enum):  # pylint: disable=c0103
                     FROM
                         matriz_integracao
                     WHERE
-                        dt_inclusao &gt;= &#39;{start}&#39;
+                        dt_inclusao BETWEEN &#39;{start}&#39;
+                        AND &#39;{end}&#39;
                 &#34;&#34;&#34;,
             },
             &#34;primary_key&#34;: [
                 &#34;cd_versao_matriz&#34;,
                 &#34;cd_integracao&#34;,
             ],  # id column to nest data on
-            &#34;interval_minutes&#34;: 60,
+            &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
+            &#34;truncate_hour&#34;: True,
         },
     ]
 
@@ -514,6 +547,10 @@ class constants(Enum):  # pylint: disable=c0103
                 &#34;engine&#34;: &#34;postgresql&#34;,
                 &#34;host&#34;: &#34;10.5.115.1&#34;,
             },
+            &#34;tracking_db&#34;: {
+                &#34;engine&#34;: &#34;postgresql&#34;,
+                &#34;host&#34;: &#34;10.5.15.25&#34;,
+            },
         },
         &#34;source_type&#34;: &#34;db&#34;,
     }
@@ -537,7 +574,28 @@ class constants(Enum):  # pylint: disable=c0103
         &#34;interval_minutes&#34;: 1,
     }
 
+    BILHETAGEM_TRACKING_CAPTURE_PARAMS = {
+        &#34;table_id&#34;: &#34;gps_validador&#34;,
+        &#34;partition_date_only&#34;: False,
+        &#34;extract_params&#34;: {
+            &#34;database&#34;: &#34;tracking_db&#34;,
+            &#34;query&#34;: &#34;&#34;&#34;
+                SELECT
+                    *
+                FROM
+                    tracking_detalhe
+                WHERE
+                    data_tracking BETWEEN &#39;{start}&#39;
+                    AND &#39;{end}&#39;
+            &#34;&#34;&#34;,
+        },
+        &#34;primary_key&#34;: [&#34;id&#34;],
+        &#34;interval_minutes&#34;: 1,
+    }
+
     BILHETAGEM_SECRET_PATH = &#34;smtr_jae_access_data&#34;
+
+    BILHETAGEM_TRATAMENTO_INTERVAL = 60
 
     BILHETAGEM_CAPTURE_PARAMS = [
         {
@@ -551,11 +609,13 @@ class constants(Enum):  # pylint: disable=c0103
                     FROM
                         LINHA
                     WHERE
-                        DT_INCLUSAO &gt;= &#39;{start}&#39;
+                        DT_INCLUSAO BETWEEN &#39;{start}&#39;
+                        AND &#39;{end}&#39;
                 &#34;&#34;&#34;,
             },
             &#34;primary_key&#34;: [&#34;CD_LINHA&#34;],  # id column to nest data on
-            &#34;interval_minutes&#34;: 60,
+            &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
+            &#34;truncate_hour&#34;: True,
         },
         {
             &#34;table_id&#34;: &#34;grupo&#34;,
@@ -568,11 +628,13 @@ class constants(Enum):  # pylint: disable=c0103
                     FROM
                         GRUPO
                     WHERE
-                        DT_INCLUSAO &gt;= &#39;{start}&#39;
+                        DT_INCLUSAO BETWEEN &#39;{start}&#39;
+                        AND &#39;{end}&#39;
                 &#34;&#34;&#34;,
             },
             &#34;primary_key&#34;: [&#34;CD_GRUPO&#34;],  # id column to nest data on
-            &#34;interval_minutes&#34;: 60,
+            &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
+            &#34;truncate_hour&#34;: True,
         },
         {
             &#34;table_id&#34;: &#34;grupo_linha&#34;,
@@ -585,11 +647,13 @@ class constants(Enum):  # pylint: disable=c0103
                     FROM
                         GRUPO_LINHA
                     WHERE
-                        DT_INCLUSAO &gt;= &#39;{start}&#39;
+                        DT_INCLUSAO BETWEEN &#39;{start}&#39;
+                        AND &#39;{end}&#39;
                 &#34;&#34;&#34;,
             },
             &#34;primary_key&#34;: [&#34;CD_GRUPO&#34;, &#34;CD_LINHA&#34;],
-            &#34;interval_minutes&#34;: 60,
+            &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
+            &#34;truncate_hour&#34;: True,
         },
         {
             &#34;table_id&#34;: &#34;matriz_integracao&#34;,
@@ -602,14 +666,16 @@ class constants(Enum):  # pylint: disable=c0103
                     FROM
                         matriz_integracao
                     WHERE
-                        dt_inclusao &gt;= &#39;{start}&#39;
+                        dt_inclusao BETWEEN &#39;{start}&#39;
+                        AND &#39;{end}&#39;
                 &#34;&#34;&#34;,
             },
             &#34;primary_key&#34;: [
                 &#34;cd_versao_matriz&#34;,
                 &#34;cd_integracao&#34;,
             ],  # id column to nest data on
-            &#34;interval_minutes&#34;: 60,
+            &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
+            &#34;truncate_hour&#34;: True,
         },
     ]
 
@@ -651,7 +717,15 @@ class constants(Enum):  # pylint: disable=c0103
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_TRACKING_CAPTURE_PARAMS"><code class="name">var <span class="ident">BILHETAGEM_TRACKING_CAPTURE_PARAMS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS"><code class="name">var <span class="ident">BILHETAGEM_TRANSACAO_CAPTURE_PARAMS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_TRATAMENTO_INTERVAL"><code class="name">var <span class="ident">BILHETAGEM_TRATAMENTO_INTERVAL</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -959,7 +1033,9 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS">BILHETAGEM_GENERAL_CAPTURE_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_PARAMS">BILHETAGEM_MATERIALIZACAO_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_SECRET_PATH">BILHETAGEM_SECRET_PATH</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_TRACKING_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_TRACKING_CAPTURE_PARAMS">BILHETAGEM_TRACKING_CAPTURE_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS">BILHETAGEM_TRANSACAO_CAPTURE_PARAMS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_TRATAMENTO_INTERVAL" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_TRATAMENTO_INTERVAL">BILHETAGEM_TRATAMENTO_INTERVAL</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH">CRITICAL_SECRET_PATH</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_API_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_API_SECRET_PATH">GPS_BRT_API_SECRET_PATH</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_API_URL" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_API_URL">GPS_BRT_API_URL</a></code></li>
