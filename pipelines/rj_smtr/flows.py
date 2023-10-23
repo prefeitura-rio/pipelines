@@ -42,6 +42,8 @@ from pipelines.rj_smtr.tasks import (
 
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
+from pipelines.utils.utils import log
+
 with Flow(
     "SMTR: Captura",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
@@ -295,6 +297,8 @@ with Flow(
         exclude=unmapped(exclude),
         flags=unmapped(flags),
     )
+
+    task(lambda x: [log(f"Saída modelo:\n{x}") for x in x])(RUNS)
 
     with case(flag_date_range, True):
         set_last_run_timestamp(
