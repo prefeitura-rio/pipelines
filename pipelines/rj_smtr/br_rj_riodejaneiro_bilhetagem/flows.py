@@ -131,7 +131,9 @@ with Flow(
 ) as bilhetagem_transacao_tratamento:
     # Configuração #
 
-    timestamp = get_rounded_timestamp(interval_minutes=60)
+    timestamp = get_rounded_timestamp(
+        interval_minutes=constants.BILHETAGEM_AUXILIAR_INTERVAL.value
+    )
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=bilhetagem_transacao_tratamento.name + " ",
