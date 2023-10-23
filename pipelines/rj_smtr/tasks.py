@@ -297,9 +297,7 @@ def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -> datet
     if not timestamp:
         timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
     if truncate_minute:
-        timestamp = timestamp.replace(second=0, microsecond=0)
-
-    return timestamp
+        return timestamp.replace(second=0, microsecond=0)
 
 
 @task
