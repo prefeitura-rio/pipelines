@@ -243,13 +243,54 @@ def create_dbt_run_vars(
 
 
 @task
-def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -> datetime:
+def get_rounded_timestamp(
+    timestamp: Union[str, datetime, None] = None,
+    interval_minutes: Union[int, None] = None,
+) -> datetime:
+    """
+    Calculate rounded timestamp for flow run.
+
+    Args:
+        timestamp (Union[str, datetime, None]): timestamp to be used as reference
+        interval_minutes (Union[int, None], optional): interval in minutes between each recapture
+
+    Returns:
+        datetime: timestamp for flow run
+    """
+    if isinstance(timestamp, str):
+        timestamp = datetime.fromisoformat(timestamp)
+
+    if not timestamp:
+        timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
+
+    timestamp = timestamp.replace(second=0, microsecond=0)
+
+    if interval_minutes:
+        if interval_minutes >= 60:
+            hours = interval_minutes / 60
+            interval_minutes = round(((hours) % 1) * 60)
+
+        if interval_minutes == 0:
+            rounded_minutes = interval_minutes
+        else:
+            rounded_minutes = (timestamp.minute // interval_minutes) * interval_minutes
+
+        timestamp = timestamp.replace(minute=rounded_minutes)
+
+    return timestamp
+
+
+@task
+def get_current_timestamp(
+    timestamp=None, truncate_minute: bool = True, truncate_hour: bool = False
+) -> datetime:
     """
     Get current timestamp for flow run.
 
     Args:
         timestamp: timestamp to be used as reference (optionally, it can be a string)
         truncate_minute: whether to truncate the timestamp to the minute or not
+        truncate_hour: whether to truncate the timestamp to the hour or not
 
     Returns:
         datetime: timestamp for flow run
@@ -259,7 +300,9 @@ def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -> datet
     if not timestamp:
         timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
     if truncate_minute:
-        return timestamp.replace(second=0, microsecond=0)
+        timestamp = timestamp.replace(second=0, microsecond=0)
+    if truncate_hour:
+        timestamp = timestamp.replace(minute=0)
     return timestamp
 
 
@@ -385,6 +428,7 @@ def query_logs(
         max_recaptures (int, optional): maximum number of recaptures to be done
         interval_minutes (int, optional): interval in minutes between each recapture
         recapture_window_days (int, optional): Number of days to query for erros
+        truncate_hour: whether to truncate the timestamp to the hour or not
 
     Returns:
         lists: errors (bool),
@@ -1265,3 +1309,28 @@ def unpack_mapped_results_nout2(
 
     """
     return [r[0] for r in mapped_results], [r[1] for r in mapped_results]
+
+
+@task(checkpoint=False)
+def join_dicts(
+    original_dict: Union[dict, list[dict]], dict_to_join: dict
+) -> Union[dict, list[dict]]:
+    """
+    Task to join a dict or list of dicts with another dict
+
+    Args:
+        original_dict (Union[dict, list[dict]]): The input dict or list of dicts
+        dict_to_join (dict): The dict to be joined with original_dict
+
+    Returns:
+        Union[dict, list[dict]]: The joined value
+    """
+
+    if isinstance(original_dict, list):
+        return [d | dict_to_join for d in original_dict]
+    elif isinstance(original_dict, dict):
+        return original_dict | dict_to_join
+    else:
+        raise ValueError(
+            f"original_dict must be dict or list, received: {type(original_dict)}"
+        )

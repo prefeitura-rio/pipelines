@@ -30,7 +30,7 @@ from pipelines.rj_smtr.flows import (
     default_materialization_flow,
 )
 
-from pipelines.rj_smtr.tasks import get_current_timestamp
+from pipelines.rj_smtr.tasks import get_rounded_timestamp, join_dicts
 
 from pipelines.rj_smtr.constants import constants
 
@@ -131,7 +131,7 @@ with Flow(
 ) as bilhetagem_transacao_tratamento:
     # Configuração #
 
-    timestamp = get_current_timestamp()
+    timestamp = get_rounded_timestamp(interval_minutes=60)
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=bilhetagem_transacao_tratamento.name + " ",
@@ -140,13 +140,17 @@ with Flow(
 
     LABELS = get_current_flow_labels()
 
-    # Recapturas
-
+    # Recaptura Transação
+    transacao_recapture_params = join_dicts(
+        original_dict=constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value,
+        dict_to_join={"timestamp": timestamp},
+    )
     run_recaptura_trasacao = create_flow_run(
         flow_name=bilhetagem_recaptura.name,
-        project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+        # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+        project_name="staging",
         labels=LABELS,
-        parameters=constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value,
+        parameters=transacao_recapture_params,
     )
 
     wait_recaptura_trasacao = wait_for_flow_run(
@@ -156,34 +160,41 @@ with Flow(
         raise_final_state=True,
     )
 
-    runs_recaptura_auxiliar = create_flow_run.map(
-        flow_name=unmapped(bilhetagem_recaptura.name),
-        project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
-        parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
+    # Captura Auxiliar
+
+    auxiliar_capture_params = join_dicts(
+        original_dict=constants.BILHETAGEM_CAPTURE_PARAMS.value,
+        dict_to_join={"timestamp": timestamp},
+    )
+    runs_captura = create_flow_run.map(
+        flow_name=unmapped(bilhetagem_auxiliar_captura.name),
+        # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+        project_name=unmapped("staging"),
+        parameters=auxiliar_capture_params,
         labels=unmapped(LABELS),
     )
 
-    runs_recaptura_auxiliar.set_upstream(wait_recaptura_trasacao)
-
-    wait_recaptura_auxiliar = wait_for_flow_run.map(
-        runs_recaptura_auxiliar,
+    wait_captura = wait_for_flow_run.map(
+        runs_captura,
         stream_states=unmapped(True),
         stream_logs=unmapped(True),
         raise_final_state=unmapped(True),
     )
 
-    # Captura
-    runs_captura = create_flow_run.map(
-        flow_name=unmapped(bilhetagem_auxiliar_captura.name),
-        project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
-        parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
+    # Recaptura Auxiliar
+
+    runs_recaptura_auxiliar = create_flow_run.map(
+        flow_name=unmapped(bilhetagem_recaptura.name),
+        # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+        project_name=unmapped("staging"),
+        parameters=auxiliar_capture_params,
         labels=unmapped(LABELS),
     )
 
-    runs_captura.set_upstream(wait_recaptura_auxiliar)
+    runs_recaptura_auxiliar.set_upstream(wait_captura)
 
-    wait_captura = wait_for_flow_run.map(
-        runs_captura,
+    wait_recaptura_auxiliar = wait_for_flow_run.map(
+        runs_recaptura_auxiliar,
         stream_states=unmapped(True),
         stream_logs=unmapped(True),
         raise_final_state=unmapped(True),
@@ -207,6 +218,6 @@ with Flow(
 bilhetagem_transacao_tratamento.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 bilhetagem_transacao_tratamento.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 bilhetagem_transacao_tratamento.schedule = every_hour
