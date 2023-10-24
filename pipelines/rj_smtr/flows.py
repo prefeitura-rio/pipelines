@@ -44,7 +44,7 @@ from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
 with Flow(
     "SMTR: Captura",
-    code_owners=["caio", "fernanda", "boris", "rodrigo"],
+    code_owners=["caio", "fernanda", "boris", "rodrigo", "rafaelpinheiro"],
 ) as default_capture_flow:
     # Configuração #
 
@@ -52,6 +52,7 @@ with Flow(
     table_id = Parameter("table_id", default=None)
     dataset_id = Parameter("dataset_id", default=None)
     partition_date_only = Parameter("partition_date_only", default=None)
+    partition_date_name = Parameter("partition_date_name", default="data")
 
     # Parâmetros Captura #
     extract_params = Parameter("extract_params", default=None)
@@ -61,7 +62,6 @@ with Flow(
     recapture = Parameter("recapture", default=False)
     recapture_window_days = Parameter("recapture_window_days", default=1)
     timestamp = Parameter("timestamp", default=None)
-    partition_date_name = Parameter("partition_date_name", default=None)
 
     # Parâmetros Pré-tratamento #
     primary_key = Parameter("primary_key", default=None)
