@@ -166,8 +166,8 @@ def create_dbt_run_vars(
 
     log(f"Creating DBT variables. Parameter received: {dbt_vars}")
 
-    if (not dbt_vars) or (not table_id):
-        log("dbt_vars or table_id are blank. Skiping task")
+    if not dbt_vars:
+        log("dbt_vars are blank. Skiping task...")
         return [None], None, False
 
     final_vars = []
@@ -187,6 +187,10 @@ def create_dbt_run_vars(
             }
         # Create date_range using Redis
         else:
+            if not table_id:
+                log("table_id are blank. Skiping task...")
+                return [None], None, False
+
             raw_table_id = raw_table_id or table_id
 
             date_var = get_materialization_date_range.run(
@@ -230,6 +234,16 @@ def create_dbt_run_vars(
 
         log(f"version created: {dataset_sha}")
 
+    if "data_versao_gtfs" in dbt_vars.keys():
+        log("Creating data_versao_gtfs variable")
+
+        temp_dict = {"data_versao_gtfs": dbt_vars["data_versao_gtfs"]}
+
+        if final_vars:
+            final_vars = get_join_dict.run(dict_list=final_vars, new_dict=temp_dict)
+        else:
+            final_vars.append(temp_dict)
+
     log(f"All variables was created, final value is: {final_vars}")
 
     return final_vars, date_var, flag_date_range
@@ -240,6 +254,44 @@ def create_dbt_run_vars(
 # Local file managment
 #
 ###############
+
+
+@task
+def get_rounded_timestamp(
+    timestamp: Union[str, datetime, None] = None,
+    interval_minutes: Union[int, None] = None,
+) -> datetime:
+    """
+    Calculate rounded timestamp for flow run.
+
+    Args:
+        timestamp (Union[str, datetime, None]): timestamp to be used as reference
+        interval_minutes (Union[int, None], optional): interval in minutes between each recapture
+
+    Returns:
+        datetime: timestamp for flow run
+    """
+    if isinstance(timestamp, str):
+        timestamp = datetime.fromisoformat(timestamp)
+
+    if not timestamp:
+        timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
+
+    timestamp = timestamp.replace(second=0, microsecond=0)
+
+    if interval_minutes:
+        if interval_minutes >= 60:
+            hours = interval_minutes / 60
+            interval_minutes = round(((hours) % 1) * 60)
+
+        if interval_minutes == 0:
+            rounded_minutes = interval_minutes
+        else:
+            rounded_minutes = (timestamp.minute // interval_minutes) * interval_minutes
+
+        timestamp = timestamp.replace(minute=rounded_minutes)
+
+    return timestamp
 
 
 @task
@@ -260,24 +312,26 @@ def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -> datet
         timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
     if truncate_minute:
         return timestamp.replace(second=0, microsecond=0)
-    return timestamp
 
 
 @task
 def create_date_hour_partition(
-    timestamp: datetime, partition_date_only: bool = False
+    timestamp: datetime,
+    partition_date_name: str = "data",
+    partition_date_only: bool = False,
 ) -> str:
     """
     Create a date (and hour) Hive partition structure from timestamp.
 
     Args:
         timestamp (datetime): timestamp to be used as reference
+        partition_date_name (str, optional): partition name. Defaults to "data".
         partition_date_only (bool, optional): whether to add hour partition or not
 
     Returns:
         str: partition string
     """
-    partition = f"data={timestamp.strftime('%Y-%m-%d')}"
+    partition = f"{partition_date_name}={timestamp.strftime('%Y-%m-%d')}"
     if not partition_date_only:
         partition += f"/hora={timestamp.strftime('%H')}"
     return partition
@@ -351,11 +405,16 @@ def save_treated_local(file_path: str, status: dict, mode: str = "staging") -> s
     Returns:
         str: Path to the saved file
     """
+
+    log(f"Saving treated data to: {file_path}, {status}")
+
     _file_path = file_path.format(mode=mode, filetype="csv")
+
     Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
     if status["error"] is None:
         status["data"].to_csv(_file_path, index=False)
         log(f"Treated data saved to: {_file_path}")
+
     return _file_path
 
 
@@ -508,7 +567,7 @@ def get_raw(  # pylint: disable=R0912
         params (dict, optional): Params to be sent on request
 
     Returns:
-        dict: Conatining keys
+        dict: Containing keys
           * `data` (json): data result
           * `error` (str): catched error, if any. Otherwise, returns None
     """
@@ -598,6 +657,9 @@ def create_request_params(
             "engine": database["engine"],
             "query": extract_params["query"].format(**datetime_range),
         }
+
+    elif dataset_id == constants.GTFS_DATASET_ID.value:
+        request_params = extract_params["filename"]
 
     return request_params, request_url
 

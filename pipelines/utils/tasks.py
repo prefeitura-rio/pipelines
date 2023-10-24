@@ -230,11 +230,10 @@ def create_table_and_upload_to_gcs(
                 f"{storage_path}\n"
                 f"{storage_path_link}"
             )  # pylint: disable=C0301
-            tb.delete(mode="all")
+            # delete only staging table and let DBT overwrite the prod table
+            tb.delete(mode="staging")
             log(
-                "MODE OVERWRITE: Sucessfully DELETED TABLE:\n"
-                f"{table_staging}\n"
-                f"{tb.table_full_name['prod']}"
+                "MODE OVERWRITE: Sucessfully DELETED TABLE:\n" f"{table_staging}\n"
             )  # pylint: disable=C0301
 
         # the header is needed to create a table when dosen't exist
