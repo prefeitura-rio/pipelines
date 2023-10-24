@@ -42,8 +42,6 @@ from pipelines.rj_smtr.tasks import (
 
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
-from pipelines.utils.utils import log
-
 with Flow(
     "SMTR: Captura",
     code_owners=["caio", "fernanda", "boris", "rodrigo", "rafaelpinheiro"],
