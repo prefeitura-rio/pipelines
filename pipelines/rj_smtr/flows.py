@@ -303,13 +303,18 @@ with Flow(
     )
 
     with case(flag_date_range, True):
-        set_last_run_timestamp(
+        SET_TIMESTAMP_TASK = set_last_run_timestamp(
             dataset_id=dataset_id,
             table_id=table_id,
             timestamp=date_var["date_range_end"],
             wait=RUNS,
             mode=MODE,
         )
+
+    with case(flag_date_range, False):
+        CONTROL_FAIL_TASK = task(lambda: None)(upstream_tasks=RUNS)
+
+    merge(SET_TIMESTAMP_TASK, CONTROL_FAIL_TASK)
 
 
 default_materialization_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
