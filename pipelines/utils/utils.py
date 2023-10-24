@@ -1007,18 +1007,27 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
     # Access all data saved on redis with this key
     last_updates = redis_client.hgetall(key)
 
-    # Convert data in dictionary in format with unique_id in key and last updated time as value
-    # Example > {"12": "2022-06-06 14:45:00"}
-    last_updates = {
-        k.decode("utf-8"): v.decode("utf-8") for k, v in last_updates.items()
-    }
+    if len(last_updates) == 0:
+        last_updates = pd.DataFrame(dataframe[unique_id].unique(), columns=[unique_id])
+        last_updates["last_update"] = "1900-01-01 00:00:00"
+        log(f"Redis key: {key}\nCreating Redis fake values:\n {last_updates}")
+    else:
+        # Convert data in dictionary in format with unique_id in key and last updated time as value
+        # Example > {"12": "2022-06-06 14:45:00"}
+        last_updates = {
+            k.decode("utf-8"): v.decode("utf-8") for k, v in last_updates.items()
+        }
 
-    # Convert dictionary to dataframe
-    last_updates = pd.DataFrame(
-        last_updates.items(), columns=[unique_id, "last_update"]
-    )
+        # Convert dictionary to dataframe
+        last_updates = pd.DataFrame(
+            last_updates.items(), columns=[unique_id, "last_update"]
+        )
 
-    log(f"Redis key: {key}\nRedis actual values:\n {last_updates}")
+        log(f"Redis key: {key}\nRedis actual values:\n {last_updates}")
+
+    # Garante that both are string
+    dataframe[unique_id] = dataframe[unique_id].astype(str)
+    last_updates[unique_id] = last_updates[unique_id].astype(str)
 
     # dataframe and last_updates need to have the same index, in our case unique_id
     missing_in_dfr = [
@@ -1034,11 +1043,8 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
 
     # If unique_id doesn't exists on updates we create a fake date for this station on updates
     if len(missing_in_updates) > 0:
-        for i in missing_in_updates:
-            last_updates = last_updates.append(
-                {unique_id: i, "last_update": "1900-01-01 00:00:00"},
-                ignore_index=True,
-            )
+        for i, _id in enumerate(missing_in_updates):
+            last_updates.loc[-i] = [_id, "1900-01-01 00:00:00"]
 
     # If unique_id doesn't exists on dataframe we remove this stations from last_updates
     if len(missing_in_dfr) > 0:
