@@ -1036,18 +1036,27 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
     # Access all data saved on redis with this key
     last_updates = redis_client.hgetall(key)
 
-    # Convert data in dictionary in format with unique_id in key and last updated time as value
-    # Example &gt; {&#34;12&#34;: &#34;2022-06-06 14:45:00&#34;}
-    last_updates = {
-        k.decode(&#34;utf-8&#34;): v.decode(&#34;utf-8&#34;) for k, v in last_updates.items()
-    }
+    if len(last_updates) == 0:
+        last_updates = pd.DataFrame(dataframe[unique_id].unique(), columns=[unique_id])
+        last_updates[&#34;last_update&#34;] = &#34;1900-01-01 00:00:00&#34;
+        log(f&#34;Redis key: {key}\nCreating Redis fake values:\n {last_updates}&#34;)
+    else:
+        # Convert data in dictionary in format with unique_id in key and last updated time as value
+        # Example &gt; {&#34;12&#34;: &#34;2022-06-06 14:45:00&#34;}
+        last_updates = {
+            k.decode(&#34;utf-8&#34;): v.decode(&#34;utf-8&#34;) for k, v in last_updates.items()
+        }
 
-    # Convert dictionary to dataframe
-    last_updates = pd.DataFrame(
-        last_updates.items(), columns=[unique_id, &#34;last_update&#34;]
-    )
+        # Convert dictionary to dataframe
+        last_updates = pd.DataFrame(
+            last_updates.items(), columns=[unique_id, &#34;last_update&#34;]
+        )
 
-    log(f&#34;Redis key: {key}\nRedis actual values:\n {last_updates}&#34;)
+        log(f&#34;Redis key: {key}\nRedis actual values:\n {last_updates}&#34;)
+
+    # Garante that both are string
+    dataframe[unique_id] = dataframe[unique_id].astype(str)
+    last_updates[unique_id] = last_updates[unique_id].astype(str)
 
     # dataframe and last_updates need to have the same index, in our case unique_id
     missing_in_dfr = [
@@ -1063,11 +1072,8 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
 
     # If unique_id doesn&#39;t exists on updates we create a fake date for this station on updates
     if len(missing_in_updates) &gt; 0:
-        for i in missing_in_updates:
-            last_updates = last_updates.append(
-                {unique_id: i, &#34;last_update&#34;: &#34;1900-01-01 00:00:00&#34;},
-                ignore_index=True,
-            )
+        for i, _id in enumerate(missing_in_updates):
+            last_updates.loc[-i] = [_id, &#34;1900-01-01 00:00:00&#34;]
 
     # If unique_id doesn&#39;t exists on dataframe we remove this stations from last_updates
     if len(missing_in_dfr) &gt; 0:
@@ -2079,18 +2085,27 @@ updated unique_id as a DataFrame and save new dates on redis</p></div>
     # Access all data saved on redis with this key
     last_updates = redis_client.hgetall(key)
 
-    # Convert data in dictionary in format with unique_id in key and last updated time as value
-    # Example &gt; {&#34;12&#34;: &#34;2022-06-06 14:45:00&#34;}
-    last_updates = {
-        k.decode(&#34;utf-8&#34;): v.decode(&#34;utf-8&#34;) for k, v in last_updates.items()
-    }
+    if len(last_updates) == 0:
+        last_updates = pd.DataFrame(dataframe[unique_id].unique(), columns=[unique_id])
+        last_updates[&#34;last_update&#34;] = &#34;1900-01-01 00:00:00&#34;
+        log(f&#34;Redis key: {key}\nCreating Redis fake values:\n {last_updates}&#34;)
+    else:
+        # Convert data in dictionary in format with unique_id in key and last updated time as value
+        # Example &gt; {&#34;12&#34;: &#34;2022-06-06 14:45:00&#34;}
+        last_updates = {
+            k.decode(&#34;utf-8&#34;): v.decode(&#34;utf-8&#34;) for k, v in last_updates.items()
+        }
 
-    # Convert dictionary to dataframe
-    last_updates = pd.DataFrame(
-        last_updates.items(), columns=[unique_id, &#34;last_update&#34;]
-    )
+        # Convert dictionary to dataframe
+        last_updates = pd.DataFrame(
+            last_updates.items(), columns=[unique_id, &#34;last_update&#34;]
+        )
 
-    log(f&#34;Redis key: {key}\nRedis actual values:\n {last_updates}&#34;)
+        log(f&#34;Redis key: {key}\nRedis actual values:\n {last_updates}&#34;)
+
+    # Garante that both are string
+    dataframe[unique_id] = dataframe[unique_id].astype(str)
+    last_updates[unique_id] = last_updates[unique_id].astype(str)
 
     # dataframe and last_updates need to have the same index, in our case unique_id
     missing_in_dfr = [
@@ -2106,11 +2121,8 @@ updated unique_id as a DataFrame and save new dates on redis</p></div>
 
     # If unique_id doesn&#39;t exists on updates we create a fake date for this station on updates
     if len(missing_in_updates) &gt; 0:
-        for i in missing_in_updates:
-            last_updates = last_updates.append(
-                {unique_id: i, &#34;last_update&#34;: &#34;1900-01-01 00:00:00&#34;},
-                ignore_index=True,
-            )
+        for i, _id in enumerate(missing_in_updates):
+            last_updates.loc[-i] = [_id, &#34;1900-01-01 00:00:00&#34;]
 
     # If unique_id doesn&#39;t exists on dataframe we remove this stations from last_updates
     if len(missing_in_dfr) &gt; 0:
