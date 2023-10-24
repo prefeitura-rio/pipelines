@@ -64,7 +64,6 @@ with Flow(
     code_owners=["rodrigo", "carolinagomes"],
 ) as gtfs_captura_tratamento:
     # SETUP
-
     data_versao_gtfs = Parameter("data_versao_gtfs", default=None)
     capture = Parameter("capture", default=True)
     materialize = Parameter("materialize", default=True)
@@ -115,7 +114,8 @@ with Flow(
 
         run_materializacao = create_flow_run(
             flow_name=gtfs_materializacao.name,
-            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            project_name="staging",
             parameters=gtfs_materializacao_parameters,
             labels=LABELS,
             upstream_tasks=[wait_captura],
