@@ -245,3 +245,11 @@ with Flow(
         stream_logs=True,
         raise_final_state=True,
     )
+
+
+bilhetagem_gps_tratamento.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bilhetagem_gps_tratamento.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+bilhetagem_gps_tratamento.schedule = every_hour
