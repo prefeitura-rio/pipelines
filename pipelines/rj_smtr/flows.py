@@ -312,7 +312,7 @@ with Flow(
         )
 
     with case(flag_date_range, False):
-        CONTROL_FAIL_TASK = task(lambda: None)(upstream_tasks=RUNS)
+        CONTROL_FAIL_TASK = task(lambda: None)(upstream_tasks=[RUNS])
 
     merge(SET_TIMESTAMP_TASK, CONTROL_FAIL_TASK)
 
