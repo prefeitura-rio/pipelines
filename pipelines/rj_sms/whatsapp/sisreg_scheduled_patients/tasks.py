@@ -5,8 +5,7 @@ import json
 import requests
 import pandas as pd
 from prefect import task
-#from google.cloud import storage
-from utils import log
+from pipelines.utils.utils import log
 from datetime import datetime, timedelta
 
 @task
@@ -61,24 +60,13 @@ def get_patients():
 
                 # Aguarda 1 minuto antes da próxima solicitação
                 time.sleep(60)
-                
-    else:
-        log('Erro na autenticação')
     
     return pd.DataFrame()
 
 @task
 def save_patients(dataframe):
-    log('Salva lista de pacientes no cloud storage')
     data_futura = datetime.today() + timedelta(days=3)
     data_formatada = data_futura.strftime('%Y-%m-%d')
-    #filename = f'sisreg_scheduled_patients/origin/{data_formatada}.csv'
-    filename = f'files/{data_formatada}.csv'
-    #bucket_name = 'rj-whatsapp'
-    #storage_client = storage.Client()
-    #bucket = storage_client.get_bucket(bucket_name)
-    #blob = bucket.blob(filename)
-    #csv_data = dataframe.to_csv(sep=';', quoting=csv.QUOTE_NONNUMERIC, quotechar='"', index=False, encoding='utf-8')
-    #dataframe.to_csv(filename, sep=';', quoting=csv.QUOTE_NONNUMERIC, quotechar='"', index=False, encoding='utf-8')
-    #blob.upload_from_string(csv_data, content_type="text/csv")
+    filename = f'pipelines/rj_sms/whatsapp/sisreg_scheduled_patients/data/{data_formatada}.csv'
+    dataframe.to_csv(filename, sep=';', quoting=csv.QUOTE_NONNUMERIC, quotechar='"', index=False, encoding='utf-8')
     return True

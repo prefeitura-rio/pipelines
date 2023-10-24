@@ -1,10 +1,7 @@
 import prefect
 from prefect import task
 import basedosdados as bd
-
-def log(message) -> None:
-    """Logs a message"""
-    prefect.context.logger.info(f"\n{message}")
+from pipelines.utils.utils import log
     
 @task
 def upload_to_datalake(
