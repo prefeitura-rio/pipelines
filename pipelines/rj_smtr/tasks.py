@@ -1122,6 +1122,7 @@ def set_last_run_timestamp(
     Returns:
         _type_: _description_
     """
+    log(f"Saving timestamp {timestamp} on Redis for {dataset_id}.{table_id}")
     redis_client = get_redis_client()
     key = dataset_id + "." + table_id
     if mode == "dev":
