@@ -303,33 +303,21 @@ with Flow(
         flags=unmapped(flags),
     )
 
-    # with case(flag_date_range, True):
-    #     SET_TIMESTAMP_TASK = set_last_run_timestamp(
-    #         dataset_id=dataset_id,
-    #         table_id=table_id,
-    #         timestamp=date_var["date_range_end"],
-    #         wait=RUNS,
-    #         mode=MODE,
-    #     )
+    with case(flag_date_range, True):
+        SET_TIMESTAMP_TASK = set_last_run_timestamp(
+            dataset_id=dataset_id,
+            table_id=table_id,
+            timestamp=date_var["date_range_end"],
+            wait=RUNS,
+            mode=MODE,
+        )
 
-    switch(
-        flag_date_range,
-        {
-            True: set_last_run_timestamp(
-                dataset_id=dataset_id,
-                table_id=table_id,
-                timestamp=DotDict(date_var).get("date_range_end"),
-                wait=RUNS,
-                mode=MODE,
-            )
-        },
-    )
+    default_materialization_flow.set_reference_tasks([RUNS, SET_TIMESTAMP_TASK])
 
     # with case(flag_date_range, False):
     #     CONTROL_FAIL_TASK = task(lambda: None)(upstream_tasks=[RUNS])
 
     # merge(SET_TIMESTAMP_TASK, CONTROL_FAIL_TASK)
-
 
 default_materialization_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 default_materialization_flow.run_config = KubernetesRun(
