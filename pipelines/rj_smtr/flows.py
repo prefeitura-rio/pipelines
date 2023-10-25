@@ -7,8 +7,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect import case, Parameter, task
 from prefect.utilities.edges import unmapped
-from prefect.tasks.control_flow import merge, switch
-from prefect.utilities.collections import DotDict
+from prefect.tasks.control_flow import merge
 
 # EMD Imports #
 
