@@ -32,7 +32,7 @@ from pipelines.rj_smtr.flows import (
     default_materialization_flow,
 )
 
-from pipelines.rj_smtr.tasks import get_rounded_timestamp, timestamp_to_isostr
+from pipelines.rj_smtr.tasks import get_rounded_timestamp, get_current_timestamp
 
 from pipelines.rj_smtr.constants import constants
 
@@ -235,7 +235,9 @@ with Flow(
                 wait_recaptura_auxiliar,
                 wait_recaptura_transacao,
             ],
-            parameters={"timestamp": timestamp_to_isostr(timestamp=timestamp)},
+            parameters={
+                "timestamp": get_current_timestamp(timestamp=timestamp, return_str=True)
+            },
         )
 
         wait_materializacao = wait_for_flow_run(
