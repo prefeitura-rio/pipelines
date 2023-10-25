@@ -269,10 +269,6 @@ with Flow(
 
     default_materialization_flow.set_reference_tasks([RUNS, SET_TIMESTAMP_TASK])
 
-    # with case(flag_date_range, False):
-    #     CONTROL_FAIL_TASK = task(lambda: None)(upstream_tasks=[RUNS])
-
-    # merge(SET_TIMESTAMP_TASK, CONTROL_FAIL_TASK)
 
 default_materialization_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 default_materialization_flow.run_config = KubernetesRun(
