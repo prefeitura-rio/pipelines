@@ -212,9 +212,7 @@ with Flow(
             wait_recaptura_auxiliar_false,
             wait_recaptura_trasacao_false,
         ) = task(
-            lambda: [None, None, None],
-            checkpoint=False,
-            name="assign_none_to_capture_runs",
+            lambda: [None, None, None], name="assign_none_to_capture_runs", nout=3
         )()
 
     wait_captura = merge(wait_captura_false, wait_captura_true)
