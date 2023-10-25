@@ -217,8 +217,8 @@ def create_dbt_run_vars(
         log("Creating run_date variable")
 
         date_var = get_run_dates.run(
-            date_range_start=dbt_vars["run_date"].get("date_range_start"),
-            date_range_end=dbt_vars["run_date"].get("date_range_end"),
+            date_range_start=dbt_vars["run_date"].get("date_range_start", False),
+            date_range_end=dbt_vars["run_date"].get("date_range_end", False),
             day_datetime=timestamp,
         )
 
@@ -244,16 +244,6 @@ def create_dbt_run_vars(
             final_vars.append(dataset_sha)
 
         log(f"version created: {dataset_sha}")
-
-    # if "data_versao_gtfs" in dbt_vars.keys():
-    #     log("Creating data_versao_gtfs variable")
-
-    #     temp_dict = {"data_versao_gtfs": dbt_vars["data_versao_gtfs"]}
-
-    #     if final_vars:
-    #         final_vars = get_join_dict.run(dict_list=final_vars, new_dict=temp_dict)
-    #     else:
-    #         final_vars.append(temp_dict)
 
     log(f"All variables was created, final value is: {final_vars}")
 
@@ -306,23 +296,31 @@ def get_rounded_timestamp(
 
 
 @task
-def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -> datetime:
+def get_current_timestamp(
+    timestamp=None, truncate_minute: bool = True, return_str: bool = False
+) -> Union[datetime, str]:
     """
     Get current timestamp for flow run.
 
     Args:
         timestamp: timestamp to be used as reference (optionally, it can be a string)
         truncate_minute: whether to truncate the timestamp to the minute or not
+        return_str: if True, the return will be an isoformatted datetime string
+                    otherwise it returns a datetime object
 
     Returns:
-        datetime: timestamp for flow run
+        Union[datetime, str]: timestamp for flow run
     """
     if isinstance(timestamp, str):
         timestamp = datetime.fromisoformat(timestamp)
     if not timestamp:
         timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
     if truncate_minute:
-        return timestamp.replace(second=0, microsecond=0)
+        timestamp = timestamp.replace(second=0, microsecond=0)
+    if return_str:
+        timestamp = timestamp.isoformat()
+
+    return timestamp
 
 
 @task
@@ -1181,6 +1179,15 @@ def get_run_dates(
 ) -> List:
     """
     Generates a list of dates between date_range_start and date_range_end.
+
+    Args:
+        date_range_start (str): the start date to create the date range
+        date_range_end (str): the end date to create the date range
+        day_datetime (datetime, Optional): a timestamp to use as run_date
+                                            if the range start or end is False
+
+    Returns:
+        list: the list of run_dates
     """
     if (date_range_start is False) or (date_range_end is False):
         if day_datetime:
@@ -1370,18 +1377,3 @@ def check_mapped_query_logs_output(query_logs_output: list[tuple]) -> bool:
 
     recapture_list = [i[0] for i in query_logs_output]
     return any(recapture_list)
-
-
-@task(checkpoint=False)
-def timestamp_to_isostr(timestamp: datetime) -> str:
-    """
-    Task to transform datetime to iso format string
-
-    Args:
-        timestamp (datetime): the datetime to convert
-
-    Returns:
-        str: timestamp formatted string
-    """
-
-    return timestamp.isoformat()
