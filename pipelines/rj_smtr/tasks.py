@@ -1095,13 +1095,15 @@ def get_materialization_date_range(  # pylint: disable=R0913
     start_ts = last_run.replace(minute=0, second=0, microsecond=0).strftime(timestr)
 
     # set end to now - delay
-    now_ts = pendulum.now(constants.TIMEZONE.value).replace(
-        tzinfo=None, minute=0, second=0, microsecond=0
-    )
+
     if not end_ts:
-        end_ts = (now_ts - timedelta(hours=delay_hours)).replace(
-            minute=0, second=0, microsecond=0
+        end_ts = pendulum.now(constants.TIMEZONE.value).replace(
+            tzinfo=None, minute=0, second=0, microsecond=0
         )
+
+    end_ts = (end_ts - timedelta(hours=delay_hours)).replace(
+        minute=0, second=0, microsecond=0
+    )
 
     end_ts = end_ts.strftime(timestr)
 
