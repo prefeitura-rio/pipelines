@@ -9,6 +9,8 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect.utilities.edges import unmapped
+from prefect import Parameter, case, task
+from prefect.tasks.control_flow import merge
 
 
 # EMD Imports #
@@ -139,6 +141,9 @@ with Flow(
 ) as bilhetagem_transacao_tratamento:
     # Configuração #
 
+    capture = Parameter("capture", default=True)
+    materialize = Parameter("materialize", default=True)
+
     timestamp = get_rounded_timestamp(
         interval_minutes=constants.BILHETAGEM_TRATAMENTO_INTERVAL.value
     )
@@ -150,71 +155,96 @@ with Flow(
 
     LABELS = get_current_flow_labels()
 
-    # Recaptura Transação
+    with case(capture, True):
+        # Recaptura Transação
 
-    run_recaptura_trasacao = create_flow_run(
-        flow_name=bilhetagem_recaptura.name,
-        project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-        labels=LABELS,
-        parameters=constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value,
+        run_recaptura_trasacao = create_flow_run(
+            flow_name=bilhetagem_recaptura.name,
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            labels=LABELS,
+            parameters=constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value,
+        )
+
+        wait_recaptura_trasacao_true = wait_for_flow_run(
+            run_recaptura_trasacao,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+
+        # Captura Auxiliar
+
+        runs_captura = create_flow_run.map(
+            flow_name=unmapped(bilhetagem_auxiliar_captura.name),
+            project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+            parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
+            labels=unmapped(LABELS),
+        )
+
+        wait_captura_true = wait_for_flow_run.map(
+            runs_captura,
+            stream_states=unmapped(True),
+            stream_logs=unmapped(True),
+            raise_final_state=unmapped(True),
+        )
+
+        # Recaptura Auxiliar
+
+        runs_recaptura_auxiliar = create_flow_run.map(
+            flow_name=unmapped(bilhetagem_recaptura.name),
+            project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+            parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
+            labels=unmapped(LABELS),
+        )
+
+        runs_recaptura_auxiliar.set_upstream(wait_captura_true)
+
+        wait_recaptura_auxiliar_true = wait_for_flow_run.map(
+            runs_recaptura_auxiliar,
+            stream_states=unmapped(True),
+            stream_logs=unmapped(True),
+            raise_final_state=unmapped(True),
+        )
+
+    with case(capture, False):
+        (
+            wait_captura_false,
+            wait_recaptura_auxiliar_false,
+            wait_recaptura_trasacao_false,
+        ) = task(
+            lambda: [None, None, None],
+            checkpoint=False,
+            name="assign_none_to_capture_runs",
+        )
+
+    wait_captura = merge(wait_captura_false, wait_captura_true)
+    wait_recaptura_auxiliar = merge(
+        wait_recaptura_auxiliar_false, wait_recaptura_auxiliar_true
+    )
+    wait_recaptura_trasacao = merge(
+        wait_recaptura_trasacao_false, wait_recaptura_trasacao_true
     )
 
-    wait_recaptura_trasacao = wait_for_flow_run(
-        run_recaptura_trasacao,
-        stream_states=True,
-        stream_logs=True,
-        raise_final_state=True,
-    )
+    with case(materialize, True):
+        # Materialização
+        run_materializacao = create_flow_run(
+            flow_name=bilhetagem_materializacao.name,
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            labels=LABELS,
+            upstream_tasks=[
+                wait_captura,
+                wait_recaptura_auxiliar,
+                wait_recaptura_trasacao,
+            ],
+            parameters=timestamp_to_isostr(timestamp=timestamp),
+        )
 
-    # Captura Auxiliar
-
-    runs_captura = create_flow_run.map(
-        flow_name=unmapped(bilhetagem_auxiliar_captura.name),
-        project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
-        parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
-        labels=unmapped(LABELS),
-    )
-
-    wait_captura = wait_for_flow_run.map(
-        runs_captura,
-        stream_states=unmapped(True),
-        stream_logs=unmapped(True),
-        raise_final_state=unmapped(True),
-    )
-
-    # Recaptura Auxiliar
-
-    runs_recaptura_auxiliar = create_flow_run.map(
-        flow_name=unmapped(bilhetagem_recaptura.name),
-        project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
-        parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
-        labels=unmapped(LABELS),
-    )
-
-    runs_recaptura_auxiliar.set_upstream(wait_captura)
-
-    wait_recaptura_auxiliar = wait_for_flow_run.map(
-        runs_recaptura_auxiliar,
-        stream_states=unmapped(True),
-        stream_logs=unmapped(True),
-        raise_final_state=unmapped(True),
-    )
-
-    # Materialização
-    run_materializacao = create_flow_run(
-        flow_name=bilhetagem_materializacao.name,
-        project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-        labels=LABELS,
-        upstream_tasks=[wait_captura],
-        parameters=timestamp_to_isostr(timestamp=timestamp),
-    )
-
-    wait_materializacao = wait_for_flow_run(
-        run_materializacao,
-        stream_states=True,
-        stream_logs=True,
-        raise_final_state=True,
-    )
+        wait_materializacao = wait_for_flow_run(
+            run_materializacao,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
 
 bilhetagem_transacao_tratamento.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 bilhetagem_transacao_tratamento.run_config = KubernetesRun(
