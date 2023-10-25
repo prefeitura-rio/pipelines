@@ -7,7 +7,7 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect import case, Parameter, task
 from prefect.utilities.edges import unmapped
-from prefect.tasks.control_flow import merge
+from prefect.tasks.control_flow import merge, switch
 
 # EMD Imports #
 
@@ -302,19 +302,32 @@ with Flow(
         flags=unmapped(flags),
     )
 
-    with case(flag_date_range, True):
-        SET_TIMESTAMP_TASK = set_last_run_timestamp(
-            dataset_id=dataset_id,
-            table_id=table_id,
-            timestamp=date_var["date_range_end"],
-            wait=RUNS,
-            mode=MODE,
-        )
+    # with case(flag_date_range, True):
+    #     SET_TIMESTAMP_TASK = set_last_run_timestamp(
+    #         dataset_id=dataset_id,
+    #         table_id=table_id,
+    #         timestamp=date_var["date_range_end"],
+    #         wait=RUNS,
+    #         mode=MODE,
+    #     )
 
-    with case(flag_date_range, False):
-        CONTROL_FAIL_TASK = task(lambda: None)(upstream_tasks=[RUNS])
+    switch(
+        flag_date_range,
+        {
+            True: set_last_run_timestamp(
+                dataset_id=dataset_id,
+                table_id=table_id,
+                timestamp=date_var["date_range_end"],
+                wait=RUNS,
+                mode=MODE,
+            )
+        },
+    )
 
-    merge(SET_TIMESTAMP_TASK, CONTROL_FAIL_TASK)
+    # with case(flag_date_range, False):
+    #     CONTROL_FAIL_TASK = task(lambda: None)(upstream_tasks=[RUNS])
+
+    # merge(SET_TIMESTAMP_TASK, CONTROL_FAIL_TASK)
 
 
 default_materialization_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
