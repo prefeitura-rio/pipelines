@@ -158,15 +158,15 @@ with Flow(
     with case(capture, True):
         # Recaptura Transação
 
-        run_recaptura_trasacao = create_flow_run(
+        run_recaptura_transacao = create_flow_run(
             flow_name=bilhetagem_recaptura.name,
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=LABELS,
             parameters=constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value,
         )
 
-        wait_recaptura_trasacao_true = wait_for_flow_run(
-            run_recaptura_trasacao,
+        wait_recaptura_transacao_true = wait_for_flow_run(
+            run_recaptura_transacao,
             stream_states=True,
             stream_logs=True,
             raise_final_state=True,
@@ -210,7 +210,7 @@ with Flow(
         (
             wait_captura_false,
             wait_recaptura_auxiliar_false,
-            wait_recaptura_trasacao_false,
+            wait_recaptura_transacao_false,
         ) = task(
             lambda: [None, None, None], name="assign_none_to_capture_runs", nout=3
         )()
@@ -219,8 +219,8 @@ with Flow(
     wait_recaptura_auxiliar = merge(
         wait_recaptura_auxiliar_false, wait_recaptura_auxiliar_true
     )
-    wait_recaptura_trasacao = merge(
-        wait_recaptura_trasacao_false, wait_recaptura_trasacao_true
+    wait_recaptura_transacao = merge(
+        wait_recaptura_transacao_false, wait_recaptura_transacao_true
     )
 
     with case(materialize, True):
@@ -233,9 +233,9 @@ with Flow(
             upstream_tasks=[
                 wait_captura,
                 wait_recaptura_auxiliar,
-                wait_recaptura_trasacao,
+                wait_recaptura_transacao,
             ],
-            parameters=timestamp_to_isostr(timestamp=timestamp),
+            parameters={"timestamp": timestamp_to_isostr(timestamp=timestamp)},
         )
 
         wait_materializacao = wait_for_flow_run(
