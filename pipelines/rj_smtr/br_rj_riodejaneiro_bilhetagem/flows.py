@@ -106,7 +106,15 @@ bilhetagem_materializacao.run_config = KubernetesRun(
 )
 
 bilhetagem_materializacao_parameters = {
-    "dataset_id": constants.BILHETAGEM_DATASET_ID.value
+    "source_table_ids": [
+        constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value["table_id"]
+    ]
+    + [d["table_id"] for d in constants.BILHETAGEM_CAPTURE_PARAMS.value],
+    "capture_intervals_minutes": [
+        constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value["interval_minutes"]
+    ]
+    + [d["interval_minutes"] for d in constants.BILHETAGEM_CAPTURE_PARAMS.value],
+    "dataset_id": constants.BILHETAGEM_DATASET_ID.value,
 } | constants.BILHETAGEM_MATERIALIZACAO_PARAMS.value
 
 bilhetagem_materializacao = set_default_parameters(

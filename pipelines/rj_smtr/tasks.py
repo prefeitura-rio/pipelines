@@ -1335,3 +1335,22 @@ def unpack_mapped_results_nout2(
 
     """
     return [r[0] for r in mapped_results], [r[1] for r in mapped_results]
+
+
+@task
+def check_mapped_query_logs_output(query_logs_output: list[tuple]) -> bool:
+    """
+    Task to check if there is recaptures pending
+
+    Args:
+        query_logs_output (list[tuple]): the return from a mapped query_logs execution
+
+    Returns:
+        bool: True if there is recaptures to do, otherwise False
+    """
+
+    if len(query_logs_output) == 0:
+        return False
+
+    recapture_list = [i[0] for i in query_logs_output]
+    return any(recapture_list)
