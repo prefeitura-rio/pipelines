@@ -222,6 +222,13 @@ def create_dbt_run_vars(
 
         log(f"run_date created: {date_var}")
 
+    elif "data_versao_gtfs" in dbt_vars.keys():
+        log("Creating data_versao_gtfs variable")
+
+        date_var = {"data_versao_gtfs": dbt_vars["data_versao_gtfs"]}
+
+        final_vars.append(date_var.copy())
+
     if "version" in dbt_vars.keys():
         log("Creating version variable")
         dataset_sha = fetch_dataset_sha.run(dataset_id=dataset_id)
@@ -234,15 +241,15 @@ def create_dbt_run_vars(
 
         log(f"version created: {dataset_sha}")
 
-    if "data_versao_gtfs" in dbt_vars.keys():
-        log("Creating data_versao_gtfs variable")
+    # if "data_versao_gtfs" in dbt_vars.keys():
+    #     log("Creating data_versao_gtfs variable")
 
-        temp_dict = {"data_versao_gtfs": dbt_vars["data_versao_gtfs"]}
+    #     temp_dict = {"data_versao_gtfs": dbt_vars["data_versao_gtfs"]}
 
-        if final_vars:
-            final_vars = get_join_dict.run(dict_list=final_vars, new_dict=temp_dict)
-        else:
-            final_vars.append(temp_dict)
+    #     if final_vars:
+    #         final_vars = get_join_dict.run(dict_list=final_vars, new_dict=temp_dict)
+    #     else:
+    #         final_vars.append(temp_dict)
 
     log(f"All variables was created, final value is: {final_vars}")
 
