@@ -146,6 +146,7 @@ def create_dbt_run_vars(
     raw_dataset_id: str,
     raw_table_id: str,
     mode: str,
+    timestamp: datetime,
 ) -> tuple[list[dict], Union[list[dict], dict, None], bool]:
     """
     Create the variables to be used in dbt materialization based on a dict
@@ -203,6 +204,7 @@ def create_dbt_run_vars(
                 ),
                 mode=mode,
                 delay_hours=dbt_vars["date_range"].get("delay_hours", 0),
+                end_ts=timestamp,
             )
 
             flag_date_range = True
@@ -215,9 +217,11 @@ def create_dbt_run_vars(
         log("Creating run_date variable")
 
         date_var = get_run_dates.run(
-            dbt_vars["run_date"].get("date_range_start"),
-            dbt_vars["run_date"].get("date_range_end"),
+            date_range_start=dbt_vars["run_date"].get("date_range_start"),
+            date_range_end=dbt_vars["run_date"].get("date_range_end"),
+            day_datetime=timestamp,
         )
+
         final_vars.append([d.copy() for d in date_var])
 
         log(f"run_date created: {date_var}")
@@ -1025,6 +1029,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
     table_run_datetime_column_name: str = None,
     mode: str = "prod",
     delay_hours: int = 0,
+    end_ts: datetime = None,
 ):
     """
     Task for generating dict with variables to be passed to the
@@ -1041,6 +1046,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
         rebuild (Optional, bool): if true, queries the minimum date value on the
         table and return a date range from that value to the datetime.now() time
         delay(Optional, int): hours delayed from now time for materialization range
+        end_ts(Optional, datetime): date range's final date
     Returns:
         dict: containing date_range_start and date_range_end
     """
@@ -1092,11 +1098,13 @@ def get_materialization_date_range(  # pylint: disable=R0913
     now_ts = pendulum.now(constants.TIMEZONE.value).replace(
         tzinfo=None, minute=0, second=0, microsecond=0
     )
-    end_ts = (
-        (now_ts - timedelta(hours=delay_hours))
-        .replace(minute=0, second=0, microsecond=0)
-        .strftime(timestr)
-    )
+    if not end_ts:
+        end_ts = (now_ts - timedelta(hours=delay_hours)).replace(
+            minute=0, second=0, microsecond=0
+        )
+
+    end_ts = end_ts.strftime(timestr)
+
     date_range = {"date_range_start": start_ts, "date_range_end": end_ts}
     log(f"Got date_range as: {date_range}")
     return date_range
@@ -1166,12 +1174,18 @@ def fetch_dataset_sha(dataset_id: str):
 
 
 @task
-def get_run_dates(date_range_start: str, date_range_end: str) -> List:
+def get_run_dates(
+    date_range_start: str, date_range_end: str, day_datetime: datetime = None
+) -> List:
     """
     Generates a list of dates between date_range_start and date_range_end.
     """
     if (date_range_start is False) or (date_range_end is False):
-        dates = [{"run_date": get_now_date.run()}]
+        if day_datetime:
+            run_date = day_datetime.strftime("%Y-%m-%d")
+        else:
+            run_date = get_now_date.run()
+        dates = [{"run_date": run_date}]
     else:
         dates = [
             {"run_date": d.strftime("%Y-%m-%d")}
@@ -1354,3 +1368,18 @@ def check_mapped_query_logs_output(query_logs_output: list[tuple]) -> bool:
 
     recapture_list = [i[0] for i in query_logs_output]
     return any(recapture_list)
+
+
+@task(checkpoint=False)
+def timestamp_to_isostr(timestamp: datetime) -> str:
+    """
+    Task to transform datetime to iso format string
+
+    Args:
+        timestamp (datetime): the datetime to convert
+
+    Returns:
+        str: timestamp formatted string
+    """
+
+    return timestamp.isoformat()

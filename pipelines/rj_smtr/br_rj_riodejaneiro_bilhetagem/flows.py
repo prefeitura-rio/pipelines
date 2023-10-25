@@ -30,7 +30,7 @@ from pipelines.rj_smtr.flows import (
     default_materialization_flow,
 )
 
-from pipelines.rj_smtr.tasks import get_rounded_timestamp
+from pipelines.rj_smtr.tasks import get_rounded_timestamp, timestamp_to_isostr
 
 from pipelines.rj_smtr.constants import constants
 
@@ -206,6 +206,7 @@ with Flow(
         project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
         labels=LABELS,
         upstream_tasks=[wait_captura],
+        parameters=timestamp_to_isostr(timestamp=timestamp),
     )
 
     wait_materializacao = wait_for_flow_run(

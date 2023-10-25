@@ -187,6 +187,8 @@ with Flow(
 ) as default_materialization_flow:
     # SETUP #
 
+    timestamp = Parameter("timestamp", default=None)
+
     # Parametros Verificação de Recapturas
     source_table_ids = Parameter("source_table_ids", default=[])
     capture_intervals_minutes = Parameter("capture_intervals_minutes", default=[])
@@ -205,35 +207,43 @@ with Flow(
     LABELS = get_current_flow_labels()
     MODE = get_current_flow_mode(LABELS)
 
+    timestamp = get_rounded_timestamp(timestamp=timestamp)
+
+    query_logs_timestamps = get_rounded_timestamp.map(
+        timestamp=unmapped(timestamp), interval_minutes=capture_intervals_minutes
+    )
+
     query_logs_output = query_logs.map(
         dataset_id=unmapped(dataset_id),
         table_id=source_table_ids,
         interval_minutes=capture_intervals_minutes,
+        datetime_filter=query_logs_timestamps,
     )
 
     has_recaptures = check_mapped_query_logs_output(query_logs_output)
 
+    _vars, date_var, flag_date_range = create_dbt_run_vars(
+        dataset_id=dataset_id,
+        dbt_vars=dbt_vars,
+        table_id=table_id,
+        raw_dataset_id=dataset_id,
+        raw_table_id=raw_table_id,
+        mode=MODE,
+        timestamp=timestamp,
+    )
+
+    # Rename flow run
+
+    flow_name_prefix = coalesce_task([table_id, dataset_id])
+
+    flow_name_now_time = coalesce_task([date_var, get_now_time()])
+
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix=default_materialization_flow.name + " " + flow_name_prefix + ": ",
+        now_time=flow_name_now_time,
+    )
+
     with case(has_recaptures, False):
-        _vars, date_var, flag_date_range = create_dbt_run_vars(
-            dataset_id=dataset_id,
-            dbt_vars=dbt_vars,
-            table_id=table_id,
-            raw_dataset_id=dataset_id,
-            raw_table_id=raw_table_id,
-            mode=MODE,
-        )
-
-        # Rename flow run
-
-        flow_name_prefix = coalesce_task([table_id, dataset_id])
-
-        flow_name_now_time = coalesce_task([date_var, get_now_time()])
-
-        rename_flow_run = rename_current_flow_run_now_time(
-            prefix=default_materialization_flow.name + " " + flow_name_prefix + ": ",
-            now_time=flow_name_now_time,
-        )
-
         dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
 
         RUNS = run_dbt_model.map(
