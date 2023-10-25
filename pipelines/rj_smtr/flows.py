@@ -8,7 +8,7 @@ from prefect.storage import GCS
 from prefect import case, Parameter, task
 from prefect.utilities.edges import unmapped
 from prefect.tasks.control_flow import merge, switch
-from prefect.tasks.core.operators import GetItem
+from prefect.utilities.collections import DotDict
 
 # EMD Imports #
 
@@ -318,7 +318,7 @@ with Flow(
             True: set_last_run_timestamp(
                 dataset_id=dataset_id,
                 table_id=table_id,
-                timestamp=date_var["date_range_end"],
+                timestamp=DotDict(date_var).get("date_range_end"),
                 wait=RUNS,
                 mode=MODE,
             )
