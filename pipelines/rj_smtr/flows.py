@@ -8,6 +8,7 @@ from prefect.storage import GCS
 from prefect import case, Parameter, task
 from prefect.utilities.edges import unmapped
 from prefect.tasks.control_flow import merge, switch
+from prefect.tasks.core.operators import GetItem
 
 # EMD Imports #
 
