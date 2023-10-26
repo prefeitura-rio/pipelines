@@ -464,6 +464,7 @@ if __name__ == "__main__":
         if file_.endswith(".py")
         and file_.startswith("pipelines")
         and "cookiecutter" not in file_
+        and Path(file_).exists()
     ]
     print("We're interested in these files:")
     for file_ in changed_files:

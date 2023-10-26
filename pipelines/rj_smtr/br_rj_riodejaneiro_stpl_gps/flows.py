@@ -12,7 +12,6 @@ from prefect.storage import GCS
 from pipelines.constants import constants as emd_constants
 from pipelines.utils.decorators import Flow
 from pipelines.utils.tasks import rename_current_flow_run_now_time
-from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks import get_stpl_headers
 
 # SMTR Imports #
 
@@ -41,7 +40,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.tasks import (
 
 with Flow(
     "SMTR: GPS STPL - Captura",
-    code_owners=["caio", "fernanda"],
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as captura_stpl:
     # DEFAULT PARAMETERS #
     dataset_id = Parameter(
@@ -71,7 +70,7 @@ with Flow(
         partitions=partitions,
     )
 
-    raw_status = get_raw(url=url, headers=get_stpl_headers())
+    raw_status = get_raw(url=url, headers=constants.GPS_STPL_API_SECRET_PATH.value)
 
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
 
@@ -107,5 +106,5 @@ captura_stpl.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-# Seguindo o padrão de captura adotado pelo BRT
-captura_stpl.schedule = every_minute
+# Captura descontinuada (sem dados), avaliar quando voltar
+# captura_stpl.schedule = every_minute
