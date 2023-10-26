@@ -13,7 +13,6 @@ import traceback
 import io
 import json
 import zipfile
-import pendulum
 import pytz
 import requests
 import basedosdados as bd
