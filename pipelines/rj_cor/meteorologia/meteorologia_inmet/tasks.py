@@ -4,6 +4,7 @@ Tasks for meteorologia_inmet
 """
 from datetime import datetime, timedelta
 import json
+import os
 from pathlib import Path
 from typing import Tuple, Union
 
@@ -13,33 +14,20 @@ from prefect import task
 import requests
 
 from pipelines.constants import constants
-from pipelines.utils.utils import get_vault_secret, log, to_partitions
-from pipelines.rj_cor.meteorologia.precipitacao_alertario.utils import (
-    parse_date_columns,
-)
+from pipelines.utils.utils import log
 
 # from pipelines.rj_cor.meteorologia.meteorologia_inmet.meteorologia_utils import converte_timezone
 
 
-@task(nout=3)
-def get_dates(data_inicio: str, data_fim: str) -> Tuple[str, str]:
+@task(nout=2)
+def get_dates() -> Tuple[str, str]:
     """
-    Task para obter o dia de início e o de fim.
-    Se nenhuma data foi passada a data_inicio corresponde a ontem
-    e data_fim a hoje e não estamos fazendo backfill.
-    Caso contrário, retorna as datas inputadas mos parâmetros do flow.
+    Task para obter o dia atual e o anterior
     """
     # segundo o manual do inmet o dado vem em UTC
-    log(f"data de inicio e fim antes do if {data_inicio} {data_fim}")
-    if data_inicio == "":
-        data_fim = pendulum.now("UTC").format("YYYY-MM-DD")
-        data_inicio = pendulum.yesterday("UTC").format("YYYY-MM-DD")
-        backfill = 0
-    else:
-        backfill = 1
-    log(f"data de inicio e fim dps do if {data_inicio} {data_fim}")
-
-    return data_inicio, data_fim, backfill
+    current_time = pendulum.now("UTC").format("YYYY-MM-DD")
+    yesterday = pendulum.yesterday("UTC").format("YYYY-MM-DD")
+    return current_time, yesterday
 
 
 @task()
@@ -58,7 +46,7 @@ def slice_data(current_time: str) -> str:
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def download(data_inicio: str, data_fim: str) -> pd.DataFrame:
+def download(data: str, yesterday: str) -> pd.DataFrame:
     """
     Faz o request na data especificada e retorna dados
     """
@@ -80,14 +68,9 @@ def download(data_inicio: str, data_fim: str) -> pd.DataFrame:
     # Trazer desde o dia anterior evita problemas quando já é outro dia
     # no UTC, visto que ele só traria dados do novo dia e substituiria
     # no arquivo da partição do dia atual no nosso timezone
-
-    dicionario = get_vault_secret("inmet_api")
-    token = dicionario["data"]["token"]
-
     raw = []
     for id_estacao in estacoes_unicas:
-        base_url = "https://apitempo.inmet.gov.br/token/estacao"
-        url = f"{base_url}/{data_inicio}/{data_fim}/{id_estacao}/{token}"
+        url = f"https://apitempo.inmet.gov.br/estacao/{yesterday}/{data}/{id_estacao}"
         res = requests.get(url)
         if res.status_code != 200:
             log(f"Problema no id: {id_estacao}, {res.status_code}, {url}")
@@ -104,8 +87,8 @@ def download(data_inicio: str, data_fim: str) -> pd.DataFrame:
     return dados
 
 
-@task
-def tratar_dados(dados: pd.DataFrame, backfill: bool = 0) -> pd.DataFrame:
+@task(nout=2)
+def tratar_dados(dados: pd.DataFrame) -> Tuple[pd.DataFrame, str]:
     """
     Renomeia colunas e filtra dados com a hora do timestamp de execução
     """
@@ -209,6 +192,9 @@ def tratar_dados(dados: pd.DataFrame, backfill: bool = 0) -> pd.DataFrame:
 
     # Pegar o dia no nosso timezone como partição
     br_timezone = pendulum.now("America/Sao_Paulo").format("YYYY-MM-DD")
+    ano = br_timezone[:4]
+    mes = str(int(br_timezone[5:7]))
+    dia = str(int(br_timezone[8:10]))
 
     # Define colunas que serão salvas
     dados = dados[
@@ -236,35 +222,33 @@ def tratar_dados(dados: pd.DataFrame, backfill: bool = 0) -> pd.DataFrame:
         ]
     ]
 
-    if not backfill:
-        # Seleciona apenas dados daquele dia (devido à UTC)
-        dados = dados[dados["data"] == br_timezone]
+    # Seleciona apenas dados daquele dia (devido à UTC)
+    dados = dados[dados["data"] == br_timezone]
 
     # Remove linhas com todos os dados nan
     dados = dados.dropna(subset=float_cols, how="all")
 
+    partitions = f"ano={ano}/mes={mes}/dia={dia}"
+    log(f">>> partitions{partitions}")
     print(">>>> max hora ", dados[~dados.temperatura.isna()].horario.max())
-    return dados
+    return dados, partitions
 
 
 @task
-def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
+def salvar_dados(dados: pd.DataFrame, partitions: str, data: str) -> Union[str, Path]:
     """
     Salvar dados em csv
     """
+    base_path = Path(os.getcwd(), "data", "meteorologia_inmet", "output")
 
-    prepath = Path("/tmp/precipitacao_alertario/")
-    prepath.mkdir(parents=True, exist_ok=True)
+    partition_path = Path(base_path, partitions)
 
-    partition_column = "data"
-    dataframe, partitions = parse_date_columns(dados, partition_column)
+    if not os.path.exists(partition_path):
+        os.makedirs(partition_path)
 
-    # Cria partições a partir da data
-    to_partitions(
-        data=dataframe,
-        partition_columns=partitions,
-        savepath=prepath,
-        data_type="csv",
-    )
-    log(f"[DEBUG] Files saved on {prepath}")
-    return prepath
+    filename = str(partition_path / f"dados_{data}.csv")
+
+    log(f"Saving {filename}")
+    # dados.to_csv(filename, index=False)
+    dados.to_csv(r"{}".format(filename), index=False)
+    return base_path

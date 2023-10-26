@@ -12,13 +12,24 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: "3.9.x"
+          python-version: "3.8.x"
       - name: Set up Poetry and upgrade pip
         run: |
           pip install -U pip poetry
       - name: Install flows
         run: |
-          poetry install
-      - name: Lint with flake8
-        run: |
-          poetry run lint
+          pip install --prefer-binary .
+      - name: Lint flows
+        uses: gabriel-milan/action-pylint@v1
+        with:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          path: "pipelines/"
+          fail: true
+          pr-message: true
+      - name: Lint tests
+        uses: gabriel-milan/action-pylint@v1
+        with:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          path: "tests/"
+          fail: true
+          pr-message: true

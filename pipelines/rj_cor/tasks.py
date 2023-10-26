@@ -19,7 +19,7 @@ def get_on_redis(
     wait=None,
 ) -> list:
     """
-    Get filenames saved on Redis.
+    Set the last updated time on Redis.
     """
     redis_client = get_redis_client()
     key = build_redis_key(dataset_id, table_id, "files", mode)

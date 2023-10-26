@@ -1,14 +1,9 @@
 # -*- coding: utf-8 -*-
-from glob import glob
-import subprocess
+from pylint.lint import Run
 
 
 def main():
-    """
-    Lint all python files in the project.
-    """
-    files = glob("**/*.py", recursive=True)
-    subprocess.run(["flake8", *files])
+    Run(["pipelines/"])
 
 
 if __name__ == "__main__":

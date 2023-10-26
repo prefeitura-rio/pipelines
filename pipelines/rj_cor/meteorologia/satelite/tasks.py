@@ -31,13 +31,9 @@ from pipelines.utils.utils import log
 def get_dates(current_time) -> str:
     """
     Task para obter o dia atual caso nenhuma data tenha sido passada
-    Subtraimos 5 minutos da hora atual pois o último arquivo que sobre na aws
-    sempre cai na hora seguinte (Exemplo: o arquivo
-    OR_ABI-L2-RRQPEF-M6_G16_s20230010850208_e20230010859516_c20230010900065.nc
-    cujo início da medição foi às 08:50 foi salvo na AWS às 09:00:33).
     """
     if current_time is None:
-        current_time = pendulum.now("UTC").subtract(minutes=5).to_datetime_string()
+        current_time = pendulum.now("UTC").to_datetime_string()
     return current_time
 
 
@@ -80,7 +76,6 @@ def download(
     ref_filename: str = None,
     redis_files: list = [],
     wait=None,
-    mode_redis: str = "prod",
 ) -> Union[str, Path]:
     """
     Acessa o S3 e faz o download do primeiro arquivo da data-hora especificada
@@ -122,9 +117,7 @@ def download(
         skip = Skipped("No available files on API")
         raise ENDRUN(state=skip)
 
-    base_path = os.path.join(
-        os.getcwd(), mode_redis, "data", "satelite", variavel[:-1], "input"
-    )
+    base_path = os.path.join(os.getcwd(), "data", "satelite", variavel[:-1], "input")
 
     if not os.path.exists(base_path):
         os.makedirs(base_path)
@@ -148,13 +141,12 @@ def download(
     download_file = None
     for path_file in path_files:
         filename = path_file.split("/")[-1]
-        log(f"\n\n[DEBUG]: {filename} check if is in redis")
         if filename not in redis_files:
             log(f"\n\n[DEBUG]: {filename} not in redis")
             redis_files.append(filename)
             path_filename = os.path.join(base_path, filename)
             download_file = path_file
-            # log(f"[DEBUG]: filename to be append on redis_files: {redis_files}")
+            log(f"[DEBUG]: filename to be append on redis_files: {redis_files}")
             break
 
     # Skip task if there is no new file
@@ -178,18 +170,18 @@ def download(
 
 
 @task
-def tratar_dados(filename: str, mode_redis: str = "prod") -> dict:
+def tratar_dados(filename: str) -> dict:
     """
     Converte coordenadas X, Y para latlon e recorta área
     """
     log(f"\n>>>> Started treating file: {filename}")
-    grid, goes16_extent, info = main(filename, mode_redis)
+    grid, goes16_extent, info = main(filename)
     del grid, goes16_extent
     return info
 
 
 @task
-def save_data(info: dict, file_path: str, mode_redis: str = "prod") -> Union[str, Path]:
+def save_data(info: dict, file_path: str) -> Union[str, Path]:
     """
     Convert tif data to csv
     """
@@ -197,5 +189,5 @@ def save_data(info: dict, file_path: str, mode_redis: str = "prod") -> Union[str
     variable = info["variable"]
     datetime_save = info["datetime_save"]
     print(f"Saving {variable} in parquet")
-    output_path = save_data_in_file(variable, datetime_save, file_path, mode_redis)
+    output_path = save_data_in_file(variable, datetime_save, file_path)
     return output_path

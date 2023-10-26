@@ -63,6 +63,7 @@ from prefect.storage import GCS
 from pipelines.constants import constants
 from pipelines.rj_smtr.example.tasks import say_hello
 
+# from pipelines.rj_smtr.example.schedules import every_two_weeks
 from pipelines.utils.decorators import Flow
 
 with Flow(
@@ -75,3 +76,4 @@ with Flow(
 
 flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
+# flow.schedule = every_two_weeks

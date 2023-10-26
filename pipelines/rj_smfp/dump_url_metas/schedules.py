@@ -41,7 +41,7 @@ gsheets_urls = {
         "url": "https://docs.google.com/spreadsheets/d/1nqnwgigE0_Ac6-jkWiNwAdB4EMJfz1WV5nn0HaOhfu0\
             /edit#gid=1236673479",
         "url_type": "google_sheet",
-        "gsheets_sheet_name": "ListaOrgaos",
+        "gsheets_sheet_name": "Lista Órgãos",
         "materialize_after_dump": True,
         "dataset_id": "planejamento_gestao_dashboard_metas",
     },
@@ -50,7 +50,7 @@ gsheets_urls = {
         "url": "https://docs.google.com/spreadsheets/d/1s9-PY6ayAYbtOY8_jUCvaMZSPP5xGdgNkERxS5QQCsw\
             /edit#gid=118781852",
         "url_type": "google_sheet",
-        "gsheets_sheet_name": "Relação MetaPE-AR",
+        "gsheets_sheet_name": "Relação MetaPE-AR2022",
         "gsheets_sheet_range": "A2:I1000",
         "materialize_after_dump": True,
         "dataset_id": "planejamento_gestao_dashboard_metas",

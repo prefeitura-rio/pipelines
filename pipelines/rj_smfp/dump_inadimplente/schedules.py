@@ -18,7 +18,7 @@ from pipelines.utils.utils import untuple_clocks as untuple
 #####################################
 
 inadimplente_queries = {
-    "perfil_inadimplente_v2": {
+    "perfil_inadimplente": {
         "dump_mode": "overwrite",
         "execute_query": "SELECT * FROM DBINAD.IPTU.IPTU;",
         "materialize_after_dump": True,
