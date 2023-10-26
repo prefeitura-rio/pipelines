@@ -331,7 +331,7 @@ with Flow(
         flow_name=unmapped(bilhetagem_ressarcimento_captura.name),
         # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
         project_name=unmapped("staging"),
-        parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
+        parameters=constants.BILHETAGEM_RESSARCIMENTO_CAPTURE_PARAMS.value,
         labels=unmapped(LABELS),
     )
 
