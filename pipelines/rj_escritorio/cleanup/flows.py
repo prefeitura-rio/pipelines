@@ -21,7 +21,6 @@ with Flow(
         "gabriel",
     ],
 ) as database_cleanup_flow:
-
     # Parameters
     days_old = Parameter("days_old", default=60, required=False)
     skip_running = Parameter("skip_running", default=True, required=False)

@@ -47,7 +47,6 @@ with Flow(
     "SMTR: Subsídio Recursos Viagens Individuais - Captura",
     code_owners=["carolinagomes", "igorlaltuf"],
 ) as subsidio_sppo_recursos_viagens_individuais:
-
     # Get run parameters #
     date_range_start = Parameter("date_range_start", default="2022-10-03 00:00:00")
     date_range_end = Parameter("date_range_end", default="2022-10-04 00:00:00")

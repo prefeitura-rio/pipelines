@@ -22,7 +22,6 @@ with Flow(
         "gabriel",
     ],
 ) as birthday_flow:
-
     secret_path = Parameter("secret_path")
 
     today = get_todays_date()

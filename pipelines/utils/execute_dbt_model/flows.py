@@ -32,7 +32,6 @@ with Flow(
         "gabriel",
     ],
 ) as utils_run_dbt_model_flow:
-
     # Parameters
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")

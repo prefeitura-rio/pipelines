@@ -135,7 +135,6 @@ def get_custom_fields(custom_fields: List) -> Dict:
 
     row = {}
     for field in custom_fields:
-
         if field["customFieldId"] in map_field:
             # dropdown field
             if field["items"]:
