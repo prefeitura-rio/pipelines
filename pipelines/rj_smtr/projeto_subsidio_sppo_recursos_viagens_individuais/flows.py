@@ -64,7 +64,7 @@ with Flow(
     filename = parse_timestamp_to_string(timestamp)
 
     filepath = create_local_partition_path(
-        dataset_id=constants.SUBSIDIO_SPPO_DATASET_ID.value,
+        dataset_id=constants.SUBSIDIO_SPPO_RECURSO_DATASET_ID.value,
         table_id=constants.SUBSIDIO_SPPO_RECURSO_TABLE_ID.value,
         filename=filename,
         partitions=partitions,
@@ -84,7 +84,7 @@ with Flow(
 
     # LOAD
     error = bq_upload(
-        dataset_id=constants.SUBSIDIO_SPPO_DATASET_ID.value,
+        dataset_id=constants.SUBSIDIO_SPPO_RECURSO_DATASET_ID.value,
         table_id=constants.SUBSIDIO_SPPO_RECURSO_TABLE_ID.value,
         filepath=treated_filepath,
         raw_filepath=raw_filepath,
@@ -93,7 +93,7 @@ with Flow(
     )
 
     upload_logs_to_bq(
-        dataset_id=constants.SUBSIDIO_SPPO_DATASET_ID.value,
+        dataset_id=constants.SUBSIDIO_SPPO_RECURSO_DATASET_ID.value,
         parent_table_id=constants.SUBSIDIO_SPPO_RECURSO_TABLE_ID.value,
         error=error,
         timestamp=timestamp,
