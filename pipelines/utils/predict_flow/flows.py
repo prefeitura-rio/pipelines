@@ -23,7 +23,6 @@ with Flow(
         "gabriel",
     ],
 ) as predict_with_mlflow_model_flow:
-
     # MLflow parameters
     tracking_server_uri = Parameter("tracking_server_uri", default=None, required=False)
 
@@ -47,6 +46,7 @@ with Flow(
     )
     include_timestamp = Parameter("include_timestamp", default=False, required=False)
     timestamp = Parameter("timestamp", default=None, required=False)
+    biglake_table = Parameter("biglake_table", default=False, required=False)
 
     # Get model from MLflow model registry (either model version or stage must be provided)
     model = get_model(
@@ -76,6 +76,7 @@ with Flow(
             data_path=save_dataframe_path,
             dataset_id=dataset_id,
             table_id=table_id,
+            biglake_table=biglake_table,
             dump_mode=dump_mode,
         )
 

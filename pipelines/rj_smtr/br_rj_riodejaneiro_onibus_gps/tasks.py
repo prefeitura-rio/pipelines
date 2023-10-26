@@ -73,6 +73,8 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
         log("Data is empty, skipping treatment...")
         return {"data": pd.DataFrame(), "error": status["error"]}
 
+    error = None
+
     log(f"Data received to treat: \n{status['data'][:5]}")
     df_realocacao = pd.DataFrame(status["data"])  # pylint: disable=c0103
     # df_realocacao["timestamp_captura"] = timestamp
@@ -86,15 +88,30 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
         "dataSaida",
         "dataProcessado",
     ]
+
     for col in dt_cols:
         log(f"Converting column {col}")
-        df_realocacao[col] = pd.to_datetime(df_realocacao[col]).dt.tz_localize(
-            tz=constants.TIMEZONE.value
+        log(f"Data received to treat: \n{df_realocacao[col]}")
+        temp_time_col_sec = pd.to_datetime(
+            df_realocacao[col], format="%Y-%m-%dT%H:%M:%S", errors="coerce"
+        ).dt.tz_localize(tz=constants.TIMEZONE.value)
+        temp_time_col_msec = pd.to_datetime(
+            df_realocacao[col], format="%Y-%m-%dT%H:%M:%S.%f", errors="coerce"
+        ).dt.tz_localize(tz=constants.TIMEZONE.value)
+
+        df_realocacao[col] = temp_time_col_sec.fillna(temp_time_col_msec).dt.strftime(
+            "%Y-%m-%d %H:%M:%S%z"
         )
+
+        if df_realocacao[col].isna().sum() > 0:
+            error = ValueError("After treating, there is null values!")
+            log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+
+        log(f"Treated data: \n{df_realocacao[col]}")
 
     # Ajusta tempo máximo da realocação
     df_realocacao.loc[
-        df_realocacao.dataSaida == "1971-01-01 00:00:00", "dataSaida"
+        df_realocacao.dataSaida == "1971-01-01 00:00:00-0300", "dataSaida"
     ] = ""
 
     # Renomeia colunas
@@ -109,7 +126,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
 
     df_realocacao = df_realocacao.rename(columns=cols)
 
-    return {"data": df_realocacao.drop_duplicates(), "error": None}
+    return {"data": df_realocacao.drop_duplicates(), "error": error}
 
 
 @task
@@ -210,7 +227,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
             df_gps = df_gps[server_mask]  # pylint: disable=c0103
 
         mask = (df_gps[filter_col] - df_gps["datahora"]).apply(
-            lambda x: timedelta(seconds=0) <= x <= timedelta(minutes=time_delay)
+            lambda x: timedelta(seconds=-20) <= x <= timedelta(minutes=time_delay)
         )
 
         # Select and drop duplicated data

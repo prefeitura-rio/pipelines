@@ -135,7 +135,6 @@ def get_custom_fields(custom_fields: List) -> Dict:
 
     row = {}
     for field in custom_fields:
-
         if field["customFieldId"] in map_field:
             # dropdown field
             if field["items"]:
@@ -194,3 +193,11 @@ def pre_treatment_subsidio_sppo_recursos(status: dict, timestamp: str) -> Dict:
     data["servico"] = data["servico"].str.replace("\xa0", " ").str.replace("\n", "")
 
     return {"data": data, "error": None}
+
+
+@task
+def check_param(param: str) -> bool:
+    """
+    Check if param is None
+    """
+    return param is None

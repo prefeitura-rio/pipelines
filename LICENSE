@@ -1,3 +1,8 @@
+**Attention:** This repository contains part of the code under the GPL-3.0 license and part under an EULA license.
+All code under the EULA license will have a header indicating that it is proprietary.
+See the respective topics under LICENSE for the terms and conditions of each license.
+
+
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 
@@ -672,3 +677,89 @@ may consider it more useful to permit linking proprietary applications with
 the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 <https://www.gnu.org/licenses/why-not-lgpl.html>.
+
+
+###########################################################################
+
+
+                    END USER LICENSE AGREEMENT (EULA)
+
+    IMPORTANT - PLEASE READ CAREFULLY BEFORE DOWNLOADING, INSTALLING OR USING
+ANY PART OF THIS CODE:
+
+    This End User License Agreement ("EULA") is entered into between the
+Municipality of Rio de Janeiro ("Licensor") and any individual or entity
+that downloads, installs or uses Licensor code ("Licensee") made available in
+this directory and in its subdirectories.
+
+    BY DOWNLOADING, INSTALLING, COPYING OR USING ANY PART OF THIS CODE, YOU
+AGREE TO BE BOUND BY THE TERMS OF THIS EULA. IF YOU DO NOT AGREE TO THE TERMS
+OF THIS EULA, DO NOT DOWNLOAD, INSTALL OR USE THE PRODUCT.
+
+
+    1. License Grant.
+
+    Licensor grants Licensee a non-exclusive, non-transferable license to
+use this code for personal or commercial purposes, subject to the terms and
+conditions of this Agreement. This license does not grant you the right to
+distribute, modify, rent, lease or sublicense the product.
+
+
+    2. Restrictions
+
+    Licensee may not reproduce, distribute, modify, reverse engineer, create
+derivative works or otherwise use or exploit any part of this code, particularly
+that which is specifically identified by Licensor as proprietary or confidential
+information ("Restricted Code"). Licensee acknowledges that any breach of this
+restriction may cause Licensor irreparable harm and that Licensor may seek
+injunctive relief in addition to any other available legal or equitable remedies.
+
+
+    3. Property right
+
+    The Product is the property of Licensor and is protected by copyright laws and
+international treaty provisions. Licensor retains all right, title and interest in
+and to the Code, including all intellectual property rights therein. You agree to
+protect the Product from unauthorized use, reproduction or distribution. This
+Agreement does not transfer any ownership rights to Licensee.
+
+
+    4. Limitation of Liability
+
+    IN NO EVENT SHALL LICENSOR BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+CONSEQUENTIAL OR PUNITIVE DAMAGES, OR ANY DAMAGES RESULTING FROM LOSS OF USE, DATA
+OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHERWISE, ARISING OUT
+OF OR IN CONNECTION WITH WITH THE USE OR PERFORMANCE OF THE PRODUCT.
+
+
+    5. Disclaimer of Warranties
+
+    THE PRODUCT IS PROVIDED WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT. LICENSOR DOES NOT WARRANT THAT THE
+PRODUCT WILL MEET YOUR REQUIREMENTS OR THAT THE OPERATION OF THE PRODUCT WILL BE
+UNINTERRUPTED OR ERROR-FREE.
+
+
+    6. Applicable law
+
+    This EULA will be governed by and constructed in accordance with the laws of
+the state of Rio de Janeiro, without giving effect to any choice of law or conflict
+of law provisions.
+
+
+    7. Total agreement
+
+    This Agreement constitutes the entire agreement between the parties with
+respect to the subject matter herein and supersedes all prior or contemporaneous
+communications and proposals, oral or written, between the parties.
+
+
+    By downloading, installing or using the code, Licensee acknowledges that
+Licensee has read and understood this Agreement and agrees to be bound by its
+terms and conditions.
+
+    If you have any questions about this EULA or the Product, please contact us
+at escritoriodedados@gmail.com
+
+                        END OF TERMS AND CONDITIONS

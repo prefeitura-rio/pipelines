@@ -40,7 +40,6 @@ with Flow(
         "gabriel",
     ],
 ) as dump_sql_flow:
-
     #####################################
     #
     # Parameters
@@ -96,6 +95,8 @@ with Flow(
     dbt_model_secret_parameters = Parameter(
         "dbt_model_secret_parameters", default={}, required=False
     )
+    dbt_alias = Parameter("dbt_alias", default=False, required=False)
+    biglake_table = Parameter("biglake_table", default=False, required=False)
     #####################################
     #
     # Rename flow run
@@ -143,6 +144,7 @@ with Flow(
         query=query,
         dataset_id=dataset_id,
         table_id=table_id,
+        database_type=database_type,
         partition_columns=partition_columns,
         lower_bound_date=lower_bound_date,
         date_format=partition_date_format,
@@ -176,12 +178,12 @@ with Flow(
     data_exists = greater_than(num_batches, 0)
 
     with case(data_exists, True):
-
-        create_table_and_upload_to_gcs(
+        upload_table = create_table_and_upload_to_gcs(
             data_path=batches_path,
             dataset_id=dataset_id,
             table_id=table_id,
             dump_mode=dump_mode,
+            biglake_table=biglake_table,
             wait=data_exists,
         )
 
@@ -196,11 +198,12 @@ with Flow(
                     "mode": materialization_mode,
                     "materialize_to_datario": materialize_to_datario,
                     "dbt_model_secret_parameters": dbt_model_secret_parameters,
+                    "dbt_alias": dbt_alias,
                 },
                 labels=current_flow_labels,
                 run_name=f"Materialize {dataset_id}.{table_id}",
             )
-
+            materialization_flow.set_upstream(upload_table)
             wait_for_materialization = wait_for_flow_run(
                 materialization_flow,
                 stream_states=True,

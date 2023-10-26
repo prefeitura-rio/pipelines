@@ -104,7 +104,11 @@ def build_and_register(  # pylint: disable=too-many-branches
                 while attempts < max_retries:
                     attempts += 1
                     try:
-                        (flow_id, flow_version, is_new,) = register_serialized_flow(
+                        (
+                            flow_id,
+                            flow_version,
+                            is_new,
+                        ) = register_serialized_flow(
                             client=client,
                             serialized_flow=serialized_flow,
                             project_id=project_id,
@@ -480,8 +484,8 @@ def get_affected_flows(fpath: str = None):
     for flow in declared_flows:
         try:
             flows.append(eval(flow))
-        except Exception:
-            logger.warning(f"Could not evaluate {flow}")
+        except Exception as exc:
+            logger.exception(f"Could not evaluate {flow}: {exc}")
     return flows
 
 
