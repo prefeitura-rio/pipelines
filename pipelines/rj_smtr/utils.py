@@ -13,7 +13,6 @@ import traceback
 import io
 import json
 import zipfile
-import pendulum
 import pytz
 import requests
 import basedosdados as bd
@@ -581,11 +580,13 @@ def get_upload_storage_blob(
         Blob: blob object
     """
     bucket = bd.Storage(dataset_id="", table_id="")
+    log(f"Filename: {filename}, dataset_id: {dataset_id}")
     blob_list = list(
         bucket.client["storage_staging"]
         .bucket(bucket.bucket_name)
         .list_blobs(prefix=f"upload/{dataset_id}/{filename}.")
     )
+
     return blob_list[0]
 
 
