@@ -6,9 +6,7 @@ Database definitions for SQL pipelines.
 from abc import ABC, abstractmethod
 from typing import List
 
-from bson.objectid import ObjectId
 import cx_Oracle
-from pymongo import MongoClient
 import pymssql
 import pymysql.cursors
 
@@ -318,109 +316,3 @@ class Oracle(Database):
         Fetches all rows from the Oracle.
         """
         return [list(item) for item in self._cursor.fetchall()]
-
-
-class Mongo(Database):
-    """
-    MongoDB database.
-    """
-
-    # pylint: disable=too-many-arguments
-    def __init__(
-        self,
-        hostname: str,
-        user: str,
-        password: str,
-        database: str,
-        port: int = 27017,
-    ) -> None:
-        """
-        Initializes the MongoDB database.
-
-        Args:
-            hostname: The hostname of the database.
-            port: The port of the database.
-            user: The username of the database.
-            password: The password of the database.
-            database: Database and collection, in the format <database>__<collection>.
-        """
-        splits = database.split("__")
-        if len(splits) != 2:
-            raise ValueError("Database must be in the format <database>__<collection>")
-        database = splits[0]
-        self._collection = splits[1]
-        super().__init__(
-            hostname,
-            port,
-            user,
-            password,
-            database,
-        )
-
-    def _doc_to_list(self, doc: dict) -> list:
-        """
-        Gets a list of values from a document.
-        """
-        result = []
-        for _, value in doc.items():
-            if isinstance(value, ObjectId):
-                result.append(str(value))
-            else:
-                result.append(value)
-        return result
-
-    def connect(self):
-        """
-        Connect to the MongoDB.
-        """
-        return MongoClient(
-            host=self._hostname,
-            port=self._port,
-            username=self._user,
-            password=self._password,
-        )
-
-    def get_cursor(self):
-        """
-        Returns a cursor for the MongoDB.
-        """
-        return self._connection[self._database][self._collection].find()
-
-    def execute_query(self, query: str) -> None:
-        """
-        This doesn't apply to MongoDB. Does nothing.
-        """
-        pass
-
-    def get_columns(self) -> List[str]:
-        """
-        Infer columns from a single document in the collection. Fetches a single document
-        and returns its keys as columns.
-
-        WARNING: This will rewind the cursor after inferring the columns.
-        """
-        columns = []
-        try:
-            columns = list(self._cursor.next().keys())
-        except IndexError:
-            pass
-        self._cursor.rewind()
-        return columns
-
-    def fetch_batch(self, batch_size: int) -> List[List]:
-        """
-        Fetches a batch of documents from the MongoDB.
-        """
-        items = []
-        for _ in range(batch_size):
-            try:
-                items.append(self._doc_to_list(self._cursor.next()))
-            except StopIteration:
-                break
-        return items
-
-    def fetch_all(self) -> List[List]:
-        """
-        Fetches all documents from the MongoDB.
-        """
-        return [self._doc_to_list(doc) for doc in self._cursor]
