@@ -97,10 +97,8 @@ bilhetagem_ressarcimento_captura.run_config = KubernetesRun(
 
 bilhetagem_ressarcimento_captura = set_default_parameters(
     flow=bilhetagem_ressarcimento_captura,
-    default_parameters=GENERAL_CAPTURE_DEFAULT_PARAMS
-    | constants.BILHETAGEM_RESSARCIMENTO_CAPTURE_PARAMS.value,
+    default_parameters=GENERAL_CAPTURE_DEFAULT_PARAMS,
 )
-
 
 # BILHETAGEM AUXILIAR - SUBFLOW PARA RODAR ANTES DE CADA MATERIALIZAÇÃO #
 
@@ -117,7 +115,8 @@ bilhetagem_auxiliar_captura = set_default_parameters(
     default_parameters=GENERAL_CAPTURE_DEFAULT_PARAMS,
 )
 
-# MATERIALIZAÇÃO - SUBFLOW DE MATERIALIZAÇÃO
+# MATERIALIZAÇÃO - SUBFLOW DE MATERIALIZAÇÃO #
+
 bilhetagem_materializacao = deepcopy(default_materialization_flow)
 bilhetagem_materializacao.name = "SMTR: Bilhetagem Transação - Materialização (subflow)"
 bilhetagem_materializacao.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
@@ -143,7 +142,7 @@ bilhetagem_materializacao = set_default_parameters(
     default_parameters=bilhetagem_materializacao_parameters,
 )
 
-# RECAPTURA
+# RECAPTURA #
 
 bilhetagem_recaptura = deepcopy(default_capture_flow)
 bilhetagem_recaptura.name = "SMTR: Bilhetagem - Recaptura (subflow)"
@@ -153,7 +152,8 @@ bilhetagem_recaptura = set_default_parameters(
     default_parameters=GENERAL_CAPTURE_DEFAULT_PARAMS | {"recapture": True},
 )
 
-# TRATAMENTO - RODA DE HORA EM HORA, RECAPTURAS + CAPTURA AUXILIAR + MATERIALIZAÇÃO
+# TRATAMENTO - RODA DE HORA EM HORA, RECAPTURAS + CAPTURA AUXILIAR + MATERIALIZAÇÃO #
+
 with Flow(
     "SMTR: Bilhetagem Transação - Tratamento",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
@@ -311,3 +311,40 @@ bilhetagem_gps_tratamento.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 bilhetagem_gps_tratamento.schedule = every_hour
+
+with Flow(
+    "SMTR: Bilhetagem Ressarcimento - Captura/Tratamento",
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
+) as bilhetagem_ressarcimento_captura_tratamento:
+    timestamp = get_rounded_timestamp(
+        interval_minutes=constants.BILHETAGEM_TRATAMENTO_INTERVAL.value
+    )
+
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix=bilhetagem_ressarcimento_captura_tratamento.name + " ",
+        now_time=timestamp,
+    )
+
+    LABELS = get_current_flow_labels()
+
+    runs_captura = create_flow_run.map(
+        flow_name=unmapped(bilhetagem_ressarcimento_captura.name),
+        project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+        parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
+        labels=unmapped(LABELS),
+    )
+
+    wait_captura = wait_for_flow_run.map(
+        runs_captura,
+        stream_states=unmapped(True),
+        stream_logs=unmapped(True),
+        raise_final_state=unmapped(True),
+    )
+
+bilhetagem_ressarcimento_captura_tratamento.storage = GCS(
+    emd_constants.GCS_FLOWS_BUCKET.value
+)
+bilhetagem_ressarcimento_captura_tratamento.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
