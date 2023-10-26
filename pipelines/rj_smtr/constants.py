@@ -233,7 +233,7 @@ class constants(Enum):  # pylint: disable=c0103
     BILHETAGEM_RESSARCIMENTO_CAPTURE_PARAMS = [
         {
             "table_id": "ordem_ressarcimento",
-            "partition_date_only": False,
+            "partition_date_only": True,
             "extract_params": {
                 "database": "ressarcimento_db",
                 "query": """
@@ -248,7 +248,7 @@ class constants(Enum):  # pylint: disable=c0103
         },
         {
             "table_id": "ordem_pagamento",
-            "partition_date_only": False,
+            "partition_date_only": True,
             "extract_params": {
                 "database": "ressarcimento_db",
                 "query": """
