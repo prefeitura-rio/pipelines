@@ -146,6 +146,7 @@ def create_dbt_run_vars(
     raw_dataset_id: str,
     raw_table_id: str,
     mode: str,
+    timestamp: datetime,
 ) -> tuple[list[dict], Union[list[dict], dict, None], bool]:
     """
     Create the variables to be used in dbt materialization based on a dict
@@ -203,6 +204,7 @@ def create_dbt_run_vars(
                 ),
                 mode=mode,
                 delay_hours=dbt_vars["date_range"].get("delay_hours", 0),
+                end_ts=timestamp,
             )
 
             flag_date_range = True
@@ -215,12 +217,21 @@ def create_dbt_run_vars(
         log("Creating run_date variable")
 
         date_var = get_run_dates.run(
-            dbt_vars["run_date"].get("date_range_start"),
-            dbt_vars["run_date"].get("date_range_end"),
+            date_range_start=dbt_vars["run_date"].get("date_range_start", False),
+            date_range_end=dbt_vars["run_date"].get("date_range_end", False),
+            day_datetime=timestamp,
         )
+
         final_vars.append([d.copy() for d in date_var])
 
         log(f"run_date created: {date_var}")
+
+    elif "data_versao_gtfs" in dbt_vars.keys():
+        log("Creating data_versao_gtfs variable")
+
+        date_var = {"data_versao_gtfs": dbt_vars["data_versao_gtfs"]}
+
+        final_vars.append(date_var.copy())
 
     if "version" in dbt_vars.keys():
         log("Creating version variable")
@@ -233,16 +244,6 @@ def create_dbt_run_vars(
             final_vars.append(dataset_sha)
 
         log(f"version created: {dataset_sha}")
-
-    if "data_versao_gtfs" in dbt_vars.keys():
-        log("Creating data_versao_gtfs variable")
-
-        temp_dict = {"data_versao_gtfs": dbt_vars["data_versao_gtfs"]}
-
-        if final_vars:
-            final_vars = get_join_dict.run(dict_list=final_vars, new_dict=temp_dict)
-        else:
-            final_vars.append(temp_dict)
 
     log(f"All variables was created, final value is: {final_vars}")
 
@@ -295,23 +296,31 @@ def get_rounded_timestamp(
 
 
 @task
-def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -> datetime:
+def get_current_timestamp(
+    timestamp=None, truncate_minute: bool = True, return_str: bool = False
+) -> Union[datetime, str]:
     """
     Get current timestamp for flow run.
 
     Args:
         timestamp: timestamp to be used as reference (optionally, it can be a string)
         truncate_minute: whether to truncate the timestamp to the minute or not
+        return_str: if True, the return will be an isoformatted datetime string
+                    otherwise it returns a datetime object
 
     Returns:
-        datetime: timestamp for flow run
+        Union[datetime, str]: timestamp for flow run
     """
     if isinstance(timestamp, str):
         timestamp = datetime.fromisoformat(timestamp)
     if not timestamp:
         timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
     if truncate_minute:
-        return timestamp.replace(second=0, microsecond=0)
+        timestamp = timestamp.replace(second=0, microsecond=0)
+    if return_str:
+        timestamp = timestamp.isoformat()
+
+    return timestamp
 
 
 @task
@@ -428,7 +437,7 @@ def query_logs(
     dataset_id: str,
     table_id: str,
     datetime_filter=None,
-    max_recaptures: int = 360,
+    max_recaptures: int = 90,
     interval_minutes: int = 1,
     recapture_window_days: int = 1,
 ):
@@ -1018,6 +1027,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
     table_run_datetime_column_name: str = None,
     mode: str = "prod",
     delay_hours: int = 0,
+    end_ts: datetime = None,
 ):
     """
     Task for generating dict with variables to be passed to the
@@ -1034,6 +1044,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
         rebuild (Optional, bool): if true, queries the minimum date value on the
         table and return a date range from that value to the datetime.now() time
         delay(Optional, int): hours delayed from now time for materialization range
+        end_ts(Optional, datetime): date range's final date
     Returns:
         dict: containing date_range_start and date_range_end
     """
@@ -1082,14 +1093,18 @@ def get_materialization_date_range(  # pylint: disable=R0913
     start_ts = last_run.replace(minute=0, second=0, microsecond=0).strftime(timestr)
 
     # set end to now - delay
-    now_ts = pendulum.now(constants.TIMEZONE.value).replace(
-        tzinfo=None, minute=0, second=0, microsecond=0
+
+    if not end_ts:
+        end_ts = pendulum.now(constants.TIMEZONE.value).replace(
+            tzinfo=None, minute=0, second=0, microsecond=0
+        )
+
+    end_ts = (end_ts - timedelta(hours=delay_hours)).replace(
+        minute=0, second=0, microsecond=0
     )
-    end_ts = (
-        (now_ts - timedelta(hours=delay_hours))
-        .replace(minute=0, second=0, microsecond=0)
-        .strftime(timestr)
-    )
+
+    end_ts = end_ts.strftime(timestr)
+
     date_range = {"date_range_start": start_ts, "date_range_end": end_ts}
     log(f"Got date_range as: {date_range}")
     return date_range
@@ -1115,6 +1130,7 @@ def set_last_run_timestamp(
     Returns:
         _type_: _description_
     """
+    log(f"Saving timestamp {timestamp} on Redis for {dataset_id}.{table_id}")
     redis_client = get_redis_client()
     key = dataset_id + "." + table_id
     if mode == "dev":
@@ -1158,12 +1174,27 @@ def fetch_dataset_sha(dataset_id: str):
 
 
 @task
-def get_run_dates(date_range_start: str, date_range_end: str) -> List:
+def get_run_dates(
+    date_range_start: str, date_range_end: str, day_datetime: datetime = None
+) -> List:
     """
     Generates a list of dates between date_range_start and date_range_end.
+
+    Args:
+        date_range_start (str): the start date to create the date range
+        date_range_end (str): the end date to create the date range
+        day_datetime (datetime, Optional): a timestamp to use as run_date
+                                            if the range start or end is False
+
+    Returns:
+        list: the list of run_dates
     """
     if (date_range_start is False) or (date_range_end is False):
-        dates = [{"run_date": get_now_date.run()}]
+        if day_datetime:
+            run_date = day_datetime.strftime("%Y-%m-%d")
+        else:
+            run_date = get_now_date.run()
+        dates = [{"run_date": run_date}]
     else:
         dates = [
             {"run_date": d.strftime("%Y-%m-%d")}
@@ -1327,3 +1358,22 @@ def unpack_mapped_results_nout2(
 
     """
     return [r[0] for r in mapped_results], [r[1] for r in mapped_results]
+
+
+@task
+def check_mapped_query_logs_output(query_logs_output: list[tuple]) -> bool:
+    """
+    Task to check if there is recaptures pending
+
+    Args:
+        query_logs_output (list[tuple]): the return from a mapped query_logs execution
+
+    Returns:
+        bool: True if there is recaptures to do, otherwise False
+    """
+
+    if len(query_logs_output) == 0:
+        return False
+
+    recapture_list = [i[0] for i in query_logs_output]
+    return any(recapture_list)
