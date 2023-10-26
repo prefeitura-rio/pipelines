@@ -36,7 +36,7 @@ from pipelines.rj_smtr.tasks import (
 #     every_day_hour_six,
 # )
 
-from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import (
+from pipelines.rj_smtr.projeto_subsidio_sppo_recursos_viagens_individuais.tasks import (
     get_raw_recursos,
     pre_treatment_subsidio_sppo_recursos,
 )
@@ -44,8 +44,9 @@ from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import (
 # Flows #
 
 with Flow(
-    "SMTR - Subsídio SPPO - Recursos Captura", code_owners=["caio", "fernanda"]
-) as subsidio_sppo_recursos:
+    "SMTR: Subsídio Recursos Viagens Individuais - Captura",
+    code_owners=["carolinagomes", "igorlaltuf"],
+) as subsidio_sppo_recursos_viagens_individuais:
 
     # Get run parameters #
     date_range_start = Parameter("date_range_start", default="2022-10-03 00:00:00")
@@ -98,8 +99,10 @@ with Flow(
         timestamp=timestamp,
     )
 
-subsidio_sppo_recursos.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-subsidio_sppo_recursos.run_config = KubernetesRun(
+subsidio_sppo_recursos_viagens_individuais.storage = GCS(
+    emd_constants.GCS_FLOWS_BUCKET.value
+)
+subsidio_sppo_recursos_viagens_individuais.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
