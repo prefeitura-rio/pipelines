@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=E1101
 """
-Dumping data from URLs
+Dumping  data from URLs
 """
 from datetime import timedelta
 
@@ -79,7 +80,7 @@ with Flow(
     build_json_dataframe = Parameter(
         "build_json_dataframe", default=False, required=False
     )
-
+    biglake_table = Parameter("biglake_table", default=False, required=False)
     #####################################
     #
     # Rename flow run
@@ -131,9 +132,9 @@ with Flow(
         data_path=DUMP_DATA_PATH,
         dataset_id=dataset_id,
         table_id=table_id,
+        biglake_table=biglake_table,
         dump_mode=dump_mode,
     )
-    CREATE_TABLE_AND_UPLOAD_TO_GCS_TASK.set_upstream(DOWNLOAD_URL_TASK)
     CREATE_TABLE_AND_UPLOAD_TO_GCS_TASK.set_upstream(DUMP_CHUNKS_TASK)
 
     #####################################
@@ -155,6 +156,7 @@ with Flow(
             labels=current_flow_labels,
             run_name=f"Materialize {dataset_id}.{table_id}",
         )
+        materialization_flow.set_upstream(CREATE_TABLE_AND_UPLOAD_TO_GCS_TASK)
 
         wait_for_materialization = wait_for_flow_run(
             materialization_flow,
