@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0103, E1120
 """
-Flows for meteorologia_inmet
+Flows for meteorologia_redemet
 """
 from datetime import timedelta
 
@@ -12,14 +12,13 @@ from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 
 from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
-from pipelines.rj_cor.meteorologia.meteorologia_inmet.tasks import (
+from pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks import (
     get_dates,
-    # slice_data,
     download,
     tratar_dados,
     salvar_dados,
 )
-from pipelines.rj_cor.meteorologia.meteorologia_inmet.schedules import hour_schedule
+from pipelines.rj_cor.meteorologia.meteorologia_redemet.schedules import hour_schedule
 from pipelines.utils.decorators import Flow
 from pipelines.utils.dump_db.constants import constants as dump_db_constants
 from pipelines.utils.dump_to_gcs.constants import constants as dump_to_gcs_constants
@@ -30,13 +29,14 @@ from pipelines.utils.tasks import (
 
 
 with Flow(
-    name="COR: Meteorologia - Meteorologia INMET",
+    name="COR: Meteorologia - Meteorologia REDEMET",
     code_owners=[
+        "richardg867",
         "paty",
     ],
-) as cor_meteorologia_meteorologia_inmet:
+) as cor_meteorologia_meteorologia_redemet:
     DATASET_ID = "clima_estacao_meteorologica"
-    TABLE_ID = "meteorologia_inmet"
+    TABLE_ID = "meteorologia_redemet"
     DUMP_MODE = "append"
 
     # data_inicio e data_fim devem ser strings no formato "YYYY-MM-DD"
@@ -135,9 +135,9 @@ with Flow(
 
 
 # para rodar na cloud
-cor_meteorologia_meteorologia_inmet.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-cor_meteorologia_meteorologia_inmet.run_config = KubernetesRun(
+cor_meteorologia_meteorologia_redemet.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+cor_meteorologia_meteorologia_redemet.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_COR_AGENT_LABEL.value],
 )
-cor_meteorologia_meteorologia_inmet.schedule = hour_schedule
+cor_meteorologia_meteorologia_redemet.schedule = hour_schedule
