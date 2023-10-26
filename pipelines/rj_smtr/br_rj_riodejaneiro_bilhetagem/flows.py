@@ -65,7 +65,7 @@ bilhetagem_transacao_captura = set_default_parameters(
 
 bilhetagem_transacao_captura.schedule = every_minute
 
-# BILHETAGEM GPS
+# BILHETAGEM GPS - CAPTURA A CADA MINUTO #
 
 bilhetagem_tracking_captura = deepcopy(default_capture_flow)
 bilhetagem_tracking_captura.name = "SMTR: Bilhetagem GPS Validador - Captura"
@@ -82,6 +82,25 @@ bilhetagem_tracking_captura = set_default_parameters(
 )
 
 bilhetagem_tracking_captura.schedule = every_minute
+
+# BILHETAGEM RESSARCIMENTO - SUBFLOW PARA RODAR DIARIAMENTE #
+
+bilhetagem_ressarcimento_captura = deepcopy(default_capture_flow)
+bilhetagem_ressarcimento_captura.name = (
+    "SMTR: Bilhetagem Ressarcimento - Captura (subflow)"
+)
+bilhetagem_ressarcimento_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bilhetagem_ressarcimento_captura.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+
+bilhetagem_ressarcimento_captura = set_default_parameters(
+    flow=bilhetagem_ressarcimento_captura,
+    default_parameters=GENERAL_CAPTURE_DEFAULT_PARAMS
+    | constants.BILHETAGEM_RESSARCIMENTO_CAPTURE_PARAMS.value,
+)
+
 
 # BILHETAGEM AUXILIAR - SUBFLOW PARA RODAR ANTES DE CADA MATERIALIZAÇÃO #
 

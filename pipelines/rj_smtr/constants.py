@@ -184,6 +184,10 @@ class constants(Enum):  # pylint: disable=c0103
                 "engine": "postgresql",
                 "host": "10.5.15.25",
             },
+            "ressarcimento_db": {
+                "engine": "postgresql",
+                "host": "10.5.15.127",
+            },
         },
         "source_type": "db",
     }
@@ -225,6 +229,39 @@ class constants(Enum):  # pylint: disable=c0103
         "primary_key": ["id"],
         "interval_minutes": 1,
     }
+
+    BILHETAGEM_RESSARCIMENTO_CAPTURE_PARAMS = [
+        {
+            "table_id": "ordem_ressarcimento",
+            "partition_date_only": False,
+            "extract_params": {
+                "database": "ressarcimento_db",
+                "query": """
+                SELECT
+                    *
+                FROM
+                    ordem_ressarcimento
+            """,
+            },
+            "primary_key": ["id"],
+            "interval_minutes": 1,
+        },
+        {
+            "table_id": "ordem_pagamento",
+            "partition_date_only": False,
+            "extract_params": {
+                "database": "ressarcimento_db",
+                "query": """
+                SELECT
+                    *
+                FROM
+                    ordem_pagamento
+            """,
+            },
+            "primary_key": ["id"],
+            "interval_minutes": 1,
+        },
+    ]
 
     BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
 
@@ -304,6 +341,21 @@ class constants(Enum):  # pylint: disable=c0103
                 "cd_versao_matriz",
                 "cd_integracao",
             ],  # id column to nest data on
+            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+        },
+        {
+            "table_id": "dw_dm_operadora",
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "principal_db",
+                "query": """
+                    SELECT
+                        *
+                    FROM
+                        dw_dm_operadora
+                """,
+            },
+            "primary_key": ["id_operadora"],  # id column to nest data on
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
         },
     ]
