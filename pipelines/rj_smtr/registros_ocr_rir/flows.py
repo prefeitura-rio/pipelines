@@ -21,7 +21,7 @@ from pipelines.utils.decorators import Flow
 from pipelines.utils.tasks import rename_current_flow_run_now_time
 
 with Flow(
-    "SMTR - Captura FTP - OCR RIR",
+    "SMTR: OCR RIR - Captura",
     code_owners=[
         "caio",
         "fernanda",

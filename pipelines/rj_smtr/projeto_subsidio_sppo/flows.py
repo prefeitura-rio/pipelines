@@ -52,7 +52,7 @@ from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import check_param
 # Flows #
 
 with Flow(
-    "SMTR: Viagens SPPO",
+    "SMTR: Viagens SPPO - Materialização",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as viagens_sppo:
     # Rename flow run
@@ -98,7 +98,7 @@ viagens_sppo.run_config = KubernetesRun(
 
 viagens_sppo.schedule = every_day_hour_five
 
-SUBSIDIO_SPPO_APURACAO_NAME = "SMTR: Subsídio SPPO Apuração"
+SUBSIDIO_SPPO_APURACAO_NAME = "SMTR: Subsídio SPPO Apuração - Materialização"
 with Flow(
     SUBSIDIO_SPPO_APURACAO_NAME,
     code_owners=["rodrigo"],
