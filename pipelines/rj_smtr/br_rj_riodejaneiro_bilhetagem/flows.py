@@ -38,13 +38,6 @@ from pipelines.rj_smtr.constants import constants
 
 from pipelines.rj_smtr.schedules import every_hour, every_minute
 
-
-GENERAL_CAPTURE_DEFAULT_PARAMS = {
-    "dataset_id": constants.BILHETAGEM_DATASET_ID.value,
-    "secret_path": constants.BILHETAGEM_SECRET_PATH.value,
-    "source_type": constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value["source_type"],
-}
-
 # Flows #
 
 # BILHETAGEM TRANSAÇÃO - CAPTURA A CADA MINUTO #
@@ -59,7 +52,7 @@ bilhetagem_transacao_captura.run_config = KubernetesRun(
 
 bilhetagem_transacao_captura = set_default_parameters(
     flow=bilhetagem_transacao_captura,
-    default_parameters=GENERAL_CAPTURE_DEFAULT_PARAMS
+    default_parameters=constants.BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS.value
     | constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value,
 )
 
@@ -77,7 +70,7 @@ bilhetagem_tracking_captura.run_config = KubernetesRun(
 
 bilhetagem_tracking_captura = set_default_parameters(
     flow=bilhetagem_tracking_captura,
-    default_parameters=GENERAL_CAPTURE_DEFAULT_PARAMS
+    default_parameters=constants.BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS.value
     | constants.BILHETAGEM_TRACKING_CAPTURE_PARAMS.value,
 )
 
@@ -95,7 +88,7 @@ bilhetagem_auxiliar_captura.run_config = KubernetesRun(
 
 bilhetagem_auxiliar_captura = set_default_parameters(
     flow=bilhetagem_auxiliar_captura,
-    default_parameters=GENERAL_CAPTURE_DEFAULT_PARAMS,
+    default_parameters=constants.BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS.value,
 )
 
 # MATERIALIZAÇÃO - SUBFLOW DE MATERIALIZAÇÃO
@@ -131,7 +124,8 @@ bilhetagem_recaptura.name = "SMTR: Bilhetagem - Recaptura (subflow)"
 bilhetagem_recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 bilhetagem_recaptura = set_default_parameters(
     flow=bilhetagem_recaptura,
-    default_parameters=GENERAL_CAPTURE_DEFAULT_PARAMS | {"recapture": True},
+    default_parameters=constants.BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS.value
+    | {"recapture": True},
 )
 
 # TRATAMENTO - RODA DE HORA EM HORA, RECAPTURAS + CAPTURA AUXILIAR + MATERIALIZAÇÃO
