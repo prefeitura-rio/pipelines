@@ -65,7 +65,7 @@ with Flow(
     run_dates = get_run_dates(date_range_start, date_range_end)
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SMTR - Viagens SPPO: ", now_time=run_dates
+        prefix=viagens_sppo.name + ": ", now_time=run_dates
     )
 
     LABELS = get_current_flow_labels()
