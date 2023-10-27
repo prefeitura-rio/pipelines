@@ -52,7 +52,7 @@ from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import check_param
 # Flows #
 
 with Flow(
-    "SMTR: Viagens SPPO",
+    "SMTR: Viagens SPPO - Materialização",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as viagens_sppo:
     # Rename flow run
@@ -65,7 +65,7 @@ with Flow(
     run_dates = get_run_dates(date_range_start, date_range_end)
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SMTR - Viagens SPPO: ", now_time=run_dates
+        prefix=viagens_sppo.name + ": ", now_time=run_dates
     )
 
     LABELS = get_current_flow_labels()
@@ -98,9 +98,8 @@ viagens_sppo.run_config = KubernetesRun(
 
 viagens_sppo.schedule = every_day_hour_five
 
-SUBSIDIO_SPPO_APURACAO_NAME = "SMTR: Subsídio SPPO Apuração"
 with Flow(
-    SUBSIDIO_SPPO_APURACAO_NAME,
+    "SMTR: Subsídio SPPO Apuração - Materialização",
     code_owners=["rodrigo"],
 ) as subsidio_sppo_apuracao:
     # 1. SETUP #
@@ -137,7 +136,7 @@ with Flow(
 
     # Rename flow run #
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=SUBSIDIO_SPPO_APURACAO_NAME + ": ", now_time=run_dates
+        prefix=subsidio_sppo_apuracao.name + ": ", now_time=run_dates
     )
 
     # Set dbt client #
