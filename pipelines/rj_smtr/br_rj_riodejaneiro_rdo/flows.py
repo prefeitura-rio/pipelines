@@ -42,7 +42,7 @@ with Flow(
 ) as sppo_rho_materialize:
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=sppo_rho_materialize.name + " ", now_time=get_now_time()
+        prefix=sppo_rho_materialize.name + ": ", now_time=get_now_time()
     )
 
     # Get default parameters #
