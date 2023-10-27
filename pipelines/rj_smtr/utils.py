@@ -622,9 +622,16 @@ def get_raw_data_gcs(
         if filetype == "zip":
             with zipfile.ZipFile(io.BytesIO(data), "r") as zipped_file:
                 filenames = zipped_file.namelist()
-                filename = list(
-                    filter(lambda x: x.split(".")[0] == table_id, filenames)
-                )[0]
+                matching_files = [f for f in filenames if f.split(".")[0] == table_id]
+
+                if len(matching_files) == 0:
+                    error = f"Filename {table_id} não encontrado."
+                    log_critical(error)
+                    log(error, level="warning")
+
+                    return error, None, None
+
+                filename = matching_files[0]
                 filetype = filename.split(".")[-1]
                 data = zipped_file.read(filename)
 
