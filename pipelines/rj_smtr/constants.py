@@ -320,6 +320,12 @@ class constants(Enum):  # pylint: disable=c0103
         },
     }
 
+    BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS = {
+        "dataset_id": BILHETAGEM_DATASET_ID,
+        "secret_path": BILHETAGEM_SECRET_PATH,
+        "source_type": BILHETAGEM_GENERAL_CAPTURE_PARAMS["source_type"],
+    }
+
     # GTFS
     GTFS_DATASET_ID = "br_rj_riodejaneiro_gtfs"
 
