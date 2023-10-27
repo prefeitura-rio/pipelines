@@ -17,6 +17,7 @@ from pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks import (
     download,
     tratar_dados,
     salvar_dados,
+    tratar_dados_estacao,
 )
 from pipelines.rj_cor.meteorologia.meteorologia_redemet.schedules import hour_schedule
 from pipelines.utils.decorators import Flow
