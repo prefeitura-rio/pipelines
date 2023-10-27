@@ -143,7 +143,7 @@ with Flow(
 
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=captura_brt + ": ", now_time=timestamp
+        prefix=captura_brt.name + ": ", now_time=timestamp
     )
 
     # SETUP LOCAL #
