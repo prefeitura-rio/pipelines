@@ -358,6 +358,24 @@ class constants(Enum):  # pylint: disable=c0103
             "primary_key": ["id_operadora"],  # id column to nest data on
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
         },
+        {
+            "table_id": "consorcio",
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "principal_db",
+                "query": """
+                    SELECT
+                        *
+                    FROM
+                        CONSORCIO
+                    WHERE
+                        DT_INCLUSAO BETWEEN '{start}'
+                        AND '{end}'
+                """,
+            },
+            "primary_key": ["CD_CONSORCIO"],  # id column to nest data on
+            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+        },
     ]
 
     BILHETAGEM_MATERIALIZACAO_PARAMS = {
