@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=C0103
 """
 Predict flow example usage.
 """
@@ -27,6 +26,7 @@ with Flow(
         "gabriel",
     ],
 ) as dummy_predict_example_flow:
+
     ###########################
     #     Your parameters     #
     ###########################

@@ -10,7 +10,7 @@ from prefect import task
 
 # EMD Imports #
 
-from pipelines.utils.utils import log
+from pipelines.utils.utils import get_vault_secret, log
 
 # SMTR Imports #
 
@@ -18,6 +18,21 @@ from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.utils import log_critical, map_dict_keys
 
 # Tasks #
+
+
+@task
+def create_api_url_brt_gps(secret_path: str = constants.GPS_BRT_SECRET_PATH.value):
+    """Create the url to request data from
+
+    Args:
+        secret_path (str, optional): secret path to the url.
+
+    Returns:
+        _str: url to request
+    """
+    url = get_vault_secret(secret_path=secret_path)["data"]["url"]
+    log(f"Request data from {url}")
+    return url
 
 
 @task
@@ -35,11 +50,10 @@ def pre_treatment_br_rj_riodejaneiro_brt_gps(status: dict, timestamp):
 
     # Check previous error
     if status["error"] is not None:
-        log("Skipped due to previous error.")
         return {"data": pd.DataFrame(), "error": status["error"]}
 
     error = None
-    data = status["data"]["veiculos"]
+    data = status["data"]
     timezone = constants.TIMEZONE.value
     log(
         f"""
@@ -62,9 +76,9 @@ def pre_treatment_br_rj_riodejaneiro_brt_gps(status: dict, timestamp):
     log(f"timestamp captura is:\n{df['timestamp_captura']}")
 
     # Remove timezone and force it to be config timezone
-    log(f"Before converting, timestamp_gps was: \n{df['timestamp_gps']}")
+    log(f"Before converting, timestamp_gps is: \n{df['timestamp_gps']}")
     df["timestamp_gps"] = (
-        pd.to_datetime(df["timestamp_gps"], unit="ms")
+        pd.to_datetime(df["timestamp_gps"], unit="s")
         .dt.tz_localize("UTC")
         .dt.tz_convert(timezone)
     )

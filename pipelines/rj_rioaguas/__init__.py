@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Prefect flows para níveis dos reservatórios
+Prefect flows for rio_aguas project
 """
-from pipelines.rj_rioaguas.saneamento_drenagem.nivel_lagoa.flows import *
-from pipelines.rj_rioaguas.saneamento_drenagem.nivel_lamina_agua.flows import *
-from pipelines.rj_rioaguas.saneamento_drenagem.nivel_reservatorio.flows import *
+from pipelines.rj_rioaguas.clima_fluviometro.nivel_lagoa.flows import *
+from pipelines.rj_rioaguas.nivel_lamina_agua.flows import *

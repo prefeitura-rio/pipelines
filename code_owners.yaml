@@ -19,9 +19,6 @@ pipelines:
         - hellcassius
         - fernandascovino
         - eng-rodrigocunha
-        - borismarinho
-        - pixuimpou
-        - lingsv
     rj_escritorio:
       owners:
         - gabriel-milan

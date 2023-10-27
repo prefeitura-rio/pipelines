@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Database dumping flows for SME project
+Database dumping flows for sme project
 """
 
 from copy import deepcopy

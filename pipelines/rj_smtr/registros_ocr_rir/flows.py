@@ -25,8 +25,6 @@ with Flow(
     code_owners=[
         "caio",
         "fernanda",
-        "boris",
-        "rodrigo",
     ],
 ) as captura_ocr:
     # SETUP

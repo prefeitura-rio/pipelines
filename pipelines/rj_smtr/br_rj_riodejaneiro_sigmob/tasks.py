@@ -59,6 +59,7 @@ def request_data(endpoints: dict):
             page_count += 1
 
             try:
+
                 # Get data
                 log(f"URL = {next_page}")
                 data = requests.get(
@@ -92,6 +93,7 @@ def request_data(endpoints: dict):
 
             # Create a new file for every (constants.SIGMOB_PAGES_FOR_CSV_FILE.value) pages
             if page_count % constants.SIGMOB_PAGES_FOR_CSV_FILE.value == 0:
+
                 # Increment file ID
                 file_id += 1
                 # "{{run_date}}/{{key}}/data_versao={{run_date}}/{{key}}_version-{{run_date}}-{{file_id}}.csv"

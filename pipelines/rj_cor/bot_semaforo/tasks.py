@@ -126,7 +126,6 @@ def format_message(dataframe: pd.DataFrame) -> pd.Series:
     """
     Formats the message before sending it.
     """
-
     # Create a link for eath alert on google maps
     def map_link(dataframe: pd.DataFrame):
         url = (

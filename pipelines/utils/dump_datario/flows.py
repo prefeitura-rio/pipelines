@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=invalid-name, C0103, E1120
 """
 Database dumping flows.
 """
@@ -22,7 +21,6 @@ from pipelines.utils.tasks import (
 from pipelines.utils.decorators import Flow
 from pipelines.utils.dump_datario.tasks import (
     get_datario_geodataframe,
-    transform_geodataframe,
 )
 
 with Flow(
@@ -31,6 +29,7 @@ with Flow(
         "diego",
     ],
 ) as dump_datario_flow:
+
     #####################################
     #
     # Parameters
@@ -39,18 +38,13 @@ with Flow(
 
     # Datario
     url = Parameter("url")
-    geometry_column = Parameter("geometry_column", default="geometry", required=False)
-    convert_to_crs_4326 = Parameter(
-        "convert_to_crs_4326", default=False, required=False
-    )
-    geometry_3d_to_2d = Parameter("geometry_3d_to_2d", default=False, required=False)
-    batch_size = Parameter("batch_size", default=100, required=False)
 
     # BigQuery parameters
     dataset_id = Parameter("dataset_id")
     table_id = Parameter("table_id")
     # overwrite or append
     dump_mode = Parameter("dump_mode", default="overwrite")
+
     # Materialization parameters
     materialize_after_dump = Parameter(
         "materialize_after_dump", default=False, required=False
@@ -69,7 +63,7 @@ with Flow(
         required=False,
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
-    biglake_table = Parameter("biglake_table", default=False, required=False)
+
     #####################################
     #
     # Rename flow run
@@ -85,32 +79,17 @@ with Flow(
     #
     #####################################
 
-    file_path = get_datario_geodataframe(
-        url=url,
-        path=f"data/{uuid4()}/",
-        wait=rename_flow_run,
+    datario_path = get_datario_geodataframe(  # pylint: disable=invalid-name
+        url=url, path=f"data/{uuid4()}/", wait=rename_flow_run
     )
-    file_path.set_upstream(rename_flow_run)
 
-    datario_path = transform_geodataframe(
-        file_path=file_path,
-        batch_size=batch_size,
-        geometry_column=geometry_column,
-        convert_to_crs_4326=convert_to_crs_4326,
-        geometry_3d_to_2d=geometry_3d_to_2d,
-        wait=file_path,
-    )
-    datario_path.set_upstream(file_path)
-
-    CREATE_TABLE_AND_UPLOAD_TO_GCS_DONE = create_table_and_upload_to_gcs(
+    create_table_and_upload_to_gcs(
         data_path=datario_path,
         dataset_id=dataset_id,
         table_id=table_id,
         dump_mode=dump_mode,
-        biglake_table=biglake_table,
         wait=datario_path,
     )
-    CREATE_TABLE_AND_UPLOAD_TO_GCS_DONE.set_upstream(datario_path)
 
     with case(materialize_after_dump, True):
         # Trigger DBT flow run
@@ -127,7 +106,6 @@ with Flow(
             labels=current_flow_labels,
             run_name=f"Materialize {dataset_id}.{table_id}",
         )
-        materialization_flow.set_upstream(CREATE_TABLE_AND_UPLOAD_TO_GCS_DONE)
 
         wait_for_materialization = wait_for_flow_run(
             materialization_flow,

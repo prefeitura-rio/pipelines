@@ -64,6 +64,7 @@ def create_timestamp_parameters(
 
 
 if __name__ == "__main__":
+
     timestamp_parameters = create_timestamp_parameters(
         start=BACKFILL_START,
         end=BACKFILL_END,
