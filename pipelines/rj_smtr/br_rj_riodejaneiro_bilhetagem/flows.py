@@ -90,7 +90,7 @@ bilhetagem_ressarcimento_captura.run_config = KubernetesRun(
 
 bilhetagem_ressarcimento_captura = set_default_parameters(
     flow=bilhetagem_ressarcimento_captura,
-    default_parameters=GENERAL_CAPTURE_DEFAULT_PARAMS,
+    default_parameters=constants.BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS.value,
 )
 
 # BILHETAGEM AUXILIAR - SUBFLOW PARA RODAR ANTES DE CADA MATERIALIZAÇÃO #
