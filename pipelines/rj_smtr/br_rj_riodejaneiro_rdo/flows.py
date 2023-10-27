@@ -38,10 +38,12 @@ from pipelines.utils.tasks import (
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
-with Flow("SMTR: SPPO RHO - Materialização") as sppo_rho_materialize:
+with Flow(
+    "SMTR: SPPO RHO - Materialização", code_owners=["rodrigo"]
+) as sppo_rho_materialize:
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SPPO RHO - Materialização: ", now_time=get_now_time()
+        prefix=sppo_rho_materialize.name + ": ", now_time=get_now_time()
     )
 
     # Get default parameters #
@@ -109,7 +111,7 @@ with Flow(
     materialize = Parameter("materialize", False)
 
     rename_run = rename_current_flow_run_now_time(
-        prefix=f"Captura FTP - {transport_mode.run()}-{report_type.run()} ",
+        prefix=f"{captura_sppo_rho.name} FTP - {transport_mode.run()}-{report_type.run()} ",
         now_time=get_current_timestamp(),
         wait=None,
     )
@@ -157,7 +159,7 @@ with Flow(
     materialize = Parameter("materialize", False)
 
     rename_run = rename_current_flow_run_now_time(
-        prefix=f"Captura FTP - {transport_mode.run()}-{report_type.run()} ",
+        prefix=f"{captura_sppo_rdo.name} FTP - {transport_mode.run()}-{report_type.run()} ",
         now_time=get_current_timestamp(),
         wait=None,
     )
