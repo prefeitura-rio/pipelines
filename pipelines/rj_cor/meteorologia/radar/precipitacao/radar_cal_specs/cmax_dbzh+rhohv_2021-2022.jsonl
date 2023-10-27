@@ -1,2 +1,0 @@
-{"process_type":"CMAX","feature":"DBZH","sampling": ["9_nearest", "beam"], "operations":["9_nearest:", "9_nearest:mean", "9_nearest:std", "beam:accumulated", "beam:rain_bins", "beam:dist_last_rain_bin", "beam:accumulated/dist:", "9_nearest:mean+beam:accumulated", "beam:accumulated/beam:rain_bins", "beam:accumulated/beam:dist_last_rain_bin"],"nlags":3}
-{"process_type":"CMAX_DBZH","feature":"RHOHV", "sampling": ["9_nearest"], "operations":["9_nearest:"],"nlags":3}

@@ -39,6 +39,7 @@ with Flow(
         "paty",
     ],
 ) as cor_meteorologia_goes16:
+
     # Materialization parameters
     materialize_after_dump = Parameter(
         "materialize_after_dump", default=False, required=False
@@ -51,7 +52,6 @@ with Flow(
     # Other parameters
     dataset_id = satelite_constants.DATASET_ID.value
     dump_mode = "append"
-    mode_redis = Parameter("mode_redis", default="prod", required=False)
     ref_filename = Parameter("ref_filename", default=None, required=False)
     current_time = Parameter("current_time", default=None, required=False)
     current_time = get_dates(current_time)
@@ -63,7 +63,7 @@ with Flow(
     table_id_rr = satelite_constants.TABLE_ID_RR.value
 
     # Get filenames that were already treated on redis
-    redis_files_rr = get_on_redis(dataset_id, table_id_rr, mode=mode_redis)
+    redis_files_rr = get_on_redis(dataset_id, table_id_rr, mode="prod")
 
     # Download raw data from API
     filename_rr, redis_files_rr_updated = download(
@@ -72,12 +72,11 @@ with Flow(
         redis_files=redis_files_rr,
         ref_filename=ref_filename,
         wait=redis_files_rr,
-        mode_redis=mode_redis,
     )
 
     # Start data treatment if there are new files
-    info_rr = tratar_dados(filename=filename_rr, mode_redis=mode_redis)
-    path_rr = save_data(info=info_rr, file_path=filename_rr, mode_redis=mode_redis)
+    info_rr = tratar_dados(filename=filename_rr)
+    path_rr = save_data(info=info_rr, file_path=filename_rr)
 
     # Create table in BigQuery
     upload_table_rr = create_table_and_upload_to_gcs(
@@ -92,7 +91,7 @@ with Flow(
     save_on_redis(
         dataset_id,
         table_id_rr,
-        mode_redis,
+        "prod",
         redis_files_rr_updated,
         wait=path_rr,
     )
@@ -102,7 +101,7 @@ with Flow(
     table_id_tpw = satelite_constants.TABLE_ID_TPW.value
 
     # Get filenames that were already treated on redis
-    redis_files_tpw = get_on_redis(dataset_id, table_id_tpw, mode=mode_redis)
+    redis_files_tpw = get_on_redis(dataset_id, table_id_tpw, mode="prod")
 
     # Download raw data from API
     filename_tpw, redis_files_tpw_updated = download(
@@ -111,12 +110,11 @@ with Flow(
         redis_files=redis_files_tpw,
         ref_filename=ref_filename,
         wait=redis_files_tpw,
-        mode_redis=mode_redis,
     )
 
     # Start data treatment if there are new files
-    info_tpw = tratar_dados(filename=filename_tpw, mode_redis=mode_redis)
-    path_tpw = save_data(info=info_tpw, file_path=filename_tpw, mode_redis=mode_redis)
+    info_tpw = tratar_dados(filename=filename_tpw)
+    path_tpw = save_data(info=info_tpw, file_path=filename_tpw)
 
     upload_table_tpw = create_table_and_upload_to_gcs(
         data_path=path_tpw,
@@ -130,7 +128,7 @@ with Flow(
     save_on_redis(
         dataset_id,
         table_id_tpw,
-        mode_redis,
+        "prod",
         redis_files_tpw_updated,
         wait=path_tpw,
     )
@@ -140,7 +138,7 @@ with Flow(
     table_id_cmip = satelite_constants.TABLE_ID_cmip.value
 
     # Get filenames that were already treated on redis
-    redis_files_cmip = get_on_redis(dataset_id, table_id_cmip, mode=mode_redis)
+    redis_files_cmip = get_on_redis(dataset_id, table_id_cmip, mode="prod")
 
     # Download raw data from API
     filename_cmip, redis_files_cmip_updated = download(
@@ -150,14 +148,11 @@ with Flow(
         redis_files=redis_files_cmip,
         ref_filename=ref_filename,
         wait=redis_files_cmip,
-        mode_redis=mode_redis,
     )
 
     # Start data treatment if there are new files
-    info_cmip = tratar_dados(filename=filename_cmip, mode_redis=mode_redis)
-    path_cmip = save_data(
-        info=info_cmip, file_path=filename_cmip, mode_redis=mode_redis
-    )
+    info_cmip = tratar_dados(filename=filename_cmip)
+    path_cmip = save_data(info=info_cmip, file_path=filename_cmip)
 
     # Create table in BigQuery
     upload_table_cmip = create_table_and_upload_to_gcs(
@@ -172,7 +167,7 @@ with Flow(
     save_on_redis(
         dataset_id,
         table_id_cmip,
-        mode_redis,
+        "prod",
         redis_files_cmip_updated,
         wait=path_cmip,
     )

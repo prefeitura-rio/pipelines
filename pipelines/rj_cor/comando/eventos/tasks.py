@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=R0914,W0613,W0102,W0613,R0912,R0915,E1136,E1137,W0702
-# flake8: noqa: E722
+# pylint: disable=R0914,W0613,W0102,W0613,R0912,R0915
 """
 Tasks for comando
 """
@@ -35,8 +34,6 @@ def get_date_interval(
     """
     If `date_interval_text` is provided, parse it for the date interval. Else,
     get the date interval from Redis.
-    Example of date_interval_text to use when selecting type string:
-    {"inicio": "2023-04-19 08:54:41.0", "fim": "2023-04-19 10:40:41.0"}
     """
     if date_interval_text:
         log(f">>>>>>>>>>> Date interval was provided: {date_interval_text}")
@@ -235,15 +232,10 @@ def download_eventos(date_interval, wait=None) -> Tuple[pd.DataFrame, str]:
 
     eventos_datas_cols = ["data_inicio", "data_fim"]
     atividades_eventos_datas_cols = ["data_chegada", "data_inicio", "data_fim"]
-    eventos[eventos_datas_cols] = eventos[eventos_datas_cols].fillna(
-        "1970-01-01 00:00:00"
-    )
+    eventos[eventos_datas_cols] = eventos[eventos_datas_cols].fillna("1970-01-01")
     atividades_evento[atividades_eventos_datas_cols] = atividades_evento[
         atividades_eventos_datas_cols
-    ].fillna("1970-01-01 00:00:00")
-
-    # Treat id_pop col
-    eventos["id_pop"] = eventos["id_pop"].astype(float).astype(int)
+    ].fillna("1970-01-01")
 
     # Fixa colunas e ordem
     eventos = eventos[eventos_cols].drop_duplicates()
@@ -267,14 +259,10 @@ def get_pops() -> pd.DataFrame:
 
     pops = pd.DataFrame(response["objeto"])
     pops["id"] = pops["id"].astype("int")
-    pops = pops.rename({"id": "id_pop", "titulo": "pop_titulo"}, axis=1).sort_values(
-        "id_pop"
-    )
-    pops["pop_titulo"] = pops[
-        "pop_titulo"
-    ].str.capitalize()  # pylint: disable=unsubscriptable-object, E1137
+    pops = pops.rename({"id": "id_pop", "titulo": "pop_titulo"}, axis=1)
+    pops["pop_titulo"] = pops["pop_titulo"].str.capitalize()
 
-    return pops[["id_pop", "pop_titulo"]]  # pylint: disable=unsubscriptable-object
+    return pops[["id_pop", "pop_titulo"]]
 
 
 @task(nout=2)
@@ -291,18 +279,13 @@ def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -> pd.DataFrame:
 
     pop_ids = pops["id_pop"].unique()
 
-    # remove pop_id 0
-    pop_ids = [i for i in pop_ids if i not in [0, "0"]]
-
     atividades_pops = []
     for pop_id in pop_ids:
         log(f">>>>>>> Requesting POP's activities for pop_id: {pop_id}")
         response = get_url(url=url + f"?popId={pop_id}", token=auth_token)
 
         tentativa = 0
-        while (
-            "error" in response.keys() or response == {"response": None}
-        ) and tentativa <= 5:
+        while "error" in response.keys() and tentativa <= 5:
             log(
                 f">>>>>>> Requesting POP's activities for pop_id: {pop_id} Time: {tentativa+1}"
             )
@@ -310,22 +293,16 @@ def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -> pd.DataFrame:
             response = get_url(url=url + f"?popId={pop_id}", token=auth_token)
             tentativa += 1
 
-        if (
-            "error" in response.keys() or response == {"response": None}
-        ) and tentativa > 5:
+        if "error" in response.keys() and tentativa > 5:
             continue
 
-        try:
-            row_template = {
-                "pop_titulo": response["pop"],
-                "id_pop": pop_id,
-                "sigla": "",
-                "orgao": "",
-                "acao": "",
-            }
-        except:
-            log(f"Problem on response {response}")
-
+        row_template = {
+            "pop_titulo": response["pop"],
+            "id_pop": pop_id,
+            "sigla": "",
+            "orgao": "",
+            "acao": "",
+        }
         for activity in response["atividades"]:
             row = deepcopy(row_template)
             row["sigla"] = activity["sigla"]
@@ -334,7 +311,6 @@ def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -> pd.DataFrame:
             atividades_pops.append(row)
 
     dataframe = pd.DataFrame(atividades_pops)
-    dataframe = dataframe.sort_values(["id_pop", "sigla", "acao"])
 
     for i in ["sigla", "orgao", "acao"]:
         dataframe[i] = dataframe[i].str.capitalize()

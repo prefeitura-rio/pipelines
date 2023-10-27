@@ -30,7 +30,6 @@ egpweb_default_parameters = {
     "db_port": "1433",
     "db_type": "sql_server",
     "vault_secret_path": "egpweb-prod",
-    "materialization_mode": "prod",
     "dataset_id": "planejamento_gestao_acordo_resultados",
 }
 smfp_egpweb_flow = set_default_parameters(

@@ -9,7 +9,11 @@ from typing import List, Union
 import pandas as pd
 
 from prefect.schedules.clocks import IntervalClock
-from pipelines.utils.utils import log, query_to_line, remove_columns_accents, is_date
+from pipelines.utils.utils import (
+    log,
+    query_to_line,
+    remove_columns_accents,
+)
 
 
 def extract_last_partition_date(partitions_dict: dict, date_format: str):
@@ -18,23 +22,13 @@ def extract_last_partition_date(partitions_dict: dict, date_format: str):
     """
     last_partition_date = None
     for partition, values in partitions_dict.items():
-        new_values = [
-            date
-            for date in values
-            if is_date(date_string=date, date_format=date_format)
-        ]
         try:
-            last_partition_date = datetime.strptime(
-                max(new_values), date_format
-            ).strftime(date_format)
-            log(
-                f"last partition from {partition} is in date format "
-                f"{date_format}: {last_partition_date}"
+            last_partition_date = datetime.strptime(max(values), "%Y-%m-%d").strftime(
+                date_format
             )
+            log(f"{partition} is in date format Y-m-d")
         except ValueError:
-            log(
-                f"partition {partition} is not a date or not in correct format {date_format}"
-            )
+            log(f"Partition {partition} is not a date")
     return last_partition_date
 
 
@@ -89,10 +83,6 @@ def generate_dump_db_schedules(  # pylint: disable=too-many-arguments,too-many-l
             if value is not None and key not in ["interval"]:
                 parameter_defaults[key] = value
 
-        if "dbt_alias" in parameters:
-            parameter_defaults["dbt_alias"] = parameters["dbt_alias"]
-        if "dataset_id" in parameters:
-            parameter_defaults["dataset_id"] = parameters["dataset_id"]
         new_interval = parameters["interval"] if "interval" in parameters else interval
 
         clocks.append(

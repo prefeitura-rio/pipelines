@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=E1101
 """
 General purpose tasks for dumping data from URLs.
 """
-
 from datetime import datetime, timedelta
 import io
 from pathlib import Path

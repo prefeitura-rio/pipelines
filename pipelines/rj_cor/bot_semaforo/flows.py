@@ -24,6 +24,7 @@ with Flow(
         "gabriel",
     ],
 ) as cet_telegram_flow:
+
     secret_path = Parameter("secret_path")
 
     # Get credentials for Telegram

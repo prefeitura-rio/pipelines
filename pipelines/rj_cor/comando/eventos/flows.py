@@ -31,9 +31,6 @@ from pipelines.rj_cor.tasks import (
     get_on_redis,
     save_on_redis,
 )
-from pipelines.rj_escritorio.rain_dashboard.constants import (
-    constants as rain_dashboard_constants,
-)
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.decorators import Flow
 from pipelines.utils.dump_db.constants import constants as dump_db_constants
@@ -49,6 +46,7 @@ with Flow(
         "paty",
     ],
 ) as rj_cor_comando_eventos_flow:
+
     dump_mode = Parameter("dump_mode", default="append", required=False)
 
     # Materialization parameters
@@ -60,9 +58,6 @@ with Flow(
     )
     materialize_to_datario = Parameter(
         "materialize_to_datario", default=False, required=False
-    )
-    TRIGGER_RAIN_DASHBOARD_UPDATE = Parameter(
-        "trigger_rain_dashboard_update", default=False, required=False
     )
 
     # Dump to GCS after? Should only dump to GCS if materializing to datario
@@ -107,7 +102,6 @@ with Flow(
         dataset_id=dataset_id,
         table_id=table_id_eventos,
         dump_mode=dump_mode,
-        biglake_table=False,
         wait=eventos_path,
     )
 
@@ -116,7 +110,6 @@ with Flow(
         dataset_id=dataset_id,
         table_id=table_id_atividades_eventos,
         dump_mode=dump_mode,
-        biglake_table=False,
         wait=atividade_eventos_path,
     )
 
@@ -247,50 +240,6 @@ with Flow(
                 stream_logs=True,
                 raise_final_state=True,
             )
-    with case(TRIGGER_RAIN_DASHBOARD_UPDATE, True):
-        # Trigger rain dashboard update flow run
-        rain_radar_dashboard_update_flow = create_flow_run(
-            flow_name=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_NAME.value,
-            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters=comando_constants.RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS.value,  # noqa
-            labels=[
-                "rj-cor",
-            ],
-            run_name="Update radar rain dashboard data (triggered by cor_comando flow)",  # noqa
-            task_args=dict(
-                skip_on_upstream_skip=False,
-            ),
-        )
-        rain_radar_dashboard_update_flow.set_upstream(task_upload_eventos)
-
-        wait_for_rain_dashboard_update = wait_for_flow_run(
-            flow_run_id=rain_radar_dashboard_update_flow,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=False,
-        )
-
-        # Trigger rain dashboard update last 2h flow run
-        rain_radar_dashboard_last_2h_update_flow = create_flow_run(
-            flow_name=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_NAME.value,
-            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters=comando_constants.RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS.value,  # noqa
-            labels=[
-                "rj-cor",
-            ],
-            run_name="Update radar rain dashboard data (triggered by cor_comando flow for last 2h)",  # noqa
-            task_args=dict(
-                skip_on_upstream_skip=False,
-            ),
-        )
-        rain_radar_dashboard_last_2h_update_flow.set_upstream(task_upload_eventos)
-
-        wait_for_rain_dashboard_last_2h_update = wait_for_flow_run(
-            flow_run_id=rain_radar_dashboard_last_2h_update_flow,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=False,
-        )
 
 rj_cor_comando_eventos_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 rj_cor_comando_eventos_flow.run_config = KubernetesRun(
@@ -355,7 +304,6 @@ with Flow(
         data_path=path_pops,
         dataset_id=dataset_id,
         table_id=table_id_pops,
-        biglake_table=False,
         dump_mode=dump_mode,
     )
 
@@ -368,7 +316,6 @@ with Flow(
             data_path=path_atividades_pops,
             dataset_id=dataset_id,
             table_id=table_id_atividades_pops,
-            biglake_table=False,
             dump_mode="overwrite",
         )
 

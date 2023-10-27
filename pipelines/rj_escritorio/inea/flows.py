@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=C0103
 """
 Flows for INEA.
 """
@@ -11,12 +10,7 @@ from prefect.storage import GCS
 from prefect.utilities.edges import unmapped
 
 from pipelines.constants import constants
-from pipelines.rj_escritorio.inea.schedules import (
-    every_5_minutes,
-    every_5_minutes_mac,
-    every_1_day,
-    every_1_day_mac,
-)
+from pipelines.rj_escritorio.inea.schedules import every_5_minutes
 from pipelines.rj_escritorio.inea.tasks import (
     convert_vol_file,
     execute_shell_command,
@@ -29,30 +23,26 @@ from pipelines.utils.decorators import Flow
 with Flow(
     "INEA: Captura dados de radar",
     code_owners=[
-        "paty",
+        "gabriel",
     ],
     skip_if_running=True,
 ) as inea_radar_flow:
     date = Parameter("date", default=None, required=False)
-    bucket_name = Parameter("bucket_name", default="rj-escritorio-dev", required=False)
-    prefix = Parameter(
-        "prefix", default="raw/meio_ambiente_clima/inea_radar_hdf5", required=False
-    )
+    bucket_name = Parameter("bucket_name")
+    prefix = Parameter("prefix")
     mode = Parameter("mode", default="prod", required=False)
-    radar = Parameter("radar", default="gua", required=False)
-    product = Parameter("product", default="ppi", required=False)
-    output_format = Parameter("output_format", default="HDF5", required=False)
+    radar = Parameter("radar")
+    product = Parameter("product")
+    output_format = Parameter("output_format", default="NetCDF", required=False)
     convert_params = Parameter(
         "convert_params",
-        default="-k=ODIM2.1 -M=All",
+        default="-f=Whole -k=CFext -r=Short -p=Radar -M=All -z",
         required=False,
     )
     greater_than = Parameter("greater_than", default=None, required=False)
     vols_remote_directory = Parameter(
         "vols_remote_directory", default="/var/opt/edge/vols", required=False
     )
-    get_only_last_file = Parameter("get_only_last_file", default=True, required=False)
-
     remote_files, output_directory = list_vol_files(
         date=date,
         greater_than=greater_than,
@@ -60,14 +50,12 @@ with Flow(
         prefix=prefix,
         radar=radar,
         product=product,
-        get_only_last_file=get_only_last_file,
         mode=mode,
+        output_format=output_format,
         vols_remote_directory=vols_remote_directory,
     )
     downloaded_files = fetch_vol_file.map(
-        remote_file=remote_files,
-        radar=unmapped(radar),
-        output_directory=unmapped(output_directory),
+        remote_file=remote_files, output_directory=unmapped(output_directory)
     )
     converted_files = convert_vol_file.map(
         downloaded_file=downloaded_files,
@@ -87,32 +75,6 @@ with Flow(
 inea_radar_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 inea_radar_flow.run_config = LocalRun(labels=[constants.INEA_AGENT_LABEL.value])
 inea_radar_flow.schedule = every_5_minutes
-
-inea_radar_flow_mac = deepcopy(inea_radar_flow)
-inea_radar_flow_mac.name = "INEA: Captura dados de radar (Macaé)"
-inea_radar_flow_mac.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-inea_radar_flow_mac.run_config = LocalRun(labels=[constants.INEA_AGENT_LABEL.value])
-inea_radar_flow_mac.schedule = every_5_minutes_mac
-
-inea_radar_flow_fill_missing = deepcopy(inea_radar_flow)
-inea_radar_flow_fill_missing.name = (
-    "INEA: Captura dados de radar: preenchimento de arquivos faltantes"
-)
-inea_radar_flow_fill_missing.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-inea_radar_flow_fill_missing.run_config = LocalRun(
-    labels=[constants.INEA_AGENT_LABEL.value]
-)
-inea_radar_flow_fill_missing.schedule = every_1_day
-
-inea_radar_flow_fill_missing_mac = deepcopy(inea_radar_flow)
-inea_radar_flow_fill_missing_mac.name = (
-    "INEA: Captura dados de radar (Macaé): preenchimento de arquivos faltantes"
-)
-inea_radar_flow_fill_missing_mac.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-inea_radar_flow_fill_missing_mac.run_config = LocalRun(
-    labels=[constants.INEA_AGENT_LABEL.value]
-)
-inea_radar_flow_fill_missing_mac.schedule = every_1_day_mac
 
 inea_backfill_radar_flow = deepcopy(inea_radar_flow)
 inea_backfill_radar_flow.name = "INEA: Captura dados de radar (backfill)"

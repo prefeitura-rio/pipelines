@@ -444,6 +444,7 @@ def identify_code_owners(files: List[str]) -> List[str]:
 
 
 if __name__ == "__main__":
+
     # Assert arguments.
     if len(sys.argv) not in [2, 3]:
         print(f"Usage: python {sys.argv[0]} <changed_files> [--write-to-file]")
@@ -464,7 +465,6 @@ if __name__ == "__main__":
         if file_.endswith(".py")
         and file_.startswith("pipelines")
         and "cookiecutter" not in file_
-        and Path(file_).exists()
     ]
     print("We're interested in these files:")
     for file_ in changed_files:
