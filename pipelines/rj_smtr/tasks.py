@@ -473,43 +473,42 @@ def query_logs(
 
     query = f"""
     WITH
-    t AS (
-    SELECT
-        DATETIME(timestamp_array) AS timestamp_array
-    FROM
-        UNNEST(
-            GENERATE_TIMESTAMP_ARRAY(
-                TIMESTAMP_SUB('{datetime_filter}', INTERVAL {recapture_window_days} day),
-                TIMESTAMP('{datetime_filter}'),
-                INTERVAL {interval_minutes} minute) )
-        AS timestamp_array
-    WHERE
-        timestamp_array < '{datetime_filter}' ),
-    logs_table AS (
+        t AS (
         SELECT
-            SAFE_CAST(DATETIME(TIMESTAMP(timestamp_captura),
-                    "America/Sao_Paulo") AS DATETIME) timestamp_captura,
-            SAFE_CAST(sucesso AS BOOLEAN) sucesso,
-            SAFE_CAST(erro AS STRING) erro,
-            SAFE_CAST(DATA AS DATE) DATA
+            DATETIME(timestamp_array) AS timestamp_array
         FROM
-            rj-smtr-staging.{dataset_id}_staging.{table_id}_logs AS t
-    ),
-    logs AS (
-        SELECT
-            *,
-            TIMESTAMP_TRUNC(timestamp_captura, minute) AS timestamp_array
-        FROM
-            logs_table
+            UNNEST(
+                GENERATE_TIMESTAMP_ARRAY(
+                    TIMESTAMP_SUB('{datetime_filter}', INTERVAL {recapture_window_days} day),
+                    TIMESTAMP('{datetime_filter}'),
+                    INTERVAL {interval_minutes} minute) )
+            AS timestamp_array
         WHERE
-            DATA BETWEEN DATE(DATETIME_SUB('{datetime_filter}',
-                            INTERVAL {recapture_window_days} day))
-            AND DATE('{datetime_filter}')
-            AND timestamp_captura BETWEEN
-                DATETIME_SUB('{datetime_filter}', INTERVAL {recapture_window_days} day)
-            AND '{datetime_filter}'
-        ORDER BY
-            timestamp_captura )
+            timestamp_array < '{datetime_filter}' ),
+        logs_table AS (
+            SELECT
+                SAFE_CAST(DATETIME(TIMESTAMP(timestamp_captura),
+                        "America/Sao_Paulo") AS DATETIME) timestamp_captura,
+                SAFE_CAST(sucesso AS BOOLEAN) sucesso,
+                SAFE_CAST(erro AS STRING) erro,
+                SAFE_CAST(DATA AS DATE) DATA
+            FROM
+                rj-smtr-staging.{dataset_id}_staging.{table_id}_logs AS t
+        ),
+        logs AS (
+            SELECT
+                *,
+                TIMESTAMP_TRUNC(timestamp_captura, minute) AS timestamp_array
+            FROM
+                logs_table
+            WHERE
+                DATA BETWEEN DATE(DATETIME_SUB('{datetime_filter}',
+                                INTERVAL {recapture_window_days} day))
+                AND DATE('{datetime_filter}')
+                AND timestamp_captura BETWEEN
+                    DATETIME_SUB('{datetime_filter}', INTERVAL {recapture_window_days} day)
+                AND '{datetime_filter}'
+        )
     SELECT
         CASE
             WHEN logs.timestamp_captura IS NOT NULL THEN logs.timestamp_captura
@@ -526,12 +525,11 @@ def query_logs(
         logs.timestamp_array = t.timestamp_array
     WHERE
         logs.sucesso IS NOT TRUE
-    ORDER BY
-        timestamp_captura
     """
     log(f"Run query to check logs:\n{query}")
     results = bd.read_sql(query=query, billing_project_id=bq_project())
     if len(results) > 0:
+        results = results.sort_values(["timestamp_captura"])
         results["timestamp_captura"] = (
             pd.to_datetime(results["timestamp_captura"])
             .dt.tz_localize(constants.TIMEZONE.value)
