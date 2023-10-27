@@ -56,21 +56,22 @@ class constants(Enum):  # pylint: disable=c0103
     GPS_SPPO_REALOCACAO_SECRET_PATH = "realocacao_api"
 
     # GPS BRT #
-    GPS_BRT_SECRET_PATH = "brt_api"
+    GPS_BRT_API_SECRET_PATH = "brt_api_v2"
+    GPS_BRT_API_URL = "https://zn4.m2mcontrol.com.br/api/integracao/veiculos"
     GPS_BRT_DATASET_ID = "br_rj_riodejaneiro_veiculos"
     GPS_BRT_RAW_DATASET_ID = "br_rj_riodejaneiro_brt_gps"
     GPS_BRT_RAW_TABLE_ID = "registros"
     GPS_BRT_TREATED_TABLE_ID = "gps_brt"
     GPS_BRT_MAPPING_KEYS = {
-        "vei_nro_gestor": "id_veiculo",
+        "codigo": "id_veiculo",
         "linha": "servico",
         "latitude": "latitude",
         "longitude": "longitude",
-        "comunicacao": "timestamp_gps",
+        "dataHora": "timestamp_gps",
         "velocidade": "velocidade",
-        "nomeItinerario": "sentido",
-        "nomeLinha": "vista",
-        "inicio_viagem": "timestamp_inicio_viagem",
+        "sentido": "sentido",
+        "trajeto": "vista",
+        # "inicio_viagem": "timestamp_inicio_viagem",
     }
     GPS_BRT_MATERIALIZE_DELAY_HOURS = 0
 
@@ -128,15 +129,15 @@ class constants(Enum):  # pylint: disable=c0103
         },
     }
 
-    # SUBSIDIO SPPO #
-    SUBSIDIO_SPPO_DATASET_ID = "projeto_subsidio_sppo"
-    SUBSIDIO_SPPO_RECURSO_TABLE_ID = "recursos_filtrada"
-    SUBSIDIO_SPPO_RECURSO_API_BASE_URL = "https://api.movidesk.com/public/v1/tickets?"
-    SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH = "sppo_subsidio_recursos_api"
-
-    # RDO
-    FTPS_SECRET_PATH = "smtr_rdo_ftps"
-
+    # RDO/RHO
+    RDO_FTP_ALLOWED_PATHS = ["SPPO", "STPL"]
+    RDO_FTPS_SECRET_PATH = "smtr_rdo_ftps"
+    RDO_DATASET_ID = "br_rj_riodejaneiro_rdo"
+    SPPO_RDO_TABLE_ID = "rdo_registros_sppo"
+    SPPO_RHO_TABLE_ID = "rho_registros_sppo"
+    STPL_RDO_TABLE_ID = "rdo_registros_stpl"
+    STPL_RHO_TABLE_ID = "rho_registros_stpl"
+    RDO_MATERIALIZE_START_DATE = "2022-12-07"
     # ROCK IN RIO
     RIR_DATASET_ID = "dashboards"
     RIR_TABLE_ID = "registros_ocr_rir"
