@@ -59,7 +59,7 @@ from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 # Flows #
 
 with Flow(
-    "SMTR: GPS SPPO - Realocação (captura)",
+    "SMTR: GPS SPPO Realocação - Captura",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as realocacao_sppo:
     # SETUP #
@@ -81,7 +81,7 @@ with Flow(
     timestamp = get_current_timestamp()
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="GPS SPPO - Realocação: ", now_time=timestamp
+        prefix=realocacao_sppo.name + ": ", now_time=timestamp
     )
 
     partitions = create_date_hour_partition(timestamp)
@@ -135,12 +135,12 @@ realocacao_sppo.schedule = every_10_minutes
 
 
 with Flow(
-    "SMTR: GPS SPPO - Materialização",
+    "SMTR: GPS SPPO - Materialização (subflow)",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as materialize_sppo:
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SMTR: GPS SPPO - Materialização - ", now_time=get_now_time()
+        prefix=materialize_sppo.name + ": ", now_time=get_now_time()
     )
 
     # Get default parameters #
@@ -228,7 +228,7 @@ with Flow(
     timestamp = get_current_timestamp()
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="GPS SPPO: ", now_time=timestamp
+        prefix=captura_sppo_v2.name + ": ", now_time=timestamp
     )
 
     partitions = create_date_hour_partition(timestamp)
@@ -282,7 +282,7 @@ captura_sppo_v2.schedule = every_minute
 
 
 with Flow(
-    "SMTR - GPS SPPO Recapturas", code_owners=["caio", "fernanda", "boris", "rodrigo"]
+    "SMTR: GPS SPPO - Tratamento", code_owners=["caio", "fernanda", "boris", "rodrigo"]
 ) as recaptura:
     version = Parameter("version", default=2)
     datetime_filter = Parameter("datetime_filter", default=None)
@@ -297,7 +297,7 @@ with Flow(
     )
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="GPS SPPO Recapturas: ", now_time=get_now_time(), wait=timestamps
+        prefix=recaptura.name + ": ", now_time=get_now_time(), wait=timestamps
     )
     with case(errors, False):
         with case(materialize, True):
