@@ -82,7 +82,8 @@ with Flow(
 
     with case(capture, True):
         gtfs_capture_parameters = [
-            {"timestamp": data_versao_gtfs, **d} for d in gtfs_table_capture_params
+            {"timestamp": data_versao_gtfs, **d}
+            for d in gtfs_table_capture_params.run()
         ]
 
         run_captura = create_flow_run.map(
