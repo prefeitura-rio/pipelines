@@ -98,9 +98,8 @@ viagens_sppo.run_config = KubernetesRun(
 
 viagens_sppo.schedule = every_day_hour_five
 
-SUBSIDIO_SPPO_APURACAO_NAME = "SMTR: Subsídio SPPO Apuração - Materialização"
 with Flow(
-    SUBSIDIO_SPPO_APURACAO_NAME,
+    "SMTR: Subsídio SPPO Apuração - Materialização",
     code_owners=["rodrigo"],
 ) as subsidio_sppo_apuracao:
     # 1. SETUP #
@@ -137,7 +136,7 @@ with Flow(
 
     # Rename flow run #
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=SUBSIDIO_SPPO_APURACAO_NAME + ": ", now_time=run_dates
+        prefix=subsidio_sppo_apuracao.name + ": ", now_time=run_dates
     )
 
     # Set dbt client #
