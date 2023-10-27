@@ -198,3 +198,69 @@ def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
     )
     log(f"[DEBUG] Files saved on {prepath}")
     return prepath
+
+
+@task
+def tratar_dados_estacao(data_inicio: str, data_fim: str) -> pd.DataFrame:
+    # Lista com as estações da cidade do Rio de Janeiro
+    estacoes_unicas = [
+        "SBAF",
+        "SBGL",
+        "SBJR",
+        "SBRJ",
+        "SBSC",
+    ]
+
+    dicionario = get_vault_secret("redemet-token")
+
+    # Converte datas em int para cálculo de faixas.
+    data_inicio_int = int(data_inicio.replace("-", ""))
+    data_fim_int = int(data_fim.replace("-", ""))
+
+    raw = []
+    for id_estacao in estacoes_unicas:
+        base_url = f"https://api-redemet.decea.mil.br/aerodromos/info?api_key={dicionario['data']['token']}"  # noqa
+        for data in range(data_inicio_int, data_fim_int + 1):
+            for hora in range(24):
+                url = f"{base_url}&localidade={id_estacao}&datahora={data:06}{hora:02}"
+                res = requests.get(url)
+                if res.status_code != 200:
+                    log(f"Problema no id: {id_estacao}, {res.status_code}, {url}")
+                    continue
+                res_data = json.loads(res.text)
+                if res_data["status"] is not True:
+                    log(f"Problema no id: {id_estacao}, {res_data['message']}, {url}")
+                    continue
+                if "data" not in res_data["data"]:
+                    # Sem dados para esse horario
+                    continue
+                raw.append(res_data)
+
+    # Função para converter longitude de graus, minutos, segundos para decimal
+    res_data["latitude"] = res_data["lat"].apply(converter_lat_lon)
+    res_data["longitude"] = res_data["lon"].apply(converter_lat_lon)
+    return dados
+    
+    
+    
+def converter_lat_lon(longitude_str):
+    longitude_str = longitude_str.replace("º", "/").replace("''", "/").replace("'", "/")
+    
+    # Divida a string com base nos espaços em branco
+    partes = longitude_str.split("/")
+    # print(partes)
+    
+    # Extraia os graus, minutos e segundos da lista de partes
+    graus = int(partes[0])
+    minutos = int(partes[1])
+    segundos = float(partes[2])
+
+    # Calcule o valor decimal
+    decimal = graus + (minutos / 60) + (segundos / 3600)
+
+    # Verifique se a direção é Oeste (W) e faça o valor negativo
+    # Verifique se a direção é Norte (N) e retorne o valor decimal
+    if ("W" in partes[3].upper()) | ("S" in partes[3].upper()):
+        decimal = -decimal
+    
+    return decimal

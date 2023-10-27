@@ -134,6 +134,55 @@ with Flow(
             )
 
 
+# Código não finalizado; flow de atualização das estações
+with Flow(
+    name="COR: Meteorologia - Atualização das estações",
+    code_owners=[
+        "karinappassos",
+        "paty",
+    ],
+) as cor_meteorologia_meteorologia_redemet:
+    DATASET_ID = "clima_estacao_meteorologica"
+    TABLE_ID = "meteorologia_redemet"
+    DUMP_MODE = "append"
+
+    # data_inicio e data_fim devem ser strings no formato "YYYY-MM-DD"
+    data_inicio = Parameter("data_inicio", default="", required=False)
+    data_fim = Parameter("data_fim", default="", required=False)
+
+    # Materialization parameters
+    MATERIALIZE_AFTER_DUMP = Parameter(
+        "materialize_after_dump", default=False, required=False
+    )
+    MATERIALIZE_TO_DATARIO = Parameter(
+        "materialize_to_datario", default=False, required=False
+    )
+    MATERIALIZATION_MODE = Parameter("mode", default="dev", required=False)
+
+    # Dump to GCS after? Should only dump to GCS if materializing to datario
+    DUMP_TO_GCS = Parameter("dump_to_gcs", default=False, required=False)
+
+    MAXIMUM_BYTES_PROCESSED = Parameter(
+        "maximum_bytes_processed",
+        required=False,
+        default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
+    )
+
+    data_inicio_, data_fim_, backfill = get_dates(data_inicio, data_fim)
+    # data = slice_data(current_time=CURRENT_TIME)
+    dados = tratar_dados_estacao(data_inicio_, data_fim_)
+    PATH = salvar_dados(dados=dados)
+
+    # Create table in BigQuery
+    UPLOAD_TABLE = create_table_and_upload_to_gcs(
+        data_path=PATH,
+        dataset_id=DATASET_ID,
+        table_id=TABLE_ID,
+        dump_mode=DUMP_MODE,
+        wait=PATH,
+    )
+
+
 # para rodar na cloud
 cor_meteorologia_meteorologia_redemet.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 cor_meteorologia_meteorologia_redemet.run_config = KubernetesRun(
