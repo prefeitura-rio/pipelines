@@ -84,9 +84,8 @@ from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 # Flows #
 
 # flake8: noqa: E501
-sppo_licenciamento_captura_name = f&#34;SMTR: Captura - {constants.DATASET_ID.value}.{constants.SPPO_LICENCIAMENTO_TABLE_ID.value}&#34;
 with Flow(
-    sppo_licenciamento_captura_name,
+    f&#34;SMTR: {constants.DATASET_ID.value} {constants.SPPO_LICENCIAMENTO_TABLE_ID.value} - Captura&#34;,
     code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
 ) as sppo_licenciamento_captura:
     timestamp = get_current_timestamp()
@@ -96,7 +95,7 @@ with Flow(
 
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=f&#34;{sppo_licenciamento_captura_name} - &#34;, now_time=timestamp
+        prefix=f&#34;{sppo_licenciamento_captura.name} - &#34;, now_time=timestamp
     )
 
     # SETUP #
@@ -153,9 +152,8 @@ sppo_licenciamento_captura.run_config = KubernetesRun(
 )
 sppo_licenciamento_captura.schedule = every_day_hour_seven
 
-sppo_infracao_captura_name = f&#34;SMTR: Captura - {constants.DATASET_ID.value}.{constants.SPPO_INFRACAO_TABLE_ID.value}&#34;
 with Flow(
-    sppo_infracao_captura_name,
+    f&#34;SMTR: {constants.DATASET_ID.value} {constants.SPPO_INFRACAO_TABLE_ID.value} - Captura&#34;,
     code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
 ) as sppo_infracao_captura:
     timestamp = get_current_timestamp()
@@ -165,7 +163,7 @@ with Flow(
 
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=f&#34;{sppo_infracao_captura_name} - &#34;, now_time=timestamp
+        prefix=f&#34;{sppo_infracao_captura.name} - &#34;, now_time=timestamp
     )
 
     # SETUP #
@@ -221,9 +219,8 @@ sppo_infracao_captura.run_config = KubernetesRun(
 sppo_infracao_captura.schedule = every_day_hour_seven
 
 # flake8: noqa: E501
-sppo_veiculo_dia_name = f&#34;SMTR: Materialização - {constants.DATASET_ID.value}.{constants.SPPO_VEICULO_DIA_TABLE_ID.value}&#34;
 with Flow(
-    sppo_veiculo_dia_name,
+    f&#34;SMTR: {constants.DATASET_ID.value} {constants.SPPO_VEICULO_DIA_TABLE_ID.value} - Materialização (subflow)&#34;,
     code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
 ) as sppo_veiculo_dia:
     # 1. SETUP #
@@ -237,7 +234,7 @@ with Flow(
 
     # Rename flow run #
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=sppo_veiculo_dia_name + &#34;: &#34;,
+        prefix=sppo_veiculo_dia.name + &#34;: &#34;,
         now_time=run_dates,
     )
 

@@ -88,7 +88,7 @@ from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 # Flows #
 
 with Flow(
-    &#34;SMTR: GPS SPPO - Realocação (captura)&#34;,
+    &#34;SMTR: GPS SPPO Realocação - Captura&#34;,
     code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
 ) as realocacao_sppo:
     # SETUP #
@@ -110,7 +110,7 @@ with Flow(
     timestamp = get_current_timestamp()
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=&#34;GPS SPPO - Realocação: &#34;, now_time=timestamp
+        prefix=realocacao_sppo.name + &#34;: &#34;, now_time=timestamp
     )
 
     partitions = create_date_hour_partition(timestamp)
@@ -164,12 +164,12 @@ realocacao_sppo.schedule = every_10_minutes
 
 
 with Flow(
-    &#34;SMTR: GPS SPPO - Materialização&#34;,
+    &#34;SMTR: GPS SPPO - Materialização (subflow)&#34;,
     code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
 ) as materialize_sppo:
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=&#34;SMTR: GPS SPPO - Materialização - &#34;, now_time=get_now_time()
+        prefix=materialize_sppo.name + &#34;: &#34;, now_time=get_now_time()
     )
 
     # Get default parameters #
@@ -257,7 +257,7 @@ with Flow(
     timestamp = get_current_timestamp()
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=&#34;GPS SPPO: &#34;, now_time=timestamp
+        prefix=captura_sppo_v2.name + &#34;: &#34;, now_time=timestamp
     )
 
     partitions = create_date_hour_partition(timestamp)
@@ -311,7 +311,7 @@ captura_sppo_v2.schedule = every_minute
 
 
 with Flow(
-    &#34;SMTR - GPS SPPO Recapturas&#34;, code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;]
+    &#34;SMTR: GPS SPPO - Tratamento&#34;, code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;]
 ) as recaptura:
     version = Parameter(&#34;version&#34;, default=2)
     datetime_filter = Parameter(&#34;datetime_filter&#34;, default=None)
@@ -326,7 +326,7 @@ with Flow(
     )
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=&#34;GPS SPPO Recapturas: &#34;, now_time=get_now_time(), wait=timestamps
+        prefix=recaptura.name + &#34;: &#34;, now_time=get_now_time(), wait=timestamps
     )
     with case(errors, False):
         with case(materialize, True):
