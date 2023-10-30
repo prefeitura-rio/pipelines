@@ -200,6 +200,29 @@ def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
     return prepath
 
 
+def converter_lat_lon(longitude_str):
+    longitude_str = longitude_str.replace("º", "/").replace("''", "/").replace("'", "/")
+
+    # Divida a string com base nos espaços em branco
+    partes = longitude_str.split("/")
+    # print(partes)
+
+    # Extraia os graus, minutos e segundos da lista de partes
+    graus = int(partes[0])
+    minutos = int(partes[1])
+    segundos = float(partes[2])
+
+    # Calcule o valor decimal
+    decimal = graus + (minutos / 60) + (segundos / 3600)
+
+    # Verifique se a direção é Oeste (W) e faça o valor negativo
+    # Verifique se a direção é Norte (N) e retorne o valor decimal
+    if ("W" in partes[3].upper()) | ("S" in partes[3].upper()):
+        decimal = -decimal
+
+    return decimal
+
+
 @task
 def tratar_dados_estacao(data_inicio: str, data_fim: str) -> pd.DataFrame:
     # Lista com as estações da cidade do Rio de Janeiro
@@ -237,29 +260,6 @@ def tratar_dados_estacao(data_inicio: str, data_fim: str) -> pd.DataFrame:
                 raw.append(res_data)
 
     # Função para converter longitude de graus, minutos, segundos para decimal
-    res_data["latitude"] = res_data["lat"].apply(converter_lat_lon)
-    res_data["longitude"] = res_data["lon"].apply(converter_lat_lon)
+    # res_data["latitude"] = res_data["lat"].apply(converter_lat_lon)
+    # res_data["longitude"] = res_data["lon"].apply(converter_lat_lon)
     return res_data
-
-
-def converter_lat_lon(longitude_str):
-    longitude_str = longitude_str.replace("º", "/").replace("''", "/").replace("'", "/")
-
-    # Divida a string com base nos espaços em branco
-    partes = longitude_str.split("/")
-    # print(partes)
-
-    # Extraia os graus, minutos e segundos da lista de partes
-    graus = int(partes[0])
-    minutos = int(partes[1])
-    segundos = float(partes[2])
-
-    # Calcule o valor decimal
-    decimal = graus + (minutos / 60) + (segundos / 3600)
-
-    # Verifique se a direção é Oeste (W) e faça o valor negativo
-    # Verifique se a direção é Norte (N) e retorne o valor decimal
-    if ("W" in partes[3].upper()) | ("S" in partes[3].upper()):
-        decimal = -decimal
-
-    return decimal
