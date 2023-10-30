@@ -176,13 +176,13 @@ with Flow(
     #PATH = salvar_dados(dados=dados)
 
     # Create table in BigQuery
-    UPLOAD_TABLE = create_table_and_upload_to_gcs(
-        data_path=PATH,
-        dataset_id=DATASET_ID,
-        table_id=TABLE_ID,
-        dump_mode=DUMP_MODE,
-        wait=PATH,
-    )
+    #UPLOAD_TABLE = create_table_and_upload_to_gcs(
+    #    data_path=PATH,
+    #    dataset_id=DATASET_ID,
+    #    table_id=TABLE_ID,
+    #    dump_mode=DUMP_MODE,
+    #    wait=PATH,
+    #)
 
 
 # para rodar na cloud
