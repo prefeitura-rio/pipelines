@@ -38,7 +38,7 @@ from pipelines.rj_smtr.tasks import (
 
 from pipelines.rj_smtr.projeto_subsidio_sppo_recursos_viagens_individuais.tasks import (
     get_raw_recursos,
-    treatment_subsidio_sppo_recursos,
+    pre_treatment_subsidio_sppo_recursos,
 )
 
 # Flows #
@@ -75,7 +75,9 @@ with Flow(
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
 
     # TREAT
-    treated_status = treatment_subsidio_sppo_recursos(status=raw_status)
+    treated_status = pre_treatment_subsidio_sppo_recursos(
+        status=raw_status, timestamp=timestamp
+    )
 
     treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
 
