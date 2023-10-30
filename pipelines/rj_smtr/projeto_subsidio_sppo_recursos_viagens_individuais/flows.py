@@ -75,9 +75,7 @@ with Flow(
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
 
     # TREAT
-    treated_status = treatment_subsidio_sppo_recursos(
-        status=raw_status, timestamp=timestamp
-    )
+    treated_status = treatment_subsidio_sppo_recursos(status=raw_status)
 
     treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
 
