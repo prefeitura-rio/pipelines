@@ -50,7 +50,6 @@ def create_api_url_recursos(date_range_end, skip=0, top=1000) -> Dict:
     for param, value in params.items():
         url += f"&${param}={value}"
 
-    print(f"URL gerada: {url}")
     return url
 
 
@@ -76,7 +75,7 @@ def request_data(url: str) -> Dict:
             return {"data": data, "error": False}
 
         else:
-            print(f"Falha no requests, response: {response}. Tentativa: {retries}.")
+            print(f"Falha no requests. Tentativa: {retries}.")
             retries += 1
             if retries > constants.MAX_RETRIES.value:
                 return {"data": None, "error": True}
