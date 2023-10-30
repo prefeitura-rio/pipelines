@@ -82,7 +82,7 @@ dump_vitai_posicao.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_vitai_posicao.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[
-        constants.RJ_SMS_DEV_AGENT_LABEL.value,
+        constants.RJ_SMS_AGENT_LABEL.value,
     ],
 )
 
@@ -153,7 +153,7 @@ dump_vitai_movimentos.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_vitai_movimentos.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[
-        constants.RJ_SMS_DEV_AGENT_LABEL.value,
+        constants.RJ_SMS_AGENT_LABEL.value,
     ],
 )
 
