@@ -1,15 +1,10 @@
 # -*- coding: utf-8 -*-
-"""
-Tasks for projeto_subsidio_sppo
-"""
-
-# pylint: disable=too-many-arguments,broad-except,too-many-locals
-
-# import datetime
-from typing import Dict, List
 import time
-import requests
+import json
+import math
+from typing import Dict
 import pandas as pd
+import requests
 from prefect import task
 
 # EMD Imports #
@@ -23,7 +18,8 @@ from pipelines.rj_smtr.constants import constants
 # Tasks #
 
 
-def create_api_url_recursos(date_range_start, date_range_end, skip=0, top=1000) -> Dict:
+@task
+def create_api_url_recursos(date_range_end, skip=0, top=1000) -> Dict:
     """
     Returns movidesk URL to get the requests over date range.
     """
@@ -32,23 +28,17 @@ def create_api_url_recursos(date_range_start, date_range_end, skip=0, top=1000) 
         "data"
     ]["token"]
 
-    base_status = " or ".join(
-        [f"baseStatus eq '{s}'" for s in ["New", "InAttendance", "Resolved", "Closed"]]
-    )
-    status = "status ne 'Resolvido Automaticamente'"
-
-    start = pd.to_datetime(date_range_start, utc=True).strftime("%Y-%m-%dT%H:%M:%S.%MZ")
     end = pd.to_datetime(date_range_end, utc=True).strftime("%Y-%m-%dT%H:%M:%S.%MZ")
 
-    category = "category eq 'Recurso'"
-    dates = f"createdDate ge {start} and createdDate lt {end}"
-    service = "serviceFirstLevel eq 'Viagem Individual - Recurso Viagens Subsídio'"
+    dates = f"createdDate le {end}"
+    service = "serviceFull eq 'SPPO'"
 
     params = {
-        "select": "id,protocol,createdDate,status,serviceSecondLevel,customFieldValues",
-        "filter": f"({category} and {dates} and {service} and {status}) and ({base_status})",
-        "expand": "customFieldValues($expand=items)",
-        "orderby": "createdDate%20desc",
+        "select": "id," "protocol," "createdDate",
+        "filter": f"{dates} and serviceFull/any(serviceFull: {service})",
+        "expand": "customFieldValues,"
+        "customFieldValues($expand=items),"
+        "actions($select=id,description)",
         "top": top,
         "skip": skip,
     }
@@ -60,49 +50,63 @@ def create_api_url_recursos(date_range_start, date_range_end, skip=0, top=1000) 
     for param, value in params.items():
         url += f"&${param}={value}"
 
+    print(f"URL gerada: {url}")
     return url
 
 
-def request_data(url: str, headers: dict = None) -> Dict:
+@task
+def request_data(url: str) -> Dict:
     """
     Return response json and error.
     """
-    data = None
+    retries = 0
 
     # Get data from API
-    try:
-        response = requests.get(
-            url, headers=headers, timeout=constants.MAX_TIMEOUT_SECONDS.value
-        )
-        error = None
-    except Exception as exp:
-        error = exp
-        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
-        return {"data": None, "error": error}
+    while retries <= constants.MAX_RETRIES.value:
+        try:
+            response = requests.get(url, timeout=constants.MAX_TIMEOUT_SECONDS.value)
 
-    # Check data results
-    if response.ok:  # status code is less than 400
-        data = response.json()
+        except Exception as error:
+            log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+            return {"data": None, "error": True}
 
-    return {"data": data, "error": error}
+        # Check data results
+        if response.ok:  # status code is less than 400
+            data = response.json()
+            return {"data": data, "error": False}
+
+        else:
+            print(f"Falha no requests, response: {response}. Tentativa: {retries}.")
+            retries += 1
+            if retries > constants.MAX_RETRIES.value:
+                return {"data": None, "error": True}
+            time.sleep(30)
 
 
 @task
 def get_raw_recursos(
-    date_range_start: str, date_range_end: str, skip: int = 0, top: int = 1000
-) -> Dict:
+    date_range_end: str, skip: int = 0, top: int = 1000
+) -> pd.DataFrame:
     """
-    Returns a dataframe with all recurso data from movidesk api until date.
+    Returns a dataframe with recursos data from movidesk api.
     """
     all_records = False
     status = {"data": [], "error": None}
 
     while not all_records:
-        url = create_api_url_recursos(date_range_start, date_range_end, skip)
+        url = create_api_url_recursos(date_range_end, skip)
         current_status = request_data(url)
 
-        if current_status["error"] is not None:
-            return {"data": None, "error": current_status["error"]}
+        if not current_status or current_status["error"]:
+            raise ValueError(
+                f"O request de {url} falhou. Como precisaremos de \
+                todos os dados para prosseguir, encerraremos o script"
+            )
+
+        elif current_status["error"] and current_status["data"] is None:
+            raise ValueError(
+                "O request falhou sem pegar nenhum dado, encerraremos o script."
+            )
 
         status["data"] += current_status["data"]
 
@@ -114,82 +118,287 @@ def get_raw_recursos(
             all_records = True
 
     if len(status["data"]) == 0:
-        status["error"] = "Empty data"
+        raise ValueError("Nenhum dado para tratar.")
 
+    status = pd.DataFrame(status["data"])
+    log(f"Request concluído, com status: {status}.")
     return status
 
 
-def get_custom_fields(custom_fields: List) -> Dict:
+@task
+def treatment_subsidio_sppo_recursos(status) -> pd.DataFrame:
     """
-    Return customFields dict.
+    Treat recursos requested from movidesk api.
     """
-    map_field = {
-        111867: "data_viagem",
-        111868: "hora_partida",
-        111869: "hora_chegada",
-        111871: "servico",
-        111873: "id_veiculo",
-        111872: "tipo_servico",
-        111901: "sentido",
+
+    colunas = [
+        "protocolo",
+        "data_ticket",
+        "id_recurso",
+        "acao",
+        "customFieldValues",
+        "julgamento",
+        "motivo",
+        "json_motivo",
+        "json_observacao",
+    ]
+
+    # Criar o DataFrame vazio com as colunas especificadas
+    data = pd.DataFrame(columns=colunas)
+
+    for index, item in status.iterrows():
+        row = {
+            "protocolo": item["protocolo"],
+            "data_ticket": item["createdDate"],
+            "id_recurso": item["id"],
+            "acao": item["actions"],
+            "customFieldValues": eval(item["customFieldValues"]),
+            "julgamento": item["julgamento"],
+            "motivo": item["motivo"],
+            "observacao": item["observacao"],
+            "json_motivo": dict,
+        }
+
+        row["motivo"] = trata_motivo(row["motivo"])
+        row = analisar_ja_julgados(row)
+        row = analisar_linha(row)
+
+        data.loc[len(data)] = row
+        print(f"Ticket: {row['protocolo']} tratado com sucesso!")
+
+    return data
+
+
+@task
+def trata_motivo(valor: dict):
+    if valor == "Não respeitou o limite da conformidade da distância da viagem.":
+        return "Não respeitou o limite da conformidade da distância da viagem."
+    elif (
+        valor
+        == "Informação incompleta ou incorreta (Art. 5o § 2o Res. SMTR 3534 / 2022)"
+    ):
+        return "Informação incompleta ou incorreta (Art. 5º § 2º Res. SMTR 3534 / 2022)"
+    elif (
+        valor
+        == "Não respeitou o limite da conformidade da quantidade de \
+        transmissões dentro do itinerário. (Art 2o Res. SMTR 3534 / 2022)"
+    ):
+        return "Não respeitou o limite da conformidade da quantidade de \
+            transmissões dentro do itinerário. (Art 2º Res. SMTR 3534 / 2022)"
+    elif (
+        valor
+        == "Não houve comunicação de GPS no período informado para o veículo. \
+            (Art 1o Res. SMTR 3534 / 2022)"
+    ):
+        return "Não houve comunicação de GPS no período informado para o veículo. \
+            (Art 1º Res. SMTR 3534 / 2022)"
+    elif (
+        valor
+        == "Intempestivo. Recurso de viagem fora do prazo. \
+              (Art. 5o Res. SMTR 3534 / 2022)"
+    ):
+        return "Intempestivo. Recurso de viagem fora do prazo. \
+              (Art. 5º Res. SMTR 3534 / 2022)"
+    elif (
+        valor
+        == "Não respeitou o limite da conformidade da qualidade do GPS.\
+              (Art 2o Res. SMTR 3534 / 2022)"
+    ):
+        return "Não respeitou o limite da conformidade da qualidade do GPS.\
+              (Art 2º Res. SMTR 3534 / 2022)"
+    elif valor == "Viagem já paga.":
+        return "Viagem já paga."
+    elif (
+        valor
+        == "Viagem identificada considerando os sinais de GPS com o \
+            serviço informado pelo recurso."
+    ):
+        return "Viagem identificada considerando os sinais de GPS com o \
+            serviço informado pelo recurso."
+    else:
+        return valor
+
+
+@task
+def analisar_ja_julgados(row):
+    """
+    Analisa se o recurso já foi julgado anteriormente, se tiver sido, \
+        retira o julgamento anterior.
+    """
+    # Encontrar o índice do dicionário desejado
+    indice_para_remover = None
+    for indice, dicionario in enumerate(row["customFieldValues"]):
+        if (
+            dicionario["customFieldId"] == 111904
+            or dicionario["customFieldId"] == 111900
+        ):
+            indice_para_remover = indice
+            break
+
+    # Remover o dicionário, se encontrado
+    if indice_para_remover is not None:
+        del row["customFieldValues"][indice_para_remover]
+
+    # Resultado
+    return row
+
+
+@task
+def analisar_linha(row: dict) -> Dict:
+    """
+    Treat the row to return the values of the json
+    """
+
+    julgamento = {
+        "items": [
+            {
+                "personId": None,
+                "clientId": None,
+                "team": None,
+                "customFieldItem": row["julgamento"],
+                "storageFileGuid": "",
+                "fileName": None,
+            }
+        ],
+        "customFieldId": 111865,
+        "customFieldRuleId": 55533,
+        "line": 1,
+        "value": None,
     }
 
-    row = {}
-    for field in custom_fields:
-        if field["customFieldId"] in map_field:
-            # dropdown field
-            if field["items"]:
-                row.update(
-                    {
-                        map_field[field["customFieldId"]]: field["items"][0][
-                            "customFieldItem"
-                        ]
-                    }
-                )
-            # other fields
-            else:
-                row.update({map_field[field["customFieldId"]]: field["value"]})
+    row["customFieldValues"].append(julgamento)
+
+    if row["julgamento"] == "Indeferido":
+        id_julgamento = 111904
+        rule_id = 55547
+    else:
+        id_julgamento = 111900
+        rule_id = 55546
+
+    motivo = {
+        "items": [
+            {
+                "personId": None,
+                "clientId": None,
+                "team": None,
+                "customFieldItem": row["motivo"],
+                "storageFileGuid": "",
+                "fileName": None,
+            }
+        ],
+        "customFieldId": id_julgamento,
+        "customFieldRuleId": rule_id,
+        "line": 1,
+        "value": None,
+    }
+
+    if (
+        row["observacao"] == "nan"
+        or row["observacao"] == ""
+        or (isinstance(row["observacao"], float) and math.isnan(row["observacao"]))
+    ):
+        row["observacao"] = None
+
+    observacao = {
+        "customFieldId": 125615,
+        "customFieldRuleId": rule_id,
+        "line": 1,
+        "value": row["observacao"],
+        "items": [],
+    }
+
+    # Não da para adicionar no customFieldValues,
+    # pois não da para fazer o PATCH do motivo junto com o do Julgamento
+    row["json_motivo"] = motivo
+    row["json_observacao"] = observacao
 
     return row
 
 
 @task
-def pre_treatment_subsidio_sppo_recursos(status: dict, timestamp: str) -> Dict:
+def patch_data(data: dict) -> Dict:
     """
-    Treat recursos requested from movidesk api.
+    Post treat data to customField
     """
-    if status["error"] is not None:
-        return {"data": pd.DataFrame(), "error": status["error"]}
+    count = 18932
+    data["Patch_status"] = ""
+    data["Patch_date"] = ""
+    url = f"{constants.SUBSIDIO_SPPO_RECURSO_API_BASE_URL.value}\
+        token={constants.SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH.value}"
+    headers = {"Content-Type": "application/json"}
 
-    if status["data"] == []:
-        # log("Data is empty, skipping treatment...")
-        return {"data": pd.DataFrame(), "error": status["error"]}
+    for i, row in data.iterrows():
+        retries = 0
+        dual_patch = False
 
-    data = pd.DataFrame()
-    for item in status["data"]:
-        row = {
-            "modo": item["serviceSecondLevel"],
-            "id_recurso": item["id"],
-            "protocolo": item["protocol"],
-            "status": item["status"],
-            "data_recurso": item["createdDate"],
-        }
-        row.update(get_custom_fields(item["customFieldValues"]))
-        data = data.append(row, ignore_index=True)
+        while retries <= constants.MAX_RETRIES.value:
+            if dual_patch:
+                break
 
-    data["timestamp_captura"] = timestamp
+            id = row["protocolo"]
+            body = {"customFieldValues": eval(row["customFieldValues"])}
 
-    # filtrando não nulos
-    data = data.dropna()
+            try:
+                response = requests.patch(
+                    f"{url}&id={id}",
+                    data=json.dumps(body),
+                    headers=headers,
+                    timeout=constants.TIMEOUT.value,
+                )
+                response.raise_for_status()
+                # Levanta uma exceção se a resposta não for bem-sucedida
+            except requests.RequestException as exp:
+                log(f"Erro: {exp} ao atualizar o ticket: {id}")
+                retries += 1
+                sleep_time = constants.BACKOFF_FACTOR.value * (2**retries)
+                log(f"Tentando novamente em {sleep_time} segundos...")
+                time.sleep(sleep_time)
+                continue
 
-    # converte datas
-    data["data_recurso"] = (
-        pd.to_datetime(data["data_recurso"])
-        .dt.tz_localize(tz="America/Sao_Paulo")
-        .map(lambda x: x.isoformat())
-    )
-    data["data_viagem"] = pd.to_datetime(data["data_viagem"]).dt.strftime("%Y-%m-%d")
+            while retries <= constants.MAX_RETRIES.value:
+                body["customFieldValues"].append(eval(row["json_motivo"]))
+                body["customFieldValues"].append(eval(row["json_observacao"]))
+                motive_and_observation_body = {
+                    "customFieldValues": body["customFieldValues"],
+                    "status": "Resolvido",
+                    "baseStatus": "Resolved",
+                    "justification": None,
+                }
 
-    # remove caracteres de campo aberto que quebram o schema
-    data["servico"] = data["servico"].str.replace("\xa0", " ").str.replace("\n", "")
+                try:
+                    response = requests.patch(
+                        f"{url}&id={id}",
+                        data=json.dumps(motive_and_observation_body),
+                        headers=headers,
+                        timeout=constants.TIMEOUT.value,
+                    )
+                    response.raise_for_status()
+                except requests.RequestException as exp:
+                    data.loc[i, "Patch_status"] = str(exp)
+                    data.loc[i, "Patch_date"] = time.time()
+                    log(f"Erro: {exp} ao atualizar o ticket: {id}")
+                    retries += 1
+                    sleep_time = constants.BACKOFF_FACTOR.value * (2**retries)
+                    log(f"Tentando novamente em {sleep_time} segundos...")
+                    time.sleep(sleep_time)
+                    continue
 
-    return {"data": data, "error": None}
+                data.loc[i, "Patch_status"] = response.status_code
+                data.loc[i, "Patch_date"] = time.time()
+                log(
+                    f"PATCH de número {count} feito com sucesso. Ticket: {id} atualizado."
+                )
+                count += 1
+                dual_patch = True
+                break
+
+        if retries >= constants.MAX_RETRIES.value:
+            log(
+                f"Ocorreram {constants.MAX_RETRIES.value} erros consecutivos \
+                    ao atualizar o ticket: {id}. Encerrando o programa."
+            )
+            data.to_excel("comprovante_patch_incompleto_recursos_movidesk.xlsx")
+            return data
+
+    data.to_excel("comprovante_patch_recursos_movidesk.xlsx")
+    return data
