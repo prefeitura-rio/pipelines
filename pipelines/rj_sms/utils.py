@@ -421,7 +421,8 @@ def create_partitions(data_path: str, partition_directory: str):
         output_directory = f"{partition_directory}/ano_particao={int(ano_particao)}/mes_particao={int(mes_particao)}/data_particao={data_particao}"  # noqa: E501
 
         # Create partition directory
-        os.makedirs(output_directory, exist_ok=False)
+        if not os.path.exists(output_directory):
+            os.makedirs(output_directory, exist_ok=False)
 
         # Copy file(s) to partition directory
         shutil.copy(file_name, output_directory)
