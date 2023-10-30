@@ -172,7 +172,8 @@ with Flow(
     data_inicio_, data_fim_, backfill = get_dates(data_inicio, data_fim)
     # data = slice_data(current_time=CURRENT_TIME)
     dados = tratar_dados_estacao(data_inicio_, data_fim_)
-    PATH = salvar_dados(dados=dados)
+    print(dados)
+    #PATH = salvar_dados(dados=dados)
 
     # Create table in BigQuery
     UPLOAD_TABLE = create_table_and_upload_to_gcs(
