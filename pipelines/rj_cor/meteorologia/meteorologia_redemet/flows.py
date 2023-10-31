@@ -174,10 +174,9 @@ with Flow(
     # data = slice_data(current_time=CURRENT_TIME)
     dados = tratar_dados_estacao(data_inicio_, data_fim_)
 
-    # Configure logging format and level
-    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    # debug
+    log(f"printa df {dados.head()}")
 
-    logging.info("hi")
     # print(dados.columns)
     # PATH = salvar_dados(dados=dados)
 
