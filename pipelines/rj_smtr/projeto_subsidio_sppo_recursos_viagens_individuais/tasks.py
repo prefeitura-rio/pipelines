@@ -30,42 +30,44 @@ def get_raw_recursos(
     all_records = False
     status = {"data": [], "error": None}
 
-    while not all_records:
-        url = create_api_url_recursos(date_range_end, skip)
-        current_status = request_data(url)
+    try:
+        while not all_records:
+            url = create_api_url_recursos(date_range_end, skip)
+            current_status = request_data(url)
 
-        if not current_status or current_status["error"]:
-            raise ValueError(
-                f"O request de {url} falhou. Como precisaremos de \
-                todos os dados para prosseguir, encerraremos o script."
-            )
+            if not current_status or current_status["error"]:
+                raise ValueError(
+                    f"O request de {url} falhou. Como precisaremos de \
+                    todos os dados para prosseguir, encerraremos o script."
+                )
 
-        elif current_status["error"] and current_status["data"] is None:
-            raise ValueError(
-                "O request falhou sem pegar nenhum dado, encerraremos o script."
-            )
+            elif current_status["error"] and current_status["data"] is None:
+                raise ValueError(
+                    "O request falhou sem pegar nenhum dado, encerraremos o script."
+                )
 
-        status["data"] += current_status["data"]
+            status["data"] += current_status["data"]
 
-        # log(f"Status: {status}")
+            # itera os proximos recursos do periodo
+            if len(current_status["data"]) == top:
+                skip += top
+                time.sleep(6)
+            else:
+                all_records = True
 
-        # itera os proximos recursos do periodo
-        if len(current_status["data"]) == top:
-            skip += top
-            time.sleep(6)
-        else:
-            all_records = True
+        if len(status["data"]) == 0:
+            error = "Nenhum dado para tratar."
 
-    if len(status["data"]) == 0:
-        raise ValueError("Nenhum dado para tratar.")
+        # status = pd.DataFrame(status["data"])
 
-    status = pd.DataFrame(status["data"])
-    log(f"Request concluído, com status: {status}.")
+        log(f"Request concluído, com status: {status}.")
 
-    path = status.to_csv("recursos_registados_movidesk.csv", index=None)
+    except Exception as error:
+        log(f"CATCHED ERROR {error}.")
 
-    log(f"Arquivo salvo em {path}")
-    return status
+    status_final = {"data": status, "error": error}
+
+    return status_final
 
 
 @task
@@ -107,7 +109,10 @@ def pre_treatment_subsidio_sppo_recursos(status, timestamp: str) -> pd.DataFrame
         row = analisar_linha(row)
 
         data.loc[len(data)] = row
-        log(f"Ticket: {row['protocolo']} tratado com sucesso!")
+
+        data.rename(columns={"protocol": "protocolo"}, inplace=True)
+
+        log(f"Ticket: {row['protocol']} tratado com sucesso!")
 
         data["timestamp_captura"] = timestamp
 

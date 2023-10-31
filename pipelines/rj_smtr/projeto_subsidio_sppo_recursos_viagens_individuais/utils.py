@@ -46,8 +46,6 @@ def create_api_url_recursos(date_range_end, skip=0, top=1000) -> Dict:
     for param, value in params.items():
         url += f"&${param}={value}"
 
-    # log(f'url: {url}')
-
     return url
 
 

@@ -64,26 +64,24 @@ with Flow(
     filename = parse_timestamp_to_string(timestamp)
 
     filepath = create_local_partition_path(
-        dataset_id=unmapped(constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value),
-        table_id=unmapped(constants.SUBSIDIO_SPPO_RECURSOS_TABLE_ID.value),
-        filename=unmapped(filename),
-        partitions=unmapped(partitions),
+        dataset_id=constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value,
+        table_id=constants.SUBSIDIO_SPPO_RECURSOS_TABLE_ID.value,
+        filename=filename,
+        partitions=partitions,
     )
 
     # EXTRACT #
     raw_status = get_raw_recursos(date_range_end)
-    """
-    raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
 
+    raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
 
     # TREAT
     treated_status = pre_treatment_subsidio_sppo_recursos(
         status=raw_status, timestamp=timestamp
     )
 
-
     treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
-
+    """
     # LOAD
     error = bq_upload(
         dataset_id=constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value,
