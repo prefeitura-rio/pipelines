@@ -100,11 +100,10 @@ with Flow(
         error=error,
         timestamp=timestamp,
     )
-
+"""
 subsidio_sppo_recursos.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 subsidio_sppo_recursos.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 # subsidio_sppo_recursos.schedule = every_day_hour_six
-"""

@@ -61,6 +61,10 @@ def get_raw_recursos(
 
     status = pd.DataFrame(status["data"])
     log(f"Request concluído, com status: {status}.")
+
+    path = status.to_excel("data/recursos_registados_movidesk.xlsx")
+
+    log(f"Arquivo salvo em {path}")
     return status
 
 
@@ -106,7 +110,5 @@ def pre_treatment_subsidio_sppo_recursos(status, timestamp: str) -> pd.DataFrame
         log(f"Ticket: {row['protocolo']} tratado com sucesso!")
 
         data["timestamp_captura"] = timestamp
-
-        data.to_excel("recursos_registados_movidesk.xlsx")
 
     return data
