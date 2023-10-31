@@ -17,14 +17,14 @@ from pipelines.rj_sms.utils import (
 )
 from pipelines.rj_sms.dump_api_prontuario_vitacare.tasks import (
     build_params,
-    download_multiple_files)
+    download_multiple_files,
+    download_to_cloudstorage
+    )
 
 from pipelines.rj_sms.dump_api_prontuario_vitai.schedules import every_day_at_six_am
 
 
-with Flow(
-    name="SMS: Dump VitaCare - Captura Posição de Estoque", code_owners=["thiago"]
-) as dump_vitacare_posicao:
+with Flow( name="SMS: Dump VitaCare - Captura Posição de Estoque", code_owners=["thiago"] ) as dump_vitacare_posicao:  # noqa: E501
     # Set Parameters
     #  Vault
     vault_path = vitacare_constants.VAULT_PATH.value
@@ -81,9 +81,7 @@ dump_vitacare_posicao.run_config = KubernetesRun(
 dump_vitacare_posicao.schedule = every_day_at_six_am
 
 
-with Flow(
-    name="SMS: Dump VitaCare - Captura Posição de Estoque", code_owners=["thiago"]
-) as dump_vitacare_movimento:
+with Flow(name="SMS: Dump VitaCare - Captura Posição de Estoque", code_owners=["thiago"]) as dump_vitacare_movimento:  # noqa: E501
     # Set Parameters
     #  Vault
     vault_path = vitacare_constants.VAULT_PATH.value
@@ -138,3 +136,27 @@ dump_vitacare_movimento.run_config = KubernetesRun(
 )
 
 dump_vitacare_movimento.schedule = every_day_at_six_am
+
+
+
+with Flow(
+    name="SMS: Dump VitaCare - Captura Posição de Estoque", code_owners=["thiago"]
+) as dump_vitacare_posicao2:
+    # Set Parameters
+    #  Vault
+    vault_path = vitacare_constants.VAULT_PATH.value
+    vault_key = vitacare_constants.VAULT_KEY.value
+    #  GCP
+    dataset_id = vitacare_constants.DATASET_ID.value
+    table_id = vitacare_constants.TABLE_POSICAO_ID.value
+
+    # Vitacare API
+    endpoint_base_url = vitacare_constants.ENDPOINT_BASE_URL.value
+    endpoint_posicao = vitacare_constants.ENDPOINT_POSICAO.value
+    date = Parameter("date", default="today")
+
+    # Start run
+    create_folders_task = create_folders()
+
+    download_to_cloudstorage_task = download_to_cloudstorage()
+    download_to_cloudstorage_task.set_upstream(create_folders_task)

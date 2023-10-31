@@ -5,6 +5,10 @@ Tasks for dump_api_prontuario_vitacare
 
 from datetime import date, timedelta
 import re
+import json
+import requests
+import google.oauth2.id_token
+import google.auth.transport.requests
 from prefect import task
 from pipelines.utils.utils import log
 from pipelines.rj_sms.utils import (
@@ -61,3 +65,23 @@ def download_multiple_files(
             add_load_date_column_task = add_load_date_column.run(
                 input_path=conversion_task, sep=";"
             )
+
+
+@task
+def download_to_cloudstorage():
+
+    url = 'https://us-central1-rj-sms-dev.cloudfunctions.net/vitacare-v2'
+
+    request = google.auth.transport.requests.Request()
+    TOKEN = google.oauth2.id_token.fetch_id_token(request, url)
+
+    payload = json.dumps({
+        "url": "http://consolidado-ap10.pepvitacare.com:8088/reports/pharmacy/movements?date=2023-10-28&cnes=4030990",
+        "path": "temporary_downloads/",
+        "env": "staging"
+    })
+    headers = {
+        'Content-Type': 'application/json',
+}
+    response = requests.request("POST", url, headers=headers, data=payload)
+    log(response.text)
