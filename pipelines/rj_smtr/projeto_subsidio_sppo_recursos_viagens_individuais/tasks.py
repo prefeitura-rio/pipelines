@@ -47,6 +47,8 @@ def get_raw_recursos(
 
         status["data"] += current_status["data"]
 
+        # log(f"Status: {status}")
+
         # itera os proximos recursos do periodo
         if len(current_status["data"]) == top:
             skip += top
@@ -101,8 +103,10 @@ def pre_treatment_subsidio_sppo_recursos(status, timestamp: str) -> pd.DataFrame
         row = analisar_linha(row)
 
         data.loc[len(data)] = row
-        print(f"Ticket: {row['protocolo']} tratado com sucesso!")
+        log(f"Ticket: {row['protocolo']} tratado com sucesso!")
 
         data["timestamp_captura"] = timestamp
+
+        data.to_excel("recursos_registados_movidesk.xlsx")
 
     return data
