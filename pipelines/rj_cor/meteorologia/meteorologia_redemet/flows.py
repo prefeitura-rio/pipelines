@@ -174,16 +174,16 @@ with Flow(
     dados = tratar_dados_estacao(data_inicio_, data_fim_)
     print("hi")
     print(dados.columns)
-    #PATH = salvar_dados(dados=dados)
+    # PATH = salvar_dados(dados=dados)
 
     # Create table in BigQuery
-    #UPLOAD_TABLE = create_table_and_upload_to_gcs(
+    # UPLOAD_TABLE = create_table_and_upload_to_gcs(
     #    data_path=PATH,
     #    dataset_id=DATASET_ID,
     #    table_id=TABLE_ID,
     #    dump_mode=DUMP_MODE,
     #    wait=PATH,
-    #)
+    # )
 
 
 # para rodar na cloud
