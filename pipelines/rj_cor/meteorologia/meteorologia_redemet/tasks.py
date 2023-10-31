@@ -19,6 +19,7 @@ from pipelines.utils.utils import (
     to_partitions,
     parse_date_columns,
 )
+from pipelines.utils.utils import log
 
 
 @task(nout=3)
@@ -258,6 +259,8 @@ def tratar_dados_estacao(data_inicio: str, data_fim: str) -> pd.DataFrame:
                     # Sem dados para esse horario
                     continue
                 raw.append(res_data)
+
+    log("testando")
 
     # Função para converter longitude de graus, minutos, segundos para decimal
     # res_data["latitude"] = res_data["lat"].apply(converter_lat_lon)

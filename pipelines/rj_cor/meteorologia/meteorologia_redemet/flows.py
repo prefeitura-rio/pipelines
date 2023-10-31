@@ -27,7 +27,6 @@ from pipelines.utils.tasks import (
     create_table_and_upload_to_gcs,
     get_current_flow_labels,
 )
-from pipelines.utils.utils import log
 
 with Flow(
     name="COR: Meteorologia - Meteorologia REDEMET",
@@ -175,7 +174,6 @@ with Flow(
 
     # debug
     # log(f"printa df {dados.head()}")
-    log("hi")
 
     # print(dados.columns)
     # PATH = salvar_dados(dados=dados)
