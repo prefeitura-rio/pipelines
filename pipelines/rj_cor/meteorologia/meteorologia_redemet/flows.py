@@ -27,8 +27,7 @@ from pipelines.utils.tasks import (
     create_table_and_upload_to_gcs,
     get_current_flow_labels,
 )
-
-import logging
+from pipelines.utils.utils import log
 
 with Flow(
     name="COR: Meteorologia - Meteorologia REDEMET",
