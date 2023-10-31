@@ -173,6 +173,10 @@ with Flow(
     data_inicio_, data_fim_, backfill = get_dates(data_inicio, data_fim)
     # data = slice_data(current_time=CURRENT_TIME)
     dados = tratar_dados_estacao(data_inicio_, data_fim_)
+
+    # Configure logging format and level
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+
     logging.info("hi")
     # print(dados.columns)
     # PATH = salvar_dados(dados=dados)
