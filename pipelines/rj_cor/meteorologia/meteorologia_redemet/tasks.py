@@ -260,7 +260,7 @@ def tratar_dados_estacao(data_inicio: str, data_fim: str) -> pd.DataFrame:
                     continue
                 raw.append(res_data)
 
-    log("testando")
+    log(f"printa df {res_data.head()}")
 
     # Função para converter longitude de graus, minutos, segundos para decimal
     # res_data["latitude"] = res_data["lat"].apply(converter_lat_lon)
