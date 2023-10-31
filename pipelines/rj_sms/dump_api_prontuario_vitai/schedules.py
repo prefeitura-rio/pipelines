@@ -16,7 +16,7 @@ every_day_at_six_am = Schedule(
             interval=timedelta(days=1),
             start_date=pendulum.datetime(2023, 1, 1, 6, 0, 0, tz="America/Sao_Paulo"),
             labels=[
-                constants.RJ_SMS_DEV_AGENT_LABEL.value,
+                constants.RJ_SMS_AGENT_LABEL.value,
             ],
         )
     ]
