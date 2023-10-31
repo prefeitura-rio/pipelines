@@ -6,6 +6,7 @@ Flows for projeto_subsidio_sppo
 from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
+from prefect.utilities.edges import unmapped
 
 # EMD Imports #
 
@@ -48,7 +49,7 @@ with Flow(
     code_owners=["carolinagomes", "igorlaltuf"],
 ) as subsidio_sppo_recursos:
     # Get run parameters #
-    date_range_start = Parameter("date_range_start", default="2022-10-03 00:00:00")
+    # date_range_start = Parameter("date_range_start", default="2022-10-03 00:00:00")
     date_range_end = Parameter("date_range_end", default="2022-10-04 00:00:00")
 
     # SETUP #
@@ -63,21 +64,23 @@ with Flow(
     filename = parse_timestamp_to_string(timestamp)
 
     filepath = create_local_partition_path(
-        dataset_id=constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value,
-        table_id=constants.SUBSIDIO_SPPO_RECURSOS_TABLE_ID.value,
-        filename=filename,
-        partitions=partitions,
+        dataset_id=unmapped(constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value),
+        table_id=unmapped(constants.SUBSIDIO_SPPO_RECURSOS_TABLE_ID.value),
+        filename=unmapped(filename),
+        partitions=unmapped(partitions),
     )
 
     # EXTRACT #
-    raw_status = get_raw_recursos(date_range_start, date_range_end)
-
+    raw_status = get_raw_recursos(date_range_end)
+    """
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
+
 
     # TREAT
     treated_status = pre_treatment_subsidio_sppo_recursos(
         status=raw_status, timestamp=timestamp
     )
+
 
     treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
 
@@ -104,3 +107,4 @@ subsidio_sppo_recursos.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 # subsidio_sppo_recursos.schedule = every_day_hour_six
+"""

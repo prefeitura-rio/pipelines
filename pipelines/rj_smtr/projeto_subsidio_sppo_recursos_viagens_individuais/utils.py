@@ -227,8 +227,13 @@ def patch_data(data: dict) -> Dict:
     count = 18932
     data["Patch_status"] = ""
     data["Patch_date"] = ""
-    url = f"{constants.SUBSIDIO_SPPO_RECURSO_API_BASE_URL.value}\
-        token={constants.SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH.value}"
+
+    url = constants.SUBSIDIO_SPPO_RECURSO_API_BASE_URL.value
+    token = get_vault_secret(constants.SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH.value)[
+        "data"
+    ]["token"]
+
+    url = f"{url}token={token}"
     headers = {"Content-Type": "application/json"}
 
     for i, row in data.iterrows():

@@ -146,4 +146,8 @@ class constants(Enum):  # pylint: disable=c0103
             "user_id": "620000269392019469",
             "type": "user_nickname",
         },
+        "igorlaltuf": {
+            "user_id": "87545892319531008",
+            "type": "user_nickname",
+        },
     }
