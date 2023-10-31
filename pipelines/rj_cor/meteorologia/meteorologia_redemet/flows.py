@@ -174,7 +174,7 @@ with Flow(
     dados = tratar_dados_estacao(data_inicio_, data_fim_)
 
     # debug
-    log(f"printa df {dados.head()}")
+    #log(f"printa df {dados.head()}")
 
     # print(dados.columns)
     # PATH = salvar_dados(dados=dados)
