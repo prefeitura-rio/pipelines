@@ -62,7 +62,7 @@ def get_raw_recursos(
     status = pd.DataFrame(status["data"])
     log(f"Request concluído, com status: {status}.")
 
-    path = status.to_excel("data/recursos_registados_movidesk.xlsx")
+    path = status.to_csv("recursos_registados_movidesk.csv", index=None)
 
     log(f"Arquivo salvo em {path}")
     return status
