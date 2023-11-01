@@ -171,6 +171,7 @@ def tratar_dados(dados: pd.DataFrame, backfill: bool = 0) -> pd.DataFrame:
 
     # Remover fuso horário
     dados["data"] = dados["data"].dt.strftime("%Y-%m-%d %H:%M:%S")
+    dados.rename(columns={"data": "data_medicao"}, inplace=True)
 
     # Capitalizar os dados da coluna céu
     dados["ceu"] = dados["ceu"].str.capitalize()
@@ -187,7 +188,7 @@ def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
     prepath = Path("/tmp/meteorologia_redemet/")
     prepath.mkdir(parents=True, exist_ok=True)
 
-    partition_column = "data"
+    partition_column = "data_medicao"
     dataframe, partitions = parse_date_columns(dados, partition_column)
 
     # Cria partições a partir da data
