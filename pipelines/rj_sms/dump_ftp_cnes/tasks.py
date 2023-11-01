@@ -5,7 +5,7 @@ Tasks for dump_ftp_cnes
 
 import os
 import shutil
-from datetime import datetime
+from datetime import datetime, timedelta
 import tempfile
 import re
 import pandas as pd
@@ -13,7 +13,7 @@ import pytz
 from prefect import task
 from pipelines.utils.utils import log
 from pipelines.rj_sms.dump_ftp_cnes.constants import constants
-from pipelines.rj_sms.utils import list_files_ftp, upload_to_datalake
+from pipelines.rj_sms.utils import list_files_ftp, upload_to_datalake, download_ftp
 
 
 @task
@@ -45,7 +45,7 @@ def check_newest_file_version(
 
     # extract snapshot date from file
     snapshot_date = re.findall(r"\d{6}", newest_file)[0]
-    snapshot_date = f"{snapshot_date[:4]}-{snapshot_date[-2:]}-01"
+    snapshot_date = f"{snapshot_date[:4]}-{snapshot_date[-2:]}"
 
     log(f"Newest file: {newest_file}, snapshot_date: {snapshot_date}")
     return {"file": newest_file, "snapshot": snapshot_date}
@@ -166,3 +166,52 @@ def add_multiple_date_column(directory: str, sep=";", snapshot_date=None):
 
         df.to_csv(filepath, index=False, sep=sep, encoding="utf-8")
         log(f"Column added to {filepath}")
+
+
+@task(max_retries=5, retry_delay=timedelta(seconds=5), timeout=timedelta(seconds=600))
+def download_ftp_cnes(host, user, password, directory, file_name, output_path):
+    return download_ftp.run(
+        host=host,
+        user=user,
+        password=password,
+        directory=directory,
+        file_name=file_name,
+        output_path=output_path,
+    )
+
+
+@task
+def create_partitions_and_upload_multiple_tables_to_datalake(
+    path_files: str, dataset_id: str, dump_mode: str
+):
+    """
+    Uploads multiple tables to datalake.
+
+    Args:
+        path_files (str): The path to the files to be uploaded.
+        dataset_id (str): The ID of the dataset to upload the files to.
+        dump_mode (str): The dump mode to use for the upload.
+
+    Returns:
+        None
+    """
+    for n, file in enumerate(path_files):
+        log(f"Uploading {n+1}/{len(path_files)} files to datalake...")
+
+        # retrieve file name from path
+        file_name = os.path.basename(file)
+
+        # replace 6 digits numbers from string
+        table_id = re.sub(r"\d{6}", "", file_name)
+        table_id = table_id.replace(".csv", "")
+
+        upload_to_datalake.run(
+            input_path=file,
+            dataset_id=dataset_id,
+            table_id=table_id,
+            if_exists="replace",
+            csv_delimiter=";",
+            if_storage_data_exists="replace",
+            biglake_table=True,
+            dump_mode=dump_mode,
+        )

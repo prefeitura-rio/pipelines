@@ -138,7 +138,6 @@ dump_vitacare_movimento.run_config = KubernetesRun(
 dump_vitacare_movimento.schedule = every_day_at_six_am
 
 
-
 with Flow(
     name="SMS: Dump VitaCare - Captura Posição de Estoque", code_owners=["thiago"]
 ) as dump_vitacare_posicao2:
