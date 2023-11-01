@@ -3,7 +3,11 @@
 """
 Tasks for generating a data catalog from BigQuery.
 """
+from typing import List
+
+from google.api_core.exceptions import NotFound
 from google.cloud import bigquery
+from googleapiclient import discovery
 import gspread
 import pandas as pd
 from prefect import task
@@ -13,6 +17,41 @@ from pipelines.rj_escritorio.data_catalog.utils import (
     write_data_to_gsheets,
 )
 from pipelines.utils.utils import get_credentials_from_env, log
+
+
+@task
+def list_projects(
+    mode: str = "prod",
+    exclude_dev: bool = True,
+) -> List[str]:
+    """
+    Lists all GCP projects that we have access to.
+
+    Args:
+        mode: Credentials mode.
+        exclude_dev: Exclude projects that ends with "-dev".
+
+    Returns:
+        List of project IDs.
+    """
+    credentials = get_credentials_from_env(mode=mode)
+    service = discovery.build("cloudresourcemanager", "v1", credentials=credentials)
+    request = service.projects().list()
+    projects = []
+    while request is not None:
+        response = request.execute()
+        for project in response.get("projects", []):
+            project_id = project["projectId"]
+            if exclude_dev and project_id.endswith("-dev"):
+                log(f"Excluding dev project {project_id}.")
+                continue
+            log(f"Found project {project_id}.")
+            projects.append(project_id)
+        request = service.projects().list_next(
+            previous_request=request, previous_response=response
+        )
+    log(f"Found {len(projects)} projects.")
+    return projects
 
 
 @task
@@ -50,32 +89,41 @@ def list_tables(  # pylint: disable=too-many-arguments
         client = get_bigquery_client(mode=mode)
     log(f"Listing tables in project {project_id}.")
     tables = []
-    for dataset in client.list_datasets(project=project_id):
-        dataset_id: str = dataset.dataset_id
-        if exclude_staging and dataset_id.endswith("_staging"):
-            log(f"Excluding staging dataset {dataset_id}.")
-            continue
-        if exclude_test and "test" in dataset_id:
-            log(f"Excluding test dataset {dataset_id}.")
-            continue
-        if exclude_logs and (
-            dataset_id.startswith("logs_") or dataset_id.endswith("_logs")
-        ):
-            log(f"Excluding logs dataset {dataset_id}.")
-            continue
-        for table in client.list_tables(dataset):
-            table_id = table.table_id
-            if exclude_test and "test" in table_id:
-                log(f"Excluding test table {table_id}.")
+    try:
+        datasets = client.list_datasets(project=project_id)
+        for dataset in datasets:
+            dataset_id: str = dataset.dataset_id
+            if exclude_staging and dataset_id.endswith("_staging"):
+                log(f"Excluding staging dataset {dataset_id}.")
                 continue
-            table_info = {
-                "project_id": project_id,
-                "dataset_id": dataset_id,
-                "table_id": table_id,
-                "url": f"https://console.cloud.google.com/bigquery?p={project_id}&d={dataset_id}&t={table_id}&page=table",
-                "private": not project_id == "datario",
-            }
-            tables.append(table_info)
+            if exclude_test and "test" in dataset_id:
+                log(f"Excluding test dataset {dataset_id}.")
+                continue
+            if exclude_logs and (
+                dataset_id.startswith("logs_") or dataset_id.endswith("_logs")
+            ):
+                log(f"Excluding logs dataset {dataset_id}.")
+                continue
+            for table in client.list_tables(dataset):
+                table_id = table.table_id
+                table_object = client.get_table(table.reference)
+                if exclude_test and "test" in table_id:
+                    log(f"Excluding test table {table_id}.")
+                    continue
+                table_description = table_object.description
+                table_info = {
+                    "project_id": project_id,
+                    "dataset_id": dataset_id,
+                    "table_id": table_id,
+                    "description": table_description,
+                    "url": f"https://console.cloud.google.com/bigquery?p={project_id}&d={dataset_id}&t={table_id}&page=table",
+                    "private": not project_id == "datario",
+                }
+                tables.append(table_info)
+    except NotFound:
+        # This will happen if BigQuery API is not enabled for this project. Just return an empty
+        # list
+        return tables
     log(f"Found {len(tables)} tables in project {project_id}.")
     return tables
 
