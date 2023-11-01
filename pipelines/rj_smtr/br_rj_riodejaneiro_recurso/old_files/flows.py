@@ -37,10 +37,12 @@ from pipelines.rj_smtr.tasks import (
 #     every_day_hour_six,
 # )
 
-from pipelines.rj_smtr.projeto_subsidio_sppo_recursos_viagens_individuais.tasks import (
+from pipelines.rj_smtr.br_rj_riodejaneiro_recurso.tasks import (
     get_raw_recursos,
     pre_treatment_subsidio_sppo_recursos,
 )
+
+# Criar um flow para acionar o flow padrão
 
 # Flows #
 

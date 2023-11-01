@@ -160,12 +160,13 @@ class constants(Enum):  # pylint: disable=c0103
     SUBSIDIO_SPPO_TABLE_ID = "viagem_completa"
 
     # SUBSÍDIO RECURSOS VIAGENS INDIVIDUAIS
-    SUBSIDIO_SPPO_RECURSOS_DATASET_ID = "projeto_subsidio_sppo_recursos"
-    SUBSIDIO_SPPO_RECURSOS_TABLE_ID = "recursos_abertos"
+    SUBSIDIO_SPPO_RECURSOS_DATASET_ID = "br_rj_riodejaneiro_recurso"
+    SUBSIDIO_SPPO_RECURSOS_TABLE_ID = "recurso_sppo"
     SUBSIDIO_SPPO_RECURSO_API_BASE_URL = "https://api.movidesk.com/public/v1/tickets?"
     SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH = "sppo_subsidio_recursos_api"
-    TIMEOUT = 10  # em segundos
-    BACKOFF_FACTOR = 1.5
+    SUBSIDIO_SPPO_RECURSO_DEFAULT_PARAM = {"date_range_end": "2022-10-04 00:00:00"}
+    # TIMEOUT = 10  # em segundos
+    # BACKOFF_FACTOR = 1.5
 
     # SUBSÍDIO DASHBOARD
     SUBSIDIO_SPPO_DASHBOARD_DATASET_ID = "dashboard_subsidio_sppo"
