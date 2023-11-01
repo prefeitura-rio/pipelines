@@ -230,7 +230,7 @@ class constants(Enum):  # pylint: disable=c0103
         "interval_minutes": 1,
     }
 
-    BILHETAGEM_RESSARCIMENTO_CAPTURE_PARAMS = [
+    BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS = [
         {
             "table_id": "ordem_ressarcimento",
             "partition_date_only": True,
@@ -241,10 +241,13 @@ class constants(Enum):  # pylint: disable=c0103
                     *
                 FROM
                     ordem_ressarcimento
+                WHERE
+                    data_inclusao BETWEEN '{start}'
+                    AND '{end}'
             """,
             },
             "primary_key": ["id"],
-            "interval_minutes": 1,
+            "interval_minutes": 1440,
         },
         {
             "table_id": "ordem_pagamento",
@@ -256,10 +259,13 @@ class constants(Enum):  # pylint: disable=c0103
                     *
                 FROM
                     ordem_pagamento
+                WHERE
+                    data_inclusao BETWEEN '{start}'
+                    AND '{end}'
             """,
             },
             "primary_key": ["id"],
-            "interval_minutes": 1,
+            "interval_minutes": 1440,
         },
     ]
 
@@ -414,13 +420,28 @@ class constants(Enum):  # pylint: disable=c0103
         },
     ]
 
-    BILHETAGEM_MATERIALIZACAO_PARAMS = {
+    BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS = {
+        "dataset_id": BILHETAGEM_DATASET_ID,
         "table_id": BILHETAGEM_TRANSACAO_CAPTURE_PARAMS["table_id"],
         "upstream": True,
         "dbt_vars": {
             "date_range": {
                 "table_run_datetime_column_name": "datetime_transacao",
                 "delay_hours": 1,
+            },
+            "version": {},
+        },
+    }
+
+    BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS = {
+        "dataset_id": BILHETAGEM_DATASET_ID,
+        "table_id": "ordem_pagamento_validacao",
+        "upstream": True,
+        "exclude": f"+{BILHETAGEM_TRANSACAO_CAPTURE_PARAMS['table_id']}",
+        "dbt_vars": {
+            "date_range": {
+                "table_run_datetime_column_name": "data",
+                "delay_hours": 0,
             },
             "version": {},
         },
