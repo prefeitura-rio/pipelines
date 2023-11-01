@@ -108,17 +108,20 @@ bilhetagem_auxiliar_captura = set_default_parameters(
     default_parameters=constants.BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS.value,
 )
 
-# MATERIALIZAÇÃO - SUBFLOW DE MATERIALIZAÇÃO #
+# MATERIALIZAÇÃO #
 
-bilhetagem_materializacao = deepcopy(default_materialization_flow)
-bilhetagem_materializacao.name = "SMTR: Bilhetagem Transação - Materialização (subflow)"
-bilhetagem_materializacao.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-bilhetagem_materializacao.run_config = KubernetesRun(
+# Transação
+bilhetagem_materializacao_transacao = deepcopy(default_materialization_flow)
+bilhetagem_materializacao_transacao.name = (
+    "SMTR: Bilhetagem Transação - Materialização (subflow)"
+)
+bilhetagem_materializacao_transacao.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bilhetagem_materializacao_transacao.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
-bilhetagem_materializacao_parameters = {
+bilhetagem_materializacao_transacao_parameters = {
     "source_table_ids": [
         constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value["table_id"]
     ]
@@ -127,13 +130,57 @@ bilhetagem_materializacao_parameters = {
         constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value["interval_minutes"]
     ]
     + [d["interval_minutes"] for d in constants.BILHETAGEM_CAPTURE_PARAMS.value],
-    "dataset_id": constants.BILHETAGEM_DATASET_ID.value,
-} | constants.BILHETAGEM_MATERIALIZACAO_PARAMS.value
+} | constants.BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS.value
 
-bilhetagem_materializacao = set_default_parameters(
-    flow=bilhetagem_materializacao,
-    default_parameters=bilhetagem_materializacao_parameters,
+bilhetagem_materializacao_transacao = set_default_parameters(
+    flow=bilhetagem_materializacao_transacao,
+    default_parameters=bilhetagem_materializacao_transacao_parameters,
 )
+
+bilhetagem_materializacao_transacao_parameters = {
+    "source_table_ids": [
+        constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value["table_id"]
+    ]
+    + [d["table_id"] for d in constants.BILHETAGEM_CAPTURE_PARAMS.value],
+    "capture_intervals_minutes": [
+        constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value["interval_minutes"]
+    ]
+    + [d["interval_minutes"] for d in constants.BILHETAGEM_CAPTURE_PARAMS.value],
+} | constants.BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS.value
+
+
+# Ordem Pagamento
+
+bilhetagem_materializacao_ordem_pagamento = deepcopy(default_materialization_flow)
+bilhetagem_materializacao_ordem_pagamento.name = (
+    "SMTR: Bilhetagem Ordem Pagamento - Materialização (subflow)"
+)
+bilhetagem_materializacao_ordem_pagamento.storage = GCS(
+    emd_constants.GCS_FLOWS_BUCKET.value
+)
+bilhetagem_materializacao_ordem_pagamento.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+)
+
+bilhetagem_materializacao_ordem_pagamento_parameters = {
+    "source_table_ids": [
+        constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value["table_id"]
+    ]
+    + [d["table_id"] for d in constants.BILHETAGEM_CAPTURE_PARAMS.value]
+    + [
+        d["table_id"] for d in constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS.value
+    ],
+    "capture_intervals_minutes": [
+        constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value["interval_minutes"]
+    ]
+    + [d["interval_minutes"] for d in constants.BILHETAGEM_CAPTURE_PARAMS.value]
+    + [
+        d["interval_minutes"]
+        for d in constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS.value
+    ],
+} | constants.BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS.value
+
 
 # RECAPTURA #
 
@@ -239,7 +286,7 @@ with Flow(
     with case(materialize, True):
         # Materialização
         run_materializacao = create_flow_run(
-            flow_name=bilhetagem_materializacao.name,
+            flow_name=bilhetagem_materializacao_transacao.name,
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=LABELS,
             upstream_tasks=[
@@ -248,7 +295,9 @@ with Flow(
                 wait_recaptura_transacao,
             ],
             parameters={
-                "timestamp": get_current_timestamp(timestamp=timestamp, return_str=True)
+                "timestamp": get_current_timestamp(
+                    timestamp=timestamp, return_str=True
+                ),
             },
         )
 
@@ -307,25 +356,27 @@ bilhetagem_gps_tratamento.run_config = KubernetesRun(
 bilhetagem_gps_tratamento.schedule = every_hour
 
 with Flow(
-    "SMTR: Bilhetagem Ressarcimento - Captura/Tratamento",
+    "SMTR: Bilhetagem Ordem Pagamento - Captura/Tratamento",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
-) as bilhetagem_ressarcimento_captura_tratamento:
+) as bilhetagem_ordem_pagamento_captura_tratamento:
     timestamp = get_rounded_timestamp(
         interval_minutes=constants.BILHETAGEM_TRATAMENTO_INTERVAL.value
     )
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=bilhetagem_ressarcimento_captura_tratamento.name + " ",
+        prefix=bilhetagem_ordem_pagamento_captura_tratamento.name + " ",
         now_time=timestamp,
     )
 
     LABELS = get_current_flow_labels()
 
+    # Captura #
+
     runs_captura = create_flow_run.map(
-        flow_name=unmapped(bilhetagem_ressarcimento_captura.name),
+        flow_name=unmapped(bilhetagem_ordem_pagamento_captura_tratamento.name),
         # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
         project_name=unmapped("staging"),
-        parameters=constants.BILHETAGEM_RESSARCIMENTO_CAPTURE_PARAMS.value,
+        parameters=constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS.value,
         labels=unmapped(LABELS),
     )
 
@@ -336,10 +387,49 @@ with Flow(
         raise_final_state=unmapped(True),
     )
 
-bilhetagem_ressarcimento_captura_tratamento.storage = GCS(
+    # Recaptura #
+
+    runs_recaptura = create_flow_run.map(
+        flow_name=unmapped(bilhetagem_recaptura.name),
+        # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+        project_name=unmapped("staging"),
+        parameters=constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS.value,
+        labels=unmapped(LABELS),
+    )
+
+    runs_recaptura.set_upstream(wait_captura)
+
+    wait_recaptura = wait_for_flow_run.map(
+        runs_recaptura,
+        stream_states=unmapped(True),
+        stream_logs=unmapped(True),
+        raise_final_state=unmapped(True),
+    )
+
+    # Materialização #
+
+    run_materializacao = create_flow_run(
+        flow_name=bilhetagem_materializacao_ordem_pagamento.name,
+        # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+        project_name="staging",
+        labels=LABELS,
+        upstream_tasks=[wait_recaptura],
+        parameters={
+            "timestamp": get_current_timestamp(timestamp=timestamp, return_str=True),
+        },
+    )
+
+    wait_materializacao = wait_for_flow_run(
+        run_materializacao,
+        stream_states=True,
+        stream_logs=True,
+        raise_final_state=True,
+    )
+
+bilhetagem_ordem_pagamento_captura_tratamento.storage = GCS(
     emd_constants.GCS_FLOWS_BUCKET.value
 )
-bilhetagem_ressarcimento_captura_tratamento.run_config = KubernetesRun(
+bilhetagem_ordem_pagamento_captura_tratamento.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
