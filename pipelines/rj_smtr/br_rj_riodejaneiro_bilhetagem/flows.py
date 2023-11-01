@@ -359,6 +359,9 @@ with Flow(
     "SMTR: Bilhetagem Ordem Pagamento - Captura/Tratamento",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as bilhetagem_ordem_pagamento_captura_tratamento:
+    capture = Parameter("capture", default=True)
+    materialize = Parameter("materialize", default=True)
+
     timestamp = get_rounded_timestamp(
         interval_minutes=constants.BILHETAGEM_TRATAMENTO_INTERVAL.value
     )
@@ -371,60 +374,70 @@ with Flow(
     LABELS = get_current_flow_labels()
 
     # Captura #
+    with case(capture, True):
+        runs_captura = create_flow_run.map(
+            flow_name=unmapped(bilhetagem_ordem_pagamento_captura_tratamento.name),
+            # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+            project_name=unmapped("staging"),
+            parameters=constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS.value,
+            labels=unmapped(LABELS),
+        )
 
-    runs_captura = create_flow_run.map(
-        flow_name=unmapped(bilhetagem_ordem_pagamento_captura_tratamento.name),
-        # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
-        project_name=unmapped("staging"),
-        parameters=constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS.value,
-        labels=unmapped(LABELS),
-    )
+        wait_captura = wait_for_flow_run.map(
+            runs_captura,
+            stream_states=unmapped(True),
+            stream_logs=unmapped(True),
+            raise_final_state=unmapped(True),
+        )
 
-    wait_captura = wait_for_flow_run.map(
-        runs_captura,
-        stream_states=unmapped(True),
-        stream_logs=unmapped(True),
-        raise_final_state=unmapped(True),
-    )
+        # Recaptura #
 
-    # Recaptura #
+        runs_recaptura = create_flow_run.map(
+            flow_name=unmapped(bilhetagem_recaptura.name),
+            # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+            project_name=unmapped("staging"),
+            parameters=constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS.value,
+            labels=unmapped(LABELS),
+        )
 
-    runs_recaptura = create_flow_run.map(
-        flow_name=unmapped(bilhetagem_recaptura.name),
-        # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
-        project_name=unmapped("staging"),
-        parameters=constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS.value,
-        labels=unmapped(LABELS),
-    )
+        runs_recaptura.set_upstream(wait_captura)
 
-    runs_recaptura.set_upstream(wait_captura)
+        wait_recaptura_true = wait_for_flow_run.map(
+            runs_recaptura,
+            stream_states=unmapped(True),
+            stream_logs=unmapped(True),
+            raise_final_state=unmapped(True),
+        )
 
-    wait_recaptura = wait_for_flow_run.map(
-        runs_recaptura,
-        stream_states=unmapped(True),
-        stream_logs=unmapped(True),
-        raise_final_state=unmapped(True),
-    )
+    with case(capture, False):
+        wait_recaptura_false = task(
+            lambda: None, name="assign_none_to_recapture", nout=3
+        )()
+
+    wait_recaptura = merge(wait_recaptura_true, wait_recaptura_false)
 
     # Materialização #
 
-    run_materializacao = create_flow_run(
-        flow_name=bilhetagem_materializacao_ordem_pagamento.name,
-        # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-        project_name="staging",
-        labels=LABELS,
-        upstream_tasks=[wait_recaptura],
-        parameters={
-            "timestamp": get_current_timestamp(timestamp=timestamp, return_str=True),
-        },
-    )
+    with case(materialize, True):
+        run_materializacao = create_flow_run(
+            flow_name=bilhetagem_materializacao_ordem_pagamento.name,
+            # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            project_name="staging",
+            labels=LABELS,
+            upstream_tasks=[wait_recaptura],
+            parameters={
+                "timestamp": get_current_timestamp(
+                    timestamp=timestamp, return_str=True
+                ),
+            },
+        )
 
-    wait_materializacao = wait_for_flow_run(
-        run_materializacao,
-        stream_states=True,
-        stream_logs=True,
-        raise_final_state=True,
-    )
+        wait_materializacao = wait_for_flow_run(
+            run_materializacao,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
 
 bilhetagem_ordem_pagamento_captura_tratamento.storage = GCS(
     emd_constants.GCS_FLOWS_BUCKET.value
