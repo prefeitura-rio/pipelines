@@ -3,7 +3,7 @@
 """
 Tasks for rj_smtr
 """
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import json
 import os
 from pathlib import Path
@@ -1086,6 +1086,9 @@ def get_materialization_date_range(  # pylint: disable=R0913
         )
     else:
         last_run = datetime.strptime(last_run, timestr)
+
+    if isinstance(last_run, date):
+        last_run = datetime(last_run.year, last_run.month, last_run.day)
 
     # set start to last run hour (H)
     start_ts = last_run.replace(minute=0, second=0, microsecond=0).strftime(timestr)
