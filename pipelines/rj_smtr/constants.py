@@ -344,7 +344,7 @@ class constants(Enum):  # pylint: disable=c0103
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
         },
         {
-            "table_id": "dw_dm_operadora",
+            "table_id": "operadora_transporte",
             "partition_date_only": True,
             "extract_params": {
                 "database": "principal_db",
@@ -352,10 +352,28 @@ class constants(Enum):  # pylint: disable=c0103
                     SELECT
                         *
                     FROM
-                        dw_dm_operadora
+                        OPERADORA_TRANSPORTE
+                    WHERE
+                        DT_INCLUSAO BETWEEN '{start}'
+                        AND '{end}'
                 """,
             },
-            "primary_key": ["id_operadora"],  # id column to nest data on
+            "primary_key": ["CD_OPERADORA_TRANSPORTE"],  # id column to nest data on
+            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+        },
+        {
+            "table_id": "pessoa_juridica",
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "principal_db",
+                "query": """
+                    SELECT
+                        *
+                    FROM
+                        PESSOA_JURIDICA
+                """,
+            },
+            "primary_key": ["CD_CLIENTE"],  # id column to nest data on
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
         },
         {
