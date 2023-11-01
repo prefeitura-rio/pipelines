@@ -264,7 +264,7 @@ def tratar_dados_estacao(data_inicio: str, data_fim: str) -> pd.DataFrame:
     log(f"printa df {res_data}")
 
     # Removendo acentos
-    res_data['data']['nome'] = unidecode(res_data['data']['nome'])
+    res_data["data"]["nome"] = unidecode(res_data["data"]["nome"])
 
     log(f"printa df {res_data}")
 
