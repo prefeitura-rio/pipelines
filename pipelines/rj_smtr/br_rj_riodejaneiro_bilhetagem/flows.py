@@ -137,18 +137,6 @@ bilhetagem_materializacao_transacao = set_default_parameters(
     default_parameters=bilhetagem_materializacao_transacao_parameters,
 )
 
-bilhetagem_materializacao_transacao_parameters = {
-    "source_table_ids": [
-        constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value["table_id"]
-    ]
-    + [d["table_id"] for d in constants.BILHETAGEM_CAPTURE_PARAMS.value],
-    "capture_intervals_minutes": [
-        constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value["interval_minutes"]
-    ]
-    + [d["interval_minutes"] for d in constants.BILHETAGEM_CAPTURE_PARAMS.value],
-} | constants.BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS.value
-
-
 # Ordem Pagamento
 
 bilhetagem_materializacao_ordem_pagamento = deepcopy(default_materialization_flow)
@@ -179,7 +167,12 @@ bilhetagem_materializacao_ordem_pagamento_parameters = {
     #     d["interval_minutes"]
     #     for d in constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS.value
     # ],
-} | constants.BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS.value
+} | constants.BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS.value
+
+bilhetagem_materializacao_ordem_pagamento = set_default_parameters(
+    flow=bilhetagem_materializacao_ordem_pagamento,
+    default_parameters=bilhetagem_materializacao_ordem_pagamento_parameters,
+)
 
 
 # RECAPTURA #
