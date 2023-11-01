@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_sms API documentation</title>
-<meta name="description" content="Prefect flows for rj_sms project" />
+<title>pipelines.rj_sms.dump_api_prontuario_vitai.tasks API documentation</title>
+<meta name="description" content="Tasks for dump_api_prontuario_vitai" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,43 +19,148 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_sms</code></h1>
+<h1 class="title">Module <code>pipelines.rj_sms.dump_api_prontuario_vitai.tasks</code></h1>
 </header>
 <section id="section-intro">
-<p>Prefect flows for rj_sms project</p>
+<p>Tasks for dump_api_prontuario_vitai</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Prefect flows for rj_sms project
+Tasks for dump_api_prontuario_vitai
 &#34;&#34;&#34;
 
-from pipelines.rj_sms.dump_db_sivep.flows import *
-from pipelines.rj_sms.dump_api_prontuario_vitai.flows import *</code></pre>
+from datetime import date, timedelta
+from prefect import task
+from pipelines.utils.utils import log
+
+
+@task
+def build_movimentos_url(date_param=None):
+    &#34;&#34;&#34;
+    Builds a URL for querying product movements from the Vitai API.
+
+    Args:
+        date_param (str, optional): The date to query in the format &#34;YYYY-MM-DD&#34;.
+        Defaults to yesterday&#39;s date.
+
+    Returns:
+        str: The URL for querying product movements from the Vitai API.
+    &#34;&#34;&#34;
+    if date_param is None:
+        date_param = (date.today() + timedelta(days=-1)).strftime(&#34;%Y-%m-%d&#34;)
+
+    url = f&#34;https://apidw.vitai.care/api/dw/v1/movimentacaoProduto/query/dataMovimentacao/{date_param}&#34;  # noqa: E501
+    log(f&#34;URL built: {url}&#34;)
+    return url
+
+
+@task
+def build_movimentos_date(date_param=None):
+    &#34;&#34;&#34;
+    Builds a date string in the format &#39;%Y-%m-%d&#39; based on the given date_param or yesterday&#39;s
+    date if date_param is None.
+
+    Args:
+        date_param (str, optional): A date string in the format &#39;%Y-%m-%d&#39;. Defaults to None.
+
+    Returns:
+        str: A date string in the format &#39;%Y-%m-%d&#39;.
+    &#34;&#34;&#34;
+    if date_param is None:
+        date_param = (date.today() + timedelta(days=-1)).strftime(&#34;%Y-%m-%d&#34;)
+
+    return date_param</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt><code class="name"><a title="pipelines.rj_sms.dump_api_prontuario_vitai" href="dump_api_prontuario_vitai/index.html">pipelines.rj_sms.dump_api_prontuario_vitai</a></code></dt>
+<dt id="pipelines.rj_sms.dump_api_prontuario_vitai.tasks.build_movimentos_date"><code class="name flex">
+<span>def <span class="ident">build_movimentos_date</span></span>(<span>date_param=None)</span>
+</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Builds a date string in the format '%Y-%m-%d' based on the given date_param or yesterday's
+date if date_param is None.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>date_param</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>A date string in the format '%Y-%m-%d'. Defaults to None.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>A date string in the format '%Y-%m-%d'.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def build_movimentos_date(date_param=None):
+    &#34;&#34;&#34;
+    Builds a date string in the format &#39;%Y-%m-%d&#39; based on the given date_param or yesterday&#39;s
+    date if date_param is None.
+
+    Args:
+        date_param (str, optional): A date string in the format &#39;%Y-%m-%d&#39;. Defaults to None.
+
+    Returns:
+        str: A date string in the format &#39;%Y-%m-%d&#39;.
+    &#34;&#34;&#34;
+    if date_param is None:
+        date_param = (date.today() + timedelta(days=-1)).strftime(&#34;%Y-%m-%d&#34;)
+
+    return date_param</code></pre>
+</details>
 </dd>
-<dt><code class="name"><a title="pipelines.rj_sms.dump_db_sivep" href="dump_db_sivep/index.html">pipelines.rj_sms.dump_db_sivep</a></code></dt>
+<dt id="pipelines.rj_sms.dump_api_prontuario_vitai.tasks.build_movimentos_url"><code class="name flex">
+<span>def <span class="ident">build_movimentos_url</span></span>(<span>date_param=None)</span>
+</code></dt>
 <dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_sms.utils" href="utils.html">pipelines.rj_sms.utils</a></code></dt>
-<dd>
-<div class="desc"><p>General utilities for SMS pipelines.</p></div>
+<div class="desc"><p>Builds a URL for querying product movements from the Vitai API.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>date_param</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>The date to query in the format "YYYY-MM-DD".</dd>
+</dl>
+<p>Defaults to yesterday's date.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>The URL for querying product movements from the Vitai API.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def build_movimentos_url(date_param=None):
+    &#34;&#34;&#34;
+    Builds a URL for querying product movements from the Vitai API.
+
+    Args:
+        date_param (str, optional): The date to query in the format &#34;YYYY-MM-DD&#34;.
+        Defaults to yesterday&#39;s date.
+
+    Returns:
+        str: The URL for querying product movements from the Vitai API.
+    &#34;&#34;&#34;
+    if date_param is None:
+        date_param = (date.today() + timedelta(days=-1)).strftime(&#34;%Y-%m-%d&#34;)
+
+    url = f&#34;https://apidw.vitai.care/api/dw/v1/movimentacaoProduto/query/dataMovimentacao/{date_param}&#34;  # noqa: E501
+    log(f&#34;URL built: {url}&#34;)
+    return url</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
 </section>
 <section>
 </section>
@@ -95,7 +200,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -114,14 +219,13 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines" href="../index.html">pipelines</a></code></li>
+<li><code><a title="pipelines.rj_sms.dump_api_prontuario_vitai" href="index.html">pipelines.rj_sms.dump_api_prontuario_vitai</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="pipelines.rj_sms.dump_api_prontuario_vitai" href="dump_api_prontuario_vitai/index.html">pipelines.rj_sms.dump_api_prontuario_vitai</a></code></li>
-<li><code><a title="pipelines.rj_sms.dump_db_sivep" href="dump_db_sivep/index.html">pipelines.rj_sms.dump_db_sivep</a></code></li>
-<li><code><a title="pipelines.rj_sms.utils" href="utils.html">pipelines.rj_sms.utils</a></code></li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pipelines.rj_sms.dump_api_prontuario_vitai.tasks.build_movimentos_date" href="#pipelines.rj_sms.dump_api_prontuario_vitai.tasks.build_movimentos_date">build_movimentos_date</a></code></li>
+<li><code><a title="pipelines.rj_sms.dump_api_prontuario_vitai.tasks.build_movimentos_url" href="#pipelines.rj_sms.dump_api_prontuario_vitai.tasks.build_movimentos_url">build_movimentos_url</a></code></li>
 </ul>
 </li>
 </ul>
