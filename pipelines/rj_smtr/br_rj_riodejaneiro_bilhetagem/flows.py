@@ -444,5 +444,5 @@ bilhetagem_ordem_pagamento_captura_tratamento.storage = GCS(
 )
 bilhetagem_ordem_pagamento_captura_tratamento.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
