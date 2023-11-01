@@ -6,7 +6,6 @@ from datetime import timedelta
 import json
 from pathlib import Path
 from typing import Tuple, Union
-from unidecode import unidecode
 
 import pandas as pd
 import pendulum
@@ -260,11 +259,6 @@ def tratar_dados_estacao(data_inicio: str, data_fim: str) -> pd.DataFrame:
                     # Sem dados para esse horario
                     continue
                 raw.append(res_data)
-
-    log(f"printa df {res_data}")
-
-    # Removendo acentos
-    # res_data["data"]["nome"] = unidecode(res_data["data"]["nome"])
 
     log(f"printa df {res_data}")
 
