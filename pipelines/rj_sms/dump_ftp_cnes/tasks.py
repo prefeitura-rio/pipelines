@@ -13,7 +13,12 @@ import pytz
 from prefect import task
 from pipelines.utils.utils import log
 from pipelines.rj_sms.dump_ftp_cnes.constants import constants
-from pipelines.rj_sms.utils import list_files_ftp, upload_to_datalake, download_ftp
+from pipelines.rj_sms.utils import (
+    list_files_ftp,
+    upload_to_datalake,
+    download_ftp,
+    create_partitions,
+)
 
 
 @task
@@ -49,6 +54,34 @@ def check_newest_file_version(
 
     log(f"Newest file: {newest_file}, snapshot_date: {snapshot_date}")
     return {"file": newest_file, "snapshot": snapshot_date}
+
+
+@task
+def check_file_to_download(
+    download_newest: bool,
+    file_to_download: str,
+    partition_date: str,
+    host: str,
+    user: str,
+    password: str,
+    directory: str,
+    file_name: str,
+):
+    if download_newest:
+        newest_file = check_newest_file_version.run(
+            host=host,
+            user=user,
+            password=password,
+            director=directory,
+            file_name=file_name,
+        )
+        return newest_file
+    elif file_to_download is not None and partition_date is not None:
+        return {"file": file_to_download, "snapshot": partition_date}
+    else:
+        raise ValueError(
+            "If download_newest is False, file_to_download and partition_date must be provided"
+        )
 
 
 @task
@@ -182,7 +215,11 @@ def download_ftp_cnes(host, user, password, directory, file_name, output_path):
 
 @task
 def create_partitions_and_upload_multiple_tables_to_datalake(
-    path_files: str, dataset_id: str, dump_mode: str
+    path_files: str,
+    partition_folder: str,
+    partition_date: str,
+    dataset_id: str,
+    dump_mode: str,
 ):
     """
     Uploads multiple tables to datalake.
@@ -205,8 +242,17 @@ def create_partitions_and_upload_multiple_tables_to_datalake(
         table_id = re.sub(r"\d{6}", "", file_name)
         table_id = table_id.replace(".csv", "")
 
+        table_partition_folder = os.path.join(partition_folder, table_id)
+
+        create_partitions.run(
+            data_path=file,
+            partition_directory=table_partition_folder,
+            level="month",
+            partition_date=partition_date,
+        )
+
         upload_to_datalake.run(
-            input_path=file,
+            input_path=table_partition_folder,
             dataset_id=dataset_id,
             table_id=table_id,
             if_exists="replace",

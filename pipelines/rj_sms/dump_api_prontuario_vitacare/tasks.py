@@ -30,7 +30,7 @@ def build_params(date_param="today"):
     return params
 
 
-@task
+@task(max_retries=3, retry_delay=timedelta(seconds=5))
 def download_multiple_files(
     base_urls: list, endpoint: str, params: dict, table_id:str, vault_path: str, vault_key: str
 ):

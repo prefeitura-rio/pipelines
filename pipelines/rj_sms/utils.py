@@ -408,9 +408,13 @@ def create_partitions(data_path: str, partition_directory: str, level="day", par
     Returns:
         None
     """
-    data_path = Path(data_path)
-    # Load data
-    files = data_path.glob("*.csv")
+
+    # check if data_path is a directory or a file
+    if os.path.isdir(data_path):
+        data_path = Path(data_path)
+        files = data_path.glob("*.csv")
+    else:
+        files = [data_path]
     #
     # Create partition directories for each file
     for file_name in files:
