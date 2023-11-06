@@ -659,6 +659,8 @@ def create_request_params(
             timestamp=timestamp, interval=timedelta(minutes=interval_minutes)
         )
 
+        log(f"datetime_range = {datetime_range}")
+
         request_params = {
             "database": extract_params["database"],
             "engine": database["engine"],
