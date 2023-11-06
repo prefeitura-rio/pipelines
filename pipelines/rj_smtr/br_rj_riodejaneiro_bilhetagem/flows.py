@@ -229,7 +229,8 @@ with Flow(
 
         runs_captura = create_flow_run.map(
             flow_name=unmapped(bilhetagem_auxiliar_captura.name),
-            project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+            # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+            project_name=unmapped("staging"),
             parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
             labels=unmapped(LABELS),
         )
@@ -245,7 +246,8 @@ with Flow(
 
         runs_recaptura_auxiliar = create_flow_run.map(
             flow_name=unmapped(bilhetagem_recaptura.name),
-            project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+            # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+            project_name=unmapped("staging"),
             parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
             labels=unmapped(LABELS),
         )
@@ -369,7 +371,7 @@ with Flow(
     # Captura #
     with case(capture, True):
         runs_captura = create_flow_run.map(
-            flow_name=unmapped(bilhetagem_ordem_pagamento_captura_tratamento.name),
+            flow_name=unmapped(bilhetagem_ressarcimento_captura.name),
             # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
             project_name=unmapped("staging"),
             parameters=constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS.value,
