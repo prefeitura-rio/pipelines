@@ -64,27 +64,19 @@ with Flow(
 
     LABELS = get_current_flow_labels()
 
-    run_captura = create_flow_run.map(
-        flow_name=unmapped(sppo_recurso_captura.name),
-        project_name=unmapped("staging"),
-        parameters=sppo_recurso_captura,
-        labels=unmapped(LABELS),
-    )
-
-    """
     with case(capture, True):
         run_captura = create_flow_run.map(
-            flow_name=unmapped(sppo_recurso_captura.name),
-            project_name=unmapped("staging"),
+            flow_name=sppo_recurso_captura.name,
+            project_name="staging",
             parameters=sppo_recurso_captura,
-            labels=unmapped(LABELS),
+            labels=LABELS,
         )
 
         wait_captura_true = wait_for_flow_run.map(
             run_captura,
-            stream_states=unmapped(True),
-            stream_logs=unmapped(True),
-            raise_final_state=unmapped(True),
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
         )
 
     with case(capture, False):
@@ -93,7 +85,7 @@ with Flow(
         )()
 
     wait_captura = merge(wait_captura_true, wait_captura_false)
-    """
+
 subsidio_sppo_recurso.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 subsidio_sppo_recurso.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
