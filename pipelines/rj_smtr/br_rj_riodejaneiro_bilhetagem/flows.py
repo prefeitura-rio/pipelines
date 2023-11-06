@@ -403,9 +403,7 @@ with Flow(
         )
 
     with case(capture, False):
-        wait_recaptura_false = task(
-            lambda: None, name="assign_none_to_recapture", nout=3
-        )()
+        wait_recaptura_false = task(lambda: None, name="assign_none_to_recapture")()
 
     wait_recaptura = merge(wait_recaptura_true, wait_recaptura_false)
 
