@@ -152,21 +152,21 @@ bilhetagem_materializacao_ordem_pagamento.run_config = KubernetesRun(
 )
 
 bilhetagem_materializacao_ordem_pagamento_parameters = {
-    # "source_table_ids": [
-    #     constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value["table_id"]
-    # ]
-    # + [d["table_id"] for d in constants.BILHETAGEM_CAPTURE_PARAMS.value]
-    # + [
-    #     d["table_id"] for d in constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS.value
-    # ],
-    # "capture_intervals_minutes": [
-    #     constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value["interval_minutes"]
-    # ]
-    # + [d["interval_minutes"] for d in constants.BILHETAGEM_CAPTURE_PARAMS.value]
-    # + [
-    #     d["interval_minutes"]
-    #     for d in constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS.value
-    # ],
+    "source_table_ids": [
+        constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value["table_id"]
+    ]
+    + [d["table_id"] for d in constants.BILHETAGEM_CAPTURE_PARAMS.value]
+    + [
+        d["table_id"] for d in constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS.value
+    ],
+    "capture_intervals_minutes": [
+        constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value["interval_minutes"]
+    ]
+    + [d["interval_minutes"] for d in constants.BILHETAGEM_CAPTURE_PARAMS.value]
+    + [
+        d["interval_minutes"]
+        for d in constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS.value
+    ],
 } | constants.BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS.value
 
 bilhetagem_materializacao_ordem_pagamento = set_default_parameters(
