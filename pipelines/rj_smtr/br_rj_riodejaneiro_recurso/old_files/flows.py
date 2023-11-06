@@ -55,7 +55,8 @@ with Flow(
     date_range_end = Parameter("date_range_end", default="2022-10-04 00:00:00")
 
     # SETUP #
-    timestamp = get_current_timestamp()
+    timestamp = 34459200
+    # timestamp = get_current_timestamp()
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix="Subsídio SPPO - Recursos Captura: ", now_time=timestamp

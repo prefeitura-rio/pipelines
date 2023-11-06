@@ -31,6 +31,7 @@ from pipelines.rj_smtr.utils import (
     get_raw_data_api,
     get_raw_data_gcs,
     get_raw_data_db,
+    get_raw_recursos,
     upload_run_logs_to_bq,
     get_datetime_range,
     read_raw_data,
@@ -667,6 +668,19 @@ def create_request_params(
 
     elif dataset_id == constants.GTFS_DATASET_ID.value:
         request_params = extract_params["filename"]
+    elif dataset_id == constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value:
+        end = datetime.strftime(timestamp, "%Y-%m-%dT%H:%M:%S.%MZ")
+        dates = f"createdDate le {end}"
+        request_params = extract_params.copy()
+        request_params["filter"] = request_params["filter"].format(
+            dates, request_params["service"]
+        )
+
+        request_params["token"] = get_vault_secret(
+            constants.SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH.value
+        )["data"]["token"]
+
+        request_url = constants.SUBSIDIO_SPPO_RECURSO_API_BASE_URL.value
 
     return request_params, request_url
 
@@ -724,6 +738,10 @@ def get_raw_from_sources(
         elif source_type == "db":
             error, data, filetype = get_raw_data_db(
                 host=source_path, secret_path=secret_path, **request_params
+            )
+        elif source_type == "movidesk":
+            error, data, filetype = get_raw_recursos(
+                request_url=source_path, request_params=request_params
             )
         else:
             raise NotImplementedError(f"{source_type} not supported")

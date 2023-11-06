@@ -22,7 +22,8 @@ from google.cloud.storage.blob import Blob
 import pymysql
 import psycopg2
 import psycopg2.extras
-
+import time
+from typing import Dict
 
 from prefect.schedules.clocks import IntervalClock
 
@@ -828,3 +829,54 @@ def read_raw_data(filepath: str, csv_args: dict = None) -> tuple[str, pd.DataFra
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return error, data
+
+
+def get_raw_recursos(request_url: str, request_params: dict) -> Dict:
+    """
+    Returns a dataframe with recursos data from movidesk api.
+    """
+    all_records = False
+    top = 1000
+    skip = 0
+    error = None
+    filetype = "json"
+    data = []
+
+    while not all_records:
+        try:
+            request_params["$top"] = top
+            request_params["$skip"] = skip
+
+            log(f"Request params: {request_params}")
+
+            response = requests.get(
+                request_url,
+                params=request_params,
+                timeout=constants.MAX_TIMEOUT_SECONDS.value,
+            )
+            response.raise_for_status()
+
+            paginated_data = response.json()
+
+            log(f"Dados (iniciais): {paginated_data}")
+
+            if isinstance(paginated_data, dict):
+                paginated_data = [paginated_data]
+
+            if len(paginated_data) == top:
+                skip += top
+                time.sleep(20)
+            else:
+                all_records = True
+
+            data += paginated_data
+            log(f"Dados (paginados): {len(data)}")
+        except Exception as error:
+            error = traceback.format_exc()
+            log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+            data = []
+            break
+
+    log(f"Request concluído, com status: {data}.")
+
+    return error, data, filetype
