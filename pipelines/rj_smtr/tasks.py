@@ -253,7 +253,7 @@ def create_dbt_run_vars(
 
 ###############
 #
-# Local file managment
+# Local file management
 #
 ###############
 
