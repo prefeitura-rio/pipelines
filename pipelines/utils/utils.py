@@ -754,6 +754,19 @@ def list_blobs_with_prefix(
     return list(blobs)
 
 
+def delete_blobs_list(bucket_name: str, blobs: List[Blob], mode: str = "prod") -> None:
+    """
+    Deletes all blobs in the bucket that are in the blobs list.
+    Mode needs to be "prod" or "staging"
+    """
+
+    credentials = get_credentials_from_env(mode=mode)
+    storage_client = storage.Client(credentials=credentials)
+
+    bucket = storage_client.bucket(bucket_name)
+    bucket.delete_blobs(blobs)
+
+
 def upload_files_to_storage(
     bucket_name: str,
     prefix: str,

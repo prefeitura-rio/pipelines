@@ -34,6 +34,7 @@ from pipelines.utils.utils import (
     batch_to_dataframe,
     dataframe_to_csv,
     dataframe_to_parquet,
+    delete_blobs_list,
     dump_header_to_file,
     list_blobs_with_prefix,
     parse_date_columns,
@@ -404,19 +405,18 @@ def dump_upload_batch(
             partitions = list(set(partitions))
             log(f"Got partitions: {partitions}")
             # Loop through partitions and delete files from GCS.
+            blobs_to_delete = []
             for partition in partitions:
                 if partition not in cleared_partitions:
-                    if idx % 100 == 0:
-                        log(
-                            f"Deleting partition with prefix: staging/{dataset_id}/{table_id}/{partition}"  # noqa
-                        )
                     blobs = list_blobs_with_prefix(
                         bucket_name=st.bucket_name,
                         prefix=f"staging/{dataset_id}/{table_id}/{partition}",
                     )
-                    for blob in blobs:
-                        blob.delete()
+                    blobs_to_delete.extend(blobs)
                 cleared_partitions.add(partition)
+            if blobs_to_delete:
+                delete_blobs_list(blobs_to_delete)
+                log(f"Deleted {len(blobs_to_delete)} blobs from GCS: {blobs_to_delete}")
         if dump_mode == "append":
             if tb.table_exists(mode="staging"):
                 log(
@@ -518,6 +518,10 @@ def dump_upload_batch(
         else:
             # pylint: disable=C0301
             log("STEP UPLOAD: Table does not exist in STAGING, need to create first")
+
+        # Get next batch.
+        batch = database.fetch_batch(batch_size)
+        idx += 1
 
 
 @task(
