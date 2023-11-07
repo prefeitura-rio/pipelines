@@ -844,8 +844,8 @@ def get_raw_recursos(request_url: str, request_params: dict) -> Dict:
 
     while not all_records:
         try:
-            request_params["$top"] = top
-            request_params["$skip"] = skip
+            # request_params["$top"] = top
+            # request_params["$skip"] = skip
 
             log(f"Request params: {request_params}")
 
@@ -871,6 +871,7 @@ def get_raw_recursos(request_url: str, request_params: dict) -> Dict:
 
             data += paginated_data
             log(f"Dados (paginados): {len(data)}")
+
         except Exception as error:
             error = traceback.format_exc()
             log(f"[CATCHED] Task failed with error: \n{error}", level="error")
@@ -879,4 +880,4 @@ def get_raw_recursos(request_url: str, request_params: dict) -> Dict:
 
     log(f"Request concluído, com status: {data}.")
 
-    return error, data, filetype
+    return data, filetype, error

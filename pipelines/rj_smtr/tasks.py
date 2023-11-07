@@ -668,12 +668,13 @@ def create_request_params(
 
     elif dataset_id == constants.GTFS_DATASET_ID.value:
         request_params = extract_params["filename"]
+
     elif dataset_id == constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value:
         end = datetime.strftime(timestamp, "%Y-%m-%dT%H:%M:%S.%MZ")
         dates = f"createdDate le {end}"
         request_params = extract_params.copy()
-        request_params["filter"] = request_params["filter"].format(
-            dates, request_params["service"]
+        request_params["$filter"] = request_params["$filter"].format(
+            dates, request_params["$service"]
         )
 
         request_params["token"] = get_vault_secret(

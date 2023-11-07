@@ -162,7 +162,7 @@ class constants(Enum):  # pylint: disable=c0103
     # SUBSÍDIO RECURSOS VIAGENS INDIVIDUAIS
     SUBSIDIO_SPPO_RECURSOS_DATASET_ID = "br_rj_riodejaneiro_recurso"
     SUBSIDIO_SPPO_RECURSOS_TABLE_ID = "recurso_sppo"
-    SUBSIDIO_SPPO_RECURSO_API_BASE_URL = "https://api.movidesk.com/public/v1/tickets"
+    SUBSIDIO_SPPO_RECURSO_API_BASE_URL = "https://api.movidesk.com/public/v1/tickets?"
     SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH = "sppo_subsidio_recursos_api"
     SUBSIDIO_SPPO_RECURSO_DEFAULT_PARAM = {"date_range_end": "2022-10-04 00:00:00"}
     SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS = {
@@ -172,6 +172,7 @@ class constants(Enum):  # pylint: disable=c0103
         "$expand": "customFieldValues,"
         "$customFieldValues($expand=items),"
         "$actions($select=id,description)",
+        "source_type": "movidesk",
     }
 
     # TIMEOUT = 10  # em segundos

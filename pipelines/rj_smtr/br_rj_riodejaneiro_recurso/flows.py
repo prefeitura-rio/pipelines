@@ -7,7 +7,6 @@ from copy import deepcopy
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
-from prefect.utilities.edges import unmapped
 from prefect import Parameter, case, task
 from prefect.tasks.control_flow import merge
 
@@ -22,7 +21,6 @@ from pipelines.utils.tasks import (
     get_current_flow_labels,
 )
 
-
 # SMTR Imports #
 
 from pipelines.rj_smtr.constants import constants
@@ -32,7 +30,8 @@ from pipelines.rj_smtr.tasks import (
 
 from pipelines.rj_smtr.flows import (
     default_capture_flow,
-)  # -> TODO: alterar função de captura de dados brutos
+)
+
 
 # SETUP #
 
@@ -54,8 +53,7 @@ with Flow(
     code_owners=["carolinagomes", "igorlaltuf"],
 ) as subsidio_sppo_recurso:
     capture = Parameter("capture", default=True)
-    # timestamp = get_current_timestamp()
-    timestamp = 34459200
+    timestamp = get_current_timestamp()
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=subsidio_sppo_recurso.name + " ",
@@ -65,14 +63,14 @@ with Flow(
     LABELS = get_current_flow_labels()
 
     with case(capture, True):
-        run_captura = create_flow_run.map(
+        run_captura = create_flow_run(
             flow_name=sppo_recurso_captura.name,
             project_name="staging",
             parameters=sppo_recurso_captura,
             labels=LABELS,
         )
 
-        wait_captura_true = wait_for_flow_run.map(
+        wait_captura_true = wait_for_flow_run(
             run_captura,
             stream_states=True,
             stream_logs=True,
