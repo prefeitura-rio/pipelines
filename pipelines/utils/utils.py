@@ -65,7 +65,7 @@ def log_mod(msg: Any, level: str = "info", index: int = 0, mod: int = 1):
     Only logs a message if the index is a multiple of mod.
     """
     if index % mod == 0 or index == 0:
-        log(msg=msg, level=level)
+        log(msg=f"iteration {index}:\n {msg}", level=level)
 
 
 ###############
