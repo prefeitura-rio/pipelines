@@ -302,7 +302,7 @@ def dump_upload_batch(
     partition_columns: List[str] = None,
     batch_data_type: str = "csv",
     biglake_table: bool = True,
-    number_batches_to_upload_log: int = 100,
+    log_number_of_batches: int = 100,
 ):
     """
     This task will dump and upload batches of data, sequentially.
@@ -344,7 +344,7 @@ def dump_upload_batch(
         log_mod(
             msg=f"Dumping batch {idx} with size {len(batch)}",
             index=idx,
-            mod=number_batches_to_upload_log,
+            mod=log_number_of_batches,
         )
 
         # Dump batch to file.
@@ -384,7 +384,7 @@ def dump_upload_batch(
         log_mod(
             msg=f"Batch generated {len(saved_files)} files. Will now upload.",
             index=idx,
-            mod=number_batches_to_upload_log,
+            mod=log_number_of_batches,
         )
 
         # Upload files.
@@ -414,7 +414,7 @@ def dump_upload_batch(
             log_mod(
                 msg=f"Got partitions: {partitions}",
                 index=idx,
-                mod=number_batches_to_upload_log,
+                mod=log_number_of_batches,
             )
             # Loop through partitions and delete files from GCS.
             blobs_to_delete = []
@@ -431,7 +431,7 @@ def dump_upload_batch(
                 log_mod(
                     msg=f"Deleted {len(blobs_to_delete)} blobs from GCS: {blobs_to_delete}",
                     index=idx,
-                    mod=number_batches_to_upload_log,
+                    mod=log_number_of_batches,
                 )
         if dump_mode == "append":
             if tb.table_exists(mode="staging"):
@@ -442,20 +442,20 @@ def dump_upload_batch(
                         + f"\n{storage_path_link}"
                     ),
                     index=idx,
-                    mod=number_batches_to_upload_log,
+                    mod=log_number_of_batches,
                 )
             else:
                 # the header is needed to create a table when dosen't exist
                 log_mod(
                     msg="MODE APPEND: Table DOESN'T EXISTS\nStart to CREATE HEADER file",
                     index=idx,
-                    mod=number_batches_to_upload_log,
+                    mod=log_number_of_batches,
                 )
                 header_path = dump_header_to_file(data_path=saved_files[0])
                 log_mod(
                     msg="MODE APPEND: Created HEADER file:\n" f"{header_path}",
                     index=idx,
-                    mod=number_batches_to_upload_log,
+                    mod=log_number_of_batches,
                 )
 
                 tb.create(
@@ -473,7 +473,7 @@ def dump_upload_batch(
                         + f"{storage_path_link}"
                     ),
                     index=idx,
-                    mod=number_batches_to_upload_log,
+                    mod=log_number_of_batches,
                 )  # pylint: disable=C0301
 
                 if not cleared_table:
@@ -489,7 +489,7 @@ def dump_upload_batch(
                             + f"{storage_path_link}"
                         ),
                         index=idx,
-                        mod=number_batches_to_upload_log,
+                        mod=log_number_of_batches,
                     )  # pylint: disable=C0301
                     cleared_table = True
         elif dump_mode == "overwrite":
@@ -501,7 +501,7 @@ def dump_upload_batch(
                         + f"{storage_path_link}"
                     ),
                     index=idx,
-                    mod=number_batches_to_upload_log,
+                    mod=log_number_of_batches,
                 )  # pylint: disable=C0301
                 st.delete_table(
                     mode="staging", bucket_name=st.bucket_name, not_found_ok=True
@@ -513,7 +513,7 @@ def dump_upload_batch(
                         + f"{storage_path_link}"
                     ),
                     index=idx,
-                    mod=number_batches_to_upload_log,
+                    mod=log_number_of_batches,
                 )  # pylint: disable=C0301
                 # delete only staging table and let DBT overwrite the prod table
                 tb.delete(mode="staging")
@@ -523,7 +523,7 @@ def dump_upload_batch(
                         + f"{table_staging}\n"
                     ),
                     index=idx,
-                    mod=number_batches_to_upload_log,
+                    mod=log_number_of_batches,
                 )  # pylint: disable=C0301
                 cleared_table = True
 
@@ -533,13 +533,13 @@ def dump_upload_batch(
                 log_mod(
                     msg="MODE OVERWRITE: Table DOSEN'T EXISTS\nStart to CREATE HEADER file",
                     index=idx,
-                    mod=number_batches_to_upload_log,
+                    mod=log_number_of_batches,
                 )
                 header_path = dump_header_to_file(data_path=saved_files[0])
                 log_mod(
                     "MODE OVERWRITE: Created HEADER file:\n" f"{header_path}",
                     index=idx,
-                    mod=number_batches_to_upload_log,
+                    mod=log_number_of_batches,
                 )
 
                 tb.create(
@@ -557,7 +557,7 @@ def dump_upload_batch(
                         + f"{storage_path_link}"
                     ),
                     index=idx,
-                    mod=number_batches_to_upload_log,
+                    mod=log_number_of_batches,
                 )
 
                 st.delete_table(
@@ -570,14 +570,14 @@ def dump_upload_batch(
                         + f"{storage_path_link}"
                     ),
                     index=idx,
-                    mod=number_batches_to_upload_log,
+                    mod=log_number_of_batches,
                 )  # pylint: disable=C0301
                 cleared_table = True
 
         log_mod(
             msg="STARTING UPLOAD TO GCS",
             index=idx,
-            mod=number_batches_to_upload_log,
+            mod=log_number_of_batches,
         )
         if tb.table_exists(mode="staging"):
             # Upload them all at once
@@ -585,7 +585,7 @@ def dump_upload_batch(
             log_mod(
                 msg="STEP UPLOAD: Sucessfully uploaded all batch files to Storage",
                 index=idx,
-                mod=number_batches_to_upload_log,
+                mod=log_number_of_batches,
             )
             for saved_file in saved_files:
                 # Delete the files
@@ -595,7 +595,7 @@ def dump_upload_batch(
             log_mod(
                 msg="STEP UPLOAD: Table does not exist in STAGING, need to create first",
                 index=idx,
-                mod=number_batches_to_upload_log,
+                mod=log_number_of_batches,
             )
 
         # Get next batch.

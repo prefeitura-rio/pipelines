@@ -96,6 +96,10 @@ with Flow(
     )
     dbt_alias = Parameter("dbt_alias", default=False, required=False)
     biglake_table = Parameter("biglake_table", default=False, required=False)
+    log_number_of_batches = Parameter(
+        "log_number_of_batches", default=100, required=False
+    )
+
     #####################################
     #
     # Rename flow run
@@ -171,6 +175,7 @@ with Flow(
         partition_columns=partition_columns,
         batch_data_type=batch_data_type,
         biglake_table=biglake_table,
+        log_number_of_batches=log_number_of_batches,
     )
     dump_upload.set_upstream(db_execute)
 
