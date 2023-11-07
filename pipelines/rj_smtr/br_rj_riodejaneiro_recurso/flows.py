@@ -36,7 +36,7 @@ from pipelines.rj_smtr.flows import (
 # SETUP #
 
 sppo_recurso_captura = deepcopy(default_capture_flow)
-sppo_recurso_captura.name = "Subsídio SPPO - Recursos Captura"
+sppo_recurso_captura.name = "Subsídio SPPO - Recursos: Captura"
 sppo_recurso_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_recurso_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
