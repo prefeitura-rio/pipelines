@@ -432,7 +432,7 @@ with Flow(
             raise_final_state=True,
         )
 
-    bilhetagem_ordem_pagamento_captura_tratamento.reference_tasks(
+    bilhetagem_ordem_pagamento_captura_tratamento.set_reference_tasks(
         [wait_materializacao, wait_recaptura]
     )
 
