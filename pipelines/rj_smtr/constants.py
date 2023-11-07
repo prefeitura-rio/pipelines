@@ -164,14 +164,14 @@ class constants(Enum):  # pylint: disable=c0103
     SUBSIDIO_SPPO_RECURSOS_TABLE_ID = "recurso_sppo"
     SUBSIDIO_SPPO_RECURSO_API_BASE_URL = "https://api.movidesk.com/public/v1/tickets?"
     SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH = "sppo_subsidio_recursos_api"
-    SUBSIDIO_SPPO_RECURSO_DEFAULT_PARAM = {"date_range_end": "2022-10-04 00:00:00"}
+    SUBSIDIO_SPPO_RECURSO_DEFAULT_PARAM = {"date_range_end": "%Y-%m-%dT%H:%M:%S.%MZ"}
     SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS = {
         "$service": "serviceFull eq 'SPPO'",
-        "$select": "id," "protocol," "createdDate",
+        "$select": "'id', 'protocol','createdDate'",
         "$filter": "{dates} and serviceFull/any(serviceFull: {service})",
-        "$expand": "customFieldValues,"
-        "$customFieldValues($expand=items),"
-        "$actions($select=id,description)",
+        "$expand": "customFieldValues",
+        "$customFieldValues($expand=items)": "customFieldValues($expand=items)",
+        "$actions($select=id,description)": "actions($select=id,description)",
         "source_type": "movidesk",
     }
 
