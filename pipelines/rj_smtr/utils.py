@@ -831,7 +831,7 @@ def read_raw_data(filepath: str, csv_args: dict = None) -> tuple[str, pd.DataFra
     return error, data
 
 
-def get_raw_recursos(request_url: str, request_params: dict) -> Dict:
+def get_raw_recursos(request_url: str, request_params: dict) -> tuple[str, str, str]:
     """
     Returns a dataframe with recursos data from movidesk api.
     """
@@ -880,4 +880,4 @@ def get_raw_recursos(request_url: str, request_params: dict) -> Dict:
 
     log(f"Request concluído, com status: {data}.")
 
-    return data, filetype, error
+    return error, data, filetype
