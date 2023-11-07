@@ -362,7 +362,7 @@ def dump_upload_batch(
                 partition_columns=partitions,
                 savepath=prepath,
                 data_type=batch_data_type,
-                suffix=f"{uuid4()}",
+                suffix=f"{datetime.now().strftime('%Y%m%d-%H%M%S')}",
             )
         elif batch_data_type == "csv":
             fname = prepath / f"{uuid4()}.csv"
