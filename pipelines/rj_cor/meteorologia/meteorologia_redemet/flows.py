@@ -28,7 +28,6 @@ from pipelines.utils.tasks import (
     get_current_flow_labels,
 )
 
-
 with Flow(
     name="COR: Meteorologia - Meteorologia REDEMET",
     code_owners=[
@@ -172,16 +171,17 @@ with Flow(
     data_inicio_, data_fim_, backfill = get_dates(data_inicio, data_fim)
     # data = slice_data(current_time=CURRENT_TIME)
     dados = tratar_dados_estacao(data_inicio_, data_fim_)
-    PATH = salvar_dados(dados=dados)
 
+    # print(dados.columns)
+    # PATH = salvar_dados(dados=dados)
     # Create table in BigQuery
-    UPLOAD_TABLE = create_table_and_upload_to_gcs(
-        data_path=PATH,
-        dataset_id=DATASET_ID,
-        table_id=TABLE_ID,
-        dump_mode=DUMP_MODE,
-        wait=PATH,
-    )
+    # UPLOAD_TABLE = create_table_and_upload_to_gcs(
+    #    data_path=PATH,
+    #    dataset_id=DATASET_ID,
+    #    table_id=TABLE_ID,
+    #    dump_mode=DUMP_MODE,
+    #    wait=PATH,
+    # )
 
 
 # para rodar na cloud
