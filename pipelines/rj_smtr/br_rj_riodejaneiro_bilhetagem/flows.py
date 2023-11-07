@@ -148,7 +148,7 @@ bilhetagem_materializacao_ordem_pagamento.storage = GCS(
 )
 bilhetagem_materializacao_ordem_pagamento.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
 bilhetagem_materializacao_ordem_pagamento_parameters = {
@@ -190,7 +190,7 @@ bilhetagem_recaptura = set_default_parameters(
 
 with Flow(
     "SMTR: Bilhetagem Transação - Tratamento",
-    code_owners=["caio", "fernanda", "boris", "rodrigo"],
+    code_owners=["caio", "fernanda", "boris", "rodrigo", "rafaelpinheiro"],
 ) as bilhetagem_transacao_tratamento:
     # Configuração #
 
@@ -229,8 +229,7 @@ with Flow(
 
         runs_captura = create_flow_run.map(
             flow_name=unmapped(bilhetagem_auxiliar_captura.name),
-            # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
-            project_name=unmapped("staging"),
+            project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
             parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
             labels=unmapped(LABELS),
         )
@@ -246,8 +245,7 @@ with Flow(
 
         runs_recaptura_auxiliar = create_flow_run.map(
             flow_name=unmapped(bilhetagem_recaptura.name),
-            # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
-            project_name=unmapped("staging"),
+            project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
             parameters=constants.BILHETAGEM_CAPTURE_PARAMS.value,
             labels=unmapped(LABELS),
         )
@@ -313,7 +311,7 @@ bilhetagem_transacao_tratamento.schedule = every_hour
 
 with Flow(
     "SMTR: Bilhetagem GPS Validador - Tratamento",
-    code_owners=["caio", "fernanda", "boris", "rodrigo"],
+    code_owners=["caio", "fernanda", "boris", "rodrigo", "rafaelpinheiro"],
 ) as bilhetagem_gps_tratamento:
     timestamp = get_rounded_timestamp(
         interval_minutes=constants.BILHETAGEM_TRATAMENTO_INTERVAL.value
@@ -352,7 +350,7 @@ bilhetagem_gps_tratamento.schedule = every_hour
 
 with Flow(
     "SMTR: Bilhetagem Ordem Pagamento - Captura/Tratamento",
-    code_owners=["caio", "fernanda", "boris", "rodrigo"],
+    code_owners=["caio", "fernanda", "boris", "rodrigo", "rafaelpinheiro"],
 ) as bilhetagem_ordem_pagamento_captura_tratamento:
     capture = Parameter("capture", default=True)
     materialize = Parameter("materialize", default=True)
@@ -372,8 +370,7 @@ with Flow(
     with case(capture, True):
         runs_captura = create_flow_run.map(
             flow_name=unmapped(bilhetagem_ressarcimento_captura.name),
-            # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
-            project_name=unmapped("staging"),
+            project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
             parameters=constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS.value,
             labels=unmapped(LABELS),
         )
@@ -389,8 +386,7 @@ with Flow(
 
         runs_recaptura = create_flow_run.map(
             flow_name=unmapped(bilhetagem_recaptura.name),
-            # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
-            project_name=unmapped("staging"),
+            project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
             parameters=constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS.value,
             labels=unmapped(LABELS),
         )
@@ -441,7 +437,7 @@ bilhetagem_ordem_pagamento_captura_tratamento.storage = GCS(
 )
 bilhetagem_ordem_pagamento_captura_tratamento.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
 
