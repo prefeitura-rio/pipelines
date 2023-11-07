@@ -574,7 +574,7 @@ def to_partitions(
     suffix: str = None,
     build_json_dataframe: bool = False,
     dataframe_key_column: str = None,
-):  # sourcery skip: raise-specific-error
+) -> List[Path]:  # sourcery skip: raise-specific-error
     """Save data in to hive patitions schema, given a dataframe and a list of partition columns.
     Args:
         data (pandas.core.frame.DataFrame): Dataframe to be partitioned.
@@ -593,7 +593,7 @@ def to_partitions(
             savepath='partitions/'
         )
     """
-
+    saved_files = []
     if isinstance(data, (pd.core.frame.DataFrame)):
         savepath = Path(savepath)
 
@@ -642,12 +642,16 @@ def to_partitions(
                     mode="a",
                     header=not file_filter_save_path.exists(),
                 )
+                saved_files.append(file_filter_save_path)
             elif data_type == "parquet":
                 dataframe_to_parquet(dataframe=df_filter, path=file_filter_save_path)
+                saved_files.append(file_filter_save_path)
             else:
                 raise ValueError(f"Invalid data type: {data_type}")
     else:
         raise BaseException("Data need to be a pandas DataFrame")
+
+    return saved_files
 
 
 def to_json_dataframe(
