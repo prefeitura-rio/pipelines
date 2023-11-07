@@ -415,9 +415,7 @@ def dump_upload_batch(
                     blobs_to_delete.extend(blobs)
                 cleared_partitions.add(partition)
             if blobs_to_delete:
-                delete_blobs_list(
-                    bucket_name=st.bucket_name, blobs_list=blobs_to_delete
-                )
+                delete_blobs_list(bucket_name=st.bucket_name, blobs=blobs_to_delete)
                 log(f"Deleted {len(blobs_to_delete)} blobs from GCS: {blobs_to_delete}")
         if dump_mode == "append":
             if tb.table_exists(mode="staging"):
