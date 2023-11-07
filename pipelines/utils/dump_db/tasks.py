@@ -35,6 +35,7 @@ from pipelines.utils.utils import (
     dataframe_to_csv,
     dataframe_to_parquet,
     dump_header_to_file,
+    list_blobs_with_prefix,
     parse_date_columns,
     clean_dataframe,
     to_partitions,
@@ -310,7 +311,7 @@ def dump_upload_batch(
 
     # Keep track of cleared stuff
     prepath = f"data/{uuid4()}/"
-    # cleared_partitions = []
+    cleared_partitions = set()
     cleared_table = False
 
     # Get data columns
@@ -387,7 +388,35 @@ def dump_upload_batch(
             f"/staging/{dataset_id}/{table_id}"
         )
         dataset_is_public = tb.client["bigquery_prod"].project == "datario"
-        # TODO: clear partitions before uploading
+        # If we have a partition column
+        if partition_column:
+            # Extract the partition from the filenames
+            partitions = []
+            for saved_file in saved_files:
+                # Remove the prepath and filename. This is the partition.
+                partition = str(saved_file).replace(str(prepath), "")
+                partition = partition.replace(saved_file.name, "")
+                # Strip slashes from beginning and end.
+                partition = partition.strip("/")
+                # Add to list.
+                partitions.append(partition)
+            # Remove duplicates.
+            partitions = list(set(partitions))
+            log(f"Got partitions: {partitions}")
+            # Loop through partitions and delete files from GCS.
+            for partition in partitions:
+                if partition not in cleared_partitions:
+                    if idx % 100 == 0:
+                        log(
+                            f"Deleting partition with prefix: staging/{dataset_id}/{table_id}/{partition}"  # noqa
+                        )
+                    blobs = list_blobs_with_prefix(
+                        bucket_name=st.bucket_name,
+                        prefix=f"staging/{dataset_id}/{table_id}/{partition}",
+                    )
+                    for blob in blobs:
+                        blob.delete()
+                cleared_partitions.add(partition)
         if dump_mode == "append":
             if tb.table_exists(mode="staging"):
                 log(
