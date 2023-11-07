@@ -159,25 +159,6 @@ class constants(Enum):  # pylint: disable=c0103
     SUBSIDIO_SPPO_DATASET_ID = "projeto_subsidio_sppo"
     SUBSIDIO_SPPO_TABLE_ID = "viagem_completa"
 
-    # SUBSÍDIO RECURSOS VIAGENS INDIVIDUAIS
-    SUBSIDIO_SPPO_RECURSOS_DATASET_ID = "br_rj_riodejaneiro_recurso"
-    SUBSIDIO_SPPO_RECURSOS_TABLE_ID = "recurso_sppo"
-    SUBSIDIO_SPPO_RECURSO_API_BASE_URL = "https://api.movidesk.com/public/v1/tickets?"
-    SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH = "sppo_subsidio_recursos_api"
-    SUBSIDIO_SPPO_RECURSO_DEFAULT_PARAM = {"date_range_end": "%Y-%m-%dT%H:%M:%S.%MZ"}
-    SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS = {
-        "$service": "serviceFull eq 'SPPO'",
-        "$select": "'id', 'protocol','createdDate'",
-        "$filter": "{dates} and serviceFull/any(serviceFull: {service})",
-        "$expand": "customFieldValues",
-        "$customFieldValues($expand=items)": "customFieldValues($expand=items)",
-        "$actions($select=id,description)": "actions($select=id,description)",
-        "source_type": "movidesk",
-    }
-
-    # TIMEOUT = 10  # em segundos
-    # BACKOFF_FACTOR = 1.5
-
     # SUBSÍDIO DASHBOARD
     SUBSIDIO_SPPO_DASHBOARD_DATASET_ID = "dashboard_subsidio_sppo"
     SUBSIDIO_SPPO_DASHBOARD_TABLE_ID = "sumario_servico_dia"
@@ -419,3 +400,26 @@ class constants(Enum):  # pylint: disable=c0103
             "version": {},
         },
     }
+
+    # SUBSÍDIO RECURSOS VIAGENS INDIVIDUAIS
+    SUBSIDIO_SPPO_RECURSOS_DATASET_ID = "br_rj_riodejaneiro_recurso"
+    SUBSIDIO_SPPO_RECURSOS_TABLE_ID = "recurso_sppo"
+    SUBSIDIO_SPPO_RECURSO_API_BASE_URL = "https://api.movidesk.com/public/v1/tickets?"
+    SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH = "sppo_subsidio_recursos_api"
+    SUBSIDIO_SPPO_RECURSO_DEFAULT_PARAM = {"date_range_end": "%Y-%m-%dT%H:%M:%S.%MZ"}
+    SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS = {
+        "partition_date_only": True,
+        "source_type": "movidesk",
+        "dataset_id": "br_rj_riodejaneiro_recurso",
+        "extract_params": {
+            "$service": "serviceFull eq 'SPPO'",
+            "$select": "'id', 'protocol','createdDate'",
+            "$filter": "{dates} and serviceFull/any(serviceFull: {service})",
+            "$expand": "customFieldValues",
+            "$customFieldValues($expand=items)": "customFieldValues($expand=items)",
+            "$actions($select=id,description)": "actions($select=id,description)",
+        },
+        "interval_minutes": "{timestamp}",
+    }
+    # TIMEOUT = 10  # em segundos
+    # BACKOFF_FACTOR = 1.5
