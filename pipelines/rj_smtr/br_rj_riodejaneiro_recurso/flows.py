@@ -24,13 +24,9 @@ from pipelines.utils.tasks import (
 # SMTR Imports #
 
 from pipelines.rj_smtr.constants import constants
-from pipelines.rj_smtr.tasks import (
-    get_current_timestamp,
-)
+from pipelines.rj_smtr.tasks import get_current_timestamp
 
-from pipelines.rj_smtr.flows import (
-    default_capture_flow,
-)
+from pipelines.rj_smtr.flows import default_capture_flow
 
 
 # SETUP #
@@ -47,7 +43,6 @@ sppo_recurso_captura_params = set_default_parameters(
     default_parameters=constants.SUBSIDIO_SPPO_RECURSO_DEFAULT_PARAM.value,
 )
 
-"""
 with Flow(
     "SMTR: Subsídio Recursos Viagens Individuais - Captura",
     code_owners=["carolinagomes", "igorlaltuf"],
@@ -83,9 +78,9 @@ with Flow(
         )()
 
     wait_captura = merge(wait_captura_true, wait_captura_false)
-"""
-sppo_recurso_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-sppo_recurso_captura.run_config = KubernetesRun(
+
+subsidio_sppo_recurso.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+subsidio_sppo_recurso.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
