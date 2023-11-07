@@ -42,14 +42,14 @@ sppo_recurso_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
-sppo_recurso_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_recurso_captura_params = set_default_parameters(
     flow=sppo_recurso_captura,
     default_parameters=constants.SUBSIDIO_SPPO_RECURSO_DEFAULT_PARAM.value,
 )
 
+"""
 with Flow(
-    "SMTR: Subsídio Recursos Viagens Individuais-Captura",
+    "SMTR: Subsídio Recursos Viagens Individuais - Captura",
     code_owners=["carolinagomes", "igorlaltuf"],
 ) as subsidio_sppo_recurso:
     capture = Parameter("capture", default=True)
@@ -83,9 +83,9 @@ with Flow(
         )()
 
     wait_captura = merge(wait_captura_true, wait_captura_false)
-
-subsidio_sppo_recurso.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-subsidio_sppo_recurso.run_config = KubernetesRun(
+"""
+sppo_recurso_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+sppo_recurso_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
