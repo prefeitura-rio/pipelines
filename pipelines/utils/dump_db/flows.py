@@ -159,6 +159,7 @@ with Flow(
         dataset_id=dataset_id,
         table_id=table_id,
     )
+    db_execute.set_upstream(formated_query)
 
     # Dump batches to files
     dump_upload = dump_upload_batch(
@@ -171,6 +172,7 @@ with Flow(
         batch_data_type=batch_data_type,
         biglake_table=biglake_table,
     )
+    dump_upload.set_upstream(db_execute)
 
     with case(materialize_after_dump, True):
         # Trigger DBT flow run
