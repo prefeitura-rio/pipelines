@@ -49,7 +49,7 @@ sppo_recurso_captura_params = set_default_parameters(
 )
 
 with Flow(
-    "SMTR: Subsídio Recursos Viagens Individuais - Captura",
+    "SMTR: Subsídio Recursos Viagens Individuais-Captura",
     code_owners=["carolinagomes", "igorlaltuf"],
 ) as subsidio_sppo_recurso:
     capture = Parameter("capture", default=True)
