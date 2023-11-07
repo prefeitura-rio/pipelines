@@ -509,15 +509,12 @@ def dump_upload_batch(
 
         log("STARTING UPLOAD TO GCS")
         if tb.table_exists(mode="staging"):
+            # Upload them all at once
+            tb.append(filepath=prepath, if_exists="replace")
+            log("STEP UPLOAD: Sucessfully uploaded all batch files to Storage")
             for saved_file in saved_files:
-                # the name of the files need to be the same or the data doesn't get overwritten
-                tb.append(filepath=saved_file, if_exists="replace")
-
-                log(
-                    f"STEP UPLOAD: Successfully uploaded {saved_file} to Storage:\n"
-                    f"{storage_path}\n"
-                    f"{storage_path_link}"
-                )
+                # Delete the files
+                saved_file.unlink()
         else:
             # pylint: disable=C0301
             log("STEP UPLOAD: Table does not exist in STAGING, need to create first")
