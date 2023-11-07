@@ -36,7 +36,7 @@ from pipelines.rj_smtr.tasks import get_rounded_timestamp, get_current_timestamp
 
 from pipelines.rj_smtr.constants import constants
 
-from pipelines.rj_smtr.schedules import every_hour, every_minute
+from pipelines.rj_smtr.schedules import every_hour, every_minute, every_day
 
 # Flows #
 
@@ -432,6 +432,10 @@ with Flow(
             raise_final_state=True,
         )
 
+    bilhetagem_ordem_pagamento_captura_tratamento.reference_tasks(
+        [wait_materializacao, wait_recaptura]
+    )
+
 bilhetagem_ordem_pagamento_captura_tratamento.storage = GCS(
     emd_constants.GCS_FLOWS_BUCKET.value
 )
@@ -439,3 +443,6 @@ bilhetagem_ordem_pagamento_captura_tratamento.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
+
+
+bilhetagem_ordem_pagamento_captura_tratamento.schedule = every_day
