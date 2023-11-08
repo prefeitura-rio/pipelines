@@ -222,6 +222,7 @@ sme_queries = {
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Movimentacao_lgpd",
     },
     "turma": {
+        "dataset_id": "educacao_basica_frequencia",
         "dump_mode": "overwrite",
         "materialize_after_dump": True,
         "materialize_to_datario": False,
@@ -250,7 +251,6 @@ sme_queries = {
                 trn_horaFim
             FROM GestaoEscolar.dbo.ACA_Turno
         """,
-        "dataset_id": "educacao_basica_frequencia",
     },
 }
 
