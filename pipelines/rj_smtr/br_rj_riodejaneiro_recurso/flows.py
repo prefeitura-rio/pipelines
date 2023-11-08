@@ -60,7 +60,7 @@ with Flow(
     with case(capture, True):
         run_captura = create_flow_run.map(
             flow_name=sppo_recurso_captura.name,
-            project_name=unmapped("staging"),
+            project_name="staging",
             parameters=constants.SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS.value,
             labels=LABELS,
         )
