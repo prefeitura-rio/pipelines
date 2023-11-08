@@ -124,7 +124,7 @@ class SqlServer(Database):
         # pylint: disable=E1101
         return pyodbc.connect(
             connstring=(
-                "DRIVER={ODBC Driver 18 for SQL Server};"
+                "DRIVER={SQL Server};"
                 + f"SERVER={self._hostname},{self._port};"
                 + f"DATABASE={self._database};"
                 + f"UID={self._user};"
