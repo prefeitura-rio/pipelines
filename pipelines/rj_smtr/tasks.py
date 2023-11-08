@@ -670,16 +670,16 @@ def create_request_params(
         request_params = extract_params["filename"]
 
     elif dataset_id == constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value:
-        end = datetime.strftime(timestamp, "%Y-%m-%dT%H:%M:%S.%MZ")
-        dates = f"createdDate le {end}"
-        request_params = extract_params.copy()
-        request_params["$filter"] = request_params["$filter"].format(
-            dates, request_params["$service"]
-        )
-
-        request_params["token"] = get_vault_secret(
+        extract_params["token"] = get_vault_secret(
             constants.SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH.value
         )["data"]["token"]
+        end = datetime.strftime(timestamp, "%Y-%m-%dT%H:%M:%S.%MZ")
+        recurso_params = {
+            "service": constants.SUBSIDIO_SPPO_RECURSO_SERVICE.value,
+            "dates": f"createdDate le {end}",
+        }
+        extract_params["$filter"] = extract_params["$filter"].format(**recurso_params)
+        request_params = extract_params
 
         request_url = constants.SUBSIDIO_SPPO_RECURSO_API_BASE_URL.value
 
@@ -716,6 +716,7 @@ def get_raw_from_sources(
     filepath = None
     data = None
 
+    log(f"Params {request_params}, source type {source_type}.")
     source_values = source_type.split("-", 1)
 
     source_type, filetype = (

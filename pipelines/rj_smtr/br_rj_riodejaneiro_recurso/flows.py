@@ -38,9 +38,9 @@ sppo_recurso_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
-sppo_recurso_captura_params = set_default_parameters(
+sppo_recurso_captura = set_default_parameters(
     flow=sppo_recurso_captura,
-    default_parameters=constants.SUBSIDIO_SPPO_RECURSO_DEFAULT_PARAM.value,
+    default_parameters=constants.SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS.value,
 )
 
 with Flow(
@@ -61,7 +61,7 @@ with Flow(
         run_captura = create_flow_run.map(
             flow_name=sppo_recurso_captura.name,
             project_name=unmapped("staging"),
-            parameters=sppo_recurso_captura_params,
+            parameters=constants.SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS.value,
             labels=LABELS,
         )
 

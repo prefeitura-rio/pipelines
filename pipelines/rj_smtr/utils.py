@@ -29,6 +29,7 @@ from prefect.schedules.clocks import IntervalClock
 
 from pipelines.constants import constants as emd_constants
 
+
 from pipelines.rj_smtr.implicit_ftp import ImplicitFtpTls
 from pipelines.rj_smtr.constants import constants
 
@@ -844,8 +845,8 @@ def get_raw_recursos(request_url: str, request_params: dict) -> tuple[str, str, 
 
     while not all_records:
         try:
-            # request_params["$top"] = top
-            # request_params["$skip"] = skip
+            request_params["$top"] = top
+            request_params["$skip"] = skip
 
             log(f"Request params: {request_params}")
 
