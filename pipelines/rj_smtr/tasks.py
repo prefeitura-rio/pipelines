@@ -434,7 +434,7 @@ def save_treated_local(file_path: str, status: dict, mode: str = "staging") -> s
 # Extract data
 #
 ###############
-@task(nout=3)
+@task(nout=3, max_retries=3, retry_delay=timedelta(seconds=5))
 def query_logs(
     dataset_id: str,
     table_id: str,
@@ -529,16 +529,8 @@ def query_logs(
         logs.sucesso IS NOT TRUE
     """
     log(f"Run query to check logs:\n{query}")
-    retries = 5
-    for i in range(retries):
-        try:
-            results = bd.read_sql(query=query, billing_project_id=bq_project())
-            break
-        except NotFound as e:
-            log(e)
-            if i == retries - 1:
-                raise e
-            time.sleep(5)
+    results = bd.read_sql(query=query, billing_project_id=bq_project())
+
     if len(results) > 0:
         results = results.sort_values(["timestamp_captura"])
         results["timestamp_captura"] = (

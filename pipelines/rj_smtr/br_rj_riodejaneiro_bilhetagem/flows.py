@@ -36,7 +36,7 @@ from pipelines.rj_smtr.tasks import get_rounded_timestamp, get_current_timestamp
 
 from pipelines.rj_smtr.constants import constants
 
-from pipelines.rj_smtr.schedules import every_hour, every_minute, every_day
+from pipelines.rj_smtr.schedules import every_hour, every_minute, every_day_hour_five
 
 # Flows #
 
@@ -410,8 +410,7 @@ with Flow(
     with case(materialize, True):
         run_materializacao = create_flow_run(
             flow_name=bilhetagem_materializacao_ordem_pagamento.name,
-            # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            project_name="staging",
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=LABELS,
             upstream_tasks=[wait_recaptura],
             parameters={
@@ -441,4 +440,4 @@ bilhetagem_ordem_pagamento_captura_tratamento.run_config = KubernetesRun(
 )
 
 
-bilhetagem_ordem_pagamento_captura_tratamento.schedule = every_day
+bilhetagem_ordem_pagamento_captura_tratamento.schedule = every_day_hour_five
