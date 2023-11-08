@@ -10,7 +10,6 @@ from pathlib import Path
 import traceback
 from typing import Dict, List, Union, Iterable, Any
 import io
-import time
 
 from basedosdados import Storage, Table
 import basedosdados as bd
@@ -20,7 +19,6 @@ import pendulum
 from prefect import task
 from pytz import timezone
 import requests
-from google.api_core.exceptions import NotFound
 
 from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.utils import (
