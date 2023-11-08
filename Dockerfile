@@ -1,5 +1,5 @@
 # Build arguments
-ARG PYTHON_VERSION=3.9-slim
+ARG PYTHON_VERSION=3.9-slim-bookworm
 
 # Get Oracle Instant Client
 FROM curlimages/curl:7.81.0 as curl-step
@@ -22,6 +22,7 @@ FROM python:${PYTHON_VERSION}
 # Setting environment with prefect version
 ARG PREFECT_VERSION=0.15.9
 ENV PREFECT_VERSION $PREFECT_VERSION
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Setting environment with Oracle Instant Client URL
 
@@ -29,10 +30,18 @@ ENV PREFECT_VERSION $PREFECT_VERSION
 WORKDIR /opt/oracle
 COPY --from=unzip-step /tmp/instantclient_21_5 /opt/oracle/instantclient_21_5
 RUN apt-get update && \
-    apt-get install --no-install-recommends -y libaio1 unixodbc-dev && \
+    apt-get install --no-install-recommends -y libaio1 && \
     rm -rf /var/lib/apt/lists/* && \
     sh -c "echo /opt/oracle/instantclient_21_5 > /etc/ld.so.conf.d/oracle-instantclient.conf" && \
     ldconfig
+
+# Setup SQL Server ODBC Driver
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y curl gnupg2
+RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
+RUN echo "deb [arch=amd64,arm64,armhf] https://packages.microsoft.com/debian/12/prod bookworm main" > /etc/apt/sources.list.d/mssql-release.list
+RUN apt-get update && \
+    ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
 
 # Setup virtual environment and prefect
 ENV VIRTUAL_ENV=/opt/venv
