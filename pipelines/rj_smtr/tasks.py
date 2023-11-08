@@ -10,6 +10,7 @@ from pathlib import Path
 import traceback
 from typing import Dict, List, Union, Iterable, Any
 import io
+import time
 
 from basedosdados import Storage, Table
 import basedosdados as bd
@@ -19,6 +20,7 @@ import pendulum
 from prefect import task
 from pytz import timezone
 import requests
+from google.api_core.exceptions import NotFound
 
 from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.utils import (
@@ -527,7 +529,16 @@ def query_logs(
         logs.sucesso IS NOT TRUE
     """
     log(f"Run query to check logs:\n{query}")
-    results = bd.read_sql(query=query, billing_project_id=bq_project())
+    retries = 5
+    for i in range(retries):
+        try:
+            results = bd.read_sql(query=query, billing_project_id=bq_project())
+            break
+        except NotFound as e:
+            log(e)
+            if i == retries - 1:
+                raise e
+            time.sleep(5)
     if len(results) > 0:
         results = results.sort_values(["timestamp_captura"])
         results["timestamp_captura"] = (
@@ -658,8 +669,6 @@ def create_request_params(
         datetime_range = get_datetime_range(
             timestamp=timestamp, interval=timedelta(minutes=interval_minutes)
         )
-
-        log(f"datetime_range = {datetime_range}")
 
         request_params = {
             "database": extract_params["database"],
