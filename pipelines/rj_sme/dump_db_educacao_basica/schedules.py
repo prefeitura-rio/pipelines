@@ -229,7 +229,7 @@ sme_queries = {
         "materialization_mode": "prod",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Turma",
     },
-    "aca_turno": {
+    "turno": {
         "dump_mode": "overwrite",
         "materialize_after_dump": False,
         "materialize_to_datario": False,
