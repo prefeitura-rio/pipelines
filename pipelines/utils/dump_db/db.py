@@ -128,6 +128,7 @@ class SqlServer(Database):
             f"DATABASE={self._database};"
             f"UID={self._user};"
             f"PWD={self._password};"
+            "Encrypt=no;"
         )
 
     def get_cursor(self):
