@@ -7,8 +7,8 @@ from abc import ABC, abstractmethod
 from typing import List
 
 import cx_Oracle
-import pymssql
 import pymysql.cursors
+import pyodbc
 
 
 class Database(ABC):
@@ -114,18 +114,20 @@ class SqlServer(Database):
             password,
             database,
         )
+        self._connection: pyodbc.Connection = None
+        self._cursor: pyodbc.Cursor = None
 
     def connect(self):
         """
         Connect to the SQL Server.
         """
         # pylint: disable=E1101
-        return pymssql.connect(
-            server=self._hostname,
-            port=self._port,
-            user=self._user,
-            password=self._password,
-            database=self._database,
+        return pyodbc.connect(
+            f"DRIVER={{ODBC Driver 17 for SQL Server}};"
+            f"SERVER={self._hostname};"
+            f"DATABASE={self._database};"
+            f"UID={self._user};"
+            f"PWD={self._password};"
         )
 
     def get_cursor(self):
