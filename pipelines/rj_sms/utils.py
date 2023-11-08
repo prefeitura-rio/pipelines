@@ -97,7 +97,7 @@ def download_from_api(
     params = {} if params is None else params
     try:
         response = requests.get(url, headers=headers, params=params)
-    except Exception as e:
+    except Exception as e :
         log(f"An error occurred: {e}", level="error")
 
     if response.status_code == 200:
@@ -119,13 +119,10 @@ def download_from_api(
 
         log(f"API data downloaded to {destination_file_path}")
 
-    else:
-        log(
-            f"API call failed. Error: {response.status_code} - {response.reason}",
-            level="error",
-        )
+        return destination_file_path
 
-    return destination_file_path
+    else:
+        raise ValueError(f"API call failed, error: {response.status_code} - {response.reason}")
 
 
 @task
@@ -391,7 +388,7 @@ def from_json_to_csv(input_path, sep=";"):
 
 
 @task
-def create_partitions(data_path: str, partition_directory: str):
+def create_partitions(data_path: str, partition_directory: str, level="day", partition_date=None):
     """
     Creates partitions for each file in the given data path and saves them in the
     partition directory.
@@ -399,26 +396,69 @@ def create_partitions(data_path: str, partition_directory: str):
     Args:
         data_path (str): The path to the data directory.
         partition_directory (str): The path to the partition directory.
+        level (str): The level of partitioning. Can be "day" or "month". Defaults to "day".
 
     Raises:
         FileExistsError: If the partition directory already exists.
+        ValueError: If the partition level is not "day" or "month".
 
     Returns:
         None
     """
-    data_path = Path(data_path)
-    # Load data
-    files = data_path.glob("*.csv")
+
+    # check if data_path is a directory or a file
+    if os.path.isdir(data_path):
+        data_path = Path(data_path)
+        files = data_path.glob("*.csv")
+    else:
+        files = [data_path]
     #
     # Create partition directories for each file
     for file_name in files:
-        date_str = re.search(r"\d{4}-\d{2}-\d{2}", str(file_name)).group()
-        parsed_date = datetime.strptime(date_str, "%Y-%m-%d")
-        ano_particao = parsed_date.strftime("%Y")
-        mes_particao = parsed_date.strftime("%m")
-        data_particao = parsed_date.strftime("%Y-%m-%d")
 
-        output_directory = f"{partition_directory}/ano_particao={int(ano_particao)}/mes_particao={int(mes_particao)}/data_particao={data_particao}"  # noqa: E501
+        if level == "day":
+
+            if partition_date is None:
+                try:
+                    date_str = re.search(r"\d{4}-\d{2}-\d{2}", str(file_name)).group()
+                    parsed_date = datetime.strptime(date_str, "%Y-%m-%d")
+                except ValueError:
+                    log("Filename must contain a date in the format YYYY-MM-DD to match partition level", level="error")   # noqa: E501")
+            else:
+                try:
+                    parsed_date = datetime.strptime(partition_date, "%Y-%m-%d")
+                except ValueError:
+                    log("Partition date must be in the format YYYY-MM-DD to match partition level",   # noqa: E501
+                        level="error")
+
+            ano_particao = parsed_date.strftime("%Y")
+            mes_particao = parsed_date.strftime("%m")
+            data_particao = parsed_date.strftime("%Y-%m-%d")
+
+            output_directory = f"{partition_directory}/ano_particao={int(ano_particao)}/mes_particao={int(mes_particao)}/data_particao={data_particao}"  # noqa: E501
+
+        elif level == "month":
+
+            if partition_date is None:
+                try:
+                    date_str = re.search(r"\d{4}-\d{2}", str(file_name)).group()
+                    parsed_date = datetime.strptime(date_str, "%Y-%m")
+                except ValueError:
+                    log("File must contain a date in the format YYYY-MM", level="error")   # noqa: E501")
+            else:
+                try:
+                    parsed_date = datetime.strptime(partition_date, "%Y-%m")
+                except ValueError:
+                    log("Partition date must match be in the format YYYY-MM to match partitio level",   # noqa: E501
+                        level="error")
+
+            ano_particao = parsed_date.strftime("%Y")
+            mes_particao = parsed_date.strftime("%Y-%m")
+
+            output_directory = f"{partition_directory}/ano_particao={int(ano_particao)}/mes_particao={mes_particao}"  # noqa: E501
+
+        else:
+            raise ValueError("Partition level must be day or month")
 
         # Create partition directory
         if not os.path.exists(output_directory):
@@ -426,7 +466,8 @@ def create_partitions(data_path: str, partition_directory: str):
 
         # Copy file(s) to partition directory
         shutil.copy(file_name, output_directory)
-        log("Partitions created successfully")
+
+    log("Partitions created successfully")
 
 
 @task
