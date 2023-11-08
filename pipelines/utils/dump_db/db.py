@@ -125,7 +125,7 @@ class SqlServer(Database):
         return pyodbc.connect(
             connstring=(
                 "DRIVER={ODBC Driver 18 for SQL Server};"
-                + f"SERVER={self._hostname};"
+                + f"SERVER={self._hostname},{self._port};"
                 + f"DATABASE={self._database};"
                 + f"UID={self._user};"
                 + f"PWD={self._password};"
