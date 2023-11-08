@@ -229,7 +229,39 @@ sme_queries = {
         "materialization_mode": "prod",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Turma",
     },
+    "turma": {
+        "dump_mode": "overwrite",
+        "materialize_after_dump": True,
+        "materialize_to_datario": False,
+        "dump_to_gcs": False,
+        "materialization_mode": "prod",
+        "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Turma",
+    },
+    "aca_turno": {
+        "dump_mode": "overwrite",
+        "materialize_after_dump": False,
+        "materialize_to_datario": False,
+        "dump_to_gcs": False,
+        "materialization_mode": "prod",
+        "execute_query": """
+            SELECT 
+                trn_id, 
+                ent_id, 
+                ttn_id, 
+                trn_descricao, 
+                trn_padrao, 
+                trn_situacao, 
+                trn_dataCriacao, 
+                trn_dataAlteracao, 
+                trn_controleTempo, 
+                trn_horaInicio, 
+                trn_horaFim
+            FROM GestaoEscolar.dbo.ACA_Turno
+        """,
+        "dataset_id": "educacao_basica_frequencia",
+    },
 }
+
 
 sme_clocks = generate_dump_db_schedules(
     interval=timedelta(days=1),
