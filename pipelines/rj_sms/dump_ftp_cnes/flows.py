@@ -35,9 +35,9 @@ with Flow(
     download_newest = Parameter("download_newest", default=True)
 
     # Aditional parameters for CNES if download_newest is False
-    file_to_download = Parameter("file_to_download", default=None, required=True)
+    file_to_download = Parameter("file_to_download", default=None, required=False)
     partition_date = Parameter(
-        "partition_date", default=None, required=True
+        "partition_date", default=None, required=False
     )  # format YYYY-MM-DD or YY-MM. Partitions level must follow
 
     # Start run

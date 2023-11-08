@@ -97,7 +97,7 @@ def download_from_api(
     params = {} if params is None else params
     try:
         response = requests.get(url, headers=headers, params=params)
-    except Exception as e:
+    except Exception as e :
         log(f"An error occurred: {e}", level="error")
 
     if response.status_code == 200:
@@ -119,13 +119,10 @@ def download_from_api(
 
         log(f"API data downloaded to {destination_file_path}")
 
-    else:
-        log(
-            f"API call failed. Error: {response.status_code} - {response.reason}",
-            level="error",
-        )
+        return destination_file_path
 
-    return destination_file_path
+    else:
+        raise ValueError(f"API call failed, error: {response.status_code} - {response.reason}")
 
 
 @task

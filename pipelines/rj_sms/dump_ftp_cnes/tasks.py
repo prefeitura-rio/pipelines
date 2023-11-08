@@ -59,8 +59,8 @@ def check_newest_file_version(
 @task
 def check_file_to_download(
     download_newest: bool,
-    file_to_download: str,
-    partition_date: str,
+    file_to_download: None,
+    partition_date: None,
     host: str,
     user: str,
     password: str,
@@ -72,7 +72,7 @@ def check_file_to_download(
             host=host,
             user=user,
             password=password,
-            director=directory,
+            directory=directory,
             file_name=file_name,
         )
         return newest_file

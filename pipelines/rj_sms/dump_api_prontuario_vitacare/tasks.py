@@ -30,7 +30,7 @@ def build_params(date_param="today"):
     return params
 
 
-@task(max_retries=3, retry_delay=timedelta(seconds=5))
+@task(max_retries=3, retry_delay=timedelta(seconds=5), timeout=timedelta(seconds=600))
 def download_multiple_files(
     base_urls: list, endpoint: str, params: dict, table_id:str, vault_path: str, vault_key: str
 ):
@@ -38,33 +38,36 @@ def download_multiple_files(
     pattern = r"ap\d{2}"
     
     for n, base_url in enumerate(base_urls):
+        try:
+            ap = re.findall(pattern, base_url)[0]
 
-        ap = re.findall(pattern, base_url)[0]
+            log(f"Downloading {ap} ({n+1}/{len(base_urls)})")
 
-        log(f"Downloading {ap} ({n+1}/{len(base_urls)})")
-
-        download_task = download_from_api.run(
-            url=f"{base_url}{endpoint}",
-            params=params,
-            file_folder="./data/raw",
-            file_name=f"{table_id}-{ap}",
-            vault_path=vault_path,
-            vault_key=vault_key,
-            add_load_date_to_filename=True,
-            load_date=params["date"],
-        )
-
-        #
-        with open(download_task, 'r', encoding="UTF-8") as f:
-            first_line = f.readline().strip()
-        if first_line == '[]':
-            log("The json content is empty.")
-        else:
-            conversion_task = from_json_to_csv.run(input_path=download_task, sep=";")
-
-            add_load_date_column_task = add_load_date_column.run(
-                input_path=conversion_task, sep=";"
+            download_task = download_from_api.run(
+                url=f"{base_url}{endpoint}",
+                params=params,
+                file_folder="./data/raw",
+                file_name=f"{table_id}-{ap}",
+                vault_path=vault_path,
+                vault_key=vault_key,
+                add_load_date_to_filename=True,
+                load_date=params["date"],
             )
+
+            #
+            with open(download_task, 'r', encoding="UTF-8") as f:
+                first_line = f.readline().strip()
+            if first_line == '[]':
+                log("The json content is empty.")
+            else:
+                conversion_task = from_json_to_csv.run(input_path=download_task, sep=";")
+
+                add_load_date_column_task = add_load_date_column.run(
+                    input_path=conversion_task, sep=";"
+                )
+        except Exception as e:
+            log(f"Error downloading {ap}. {e}", level="error")
+
 
 
 @task
