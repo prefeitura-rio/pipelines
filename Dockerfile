@@ -29,7 +29,7 @@ ENV PREFECT_VERSION $PREFECT_VERSION
 WORKDIR /opt/oracle
 COPY --from=unzip-step /tmp/instantclient_21_5 /opt/oracle/instantclient_21_5
 RUN apt-get update && \
-    apt-get install --no-install-recommends -y libaio1 && \
+    apt-get install --no-install-recommends -y libaio1 unixodbc-dev && \
     rm -rf /var/lib/apt/lists/* && \
     sh -c "echo /opt/oracle/instantclient_21_5 > /etc/ld.so.conf.d/oracle-instantclient.conf" && \
     ldconfig
