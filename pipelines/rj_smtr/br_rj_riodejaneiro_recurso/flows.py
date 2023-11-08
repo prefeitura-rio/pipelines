@@ -58,14 +58,14 @@ with Flow(
     LABELS = get_current_flow_labels()
 
     with case(capture, True):
-        run_captura = create_flow_run.map(
+        run_captura = create_flow_run(
             flow_name=sppo_recurso_captura.name,
             project_name="staging",
             parameters=constants.SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS.value,
             labels=LABELS,
         )
 
-        wait_captura_true = wait_for_flow_run.map(
+        wait_captura_true = wait_for_flow_run(
             run_captura,
             stream_states=True,
             stream_logs=True,
