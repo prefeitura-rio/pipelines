@@ -848,8 +848,6 @@ def get_raw_recursos(request_url: str, request_params: dict) -> tuple[str, str, 
             request_params["$top"] = top
             request_params["$skip"] = skip
 
-            log(f"Request params: {request_params}")
-
             response = requests.get(
                 request_url,
                 params=request_params,
@@ -858,8 +856,6 @@ def get_raw_recursos(request_url: str, request_params: dict) -> tuple[str, str, 
             response.raise_for_status()
 
             paginated_data = response.json()
-
-            log(f"Dados (iniciais): {paginated_data}")
 
             if isinstance(paginated_data, dict):
                 paginated_data = [paginated_data]
@@ -879,6 +875,6 @@ def get_raw_recursos(request_url: str, request_params: dict) -> tuple[str, str, 
             data = []
             break
 
-    log(f"Request concluído, com status: {data}.")
+    log(f"Request concluído, tamanho dos dados: {len(data)}.")
 
     return error, data, filetype

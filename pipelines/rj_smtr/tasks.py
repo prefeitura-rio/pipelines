@@ -716,7 +716,6 @@ def get_raw_from_sources(
     filepath = None
     data = None
 
-    log(f"Params {request_params}, source type {source_type}.")
     source_values = source_type.split("-", 1)
 
     source_type, filetype = (
