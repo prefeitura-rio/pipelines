@@ -7,7 +7,7 @@ General purpose functions for rj_smtr
 from ftplib import FTP
 from pathlib import Path
 
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, date
 from typing import List, Union, Any
 import traceback
 import io
@@ -472,12 +472,12 @@ def custom_serialization(obj: Any) -> Any:
     Returns:
         Any: Serialized object
     """
-    if isinstance(obj, pd.Timestamp):
-        if obj.tzinfo is None:
-            obj = obj.tz_localize("UTC").tz_convert(
-                emd_constants.DEFAULT_TIMEZONE.value
-            )
-
+    if isinstance(obj, (pd.Timestamp, date)):
+        if isinstance(obj, pd.Timestamp):
+            if obj.tzinfo is None:
+                obj = obj.tz_localize("UTC").tz_convert(
+                    emd_constants.DEFAULT_TIMEZONE.value
+                )
         return obj.isoformat()
 
     raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
