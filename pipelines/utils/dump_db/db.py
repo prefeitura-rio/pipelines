@@ -9,6 +9,7 @@ from typing import List
 import cx_Oracle
 import pymysql.cursors
 import pyodbc
+from pipelines.utils.utils import log
 
 
 class Database(ABC):
@@ -121,6 +122,7 @@ class SqlServer(Database):
         """
         Connect to the SQL Server.
         """
+        log(f"pyodbc drivers: {pyodbc.drivers()}")
         # pylint: disable=E1101
         return pyodbc.connect(
             f"DRIVER={{ODBC Driver 17 for SQL Server}};"
