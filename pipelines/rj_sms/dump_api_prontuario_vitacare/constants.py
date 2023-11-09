@@ -11,8 +11,9 @@ class constants(Enum):
     Constant values for the dump vitai flows
     """
 
-    VAULT_PATH = "estoque_vitai"
-    VAULT_KEY = "token"
+    VAULT_PATH = "prontuario_vitacare"
+    VAULT_USER = "user"
+    VAULT_PASSWORD = "password"
     DATASET_ID = "brutos_prontuario_vitacare"
     TABLE_POSICAO_ID = "estoque_posicao"
     TABLE_MOVIMENTOS_ID = "estoque_movimento"
