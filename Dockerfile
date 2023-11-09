@@ -35,7 +35,7 @@ RUN apt-get update && \
     curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
     echo "deb [arch=amd64,arm64,armhf] https://packages.microsoft.com/debian/12/prod bookworm main" > /etc/apt/sources.list.d/mssql-release.list && \
     apt-get update && \
-    ACCEPT_EULA=Y apt-get install --no-install-recommends -y msodbcsql18 unixodbc-dev && \
+    ACCEPT_EULA=Y apt-get install --no-install-recommends -y msodbcsql17 unixodbc-dev && \
     rm -rf /var/lib/apt/lists/* && \
     sh -c "echo /opt/oracle/instantclient_21_5 > /etc/ld.so.conf.d/oracle-instantclient.conf" && \
     ldconfig

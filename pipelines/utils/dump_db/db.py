@@ -123,12 +123,12 @@ class SqlServer(Database):
         """
         # pylint: disable=E1101
         return pyodbc.connect(
-            f"DRIVER={{ODBC Driver 18 for SQL Server}};"
+            f"DRIVER={{ODBC Driver 17 for SQL Server}};"
             f"SERVER={self._hostname};"
             f"DATABASE={self._database};"
             f"UID={self._user};"
             f"PWD={self._password};"
-            "Encrypt=no;"
+            "TrustServerCertificate=yes;"
         )
 
     def get_cursor(self):
