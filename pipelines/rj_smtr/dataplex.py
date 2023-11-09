@@ -1,38 +1,50 @@
 # -*- coding: utf-8 -*-
+
+import json
+import os
+import base64
+from typing import Union
+from time import sleep
+
+import google.api_core.exceptions
 from google.cloud.dataplex_v1 import (
+    DataScanJob,
     DataScan,
+    DataProfileSpec,
+    DataQualitySpec,
+    CreateDataScanRequest,
+    GetDataScanJobRequest,
     UpdateDataScanRequest,
     DataScanServiceClient,
     GetDataScanRequest,
     RunDataScanRequest,
 )
 from google.oauth2 import service_account
-import json
-import os
-import base64
 
 
 class Dataplex:
-    def __init__(self):
-        self.base_url = "https://google.com/dataplex"
+    """
+    Base class for interacting with Google Dataplex API
+    """
 
-
-class DataQuality:
     def __init__(
         self,
         data_scan_id: str,
         credentials_path: str = None,
-        project: str = None,
+        project_id: str = None,
         location: str = "us-central1",
     ):
         self.credentials_path = credentials_path
         self.credentials = self._load_credentials()
         self.location = location
-        self.project = project or self.credentials._project_id
+        self.project_id = project_id or self.credentials._project_id
         self.id = data_scan_id
         self.client = DataScanServiceClient(credentials=self.credentials)
         self.scan = self._get_scan()
-        self.spec = self.scan.data_quality_spec
+        if self.scan:
+            self.spec = self.scan.data_quality_spec
+        else:
+            self.spec = None
 
     @staticmethod
     def _decode_env(env: str) -> str:
@@ -72,30 +84,94 @@ class DataQuality:
         try:
             # Initialize request argument(s)
             request = GetDataScanRequest(
-                name=f"projects/{self.project}/locations/{self.location}/dataScans/{self.id}",
+                name=f"projects/{self.project_id}/locations/{self.location}/dataScans/{self.id}",
                 view=GetDataScanRequest.DataScanView.FULL.value,
             )
             # Make the request
             response = self.client.get_data_scan(request=request)
             return response
-        except Exception:
+        except google.api_core.exceptions.NotFound as e:
+            print(e)
             return None
 
+    def _wait_for_job_completion(self, job_name: str):
+        """
+        _summary_
+
+        Args:
+            job_name (str): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        # Initialize request argument(s)
+        request = GetDataScanJobRequest(
+            name=job_name, view=GetDataScanJobRequest.DataScanJobView.FULL.value
+        )
+        # Make the request
+        job = self.client.get_data_scan_job(request=request)
+        unfinished_states = [
+            DataScanJob.State.PENDING.value,
+            DataScanJob.State.RUNNING.value,
+            DataScanJob.State.CANCELING.value,
+            DataScanJob.State.STATE_UNSPECIFIED.value,
+        ]
+        while job.state.value in unfinished_states:
+            sleep(1)
+            job = self.client.get_data_scan_job(request=request)
+        return job
+
     def run(self):
+        """
+        _summary_
+
+        Returns:
+            _type_: _description_
+        """
         # Initialize request argument(s)
         request = RunDataScanRequest(
-            name=f"projects/{self.project}/locations/{self.location}/dataScans/{self.id}",
+            name=f"projects/{self.project_id}/locations/{self.location}/dataScans/{self.id}",
         )
         # Make the request
         response = self.client.run_data_scan(request=request)
         return response
 
+
+class DataQuality(Dataplex):
+    """
+    Class representing a Data Quality Scan resource
+    """
+
+    def __init__(
+        self,
+        data_scan_id: str,
+        credentials_path: str = None,
+        project_id: str = None,
+        location: str = "us-central1",
+    ):
+        super().__init__(
+            data_scan_id=data_scan_id,
+            credentials_path=credentials_path,
+            project_id=project_id,
+            location=location,
+        )
+
     def _create_default(self):
+        # create default data quality scan based on profile
         pass
 
-    def _patch(self, row_filter: str, sampling_percent: float = None):
-        # self.scan.data_quality_spec.row_filter = row_filter
-        self.scan.data_profile_spec.sampling_percent = sampling_percent
+    def _patch(self, row_filter: str):
+        """
+        _summary_
+
+        Args:
+            row_filter (str): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        self.scan.data_quality_spec.row_filter = row_filter
+        # self.scan.data_profile_spec.sampling_percent = sampling_percent
         update_mask = [
             "dataQualitySpec.rowFilter",
             # "dataQualitySpec.samplingPercent", #TODO: patching sampling percent goes to 0.0
@@ -109,8 +185,81 @@ class DataQuality:
         response = operation.result()
         return response
 
-    def run_parameterized(self, value: str, column: str = "data", operator: str = ">="):
-        pass
+    def create(
+        self,
+        dataset_id: str,
+        table_id: str,
+        export_table_id: str = None,
+        export_dataset_id: str = "bq_logs",
+        row_filter: str = None,
+        incremental_field: str = None,
+    ):
+        """
+        _summary_
+
+        Args:
+            dataset_id (str): _description_
+            table_id (str): _description_
+            export_table_id (str, optional): _description_. Defaults to None.
+            export_dataset_id (str, optional): _description_. Defaults to "bq_logs".
+            exclude_columns (list, optional): _description_. Defaults to [].
+            row_filter (str, optional): _description_. Defaults to None.
+            incremental_field (str, optional): _description_. Defaults to None.
+
+        Returns:
+            _type_: _description_
+        """
+        base_url = f"//bigquery.googleapis.com/projects/{self.project_id}/datasets"
+        data_quality_scan = DataScan()
+        data_quality_scan.data_quality_spec = DataQualitySpec()
+        data_quality_scan.data.resource = f"{base_url}/{dataset_id}/tables/{table_id}"
+
+        if export_table_id and export_dataset_id:
+            table_str = f"{base_url}/{export_dataset_id}/tables/{export_table_id}"
+            data_quality_scan.data_quality_spec.post_scan_actions.bigquery_export.results_table = (
+                table_str
+            )
+
+        if row_filter:
+            data_quality_scan.data_quality_spec.row_filter = row_filter
+
+        if incremental_field:
+            data_quality_scan.execution_spec.field = incremental_field
+
+        request = CreateDataScanRequest(
+            parent=f"projects/{self.project_id}/locations/{self.location}",
+            data_scan=data_quality_scan,
+            data_scan_id=self.id,
+        )
+
+        response = self.client.create_data_scan(request=request)
+
+        return response
+
+    def run_parameterized(
+        self, row_filters: Union[list, str], wait_run_completion: bool = False
+    ):
+        """
+        _summary_
+
+        Args:
+            row_filters (Union[list, str]): _description_
+            wait_run_completion (bool, optional): _description_. Defaults to False.
+
+        Returns:
+            _type_: _description_
+        """
+        if isinstance(row_filters, str):
+            row_filter = row_filters
+        else:
+            row_filter = " AND ".join(row_filters)
+
+        self._patch(row_filter=row_filter)
+        response = self.run()
+        if wait_run_completion:
+            job = self._wait_for_job_completion(job_name=response.job.name)
+            return job
+        return response
 
     def add_rules(self, rules: dict):
         # get current scan definition
@@ -120,5 +269,76 @@ class DataQuality:
 
 
 class DataProfile(Dataplex):
-    def __init__(self):
-        pass
+    """
+    Class representing a Data Profiling resource
+    """
+
+    def __init__(
+        self,
+        data_scan_id: str,
+        credentials_path: str = None,
+        project_id: str = None,
+        location: str = "us-central1",
+    ):
+        super().__init__(
+            data_scan_id=data_scan_id,
+            credentials_path=credentials_path,
+            project_id=project_id,
+            location=location,
+        )
+
+    def create(
+        self,
+        dataset_id: str,
+        table_id: str,
+        export_table_id: str = None,
+        export_dataset_id: str = "bq_logs",
+        exclude_columns: list = None,
+        row_filter: str = None,
+        incremental_field: str = None,
+    ):
+        """
+        _summary_
+
+        Args:
+            dataset_id (str): _description_
+            table_id (str): _description_
+            export_table_id (str, optional): _description_. Defaults to None.
+            export_dataset_id (str, optional): _description_. Defaults to "bq_logs".
+            exclude_columns (list, optional): _description_. Defaults to [].
+            row_filter (str, optional): _description_. Defaults to None.
+            incremental_field (str, optional): _description_. Defaults to None.
+
+        Returns:
+            _type_: _description_
+        """
+        base_url = f"//bigquery.googleapis.com/projects/{self.project_id}/datasets"
+        data_profile = DataScan()
+        data_profile.data_profile_spec = DataProfileSpec()
+        data_profile.data.resource = f"{base_url}/{dataset_id}/tables/{table_id}"
+
+        if exclude_columns:
+            data_profile.data_profile_spec.exclude_fields = (
+                DataProfileSpec.SelectedFields(field_names=exclude_columns)
+            )
+
+        if export_table_id and export_dataset_id:
+            table_str = f"{base_url}/{export_dataset_id}/tables/{export_table_id}"
+            data_profile.data_profile_spec.post_scan_actions.bigquery_export.results_table = (
+                table_str
+            )
+        if row_filter:
+            data_profile.data_profile_spec.row_filter = row_filter
+
+        if incremental_field:
+            data_profile.execution_spec.field = incremental_field
+
+        request = CreateDataScanRequest(
+            parent=f"projects/{self.project_id}/locations/{self.location}",
+            data_scan=data_profile,
+            data_scan_id=self.id,
+        )
+
+        response = self.client.create_data_scan(request=request)
+
+        return response
