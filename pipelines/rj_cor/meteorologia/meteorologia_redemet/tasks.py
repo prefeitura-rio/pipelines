@@ -21,6 +21,8 @@ from pipelines.utils.utils import (
 )
 from pipelines.utils.utils import log
 
+import unidecode
+
 
 @task(nout=3)
 def get_dates(data_inicio: str, data_fim: str) -> Tuple[str, str]:
@@ -261,9 +263,10 @@ def tratar_dados_estacao(data_inicio: str, data_fim: str) -> pd.DataFrame:
                     continue
                 raw.append(res_data)
 
-    log(f"printa df {res_data}")
-
     # Função para converter longitude de graus, minutos, segundos para decimal
-    # res_data["latitude"] = res_data["lat"].apply(converter_lat_lon)
-    # res_data["longitude"] = res_data["lon"].apply(converter_lat_lon)
+    res_data["data"]["lat"] = converter_lat_lon(res_data["data"]["lat"])
+    res_data["data"]["lon"] = converter_lat_lon(res_data["data"]["lon"])
+    res_data["data"]["nome"] = unidecode.unidecode(res_data["data"]["nome"])
+
+    log(f"printa dados {res_data}")
     return res_data
