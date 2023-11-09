@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_sms API documentation</title>
-<meta name="description" content="Prefect flows for rj_sms project" />
+<title>pipelines.rj_sms.dump_ftp_cnes.flows API documentation</title>
+<meta name="description" content="CNES dumping flows" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,43 +19,117 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_sms</code></h1>
+<h1 class="title">Module <code>pipelines.rj_sms.dump_ftp_cnes.flows</code></h1>
 </header>
 <section id="section-intro">
-<p>Prefect flows for rj_sms project</p>
+<p>CNES dumping flows</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
+# pylint: disable=C0103
 &#34;&#34;&#34;
-Prefect flows for rj_sms project
+CNES dumping flows
 &#34;&#34;&#34;
 
-from pipelines.rj_sms.dump_db_sivep.flows import *
-from pipelines.rj_sms.dump_api_prontuario_vitai.flows import *</code></pre>
+from prefect import Parameter
+from prefect.run_configs import KubernetesRun
+from prefect.storage import GCS
+from pipelines.utils.decorators import Flow
+from pipelines.constants import constants
+from pipelines.rj_sms.dump_ftp_cnes.constants import constants as cnes_constants
+from pipelines.rj_sms.utils import create_folders, unzip_file
+from pipelines.rj_sms.dump_ftp_cnes.tasks import (
+    conform_csv_to_gcp,
+    create_partitions_and_upload_multiple_tables_to_datalake,
+    add_multiple_date_column,
+    download_ftp_cnes,
+    check_file_to_download,
+)
+from pipelines.rj_sms.dump_ftp_cnes.schedules import every_sunday_at_six_am
+
+
+with Flow(
+    name=&#34;SMS: Dump CNES - Captura de dados CNES&#34;, code_owners=[&#34;thiago&#34;]
+) as dump_cnes:
+    # Parameters
+    # Parameters for GCP
+    dataset_id = cnes_constants.DATASET_ID.value
+    # Parameters for CNES
+    ftp_server = cnes_constants.FTP_SERVER.value
+    ftp_file_path = cnes_constants.FTP_FILE_PATH.value
+    base_file = cnes_constants.BASE_FILE.value
+    download_newest = Parameter(&#34;download_newest&#34;, default=True)
+
+    # Aditional parameters for CNES if download_newest is False
+    file_to_download = Parameter(&#34;file_to_download&#34;, default=None, required=False)
+    partition_date = Parameter(
+        &#34;partition_date&#34;, default=None, required=False
+    )  # format YYYY-MM-DD or YY-MM. Partitions level must follow
+
+    # Start run
+    file_to_download_task = check_file_to_download(
+        download_newest=download_newest,
+        file_to_download=file_to_download,
+        partition_date=partition_date,
+        host=ftp_server,
+        user=&#34;&#34;,
+        password=&#34;&#34;,
+        directory=ftp_file_path,
+        file_name=base_file,
+    )
+
+    create_folders_task = create_folders()
+    create_folders_task.set_upstream(file_to_download_task)
+
+    download_task = download_ftp_cnes(
+        host=ftp_server,
+        user=&#34;&#34;,
+        password=&#34;&#34;,
+        directory=ftp_file_path,
+        file_name=file_to_download_task[&#34;file&#34;],
+        output_path=create_folders_task[&#34;raw&#34;],
+    )
+    download_task.set_upstream(create_folders_task)
+
+    unzip_task = unzip_file(
+        file_path=download_task, output_path=create_folders_task[&#34;raw&#34;]
+    )
+    unzip_task.set_upstream(download_task)
+
+    conform_task = conform_csv_to_gcp(create_folders_task[&#34;raw&#34;])
+    conform_task.set_upstream(unzip_task)
+
+    add_multiple_date_column_task = add_multiple_date_column(
+        directory=create_folders_task[&#34;raw&#34;],
+        snapshot_date=file_to_download_task[&#34;snapshot&#34;],
+        sep=&#34;;&#34;,
+    )
+    add_multiple_date_column_task.set_upstream(conform_task)
+
+    upload_to_datalake_task = create_partitions_and_upload_multiple_tables_to_datalake(
+        path_files=conform_task,
+        partition_folder=create_folders_task[&#34;partition_directory&#34;],
+        partition_date=file_to_download_task[&#34;snapshot&#34;],
+        dataset_id=dataset_id,
+        dump_mode=&#34;append&#34;,
+    )
+    upload_to_datalake_task.set_upstream(add_multiple_date_column_task)
+
+
+dump_cnes.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+dump_cnes.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[
+        constants.RJ_SMS_AGENT_LABEL.value,
+    ],
+)
+
+dump_cnes.schedule = every_sunday_at_six_am</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
-<dl>
-<dt><code class="name"><a title="pipelines.rj_sms.dump_api_prontuario_vitai" href="dump_api_prontuario_vitai/index.html">pipelines.rj_sms.dump_api_prontuario_vitai</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_sms.dump_db_sivep" href="dump_db_sivep/index.html">pipelines.rj_sms.dump_db_sivep</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_sms.dump_ftp_cnes" href="dump_ftp_cnes/index.html">pipelines.rj_sms.dump_ftp_cnes</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_sms.utils" href="utils.html">pipelines.rj_sms.utils</a></code></dt>
-<dd>
-<div class="desc"><p>General utilities for SMS pipelines.</p></div>
-</dd>
-</dl>
 </section>
 <section>
 </section>
@@ -99,7 +173,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -118,15 +192,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines" href="../index.html">pipelines</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="pipelines.rj_sms.dump_api_prontuario_vitai" href="dump_api_prontuario_vitai/index.html">pipelines.rj_sms.dump_api_prontuario_vitai</a></code></li>
-<li><code><a title="pipelines.rj_sms.dump_db_sivep" href="dump_db_sivep/index.html">pipelines.rj_sms.dump_db_sivep</a></code></li>
-<li><code><a title="pipelines.rj_sms.dump_ftp_cnes" href="dump_ftp_cnes/index.html">pipelines.rj_sms.dump_ftp_cnes</a></code></li>
-<li><code><a title="pipelines.rj_sms.utils" href="utils.html">pipelines.rj_sms.utils</a></code></li>
+<li><code><a title="pipelines.rj_sms.dump_ftp_cnes" href="index.html">pipelines.rj_sms.dump_ftp_cnes</a></code></li>
 </ul>
 </li>
 </ul>
