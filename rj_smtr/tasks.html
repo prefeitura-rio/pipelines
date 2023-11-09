@@ -32,7 +32,7 @@
 &#34;&#34;&#34;
 Tasks for rj_smtr
 &#34;&#34;&#34;
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import json
 import os
 from pathlib import Path
@@ -461,7 +461,7 @@ def save_treated_local(file_path: str, status: dict, mode: str = &#34;staging&#3
 # Extract data
 #
 ###############
-@task(nout=3)
+@task(nout=3, max_retries=3, retry_delay=timedelta(seconds=5))
 def query_logs(
     dataset_id: str,
     table_id: str,
@@ -557,6 +557,7 @@ def query_logs(
     &#34;&#34;&#34;
     log(f&#34;Run query to check logs:\n{query}&#34;)
     results = bd.read_sql(query=query, billing_project_id=bq_project())
+
     if len(results) &gt; 0:
         results = results.sort_values([&#34;timestamp_captura&#34;])
         results[&#34;timestamp_captura&#34;] = (
@@ -1115,6 +1116,9 @@ def get_materialization_date_range(  # pylint: disable=R0913
         )
     else:
         last_run = datetime.strptime(last_run, timestr)
+
+    if isinstance(last_run, date):
+        last_run = datetime(last_run.year, last_run.month, last_run.day)
 
     # set start to last run hour (H)
     start_ts = last_run.replace(minute=0, second=0, microsecond=0).strftime(timestr)
@@ -2352,6 +2356,9 @@ def get_materialization_date_range(  # pylint: disable=R0913
     else:
         last_run = datetime.strptime(last_run, timestr)
 
+    if isinstance(last_run, date):
+        last_run = datetime(last_run.year, last_run.month, last_run.day)
+
     # set start to last run hour (H)
     start_ts = last_run.replace(minute=0, second=0, microsecond=0).strftime(timestr)
 
@@ -2755,7 +2762,7 @@ previous_errors (list of previous errors)</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@task(nout=3)
+<pre><code class="python">@task(nout=3, max_retries=3, retry_delay=timedelta(seconds=5))
 def query_logs(
     dataset_id: str,
     table_id: str,
@@ -2851,6 +2858,7 @@ def query_logs(
     &#34;&#34;&#34;
     log(f&#34;Run query to check logs:\n{query}&#34;)
     results = bd.read_sql(query=query, billing_project_id=bq_project())
+
     if len(results) &gt; 0:
         results = results.sort_values([&#34;timestamp_captura&#34;])
         results[&#34;timestamp_captura&#34;] = (
