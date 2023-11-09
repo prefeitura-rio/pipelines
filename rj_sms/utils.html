@@ -455,7 +455,7 @@ def create_partitions(
                     parsed_date = datetime.strptime(date_str, &#34;%Y-%m-%d&#34;)
                 except ValueError:
                     log(
-                        &#34;Filename must contain a date in the format YYYY-MM-DD to match partition level&#34;,
+                        &#34;Filename must contain a date in the format YYYY-MM-DD to match partition level&#34;,  # noqa: E501
                         level=&#34;error&#34;,
                     )  # noqa: E501&#34;)
             else:
@@ -828,7 +828,7 @@ def create_partitions(
                     parsed_date = datetime.strptime(date_str, &#34;%Y-%m-%d&#34;)
                 except ValueError:
                     log(
-                        &#34;Filename must contain a date in the format YYYY-MM-DD to match partition level&#34;,
+                        &#34;Filename must contain a date in the format YYYY-MM-DD to match partition level&#34;,  # noqa: E501
                         level=&#34;error&#34;,
                     )  # noqa: E501&#34;)
             else:
