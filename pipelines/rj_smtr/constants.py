@@ -440,7 +440,7 @@ class constants(Enum):  # pylint: disable=c0103
         "exclude": f"+{BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS['table_id']}",
         "dbt_vars": {
             "date_range": {
-                "table_run_datetime_column_name": "data",
+                "table_run_datetime_column_name": "data_ordem",
                 "delay_hours": 0,
             },
             "version": {},
