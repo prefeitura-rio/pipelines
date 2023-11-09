@@ -125,11 +125,12 @@ class SqlServer(Database):
         log(f"pyodbc drivers: {pyodbc.drivers()}")
         # pylint: disable=E1101
         return pyodbc.connect(
-            f"DRIVER={{ODBC Driver 17 for SQL Server}};"
-            f"SERVER={self._hostname};"
+            f"DRIVER={{ODBC Driver 18 for SQL Server}};"
+            f"SERVER={self._hostname},{self._port};"
             f"DATABASE={self._database};"
             f"UID={self._user};"
             f"PWD={self._password};"
+            "Encrypt=no;"
             "TrustServerCertificate=yes;"
         )
 
