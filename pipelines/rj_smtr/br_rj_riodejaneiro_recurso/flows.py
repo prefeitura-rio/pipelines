@@ -69,7 +69,7 @@ with Flow(
     code_owners=["carolinagomes", "igorlaltuf"],
 ) as subsidio_sppo_recurso:
     capture = Parameter("capture", default=True)
-    materialize = Parameter("materialize", default=True)
+    materialize = Parameter("materialize", default=False)
     timestamp = get_current_timestamp()
 
     rename_flow_run = rename_current_flow_run_now_time(
