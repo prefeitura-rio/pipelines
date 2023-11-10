@@ -47,6 +47,23 @@ with Flow(
     "SMTR: Captura",
     code_owners=["caio", "fernanda", "boris", "rodrigo", "rafaelpinheiro"],
 ) as default_capture_flow:
+    """
+    Captura dos dados
+
+    Params:
+        dataset_id (str): Nome do dataset
+        table_id (str): Nome da tabela
+        partition_date_only (bool): Flag para particionamento
+        partition_date_name (optional, str): Nome da coluna de particionamento
+        extract_params (dict): Parâmetros de extração
+        secret_path (optional, str): Caminho para o secret
+        source_type (str): Tipo de fonte
+        interval_minutes (int): Intervalo de captura
+        recapture (bool): Flag para recaptura
+        recapture_window_days (int): Janela de recaptura
+        timestamp (datetime): Timestamp da execução
+        primary_key (str): Chave primária
+    """
     # Configuração #
 
     # Parâmetros Gerais #
@@ -185,6 +202,24 @@ with Flow(
     "SMTR: Materialização",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as default_materialization_flow:
+    """
+    Materialização dos dados capturados
+
+    Params:
+        dataset_id (str): Nome do dataset
+        table_id (str): Nome da tabela
+        raw_table_id (str): Nome da tabela raw
+        dbt_alias (str): Alias do modelo dbt
+        upstream (list): Lista de tasks upstream
+        downstream (list): Lista de tasks downstream
+        exclude (list): Lista de tasks a serem excluídas
+        flags (list): Lista de flags para o dbt
+        dbt_vars (dict): Variáveis para o dbt
+        timestamp (datetime): Timestamp da execução
+        source_table_ids (list): Lista de tabelas de origem
+        capture_intervals_minutes (list): Lista de intervalos de captura
+    """
+
     # SETUP #
 
     timestamp = Parameter("timestamp", default=None)
