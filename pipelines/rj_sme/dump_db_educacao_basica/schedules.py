@@ -230,7 +230,7 @@ sme_queries = {
         "materialization_mode": "prod",
         "execute_query": "SELECT * FROM GestaoEscolar.dbo.VW_BI_Turma",
     },
-    "g": {
+    "turno": {
         "dataset_id": "educacao_basica_frequencia",
         "dump_mode": "overwrite",
         "materialize_after_dump": False,
