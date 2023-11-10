@@ -70,7 +70,8 @@ with Flow(
 ) as subsidio_sppo_recurso:
     capture = Parameter("capture", default=True)
     materialize = Parameter("materialize", default=False)
-    timestamp = get_current_timestamp()
+    timestamp = Parameter("timestamp", default=None)
+    timestamp = get_current_timestamp(timestamp=timestamp)
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=subsidio_sppo_recurso.name + " ",
