@@ -867,7 +867,7 @@ def get_raw_recursos(request_url: str, request_params: dict) -> tuple[str, str, 
                 all_records = True
 
             data += paginated_data
-            log(f"Dados (iniciais): {paginated_data}")
+
             log(f"Dados (paginados): {len(data)}")
 
         except Exception as error:
