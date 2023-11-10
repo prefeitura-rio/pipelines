@@ -115,23 +115,21 @@ class SqlServer(Database):
             password,
             database,
         )
-        self._connection: pyodbc.Connection = None
-        self._cursor: pyodbc.Cursor = None
 
     def connect(self):
         """
         Connect to the SQL Server.
         """
-        log(f"pyodbc drivers: {pyodbc.drivers()}")
-        # pylint: disable=E1101
-        return pyodbc.connect(
+        conn_str = (
             f"DRIVER={{ODBC Driver 17 for SQL Server}};"
-            f"SERVER={self._hostname};"
+            f"SERVER={self._hostname},{self._port};"
             f"DATABASE={self._database};"
             f"UID={self._user};"
             f"PWD={self._password};"
+            "Encrypt=no;"
             "TrustServerCertificate=yes;"
         )
+        return pyodbc.connect(conn_str)
 
     def get_cursor(self):
         """

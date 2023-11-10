@@ -1,5 +1,5 @@
 # Build arguments
-ARG PYTHON_VERSION=3.9-slim-bookworm
+ARG PYTHON_VERSION=3.9-slim-buster
 
 # Get Oracle Instant Client
 FROM curlimages/curl:7.81.0 as curl-step
