@@ -14,24 +14,11 @@ import google.auth.transport.requests
 
 @task
 def get_patients():
-    url = 'https://us-central1-rj-sms-dev.cloudfunctions.net/vitacare'
 
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/Users/andremartins/.basedosdados/credentials/staging.json'
-    request = google.auth.transport.requests.Request()
-    audience = url
-    TOKEN = google.oauth2.id_token.fetch_id_token(request, audience)
-
-    payload = json.dumps({
-    "url": "http://homologacao-devrj.pepvitacare.com:9003/health/schedule/nextappointments",
-    "path": "whatsapp/clinica_patients_treated/origin/",
-    "env": "staging"
-    })
-    headers = {
-    'Content-Type': 'application/json',
-    'Authorization': f'Bearer {TOKEN}'
-    }
-    response = requests.request("POST", url, headers=headers, data=payload)
-    log(response.text)
+    url = 'http://saudedigital.pepvitacare.com:8081/health/schedule/lastattendances'
+    context = 'clinica_patients_treated'
+    env = 'production'
+    cloud_function_vitacare(url, context, env)
 
 @task
 def save_patients(dataframe):
@@ -47,3 +34,24 @@ def save_patients(dataframe):
     dataframe.to_csv(filename, sep=';', quoting=csv.QUOTE_NONNUMERIC, quotechar='"', index=False, encoding='utf-8')
     #blob.upload_from_string(csv_data, content_type="text/csv")
     return True
+
+def cloud_function_vitacare(url, context, env):
+    if env == 'production':
+        function = 'https://us-central1-rj-sms.cloudfunctions.net/vitacare'
+    else:
+        function = 'https://us-central1-rj-sms.cloudfunctions.net/vitacare'
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/Users/andremartins/.basedosdados/credentials/prod.json'
+    request = google.auth.transport.requests.Request()
+    audience = function
+    TOKEN = google.oauth2.id_token.fetch_id_token(request, audience)
+
+    payload = json.dumps({
+        "url": url,
+        "path": context,
+        "env": env
+    })
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {TOKEN}'
+    }
+    return requests.request("POST", function, headers=headers, data=payload)
