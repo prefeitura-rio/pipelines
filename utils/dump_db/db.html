@@ -36,8 +36,9 @@ from abc import ABC, abstractmethod
 from typing import List
 
 import cx_Oracle
-import pymssql
 import pymysql.cursors
+import pyodbc
+from pipelines.utils.utils import log
 
 
 class Database(ABC):
@@ -148,14 +149,16 @@ class SqlServer(Database):
         &#34;&#34;&#34;
         Connect to the SQL Server.
         &#34;&#34;&#34;
-        # pylint: disable=E1101
-        return pymssql.connect(
-            server=self._hostname,
-            port=self._port,
-            user=self._user,
-            password=self._password,
-            database=self._database,
+        conn_str = (
+            f&#34;DRIVER={{ODBC Driver 17 for SQL Server}};&#34;
+            f&#34;SERVER={self._hostname},{self._port};&#34;
+            f&#34;DATABASE={self._database};&#34;
+            f&#34;UID={self._user};&#34;
+            f&#34;PWD={self._password};&#34;
+            &#34;Encrypt=no;&#34;
+            &#34;TrustServerCertificate=yes;&#34;
         )
+        return pyodbc.connect(conn_str)
 
     def get_cursor(self):
         &#34;&#34;&#34;
@@ -1068,14 +1071,16 @@ def get_cursor(self):
         &#34;&#34;&#34;
         Connect to the SQL Server.
         &#34;&#34;&#34;
-        # pylint: disable=E1101
-        return pymssql.connect(
-            server=self._hostname,
-            port=self._port,
-            user=self._user,
-            password=self._password,
-            database=self._database,
+        conn_str = (
+            f&#34;DRIVER={{ODBC Driver 17 for SQL Server}};&#34;
+            f&#34;SERVER={self._hostname},{self._port};&#34;
+            f&#34;DATABASE={self._database};&#34;
+            f&#34;UID={self._user};&#34;
+            f&#34;PWD={self._password};&#34;
+            &#34;Encrypt=no;&#34;
+            &#34;TrustServerCertificate=yes;&#34;
         )
+        return pyodbc.connect(conn_str)
 
     def get_cursor(self):
         &#34;&#34;&#34;
@@ -1130,14 +1135,16 @@ def get_cursor(self):
     &#34;&#34;&#34;
     Connect to the SQL Server.
     &#34;&#34;&#34;
-    # pylint: disable=E1101
-    return pymssql.connect(
-        server=self._hostname,
-        port=self._port,
-        user=self._user,
-        password=self._password,
-        database=self._database,
-    )</code></pre>
+    conn_str = (
+        f&#34;DRIVER={{ODBC Driver 17 for SQL Server}};&#34;
+        f&#34;SERVER={self._hostname},{self._port};&#34;
+        f&#34;DATABASE={self._database};&#34;
+        f&#34;UID={self._user};&#34;
+        f&#34;PWD={self._password};&#34;
+        &#34;Encrypt=no;&#34;
+        &#34;TrustServerCertificate=yes;&#34;
+    )
+    return pyodbc.connect(conn_str)</code></pre>
 </details>
 </dd>
 <dt id="pipelines.utils.dump_db.db.SqlServer.execute_query"><code class="name flex">
