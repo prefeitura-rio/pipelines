@@ -56,7 +56,7 @@ with Flow(
 ) as materialize_brt:
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="GPS BRT - Materialização: ", now_time=get_now_time()
+        prefix=materialize_brt.name + ": ", now_time=get_now_time()
     )
 
     # Get default parameters #
@@ -143,7 +143,7 @@ with Flow(
 
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SMTR: GPS BRT - Captura - ", now_time=timestamp
+        prefix=captura_brt.name + ": ", now_time=timestamp
     )
 
     # SETUP LOCAL #
