@@ -211,6 +211,25 @@ class constants(Enum):  # pylint: disable=c0103
         "interval_minutes": 1,
     }
 
+    BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS = {
+        "table_id": "integracao_transacao",
+        "partition_date_only": False,
+        "extract_params": {
+            "database": "ressarcimento_db",
+            "query": """
+                SELECT
+                    *
+                FROM
+                    integracao_transacao
+                WHERE
+                    data_processamento BETWEEN '{start}'
+                    AND '{end}'
+            """,
+        },
+        "primary_key": ["id"],
+        "interval_minutes": 1,
+    }
+
     BILHETAGEM_TRACKING_CAPTURE_PARAMS = {
         "table_id": "gps_validador",
         "partition_date_only": False,
@@ -259,6 +278,24 @@ class constants(Enum):  # pylint: disable=c0103
                     *
                 FROM
                     ordem_pagamento
+                WHERE
+                    data_inclusao BETWEEN '{start}'
+                    AND '{end}'
+            """,
+            },
+            "primary_key": ["id"],
+            "interval_minutes": 1440,
+        },
+        {
+            "table_id": "ordem_rateio",
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "ressarcimento_db",
+                "query": """
+                SELECT
+                    *
+                FROM
+                    ordem_rateio
                 WHERE
                     data_inclusao BETWEEN '{start}'
                     AND '{end}'
