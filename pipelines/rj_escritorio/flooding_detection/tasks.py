@@ -106,6 +106,7 @@ def get_snapshot(
 def pick_cameras(
     hexagons: List[str],
     last_update: datetime,
+    predictions_buffer_key: str,
 ) -> List[Dict[str, Union[str, float]]]:
     """
     Picks cameras based on the raining hexagons and last update.
@@ -113,6 +114,7 @@ def pick_cameras(
     Args:
         hexagons: The H3 hexagons that are raining.
         last_update: The last update datetime.
+        predictions_buffer_key: The Redis key for the predictions buffer.
 
     Returns:
         A list of cameras in the following format:
