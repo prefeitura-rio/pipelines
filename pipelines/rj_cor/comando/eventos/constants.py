@@ -44,7 +44,7 @@ class constants(Enum):  # pylint: disable=c0103
                 nome AS bairro,
                 COALESCE(MAX(tipo), 0) AS tipo
             FROM `rj-cor.dados_mestres.h3_grid_res8` h3_grid
-            INNER JOIN `rj-cor.dados_mestres.bairro`
+            LEFT JOIN `rj-cor.dados_mestres.bairro`
                 ON ST_CONTAINS(`rj-cor.dados_mestres.bairro`.geometry, ST_CENTROID(h3_grid.geometry))
             LEFT JOIN alagamentos
                 ON ST_CONTAINS(h3_grid.geometry, alagamentos.geometry)
@@ -102,7 +102,7 @@ class constants(Enum):  # pylint: disable=c0103
                 nome AS bairro,
                 COALESCE(MAX(tipo), 0) AS tipo
             FROM `rj-cor.dados_mestres.h3_grid_res8` h3_grid
-            INNER JOIN `rj-cor.dados_mestres.bairro`
+            LEFT JOIN `rj-cor.dados_mestres.bairro`
                 ON ST_CONTAINS(`rj-cor.dados_mestres.bairro`.geometry, ST_CENTROID(h3_grid.geometry))
             LEFT JOIN alagamentos
                 ON ST_CONTAINS(h3_grid.geometry, alagamentos.geometry)
