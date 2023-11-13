@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
-from typing import Any, Dict, List, Union
+from typing import Dict, List, Union
 
 from prefect import task
+import requests
+
+from pipelines.utils.utils import get_vault_secret
 
 
 @task
@@ -18,20 +21,23 @@ def get_last_update(
     Returns:
         The last update datetime.
     """
-    # TODO: Implement
-    raise NotImplementedError()
+    data = requests.get(rain_api_update_url).text
+    return datetime.strptime(data, "%d/%m/%Y %H:%M:%S")
 
 
 @task
-def get_openai_api_key() -> str:
+def get_openai_api_key(secret_path: str) -> str:
     """
     Gets the OpenAI API key.
+
+    Args:
+        secret_path: The secret path.
 
     Returns:
         The OpenAI API key.
     """
-    # TODO: Implement
-    raise NotImplementedError()
+    secret = get_vault_secret(secret_path)["data"]
+    return secret["api_key"]
 
 
 @task

@@ -30,6 +30,7 @@ with Flow(
     ],
 ) as rj_escritorio__flooding_detection__flow:
     # Parameters
+    openai_api_key_secret_path = Parameter("openai_api_key_secret_path", required=True)
     openai_flooding_detection_prompt = Parameter(
         "openai_flooding_detection_prompt", required=True
     )
@@ -55,8 +56,12 @@ with Flow(
     # Flow
     hexagons = get_raining_hexagons(rain_api_data_url=rain_api_data_url)
     last_update = get_last_update(rain_api_update_url=rain_api_update_url)
-    cameras = pick_cameras(hexagons=hexagons, last_update=last_update)
-    openai_api_key = get_openai_api_key()
+    cameras = pick_cameras(
+        hexagons=hexagons,
+        last_update=last_update,
+        predictions_buffer_key=redis_key_predictions_buffer,
+    )
+    openai_api_key = get_openai_api_key(secret_path=openai_api_key_secret_path)
     images = get_snapshot.map(
         camera=cameras,
     )
