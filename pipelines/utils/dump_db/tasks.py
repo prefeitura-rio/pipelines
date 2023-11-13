@@ -529,6 +529,19 @@ def dump_upload_batch(
             if not cleared_table:
                 # the header is needed to create a table when dosen't exist
                 # in overwrite mode the header is always created
+                st.delete_table(
+                    mode="staging", bucket_name=st.bucket_name, not_found_ok=True
+                )
+                log_mod(
+                    msg=(
+                        "MODE OVERWRITE: Sucessfully DELETED OLD DATA from Storage:\n"
+                        + f"{storage_path}\n"
+                        + f"{storage_path_link}"
+                    ),
+                    index=idx,
+                    mod=log_number_of_batches,
+                )  # pylint: disable=C0301
+
                 log_mod(
                     msg="MODE OVERWRITE: Table DOSEN'T EXISTS\nStart to CREATE HEADER file",
                     index=idx,
