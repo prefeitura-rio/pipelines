@@ -127,7 +127,7 @@ class constants(Enum):  # pylint: disable=c0103
             FROM h3_media
             LEFT JOIN `rj-cor.dados_mestres.h3_grid_res8` h3_grid
                 ON h3_grid.id=h3_media.id_h3
-            INNER JOIN `rj-cor.dados_mestres.bairro`
+            LEFT JOIN `rj-cor.dados_mestres.bairro`
                 ON ST_CONTAINS(`rj-cor.dados_mestres.bairro`.geometry, ST_CENTROID(h3_grid.geometry))
             )
 
