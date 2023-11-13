@@ -525,7 +525,6 @@ def dump_upload_batch(
                     index=idx,
                     mod=log_number_of_batches,
                 )  # pylint: disable=C0301
-                cleared_table = True
 
             if not cleared_table:
                 # the header is needed to create a table when dosen't exist
