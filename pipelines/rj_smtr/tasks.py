@@ -3,7 +3,7 @@
 """
 Tasks for rj_smtr
 """
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import json
 import os
 from pathlib import Path
@@ -432,7 +432,7 @@ def save_treated_local(file_path: str, status: dict, mode: str = "staging") -> s
 # Extract data
 #
 ###############
-@task(nout=3)
+@task(nout=3, max_retries=3, retry_delay=timedelta(seconds=5))
 def query_logs(
     dataset_id: str,
     table_id: str,
@@ -528,6 +528,7 @@ def query_logs(
     """
     log(f"Run query to check logs:\n{query}")
     results = bd.read_sql(query=query, billing_project_id=bq_project())
+
     if len(results) > 0:
         results = results.sort_values(["timestamp_captura"])
         results["timestamp_captura"] = (
@@ -1086,6 +1087,9 @@ def get_materialization_date_range(  # pylint: disable=R0913
         )
     else:
         last_run = datetime.strptime(last_run, timestr)
+
+    if (not isinstance(last_run, datetime)) and (isinstance(last_run, date)):
+        last_run = datetime(last_run.year, last_run.month, last_run.day)
 
     # set start to last run hour (H)
     start_ts = last_run.replace(minute=0, second=0, microsecond=0).strftime(timestr)

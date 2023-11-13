@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Database dumping flows
+Database dumping flows.
 """
 
 from datetime import timedelta
@@ -20,14 +20,13 @@ from pipelines.utils.tasks import (
     get_user_and_password,
     greater_than,
     rename_current_flow_run_dataset_table,
-    create_table_and_upload_to_gcs,
 )
 from pipelines.utils.decorators import Flow
 from pipelines.utils.dump_db.tasks import (
     database_execute,
     database_fetch,
     database_get,
-    dump_batches_to_file,
+    dump_upload_batch,
     format_partitioned_query,
     parse_comma_separated_string_to_list,
 )
@@ -97,6 +96,10 @@ with Flow(
     )
     dbt_alias = Parameter("dbt_alias", default=False, required=False)
     biglake_table = Parameter("biglake_table", default=False, required=False)
+    log_number_of_batches = Parameter(
+        "log_number_of_batches", default=100, required=False
+    )
+
     #####################################
     #
     # Rename flow run
@@ -160,87 +163,76 @@ with Flow(
         dataset_id=dataset_id,
         table_id=table_id,
     )
+    db_execute.set_upstream(formated_query)
 
     # Dump batches to files
-    batches_path, num_batches = dump_batches_to_file(
+    dump_upload = dump_upload_batch(
         database=db_object,
         batch_size=batch_size,
-        prepath=f"data/{uuid4()}/",
-        partition_columns=partition_columns,
-        batch_data_type=batch_data_type,
-        wait=db_execute,
-        flow_name="dump_db",
-        labels=current_flow_labels,
         dataset_id=dataset_id,
         table_id=table_id,
+        dump_mode=dump_mode,
+        partition_columns=partition_columns,
+        batch_data_type=batch_data_type,
+        biglake_table=biglake_table,
+        log_number_of_batches=log_number_of_batches,
     )
+    dump_upload.set_upstream(db_execute)
 
-    data_exists = greater_than(num_batches, 0)
-
-    with case(data_exists, True):
-        upload_table = create_table_and_upload_to_gcs(
-            data_path=batches_path,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            dump_mode=dump_mode,
-            biglake_table=biglake_table,
-            wait=data_exists,
+    with case(materialize_after_dump, True):
+        # Trigger DBT flow run
+        materialization_flow = create_flow_run(
+            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+            parameters={
+                "dataset_id": dataset_id,
+                "table_id": table_id,
+                "mode": materialization_mode,
+                "materialize_to_datario": materialize_to_datario,
+                "dbt_model_secret_parameters": dbt_model_secret_parameters,
+                "dbt_alias": dbt_alias,
+            },
+            labels=current_flow_labels,
+            run_name=f"Materialize {dataset_id}.{table_id}",
+        )
+        materialization_flow.set_upstream(dump_upload)
+        wait_for_materialization = wait_for_flow_run(
+            materialization_flow,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+        wait_for_materialization.max_retries = (
+            dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
+        )
+        wait_for_materialization.retry_delay = timedelta(
+            seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
         )
 
-        with case(materialize_after_dump, True):
-            # Trigger DBT flow run
-            materialization_flow = create_flow_run(
-                flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+        with case(dump_to_gcs, True):
+            # Trigger Dump to GCS flow run with project id as datario
+            dump_to_gcs_flow = create_flow_run(
+                flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
                 project_name=constants.PREFECT_DEFAULT_PROJECT.value,
                 parameters={
+                    "project_id": "datario",
                     "dataset_id": dataset_id,
                     "table_id": table_id,
-                    "mode": materialization_mode,
-                    "materialize_to_datario": materialize_to_datario,
-                    "dbt_model_secret_parameters": dbt_model_secret_parameters,
-                    "dbt_alias": dbt_alias,
+                    "maximum_bytes_processed": maximum_bytes_processed,
                 },
-                labels=current_flow_labels,
-                run_name=f"Materialize {dataset_id}.{table_id}",
+                labels=[
+                    "datario",
+                ],
+                run_name=f"Dump to GCS {dataset_id}.{table_id}",
             )
-            materialization_flow.set_upstream(upload_table)
-            wait_for_materialization = wait_for_flow_run(
-                materialization_flow,
+            dump_to_gcs_flow.set_upstream(wait_for_materialization)
+
+            wait_for_dump_to_gcs = wait_for_flow_run(
+                dump_to_gcs_flow,
                 stream_states=True,
                 stream_logs=True,
                 raise_final_state=True,
             )
-            wait_for_materialization.max_retries = (
-                dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
-            )
-            wait_for_materialization.retry_delay = timedelta(
-                seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
-            )
-
-            with case(dump_to_gcs, True):
-                # Trigger Dump to GCS flow run with project id as datario
-                dump_to_gcs_flow = create_flow_run(
-                    flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
-                    project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-                    parameters={
-                        "project_id": "datario",
-                        "dataset_id": dataset_id,
-                        "table_id": table_id,
-                        "maximum_bytes_processed": maximum_bytes_processed,
-                    },
-                    labels=[
-                        "datario",
-                    ],
-                    run_name=f"Dump to GCS {dataset_id}.{table_id}",
-                )
-                dump_to_gcs_flow.set_upstream(wait_for_materialization)
-
-                wait_for_dump_to_gcs = wait_for_flow_run(
-                    dump_to_gcs_flow,
-                    stream_states=True,
-                    stream_logs=True,
-                    raise_final_state=True,
-                )
 
 
 dump_sql_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
