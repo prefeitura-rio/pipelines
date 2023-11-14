@@ -584,6 +584,6 @@ class constants(Enum):  # pylint: disable=c0103
     STU_TABLE_CAPTURE_PARAMS = [
         {
             "table_id": "operadora_empresa",
-            "primary_key": ["Perm/Autor", "CNPJ"],
+            "primary_key": ["Perm_Autor", "CNPJ"],
         },
     ]
