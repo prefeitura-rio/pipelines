@@ -2,10 +2,12 @@
 
 import json
 import os
+import re
 import base64
 from typing import Union, List
 from time import sleep
 
+import yaml
 import google.api_core.exceptions
 from google.cloud.dataplex_v1 import (
     DataScanJob,
@@ -48,6 +50,22 @@ class Dataplex:
             self.spec = None
 
     @staticmethod
+    def to_snake_case(name: str):
+        """
+        Converts camelCase to snake_case
+        """
+        name = re.sub(r'(?<!^)(?=[A-Z])', '_', name).lower()
+        return name
+
+    @staticmethod
+    def snake_case_rule(rule):
+        """
+        Converts all keys in a dictionary from camelCase to snake_case 
+        """
+        sc_rule = {Dataplex.to_snake_case(key): rule[key] for key in rule}
+        return sc_rule
+
+    @staticmethod
     def _decode_env(env: str) -> str:
         """
         Decode environment variable
@@ -63,12 +81,12 @@ class Dataplex:
             _type_: _description_
         """
         json_acct_info = None
-        if os.getenv("BASEDOSDADOS_CREDENTIALS_PROD"):
-            stream = self._decode_env("BASEDOSDADOS_CREDENTIALS_PROD")
-            json_acct_info = json.loads(stream, strict=False)
-        elif self.credentials_path:
+        if self.credentials_path:
             with open(self.credentials_path) as fp:
                 json_acct_info = json.load(fp, strict=False)
+        elif os.getenv("BASEDOSDADOS_CREDENTIALS_PROD"):
+            stream = self._decode_env("BASEDOSDADOS_CREDENTIALS_PROD")
+            json_acct_info = json.loads(stream, strict=False)
 
         credentials = service_account.Credentials.from_service_account_info(
             json_acct_info
@@ -157,9 +175,6 @@ class DataQuality(Dataplex):
             location=location,
         )
 
-    def _load_rules(rules_yaml_path: str):
-        pass
-
     def _create_default(self):
         # create default data quality scan based on profile
         pass
@@ -232,7 +247,7 @@ class DataQuality(Dataplex):
         # TODO: check rules syntax
         # TODO: add loading rules from file (yaml/json)
         # May pass rules as dict or filepath
-        data_quality_scan.data_quality_spec.rules = [DataQualityRule(r) for r in rules]
+        data_quality_scan.data_quality_spec.rules = self._get_rules(rules)
 
         if export_table_id and export_dataset_id:
             table_str = f"{base_url}/{export_dataset_id}/tables/{export_table_id}"
@@ -282,11 +297,24 @@ class DataQuality(Dataplex):
         self._patch(row_filter=None)
         return response
 
-    def add_rules(self, rules: dict):
-        # get current scan definition
-        # add new rules
-        # update scan definition
-        pass
+    def _normalize_rules(self, rules):
+        snake_case_rules = [self.snake_case_rule(rule) for rule in rules]
+        rules = [DataQualityRule(**rule) for rule in snake_case_rules]
+        return rules
+
+    def _get_rules(self, rules: Union[list, str] = None):
+        if rules is None:
+            return
+        if isinstance(rules, list):
+            read_rules = rules
+        elif isinstance(rules, str):
+            with open(rules, 'r') as fp:
+                read_rules = yaml.safe_load(fp)
+                if isinstance(read_rules, str):
+                    read_rules = json.load(fp, strict=False)
+                read_rules = read_rules['rules']
+
+        return self._normalize_rules(read_rules)
 
 
 class DataProfile(Dataplex):
