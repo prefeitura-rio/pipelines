@@ -15,7 +15,6 @@ from pipelines.rj_escritorio.flooding_detection.tasks import (
     get_last_update,
     get_openai_api_key,
     get_prediction,
-    get_raining_hexagons,
     get_snapshot,
     pick_cameras,
     update_flooding_api_data,
@@ -30,6 +29,10 @@ with Flow(
     ],
 ) as rj_escritorio__flooding_detection__flow:
     # Parameters
+    cameras_geodf_url = Parameter(
+        "cameras_geodf_url",
+        required=True,
+    )
     openai_api_key_secret_path = Parameter("openai_api_key_secret_path", required=True)
     openai_flooding_detection_prompt = Parameter(
         "openai_flooding_detection_prompt", required=True
@@ -54,10 +57,10 @@ with Flow(
     )
 
     # Flow
-    hexagons = get_raining_hexagons(rain_api_data_url=rain_api_data_url)
     last_update = get_last_update(rain_api_update_url=rain_api_update_url)
     cameras = pick_cameras(
-        hexagons=hexagons,
+        rain_api_data_url=rain_api_data_url,
+        cameras_data_url=cameras_geodf_url,
         last_update=last_update,
         predictions_buffer_key=redis_key_predictions_buffer,
     )
