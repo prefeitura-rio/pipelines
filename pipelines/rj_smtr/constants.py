@@ -418,6 +418,51 @@ class constants(Enum):  # pylint: disable=c0103
             "primary_key": ["CD_CONSORCIO", "CD_LINHA"],  # id column to nest data on
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
         },
+        {
+            "table_id": "conta_bancaria",
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "principal_db",
+                "query": """
+                    SELECT
+                        c.*,
+                        b.NM_BANCO
+                    FROM
+                        CONTA_BANCARIA c
+                    JOIN
+                        BANCO b
+                    ON
+                        b.NR_BANCO = c.NR_BANCO
+                    JOIN
+                        OPERADORA_TRANSPORTE o
+                    ON
+                        o.CD_CLIENTE = c.CD_CLIENTE
+                """,
+            },
+            "primary_key": ["CD_CLIENTE"],  # id column to nest data on
+            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+        },
+        {
+            "table_id": "contato_pessoa_juridica",
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "principal_db",
+                "query": """
+                    SELECT
+                        *
+                    FROM
+                        CONTATO_PESSOA_JURIDICA
+                    WHERE
+                        DT_INCLUSAO BETWEEN '{start}'
+                        AND '{end}'
+                """,
+            },
+            "primary_key": [
+                "NR_SEQ_CONTATO",
+                "CD_CLIENTE",
+            ],  # id column to nest data on
+            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+        },
     ]
 
     BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS = {
