@@ -317,20 +317,20 @@ def update_flooding_api_data(
                     "confidence": 0.7,
                 }
             )
-        api_data.append(
-            {
-                "datetime": last_update.to_datetime_string(),
-                "id_camera": camera["id_camera"],
-                "url_camera": camera["url_camera"],
-                "latitude": camera["latitude"],
-                "longitude": camera["longitude"],
-                "image_base64": image,
-                "ai_classification": ai_classification,
-            }
-        )
+            api_data.append(
+                {
+                    "datetime": last_update.to_datetime_string(),
+                    "id_camera": camera["id_camera"],
+                    "url_camera": camera["url_camera"],
+                    "latitude": camera["latitude"],
+                    "longitude": camera["longitude"],
+                    "image_base64": image,
+                    "ai_classification": ai_classification,
+                }
+            )
 
     # Update API data
-    redis_client = get_redis_client()
+    redis_client = get_redis_client(db=1)
     redis_client.set(data_key, json.dumps(api_data))
     redis_client.set(last_update_key, last_update.to_datetime_string())
     log("Successfully updated flooding detection data.")
