@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Flow definition for generating a data catalog from BigQuery.
+Flow definition for flooding detection using AI.
 """
 from prefect import Parameter
 from prefect.run_configs import KubernetesRun
