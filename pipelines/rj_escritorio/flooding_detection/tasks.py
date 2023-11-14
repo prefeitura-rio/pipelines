@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
+# TODO: Make it resilient to camera failures
 import base64
-from datetime import datetime
+from datetime import datetime, timedelta
 import io
 import json
 from pathlib import Path
@@ -128,7 +129,10 @@ def get_prediction(
     }
 
 
-@task
+@task(
+    max_retries=3,
+    retry_delay=timedelta(seconds=5),
+)
 def get_snapshot(
     camera: Dict[str, Union[str, float]],
 ) -> str:
