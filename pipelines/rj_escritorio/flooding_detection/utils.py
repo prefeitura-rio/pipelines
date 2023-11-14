@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Union
 
 import geopandas as gpd
 import h3
@@ -9,8 +9,7 @@ from redis_pal import RedisPal
 import requests
 from shapely.geometry import Point, Polygon
 
-
-from utils.utils import remove_columns_accents
+from pipelines.utils.utils import get_redis_client, remove_columns_accents
 
 
 def download_file(url: str, output_path: Union[str, Path]) -> bool:
@@ -215,7 +214,24 @@ def clean_and_padronize_cameras() -> gpd.GeoDataFrame:
     return cameras_h3.reset_index(drop=True)
 
 
-def redis_get_prediction_buffer(key: str, len: int = 3) -> List[bool]:
+def redis_add_to_prediction_buffer(key: str, value: bool, len_: int = 3) -> List[bool]:
+    """
+    Adds a value to the prediction buffer in Redis.
+
+    Args:
+        key: The Redis key.
+        value: The value to be added.
+        len: The length of the buffer.
+    """
+    prediction_buffer = redis_get_prediction_buffer(key, len_)
+    prediction_buffer.append(value)
+    prediction_buffer = prediction_buffer[-len_:]
+    redis_client: RedisPal = get_redis_client()
+    redis_client.set(key, prediction_buffer)
+    return prediction_buffer
+
+
+def redis_get_prediction_buffer(key: str, len_: int = 3) -> List[bool]:
     """
     Gets the prediction buffer from Redis.
 
@@ -226,3 +242,13 @@ def redis_get_prediction_buffer(key: str, len: int = 3) -> List[bool]:
     Returns:
         The prediction buffer.
     """
+    redis_client: RedisPal = get_redis_client()
+    prediction_buffer = redis_client.get(key)
+    if prediction_buffer is None:
+        return [False] * len_
+    elif not isinstance(prediction_buffer, list):
+        return [False] * len_
+    elif len(prediction_buffer) < len_:
+        diff = len_ - len(prediction_buffer)
+        return [False] * diff + prediction_buffer
+    return prediction_buffer

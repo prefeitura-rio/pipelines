@@ -10,6 +10,7 @@ import cv2
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+import pendulum
 from PIL import Image
 from prefect import task
 import requests
@@ -17,8 +18,9 @@ from shapely.geometry import Point
 
 from pipelines.rj_escritorio.flooding_detection.utils import (
     download_file,
+    redis_add_to_prediction_buffer,
 )
-from pipelines.utils.utils import get_vault_secret, log
+from pipelines.utils.utils import get_redis_client, get_vault_secret, log
 
 
 @task
@@ -189,7 +191,7 @@ def pick_cameras(
     cameras_data_path = Path("/tmp") / "cameras_geo_min.csv"
     if not download_file(url=cameras_data_url, output_path=cameras_data_path):
         raise RuntimeError("Failed to download the cameras data.")
-    cameras = pd.read_csv("cameras.csv")
+    cameras = pd.read_csv(cameras_data_path)
     cameras = cameras.drop(columns=["geometry"])
     geometry = [Point(xy) for xy in zip(cameras["longitude"], cameras["latitude"])]
     df_cameras = gpd.GeoDataFrame(cameras, geometry=geometry)
@@ -267,5 +269,46 @@ def update_flooding_api_data(
         last_update_key: The Redis key for the last update datetime.
         predictions_buffer_key: The Redis key for the predictions buffer.
     """
-    # TODO: Implement
-    raise NotImplementedError()
+    # Build API data
+    last_update = pendulum.now(tz="America/Sao_Paulo")
+    api_data = []
+    for prediction, camera, image in zip(predictions, cameras, images):
+        # Get AI classifications
+        ai_classification = []
+        current_prediction = prediction["label"]
+        predictions_buffer_camera_key = (
+            f"{predictions_buffer_key}_{camera['id_camera']}"
+        )
+        predictions_buffer = redis_add_to_prediction_buffer(
+            predictions_buffer_camera_key, current_prediction
+        )
+        # Get most common prediction
+        most_common_prediction = max(
+            set(predictions_buffer), key=predictions_buffer.count
+        )
+        # Add classifications
+        if most_common_prediction:
+            ai_classification.append(
+                {
+                    "object": "alagamento",
+                    "label": True,
+                    "confidence": 0.7,
+                }
+            )
+        api_data.append(
+            {
+                "datetime": last_update.to_datetime_string(),
+                "id_camera": camera["id_camera"],
+                "url_camera": camera["url_camera"],
+                "latitude": camera["latitude"],
+                "longitude": camera["longitude"],
+                "image_base64": image,
+                "ai_classification": ai_classification,
+            }
+        )
+
+    # Update API data
+    redis_client = get_redis_client()
+    redis_client.set(data_key, json.dumps(api_data))
+    redis_client.set(last_update_key, last_update.to_datetime_string())
+    log("Successfully updated flooding detection data.")
