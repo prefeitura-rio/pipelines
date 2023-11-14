@@ -245,7 +245,8 @@ def pick_cameras(
         output.append(
             {
                 "id_camera": row["id_camera"],
-                "url_camera": row["nome_da_camera"],
+                "nome_camera": row["nome"],
+                "url_camera": row["rtsp"],
                 "latitude": row["geometry"].y,
                 "longitude": row["geometry"].x,
             }
