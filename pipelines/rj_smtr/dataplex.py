@@ -3,7 +3,7 @@
 import json
 import os
 import base64
-from typing import Union
+from typing import Union, List
 from time import sleep
 
 import google.api_core.exceptions
@@ -12,6 +12,7 @@ from google.cloud.dataplex_v1 import (
     DataScan,
     DataProfileSpec,
     DataQualitySpec,
+    DataQualityRule,
     CreateDataScanRequest,
     GetDataScanJobRequest,
     UpdateDataScanRequest,
@@ -156,6 +157,9 @@ class DataQuality(Dataplex):
             location=location,
         )
 
+    def _load_rules(rules_yaml_path: str):
+        pass
+
     def _create_default(self):
         # create default data quality scan based on profile
         pass
@@ -183,28 +187,40 @@ class DataQuality(Dataplex):
         operation = self.client.update_data_scan(request=request)
 
         response = operation.result()
+        # remove row_filter after running
         return response
 
     def create(
         self,
         dataset_id: str,
         table_id: str,
+        rules: List[dict],
         export_table_id: str = None,
         export_dataset_id: str = "bq_logs",
         row_filter: str = None,
         incremental_field: str = None,
     ):
         """
-        _summary_
+        Create a Data Quality Scan Resource.
+
+
 
         Args:
-            dataset_id (str): _description_
-            table_id (str): _description_
-            export_table_id (str, optional): _description_. Defaults to None.
-            export_dataset_id (str, optional): _description_. Defaults to "bq_logs".
-            exclude_columns (list, optional): _description_. Defaults to [].
-            row_filter (str, optional): _description_. Defaults to None.
-            incremental_field (str, optional): _description_. Defaults to None.
+            dataset_id (str): dataset_id for the table being scanned
+            table_id (str): table_id for the table being scanned
+            rules (List[dict]): set of rules to check against table data.
+                Should be a list of dicts with the rules formatted as  per
+                `https://cloud.google.com/dataplex/docs/use-auto-data-quality#create-scan-using-gcloud`
+            export_table_id (str, optional): table_id which to export scan results to.
+                Defaults to None.
+            export_dataset_id (str, optional): dataset_id which to export scan results to.
+                Defaults to "bq_logs".
+            row_filter (str, optional): run scan only on filtered data.
+                Should be a valid SQL expression for a `WHERE` clause.
+                Defaults to None.
+            incremental_field (str, optional): if set, will define the data scan scope as
+                incremental. Should be a monotonically increasing field on the source table.
+                Defaults to None.
 
         Returns:
             _type_: _description_
@@ -213,6 +229,10 @@ class DataQuality(Dataplex):
         data_quality_scan = DataScan()
         data_quality_scan.data_quality_spec = DataQualitySpec()
         data_quality_scan.data.resource = f"{base_url}/{dataset_id}/tables/{table_id}"
+        # TODO: check rules syntax
+        # TODO: add loading rules from file (yaml/json)
+        # May pass rules as dict or filepath
+        data_quality_scan.data_quality_spec.rules = [DataQualityRule(r) for r in rules]
 
         if export_table_id and export_dataset_id:
             table_str = f"{base_url}/{export_dataset_id}/tables/{export_table_id}"
@@ -259,6 +279,7 @@ class DataQuality(Dataplex):
         if wait_run_completion:
             job = self._wait_for_job_completion(job_name=response.job.name)
             return job
+        self._patch(row_filter=None)
         return response
 
     def add_rules(self, rules: dict):
@@ -298,16 +319,26 @@ class DataProfile(Dataplex):
         incremental_field: str = None,
     ):
         """
-        _summary_
+        Create a Data Quality Scan Resource.
+
+
 
         Args:
-            dataset_id (str): _description_
-            table_id (str): _description_
-            export_table_id (str, optional): _description_. Defaults to None.
-            export_dataset_id (str, optional): _description_. Defaults to "bq_logs".
-            exclude_columns (list, optional): _description_. Defaults to [].
-            row_filter (str, optional): _description_. Defaults to None.
-            incremental_field (str, optional): _description_. Defaults to None.
+            dataset_id (str): dataset_id for the table being scanned
+            table_id (str): table_id for the table being scanned
+            rules (List[dict]): set of rules to check against table data.
+                Should be a list of dicts with the rules formatted as  per
+                `https://cloud.google.com/dataplex/docs/use-auto-data-quality#create-scan-using-gcloud`
+            export_table_id (str, optional): table_id which to export scan results to.
+                Defaults to None.
+            export_dataset_id (str, optional): dataset_id which to export scan results to.
+                Defaults to "bq_logs".
+            row_filter (str, optional): run scan only on filtered data.
+                Should be a valid SQL expression for a `WHERE` clause.
+                Defaults to None.
+            incremental_field (str, optional): if set, will define the data scan scope as
+                incremental. Should be a monotonically increasing field on the source table.
+                Defaults to None.
 
         Returns:
             _type_: _description_
