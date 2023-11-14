@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
+import base64
 from datetime import datetime
+import io
+import json
 from pathlib import Path
 from typing import Dict, List, Union
 
+import cv2
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+from PIL import Image
 from prefect import task
 import requests
 
@@ -55,7 +60,10 @@ def get_prediction(
     image: str,
     flooding_prompt: str,
     openai_api_key: str,
+    openai_api_model: str,
     predictions_buffer_key: str,
+    openai_api_max_tokens: int = 300,
+    openai_api_url: str = "https://api.openai.com/v1/chat/completions",
 ) -> Dict[str, Union[str, float, bool]]:
     """
     Gets the flooding detection prediction from OpenAI API.
@@ -74,8 +82,45 @@ def get_prediction(
                 "confidence": 0.7,
             }
     """
-    # TODO: Implement
-    raise NotImplementedError()
+    # TODO:
+    # - Add confidence value
+    # Setup the request
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {openai_api_key}",
+    }
+    payload = {
+        "model": openai_api_model,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": flooding_prompt,
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/jpeg;base64,{image}"},
+                    },
+                ],
+            }
+        ],
+        "max_tokens": openai_api_max_tokens,
+    }
+    response = requests.post(openai_api_url, headers=headers, json=payload)
+    data: dict = response.json()
+    if data.get("error"):
+        raise RuntimeError(f"Failed to get prediction: {data['error']}")
+    content: str = data["choices"][0]["message"]["content"]
+    json_string = content.replace("```json\n", "").replace("\n```", "")
+    json_object = json.loads(json_string)
+    flooding_detected = json_object["flooding_detected"]
+    return {
+        "object": "alagamento",
+        "label": flooding_detected,
+        "confidence": 0.7,
+    }
 
 
 @task
@@ -97,8 +142,18 @@ def get_snapshot(
     Returns:
         The snapshot in base64 format.
     """
-    # TODO: Implement
-    raise NotImplementedError()
+    rtsp_url = camera["url_camera"]
+    cap = cv2.VideoCapture(rtsp_url)
+    ret, frame = cap.read()
+    if not ret:
+        raise RuntimeError(f"Failed to get snapshot from URL {rtsp_url}.")
+    cap.release()
+    img = Image.fromarray(frame)
+    buffer = io.BytesIO()
+    img.save(buffer, format="JPEG")
+    img_b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+    log(f"Successfully got snapshot from URL {rtsp_url}.")
+    return img_b64
 
 
 @task
