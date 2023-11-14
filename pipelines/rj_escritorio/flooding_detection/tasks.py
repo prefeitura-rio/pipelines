@@ -245,6 +245,7 @@ def update_flooding_api_data(
     images: List[str],
     data_key: str,
     last_update_key: str,
+    predictions_buffer_key: str,
 ) -> None:
     """
     Updates Redis keys with flooding detection data and last update datetime (now).
@@ -272,6 +273,7 @@ def update_flooding_api_data(
         images: A list of images in base64 format.
         data_key: The Redis key for the flooding detection data.
         last_update_key: The Redis key for the last update datetime.
+        predictions_buffer_key: The Redis key for the predictions buffer.
     """
     # TODO: Implement
     raise NotImplementedError()

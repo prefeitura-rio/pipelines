@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import geopandas as gpd
 import h3
 import pandas as pd
+from redis_pal import RedisPal
 import requests
 from shapely.geometry import Point, Polygon
 
@@ -212,3 +213,16 @@ def clean_and_padronize_cameras() -> gpd.GeoDataFrame:
     )
 
     return cameras_h3.reset_index(drop=True)
+
+
+def redis_get_prediction_buffer(key: str, len: int = 3) -> List[bool]:
+    """
+    Gets the prediction buffer from Redis.
+
+    Args:
+        key: The Redis key.
+        len: The length of the buffer.
+
+    Returns:
+        The prediction buffer.
+    """
