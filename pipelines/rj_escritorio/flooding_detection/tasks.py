@@ -13,10 +13,10 @@ import pandas as pd
 from PIL import Image
 from prefect import task
 import requests
+from shapely.geometry import Point
 
 from pipelines.rj_escritorio.flooding_detection.utils import (
     download_file,
-    h3_id_to_polygon,
 )
 from pipelines.utils.utils import get_vault_secret, log
 
@@ -189,9 +189,11 @@ def pick_cameras(
     cameras_data_path = Path("/tmp") / "cameras_geo_min.csv"
     if not download_file(url=cameras_data_url, output_path=cameras_data_path):
         raise RuntimeError("Failed to download the cameras data.")
-    df_cameras = gpd.read_file(
-        cameras_data_path, GEOM_POSSIBLE_NAMES="geometry", KEEP_GEOM_COLUMNS="NO"
-    )
+    cameras = pd.read_csv("cameras.csv")
+    cameras = cameras.drop(columns=["geometry"])
+    geometry = [Point(xy) for xy in zip(cameras["longitude"], cameras["latitude"])]
+    df_cameras = gpd.GeoDataFrame(cameras, geometry=geometry)
+    df_cameras.crs = {"init": "epsg:4326"}
     log("Successfully downloaded cameras data.")
     log(f"Cameras shape: {df_cameras.shape}")
 
@@ -199,19 +201,11 @@ def pick_cameras(
     rain_data = requests.get(rain_api_data_url).json()
     df_rain = pd.DataFrame(rain_data)
     df_rain["last_update"] = last_update
-    df_rain = df_rain.rename(columns={"status": "status_chuva"})
-    geometry = df_rain["id_h3"].apply(lambda h3_id: h3_id_to_polygon(h3_id))
-    df_rain_geo = gpd.GeoDataFrame(df_rain, geometry=geometry)
-    df_rain_geo.crs = {"init": "epsg:4326"}
     log("Successfully downloaded rain data.")
     log(f"Rain data shape: {df_rain.shape}")
 
     # Join the dataframes
-    df_cameras_h3: gpd.GeoDataFrame = gpd.sjoin(
-        df_cameras, df_rain_geo, how="left", op="within"
-    )
-    df_cameras_h3 = df_cameras_h3.drop(columns=["index_right"])
-    df_cameras_h3 = df_cameras_h3[df_cameras_h3["id_h3"].notnull()]
+    df_cameras_h3 = pd.merge(df_cameras, df_rain, how="left", on="id_h3")
     log("Successfully joined the dataframes.")
     log(f"Cameras H3 shape: {df_cameras_h3.shape}")
 
