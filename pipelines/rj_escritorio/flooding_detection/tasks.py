@@ -210,9 +210,7 @@ def pick_cameras(
     log(f"Cameras H3 shape: {df_cameras_h3.shape}")
 
     # Pick cameras
-    mask = np.logical_not(
-        df_cameras_h3["status_chuva"].isin(["sem chuva", "chuva fraca"])
-    )
+    mask = np.logical_not(df_cameras_h3["status"].isin(["sem chuva", "chuva fraca"]))
     df_cameras_h3 = df_cameras_h3[mask]
     log("Successfully picked cameras.")
     log(f"Picked cameras shape: {df_cameras_h3.shape}")
