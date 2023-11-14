@@ -2750,6 +2750,58 @@ files = [
 ]
 
 [[package]]
+name = "h3"
+version = "3.7.6"
+description = "Hierarchical hexagonal geospatial indexing system"
+optional = false
+python-versions = "*"
+files = [
+    {file = "h3-3.7.6-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:cd4a5103a86a7d98cffa3be77eb82080aa2e9d676bbd1661f3db9ecad7a4ef2b"},
+    {file = "h3-3.7.6-cp27-cp27m-manylinux2010_x86_64.whl", hash = "sha256:231959dceb4cc4ae86fe4fe2c385b176ed81712549e787b889dfa66f583676df"},
+    {file = "h3-3.7.6-cp27-cp27mu-manylinux2010_x86_64.whl", hash = "sha256:b9de9da755c90bbc90d6c041396a20c91816cd86a0bafa3b8899681cfdc2c4c6"},
+    {file = "h3-3.7.6-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:cda9a427b0de0d4069115ec765118888f180d0db915b5bc0dba52f5ae957b789"},
+    {file = "h3-3.7.6-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:8bf1e080b9a47774754834e7f10155f3d2e3542bf895488a0519b2ae7d5b15db"},
+    {file = "h3-3.7.6-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:1d3b93e3f38eb6c8fc5051d1b289b74614fb5f2415d272fea18085dea260d6b0"},
+    {file = "h3-3.7.6-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:783b2ca4448360c5a184fd43b84fc5554e3a8fd02738ff31349506189c5b4b49"},
+    {file = "h3-3.7.6-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:3bae8b95f21f20f04141a35f15c8caa74f2046eb01ef49e35fc45e6a8edfc8df"},
+    {file = "h3-3.7.6-cp310-cp310-win_amd64.whl", hash = "sha256:6ca9dd410e250d37f24a87c4ecb0615bb6d44a3f90eb5dbbf1b5e3d4489b8703"},
+    {file = "h3-3.7.6-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:991ee991f2ae41f629feb1cd32fa677b8512c72696eb0ad94fcf359d61184b2e"},
+    {file = "h3-3.7.6-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:fcbfff87d223279f8e38bbee3ebf52b1b96ae280e9e7de24674d3c284373d946"},
+    {file = "h3-3.7.6-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:eddf10d1d2139b3ea3ad1618c2074e1c47d3d36bddb5359e4955f5fd0b089d93"},
+    {file = "h3-3.7.6-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:76abc02f14a8df42fb5d80e6045023fb756c49d3cb08d69a8ceb9362b95d4bec"},
+    {file = "h3-3.7.6-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:fc8030968586a7810aa192397ad9a4f7d7a963f57c9b3e210fc38de0aa5c2533"},
+    {file = "h3-3.7.6-cp311-cp311-win_amd64.whl", hash = "sha256:1bdc790d91138e781973dcaade5231db7fe8a876330939e0903f602acc4fb64c"},
+    {file = "h3-3.7.6-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:198718ab20a06ebe52f0aaafc02469e4a51964e5ba7990c3cc1d2fc32e7a54d9"},
+    {file = "h3-3.7.6-cp36-cp36m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:02faa911f2d8425c641a1f7c08f3dc9c10a5a3d81408832afa40748534b999c8"},
+    {file = "h3-3.7.6-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1b4db92ceaeb9a51cc875c302cdc5e1aa27eed776d95943ee55c941bc2f219a3"},
+    {file = "h3-3.7.6-cp36-cp36m-musllinux_1_1_x86_64.whl", hash = "sha256:4810ddb3d91411a6cbf87a28108fe31712f618ef223c349e1f6675602af2c473"},
+    {file = "h3-3.7.6-cp36-cp36m-win_amd64.whl", hash = "sha256:211ef3317dcf7863e2d01a97ab6da319b8451d78cd1633dd28faaf69e66bc321"},
+    {file = "h3-3.7.6-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:99b81620608378fc9910a5c630b0f17eb939156fa13e1adc55229d31f8c3f5ca"},
+    {file = "h3-3.7.6-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:26f3175bd3ea3ee528dbf49308e7215a58351ce425e1c3a9838ae22526663311"},
+    {file = "h3-3.7.6-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7d7b69015f5bab2525914fad370b96dc386437e19a14cfed3eb13868589263db"},
+    {file = "h3-3.7.6-cp37-cp37m-musllinux_1_1_x86_64.whl", hash = "sha256:d0c2890fa10fa8695c020569c8d55da79e2c552a39533de4ae6991c7acb122e1"},
+    {file = "h3-3.7.6-cp37-cp37m-win_amd64.whl", hash = "sha256:1cd4f07c49721023c5fef401a4de03c47000705dfd116579dc6b61cad821305d"},
+    {file = "h3-3.7.6-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:f8d1db3dcd8f6ce7f54e061e6c9fbecbb5c3978b9e54e44af05a53787c4f99b3"},
+    {file = "h3-3.7.6-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:495e37b1dee0ec46ccd88b278e571234b0d0d30648f161799d65a8d7f390b3f2"},
+    {file = "h3-3.7.6-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b2e2c4808b7691b176c89ebf23c173b3b23dd4ce42f8f494b32c6e31ceee49af"},
+    {file = "h3-3.7.6-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b58b1298bf1068704c6d9426749c8ae6021b53d982d5153cc4161c7042ecd810"},
+    {file = "h3-3.7.6-cp38-cp38-musllinux_1_1_x86_64.whl", hash = "sha256:a2872f695168c4700c73edd6eab9c6181387d7ea177de13b130ae61e613ff7de"},
+    {file = "h3-3.7.6-cp38-cp38-win_amd64.whl", hash = "sha256:98c3951c3b67ca3de06ef70aa74a9752640a3eca9b4d68e0d5d8e4fc6fa72337"},
+    {file = "h3-3.7.6-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:0724d4645c1da59e02b3305050c52b93ce1d8971d1d139433d464fcc103249a6"},
+    {file = "h3-3.7.6-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:e1f6ec0f2246381ce3a7f72da1ce825a5474eb7c8fb25a2ea1f16c6606ce34a7"},
+    {file = "h3-3.7.6-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:1471ff4d3875b25b521eeec5c2b72abe27b8e6af10ab99b7da5c0de545b0e832"},
+    {file = "h3-3.7.6-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:eb96f2caae519d0ed17acde625af528476dca121b0336d3eb776429d40284ef6"},
+    {file = "h3-3.7.6-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:b1b1bce0dee05175f8d422e50ffa1afacb9a7e78ae0963059aebfbef50e10175"},
+    {file = "h3-3.7.6-cp39-cp39-win_amd64.whl", hash = "sha256:36ea935833c37fdfd7ffbfc000d7cd20addcdf67f30b26a6b9bccb9210b03704"},
+    {file = "h3-3.7.6.tar.gz", hash = "sha256:9bbd3dbac99532fa521d7d2e288ff55877bea3223b070f659ed7b5f8f1f213eb"},
+]
+
+[package.extras]
+all = ["flake8", "numpy", "pylint", "pytest", "pytest-cov"]
+numpy = ["numpy"]
+test = ["flake8", "pylint", "pytest", "pytest-cov"]
+
+[[package]]
 name = "h5py"
 version = "3.9.0"
 description = "Read and write HDF5 files from Python"
@@ -7315,4 +7367,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8.1,<3.11"
-content-hash = "26bc9f8eea3e12980a49451806dbc243c4ac6bc940bef5dd5f3e1f758f8c0e31"
+content-hash = "b788af3d35ff07ac9dcbda64936ef602c4196038307f0c602a47f5ce1c3d363d"
