@@ -34,6 +34,9 @@ from pipelines.utils.utils import (
     batch_to_dataframe,
     dataframe_to_csv,
     dataframe_to_parquet,
+    delete_blobs_list,
+    dump_header_to_file,
+    list_blobs_with_prefix,
     parse_date_columns,
     clean_dataframe,
     to_partitions,
@@ -43,7 +46,7 @@ from pipelines.utils.utils import (
     remove_columns_accents,
 )
 from pipelines.constants import constants
-from pipelines.utils.utils import log
+from pipelines.utils.utils import log, log_mod
 
 DATABASE_MAPPING: Dict[str, Database] = {
     "mysql": MySql,
@@ -287,6 +290,333 @@ def parse_comma_separated_string_to_list(text: str) -> List[str]:
     result = [x.strip() for x in text.split(",")]
     result = [item for item in result if item != "" and item is not None]
     return result
+
+
+@task
+def dump_upload_batch(
+    database: Database,
+    batch_size: int,
+    dataset_id: str,
+    table_id: str,
+    dump_mode: str,
+    partition_columns: List[str] = None,
+    batch_data_type: str = "csv",
+    biglake_table: bool = True,
+    log_number_of_batches: int = 100,
+):
+    """
+    This task will dump and upload batches of data, sequentially.
+    """
+    # Log BD version
+    bd_version = bd.__version__
+    log(f"Using basedosdados@{bd_version}")
+
+    # Keep track of cleared stuff
+    prepath = f"data/{uuid4()}/"
+    cleared_partitions = set()
+    cleared_table = False
+
+    # Get data columns
+    columns = database.get_columns()
+    log(f"Got columns: {columns}")
+
+    new_query_cols = build_query_new_columns(table_columns=columns)
+    log(f"New query columns without accents: {new_query_cols}")
+
+    prepath = Path(prepath)
+    log(f"Got prepath: {prepath}")
+
+    if not partition_columns or partition_columns[0] == "":
+        partition_column = None
+    else:
+        partition_column = partition_columns[0]
+
+    if not partition_column:
+        log("NO partition column specified! Writing unique files")
+    else:
+        log(f"Partition column: {partition_column} FOUND!! Write to partitioned files")
+
+    # Now loop until we have no more data.
+    batch = database.fetch_batch(batch_size)
+    idx = 0
+    while len(batch) > 0:
+        # Log progress each 100 batches.
+        log_mod(
+            msg=f"Dumping batch {idx} with size {len(batch)}",
+            index=idx,
+            mod=log_number_of_batches,
+        )
+
+        # Dump batch to file.
+        dataframe = batch_to_dataframe(batch, columns)
+        old_columns = dataframe.columns.tolist()
+        dataframe.columns = remove_columns_accents(dataframe)
+        new_columns_dict = dict(zip(old_columns, dataframe.columns.tolist()))
+        dataframe = clean_dataframe(dataframe)
+        saved_files = []
+        if partition_column:
+            dataframe, date_partition_columns = parse_date_columns(
+                dataframe, new_columns_dict[partition_column]
+            )
+            partitions = date_partition_columns + [
+                new_columns_dict[col] for col in partition_columns[1:]
+            ]
+            saved_files = to_partitions(
+                data=dataframe,
+                partition_columns=partitions,
+                savepath=prepath,
+                data_type=batch_data_type,
+                suffix=f"{datetime.now().strftime('%Y%m%d-%H%M%S')}",
+            )
+        elif batch_data_type == "csv":
+            fname = prepath / f"{uuid4()}.csv"
+            dataframe_to_csv(dataframe, fname)
+            saved_files = [fname]
+        elif batch_data_type == "parquet":
+            fname = prepath / f"{uuid4()}.parquet"
+            dataframe_to_parquet(dataframe, fname)
+            saved_files = [fname]
+        else:
+            raise ValueError(f"Unknown data type: {batch_data_type}")
+
+        # Log progress each 100 batches.
+
+        log_mod(
+            msg=f"Batch generated {len(saved_files)} files. Will now upload.",
+            index=idx,
+            mod=log_number_of_batches,
+        )
+
+        # Upload files.
+        tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
+        table_staging = f"{tb.table_full_name['staging']}"
+        st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+        storage_path = f"{st.bucket_name}.staging.{dataset_id}.{table_id}"
+        storage_path_link = (
+            f"https://console.cloud.google.com/storage/browser/{st.bucket_name}"
+            f"/staging/{dataset_id}/{table_id}"
+        )
+        dataset_is_public = tb.client["bigquery_prod"].project == "datario"
+        # If we have a partition column
+        if partition_column:
+            # Extract the partition from the filenames
+            partitions = []
+            for saved_file in saved_files:
+                # Remove the prepath and filename. This is the partition.
+                partition = str(saved_file).replace(str(prepath), "")
+                partition = partition.replace(saved_file.name, "")
+                # Strip slashes from beginning and end.
+                partition = partition.strip("/")
+                # Add to list.
+                partitions.append(partition)
+            # Remove duplicates.
+            partitions = list(set(partitions))
+            log_mod(
+                msg=f"Got partitions: {partitions}",
+                index=idx,
+                mod=log_number_of_batches,
+            )
+            # Loop through partitions and delete files from GCS.
+            blobs_to_delete = []
+            for partition in partitions:
+                if partition not in cleared_partitions:
+                    blobs = list_blobs_with_prefix(
+                        bucket_name=st.bucket_name,
+                        prefix=f"staging/{dataset_id}/{table_id}/{partition}",
+                    )
+                    blobs_to_delete.extend(blobs)
+                cleared_partitions.add(partition)
+            if blobs_to_delete:
+                delete_blobs_list(bucket_name=st.bucket_name, blobs=blobs_to_delete)
+                log_mod(
+                    msg=f"Deleted {len(blobs_to_delete)} blobs from GCS: {blobs_to_delete}",
+                    index=idx,
+                    mod=log_number_of_batches,
+                )
+        if dump_mode == "append":
+            if tb.table_exists(mode="staging"):
+                log_mod(
+                    msg=(
+                        "MODE APPEND: Table ALREADY EXISTS:"
+                        + f"\n{table_staging}"
+                        + f"\n{storage_path_link}"
+                    ),
+                    index=idx,
+                    mod=log_number_of_batches,
+                )
+            else:
+                # the header is needed to create a table when dosen't exist
+                log_mod(
+                    msg="MODE APPEND: Table DOESN'T EXISTS\nStart to CREATE HEADER file",
+                    index=idx,
+                    mod=log_number_of_batches,
+                )
+                header_path = dump_header_to_file(data_path=saved_files[0])
+                log_mod(
+                    msg="MODE APPEND: Created HEADER file:\n" f"{header_path}",
+                    index=idx,
+                    mod=log_number_of_batches,
+                )
+
+                tb.create(
+                    path=header_path,
+                    if_storage_data_exists="replace",
+                    if_table_exists="replace",
+                    biglake_table=biglake_table,
+                    dataset_is_public=dataset_is_public,
+                )
+
+                log_mod(
+                    msg=(
+                        "MODE APPEND: Sucessfully CREATED A NEW TABLE:\n"
+                        + f"{table_staging}\n"
+                        + f"{storage_path_link}"
+                    ),
+                    index=idx,
+                    mod=log_number_of_batches,
+                )  # pylint: disable=C0301
+
+                if not cleared_table:
+                    st.delete_table(
+                        mode="staging",
+                        bucket_name=st.bucket_name,
+                        not_found_ok=True,
+                    )
+                    log_mod(
+                        msg=(
+                            "MODE APPEND: Sucessfully REMOVED HEADER DATA from Storage:\n"
+                            + f"{storage_path}\n"
+                            + f"{storage_path_link}"
+                        ),
+                        index=idx,
+                        mod=log_number_of_batches,
+                    )  # pylint: disable=C0301
+                    cleared_table = True
+        elif dump_mode == "overwrite":
+            if tb.table_exists(mode="staging") and not cleared_table:
+                log_mod(
+                    msg=(
+                        "MODE OVERWRITE: Table ALREADY EXISTS, DELETING OLD DATA!\n"
+                        + f"{storage_path}\n"
+                        + f"{storage_path_link}"
+                    ),
+                    index=idx,
+                    mod=log_number_of_batches,
+                )  # pylint: disable=C0301
+                st.delete_table(
+                    mode="staging", bucket_name=st.bucket_name, not_found_ok=True
+                )
+                log_mod(
+                    msg=(
+                        "MODE OVERWRITE: Sucessfully DELETED OLD DATA from Storage:\n"
+                        + f"{storage_path}\n"
+                        + f"{storage_path_link}"
+                    ),
+                    index=idx,
+                    mod=log_number_of_batches,
+                )  # pylint: disable=C0301
+                # delete only staging table and let DBT overwrite the prod table
+                tb.delete(mode="staging")
+                log_mod(
+                    msg=(
+                        "MODE OVERWRITE: Sucessfully DELETED TABLE:\n"
+                        + f"{table_staging}\n"
+                    ),
+                    index=idx,
+                    mod=log_number_of_batches,
+                )  # pylint: disable=C0301
+
+            if not cleared_table:
+                # the header is needed to create a table when dosen't exist
+                # in overwrite mode the header is always created
+                st.delete_table(
+                    mode="staging", bucket_name=st.bucket_name, not_found_ok=True
+                )
+                log_mod(
+                    msg=(
+                        "MODE OVERWRITE: Sucessfully DELETED OLD DATA from Storage:\n"
+                        + f"{storage_path}\n"
+                        + f"{storage_path_link}"
+                    ),
+                    index=idx,
+                    mod=log_number_of_batches,
+                )  # pylint: disable=C0301
+
+                log_mod(
+                    msg="MODE OVERWRITE: Table DOSEN'T EXISTS\nStart to CREATE HEADER file",
+                    index=idx,
+                    mod=log_number_of_batches,
+                )
+                header_path = dump_header_to_file(data_path=saved_files[0])
+                log_mod(
+                    "MODE OVERWRITE: Created HEADER file:\n" f"{header_path}",
+                    index=idx,
+                    mod=log_number_of_batches,
+                )
+
+                tb.create(
+                    path=header_path,
+                    if_storage_data_exists="replace",
+                    if_table_exists="replace",
+                    biglake_table=biglake_table,
+                    dataset_is_public=dataset_is_public,
+                )
+
+                log_mod(
+                    msg=(
+                        "MODE OVERWRITE: Sucessfully CREATED TABLE\n"
+                        + f"{table_staging}\n"
+                        + f"{storage_path_link}"
+                    ),
+                    index=idx,
+                    mod=log_number_of_batches,
+                )
+
+                st.delete_table(
+                    mode="staging", bucket_name=st.bucket_name, not_found_ok=True
+                )
+                log_mod(
+                    msg=(
+                        f"MODE OVERWRITE: Sucessfully REMOVED HEADER DATA from Storage\n:"
+                        + f"{storage_path}\n"
+                        + f"{storage_path_link}"
+                    ),
+                    index=idx,
+                    mod=log_number_of_batches,
+                )  # pylint: disable=C0301
+                cleared_table = True
+
+        log_mod(
+            msg="STARTING UPLOAD TO GCS",
+            index=idx,
+            mod=log_number_of_batches,
+        )
+        if tb.table_exists(mode="staging"):
+            # Upload them all at once
+            tb.append(filepath=prepath, if_exists="replace")
+            log_mod(
+                msg="STEP UPLOAD: Sucessfully uploaded all batch files to Storage",
+                index=idx,
+                mod=log_number_of_batches,
+            )
+            for saved_file in saved_files:
+                # Delete the files
+                saved_file.unlink()
+        else:
+            # pylint: disable=C0301
+            log_mod(
+                msg="STEP UPLOAD: Table does not exist in STAGING, need to create first",
+                index=idx,
+                mod=log_number_of_batches,
+            )
+
+        # Get next batch.
+        batch = database.fetch_batch(batch_size)
+        idx += 1
+
+    log(
+        msg=f"Successfully dumped {idx} batches with size {len(batch)}, total of {idx*batch_size}",
+    )
 
 
 @task(

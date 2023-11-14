@@ -1088,7 +1088,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
     else:
         last_run = datetime.strptime(last_run, timestr)
 
-    if isinstance(last_run, date):
+    if (not isinstance(last_run, datetime)) and (isinstance(last_run, date)):
         last_run = datetime(last_run.year, last_run.month, last_run.day)
 
     # set start to last run hour (H)
