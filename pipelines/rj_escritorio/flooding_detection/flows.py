@@ -33,6 +33,10 @@ with Flow(
         "cameras_geodf_url",
         required=True,
     )
+    mocked_cameras_number = Parameter(
+        "mocked_cameras_number",
+        default=0,
+    )
     openai_api_max_tokens = Parameter("openai_api_max_tokens", default=300)
     openai_api_model = Parameter("openai_api_model", default="gpt-4-vision-preview")
     openai_api_url = Parameter(
@@ -69,6 +73,7 @@ with Flow(
         cameras_data_url=cameras_geodf_url,
         last_update=last_update,
         predictions_buffer_key=redis_key_predictions_buffer,
+        number_mock_rain_cameras=mocked_cameras_number,
     )
     openai_api_key = get_openai_api_key(secret_path=openai_api_key_secret_path)
     images = get_snapshot.map(
@@ -79,7 +84,6 @@ with Flow(
         flooding_prompt=unmapped(openai_flooding_detection_prompt),
         openai_api_key=unmapped(openai_api_key),
         openai_api_model=unmapped(openai_api_model),
-        predictions_buffer_key=unmapped(redis_key_predictions_buffer),
         openai_api_max_tokens=unmapped(openai_api_max_tokens),
         openai_api_url=unmapped(openai_api_url),
     )

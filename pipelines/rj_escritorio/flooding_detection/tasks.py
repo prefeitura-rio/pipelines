@@ -4,6 +4,7 @@ from datetime import datetime
 import io
 import json
 from pathlib import Path
+import random
 from typing import Dict, List, Union
 
 import cv2
@@ -19,6 +20,7 @@ from shapely.geometry import Point
 from pipelines.rj_escritorio.flooding_detection.utils import (
     download_file,
     redis_add_to_prediction_buffer,
+    redis_get_prediction_buffer,
 )
 from pipelines.utils.utils import get_redis_client, get_vault_secret, log
 
@@ -63,7 +65,6 @@ def get_prediction(
     flooding_prompt: str,
     openai_api_key: str,
     openai_api_model: str,
-    predictions_buffer_key: str,
     openai_api_max_tokens: int = 300,
     openai_api_url: str = "https://api.openai.com/v1/chat/completions",
 ) -> Dict[str, Union[str, float, bool]]:
@@ -74,7 +75,9 @@ def get_prediction(
         image: The image in base64 format.
         flooding_prompt: The flooding prompt.
         openai_api_key: The OpenAI API key.
-        predictions_buffer_key: The Redis key for the predictions buffer.
+        openai_api_model: The OpenAI API model.
+        openai_api_max_tokens: The OpenAI API max tokens.
+        openai_api_url: The OpenAI API URL.
 
     Returns:
         The prediction in the following format:
@@ -164,6 +167,7 @@ def pick_cameras(
     cameras_data_url: str,
     last_update: datetime,
     predictions_buffer_key: str,
+    number_mock_rain_cameras: int = 0,
 ) -> List[Dict[str, Union[str, float]]]:
     """
     Picks cameras based on the raining hexagons and last update.
@@ -185,8 +189,6 @@ def pick_cameras(
                 ...
             ]
     """
-    # TODO:
-    # - Must always pick cameras whose buffer contains flooding predictions
     # Download the cameras data
     cameras_data_path = Path("/tmp") / "cameras_geo_min.csv"
     if not download_file(url=cameras_data_url, output_path=cameras_data_path):
@@ -211,6 +213,26 @@ def pick_cameras(
     log("Successfully joined the dataframes.")
     log(f"Cameras H3 shape: {df_cameras_h3.shape}")
 
+    # Modify status based on buffers
+    for _, row in df_cameras_h3.iterrows():
+        predictions_buffer_camera_key = f"{predictions_buffer_key}_{row['id_camera']}"
+        predictions_buffer = redis_get_prediction_buffer(predictions_buffer_camera_key)
+        # Get most common prediction
+        most_common_prediction = max(
+            set(predictions_buffer), key=predictions_buffer.count
+        )
+        # Add classifications
+        if most_common_prediction or predictions_buffer[-1]:
+            row["status"] = "chuva moderada"
+
+    # Mock a few cameras when argument is set
+    if number_mock_rain_cameras > 0:
+        df_len = len(df_cameras_h3)
+        for _ in range(number_mock_rain_cameras):
+            mocked_index = random.randint(0, df_len)
+            df_cameras_h3.loc[mocked_index, "status"] = "chuva moderada"
+            log(f'Mocked camera ID: {df_cameras_h3.loc[mocked_index]["id_camera"]}')
+
     # Pick cameras
     mask = np.logical_not(df_cameras_h3["status"].isin(["sem chuva", "chuva fraca"]))
     df_cameras_h3 = df_cameras_h3[mask]
@@ -222,7 +244,7 @@ def pick_cameras(
     for _, row in df_cameras_h3.iterrows():
         output.append(
             {
-                "id_camera": row["codigo"],
+                "id_camera": row["id_camera"],
                 "url_camera": row["nome_da_camera"],
                 "latitude": row["geometry"].y,
                 "longitude": row["geometry"].x,
