@@ -336,6 +336,6 @@ def update_flooding_api_data(
 
     # Update API data
     redis_client = get_redis_client(db=1)
-    redis_client.set(data_key, json.dumps(api_data))
+    redis_client.set(data_key, api_data)
     redis_client.set(last_update_key, last_update.to_datetime_string())
     log("Successfully updated flooding detection data.")
