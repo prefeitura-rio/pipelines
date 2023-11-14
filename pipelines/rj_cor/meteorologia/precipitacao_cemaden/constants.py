@@ -1,56 +1,57 @@
 # -*- coding: utf-8 -*-
 # flake8: noqa: E501
 """
-Constants for the rain dashboard pipeline
+Constant values for the rj_cor.meteorologia.precipitacao_cemaden project
 """
+
 from enum import Enum
 
 
 class constants(Enum):  # pylint: disable=c0103
     """
-    Constants for the rain dashboard pipeline
+    Constant values for the precipitacao_cemaden project
     """
 
-    RAIN_DASHBOARD_FLOW_NAME = "EMD: Atualizar dados de chuva na api.dados.rio"
-    RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS = {
+    RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS = {
+        "redis_data_key": "data_chuva_passado_cemaden",
+        "redis_update_key": "data_update_chuva_passado_cemaden",
         "query_data": """
         WITH
-            alertario AS ( -- seleciona a última medição do alertario
+            last_update_date AS (
+            SELECT
+                CAST(MAX(data_particao) AS DATETIME) AS last_update
+            FROM `rj-cor.clima_pluviometro.taxa_precipitacao_cemaden`
+            WHERE data_particao >= DATE_SUB(CURRENT_DATETIME('America/Sao_Paulo'), INTERVAL 2 DAY)
+        ),
+            cemaden AS ( -- seleciona as últimas 2h de medição antes da última atualização
             SELECT
                 id_estacao,
-                acumulado_chuva_15_min,
+                acumulado_chuva_1_h,
                 CURRENT_DATE('America/Sao_Paulo') as data,
-                data_update
-            FROM (
-                SELECT
-                id_estacao,
-                acumulado_chuva_15_min,
                 data_particao,
                 DATETIME(CONCAT(data_particao," ", horario)) AS data_update,
-                ROW_NUMBER() OVER (
-                    PARTITION BY id_estacao ORDER BY DATETIME(CONCAT(data_particao," ", horario)) DESC
-                ) AS row_num
-                FROM `rj-cor.clima_pluviometro.taxa_precipitacao_alertario`
-                WHERE data_particao> DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY)
-            )AS a
-            WHERE a.row_num = 1
+                FROM `rj-cor.clima_pluviometro.taxa_precipitacao_cemaden`
+                INNER JOIN last_update_date lup ON 1=1
+                WHERE data_particao >= DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 2 DAY)
+                  AND CAST(CONCAT(data_particao, " ", horario) AS DATETIME) >= DATE_SUB(lup.last_update, INTERVAL 2 HOUR)
             ),
 
-            last_measurements AS (-- concatena medições do alertario e websirene
+            last_measurements AS (-- soma a quantidade chuva das últimas 2h
             SELECT
                 a.id_estacao,
-                a.data_update,
-                "alertario" AS sistema,
-                a.acumulado_chuva_15_min,
-            FROM alertario a
+                "cemaden" AS sistema,
+                MAX(a.data_update) AS data_update,
+                SUM(a.acumulado_chuva_1_h) AS acumulado_chuva_1_h,
+            FROM cemaden a
+            GROUP BY a.id_estacao, sistema
             ),
 
             h3_chuvas AS ( -- calcula qnt de chuva para cada h3
             SELECT
                 h3.*,
                 lm.id_estacao,
-                lm.acumulado_chuva_15_min,
-                lm.acumulado_chuva_15_min/power(h3.dist,5) AS p1_15min,
+                lm.acumulado_chuva_1_h,
+                lm.acumulado_chuva_1_h/power(h3.dist,5) AS p1_1h,
                 1/power(h3.dist,5) AS inv_dist
             FROM (
                 WITH centroid_h3 AS (
@@ -64,13 +65,13 @@ class constants(Enum):  # pylint: disable=c0103
                     SELECT
                         id_estacao AS id,
                         estacao,
-                        "alertario" AS sistema,
+                        "cemaden" AS sistema,
                         ST_GEOGPOINT(CAST(longitude AS FLOAT64),
                         CAST(latitude AS FLOAT64)) AS geom
-                    FROM `rj-cor.clima_pluviometro.estacoes_alertario`
+                    FROM `rj-cor.clima_pluviometro.estacoes_cemaden`
                 ),
 
-                estacoes_mais_proximas AS (
+                estacoes_mais_proximas AS ( -- calcula distância das estações para cada centróide do h3
                     SELECT AS VALUE s
                     FROM (
                         SELECT
@@ -110,7 +111,7 @@ class constants(Enum):  # pylint: disable=c0103
             h3_media AS ( -- calcula média de chuva para as 3 estações mais próximas
             SELECT
                 id_h3,
-                CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL) AS chuva_15min,
+                CAST(sum(p1_1h)/sum(inv_dist) AS DECIMAL) AS chuva_1h,
                 STRING_AGG(estacao ORDER BY estacao) estacoes
             FROM h3_chuvas
             -- WHERE ranking < 4
@@ -120,9 +121,9 @@ class constants(Enum):  # pylint: disable=c0103
             final_table AS (
             SELECT
                 h3_media.id_h3,
+                h3_media.estacoes,
                 nome AS bairro,
-                estacoes,
-                cast(round(h3_media.chuva_15min,2) AS decimal) AS chuva_15min,
+                cast(round(h3_media.chuva_1h,2) AS decimal) AS chuva_1h,
             FROM h3_media
             LEFT JOIN `rj-cor.dados_mestres.h3_grid_res8` h3_grid
                 ON h3_grid.id=h3_media.id_h3
@@ -133,20 +134,20 @@ class constants(Enum):  # pylint: disable=c0103
         SELECT
         final_table.id_h3,
         bairro,
-        chuva_15min,
+        chuva_1h,
         estacoes,
         CASE
-            WHEN chuva_15min> 0     AND chuva_15min<= 1.25 THEN 'chuva fraca'
-            WHEN chuva_15min> 1.25  AND chuva_15min<= 6.25 THEN 'chuva moderada'
-            WHEN chuva_15min> 6.25  AND chuva_15min<= 12.5 THEN 'chuva forte'
-            WHEN chuva_15min> 12.5                         THEN 'chuva muito forte'
+            WHEN chuva_1h> 0   AND chuva_1h<= 10  THEN 'chuva fraca'
+            WHEN chuva_1h> 10  AND chuva_1h<= 50  THEN 'chuva moderada'
+            WHEN chuva_1h> 50  AND chuva_1h<= 100 THEN 'chuva forte'
+            WHEN chuva_1h> 100                       THEN 'chuva muito forte'
             ELSE 'sem chuva'
         END AS status,
         CASE
-            WHEN chuva_15min> 0     AND chuva_15min<= 1.25 THEN '#DAECFB'--'#00CCFF'
-            WHEN chuva_15min> 1.25  AND chuva_15min<= 6.25 THEN '#A9CBE8'--'#BFA230'
-            WHEN chuva_15min> 6.25  AND chuva_15min<= 12.5 THEN '#77A9D5'--'#E0701F'
-            WHEN chuva_15min> 12.5                         THEN '#125999'--'#FF0000'
+            WHEN chuva_1h> 0  AND chuva_1h<= 10  THEN '#DAECFB'--'#00CCFF'
+            WHEN chuva_1h> 1  AND chuva_1h<= 50  THEN '#A9CBE8'--'#BFA230'
+            WHEN chuva_1h> 50 AND chuva_1h<= 100 THEN '#77A9D5'--'#E0701F'
+            WHEN chuva_1h> 100                   THEN '#125999'--'#FF0000'
             ELSE '#ffffff'
         END AS color
         FROM final_table
@@ -158,7 +159,7 @@ class constants(Enum):  # pylint: disable=c0103
                 CONCAT(data_particao," ", horario)
             )
             ) AS last_update
-        FROM `rj-cor.clima_pluviometro.taxa_precipitacao_alertario`
+        FROM `rj-cor.clima_pluviometro.taxa_precipitacao_cemaden`
         WHERE data_particao> DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 2 DAY)
         """,
     }

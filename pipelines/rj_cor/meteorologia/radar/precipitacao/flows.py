@@ -37,8 +37,6 @@ with Flow(
     name="COR: Meteorologia - Precipitacao RADAR",
     code_owners=[
         "paty",
-        "joao",
-        "gabriel",
     ],
     # skip_if_running=True,
 ) as cor_meteorologia_precipitacao_radar_flow:
