@@ -527,3 +527,18 @@ class constants(Enum):  # pylint: disable=c0103
             "version": {},
         },
     }
+
+    # STU
+
+    STU_GENERAL_CAPTURE_PARAMS = {
+        "partition_date_only": True,
+        "source_type": "gcs",
+        "dataset_id": "br_rj_riodejaneiro_stu",
+    }
+
+    STU_TABLE_CAPTURE_PARAMS = [
+        {
+            "table_id": "operadora_empresa",
+            "primary_key": ["Perm/Autor", "CNPJ"],
+        },
+    ]
