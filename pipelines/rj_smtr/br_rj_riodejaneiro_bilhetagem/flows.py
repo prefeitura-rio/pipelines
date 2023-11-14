@@ -58,6 +58,25 @@ bilhetagem_transacao_captura = set_default_parameters(
 
 bilhetagem_transacao_captura.schedule = every_minute
 
+
+# TESTE TRANSAÇÃO ATRASADA
+
+bilhetagem_transacao_captura_test = deepcopy(default_capture_flow)
+bilhetagem_transacao_captura_test.name = "SMTR: Bilhetagem Transação Atrasada - Captura"
+bilhetagem_transacao_captura_test.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bilhetagem_transacao_captura_test.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+
+bilhetagem_transacao_captura_test = set_default_parameters(
+    flow=bilhetagem_transacao_captura_test,
+    default_parameters=constants.BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS.value
+    | constants.BILHETAGEM_TRANSACAO_ATRASADA_CAPTURE_PARAMS.value,
+)
+
+bilhetagem_transacao_captura_test.schedule = every_minute
+
 # BILHETAGEM GPS - CAPTURA A CADA MINUTO #
 
 bilhetagem_tracking_captura = deepcopy(default_capture_flow)

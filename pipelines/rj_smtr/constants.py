@@ -211,6 +211,25 @@ class constants(Enum):  # pylint: disable=c0103
         "interval_minutes": 1,
     }
 
+    BILHETAGEM_TRANSACAO_ATRASADA_CAPTURE_PARAMS = {
+        "table_id": "transacao_atrasada_dev",
+        "partition_date_only": False,
+        "extract_params": {
+            "database": "transacao_db",
+            "query": """
+                SELECT
+                    *
+                FROM
+                    transacao
+                WHERE
+                    data_processamento BETWEEN timestamp '{start}' - INTERVAL '10 min'
+                    AND timestamp '{end}' - INTERVAL '10 min'
+            """,
+        },
+        "primary_key": ["id"],
+        "interval_minutes": 1,
+    }
+
     BILHETAGEM_TRACKING_CAPTURE_PARAMS = {
         "table_id": "gps_validador",
         "partition_date_only": False,
