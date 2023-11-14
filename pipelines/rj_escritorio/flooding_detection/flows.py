@@ -89,6 +89,7 @@ with Flow(
         images=images,
         data_key=redis_key_flooding_detection_data,
         last_update_key=redis_key_flooding_detection_last_update,
+        predictions_buffer_key=redis_key_predictions_buffer,
     )
 
 
