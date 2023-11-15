@@ -62,8 +62,7 @@ def get_openai_api_key(secret_path: str) -> str:
 
 @task(nout=3)
 def get_prediction(
-    image: str,
-    camera: Dict[str, Union[str, float]],
+    camera_with_image: Dict[str, Union[str, float]],
     flooding_prompt: str,
     openai_api_key: str,
     openai_api_model: str,
@@ -74,7 +73,14 @@ def get_prediction(
     Gets the flooding detection prediction from OpenAI API.
 
     Args:
-        image: The image in base64 format.
+        camera_with_image: The camera with image in the following format:
+            {
+                "id_camera": "1",
+                "url_camera": "rtsp://...",
+                "latitude": -22.912,
+                "longitude": -43.230,
+                "image_base64": "base64...",
+            }
         flooding_prompt: The flooding prompt.
         openai_api_key: The OpenAI API key.
         openai_api_model: The OpenAI API model.
@@ -108,7 +114,9 @@ def get_prediction(
                     },
                     {
                         "type": "image_url",
-                        "image_url": {"url": f"data:image/jpeg;base64,{image}"},
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{camera_with_image['image_base64']}"
+                        },
                     },
                 ],
             }
@@ -123,21 +131,20 @@ def get_prediction(
     json_string = content.replace("```json\n", "").replace("\n```", "")
     json_object = json.loads(json_string)
     flooding_detected = json_object["flooding_detected"]
-    return (
+    log(f"Successfully got prediction: {flooding_detected}")
+    camera_with_image["ai_classification"] = [
         {
             "object": "alagamento",
             "label": flooding_detected,
             "confidence": 0.7,
-        },
-        image,
-        camera,
-    )
+        }
+    ]
+    return camera_with_image
 
 
 @task(
     max_retries=3,
     retry_delay=timedelta(seconds=5),
-    nout=2,
 )
 def get_snapshot(
     camera: Dict[str, Union[str, float]],
@@ -168,7 +175,8 @@ def get_snapshot(
     img.save(buffer, format="JPEG")
     img_b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
     log(f"Successfully got snapshot from URL {rtsp_url}.")
-    return img_b64, camera
+    camera["image_base64"] = img_b64
+    return camera
 
 
 @task
@@ -267,9 +275,7 @@ def pick_cameras(
 
 @task
 def update_flooding_api_data(
-    predictions: List[Dict[str, Union[str, float, bool]]],
-    cameras: List[Dict[str, Union[str, float]]],
-    images: List[str],
+    cameras_with_image_and_classification: List[Dict[str, Union[str, float, bool]]],
     data_key: str,
     last_update_key: str,
     predictions_buffer_key: str,
@@ -278,26 +284,25 @@ def update_flooding_api_data(
     Updates Redis keys with flooding detection data and last update datetime (now).
 
     Args:
-        predictions: The AI predictions in the following format:
-            [
-                {
-                    "object": "alagamento",
-                    "label": True,
-                    "confidence": 0.7,
-                },
-                ...
-            ]
-        cameras: A list of cameras in the following format:
-            [
-                {
-                    "id_camera": "1",
-                    "url_camera": "rtsp://...",
-                    "latitude": -22.912,
-                    "longitude": -43.230,
-                },
-                ...
-            ]
-        images: A list of images in base64 format.
+        cameras_with_image_and_classification: The cameras with image and classification
+            in the following format:
+                [
+                    {
+                        "id_camera": "1",
+                        "url_camera": "rtsp://...",
+                        "latitude": -22.912,
+                        "longitude": -43.230,
+                        "image_base64": "base64...",
+                        "ai_classification": [
+                            {
+                                "object": "alagamento",
+                                "label": True,
+                                "confidence": 0.7,
+                            }
+                        ],
+                    },
+                    ...
+                ]
         data_key: The Redis key for the flooding detection data.
         last_update_key: The Redis key for the last update datetime.
         predictions_buffer_key: The Redis key for the predictions buffer.
@@ -305,13 +310,13 @@ def update_flooding_api_data(
     # Build API data
     last_update = pendulum.now(tz="America/Sao_Paulo")
     api_data = []
-    for prediction, camera, image in zip(predictions, cameras, images):
+    for camera_with_image_and_classification in cameras_with_image_and_classification:
         # Get AI classifications
         ai_classification = []
-        current_prediction = prediction["label"]
-        predictions_buffer_camera_key = (
-            f"{predictions_buffer_key}_{camera['id_camera']}"
-        )
+        current_prediction = camera_with_image_and_classification["ai_classification"][
+            0
+        ]["label"]
+        predictions_buffer_camera_key = f"{predictions_buffer_key}_{camera_with_image_and_classification['id_camera']}"  # noqa
         predictions_buffer = redis_add_to_prediction_buffer(
             predictions_buffer_camera_key, current_prediction
         )
@@ -331,11 +336,13 @@ def update_flooding_api_data(
             api_data.append(
                 {
                     "datetime": last_update.to_datetime_string(),
-                    "id_camera": camera["id_camera"],
-                    "url_camera": camera["url_camera"],
-                    "latitude": camera["latitude"],
-                    "longitude": camera["longitude"],
-                    "image_base64": image,
+                    "id_camera": cameras_with_image_and_classification["id_camera"],
+                    "url_camera": cameras_with_image_and_classification["url_camera"],
+                    "latitude": cameras_with_image_and_classification["latitude"],
+                    "longitude": cameras_with_image_and_classification["longitude"],
+                    "image_base64": cameras_with_image_and_classification[
+                        "image_base64"
+                    ],
                     "ai_classification": ai_classification,
                 }
             )

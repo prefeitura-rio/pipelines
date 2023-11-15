@@ -83,27 +83,23 @@ with Flow(
         number_mock_rain_cameras=mocked_cameras_number,
     )
     openai_api_key = get_openai_api_key(secret_path=openai_api_key_secret_path)
-    images, cameras = get_snapshot.map(
+    cameras_with_image = get_snapshot.map(
         camera=cameras,
     )
-    images = filter_results(images)
-    cameras = filter_results(cameras)
-    predictions, images, cameras = get_prediction.map(
-        image=images,
-        camera=cameras,
+    cameras_with_image = filter_results(cameras_with_image)
+    cameras_with_image_and_classification = get_prediction.map(
+        camera_with_image=cameras_with_image,
         flooding_prompt=unmapped(openai_flooding_detection_prompt),
         openai_api_key=unmapped(openai_api_key),
         openai_api_model=unmapped(openai_api_model),
         openai_api_max_tokens=unmapped(openai_api_max_tokens),
         openai_api_url=unmapped(openai_api_url),
     )
-    predictions = filter_results(predictions)
-    images = filter_results(images)
-    cameras = filter_results(cameras)
+    cameras_with_image_and_classification = filter_results(
+        cameras_with_image_and_classification
+    )
     update_flooding_api_data(
-        predictions=predictions,
-        cameras=cameras,
-        images=images,
+        cameras_with_image_and_classification=cameras_with_image_and_classification,
         data_key=redis_key_flooding_detection_data,
         last_update_key=redis_key_flooding_detection_last_update,
         predictions_buffer_key=redis_key_predictions_buffer,
