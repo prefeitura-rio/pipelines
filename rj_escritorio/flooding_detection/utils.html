@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>pipelines.rj_escritorio.flooding_detection.utils API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Data in: https://drive.google.com/drive/folders/1C-W_MMFAAJy5Lq_rHDzXUesEUyzke5gw" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,22 +22,27 @@
 <h1 class="title">Module <code>pipelines.rj_escritorio.flooding_detection.utils</code></h1>
 </header>
 <section id="section-intro">
+<p>Data in: <a href="https://drive.google.com/drive/folders/1C-W_MMFAAJy5Lq_rHDzXUesEUyzke5gw">https://drive.google.com/drive/folders/1C-W_MMFAAJy5Lq_rHDzXUesEUyzke5gw</a></p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
+&#34;&#34;&#34;
+Data in: https://drive.google.com/drive/folders/1C-W_MMFAAJy5Lq_rHDzXUesEUyzke5gw
+&#34;&#34;&#34;
 from pathlib import Path
 from typing import Any, Dict, List, Union
 
 import geopandas as gpd
 import h3
+import numpy as np
 import pandas as pd
 from redis_pal import RedisPal
 import requests
 from shapely.geometry import Point, Polygon
 
-from pipelines.utils.utils import get_redis_client, remove_columns_accents
+from pipelines.utils.utils import get_redis_client, log, remove_columns_accents
 
 
 def download_file(url: str, output_path: Union[str, Path]) -&gt; bool:
@@ -188,6 +193,52 @@ def get_cameras_h3(df: pd.DataFrame) -&gt; gpd.GeoDataFrame:
     return cameras_h3
 
 
+def get_cameras_h3_bolsao(cameras_h3: gpd.GeoDataFrame, buffer: int = 0.002):
+    &#34;&#34;&#34;
+    Enhances camera data with geographical information and joins it with flood pocket data.
+
+    Parameters:
+    - cameras_h3 (gpd.GeoDataFrame): A GeoDataFrame containing camera and h3 data.
+    - buffer (int): A radius buffer around the flood pocket point.
+
+    Returns:
+    - gpd.GeoDataFrame: A GeoDataFrame containing the joined camera, rainfall and flood pocket data.
+    &#34;&#34;&#34;
+
+    bolsao = pd.read_excel(&#34;./data/PLANILHAO_PDS_alimentaBI.xlsx&#34;)
+    bolsao.columns = remove_columns_accents(bolsao)
+    cols = [&#34;codigo&#34;, &#34;lat&#34;, &#34;long&#34;, &#34;classe_atual&#34;, &#34;bacia&#34;, &#34;sub_bacia&#34;]
+    bolsao = bolsao[cols]
+
+    geometry = [Point(xy) for xy in zip(bolsao[&#34;long&#34;], bolsao[&#34;lat&#34;])]
+    bolsao_geo = gpd.GeoDataFrame(bolsao, geometry=geometry)
+    bolsao_geo.crs = {&#34;init&#34;: &#34;epsg:4326&#34;}
+    bolsao_geo[&#34;geometry&#34;] = bolsao_geo[&#34;geometry&#34;].buffer(buffer)
+    bolsao_geo.insert(0, &#34;is_bolsao&#34;, True)
+
+    cameras_bolsao_h3 = gpd.sjoin(cameras_h3, bolsao_geo, how=&#34;left&#34;, op=&#34;within&#34;)
+
+    cameras_bolsao_h3[&#34;geometry_bolsao_buffer_0.002&#34;] = [
+        Point(xy).buffer(buffer)
+        for xy in zip(cameras_bolsao_h3[&#34;long&#34;], cameras_bolsao_h3[&#34;lat&#34;])
+    ]
+    cameras_bolsao_h3[&#34;geometry_bolsao_buffer_0.002&#34;] = cameras_bolsao_h3[
+        f&#34;geometry_bolsao_buffer_{buffer}&#34;
+    ].apply(lambda x: np.nan if x.is_empty else x)
+    cameras_bolsao_h3 = cameras_bolsao_h3.drop(columns=[&#34;index_right&#34;])
+
+    rename_bolsao_cols = {
+        &#34;codigo&#34;: &#34;id_bolsao&#34;,
+        &#34;lat&#34;: &#34;bolsao_latitude&#34;,
+        &#34;long&#34;: &#34;bolsao_longitude&#34;,
+        &#34;classe_atual&#34;: &#34;bolsao_classe_atual&#34;,
+    }
+
+    cameras_bolsao_h3 = cameras_bolsao_h3.rename(columns=rename_bolsao_cols)
+
+    return cameras_bolsao_h3
+
+
 def clean_and_padronize_cameras() -&gt; gpd.GeoDataFrame:
     &#34;&#34;&#34;
     Cleans and standardizes camera data from a CSV file, then merges it with geographical data.
@@ -222,8 +273,9 @@ def clean_and_padronize_cameras() -&gt; gpd.GeoDataFrame:
         | df[&#34;ip&#34;].str.startswith(&#34;10.50&#34;)
         | df[&#34;ip&#34;].str.startswith(&#34;10.52&#34;)
     ]
+    log(&#34;cameras: &#34;, df.shape)
+    cameras_h3 = get_cameras_h3(df=df)
 
-    cameras_h3 = get_cameras_h3(df)
     cols = [
         &#34;codigo&#34;,
         &#34;nome_da_camera&#34;,
@@ -234,12 +286,19 @@ def clean_and_padronize_cameras() -&gt; gpd.GeoDataFrame:
         &#34;id_h3&#34;,
     ]
     cameras_h3 = cameras_h3[cols]
-
     cameras_h3 = cameras_h3.rename(
         columns={&#34;codigo&#34;: &#34;id_camera&#34;, &#34;nome_da_camera&#34;: &#34;nome&#34;}
     )
 
-    return cameras_h3.reset_index(drop=True)
+    cameras_h3 = cameras_h3.reset_index(drop=True)
+    log(&#34;cameras_h3: &#34;, cameras_h3.shape)
+
+    cameras_h3_bolsao = get_cameras_h3_bolsao(cameras_h3, buffer=0.002)
+    # remove duplicate bolsoes
+    cameras_h3_bolsao = cameras_h3_bolsao.drop_duplicates(subset=&#34;id_camera&#34;)
+    log(&#34;cameras_h3_bolsao: &#34;, cameras_h3_bolsao.shape)
+    log(&#34;is_bolsao: &#34;, cameras_h3_bolsao[&#34;is_bolsao&#34;].sum())
+    return cameras_h3_bolsao.reset_index(drop=True)
 
 
 def redis_add_to_prediction_buffer(key: str, value: bool, len_: int = 3) -&gt; List[bool]:
@@ -369,8 +428,9 @@ enriched camera data.</p></div>
         | df[&#34;ip&#34;].str.startswith(&#34;10.50&#34;)
         | df[&#34;ip&#34;].str.startswith(&#34;10.52&#34;)
     ]
+    log(&#34;cameras: &#34;, df.shape)
+    cameras_h3 = get_cameras_h3(df=df)
 
-    cameras_h3 = get_cameras_h3(df)
     cols = [
         &#34;codigo&#34;,
         &#34;nome_da_camera&#34;,
@@ -381,12 +441,19 @@ enriched camera data.</p></div>
         &#34;id_h3&#34;,
     ]
     cameras_h3 = cameras_h3[cols]
-
     cameras_h3 = cameras_h3.rename(
         columns={&#34;codigo&#34;: &#34;id_camera&#34;, &#34;nome_da_camera&#34;: &#34;nome&#34;}
     )
 
-    return cameras_h3.reset_index(drop=True)</code></pre>
+    cameras_h3 = cameras_h3.reset_index(drop=True)
+    log(&#34;cameras_h3: &#34;, cameras_h3.shape)
+
+    cameras_h3_bolsao = get_cameras_h3_bolsao(cameras_h3, buffer=0.002)
+    # remove duplicate bolsoes
+    cameras_h3_bolsao = cameras_h3_bolsao.drop_duplicates(subset=&#34;id_camera&#34;)
+    log(&#34;cameras_h3_bolsao: &#34;, cameras_h3_bolsao.shape)
+    log(&#34;is_bolsao: &#34;, cameras_h3_bolsao[&#34;is_bolsao&#34;].sum())
+    return cameras_h3_bolsao.reset_index(drop=True)</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_escritorio.flooding_detection.utils.download_file"><code class="name flex">
@@ -528,6 +595,66 @@ and 'path' information.</p></div>
     cameras_h3 = cameras_h3[cameras_h3[&#34;id_h3&#34;].notnull()]
 
     return cameras_h3</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_escritorio.flooding_detection.utils.get_cameras_h3_bolsao"><code class="name flex">
+<span>def <span class="ident">get_cameras_h3_bolsao</span></span>(<span>cameras_h3: geopandas.geodataframe.GeoDataFrame, buffer: int = 0.002)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Enhances camera data with geographical information and joins it with flood pocket data.</p>
+<p>Parameters:
+- cameras_h3 (gpd.GeoDataFrame): A GeoDataFrame containing camera and h3 data.
+- buffer (int): A radius buffer around the flood pocket point.</p>
+<p>Returns:
+- gpd.GeoDataFrame: A GeoDataFrame containing the joined camera, rainfall and flood pocket data.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_cameras_h3_bolsao(cameras_h3: gpd.GeoDataFrame, buffer: int = 0.002):
+    &#34;&#34;&#34;
+    Enhances camera data with geographical information and joins it with flood pocket data.
+
+    Parameters:
+    - cameras_h3 (gpd.GeoDataFrame): A GeoDataFrame containing camera and h3 data.
+    - buffer (int): A radius buffer around the flood pocket point.
+
+    Returns:
+    - gpd.GeoDataFrame: A GeoDataFrame containing the joined camera, rainfall and flood pocket data.
+    &#34;&#34;&#34;
+
+    bolsao = pd.read_excel(&#34;./data/PLANILHAO_PDS_alimentaBI.xlsx&#34;)
+    bolsao.columns = remove_columns_accents(bolsao)
+    cols = [&#34;codigo&#34;, &#34;lat&#34;, &#34;long&#34;, &#34;classe_atual&#34;, &#34;bacia&#34;, &#34;sub_bacia&#34;]
+    bolsao = bolsao[cols]
+
+    geometry = [Point(xy) for xy in zip(bolsao[&#34;long&#34;], bolsao[&#34;lat&#34;])]
+    bolsao_geo = gpd.GeoDataFrame(bolsao, geometry=geometry)
+    bolsao_geo.crs = {&#34;init&#34;: &#34;epsg:4326&#34;}
+    bolsao_geo[&#34;geometry&#34;] = bolsao_geo[&#34;geometry&#34;].buffer(buffer)
+    bolsao_geo.insert(0, &#34;is_bolsao&#34;, True)
+
+    cameras_bolsao_h3 = gpd.sjoin(cameras_h3, bolsao_geo, how=&#34;left&#34;, op=&#34;within&#34;)
+
+    cameras_bolsao_h3[&#34;geometry_bolsao_buffer_0.002&#34;] = [
+        Point(xy).buffer(buffer)
+        for xy in zip(cameras_bolsao_h3[&#34;long&#34;], cameras_bolsao_h3[&#34;lat&#34;])
+    ]
+    cameras_bolsao_h3[&#34;geometry_bolsao_buffer_0.002&#34;] = cameras_bolsao_h3[
+        f&#34;geometry_bolsao_buffer_{buffer}&#34;
+    ].apply(lambda x: np.nan if x.is_empty else x)
+    cameras_bolsao_h3 = cameras_bolsao_h3.drop(columns=[&#34;index_right&#34;])
+
+    rename_bolsao_cols = {
+        &#34;codigo&#34;: &#34;id_bolsao&#34;,
+        &#34;lat&#34;: &#34;bolsao_latitude&#34;,
+        &#34;long&#34;: &#34;bolsao_longitude&#34;,
+        &#34;classe_atual&#34;: &#34;bolsao_classe_atual&#34;,
+    }
+
+    cameras_bolsao_h3 = cameras_bolsao_h3.rename(columns=rename_bolsao_cols)
+
+    return cameras_bolsao_h3</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_escritorio.flooding_detection.utils.get_rain_dataframe"><code class="name flex">
@@ -734,6 +861,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_escritorio.flooding_detection.utils.download_file" href="#pipelines.rj_escritorio.flooding_detection.utils.download_file">download_file</a></code></li>
 <li><code><a title="pipelines.rj_escritorio.flooding_detection.utils.extract_data" href="#pipelines.rj_escritorio.flooding_detection.utils.extract_data">extract_data</a></code></li>
 <li><code><a title="pipelines.rj_escritorio.flooding_detection.utils.get_cameras_h3" href="#pipelines.rj_escritorio.flooding_detection.utils.get_cameras_h3">get_cameras_h3</a></code></li>
+<li><code><a title="pipelines.rj_escritorio.flooding_detection.utils.get_cameras_h3_bolsao" href="#pipelines.rj_escritorio.flooding_detection.utils.get_cameras_h3_bolsao">get_cameras_h3_bolsao</a></code></li>
 <li><code><a title="pipelines.rj_escritorio.flooding_detection.utils.get_rain_dataframe" href="#pipelines.rj_escritorio.flooding_detection.utils.get_rain_dataframe">get_rain_dataframe</a></code></li>
 <li><code><a title="pipelines.rj_escritorio.flooding_detection.utils.h3_id_to_polygon" href="#pipelines.rj_escritorio.flooding_detection.utils.h3_id_to_polygon">h3_id_to_polygon</a></code></li>
 <li><code><a title="pipelines.rj_escritorio.flooding_detection.utils.redis_add_to_prediction_buffer" href="#pipelines.rj_escritorio.flooding_detection.utils.redis_add_to_prediction_buffer">redis_add_to_prediction_buffer</a></code></li>
