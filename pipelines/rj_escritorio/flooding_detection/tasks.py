@@ -1,25 +1,24 @@
 # -*- coding: utf-8 -*-
 # TODO: Make it resilient to camera failures
-import base64
-from datetime import datetime, timedelta
-import io
+import asyncio
+from datetime import datetime
 import json
 from pathlib import Path
 import random
-from typing import Dict, List, Union
+from typing import Dict, List, Tuple, Union
 
-import cv2
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 import pendulum
-from PIL import Image
 from prefect import task
 import requests
 from shapely.geometry import Point
 
 from pipelines.rj_escritorio.flooding_detection.utils import (
+    capture_snapshots_async,
     download_file,
+    make_requests_async,
     redis_add_to_prediction_buffer,
     redis_get_prediction_buffer,
 )
@@ -60,15 +59,15 @@ def get_openai_api_key(secret_path: str) -> str:
     return secret["api_key"]
 
 
-@task
-def get_prediction(
-    image: str,
+@task(nout=2)
+def get_predictions(
+    images: List[str],
     flooding_prompt: str,
     openai_api_key: str,
     openai_api_model: str,
     openai_api_max_tokens: int = 300,
     openai_api_url: str = "https://api.openai.com/v1/chat/completions",
-) -> Dict[str, Union[str, float, bool]]:
+) -> Tuple[List[bool], List[Dict[str, Union[str, float, bool]]]]:
     """
     Gets the flooding detection prediction from OpenAI API.
 
@@ -81,66 +80,87 @@ def get_prediction(
         openai_api_url: The OpenAI API URL.
 
     Returns:
-        The prediction in the following format:
-            {
-                "object": "alagamento",
-                "label": True,
-                "confidence": 0.7,
-            }
+        A mask of success and the predictions in the following format:
+            [
+                {
+                    "object": "alagamento",
+                    "label": True,
+                    "confidence": 0.7,
+                },
+                ...
+            ]
     """
     # TODO:
     # - Add confidence value
     # Setup the request
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {openai_api_key}",
-    }
-    payload = {
-        "model": openai_api_model,
-        "messages": [
+    methods = ["POST"] * len(images)
+    headers = [
+        {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {openai_api_key}",
+        }
+    ] * len(images)
+    urls = [openai_api_url] * len(images)
+    payloads = [
+        {
+            "model": openai_api_model,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": flooding_prompt,
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": f"data:image/jpeg;base64,{image}"},
+                        },
+                    ],
+                }
+            ],
+            "max_tokens": openai_api_max_tokens,
+        }
+        for image in images
+    ]
+    success_mask, responses = asyncio.run(
+        make_requests_async(methods, urls, headers, payloads)
+    )
+    results = []
+    results_success_mask = []
+    for success, response in zip(success_mask, responses):
+        if not success:
+            results.append(None)
+            results_success_mask.append(False)
+        data: dict = response.json()
+        if data.get("error"):
+            results.append(None)
+            results_success_mask.append(False)
+        content: str = data["choices"][0]["message"]["content"]
+        json_string = content.replace("```json\n", "").replace("\n```", "")
+        json_object = json.loads(json_string)
+        flooding_detected = json_object["flooding_detected"]
+        results.append(
             {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": flooding_prompt,
-                    },
-                    {
-                        "type": "image_url",
-                        "image_url": {"url": f"data:image/jpeg;base64,{image}"},
-                    },
-                ],
+                "object": "alagamento",
+                "label": flooding_detected,
+                "confidence": 0.7,
             }
-        ],
-        "max_tokens": openai_api_max_tokens,
-    }
-    response = requests.post(openai_api_url, headers=headers, json=payload)
-    data: dict = response.json()
-    if data.get("error"):
-        raise RuntimeError(f"Failed to get prediction: {data['error']}")
-    content: str = data["choices"][0]["message"]["content"]
-    json_string = content.replace("```json\n", "").replace("\n```", "")
-    json_object = json.loads(json_string)
-    flooding_detected = json_object["flooding_detected"]
-    return {
-        "object": "alagamento",
-        "label": flooding_detected,
-        "confidence": 0.7,
-    }
+        )
+        results_success_mask.append(True)
+    log(f"Successfully got predictions: {results}")
+    return results_success_mask, results
 
 
-@task(
-    max_retries=3,
-    retry_delay=timedelta(seconds=5),
-)
-def get_snapshot(
-    camera: Dict[str, Union[str, float]],
-) -> str:
+@task
+def get_snapshots(
+    cameras: List[Dict[str, Union[str, float]]],
+) -> List[str]:
     """
     Gets a snapshot from a camera.
 
     Args:
-        camera: The camera in the following format:
+        cameras: A list of cameras in the following format:
             {
                 "id_camera": "1",
                 "url_camera": "rtsp://...",
@@ -149,20 +169,11 @@ def get_snapshot(
             }
 
     Returns:
-        The snapshot in base64 format.
+        The snapshots in base64 format.
     """
-    rtsp_url = camera["url_camera"]
-    cap = cv2.VideoCapture(rtsp_url)
-    ret, frame = cap.read()
-    if not ret:
-        raise RuntimeError(f"Failed to get snapshot from URL {rtsp_url}.")
-    cap.release()
-    img = Image.fromarray(frame)
-    buffer = io.BytesIO()
-    img.save(buffer, format="JPEG")
-    img_b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
-    log(f"Successfully got snapshot from URL {rtsp_url}.")
-    return img_b64
+    urls = [camera["url_camera"] for camera in cameras]
+    snapshots = asyncio.run(capture_snapshots_async(urls))
+    return snapshots
 
 
 @task
@@ -262,6 +273,7 @@ def pick_cameras(
 @task
 def update_flooding_api_data(
     predictions: List[Dict[str, Union[str, float, bool]]],
+    predictions_success_mask: List[bool],
     cameras: List[Dict[str, Union[str, float]]],
     images: List[str],
     data_key: str,
@@ -299,7 +311,11 @@ def update_flooding_api_data(
     # Build API data
     last_update = pendulum.now(tz="America/Sao_Paulo")
     api_data = []
-    for prediction, camera, image in zip(predictions, cameras, images):
+    for prediction, success, camera, image in zip(
+        predictions, predictions_success_mask, cameras, images
+    ):
+        if not success:
+            continue
         # Get AI classifications
         ai_classification = []
         current_prediction = prediction["label"]

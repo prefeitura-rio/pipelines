@@ -1,15 +1,21 @@
 # -*- coding: utf-8 -*-
+import asyncio
+import base64
+import io
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Tuple, Union
 
+import aiohttp
+import cv2
 import geopandas as gpd
 import h3
 import pandas as pd
+from PIL import Image
 from redis_pal import RedisPal
 import requests
 from shapely.geometry import Point, Polygon
 
-from pipelines.utils.utils import get_redis_client, remove_columns_accents
+from pipelines.utils.utils import get_redis_client, log, remove_columns_accents
 
 
 def download_file(url: str, output_path: Union[str, Path]) -> bool:
@@ -42,6 +48,90 @@ def h3_id_to_polygon(h3_id: str):
         The Polygon.
     """
     return Polygon(h3.h3_to_geo_boundary(h3_id, geo_json=True))
+
+
+async def fetch(
+    session: aiohttp.ClientSession,
+    method: str,
+    url: str,
+    headers: Dict[str, str],
+    data: Any,
+) -> aiohttp.ClientResponse:
+    """
+    Makes an asynchronous request.
+
+    Args:
+        session: The session.
+        method: The method.
+        url: The URL.
+        headers: The headers.
+        data: The data.
+
+    Returns:
+        The response.
+    """
+    async with session.request(method, url, headers=headers, json=data) as response:
+        return response
+
+
+async def make_requests_async(
+    methods: List[str], urls: List[str], headers: List[dict], payload: List[Any]
+) -> Tuple[List[bool], List[aiohttp.ClientResponse]]:
+    """
+    Makes asynchronous requests.
+
+    Args:
+        methods: The methods.
+        urls: The URLs.
+        headers: The headers.
+        payload: The payloads.
+
+    Returns:
+        A tuple containing the success mask and the responses.
+    """
+    async with aiohttp.ClientSession() as session:
+        tasks = []
+        for method, url, header, data in zip(methods, urls, headers, payload):
+            task = fetch(session, method, url, header, data)
+            tasks.append(task)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        success_mask = []
+        responses = []
+        for result in results:
+            if isinstance(result, aiohttp.ClientResponse) and result.status == 200:
+                success_mask.append(True)
+                responses.append(result)
+            else:
+                success_mask.append(False)
+                responses.append(None)  # Appending None for failed requests
+
+        return success_mask, responses
+
+
+async def capture_snapshot(url: str) -> str:
+    img_b64 = None
+    cap = cv2.VideoCapture(url)
+    ret, frame = cap.read()
+    if ret:
+        img = Image.fromarray(frame)
+        buffer = io.BytesIO()
+        img.save(buffer, format="JPEG")
+        img_b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        log(f"Snapshot captured from {url}.")
+    else:
+        log(f"Failed to capture snapshot from {url}.")
+    cap.release()
+    return img_b64
+
+
+async def capture_snapshots_async(
+    urls: List[str],
+) -> List[str]:
+    tasks = []
+    for url in urls:
+        task = capture_snapshot(url)
+        tasks.append(task)
+    return await asyncio.gather(*tasks)
 
 
 def extract_data(row: Dict[str, Any]) -> pd.Series:

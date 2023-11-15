@@ -5,7 +5,6 @@ Flow definition for flooding detection using AI.
 from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
-from prefect.utilities.edges import unmapped
 
 from pipelines.constants import constants
 from pipelines.rj_escritorio.flooding_detection.schedules import (
@@ -14,8 +13,8 @@ from pipelines.rj_escritorio.flooding_detection.schedules import (
 from pipelines.rj_escritorio.flooding_detection.tasks import (
     get_last_update,
     get_openai_api_key,
-    get_prediction,
-    get_snapshot,
+    get_predictions,
+    get_snapshots,
     pick_cameras,
     update_flooding_api_data,
 )
@@ -27,6 +26,7 @@ with Flow(
         "gabriel",
         "diego",
     ],
+    skip_if_running=True,
 ) as rj_escritorio__flooding_detection__flow:
     # Parameters
     cameras_geodf_url = Parameter(
@@ -76,19 +76,20 @@ with Flow(
         number_mock_rain_cameras=mocked_cameras_number,
     )
     openai_api_key = get_openai_api_key(secret_path=openai_api_key_secret_path)
-    images = get_snapshot.map(
-        camera=cameras,
+    images = get_snapshots(
+        cameras=cameras,
     )
-    predictions = get_prediction.map(
-        image=images,
-        flooding_prompt=unmapped(openai_flooding_detection_prompt),
-        openai_api_key=unmapped(openai_api_key),
-        openai_api_model=unmapped(openai_api_model),
-        openai_api_max_tokens=unmapped(openai_api_max_tokens),
-        openai_api_url=unmapped(openai_api_url),
+    predictions_success_mask, predictions = get_predictions(
+        images=images,
+        flooding_prompt=openai_flooding_detection_prompt,
+        openai_api_key=openai_api_key,
+        openai_api_model=openai_api_model,
+        openai_api_max_tokens=openai_api_max_tokens,
+        openai_api_url=openai_api_url,
     )
     update_flooding_api_data(
         predictions=predictions,
+        predictions_success_mask=predictions_success_mask,
         cameras=cameras,
         images=images,
         data_key=redis_key_flooding_detection_data,
