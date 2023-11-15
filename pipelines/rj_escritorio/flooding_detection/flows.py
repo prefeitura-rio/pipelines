@@ -3,8 +3,10 @@
 Flow definition for flooding detection using AI.
 """
 from prefect import Parameter
+from prefect.executors import LocalDaskExecutor
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
+from prefect.tasks.control_flow.filter import FilterTask
 from prefect.utilities.edges import unmapped
 
 from pipelines.constants import constants
@@ -21,12 +23,17 @@ from pipelines.rj_escritorio.flooding_detection.tasks import (
 )
 from pipelines.utils.decorators import Flow
 
+filter_results = FilterTask(
+    filter_func=lambda x: not isinstance(x, (BaseException, type(None)))
+)
+
 with Flow(
     name="EMD: flooding_detection - Atualizar detecção de alagamento (IA) na API",
     code_owners=[
         "gabriel",
         "diego",
     ],
+    skip_if_running=True,
 ) as rj_escritorio__flooding_detection__flow:
     # Parameters
     cameras_geodf_url = Parameter(
@@ -76,21 +83,23 @@ with Flow(
         number_mock_rain_cameras=mocked_cameras_number,
     )
     openai_api_key = get_openai_api_key(secret_path=openai_api_key_secret_path)
-    images = get_snapshot.map(
+    cameras_with_image = get_snapshot.map(
         camera=cameras,
     )
-    predictions = get_prediction.map(
-        image=images,
+    cameras_with_image = filter_results(cameras_with_image)
+    cameras_with_image_and_classification = get_prediction.map(
+        camera_with_image=cameras_with_image,
         flooding_prompt=unmapped(openai_flooding_detection_prompt),
         openai_api_key=unmapped(openai_api_key),
         openai_api_model=unmapped(openai_api_model),
         openai_api_max_tokens=unmapped(openai_api_max_tokens),
         openai_api_url=unmapped(openai_api_url),
     )
+    cameras_with_image_and_classification = filter_results(
+        cameras_with_image_and_classification
+    )
     update_flooding_api_data(
-        predictions=predictions,
-        cameras=cameras,
-        images=images,
+        cameras_with_image_and_classification=cameras_with_image_and_classification,
         data_key=redis_key_flooding_detection_data,
         last_update_key=redis_key_flooding_detection_last_update,
         predictions_buffer_key=redis_key_predictions_buffer,
@@ -98,6 +107,7 @@ with Flow(
 
 
 rj_escritorio__flooding_detection__flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+rj_escritorio__flooding_detection__flow.executor = LocalDaskExecutor(num_workers=10)
 rj_escritorio__flooding_detection__flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_ESCRITORIO_AGENT_LABEL.value],
