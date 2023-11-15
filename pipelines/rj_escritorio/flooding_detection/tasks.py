@@ -131,10 +131,12 @@ def get_predictions(
         if not success:
             results.append(None)
             results_success_mask.append(False)
+            continue
         data: dict = response.json()
         if data.get("error"):
             results.append(None)
             results_success_mask.append(False)
+            continue
         content: str = data["choices"][0]["message"]["content"]
         json_string = content.replace("```json\n", "").replace("\n```", "")
         json_object = json.loads(json_string)
