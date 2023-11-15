@@ -20,7 +20,7 @@ update_flooding_data_schedule = Schedule(
                 constants.RJ_ESCRITORIO_AGENT_LABEL.value,
             ],
             parameter_defaults={
-                "cameras_geodf_url": "https://prefeitura-rio.github.io/storage/cameras_geo_min.csv",
+                "cameras_geodf_url": "https://prefeitura-rio.github.io/storage/cameras_geo_min_bolsao.csv",  # noqa
                 "mocked_cameras_number": 0,
                 "openai_api_key_secret_path": "openai-api-key-flooding-detection",
                 "openai_api_max_tokens": 300,
