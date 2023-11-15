@@ -163,7 +163,7 @@ def extract_data(row: Dict[str, Any]) -> pd.Series:
                 username = username_password[0]
                 password = username_password[1]
             else:
-                print(username_password)
+                log(username_password)
                 raise Exception("Why???")
             # Remove username and password from rtsp
             rtsp = rtsp.split("@")[1]
@@ -181,7 +181,7 @@ def extract_data(row: Dict[str, Any]) -> pd.Series:
             }
         )
     except Exception as exc:
-        print(row["rtsp"])
+        log(row["rtsp"])
         raise exc
 
 
@@ -245,7 +245,7 @@ def get_cameras_h3(df: pd.DataFrame) -> gpd.GeoDataFrame:
     geometry = pluviometro["id_h3"].apply(lambda h3_id: h3_id_to_polygon(h3_id))
     pluviometro_geo = gpd.GeoDataFrame(pluviometro, geometry=geometry)
     pluviometro_geo.crs = {"init": "epsg:4326"}
-    print("pluviometro_geo:", pluviometro_geo.shape)
+    log("pluviometro_geo:", pluviometro_geo.shape)
 
     cameras_h3 = gpd.sjoin(cameras_geo, pluviometro_geo, how="left", op="within")
     cameras_h3 = cameras_h3.drop(columns=["index_right"])
@@ -334,8 +334,9 @@ def clean_and_padronize_cameras() -> gpd.GeoDataFrame:
         | df["ip"].str.startswith("10.50")
         | df["ip"].str.startswith("10.52")
     ]
+    log("cameras: ", df.shape)
+    cameras_h3 = get_cameras_h3(df=df)
 
-    cameras_h3 = get_cameras_h3(df)
     cols = [
         "codigo",
         "nome_da_camera",
@@ -346,14 +347,18 @@ def clean_and_padronize_cameras() -> gpd.GeoDataFrame:
         "id_h3",
     ]
     cameras_h3 = cameras_h3[cols]
-
     cameras_h3 = cameras_h3.rename(
         columns={"codigo": "id_camera", "nome_da_camera": "nome"}
     )
 
     cameras_h3 = cameras_h3.reset_index(drop=True)
-    cameras_h3_bolsao = get_cameras_h3_bolsao(cameras_h3, buffer=0.002)
+    log("cameras_h3: ", cameras_h3.shape)
 
+    cameras_h3_bolsao = get_cameras_h3_bolsao(cameras_h3, buffer=0.002)
+    # remove duplicate bolsoes
+    cameras_h3_bolsao = cameras_h3_bolsao.drop_duplicates(subset="id_camera")
+    log("cameras_h3_bolsao: ", cameras_h3_bolsao.shape)
+    log("is_bolsao: ", cameras_h3_bolsao["is_bolsao"].sum())
     return cameras_h3_bolsao.reset_index(drop=True)
 
 
