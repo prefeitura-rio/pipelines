@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# TODO: Make it resilient to camera failures
 import asyncio
 from datetime import datetime
 import json
