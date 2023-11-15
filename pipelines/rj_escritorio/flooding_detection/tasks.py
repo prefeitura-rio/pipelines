@@ -6,7 +6,7 @@ import io
 import json
 from pathlib import Path
 import random
-from typing import Dict, List, Union
+from typing import Dict, List, Tuple, Union
 
 import cv2
 import geopandas as gpd
@@ -69,7 +69,7 @@ def get_prediction(
     openai_api_model: str,
     openai_api_max_tokens: int = 300,
     openai_api_url: str = "https://api.openai.com/v1/chat/completions",
-) -> Dict[str, Union[str, float, bool]]:
+) -> Tuple[Dict[str, Union[str, float, bool]], str, Dict[str, Union[str, float]]]:
     """
     Gets the flooding detection prediction from OpenAI API.
 
@@ -141,7 +141,7 @@ def get_prediction(
 )
 def get_snapshot(
     camera: Dict[str, Union[str, float]],
-) -> str:
+) -> Tuple[str, Dict[str, Union[str, float]]]:
     """
     Gets a snapshot from a camera.
 
