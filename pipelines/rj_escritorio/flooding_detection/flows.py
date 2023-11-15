@@ -3,7 +3,7 @@
 Flow definition for flooding detection using AI.
 """
 from prefect import Parameter
-from prefect.executors import DaskExecutor
+from prefect.executors import LocalDaskExecutor
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.control_flow.filter import FilterTask
@@ -107,9 +107,10 @@ with Flow(
 
 
 rj_escritorio__flooding_detection__flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-rj_escritorio__flooding_detection__flow.executor = DaskExecutor(
-    address="tcp://prefect-support-cluster-scheduler.dask.svc.cluster.local:8786"
-)
+# rj_escritorio__flooding_detection__flow.executor = DaskExecutor(
+#     address="tcp://prefect-support-cluster-scheduler.dask.svc.cluster.local:8786"
+# )
+rj_escritorio__flooding_detection__flow.executor = LocalDaskExecutor()
 rj_escritorio__flooding_detection__flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_ESCRITORIO_AGENT_LABEL.value],
