@@ -28,7 +28,7 @@ filter_results = FilterTask(
 )
 
 with Flow(
-    name="EMD: flooding_detection - Atualizar detecção de alagamento (IA) na API (Dask)",
+    name="EMD: flooding_detection - Atualizar detecção de alagamento (IA) na API",
     code_owners=[
         "gabriel",
         "diego",
@@ -107,10 +107,7 @@ with Flow(
 
 
 rj_escritorio__flooding_detection__flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-# rj_escritorio__flooding_detection__flow.executor = DaskExecutor(
-#     address="tcp://prefect-support-cluster-scheduler.dask.svc.cluster.local:8786"
-# )
-rj_escritorio__flooding_detection__flow.executor = LocalDaskExecutor()
+rj_escritorio__flooding_detection__flow.executor = LocalDaskExecutor(num_workers=10)
 rj_escritorio__flooding_detection__flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_ESCRITORIO_AGENT_LABEL.value],

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# TODO: Make it resilient to camera failures
 import base64
 from datetime import datetime, timedelta
 import io
@@ -60,7 +59,7 @@ def get_openai_api_key(secret_path: str) -> str:
     return secret["api_key"]
 
 
-@task(nout=3)
+@task
 def get_prediction(
     camera_with_image: Dict[str, Union[str, float]],
     flooding_prompt: str,
@@ -68,7 +67,7 @@ def get_prediction(
     openai_api_model: str,
     openai_api_max_tokens: int = 300,
     openai_api_url: str = "https://api.openai.com/v1/chat/completions",
-) -> Tuple[Dict[str, Union[str, float, bool]], str, Dict[str, Union[str, float]]]:
+) -> Dict[str, Union[str, float, bool]]:
     """
     Gets the flooding detection prediction from OpenAI API.
 
@@ -143,12 +142,12 @@ def get_prediction(
 
 
 @task(
-    max_retries=3,
-    retry_delay=timedelta(seconds=5),
+    max_retries=2,
+    retry_delay=timedelta(seconds=1),
 )
 def get_snapshot(
     camera: Dict[str, Union[str, float]],
-) -> Tuple[str, Dict[str, Union[str, float]]]:
+) -> Dict[str, Union[str, float]]:
     """
     Gets a snapshot from a camera.
 
