@@ -60,9 +60,10 @@ def get_openai_api_key(secret_path: str) -> str:
     return secret["api_key"]
 
 
-@task
+@task(nout=3)
 def get_prediction(
     image: str,
+    camera: Dict[str, Union[str, float]],
     flooding_prompt: str,
     openai_api_key: str,
     openai_api_model: str,
@@ -122,16 +123,21 @@ def get_prediction(
     json_string = content.replace("```json\n", "").replace("\n```", "")
     json_object = json.loads(json_string)
     flooding_detected = json_object["flooding_detected"]
-    return {
-        "object": "alagamento",
-        "label": flooding_detected,
-        "confidence": 0.7,
-    }
+    return (
+        {
+            "object": "alagamento",
+            "label": flooding_detected,
+            "confidence": 0.7,
+        },
+        image,
+        camera,
+    )
 
 
 @task(
     max_retries=3,
     retry_delay=timedelta(seconds=5),
+    nout=2,
 )
 def get_snapshot(
     camera: Dict[str, Union[str, float]],
@@ -162,7 +168,7 @@ def get_snapshot(
     img.save(buffer, format="JPEG")
     img_b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
     log(f"Successfully got snapshot from URL {rtsp_url}.")
-    return img_b64
+    return img_b64, camera
 
 
 @task
