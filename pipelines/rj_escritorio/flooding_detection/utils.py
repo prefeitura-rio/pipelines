@@ -1,15 +1,19 @@
 # -*- coding: utf-8 -*-
+"""
+Data in: https://drive.google.com/drive/folders/1C-W_MMFAAJy5Lq_rHDzXUesEUyzke5gw
+"""
 from pathlib import Path
 from typing import Any, Dict, List, Union
 
 import geopandas as gpd
 import h3
+import numpy as np
 import pandas as pd
 from redis_pal import RedisPal
 import requests
 from shapely.geometry import Point, Polygon
 
-from pipelines.utils.utils import get_redis_client, remove_columns_accents
+from pipelines.utils.utils import get_redis_client, log, remove_columns_accents
 
 
 def download_file(url: str, output_path: Union[str, Path]) -> bool:
@@ -160,6 +164,52 @@ def get_cameras_h3(df: pd.DataFrame) -> gpd.GeoDataFrame:
     return cameras_h3
 
 
+def get_cameras_h3_bolsao(cameras_h3: gpd.GeoDataFrame, buffer: int = 0.002):
+    """
+    Enhances camera data with geographical information and joins it with flood pocket data.
+
+    Parameters:
+    - cameras_h3 (gpd.GeoDataFrame): A GeoDataFrame containing camera and h3 data.
+    - buffer (int): A radius buffer around the flood pocket point.
+
+    Returns:
+    - gpd.GeoDataFrame: A GeoDataFrame containing the joined camera, rainfall and flood pocket data.
+    """
+
+    bolsao = pd.read_excel("./data/PLANILHAO_PDS_alimentaBI.xlsx")
+    bolsao.columns = remove_columns_accents(bolsao)
+    cols = ["codigo", "lat", "long", "classe_atual", "bacia", "sub_bacia"]
+    bolsao = bolsao[cols]
+
+    geometry = [Point(xy) for xy in zip(bolsao["long"], bolsao["lat"])]
+    bolsao_geo = gpd.GeoDataFrame(bolsao, geometry=geometry)
+    bolsao_geo.crs = {"init": "epsg:4326"}
+    bolsao_geo["geometry"] = bolsao_geo["geometry"].buffer(buffer)
+    bolsao_geo.insert(0, "is_bolsao", True)
+
+    cameras_bolsao_h3 = gpd.sjoin(cameras_h3, bolsao_geo, how="left", op="within")
+
+    cameras_bolsao_h3["geometry_bolsao_buffer_0.002"] = [
+        Point(xy).buffer(buffer)
+        for xy in zip(cameras_bolsao_h3["long"], cameras_bolsao_h3["lat"])
+    ]
+    cameras_bolsao_h3["geometry_bolsao_buffer_0.002"] = cameras_bolsao_h3[
+        f"geometry_bolsao_buffer_{buffer}"
+    ].apply(lambda x: np.nan if x.is_empty else x)
+    cameras_bolsao_h3 = cameras_bolsao_h3.drop(columns=["index_right"])
+
+    rename_bolsao_cols = {
+        "codigo": "id_bolsao",
+        "lat": "bolsao_latitude",
+        "long": "bolsao_longitude",
+        "classe_atual": "bolsao_classe_atual",
+    }
+
+    cameras_bolsao_h3 = cameras_bolsao_h3.rename(columns=rename_bolsao_cols)
+
+    return cameras_bolsao_h3
+
+
 def clean_and_padronize_cameras() -> gpd.GeoDataFrame:
     """
     Cleans and standardizes camera data from a CSV file, then merges it with geographical data.
@@ -194,8 +244,9 @@ def clean_and_padronize_cameras() -> gpd.GeoDataFrame:
         | df["ip"].str.startswith("10.50")
         | df["ip"].str.startswith("10.52")
     ]
+    log("cameras: ", df.shape)
+    cameras_h3 = get_cameras_h3(df=df)
 
-    cameras_h3 = get_cameras_h3(df)
     cols = [
         "codigo",
         "nome_da_camera",
@@ -206,12 +257,19 @@ def clean_and_padronize_cameras() -> gpd.GeoDataFrame:
         "id_h3",
     ]
     cameras_h3 = cameras_h3[cols]
-
     cameras_h3 = cameras_h3.rename(
         columns={"codigo": "id_camera", "nome_da_camera": "nome"}
     )
 
-    return cameras_h3.reset_index(drop=True)
+    cameras_h3 = cameras_h3.reset_index(drop=True)
+    log("cameras_h3: ", cameras_h3.shape)
+
+    cameras_h3_bolsao = get_cameras_h3_bolsao(cameras_h3, buffer=0.002)
+    # remove duplicate bolsoes
+    cameras_h3_bolsao = cameras_h3_bolsao.drop_duplicates(subset="id_camera")
+    log("cameras_h3_bolsao: ", cameras_h3_bolsao.shape)
+    log("is_bolsao: ", cameras_h3_bolsao["is_bolsao"].sum())
+    return cameras_h3_bolsao.reset_index(drop=True)
 
 
 def redis_add_to_prediction_buffer(key: str, value: bool, len_: int = 3) -> List[bool]:
