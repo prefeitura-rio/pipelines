@@ -1299,44 +1299,7 @@ def transform_raw_to_nested_structure(
                 log(f"Raw data:\n{data_info_str(data)}", level="info")
 
                 log("Adding captured timestamp column...", level="info")
-                data["timestamp_captura"] = timestamp
-                custom_fields_dataframe1 = pd.json_normalize(data["customFieldValues"])
-
-                custom_fields_dataframe1 = custom_fields_dataframe1.rename(
-                    columns={
-                        "protocolo": "protocol",
-                        "createdDate": "data_ticket",
-                        "id": "id_recurso",
-                        "julgamento": "julgamento",
-                        "motivo": "motivo",
-                        "observacao": "observacao",
-                        "json_motivo": dict,
-                    }
-                )
-
-                if "items" in custom_fields_dataframe1:
-                    custom_fields_dataframe2 = pd.json_normalize(
-                        custom_fields_dataframe1["items"]
-                    )
-
-                    custom_fields_dataframe = pd.concat(
-                        [custom_fields_dataframe1, custom_fields_dataframe2], axis=1
-                    )
-                    custom_fields_dataframe = custom_fields_dataframe.drop(
-                        columns=["items"]
-                    )
-                    data = pd.concat([data, custom_fields_dataframe], axis=1)
-                    log(
-                        f"Ticket: {custom_fields_dataframe['protocol']} tratado com sucesso!"
-                    )
-
-                    data.loc[len(data)] = custom_fields_dataframe
-                    log(
-                        f"Ticket: {custom_fields_dataframe['protocol']} tratado com sucesso!"
-                    )
-                log(f"Raw data:\n{data_info_str(data)}", level="info")
-
-                log("Adding captured timestamp column...", level="info")
+                log(f"Data type: {type(data)}")
                 data["timestamp_captura"] = timestamp
 
                 log(f"Finished cleaning! Data:\n{data_info_str(data)}", level="info")
