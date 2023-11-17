@@ -9,14 +9,9 @@ from pipelines.constants import constants
 from prefect.run_configs import KubernetesRun
 from pipelines.rj_sms.utils import upload_to_datalake
 
-from tasks import (
-    get_patients, 
-    save_patients,
-    upload_to_datalake
-)
+from tasks import get_patients, save_patients, upload_to_datalake
 
 with Flow("Vitacare patients") as flow_clinica_scheduled_patients:
-
     # Tasks
     result = get_patients()
     save = save_patients(result)

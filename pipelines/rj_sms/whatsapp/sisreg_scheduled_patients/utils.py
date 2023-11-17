@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
 from datetime import datetime
 from pathlib import Path
 import re
 import shutil
 from pipelines.utils.utils import log
+
 
 def create_partitions(data_path: str, partition_directory: str):
     data_path = Path(data_path)
@@ -26,4 +28,3 @@ def create_partitions(data_path: str, partition_directory: str):
 
         # Copy file to partition directory
         shutil.copy(file_name, output_directory)
-
