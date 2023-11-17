@@ -10,26 +10,36 @@ from pipelines.utils.utils import log
 from datetime import datetime, timedelta
 import basedosdados as bd
 
-from utils import (
-    create_partitions
-)
+from utils import create_partitions
+
 
 @task
 def read_file():
-    arquivo_excel = 'pipelines/rj_sms/whatsapp/unidades_equipe_aps/data/unidades-equipes-aps-2023-10-27.csv'
-    dataframe = pd.read_csv(arquivo_excel, sep=';')
+    arquivo_excel = "pipelines/rj_sms/whatsapp/unidades_equipe_aps/data/unidades-equipes-aps-2023-10-27.csv"
+    dataframe = pd.read_csv(arquivo_excel, sep=";")
     return dataframe
+
 
 @task
 def save_file(dataframe):
     data_futura = datetime.today() + timedelta(days=3)
-    data_formatada = data_futura.strftime('%Y-%m-%d')
-    filename = 'pipelines/rj_sms/whatsapp/unidades_equipe_aps/data/unidades-equipes-aps-2023-10-27.csv'
-    dataframe.to_csv(filename, sep=';', quoting=csv.QUOTE_NONNUMERIC, quotechar='"', index=False, encoding='utf-8')
-    partition_directory = 'pipelines/rj_sms/whatsapp/unidades_equipe_aps/data_partition'
+    data_formatada = data_futura.strftime("%Y-%m-%d")
+    filename = "pipelines/rj_sms/whatsapp/unidades_equipe_aps/data/unidades-equipes-aps-2023-10-27.csv"
+    dataframe.to_csv(
+        filename,
+        sep=";",
+        quoting=csv.QUOTE_NONNUMERIC,
+        quotechar='"',
+        index=False,
+        encoding="utf-8",
+    )
+    partition_directory = "pipelines/rj_sms/whatsapp/unidades_equipe_aps/data_partition"
     shutil.rmtree(partition_directory, ignore_errors=True)
-    create_partitions('pipelines/rj_sms/whatsapp/unidades_equipe_aps/data', partition_directory)
+    create_partitions(
+        "pipelines/rj_sms/whatsapp/unidades_equipe_aps/data", partition_directory
+    )
     return True
+
 
 @task
 def upload_to_datalake(

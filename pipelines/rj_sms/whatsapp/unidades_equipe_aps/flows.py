@@ -9,14 +9,9 @@ from pipelines.constants import constants
 from prefect.run_configs import KubernetesRun
 from datetime import datetime, timedelta
 
-from tasks import (
-    read_file, 
-    save_file,
-    upload_to_datalake
-)
+from tasks import read_file, save_file, upload_to_datalake
 
 with Flow("Unidades Equipe APS") as flow_unidades_equipe_aps:
-
     # Tasks
     dataframe = read_file()
     save = save_file(dataframe)

@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
 import prefect
 from prefect import task
 import basedosdados as bd
 from pipelines.utils.utils import log
-    
+
+
 @task
 def upload_to_datalake(
     input_path: str,
