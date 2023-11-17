@@ -56,7 +56,7 @@ with Flow(
     timestamp = get_current_timestamp()
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix="SMTR: GPS STPL - Captura - ", now_time=timestamp
+        prefix=captura_stpl.name + " - ", now_time=timestamp
     )
 
     partitions = create_date_hour_partition(timestamp)
@@ -106,5 +106,5 @@ captura_stpl.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-# Seguindo o padrão de captura adotado pelo BRT
-captura_stpl.schedule = every_minute
+# Captura descontinuada (sem dados), avaliar quando voltar
+# captura_stpl.schedule = every_minute
