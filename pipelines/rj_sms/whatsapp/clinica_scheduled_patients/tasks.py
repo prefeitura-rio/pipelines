@@ -36,7 +36,7 @@ def save_patients(dataframe):
         "pipelines/rj_sms/whatsapp/clinica_scheduled_patients/data_partition"
     )
     shutil.rmtree(partition_directory, ignore_errors=True)
-    create_partitions(
+    create_partitions.run(
         "pipelines/rj_sms/whatsapp/clinica_scheduled_patients/data", partition_directory
     )
     return True
