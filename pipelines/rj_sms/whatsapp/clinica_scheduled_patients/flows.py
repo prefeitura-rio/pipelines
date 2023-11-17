@@ -8,10 +8,9 @@ from prefect.storage import GCS
 from pipelines.constants import constants
 from prefect.run_configs import KubernetesRun
 from pipelines.rj_sms.utils import upload_to_datalake
+from pipelines.rj_sms.whatsapp.sisreg_scheduled_patients.tasks import get_patients, save_patients
 
-from tasks import get_patients, save_patients, upload_to_datalake
-
-with Flow("Vitacare patients") as flow_clinica_scheduled_patients:
+with Flow("SMS: Dump VitaCare - Captura dos pacientes agendados") as flow_clinica_scheduled_patients:
     # Tasks
     result = get_patients()
     save = save_patients(result)
