@@ -6,7 +6,6 @@ from prefect import task
 from pipelines.utils.utils import log
 from pipelines.rj_sms.utils import create_partitions, cloud_function_request
 from datetime import datetime, timedelta
-from pipelines.utils.utils import log, get_vault_secret
 
 
 @task
@@ -15,7 +14,7 @@ def get_patients():
         "http://homologacao-devrj.pepvitacare.com:9003/health/schedule/nextappointments"
     )
     params = '{"cnes": "6688152", "date": "2023-11-13"}'
-    return cloud_function_request(
+    return cloud_function_request.run(
         url=url, request_type="POST", body_params=params, env="staging"
     )
 
