@@ -9,8 +9,7 @@ from prefect import task
 from pipelines.utils.utils import log
 from datetime import datetime, timedelta
 import basedosdados as bd
-
-from utils import create_partitions
+from pipelines.rj_sms.utils import create_partitions
 
 
 @task

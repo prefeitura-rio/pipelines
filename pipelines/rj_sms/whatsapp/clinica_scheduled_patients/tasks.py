@@ -4,7 +4,7 @@ import shutil
 import pandas as pd
 from prefect import task
 from pipelines.utils.utils import log
-from utils import create_partitions, cloud_function_request
+from pipelines.rj_sms.utils import create_partitions, cloud_function_request
 from datetime import datetime, timedelta
 from pipelines.utils.utils import log, get_vault_secret
 
