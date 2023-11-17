@@ -7,7 +7,7 @@ from prefect import Flow
 from prefect.storage import GCS
 from pipelines.constants import constants
 from prefect.run_configs import KubernetesRun
-from utils import upload_to_datalake
+from pipelines.rj_sms.utils import upload_to_datalake
 
 from tasks import (
     get_patients, 
