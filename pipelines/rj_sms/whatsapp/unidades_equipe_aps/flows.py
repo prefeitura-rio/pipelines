@@ -9,7 +9,7 @@ from pipelines.constants import constants
 from prefect.run_configs import KubernetesRun
 from datetime import datetime, timedelta
 
-from tasks import read_file, save_file, upload_to_datalake
+from pipelines.rj_sms.whatsapp.sisreg_scheduled_patients.tasks import read_file, save_file, upload_to_datalake
 
 with Flow("Unidades Equipe APS") as flow_unidades_equipe_aps:
     # Tasks

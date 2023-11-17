@@ -10,7 +10,7 @@ from pipelines.constants import constants
 from prefect.run_configs import KubernetesRun
 from datetime import datetime, timedelta
 
-from tasks import get_patients, save_patients, upload_to_datalake
+from pipelines.rj_sms.whatsapp.sisreg_scheduled_patients.tasks import get_patients, save_patients, upload_to_datalake
 
 with Flow("SISREG patients") as flow_sisreg_scheduled_patients:
     # Tasks
