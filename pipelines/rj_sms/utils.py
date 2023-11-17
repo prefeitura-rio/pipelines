@@ -19,9 +19,9 @@ import basedosdados as bd
 from azure.storage.blob import BlobServiceClient
 from prefect import task
 from pipelines.utils.utils import log, get_vault_secret
-import google.oauth2.id_token
 import json
-
+import google.oauth2.id_token
+import google.auth.transport.requests
 
 @task
 def create_folders():
