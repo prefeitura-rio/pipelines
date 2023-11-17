@@ -10,7 +10,7 @@ from pipelines.utils.utils import log, get_vault_secret
 
 @task
 def get_patients():
-    url = 'http://saudedigital.pepvitacare.com:8081/health/schedule/nextappointments'
+    url = 'http://homologacao-devrj.pepvitacare.com:9003/health/schedule/nextappointments'
     params = "{\"cnes\": \"6688152\", \"date\": \"2023-11-13\"}"
     return cloud_function_request(url = url, request_type = 'POST', body_params = params, env = 'staging')
 

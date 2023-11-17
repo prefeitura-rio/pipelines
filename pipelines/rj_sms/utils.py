@@ -19,6 +19,9 @@ import basedosdados as bd
 from azure.storage.blob import BlobServiceClient
 from prefect import task
 from pipelines.utils.utils import log, get_vault_secret
+import json
+import google.oauth2.id_token
+import google.auth.transport.requests
 
 
 @task
@@ -562,3 +565,50 @@ def upload_to_datalake(
 
     except Exception as e:
         log(f"An error occurred: {e}", level="error")
+
+@task
+def cloud_function_request(
+    url: str, 
+    request_type: str = 'GET',
+    body_params: list = None, 
+    query_params: list = None, 
+    env: str = "staging"
+):
+    """
+    Returns data from a URL sent as a parameter.
+    
+    Parâmetros:
+    - url (str): URL do endpoint.
+    - request_type (str): Request type [GET or POST] (default GET).
+    - body_params (list): list of parameters to send by body parameters.
+    - query_params (list): list of parameters to send by query parameters.
+    - env (str): Cloud function account [prod or staging]
+    Return:
+    - response: Request response HTTP.
+    """
+    # Retrieve the API key from Vault
+    try:
+        credential = get_vault_secret(secret_path="prontuario_vitacare")["data"]
+    except Exception as e:
+        log(f"Not able to retrieve Vault secret {e}", level="error")
+
+    if env == 'prod':
+        function = 'https://us-central1-rj-sms.cloudfunctions.net/vitacare'
+    else:
+        function = 'https://us-central1-rj-sms-dev.cloudfunctions.net/vitacare'
+
+    request = google.auth.transport.requests.Request()
+    audience = function
+    TOKEN = google.oauth2.id_token.fetch_id_token(request, audience)
+    payload = json.dumps({
+        "url": url, 
+        "request_type": request_type,
+        "body_params": body_params, 
+        "query_params": query_params,
+        "credential": credential
+    })
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {TOKEN}'
+    }
+    return requests.request("POST", function, headers=headers, data=payload)
