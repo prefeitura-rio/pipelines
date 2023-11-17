@@ -71,7 +71,7 @@ with Flow(
     capture = Parameter("capture", default=True)
     materialize = Parameter("materialize", default=False)
     timestamp = Parameter("timestamp", default=None)
-    timestamp = get_current_timestamp(timestamp=timestamp)
+    timestamp = get_current_timestamp(timestamp=timestamp, return_str=True)
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=subsidio_sppo_recurso.name + " ",
@@ -84,7 +84,7 @@ with Flow(
         run_captura = create_flow_run(
             flow_name=sppo_recurso_captura.name,
             project_name="staging",
-            parameters=timestamp,
+            parameters={"timestamp": timestamp},
             labels=LABELS,
         )
 
