@@ -15,7 +15,7 @@ from pipelines.rj_sms.whatsapp.sisreg_scheduled_patients.tasks import (
     upload_to_datalake,
 )
 
-with Flow("Unidades Equipe APS") as flow_unidades_equipe_aps:
+with Flow("SMS: Dump SISREG - Import Unidades Equipe APS") as flow_unidades_equipe_aps:
     # Tasks
     dataframe = read_file()
     save = save_file(dataframe)

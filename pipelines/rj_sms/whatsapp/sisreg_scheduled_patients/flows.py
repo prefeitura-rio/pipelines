@@ -16,7 +16,7 @@ from pipelines.rj_sms.whatsapp.sisreg_scheduled_patients.tasks import (
     upload_to_datalake,
 )
 
-with Flow("SISREG patients") as flow_sisreg_scheduled_patients:
+with Flow("SMS: Dump SISREG - Captura dos pacientes agendados") as flow_sisreg_scheduled_patients:
     # Tasks
     dataframe = get_patients()
     save = save_patients(dataframe)

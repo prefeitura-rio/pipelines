@@ -8,7 +8,7 @@ from prefect.storage import GCS
 from pipelines.constants import constants
 from prefect.run_configs import KubernetesRun
 from pipelines.rj_sms.utils import upload_to_datalake
-from pipelines.rj_sms.whatsapp.sisreg_scheduled_patients.tasks import (
+from pipelines.rj_sms.whatsapp.clinica_scheduled_patients.tasks import (
     get_patients,
     save_patients,
 )
