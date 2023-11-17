@@ -148,6 +148,7 @@ class constants(Enum):  # pylint: disable=c0103
         },
         "igorlaltuf": {
             "user_id": "87545892319531008",
+            "type": "user_nickname",
         },
         "karinappassos": {
             "user_id": "222842688117014528",

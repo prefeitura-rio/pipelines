@@ -84,7 +84,7 @@ with Flow(
         run_captura = create_flow_run(
             flow_name=sppo_recurso_captura.name,
             project_name="staging",
-            parameters=constants.SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS.value,
+            parameters={"timestamp": timestamp},
             labels=LABELS,
         )
 
