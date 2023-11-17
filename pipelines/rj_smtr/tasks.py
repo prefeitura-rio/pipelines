@@ -1300,7 +1300,7 @@ def transform_raw_to_nested_structure(
 
                 log("Adding captured timestamp column...", level="info")
                 log(f"Data type: {type(data)}")
-                data["timestamp_captura"] = timestamp
+                data["timestamp_captura"] = str(timestamp)
 
                 log(f"Finished cleaning! Data:\n{data_info_str(data)}", level="info")
 
