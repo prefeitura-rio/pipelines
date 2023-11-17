@@ -126,4 +126,4 @@ subsidio_sppo_recurso.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 
-# subsidio_sppo_recurso.schedule = every_hour
+subsidio_sppo_recurso.schedule = every_hour
