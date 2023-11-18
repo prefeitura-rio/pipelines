@@ -14,9 +14,10 @@ def get_patients():
         "http://homologacao-devrj.pepvitacare.com:9003/health/schedule/nextappointments"
     )
     params = '{"cnes": "6688152", "date": "2023-10-27"}'
-    return cloud_function_request.run(
+    response = cloud_function_request.run(
         url=url, request_type="GET", body_params=params, env="staging"
     )
+    return pd.read_json(response.text)
 
 
 @task
