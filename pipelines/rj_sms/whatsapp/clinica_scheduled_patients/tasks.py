@@ -13,9 +13,9 @@ def get_patients():
     url = (
         "http://homologacao-devrj.pepvitacare.com:9003/health/schedule/nextappointments"
     )
-    params = '{"cnes": "6688152", "date": "2023-11-13"}'
+    params = '{"cnes": "6688152", "date": "2023-10-27"}'
     return cloud_function_request.run(
-        url=url, request_type="POST", body_params=params, env="staging"
+        url=url, request_type="GET", body_params=params, env="staging"
     )
 
 
