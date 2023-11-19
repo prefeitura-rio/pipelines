@@ -208,6 +208,7 @@ def get_snapshot(
         if not ret:
             raise RuntimeError(f"Failed to get snapshot from URL {rtsp_url}.")
         cap.release()
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img = Image.fromarray(frame)
         buffer = io.BytesIO()
         img.save(buffer, format="JPEG")
