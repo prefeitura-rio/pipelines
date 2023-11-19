@@ -79,6 +79,7 @@ def get_prediction(
                 "latitude": -22.912,
                 "longitude": -43.230,
                 "image_base64": "base64...",
+                "attempt_classification": True,
             }
         flooding_prompt: The flooding prompt.
         openai_api_key: The OpenAI API key.
@@ -86,17 +87,43 @@ def get_prediction(
         openai_api_max_tokens: The OpenAI API max tokens.
         openai_api_url: The OpenAI API URL.
 
-    Returns:
-        The prediction in the following format:
-            {
-                "object": "alagamento",
-                "label": True,
-                "confidence": 0.7,
-            }
+    Returns: The camera with image and classification in the following format:
+        {
+            "id_camera": "1",
+            "url_camera": "rtsp://...",
+            "latitude": -22.912,
+            "longitude": -43.230,
+            "image_base64": "base64...",
+            "ai_classification": [
+                {
+                    "object": "alagamento",
+                    "label": True,
+                    "confidence": 0.7,
+                }
+            ],
+        }
     """
     # TODO:
     # - Add confidence value
     # Setup the request
+    if not camera_with_image["attempt_classification"]:
+        camera_with_image["ai_classification"] = [
+            {
+                "object": "alagamento",
+                "label": False,
+                "confidence": 0.7,
+            }
+        ]
+        return camera_with_image
+    if not camera_with_image["image_base64"]:
+        camera_with_image["ai_classification"] = [
+            {
+                "object": "alagamento",
+                "label": None,
+                "confidence": 0.7,
+            }
+        ]
+        return camera_with_image
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {openai_api_key}",
@@ -125,12 +152,14 @@ def get_prediction(
     response = requests.post(openai_api_url, headers=headers, json=payload)
     data: dict = response.json()
     if data.get("error"):
-        raise RuntimeError(f"Failed to get prediction: {data['error']}")
-    content: str = data["choices"][0]["message"]["content"]
-    json_string = content.replace("```json\n", "").replace("\n```", "")
-    json_object = json.loads(json_string)
-    flooding_detected = json_object["flooding_detected"]
-    log(f"Successfully got prediction: {flooding_detected}")
+        flooding_detected = None
+        log(f"Failed to get prediction: {data['error']}")
+    else:
+        content: str = data["choices"][0]["message"]["content"]
+        json_string = content.replace("```json\n", "").replace("\n```", "")
+        json_object = json.loads(json_string)
+        flooding_detected = json_object["flooding_detected"]
+        log(f"Successfully got prediction: {flooding_detected}")
     camera_with_image["ai_classification"] = [
         {
             "object": "alagamento",
@@ -158,23 +187,36 @@ def get_snapshot(
                 "url_camera": "rtsp://...",
                 "latitude": -22.912,
                 "longitude": -43.230,
+                "attempt_classification": True,
             }
 
     Returns:
-        The snapshot in base64 format.
+        The camera with image in the following format:
+            {
+                "id_camera": "1",
+                "url_camera": "rtsp://...",
+                "latitude": -22.912,
+                "longitude": -43.230,
+                "attempt_classification": True,
+                "image_base64": "base64...",
+            }
     """
-    rtsp_url = camera["url_camera"]
-    cap = cv2.VideoCapture(rtsp_url)
-    ret, frame = cap.read()
-    if not ret:
-        raise RuntimeError(f"Failed to get snapshot from URL {rtsp_url}.")
-    cap.release()
-    img = Image.fromarray(frame)
-    buffer = io.BytesIO()
-    img.save(buffer, format="JPEG")
-    img_b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
-    log(f"Successfully got snapshot from URL {rtsp_url}.")
-    camera["image_base64"] = img_b64
+    try:
+        rtsp_url = camera["url_camera"]
+        cap = cv2.VideoCapture(rtsp_url)
+        ret, frame = cap.read()
+        if not ret:
+            raise RuntimeError(f"Failed to get snapshot from URL {rtsp_url}.")
+        cap.release()
+        img = Image.fromarray(frame)
+        buffer = io.BytesIO()
+        img.save(buffer, format="JPEG")
+        img_b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        log(f"Successfully got snapshot from URL {rtsp_url}.")
+        camera["image_base64"] = img_b64
+    except Exception:
+        log(f"Failed to get snapshot from URL {rtsp_url}.")
+        camera["image_base64"] = None
     return camera
 
 
@@ -202,6 +244,7 @@ def pick_cameras(
                     "url_camera": "rtsp://...",
                     "latitude": -22.912,
                     "longitude": -43.230,
+                    "attempt_classification": True,
                 },
                 ...
             ]
@@ -238,8 +281,10 @@ def pick_cameras(
         most_common_prediction = max(
             set(predictions_buffer), key=predictions_buffer.count
         )
+        # Get last prediction
+        last_prediction = predictions_buffer[-1]
         # Add classifications
-        if most_common_prediction or predictions_buffer[-1]:
+        if most_common_prediction or last_prediction:
             row["status"] = "chuva moderada"
 
     # Mock a few cameras when argument is set
@@ -249,12 +294,6 @@ def pick_cameras(
             mocked_index = random.randint(0, df_len)
             df_cameras_h3.loc[mocked_index, "status"] = "chuva moderada"
             log(f'Mocked camera ID: {df_cameras_h3.loc[mocked_index]["id_camera"]}')
-
-    # Pick cameras
-    mask = np.logical_not(df_cameras_h3["status"].isin(["sem chuva", "chuva fraca"]))
-    df_cameras_h3 = df_cameras_h3[mask]
-    log("Successfully picked cameras.")
-    log(f"Picked cameras shape: {df_cameras_h3.shape}")
 
     # Set output
     output = []
@@ -266,6 +305,9 @@ def pick_cameras(
                 "url_camera": row["rtsp"],
                 "latitude": row["geometry"].y,
                 "longitude": row["geometry"].x,
+                "attempt_classification": (
+                    row["status"] not in ["sem chuva", "chuva fraca"]
+                ),
             }
         )
     log(f"Picked cameras: {output}")
@@ -315,23 +357,7 @@ def update_flooding_api_data(
         current_prediction = camera_with_image_and_classification["ai_classification"][
             0
         ]["label"]
-        predictions_buffer_camera_key = f"{predictions_buffer_key}_{camera_with_image_and_classification['id_camera']}"  # noqa
-        predictions_buffer = redis_add_to_prediction_buffer(
-            predictions_buffer_camera_key, current_prediction
-        )
-        # Get most common prediction
-        most_common_prediction = max(
-            set(predictions_buffer), key=predictions_buffer.count
-        )
-        # Add classifications
-        if most_common_prediction:
-            ai_classification.append(
-                {
-                    "object": "alagamento",
-                    "label": True,
-                    "confidence": 0.7,
-                }
-            )
+        if current_prediction is None:
             api_data.append(
                 {
                     "datetime": last_update.to_datetime_string(),
@@ -345,6 +371,34 @@ def update_flooding_api_data(
                     "ai_classification": ai_classification,
                 }
             )
+            continue
+        predictions_buffer_camera_key = f"{predictions_buffer_key}_{camera_with_image_and_classification['id_camera']}"  # noqa
+        predictions_buffer = redis_add_to_prediction_buffer(
+            predictions_buffer_camera_key, current_prediction
+        )
+        # Get most common prediction
+        most_common_prediction = max(
+            set(predictions_buffer), key=predictions_buffer.count
+        )
+        # Add classifications
+        ai_classification.append(
+            {
+                "object": "alagamento",
+                "label": most_common_prediction,
+                "confidence": 0.7,
+            }
+        )
+        api_data.append(
+            {
+                "datetime": last_update.to_datetime_string(),
+                "id_camera": cameras_with_image_and_classification["id_camera"],
+                "url_camera": cameras_with_image_and_classification["url_camera"],
+                "latitude": cameras_with_image_and_classification["latitude"],
+                "longitude": cameras_with_image_and_classification["longitude"],
+                "image_base64": cameras_with_image_and_classification["image_base64"],
+                "ai_classification": ai_classification,
+            }
+        )
 
     # Update API data
     redis_client = get_redis_client(db=1)
