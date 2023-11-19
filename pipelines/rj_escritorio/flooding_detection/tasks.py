@@ -361,11 +361,11 @@ def update_flooding_api_data(
             api_data.append(
                 {
                     "datetime": last_update.to_datetime_string(),
-                    "id_camera": cameras_with_image_and_classification["id_camera"],
-                    "url_camera": cameras_with_image_and_classification["url_camera"],
-                    "latitude": cameras_with_image_and_classification["latitude"],
-                    "longitude": cameras_with_image_and_classification["longitude"],
-                    "image_base64": cameras_with_image_and_classification[
+                    "id_camera": camera_with_image_and_classification["id_camera"],
+                    "url_camera": camera_with_image_and_classification["url_camera"],
+                    "latitude": camera_with_image_and_classification["latitude"],
+                    "longitude": camera_with_image_and_classification["longitude"],
+                    "image_base64": camera_with_image_and_classification[
                         "image_base64"
                     ],
                     "ai_classification": ai_classification,
@@ -391,11 +391,11 @@ def update_flooding_api_data(
         api_data.append(
             {
                 "datetime": last_update.to_datetime_string(),
-                "id_camera": cameras_with_image_and_classification["id_camera"],
-                "url_camera": cameras_with_image_and_classification["url_camera"],
-                "latitude": cameras_with_image_and_classification["latitude"],
-                "longitude": cameras_with_image_and_classification["longitude"],
-                "image_base64": cameras_with_image_and_classification["image_base64"],
+                "id_camera": camera_with_image_and_classification["id_camera"],
+                "url_camera": camera_with_image_and_classification["url_camera"],
+                "latitude": camera_with_image_and_classification["latitude"],
+                "longitude": camera_with_image_and_classification["longitude"],
+                "image_base64": camera_with_image_and_classification["image_base64"],
                 "ai_classification": ai_classification,
             }
         )
