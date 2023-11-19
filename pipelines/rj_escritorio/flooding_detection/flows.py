@@ -23,10 +23,6 @@ from pipelines.rj_escritorio.flooding_detection.tasks import (
 )
 from pipelines.utils.decorators import Flow
 
-filter_results = FilterTask(
-    filter_func=lambda x: not isinstance(x, (BaseException, type(None)))
-)
-
 with Flow(
     name="EMD: flooding_detection - Atualizar detecção de alagamento (IA) na API",
     code_owners=[
@@ -86,7 +82,6 @@ with Flow(
     cameras_with_image = get_snapshot.map(
         camera=cameras,
     )
-    cameras_with_image = filter_results(cameras_with_image)
     cameras_with_image_and_classification = get_prediction.map(
         camera_with_image=cameras_with_image,
         flooding_prompt=unmapped(openai_flooding_detection_prompt),
@@ -94,9 +89,6 @@ with Flow(
         openai_api_model=unmapped(openai_api_model),
         openai_api_max_tokens=unmapped(openai_api_max_tokens),
         openai_api_url=unmapped(openai_api_url),
-    )
-    cameras_with_image_and_classification = filter_results(
-        cameras_with_image_and_classification
     )
     update_flooding_api_data(
         cameras_with_image_and_classification=cameras_with_image_and_classification,
