@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import csv
 import shutil
 import pandas as pd
@@ -22,6 +23,9 @@ def get_patients():
 
 @task
 def save_patients(dataframe):
+    path = 'pipelines/rj_sms/whatsapp/clinica_scheduled_patients/data'
+    if not os.path.exists(path):
+        os.mkdir(path)
     data_futura = datetime.today() + timedelta(days=3)
     data_formatada = data_futura.strftime("%Y-%m-%d")
     filename = f"pipelines/rj_sms/whatsapp/clinica_scheduled_patients/data/{data_formatada}.csv"
