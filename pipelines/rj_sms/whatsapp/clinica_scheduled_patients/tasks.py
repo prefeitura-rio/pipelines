@@ -23,7 +23,7 @@ def get_patients():
 
 @task
 def save_patients(dataframe):
-    path = 'pipelines/rj_sms/whatsapp/clinica_scheduled_patients/data'
+    path = "pipelines/rj_sms/whatsapp/clinica_scheduled_patients/data"
     if not os.path.exists(path):
         os.mkdir(path)
     data_futura = datetime.today() + timedelta(days=3)
