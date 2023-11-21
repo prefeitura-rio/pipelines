@@ -71,7 +71,9 @@ with Flow(
     capture = Parameter("capture", default=True)
     materialize = Parameter("materialize", default=False)
     timestamp = Parameter("timestamp", default=None)
-    timestamp = get_current_timestamp(timestamp=timestamp, return_str=True)
+    timestamp = get_current_timestamp(return_str=True)
+    interval_minutes = Parameter("interval_minutes", default=60)
+    # passar timedelta, hora atual - 60 minutos
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=subsidio_sppo_recurso.name + " ",

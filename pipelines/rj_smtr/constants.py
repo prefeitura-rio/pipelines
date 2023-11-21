@@ -540,11 +540,12 @@ class constants(Enum):  # pylint: disable=c0103
         "extract_params": {
             "token": "",
             "$select": "id,protocol,createdDate",
-            "$filter": "{dates} and serviceFull/any(serviceFull: {service})",
+            "$filter": "{dates} and lifetimeWorkingTime eq {minutes} \
+                        and serviceFull/any(serviceFull: {service})",
             "$expand": "customFieldValues,customFieldValues($expand=items)",
             "$orderby": "createdDate asc",
         },
-        # "interval_minutes": "{timestamp}",
+        "interval_minutes": 60,
         "source_type": "movidesk",
         "primary_key": ["protocol"],
     }
