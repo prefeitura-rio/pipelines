@@ -367,16 +367,44 @@ class constants(Enum):  # pylint: disable=c0103
             "primary_key": ["CD_OPERADORA_TRANSPORTE"],  # id column to nest data on
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
         },
+        # {
+        #     "table_id": "pessoa_juridica",
+        #     "partition_date_only": True,
+        #     "extract_params": {
+        #         "database": "principal_db",
+        #         "query": """
+        #             SELECT
+        #                 pj.*,
+        #                 c.NR_DOCUMENTO
+        #             FROM
+        #                 PESSOA_JURIDICA pj
+        #             LEFT JOIN
+        #                 CLIENTE c
+        #             ON
+        #                 pj.CD_CLIENTE = c.CD_CLIENTE
+        #             JOIN
+        #                 OPERADORA_TRANSPORTE o
+        #             ON
+        #                 pj.CD_CLIENTE = o.CD_CLIENTE
+        #         """,
+        #     },
+        #     "primary_key": ["CD_CLIENTE"],  # id column to nest data on
+        #     "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+        # },
         {
-            "table_id": "pessoa_juridica",
+            "table_id": "cliente",
             "partition_date_only": True,
             "extract_params": {
                 "database": "principal_db",
                 "query": """
                     SELECT
-                        *
+                        c.*
                     FROM
-                        PESSOA_JURIDICA
+                        CLIENTE c
+                    JOIN
+                        OPERADORA_TRANSPORTE o
+                    ON
+                        c.CD_CLIENTE = o.CD_CLIENTE
                 """,
             },
             "primary_key": ["CD_CLIENTE"],  # id column to nest data on
@@ -585,5 +613,9 @@ class constants(Enum):  # pylint: disable=c0103
         {
             "table_id": "operadora_empresa",
             "primary_key": ["Perm_Autor", "CNPJ"],
+        },
+        {
+            "table_id": "operadora_pessoa_fisica",
+            "primary_key": ["Perm_Autor", "CPF"],
         },
     ]
