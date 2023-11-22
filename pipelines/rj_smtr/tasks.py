@@ -17,7 +17,7 @@ from dbt_client import DbtClient
 import pandas as pd
 import pendulum
 from prefect import task
-import prefect.context
+import prefect
 from pytz import timezone
 import requests
 
