@@ -12,18 +12,14 @@ from datetime import datetime, timedelta
 @task
 def get_patients(cnes, context):
     log("Getting data from cloud function")
-    if context == 'scheduled':
-        url = (
-            "http://homologacao-devrj.pepvitacare.com:9003/health/schedule/nextappointments"
-        )
+    if context == "scheduled":
+        url = "http://homologacao-devrj.pepvitacare.com:9003/health/schedule/nextappointments"
         data = datetime.today() + timedelta(days=3)
     else:
-        url = (
-            "http://homologacao-devrj.pepvitacare.com:9003/health/schedule/nextappointments"
-        )
+        url = "http://homologacao-devrj.pepvitacare.com:9003/health/schedule/nextappointments"
         data = datetime.today() - timedelta(days=1)
-    #data_formatada = data.strftime('%Y-%m-%d')
-    data_formatada = '2023-10-24'
+    # data_formatada = data.strftime('%Y-%m-%d')
+    data_formatada = "2023-10-24"
     df = pd.DataFrame()
     params = '{"cnes": "' + cnes + '", "date": "' + data_formatada + '"}'
     response = cloud_function_request.run(
@@ -33,25 +29,28 @@ def get_patients(cnes, context):
     if not df_temp.empty:
         df = pd.concat([df, df_temp], ignore_index=True)
     else:
-        log('Error read data from cnes - ' + cnes, level='error' )
+        log("Error read data from cnes - " + cnes, level="error")
     return df
+
 
 @task
 def save_patients(dataframe, context):
     log("Saving data into the server")
-    path = 'pipelines/rj_sms/dump_api_prontuario_vitacare/data'
+    path = "pipelines/rj_sms/dump_api_prontuario_vitacare/data"
     try:
         if os.path.exists(path):
             shutil.rmtree(path, ignore_errors=True)
             os.mkdir(path)
         else:
             os.mkdir(path)
-        if context == 'scheduled':
+        if context == "scheduled":
             data_futura = datetime.today() + timedelta(days=3)
         else:
             data_futura = datetime.today() - timedelta(days=1)
         data_formatada = data_futura.strftime("%Y-%m-%d")
-        filename = f"pipelines/rj_sms/dump_api_prontuario_vitacare/data/{data_formatada}.csv"
+        filename = (
+            f"pipelines/rj_sms/dump_api_prontuario_vitacare/data/{data_formatada}.csv"
+        )
         dataframe.to_csv(
             filename,
             sep=";",
@@ -69,5 +68,5 @@ def save_patients(dataframe, context):
         )
         return True
     except:
-        log('Error when trying to save files', level='error')
+        log("Error when trying to save files", level="error")
         return False

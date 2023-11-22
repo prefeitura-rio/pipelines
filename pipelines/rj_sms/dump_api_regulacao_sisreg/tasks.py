@@ -62,7 +62,7 @@ def get_patients(cnes):
 
 @task
 def save_patients(dataframe):
-    path='pipelines/rj_sms/dump_api_regulacao_sisreg/data'
+    path = "pipelines/rj_sms/dump_api_regulacao_sisreg/data"
     if os.path.exists(path):
         shutil.rmtree(path, ignore_errors=True)
         os.mkdir(path)
@@ -79,12 +79,9 @@ def save_patients(dataframe):
         index=False,
         encoding="utf-8",
     )
-    partition_directory = (
-        "pipelines/rj_sms/dump_api_regulacao_sisreg/data_partition"
-    )
+    partition_directory = "pipelines/rj_sms/dump_api_regulacao_sisreg/data_partition"
     shutil.rmtree(partition_directory, ignore_errors=True)
     create_partitions.run(
         "pipelines/rj_sms/dump_api_regulacao_sisreg/data", partition_directory
     )
     return True
-

@@ -7,17 +7,14 @@ from prefect.storage import GCS
 from pipelines.constants import constants
 from prefect.run_configs import KubernetesRun
 from pipelines.rj_sms.utils import upload_to_datalake
-from pipelines.rj_sms.dump_api_regulacao_sisreg.tasks import (
-    get_patients,
-    save_patients
-)
+from pipelines.rj_sms.dump_api_regulacao_sisreg.tasks import get_patients, save_patients
 from pipelines.rj_sms.dump_api_regulacao_sisreg.schedules import every_day_at_six_am
 
 with Flow(
     "SMS: Dump SISREG - Captura dos pacientes agendados"
 ) as dump_sisreg_scheduled_patients:
     # Tasks
-    dataframe = get_patients('6688152')
+    dataframe = get_patients("6688152")
     save = save_patients(dataframe)
     save.set_upstream(dataframe)
     upload_to_datalake_task = upload_to_datalake(
