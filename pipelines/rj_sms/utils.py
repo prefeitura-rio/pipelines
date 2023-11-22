@@ -61,8 +61,8 @@ def download_from_api(
     file_folder: str,
     file_name: str,
     params=None,
-    vault_path=None,
-    vault_key=None,
+    crendentials=None,
+    auth_method="bearer",
     add_load_date_to_filename=False,
     load_date=None,
 ):
@@ -83,22 +83,16 @@ def download_from_api(
         str: The path of the downloaded file.
     """
     # Retrieve the API key from Vault
-    auth_token = ""
-    if vault_key is not None:
-        try:
-            auth_token = get_vault_secret(secret_path=vault_path)["data"][vault_key]
-            log("Vault secret retrieved")
-        except Exception as e:
-            log(f"Not able to retrieve Vault secret {e}", level="error")
-
-    # Download data from API
-    log("Downloading data from API")
-    headers = {} if auth_token == "" else {"Authorization": f"Bearer {auth_token}"}
     params = {} if params is None else params
-    try:
+
+    log("Downloading data from API")
+    if auth_method == "bearer":
+        headers = {"Authorization": f"Bearer {crendentials}"}
         response = requests.get(url, headers=headers, params=params)
-    except Exception as e :
-        log(f"An error occurred: {e}", level="error")
+    elif auth_method == "basic":
+        response = requests.get(url, auth=crendentials, params=params)
+    else:
+        response = requests.get(url, params=params)
 
     if response.status_code == 200:
         api_data = response.json()
