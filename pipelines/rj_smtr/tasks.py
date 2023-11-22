@@ -16,7 +16,7 @@ import basedosdados as bd
 from dbt_client import DbtClient
 import pandas as pd
 import pendulum
-from prefect import task
+from prefect import task, context
 from pytz import timezone
 import requests
 
@@ -255,6 +255,15 @@ def create_dbt_run_vars(
 # Local file managment
 #
 ###############
+
+
+@task(checkpoint=False)
+def get_scheduled_timestamp(timestamp: Union[str, None]) -> Union[str, datetime]:
+    if timestamp is None:
+        timestamp = context["scheduled_start_time"]
+
+    log("timestamp:", timestamp)
+    return timestamp
 
 
 @task

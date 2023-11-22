@@ -5,7 +5,7 @@ Flows for rj_smtr
 
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
-from prefect import case, Parameter, task
+from prefect import case, Parameter, task, context
 from prefect.utilities.edges import unmapped
 from prefect.tasks.control_flow import merge
 
@@ -39,6 +39,7 @@ from pipelines.rj_smtr.tasks import (
     query_logs,
     unpack_mapped_results_nout2,
     check_mapped_query_logs_output,
+    get_scheduled_timestamp,
 )
 
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
@@ -72,6 +73,8 @@ with Flow(
         name="get_run_name_prefix",
         checkpoint=False,
     )
+
+    timestamp = get_scheduled_timestamp(timestamp=timestamp)
 
     current_timestamp = get_rounded_timestamp(
         timestamp=timestamp, interval_minutes=interval_minutes
