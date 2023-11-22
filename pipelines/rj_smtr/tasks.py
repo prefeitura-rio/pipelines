@@ -263,7 +263,7 @@ def get_scheduled_timestamp(timestamp: Union[str, None]) -> Union[str, datetime]
     if timestamp is None:
         timestamp = prefect.context["scheduled_start_time"]
 
-    log("timestamp:", timestamp)
+    log(f"timestamp: {timestamp}")
     return timestamp
 
 
