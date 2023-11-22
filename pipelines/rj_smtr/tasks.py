@@ -675,12 +675,12 @@ def create_request_params(
             constants.SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH.value
         )["data"]["token"]
         end = datetime.strftime(timestamp, "%Y-%m-%dT%H:%M:%S.%MZ")
-        datetime_range = get_datetime_range(
+        minutes = get_datetime_range(
             timestamp=timestamp, interval=timedelta(minutes=interval_minutes)
         )
         recurso_params = {
             "service": constants.SUBSIDIO_SPPO_RECURSO_SERVICE.value,
-            "dates": f"createdDate eq {end} and lifetimeWorkingTime eq {datetime_range}",
+            "dates": f"createdDate eq {end} and lifetimeWorkingTime eq {minutes}",
         }  # fazer um filtro para pegar só o pedaço necessário do banco
         # fazer local a chamada dos dados totais
         extract_params["$filter"] = extract_params["$filter"].format(**recurso_params)
