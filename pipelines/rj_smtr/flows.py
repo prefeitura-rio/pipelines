@@ -40,6 +40,7 @@ from pipelines.rj_smtr.tasks import (
     unpack_mapped_results_nout2,
     check_mapped_query_logs_output,
     get_scheduled_timestamp,
+    create_flow_run_time_sufix,
 )
 
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
@@ -100,7 +101,7 @@ with Flow(
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix="SMTR: " + get_run_name_prefix(recap=recapture) + " " + table_id + ": ",
-        now_time=get_now_time(),
+        now_time=create_flow_run_time_sufix(timestamp=current_timestamp),
     )
 
     partitions = create_date_hour_partition.map(

@@ -662,6 +662,8 @@ def get_raw_data_db(
     error = None
     filetype = "json"
 
+    log(f"executing query:\n{query}")
+
     try:
         credentials = get_vault_secret(secret_path)["data"]
 

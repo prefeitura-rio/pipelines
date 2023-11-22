@@ -261,10 +261,16 @@ def create_dbt_run_vars(
 @task(checkpoint=False)
 def get_scheduled_timestamp(timestamp: Union[str, None]) -> Union[str, datetime]:
     if timestamp is None:
-        timestamp = prefect.context["scheduled_start_time"]
+        timestamp: datetime = prefect.context["scheduled_start_time"]
+        timestamp = timestamp.astimezone(timezone(constants.TIMEZONE.value))
 
     log(f"timestamp: {timestamp}")
     return timestamp
+
+
+@task(checkpoint=False)
+def create_flow_run_time_sufix(timestamp: datetime) -> str:
+    return timestamp.strftime("%H:%M")
 
 
 @task
