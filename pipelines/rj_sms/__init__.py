@@ -7,4 +7,3 @@ from pipelines.rj_sms.dump_db_sivep.flows import *
 from pipelines.rj_sms.dump_ftp_cnes.flows import *
 from pipelines.rj_sms.dump_api_prontuario_vitai.flows import *
 from pipelines.rj_sms.dump_sheets.flows import *
-

@@ -15,7 +15,9 @@ from pipelines.rj_sms.dump_sheets.schedules import sms_sheets_daily_update_sched
 
 
 dump_sms_sheets_flow = deepcopy(dump_url_flow)
-dump_sms_sheets_flow.name = "SMS: Dump Google Sheets - Ingerir planilhas do Google Sheets"
+dump_sms_sheets_flow.name = (
+    "SMS: Dump Google Sheets - Ingerir planilhas do Google Sheets"
+)
 dump_sms_sheets_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 
 dump_sms_sheets_flow.run_config = KubernetesRun(
@@ -26,6 +28,6 @@ dump_sms_sheets_flow.run_config = KubernetesRun(
 )
 
 
-#dump_sms_sheets_flow = set_default_parameters(
+# dump_sms_sheets_flow = set_default_parameters(
 #    dump_sms_sheets_flow)
 dump_sms_sheets_flow.schedule = sms_sheets_daily_update_schedule

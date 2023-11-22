@@ -23,7 +23,7 @@ sms_parameters = {
         "gsheets_sheet_name": "Sheet1",
         "dataset_id": sheets_constants.DATASET_ID.value,
         "table_id": "estabelecimento_auxiliar",
-        "dump_mode": "overwrite"
+        "dump_mode": "overwrite",
     },
     "material_remume": {
         "url": "https://docs.google.com/spreadsheets/d/1p7tOI1VeeEgeuzP_mag5wGZHTetpb23g_ykwbcd2u00/edit?usp=sharing",  # noqa: E501
@@ -31,8 +31,8 @@ sms_parameters = {
         "gsheets_sheet_name": "CONSOLIDADO",
         "dataset_id": sheets_constants.DATASET_ID.value,
         "table_id": "material_remume",
-        "dump_mode": "overwrite"
-    }
+        "dump_mode": "overwrite",
+    },
 }
 
 
