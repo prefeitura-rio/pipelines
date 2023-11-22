@@ -679,8 +679,9 @@ def create_request_params(
             timestamp=timestamp, interval=timedelta(minutes=interval_minutes)
         )
         recurso_params = {
+            "dates": f"createdDate eq {end}",
+            "minutes": f"and lifetimeWorkingTime eq {minutes}",
             "service": constants.SUBSIDIO_SPPO_RECURSO_SERVICE.value,
-            "dates": f"createdDate eq {end} and lifetimeWorkingTime eq {minutes}",
         }  # fazer um filtro para pegar só o pedaço necessário do banco
         # fazer local a chamada dos dados totais
         extract_params["$filter"] = extract_params["$filter"].format(**recurso_params)
