@@ -540,7 +540,7 @@ class constants(Enum):  # pylint: disable=c0103
         "extract_params": {
             "token": "",
             "$select": "id,protocol,createdDate",
-            "$filter": "{dates} and lifetimeWorkingTime eq {minutes} \
+            "$filter": "{dates} and lifetimeWorkingTime {minutes} \
                 and serviceFull/any(serviceFull: {service})",
             "$expand": "customFieldValues,customFieldValues($expand=items)",
             "$orderby": "createdDate asc",
