@@ -72,7 +72,7 @@ with Flow(
     materialize = Parameter("materialize", default=False)
     timestamp = Parameter("timestamp", default=None)
     timestamp = get_current_timestamp(timestamp, return_str=True)
-    interval_minutes = Parameter("interval_minutes", default=60)
+    # interval_minutes = Parameter("interval_minutes", default=60)
     # passar timedelta, hora atual - 60 minutos
 
     rename_flow_run = rename_current_flow_run_now_time(
@@ -86,7 +86,7 @@ with Flow(
         run_captura = create_flow_run(
             flow_name=sppo_recurso_captura.name,
             project_name="staging",
-            parameters={"timestamp": timestamp, "minutes": interval_minutes},
+            parameters={"timestamp": timestamp},
             labels=LABELS,
         )
 
