@@ -10,9 +10,9 @@ from prefect.storage import GCS
 
 from pipelines.constants import constants
 from pipelines.utils.dump_url.flows import dump_url_flow
-from pipelines.utils.utils import set_default_parameters
 from pipelines.rj_sms.dump_sheets.schedules import sms_sheets_daily_update_schedule
 
+# TODO: add code owner
 
 dump_sms_sheets_flow = deepcopy(dump_url_flow)
 dump_sms_sheets_flow.name = (
@@ -27,7 +27,4 @@ dump_sms_sheets_flow.run_config = KubernetesRun(
     ],
 )
 
-
-# dump_sms_sheets_flow = set_default_parameters(
-#    dump_sms_sheets_flow)
 dump_sms_sheets_flow.schedule = sms_sheets_daily_update_schedule
