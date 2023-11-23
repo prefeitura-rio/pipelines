@@ -1383,7 +1383,7 @@ def check_mapped_query_logs_output(query_logs_output: list[tuple]) -> bool:
 
 @task
 def get_scheduled_start_times(
-    timestamp: datetime, parameters: list, interval=timedelta(minutes=5)
+    timestamp: datetime, parameters: list, interval=timedelta(minutes=2)
 ):
     """
     Task to get start times to schedule flows
