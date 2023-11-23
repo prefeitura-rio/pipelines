@@ -1389,9 +1389,9 @@ def get_scheduled_start_times(
     Task to get start times to schedule flows
 
     Args:
-        timestamp (datetime): the flow run timestamp
-        parameters (list): the parameters for the flow
-        interval (timedelta, optional): the timedelta between each flow run.
+        timestamp (datetime): initial flow run timestamp
+        parameters (list): parameters for the flow
+        interval (timedelta, optional): timedelta between each flow run.
             Defaults to timedelta(minutes=5).
 
     Returns:
