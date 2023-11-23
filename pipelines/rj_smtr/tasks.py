@@ -1382,20 +1382,33 @@ def check_mapped_query_logs_output(query_logs_output: list[tuple]) -> bool:
 
 
 @task
-def get_scheduled_start_times(
-    timestamp: datetime, parameters: list, interval=timedelta(minutes=2)
-):
+def get_scheduled_start_times(timestamp: datetime, parameters: list, intervals=None):
     """
     Task to get start times to schedule flows
 
     Args:
         timestamp (datetime): initial flow run timestamp
         parameters (list): parameters for the flow
-        interval (timedelta, optional): timedelta between each flow run.
-            Defaults to timedelta(minutes=5).
+        intervals (dict, optional): intervals between each parameter.
+            Optionally, you can pass specific intervals for some table_ids.
+            Suggests to pass intervals based on previous table observed execution times.
+            Defaults to dict(default=timedelta(minutes=2), agency=timedelta(minutes=7)).
+            A dict at least with default key is required.
 
     Returns:
-        list: list of scheduled start times
+        list[datetime]: list of scheduled start times
     """
 
-    return [None] + [timestamp + i * interval for i in range(1, len(parameters))]
+    if intervals is None:
+        intervals = {"default": timedelta(minutes=2), "agency": timedelta(minutes=7)}
+
+    timestamps = [None]
+    last_schedule = timestamp
+
+    for param in parameters[1:]:
+        last_schedule += intervals.get(
+            param.get("table_id", "default"), intervals["default"]
+        )
+        timestamps.append(last_schedule)
+
+    return timestamps
