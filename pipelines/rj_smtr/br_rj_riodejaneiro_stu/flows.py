@@ -32,6 +32,12 @@ from pipelines.rj_smtr.flows import (
 )
 
 from pipelines.rj_smtr.tasks import get_current_timestamp
+from pipelines.rj_smtr.br_rj_riodejaneiro_stu.tasks import (
+    get_stu_raw_blobs,
+    read_stu_raw_file,
+    create_final_stu_dataframe,
+    save_stu_dataframes,
+)
 
 from pipelines.rj_smtr.constants import constants
 
@@ -65,6 +71,16 @@ with Flow(
 
     LABELS = get_current_flow_labels()
 
+    # JOIN INDIVIDUAL FILES
+    raw_files = get_stu_raw_blobs(data_versao_stu=data_versao_stu)
+
+    raw_dfs = read_stu_raw_file.map(blob=raw_files)
+
+    df_pf, df_pj = create_final_stu_dataframe(dfs=raw_dfs)
+
+    SAVE_TABLE_FILES = save_stu_dataframes(df_pf=df_pf, df_pj=df_pj)
+
+    # CAPTURE
     stu_capture_parameters = [
         {"timestamp": data_versao_stu, **d}
         for d in constants.STU_TABLE_CAPTURE_PARAMS.value
@@ -77,6 +93,8 @@ with Flow(
         parameters=stu_capture_parameters,
         labels=unmapped(LABELS),
     )
+
+    run_captura.set_upstream(SAVE_TABLE_FILES)
 
     wait_captura_true = wait_for_flow_run.map(
         run_captura,
