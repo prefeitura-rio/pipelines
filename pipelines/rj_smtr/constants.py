@@ -544,6 +544,7 @@ class constants(Enum):  # pylint: disable=c0103
             "$expand": "customFieldValues,customFieldValues($expand=items)",
             "$orderby": "createdDate asc",
         },
+        "interval_minutes": 1440,
         "source_type": "movidesk",
         "primary_key": ["protocol"],
     }

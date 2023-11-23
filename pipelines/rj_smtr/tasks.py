@@ -674,9 +674,13 @@ def create_request_params(
         extract_params["token"] = get_vault_secret(
             constants.SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH.value
         )["data"]["token"]
+        start = datetime.strftime(
+            timestamp - timedelta(minutes=interval_minutes), "%Y-%m-%dT%H:%M:%S.%MZ"
+        )
         end = datetime.strftime(timestamp, "%Y-%m-%dT%H:%M:%S.%MZ")
+        log(f" Start date {start}, end date {end}")
         recurso_params = {
-            "dates": f"createdDate le {end}",
+            "dates": f"createdDate ge {start} and createdDate le {end}",
             "service": constants.SUBSIDIO_SPPO_RECURSO_SERVICE.value,
         }  # fazer um filtro para pegar só o pedaço necessário do banco
         # fazer local a chamada dos dados totais

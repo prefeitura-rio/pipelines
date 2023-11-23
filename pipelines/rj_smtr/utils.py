@@ -25,7 +25,7 @@ import pymysql
 import psycopg2
 import psycopg2.extras
 import time
-from typing import Dict
+
 
 from prefect.schedules.clocks import IntervalClock
 
@@ -834,31 +834,6 @@ def read_raw_data(filepath: str, csv_args: dict = None) -> tuple[str, pd.DataFra
     return error, data
 
 
-def get_downloaded_data(storage):
-    """_summary_
-
-    Args:
-        storage (_type_): _description_
-    """
-    blobs = storage.list_blobs()
-    dates = []
-
-    for blob in blobs:
-        blob_name = blob.name
-        date_str = blob_name.split("_")[-1].split(".")[0]
-
-        try:
-            datetime_obj = datetime.strptime(date_str, "%Y%m%d")
-            dates.append(datetime_obj)
-        except ValueError as error:
-            log(f"[CATECHED]: {error}.")
-            pass
-    if dates:
-        return max(dates).strftime("%Y%m%d")
-    else:
-        return "20220626"
-
-
 def get_raw_recursos(request_url: str, request_params: dict) -> tuple[str, str, str]:
     """
     Returns a dataframe with recursos data from movidesk api.
@@ -869,18 +844,8 @@ def get_raw_recursos(request_url: str, request_params: dict) -> tuple[str, str, 
     error = None
     filetype = "json"
     data = []
-    dataset_id = constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value
-    table_id = constants.SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS.value["table_id"]
 
-    st = Storage(
-        dataset_id=dataset_id,
-        table_id=table_id,
-    )
-    storage_path = f"{st.bucket_name}.staging.{dataset_id}.{table_id}"
-
-    last_downloaded_date = get_downloaded_data(st)
-
-    while True:
+    while not all_records:
         try:
             request_params["$top"] = top
             request_params["$skip"] = skip
@@ -903,23 +868,11 @@ def get_raw_recursos(request_url: str, request_params: dict) -> tuple[str, str, 
                 skip += top
                 time.sleep(36)
 
-            if len(paginated_data["data"]) == 0:
+            if len(paginated_data) == 0:
                 log("Nenhum dado para tratar.")
 
             else:
-                # all_records = True
-
-                paginated_data["data"] = [
-                    entry
-                    for entry in paginated_data["data"]
-                    if entry.get("data") and entry["data"] > last_downloaded_date
-                ]
-                if paginated_data["data"]:
-                    data += paginated_data
-                    last_downloaded_date = max(
-                        entry["data"] for entry in paginated_data["data"]
-                    )
-
+                all_records = True
             data += paginated_data
 
             log(f"Dados (paginados): {len(data)}")

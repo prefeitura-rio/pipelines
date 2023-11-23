@@ -43,6 +43,19 @@ sppo_recurso_captura = set_default_parameters(
     flow=sppo_recurso_captura,
     default_parameters=constants.SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS.value,
 )
+# RECAPTURA #
+sppo_recurso_recaptura = deepcopy(default_capture_flow)
+sppo_recurso_recaptura.name = "SMTR: Subsídio SPPO Recursos - Recaptura (subflow)"
+sppo_recurso_recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+sppo_recurso_recaptura.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+)
+sppo_recurso_recaptura = set_default_parameters(
+    flow=sppo_recurso_recaptura,
+    default_parameters=constants.SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS.value
+    | {"recapture": True},
+)
 
 # MATERIALIZAÇÃO #
 
@@ -70,9 +83,10 @@ with Flow(
 ) as subsidio_sppo_recurso:
     capture = Parameter("capture", default=True)
     materialize = Parameter("materialize", default=False)
+    recapture = Parameter("recapture", default=False)
     timestamp = Parameter("timestamp", default=None)
+    interval_minutes = Parameter("interval_minutes", default=1440)
     timestamp = get_current_timestamp(timestamp, return_str=True)
-    # interval_minutes = Parameter("interval_minutes", default=60)
     # passar timedelta, hora atual - 60 minutos
 
     rename_flow_run = rename_current_flow_run_now_time(
@@ -104,6 +118,28 @@ with Flow(
 
     wait_captura = merge(wait_captura_true, wait_captura_false)
 
+    with case(recapture, True):
+        run_recaptura = create_flow_run(
+            flow_name=sppo_recurso_recaptura.name,
+            project_name="staging",
+            labels=LABELS,
+        )
+        run_recaptura.set_upstream(wait_captura)
+
+        wait_recaptura_true = wait_for_flow_run(
+            run_recaptura,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+
+    with case(recapture, False):
+        wait_recaptura_false = task(
+            lambda: [None], checkpoint=False, name="assign_none_to_previous_runs"
+        )()
+
+    wait_recaptura = merge(wait_recaptura_true, wait_recaptura_false)
+
     with case(materialize, True):
         sppo_recurso_materializacao_parameters = {}
 
@@ -115,12 +151,24 @@ with Flow(
             upstream_tasks=[wait_captura],
         )
 
-        wait_materializacao = wait_for_flow_run(
+        run_materializacao.set_upstream(wait_recaptura)
+
+        wait_materializacao_true = wait_for_flow_run(
             run_materializacao,
             stream_states=True,
             stream_logs=True,
             raise_final_state=True,
         )
+
+    with case(materialize, False):
+        wait_materializacao_false = task(
+            lambda: [None], checkpoint=False, name="assign_none_to_previous_runs"
+        )()
+    wait_materializacao = merge(wait_materializacao_true, wait_materializacao_false)
+
+    subsidio_sppo_recurso.set_reference_tasks(
+        [wait_materializacao, wait_recaptura, wait_captura]
+    )
 
 subsidio_sppo_recurso.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 subsidio_sppo_recurso.run_config = KubernetesRun(
