@@ -1400,7 +1400,10 @@ def get_scheduled_start_times(timestamp: datetime, parameters: list, intervals=N
     """
 
     if intervals is None:
-        intervals = {"default": timedelta(minutes=2), "agency": timedelta(minutes=7)}
+        intervals = {"default": timedelta(minutes=2), "agency": timedelta(minutes=11)}
+    else:
+        if "default" not in intervals.keys():
+            raise ValueError("A default interval must be passed")
 
     timestamps = [None]
     last_schedule = timestamp
