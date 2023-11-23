@@ -23,7 +23,7 @@ dump_sms_sheets_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_sms_sheets_flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[
-        constants.RJ_SMS_DEV_AGENT_LABEL.value,
+        constants.RJ_SMS_AGENT_LABEL.value,
     ],
 )
 
