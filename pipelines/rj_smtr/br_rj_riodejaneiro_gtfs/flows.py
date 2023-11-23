@@ -26,9 +26,7 @@ from pipelines.utils.tasks import (
 
 # SMTR Imports #
 from pipelines.rj_smtr.constants import constants
-from pipelines.rj_smtr.tasks import (
-    get_current_timestamp,
-)
+from pipelines.rj_smtr.tasks import get_current_timestamp, get_scheduled_start_times
 
 from pipelines.rj_smtr.flows import default_capture_flow, default_materialization_flow
 
@@ -88,6 +86,9 @@ with Flow(
             project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
             parameters=gtfs_capture_parameters,
             labels=unmapped(LABELS),
+            scheduled_start_time=get_scheduled_start_times(
+                timestamp=timestamp, parameters=gtfs_capture_parameters
+            ),
         )
 
         wait_captura_true = wait_for_flow_run.map(

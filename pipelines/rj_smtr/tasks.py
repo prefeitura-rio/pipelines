@@ -1379,3 +1379,23 @@ def check_mapped_query_logs_output(query_logs_output: list[tuple]) -> bool:
 
     recapture_list = [i[0] for i in query_logs_output]
     return any(recapture_list)
+
+
+@task
+def get_scheduled_start_times(
+    timestamp: datetime, parameters: list, interval=timedelta(minutes=5)
+):
+    """
+    Task to get start times to schedule flows
+
+    Args:
+        timestamp (datetime): the flow run timestamp
+        parameters (list): the parameters for the flow
+        interval (timedelta, optional): the timedelta between each flow run.
+            Defaults to timedelta(minutes=5).
+
+    Returns:
+        list: list of scheduled start times
+    """
+
+    return [timestamp + i * interval for i in range(len(parameters))]
