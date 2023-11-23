@@ -1398,4 +1398,4 @@ def get_scheduled_start_times(
         list: list of scheduled start times
     """
 
-    return [timestamp + i * interval for i in range(len(parameters))]
+    return [None] + [timestamp + i * interval for i in range(1, len(parameters))]
