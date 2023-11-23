@@ -17,9 +17,8 @@ import pytz
 import requests
 import basedosdados as bd
 from basedosdados import Table
+from basedosdados import Storage
 import math
-
-# from basedosdados import Storage
 import pandas as pd
 from google.cloud.storage.blob import Blob
 import pymysql
@@ -835,6 +834,31 @@ def read_raw_data(filepath: str, csv_args: dict = None) -> tuple[str, pd.DataFra
     return error, data
 
 
+def get_downloaded_data(storage):
+    """_summary_
+
+    Args:
+        storage (_type_): _description_
+    """
+    blobs = storage.list_blobs()
+    dates = []
+
+    for blob in blobs:
+        blob_name = blob.name
+        date_str = blob_name.split("_")[-1].split(".")[0]
+
+        try:
+            datetime_obj = datetime.strptime(date_str, "%Y%m%d")
+            dates.append(datetime_obj)
+        except ValueError as error:
+            log(f"[CATECHED]: {error}.")
+            pass
+    if dates:
+        return max(dates).strftime("%Y%m%d")
+    else:
+        return "20220626"
+
+
 def get_raw_recursos(request_url: str, request_params: dict) -> tuple[str, str, str]:
     """
     Returns a dataframe with recursos data from movidesk api.
@@ -845,8 +869,18 @@ def get_raw_recursos(request_url: str, request_params: dict) -> tuple[str, str, 
     error = None
     filetype = "json"
     data = []
+    dataset_id = constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value
+    table_id = constants.SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS.value["table_id"]
 
-    while not all_records:
+    st = Storage(
+        dataset_id=dataset_id,
+        table_id=table_id,
+    )
+    storage_path = f"{st.bucket_name}.staging.{dataset_id}.{table_id}"
+
+    last_downloaded_date = get_downloaded_data(st)
+
+    while True:
         try:
             request_params["$top"] = top
             request_params["$skip"] = skip
@@ -868,8 +902,23 @@ def get_raw_recursos(request_url: str, request_params: dict) -> tuple[str, str, 
             if len(paginated_data) == top:
                 skip += top
                 time.sleep(36)
+
+            if len(paginated_data["data"]) == 0:
+                log("Nenhum dado para tratar.")
+
             else:
-                all_records = True
+                # all_records = True
+
+                paginated_data["data"] = [
+                    entry
+                    for entry in paginated_data["data"]
+                    if entry.get("data") and entry["data"] > last_downloaded_date
+                ]
+                if paginated_data["data"]:
+                    data += paginated_data
+                    last_downloaded_date = max(
+                        entry["data"] for entry in paginated_data["data"]
+                    )
 
             data += paginated_data
 
