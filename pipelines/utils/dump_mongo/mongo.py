@@ -19,6 +19,9 @@ class Mongo:
         database: str,
         collection: str,
         port: Optional[int] = 27017,
+        directConnection: Optional[bool] = True,
+        authMechanism: Optional[str] = "DEFAULT",
+        readPreference: Optional[str] = "secondary",
     ) -> None:
         """
         Initializes the MongoDB database.
@@ -30,6 +33,12 @@ class Mongo:
             database (str): Database name of the MongoDB.
             collection (str): Collection name of the MongoDB.
             port (int, optional): Port of the MongoDB. Defaults to 27017.
+            directConnection (bool, optional): Whether to use a direct connection to the
+                MongoDB. Defaults to True.
+            authMechanism (str, optional): Authentication mechanism of the MongoDB. Defaults to
+                "DEFAULT".
+            readPreference (str, optional): Read preference of the MongoDB. Defaults to
+                "secondary".
         """
         self._hostname = hostname
         self._user = user
@@ -43,6 +52,9 @@ class Mongo:
             port=self._port,
             username=self._user,
             password=self._password,
+            directConnection=directConnection,
+            authMechanism=authMechanism,
+            readPreference=readPreference,
         )
         self._db = self._client[self._database]
         self._collection = self._db[self._collection]
