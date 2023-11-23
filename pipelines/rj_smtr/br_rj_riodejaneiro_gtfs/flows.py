@@ -69,7 +69,7 @@ with Flow(
     timestamp = get_current_timestamp()
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=gtfs_captura_tratamento.name + " ",
+        prefix=gtfs_captura_tratamento.name + " " + data_versao_gtfs + " ",
         now_time=timestamp,
     )
 
