@@ -17,6 +17,7 @@ import pytz
 import requests
 import basedosdados as bd
 from basedosdados import Table
+import math
 
 # from basedosdados import Storage
 import pandas as pd

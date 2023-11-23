@@ -27,7 +27,7 @@ from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.tasks import get_current_timestamp
 
 from pipelines.rj_smtr.flows import default_capture_flow, default_materialization_flow
-from pipelines.rj_smtr.schedules import every_hour
+from pipelines.rj_smtr.schedules import every_day
 
 
 # CAPTURA #
@@ -129,4 +129,4 @@ subsidio_sppo_recurso.run_config = KubernetesRun(
 )
 
 # schedule
-subsidio_sppo_recurso.schedule = every_hour
+subsidio_sppo_recurso.schedule = every_day

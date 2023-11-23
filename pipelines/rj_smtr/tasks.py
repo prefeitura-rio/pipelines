@@ -676,7 +676,7 @@ def create_request_params(
         )["data"]["token"]
         end = datetime.strftime(timestamp, "%Y-%m-%dT%H:%M:%S.%MZ")
         recurso_params = {
-            "dates": f"createdDate eq {end}",
+            "dates": f"createdDate le {end}",
             "service": constants.SUBSIDIO_SPPO_RECURSO_SERVICE.value,
         }  # fazer um filtro para pegar só o pedaço necessário do banco
         # fazer local a chamada dos dados totais
