@@ -3,6 +3,7 @@
 Flows for gtfs
 """
 from copy import deepcopy
+from datetime import timedelta
 
 # Imports #
 
@@ -26,9 +27,7 @@ from pipelines.utils.tasks import (
 
 # SMTR Imports #
 from pipelines.rj_smtr.constants import constants
-from pipelines.rj_smtr.tasks import (
-    get_current_timestamp,
-)
+from pipelines.rj_smtr.tasks import get_current_timestamp, get_scheduled_start_times
 
 from pipelines.rj_smtr.flows import default_capture_flow, default_materialization_flow
 
@@ -74,7 +73,7 @@ with Flow(
     timestamp = get_current_timestamp()
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=gtfs_captura_tratamento.name + " ",
+        prefix=gtfs_captura_tratamento.name + " " + data_versao_gtfs + " ",
         now_time=timestamp,
     )
 
@@ -92,6 +91,11 @@ with Flow(
             project_name=unmapped("staging"),
             parameters=gtfs_capture_parameters,
             labels=unmapped(LABELS),
+            scheduled_start_time=get_scheduled_start_times(
+                timestamp=timestamp,
+                parameters=gtfs_capture_parameters,
+                intervals={"agency": timedelta(minutes=11)},
+            ),
         )
 
         wait_captura_true = wait_for_flow_run.map(
