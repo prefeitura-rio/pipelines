@@ -577,7 +577,7 @@ def dump_upload_batch(
                 )
                 log_mod(
                     msg=(
-                        f"MODE OVERWRITE: Sucessfully REMOVED HEADER DATA from Storage\n:"
+                        "MODE OVERWRITE: Sucessfully REMOVED HEADER DATA from Storage\n:"
                         + f"{storage_path}\n"
                         + f"{storage_path_link}"
                     ),
