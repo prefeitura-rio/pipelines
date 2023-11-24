@@ -33,7 +33,7 @@ kaleido = "0.2.1"
 loguru = "^0.7.0"
 lxml = "^4.9.1"
 matplotlib = "3.5.1"
-mlflow = { extras = ["extras"], version = "^2.5.0" }
+mlflow = { extras = ["extras"], version = "^2.8.1" }
 netCDF4 = "1.5.8"
 numpy = "1.22.0"
 opencv-python = "^4.6.0"
