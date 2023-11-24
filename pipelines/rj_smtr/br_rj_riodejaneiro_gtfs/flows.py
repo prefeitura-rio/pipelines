@@ -3,6 +3,7 @@
 Flows for gtfs
 """
 from copy import deepcopy
+from datetime import timedelta
 
 # Imports #
 
@@ -87,7 +88,9 @@ with Flow(
             parameters=gtfs_capture_parameters,
             labels=unmapped(LABELS),
             scheduled_start_time=get_scheduled_start_times(
-                timestamp=timestamp, parameters=gtfs_capture_parameters
+                timestamp=timestamp,
+                parameters=gtfs_capture_parameters,
+                intervals={"agency": timedelta(minutes=11)},
             ),
         )
 
