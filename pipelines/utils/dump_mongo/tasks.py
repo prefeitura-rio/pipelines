@@ -29,34 +29,25 @@ from pipelines.utils.utils import log
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 def database_get(
-    hostname: str,
-    user: str,
-    password: str,
+    connection_string: str,
     database: str,
     collection: str,
-    port: int = 27017,
 ) -> Mongo:
     """
     Returns a Mongo object.
 
     Args:
-        hostname: Hostname of the database.
-        user: Username of the database.
-        password: Password of the database.
-        database: Database name.
-        collection: Collection name.
-        port: Port of the database.
+        connection_string (str): MongoDB connection string.
+        database (str): Database name.
+        collection (str): Collection name.
 
     Returns:
         A database object.
     """
     return Mongo(
-        hostname=hostname,
-        user=user,
-        password=password,
+        connection_string=connection_string,
         database=database,
         collection=collection,
-        port=port,
     )
 
 

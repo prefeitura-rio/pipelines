@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
-from typing import Optional
 
 from pymongo import MongoClient
 
@@ -13,51 +12,21 @@ class Mongo:
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        hostname: str,
-        user: str,
-        password: str,
+        connection_string: str,
         database: str,
         collection: str,
-        port: Optional[int] = 27017,
-        directConnection: Optional[bool] = True,
-        authMechanism: Optional[str] = "DEFAULT",
-        readPreference: Optional[str] = "secondary",
     ) -> None:
         """
         Initializes the MongoDB database.
 
         Args:
-            hostname (str): Hostname of the MongoDB.
-            user (str): Username of the MongoDB.
-            password (str): Password of the MongoDB.
-            database (str): Database name of the MongoDB.
-            collection (str): Collection name of the MongoDB.
-            port (int, optional): Port of the MongoDB. Defaults to 27017.
-            directConnection (bool, optional): Whether to use a direct connection to the
-                MongoDB. Defaults to True.
-            authMechanism (str, optional): Authentication mechanism of the MongoDB. Defaults to
-                "DEFAULT".
-            readPreference (str, optional): Read preference of the MongoDB. Defaults to
-                "secondary".
+            connection_string (str): MongoDB connection string.
+            database (str): Database name.
+            collection (str): Collection name.
         """
-        self._hostname = hostname
-        self._user = user
-        self._password = password
-        self._database = database
-        self._collection = collection
-        self._port = int(port)
-
-        self._client = MongoClient(
-            host=self._hostname,
-            port=self._port,
-            username=self._user,
-            password=self._password,
-            directConnection=directConnection,
-            authMechanism=authMechanism,
-            readPreference=readPreference,
-        )
-        self._db = self._client[self._database]
-        self._collection = self._db[self._collection]
+        self._client = MongoClient(connection_string)
+        self._db = self._client[database]
+        self._collection = self._db[collection]
         self._cursor = None
 
     def fetch_batch(

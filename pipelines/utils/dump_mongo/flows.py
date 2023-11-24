@@ -19,8 +19,8 @@ from pipelines.utils.dump_mongo.tasks import (
     dump_batches_to_file,
 )
 from pipelines.utils.tasks import (
+    get_connection_string,
     get_current_flow_labels,
-    get_user_and_password,
     greater_than,
     rename_current_flow_run_dataset_table,
     create_table_and_upload_to_gcs,
@@ -45,7 +45,7 @@ with Flow(
     db_port = Parameter("db_port")
     db_database = Parameter("db_database")
     db_collection = Parameter("db_collection")
-    db_secret_path = Parameter("db_secret_path")
+    db_connection_string_secret_path = Parameter("db_connection_string_secret_path")
 
     # Filtering and partitioning
     date_field = Parameter("date_field", required=False)
@@ -104,7 +104,9 @@ with Flow(
     #####################################
 
     # Get credentials from Vault
-    user, password = get_user_and_password(secret_path=db_secret_path)
+    connection_string = get_connection_string(
+        secret_path=db_connection_string_secret_path
+    )
 
     #####################################
     #
@@ -117,12 +119,9 @@ with Flow(
 
     # Execute query on SQL Server
     db_object = database_get(
-        hostname=db_host,
-        user=user,
-        password=password,
+        connection_string=connection_string,
         database=db_database,
         collection=db_collection,
-        port=db_port,
     )
 
     # Dump batches to files

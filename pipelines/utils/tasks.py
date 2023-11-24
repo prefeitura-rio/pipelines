@@ -18,6 +18,7 @@ from prefect.client import Client
 
 from pipelines.constants import constants
 from pipelines.utils.utils import (
+    get_connection_string_from_secret,
     get_username_and_password_from_secret,
     log,
     dump_header_to_file,
@@ -134,6 +135,15 @@ def get_user_and_password(secret_path: str, wait=None):
     """
     log(f"Getting user and password for secret path: {secret_path}")
     return get_username_and_password_from_secret(secret_path)
+
+
+@task(checkpoint=False)
+def get_connection_string(secret_path: str):
+    """
+    Returns the connection string for the given secret path.
+    """
+    log(f"Getting connection string for secret path: {secret_path}")
+    return get_connection_string_from_secret(secret_path)
 
 
 ###############
