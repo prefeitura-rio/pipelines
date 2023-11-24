@@ -1407,7 +1407,44 @@ def check_mapped_query_logs_output(query_logs_output: list[tuple]) -&gt; bool:
         return False
 
     recapture_list = [i[0] for i in query_logs_output]
-    return any(recapture_list)</code></pre>
+    return any(recapture_list)
+
+
+@task
+def get_scheduled_start_times(
+    timestamp: datetime, parameters: list, intervals: Union[None, dict] = None
+):
+    &#34;&#34;&#34;
+    Task to get start times to schedule flows
+
+    Args:
+        timestamp (datetime): initial flow run timestamp
+        parameters (list): parameters for the flow
+        intervals (Union[None, dict], optional): intervals between each flow run. Defaults to None.
+            Optionally, you can pass specific intervals for some table_ids.
+            Suggests to pass intervals based on previous table observed execution times.
+            Defaults to dict(default=timedelta(minutes=2)).
+
+    Returns:
+        list[datetime]: list of scheduled start times
+    &#34;&#34;&#34;
+
+    if intervals is None:
+        intervals = dict()
+
+    if &#34;default&#34; not in intervals.keys():
+        intervals[&#34;default&#34;] = timedelta(minutes=2)
+
+    timestamps = [None]
+    last_schedule = timestamp
+
+    for param in parameters[1:]:
+        last_schedule += intervals.get(
+            param.get(&#34;table_id&#34;, &#34;default&#34;), intervals[&#34;default&#34;]
+        )
+        timestamps.append(last_schedule)
+
+    return timestamps</code></pre>
 </details>
 </section>
 <section>
@@ -2713,6 +2750,69 @@ def get_run_dates(
     return dates</code></pre>
 </details>
 </dd>
+<dt id="pipelines.rj_smtr.tasks.get_scheduled_start_times"><code class="name flex">
+<span>def <span class="ident">get_scheduled_start_times</span></span>(<span>timestamp: datetime.datetime, parameters: list, intervals: Optional[None] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Task to get start times to schedule flows</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>timestamp</code></strong> :&ensp;<code>datetime</code></dt>
+<dd>initial flow run timestamp</dd>
+<dt><strong><code>parameters</code></strong> :&ensp;<code>list</code></dt>
+<dd>parameters for the flow</dd>
+<dt><strong><code>intervals</code></strong> :&ensp;<code>Union[None, dict]</code>, optional</dt>
+<dd>intervals between each flow run. Defaults to None.
+Optionally, you can pass specific intervals for some table_ids.
+Suggests to pass intervals based on previous table observed execution times.
+Defaults to dict(default=timedelta(minutes=2)).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list[datetime]</code></dt>
+<dd>list of scheduled start times</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_scheduled_start_times(
+    timestamp: datetime, parameters: list, intervals: Union[None, dict] = None
+):
+    &#34;&#34;&#34;
+    Task to get start times to schedule flows
+
+    Args:
+        timestamp (datetime): initial flow run timestamp
+        parameters (list): parameters for the flow
+        intervals (Union[None, dict], optional): intervals between each flow run. Defaults to None.
+            Optionally, you can pass specific intervals for some table_ids.
+            Suggests to pass intervals based on previous table observed execution times.
+            Defaults to dict(default=timedelta(minutes=2)).
+
+    Returns:
+        list[datetime]: list of scheduled start times
+    &#34;&#34;&#34;
+
+    if intervals is None:
+        intervals = dict()
+
+    if &#34;default&#34; not in intervals.keys():
+        intervals[&#34;default&#34;] = timedelta(minutes=2)
+
+    timestamps = [None]
+    last_schedule = timestamp
+
+    for param in parameters[1:]:
+        last_schedule += intervals.get(
+            param.get(&#34;table_id&#34;, &#34;default&#34;), intervals[&#34;default&#34;]
+        )
+        timestamps.append(last_schedule)
+
+    return timestamps</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_smtr.tasks.parse_timestamp_to_string"><code class="name flex">
 <span>def <span class="ident">parse_timestamp_to_string</span></span>(<span>timestamp: datetime.datetime, pattern='%Y-%m-%d-%H-%M-%S') ‑> str</span>
 </code></dt>
@@ -3519,6 +3619,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.tasks.get_raw_from_sources" href="#pipelines.rj_smtr.tasks.get_raw_from_sources">get_raw_from_sources</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_rounded_timestamp" href="#pipelines.rj_smtr.tasks.get_rounded_timestamp">get_rounded_timestamp</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.get_run_dates" href="#pipelines.rj_smtr.tasks.get_run_dates">get_run_dates</a></code></li>
+<li><code><a title="pipelines.rj_smtr.tasks.get_scheduled_start_times" href="#pipelines.rj_smtr.tasks.get_scheduled_start_times">get_scheduled_start_times</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.parse_timestamp_to_string" href="#pipelines.rj_smtr.tasks.parse_timestamp_to_string">parse_timestamp_to_string</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.query_logs" href="#pipelines.rj_smtr.tasks.query_logs">query_logs</a></code></li>
 <li><code><a title="pipelines.rj_smtr.tasks.save_raw_local" href="#pipelines.rj_smtr.tasks.save_raw_local">save_raw_local</a></code></li>

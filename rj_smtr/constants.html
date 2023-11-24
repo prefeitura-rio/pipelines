@@ -495,6 +495,10 @@ class constants(Enum):  # pylint: disable=c0103
 
     GTFS_TABLE_CAPTURE_PARAMS = [
         {
+            &#34;table_id&#34;: &#34;shapes&#34;,
+            &#34;primary_key&#34;: [&#34;shape_id&#34;, &#34;shape_pt_sequence&#34;],
+        },
+        {
             &#34;table_id&#34;: &#34;agency&#34;,
             &#34;primary_key&#34;: [&#34;agency_id&#34;],
         },
@@ -519,16 +523,8 @@ class constants(Enum):  # pylint: disable=c0103
             &#34;primary_key&#34;: [&#34;route_id&#34;],
         },
         {
-            &#34;table_id&#34;: &#34;shapes&#34;,
-            &#34;primary_key&#34;: [&#34;shape_id&#34;, &#34;shape_pt_sequence&#34;],
-        },
-        {
             &#34;table_id&#34;: &#34;stops&#34;,
             &#34;primary_key&#34;: [&#34;stop_id&#34;],
-        },
-        {
-            &#34;table_id&#34;: &#34;stop_times&#34;,
-            &#34;primary_key&#34;: [&#34;trip_id&#34;, &#34;stop_sequence&#34;],
         },
         {
             &#34;table_id&#34;: &#34;trips&#34;,
@@ -546,6 +542,10 @@ class constants(Enum):  # pylint: disable=c0103
             &#34;table_id&#34;: &#34;ordem_servico&#34;,
             &#34;primary_key&#34;: [&#34;servico&#34;],
             &#34;extract_params&#34;: {&#34;filename&#34;: &#34;ordem_servico&#34;},
+        },
+        {
+            &#34;table_id&#34;: &#34;stop_times&#34;,
+            &#34;primary_key&#34;: [&#34;trip_id&#34;, &#34;stop_sequence&#34;],
         },
     ]
 
@@ -1037,6 +1037,10 @@ class constants(Enum):  # pylint: disable=c0103
 
     GTFS_TABLE_CAPTURE_PARAMS = [
         {
+            &#34;table_id&#34;: &#34;shapes&#34;,
+            &#34;primary_key&#34;: [&#34;shape_id&#34;, &#34;shape_pt_sequence&#34;],
+        },
+        {
             &#34;table_id&#34;: &#34;agency&#34;,
             &#34;primary_key&#34;: [&#34;agency_id&#34;],
         },
@@ -1061,16 +1065,8 @@ class constants(Enum):  # pylint: disable=c0103
             &#34;primary_key&#34;: [&#34;route_id&#34;],
         },
         {
-            &#34;table_id&#34;: &#34;shapes&#34;,
-            &#34;primary_key&#34;: [&#34;shape_id&#34;, &#34;shape_pt_sequence&#34;],
-        },
-        {
             &#34;table_id&#34;: &#34;stops&#34;,
             &#34;primary_key&#34;: [&#34;stop_id&#34;],
-        },
-        {
-            &#34;table_id&#34;: &#34;stop_times&#34;,
-            &#34;primary_key&#34;: [&#34;trip_id&#34;, &#34;stop_sequence&#34;],
         },
         {
             &#34;table_id&#34;: &#34;trips&#34;,
@@ -1088,6 +1084,10 @@ class constants(Enum):  # pylint: disable=c0103
             &#34;table_id&#34;: &#34;ordem_servico&#34;,
             &#34;primary_key&#34;: [&#34;servico&#34;],
             &#34;extract_params&#34;: {&#34;filename&#34;: &#34;ordem_servico&#34;},
+        },
+        {
+            &#34;table_id&#34;: &#34;stop_times&#34;,
+            &#34;primary_key&#34;: [&#34;trip_id&#34;, &#34;stop_sequence&#34;],
         },
     ]
 
