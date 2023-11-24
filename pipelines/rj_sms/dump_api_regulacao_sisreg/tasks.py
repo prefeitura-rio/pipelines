@@ -23,9 +23,7 @@ def get_patients(cnes):
     except Exception as e:
         log(f"Not able to retrieve Vault secret {e}", level="error")
 
-    payload = json.dumps(
-        credential
-    )
+    payload = json.dumps(credential)
 
     headers = {
         "Content-Type": "application/json",

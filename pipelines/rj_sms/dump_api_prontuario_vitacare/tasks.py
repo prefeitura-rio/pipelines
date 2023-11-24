@@ -11,6 +11,7 @@ from pipelines.rj_sms.dump_api_prontuario_vitacare.constants import (
     constants as vitacare_constants,
 )
 
+
 @task
 def get_patients(context):
     log("Getting data from cloud function")
@@ -21,7 +22,7 @@ def get_patients(context):
     else:
         url = vitacare_constants.URL_PACIENTES_ATENDIDOS.value
         data = datetime.today() - timedelta(days=1)
-    data_formatada = data.strftime('%Y-%m-%d')
+    data_formatada = data.strftime("%Y-%m-%d")
     df = pd.DataFrame()
     list_cnes_error = []
     list_cnes_empty = []
@@ -30,19 +31,19 @@ def get_patients(context):
         response = cloud_function_request.run(
             url=url, request_type="POST", body_params=params, env="prod"
         )
-        if response.text.startswith('A solicitação não foi bem-sucedida'):
+        if response.text.startswith("A solicitação não foi bem-sucedida"):
             list_cnes_error.append(cnes)
-        else:   
-            try: 
+        else:
+            try:
                 df_temp = pd.read_json(response.text)
             except:
-                log(f"Error cnes - {cnes}, Detail: {response.text}" , level="error")
+                log(f"Error cnes - {cnes}, Detail: {response.text}", level="error")
             if not df_temp.empty:
                 df = pd.concat([df, df_temp], ignore_index=True)
             else:
                 list_cnes_empty.append(cnes)
-    log(f"List cnes error {list_cnes_error}" , level="error")
-    log(f"List cnes empty erro {list_cnes_empty}" , level="error")
+    log(f"List cnes error {list_cnes_error}", level="error")
+    log(f"List cnes empty erro {list_cnes_empty}", level="error")
     return df
 
 
