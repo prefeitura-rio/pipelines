@@ -50,6 +50,7 @@ with Flow(
 
     # Filtering and partitioning
     date_field = Parameter("date_field", required=False)
+    date_format = Parameter("date_format", default="%Y-%m-%d", required=False)
     date_lower_bound = Parameter("date_lower_bound", required=False)
 
     # Dumping to files
@@ -132,6 +133,7 @@ with Flow(
         prepath=f"data/{uuid4()}/",
         date_field=date_field,
         date_lower_bound=date_lower_bound,
+        date_format=date_format,
         batch_data_type=bq_batch_data_type,
     )
 
