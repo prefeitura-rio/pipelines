@@ -78,16 +78,15 @@ sppo_recurso_materializacao = set_default_parameters(
 )
 
 with Flow(
-    "SMTR: Subsídio Recursos Viagens Individuais - Captura",
-    code_owners=["carolinagomes", "igorlaltuf"],
+    "SMTR: Subsídio Recursos Viagens Individuais - Captura/Tratamento",
+    code_owners=["carolinagomes", "rafaelpinheiro"],
 ) as subsidio_sppo_recurso:
     capture = Parameter("capture", default=True)
     materialize = Parameter("materialize", default=False)
-    recapture = Parameter("recapture", default=False)
+    recapture = Parameter("recapture", default=True)
     timestamp = Parameter("timestamp", default=None)
     interval_minutes = Parameter("interval_minutes", default=1440)
     timestamp = get_current_timestamp(timestamp, return_str=True)
-    # passar timedelta, hora atual - 60 minutos
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=subsidio_sppo_recurso.name + " ",
