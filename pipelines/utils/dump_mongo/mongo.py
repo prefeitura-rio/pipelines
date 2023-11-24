@@ -3,6 +3,8 @@ from datetime import datetime
 
 from pymongo import MongoClient
 
+from pipelines.utils.utils import log
+
 
 class Mongo:
     """
@@ -36,6 +38,10 @@ class Mongo:
         if date_field and date_lower_bound:
             query[date_field] = {"$gt": date_lower_bound}
 
+        log(
+            f"Fetching batch of {batch_size} documents from MongoDB with query: {query}"
+        )
+
         if self._cursor is None:
             self._cursor = self._collection.find(query)
 
@@ -51,6 +57,8 @@ class Mongo:
         query = {}
         if date_field and date_lower_bound:
             query[date_field] = {"$gt": date_lower_bound}
+
+        log(f"Fetching all documents from MongoDB with query: {query}")
 
         if self._cursor is None:
             self._cursor = self._collection.find(query)

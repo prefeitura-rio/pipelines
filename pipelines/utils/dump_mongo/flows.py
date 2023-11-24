@@ -7,6 +7,7 @@ from datetime import timedelta
 from uuid import uuid4
 
 from prefect import Parameter, case
+from prefect.executors import LocalDaskExecutor
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
@@ -202,4 +203,5 @@ with Flow(
 
 
 utils__dump_mongo_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+utils__dump_mongo_flow.executor = LocalDaskExecutor(num_workers=3)
 utils__dump_mongo_flow.run_config = KubernetesRun(image=constants.DOCKER_IMAGE.value)
