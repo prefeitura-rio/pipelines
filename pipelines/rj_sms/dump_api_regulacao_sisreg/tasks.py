@@ -7,7 +7,7 @@ import json
 import requests
 import pandas as pd
 from prefect import task
-from pipelines.utils.utils import log
+from pipelines.utils.utils import log, get_vault_secret
 from datetime import datetime, timedelta
 from pipelines.rj_sms.utils import create_partitions
 
@@ -17,8 +17,14 @@ def get_patients(cnes):
     # Get Autentication
     url = "https://rest.smsrio.org/api/usuario/autenticar"
 
+    # Retrieve the API key from Vault
+    try:
+        credential = get_vault_secret(secret_path="regulacao_sisreg")["data"]
+    except Exception as e:
+        log(f"Not able to retrieve Vault secret {e}", level="error")
+
     payload = json.dumps(
-        {"cpf": "SisregAmb", "senha": "77HtOzVJ6^#d", "cnes": "5462886"}
+        credential
     )
 
     headers = {

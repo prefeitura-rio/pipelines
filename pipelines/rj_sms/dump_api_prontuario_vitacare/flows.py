@@ -22,7 +22,7 @@ with Flow(
     "SMS: Dump VitaCare - Captura dos pacientes agendados"
 ) as dump_vitacare_scheduled_patients:
     # Tasks
-    result = get_patients("6688152", context="scheduled")
+    result = get_patients(context="scheduled")
     save = save_patients(result, context="scheduled")
     save.set_upstream(result)
     upload_to_datalake_task = upload_to_datalake(
@@ -50,7 +50,7 @@ with Flow(
     "SMS: Dump VitaCare - Captura dos pacientes atendidos"
 ) as dump_vitacare_attended_patients:
     # Tasks
-    result = get_patients("6688152", context="attended")
+    result = get_patients(context="attended")
     save = save_patients(result, context="attended")
     save.set_upstream(result)
     upload_to_datalake_task = upload_to_datalake(
