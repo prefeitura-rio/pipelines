@@ -8,6 +8,7 @@ import os
 import re
 import shutil
 import sys
+import json
 from datetime import datetime, date
 from pathlib import Path
 from ftplib import FTP
@@ -16,9 +17,48 @@ import requests
 import pytz
 import pandas as pd
 import basedosdados as bd
+import google.oauth2.id_token
+import google.auth.transport.requests
 from azure.storage.blob import BlobServiceClient
 from prefect import task
-from pipelines.utils.utils import log, get_vault_secret
+from pipelines.utils.utils import (
+    log,
+    get_vault_secret,
+    get_username_and_password_from_secret,
+)
+
+
+@task
+def get_secret(secret_path: str, secret_key: str = None):
+    """
+    Retrieves a secret stored in a vault.
+
+    Args:
+        secret_path (str): The path to the secret in the vault.
+        secret_key (str, optional): The key of the secret in the vault. If not provided, the entire secret will be returned.
+
+    Returns:
+        str: The secret retrieved from the vault.
+    """  # noqa: E501
+
+    if secret_key is None:
+        return get_vault_secret(secret_path)["data"]
+    else:
+        return get_vault_secret(secret_path)["data"][secret_key]
+
+
+@task
+def get_username_and_password(secret_path: str):
+    """
+    Retrieves the username and password from a secret stored in a vault.
+
+    Args:
+        secret_path (str): The path to the secret in the vault.
+
+    Returns:
+        Tuple[str, str]: A tuple containing the username and password retrieved from the secret.
+    """
+    return get_username_and_password_from_secret(secret_path)
 
 
 @task
@@ -61,8 +101,8 @@ def download_from_api(
     file_folder: str,
     file_name: str,
     params=None,
-    vault_path=None,
-    vault_key=None,
+    crendentials=None,
+    auth_method="bearer",
     add_load_date_to_filename=False,
     load_date=None,
 ):
@@ -70,35 +110,33 @@ def download_from_api(
     Downloads data from an API and saves it to a local file.
 
     Args:
-        url (str): The URL of the API to download data from.
+        url (str): The URL of the API endpoint.
         file_folder (str): The folder where the downloaded file will be saved.
         file_name (str): The name of the downloaded file.
-        params (dict, optional): Additional parameters to include in the API request.
-        vault_path (str, optional): The path in Vault where the authentication token is stored.
-        vault_key (str, optional): The key in Vault where the authentication token is stored.
-        add_load_date_to_filename (bool, optional): Whether to add the current date to the filename.
-        load_date (str, optional): The specific date to add to the filename.
+        params (dict, optional): Additional parameters to be included in the API request. Defaults to None.
+        crendentials (str or tuple, optional): The credentials to be used for authentication. Defaults to None.
+        auth_method (str, optional): The authentication method to be used. Valid values are "bearer" and "basic". Defaults to "bearer".
+        add_load_date_to_filename (bool, optional): Whether to add the load date to the filename. Defaults to False.
+        load_date (str, optional): The load date to be added to the filename. Defaults to None.
 
     Returns:
-        str: The path of the downloaded file.
-    """
-    # Retrieve the API key from Vault
-    auth_token = ""
-    if vault_key is not None:
-        try:
-            auth_token = get_vault_secret(secret_path=vault_path)["data"][vault_key]
-            log("Vault secret retrieved")
-        except Exception as e:
-            log(f"Not able to retrieve Vault secret {e}", level="error")
+        str: The file path of the downloaded file.
 
-    # Download data from API
-    log("Downloading data from API")
-    headers = {} if auth_token == "" else {"Authorization": f"Bearer {auth_token}"}
+    Raises:
+        ValueError: If the API call fails.
+    """  # noqa: E501
+
+    # Retrieve the API key from Vault
     params = {} if params is None else params
-    try:
+
+    log("Downloading data from API")
+    if auth_method == "bearer":
+        headers = {"Authorization": f"Bearer {crendentials}"}
         response = requests.get(url, headers=headers, params=params)
-    except Exception as e:
-        log(f"An error occurred: {e}", level="error")
+    elif auth_method == "basic":
+        response = requests.get(url, auth=crendentials, params=params)
+    else:
+        response = requests.get(url, params=params)
 
     if response.status_code == 200:
         api_data = response.json()
@@ -246,6 +284,67 @@ def download_ftp(
 
     return output_path
 
+@task
+def cloud_function_request(
+    url: str,
+    credential: None,
+    request_type: str = "GET",
+    body_params: list = None,
+    query_params: list = None,
+    env: str = "dev",
+):
+    """
+    Sends a request to an endpoint trough a cloud function.
+    This method is used when the endpoint is only accessible through a fixed IP.
+
+    Args:
+        url (str): The URL of the endpoint.
+        request_type (str, optional): The type of the request (e.g., GET, POST). Defaults to "GET".
+        body_params (list, optional): The body parameters of the request. Defaults to None.
+        query_params (list, optional): The query parameters of the request. Defaults to None.
+        env (str, optional): The environment of the cloud function (e.g., staging, prod). Defaults to "staging".
+        credential (None): The credential for the request. Defaults to None.
+
+    Returns:
+        requests.Response: The response from the cloud function.
+    """  # noqa: E501
+
+    if env == "prod":
+        cloud_function_url = "https://us-central1-rj-sms.cloudfunctions.net/vitacare"
+    elif env == "dev":
+        cloud_function_url = "https://us-central1-rj-sms-dev.cloudfunctions.net/vitacare"
+    else:
+        raise ValueError("env must be 'prod' or 'dev'")
+
+    TOKEN = os.environ.get("GOOGLE_TOKEN")
+    # request = google.auth.transport.requests.Request()
+    # TOKEN = google.oauth2.id_token.fetch_id_token(request, audience)
+
+    payload = json.dumps(
+        {
+            "url": url,
+            "request_type": request_type,
+            "body_params": json.dumps(body_params),
+            "query_params": query_params,
+            "credential": credential,
+        }
+    )
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {TOKEN}"}
+    response = requests.request("POST", cloud_function_url, headers=headers, data=payload)
+
+    if response.status_code == 200:
+        log("Request to cloud function successful")
+
+        if response.text.startswith("A solicitação não foi bem-sucedida"):
+            # TODO: melhorar a forma de verificar se a requisição foi bem sucedida
+            raise ValueError(f"Resquest to endpoint failed: {response.text}")
+        else:
+            log("Request to endpoint successful")
+            return response.json()
+
+    else:
+        raise ValueError(f"Request to cloud function failed: {response.status_code} - {response.reason}")
+
 
 @task
 def list_files_ftp(host, user, password, directory):
@@ -270,6 +369,27 @@ def list_files_ftp(host, user, password, directory):
     ftp.quit()
 
     return files
+
+
+@task
+def save_to_file(data, file_folder, file_name, add_load_date_to_filename, load_date):
+    # Save the API data to a local file
+    if add_load_date_to_filename:
+        if load_date is None:
+            destination_file_path = (
+                f"{file_folder}/{file_name}_{str(date.today())}.json"
+            )
+        else:
+            destination_file_path = f"{file_folder}/{file_name}_{load_date}.json"
+    else:
+        destination_file_path = f"{file_folder}/{file_name}.json"
+
+    with open(destination_file_path, "w", encoding="utf-8") as file:
+        file.write(str(data))
+
+    log(f"API data downloaded to {destination_file_path}")
+
+    return destination_file_path
 
 
 @task
@@ -489,6 +609,7 @@ def upload_to_datalake(
     csv_delimiter: str = ";",
     if_storage_data_exists: str = "replace",
     biglake_table: bool = True,
+    dataset_is_public: bool = False,
     dump_mode: str = "append",
 ):
     """
@@ -525,6 +646,7 @@ def upload_to_datalake(
                 csv_delimiter=csv_delimiter,
                 if_storage_data_exists=if_storage_data_exists,
                 biglake_table=biglake_table,
+                dataset_is_public=dataset_is_public,
             )
         else:
             if dump_mode == "append":
@@ -557,6 +679,7 @@ def upload_to_datalake(
                     csv_delimiter=csv_delimiter,
                     if_storage_data_exists=if_storage_data_exists,
                     biglake_table=biglake_table,
+                    dataset_is_public=dataset_is_public,
                 )
         log("Data uploaded to BigQuery")
 

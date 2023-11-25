@@ -10,7 +10,7 @@ from prefect.storage import GCS
 from pipelines.utils.decorators import Flow
 from pipelines.constants import constants
 from pipelines.rj_sms.dump_ftp_cnes.constants import constants as cnes_constants
-from pipelines.rj_sms.utils import create_folders, unzip_file
+from pipelines.rj_sms.tasks import create_folders, unzip_file
 from pipelines.rj_sms.dump_ftp_cnes.tasks import (
     conform_csv_to_gcp,
     create_partitions_and_upload_multiple_tables_to_datalake,
