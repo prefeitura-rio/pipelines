@@ -16,7 +16,17 @@ from pipelines.rj_sms.dump_api_prontuario_vitacare.constants import (
     constants as vitacare_constants,
 )
 from pipelines.utils.utils import log
+from pipelines.utils.tasks import (
+    rename_current_flow_run_dataset_table,
+)
 from pipelines.rj_sms.tasks import from_json_to_csv, add_load_date_column, save_to_file
+
+
+@task
+def rename_flow(table_id: str, ap: str):
+    rename_current_flow_run_dataset_table.run(
+        prefix="SMS Dump VitaCare: ", dataset_id=table_id, table_id=f"ap{ap}"
+    )
 
 
 @task
@@ -37,8 +47,8 @@ def build_params(date_param: str = "today"):
             # check if date_param is a date string
             datetime.datetime.strptime(date_param, "%Y-%m-%d")
             params = {"date": date_param}
-        except ValueError:
-            raise ValueError("date_param must be a date string (YYYY-MM-DD)")
+        except ValueError as e:
+            raise ValueError("date_param must be a date string (YYYY-MM-DD)") from e
 
     log(f"Params built: {params}")
     return params
@@ -76,7 +86,7 @@ def fix_payload_column_order(filepath: str, table_id: str, sep: str = ";"):
             "dtaValidadeLote",
             "estoqueLote",
             "id",
-            "_data_carga"
+            "_data_carga",
         ],
         "estoque_movimento": [
             "ap",
@@ -95,7 +105,7 @@ def fix_payload_column_order(filepath: str, table_id: str, sep: str = ";"):
             "cnsPatient",
             "qtd",
             "id",
-            "_data_carga"
+            "_data_carga",
         ],
     }
 

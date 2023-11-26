@@ -9,9 +9,6 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.utils.decorators import Flow
 from pipelines.constants import constants
-from pipelines.utils.tasks import (
-    rename_current_flow_run_dataset_table,
-)
 from pipelines.rj_sms.dump_api_prontuario_vitacare.constants import (
     constants as vitacare_constants,
 )
@@ -23,6 +20,7 @@ from pipelines.rj_sms.tasks import (
     upload_to_datalake,
 )
 from pipelines.rj_sms.dump_api_prontuario_vitacare.tasks import (
+    rename_flow,
     build_url,
     build_params,
     create_filename,
@@ -51,12 +49,11 @@ with Flow(
     TABLE_ID = Parameter("table_id", required=True)
 
     # Start run
-
-    # rename_flow_run = rename_current_flow_run_dataset_table(
-    #    prefix="SMS Dump VitaCare: ",
-    #    dataset_id=TABLE_ID,
-    #    table_id=f"ap{AP}"
-    # )
+    # TODO: Uncomment rename_flow before production
+    #rename_flow_task = rename_flow(
+    #    table_id=TABLE_ID,
+    #    ap=AP
+    #)
 
     get_secret_task = get_secret(secret_path=VAULT_PATH)
 
