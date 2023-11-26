@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0103
 """
-Constants for utils.
+Constants for Vitai.
 """
 from enum import Enum
 

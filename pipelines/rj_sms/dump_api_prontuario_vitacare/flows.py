@@ -32,11 +32,12 @@ from pipelines.rj_sms.dump_api_prontuario_vitai.schedules import every_day_at_si
 
 with Flow(
     name="SMS: Dump VitaCare - Captura ", code_owners=["thiago"]
-) as dump_vitacare:  # noqa: E501
+) as dump_vitacare:
     # Set Parameters
+    # Flow parameters
+    RENAME_FLOW = Parameter("rename_flow", default=True)
     #  Vault
     VAULT_PATH = vitacare_constants.VAULT_PATH.value
-
     # Vitacare API
     AP = Parameter("ap", required=True, default="10")
     ENDPOINT = Parameter("endpoint", required=True)
@@ -45,15 +46,15 @@ with Flow(
     #  GCP
     DATASET_ID = Parameter(
         "DATASET_ID", default=vitacare_constants.DATASET_ID.value
-    )  # noqa: E501
+    )
     TABLE_ID = Parameter("table_id", required=True)
 
     # Start run
-    # TODO: Uncomment rename_flow before production
-    # rename_flow_task = rename_flow(
-    #    table_id=TABLE_ID,
-    #    ap=AP
-    # )
+    with case(RENAME_FLOW, True):
+        rename_flow_task = rename_flow(
+            table_id=TABLE_ID,
+            ap=AP
+        )
 
     get_secret_task = get_secret(secret_path=VAULT_PATH)
 
@@ -103,6 +104,7 @@ with Flow(
             csv_delimiter=";",
             if_storage_data_exists="replace",
             biglake_table=True,
+            dataset_is_public=False,
         )
     upload_to_datalake_task.set_upstream(create_partitions_task)
 

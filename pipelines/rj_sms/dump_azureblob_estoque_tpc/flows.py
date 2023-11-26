@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0103
 """
-Vitai healthrecord dumping flows
+TPC inventory dumping flows
 """
 
 from prefect import Parameter, case
@@ -9,44 +9,46 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.utils.decorators import Flow
 from pipelines.constants import constants
-from pipelines.rj_sms.dump_api_prontuario_vitai.constants import (
-    constants as vitai_constants,
+from pipelines.rj_sms.dump_azureblob_estoque_tpc.constants import (
+    constants as tpc_constants,
 )
 from pipelines.utils.tasks import (
     rename_current_flow_run_dataset_table,
 )
 from pipelines.rj_sms.tasks import (
     get_secret,
+    download_azure_blob,
     create_folders,
-    from_json_to_csv,
-    download_from_api,
     add_load_date_column,
     create_partitions,
     upload_to_datalake,
 )
-from pipelines.rj_sms.dump_api_prontuario_vitai.tasks import build_date_param, build_url
-from pipelines.rj_sms.dump_api_prontuario_vitai.schedules import every_day_at_six_am
+from pipelines.rj_sms.dump_azureblob_estoque_tpc.tasks import (
+    get_blob_path,
+    conform_csv_to_gcp,
+)
+from pipelines.rj_sms.dump_azureblob_estoque_tpc.schedules import every_day_at_six_am
 
-with Flow(name="SMS: Dump Vitai - Captura ", code_owners=["thiago"]) as dump_vitai:
+with Flow(name="SMS: Dump TPC - Captura ", code_owners=["thiago"]) as dump_tpc:
     # Parameters
     # Flow parameters
     RENAME_FLOW = Parameter("rename_flow", default=True)
     # Parameters for Vault
-    VAULT_PATH = vitai_constants.VAULT_PATH.value
-    VAULT_KEY = vitai_constants.VAULT_KEY.value
-    # Vitai API
-    ENDPOINT = Parameter("endpoint", required=True)
-    DATE = Parameter("date", default=None)
+    VAULT_PATH = tpc_constants.VAULT_PATH.value
+    VAULT_KEY = tpc_constants.VAULT_KEY.value
+    # TPC Azure
+    CONTAINER_NAME = tpc_constants.CONTAINER_NAME.value
+    BLOB_FILE = Parameter("blob_file", required=True)
     # Paramenters for GCP
     DATASET_ID = Parameter(
-        "DATASET_ID", default=vitai_constants.DATASET_ID.value
+        "DATASET_ID", default=tpc_constants.DATASET_ID.value
     )
     TABLE_ID = Parameter("table_id", required=True)
 
     # Start run
     with case(RENAME_FLOW, True):
         rename_flow_task = rename_current_flow_run_dataset_table(
-            prefix="SMS Dump Vitai: ", dataset_id=TABLE_ID, table_id=""
+            prefix="SMS Dump TPC: ", dataset_id=TABLE_ID, table_id=""
         )
 
     get_secret_task = get_secret(secret_path=VAULT_PATH, secret_key=VAULT_KEY)
@@ -54,31 +56,26 @@ with Flow(name="SMS: Dump Vitai - Captura ", code_owners=["thiago"]) as dump_vit
     create_folders_task = create_folders()
     create_folders_task.set_upstream(get_secret_task)  # pylint: disable=E1101
 
-    build_date_param_task = build_date_param(date_param=DATE)
-    build_date_param_task.set_upstream(create_folders_task)
+    get_blob_path_task = get_blob_path(blob_file=BLOB_FILE)
+    get_blob_path_task.set_upstream(create_folders_task)
 
-    build_url_task = build_url(endpoint=ENDPOINT, date_param=build_date_param_task)
-    build_url_task.set_upstream(build_date_param_task)
-
-    download_task = download_from_api(
-        url=build_url_task,
+    download_task = download_azure_blob(
+        container_name=CONTAINER_NAME,
+        blob_path=get_blob_path_task,
         file_folder=create_folders_task["raw"],
         file_name=TABLE_ID,
-        params=None,
-        crendentials=get_secret_task,
-        auth_method="bearer",
+        credentials=get_secret_task,
         add_load_date_to_filename=True,
-        load_date=build_date_param_task,
     )
     download_task.set_upstream(create_folders_task)
 
-    conversion_task = from_json_to_csv(input_path=download_task, sep=";")
-    conversion_task.set_upstream(download_task)
+    conform_task = conform_csv_to_gcp(
+        filepath=download_task,
+        blob_file=BLOB_FILE)
+    conform_task.set_upstream(download_task)
 
-    add_load_date_column_task = add_load_date_column(
-        input_path=conversion_task, sep=";"
-    )
-    add_load_date_column_task.set_upstream(conversion_task)
+    add_load_date_column_task = add_load_date_column(input_path=download_task, sep=";")
+    add_load_date_column_task.set_upstream(conform_task)
 
     create_partitions_task = create_partitions(
         data_path=create_folders_task["raw"],
@@ -97,14 +94,13 @@ with Flow(name="SMS: Dump Vitai - Captura ", code_owners=["thiago"]) as dump_vit
         dataset_is_public=False,
     )
     upload_to_datalake_task.set_upstream(create_partitions_task)
-
-
-dump_vitai.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-dump_vitai.run_config = KubernetesRun(
+    
+dump_tpc.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+dump_tpc.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[
-        constants.RJ_SMS_AGENT_LABEL.value,
+        constants.RJ_SMS_DEV_AGENT_LABEL.value,
     ],
 )
 
-dump_vitai.schedule = every_day_at_six_am
+dump_tpc.schedule = every_day_at_six_am

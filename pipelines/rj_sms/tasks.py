@@ -171,8 +171,7 @@ def download_azure_blob(
     blob_path: str,
     file_folder: str,
     file_name: str,
-    vault_path: str,
-    vault_key: str,
+    credentials=None,
     add_load_date_to_filename=False,
     load_date=None,
 ):
@@ -185,26 +184,19 @@ def download_azure_blob(
         file_folder (str): The folder where the downloaded file will be saved.
         file_name (str): The name of the downloaded file.
         params (dict, optional): Additional parameters to include in the API request.
-        vault_path (str, optional): The path in Vault where the authentication token is stored.
-        vault_key (str, optional): The key in Vault where the authentication token is stored.
+        credentials (str or tuple, optional): The credentials to be used for authentication. Defaults to None.
         add_load_date_to_filename (bool, optional): Whether to add the current date to the filename.
         load_date (str, optional): The specific date to add to the filename.
 
     Returns:
         str: The path of the downloaded file.
-    """
-    # Retrieve the API key from Vault
-    try:
-        credential = get_vault_secret(secret_path=vault_path)["data"][vault_key]
-        log("Vault secret retrieved")
-    except Exception as e:
-        log(f"Not able to retrieve Vault secret {e}", level="error")
+    """  # noqa: E501
 
     # Download data from Blob Storage
     log(f"Downloading data from Azure Blob Storage: {blob_path}")
     blob_service_client = BlobServiceClient(
         account_url="https://datalaketpcgen2.blob.core.windows.net/",
-        credential=credential,
+        credential=credentials,
     )
     blob_client = blob_service_client.get_blob_client(
         container=container_name, blob=blob_path
