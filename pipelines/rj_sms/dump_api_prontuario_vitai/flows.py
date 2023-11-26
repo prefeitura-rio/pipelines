@@ -50,10 +50,10 @@ with Flow(
 
     # Start run
     # TODO: Uncomment rename_flow before production
-    #rename_flow_task = rename_current_flow_run_dataset_table(
-    #    prefix="SMS Dump Vitai: ",
-    #    dataset_id=TABLE_ID,
-    #    table_id="")
+    rename_flow_task = rename_current_flow_run_dataset_table(
+        prefix="SMS Dump Vitai: ",
+        dataset_id=TABLE_ID,
+        table_id="")
 
     get_secret_task = get_secret(secret_path=VAULT_PATH, secret_key=VAULT_KEY)
 
