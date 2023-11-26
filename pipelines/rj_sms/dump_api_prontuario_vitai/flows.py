@@ -24,15 +24,10 @@ from pipelines.rj_sms.tasks import (
     create_partitions,
     upload_to_datalake,
 )
-from pipelines.rj_sms.dump_api_prontuario_vitai.tasks import (
-    build_date_param,
-    build_url
-)
+from pipelines.rj_sms.dump_api_prontuario_vitai.tasks import build_date_param, build_url
 from pipelines.rj_sms.dump_api_prontuario_vitai.schedules import every_day_at_six_am
 
-with Flow(
-    name="SMS: Dump Vitai - Captura ", code_owners=["thiago"]
-) as dump_vitai:
+with Flow(name="SMS: Dump Vitai - Captura ", code_owners=["thiago"]) as dump_vitai:
     # Parameters
     # Parameters for Vault
     VAULT_PATH = vitai_constants.VAULT_PATH.value
@@ -51,9 +46,8 @@ with Flow(
     # Start run
     # TODO: Uncomment rename_flow before production
     rename_flow_task = rename_current_flow_run_dataset_table(
-        prefix="SMS Dump Vitai: ",
-        dataset_id=TABLE_ID,
-        table_id="")
+        prefix="SMS Dump Vitai: ", dataset_id=TABLE_ID, table_id=""
+    )
 
     get_secret_task = get_secret(secret_path=VAULT_PATH, secret_key=VAULT_KEY)
 

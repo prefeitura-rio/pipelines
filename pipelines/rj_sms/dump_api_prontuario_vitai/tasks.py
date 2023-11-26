@@ -9,7 +9,8 @@ from prefect import task
 
 from pipelines.utils.utils import log
 from pipelines.rj_sms.dump_api_prontuario_vitai.constants import (
-    constants as vitai_constants)
+    constants as vitai_constants,
+)
 
 
 @task

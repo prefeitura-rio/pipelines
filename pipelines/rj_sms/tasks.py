@@ -313,7 +313,9 @@ def cloud_function_request(
     if env == "prod":
         cloud_function_url = "https://us-central1-rj-sms.cloudfunctions.net/vitacare"
     elif env == "dev":
-        cloud_function_url = "https://us-central1-rj-sms-dev.cloudfunctions.net/vitacare"
+        cloud_function_url = (
+            "https://us-central1-rj-sms-dev.cloudfunctions.net/vitacare"
+        )
     else:
         raise ValueError("env must be 'prod' or 'dev'")
 
@@ -331,7 +333,9 @@ def cloud_function_request(
         }
     )
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {TOKEN}"}
-    response = requests.request("POST", cloud_function_url, headers=headers, data=payload)
+    response = requests.request(
+        "POST", cloud_function_url, headers=headers, data=payload
+    )
 
     if response.status_code == 200:
         log("Request to cloud function successful")
@@ -344,7 +348,9 @@ def cloud_function_request(
             return response.json()
 
     else:
-        raise ValueError(f"Request to cloud function failed: {response.status_code} - {response.reason}")  # noqa: E501
+        raise ValueError(
+            f"Request to cloud function failed: {response.status_code} - {response.reason}"
+        )  # noqa: E501
 
 
 @task
@@ -386,7 +392,7 @@ def save_to_file(data, file_folder, file_name, add_load_date_to_filename, load_d
 
     Returns:
         The path of the saved file.
-    """   # noqa: E501
+    """  # noqa: E501
     if add_load_date_to_filename:
         if load_date is None:
             destination_file_path = (

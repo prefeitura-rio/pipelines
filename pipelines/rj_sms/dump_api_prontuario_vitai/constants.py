@@ -18,4 +18,3 @@ class constants(Enum):
         "posicao": "https://apidw.vitai.care/api/dw/v1/produtos/saldoAtual",
         "movimento": "https://apidw.vitai.care/api/dw/v1/movimentacaoProduto/query/dataMovimentacao",  # noqa: E501
     }
-

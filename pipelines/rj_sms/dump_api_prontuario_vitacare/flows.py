@@ -50,10 +50,10 @@ with Flow(
 
     # Start run
     # TODO: Uncomment rename_flow before production
-    #rename_flow_task = rename_flow(
+    # rename_flow_task = rename_flow(
     #    table_id=TABLE_ID,
     #    ap=AP
-    #)
+    # )
 
     get_secret_task = get_secret(secret_path=VAULT_PATH)
 
@@ -84,14 +84,14 @@ with Flow(
         table_id=TABLE_ID,
         ap=AP,
         add_load_date_to_filename=True,
-        load_date=build_params_task["date"]
+        load_date=build_params_task["date"],
     )
     save_data_task.set_upstream(file_name_task)  # pylint: disable=E1101
 
     with case(save_data_task, True):
         create_partitions_task = create_partitions(
             data_path=create_folders_task["raw"],
-            partition_directory=create_folders_task["partition_directory"]
+            partition_directory=create_folders_task["partition_directory"],
         )
         create_partitions_task.set_upstream(save_data_task)
 
