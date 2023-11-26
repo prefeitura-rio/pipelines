@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0103
+"""
+Vitacare healthrecord dumping flows
+"""
 
 from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
@@ -46,7 +49,6 @@ with Flow(
         "DATASET_ID", default=vitacare_constants.DATASET_ID.value
     )  # noqa: E501
     TABLE_ID = Parameter("table_id", required=True)
-
 
     # Start run
 

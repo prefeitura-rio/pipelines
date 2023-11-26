@@ -284,6 +284,7 @@ def download_ftp(
 
     return output_path
 
+
 @task
 def cloud_function_request(
     url: str,
@@ -343,7 +344,7 @@ def cloud_function_request(
             return response.json()
 
     else:
-        raise ValueError(f"Request to cloud function failed: {response.status_code} - {response.reason}")
+        raise ValueError(f"Request to cloud function failed: {response.status_code} - {response.reason}")  # noqa: E501
 
 
 @task
@@ -373,7 +374,19 @@ def list_files_ftp(host, user, password, directory):
 
 @task
 def save_to_file(data, file_folder, file_name, add_load_date_to_filename, load_date):
-    # Save the API data to a local file
+    """
+    Save the API data to a local file.
+
+    Args:
+        data: The API data to be saved.
+        file_folder: The folder where the file will be saved.
+        file_name: The name of the file.
+        add_load_date_to_filename: A boolean indicating whether to add the load date to the filename.
+        load_date: The load date to be added to the filename.
+
+    Returns:
+        The path of the saved file.
+    """   # noqa: E501
     if add_load_date_to_filename:
         if load_date is None:
             destination_file_path = (
