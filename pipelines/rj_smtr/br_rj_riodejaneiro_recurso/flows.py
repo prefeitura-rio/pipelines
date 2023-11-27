@@ -69,8 +69,9 @@ sppo_recurso_materializacao.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 
-# a definir
-sppo_recurso_materializacao_parameters = {}
+sppo_recurso_materializacao_parameters = (
+    constants.SUBSIDIO_SPPO_RECURSOS_MATERIALIZACAO_PARAMS.value
+)
 
 sppo_recurso_materializacao = set_default_parameters(
     flow=sppo_recurso_materializacao,
@@ -95,6 +96,8 @@ with Flow(
 
     LABELS = get_current_flow_labels()
 
+    # Captura
+
     with case(capture, True):
         run_captura = create_flow_run(
             flow_name=sppo_recurso_captura.name,
@@ -116,6 +119,8 @@ with Flow(
         )()
 
     wait_captura = merge(wait_captura_true, wait_captura_false)
+
+    # Recaptura
 
     with case(recapture, True):
         run_recaptura = create_flow_run(
@@ -139,12 +144,13 @@ with Flow(
 
     wait_recaptura = merge(wait_recaptura_true, wait_recaptura_false)
 
-    with case(materialize, True):
-        sppo_recurso_materializacao_parameters = {}
+    # Materialização
 
+    with case(materialize, True):
         run_materializacao = create_flow_run(
             flow_name=sppo_recurso_materializacao.name,
-            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            project_name="staging",
+            # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             parameters=sppo_recurso_materializacao_parameters,
             labels=LABELS,
             upstream_tasks=[wait_captura],

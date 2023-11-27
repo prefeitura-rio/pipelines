@@ -548,6 +548,19 @@ class constants(Enum):  # pylint: disable=c0103
         "source_type": "movidesk",
         "primary_key": ["protocol"],
     }
+
+    SUBSIDIO_SPPO_RECURSOS_MATERIALIZACAO_PARAMS = {
+        "dataset_id": SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
+        "table_id": SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS["table_id"],
+        "upstream": True,
+        "dbt_vars": {
+            "date_range": {
+                "table_run_datetime_column_name": "data_ticket",
+                "delay_hours": 0,
+            },
+            "version": {},
+        },
+    }
     # 1. select, 2. filter, 3.expand, passar o service na função
     # TIMEOUT = 10  # em segundos
     # BACKOFF_FACTOR = 1.5
