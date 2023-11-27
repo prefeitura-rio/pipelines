@@ -3,7 +3,7 @@
 """
 Tasks for rj_smtr
 """
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import json
 import os
 from pathlib import Path
@@ -146,6 +146,7 @@ def create_dbt_run_vars(
     raw_dataset_id: str,
     raw_table_id: str,
     mode: str,
+    timestamp: datetime,
 ) -> tuple[list[dict], Union[list[dict], dict, None], bool]:
     """
     Create the variables to be used in dbt materialization based on a dict
@@ -166,8 +167,8 @@ def create_dbt_run_vars(
 
     log(f"Creating DBT variables. Parameter received: {dbt_vars}")
 
-    if (not dbt_vars) or (not table_id):
-        log("dbt_vars or table_id are blank. Skiping task")
+    if not dbt_vars:
+        log("dbt_vars are blank. Skiping task...")
         return [None], None, False
 
     final_vars = []
@@ -187,6 +188,10 @@ def create_dbt_run_vars(
             }
         # Create date_range using Redis
         else:
+            if not table_id:
+                log("table_id are blank. Skiping task...")
+                return [None], None, False
+
             raw_table_id = raw_table_id or table_id
 
             date_var = get_materialization_date_range.run(
@@ -199,6 +204,7 @@ def create_dbt_run_vars(
                 ),
                 mode=mode,
                 delay_hours=dbt_vars["date_range"].get("delay_hours", 0),
+                end_ts=timestamp,
             )
 
             flag_date_range = True
@@ -211,12 +217,21 @@ def create_dbt_run_vars(
         log("Creating run_date variable")
 
         date_var = get_run_dates.run(
-            dbt_vars["run_date"].get("date_range_start"),
-            dbt_vars["run_date"].get("date_range_end"),
+            date_range_start=dbt_vars["run_date"].get("date_range_start", False),
+            date_range_end=dbt_vars["run_date"].get("date_range_end", False),
+            day_datetime=timestamp,
         )
+
         final_vars.append([d.copy() for d in date_var])
 
         log(f"run_date created: {date_var}")
+
+    elif "data_versao_gtfs" in dbt_vars.keys():
+        log("Creating data_versao_gtfs variable")
+
+        date_var = {"data_versao_gtfs": dbt_vars["data_versao_gtfs"]}
+
+        final_vars.append(date_var.copy())
 
     if "version" in dbt_vars.keys():
         log("Creating version variable")
@@ -243,41 +258,89 @@ def create_dbt_run_vars(
 
 
 @task
-def get_current_timestamp(timestamp=None, truncate_minute: bool = True) -> datetime:
+def get_rounded_timestamp(
+    timestamp: Union[str, datetime, None] = None,
+    interval_minutes: Union[int, None] = None,
+) -> datetime:
     """
-    Get current timestamp for flow run.
+    Calculate rounded timestamp for flow run.
 
     Args:
-        timestamp: timestamp to be used as reference (optionally, it can be a string)
-        truncate_minute: whether to truncate the timestamp to the minute or not
+        timestamp (Union[str, datetime, None]): timestamp to be used as reference
+        interval_minutes (Union[int, None], optional): interval in minutes between each recapture
 
     Returns:
         datetime: timestamp for flow run
     """
     if isinstance(timestamp, str):
         timestamp = datetime.fromisoformat(timestamp)
+
+    if not timestamp:
+        timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
+
+    timestamp = timestamp.replace(second=0, microsecond=0)
+
+    if interval_minutes:
+        if interval_minutes >= 60:
+            hours = interval_minutes / 60
+            interval_minutes = round(((hours) % 1) * 60)
+
+        if interval_minutes == 0:
+            rounded_minutes = interval_minutes
+        else:
+            rounded_minutes = (timestamp.minute // interval_minutes) * interval_minutes
+
+        timestamp = timestamp.replace(minute=rounded_minutes)
+
+    return timestamp
+
+
+@task
+def get_current_timestamp(
+    timestamp=None, truncate_minute: bool = True, return_str: bool = False
+) -> Union[datetime, str]:
+    """
+    Get current timestamp for flow run.
+
+    Args:
+        timestamp: timestamp to be used as reference (optionally, it can be a string)
+        truncate_minute: whether to truncate the timestamp to the minute or not
+        return_str: if True, the return will be an isoformatted datetime string
+                    otherwise it returns a datetime object
+
+    Returns:
+        Union[datetime, str]: timestamp for flow run
+    """
+    if isinstance(timestamp, str):
+        timestamp = datetime.fromisoformat(timestamp)
     if not timestamp:
         timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
     if truncate_minute:
-        return timestamp.replace(second=0, microsecond=0)
+        timestamp = timestamp.replace(second=0, microsecond=0)
+    if return_str:
+        timestamp = timestamp.isoformat()
+
     return timestamp
 
 
 @task
 def create_date_hour_partition(
-    timestamp: datetime, partition_date_only: bool = False
+    timestamp: datetime,
+    partition_date_name: str = "data",
+    partition_date_only: bool = False,
 ) -> str:
     """
     Create a date (and hour) Hive partition structure from timestamp.
 
     Args:
         timestamp (datetime): timestamp to be used as reference
+        partition_date_name (str, optional): partition name. Defaults to "data".
         partition_date_only (bool, optional): whether to add hour partition or not
 
     Returns:
         str: partition string
     """
-    partition = f"data={timestamp.strftime('%Y-%m-%d')}"
+    partition = f"{partition_date_name}={timestamp.strftime('%Y-%m-%d')}"
     if not partition_date_only:
         partition += f"/hora={timestamp.strftime('%H')}"
     return partition
@@ -351,11 +414,16 @@ def save_treated_local(file_path: str, status: dict, mode: str = "staging") -> s
     Returns:
         str: Path to the saved file
     """
+
+    log(f"Saving treated data to: {file_path}, {status}")
+
     _file_path = file_path.format(mode=mode, filetype="csv")
+
     Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
     if status["error"] is None:
         status["data"].to_csv(_file_path, index=False)
         log(f"Treated data saved to: {_file_path}")
+
     return _file_path
 
 
@@ -364,12 +432,12 @@ def save_treated_local(file_path: str, status: dict, mode: str = "staging") -> s
 # Extract data
 #
 ###############
-@task(nout=3)
+@task(nout=3, max_retries=3, retry_delay=timedelta(seconds=5))
 def query_logs(
     dataset_id: str,
     table_id: str,
     datetime_filter=None,
-    max_recaptures: int = 360,
+    max_recaptures: int = 90,
     interval_minutes: int = 1,
     recapture_window_days: int = 1,
 ):
@@ -405,43 +473,42 @@ def query_logs(
 
     query = f"""
     WITH
-    t AS (
-    SELECT
-        DATETIME(timestamp_array) AS timestamp_array
-    FROM
-        UNNEST(
-            GENERATE_TIMESTAMP_ARRAY(
-                TIMESTAMP_SUB('{datetime_filter}', INTERVAL {recapture_window_days} day),
-                TIMESTAMP('{datetime_filter}'),
-                INTERVAL {interval_minutes} minute) )
-        AS timestamp_array
-    WHERE
-        timestamp_array < '{datetime_filter}' ),
-    logs_table AS (
+        t AS (
         SELECT
-            SAFE_CAST(DATETIME(TIMESTAMP(timestamp_captura),
-                    "America/Sao_Paulo") AS DATETIME) timestamp_captura,
-            SAFE_CAST(sucesso AS BOOLEAN) sucesso,
-            SAFE_CAST(erro AS STRING) erro,
-            SAFE_CAST(DATA AS DATE) DATA
+            DATETIME(timestamp_array) AS timestamp_array
         FROM
-            rj-smtr-staging.{dataset_id}_staging.{table_id}_logs AS t
-    ),
-    logs AS (
-        SELECT
-            *,
-            TIMESTAMP_TRUNC(timestamp_captura, minute) AS timestamp_array
-        FROM
-            logs_table
+            UNNEST(
+                GENERATE_TIMESTAMP_ARRAY(
+                    TIMESTAMP_SUB('{datetime_filter}', INTERVAL {recapture_window_days} day),
+                    TIMESTAMP('{datetime_filter}'),
+                    INTERVAL {interval_minutes} minute) )
+            AS timestamp_array
         WHERE
-            DATA BETWEEN DATE(DATETIME_SUB('{datetime_filter}',
-                            INTERVAL {recapture_window_days} day))
-            AND DATE('{datetime_filter}')
-            AND timestamp_captura BETWEEN
-                DATETIME_SUB('{datetime_filter}', INTERVAL {recapture_window_days} day)
-            AND '{datetime_filter}'
-        ORDER BY
-            timestamp_captura )
+            timestamp_array < '{datetime_filter}' ),
+        logs_table AS (
+            SELECT
+                SAFE_CAST(DATETIME(TIMESTAMP(timestamp_captura),
+                        "America/Sao_Paulo") AS DATETIME) timestamp_captura,
+                SAFE_CAST(sucesso AS BOOLEAN) sucesso,
+                SAFE_CAST(erro AS STRING) erro,
+                SAFE_CAST(DATA AS DATE) DATA
+            FROM
+                rj-smtr-staging.{dataset_id}_staging.{table_id}_logs AS t
+        ),
+        logs AS (
+            SELECT
+                *,
+                TIMESTAMP_TRUNC(timestamp_captura, minute) AS timestamp_array
+            FROM
+                logs_table
+            WHERE
+                DATA BETWEEN DATE(DATETIME_SUB('{datetime_filter}',
+                                INTERVAL {recapture_window_days} day))
+                AND DATE('{datetime_filter}')
+                AND timestamp_captura BETWEEN
+                    DATETIME_SUB('{datetime_filter}', INTERVAL {recapture_window_days} day)
+                AND '{datetime_filter}'
+        )
     SELECT
         CASE
             WHEN logs.timestamp_captura IS NOT NULL THEN logs.timestamp_captura
@@ -458,12 +525,12 @@ def query_logs(
         logs.timestamp_array = t.timestamp_array
     WHERE
         logs.sucesso IS NOT TRUE
-    ORDER BY
-        timestamp_captura
     """
     log(f"Run query to check logs:\n{query}")
     results = bd.read_sql(query=query, billing_project_id=bq_project())
+
     if len(results) > 0:
+        results = results.sort_values(["timestamp_captura"])
         results["timestamp_captura"] = (
             pd.to_datetime(results["timestamp_captura"])
             .dt.tz_localize(constants.TIMEZONE.value)
@@ -508,7 +575,7 @@ def get_raw(  # pylint: disable=R0912
         params (dict, optional): Params to be sent on request
 
     Returns:
-        dict: Conatining keys
+        dict: Containing keys
           * `data` (json): data result
           * `error` (str): catched error, if any. Otherwise, returns None
     """
@@ -598,6 +665,9 @@ def create_request_params(
             "engine": database["engine"],
             "query": extract_params["query"].format(**datetime_range),
         }
+
+    elif dataset_id == constants.GTFS_DATASET_ID.value:
+        request_params = extract_params["filename"]
 
     return request_params, request_url
 
@@ -956,6 +1026,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
     table_run_datetime_column_name: str = None,
     mode: str = "prod",
     delay_hours: int = 0,
+    end_ts: datetime = None,
 ):
     """
     Task for generating dict with variables to be passed to the
@@ -972,6 +1043,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
         rebuild (Optional, bool): if true, queries the minimum date value on the
         table and return a date range from that value to the datetime.now() time
         delay(Optional, int): hours delayed from now time for materialization range
+        end_ts(Optional, datetime): date range's final date
     Returns:
         dict: containing date_range_start and date_range_end
     """
@@ -1016,18 +1088,25 @@ def get_materialization_date_range(  # pylint: disable=R0913
     else:
         last_run = datetime.strptime(last_run, timestr)
 
+    if (not isinstance(last_run, datetime)) and (isinstance(last_run, date)):
+        last_run = datetime(last_run.year, last_run.month, last_run.day)
+
     # set start to last run hour (H)
     start_ts = last_run.replace(minute=0, second=0, microsecond=0).strftime(timestr)
 
     # set end to now - delay
-    now_ts = pendulum.now(constants.TIMEZONE.value).replace(
-        tzinfo=None, minute=0, second=0, microsecond=0
+
+    if not end_ts:
+        end_ts = pendulum.now(constants.TIMEZONE.value).replace(
+            tzinfo=None, minute=0, second=0, microsecond=0
+        )
+
+    end_ts = (end_ts - timedelta(hours=delay_hours)).replace(
+        minute=0, second=0, microsecond=0
     )
-    end_ts = (
-        (now_ts - timedelta(hours=delay_hours))
-        .replace(minute=0, second=0, microsecond=0)
-        .strftime(timestr)
-    )
+
+    end_ts = end_ts.strftime(timestr)
+
     date_range = {"date_range_start": start_ts, "date_range_end": end_ts}
     log(f"Got date_range as: {date_range}")
     return date_range
@@ -1053,6 +1132,7 @@ def set_last_run_timestamp(
     Returns:
         _type_: _description_
     """
+    log(f"Saving timestamp {timestamp} on Redis for {dataset_id}.{table_id}")
     redis_client = get_redis_client()
     key = dataset_id + "." + table_id
     if mode == "dev":
@@ -1096,12 +1176,27 @@ def fetch_dataset_sha(dataset_id: str):
 
 
 @task
-def get_run_dates(date_range_start: str, date_range_end: str) -> List:
+def get_run_dates(
+    date_range_start: str, date_range_end: str, day_datetime: datetime = None
+) -> List:
     """
     Generates a list of dates between date_range_start and date_range_end.
+
+    Args:
+        date_range_start (str): the start date to create the date range
+        date_range_end (str): the end date to create the date range
+        day_datetime (datetime, Optional): a timestamp to use as run_date
+                                            if the range start or end is False
+
+    Returns:
+        list: the list of run_dates
     """
     if (date_range_start is False) or (date_range_end is False):
-        dates = [{"run_date": get_now_date.run()}]
+        if day_datetime:
+            run_date = day_datetime.strftime("%Y-%m-%d")
+        else:
+            run_date = get_now_date.run()
+        dates = [{"run_date": run_date}]
     else:
         dates = [
             {"run_date": d.strftime("%Y-%m-%d")}
@@ -1265,3 +1360,59 @@ def unpack_mapped_results_nout2(
 
     """
     return [r[0] for r in mapped_results], [r[1] for r in mapped_results]
+
+
+@task
+def check_mapped_query_logs_output(query_logs_output: list[tuple]) -> bool:
+    """
+    Task to check if there is recaptures pending
+
+    Args:
+        query_logs_output (list[tuple]): the return from a mapped query_logs execution
+
+    Returns:
+        bool: True if there is recaptures to do, otherwise False
+    """
+
+    if len(query_logs_output) == 0:
+        return False
+
+    recapture_list = [i[0] for i in query_logs_output]
+    return any(recapture_list)
+
+
+@task
+def get_scheduled_start_times(
+    timestamp: datetime, parameters: list, intervals: Union[None, dict] = None
+):
+    """
+    Task to get start times to schedule flows
+
+    Args:
+        timestamp (datetime): initial flow run timestamp
+        parameters (list): parameters for the flow
+        intervals (Union[None, dict], optional): intervals between each flow run. Defaults to None.
+            Optionally, you can pass specific intervals for some table_ids.
+            Suggests to pass intervals based on previous table observed execution times.
+            Defaults to dict(default=timedelta(minutes=2)).
+
+    Returns:
+        list[datetime]: list of scheduled start times
+    """
+
+    if intervals is None:
+        intervals = dict()
+
+    if "default" not in intervals.keys():
+        intervals["default"] = timedelta(minutes=2)
+
+    timestamps = [None]
+    last_schedule = timestamp
+
+    for param in parameters[1:]:
+        last_schedule += intervals.get(
+            param.get("table_id", "default"), intervals["default"]
+        )
+        timestamps.append(last_schedule)
+
+    return timestamps
