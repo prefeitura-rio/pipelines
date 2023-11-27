@@ -25,37 +25,23 @@ Funções úteis no tratamento de dados de satélite
 # ACHTF - Cloud Top Temperature: 'TEMP'
 # ACMF - Clear Sky Masks: 'BCM'
 # ACTPF - Cloud Top Phase: 'Phase'
-# ADPF - Aerosol Detection: 'Smoke'
-# ADPF - Aerosol Detection: 'Dust'
+# ADPF - Aerosol Detection: 'Smoke', 'Dust'
 # AODF - Aerosol Optical Depth: 'AOD'
 # CMIPF - Cloud and Moisture Imagery: 'CMI'
-# CMIPC - Cloud and Moisture Imagery: 'CMI'
-# CMIPM - Cloud and Moisture Imagery: 'CMI'
 # CODF - Cloud Optical Depth: 'COD'
 # CPSF - Cloud Particle Size: 'PSD'
 # CTPF - Cloud Top Pressure: 'PRES'
-# DMWF - Derived Motion Winds: 'pressure'
-# DMWF - Derived Motion Winds: 'temperature'
-# DMWF - Derived Motion Winds: 'wind_direction'
-# DMWF - Derived Motion Winds: 'wind_speed'
-# DSIF - Derived Stability Indices: 'CAPE'
-# DSIF - Derived Stability Indices: 'KI'
-# DSIF - Derived Stability Indices: 'LI'
-# DSIF - Derived Stability Indices: 'SI'
-# DSIF - Derived Stability Indices: 'TT'
+# DMWF - Derived Motion Winds: 'pressure', 'temperature', 'wind_direction', 'wind_speed'
+# DSIF - Derived Stability Indices: 'CAPE', 'KI', 'LI', 'SI', 'TT'
 # DSRF - Downward Shortwave Radiation: 'DSR'
-# FDCF - Fire-Hot Spot Characterization: 'Area'
-# FDCF - Fire-Hot Spot Characterization: 'Mask'
-# FDCF - Fire-Hot Spot Characterization: 'Power'
-# FDCF - Fire-Hot Spot Characterization: 'Temp'
+# FDCF - Fire-Hot Spot Characterization: 'Area', 'Mask', 'Power', 'Temp'
 # FSCF - Snow Cover: 'FSC'
 # LSTF - Land Surface (Skin) Temperature: 'LST'
 # RRQPEF - Rainfall Rate - Quantitative Prediction Estimate: 'RRQPE'
 # RSR - Reflected Shortwave Radiation: 'RSR'
 # SSTF - Sea Surface (Skin) Temperature: 'SST'
 # TPWF - Total Precipitable Water: 'TPW'
-# VAAF - Volcanic Ash: 'VAH'
-# VAAF - Volcanic Ash: 'VAML'
+# VAAF - Volcanic Ash: 'VAH', 'VAML'
 
 # ====================================================================
 # Required Libraries
@@ -63,14 +49,13 @@ Funções úteis no tratamento de dados de satélite
 
 import datetime
 import os
+import shutil
 from pathlib import Path
 import re
-from typing import Tuple, Union
+from typing import Union
 
 from google.cloud import storage
-import netCDF4 as nc
 import numpy as np
-from osgeo import gdal  # pylint: disable=E0401
 import pandas as pd
 import pendulum
 import xarray as xr
@@ -184,7 +169,7 @@ def convert_julian_to_conventional_day(year: int, julian_day: int):
     return date_save
 
 
-def get_info(path: str) -> Tuple[dict, str]:
+def get_info(path: str) -> dict:
     """
     # Getting Information From the File Name  (Time, Date,
     # Product Type, Variable and Defining the CMAP)
@@ -213,150 +198,151 @@ def get_info(path: str) -> Tuple[dict, str]:
 
     # Nem todos os produtos foram adicionados no dicionário de características
     # dos produtos. Olhar arquivo original caso o produto não estaja aqui
+    # https://www.dropbox.com/s/yfopijdrplq5sjr/GNC-A%20Blog%20-%20GOES-R-Level-2-Products%20-%20Superimpose.py?dl=0
+    # GNC-A Blog - GOES-R-Level-2-Products - Superimpose
+    # https://geonetcast.wordpress.com/2018/06/28/goes-r-level-2-products-a-python-script/
+    # https://www.dropbox.com/s/2zylbwfjfkx9a7i/GNC-A%20Blog%20-%20GOES-R-Level-2-Products.py?dl=0
     product_caracteristics = {}
-    # CMIPF - Cloud and Moisture Imagery: 'CMI'
-    product_caracteristics["CMIPF"] = {
-        "variable": "CMI",
-        "vmin": -50,
-        "vmax": 50,
-        "cmap": "jet",
-        "resolution": 3,
-    }
-    # CMIPC - Cloud and Moisture Imagery: 'CMI'
-    product_caracteristics["CMIPC"] = {
-        "variable": "CMI",
-        "vmin": -50,
-        "vmax": 50,
-        "cmap": "jet",
-        "resolution": 3,
-    }
-    # CMIPM - Cloud and Moisture Imagery: 'CMI'
-    product_caracteristics["CMIPM"] = {
-        "variable": "CMI",
-        "vmin": -50,
-        "vmax": 50,
-        "cmap": "jet",
-        "resolution": 1,
-    }
+
     # ACHAF - Cloud Top Height: 'HT'
     product_caracteristics["ACHAF"] = {
-        "variable": "HT",
+        "variable": ["HT"],
         "vmin": 0,
         "vmax": 15000,
         "cmap": "rainbow",
-        "resolution": 3,
+    }
+    # CMIPF - Cloud and Moisture Imagery: 'CMI'
+    product_caracteristics["CMIPF"] = {
+        "variable": ["CMI"],
+        "vmin": -50,
+        "vmax": 50,
+        "cmap": "jet",
+    }
+    # ACHAF - Cloud Top Height: 'HT'
+    product_caracteristics["ACHAF"] = {
+        "variable": ["HT"],
+        "vmin": 0,
+        "vmax": 15000,
+        "cmap": "rainbow",
     }
     # ACHTF - Cloud Top Temperature: 'TEMP'
     product_caracteristics["ACHATF"] = {
-        "variable": "TEMP",
+        "variable": ["TEMP"],
         "vmin": 180,
         "vmax": 300,
         "cmap": "jet",
-        "resolution": 3,
     }
     # ACMF - Clear Sky Masks: 'BCM'
     product_caracteristics["ACMF"] = {
-        "variable": "BCM",
+        "variable": ["BCM"],
         "vmin": 0,
         "vmax": 1,
         "cmap": "gray",
-        "resolution": 3,
     }
     # ACTPF - Cloud Top Phase: 'Phase'
     product_caracteristics["ACTPF"] = {
-        "variable": "Phase",
+        "variable": ["Phase"],
         "vmin": 0,
         "vmax": 5,
         "cmap": "jet",
-        "resolution": 3,
     }
     # ADPF - Aerosol Detection: 'Smoke'
     product_caracteristics["ADPF"] = {
-        "variable": "Smoke",
+        "variable": ["Smoke"],
         "vmin": 0,
         "vmax": 255,
         "cmap": "jet",
-        "resolution": 3,
     }
     # AODF - Aerosol Optical Depth: 'AOD'
     product_caracteristics["AODF"] = {
-        "variable": "AOD",
+        "variable": ["AOD"],
         "vmin": 0,
         "vmax": 2,
         "cmap": "rainbow",
-        "resolution": 3,
     }
     # CODF - Cloud Optical Depth: 'COD'
     product_caracteristics["CODF"] = {
-        "variable": "CODF",
+        "variable": ["CODF"],
         "vmin": 0,
         "vmax": 100,
         "cmap": "jet",
-        "resolution": 3,
     }
     # CPSF - Cloud Particle Size: 'PSD'
     product_caracteristics["CPSF"] = {
-        "variable": "PSD",
+        "variable": ["PSD"],
         "vmin": 0,
         "vmax": 80,
         "cmap": "rainbow",
-        "resolution": 3,
     }
     # CTPF - Cloud Top Pressure: 'PRES'
     product_caracteristics["CTPF"] = {
-        "variable": "PRES",
+        "variable": ["PRES"],
         "vmin": 0,
         "vmax": 1100,
         "cmap": "rainbow",
-        "resolution": 3,
     }
     # DSIF - Derived Stability Indices: 'CAPE', 'KI', 'LI', 'SI', 'TT'
     product_caracteristics["DSIF"] = {
-        "variable": "CAPE",
+        "variable": ["LI", "CAPE", "TT", "SI", "KI"],
         "vmin": 0,
         "vmax": 1000,
         "cmap": "jet",
-        "resolution": 3,
     }
     # FDCF - Fire-Hot Spot Characterization: 'Area', 'Mask', 'Power', 'Temp'
     product_caracteristics["FDCF"] = {
-        "variable": "Mask",
+        "variable": ["Mask"],
         "vmin": 0,
         "vmax": 255,
         "cmap": "jet",
-        "resolution": 3,
     }
     # LSTF - Land Surface (Skin) Temperature: 'LST'
     product_caracteristics["LSTF"] = {
-        "variable": "LST",
+        "variable": ["LST"],
         "vmin": 213,
         "vmax": 330,
         "cmap": "jet",
-        "resolution": 3,
     }
     # RRQPEF - Rainfall Rate - Quantitative Prediction Estimate: 'RRQPE'
     product_caracteristics["RRQPEF"] = {
-        "variable": "RRQPE",
+        "variable": ["RRQPE"],
         "vmin": 0,
         "vmax": 50,
         "cmap": "jet",
-        "resolution": 3,
     }
     # SSTF - Sea Surface (Skin) Temperature: 'SST'
     product_caracteristics["SSTF"] = {
-        "variable": "SSTF",
+        "variable": ["SSTF"],
         "vmin": 268,
         "vmax": 308,
         "cmap": "jet",
-        "resolution": 3,
     }
     # TPWF - Total Precipitable Water: 'TPW'
     product_caracteristics["TPWF"] = {
-        "variable": "TPW",
+        "variable": ["TPW"],
         "vmin": 0,
         "vmax": 60,
         "cmap": "jet",
-        "resolution": 3,
+    }
+    # TPWF - Total Precipitable Water: 'TPW'
+    product_caracteristics["MCMIPF"] = {
+        "variable": [
+            "CMI_C01",
+            "CMI_C02",
+            "CMI_C03",
+            "CMI_C04",
+            "CMI_C05",
+            "CMI_C06",
+            "CMI_C07",
+            "CMI_C08",
+            "CMI_C09",
+            "CMI_C10",
+            "CMI_C11",
+            "CMI_C12",
+            "CMI_C13",
+            "CMI_C14",
+            "CMI_C15",
+            "CMI_C16",
+        ],
     }
 
     # variable = product_caracteristics[product]['variable']
@@ -365,169 +351,86 @@ def get_info(path: str) -> Tuple[dict, str]:
     # cmap = product_caracteristics[product]['cmap']
     product_caracteristics = product_caracteristics[product]
     product_caracteristics["product"] = product
-    variable = product_caracteristics["variable"]
+    product_caracteristics["filename"] = path
+    product_caracteristics["datetime_save"] = datetime_save
 
-    if variable == "CMI":
+    if product_caracteristics["variable"] == ["CMI"]:
         # Search for the GOES-16 channel in the file name
-        regex = "-M\\dC\\d"  # noqa: W605
-        find_expression = re.findall(regex, path)[0]
-        product_caracteristics["band"] = int(
-            (path[path.find(find_expression) + 4 : path.find("_G16")])
-        )
+        pattern = r"M(\d+)C(\d+)_G16"
+        match = re.search(pattern, path)
+        print(match)
+        print(match.group(1))
+        product_caracteristics["band"] = match.group(2)
     else:
         product_caracteristics["band"] = np.nan
 
-    return product_caracteristics, datetime_save
+    print(f"Product Caracteristics: {product_caracteristics}")
 
-
-def get_goes_extent(data: pd.DataFrame) -> list:
-    """
-    define espatial limits
-    """
-    pph = data.variables["goes_imager_projection"].perspective_point_height
-    x_1 = data.variables["x_image_bounds"][0] * pph
-    x_2 = data.variables["x_image_bounds"][1] * pph
-    y_1 = data.variables["y_image_bounds"][1] * pph
-    y_2 = data.variables["y_image_bounds"][0] * pph
-    goes16_extent = [x_1, y_1, x_2, y_2]
-
-    # Get the latitude and longitude image bounds
-    # geo_extent = data.variables['geospatial_lat_lon_extent']
-    # min_lon = float(geo_extent.geospatial_westbound_longitude)
-    # max_lon = float(geo_extent.geospatial_eastbound_longitude)
-    # min_lat = float(geo_extent.geospatial_southbound_latitude)
-    # max_lat = float(geo_extent.geospatial_northbound_latitude)
-    return goes16_extent
+    return product_caracteristics
 
 
 def remap_g16(
-    path: Union[str, Path],
+    path: str,
     extent: list,
-    resolution: int,
-    variable: str,
-    datetime_save: str,
-    mode_redis: str = "prod",
+    product: str,
+    variable: list,
 ):
     """
-    the GOES-16 image is reprojected to the rectangular projection in the extent region
+    the GOES-16 image is reprojected to the rectangular projection in the extent region.
+    If netcdf file has more than one variable remap function will save each variable in
+    a different netcdf file inside temp/ folder.
     """
-    # Open the file using the NetCDF4 library
-    data = nc.Dataset(path)
-    # see_data = np.ma.getdata(data.variables[variable][:])
-    # print('\n\n>>>>>> netcdf ', np.unique(see_data)[:100])
 
-    # Calculate the image extent required for the reprojection
-    goes16_extent = get_goes_extent(data)
+    n_variables = len(variable)
+    print(variable, n_variables)
+    remap_path = f"{os.getcwd()}/temp/treated/{product}/"
 
-    # Close the NetCDF file after getting the data
-    data.close()
+    # This removing old files step is important to do backfill
+    if os.path.exists(remap_path):
+        print("Removing old files")
+        shutil.rmtree(remap_path)
 
-    # Call the reprojection funcion
-    grid = remap(path, variable, extent, resolution, goes16_extent)
-
-    #     You may export the grid to GeoTIFF (and any other format supported by GDAL).
-    # using GDAL from osgeo
-    time_save = str(int(datetime_save[9:11]))
-
-    year = datetime_save[:4]
-    month = str(int(datetime_save[4:6]))
-    day = str(int(datetime_save[6:8]))
-    data = year + "-" + month.zfill(2) + "-" + day.zfill(2)
-    partitions = os.path.join(
-        f"ano_particao={year}",
-        f"mes_particao={month}",
-        f"data_particao={data}",
-        f"hora_particao={time_save}",
-    )
-
-    tif_path = os.path.join(
-        os.getcwd(), mode_redis, "data", "satelite", variable, "temp", partitions
-    )
-
-    if not os.path.exists(tif_path):
-        os.makedirs(tif_path)
-
-    # Export the result to GeoTIFF
-    driver = gdal.GetDriverByName("GTiff")
-    filename = os.path.join(tif_path, "dados.tif")
-    driver.CreateCopy(filename, grid, 0)
-    return grid, goes16_extent
+    os.makedirs(remap_path)
+    for i in range(n_variables):
+        remap(path, remap_path, variable[i], extent)
 
 
-def treat_data(
-    data: pd.DataFrame, variable: str, reprojection_variables: dict
-) -> pd.DataFrame:
+def read_netcdf(file_path: str) -> pd.DataFrame:
     """
-    Treat nans and Temperature data, extent, product, variable, date_save,
-    time_save, bmap, cmap, vmin, vmax, dpi, band, path
+    Function to extract data from NetCDF file and convert it to pandas DataFrame
+    with the name of columns the same as the variable saved on the filename
     """
-    if variable in (
-        "Dust",
-        "Smoke",
-        "TPW",
-        "PRES",
-        "HT",
-        "TEMP",
-        "AOD",
-        "COD",
-        "PSD",
-        "CAPE",
-        "KI",
-        "LI",
-        "SI",
-        "TT",
-        "FSC",
-        "RRQPE",
-        "VAML",
-        "VAH",
-    ):
-        data[data == max(data[0])] = np.nan
-        data[data == min(data[0])] = np.nan
+    dxr = xr.open_dataset(file_path)
 
-    if variable == "SST":
-        data[data == max(data[0])] = np.nan
-        data[data == min(data[0])] = np.nan
+    pattern = r"variable-(.*?)\.nc"
 
-        # Call the reprojection funcion again to get only the valid SST pixels
-        path = reprojection_variables["path"]
-        extent = reprojection_variables["extent"]
-        resolution = reprojection_variables["resolution"]
-        goes16_extent = reprojection_variables["goes16_extent"]
+    match = re.search(pattern, file_path)
 
-        grid = remap(path, "DQF", extent, resolution, goes16_extent)
-        data_dqf = grid.ReadAsArray()
-        # If the Quality Flag is not 0, set as NaN
-        data[data_dqf != 0] = np.nan
+    if match:
+        # Extract the content between "variable-" and ".nc"
+        variable = match.group(1)
 
-    if variable == "Mask":
-        data[data == -99] = np.nan
-        data[data == 40] = np.nan
-        data[data == 50] = np.nan
-        data[data == 60] = np.nan
-        data[data == 150] = np.nan
-        data[data == max(data[0])] = np.nan
-        data[data == min(data[0])] = np.nan
+        dfr = (
+            dxr.to_dataframe()
+            .reset_index()[["lat", "lon", "Band1"]]
+            .rename(
+                {
+                    "lat": "latitude",
+                    "lon": "longitude",
+                    "Band1": f"{variable}",
+                },
+                axis=1,
+            )
+        )
 
-    if variable == "BCM":
-        data[data == 255] = np.nan
-        data[data == 0] = np.nan
-
-    if variable == "Phase":
-        data[data >= 5] = np.nan
-        data[data == 0] = np.nan
-
-    if variable == "LST":
-        data[data >= 335] = np.nan
-        data[data <= 200] = np.nan
-
-    return data
+    return dfr
 
 
 def save_data_in_file(
-    variable: str, datetime_save: str, file_path: str, mode_redis: str = "prod"
-) -> Union[str, Path]:
+    product: str, variable: list, datetime_save: str, mode_redis: str = "prod"
+):
     """
-    Save data in parquet
+    Read all nc or tif files and save them in a unique file inside a partition
     """
     date_save = datetime_save[:8]
     time_save = str(int(datetime_save[9:11]))
@@ -543,114 +446,40 @@ def save_data_in_file(
         f"hora_particao={time_save}",
     )
 
-    tif_data = os.path.join(
-        os.getcwd(),
-        mode_redis,
-        "data",
-        "satelite",
-        variable,
-        "temp",
-        partitions,
-        "dados.tif",
-    )
-    log(f"debug path >>>>>>{tif_data}")
-    data = xr.open_dataset(tif_data, engine="rasterio")
-    # print('>>>>>>>>>>>>>>> data', data['band_data'].values)
-
-    # Converte para dataframe trocando o nome das colunas
-
-    data = (
-        data.to_dataframe()
-        .reset_index()[["x", "y", "band_data"]]
-        .rename(
-            {
-                "y": "latitude",
-                "x": "longitude",
-                "band_data": f"{variable.lower()}",
-            },
-            axis=1,
-        )
-    )
-
+    folder_path = f"{os.getcwd()}/temp/treated/{product}/"
     # cria pasta de partições se elas não existem
-    output_path = os.path.join(
-        os.getcwd(), mode_redis, "data", "satelite", variable, "output"
-    )
-    parquet_path = os.path.join(output_path, partitions)
+    output_path = os.path.join(os.getcwd(), "temp", "output", mode_redis, product)
+    partitions_path = os.path.join(output_path, partitions)
 
-    if not os.path.exists(parquet_path):
-        os.makedirs(parquet_path)
+    if not os.path.exists(partitions_path):
+        os.makedirs(partitions_path)
+
+    # Loop through all NetCDF files in the folder
+    data = pd.DataFrame()
+    files = [i for i in os.listdir(folder_path) if i.endswith(".nc")]
+    for i, file_name in enumerate(files):
+        saved_file_path = os.path.join(folder_path, file_name)
+        data_temp = read_netcdf(saved_file_path)
+        if i == 0:
+            data = data_temp.copy()
+        else:
+            data = data.merge(data_temp, on=["latitude", "longitude"], how="outer")
 
     # Guarda horário do arquivo na coluna
     data["horario"] = pendulum.from_format(
         datetime_save, "YYYYMMDD HHmmss"
     ).to_time_string()
-    # Fixa ordem das colunas
-    data = data[["longitude", "latitude", "horario", variable.lower()]]
 
-    # salva em csv
-    filename = file_path.split("/")[-1].replace(".nc", "")
-    log(f"\n\n[DEGUB]: Saving {filename} on {parquet_path}\n\n")
-    log(f"Data_save: {date_save}, time_save: {time_save}")
-    file_path = os.path.join(parquet_path, f"{filename}.csv")
+    print(f"Final df: {data.head()}")
+    # Fixa ordem das colunas
+    data = data[["longitude", "latitude", "horario"] + [i.lower() for i in variable]]
+    print("cols", data.columns)
+
+    file_name = files[0].split("_variable-")[0]
+    print(f"\n\n[DEGUB]: Saving {file_name} on {output_path}\n\n")
+    print(f"Data_save: {date_save}, time_save: {time_save}")
+    # log(f"\n\n[DEGUB]: Saving {file_name} on {parquet_path}\n\n")
+    # log(f"Data_save: {date_save}, time_save: {time_save}")
+    file_path = os.path.join(partitions_path, f"{file_name}.csv")
     data.to_csv(file_path, index=False)
     return output_path
-
-
-def main(path: Union[str, Path], mode_redis: str = "prod"):
-    """
-    Função principal para converter dados x,y em lon,lat
-    """
-    # Create the basemap reference for the Rectangular Projection.
-    # You may choose the region you want.
-    # Full Disk Extent
-    # extent = [-156.00, -81.30, 6.30, 81.30]
-    # Brazil region
-    # extent = [-90.0, -40.0, -20.0, 10.0]
-    # Região da cidade do Rio de Janeiro
-    # lat_max, lon_min = (-22.802842397418548, -43.81200531887697)
-    # lat_min, lon_max = (-23.073487725280266, -43.11300020870994)
-    # Região da cidade do Rio de Janeiro meteorologista
-    lat_max, lon_max = (
-        -21.699774257353113,
-        -42.35676996062447,
-    )  # canto superior direito
-    lat_min, lon_min = (
-        -23.801876626302175,
-        -45.05290312102409,
-    )  # canto inferior esquerdo
-    # Estado do RJ
-    # lat_max, lon_max = (-20.69080839963545, -40.28483671464648)
-    # lat_min, lon_min = (-23.801876626302175, -45.05290312102409)
-    extent = [lon_min, lat_min, lon_max, lat_max]
-
-    # Get information from the image file
-    product_caracteristics, datetime_save = get_info(path)
-    # product, variable, vmin, vmax, cmap, band
-
-    # Choose the image resolution (the higher the number the faster the processing is)
-    resolution = product_caracteristics["resolution"]
-
-    # Call the remap function to convert x, y to lon, lat and save geotiff
-    grid, goes16_extent = remap_g16(
-        path,
-        extent,
-        resolution,
-        product_caracteristics["variable"],
-        datetime_save,
-        mode_redis,
-    )
-
-    info = {
-        "product": product_caracteristics["product"],
-        "variable": product_caracteristics["variable"],
-        "vmin": product_caracteristics["vmin"],
-        "vmax": product_caracteristics["vmax"],
-        "cmap": product_caracteristics["cmap"],
-        "datetime_save": datetime_save,
-        "band": product_caracteristics["band"],
-        "extent": extent,
-        "resolution": resolution,
-    }
-
-    return grid, goes16_extent, info
