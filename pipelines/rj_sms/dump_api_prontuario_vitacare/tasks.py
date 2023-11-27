@@ -45,7 +45,7 @@ def build_params(date_param: str = "today"):
     else:
         try:
             # check if date_param is a date string
-            datetime.datetime.strptime(date_param, "%Y-%m-%d")
+            datetime.strptime(date_param, "%Y-%m-%d")
             params = {"date": date_param}
         except ValueError as e:
             raise ValueError("date_param must be a date string (YYYY-MM-DD)") from e
