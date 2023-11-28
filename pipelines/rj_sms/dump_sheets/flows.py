@@ -10,7 +10,7 @@ from prefect.storage import GCS
 
 from pipelines.constants import constants
 from pipelines.utils.dump_url.flows import dump_url_flow
-from pipelines.rj_sms.dump_sheets.schedules import sms_sheets_daily_update_schedule
+from pipelines.rj_sms.dump_sheets.schedules import sheets_daily_update_schedule
 
 # TODO: add code owner
 
@@ -27,4 +27,4 @@ dump_sms_sheets_flow.run_config = KubernetesRun(
     ],
 )
 
-dump_sms_sheets_flow.schedule = sms_sheets_daily_update_schedule
+dump_sms_sheets_flow.schedule = sheets_daily_update_schedule

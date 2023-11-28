@@ -47,4 +47,4 @@ sms_clocks = generate_dump_url_schedules(
     runs_interval_minutes=2,
 )
 
-sms_sheets_daily_update_schedule = Schedule(clocks=untuple(sms_clocks))
+sheets_daily_update_schedule = Schedule(clocks=untuple(sms_clocks))

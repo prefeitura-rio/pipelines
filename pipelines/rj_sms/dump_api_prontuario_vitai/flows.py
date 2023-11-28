@@ -25,7 +25,7 @@ from pipelines.rj_sms.tasks import (
     upload_to_datalake,
 )
 from pipelines.rj_sms.dump_api_prontuario_vitai.tasks import build_date_param, build_url
-from pipelines.rj_sms.dump_api_prontuario_vitai.schedules import vitai_clocks
+from pipelines.rj_sms.dump_api_prontuario_vitai.schedules import vitai_daily_update_schedule
 
 with Flow(
     name="SMS: Dump Vitai - Ingerir dados do prontuário Vitai", code_owners=["thiago"]
@@ -122,4 +122,4 @@ dump_vitai.run_config = KubernetesRun(
     ],
 )
 
-dump_vitai.schedule = vitai_clocks
+dump_vitai.schedule = vitai_daily_update_schedule

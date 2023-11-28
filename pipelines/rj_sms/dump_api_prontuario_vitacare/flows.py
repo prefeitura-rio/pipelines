@@ -27,7 +27,7 @@ from pipelines.rj_sms.dump_api_prontuario_vitacare.tasks import (
     save_data_to_file,
 )
 
-from pipelines.rj_sms.dump_api_prontuario_vitacare.schedules import vitacare_clocks
+from pipelines.rj_sms.dump_api_prontuario_vitacare.schedules import vitacare_daily_update_schedule
 
 
 with Flow(
@@ -129,4 +129,4 @@ dump_vitacare.run_config = KubernetesRun(
     ],
 )
 
-dump_vitacare.schedule = vitacare_clocks
+dump_vitacare.schedule = vitacare_daily_update_schedule
