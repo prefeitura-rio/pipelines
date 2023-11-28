@@ -9,6 +9,7 @@ from pathlib import Path
 
 from datetime import timedelta, datetime, date
 from typing import List, Union, Any
+from functools import partial
 import traceback
 import io
 import json
@@ -16,9 +17,11 @@ import zipfile
 import pytz
 import requests
 import basedosdados as bd
-from basedosdados import Table
+from basedosdados import Table, Storage
+from basedosdados.upload.datatypes import Datatype
 import pandas as pd
 from google.cloud.storage.blob import Blob
+from google.cloud import bigquery
 import pymysql
 import psycopg2
 import psycopg2.extras
@@ -56,8 +59,76 @@ def log_critical(message: str, secret_path: str = constants.CRITICAL_SECRET_PATH
     return send_discord_message(message=message, webhook_url=url)
 
 
+def create_bq_table_schema(
+    data_sample_path: Union[str, Path],
+) -> list[bigquery.SchemaField]:
+    """
+    Create the bq schema based on the structure of data_sample_path.
+
+    Args:
+        data_sample_path (str, Path): Data sample path to auto complete columns names
+
+    Returns:
+        list[bigquery.SchemaField]: The table schema
+    """
+
+    data_sample_path = Path(data_sample_path)
+
+    columns = Datatype(source_format="csv").header(
+        data_sample_path=data_sample_path, csv_delimiter=","
+    )
+
+    schema = []
+    for col in columns:
+        schema.append(
+            bigquery.SchemaField(name=col, field_type="STRING", description=None)
+        )
+    return schema
+
+
+def create_bq_external_table(table_obj: Table, path: str, bucket_name: str):
+    """Creates an BigQuery External table based on sample data
+
+    Args:
+        table_obj (Table): BD Table object
+        path (str): Table data local path
+        bucket_name (str, Optional): The bucket name where the data is located
+    """
+
+    Storage(
+        dataset_id=table_obj.dataset_id,
+        table_id=table_obj.table_id,
+        bucket_name=bucket_name,
+    ).upload(
+        path=path,
+        mode="staging",
+        if_exists="replace",
+    )
+
+    bq_table = bigquery.Table(table_obj.table_full_name["staging"])
+    bq_table.description = f"staging table for `{table_obj.table_full_name['prod']}`"
+
+    bq_table.external_data_configuration = Datatype(
+        dataset_id=table_obj.dataset_id,
+        table_id=table_obj.table_id,
+        schema=create_bq_table_schema(
+            data_sample_path=path,
+        ),
+        mode="staging",
+        bucket_name=bucket_name,
+        partitioned=True,
+        biglake_connection_id=None,
+    ).external_config
+
+    table_obj.client["bigquery_staging"].create_table(bq_table)
+
+
 def create_or_append_table(
-    dataset_id: str, table_id: str, path: str, partitions: str = None
+    dataset_id: str,
+    table_id: str,
+    path: str,
+    partitions: str = None,
+    bucket_name: str = None,
 ):
     """Conditionally create table or append data to its relative GCS folder.
 
@@ -65,22 +136,59 @@ def create_or_append_table(
         dataset_id (str): target dataset_id on BigQuery
         table_id (str): target table_id on BigQuery
         path (str): Path to .csv data file
+        partitions (str): partition string.
+        bucket_name (str, Optional): The bucket name to save the data.
     """
-    tb_obj = Table(table_id=table_id, dataset_id=dataset_id)
-    if not tb_obj.table_exists("staging"):
-        log("Table does not exist in STAGING, creating table...")
+    tb_obj = Table(table_id=table_id, dataset_id=dataset_id, bucket_name=bucket_name)
+    if bucket_name is not None:
+        Storage(
+            dataset_id=dataset_id, table_id=table_id, bucket_name=bucket_name
+        ).upload(
+            path=path,
+            mode="staging",
+            if_exists="replace",
+        )
+
+        create_func = partial(
+            create_bq_external_table,
+            table_obj=tb_obj,
+            path=path,
+            bucket_name=bucket_name,
+        )
+
+        append_func = partial(
+            Storage(
+                dataset_id=dataset_id, table_id=table_id, bucket_name=bucket_name
+            ).upload,
+            path=path,
+            mode="staging",
+            if_exists="replace",
+        )
+
+    else:
         dirpath = path.split(partitions)[0]
-        tb_obj.create(
+        create_func = partial(
+            tb_obj.create,
             path=dirpath,
             if_table_exists="pass",
             if_storage_data_exists="replace",
         )
+
+        append_func = partial(
+            tb_obj.append,
+            filepath=path,
+            if_exists="replace",
+            timeout=600,
+            partitions=partitions,
+        )
+
+    if not tb_obj.table_exists("staging"):
+        log("Table does not exist in STAGING, creating table...")
+        create_func()
         log("Table created in STAGING")
     else:
         log("Table already exists in STAGING, appending to it...")
-        tb_obj.append(
-            filepath=path, if_exists="replace", timeout=600, partitions=partitions
-        )
+        append_func()
         log("Appended to table on STAGING successfully.")
 
 
@@ -638,7 +746,12 @@ def get_raw_data_gcs(
 
 
 def get_raw_data_db(
-    query: str, engine: str, host: str, secret_path: str, database: str
+    query: str,
+    engine: str,
+    host: str,
+    secret_path: str,
+    database: str,
+    dtype: dict = None,
 ) -> tuple[str, str, str]:
     """
     Get data from Databases
@@ -649,6 +762,7 @@ def get_raw_data_db(
         host (str): The database host
         secret_path (str): Secret path to get credentials
         database (str): The database to connect
+        dtype (dict, Optional): The dtype dict to pass to pandas read_sql
 
     Returns:
         tuple[str, str, str]: Error, data and filetype
@@ -671,7 +785,9 @@ def get_raw_data_db(
             password=credentials["password"],
             database=database,
         ) as connection:
-            data = pd.read_sql(sql=query, con=connection).to_dict(orient="records")
+            data = pd.read_sql(sql=query, con=connection, dtype=dtype).to_dict(
+                orient="records"
+            )
 
     except Exception:
         error = traceback.format_exc()
@@ -711,6 +827,7 @@ def upload_run_logs_to_bq(  # pylint: disable=R0913
     previous_error: str = None,
     recapture: bool = False,
     mode: str = "raw",
+    bucket_name: str = None,
 ):
     """
     Upload execution status table to BigQuery.
@@ -725,6 +842,7 @@ def upload_run_logs_to_bq(  # pylint: disable=R0913
         previous_error (str): previous error catched during execution
         recapture (bool): if the execution was a recapture
         mode (str): folder to save locally, later folder which to upload to GCS
+        bucket_name (str, Optional): The bucket name to save the data.
 
     Returns:
         None
@@ -765,6 +883,7 @@ def upload_run_logs_to_bq(  # pylint: disable=R0913
         table_id=table_id,
         path=filepath.as_posix(),
         partitions=partition,
+        bucket_name=bucket_name,
     )
     if error is not None:
         raise Exception(f"Pipeline failed with error: {error}")

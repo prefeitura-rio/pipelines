@@ -54,6 +54,7 @@ with Flow(
     dataset_id = Parameter("dataset_id", default=None)
     partition_date_only = Parameter("partition_date_only", default=None)
     partition_date_name = Parameter("partition_date_name", default="data")
+    save_bucket_name = Parameter("save_bucket_name", default=None)
 
     # Parâmetros Captura #
     extract_params = Parameter("extract_params", default=None)
@@ -148,6 +149,7 @@ with Flow(
         table_id=unmapped(table_id),
         dataset_id=unmapped(dataset_id),
         partitions=partitions,
+        bucket_name=unmapped(save_bucket_name),
     )
 
     # Pré-tratamento #
@@ -173,6 +175,7 @@ with Flow(
         partitions=partitions,
         previous_error=previous_errors,
         recapture=unmapped(recapture),
+        bucket_name=unmapped(save_bucket_name),
     )
 
 default_capture_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
