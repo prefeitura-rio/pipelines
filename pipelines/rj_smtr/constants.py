@@ -435,7 +435,7 @@ class constants(Enum):  # pylint: disable=c0103
 
     BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS = {
         "dataset_id": BILHETAGEM_DATASET_ID,
-        "table_id": "ordem_pagamento_validacao",
+        "table_id": "ordem_pagamento",
         "upstream": True,
         "exclude": f"+{BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS['table_id']}",
         "dbt_vars": {
