@@ -356,9 +356,14 @@ class constants(Enum):  # pylint: disable=c0103
                 "database": "principal_db",
                 "query": """
                     SELECT
-                        *
+                        o.*,
+                        m.DS_TIPO_MODAL
                     FROM
-                        OPERADORA_TRANSPORTE
+                        OPERADORA_TRANSPORTE o
+                    LEFT JOIN
+                        TIPO_MODAL m
+                    ON
+                        o.CD_TIPO_MODAL = m.CD_TIPO_MODAL
                     WHERE
                         DT_INCLUSAO BETWEEN '{start}'
                         AND '{end}'
@@ -406,9 +411,11 @@ class constants(Enum):  # pylint: disable=c0103
                     ON
                         c.CD_CLIENTE = o.CD_CLIENTE
                 """,
+                "dtype": {"NR_DOCUMENTO": "object"},
             },
             "primary_key": ["CD_CLIENTE"],  # id column to nest data on
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+            "save_bucket_name": "rj-smtr-dev-private",
         },
         {
             "table_id": "consorcio",
@@ -469,6 +476,7 @@ class constants(Enum):  # pylint: disable=c0103
             },
             "primary_key": ["CD_CLIENTE"],  # id column to nest data on
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+            "save_bucket_name": "rj-smtr-dev-private",
         },
         {
             "table_id": "contato_pessoa_juridica",
@@ -490,6 +498,7 @@ class constants(Enum):  # pylint: disable=c0103
                 "CD_CLIENTE",
             ],  # id column to nest data on
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+            "save_bucket_name": "rj-smtr-dev-private",
         },
     ]
 
