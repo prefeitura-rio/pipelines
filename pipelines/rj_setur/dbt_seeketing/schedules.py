@@ -22,6 +22,7 @@ setur_seeketing_tables = {
     "aeroportos": "aeroportos",
     "pontos_turisticos": "pontos_turisticos",
     "caged": "caged",
+    "empregos": "empregos",
     "iss_turistico": "iss_turistico",
     "rede_hoteleira_ocupacao_eventos": "rede_hoteleira_ocupacao_eventos",
     "rede_hoteleira_ocupacao_geral": "rede_hoteleira_ocupacao_geral",
