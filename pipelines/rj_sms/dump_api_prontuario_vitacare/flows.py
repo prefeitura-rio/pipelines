@@ -27,17 +27,23 @@ from pipelines.rj_sms.dump_api_prontuario_vitacare.tasks import (
     save_data_to_file,
 )
 
-from pipelines.rj_sms.dump_api_prontuario_vitai.schedules import every_day_at_six_am
+from pipelines.rj_sms.dump_api_prontuario_vitacare.schedules import vitacare_clocks
 
 
 with Flow(
-    name="SMS: Dump VitaCare - Captura ", code_owners=["thiago"]
+    name="SMS: Dump VitaCare - Ingerir dados do prontuário VitaCare", code_owners=["thiago"]
 ) as dump_vitacare:
-    # Set Parameters
-    # Flow parameters
+
+    #####################################
+    # Parameters
+    #####################################
+
+    # Flow
     RENAME_FLOW = Parameter("rename_flow", default=True)
+
     #  Vault
     VAULT_PATH = vitacare_constants.VAULT_PATH.value
+
     # Vitacare API
     AP = Parameter("ap", required=True, default="10")
     ENDPOINT = Parameter("endpoint", required=True)
@@ -49,12 +55,19 @@ with Flow(
     )
     TABLE_ID = Parameter("table_id", required=True)
 
-    # Start run
+    #####################################
+    # Rename flow run
+    ####################################
+
     with case(RENAME_FLOW, True):
         rename_flow_task = rename_flow(
             table_id=TABLE_ID,
             ap=AP
         )
+
+    ####################################
+    # Tasks section #1 - Get data
+    #####################################
 
     get_secret_task = get_secret(secret_path=VAULT_PATH)
 
@@ -89,6 +102,10 @@ with Flow(
     )
     save_data_task.set_upstream(file_name_task)  # pylint: disable=E1101
 
+    #####################################
+    # Tasks section #2 - Transform data and Create table
+    #####################################
+
     with case(save_data_task, True):
         create_partitions_task = create_partitions(
             data_path=create_folders_task["raw"],
@@ -117,4 +134,4 @@ dump_vitacare.run_config = KubernetesRun(
     ],
 )
 
-dump_vitacare.schedule = every_day_at_six_am
+dump_vitacare.schedule = vitacare_clocks

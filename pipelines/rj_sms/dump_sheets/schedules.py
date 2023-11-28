@@ -22,7 +22,6 @@ table_parameters = {
         "url_type": "google_sheet",
         "gsheets_sheet_name": "Sheet1",
         "dataset_id": sheets_constants.DATASET_ID.value,
-        "table_id": "estabelecimento_auxiliar",
         "dump_mode": "overwrite",
         "biglake_table": True,
     },
@@ -31,7 +30,6 @@ table_parameters = {
         "url_type": "google_sheet",
         "gsheets_sheet_name": "CONSOLIDADO",
         "dataset_id": sheets_constants.DATASET_ID.value,
-        "table_id": "material_remume",
         "dump_mode": "overwrite",
         "biglake_table": True,
     },
@@ -40,13 +38,13 @@ table_parameters = {
 
 sms_clocks = generate_dump_url_schedules(
     interval=timedelta(days=1),
-    start_date=datetime(2023, 1, 1, 5, 0, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2023, 1, 1, 13, 20, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
-        constants.RJ_SMS_AGENT_LABEL.value,
+        constants.RJ_SMS_DEV_AGENT_LABEL.value,
     ],
     dataset_id=sheets_constants.DATASET_ID.value,
     table_parameters=table_parameters,
-    runs_interval_minutes=5,
+    runs_interval_minutes=2,
 )
 
 sms_sheets_daily_update_schedule = Schedule(clocks=untuple(sms_clocks))

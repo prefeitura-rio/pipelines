@@ -25,30 +25,42 @@ from pipelines.rj_sms.tasks import (
     upload_to_datalake,
 )
 from pipelines.rj_sms.dump_api_prontuario_vitai.tasks import build_date_param, build_url
-from pipelines.rj_sms.dump_api_prontuario_vitai.schedules import every_day_at_six_am
+from pipelines.rj_sms.dump_api_prontuario_vitai.schedules import vitai_clocks
 
-with Flow(name="SMS: Dump Vitai - Captura ", code_owners=["thiago"]) as dump_vitai:
+with Flow(
+    name="SMS: Dump Vitai - Ingerir dados do prontuário Vitai", code_owners=["thiago"]
+) as dump_vitai:
+
+    #####################################
     # Parameters
-    # Flow parameters
+    #####################################
+
+    # Flow
     RENAME_FLOW = Parameter("rename_flow", default=True)
-    # Parameters for Vault
+
+    # Vault
     VAULT_PATH = vitai_constants.VAULT_PATH.value
     VAULT_KEY = vitai_constants.VAULT_KEY.value
+
     # Vitai API
     ENDPOINT = Parameter("endpoint", required=True)
     DATE = Parameter("date", default=None)
-    # Paramenters for GCP
-    DATASET_ID = Parameter(
-        "DATASET_ID", default=vitai_constants.DATASET_ID.value
-    )
+
+    # GCP
+    DATASET_ID = Parameter("DATASET_ID", default=vitai_constants.DATASET_ID.value)
     TABLE_ID = Parameter("table_id", required=True)
 
-    # Start run
+    #####################################
+    # Rename flow run
+    ####################################
     with case(RENAME_FLOW, True):
         rename_flow_task = rename_current_flow_run_dataset_table(
             prefix="SMS Dump Vitai: ", dataset_id=TABLE_ID, table_id=""
         )
 
+    ####################################
+    # Tasks section #1 - Get data
+    #####################################
     get_secret_task = get_secret(secret_path=VAULT_PATH, secret_key=VAULT_KEY)
 
     create_folders_task = create_folders()
@@ -71,6 +83,10 @@ with Flow(name="SMS: Dump Vitai - Captura ", code_owners=["thiago"]) as dump_vit
         load_date=build_date_param_task,
     )
     download_task.set_upstream(create_folders_task)
+
+    #####################################
+    # Tasks section #2 - Transform data and Create table
+    #####################################
 
     conversion_task = from_json_to_csv(input_path=download_task, sep=";")
     conversion_task.set_upstream(download_task)
@@ -107,4 +123,4 @@ dump_vitai.run_config = KubernetesRun(
     ],
 )
 
-dump_vitai.schedule = every_day_at_six_am
+dump_vitai.schedule = vitai_clocks

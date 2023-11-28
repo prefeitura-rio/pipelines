@@ -29,27 +29,41 @@ from pipelines.rj_sms.dump_azureblob_estoque_tpc.tasks import (
 )
 from pipelines.rj_sms.dump_azureblob_estoque_tpc.schedules import every_day_at_six_am
 
-with Flow(name="SMS: Dump TPC - Captura ", code_owners=["thiago"]) as dump_tpc:
+with Flow(name="SMS: Dump TPC - Ingerir dados do estoque TPC", code_owners=["thiago"]) as dump_tpc:
+
+    #####################################
     # Parameters
-    # Flow parameters
+    #####################################
+
+    # Flow
     RENAME_FLOW = Parameter("rename_flow", default=True)
-    # Parameters for Vault
+
+    # Vault
     VAULT_PATH = tpc_constants.VAULT_PATH.value
     VAULT_KEY = tpc_constants.VAULT_KEY.value
+
     # TPC Azure
     CONTAINER_NAME = tpc_constants.CONTAINER_NAME.value
     BLOB_FILE = Parameter("blob_file", required=True)
-    # Paramenters for GCP
+
+    # GCP
     DATASET_ID = Parameter(
         "DATASET_ID", default=tpc_constants.DATASET_ID.value
     )
     TABLE_ID = Parameter("table_id", required=True)
 
-    # Start run
+    #####################################
+    # Rename flow run
+    ####################################
+
     with case(RENAME_FLOW, True):
         rename_flow_task = rename_current_flow_run_dataset_table(
             prefix="SMS Dump TPC: ", dataset_id=TABLE_ID, table_id=""
         )
+
+    ####################################
+    # Tasks section #1 - Get data
+    #####################################
 
     get_secret_task = get_secret(secret_path=VAULT_PATH, secret_key=VAULT_KEY)
 
@@ -68,6 +82,10 @@ with Flow(name="SMS: Dump TPC - Captura ", code_owners=["thiago"]) as dump_tpc:
         add_load_date_to_filename=True,
     )
     download_task.set_upstream(create_folders_task)
+
+    #####################################
+    # Tasks section #2 - Transform data and Create table
+    #####################################
 
     conform_task = conform_csv_to_gcp(
         filepath=download_task,
@@ -94,7 +112,7 @@ with Flow(name="SMS: Dump TPC - Captura ", code_owners=["thiago"]) as dump_tpc:
         dataset_is_public=False,
     )
     upload_to_datalake_task.set_upstream(create_partitions_task)
-    
+
 dump_tpc.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_tpc.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
