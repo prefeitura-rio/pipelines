@@ -52,24 +52,24 @@ def read_stu_raw_file(blob: Blob) -> pd.DataFrame:
     """
 
     stu_mode_mapping = [
-        "taxi",
-        "onibus",
-        "escolar",
-        "complementar (cabritinho)",
-        "fretamento",
+        "Táxi",
+        "Ônibus",
+        "Escolar",
+        "Complementar (cabritinho)",
+        "Fretamento",
         "TEC",
         "STPL",
     ]
 
     stu_type_mapping = [
-        "autonomo",
-        "empresa",
-        "cooperativa",
-        "instituicao de ensino",
-        "associacoes",
-        "autonomo provisorio",
-        "contrato publico",
-        "prestadora de servicos",
+        "Autônomo",
+        "Empresa",
+        "Cooperativa",
+        "Instituicao de Ensino",
+        "Associações",
+        "Autônomo Provisório",
+        "Contrato Público",
+        "Prestadora de Serviços",
     ]
 
     # blob = get_upload_storage_blob(
