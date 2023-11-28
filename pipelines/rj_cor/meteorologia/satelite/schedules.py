@@ -49,7 +49,7 @@ tpw = Schedule(
                 "mode": "prod",
                 "mode_redis": "prod",
                 "dataset_id": "clima_satelite",
-                "table_id": "quantidade_agua_precipitavel_goes_16_temp",
+                "table_id": "quantidade_agua_precipitavel_goes_16",
                 "product": "TPWF",
             },
         )
@@ -67,8 +67,9 @@ cmip = Schedule(
                 "mode": "prod",
                 "mode_redis": "prod",
                 "dataset_id": "clima_satelite",
-                "table_id": "infravermelho_longo_banda_13_goes_16_temp",
+                "table_id": "infravermelho_longo_banda_13_goes_16",
                 "product": "CMIPF",
+                "band": "13",
             },
         )
     ]

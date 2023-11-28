@@ -26,10 +26,7 @@ from pipelines.rj_cor.tasks import (
     get_on_redis,
     save_on_redis,
 )
-from pipelines.rj_cor.meteorologia.satelite.schedules import (
-    rrqpe,
-    mcmip,
-)
+from pipelines.rj_cor.meteorologia.satelite.schedules import cmip, mcmip, rrqpe, tpw
 
 from pipelines.utils.decorators import Flow
 
@@ -133,18 +130,43 @@ with Flow(
 
 
 # para rodar na cloud
-cor_meteorologia_goes16.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-cor_meteorologia_goes16.run_config = KubernetesRun(
+# cor_meteorologia_goes16.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+# cor_meteorologia_goes16.run_config = KubernetesRun(
+#     image=constants.DOCKER_IMAGE.value,
+#     labels=[constants.RJ_COR_AGENT_LABEL.value],
+# )
+cor_meteorologia_goes16_rrqpe = deepcopy(cor_meteorologia_goes16)
+cor_meteorologia_goes16_rrqpe.name = "COR: Meteorologia - Satelite GOES 16 - RRQPE"
+cor_meteorologia_goes16_rrqpe.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+cor_meteorologia_goes16_rrqpe.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_COR_AGENT_LABEL.value],
 )
 cor_meteorologia_goes16.schedule = rrqpe
+
+cor_meteorologia_goes16_tpw = deepcopy(cor_meteorologia_goes16)
+cor_meteorologia_goes16_tpw.name = "COR: Meteorologia - Satelite GOES 16 - TPW"
+cor_meteorologia_goes16_tpw.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+cor_meteorologia_goes16_tpw.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[constants.RJ_COR_AGENT_LABEL.value],
+)
+cor_meteorologia_goes16_tpw.schedule = tpw
+
+cor_meteorologia_goes16_cmip = deepcopy(cor_meteorologia_goes16)
+cor_meteorologia_goes16_cmip.name = "COR: Meteorologia - Satelite GOES 16 - CMIP"
+cor_meteorologia_goes16_cmip.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+cor_meteorologia_goes16_cmip.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[constants.RJ_COR_AGENT_LABEL.value],
+)
+cor_meteorologia_goes16_cmip.schedule = cmip
 
 cor_meteorologia_goes16_mcmip = deepcopy(cor_meteorologia_goes16)
 cor_meteorologia_goes16_mcmip.name = "COR: Meteorologia - Satelite GOES 16 - MCMIP"
 cor_meteorologia_goes16_mcmip.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 cor_meteorologia_goes16_mcmip.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
-    labels=[constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value],
+    labels=[constants.RJ_COR_AGENT_LABEL.value],
 )
 cor_meteorologia_goes16_mcmip.schedule = mcmip
