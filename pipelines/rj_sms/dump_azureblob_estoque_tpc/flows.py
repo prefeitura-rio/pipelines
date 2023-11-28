@@ -27,7 +27,7 @@ from pipelines.rj_sms.dump_azureblob_estoque_tpc.tasks import (
     get_blob_path,
     conform_csv_to_gcp,
 )
-from pipelines.rj_sms.dump_azureblob_estoque_tpc.schedules import every_day_at_six_am
+from pipelines.rj_sms.dump_azureblob_estoque_tpc.schedules import tpc_daily_update_schedule
 
 with Flow(
     name="SMS: Dump TPC - Ingerir dados do estoque TPC", code_owners=["thiago"]
@@ -118,4 +118,4 @@ dump_tpc.run_config = KubernetesRun(
     ],
 )
 
-dump_tpc.schedule = every_day_at_six_am
+dump_tpc.schedule = tpc_daily_update_schedule
