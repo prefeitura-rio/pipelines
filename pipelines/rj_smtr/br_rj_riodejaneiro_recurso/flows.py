@@ -37,7 +37,7 @@ sppo_recurso_captura.name = "SMTR: Subsídio SPPO Recursos - Captura (subflow)"
 sppo_recurso_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_recurso_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 sppo_recurso_captura = set_default_parameters(
     flow=sppo_recurso_captura,
@@ -97,7 +97,8 @@ with Flow(
     with case(capture, True):
         run_captura = create_flow_run(
             flow_name=sppo_recurso_captura.name,
-            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            project_name="staging",
+            # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             parameters={"timestamp": timestamp},
             labels=LABELS,
         )
