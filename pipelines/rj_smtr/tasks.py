@@ -664,6 +664,7 @@ def create_request_params(
             "database": extract_params["database"],
             "engine": database["engine"],
             "query": extract_params["query"].format(**datetime_range),
+            "dtype": extract_params.get("dtype"),
         }
 
     elif dataset_id == constants.GTFS_DATASET_ID.value:
@@ -921,6 +922,7 @@ def upload_raw_data_to_gcs(
     table_id: str,
     dataset_id: str,
     partitions: list,
+    bucket_name: str = None,
 ) -> Union[str, None]:
     """
     Upload raw data to GCS.
@@ -935,9 +937,12 @@ def upload_raw_data_to_gcs(
     Returns:
         Union[str, None]: if there is an error returns it traceback, otherwise returns None
     """
+    log(f"BUCKET: {bucket_name}")
     if error is None:
         try:
-            st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
+            st_obj = Storage(
+                table_id=table_id, dataset_id=dataset_id, bucket_name=bucket_name
+            )
             log(
                 f"""Uploading raw file to bucket {st_obj.bucket_name} at
                 {st_obj.bucket_name}/{dataset_id}/{table_id}"""
@@ -962,9 +967,10 @@ def upload_staging_data_to_gcs(
     timestamp: datetime,
     table_id: str,
     dataset_id: str,
-    partitions: list,
+    partitions: str,
     previous_error: str = None,
     recapture: bool = False,
+    bucket_name: str = None,
 ) -> Union[str, None]:
     """
     Upload staging data to GCS.
@@ -975,11 +981,15 @@ def upload_staging_data_to_gcs(
         timestamp (datetime): timestamp for flow run.
         table_id (str): table_id on BigQuery.
         dataset_id (str): dataset_id on BigQuery.
-        partitions (list): list of partition strings.
+        partitions (str): partition string.
+        previous_error (str, Optional): Previous error on recaptures.
+        recapture: (bool, Optional): Flag that indicates if the run is recapture or not.
+        bucket_name (str, Optional): The bucket name to save the data.
 
     Returns:
         Union[str, None]: if there is an error returns it traceback, otherwise returns None
     """
+    log(f"FILE PATH: {staging_filepath}")
     if error is None:
         try:
             # Creates and publish table if it does not exist, append to it otherwise
@@ -988,6 +998,7 @@ def upload_staging_data_to_gcs(
                 table_id=table_id,
                 path=staging_filepath,
                 partitions=partitions,
+                bucket_name=bucket_name,
             )
         except Exception:
             error = traceback.format_exc()
@@ -1001,6 +1012,7 @@ def upload_staging_data_to_gcs(
         mode="staging",
         previous_error=previous_error,
         recapture=recapture,
+        bucket_name=bucket_name,
     )
 
     return error
