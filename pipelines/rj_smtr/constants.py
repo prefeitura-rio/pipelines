@@ -554,7 +554,10 @@ class constants(Enum):  # pylint: disable=c0103
         "table_id": SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS["table_id"],
         "upstream": True,
         "dbt_vars": {
-            "data_ticket": "",
+            "date_range": {
+                "table_run_datetime_column_name": "data_recurso",
+                "delay_hours": 0,
+            },
             "version": {},
         },
     }

@@ -83,11 +83,11 @@ with Flow(
     code_owners=["carolinagomes", "rafaelpinheiro"],
 ) as subsidio_sppo_recurso:
     capture = Parameter("capture", default=True)
-    materialize = Parameter("materialize", default=False)
+    materialize = Parameter("materialize", default=True)
     recapture = Parameter("recapture", default=True)
-    timestamp = Parameter("timestamp", default=None)
+    data_recurso = Parameter("data_recurso", default=None)
     interval_minutes = Parameter("interval_minutes", default=1440)
-    timestamp = get_current_timestamp(timestamp, return_str=True)
+    timestamp = get_current_timestamp(data_recurso, return_str=True)
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=subsidio_sppo_recurso.name + " ",
