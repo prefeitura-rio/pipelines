@@ -56,4 +56,3 @@ vitacare_clocks = generate_dump_api_schedules(
 )
 
 vitacare_daily_update_schedule = Schedule(clocks=untuple(vitacare_clocks))
-
