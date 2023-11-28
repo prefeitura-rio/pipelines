@@ -1300,44 +1300,16 @@ def transform_raw_to_nested_structure(
             if data.empty:
                 log("Empty dataframe, skipping transformation...")
 
-            elif "customFieldValues" in data:
-                log(f"Raw data:\n{data_info_str(data)}", level="info")
-
-                log("Adding captured timestamp column...", level="info")
-                log(f"Data type: {type(data)}")
-                data["timestamp_captura"] = timestamp
-
-                log(f"Finished cleaning! Data:\n{data_info_str(data)}", level="info")
-
-                log("Creating nested structure...", level="info")
-                pk_cols = primary_key + ["timestamp_captura"]
-                data = (
-                    data.groupby(pk_cols)
-                    .apply(
-                        lambda x: x[data.columns.difference(pk_cols)].to_json(
-                            orient="records"
-                        )
-                    )
-                    .str.strip("[]")
-                    .reset_index(name="content")[
-                        primary_key + ["content", "timestamp_captura"]
-                    ]
-                )
-
-                log(
-                    f"Finished nested structure! Data:\n{data_info_str(data)}",
-                    level="info",
-                )
-
             else:
                 log(f"Raw data:\n{data_info_str(data)}", level="info")
 
                 log("Adding captured timestamp column...", level="info")
                 data["timestamp_captura"] = timestamp
 
-                log("Striping string columns...", level="info")
-                for col in data.columns[data.dtypes == "object"].to_list():
-                    data[col] = data[col].str.strip()
+                if "customFieldValues" not in data:
+                    log("Striping string columns...", level="info")
+                    for col in data.columns[data.dtypes == "object"].to_list():
+                        data[col] = data[col].str.strip()
 
                 log(f"Finished cleaning! Data:\n{data_info_str(data)}", level="info")
 
