@@ -22,11 +22,11 @@ posicao_parameters = generate_dicts(
     dict_template={
         "dataset_id": vitacare_constants.DATASET_ID.value,
         "table_id": "estoque_posicao",
-        "AP": "",
+        "ap": "",
         "endpoint": "posicao",
         "date": "today",
     },
-    key="AP",
+    key="ap",
     values=["10", "21", "22", "31", "32", "33", "40", "51", "52", "53"],
 )
 
@@ -34,11 +34,11 @@ movimento_parameters = generate_dicts(
     dict_template={
         "dataset_id": vitacare_constants.DATASET_ID.value,
         "table_id": "estoque_movimento",
-        "AP": "",
+        "ap": "",
         "endpoint": "movimento",
         "date": "yesterday",
     },
-    key="AP",
+    key="ap",
     values=["10", "21", "22", "31", "32", "33", "40", "51", "52", "53"],
 )
 
@@ -47,7 +47,7 @@ flow_parameters = posicao_parameters + movimento_parameters
 
 vitacare_clocks = generate_dump_api_schedules(
     interval=timedelta(days=1),
-    start_date=datetime(2023, 1, 1, 13, 10, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2023, 1, 1, 13, 30, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
         constants.RJ_SMS_DEV_AGENT_LABEL.value,
     ],
