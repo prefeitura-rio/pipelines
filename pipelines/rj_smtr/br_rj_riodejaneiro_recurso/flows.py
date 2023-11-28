@@ -69,13 +69,9 @@ sppo_recurso_materializacao.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
-sppo_recurso_materializacao_parameters = (
-    constants.SUBSIDIO_SPPO_RECURSOS_MATERIALIZACAO_PARAMS.value
-)
-
 sppo_recurso_materializacao = set_default_parameters(
     flow=sppo_recurso_materializacao,
-    default_parameters=sppo_recurso_materializacao_parameters,
+    default_parameters=constants.SUBSIDIO_SPPO_RECURSOS_MATERIALIZACAO_PARAMS.value,
 )
 
 with Flow(
@@ -150,7 +146,6 @@ with Flow(
         run_materializacao = create_flow_run(
             flow_name=sppo_recurso_materializacao.name,
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters=sppo_recurso_materializacao_parameters,
             labels=LABELS,
             upstream_tasks=[wait_captura],
         )
