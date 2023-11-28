@@ -7,13 +7,12 @@ General purpose functions for rj_smtr
 from ftplib import FTP
 from pathlib import Path
 
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, date
 from typing import List, Union, Any
 import traceback
 import io
 import json
 import zipfile
-import pendulum
 import pytz
 import requests
 import basedosdados as bd
@@ -473,12 +472,12 @@ def custom_serialization(obj: Any) -> Any:
     Returns:
         Any: Serialized object
     """
-    if isinstance(obj, pd.Timestamp):
-        if obj.tzinfo is None:
-            obj = obj.tz_localize("UTC").tz_convert(
-                emd_constants.DEFAULT_TIMEZONE.value
-            )
-
+    if isinstance(obj, (pd.Timestamp, date)):
+        if isinstance(obj, pd.Timestamp):
+            if obj.tzinfo is None:
+                obj = obj.tz_localize("UTC").tz_convert(
+                    emd_constants.DEFAULT_TIMEZONE.value
+                )
         return obj.isoformat()
 
     raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
@@ -581,11 +580,13 @@ def get_upload_storage_blob(
         Blob: blob object
     """
     bucket = bd.Storage(dataset_id="", table_id="")
+    log(f"Filename: {filename}, dataset_id: {dataset_id}")
     blob_list = list(
         bucket.client["storage_staging"]
         .bucket(bucket.bucket_name)
         .list_blobs(prefix=f"upload/{dataset_id}/{filename}.")
     )
+
     return blob_list[0]
 
 
