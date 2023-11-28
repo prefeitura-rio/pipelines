@@ -290,7 +290,7 @@ def get_info(path: str) -> dict:
     }
     # FDCF - Fire-Hot Spot Characterization: 'Area', 'Mask', 'Power', 'Temp'
     product_caracteristics["FDCF"] = {
-        "variable": ["Mask"],
+        "variable": ["Area", "Mask", "Power", "Temp"],
         "vmin": 0,
         "vmax": 255,
         "cmap": "jet",

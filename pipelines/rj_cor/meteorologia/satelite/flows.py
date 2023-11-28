@@ -26,7 +26,16 @@ from pipelines.rj_cor.tasks import (
     get_on_redis,
     save_on_redis,
 )
-from pipelines.rj_cor.meteorologia.satelite.schedules import cmip, mcmip, rrqpe, tpw
+from pipelines.rj_cor.meteorologia.satelite.schedules import (
+    cmip,
+    mcmip,
+    rrqpe,
+    tpw,
+    dsi,
+    lst,
+    sst,
+    aod,
+)
 
 from pipelines.utils.decorators import Flow
 
@@ -170,3 +179,39 @@ cor_meteorologia_goes16_mcmip.run_config = KubernetesRun(
     labels=[constants.RJ_COR_AGENT_LABEL.value],
 )
 cor_meteorologia_goes16_mcmip.schedule = mcmip
+
+cor_meteorologia_goes16_dsi = deepcopy(cor_meteorologia_goes16)
+cor_meteorologia_goes16_dsi.name = "COR: Meteorologia - Satelite GOES 16 - DSI"
+cor_meteorologia_goes16_dsi.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+cor_meteorologia_goes16_dsi.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[constants.RJ_COR_AGENT_LABEL.value],
+)
+cor_meteorologia_goes16_dsi.schedule = dsi
+
+cor_meteorologia_goes16_lst = deepcopy(cor_meteorologia_goes16)
+cor_meteorologia_goes16_lst.name = "COR: Meteorologia - Satelite GOES 16 - LST"
+cor_meteorologia_goes16_lst.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+cor_meteorologia_goes16_lst.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[constants.RJ_COR_AGENT_LABEL.value],
+)
+cor_meteorologia_goes16_lst.schedule = lst
+
+cor_meteorologia_goes16_sst = deepcopy(cor_meteorologia_goes16)
+cor_meteorologia_goes16_sst.name = "COR: Meteorologia - Satelite GOES 16 - SST"
+cor_meteorologia_goes16_sst.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+cor_meteorologia_goes16_sst.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[constants.RJ_COR_AGENT_LABEL.value],
+)
+cor_meteorologia_goes16_sst.schedule = sst
+
+cor_meteorologia_goes16_aod = deepcopy(cor_meteorologia_goes16)
+cor_meteorologia_goes16_aod.name = "COR: Meteorologia - Satelite GOES 16 - AOD"
+cor_meteorologia_goes16_aod.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
+cor_meteorologia_goes16_aod.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[constants.RJ_COR_AGENT_LABEL.value],
+)
+cor_meteorologia_goes16_aod.schedule = aod
