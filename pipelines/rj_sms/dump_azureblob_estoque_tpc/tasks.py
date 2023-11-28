@@ -24,6 +24,7 @@ def get_blob_path(blob_file: str):
     """
     return tpc_constants.BLOB_PATH.value[blob_file]
 
+
 @task
 def conform_csv_to_gcp(filepath: str, blob_file: str):
     """
@@ -39,19 +40,17 @@ def conform_csv_to_gcp(filepath: str, blob_file: str):
     log("Conforming CSV to GCP")
 
     # remove " from csv to avoid errors
-    with open(filepath, 'r') as f:
+    with open(filepath, "r") as f:
         file_contents = f.read()
 
-    file_contents = file_contents.replace('\"', '')
+    file_contents = file_contents.replace('"', "")
 
-    with open(filepath, 'w') as f:
+    with open(filepath, "w") as f:
         f.write(file_contents)
-
 
     df = pd.read_csv(filepath, sep=";", dtype=str, keep_default_na=False)
 
     if blob_file == "posicao":
-
         # remove registros errados
         df = df[df.sku != ""]
 
@@ -76,16 +75,14 @@ def conform_csv_to_gcp(filepath: str, blob_file: str):
         )
         df["peso"] = df.peso.apply(lambda x: float(x.replace(",", ".")))
         df["volume"] = df.volume.apply(lambda x: float(x.replace(",", ".")))
-        df["quantidade_peca"] = df.quantidade_peca.apply(lambda x: float(x.replace(",", ".")))
+        df["quantidade_peca"] = df.quantidade_peca.apply(
+            lambda x: float(x.replace(",", "."))
+        )
         df["valor_total"] = df.valor_total.apply(
             lambda x: float(x.replace(",", ".")) if x != "" else x
         )
     elif blob_file == "recebimento":
-
-
-        df["qt"] = df.qt.apply(
-            lambda x: float(x.replace(",", ".")) if x != "" else x
-        )
+        df["qt"] = df.qt.apply(lambda x: float(x.replace(",", ".")) if x != "" else x)
         df["qt_fis"] = df.qt_fis.apply(
             lambda x: float(x.replace(",", ".")) if x != "" else x
         )
@@ -101,7 +98,6 @@ def conform_csv_to_gcp(filepath: str, blob_file: str):
         df["qt_rec"] = df.qt_rec.apply(
             lambda x: float(x.replace(",", ".")) if x != "" else x
         )
-
 
     df.to_csv(filepath, index=False, sep=";", encoding="utf-8", quoting=0, decimal=".")
 

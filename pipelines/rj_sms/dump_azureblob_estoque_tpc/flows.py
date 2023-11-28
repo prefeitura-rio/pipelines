@@ -29,8 +29,9 @@ from pipelines.rj_sms.dump_azureblob_estoque_tpc.tasks import (
 )
 from pipelines.rj_sms.dump_azureblob_estoque_tpc.schedules import every_day_at_six_am
 
-with Flow(name="SMS: Dump TPC - Ingerir dados do estoque TPC", code_owners=["thiago"]) as dump_tpc:
-
+with Flow(
+    name="SMS: Dump TPC - Ingerir dados do estoque TPC", code_owners=["thiago"]
+) as dump_tpc:
     #####################################
     # Parameters
     #####################################
@@ -47,9 +48,7 @@ with Flow(name="SMS: Dump TPC - Ingerir dados do estoque TPC", code_owners=["thi
     BLOB_FILE = Parameter("blob_file", required=True)
 
     # GCP
-    DATASET_ID = Parameter(
-        "DATASET_ID", default=tpc_constants.DATASET_ID.value
-    )
+    DATASET_ID = Parameter("DATASET_ID", default=tpc_constants.DATASET_ID.value)
     TABLE_ID = Parameter("table_id", required=True)
 
     #####################################
@@ -87,9 +86,7 @@ with Flow(name="SMS: Dump TPC - Ingerir dados do estoque TPC", code_owners=["thi
     # Tasks section #2 - Transform data and Create table
     #####################################
 
-    conform_task = conform_csv_to_gcp(
-        filepath=download_task,
-        blob_file=BLOB_FILE)
+    conform_task = conform_csv_to_gcp(filepath=download_task, blob_file=BLOB_FILE)
     conform_task.set_upstream(download_task)
 
     add_load_date_column_task = add_load_date_column(input_path=download_task, sep=";")

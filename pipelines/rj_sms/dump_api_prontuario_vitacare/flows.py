@@ -31,9 +31,9 @@ from pipelines.rj_sms.dump_api_prontuario_vitacare.schedules import vitacare_clo
 
 
 with Flow(
-    name="SMS: Dump VitaCare - Ingerir dados do prontuário VitaCare", code_owners=["thiago"]
+    name="SMS: Dump VitaCare - Ingerir dados do prontuário VitaCare",
+    code_owners=["thiago"],
 ) as dump_vitacare:
-
     #####################################
     # Parameters
     #####################################
@@ -50,9 +50,7 @@ with Flow(
     DATE = Parameter("date", default="today")
 
     #  GCP
-    DATASET_ID = Parameter(
-        "DATASET_ID", default=vitacare_constants.DATASET_ID.value
-    )
+    DATASET_ID = Parameter("DATASET_ID", default=vitacare_constants.DATASET_ID.value)
     TABLE_ID = Parameter("table_id", required=True)
 
     #####################################
@@ -60,10 +58,7 @@ with Flow(
     ####################################
 
     with case(RENAME_FLOW, True):
-        rename_flow_task = rename_flow(
-            table_id=TABLE_ID,
-            ap=AP
-        )
+        rename_flow_task = rename_flow(table_id=TABLE_ID, ap=AP)
 
     ####################################
     # Tasks section #1 - Get data

@@ -11,12 +11,11 @@ import pytz
 
 
 from pipelines.constants import constants
-from pipelines.rj_sms.dump_api_prontuario_vitacare.constants import constants as vitacare_constants
-from pipelines.utils.utils import untuple_clocks as untuple
-from pipelines.rj_sms.utils import (
-    generate_dicts,
-    generate_dump_api_schedules
+from pipelines.rj_sms.dump_api_prontuario_vitacare.constants import (
+    constants as vitacare_constants,
 )
+from pipelines.utils.utils import untuple_clocks as untuple
+from pipelines.rj_sms.utils import generate_dicts, generate_dump_api_schedules
 
 
 posicao_parameters = generate_dicts(
@@ -28,7 +27,7 @@ posicao_parameters = generate_dicts(
         "date": "today",
     },
     key="AP",
-    values=["10", "21", "22", "31", "32", "33", "40", "51", "52", "53"]
+    values=["10", "21", "22", "31", "32", "33", "40", "51", "52", "53"],
 )
 
 movimento_parameters = generate_dicts(
@@ -40,7 +39,7 @@ movimento_parameters = generate_dicts(
         "date": "yesterday",
     },
     key="AP",
-    values=["10", "21", "22", "31", "32", "33", "40", "51", "52", "53"]
+    values=["10", "21", "22", "31", "32", "33", "40", "51", "52", "53"],
 )
 
 flow_parameters = posicao_parameters + movimento_parameters
