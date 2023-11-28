@@ -27,7 +27,9 @@ from pipelines.rj_sms.dump_azureblob_estoque_tpc.tasks import (
     get_blob_path,
     conform_csv_to_gcp,
 )
-from pipelines.rj_sms.dump_azureblob_estoque_tpc.schedules import tpc_daily_update_schedule
+from pipelines.rj_sms.dump_azureblob_estoque_tpc.schedules import (
+    tpc_daily_update_schedule,
+)
 
 with Flow(
     name="SMS: Dump TPC - Ingerir dados do estoque TPC", code_owners=["thiago"]
