@@ -152,6 +152,7 @@ def create_table_and_upload_to_gcs(
     dataset_id: str,
     table_id: str,
     dump_mode: str,
+    data_type: str = "csv",
     biglake_table: bool = True,
     wait=None,  # pylint: disable=unused-argument
 ) -> None:
@@ -190,15 +191,15 @@ def create_table_and_upload_to_gcs(
         else:
             # the header is needed to create a table when dosen't exist
             log("MODE APPEND: Table DOSEN'T EXISTS\nStart to CREATE HEADER file")
-            header_path = dump_header_to_file(data_path=data_path)
+            header_path = dump_header_to_file(data_path=data_path, data_type=data_type)
             log("MODE APPEND: Created HEADER file:\n" f"{header_path}")
 
             tb.create(
                 path=header_path,
                 if_storage_data_exists="replace",
                 if_table_exists="replace",
-                biglake_table=biglake_table,
                 dataset_is_public=dataset_is_public,
+                source_format=data_type,
             )
 
             log(
