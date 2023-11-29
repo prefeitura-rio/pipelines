@@ -160,11 +160,13 @@ with Flow(
         error=errors,
         timestamp=timestamps,
         primary_key=unmapped(primary_key),
-        flag_private_data=task(
-            lambda bucket: bucket is not None,
-            checkpoint=False,
-            name="create_flag_private_data",
-        )(bucket=save_bucket_name),
+        flag_private_data=unmapped(
+            task(
+                lambda bucket: bucket is not None,
+                checkpoint=False,
+                name="create_flag_private_data",
+            )(bucket=save_bucket_name)
+        ),
     )
 
     errors, staging_filepaths = unpack_mapped_results_nout2(
