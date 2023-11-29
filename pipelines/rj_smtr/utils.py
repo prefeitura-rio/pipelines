@@ -74,6 +74,13 @@ def create_bq_table_schema(
 
     data_sample_path = Path(data_sample_path)
 
+    if data_sample_path.is_dir():
+        data_sample_path = [
+            f
+            for f in data_sample_path.glob("**/*")
+            if f.is_file() and f.suffix == ".csv"
+        ][0]
+
     columns = Datatype(source_format="csv").header(
         data_sample_path=data_sample_path, csv_delimiter=","
     )
@@ -140,19 +147,13 @@ def create_or_append_table(
         bucket_name (str, Optional): The bucket name to save the data.
     """
     tb_obj = Table(table_id=table_id, dataset_id=dataset_id, bucket_name=bucket_name)
-    if bucket_name is not None:
-        Storage(
-            dataset_id=dataset_id, table_id=table_id, bucket_name=bucket_name
-        ).upload(
-            path=path,
-            mode="staging",
-            if_exists="replace",
-        )
+    dirpath = path.split(partitions)[0]
 
+    if bucket_name is not None:
         create_func = partial(
             create_bq_external_table,
             table_obj=tb_obj,
-            path=path,
+            path=dirpath,
             bucket_name=bucket_name,
         )
 
@@ -163,10 +164,10 @@ def create_or_append_table(
             path=path,
             mode="staging",
             if_exists="replace",
+            partitions=partitions,
         )
 
     else:
-        dirpath = path.split(partitions)[0]
         create_func = partial(
             tb_obj.create,
             path=dirpath,
