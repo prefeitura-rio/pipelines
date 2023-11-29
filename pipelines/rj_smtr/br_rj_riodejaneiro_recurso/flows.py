@@ -175,7 +175,5 @@ subsidio_sppo_recurso.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
-# schedule
+# Schedule
 subsidio_sppo_recurso.schedule = every_day
-
-#####

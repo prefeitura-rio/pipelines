@@ -561,6 +561,3 @@ class constants(Enum):  # pylint: disable=c0103
             "version": {},
         },
     }
-    # 1. select, 2. filter, 3.expand, passar o service na função
-    # TIMEOUT = 10  # em segundos
-    # BACKOFF_FACTOR = 1.5

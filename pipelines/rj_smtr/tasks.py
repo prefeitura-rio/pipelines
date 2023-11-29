@@ -682,8 +682,7 @@ def create_request_params(
         recurso_params = {
             "dates": f"createdDate ge {start} and createdDate le {end}",
             "service": constants.SUBSIDIO_SPPO_RECURSO_SERVICE.value,
-        }  # fazer um filtro para pegar só o pedaço necessário do banco
-        # fazer local a chamada dos dados totais
+        }
         extract_params["$filter"] = extract_params["$filter"].format(**recurso_params)
         request_params = extract_params
 
