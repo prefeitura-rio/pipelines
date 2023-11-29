@@ -277,7 +277,11 @@ def download_ftp(
     return output_path
 
 
-@task(max_retries=2, retry_delay=timedelta(seconds=5), timeout=timedelta(seconds=240),)
+@task(
+    max_retries=2,
+    retry_delay=timedelta(seconds=5),
+    timeout=timedelta(seconds=240),
+)
 def cloud_function_request(
     url: str,
     credential: None,
