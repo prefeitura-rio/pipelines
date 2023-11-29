@@ -50,7 +50,7 @@ with Flow(
     BLOB_FILE = Parameter("blob_file", required=True)
 
     # GCP
-    DATASET_ID = Parameter("DATASET_ID", default=tpc_constants.DATASET_ID.value)
+    DATASET_ID = Parameter("dataset_id", default=tpc_constants.DATASET_ID.value)
     TABLE_ID = Parameter("table_id", required=True)
 
     #####################################

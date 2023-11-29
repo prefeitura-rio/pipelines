@@ -27,7 +27,6 @@ from pipelines.utils.utils import (
     get_username_and_password_from_secret,
 )
 
-
 @task
 def get_secret(secret_path: str, secret_key: str = None):
     """
@@ -311,9 +310,9 @@ def cloud_function_request(
     else:
         raise ValueError("env must be 'prod' or 'dev'")
 
-    TOKEN = os.environ.get("GOOGLE_TOKEN")
-    # request = google.auth.transport.requests.Request()
-    # TOKEN = google.oauth2.id_token.fetch_id_token(request, audience)
+    request = google.auth.transport.requests.Request()
+    TOKEN = google.oauth2.id_token.fetch_id_token(request, cloud_function_url)
+
 
     payload = json.dumps(
         {

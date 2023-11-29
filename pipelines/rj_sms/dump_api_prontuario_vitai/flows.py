@@ -48,7 +48,7 @@ with Flow(
     DATE = Parameter("date", default=None)
 
     # GCP
-    DATASET_ID = Parameter("DATASET_ID", default=vitai_constants.DATASET_ID.value)
+    DATASET_ID = Parameter("dataset_id", default=vitai_constants.DATASET_ID.value)
     TABLE_ID = Parameter("table_id", required=True)
 
     #####################################

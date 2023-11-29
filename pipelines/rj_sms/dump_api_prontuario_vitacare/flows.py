@@ -52,7 +52,7 @@ with Flow(
     DATE = Parameter("date", default="today")
 
     #  GCP
-    DATASET_ID = Parameter("DATASET_ID", default=vitacare_constants.DATASET_ID.value)
+    DATASET_ID = Parameter("dataset_id", default=vitacare_constants.DATASET_ID.value)
     TABLE_ID = Parameter("table_id", required=True)
 
     #####################################

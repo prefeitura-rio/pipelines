@@ -24,16 +24,16 @@ flow_parameters = [
         "dataset_id": tpc_constants.DATASET_ID.value,
         "blob_file": "posicao",
     },
-    {
-        "table_id": "estoque_pedidos_abastecimento",
-        "dataset_id": tpc_constants.DATASET_ID.value,
-        "blob_file": "pedidos",
-    },
-    {
-        "table_id": "estoque_recebimento",
-        "dataset_id": tpc_constants.DATASET_ID.value,
-        "blob_file": "recebimento",
-    },
+    #{
+    #    "table_id": "estoque_pedidos_abastecimento",
+    #    "dataset_id": tpc_constants.DATASET_ID.value,
+    #    "blob_file": "pedidos",
+    #},
+    #{
+    #    "table_id": "estoque_recebimento",
+    #    "dataset_id": tpc_constants.DATASET_ID.value,
+    #    "blob_file": "recebimento",
+    #},
 ]
 
 
