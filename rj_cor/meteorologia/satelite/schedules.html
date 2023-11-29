@@ -5,8 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>pipelines.rj_cor.meteorologia.satelite.schedules API documentation</title>
-<meta name="description" content="Schedules for meteorologia_inmet
-Rodar a cada 1 hora" />
+<meta name="description" content="Schedules to run all satelite products" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -23,31 +22,163 @@ Rodar a cada 1 hora" />
 <h1 class="title">Module <code>pipelines.rj_cor.meteorologia.satelite.schedules</code></h1>
 </header>
 <section id="section-intro">
-<p>Schedules for meteorologia_inmet
-Rodar a cada 1 hora</p>
+<p>Schedules to run all satelite products</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Schedules for meteorologia_inmet
-Rodar a cada 1 hora
+Schedules to run all satelite products
 &#34;&#34;&#34;
 from datetime import timedelta, datetime
 from prefect.schedules import Schedule
 from prefect.schedules.clocks import IntervalClock
 from pipelines.constants import constants
 
-hour_schedule = Schedule(
+rrqpe = Schedule(
     clocks=[
         IntervalClock(
             interval=timedelta(minutes=5),
             start_date=datetime(2021, 1, 1, 0, 4, 0),
-            labels=[
-                constants.RJ_COR_AGENT_LABEL.value,
-            ],
-        ),
+            labels=[constants.RJ_COR_AGENT_LABEL.value],
+            parameter_defaults={
+                &#34;materialize_after_dump&#34;: False,
+                &#34;materialize_to_datario&#34;: False,
+                &#34;mode&#34;: &#34;prod&#34;,
+                &#34;mode_redis&#34;: &#34;prod&#34;,
+                &#34;dataset_id&#34;: &#34;clima_satelite&#34;,
+                &#34;table_id&#34;: &#34;taxa_precipitacao_goes_16&#34;,
+                &#34;product&#34;: &#34;RRQPEF&#34;,
+            },
+        )
+    ]
+)
+tpw = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(minutes=5),
+            start_date=datetime(2021, 1, 1, 0, 4, 0),
+            labels=[constants.RJ_COR_AGENT_LABEL.value],
+            parameter_defaults={
+                &#34;materialize_after_dump&#34;: False,
+                &#34;materialize_to_datario&#34;: False,
+                &#34;mode&#34;: &#34;prod&#34;,
+                &#34;mode_redis&#34;: &#34;prod&#34;,
+                &#34;dataset_id&#34;: &#34;clima_satelite&#34;,
+                &#34;table_id&#34;: &#34;quantidade_agua_precipitavel_goes_16&#34;,
+                &#34;product&#34;: &#34;TPWF&#34;,
+            },
+        )
+    ]
+)
+cmip = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(minutes=5),
+            start_date=datetime(2021, 1, 1, 0, 4, 0),
+            labels=[constants.RJ_COR_AGENT_LABEL.value],
+            parameter_defaults={
+                &#34;materialize_after_dump&#34;: False,
+                &#34;materialize_to_datario&#34;: False,
+                &#34;mode&#34;: &#34;prod&#34;,
+                &#34;mode_redis&#34;: &#34;prod&#34;,
+                &#34;dataset_id&#34;: &#34;clima_satelite&#34;,
+                &#34;table_id&#34;: &#34;infravermelho_longo_banda_13_goes_16&#34;,
+                &#34;product&#34;: &#34;CMIPF&#34;,
+                &#34;band&#34;: &#34;13&#34;,
+            },
+        )
+    ]
+)
+mcmip = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(minutes=5),
+            start_date=datetime(2021, 1, 1, 0, 4, 0),
+            labels=[constants.RJ_COR_AGENT_LABEL.value],
+            parameter_defaults={
+                &#34;materialize_after_dump&#34;: False,
+                &#34;materialize_to_datario&#34;: False,
+                &#34;mode&#34;: &#34;prod&#34;,
+                &#34;mode_redis&#34;: &#34;prod&#34;,
+                &#34;dataset_id&#34;: &#34;clima_satelite&#34;,
+                &#34;table_id&#34;: &#34;imagem_nuvem_umidade_goes_16&#34;,
+                &#34;product&#34;: &#34;MCMIPF&#34;,
+            },
+        )
+    ]
+)
+dsi = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(minutes=5),
+            start_date=datetime(2021, 1, 1, 0, 4, 0),
+            labels=[constants.RJ_COR_AGENT_LABEL.value],
+            parameter_defaults={
+                &#34;materialize_after_dump&#34;: False,
+                &#34;materialize_to_datario&#34;: False,
+                &#34;mode&#34;: &#34;prod&#34;,
+                &#34;mode_redis&#34;: &#34;prod&#34;,
+                &#34;dataset_id&#34;: &#34;clima_satelite&#34;,
+                &#34;table_id&#34;: &#34;indice_estabilidade_derivado_goes_16&#34;,
+                &#34;product&#34;: &#34;DSIF&#34;,
+            },
+        )
+    ]
+)
+lst = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(minutes=5),
+            start_date=datetime(2021, 1, 1, 0, 4, 0),
+            labels=[constants.RJ_COR_AGENT_LABEL.value],
+            parameter_defaults={
+                &#34;materialize_after_dump&#34;: False,
+                &#34;materialize_to_datario&#34;: False,
+                &#34;mode&#34;: &#34;prod&#34;,
+                &#34;mode_redis&#34;: &#34;prod&#34;,
+                &#34;dataset_id&#34;: &#34;clima_satelite&#34;,
+                &#34;table_id&#34;: &#34;temperatura_superficie_terra_goes_16&#34;,
+                &#34;product&#34;: &#34;LSTF&#34;,
+            },
+        )
+    ]
+)
+sst = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(minutes=5),
+            start_date=datetime(2021, 1, 1, 0, 4, 0),
+            labels=[constants.RJ_COR_AGENT_LABEL.value],
+            parameter_defaults={
+                &#34;materialize_after_dump&#34;: False,
+                &#34;materialize_to_datario&#34;: False,
+                &#34;mode&#34;: &#34;prod&#34;,
+                &#34;mode_redis&#34;: &#34;prod&#34;,
+                &#34;dataset_id&#34;: &#34;clima_satelite&#34;,
+                &#34;table_id&#34;: &#34;temperatura_superficie_oceano_goes_16&#34;,
+                &#34;product&#34;: &#34;SSTF&#34;,
+            },
+        )
+    ]
+)
+aod = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(minutes=5),
+            start_date=datetime(2021, 1, 1, 0, 4, 0),
+            labels=[constants.RJ_COR_AGENT_LABEL.value],
+            parameter_defaults={
+                &#34;materialize_after_dump&#34;: False,
+                &#34;materialize_to_datario&#34;: False,
+                &#34;mode&#34;: &#34;prod&#34;,
+                &#34;mode_redis&#34;: &#34;prod&#34;,
+                &#34;dataset_id&#34;: &#34;clima_satelite&#34;,
+                &#34;table_id&#34;: &#34;profundidade_optica_aerossol_goes_16&#34;,
+                &#34;product&#34;: &#34;AODF&#34;,
+            },
+        )
     ]
 )</code></pre>
 </details>

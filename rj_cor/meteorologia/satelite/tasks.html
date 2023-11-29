@@ -28,7 +28,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
-# pylint: disable=W0102, W0613, R0913, R0914
+# pylint: disable=W0102, W0613, R0913, R0914, R0915
 &#34;&#34;&#34;
 Tasks for emd
 &#34;&#34;&#34;
@@ -47,11 +47,12 @@ from prefect.engine.state import Skipped
 import s3fs
 
 from pipelines.rj_cor.meteorologia.satelite.satellite_utils import (
-    extract_julian_day_and_hour_from_filename,
-    main,
-    save_data_in_file,
-    get_blob_with_prefix,
     download_blob,
+    extract_julian_day_and_hour_from_filename,
+    get_blob_with_prefix,
+    get_info,
+    remap_g16,
+    save_data_in_file,
 )
 from pipelines.utils.utils import log
 
@@ -103,7 +104,7 @@ def slice_data(current_time: str, ref_filename: str = None) -&gt; dict:
 
 @task(nout=2, max_retries=10, retry_delay=dt.timedelta(seconds=60))
 def download(
-    variavel: str,
+    product: str,
     date_hour_info: dict,
     band: str = None,
     ref_filename: str = None,
@@ -127,19 +128,21 @@ def download(
         path_files = np.sort(
             np.array(
                 s3_fs.find(
-                    f&#34;noaa-goes16/ABI-L2-{variavel}/{year}/{julian_day}/{hour_utc}/&#34;
+                    f&#34;noaa-goes16/ABI-L2-{product}/{year}/{julian_day}/{hour_utc}/&#34;
                 )
                 # s3_fs.find(f&#34;noaa-goes16/ABI-L2-CMIPF/2022/270/10/OR_ABI-L2-CMIPF-M6C13_G16_s20222701010208_e20222701019528_c20222701020005.nc&#34;)
             )
         )
+        print(&#34;product&#34;, product)
+        print(&#34;path_files&#34;, path_files)
         # Mantém apenas arquivos de determinada banda
-        if variavel == &#34;CMIPF&#34;:
+        if product == &#34;CMIPF&#34;:
             # para capturar banda 13
             path_files = [f for f in path_files if bool(re.search(&#34;C&#34; + band, f))]
         origem = &#34;aws&#34;
     except IndexError:
         bucket_name = &#34;gcp-public-data-goes-16&#34;
-        partition_file = f&#34;ABI-L2-{variavel}/{year}/{julian_day}/{hour_utc}/&#34;
+        partition_file = f&#34;ABI-L2-{product}/{year}/{julian_day}/{hour_utc}/&#34;
         path_files = get_blob_with_prefix(
             bucket_name=bucket_name, prefix=partition_file, mode=&#34;prod&#34;
         )
@@ -152,7 +155,7 @@ def download(
         raise ENDRUN(state=skip)
 
     base_path = os.path.join(
-        os.getcwd(), mode_redis, &#34;data&#34;, &#34;satelite&#34;, variavel[:-1], &#34;input&#34;
+        os.getcwd(), mode_redis, &#34;data&#34;, &#34;satelite&#34;, product[:-1], &#34;input&#34;
     )
 
     if not os.path.exists(base_path):
@@ -207,26 +210,69 @@ def download(
 
 
 @task
-def tratar_dados(filename: str, mode_redis: str = &#34;prod&#34;) -&gt; dict:
+def tratar_dados(filename: str) -&gt; dict:
     &#34;&#34;&#34;
-    Converte coordenadas X, Y para latlon e recorta área
+    Converte coordenadas X, Y para latlon do arquivo netcdf
+    e seleciona apenas a área especificada na variável extent
     &#34;&#34;&#34;
-    log(f&#34;\n&gt;&gt;&gt;&gt; Started treating file: {filename}&#34;)
-    grid, goes16_extent, info = main(filename, mode_redis)
-    del grid, goes16_extent
-    return info
+    log(f&#34;\n Started treating file: {filename}&#34;)
+    # Create the basemap reference for the Rectangular Projection.
+    # You may choose the region you want.
+
+    # Full Disk Extent
+    # extent = [-156.00, -81.30, 6.30, 81.30]
+
+    # Brazil region
+    # extent = [-90.0, -40.0, -20.0, 10.0]
+
+    # Estado do RJ
+    # lat_max, lon_max = (-20.69080839963545, -40.28483671464648)
+    # lat_min, lon_min = (-23.801876626302175, -45.05290312102409)
+
+    # Região da cidade do Rio de Janeiro
+    # lat_max, lon_min = (-22.802842397418548, -43.81200531887697)
+    # lat_min, lon_max = (-23.073487725280266, -43.11300020870994)
+
+    # Recorte da região da cidade do Rio de Janeiro segundo meteorologista
+    lat_max, lon_max = (
+        -21.699774257353113,
+        -42.35676996062447,
+    )  # canto superior direito
+    lat_min, lon_min = (
+        -23.801876626302175,
+        -45.05290312102409,
+    )  # canto inferior esquerdo
+
+    extent = [lon_min, lat_min, lon_max, lat_max]
+
+    # Get informations from the nc file
+    product_caracteristics = get_info(filename)
+
+    print(&#34;product_caracteristics[variable]&#34;, product_caracteristics[&#34;variable&#34;])
+    # Call the remap function to convert x, y to lon, lat and save converted file
+    remap_g16(
+        filename,
+        extent,
+        product=product_caracteristics[&#34;product&#34;],
+        variable=product_caracteristics[&#34;variable&#34;],
+    )
+
+    return product_caracteristics
 
 
 @task
-def save_data(info: dict, file_path: str, mode_redis: str = &#34;prod&#34;) -&gt; Union[str, Path]:
+def save_data(info: dict, mode_redis: str = &#34;prod&#34;) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
-    Convert tif data to csv
+    Concat all netcdf data and save partitioned by date on a csv
     &#34;&#34;&#34;
 
-    variable = info[&#34;variable&#34;]
-    datetime_save = info[&#34;datetime_save&#34;]
-    print(f&#34;Saving {variable} in parquet&#34;)
-    output_path = save_data_in_file(variable, datetime_save, file_path, mode_redis)
+    log(&#34;Start saving product on a csv&#34;)
+    output_path = save_data_in_file(
+        product=info[&#34;product&#34;],
+        variable=info[&#34;variable&#34;],
+        datetime_save=info[&#34;datetime_save&#34;],
+        mode_redis=mode_redis,
+    )
     return output_path</code></pre>
 </details>
 </section>
@@ -238,7 +284,7 @@ def save_data(info: dict, file_path: str, mode_redis: str = &#34;prod&#34;) -&gt
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pipelines.rj_cor.meteorologia.satelite.tasks.download"><code class="name flex">
-<span>def <span class="ident">download</span></span>(<span>variavel: str, date_hour_info: dict, band: str = None, ref_filename: str = None, redis_files: list = [], wait=None, mode_redis: str = 'prod') ‑> Union[str, pathlib.Path]</span>
+<span>def <span class="ident">download</span></span>(<span>product: str, date_hour_info: dict, band: str = None, ref_filename: str = None, redis_files: list = [], wait=None, mode_redis: str = 'prod') ‑> Union[str, pathlib.Path]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Acessa o S3 e faz o download do primeiro arquivo da data-hora especificada</p></div>
@@ -248,7 +294,7 @@ def save_data(info: dict, file_path: str, mode_redis: str = &#34;prod&#34;) -&gt
 </summary>
 <pre><code class="python">@task(nout=2, max_retries=10, retry_delay=dt.timedelta(seconds=60))
 def download(
-    variavel: str,
+    product: str,
     date_hour_info: dict,
     band: str = None,
     ref_filename: str = None,
@@ -272,19 +318,21 @@ def download(
         path_files = np.sort(
             np.array(
                 s3_fs.find(
-                    f&#34;noaa-goes16/ABI-L2-{variavel}/{year}/{julian_day}/{hour_utc}/&#34;
+                    f&#34;noaa-goes16/ABI-L2-{product}/{year}/{julian_day}/{hour_utc}/&#34;
                 )
                 # s3_fs.find(f&#34;noaa-goes16/ABI-L2-CMIPF/2022/270/10/OR_ABI-L2-CMIPF-M6C13_G16_s20222701010208_e20222701019528_c20222701020005.nc&#34;)
             )
         )
+        print(&#34;product&#34;, product)
+        print(&#34;path_files&#34;, path_files)
         # Mantém apenas arquivos de determinada banda
-        if variavel == &#34;CMIPF&#34;:
+        if product == &#34;CMIPF&#34;:
             # para capturar banda 13
             path_files = [f for f in path_files if bool(re.search(&#34;C&#34; + band, f))]
         origem = &#34;aws&#34;
     except IndexError:
         bucket_name = &#34;gcp-public-data-goes-16&#34;
-        partition_file = f&#34;ABI-L2-{variavel}/{year}/{julian_day}/{hour_utc}/&#34;
+        partition_file = f&#34;ABI-L2-{product}/{year}/{julian_day}/{hour_utc}/&#34;
         path_files = get_blob_with_prefix(
             bucket_name=bucket_name, prefix=partition_file, mode=&#34;prod&#34;
         )
@@ -297,7 +345,7 @@ def download(
         raise ENDRUN(state=skip)
 
     base_path = os.path.join(
-        os.getcwd(), mode_redis, &#34;data&#34;, &#34;satelite&#34;, variavel[:-1], &#34;input&#34;
+        os.getcwd(), mode_redis, &#34;data&#34;, &#34;satelite&#34;, product[:-1], &#34;input&#34;
     )
 
     if not os.path.exists(base_path):
@@ -379,24 +427,27 @@ def get_dates(current_time) -&gt; str:
 </details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.tasks.save_data"><code class="name flex">
-<span>def <span class="ident">save_data</span></span>(<span>info: dict, file_path: str, mode_redis: str = 'prod') ‑> Union[str, pathlib.Path]</span>
+<span>def <span class="ident">save_data</span></span>(<span>info: dict, mode_redis: str = 'prod') ‑> Union[str, pathlib.Path]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Convert tif data to csv</p></div>
+<div class="desc"><p>Concat all netcdf data and save partitioned by date on a csv</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def save_data(info: dict, file_path: str, mode_redis: str = &#34;prod&#34;) -&gt; Union[str, Path]:
+def save_data(info: dict, mode_redis: str = &#34;prod&#34;) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
-    Convert tif data to csv
+    Concat all netcdf data and save partitioned by date on a csv
     &#34;&#34;&#34;
 
-    variable = info[&#34;variable&#34;]
-    datetime_save = info[&#34;datetime_save&#34;]
-    print(f&#34;Saving {variable} in parquet&#34;)
-    output_path = save_data_in_file(variable, datetime_save, file_path, mode_redis)
+    log(&#34;Start saving product on a csv&#34;)
+    output_path = save_data_in_file(
+        product=info[&#34;product&#34;],
+        variable=info[&#34;variable&#34;],
+        datetime_save=info[&#34;datetime_save&#34;],
+        mode_redis=mode_redis,
+    )
     return output_path</code></pre>
 </details>
 </dd>
@@ -441,23 +492,64 @@ def slice_data(current_time: str, ref_filename: str = None) -&gt; dict:
 </details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.tasks.tratar_dados"><code class="name flex">
-<span>def <span class="ident">tratar_dados</span></span>(<span>filename: str, mode_redis: str = 'prod') ‑> dict</span>
+<span>def <span class="ident">tratar_dados</span></span>(<span>filename: str) ‑> dict</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Converte coordenadas X, Y para latlon e recorta área</p></div>
+<div class="desc"><p>Converte coordenadas X, Y para latlon do arquivo netcdf
+e seleciona apenas a área especificada na variável extent</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def tratar_dados(filename: str, mode_redis: str = &#34;prod&#34;) -&gt; dict:
+def tratar_dados(filename: str) -&gt; dict:
     &#34;&#34;&#34;
-    Converte coordenadas X, Y para latlon e recorta área
+    Converte coordenadas X, Y para latlon do arquivo netcdf
+    e seleciona apenas a área especificada na variável extent
     &#34;&#34;&#34;
-    log(f&#34;\n&gt;&gt;&gt;&gt; Started treating file: {filename}&#34;)
-    grid, goes16_extent, info = main(filename, mode_redis)
-    del grid, goes16_extent
-    return info</code></pre>
+    log(f&#34;\n Started treating file: {filename}&#34;)
+    # Create the basemap reference for the Rectangular Projection.
+    # You may choose the region you want.
+
+    # Full Disk Extent
+    # extent = [-156.00, -81.30, 6.30, 81.30]
+
+    # Brazil region
+    # extent = [-90.0, -40.0, -20.0, 10.0]
+
+    # Estado do RJ
+    # lat_max, lon_max = (-20.69080839963545, -40.28483671464648)
+    # lat_min, lon_min = (-23.801876626302175, -45.05290312102409)
+
+    # Região da cidade do Rio de Janeiro
+    # lat_max, lon_min = (-22.802842397418548, -43.81200531887697)
+    # lat_min, lon_max = (-23.073487725280266, -43.11300020870994)
+
+    # Recorte da região da cidade do Rio de Janeiro segundo meteorologista
+    lat_max, lon_max = (
+        -21.699774257353113,
+        -42.35676996062447,
+    )  # canto superior direito
+    lat_min, lon_min = (
+        -23.801876626302175,
+        -45.05290312102409,
+    )  # canto inferior esquerdo
+
+    extent = [lon_min, lat_min, lon_max, lat_max]
+
+    # Get informations from the nc file
+    product_caracteristics = get_info(filename)
+
+    print(&#34;product_caracteristics[variable]&#34;, product_caracteristics[&#34;variable&#34;])
+    # Call the remap function to convert x, y to lon, lat and save converted file
+    remap_g16(
+        filename,
+        extent,
+        product=product_caracteristics[&#34;product&#34;],
+        variable=product_caracteristics[&#34;variable&#34;],
+    )
+
+    return product_caracteristics</code></pre>
 </details>
 </dd>
 </dl>
