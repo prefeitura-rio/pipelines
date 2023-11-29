@@ -9,7 +9,7 @@ import re
 import shutil
 import sys
 import json
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from pathlib import Path
 from ftplib import FTP
 import zipfile
@@ -101,7 +101,7 @@ def download_from_api(
     file_folder: str,
     file_name: str,
     params=None,
-    crendentials=None,
+    credentials=None,
     auth_method="bearer",
     add_load_date_to_filename=False,
     load_date=None,
@@ -114,7 +114,7 @@ def download_from_api(
         file_folder (str): The folder where the downloaded file will be saved.
         file_name (str): The name of the downloaded file.
         params (dict, optional): Additional parameters to be included in the API request. Defaults to None.
-        crendentials (str or tuple, optional): The credentials to be used for authentication. Defaults to None.
+        credentials (str or tuple, optional): The credentials to be used for authentication. Defaults to None.
         auth_method (str, optional): The authentication method to be used. Valid values are "bearer" and "basic". Defaults to "bearer".
         add_load_date_to_filename (bool, optional): Whether to add the load date to the filename. Defaults to False.
         load_date (str, optional): The load date to be added to the filename. Defaults to None.
@@ -131,10 +131,10 @@ def download_from_api(
 
     log("Downloading data from API")
     if auth_method == "bearer":
-        headers = {"Authorization": f"Bearer {crendentials}"}
+        headers = {"Authorization": f"Bearer {credentials}"}
         response = requests.get(url, headers=headers, params=params)
     elif auth_method == "basic":
-        response = requests.get(url, auth=crendentials, params=params)
+        response = requests.get(url, auth=credentials, params=params)
     else:
         response = requests.get(url, params=params)
 
@@ -277,7 +277,7 @@ def download_ftp(
     return output_path
 
 
-@task
+@task(max_retries=2, retry_delay=timedelta(seconds=5), timeout=timedelta(seconds=240),)
 def cloud_function_request(
     url: str,
     credential: None,
@@ -311,6 +311,7 @@ def cloud_function_request(
     else:
         raise ValueError("env must be 'prod' or 'dev'")
 
+    # TOKEN = os.environ.get("GOOGLE_TOKEN")
     request = google.auth.transport.requests.Request()
     TOKEN = google.oauth2.id_token.fetch_id_token(request, cloud_function_url)
 

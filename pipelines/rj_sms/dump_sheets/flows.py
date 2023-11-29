@@ -18,6 +18,7 @@ dump_sms_sheets_flow = deepcopy(dump_url_flow)
 dump_sms_sheets_flow.name = (
     "SMS: Dump Google Sheets - Ingerir planilhas do Google Sheets"
 )
+dump_sms_sheets_flow.code_owners = ["thiago", "andre", "danilo"]
 dump_sms_sheets_flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 
 dump_sms_sheets_flow.run_config = KubernetesRun(

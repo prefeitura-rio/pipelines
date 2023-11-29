@@ -22,7 +22,8 @@ from pipelines.rj_sms.dump_ftp_cnes.schedules import every_sunday_at_six_am
 
 
 with Flow(
-    name="SMS: Dump CNES - Captura de dados CNES", code_owners=["thiago"]
+    name="SMS: Dump CNES - Captura de dados CNES",
+    code_owners=["thiago", "andre", "danilo"],
 ) as dump_cnes:
     # Parameters
     # Parameters for GCP
@@ -52,7 +53,7 @@ with Flow(
     )
 
     create_folders_task = create_folders()
-    create_folders_task.set_upstream(file_to_download_task)
+    create_folders_task.set_upstream(file_to_download_task)  # pylint: disable=E1101
 
     download_task = download_ftp_cnes(
         host=ftp_server,
@@ -70,7 +71,7 @@ with Flow(
     unzip_task.set_upstream(download_task)
 
     conform_task = conform_csv_to_gcp(create_folders_task["raw"])
-    conform_task.set_upstream(unzip_task)
+    conform_task.set_upstream(unzip_task)  # pylint: disable=E1101
 
     add_multiple_date_column_task = add_multiple_date_column(
         directory=create_folders_task["raw"],

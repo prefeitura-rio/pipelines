@@ -30,7 +30,8 @@ from pipelines.rj_sms.dump_api_prontuario_vitai.schedules import (
 )
 
 with Flow(
-    name="SMS: Dump Vitai - Ingerir dados do prontuário Vitai", code_owners=["thiago"]
+    name="SMS: Dump Vitai - Ingerir dados do prontuário Vitai",
+    code_owners=["thiago", "andre", "danilo"],
 ) as dump_vitai:
     #####################################
     # Parameters
@@ -78,7 +79,7 @@ with Flow(
         file_folder=create_folders_task["raw"],
         file_name=TABLE_ID,
         params=None,
-        crendentials=get_secret_task,
+        credentials=get_secret_task,
         auth_method="bearer",
         add_load_date_to_filename=True,
         load_date=build_date_param_task,

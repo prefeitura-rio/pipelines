@@ -34,7 +34,7 @@ from pipelines.rj_sms.dump_api_prontuario_vitacare.schedules import (
 
 with Flow(
     name="SMS: Dump VitaCare - Ingerir dados do prontuário VitaCare",
-    code_owners=["thiago"],
+    code_owners=["thiago", "andre", "danilo"],
 ) as dump_vitacare:
     #####################################
     # Parameters
@@ -76,6 +76,9 @@ with Flow(
     build_params_task = build_params(date_param=DATE)
     build_params_task.set_upstream(create_folders_task)  # pylint: disable=E1101
 
+    file_name_task = create_filename(table_id=TABLE_ID, ap=AP)
+    file_name_task.set_upstream(build_params_task)
+
     download_task = cloud_function_request(
         url=build_url_task,
         credential=get_secret_task,
@@ -84,10 +87,7 @@ with Flow(
         query_params=build_params_task,
         env="prod",
     )
-    download_task.set_upstream(build_url_task)
-
-    file_name_task = create_filename(table_id=TABLE_ID, ap=AP)
-    file_name_task.set_upstream(download_task)
+    download_task.set_upstream(file_name_task)  # pylint: disable=E1101
 
     save_data_task = save_data_to_file(
         data=download_task,
@@ -97,7 +97,7 @@ with Flow(
         add_load_date_to_filename=True,
         load_date=build_params_task["date"],
     )
-    save_data_task.set_upstream(file_name_task)  # pylint: disable=E1101
+    save_data_task.set_upstream(download_task)  # pylint: disable=E1101
 
     #####################################
     # Tasks section #2 - Transform data and Create table
@@ -127,7 +127,7 @@ dump_vitacare.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_vitacare.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[
-        constants.RJ_SMS_DEV_AGENT_LABEL.value,
+        constants.RJ_SMS_AGENT_LABEL.value,
     ],
 )
 

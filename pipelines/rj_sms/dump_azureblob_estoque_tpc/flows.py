@@ -32,7 +32,8 @@ from pipelines.rj_sms.dump_azureblob_estoque_tpc.schedules import (
 )
 
 with Flow(
-    name="SMS: Dump TPC - Ingerir dados do estoque TPC", code_owners=["thiago"]
+    name="SMS: Dump TPC - Ingerir dados do estoque TPC",
+    code_owners=["thiago", "andre", "danilo"],
 ) as dump_tpc:
     #####################################
     # Parameters
@@ -116,7 +117,7 @@ dump_tpc.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 dump_tpc.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[
-        constants.RJ_SMS_DEV_AGENT_LABEL.value,
+        constants.RJ_SMS_AGENT_LABEL.value,
     ],
 )
 
