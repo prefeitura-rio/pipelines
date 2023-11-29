@@ -671,7 +671,18 @@ def get_raw_data_db(
             password=credentials["password"],
             database=database,
         ) as connection:
-            data = pd.read_sql(sql=query, con=connection).to_dict(orient="records")
+            for i in range(10):
+                try:
+                    data = pd.read_sql(sql=query, con=connection).to_dict(
+                        orient="records"
+                    )
+                    break
+                except pd.errors.DatabaseError as e:
+                    if "canceling statement due to conflict with recovery" in e:
+                        log(f"[ATTEMPT {i}] {e}")
+                        continue
+
+                    raise e
 
     except Exception:
         error = traceback.format_exc()
