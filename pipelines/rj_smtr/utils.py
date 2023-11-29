@@ -677,12 +677,12 @@ def get_raw_data_db(
                         orient="records"
                     )
                     break
-                except pd.errors.DatabaseError as e:
-                    if "canceling statement due to conflict with recovery" in e:
-                        log(f"[ATTEMPT {i}] {e}")
+                except pd.errors.DatabaseError as err:
+                    if "canceling statement due to conflict with recovery" in str(err):
+                        log(f"[ATTEMPT {i}] {err}", level="warning")
                         continue
 
-                    raise e
+                    raise err
 
     except Exception:
         error = traceback.format_exc()
