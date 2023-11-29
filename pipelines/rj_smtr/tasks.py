@@ -937,7 +937,6 @@ def upload_raw_data_to_gcs(
     Returns:
         Union[str, None]: if there is an error returns it traceback, otherwise returns None
     """
-    log(f"BUCKET: {bucket_name}")
     if error is None:
         try:
             st_obj = Storage(
@@ -1254,6 +1253,7 @@ def transform_raw_to_nested_structure(
     error: str,
     timestamp: datetime,
     primary_key: list = None,
+    flag_private_data: bool = False,
 ) -> tuple[str, str]:
     """
     Task to transform raw data to nested structure
@@ -1264,6 +1264,7 @@ def transform_raw_to_nested_structure(
         error (str): Error catched from upstream tasks
         timestamp (datetime): timestamp for flow run
         primary_key (list, optional): Primary key to be used on nested structure
+        flag_private_data (bool, optional): Flag to indicate if the task should log the data
 
     Returns:
         str: Error traceback
@@ -1277,12 +1278,13 @@ def transform_raw_to_nested_structure(
             if primary_key is None:
                 primary_key = []
 
-            log(
-                f"""
-                Received inputs:
-                - timestamp:\n{timestamp}
-                - data:\n{data.head()}"""
-            )
+            if not flag_private_data:
+                log(
+                    f"""
+                    Received inputs:
+                    - timestamp:\n{timestamp}
+                    - data:\n{data.head()}"""
+                )
 
             # Check empty dataframe
             if data.empty:
