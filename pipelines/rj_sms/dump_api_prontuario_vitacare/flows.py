@@ -34,7 +34,7 @@ from pipelines.rj_sms.dump_api_prontuario_vitacare.schedules import (
 
 with Flow(
     name="SMS: Dump VitaCare - Ingerir dados do prontuário VitaCare",
-    code_owners=["thiago", "andre", "danilo"],
+    code_owners=["thiago", "andre",],
 ) as dump_vitacare:
     #####################################
     # Parameters

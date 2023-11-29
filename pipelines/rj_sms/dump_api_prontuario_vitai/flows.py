@@ -31,7 +31,7 @@ from pipelines.rj_sms.dump_api_prontuario_vitai.schedules import (
 
 with Flow(
     name="SMS: Dump Vitai - Ingerir dados do prontuário Vitai",
-    code_owners=["thiago", "andre", "danilo"],
+    code_owners=["thiago", "andre",],
 ) as dump_vitai:
     #####################################
     # Parameters

@@ -23,7 +23,7 @@ from pipelines.rj_sms.dump_ftp_cnes.schedules import every_sunday_at_six_am
 
 with Flow(
     name="SMS: Dump CNES - Captura de dados CNES",
-    code_owners=["thiago", "andre", "danilo"],
+    code_owners=["thiago", "andre",],
 ) as dump_cnes:
     # Parameters
     # Parameters for GCP
