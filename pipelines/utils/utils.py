@@ -60,12 +60,12 @@ def log(msg: Any, level: str = "info") -> None:
     prefect.context.logger.log(levels[level], msg)  # pylint: disable=E1101
 
 
-def log_mod(msg: str, index: int, mod: int):
+def log_mod(msg: Any, level: str = "info", index: int = 0, mod: int = 1):
     """
     Only logs a message if the index is a multiple of mod.
     """
-    if index % mod == 0 or index == 1:
-        log(msg)
+    if index % mod == 0 or index == 0:
+        log(msg=f"iteration {index}:\n {msg}", level=level)
 
 
 ###############
@@ -574,7 +574,7 @@ def to_partitions(
     suffix: str = None,
     build_json_dataframe: bool = False,
     dataframe_key_column: str = None,
-):  # sourcery skip: raise-specific-error
+) -> List[Path]:  # sourcery skip: raise-specific-error
     """Save data in to hive patitions schema, given a dataframe and a list of partition columns.
     Args:
         data (pandas.core.frame.DataFrame): Dataframe to be partitioned.
@@ -593,7 +593,7 @@ def to_partitions(
             savepath='partitions/'
         )
     """
-
+    saved_files = []
     if isinstance(data, (pd.core.frame.DataFrame)):
         savepath = Path(savepath)
 
@@ -642,12 +642,16 @@ def to_partitions(
                     mode="a",
                     header=not file_filter_save_path.exists(),
                 )
+                saved_files.append(file_filter_save_path)
             elif data_type == "parquet":
                 dataframe_to_parquet(dataframe=df_filter, path=file_filter_save_path)
+                saved_files.append(file_filter_save_path)
             else:
                 raise ValueError(f"Invalid data type: {data_type}")
     else:
         raise BaseException("Data need to be a pandas DataFrame")
+
+    return saved_files
 
 
 def to_json_dataframe(
@@ -748,6 +752,19 @@ def list_blobs_with_prefix(
     blobs = storage_client.list_blobs(bucket_name, prefix=prefix)
 
     return list(blobs)
+
+
+def delete_blobs_list(bucket_name: str, blobs: List[Blob], mode: str = "prod") -> None:
+    """
+    Deletes all blobs in the bucket that are in the blobs list.
+    Mode needs to be "prod" or "staging"
+    """
+
+    credentials = get_credentials_from_env(mode=mode)
+    storage_client = storage.Client(credentials=credentials)
+
+    bucket = storage_client.bucket(bucket_name)
+    bucket.delete_blobs(blobs)
 
 
 def upload_files_to_storage(

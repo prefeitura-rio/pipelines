@@ -31,6 +31,7 @@ from pipelines.rj_smtr.utils import (
     get_raw_data_api,
     get_raw_data_gcs,
     get_raw_data_db,
+    get_raw_recursos,
     upload_run_logs_to_bq,
     get_datetime_range,
     read_raw_data,
@@ -252,7 +253,7 @@ def create_dbt_run_vars(
 
 ###############
 #
-# Local file managment
+# Local file management
 #
 ###############
 
@@ -670,6 +671,24 @@ def create_request_params(
     elif dataset_id == constants.GTFS_DATASET_ID.value:
         request_params = extract_params["filename"]
 
+    elif dataset_id == constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value:
+        extract_params["token"] = get_vault_secret(
+            constants.SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH.value
+        )["data"]["token"]
+        start = datetime.strftime(
+            timestamp - timedelta(minutes=interval_minutes), "%Y-%m-%dT%H:%M:%S.%MZ"
+        )
+        end = datetime.strftime(timestamp, "%Y-%m-%dT%H:%M:%S.%MZ")
+        log(f" Start date {start}, end date {end}")
+        recurso_params = {
+            "dates": f"createdDate ge {start} and createdDate le {end}",
+            "service": constants.SUBSIDIO_SPPO_RECURSO_SERVICE.value,
+        }
+        extract_params["$filter"] = extract_params["$filter"].format(**recurso_params)
+        request_params = extract_params
+
+        request_url = constants.SUBSIDIO_SPPO_RECURSO_API_BASE_URL.value
+
     return request_params, request_url
 
 
@@ -726,6 +745,10 @@ def get_raw_from_sources(
         elif source_type == "db":
             error, data, filetype = get_raw_data_db(
                 host=source_path, secret_path=secret_path, **request_params
+            )
+        elif source_type == "movidesk":
+            error, data, filetype = get_raw_recursos(
+                request_url=source_path, request_params=request_params
             )
         else:
             raise NotImplementedError(f"{source_type} not supported")
@@ -1289,15 +1312,17 @@ def transform_raw_to_nested_structure(
             # Check empty dataframe
             if data.empty:
                 log("Empty dataframe, skipping transformation...")
+
             else:
                 log(f"Raw data:\n{data_info_str(data)}", level="info")
 
                 log("Adding captured timestamp column...", level="info")
                 data["timestamp_captura"] = timestamp
 
-                log("Striping string columns...", level="info")
-                for col in data.columns[data.dtypes == "object"].to_list():
-                    data[col] = data[col].str.strip()
+                if "customFieldValues" not in data:
+                    log("Striping string columns...", level="info")
+                    for col in data.columns[data.dtypes == "object"].to_list():
+                        data[col] = data[col].str.strip()
 
                 log(f"Finished cleaning! Data:\n{data_info_str(data)}", level="info")
 
@@ -1393,3 +1418,40 @@ def check_mapped_query_logs_output(query_logs_output: list[tuple]) -> bool:
 
     recapture_list = [i[0] for i in query_logs_output]
     return any(recapture_list)
+
+
+@task
+def get_scheduled_start_times(
+    timestamp: datetime, parameters: list, intervals: Union[None, dict] = None
+):
+    """
+    Task to get start times to schedule flows
+
+    Args:
+        timestamp (datetime): initial flow run timestamp
+        parameters (list): parameters for the flow
+        intervals (Union[None, dict], optional): intervals between each flow run. Defaults to None.
+            Optionally, you can pass specific intervals for some table_ids.
+            Suggests to pass intervals based on previous table observed execution times.
+            Defaults to dict(default=timedelta(minutes=2)).
+
+    Returns:
+        list[datetime]: list of scheduled start times
+    """
+
+    if intervals is None:
+        intervals = dict()
+
+    if "default" not in intervals.keys():
+        intervals["default"] = timedelta(minutes=2)
+
+    timestamps = [None]
+    last_schedule = timestamp
+
+    for param in parameters[1:]:
+        last_schedule += intervals.get(
+            param.get("table_id", "default"), intervals["default"]
+        )
+        timestamps.append(last_schedule)
+
+    return timestamps
