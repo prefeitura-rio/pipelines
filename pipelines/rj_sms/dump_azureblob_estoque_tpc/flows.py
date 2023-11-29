@@ -33,7 +33,10 @@ from pipelines.rj_sms.dump_azureblob_estoque_tpc.schedules import (
 
 with Flow(
     name="SMS: Dump TPC - Ingerir dados do estoque TPC",
-    code_owners=["thiago", "andre",],
+    code_owners=[
+        "thiago",
+        "andre",
+    ],
 ) as dump_tpc:
     #####################################
     # Parameters
