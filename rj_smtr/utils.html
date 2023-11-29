@@ -46,16 +46,20 @@ import pytz
 import requests
 import basedosdados as bd
 from basedosdados import Table
+from basedosdados import Storage
+import math
 import pandas as pd
 from google.cloud.storage.blob import Blob
 import pymysql
 import psycopg2
 import psycopg2.extras
+import time
 
 
 from prefect.schedules.clocks import IntervalClock
 
 from pipelines.constants import constants as emd_constants
+
 
 from pipelines.rj_smtr.implicit_ftp import ImplicitFtpTls
 from pipelines.rj_smtr.constants import constants
@@ -856,7 +860,61 @@ def read_raw_data(filepath: str, csv_args: dict = None) -&gt; tuple[str, pd.Data
         error = traceback.format_exc()
         log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
 
-    return error, data</code></pre>
+    return error, data
+
+
+def get_raw_recursos(request_url: str, request_params: dict) -&gt; tuple[str, str, str]:
+    &#34;&#34;&#34;
+    Returns a dataframe with recursos data from movidesk api.
+    &#34;&#34;&#34;
+    all_records = False
+    top = 1000
+    skip = 0
+    error = None
+    filetype = &#34;json&#34;
+    data = []
+
+    while not all_records:
+        try:
+            request_params[&#34;$top&#34;] = top
+            request_params[&#34;$skip&#34;] = skip
+
+            log(f&#34;Request url {request_url}&#34;)
+
+            response = requests.get(
+                request_url,
+                params=request_params,
+                timeout=constants.MAX_TIMEOUT_SECONDS.value,
+            )
+            response.raise_for_status()
+
+            paginated_data = response.json()
+
+            if isinstance(paginated_data, dict):
+                paginated_data = [paginated_data]
+
+            if len(paginated_data) == top:
+                skip += top
+                time.sleep(36)
+
+            if len(paginated_data) == 0:
+                log(&#34;Nenhum dado para tratar.&#34;)
+
+            else:
+                all_records = True
+            data += paginated_data
+
+            log(f&#34;Dados (paginados): {len(data)}&#34;)
+
+        except Exception as error:
+            error = traceback.format_exc()
+            log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+            data = []
+            break
+
+    log(f&#34;Request concluído, tamanho dos dados: {len(data)}.&#34;)
+
+    return error, data, filetype</code></pre>
 </details>
 </section>
 <section>
@@ -1728,6 +1786,69 @@ mode (str):</p>
     return error, data, filetype</code></pre>
 </details>
 </dd>
+<dt id="pipelines.rj_smtr.utils.get_raw_recursos"><code class="name flex">
+<span>def <span class="ident">get_raw_recursos</span></span>(<span>request_url: str, request_params: dict) ‑> tuple[str, str, str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns a dataframe with recursos data from movidesk api.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_raw_recursos(request_url: str, request_params: dict) -&gt; tuple[str, str, str]:
+    &#34;&#34;&#34;
+    Returns a dataframe with recursos data from movidesk api.
+    &#34;&#34;&#34;
+    all_records = False
+    top = 1000
+    skip = 0
+    error = None
+    filetype = &#34;json&#34;
+    data = []
+
+    while not all_records:
+        try:
+            request_params[&#34;$top&#34;] = top
+            request_params[&#34;$skip&#34;] = skip
+
+            log(f&#34;Request url {request_url}&#34;)
+
+            response = requests.get(
+                request_url,
+                params=request_params,
+                timeout=constants.MAX_TIMEOUT_SECONDS.value,
+            )
+            response.raise_for_status()
+
+            paginated_data = response.json()
+
+            if isinstance(paginated_data, dict):
+                paginated_data = [paginated_data]
+
+            if len(paginated_data) == top:
+                skip += top
+                time.sleep(36)
+
+            if len(paginated_data) == 0:
+                log(&#34;Nenhum dado para tratar.&#34;)
+
+            else:
+                all_records = True
+            data += paginated_data
+
+            log(f&#34;Dados (paginados): {len(data)}&#34;)
+
+        except Exception as error:
+            error = traceback.format_exc()
+            log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+            data = []
+            break
+
+    log(f&#34;Request concluído, tamanho dos dados: {len(data)}.&#34;)
+
+    return error, data, filetype</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_smtr.utils.get_table_min_max_value"><code class="name flex">
 <span>def <span class="ident">get_table_min_max_value</span></span>(<span>query_project_id: str, dataset_id: str, table_id: str, field_name: str, kind: str, wait=None)</span>
 </code></dt>
@@ -2289,6 +2410,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.utils.get_raw_data_api" href="#pipelines.rj_smtr.utils.get_raw_data_api">get_raw_data_api</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.get_raw_data_db" href="#pipelines.rj_smtr.utils.get_raw_data_db">get_raw_data_db</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.get_raw_data_gcs" href="#pipelines.rj_smtr.utils.get_raw_data_gcs">get_raw_data_gcs</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.get_raw_recursos" href="#pipelines.rj_smtr.utils.get_raw_recursos">get_raw_recursos</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.get_table_min_max_value" href="#pipelines.rj_smtr.utils.get_table_min_max_value">get_table_min_max_value</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.get_upload_storage_blob" href="#pipelines.rj_smtr.utils.get_upload_storage_blob">get_upload_storage_blob</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.log_critical" href="#pipelines.rj_smtr.utils.log_critical">log_critical</a></code></li>
