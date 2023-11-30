@@ -411,11 +411,11 @@ class constants(Enum):  # pylint: disable=c0103
                     ON
                         c.CD_CLIENTE = o.CD_CLIENTE
                 """,
-                "dtype": {"NR_DOCUMENTO": "object"},
             },
             "primary_key": ["CD_CLIENTE"],  # id column to nest data on
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
             "save_bucket_name": "rj-smtr-dev-private",
+            "pre_treatment_reader_args": {"dtype": {"NR_DOCUMENTO": "object"}},
         },
         {
             "table_id": "consorcio",

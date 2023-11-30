@@ -759,7 +759,6 @@ def get_raw_data_db(
     host: str,
     secret_path: str,
     database: str,
-    dtype: dict = None,
 ) -> tuple[str, str, str]:
     """
     Get data from Databases
@@ -770,7 +769,6 @@ def get_raw_data_db(
         host (str): The database host
         secret_path (str): Secret path to get credentials
         database (str): The database to connect
-        dtype (dict, Optional): The dtype dict to pass to pandas read_sql
 
     Returns:
         tuple[str, str, str]: Error, data and filetype
@@ -793,9 +791,7 @@ def get_raw_data_db(
             password=credentials["password"],
             database=database,
         ) as connection:
-            data = pd.read_sql(sql=query, con=connection, dtype=dtype).to_dict(
-                orient="records"
-            )
+            data = pd.read_sql(sql=query, con=connection).to_dict(orient="records")
 
     except Exception:
         error = traceback.format_exc()
@@ -923,30 +919,30 @@ def get_datetime_range(
     return {"start": start, "end": end}
 
 
-def read_raw_data(filepath: str, csv_args: dict = None) -> tuple[str, pd.DataFrame]:
+def read_raw_data(filepath: str, reader_args: dict = None) -> tuple[str, pd.DataFrame]:
     """
     Read raw data from file
 
     Args:
         filepath (str): filepath to read
-        csv_args (dict): arguments to pass to pandas.read_csv
+        reader_args (dict): arguments to pass to pandas.read_csv or read_json
 
     Returns:
         tuple[str, pd.DataFrame]: error and data
     """
     error = None
     data = None
+    if reader_args is None:
+        reader_args = {}
     try:
         file_type = filepath.split(".")[-1]
 
         if file_type == "json":
-            data = pd.read_json(filepath)
+            data = pd.read_json(filepath, **reader_args)
 
             # data = json.loads(data)
         elif file_type in ("txt", "csv"):
-            if csv_args is None:
-                csv_args = {}
-            data = pd.read_csv(filepath, **csv_args)
+            data = pd.read_csv(filepath, **reader_args)
         else:
             error = "Unsupported raw file extension. Supported only: json, csv and txt"
 

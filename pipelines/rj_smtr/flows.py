@@ -67,6 +67,7 @@ with Flow(
 
     # Parâmetros Pré-tratamento #
     primary_key = Parameter("primary_key", default=None)
+    pre_treatment_reader_args = Parameter("pre_treatment_reader_args", default=None)
 
     get_run_name_prefix = task(
         lambda recap: "Recaptura" if recap else "Captura",
@@ -167,6 +168,7 @@ with Flow(
                 name="create_flag_private_data",
             )(bucket=save_bucket_name)
         ),
+        reader_args=unmapped(pre_treatment_reader_args),
     )
 
     errors, staging_filepaths = unpack_mapped_results_nout2(
