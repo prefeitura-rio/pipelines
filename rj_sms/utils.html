@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>pipelines.rj_sms.utils API documentation</title>
-<meta name="description" content="General utilities for SMS pipelines." />
+<meta name="description" content="General utilities for sms pipelines." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,575 +22,65 @@
 <h1 class="title">Module <code>pipelines.rj_sms.utils</code></h1>
 </header>
 <section id="section-intro">
-<p>General utilities for SMS pipelines.</p>
+<p>General utilities for sms pipelines.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
-# pylint: disable=C0103, R0913
+# pylint: disable=C0103
 &#34;&#34;&#34;
-General utilities for SMS pipelines.
+General utilities for sms pipelines.
 &#34;&#34;&#34;
 
-import os
-import re
-import shutil
-import sys
-from datetime import datetime, date
-from pathlib import Path
-from ftplib import FTP
-import zipfile
-import requests
-import pytz
-import pandas as pd
-import basedosdados as bd
-from azure.storage.blob import BlobServiceClient
-from prefect import task
-from pipelines.utils.utils import log, get_vault_secret
+from datetime import datetime, timedelta
+from typing import List
+
+from prefect.schedules.clocks import IntervalClock
 
 
-@task
-def create_folders():
+def generate_dump_api_schedules(  # pylint: disable=too-many-arguments,too-many-locals
+    interval: timedelta,
+    start_date: datetime,
+    labels: List[str],
+    flow_run_parameters: List[dict],
+    runs_interval_minutes: int = 2,
+) -&gt; List[IntervalClock]:
     &#34;&#34;&#34;
-    Creates two directories, &#39;./data/raw&#39; and &#39;./data/partition_directory&#39;, and returns their paths.
-
-    Returns:
-        dict: A dictionary with the paths of the created directories.
-            - &#34;data&#34;: &#34;./data/raw&#34;
-            - &#34;partition_directory&#34;: &#34;./data/partition_directory&#34;
+    Generates multiple schedules for vitacare dumping.
     &#34;&#34;&#34;
-    try:
-        path_raw_data = os.path.join(os.getcwd(), &#34;data&#34;, &#34;raw&#34;)
-        path_partionared_data = os.path.join(os.getcwd(), &#34;data&#34;, &#34;partition_directory&#34;)
-
-        if os.path.exists(path_raw_data):
-            shutil.rmtree(path_raw_data, ignore_errors=False)
-        os.makedirs(path_raw_data)
-
-        if os.path.exists(path_partionared_data):
-            shutil.rmtree(path_partionared_data, ignore_errors=False)
-        os.makedirs(path_partionared_data)
-
-        folders = {
-            &#34;raw&#34;: path_raw_data,
-            &#34;partition_directory&#34;: path_partionared_data,
-        }
-
-        log(f&#34;Folders created: {folders}&#34;)
-        return folders
-
-    except Exception as e:
-        sys.exit(f&#34;Failed to create folders: {e}&#34;)
-
-
-@task
-def download_from_api(
-    url: str,
-    file_folder: str,
-    file_name: str,
-    params=None,
-    vault_path=None,
-    vault_key=None,
-    add_load_date_to_filename=False,
-    load_date=None,
-):
-    &#34;&#34;&#34;
-    Downloads data from an API and saves it to a local file.
-
-    Args:
-        url (str): The URL of the API to download data from.
-        file_folder (str): The folder where the downloaded file will be saved.
-        file_name (str): The name of the downloaded file.
-        params (dict, optional): Additional parameters to include in the API request.
-        vault_path (str, optional): The path in Vault where the authentication token is stored.
-        vault_key (str, optional): The key in Vault where the authentication token is stored.
-        add_load_date_to_filename (bool, optional): Whether to add the current date to the filename.
-        load_date (str, optional): The specific date to add to the filename.
-
-    Returns:
-        str: The path of the downloaded file.
-    &#34;&#34;&#34;
-    # Retrieve the API key from Vault
-    auth_token = &#34;&#34;
-    if vault_key is not None:
-        try:
-            auth_token = get_vault_secret(secret_path=vault_path)[&#34;data&#34;][vault_key]
-            log(&#34;Vault secret retrieved&#34;)
-        except Exception as e:
-            log(f&#34;Not able to retrieve Vault secret {e}&#34;, level=&#34;error&#34;)
-
-    # Download data from API
-    log(&#34;Downloading data from API&#34;)
-    headers = {} if auth_token == &#34;&#34; else {&#34;Authorization&#34;: f&#34;Bearer {auth_token}&#34;}
-    params = {} if params is None else params
-    try:
-        response = requests.get(url, headers=headers, params=params)
-    except Exception as e:
-        log(f&#34;An error occurred: {e}&#34;, level=&#34;error&#34;)
-
-    if response.status_code == 200:
-        api_data = response.json()
-
-        # Save the API data to a local file
-        if add_load_date_to_filename:
-            if load_date is None:
-                destination_file_path = (
-                    f&#34;{file_folder}/{file_name}_{str(date.today())}.json&#34;
-                )
-            else:
-                destination_file_path = f&#34;{file_folder}/{file_name}_{load_date}.json&#34;
-        else:
-            destination_file_path = f&#34;{file_folder}/{file_name}.json&#34;
-
-        with open(destination_file_path, &#34;w&#34;, encoding=&#34;utf-8&#34;) as file:
-            file.write(str(api_data))
-
-        log(f&#34;API data downloaded to {destination_file_path}&#34;)
-
-        return destination_file_path
-
-    else:
-        raise ValueError(
-            f&#34;API call failed, error: {response.status_code} - {response.reason}&#34;
-        )
-
-
-@task
-def download_azure_blob(
-    container_name: str,
-    blob_path: str,
-    file_folder: str,
-    file_name: str,
-    vault_path: str,
-    vault_key: str,
-    add_load_date_to_filename=False,
-    load_date=None,
-):
-    &#34;&#34;&#34;
-    Downloads data from Azure Blob Storag and saves it to a local file.
-
-    Args:
-        container_name (str): The name of the container in the Azure Blob Storage account.
-        blob_path (str): The path to the blob in the container.
-        file_folder (str): The folder where the downloaded file will be saved.
-        file_name (str): The name of the downloaded file.
-        params (dict, optional): Additional parameters to include in the API request.
-        vault_path (str, optional): The path in Vault where the authentication token is stored.
-        vault_key (str, optional): The key in Vault where the authentication token is stored.
-        add_load_date_to_filename (bool, optional): Whether to add the current date to the filename.
-        load_date (str, optional): The specific date to add to the filename.
-
-    Returns:
-        str: The path of the downloaded file.
-    &#34;&#34;&#34;
-    # Retrieve the API key from Vault
-    try:
-        credential = get_vault_secret(secret_path=vault_path)[&#34;data&#34;][vault_key]
-        log(&#34;Vault secret retrieved&#34;)
-    except Exception as e:
-        log(f&#34;Not able to retrieve Vault secret {e}&#34;, level=&#34;error&#34;)
-
-    # Download data from Blob Storage
-    log(f&#34;Downloading data from Azure Blob Storage: {blob_path}&#34;)
-    blob_service_client = BlobServiceClient(
-        account_url=&#34;https://datalaketpcgen2.blob.core.windows.net/&#34;,
-        credential=credential,
-    )
-    blob_client = blob_service_client.get_blob_client(
-        container=container_name, blob=blob_path
-    )
-
-    # Save the API data to a local file
-    if add_load_date_to_filename:
-        if load_date is None:
-            destination_file_path = f&#34;{file_folder}/{file_name}_{str(date.today())}.csv&#34;
-        else:
-            destination_file_path = f&#34;{file_folder}/{file_name}_{load_date}.csv&#34;
-    else:
-        destination_file_path = f&#34;{file_folder}/{file_name}.csv&#34;
-
-    with open(destination_file_path, &#34;wb&#34;) as file:
-        blob_data = blob_client.download_blob()
-        blob_data.readinto(file)
-
-    log(f&#34;Blob downloaded to &#39;{destination_file_path}&#34;)
-
-    return destination_file_path
-
-
-@task
-def download_ftp(
-    host: str,
-    user: str,
-    password: str,
-    directory: str,
-    file_name: str,
-    output_path: str,
-):
-    &#34;&#34;&#34;
-    Downloads a file from an FTP server and saves it to the specified output path.
-
-    Args:
-        host (str): The FTP server hostname.
-        user (str): The FTP server username.
-        password (str): The FTP server password.
-        directory (str): The directory on the FTP server where the file is located.
-        file_name (str): The name of the file to download.
-        output_path (str): The local path where the downloaded file should be saved.
-
-    Returns:
-        str: The local path where the downloaded file was saved.
-    &#34;&#34;&#34;
-
-    file_path = f&#34;{directory}/{file_name}&#34;
-    output_path = output_path + &#34;/&#34; + file_name
-    log(output_path)
-    # Connect to the FTP server
-    ftp = FTP(host)
-    ftp.login(user, password)
-
-    # Get the size of the file
-    ftp.voidcmd(&#34;TYPE I&#34;)
-    total_size = ftp.size(file_path)
-
-    # Create a callback function to be called when each block is read
-    def callback(block):
-        nonlocal downloaded_size
-        downloaded_size += len(block)
-        percent_complete = (downloaded_size / total_size) * 100
-        if percent_complete // 5 &gt; (downloaded_size - len(block)) // (total_size / 20):
-            log(f&#34;Download is {percent_complete:.0f}% complete&#34;)
-        f.write(block)
-
-    # Initialize the downloaded size
-    downloaded_size = 0
-
-    # Download the file
-    with open(output_path, &#34;wb&#34;) as f:
-        ftp.retrbinary(f&#34;RETR {file_path}&#34;, callback)
-
-    # Close the connection
-    ftp.quit()
-
-    return output_path
-
-
-@task
-def list_files_ftp(host, user, password, directory):
-    &#34;&#34;&#34;
-    Lists all files in a given directory on a remote FTP server.
-
-    Args:
-        host (str): The hostname or IP address of the FTP server.
-        user (str): The username to use for authentication.
-        password (str): The password to use for authentication.
-        directory (str): The directory to list files from.
-
-    Returns:
-        list: A list of filenames in the specified directory.
-    &#34;&#34;&#34;
-    ftp = FTP(host)
-    ftp.login(user, password)
-    ftp.cwd(directory)
-
-    files = ftp.nlst()
-
-    ftp.quit()
-
-    return files
-
-
-@task
-def unzip_file(file_path: str, output_path: str):
-    &#34;&#34;&#34;
-    Unzips a file to the specified output path.
-
-    Args:
-        file_path (str): The path to the file to be unzipped.
-        output_path (str): The path to the output directory.
-
-    Returns:
-        str: The path to the unzipped file.
-    &#34;&#34;&#34;
-    with zipfile.ZipFile(file_path, &#34;r&#34;) as zip_ref:
-        zip_ref.extractall(output_path)
-
-    log(f&#34;File unzipped to {output_path}&#34;)
-
-    return output_path
-
-
-@task
-def clean_ascii(input_file_path):
-    &#34;&#34;&#34;
-    Clean ASCII Function
-
-    This function removes any non-basic ASCII characters from the text and saves the cleaned text
-    to a new file with a modified file name.
-    Args:
-        input_file_path (str): The path of the input file.
-
-    Returns:
-        str: The path of the output file containing the cleaned text.
-    &#34;&#34;&#34;
-
-    try:
-        with open(input_file_path, &#34;r&#34;, encoding=&#34;utf-8&#34;) as input_file:
-            text = input_file.read()
-
-            # Remove non-basic ASCII characters
-            cleaned_text = &#34;&#34;.join(c for c in text if ord(c) &lt; 128)
-
-            if &#34;.json&#34; in input_file_path:
-                output_file_path = input_file_path.replace(&#34;.json&#34;, &#34;_clean.json&#34;)
-            elif &#34;.csv&#34; in input_file_path:
-                output_file_path = input_file_path.replace(&#34;.csv&#34;, &#34;_clean.csv&#34;)
-
-            with open(output_file_path, &#34;w&#34;, encoding=&#34;utf-8&#34;) as output_file:
-                output_file.write(cleaned_text)
-
-            log(f&#34;Cleaning complete. Cleaned text saved at {output_file_path}&#34;)
-
-            return output_file_path
-
-    except Exception as e:
-        log(f&#34;An error occurred: {e}&#34;, level=&#34;error&#34;)
-
-
-@task
-def add_load_date_column(input_path: str, sep=&#34;;&#34;, load_date=None):
-    &#34;&#34;&#34;
-    Adds a new column &#39;_data_carga&#39; to a CSV file located at input_path with the current date
-    or a specified load date.
-
-    Args:
-        input_path (str): The path to the input CSV file.
-        sep (str, optional): The delimiter used in the CSV file. Defaults to &#34;;&#34;.
-        load_date (str, optional): The load date to be used in the &#39;_data_carga&#39; column. If None,
-        the current date is used. Defaults to None.
-
-    Returns:
-        str: The path to the input CSV file.
-    &#34;&#34;&#34;
-    tz = pytz.timezone(&#34;Brazil/East&#34;)
-    now = datetime.now(tz).strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
-
-    df = pd.read_csv(input_path, sep=sep, keep_default_na=False, dtype=&#34;str&#34;)
-
-    if load_date is None:
-        df[&#34;_data_carga&#34;] = now
-    else:
-        df[&#34;_data_carga&#34;] = load_date
-
-    df.to_csv(input_path, index=False, sep=sep, encoding=&#34;utf-8&#34;)
-    log(f&#34;Column added to {input_path}&#34;)
-    return input_path
-
-
-@task
-def from_json_to_csv(input_path, sep=&#34;;&#34;):
-    &#34;&#34;&#34;
-    Converts a JSON file to a CSV file.
-
-    Args:
-        input_path (str): The path to the input JSON file.
-        sep (str, optional): The separator to use in the output CSV file. Defaults to &#34;;&#34;.
-
-    Returns:
-        str: The path to the output CSV file, or None if an error occurred.
-    &#34;&#34;&#34;
-    try:
-        with open(input_path, &#34;r&#34;, encoding=&#34;utf-8&#34;) as file:
-            json_data = file.read()
-            data = eval(json_data)  # Convert JSON string to Python dictionary
-
-            output_path = input_path.replace(&#34;.json&#34;, &#34;.csv&#34;)
-            # Assuming the JSON structure is a list of dictionaries
-            df = pd.DataFrame(data, dtype=&#34;str&#34;)
-            df.to_csv(output_path, index=False, sep=sep, encoding=&#34;utf-8&#34;)
-
-            log(&#34;JSON converted to CSV&#34;)
-            return output_path
-
-    except Exception as e:
-        log(f&#34;An error occurred: {e}&#34;, level=&#34;error&#34;)
-        return None
-
-
-@task
-def create_partitions(
-    data_path: str, partition_directory: str, level=&#34;day&#34;, partition_date=None
-):
-    &#34;&#34;&#34;
-    Creates partitions for each file in the given data path and saves them in the
-    partition directory.
-
-    Args:
-        data_path (str): The path to the data directory.
-        partition_directory (str): The path to the partition directory.
-        level (str): The level of partitioning. Can be &#34;day&#34; or &#34;month&#34;. Defaults to &#34;day&#34;.
-
-    Raises:
-        FileExistsError: If the partition directory already exists.
-        ValueError: If the partition level is not &#34;day&#34; or &#34;month&#34;.
-
-    Returns:
-        None
-    &#34;&#34;&#34;
-
-    # check if data_path is a directory or a file
-    if os.path.isdir(data_path):
-        data_path = Path(data_path)
-        files = data_path.glob(&#34;*.csv&#34;)
-    else:
-        files = [data_path]
-    #
-    # Create partition directories for each file
-    for file_name in files:
-        if level == &#34;day&#34;:
-            if partition_date is None:
-                try:
-                    date_str = re.search(r&#34;\d{4}-\d{2}-\d{2}&#34;, str(file_name)).group()
-                    parsed_date = datetime.strptime(date_str, &#34;%Y-%m-%d&#34;)
-                except ValueError:
-                    log(
-                        &#34;Filename must contain a date in the format YYYY-MM-DD to match partition level&#34;,  # noqa: E501
-                        level=&#34;error&#34;,
-                    )  # noqa: E501&#34;)
-            else:
-                try:
-                    parsed_date = datetime.strptime(partition_date, &#34;%Y-%m-%d&#34;)
-                except ValueError:
-                    log(
-                        &#34;Partition date must be in the format YYYY-MM-DD to match partition level&#34;,  # noqa: E501
-                        level=&#34;error&#34;,
-                    )
-
-            ano_particao = parsed_date.strftime(&#34;%Y&#34;)
-            mes_particao = parsed_date.strftime(&#34;%m&#34;)
-            data_particao = parsed_date.strftime(&#34;%Y-%m-%d&#34;)
-
-            output_directory = f&#34;{partition_directory}/ano_particao={int(ano_particao)}/mes_particao={int(mes_particao)}/data_particao={data_particao}&#34;  # noqa: E501
-
-        elif level == &#34;month&#34;:
-            if partition_date is None:
-                try:
-                    date_str = re.search(r&#34;\d{4}-\d{2}&#34;, str(file_name)).group()
-                    parsed_date = datetime.strptime(date_str, &#34;%Y-%m&#34;)
-                except ValueError:
-                    log(
-                        &#34;File must contain a date in the format YYYY-MM&#34;, level=&#34;error&#34;
-                    )  # noqa: E501&#34;)
-            else:
-                try:
-                    parsed_date = datetime.strptime(partition_date, &#34;%Y-%m&#34;)
-                except ValueError:
-                    log(
-                        &#34;Partition date must match be in the format YYYY-MM to match partitio level&#34;,  # noqa: E501
-                        level=&#34;error&#34;,
-                    )
-
-            ano_particao = parsed_date.strftime(&#34;%Y&#34;)
-            mes_particao = parsed_date.strftime(&#34;%Y-%m&#34;)
-
-            output_directory = f&#34;{partition_directory}/ano_particao={int(ano_particao)}/mes_particao={mes_particao}&#34;  # noqa: E501
-
-        else:
-            raise ValueError(&#34;Partition level must be day or month&#34;)
-
-        # Create partition directory
-        if not os.path.exists(output_directory):
-            os.makedirs(output_directory, exist_ok=False)
-
-        # Copy file(s) to partition directory
-        shutil.copy(file_name, output_directory)
-
-    log(&#34;Partitions created successfully&#34;)
-
-
-@task
-def upload_to_datalake(
-    input_path: str,
-    dataset_id: str,
-    table_id: str,
-    if_exists: str = &#34;replace&#34;,
-    csv_delimiter: str = &#34;;&#34;,
-    if_storage_data_exists: str = &#34;replace&#34;,
-    biglake_table: bool = True,
-    dump_mode: str = &#34;append&#34;,
-):
-    &#34;&#34;&#34;
-    Uploads data from a file to a BigQuery table in a specified dataset.
-
-    Args:
-        input_path (str): The path to the file containing the data to be uploaded.
-        dataset_id (str): The ID of the dataset where the table is located.
-        table_id (str): The ID of the table where the data will be uploaded.
-        if_exists (str, optional): Specifies what to do if the table already exists.
-            Defaults to &#34;replace&#34;.
-        csv_delimiter (str, optional): The delimiter used in the CSV file. Defaults to &#34;;&#34;.
-        if_storage_data_exists (str, optional): Specifies what to do if the storage data
-            already exists. Defaults to &#34;replace&#34;.
-        biglake_table (bool, optional): Specifies whether the table is a BigLake table.
-            Defaults to True.
-    &#34;&#34;&#34;
-    tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
-    table_staging = f&#34;{tb.table_full_name[&#39;staging&#39;]}&#34;
-    st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
-    storage_path = f&#34;{st.bucket_name}.staging.{dataset_id}.{table_id}&#34;
-    storage_path_link = (
-        f&#34;https://console.cloud.google.com/storage/browser/{st.bucket_name}&#34;
-        f&#34;/staging/{dataset_id}/{table_id}&#34;
-    )
-
-    try:
-        table_exists = tb.table_exists(mode=&#34;staging&#34;)
-
-        if not table_exists:
-            log(f&#34;CREATING TABLE: {dataset_id}.{table_id}&#34;)
-            tb.create(
-                path=input_path,
-                csv_delimiter=csv_delimiter,
-                if_storage_data_exists=if_storage_data_exists,
-                biglake_table=biglake_table,
+    clocks = []
+    for count, parameters in enumerate(flow_run_parameters):
+        new_interval = parameters[&#34;interval&#34;] if &#34;interval&#34; in parameters else interval
+
+        clocks.append(
+            IntervalClock(
+                interval=new_interval,
+                start_date=start_date
+                + timedelta(minutes=runs_interval_minutes * count),
+                labels=labels,
+                parameter_defaults=parameters,
             )
-        else:
-            if dump_mode == &#34;append&#34;:
-                log(
-                    f&#34;TABLE ALREADY EXISTS APPENDING DATA TO STORAGE: {dataset_id}.{table_id}&#34;
-                )
+        )
+    return clocks
 
-                tb.append(filepath=input_path, if_exists=if_exists)
-            elif dump_mode == &#34;overwrite&#34;:
-                log(
-                    &#34;MODE OVERWRITE: Table ALREADY EXISTS, DELETING OLD DATA!\n&#34;
-                    f&#34;{storage_path}\n&#34;
-                    f&#34;{storage_path_link}&#34;
-                )  # pylint: disable=C0301
-                st.delete_table(
-                    mode=&#34;staging&#34;, bucket_name=st.bucket_name, not_found_ok=True
-                )
-                log(
-                    &#34;MODE OVERWRITE: Sucessfully DELETED OLD DATA from Storage:\n&#34;
-                    f&#34;{storage_path}\n&#34;
-                    f&#34;{storage_path_link}&#34;
-                )  # pylint: disable=C0301
-                tb.delete(mode=&#34;all&#34;)
-                log(
-                    &#34;MODE OVERWRITE: Sucessfully DELETED TABLE:\n&#34; f&#34;{table_staging}\n&#34;
-                )  # pylint: disable=C0301
 
-                tb.create(
-                    path=input_path,
-                    csv_delimiter=csv_delimiter,
-                    if_storage_data_exists=if_storage_data_exists,
-                    biglake_table=biglake_table,
-                )
-        log(&#34;Data uploaded to BigQuery&#34;)
+def generate_dicts(dict_template: dict, key: str, values: list) -&gt; list:
+    &#34;&#34;&#34;
+    Generates a list of dictionaries from a template dictionary and a list of
+    values to be used in the template.
 
-    except Exception as e:
-        log(f&#34;An error occurred: {e}&#34;, level=&#34;error&#34;)</code></pre>
+    Args:
+        dict_template (dict): Template dictionary to be used in the generation
+            of the list of dictionaries.
+        key (str): Key to be used in the template.
+        values (list): List of values to be used in the template.
+
+    Returns:
+        list: List of dictionaries generated from the template dictionary and
+            the list of values.
+    &#34;&#34;&#34;
+    return [dict_template | {key: value} for value in values]</code></pre>
 </details>
 </section>
 <section>
@@ -600,830 +90,83 @@ def upload_to_datalake(
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="pipelines.rj_sms.utils.add_load_date_column"><code class="name flex">
-<span>def <span class="ident">add_load_date_column</span></span>(<span>input_path: str, sep=';', load_date=None)</span>
+<dt id="pipelines.rj_sms.utils.generate_dicts"><code class="name flex">
+<span>def <span class="ident">generate_dicts</span></span>(<span>dict_template: dict, key: str, values: list) ‑> list</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Adds a new column '_data_carga' to a CSV file located at input_path with the current date
-or a specified load date.</p>
+<div class="desc"><p>Generates a list of dictionaries from a template dictionary and a list of
+values to be used in the template.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>input_path</code></strong> :&ensp;<code>str</code></dt>
-<dd>The path to the input CSV file.</dd>
-<dt><strong><code>sep</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>The delimiter used in the CSV file. Defaults to ";".</dd>
-<dt><strong><code>load_date</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>The load date to be used in the '_data_carga' column. If None,</dd>
-</dl>
-<p>the current date is used. Defaults to None.</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>str</code></dt>
-<dd>The path to the input CSV file.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task
-def add_load_date_column(input_path: str, sep=&#34;;&#34;, load_date=None):
-    &#34;&#34;&#34;
-    Adds a new column &#39;_data_carga&#39; to a CSV file located at input_path with the current date
-    or a specified load date.
-
-    Args:
-        input_path (str): The path to the input CSV file.
-        sep (str, optional): The delimiter used in the CSV file. Defaults to &#34;;&#34;.
-        load_date (str, optional): The load date to be used in the &#39;_data_carga&#39; column. If None,
-        the current date is used. Defaults to None.
-
-    Returns:
-        str: The path to the input CSV file.
-    &#34;&#34;&#34;
-    tz = pytz.timezone(&#34;Brazil/East&#34;)
-    now = datetime.now(tz).strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
-
-    df = pd.read_csv(input_path, sep=sep, keep_default_na=False, dtype=&#34;str&#34;)
-
-    if load_date is None:
-        df[&#34;_data_carga&#34;] = now
-    else:
-        df[&#34;_data_carga&#34;] = load_date
-
-    df.to_csv(input_path, index=False, sep=sep, encoding=&#34;utf-8&#34;)
-    log(f&#34;Column added to {input_path}&#34;)
-    return input_path</code></pre>
-</details>
-</dd>
-<dt id="pipelines.rj_sms.utils.clean_ascii"><code class="name flex">
-<span>def <span class="ident">clean_ascii</span></span>(<span>input_file_path)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Clean ASCII Function</p>
-<p>This function removes any non-basic ASCII characters from the text and saves the cleaned text
-to a new file with a modified file name.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>input_file_path</code></strong> :&ensp;<code>str</code></dt>
-<dd>The path of the input file.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>str</code></dt>
-<dd>The path of the output file containing the cleaned text.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task
-def clean_ascii(input_file_path):
-    &#34;&#34;&#34;
-    Clean ASCII Function
-
-    This function removes any non-basic ASCII characters from the text and saves the cleaned text
-    to a new file with a modified file name.
-    Args:
-        input_file_path (str): The path of the input file.
-
-    Returns:
-        str: The path of the output file containing the cleaned text.
-    &#34;&#34;&#34;
-
-    try:
-        with open(input_file_path, &#34;r&#34;, encoding=&#34;utf-8&#34;) as input_file:
-            text = input_file.read()
-
-            # Remove non-basic ASCII characters
-            cleaned_text = &#34;&#34;.join(c for c in text if ord(c) &lt; 128)
-
-            if &#34;.json&#34; in input_file_path:
-                output_file_path = input_file_path.replace(&#34;.json&#34;, &#34;_clean.json&#34;)
-            elif &#34;.csv&#34; in input_file_path:
-                output_file_path = input_file_path.replace(&#34;.csv&#34;, &#34;_clean.csv&#34;)
-
-            with open(output_file_path, &#34;w&#34;, encoding=&#34;utf-8&#34;) as output_file:
-                output_file.write(cleaned_text)
-
-            log(f&#34;Cleaning complete. Cleaned text saved at {output_file_path}&#34;)
-
-            return output_file_path
-
-    except Exception as e:
-        log(f&#34;An error occurred: {e}&#34;, level=&#34;error&#34;)</code></pre>
-</details>
-</dd>
-<dt id="pipelines.rj_sms.utils.create_folders"><code class="name flex">
-<span>def <span class="ident">create_folders</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Creates two directories, './data/raw' and './data/partition_directory', and returns their paths.</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>dict</code></dt>
-<dd>A dictionary with the paths of the created directories.
-- "data": "./data/raw"
-- "partition_directory": "./data/partition_directory"</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task
-def create_folders():
-    &#34;&#34;&#34;
-    Creates two directories, &#39;./data/raw&#39; and &#39;./data/partition_directory&#39;, and returns their paths.
-
-    Returns:
-        dict: A dictionary with the paths of the created directories.
-            - &#34;data&#34;: &#34;./data/raw&#34;
-            - &#34;partition_directory&#34;: &#34;./data/partition_directory&#34;
-    &#34;&#34;&#34;
-    try:
-        path_raw_data = os.path.join(os.getcwd(), &#34;data&#34;, &#34;raw&#34;)
-        path_partionared_data = os.path.join(os.getcwd(), &#34;data&#34;, &#34;partition_directory&#34;)
-
-        if os.path.exists(path_raw_data):
-            shutil.rmtree(path_raw_data, ignore_errors=False)
-        os.makedirs(path_raw_data)
-
-        if os.path.exists(path_partionared_data):
-            shutil.rmtree(path_partionared_data, ignore_errors=False)
-        os.makedirs(path_partionared_data)
-
-        folders = {
-            &#34;raw&#34;: path_raw_data,
-            &#34;partition_directory&#34;: path_partionared_data,
-        }
-
-        log(f&#34;Folders created: {folders}&#34;)
-        return folders
-
-    except Exception as e:
-        sys.exit(f&#34;Failed to create folders: {e}&#34;)</code></pre>
-</details>
-</dd>
-<dt id="pipelines.rj_sms.utils.create_partitions"><code class="name flex">
-<span>def <span class="ident">create_partitions</span></span>(<span>data_path: str, partition_directory: str, level='day', partition_date=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Creates partitions for each file in the given data path and saves them in the
-partition directory.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>data_path</code></strong> :&ensp;<code>str</code></dt>
-<dd>The path to the data directory.</dd>
-<dt><strong><code>partition_directory</code></strong> :&ensp;<code>str</code></dt>
-<dd>The path to the partition directory.</dd>
-<dt><strong><code>level</code></strong> :&ensp;<code>str</code></dt>
-<dd>The level of partitioning. Can be "day" or "month". Defaults to "day".</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>FileExistsError</code></dt>
-<dd>If the partition directory already exists.</dd>
-<dt><code>ValueError</code></dt>
-<dd>If the partition level is not "day" or "month".</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>None</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task
-def create_partitions(
-    data_path: str, partition_directory: str, level=&#34;day&#34;, partition_date=None
-):
-    &#34;&#34;&#34;
-    Creates partitions for each file in the given data path and saves them in the
-    partition directory.
-
-    Args:
-        data_path (str): The path to the data directory.
-        partition_directory (str): The path to the partition directory.
-        level (str): The level of partitioning. Can be &#34;day&#34; or &#34;month&#34;. Defaults to &#34;day&#34;.
-
-    Raises:
-        FileExistsError: If the partition directory already exists.
-        ValueError: If the partition level is not &#34;day&#34; or &#34;month&#34;.
-
-    Returns:
-        None
-    &#34;&#34;&#34;
-
-    # check if data_path is a directory or a file
-    if os.path.isdir(data_path):
-        data_path = Path(data_path)
-        files = data_path.glob(&#34;*.csv&#34;)
-    else:
-        files = [data_path]
-    #
-    # Create partition directories for each file
-    for file_name in files:
-        if level == &#34;day&#34;:
-            if partition_date is None:
-                try:
-                    date_str = re.search(r&#34;\d{4}-\d{2}-\d{2}&#34;, str(file_name)).group()
-                    parsed_date = datetime.strptime(date_str, &#34;%Y-%m-%d&#34;)
-                except ValueError:
-                    log(
-                        &#34;Filename must contain a date in the format YYYY-MM-DD to match partition level&#34;,  # noqa: E501
-                        level=&#34;error&#34;,
-                    )  # noqa: E501&#34;)
-            else:
-                try:
-                    parsed_date = datetime.strptime(partition_date, &#34;%Y-%m-%d&#34;)
-                except ValueError:
-                    log(
-                        &#34;Partition date must be in the format YYYY-MM-DD to match partition level&#34;,  # noqa: E501
-                        level=&#34;error&#34;,
-                    )
-
-            ano_particao = parsed_date.strftime(&#34;%Y&#34;)
-            mes_particao = parsed_date.strftime(&#34;%m&#34;)
-            data_particao = parsed_date.strftime(&#34;%Y-%m-%d&#34;)
-
-            output_directory = f&#34;{partition_directory}/ano_particao={int(ano_particao)}/mes_particao={int(mes_particao)}/data_particao={data_particao}&#34;  # noqa: E501
-
-        elif level == &#34;month&#34;:
-            if partition_date is None:
-                try:
-                    date_str = re.search(r&#34;\d{4}-\d{2}&#34;, str(file_name)).group()
-                    parsed_date = datetime.strptime(date_str, &#34;%Y-%m&#34;)
-                except ValueError:
-                    log(
-                        &#34;File must contain a date in the format YYYY-MM&#34;, level=&#34;error&#34;
-                    )  # noqa: E501&#34;)
-            else:
-                try:
-                    parsed_date = datetime.strptime(partition_date, &#34;%Y-%m&#34;)
-                except ValueError:
-                    log(
-                        &#34;Partition date must match be in the format YYYY-MM to match partitio level&#34;,  # noqa: E501
-                        level=&#34;error&#34;,
-                    )
-
-            ano_particao = parsed_date.strftime(&#34;%Y&#34;)
-            mes_particao = parsed_date.strftime(&#34;%Y-%m&#34;)
-
-            output_directory = f&#34;{partition_directory}/ano_particao={int(ano_particao)}/mes_particao={mes_particao}&#34;  # noqa: E501
-
-        else:
-            raise ValueError(&#34;Partition level must be day or month&#34;)
-
-        # Create partition directory
-        if not os.path.exists(output_directory):
-            os.makedirs(output_directory, exist_ok=False)
-
-        # Copy file(s) to partition directory
-        shutil.copy(file_name, output_directory)
-
-    log(&#34;Partitions created successfully&#34;)</code></pre>
-</details>
-</dd>
-<dt id="pipelines.rj_sms.utils.download_azure_blob"><code class="name flex">
-<span>def <span class="ident">download_azure_blob</span></span>(<span>container_name: str, blob_path: str, file_folder: str, file_name: str, vault_path: str, vault_key: str, add_load_date_to_filename=False, load_date=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Downloads data from Azure Blob Storag and saves it to a local file.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>container_name</code></strong> :&ensp;<code>str</code></dt>
-<dd>The name of the container in the Azure Blob Storage account.</dd>
-<dt><strong><code>blob_path</code></strong> :&ensp;<code>str</code></dt>
-<dd>The path to the blob in the container.</dd>
-<dt><strong><code>file_folder</code></strong> :&ensp;<code>str</code></dt>
-<dd>The folder where the downloaded file will be saved.</dd>
-<dt><strong><code>file_name</code></strong> :&ensp;<code>str</code></dt>
-<dd>The name of the downloaded file.</dd>
-<dt><strong><code>params</code></strong> :&ensp;<code>dict</code>, optional</dt>
-<dd>Additional parameters to include in the API request.</dd>
-<dt><strong><code>vault_path</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>The path in Vault where the authentication token is stored.</dd>
-<dt><strong><code>vault_key</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>The key in Vault where the authentication token is stored.</dd>
-<dt><strong><code>add_load_date_to_filename</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>Whether to add the current date to the filename.</dd>
-<dt><strong><code>load_date</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>The specific date to add to the filename.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>str</code></dt>
-<dd>The path of the downloaded file.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task
-def download_azure_blob(
-    container_name: str,
-    blob_path: str,
-    file_folder: str,
-    file_name: str,
-    vault_path: str,
-    vault_key: str,
-    add_load_date_to_filename=False,
-    load_date=None,
-):
-    &#34;&#34;&#34;
-    Downloads data from Azure Blob Storag and saves it to a local file.
-
-    Args:
-        container_name (str): The name of the container in the Azure Blob Storage account.
-        blob_path (str): The path to the blob in the container.
-        file_folder (str): The folder where the downloaded file will be saved.
-        file_name (str): The name of the downloaded file.
-        params (dict, optional): Additional parameters to include in the API request.
-        vault_path (str, optional): The path in Vault where the authentication token is stored.
-        vault_key (str, optional): The key in Vault where the authentication token is stored.
-        add_load_date_to_filename (bool, optional): Whether to add the current date to the filename.
-        load_date (str, optional): The specific date to add to the filename.
-
-    Returns:
-        str: The path of the downloaded file.
-    &#34;&#34;&#34;
-    # Retrieve the API key from Vault
-    try:
-        credential = get_vault_secret(secret_path=vault_path)[&#34;data&#34;][vault_key]
-        log(&#34;Vault secret retrieved&#34;)
-    except Exception as e:
-        log(f&#34;Not able to retrieve Vault secret {e}&#34;, level=&#34;error&#34;)
-
-    # Download data from Blob Storage
-    log(f&#34;Downloading data from Azure Blob Storage: {blob_path}&#34;)
-    blob_service_client = BlobServiceClient(
-        account_url=&#34;https://datalaketpcgen2.blob.core.windows.net/&#34;,
-        credential=credential,
-    )
-    blob_client = blob_service_client.get_blob_client(
-        container=container_name, blob=blob_path
-    )
-
-    # Save the API data to a local file
-    if add_load_date_to_filename:
-        if load_date is None:
-            destination_file_path = f&#34;{file_folder}/{file_name}_{str(date.today())}.csv&#34;
-        else:
-            destination_file_path = f&#34;{file_folder}/{file_name}_{load_date}.csv&#34;
-    else:
-        destination_file_path = f&#34;{file_folder}/{file_name}.csv&#34;
-
-    with open(destination_file_path, &#34;wb&#34;) as file:
-        blob_data = blob_client.download_blob()
-        blob_data.readinto(file)
-
-    log(f&#34;Blob downloaded to &#39;{destination_file_path}&#34;)
-
-    return destination_file_path</code></pre>
-</details>
-</dd>
-<dt id="pipelines.rj_sms.utils.download_from_api"><code class="name flex">
-<span>def <span class="ident">download_from_api</span></span>(<span>url: str, file_folder: str, file_name: str, params=None, vault_path=None, vault_key=None, add_load_date_to_filename=False, load_date=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Downloads data from an API and saves it to a local file.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>url</code></strong> :&ensp;<code>str</code></dt>
-<dd>The URL of the API to download data from.</dd>
-<dt><strong><code>file_folder</code></strong> :&ensp;<code>str</code></dt>
-<dd>The folder where the downloaded file will be saved.</dd>
-<dt><strong><code>file_name</code></strong> :&ensp;<code>str</code></dt>
-<dd>The name of the downloaded file.</dd>
-<dt><strong><code>params</code></strong> :&ensp;<code>dict</code>, optional</dt>
-<dd>Additional parameters to include in the API request.</dd>
-<dt><strong><code>vault_path</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>The path in Vault where the authentication token is stored.</dd>
-<dt><strong><code>vault_key</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>The key in Vault where the authentication token is stored.</dd>
-<dt><strong><code>add_load_date_to_filename</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>Whether to add the current date to the filename.</dd>
-<dt><strong><code>load_date</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>The specific date to add to the filename.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>str</code></dt>
-<dd>The path of the downloaded file.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task
-def download_from_api(
-    url: str,
-    file_folder: str,
-    file_name: str,
-    params=None,
-    vault_path=None,
-    vault_key=None,
-    add_load_date_to_filename=False,
-    load_date=None,
-):
-    &#34;&#34;&#34;
-    Downloads data from an API and saves it to a local file.
-
-    Args:
-        url (str): The URL of the API to download data from.
-        file_folder (str): The folder where the downloaded file will be saved.
-        file_name (str): The name of the downloaded file.
-        params (dict, optional): Additional parameters to include in the API request.
-        vault_path (str, optional): The path in Vault where the authentication token is stored.
-        vault_key (str, optional): The key in Vault where the authentication token is stored.
-        add_load_date_to_filename (bool, optional): Whether to add the current date to the filename.
-        load_date (str, optional): The specific date to add to the filename.
-
-    Returns:
-        str: The path of the downloaded file.
-    &#34;&#34;&#34;
-    # Retrieve the API key from Vault
-    auth_token = &#34;&#34;
-    if vault_key is not None:
-        try:
-            auth_token = get_vault_secret(secret_path=vault_path)[&#34;data&#34;][vault_key]
-            log(&#34;Vault secret retrieved&#34;)
-        except Exception as e:
-            log(f&#34;Not able to retrieve Vault secret {e}&#34;, level=&#34;error&#34;)
-
-    # Download data from API
-    log(&#34;Downloading data from API&#34;)
-    headers = {} if auth_token == &#34;&#34; else {&#34;Authorization&#34;: f&#34;Bearer {auth_token}&#34;}
-    params = {} if params is None else params
-    try:
-        response = requests.get(url, headers=headers, params=params)
-    except Exception as e:
-        log(f&#34;An error occurred: {e}&#34;, level=&#34;error&#34;)
-
-    if response.status_code == 200:
-        api_data = response.json()
-
-        # Save the API data to a local file
-        if add_load_date_to_filename:
-            if load_date is None:
-                destination_file_path = (
-                    f&#34;{file_folder}/{file_name}_{str(date.today())}.json&#34;
-                )
-            else:
-                destination_file_path = f&#34;{file_folder}/{file_name}_{load_date}.json&#34;
-        else:
-            destination_file_path = f&#34;{file_folder}/{file_name}.json&#34;
-
-        with open(destination_file_path, &#34;w&#34;, encoding=&#34;utf-8&#34;) as file:
-            file.write(str(api_data))
-
-        log(f&#34;API data downloaded to {destination_file_path}&#34;)
-
-        return destination_file_path
-
-    else:
-        raise ValueError(
-            f&#34;API call failed, error: {response.status_code} - {response.reason}&#34;
-        )</code></pre>
-</details>
-</dd>
-<dt id="pipelines.rj_sms.utils.download_ftp"><code class="name flex">
-<span>def <span class="ident">download_ftp</span></span>(<span>host: str, user: str, password: str, directory: str, file_name: str, output_path: str)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Downloads a file from an FTP server and saves it to the specified output path.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>host</code></strong> :&ensp;<code>str</code></dt>
-<dd>The FTP server hostname.</dd>
-<dt><strong><code>user</code></strong> :&ensp;<code>str</code></dt>
-<dd>The FTP server username.</dd>
-<dt><strong><code>password</code></strong> :&ensp;<code>str</code></dt>
-<dd>The FTP server password.</dd>
-<dt><strong><code>directory</code></strong> :&ensp;<code>str</code></dt>
-<dd>The directory on the FTP server where the file is located.</dd>
-<dt><strong><code>file_name</code></strong> :&ensp;<code>str</code></dt>
-<dd>The name of the file to download.</dd>
-<dt><strong><code>output_path</code></strong> :&ensp;<code>str</code></dt>
-<dd>The local path where the downloaded file should be saved.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>str</code></dt>
-<dd>The local path where the downloaded file was saved.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task
-def download_ftp(
-    host: str,
-    user: str,
-    password: str,
-    directory: str,
-    file_name: str,
-    output_path: str,
-):
-    &#34;&#34;&#34;
-    Downloads a file from an FTP server and saves it to the specified output path.
-
-    Args:
-        host (str): The FTP server hostname.
-        user (str): The FTP server username.
-        password (str): The FTP server password.
-        directory (str): The directory on the FTP server where the file is located.
-        file_name (str): The name of the file to download.
-        output_path (str): The local path where the downloaded file should be saved.
-
-    Returns:
-        str: The local path where the downloaded file was saved.
-    &#34;&#34;&#34;
-
-    file_path = f&#34;{directory}/{file_name}&#34;
-    output_path = output_path + &#34;/&#34; + file_name
-    log(output_path)
-    # Connect to the FTP server
-    ftp = FTP(host)
-    ftp.login(user, password)
-
-    # Get the size of the file
-    ftp.voidcmd(&#34;TYPE I&#34;)
-    total_size = ftp.size(file_path)
-
-    # Create a callback function to be called when each block is read
-    def callback(block):
-        nonlocal downloaded_size
-        downloaded_size += len(block)
-        percent_complete = (downloaded_size / total_size) * 100
-        if percent_complete // 5 &gt; (downloaded_size - len(block)) // (total_size / 20):
-            log(f&#34;Download is {percent_complete:.0f}% complete&#34;)
-        f.write(block)
-
-    # Initialize the downloaded size
-    downloaded_size = 0
-
-    # Download the file
-    with open(output_path, &#34;wb&#34;) as f:
-        ftp.retrbinary(f&#34;RETR {file_path}&#34;, callback)
-
-    # Close the connection
-    ftp.quit()
-
-    return output_path</code></pre>
-</details>
-</dd>
-<dt id="pipelines.rj_sms.utils.from_json_to_csv"><code class="name flex">
-<span>def <span class="ident">from_json_to_csv</span></span>(<span>input_path, sep=';')</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Converts a JSON file to a CSV file.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>input_path</code></strong> :&ensp;<code>str</code></dt>
-<dd>The path to the input JSON file.</dd>
-<dt><strong><code>sep</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>The separator to use in the output CSV file. Defaults to ";".</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>str</code></dt>
-<dd>The path to the output CSV file, or None if an error occurred.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task
-def from_json_to_csv(input_path, sep=&#34;;&#34;):
-    &#34;&#34;&#34;
-    Converts a JSON file to a CSV file.
-
-    Args:
-        input_path (str): The path to the input JSON file.
-        sep (str, optional): The separator to use in the output CSV file. Defaults to &#34;;&#34;.
-
-    Returns:
-        str: The path to the output CSV file, or None if an error occurred.
-    &#34;&#34;&#34;
-    try:
-        with open(input_path, &#34;r&#34;, encoding=&#34;utf-8&#34;) as file:
-            json_data = file.read()
-            data = eval(json_data)  # Convert JSON string to Python dictionary
-
-            output_path = input_path.replace(&#34;.json&#34;, &#34;.csv&#34;)
-            # Assuming the JSON structure is a list of dictionaries
-            df = pd.DataFrame(data, dtype=&#34;str&#34;)
-            df.to_csv(output_path, index=False, sep=sep, encoding=&#34;utf-8&#34;)
-
-            log(&#34;JSON converted to CSV&#34;)
-            return output_path
-
-    except Exception as e:
-        log(f&#34;An error occurred: {e}&#34;, level=&#34;error&#34;)
-        return None</code></pre>
-</details>
-</dd>
-<dt id="pipelines.rj_sms.utils.list_files_ftp"><code class="name flex">
-<span>def <span class="ident">list_files_ftp</span></span>(<span>host, user, password, directory)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Lists all files in a given directory on a remote FTP server.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>host</code></strong> :&ensp;<code>str</code></dt>
-<dd>The hostname or IP address of the FTP server.</dd>
-<dt><strong><code>user</code></strong> :&ensp;<code>str</code></dt>
-<dd>The username to use for authentication.</dd>
-<dt><strong><code>password</code></strong> :&ensp;<code>str</code></dt>
-<dd>The password to use for authentication.</dd>
-<dt><strong><code>directory</code></strong> :&ensp;<code>str</code></dt>
-<dd>The directory to list files from.</dd>
+<dt><strong><code>dict_template</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Template dictionary to be used in the generation
+of the list of dictionaries.</dd>
+<dt><strong><code>key</code></strong> :&ensp;<code>str</code></dt>
+<dd>Key to be used in the template.</dd>
+<dt><strong><code>values</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of values to be used in the template.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>list</code></dt>
-<dd>A list of filenames in the specified directory.</dd>
+<dd>List of dictionaries generated from the template dictionary and
+the list of values.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@task
-def list_files_ftp(host, user, password, directory):
+<pre><code class="python">def generate_dicts(dict_template: dict, key: str, values: list) -&gt; list:
     &#34;&#34;&#34;
-    Lists all files in a given directory on a remote FTP server.
+    Generates a list of dictionaries from a template dictionary and a list of
+    values to be used in the template.
 
     Args:
-        host (str): The hostname or IP address of the FTP server.
-        user (str): The username to use for authentication.
-        password (str): The password to use for authentication.
-        directory (str): The directory to list files from.
+        dict_template (dict): Template dictionary to be used in the generation
+            of the list of dictionaries.
+        key (str): Key to be used in the template.
+        values (list): List of values to be used in the template.
 
     Returns:
-        list: A list of filenames in the specified directory.
+        list: List of dictionaries generated from the template dictionary and
+            the list of values.
     &#34;&#34;&#34;
-    ftp = FTP(host)
-    ftp.login(user, password)
-    ftp.cwd(directory)
-
-    files = ftp.nlst()
-
-    ftp.quit()
-
-    return files</code></pre>
+    return [dict_template | {key: value} for value in values]</code></pre>
 </details>
 </dd>
-<dt id="pipelines.rj_sms.utils.unzip_file"><code class="name flex">
-<span>def <span class="ident">unzip_file</span></span>(<span>file_path: str, output_path: str)</span>
+<dt id="pipelines.rj_sms.utils.generate_dump_api_schedules"><code class="name flex">
+<span>def <span class="ident">generate_dump_api_schedules</span></span>(<span>interval: datetime.timedelta, start_date: datetime.datetime, labels: List[str], flow_run_parameters: List[dict], runs_interval_minutes: int = 2) ‑> List[prefect.schedules.clocks.IntervalClock]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Unzips a file to the specified output path.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>file_path</code></strong> :&ensp;<code>str</code></dt>
-<dd>The path to the file to be unzipped.</dd>
-<dt><strong><code>output_path</code></strong> :&ensp;<code>str</code></dt>
-<dd>The path to the output directory.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>str</code></dt>
-<dd>The path to the unzipped file.</dd>
-</dl></div>
+<div class="desc"><p>Generates multiple schedules for vitacare dumping.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@task
-def unzip_file(file_path: str, output_path: str):
+<pre><code class="python">def generate_dump_api_schedules(  # pylint: disable=too-many-arguments,too-many-locals
+    interval: timedelta,
+    start_date: datetime,
+    labels: List[str],
+    flow_run_parameters: List[dict],
+    runs_interval_minutes: int = 2,
+) -&gt; List[IntervalClock]:
     &#34;&#34;&#34;
-    Unzips a file to the specified output path.
-
-    Args:
-        file_path (str): The path to the file to be unzipped.
-        output_path (str): The path to the output directory.
-
-    Returns:
-        str: The path to the unzipped file.
+    Generates multiple schedules for vitacare dumping.
     &#34;&#34;&#34;
-    with zipfile.ZipFile(file_path, &#34;r&#34;) as zip_ref:
-        zip_ref.extractall(output_path)
+    clocks = []
+    for count, parameters in enumerate(flow_run_parameters):
+        new_interval = parameters[&#34;interval&#34;] if &#34;interval&#34; in parameters else interval
 
-    log(f&#34;File unzipped to {output_path}&#34;)
-
-    return output_path</code></pre>
-</details>
-</dd>
-<dt id="pipelines.rj_sms.utils.upload_to_datalake"><code class="name flex">
-<span>def <span class="ident">upload_to_datalake</span></span>(<span>input_path: str, dataset_id: str, table_id: str, if_exists: str = 'replace', csv_delimiter: str = ';', if_storage_data_exists: str = 'replace', biglake_table: bool = True, dump_mode: str = 'append')</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Uploads data from a file to a BigQuery table in a specified dataset.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>input_path</code></strong> :&ensp;<code>str</code></dt>
-<dd>The path to the file containing the data to be uploaded.</dd>
-<dt><strong><code>dataset_id</code></strong> :&ensp;<code>str</code></dt>
-<dd>The ID of the dataset where the table is located.</dd>
-<dt><strong><code>table_id</code></strong> :&ensp;<code>str</code></dt>
-<dd>The ID of the table where the data will be uploaded.</dd>
-<dt><strong><code>if_exists</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>Specifies what to do if the table already exists.
-Defaults to "replace".</dd>
-<dt><strong><code>csv_delimiter</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>The delimiter used in the CSV file. Defaults to ";".</dd>
-<dt><strong><code>if_storage_data_exists</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>Specifies what to do if the storage data
-already exists. Defaults to "replace".</dd>
-<dt><strong><code>biglake_table</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>Specifies whether the table is a BigLake table.
-Defaults to True.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task
-def upload_to_datalake(
-    input_path: str,
-    dataset_id: str,
-    table_id: str,
-    if_exists: str = &#34;replace&#34;,
-    csv_delimiter: str = &#34;;&#34;,
-    if_storage_data_exists: str = &#34;replace&#34;,
-    biglake_table: bool = True,
-    dump_mode: str = &#34;append&#34;,
-):
-    &#34;&#34;&#34;
-    Uploads data from a file to a BigQuery table in a specified dataset.
-
-    Args:
-        input_path (str): The path to the file containing the data to be uploaded.
-        dataset_id (str): The ID of the dataset where the table is located.
-        table_id (str): The ID of the table where the data will be uploaded.
-        if_exists (str, optional): Specifies what to do if the table already exists.
-            Defaults to &#34;replace&#34;.
-        csv_delimiter (str, optional): The delimiter used in the CSV file. Defaults to &#34;;&#34;.
-        if_storage_data_exists (str, optional): Specifies what to do if the storage data
-            already exists. Defaults to &#34;replace&#34;.
-        biglake_table (bool, optional): Specifies whether the table is a BigLake table.
-            Defaults to True.
-    &#34;&#34;&#34;
-    tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
-    table_staging = f&#34;{tb.table_full_name[&#39;staging&#39;]}&#34;
-    st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
-    storage_path = f&#34;{st.bucket_name}.staging.{dataset_id}.{table_id}&#34;
-    storage_path_link = (
-        f&#34;https://console.cloud.google.com/storage/browser/{st.bucket_name}&#34;
-        f&#34;/staging/{dataset_id}/{table_id}&#34;
-    )
-
-    try:
-        table_exists = tb.table_exists(mode=&#34;staging&#34;)
-
-        if not table_exists:
-            log(f&#34;CREATING TABLE: {dataset_id}.{table_id}&#34;)
-            tb.create(
-                path=input_path,
-                csv_delimiter=csv_delimiter,
-                if_storage_data_exists=if_storage_data_exists,
-                biglake_table=biglake_table,
+        clocks.append(
+            IntervalClock(
+                interval=new_interval,
+                start_date=start_date
+                + timedelta(minutes=runs_interval_minutes * count),
+                labels=labels,
+                parameter_defaults=parameters,
             )
-        else:
-            if dump_mode == &#34;append&#34;:
-                log(
-                    f&#34;TABLE ALREADY EXISTS APPENDING DATA TO STORAGE: {dataset_id}.{table_id}&#34;
-                )
-
-                tb.append(filepath=input_path, if_exists=if_exists)
-            elif dump_mode == &#34;overwrite&#34;:
-                log(
-                    &#34;MODE OVERWRITE: Table ALREADY EXISTS, DELETING OLD DATA!\n&#34;
-                    f&#34;{storage_path}\n&#34;
-                    f&#34;{storage_path_link}&#34;
-                )  # pylint: disable=C0301
-                st.delete_table(
-                    mode=&#34;staging&#34;, bucket_name=st.bucket_name, not_found_ok=True
-                )
-                log(
-                    &#34;MODE OVERWRITE: Sucessfully DELETED OLD DATA from Storage:\n&#34;
-                    f&#34;{storage_path}\n&#34;
-                    f&#34;{storage_path_link}&#34;
-                )  # pylint: disable=C0301
-                tb.delete(mode=&#34;all&#34;)
-                log(
-                    &#34;MODE OVERWRITE: Sucessfully DELETED TABLE:\n&#34; f&#34;{table_staging}\n&#34;
-                )  # pylint: disable=C0301
-
-                tb.create(
-                    path=input_path,
-                    csv_delimiter=csv_delimiter,
-                    if_storage_data_exists=if_storage_data_exists,
-                    biglake_table=biglake_table,
-                )
-        log(&#34;Data uploaded to BigQuery&#34;)
-
-    except Exception as e:
-        log(f&#34;An error occurred: {e}&#34;, level=&#34;error&#34;)</code></pre>
+        )
+    return clocks</code></pre>
 </details>
 </dd>
 </dl>
@@ -1490,17 +233,8 @@ setTimeout(() => input.focus(), 100);
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="pipelines.rj_sms.utils.add_load_date_column" href="#pipelines.rj_sms.utils.add_load_date_column">add_load_date_column</a></code></li>
-<li><code><a title="pipelines.rj_sms.utils.clean_ascii" href="#pipelines.rj_sms.utils.clean_ascii">clean_ascii</a></code></li>
-<li><code><a title="pipelines.rj_sms.utils.create_folders" href="#pipelines.rj_sms.utils.create_folders">create_folders</a></code></li>
-<li><code><a title="pipelines.rj_sms.utils.create_partitions" href="#pipelines.rj_sms.utils.create_partitions">create_partitions</a></code></li>
-<li><code><a title="pipelines.rj_sms.utils.download_azure_blob" href="#pipelines.rj_sms.utils.download_azure_blob">download_azure_blob</a></code></li>
-<li><code><a title="pipelines.rj_sms.utils.download_from_api" href="#pipelines.rj_sms.utils.download_from_api">download_from_api</a></code></li>
-<li><code><a title="pipelines.rj_sms.utils.download_ftp" href="#pipelines.rj_sms.utils.download_ftp">download_ftp</a></code></li>
-<li><code><a title="pipelines.rj_sms.utils.from_json_to_csv" href="#pipelines.rj_sms.utils.from_json_to_csv">from_json_to_csv</a></code></li>
-<li><code><a title="pipelines.rj_sms.utils.list_files_ftp" href="#pipelines.rj_sms.utils.list_files_ftp">list_files_ftp</a></code></li>
-<li><code><a title="pipelines.rj_sms.utils.unzip_file" href="#pipelines.rj_sms.utils.unzip_file">unzip_file</a></code></li>
-<li><code><a title="pipelines.rj_sms.utils.upload_to_datalake" href="#pipelines.rj_sms.utils.upload_to_datalake">upload_to_datalake</a></code></li>
+<li><code><a title="pipelines.rj_sms.utils.generate_dicts" href="#pipelines.rj_sms.utils.generate_dicts">generate_dicts</a></code></li>
+<li><code><a title="pipelines.rj_sms.utils.generate_dump_api_schedules" href="#pipelines.rj_sms.utils.generate_dump_api_schedules">generate_dump_api_schedules</a></code></li>
 </ul>
 </li>
 </ul>

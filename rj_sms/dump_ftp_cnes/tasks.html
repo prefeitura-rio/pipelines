@@ -42,7 +42,7 @@ import pytz
 from prefect import task
 from pipelines.utils.utils import log
 from pipelines.rj_sms.dump_ftp_cnes.constants import constants
-from pipelines.rj_sms.utils import (
+from pipelines.rj_sms.tasks import (
     list_files_ftp,
     upload_to_datalake,
     download_ftp,
