@@ -38,9 +38,9 @@ table_parameters = {
 
 sms_clocks = generate_dump_url_schedules(
     interval=timedelta(days=1),
-    start_date=datetime(2023, 1, 1, 13, 20, tzinfo=pytz.timezone("America/Sao_Paulo")),
+    start_date=datetime(2023, 1, 1, 5, 30, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
-        constants.RJ_SMS_DEV_AGENT_LABEL.value,
+        constants.RJ_SMS_AGENT_LABEL.value,
     ],
     dataset_id=sheets_constants.DATASET_ID.value,
     table_parameters=table_parameters,
