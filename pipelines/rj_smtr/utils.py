@@ -870,6 +870,7 @@ def get_raw_recursos(request_url: str, request_params: dict) -> tuple[str, str, 
 
             if len(paginated_data) == 0:
                 log("Nenhum dado para tratar.")
+                break
 
             else:
                 all_records = True
