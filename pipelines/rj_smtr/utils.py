@@ -19,17 +19,20 @@ import requests
 import basedosdados as bd
 from basedosdados import Table, Storage
 from basedosdados.upload.datatypes import Datatype
+import math
 import pandas as pd
 from google.cloud.storage.blob import Blob
 from google.cloud import bigquery
 import pymysql
 import psycopg2
 import psycopg2.extras
+import time
 
 
 from prefect.schedules.clocks import IntervalClock
 
 from pipelines.constants import constants as emd_constants
+
 
 from pipelines.rj_smtr.implicit_ftp import ImplicitFtpTls
 from pipelines.rj_smtr.constants import constants
@@ -948,3 +951,57 @@ def read_raw_data(filepath: str, csv_args: dict = None) -> tuple[str, pd.DataFra
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return error, data
+
+
+def get_raw_recursos(request_url: str, request_params: dict) -> tuple[str, str, str]:
+    """
+    Returns a dataframe with recursos data from movidesk api.
+    """
+    all_records = False
+    top = 1000
+    skip = 0
+    error = None
+    filetype = "json"
+    data = []
+
+    while not all_records:
+        try:
+            request_params["$top"] = top
+            request_params["$skip"] = skip
+
+            log(f"Request url {request_url}")
+
+            response = requests.get(
+                request_url,
+                params=request_params,
+                timeout=constants.MAX_TIMEOUT_SECONDS.value,
+            )
+            response.raise_for_status()
+
+            paginated_data = response.json()
+
+            if isinstance(paginated_data, dict):
+                paginated_data = [paginated_data]
+
+            if len(paginated_data) == top:
+                skip += top
+                time.sleep(36)
+
+            if len(paginated_data) == 0:
+                log("Nenhum dado para tratar.")
+
+            else:
+                all_records = True
+            data += paginated_data
+
+            log(f"Dados (paginados): {len(data)}")
+
+        except Exception as error:
+            error = traceback.format_exc()
+            log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+            data = []
+            break
+
+    log(f"Request concluído, tamanho dos dados: {len(data)}.")
+
+    return error, data, filetype
