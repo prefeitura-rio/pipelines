@@ -152,6 +152,17 @@ def get_username_and_password_from_secret(
     )
 
 
+def get_connection_string_from_secret(
+    secret_path: str,
+    client: hvac.Client = None,
+) -> str:
+    """
+    Returns a connection string from a secret in Vault.
+    """
+    secret = get_vault_secret(secret_path, client)
+    return secret["data"]["connection_string"]
+
+
 def notify_discord_on_failure(
     flow: prefect.Flow,
     state: State,
