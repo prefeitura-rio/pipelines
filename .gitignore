@@ -12,8 +12,9 @@ test/*.csv
 setup.py
 .vscode/*
 *.hdf
-*.DS_Store
 .idea/*
+*.DS_Store
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -149,3 +150,4 @@ dmypy.json
 # Backfill stuff
 backfill.csv
 REVIEW.md
+.DS_Store
