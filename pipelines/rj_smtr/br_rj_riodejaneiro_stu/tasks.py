@@ -23,7 +23,9 @@ def get_stu_raw_blobs(data_versao_stu: str) -> list[Blob]:
         list[Blob]: The blob list
     """
     bd_storage = bd.Storage(
-        dataset_id=constants.STU_GENERAL_CAPTURE_PARAMS.value["dataset_id"], table_id=""
+        dataset_id=constants.STU_GENERAL_CAPTURE_PARAMS.value["dataset_id"],
+        table_id="",
+        bucket_name=constants.STU_GENERAL_CAPTURE_PARAMS.value["save_bucket_name"],
     )
 
     blob_list = (
@@ -136,7 +138,9 @@ def save_stu_dataframes(df_pf: pd.DataFrame, df_pj: pd.DataFrame):
 
     df_mapping = {"CPF": df_pf, "CNPJ": df_pj}
     bd_storage = bd.Storage(
-        table_id="", dataset_id=constants.STU_GENERAL_CAPTURE_PARAMS.value["dataset_id"]
+        table_id="",
+        dataset_id=constants.STU_GENERAL_CAPTURE_PARAMS.value["dataset_id"],
+        bucket_name=constants.STU_GENERAL_CAPTURE_PARAMS.value["save_bucket_name"],
     )
 
     bucket = bd_storage.client["storage_staging"].bucket(bd_storage.bucket_name)

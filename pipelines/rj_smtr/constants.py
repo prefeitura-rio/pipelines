@@ -616,6 +616,7 @@ class constants(Enum):  # pylint: disable=c0103
         "partition_date_only": True,
         "source_type": "gcs",
         "dataset_id": "br_rj_riodejaneiro_stu",
+        "save_bucket_name": "rj-smtr-dev-private",
     }
 
     STU_TABLE_CAPTURE_PARAMS = [
