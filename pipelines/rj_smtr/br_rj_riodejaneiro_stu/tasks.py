@@ -34,11 +34,15 @@ def get_stu_raw_blobs(data_versao_stu: str) -> list[Blob]:
         .list_blobs(prefix=f"upload/{bd_storage.dataset_id}/Tptran_")
     )
 
-    return [
+    blob_list = [
         b
         for b in blob_list
         if b.name.endswith(f"{data_versao_stu.replace('-', '')}.txt")
     ]
+
+    log(f"Files found: {', '.join([b.name for b in blob_list])}")
+
+    return
 
 
 @task(checkpoint=False)
@@ -79,6 +83,7 @@ def read_stu_raw_file(blob: Blob) -> pd.DataFrame:
     #     filename=filename,
     # )
 
+    log(f"Downloading blob: {blob.name}")
     data = blob.download_as_bytes().decode("latin-1")
     name_parts = blob.name.split("/")[-1].split("_")
     mode = stu_mode_mapping[int(name_parts[1]) - 1]
