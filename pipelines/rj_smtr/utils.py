@@ -118,7 +118,7 @@ def create_bq_external_table(table_obj: Table, path: str, bucket_name: str):
     bq_table = bigquery.Table(table_obj.table_full_name["staging"])
     project_name = table_obj.client["bigquery_prod"].project
     table_full_name = table_obj.table_full_name["prod"].replace(
-        project_name, f"{project_name}.{bucket_name}"
+        project_name, f"{project_name}.{bucket_name}", 1
     )
     bq_table.description = f"staging table for `{table_full_name}`"
 
