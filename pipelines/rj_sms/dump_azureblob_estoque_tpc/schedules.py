@@ -11,8 +11,8 @@ import pytz
 
 
 from pipelines.constants import constants
-from pipelines.rj_sms.dump_api_prontuario_vitai.constants import (
-    constants as vitai_constants,
+from pipelines.rj_sms.dump_azureblob_estoque_tpc.constants import (
+    constants as tpc_constants,
 )
 from pipelines.utils.utils import untuple_clocks as untuple
 from pipelines.rj_sms.utils import generate_dump_api_schedules
@@ -21,19 +21,23 @@ from pipelines.rj_sms.utils import generate_dump_api_schedules
 flow_parameters = [
     {
         "table_id": "estoque_posicao",
-        "dataset_id": vitai_constants.DATASET_ID.value,
-        "endpoint": "posicao",
+        "dataset_id": tpc_constants.DATASET_ID.value,
+        "blob_file": "posicao",
     },
-    {
-        "table_id": "estoque_movimento",
-        "dataset_id": vitai_constants.DATASET_ID.value,
-        "endpoint": "movimento",
-        "date": "yesterday",
-    },
+    # {
+    #    "table_id": "estoque_pedidos_abastecimento",
+    #    "dataset_id": tpc_constants.DATASET_ID.value,
+    #    "blob_file": "pedidos",
+    # },
+    # {
+    #    "table_id": "estoque_recebimento",
+    #    "dataset_id": tpc_constants.DATASET_ID.value,
+    #    "blob_file": "recebimento",
+    # },
 ]
 
 
-vitai_clocks = generate_dump_api_schedules(
+tpc_clocks = generate_dump_api_schedules(
     interval=timedelta(days=1),
     start_date=datetime(2023, 1, 1, 5, 30, tzinfo=pytz.timezone("America/Sao_Paulo")),
     labels=[
@@ -43,4 +47,4 @@ vitai_clocks = generate_dump_api_schedules(
     runs_interval_minutes=2,
 )
 
-vitai_daily_update_schedule = Schedule(clocks=untuple(vitai_clocks))
+tpc_daily_update_schedule = Schedule(clocks=untuple(tpc_clocks))
