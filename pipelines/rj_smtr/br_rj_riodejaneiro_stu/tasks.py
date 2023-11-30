@@ -42,7 +42,7 @@ def get_stu_raw_blobs(data_versao_stu: str) -> list[Blob]:
 
     log(f"Files found: {', '.join([b.name for b in blob_list])}")
 
-    return
+    return blob_list
 
 
 @task(checkpoint=False)
@@ -57,15 +57,15 @@ def read_stu_raw_file(blob: Blob) -> pd.DataFrame:
         pd.DataFrame: data
     """
 
-    stu_mode_mapping = [
-        "Táxi",
-        "Ônibus",
-        "Escolar",
-        "Complementar (cabritinho)",
-        "Fretamento",
-        "TEC",
-        "STPL",
-    ]
+    stu_mode_mapping = {
+        "1": "Táxi",
+        "2": "Ônibus",
+        "3": "Escolar",
+        "4": "Complementar (cabritinho)",
+        "6": "Fretamento",
+        "7": "TEC",
+        "8": "STPL",
+    }
 
     stu_type_mapping = [
         "Autônomo",
@@ -78,15 +78,10 @@ def read_stu_raw_file(blob: Blob) -> pd.DataFrame:
         "Prestadora de Serviços",
     ]
 
-    # blob = get_upload_storage_blob(
-    #     dataset_id=constants.STU_GENERAL_CAPTURE_PARAMS.value["dataset_id"],
-    #     filename=filename,
-    # )
-
     log(f"Downloading blob: {blob.name}")
     data = blob.download_as_bytes().decode("latin-1")
     name_parts = blob.name.split("/")[-1].split("_")
-    mode = stu_mode_mapping[int(name_parts[1]) - 1]
+    mode = stu_mode_mapping[name_parts[1]]
     perm_type = stu_type_mapping[int(name_parts[3]) - 1]
 
     df = pd.read_csv(
