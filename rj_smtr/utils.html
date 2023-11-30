@@ -896,11 +896,10 @@ def get_raw_recursos(request_url: str, request_params: dict) -&gt; tuple[str, st
             if len(paginated_data) == top:
                 skip += top
                 time.sleep(36)
-
-            if len(paginated_data) == 0:
-                log(&#34;Nenhum dado para tratar.&#34;)
-
             else:
+                if len(paginated_data) == 0:
+                    log(&#34;Nenhum dado para tratar.&#34;)
+                    break
                 all_records = True
             data += paginated_data
 
@@ -1828,11 +1827,10 @@ mode (str):</p>
             if len(paginated_data) == top:
                 skip += top
                 time.sleep(36)
-
-            if len(paginated_data) == 0:
-                log(&#34;Nenhum dado para tratar.&#34;)
-
             else:
+                if len(paginated_data) == 0:
+                    log(&#34;Nenhum dado para tratar.&#34;)
+                    break
                 all_records = True
             data += paginated_data
 
