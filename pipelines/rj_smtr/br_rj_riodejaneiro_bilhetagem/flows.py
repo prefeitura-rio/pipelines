@@ -74,7 +74,7 @@ bilhetagem_tracking_captura = set_default_parameters(
     | constants.BILHETAGEM_TRACKING_CAPTURE_PARAMS.value,
 )
 
-bilhetagem_tracking_captura.schedule = every_minute
+# bilhetagem_tracking_captura.schedule = every_minute
 
 # BILHETAGEM RESSARCIMENTO - SUBFLOW PARA RODAR DIARIAMENTE #
 
@@ -346,7 +346,7 @@ bilhetagem_gps_tratamento.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-bilhetagem_gps_tratamento.schedule = every_hour
+# bilhetagem_gps_tratamento.schedule = every_hour
 
 with Flow(
     "SMTR: Bilhetagem Ordem Pagamento - Captura/Tratamento",
