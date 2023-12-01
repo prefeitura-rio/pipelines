@@ -866,11 +866,11 @@ def get_raw_recursos(request_url: str, request_params: dict) -> tuple[str, str, 
 
             if len(paginated_data) == top:
                 skip += top
-                time.sleep(36)
+                time.sleep(60)  # aumenta tempo de espera para não sobrecarregar a api
             else:
                 if len(paginated_data) == 0:
                     log("Nenhum dado para tratar.")
-                    break
+
                 all_records = True
             data += paginated_data
 
