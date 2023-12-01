@@ -622,11 +622,13 @@ class constants(Enum):  # pylint: disable=c0103
     STU_TABLE_CAPTURE_PARAMS = [
         {
             "table_id": "operadora_empresa",
-            "primary_key": ["Perm_Autor", "CNPJ"],
+            "primary_key": ["Perm_Autor"],
+            "pre_treatment_reader_args": {"dtype": {"CNPJ": "object"}},
         },
         {
             "table_id": "operadora_pessoa_fisica",
-            "primary_key": ["Perm_Autor", "CPF"],
+            "primary_key": ["Perm_Autor"],
+            "pre_treatment_reader_args": {"dtype": {"CPF": "object"}},
         },
     ]
 
