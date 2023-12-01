@@ -92,7 +92,7 @@ with Flow(
 
     LABELS = get_current_flow_labels()
 
-    # Captura
+    # Captura dos dados #
 
     with case(capture, True):
         run_captura = create_flow_run(
@@ -116,7 +116,7 @@ with Flow(
 
     wait_captura = merge(wait_captura_true, wait_captura_false)
 
-    # Recaptura
+    # Recaptura dos dados #
 
     with case(recapture, True):
         run_recaptura = create_flow_run(
@@ -140,7 +140,7 @@ with Flow(
 
     wait_recaptura = merge(wait_recaptura_true, wait_recaptura_false)
 
-    # Materialização
+    # Materialização dos dados #
 
     with case(materialize, True):
         run_materializacao = create_flow_run(
