@@ -237,7 +237,7 @@ def save_data(info: dict, mode_redis: str = "prod") -> Union[str, Path]:
     Concat all netcdf data and save partitioned by date on a csv
     """
 
-    log("Start saving product on a csv")
+    log("Start saving product on a file")
     output_path = save_data_in_file(
         product=info["product"],
         variable=info["variable"],

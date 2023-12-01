@@ -61,7 +61,13 @@ import pendulum
 import xarray as xr
 
 from pipelines.rj_cor.meteorologia.satelite.remap import remap
-from pipelines.utils.utils import get_credentials_from_env, list_blobs_with_prefix, log
+from pipelines.utils.utils import (
+    get_credentials_from_env,
+    list_blobs_with_prefix,
+    log,
+    parse_date_columns,
+    to_partitions,
+)
 
 
 def get_blob_with_prefix(bucket_name: str, prefix: str, mode: str = "prod") -> str:
@@ -432,27 +438,10 @@ def save_data_in_file(
     """
     Read all nc or tif files and save them in a unique file inside a partition
     """
-    date_save = datetime_save[:8]
-    time_save = str(int(datetime_save[9:11]))
-
-    year = date_save[:4]
-    month = str(int(date_save[4:6]))
-    day = str(int(date_save[6:8]))
-    date = year + "-" + month.zfill(2) + "-" + day.zfill(2)
-    partitions = os.path.join(
-        f"ano_particao={year}",
-        f"mes_particao={month}",
-        f"data_particao={date}",
-        f"hora_particao={time_save}",
-    )
 
     folder_path = f"{os.getcwd()}/temp/treated/{product}/"
     # cria pasta de partições se elas não existem
     output_path = os.path.join(os.getcwd(), "temp", "output", mode_redis, product)
-    partitions_path = os.path.join(output_path, partitions)
-
-    if not os.path.exists(partitions_path):
-        os.makedirs(partitions_path)
 
     # Loop through all NetCDF files in the folder
     data = pd.DataFrame()
@@ -469,17 +458,29 @@ def save_data_in_file(
     data["horario"] = pendulum.from_format(
         datetime_save, "YYYYMMDD HHmmss"
     ).to_time_string()
+    data["data_medicao"] = pendulum.from_format(
+        datetime_save, "YYYYMMDD HHmmss"
+    ).to_date_string()
 
-    print(f"Final df: {data.head()}")
     # Fixa ordem das colunas
-    data = data[["longitude", "latitude", "horario"] + [i.lower() for i in variable]]
-    print("cols", data.columns)
+    data = data[
+        ["longitude", "latitude", "data_medicao", "horario"]
+        + [i.lower() for i in variable]
+    ]
+    print(f"Final df: {data.head()}")
 
     file_name = files[0].split("_variable-")[0]
     print(f"\n\n[DEGUB]: Saving {file_name} on {output_path}\n\n")
-    print(f"Data_save: {date_save}, time_save: {time_save}")
-    # log(f"\n\n[DEGUB]: Saving {file_name} on {parquet_path}\n\n")
-    # log(f"Data_save: {date_save}, time_save: {time_save}")
-    file_path = os.path.join(partitions_path, f"{file_name}.csv")
-    data.to_csv(file_path, index=False)
+
+    partition_column = "data_medicao"
+    data, partitions = parse_date_columns(data, partition_column)
+    print(f"\n\n[DEGUB]: Partitions {partitions}\n\n")
+    print(f"Final df: {data.head()}")
+
+    to_partitions(
+        data=data,
+        partition_columns=partitions,
+        savepath=output_path,
+        data_type="parquet",
+    )
     return output_path
