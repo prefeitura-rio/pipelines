@@ -663,3 +663,13 @@ class constants(Enum):  # pylint: disable=c0103
             "version": {},
         },
     }
+
+    DIRETORIO_MATERIALIZACAO_PARAMS = {
+        "dataset_id": "br_rj_riodejaneiro_diretorios",
+        "upstream": True,
+    }
+
+    DIRETORIO_MATERIALIZACAO_TABLE_PARAMS = [
+        {"table_id": "diretorio_consorcio"},
+        {"table_id": "operadora_contato"},
+    ]
