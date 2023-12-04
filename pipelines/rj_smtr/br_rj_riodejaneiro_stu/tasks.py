@@ -136,7 +136,7 @@ def save_stu_dataframes(df_pf: pd.DataFrame, df_pj: pd.DataFrame):
         df_pj (pd.DataFrame): Dataframe for companies
     """
 
-    df_mapping = {"CPF": df_pf, "CNPJ": df_pj}
+    df_mapping = {"operadora_pessoa_fisica": df_pf, "operadora_empresa": df_pj}
     bd_storage = bd.Storage(
         table_id="",
         dataset_id=constants.STU_GENERAL_CAPTURE_PARAMS.value["dataset_id"],
@@ -146,7 +146,8 @@ def save_stu_dataframes(df_pf: pd.DataFrame, df_pj: pd.DataFrame):
     bucket = bd_storage.client["storage_staging"].bucket(bd_storage.bucket_name)
 
     for table in constants.STU_TABLE_CAPTURE_PARAMS.value:
-        df = df_mapping[table["primary_key"][1]]
+        table_id = table["table_id"]
+        df = df_mapping[table_id]
         bucket.blob(
-            f"upload/{bd_storage.dataset_id}/{table['table_id']}.csv"
+            f"upload/{bd_storage.dataset_id}/{table_id}.csv"
         ).upload_from_string(df.to_csv(index=False), "text/csv")
