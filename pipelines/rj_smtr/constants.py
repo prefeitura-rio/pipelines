@@ -612,11 +612,15 @@ class constants(Enum):  # pylint: disable=c0103
 
     # STU
 
+    STU_DATASET_ID = "br_rj_riodejaneiro_stu"
+
+    STU_BUCKET_NAME = "rj-smtr-dev-private"
+
     STU_GENERAL_CAPTURE_PARAMS = {
         "partition_date_only": True,
         "source_type": "gcs",
-        "dataset_id": "br_rj_riodejaneiro_stu",
-        "save_bucket_name": "rj-smtr-dev-private",
+        "dataset_id": STU_DATASET_ID,
+        "save_bucket_name": STU_BUCKET_NAME,
     }
 
     STU_TABLE_CAPTURE_PARAMS = [

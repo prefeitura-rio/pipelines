@@ -668,7 +668,7 @@ def create_request_params(
         }
 
     elif dataset_id == constants.GTFS_DATASET_ID.value:
-        request_params = extract_params["filename"]
+        request_params = {"zip_filename": extract_params["filename"]}
 
     elif dataset_id == constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value:
         extract_params["token"] = get_vault_secret(
@@ -687,6 +687,9 @@ def create_request_params(
         request_params = extract_params
 
         request_url = constants.SUBSIDIO_SPPO_RECURSO_API_BASE_URL.value
+
+    elif dataset_id == constants.STU_DATASET_ID.value:
+        request_params = {"bucket_name": constants.STU_BUCKET_NAME.value}
 
     return request_params, request_url
 
@@ -739,7 +742,7 @@ def get_raw_from_sources(
             )
         elif source_type == "gcs":
             error, data, filetype = get_raw_data_gcs(
-                dataset_id=dataset_id, table_id=table_id, zip_filename=request_params
+                dataset_id=dataset_id, table_id=table_id, **request_params
             )
         elif source_type == "db":
             error, data, filetype = get_raw_data_db(

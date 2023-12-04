@@ -684,6 +684,7 @@ def get_raw_data_api(  # pylint: disable=R0912
 def get_upload_storage_blob(
     dataset_id: str,
     filename: str,
+    bucket_name: str = None,
 ) -> Blob:
     """
     Get a blob from upload zone in storage
@@ -691,11 +692,12 @@ def get_upload_storage_blob(
     Args:
         dataset_id (str): The dataset id on BigQuery.
         filename (str): The filename in GCS.
+        bucket_name (str, Optional): The bucket name to get the data.
 
     Returns:
         Blob: blob object
     """
-    bucket = bd.Storage(dataset_id="", table_id="")
+    bucket = bd.Storage(dataset_id="", table_id="", bucket_name=bucket_name)
     log(f"Filename: {filename}, dataset_id: {dataset_id}")
     blob_list = list(
         bucket.client["storage_staging"]
@@ -707,9 +709,7 @@ def get_upload_storage_blob(
 
 
 def get_raw_data_gcs(
-    dataset_id: str,
-    table_id: str,
-    zip_filename: str = None,
+    dataset_id: str, table_id: str, zip_filename: str = None, bucket_name: str = None
 ) -> tuple[str, str, str]:
     """
     Get raw data from GCS
@@ -718,6 +718,7 @@ def get_raw_data_gcs(
         dataset_id (str): The dataset id on BigQuery.
         table_id (str): The table id on BigQuery.
         zip_filename (str, optional): The zip file name. Defaults to None.
+        bucket_name (str, Optional): The bucket name to get the data.
 
     Returns:
         tuple[str, str, str]: Error, data and filetype
@@ -728,7 +729,9 @@ def get_raw_data_gcs(
 
     try:
         blob_search_name = zip_filename or table_id
-        blob = get_upload_storage_blob(dataset_id=dataset_id, filename=blob_search_name)
+        blob = get_upload_storage_blob(
+            dataset_id=dataset_id, filename=blob_search_name, bucket_name=bucket_name
+        )
 
         filename = blob.name
         filetype = filename.split(".")[-1]
