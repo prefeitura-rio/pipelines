@@ -64,7 +64,7 @@ def read_stu_raw_file(blob: Blob) -> pd.DataFrame:
         "4": "Complementar (cabritinho)",
         "6": "Fretamento",
         "7": "TEC",
-        "8": "STPL",
+        "8": "Van",
     }
 
     stu_type_mapping = [
