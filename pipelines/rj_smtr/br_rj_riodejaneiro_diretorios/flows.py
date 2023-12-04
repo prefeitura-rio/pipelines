@@ -63,7 +63,9 @@ with Flow(
     table_params = task(
         lambda tables, exclude: [t for t in tables if t["table_id"] not in exclude]
         if exclude is not None
-        else tables
+        else tables,
+        checkpoint=False,
+        name="get_tables_to_run",
     )(tables=constants.DIRETORIO_MATERIALIZACAO_TABLE_PARAMS.value, exclude=exclude)
 
     run_materializacao = create_flow_run.map(
