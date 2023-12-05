@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.flows API documentation</title>
-<meta name="description" content="Imports all flows for every project so we can register all of them." />
+<title>pipelines.rj_smac.materialize_povo_comunidades_tradicionais.flows API documentation</title>
+<meta name="description" content="DBT-related flows." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,40 +19,46 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.flows</code></h1>
+<h1 class="title">Module <code>pipelines.rj_smac.materialize_povo_comunidades_tradicionais.flows</code></h1>
 </header>
 <section id="section-intro">
-<p>Imports all flows for every project so we can register all of them.</p>
+<p>DBT-related flows.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Imports all flows for every project so we can register all of them.
+DBT-related flows.
 &#34;&#34;&#34;
-# pylint: disable=W0401,W0614,W0611
-###############################################################################
-# Automatically managed, please do not touch                                  #
-###############################################################################
-from pipelines.datario import *
-from pipelines.rj_cor import *
-from pipelines.rj_cetrio import *
-from pipelines.rj_escritorio import *
-from pipelines.rj_iplanrio import *
-from pipelines.rj_pgm import *
-from pipelines.rj_rioaguas import *
-from pipelines.rj_smac import *
-from pipelines.rj_seconserva import *
-from pipelines.rj_segovi import *
-from pipelines.rj_seop import *
-from pipelines.rj_setur import *
-from pipelines.rj_sme import *
-from pipelines.rj_smfp import *
-from pipelines.rj_smi import *
-from pipelines.rj_smtr import *
-from pipelines.rj_sms import *
-from pipelines.utils import *</code></pre>
+
+from copy import deepcopy
+
+from prefect.run_configs import KubernetesRun
+from prefect.storage import GCS
+
+from pipelines.constants import constants
+from pipelines.rj_smac.materialize_povo_comunidades_tradicionais.schedules import (
+    materialize_povo_comunidades_tradicionais_schedule,
+)
+from pipelines.utils.execute_dbt_model.flows import utils_run_dbt_model_flow
+
+materialize_povo_comunidades_tradicionais_flow = deepcopy(utils_run_dbt_model_flow)
+materialize_povo_comunidades_tradicionais_flow.name = (
+    &#34;SMAC: povo_comunidades_tradicionais - Materializar tabelas&#34;
+)
+materialize_povo_comunidades_tradicionais_flow.storage = GCS(
+    constants.GCS_FLOWS_BUCKET.value
+)
+materialize_povo_comunidades_tradicionais_flow.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[
+        constants.RJ_SMAC_AGENT_LABEL.value,
+    ],
+)
+materialize_povo_comunidades_tradicionais_flow.schedule = (
+    materialize_povo_comunidades_tradicionais_schedule
+)</code></pre>
 </details>
 </section>
 <section>
@@ -99,7 +105,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -118,7 +124,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines" href="index.html">pipelines</a></code></li>
+<li><code><a title="pipelines.rj_smac.materialize_povo_comunidades_tradicionais" href="index.html">pipelines.rj_smac.materialize_povo_comunidades_tradicionais</a></code></li>
 </ul>
 </li>
 </ul>
