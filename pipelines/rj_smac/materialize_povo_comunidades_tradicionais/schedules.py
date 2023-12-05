@@ -38,12 +38,12 @@ diario_clocks = [
         start_date=datetime(2023, 1, 1, 2, 0, tzinfo=pytz.timezone("America/Sao_Paulo"))
         + timedelta(minutes=2 * count),
         labels=[
-            constants.RJ_ESCRITORIO_DEV_AGENT_LABEL.value,
+            constants.RJ_SMAC_AGENT_LABEL.value,
         ],
         parameter_defaults={
             "dataset_id": table["dataset_id"],
             "table_id": table["table_id"],
-            "mode": "prod",
+            "mode": table["mode"],
         },
     )
     for count, table in enumerate(diariamente)
