@@ -627,12 +627,12 @@ class constants(Enum):  # pylint: disable=c0103
         {
             "table_id": "operadora_empresa",
             "primary_key": ["Perm_Autor"],
-            "pre_treatment_reader_args": {"dtype": {"CNPJ": "object"}},
+            "pre_treatment_reader_args": {"dtype": "object"},
         },
         {
             "table_id": "operadora_pessoa_fisica",
             "primary_key": ["Perm_Autor"],
-            "pre_treatment_reader_args": {"dtype": {"CPF": "object"}},
+            "pre_treatment_reader_args": {"dtype": "object"},
         },
     ]
 
