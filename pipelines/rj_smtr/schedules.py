@@ -81,6 +81,20 @@ every_hour_minute_six = Schedule(
     ]
 )
 
+every_hour_minute_fifteen = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(hours=1),
+            start_date=datetime(
+                2021, 1, 1, 0, 15, 0, tzinfo=timezone(constants.TIMEZONE.value)
+            ),
+            labels=[
+                emd_constants.RJ_SMTR_AGENT_LABEL.value,
+            ],
+        ),
+    ]
+)
+
 every_day = Schedule(
     clocks=[
         IntervalClock(
