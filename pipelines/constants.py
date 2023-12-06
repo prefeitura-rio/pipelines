@@ -59,6 +59,8 @@ class constants(Enum):  # pylint: disable=c0103
 
     RJ_PGM_AGENT_LABEL = "rj-pgm"
 
+    RJ_SMAC_AGENT_LABEL = "rj-smac"
+
     ######################################
     # Other constants
     ######################################
