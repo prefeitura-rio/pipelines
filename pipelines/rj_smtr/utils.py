@@ -641,6 +641,26 @@ def get_raw_data_gcs(
     return error, data, filetype
 
 
+def close_db_connection(connection, engine: str):
+    """
+    Safely close a database connection
+
+    Args:
+        connection: the database connection
+        engine (str): The datase management system
+    """
+    if engine == "postgresql":
+        if not connection.closed:
+            connection.close()
+            log("Database connection closed")
+    elif engine == "mysql":
+        if connection.open:
+            connection.close()
+            log("Database connection closed")
+    else:
+        raise NotImplementedError(f"Engine {engine} not supported")
+
+
 def get_raw_data_db(
     query: str,
     engine: str,
@@ -677,35 +697,58 @@ def get_raw_data_db(
 
     full_data = []
     paginated_query = query
+    credentials = get_vault_secret(secret_path)["data"]
     if page_size is not None:
         paginated_query = paginated_query + f"LIMIT {page_size} OFFSET {{offset}}"
 
+    connector = connector_mapping[engine]
+
     try:
+        connection = connector(
+            host=host,
+            user=credentials["user"],
+            password=credentials["password"],
+            database=database,
+        )
         for page in range(max_pages):
-            credentials = get_vault_secret(secret_path)["data"]
-
-            with connector_mapping[engine](
-                host=host,
-                user=credentials["user"],
-                password=credentials["password"],
-                database=database,
-            ) as connection:
-                paginated_query = paginated_query.format(offset=page * page_size)
-                log(f"Executing query:\n{paginated_query}")
-                data = pd.read_sql(sql=paginated_query, con=connection).to_dict(
-                    orient="records"
-                )
-
-                full_data += data
-
-                if page_size is None or len(data) < page_size:
-                    log(f"Database Extraction Finished")
+            retries = 10
+            for retry in range(retries):
+                try:
+                    formatted_query = paginated_query.format(offset=page * page_size)
+                    log(f"Executing query:\n{formatted_query}")
+                    data = pd.read_sql(sql=formatted_query, con=connection).to_dict(
+                        orient="records"
+                    )
                     break
+                except Exception as err:
+                    log(f"[ATTEMPT {retry}]: {err}")
+                    close_db_connection(connection=connection, engine=engine)
+                    connection = connector(
+                        host=host,
+                        user=credentials["user"],
+                        password=credentials["password"],
+                        database=database,
+                    )
+                    if retry == retries - 1:
+                        raise err
+
+            full_data += data
+
+            log(f"Returned {len(data)} rows")
+
+            if page_size is None or len(data) < page_size:
+                log("Database Extraction Finished")
+                break
 
     except Exception:
         full_data = []
         error = traceback.format_exc()
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+    finally:
+        try:
+            close_db_connection(connection=connection, engine=engine)
+        except Exception:
+            pass
 
     return error, full_data, filetype
 
