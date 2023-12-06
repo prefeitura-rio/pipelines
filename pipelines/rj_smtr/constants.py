@@ -535,7 +535,7 @@ class constants(Enum):  # pylint: disable=c0103
     SUBSIDIO_SPPO_RECURSO_SERVICE = "serviceFull eq 'SPPO'"
     SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS = {
         "partition_date_only": True,
-        "table_id": "recurso_sppo",
+        "table_id": "recurso_sppo_viagens_individuais",
         "dataset_id": SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
         "extract_params": {
             "token": "",
