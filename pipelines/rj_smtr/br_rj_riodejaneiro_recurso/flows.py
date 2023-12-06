@@ -97,13 +97,12 @@ with Flow(
     LABELS = get_current_flow_labels()
 
     # Captura dos dados #
-
     with case(capture, True):
         run_captura = create_flow_run(
             flow_name=sppo_recurso_captura.name,
             project_name="staging",
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters=recurso_capture_parameters,
+            parameters={"extract_params": recurso_capture_parameters},
             labels=LABELS,
         )
 
