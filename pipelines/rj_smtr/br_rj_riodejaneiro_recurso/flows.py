@@ -30,7 +30,7 @@ from pipelines.rj_smtr.flows import default_capture_flow, default_materializatio
 from pipelines.rj_smtr.schedules import every_day
 
 
-# CAPTURA #
+# CAPTURA DOS TICKETS #
 
 sppo_recurso_captura = deepcopy(default_capture_flow)
 sppo_recurso_captura.name = "SMTR: Subsídio SPPO Recursos - Captura (subflow)"
@@ -43,7 +43,7 @@ sppo_recurso_captura = set_default_parameters(
     flow=sppo_recurso_captura,
     default_parameters=constants.SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS.value,
 )
-# RECAPTURA #
+# RECAPTURA DOS TICKETS #
 sppo_recurso_recaptura = deepcopy(default_capture_flow)
 sppo_recurso_recaptura.name = "SMTR: Subsídio SPPO Recursos - Recaptura (subflow)"
 sppo_recurso_recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
@@ -57,7 +57,7 @@ sppo_recurso_recaptura = set_default_parameters(
     | {"recapture": True},
 )
 
-# MATERIALIZAÇÃO #
+# MATERIALIZAÇÃO DOS TICKETS #
 
 sppo_recurso_materializacao = deepcopy(default_materialization_flow)
 sppo_recurso_materializacao.name = (
@@ -92,7 +92,7 @@ with Flow(
 
     LABELS = get_current_flow_labels()
 
-    # Captura
+    # Captura dos dados #
 
     with case(capture, True):
         run_captura = create_flow_run(
@@ -116,7 +116,7 @@ with Flow(
 
     wait_captura = merge(wait_captura_true, wait_captura_false)
 
-    # Recaptura
+    # Recaptura dos dados #
 
     with case(recapture, True):
         run_recaptura = create_flow_run(
@@ -140,7 +140,7 @@ with Flow(
 
     wait_recaptura = merge(wait_recaptura_true, wait_recaptura_false)
 
-    # Materialização
+    # Materialização dos dados #
 
     with case(materialize, True):
         run_materializacao = create_flow_run(
