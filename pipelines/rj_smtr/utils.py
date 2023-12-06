@@ -680,7 +680,7 @@ def get_raw_data_db(
         secret_path (str): Secret path to get credentials
         database (str): The database to connect
         page_size (int, Optional): The maximum number of rows returned by the paginated query
-            if you set a value in this argument, the query will have LIMIT and OFFSET appended to it
+            if you set a value for this argument, the query will have LIMIT and OFFSET appended to it
         max_pages (int, Optional): The maximum number of paginated queries to execute
 
     Returns:
