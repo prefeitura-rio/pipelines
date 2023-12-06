@@ -664,7 +664,8 @@ def create_request_params(
         }
 
         if table_id == constants.BILHETAGEM_TRACKING_CAPTURE_PARAMS.value["table_id"]:
-            project = bq_project()
+            project = bq_project(kind="bigquery_staging")
+            log(f"project = {project}")
             try:
                 logs_query = f"""
                 SELECT
