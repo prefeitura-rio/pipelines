@@ -222,9 +222,10 @@ class constants(Enum):  # pylint: disable=c0103
                 FROM
                     tracking_detalhe
                 WHERE
-                    data_tracking BETWEEN '{start}'
-                    AND '{end}'
+                    id > {last_id} AND id < {max_id}
             """,
+            "page_size": 1000,
+            "max_pages": 100,
         },
         "primary_key": ["id"],
         "interval_minutes": 1,
