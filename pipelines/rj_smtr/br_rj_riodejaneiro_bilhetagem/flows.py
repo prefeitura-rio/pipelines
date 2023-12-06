@@ -79,9 +79,8 @@ bilhetagem_tracking_captura = set_default_parameters(
     | constants.BILHETAGEM_TRACKING_CAPTURE_PARAMS.value,
 )
 
-bilhetagem_tracking_captura.state_handlers = (
-    bilhetagem_tracking_captura.state_handlers.append(skip_if_running_handler)
-)
+bilhetagem_tracking_captura.state_handlers.append(skip_if_running_handler)
+
 
 bilhetagem_tracking_captura.schedule = every_5_minutes
 
