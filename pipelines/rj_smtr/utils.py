@@ -642,7 +642,13 @@ def get_raw_data_gcs(
 
 
 def get_raw_data_db(
-    query: str, engine: str, host: str, secret_path: str, database: str
+    query: str,
+    engine: str,
+    host: str,
+    secret_path: str,
+    database: str,
+    page_size: int = None,
+    max_pages: int = None,
 ) -> tuple[str, str, str]:
     """
     Get data from Databases
@@ -666,22 +672,42 @@ def get_raw_data_db(
     error = None
     filetype = "json"
 
-    try:
-        credentials = get_vault_secret(secret_path)["data"]
+    if max_pages is None:
+        max_pages = 1
 
-        with connector_mapping[engine](
-            host=host,
-            user=credentials["user"],
-            password=credentials["password"],
-            database=database,
-        ) as connection:
-            data = pd.read_sql(sql=query, con=connection).to_dict(orient="records")
+    full_data = []
+    paginated_query = query
+    if page_size is not None:
+        paginated_query = paginated_query + f"LIMIT {page_size} OFFSET {{offset}}"
+
+    try:
+        for page in range(max_pages):
+            credentials = get_vault_secret(secret_path)["data"]
+
+            with connector_mapping[engine](
+                host=host,
+                user=credentials["user"],
+                password=credentials["password"],
+                database=database,
+            ) as connection:
+                paginated_query = paginated_query.format(offset=page * page_size)
+                log(f"Executing query:\n{paginated_query}")
+                data = pd.read_sql(sql=paginated_query, con=connection).to_dict(
+                    orient="records"
+                )
+
+                full_data += data
+
+                if page_size is None or len(data) < page_size:
+                    log(f"Database Extraction Finished")
+                    break
 
     except Exception:
+        full_data = []
         error = traceback.format_exc()
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
-    return error, data, filetype
+    return error, full_data, filetype
 
 
 def save_treated_local_func(
