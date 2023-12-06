@@ -16,6 +16,7 @@ from pipelines.rj_cor.meteorologia.satelite.constants import (
 )
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.rj_cor.meteorologia.satelite.tasks import (
+    create_image_and_upload_to_api,
     get_dates,
     slice_data,
     download,
@@ -68,6 +69,7 @@ with Flow(
     mode_redis = Parameter("mode_redis", default="prod", required=False)
     ref_filename = Parameter("ref_filename", default=None, required=False)
     current_time = Parameter("current_time", default=None, required=False)
+    create_image = Parameter("create_image", default=False, required=False)
 
     # Starting tasks
     current_time = get_dates(current_time)
@@ -91,7 +93,7 @@ with Flow(
 
     # Start data treatment if there are new files
     info = tratar_dados(filename=filename)
-    path = save_data(info=info, mode_redis=mode_redis)
+    path, output_filepath = save_data(info=info, mode_redis=mode_redis)
 
     # Create table in BigQuery
     upload_table = create_table_and_upload_to_gcs(
@@ -110,6 +112,9 @@ with Flow(
         redis_files_updated,
         wait=path,
     )
+
+    with case(create_image, True):
+        create_image_and_upload_to_api(info, output_filepath)
 
     # Trigger DBT flow run
     with case(materialize_after_dump, True):
