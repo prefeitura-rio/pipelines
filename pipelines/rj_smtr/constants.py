@@ -228,7 +228,7 @@ class constants(Enum):  # pylint: disable=c0103
             "max_pages": 100,
         },
         "primary_key": ["id"],
-        "interval_minutes": 1,
+        "interval_minutes": 5,
     }
 
     BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS = [
