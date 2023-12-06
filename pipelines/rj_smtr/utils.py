@@ -712,9 +712,12 @@ def get_raw_data_db(
         )
         for page in range(max_pages):
             retries = 10
+            formatted_query = paginated_query
+            if page_size is not None:
+                formatted_query = formatted_query.format(offset=page * page_size)
+
             for retry in range(retries):
                 try:
-                    formatted_query = paginated_query.format(offset=page * page_size)
                     log(f"Executing query:\n{formatted_query}")
                     data = pd.read_sql(sql=formatted_query, con=connection).to_dict(
                         orient="records"
