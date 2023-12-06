@@ -21,6 +21,7 @@ rrqpe = Schedule(
                 "dataset_id": "clima_satelite",
                 "table_id": "taxa_precipitacao_goes_16",
                 "product": "RRQPEF",
+                "create_image": True,
             },
         )
     ]
@@ -39,6 +40,7 @@ tpw = Schedule(
                 "dataset_id": "clima_satelite",
                 "table_id": "quantidade_agua_precipitavel_goes_16",
                 "product": "TPWF",
+                "create_image": False,
             },
         )
     ]
@@ -58,6 +60,7 @@ cmip = Schedule(
                 "table_id": "infravermelho_longo_banda_13_goes_16",
                 "product": "CMIPF",
                 "band": "13",
+                "create_image": False,
             },
         )
     ]
@@ -76,6 +79,7 @@ mcmip = Schedule(
                 "dataset_id": "clima_satelite",
                 "table_id": "imagem_nuvem_umidade_goes_16",
                 "product": "MCMIPF",
+                "create_image": False,
             },
         )
     ]
@@ -94,6 +98,7 @@ dsi = Schedule(
                 "dataset_id": "clima_satelite",
                 "table_id": "indice_estabilidade_derivado_goes_16",
                 "product": "DSIF",
+                "create_image": True,
             },
         )
     ]
@@ -112,6 +117,7 @@ lst = Schedule(
                 "dataset_id": "clima_satelite",
                 "table_id": "temperatura_superficie_terra_goes_16",
                 "product": "LSTF",
+                "create_image": False,
             },
         )
     ]
@@ -130,6 +136,7 @@ sst = Schedule(
                 "dataset_id": "clima_satelite",
                 "table_id": "temperatura_superficie_oceano_goes_16",
                 "product": "SSTF",
+                "create_image": False,
             },
         )
     ]
@@ -148,6 +155,7 @@ aod = Schedule(
                 "dataset_id": "clima_satelite",
                 "table_id": "profundidade_optica_aerossol_goes_16",
                 "product": "AODF",
+                "create_image": False,
             },
         )
     ]
