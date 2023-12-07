@@ -562,3 +562,40 @@ class constants(Enum):  # pylint: disable=c0103
             "version": {},
         },
     }
+
+
+# SUBSÍDIO RECURSOS BLOQUEIO DE VIA
+SUBSIDIO_SPPO_RECURSOS_DATASET_ID = "br_rj_riodejaneiro_recurso"
+SUBSIDIO_SPPO_RECURSO_API_BASE_URL = "https://api.movidesk.com/public/v1/tickets?"
+SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH = "sppo_subsidio_recursos_api"
+SUBSIDIO_SPPO_BLOQUEIO_VIA_SERVICE = (
+    "serviceFull eq 'Bloqueio da via - Recurso Viagens Subsídio'"
+)
+SUBSIDIO_SPPO_BLOQUEIO_VIA_CAPTURE_PARAMS = {
+    "partition_date_only": True,
+    "table_id": "recurso_sppo_bloqueio_via",
+    "dataset_id": SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
+    "extract_params": {
+        "token": "",
+        "$select": "id,protocol,createdDate",
+        "$filter": "{dates} and serviceFull/any(serviceFull: {service})",
+        "$expand": "customFieldValues,customFieldValues($expand=items)",
+        "$orderby": "createdDate asc",
+    },
+    "interval_minutes": 1440,
+    "source_type": "movidesk",
+    "primary_key": ["protocol"],
+}
+
+SUBSIDIO_SPPO_BLOQUEIO_VIA_MATERIALIZACAO_PARAMS = {
+    "dataset_id": SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
+    "table_id": SUBSIDIO_SPPO_BLOQUEIO_VIA_CAPTURE_PARAMS["table_id"],
+    "upstream": True,
+    "dbt_vars": {
+        "date_range": {
+            "table_run_datetime_column_name": "data_recurso",
+            "delay_hours": 0,
+        },
+        "version": {},
+    },
+}
