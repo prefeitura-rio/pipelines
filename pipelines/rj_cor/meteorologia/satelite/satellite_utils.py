@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=too-many-locals, R0913, R1732
+# pylint: disable=too-many-locals, R0913, R1732, W0631
 """
 Funções úteis no tratamento de dados de satélite
 """
@@ -611,13 +611,26 @@ def create_and_save_image(data: xr.DataArray, info: dict, variable) -> Path:
     # Plot the image
     img = axis.imshow(data, origin="upper", extent=img_extent, cmap=colormap, alpha=0.8)
 
+    # Pesquisa o arquivo "Limite_Bairros_RJ.shp" em todo o sistema de arquivos
+    for root, dirs, files in os.walk(os.sep):
+        if "Limite_Bairros_RJ.shp" in files:
+            path = os.path.join(root, "Limite_Bairros_RJ.shp")
+            log(f"[DEBUG] ROOT {root}")
+            log(f"[DEBUG] PATH {path}")
+            dirs = dirs + "/"
+            break
+    else:
+        print("O arquivo não foi encontrado.")
+
     # Add coastlines, borders and gridlines
-    shapefile_path_neighborhood = (
-        f"{os.getcwd()}/pipelines/utils/shapefiles/Limite_Bairros_RJ.shp"
-    )
-    shapefile_path_state = (
-        f"{os.getcwd()}/pipelines/utils/shapefiles/Limite_Estados_BR_IBGE.shp"
-    )
+    shapefile_path_neighborhood = f"{root}/Limite_Bairros_RJ.shp"
+    shapefile_path_state = f"{root}/Limite_Estados_BR_IBGE.shp"
+    # shapefile_path_neighborhood = (
+    #     f"{os.getcwd()}/pipelines/utils/shapefiles/Limite_Bairros_RJ.shp"
+    # )
+    # shapefile_path_state = (
+    #     f"{os.getcwd()}/pipelines/utils/shapefiles/Limite_Estados_BR_IBGE.shp"
+    # )
     log("\nImporting shapefiles")
     reader_neighborhood = shpreader.Reader(shapefile_path_neighborhood)
     reader_state = shpreader.Reader(shapefile_path_state)
