@@ -411,6 +411,9 @@ class constants(Enum):  # pylint: disable=c0103
                         OPERADORA_TRANSPORTE o
                     ON
                         c.CD_CLIENTE = o.CD_CLIENTE
+                    WHERE
+                        DT_CADASTRO BETWEEN '{start}'
+                        AND '{end}'
                 """,
             },
             "primary_key": ["CD_CLIENTE"],  # id column to nest data on
