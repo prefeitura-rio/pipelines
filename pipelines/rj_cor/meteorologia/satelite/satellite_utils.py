@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=too-many-locals, R0913, R1732, W0631
+# pylint: disable=too-many-locals, R0913, R1732
 """
 Funções úteis no tratamento de dados de satélite
 """
@@ -591,6 +591,7 @@ def get_variable_values(dfr: pd.DataFrame, variable: str) -> xr.DataArray:
     return data_array
 
 
+# pylint: disable=unused-variable
 def create_and_save_image(data: xr.DataArray, info: dict, variable) -> Path:
     """
     Create image from xarray ans save it as png file.
@@ -611,26 +612,22 @@ def create_and_save_image(data: xr.DataArray, info: dict, variable) -> Path:
     # Plot the image
     img = axis.imshow(data, origin="upper", extent=img_extent, cmap=colormap, alpha=0.8)
 
-    # Pesquisa o arquivo "Limite_Bairros_RJ.shp" em todo o sistema de arquivos
+    # Find shapefile file "Limite_Bairros_RJ.shp" across the entire file system
     for root, dirs, files in os.walk(os.sep):
         if "Limite_Bairros_RJ.shp" in files:
-            path = os.path.join(root, "Limite_Bairros_RJ.shp")
             log(f"[DEBUG] ROOT {root}")
-            log(f"[DEBUG] PATH {path}")
-            dirs = dirs + "/"
+            shapefile_dir = root
             break
     else:
-        print("O arquivo não foi encontrado.")
+        print("File not found.")
 
     # Add coastlines, borders and gridlines
-    shapefile_path_neighborhood = f"{root}/Limite_Bairros_RJ.shp"
-    shapefile_path_state = f"{root}/Limite_Estados_BR_IBGE.shp"
-    # shapefile_path_neighborhood = (
-    #     f"{os.getcwd()}/pipelines/utils/shapefiles/Limite_Bairros_RJ.shp"
-    # )
-    # shapefile_path_state = (
-    #     f"{os.getcwd()}/pipelines/utils/shapefiles/Limite_Estados_BR_IBGE.shp"
-    # )
+    shapefile_dir = Path(
+        "/opt/venv/lib/python3.9/site-packages/pipelines/utils/shapefiles"
+    )
+    shapefile_path_neighborhood = shapefile_dir / "Limite_Bairros_RJ.shp"
+    shapefile_path_state = shapefile_dir / "Limite_Estados_BR_IBGE.shp"
+
     log("\nImporting shapefiles")
     reader_neighborhood = shpreader.Reader(shapefile_path_neighborhood)
     reader_state = shpreader.Reader(shapefile_path_state)
