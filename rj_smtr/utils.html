@@ -670,8 +670,34 @@ def get_raw_data_gcs(
     return error, data, filetype
 
 
+def close_db_connection(connection, engine: str):
+    &#34;&#34;&#34;
+    Safely close a database connection
+
+    Args:
+        connection: the database connection
+        engine (str): The datase management system
+    &#34;&#34;&#34;
+    if engine == &#34;postgresql&#34;:
+        if not connection.closed:
+            connection.close()
+            log(&#34;Database connection closed&#34;)
+    elif engine == &#34;mysql&#34;:
+        if connection.open:
+            connection.close()
+            log(&#34;Database connection closed&#34;)
+    else:
+        raise NotImplementedError(f&#34;Engine {engine} not supported&#34;)
+
+
 def get_raw_data_db(
-    query: str, engine: str, host: str, secret_path: str, database: str
+    query: str,
+    engine: str,
+    host: str,
+    secret_path: str,
+    database: str,
+    page_size: int = None,
+    max_pages: int = None,
 ) -&gt; tuple[str, str, str]:
     &#34;&#34;&#34;
     Get data from Databases
@@ -682,6 +708,9 @@ def get_raw_data_db(
         host (str): The database host
         secret_path (str): Secret path to get credentials
         database (str): The database to connect
+        page_size (int, Optional): The maximum number of rows returned by the paginated query
+            if you set a value for this argument, the query will have LIMIT and OFFSET appended to it
+        max_pages (int, Optional): The maximum number of paginated queries to execute
 
     Returns:
         tuple[str, str, str]: Error, data and filetype
@@ -695,22 +724,68 @@ def get_raw_data_db(
     error = None
     filetype = &#34;json&#34;
 
-    try:
-        credentials = get_vault_secret(secret_path)[&#34;data&#34;]
+    if max_pages is None:
+        max_pages = 1
 
-        with connector_mapping[engine](
+    full_data = []
+    paginated_query = query
+    credentials = get_vault_secret(secret_path)[&#34;data&#34;]
+    if page_size is not None:
+        paginated_query = paginated_query + f&#34;LIMIT {page_size} OFFSET {{offset}}&#34;
+
+    connector = connector_mapping[engine]
+
+    try:
+        connection = connector(
             host=host,
             user=credentials[&#34;user&#34;],
             password=credentials[&#34;password&#34;],
             database=database,
-        ) as connection:
-            data = pd.read_sql(sql=query, con=connection).to_dict(orient=&#34;records&#34;)
+        )
+        for page in range(max_pages):
+            retries = 10
+            formatted_query = paginated_query
+            if page_size is not None:
+                formatted_query = formatted_query.format(offset=page * page_size)
+
+            for retry in range(retries):
+                try:
+                    log(f&#34;Executing query:\n{formatted_query}&#34;)
+                    data = pd.read_sql(sql=formatted_query, con=connection).to_dict(
+                        orient=&#34;records&#34;
+                    )
+                    break
+                except Exception as err:
+                    log(f&#34;[ATTEMPT {retry}]: {err}&#34;)
+                    close_db_connection(connection=connection, engine=engine)
+                    connection = connector(
+                        host=host,
+                        user=credentials[&#34;user&#34;],
+                        password=credentials[&#34;password&#34;],
+                        database=database,
+                    )
+                    if retry == retries - 1:
+                        raise err
+
+            full_data += data
+
+            log(f&#34;Returned {len(data)} rows&#34;)
+
+            if page_size is None or len(data) &lt; page_size:
+                log(&#34;Database Extraction Finished&#34;)
+                break
 
     except Exception:
+        full_data = []
         error = traceback.format_exc()
         log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+    finally:
+        try:
+            close_db_connection(connection=connection, engine=engine)
+        except Exception:
+            pass
 
-    return error, data, filetype
+    return error, full_data, filetype
 
 
 def save_treated_local_func(
@@ -1066,6 +1141,42 @@ Defaults to 'bigquery_prod'.</p>
                     f&#34;[data-check] Comparing &#39;{col}&#39; in &#39;{cols}&#39;, there are duplicated values&#34;,
                     level=&#34;warning&#34;,
                 )</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.utils.close_db_connection"><code class="name flex">
+<span>def <span class="ident">close_db_connection</span></span>(<span>connection, engine: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Safely close a database connection</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>connection</code></strong></dt>
+<dd>the database connection</dd>
+<dt><strong><code>engine</code></strong> :&ensp;<code>str</code></dt>
+<dd>The datase management system</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def close_db_connection(connection, engine: str):
+    &#34;&#34;&#34;
+    Safely close a database connection
+
+    Args:
+        connection: the database connection
+        engine (str): The datase management system
+    &#34;&#34;&#34;
+    if engine == &#34;postgresql&#34;:
+        if not connection.closed:
+            connection.close()
+            log(&#34;Database connection closed&#34;)
+    elif engine == &#34;mysql&#34;:
+        if connection.open:
+            connection.close()
+            log(&#34;Database connection closed&#34;)
+    else:
+        raise NotImplementedError(f&#34;Engine {engine} not supported&#34;)</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.utils.connect_ftp"><code class="name flex">
@@ -1646,7 +1757,7 @@ mode (str):</p>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.utils.get_raw_data_db"><code class="name flex">
-<span>def <span class="ident">get_raw_data_db</span></span>(<span>query: str, engine: str, host: str, secret_path: str, database: str) ‑> tuple[str, str, str]</span>
+<span>def <span class="ident">get_raw_data_db</span></span>(<span>query: str, engine: str, host: str, secret_path: str, database: str, page_size: int = None, max_pages: int = None) ‑> tuple[str, str, str]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get data from Databases</p>
@@ -1662,6 +1773,11 @@ mode (str):</p>
 <dd>Secret path to get credentials</dd>
 <dt><strong><code>database</code></strong> :&ensp;<code>str</code></dt>
 <dd>The database to connect</dd>
+<dt><strong><code>page_size</code></strong> :&ensp;<code>int, Optional</code></dt>
+<dd>The maximum number of rows returned by the paginated query
+if you set a value for this argument, the query will have LIMIT and OFFSET appended to it</dd>
+<dt><strong><code>max_pages</code></strong> :&ensp;<code>int, Optional</code></dt>
+<dd>The maximum number of paginated queries to execute</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -1673,7 +1789,13 @@ mode (str):</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_raw_data_db(
-    query: str, engine: str, host: str, secret_path: str, database: str
+    query: str,
+    engine: str,
+    host: str,
+    secret_path: str,
+    database: str,
+    page_size: int = None,
+    max_pages: int = None,
 ) -&gt; tuple[str, str, str]:
     &#34;&#34;&#34;
     Get data from Databases
@@ -1684,6 +1806,9 @@ mode (str):</p>
         host (str): The database host
         secret_path (str): Secret path to get credentials
         database (str): The database to connect
+        page_size (int, Optional): The maximum number of rows returned by the paginated query
+            if you set a value for this argument, the query will have LIMIT and OFFSET appended to it
+        max_pages (int, Optional): The maximum number of paginated queries to execute
 
     Returns:
         tuple[str, str, str]: Error, data and filetype
@@ -1697,22 +1822,68 @@ mode (str):</p>
     error = None
     filetype = &#34;json&#34;
 
-    try:
-        credentials = get_vault_secret(secret_path)[&#34;data&#34;]
+    if max_pages is None:
+        max_pages = 1
 
-        with connector_mapping[engine](
+    full_data = []
+    paginated_query = query
+    credentials = get_vault_secret(secret_path)[&#34;data&#34;]
+    if page_size is not None:
+        paginated_query = paginated_query + f&#34;LIMIT {page_size} OFFSET {{offset}}&#34;
+
+    connector = connector_mapping[engine]
+
+    try:
+        connection = connector(
             host=host,
             user=credentials[&#34;user&#34;],
             password=credentials[&#34;password&#34;],
             database=database,
-        ) as connection:
-            data = pd.read_sql(sql=query, con=connection).to_dict(orient=&#34;records&#34;)
+        )
+        for page in range(max_pages):
+            retries = 10
+            formatted_query = paginated_query
+            if page_size is not None:
+                formatted_query = formatted_query.format(offset=page * page_size)
+
+            for retry in range(retries):
+                try:
+                    log(f&#34;Executing query:\n{formatted_query}&#34;)
+                    data = pd.read_sql(sql=formatted_query, con=connection).to_dict(
+                        orient=&#34;records&#34;
+                    )
+                    break
+                except Exception as err:
+                    log(f&#34;[ATTEMPT {retry}]: {err}&#34;)
+                    close_db_connection(connection=connection, engine=engine)
+                    connection = connector(
+                        host=host,
+                        user=credentials[&#34;user&#34;],
+                        password=credentials[&#34;password&#34;],
+                        database=database,
+                    )
+                    if retry == retries - 1:
+                        raise err
+
+            full_data += data
+
+            log(f&#34;Returned {len(data)} rows&#34;)
+
+            if page_size is None or len(data) &lt; page_size:
+                log(&#34;Database Extraction Finished&#34;)
+                break
 
     except Exception:
+        full_data = []
         error = traceback.format_exc()
         log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+    finally:
+        try:
+            close_db_connection(connection=connection, engine=engine)
+        except Exception:
+            pass
 
-    return error, data, filetype</code></pre>
+    return error, full_data, filetype</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.utils.get_raw_data_gcs"><code class="name flex">
@@ -2394,6 +2565,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.utils.bq_project" href="#pipelines.rj_smtr.utils.bq_project">bq_project</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.check_not_null" href="#pipelines.rj_smtr.utils.check_not_null">check_not_null</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.check_relation" href="#pipelines.rj_smtr.utils.check_relation">check_relation</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.close_db_connection" href="#pipelines.rj_smtr.utils.close_db_connection">close_db_connection</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.connect_ftp" href="#pipelines.rj_smtr.utils.connect_ftp">connect_ftp</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.create_or_append_table" href="#pipelines.rj_smtr.utils.create_or_append_table">create_or_append_table</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.custom_serialization" href="#pipelines.rj_smtr.utils.custom_serialization">custom_serialization</a></code></li>

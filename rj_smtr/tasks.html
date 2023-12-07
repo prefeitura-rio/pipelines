@@ -48,6 +48,7 @@ import pendulum
 from prefect import task
 from pytz import timezone
 import requests
+from pandas_gbq.exceptions import GenericGBQException
 
 from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.utils import (
@@ -686,15 +687,69 @@ def create_request_params(
         ]
         request_url = database[&#34;host&#34;]
 
-        datetime_range = get_datetime_range(
-            timestamp=timestamp, interval=timedelta(minutes=interval_minutes)
-        )
-
         request_params = {
             &#34;database&#34;: extract_params[&#34;database&#34;],
             &#34;engine&#34;: database[&#34;engine&#34;],
-            &#34;query&#34;: extract_params[&#34;query&#34;].format(**datetime_range),
         }
+
+        if table_id == constants.BILHETAGEM_TRACKING_CAPTURE_PARAMS.value[&#34;table_id&#34;]:
+            project = bq_project(kind=&#34;bigquery_staging&#34;)
+            log(f&#34;project = {project}&#34;)
+            try:
+                logs_query = f&#34;&#34;&#34;
+                SELECT
+                    timestamp_captura
+                FROM
+                    `{project}.{dataset_id}_staging.{table_id}_logs`
+                WHERE
+                    data &lt;= &#39;{timestamp.strftime(&#34;%Y-%m-%d&#34;)}&#39;
+                    AND sucesso = &#34;True&#34;
+                ORDER BY
+                    timestamp_captura DESC
+                &#34;&#34;&#34;
+                last_success_dates = bd.read_sql(
+                    query=logs_query, billing_project_id=project
+                )
+                last_success_dates = last_success_dates.iloc[:, 0].to_list()
+                for success_ts in last_success_dates:
+                    success_ts = datetime.fromisoformat(success_ts)
+                    last_id_query = f&#34;&#34;&#34;
+                    SELECT
+                        MAX(id)
+                    FROM
+                        `{project}.{dataset_id}_staging.{table_id}`
+                    WHERE
+                        data = &#39;{success_ts.strftime(&#34;%Y-%m-%d&#34;)}&#39;
+                        and hora = &#34;{success_ts.hour}&#34;;
+                    &#34;&#34;&#34;
+
+                    last_captured_id = bd.read_sql(
+                        query=last_id_query, billing_project_id=project
+                    )
+                    last_captured_id = last_captured_id.iloc[0][0]
+                    if last_captured_id is None:
+                        print(&#34;ID is None, trying next timestamp&#34;)
+                    else:
+                        log(f&#34;last_captured_id = {last_captured_id}&#34;)
+                        break
+            except GenericGBQException as err:
+                if &#34;404 Not found&#34; in str(err):
+                    log(&#34;Table Not found, returning id = 0&#34;)
+                    last_captured_id = 0
+
+            request_params[&#34;query&#34;] = extract_params[&#34;query&#34;].format(
+                last_id=last_captured_id,
+                max_id=int(last_captured_id)
+                + extract_params[&#34;page_size&#34;] * extract_params[&#34;max_pages&#34;],
+            )
+            request_params[&#34;page_size&#34;] = extract_params[&#34;page_size&#34;]
+            request_params[&#34;max_pages&#34;] = extract_params[&#34;max_pages&#34;]
+        else:
+            datetime_range = get_datetime_range(
+                timestamp=timestamp, interval=timedelta(minutes=interval_minutes)
+            )
+
+            request_params[&#34;query&#34;] = extract_params[&#34;query&#34;].format(**datetime_range)
 
     elif dataset_id == constants.GTFS_DATASET_ID.value:
         request_params = extract_params[&#34;filename&#34;]
@@ -2122,15 +2177,69 @@ def create_request_params(
         ]
         request_url = database[&#34;host&#34;]
 
-        datetime_range = get_datetime_range(
-            timestamp=timestamp, interval=timedelta(minutes=interval_minutes)
-        )
-
         request_params = {
             &#34;database&#34;: extract_params[&#34;database&#34;],
             &#34;engine&#34;: database[&#34;engine&#34;],
-            &#34;query&#34;: extract_params[&#34;query&#34;].format(**datetime_range),
         }
+
+        if table_id == constants.BILHETAGEM_TRACKING_CAPTURE_PARAMS.value[&#34;table_id&#34;]:
+            project = bq_project(kind=&#34;bigquery_staging&#34;)
+            log(f&#34;project = {project}&#34;)
+            try:
+                logs_query = f&#34;&#34;&#34;
+                SELECT
+                    timestamp_captura
+                FROM
+                    `{project}.{dataset_id}_staging.{table_id}_logs`
+                WHERE
+                    data &lt;= &#39;{timestamp.strftime(&#34;%Y-%m-%d&#34;)}&#39;
+                    AND sucesso = &#34;True&#34;
+                ORDER BY
+                    timestamp_captura DESC
+                &#34;&#34;&#34;
+                last_success_dates = bd.read_sql(
+                    query=logs_query, billing_project_id=project
+                )
+                last_success_dates = last_success_dates.iloc[:, 0].to_list()
+                for success_ts in last_success_dates:
+                    success_ts = datetime.fromisoformat(success_ts)
+                    last_id_query = f&#34;&#34;&#34;
+                    SELECT
+                        MAX(id)
+                    FROM
+                        `{project}.{dataset_id}_staging.{table_id}`
+                    WHERE
+                        data = &#39;{success_ts.strftime(&#34;%Y-%m-%d&#34;)}&#39;
+                        and hora = &#34;{success_ts.hour}&#34;;
+                    &#34;&#34;&#34;
+
+                    last_captured_id = bd.read_sql(
+                        query=last_id_query, billing_project_id=project
+                    )
+                    last_captured_id = last_captured_id.iloc[0][0]
+                    if last_captured_id is None:
+                        print(&#34;ID is None, trying next timestamp&#34;)
+                    else:
+                        log(f&#34;last_captured_id = {last_captured_id}&#34;)
+                        break
+            except GenericGBQException as err:
+                if &#34;404 Not found&#34; in str(err):
+                    log(&#34;Table Not found, returning id = 0&#34;)
+                    last_captured_id = 0
+
+            request_params[&#34;query&#34;] = extract_params[&#34;query&#34;].format(
+                last_id=last_captured_id,
+                max_id=int(last_captured_id)
+                + extract_params[&#34;page_size&#34;] * extract_params[&#34;max_pages&#34;],
+            )
+            request_params[&#34;page_size&#34;] = extract_params[&#34;page_size&#34;]
+            request_params[&#34;max_pages&#34;] = extract_params[&#34;max_pages&#34;]
+        else:
+            datetime_range = get_datetime_range(
+                timestamp=timestamp, interval=timedelta(minutes=interval_minutes)
+            )
+
+            request_params[&#34;query&#34;] = extract_params[&#34;query&#34;].format(**datetime_range)
 
     elif dataset_id == constants.GTFS_DATASET_ID.value:
         request_params = extract_params[&#34;filename&#34;]
