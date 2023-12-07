@@ -414,7 +414,7 @@ class constants(Enum):  # pylint: disable=c0103
             },
             "primary_key": ["CD_CLIENTE"],  # id column to nest data on
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
-            "save_bucket_name": "rj-smtr-dev-private",
+            "save_bucket_name": "rj-smtr-jae-private",
             "pre_treatment_reader_args": {"dtype": {"NR_DOCUMENTO": "object"}},
         },
         {
@@ -476,7 +476,7 @@ class constants(Enum):  # pylint: disable=c0103
             },
             "primary_key": ["CD_CLIENTE"],  # id column to nest data on
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
-            "save_bucket_name": "rj-smtr-dev-private",
+            "save_bucket_name": "rj-smtr-jae-private",
         },
         {
             "table_id": "contato_pessoa_juridica",
@@ -498,7 +498,7 @@ class constants(Enum):  # pylint: disable=c0103
                 "CD_CLIENTE",
             ],  # id column to nest data on
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
-            "save_bucket_name": "rj-smtr-dev-private",
+            "save_bucket_name": "rj-smtr-jae-private",
         },
     ]
 
@@ -614,7 +614,7 @@ class constants(Enum):  # pylint: disable=c0103
 
     STU_DATASET_ID = "br_rj_riodejaneiro_stu"
 
-    STU_BUCKET_NAME = "rj-smtr-dev-private"
+    STU_BUCKET_NAME = "rj-smtr-stu-private"
 
     STU_GENERAL_CAPTURE_PARAMS = {
         "partition_date_only": True,
