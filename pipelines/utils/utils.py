@@ -1070,6 +1070,7 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
 
     # Merge dfs using unique_id
     dataframe = dataframe.merge(last_updates, how="left", on=unique_id)
+    log(f"Comparing times: {dataframe.sort_values(unique_id)}")
 
     # Keep on dataframe only the stations that has a time after the one that is saved on redis
     dataframe[date_column] = dataframe[date_column].apply(
@@ -1083,7 +1084,7 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
     dataframe = dataframe[dataframe[date_column] > dataframe["last_update"]].dropna(
         subset=[unique_id]
     )
-
+    log(f"Dataframe after comparison: {dataframe.sort_values(unique_id)}")
     # Keep only the last date for each unique_id
     keep_cols = [unique_id, date_column]
     new_updates = dataframe[keep_cols].sort_values(keep_cols)
