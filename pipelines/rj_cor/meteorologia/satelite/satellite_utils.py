@@ -59,6 +59,7 @@ import requests
 
 import cartopy.crs as ccrs
 import cartopy.io.shapereader as shpreader
+import fiona
 from google.cloud import storage
 import matplotlib.pyplot as plt
 import numpy as np
@@ -629,6 +630,7 @@ def create_and_save_image(data: xr.DataArray, info: dict, variable) -> Path:
     shapefile_path_state = shapefile_dir / "Limite_Estados_BR_IBGE.shp"
 
     log("\nImporting shapefiles")
+    fiona.os.environ["SHAPE_RESTORE_SHX"] = "YES"
     reader_neighborhood = shpreader.Reader(shapefile_path_neighborhood)
     reader_state = shpreader.Reader(shapefile_path_state)
     state = [record.geometry for record in reader_state.records()]
