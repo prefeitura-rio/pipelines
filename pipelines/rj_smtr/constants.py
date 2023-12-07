@@ -562,3 +562,37 @@ class constants(Enum):  # pylint: disable=c0103
             "version": {},
         },
     }
+
+    # SUBSÍDIO RECURSOS REPROCESSAMENTO
+
+    SUBSIDIO_SPPO_RECURSO_SERVICE_REPROCESSAMENTO = (
+        "serviceFull eq 'Reprocessamento - Recurso Viagens Subsídio'"
+    )
+    SUBSIDIO_SPPO_RECURSO_REPROCESSAMENTO_CAPTURE_PARAMS = {
+        "partition_date_only": True,
+        "table_id": "recurso_sppo",
+        "dataset_id": SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
+        "extract_params": {
+            "token": "",
+            "$select": "id,protocol,createdDate",
+            "$filter": "{dates} and serviceFull/any(serviceFull: {service})",
+            "$expand": "customFieldValues,customFieldValues($expand=items)",
+            "$orderby": "createdDate asc",
+        },
+        "interval_minutes": 1440,
+        "source_type": "movidesk",
+        "primary_key": ["protocol"],
+    }
+
+    SUBSIDIO_SPPO_RECURSOS_REPROCESSAMENTO_MATERIALIZACAO_PARAMS = {
+        "dataset_id": SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
+        "table_id": SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS["table_id"],
+        "upstream": True,
+        "dbt_vars": {
+            "date_range": {
+                "table_run_datetime_column_name": "data_recurso",
+                "delay_hours": 0,
+            },
+            "version": {},
+        },
+    }
