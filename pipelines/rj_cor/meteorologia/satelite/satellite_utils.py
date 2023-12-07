@@ -670,11 +670,10 @@ def create_and_save_image(data: xr.DataArray, info: dict, variable) -> Path:
         fraction=0.05,
     )
 
-    output_image_path = Path.joinpath(os.getcwd(), "output", "images")
     log("\n Start saving image")
-    save_image_path = output_image_path / (
-        variable + "_" + info["datetime_save"] + ".png"
-    )
+    output_image_path = Path(os.getcwd()) / "output" / "images"
+
+    save_image_path = output_image_path / (f"{variable}_{info['datetime_save']}.png")
 
     if not output_image_path.exists():
         output_image_path.mkdir(parents=True, exist_ok=True)

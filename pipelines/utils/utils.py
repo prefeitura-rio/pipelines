@@ -1041,7 +1041,8 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
         )
 
         log(f"Redis key: {key}\nRedis actual values:\n {last_updates}")
-
+    last_updates["last_update"] = last_updates.last_update.min()
+    log(f"Redis key: {key}\nRedis actual actual values:\n {last_updates}")
     # Garante that both are string
     dataframe[unique_id] = dataframe[unique_id].astype(str)
     last_updates[unique_id] = last_updates[unique_id].astype(str)
