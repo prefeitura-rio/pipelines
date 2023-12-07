@@ -24,6 +24,7 @@ setur_seeketing_tables = {
     "caged": "caged",
     "empregos": "empregos",
     "iss_turistico": "iss_turistico",
+    "museus": "museus",
     "rede_hoteleira_ocupacao_eventos": "rede_hoteleira_ocupacao_eventos",
     "rede_hoteleira_ocupacao_geral": "rede_hoteleira_ocupacao_geral",
     "rodoviarias": "rodoviarias",
