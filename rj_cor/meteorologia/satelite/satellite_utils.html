@@ -28,7 +28,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
-# pylint: disable=too-many-locals, R0913
+# pylint: disable=too-many-locals, R0913, R1732
 &#34;&#34;&#34;
 Funções úteis no tratamento de dados de satélite
 &#34;&#34;&#34;
@@ -76,17 +76,24 @@ Funções úteis no tratamento de dados de satélite
 # Required Libraries
 # ====================================================================
 
+import base64
 import datetime
 import os
 import shutil
 from pathlib import Path
 import re
 from typing import Union
+import requests
 
+
+import cartopy.crs as ccrs
+import cartopy.io.shapereader as shpreader
 from google.cloud import storage
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pendulum
+import s3fs
 import xarray as xr
 
 from pipelines.rj_cor.meteorologia.satelite.remap import remap
@@ -140,8 +147,8 @@ def download_blob(
 
 def converte_timezone(datetime_save: str) -&gt; str:
     &#34;&#34;&#34;
-    Recebe o formato de data hora em &#39;YYYYMMDD HHmm&#39; no UTC e
-    retorna no mesmo formato no horário São Paulo
+    Get UTC date-hour on &#39;YYYYMMDD HHmm&#39; format and returns im the same format but
+    on São Paulo timezone.
     &#34;&#34;&#34;
     log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; datetime_save {datetime_save}&#34;)
     datahora = pendulum.from_format(datetime_save, &#34;YYYYMMDD HHmmss&#34;)
@@ -196,6 +203,74 @@ def convert_julian_to_conventional_day(year: int, julian_day: int):
     date_save = dayconventional.strftime(&#34;%Y%m%d&#34;)
 
     return date_save
+
+
+def get_files_from_aws(partition_path):
+    &#34;&#34;&#34;
+    Get all available files from aws that is inside the partition path
+    &#34;&#34;&#34;
+    log(&#34;Acessing AWS to get files&#34;)
+    # Use the anonymous credentials to access public data
+    s3_fs = s3fs.S3FileSystem(anon=True)
+
+    # Get all files of GOES-16 data (multiband format) at this hour
+    storage_files_path = np.sort(
+        np.array(
+            s3_fs.find(f&#34;noaa-goes16/{partition_path}&#34;)
+            # s3_fs.find(f&#34;noaa-goes16/ABI-L2-CMIPF/2022/270/10/OR_ABI-L2-CMIPF-M6C13_G16_s20222701010208_e20222701019528_c20222701020005.nc&#34;)
+        )
+    )
+    storage_origin = &#34;aws&#34;
+
+    return storage_files_path, storage_origin, s3_fs
+
+
+def get_files_from_gcp(partition_path):
+    &#34;&#34;&#34;
+    Get all available files from gcp that is inside the partition path
+    &#34;&#34;&#34;
+    log(&#34;Acessing GCP to get files&#34;)
+    bucket_name = &#34;gcp-public-data-goes-16&#34;
+    storage_files_path = get_blob_with_prefix(
+        bucket_name=bucket_name, prefix=partition_path, mode=&#34;prod&#34;
+    )
+    storage_origin = &#34;gcp&#34;
+    return storage_files_path, storage_origin, bucket_name
+
+
+def choose_file_to_download(
+    storage_files_path: list, base_path: str, redis_files: str, ref_filename=None
+):
+    &#34;&#34;&#34;
+    We can treat only one file each run, so we will first eliminate files that were
+    already trated and saved on redis and keep only the first one from this partition
+    &#34;&#34;&#34;
+    # keep only ref_filename if it exists
+    if ref_filename is not None:
+        # extract this part of the name s_20222911230206_e20222911239514
+        ref_date = ref_filename[ref_filename.find(&#34;_s&#34;) + 1 : ref_filename.find(&#34;_e&#34;)]
+        log(f&#34;\n\n[DEBUG]: ref_date: {ref_date}&#34;)
+        match_text = re.compile(f&#34;.*{ref_date}&#34;)
+        storage_files_path = list(filter(match_text.match, storage_files_path))
+
+    log(f&#34;\n\n[DEBUG]: storage_files_path: {storage_files_path}&#34;)
+
+    # keep the first file if it is not on redis
+    storage_files_path.sort()
+    download_file = None
+
+    for path_file in storage_files_path:
+        filename = path_file.split(&#34;/&#34;)[-1]
+
+        log(f&#34;\n\nChecking if {filename} is in redis&#34;)
+        if filename not in redis_files:
+            log(f&#34;\n\n {filename} not in redis&#34;)
+            redis_files.append(filename)
+            destination_file_path = os.path.join(base_path, filename)
+            download_file = path_file
+            # log(f&#34;[DEBUG]: filename to be append on redis_files: {redis_files}&#34;)
+            break
+    return redis_files, destination_file_path, download_file
 
 
 def get_info(path: str) -&gt; dict:
@@ -352,7 +427,9 @@ def get_info(path: str) -&gt; dict:
         &#34;vmax&#34;: 60,
         &#34;cmap&#34;: &#34;jet&#34;,
     }
-    # TPWF - Total Precipitable Water: &#39;TPW&#39;
+    # MCMIPF - Cloud and Moisture Imagery: &#39;MCMIP&#39;
+    # https://developers.google.com/earth-engine/datasets/catalog/NOAA_GOES_16_MCMIPM#bands
+
     product_caracteristics[&#34;MCMIPF&#34;] = {
         &#34;variable&#34;: [
             &#34;CMI_C01&#34;,
@@ -505,13 +582,144 @@ def save_data_in_file(
     print(&#34;cols&#34;, data.columns)
 
     file_name = files[0].split(&#34;_variable-&#34;)[0]
-    print(f&#34;\n\n[DEGUB]: Saving {file_name} on {output_path}\n\n&#34;)
+    print(f&#34;\n\n[DEGUB]: Saving {file_name} on {output_path}\n&#34;)
     print(f&#34;Data_save: {date_save}, time_save: {time_save}&#34;)
     # log(f&#34;\n\n[DEGUB]: Saving {file_name} on {parquet_path}\n\n&#34;)
     # log(f&#34;Data_save: {date_save}, time_save: {time_save}&#34;)
     file_path = os.path.join(partitions_path, f&#34;{file_name}.csv&#34;)
     data.to_csv(file_path, index=False)
-    return output_path</code></pre>
+    return output_path, file_path
+
+
+def get_variable_values(dfr: pd.DataFrame, variable: str) -&gt; xr.DataArray:
+    &#34;&#34;&#34;
+    Convert pandas dataframe to a matrix with latitude on rows, longitudes on
+    columns and the correspondent values on a xarray DataArray
+    &#34;&#34;&#34;
+
+    log(&#34;Fill matrix&#34;)
+    dfr = dfr.sort_values(by=[&#34;latitude&#34;, &#34;longitude&#34;], ascending=[False, True])
+    matrix_temp = dfr.pivot(index=&#34;latitude&#34;, columns=&#34;longitude&#34;, values=variable)
+    matrix_temp = matrix_temp.sort_index(ascending=False)
+    log(
+        f&#34;[DEBUG]: matriz de conversão deve estar com a latitude em ordem descendente\
+             e a longitude em ascendente: {matrix_temp.head(10)}&#34;
+    )
+
+    # Create a NumPy matriz NumPy
+    matrix = matrix_temp.values
+
+    longitudes = list(matrix_temp.columns)
+    latitudes = list(matrix_temp.index)
+
+    log(&#34;Convert to xr dataarray&#34;)
+    data_array = xr.DataArray(
+        matrix, dims=(&#34;lat&#34;, &#34;lon&#34;), coords={&#34;lon&#34;: longitudes, &#34;lat&#34;: latitudes}
+    )
+    log(&#34;end&#34;)
+    return data_array
+
+
+def create_and_save_image(data: xr.DataArray, info: dict, variable) -&gt; Path:
+    &#34;&#34;&#34;
+    Create image from xarray ans save it as png file.
+    &#34;&#34;&#34;
+
+    plt.figure(figsize=(10, 10))
+
+    # Use the Geostationary projection in cartopy
+    axis = plt.axes(projection=ccrs.PlateCarree())
+
+    extent = info[&#34;extent&#34;]
+    img_extent = [extent[0], extent[2], extent[1], extent[3]]
+
+    # Define the color scale based on the channel
+    colormap = &#34;jet&#34;  # White to black for IR channels
+    # colormap = &#34;gray_r&#34; # White to black for IR channels
+
+    # Plot the image
+    img = axis.imshow(data, origin=&#34;upper&#34;, extent=img_extent, cmap=colormap, alpha=0.8)
+
+    # Add coastlines, borders and gridlines
+    shapefile_path_neighborhood = (
+        f&#34;{os.getcwd()}/pipelines/utils/shapefiles/Limite_Bairros_RJ.shp&#34;
+    )
+    shapefile_path_state = (
+        f&#34;{os.getcwd()}/pipelines/utils/shapefiles/Limite_Estados_BR_IBGE.shp&#34;
+    )
+    log(&#34;\nImporting shapefiles&#34;)
+    reader_neighborhood = shpreader.Reader(shapefile_path_neighborhood)
+    reader_state = shpreader.Reader(shapefile_path_state)
+    state = [record.geometry for record in reader_state.records()]
+    neighborhood = [record.geometry for record in reader_neighborhood.records()]
+    log(&#34;\nShapefiles imported&#34;)
+    axis.add_geometries(
+        state, ccrs.PlateCarree(), facecolor=&#34;none&#34;, edgecolor=&#34;black&#34;, linewidth=0.7
+    )
+    axis.add_geometries(
+        neighborhood,
+        ccrs.PlateCarree(),
+        facecolor=&#34;none&#34;,
+        edgecolor=&#34;black&#34;,
+        linewidth=0.2,
+    )
+    # axis.coastlines(resolution=&#39;10m&#39;, color=&#39;black&#39;, linewidth=1.0)
+    # axis.add_feature(cartopy.feature.BORDERS, edgecolor=&#39;black&#39;, linewidth=1.0)
+    grdln = axis.gridlines(
+        crs=ccrs.PlateCarree(),
+        color=&#34;gray&#34;,
+        alpha=0.7,
+        linestyle=&#34;--&#34;,
+        linewidth=0.7,
+        xlocs=np.arange(-180, 180, 1),
+        ylocs=np.arange(-90, 90, 1),
+        draw_labels=True,
+    )
+    grdln.top_labels = False
+    grdln.right_labels = False
+
+    plt.colorbar(
+        img,
+        label=variable.upper(),
+        extend=&#34;both&#34;,
+        orientation=&#34;horizontal&#34;,
+        pad=0.05,
+        fraction=0.05,
+    )
+
+    output_image_path = Path.joinpath(os.getcwd(), &#34;output&#34;, &#34;images&#34;)
+    log(&#34;\n Start saving image&#34;)
+    save_image_path = output_image_path / (
+        variable + &#34;_&#34; + info[&#34;datetime_save&#34;] + &#34;.png&#34;
+    )
+
+    if not output_image_path.exists():
+        output_image_path.mkdir(parents=True, exist_ok=True)
+
+    plt.savefig(save_image_path, bbox_inches=&#34;tight&#34;, pad_inches=0, dpi=300)
+    log(&#34;\n Ended saving image&#34;)
+    return save_image_path
+
+
+def upload_image_to_api(info: dict, save_image_path: Path):
+    &#34;&#34;&#34;
+    Upload image to api
+    &#34;&#34;&#34;
+    username = &#34;your-username&#34;
+    password = &#34;your-password&#34;
+
+    image = base64.b64encode(open(save_image_path, &#34;rb&#34;).read()).decode()
+
+    response = requests.post(
+        &#34;https://api.example.com/upload-image&#34;,
+        data={&#34;image&#34;: image, &#34;timestamp&#34;: info[&#34;datetime_save&#34;]},
+        auth=(username, password),
+    )
+
+    if response.status_code == 200:
+        print(&#34;Image sent to API&#34;)
+    else:
+        print(&#34;Problem senting imagem to API&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -521,6 +729,51 @@ def save_data_in_file(
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.choose_file_to_download"><code class="name flex">
+<span>def <span class="ident">choose_file_to_download</span></span>(<span>storage_files_path: list, base_path: str, redis_files: str, ref_filename=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>We can treat only one file each run, so we will first eliminate files that were
+already trated and saved on redis and keep only the first one from this partition</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def choose_file_to_download(
+    storage_files_path: list, base_path: str, redis_files: str, ref_filename=None
+):
+    &#34;&#34;&#34;
+    We can treat only one file each run, so we will first eliminate files that were
+    already trated and saved on redis and keep only the first one from this partition
+    &#34;&#34;&#34;
+    # keep only ref_filename if it exists
+    if ref_filename is not None:
+        # extract this part of the name s_20222911230206_e20222911239514
+        ref_date = ref_filename[ref_filename.find(&#34;_s&#34;) + 1 : ref_filename.find(&#34;_e&#34;)]
+        log(f&#34;\n\n[DEBUG]: ref_date: {ref_date}&#34;)
+        match_text = re.compile(f&#34;.*{ref_date}&#34;)
+        storage_files_path = list(filter(match_text.match, storage_files_path))
+
+    log(f&#34;\n\n[DEBUG]: storage_files_path: {storage_files_path}&#34;)
+
+    # keep the first file if it is not on redis
+    storage_files_path.sort()
+    download_file = None
+
+    for path_file in storage_files_path:
+        filename = path_file.split(&#34;/&#34;)[-1]
+
+        log(f&#34;\n\nChecking if {filename} is in redis&#34;)
+        if filename not in redis_files:
+            log(f&#34;\n\n {filename} not in redis&#34;)
+            redis_files.append(filename)
+            destination_file_path = os.path.join(base_path, filename)
+            download_file = path_file
+            # log(f&#34;[DEBUG]: filename to be append on redis_files: {redis_files}&#34;)
+            break
+    return redis_files, destination_file_path, download_file</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.convert_julian_to_conventional_day"><code class="name flex">
 <span>def <span class="ident">convert_julian_to_conventional_day</span></span>(<span>year: int, julian_day: int)</span>
 </code></dt>
@@ -559,22 +812,112 @@ date_save (str): 19 (20222901900203)</p></div>
 <span>def <span class="ident">converte_timezone</span></span>(<span>datetime_save: str) ‑> str</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Recebe o formato de data hora em 'YYYYMMDD HHmm' no UTC e
-retorna no mesmo formato no horário São Paulo</p></div>
+<div class="desc"><p>Get UTC date-hour on 'YYYYMMDD HHmm' format and returns im the same format but
+on São Paulo timezone.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def converte_timezone(datetime_save: str) -&gt; str:
     &#34;&#34;&#34;
-    Recebe o formato de data hora em &#39;YYYYMMDD HHmm&#39; no UTC e
-    retorna no mesmo formato no horário São Paulo
+    Get UTC date-hour on &#39;YYYYMMDD HHmm&#39; format and returns im the same format but
+    on São Paulo timezone.
     &#34;&#34;&#34;
     log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; datetime_save {datetime_save}&#34;)
     datahora = pendulum.from_format(datetime_save, &#34;YYYYMMDD HHmmss&#34;)
     log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; datahora {datahora}&#34;)
     datahora = datahora.in_tz(&#34;America/Sao_Paulo&#34;)
     return datahora.format(&#34;YYYYMMDD HHmmss&#34;)</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.create_and_save_image"><code class="name flex">
+<span>def <span class="ident">create_and_save_image</span></span>(<span>data: xarray.core.dataarray.DataArray, info: dict, variable) ‑> pathlib.Path</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create image from xarray ans save it as png file.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def create_and_save_image(data: xr.DataArray, info: dict, variable) -&gt; Path:
+    &#34;&#34;&#34;
+    Create image from xarray ans save it as png file.
+    &#34;&#34;&#34;
+
+    plt.figure(figsize=(10, 10))
+
+    # Use the Geostationary projection in cartopy
+    axis = plt.axes(projection=ccrs.PlateCarree())
+
+    extent = info[&#34;extent&#34;]
+    img_extent = [extent[0], extent[2], extent[1], extent[3]]
+
+    # Define the color scale based on the channel
+    colormap = &#34;jet&#34;  # White to black for IR channels
+    # colormap = &#34;gray_r&#34; # White to black for IR channels
+
+    # Plot the image
+    img = axis.imshow(data, origin=&#34;upper&#34;, extent=img_extent, cmap=colormap, alpha=0.8)
+
+    # Add coastlines, borders and gridlines
+    shapefile_path_neighborhood = (
+        f&#34;{os.getcwd()}/pipelines/utils/shapefiles/Limite_Bairros_RJ.shp&#34;
+    )
+    shapefile_path_state = (
+        f&#34;{os.getcwd()}/pipelines/utils/shapefiles/Limite_Estados_BR_IBGE.shp&#34;
+    )
+    log(&#34;\nImporting shapefiles&#34;)
+    reader_neighborhood = shpreader.Reader(shapefile_path_neighborhood)
+    reader_state = shpreader.Reader(shapefile_path_state)
+    state = [record.geometry for record in reader_state.records()]
+    neighborhood = [record.geometry for record in reader_neighborhood.records()]
+    log(&#34;\nShapefiles imported&#34;)
+    axis.add_geometries(
+        state, ccrs.PlateCarree(), facecolor=&#34;none&#34;, edgecolor=&#34;black&#34;, linewidth=0.7
+    )
+    axis.add_geometries(
+        neighborhood,
+        ccrs.PlateCarree(),
+        facecolor=&#34;none&#34;,
+        edgecolor=&#34;black&#34;,
+        linewidth=0.2,
+    )
+    # axis.coastlines(resolution=&#39;10m&#39;, color=&#39;black&#39;, linewidth=1.0)
+    # axis.add_feature(cartopy.feature.BORDERS, edgecolor=&#39;black&#39;, linewidth=1.0)
+    grdln = axis.gridlines(
+        crs=ccrs.PlateCarree(),
+        color=&#34;gray&#34;,
+        alpha=0.7,
+        linestyle=&#34;--&#34;,
+        linewidth=0.7,
+        xlocs=np.arange(-180, 180, 1),
+        ylocs=np.arange(-90, 90, 1),
+        draw_labels=True,
+    )
+    grdln.top_labels = False
+    grdln.right_labels = False
+
+    plt.colorbar(
+        img,
+        label=variable.upper(),
+        extend=&#34;both&#34;,
+        orientation=&#34;horizontal&#34;,
+        pad=0.05,
+        fraction=0.05,
+    )
+
+    output_image_path = Path.joinpath(os.getcwd(), &#34;output&#34;, &#34;images&#34;)
+    log(&#34;\n Start saving image&#34;)
+    save_image_path = output_image_path / (
+        variable + &#34;_&#34; + info[&#34;datetime_save&#34;] + &#34;.png&#34;
+    )
+
+    if not output_image_path.exists():
+        output_image_path.mkdir(parents=True, exist_ok=True)
+
+    plt.savefig(save_image_path, bbox_inches=&#34;tight&#34;, pad_inches=0, dpi=300)
+    log(&#34;\n Ended saving image&#34;)
+    return save_image_path</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.download_blob"><code class="name flex">
@@ -690,6 +1033,57 @@ Mode needs to be "prod" or "staging"</p></div>
     files = [b.name for b in list_blobs_with_prefix(bucket_name, prefix, mode)]
     files.sort()
     return files[0]</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_files_from_aws"><code class="name flex">
+<span>def <span class="ident">get_files_from_aws</span></span>(<span>partition_path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get all available files from aws that is inside the partition path</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_files_from_aws(partition_path):
+    &#34;&#34;&#34;
+    Get all available files from aws that is inside the partition path
+    &#34;&#34;&#34;
+    log(&#34;Acessing AWS to get files&#34;)
+    # Use the anonymous credentials to access public data
+    s3_fs = s3fs.S3FileSystem(anon=True)
+
+    # Get all files of GOES-16 data (multiband format) at this hour
+    storage_files_path = np.sort(
+        np.array(
+            s3_fs.find(f&#34;noaa-goes16/{partition_path}&#34;)
+            # s3_fs.find(f&#34;noaa-goes16/ABI-L2-CMIPF/2022/270/10/OR_ABI-L2-CMIPF-M6C13_G16_s20222701010208_e20222701019528_c20222701020005.nc&#34;)
+        )
+    )
+    storage_origin = &#34;aws&#34;
+
+    return storage_files_path, storage_origin, s3_fs</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_files_from_gcp"><code class="name flex">
+<span>def <span class="ident">get_files_from_gcp</span></span>(<span>partition_path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get all available files from gcp that is inside the partition path</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_files_from_gcp(partition_path):
+    &#34;&#34;&#34;
+    Get all available files from gcp that is inside the partition path
+    &#34;&#34;&#34;
+    log(&#34;Acessing GCP to get files&#34;)
+    bucket_name = &#34;gcp-public-data-goes-16&#34;
+    storage_files_path = get_blob_with_prefix(
+        bucket_name=bucket_name, prefix=partition_path, mode=&#34;prod&#34;
+    )
+    storage_origin = &#34;gcp&#34;
+    return storage_files_path, storage_origin, bucket_name</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_info"><code class="name flex">
@@ -857,7 +1251,9 @@ Mode needs to be "prod" or "staging"</p></div>
         &#34;vmax&#34;: 60,
         &#34;cmap&#34;: &#34;jet&#34;,
     }
-    # TPWF - Total Precipitable Water: &#39;TPW&#39;
+    # MCMIPF - Cloud and Moisture Imagery: &#39;MCMIP&#39;
+    # https://developers.google.com/earth-engine/datasets/catalog/NOAA_GOES_16_MCMIPM#bands
+
     product_caracteristics[&#34;MCMIPF&#34;] = {
         &#34;variable&#34;: [
             &#34;CMI_C01&#34;,
@@ -901,6 +1297,45 @@ Mode needs to be "prod" or "staging"</p></div>
     print(f&#34;Product Caracteristics: {product_caracteristics}&#34;)
 
     return product_caracteristics</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_variable_values"><code class="name flex">
+<span>def <span class="ident">get_variable_values</span></span>(<span>dfr: pandas.core.frame.DataFrame, variable: str) ‑> xarray.core.dataarray.DataArray</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert pandas dataframe to a matrix with latitude on rows, longitudes on
+columns and the correspondent values on a xarray DataArray</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_variable_values(dfr: pd.DataFrame, variable: str) -&gt; xr.DataArray:
+    &#34;&#34;&#34;
+    Convert pandas dataframe to a matrix with latitude on rows, longitudes on
+    columns and the correspondent values on a xarray DataArray
+    &#34;&#34;&#34;
+
+    log(&#34;Fill matrix&#34;)
+    dfr = dfr.sort_values(by=[&#34;latitude&#34;, &#34;longitude&#34;], ascending=[False, True])
+    matrix_temp = dfr.pivot(index=&#34;latitude&#34;, columns=&#34;longitude&#34;, values=variable)
+    matrix_temp = matrix_temp.sort_index(ascending=False)
+    log(
+        f&#34;[DEBUG]: matriz de conversão deve estar com a latitude em ordem descendente\
+             e a longitude em ascendente: {matrix_temp.head(10)}&#34;
+    )
+
+    # Create a NumPy matriz NumPy
+    matrix = matrix_temp.values
+
+    longitudes = list(matrix_temp.columns)
+    latitudes = list(matrix_temp.index)
+
+    log(&#34;Convert to xr dataarray&#34;)
+    data_array = xr.DataArray(
+        matrix, dims=(&#34;lat&#34;, &#34;lon&#34;), coords={&#34;lon&#34;: longitudes, &#34;lat&#34;: latitudes}
+    )
+    log(&#34;end&#34;)
+    return data_array</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.read_netcdf"><code class="name flex">
@@ -1040,13 +1475,43 @@ a different netcdf file inside temp/ folder.</p></div>
     print(&#34;cols&#34;, data.columns)
 
     file_name = files[0].split(&#34;_variable-&#34;)[0]
-    print(f&#34;\n\n[DEGUB]: Saving {file_name} on {output_path}\n\n&#34;)
+    print(f&#34;\n\n[DEGUB]: Saving {file_name} on {output_path}\n&#34;)
     print(f&#34;Data_save: {date_save}, time_save: {time_save}&#34;)
     # log(f&#34;\n\n[DEGUB]: Saving {file_name} on {parquet_path}\n\n&#34;)
     # log(f&#34;Data_save: {date_save}, time_save: {time_save}&#34;)
     file_path = os.path.join(partitions_path, f&#34;{file_name}.csv&#34;)
     data.to_csv(file_path, index=False)
-    return output_path</code></pre>
+    return output_path, file_path</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.upload_image_to_api"><code class="name flex">
+<span>def <span class="ident">upload_image_to_api</span></span>(<span>info: dict, save_image_path: pathlib.Path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Upload image to api</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def upload_image_to_api(info: dict, save_image_path: Path):
+    &#34;&#34;&#34;
+    Upload image to api
+    &#34;&#34;&#34;
+    username = &#34;your-username&#34;
+    password = &#34;your-password&#34;
+
+    image = base64.b64encode(open(save_image_path, &#34;rb&#34;).read()).decode()
+
+    response = requests.post(
+        &#34;https://api.example.com/upload-image&#34;,
+        data={&#34;image&#34;: image, &#34;timestamp&#34;: info[&#34;datetime_save&#34;]},
+        auth=(username, password),
+    )
+
+    if response.status_code == 200:
+        print(&#34;Image sent to API&#34;)
+    else:
+        print(&#34;Problem senting imagem to API&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1113,15 +1578,21 @@ setTimeout(() => input.focus(), 100);
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.choose_file_to_download" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.choose_file_to_download">choose_file_to_download</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.convert_julian_to_conventional_day" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.convert_julian_to_conventional_day">convert_julian_to_conventional_day</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.converte_timezone" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.converte_timezone">converte_timezone</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.create_and_save_image" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.create_and_save_image">create_and_save_image</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.download_blob" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.download_blob">download_blob</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.extract_julian_day_and_hour_from_filename" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.extract_julian_day_and_hour_from_filename">extract_julian_day_and_hour_from_filename</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_blob_with_prefix" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_blob_with_prefix">get_blob_with_prefix</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_files_from_aws" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_files_from_aws">get_files_from_aws</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_files_from_gcp" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_files_from_gcp">get_files_from_gcp</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_info" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_info">get_info</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_variable_values" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_variable_values">get_variable_values</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.read_netcdf" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.read_netcdf">read_netcdf</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.remap_g16" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.remap_g16">remap_g16</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.save_data_in_file" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.save_data_in_file">save_data_in_file</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.satelite.satellite_utils.upload_image_to_api" href="#pipelines.rj_cor.meteorologia.satelite.satellite_utils.upload_image_to_api">upload_image_to_api</a></code></li>
 </ul>
 </li>
 </ul>

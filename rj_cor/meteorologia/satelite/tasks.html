@@ -39,18 +39,21 @@ import re
 from pathlib import Path
 from typing import Union
 
-import numpy as np
+import pandas as pd
 import pendulum
 from prefect import task
 from prefect.engine.signals import ENDRUN
 from prefect.engine.state import Skipped
-import s3fs
 
 from pipelines.rj_cor.meteorologia.satelite.satellite_utils import (
+    create_and_save_image,
+    choose_file_to_download,
     download_blob,
     extract_julian_day_and_hour_from_filename,
-    get_blob_with_prefix,
+    get_files_from_aws,
+    get_files_from_gcp,
     get_info,
+    get_variable_values,
     remap_g16,
     save_data_in_file,
 )
@@ -113,81 +116,49 @@ def download(
     mode_redis: str = &#34;prod&#34;,
 ) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
-    Acessa o S3 e faz o download do primeiro arquivo da data-hora especificada
+    Access S3 or GCP and download the first file on this specified date hour
+    that is not already saved on redis
     &#34;&#34;&#34;
 
     year = date_hour_info[&#34;year&#34;]
     julian_day = date_hour_info[&#34;julian_day&#34;]
     hour_utc = date_hour_info[&#34;hour_utc&#34;][:2]
+    partition_path = f&#34;ABI-L2-{product}/{year}/{julian_day}/{hour_utc}/&#34;
 
-    try:
-        # Use the anonymous credentials to access public data
-        s3_fs = s3fs.S3FileSystem(anon=True)
+    storage_files_path, storage_origin, storage_conection = get_files_from_aws(
+        partition_path
+    )
+    log(storage_files_path)
+    if len(storage_files_path) == 0:
+        storage_files_path, storage_origin, storage_conection = get_files_from_gcp(
+            partition_path
+        )
 
-        # Get all files of GOES-16 data (multiband format) at this hour
-        path_files = np.sort(
-            np.array(
-                s3_fs.find(
-                    f&#34;noaa-goes16/ABI-L2-{product}/{year}/{julian_day}/{hour_utc}/&#34;
-                )
-                # s3_fs.find(f&#34;noaa-goes16/ABI-L2-CMIPF/2022/270/10/OR_ABI-L2-CMIPF-M6C13_G16_s20222701010208_e20222701019528_c20222701020005.nc&#34;)
-            )
-        )
-        print(&#34;product&#34;, product)
-        print(&#34;path_files&#34;, path_files)
-        # Mantém apenas arquivos de determinada banda
-        if product == &#34;CMIPF&#34;:
-            # para capturar banda 13
-            path_files = [f for f in path_files if bool(re.search(&#34;C&#34; + band, f))]
-        origem = &#34;aws&#34;
-    except IndexError:
-        bucket_name = &#34;gcp-public-data-goes-16&#34;
-        partition_file = f&#34;ABI-L2-{product}/{year}/{julian_day}/{hour_utc}/&#34;
-        path_files = get_blob_with_prefix(
-            bucket_name=bucket_name, prefix=partition_file, mode=&#34;prod&#34;
-        )
-        origem = &#34;gcp&#34;
+    # Keep only files from specified band
+    if product == &#34;CMIPF&#34;:
+        # para capturar banda 13
+        storage_files_path = [
+            f for f in storage_files_path if bool(re.search(&#34;C&#34; + band, f))
+        ]
 
     # Skip task if there is no file on API
-    if len(path_files) == 0:
+    if len(storage_files_path) == 0:
         log(&#34;No available files on API&#34;)
         skip = Skipped(&#34;No available files on API&#34;)
         raise ENDRUN(state=skip)
 
-    base_path = os.path.join(
-        os.getcwd(), mode_redis, &#34;data&#34;, &#34;satelite&#34;, product[:-1], &#34;input&#34;
-    )
+    base_path = os.path.join(os.getcwd(), &#34;temp&#34;, &#34;input&#34;, mode_redis, product[:-1])
 
     if not os.path.exists(base_path):
         os.makedirs(base_path)
 
     # Seleciona primeiro arquivo que não tem o nome salvo no redis
-    log(f&#34;\n\n[DEBUG]: available files on API: {path_files}&#34;)
-    log(f&#34;\n\n[DEBUG]: filenames already saved on redis_files: {redis_files}&#34;)
-    log(f&#34;\n\n[DEBUG]: ref_filename: {ref_filename}&#34;)
+    log(f&#34;\n\n[DEBUG]: available files on API: {storage_files_path}&#34;)
+    log(f&#34;\n\n[DEBUG]: filenames that are already saved on redis_files: {redis_files}&#34;)
 
-    # keep only ref_filename if it exists
-    if ref_filename is not None:
-        # extract this part of the name s_20222911230206_e20222911239514
-        ref_date = ref_filename[ref_filename.find(&#34;_s&#34;) + 1 : ref_filename.find(&#34;_e&#34;)]
-        log(f&#34;\n\n[DEBUG]: ref_date: {ref_date}&#34;)
-        match_text = re.compile(f&#34;.*{ref_date}&#34;)
-        path_files = list(filter(match_text.match, path_files))
-        log(f&#34;\n\n[DEBUG]: path_files: {path_files}&#34;)
-
-    # keep the first file if it is not on redis
-    path_files.sort()
-    download_file = None
-    for path_file in path_files:
-        filename = path_file.split(&#34;/&#34;)[-1]
-        log(f&#34;\n\n[DEBUG]: {filename} check if is in redis&#34;)
-        if filename not in redis_files:
-            log(f&#34;\n\n[DEBUG]: {filename} not in redis&#34;)
-            redis_files.append(filename)
-            path_filename = os.path.join(base_path, filename)
-            download_file = path_file
-            # log(f&#34;[DEBUG]: filename to be append on redis_files: {redis_files}&#34;)
-            break
+    redis_files, destination_file_path, download_file = choose_file_to_download(
+        storage_files_path, base_path, redis_files, ref_filename
+    )
 
     # Skip task if there is no new file
     if download_file is None:
@@ -195,25 +166,25 @@ def download(
         skip = Skipped(&#34;No new available files&#34;)
         raise ENDRUN(state=skip)
 
-    # Faz download da aws ou da gcp
-    if origem == &#34;aws&#34;:
-        s3_fs.get(download_file, path_filename)
+    # Download file from aws or gcp
+    if storage_origin == &#34;aws&#34;:
+        storage_conection.get(download_file, destination_file_path)
     else:
         download_blob(
-            bucket_name=bucket_name,
+            bucket_name=storage_conection,
             source_blob_name=download_file,
-            destination_file_name=path_filename,
+            destination_file_name=destination_file_path,
             mode=&#34;prod&#34;,
         )
 
-    return path_filename, redis_files
+    return destination_file_path, redis_files
 
 
 @task
 def tratar_dados(filename: str) -&gt; dict:
     &#34;&#34;&#34;
-    Converte coordenadas X, Y para latlon do arquivo netcdf
-    e seleciona apenas a área especificada na variável extent
+    Convert X, Y coordinates from netcdf file to a latlon coordinates
+    and select only the specified region on extent variable.
     &#34;&#34;&#34;
     log(f&#34;\n Started treating file: {filename}&#34;)
     # Create the basemap reference for the Rectangular Projection.
@@ -247,6 +218,7 @@ def tratar_dados(filename: str) -&gt; dict:
 
     # Get informations from the nc file
     product_caracteristics = get_info(filename)
+    product_caracteristics[&#34;extent&#34;] = extent
 
     print(&#34;product_caracteristics[variable]&#34;, product_caracteristics[&#34;variable&#34;])
     # Call the remap function to convert x, y to lon, lat and save converted file
@@ -260,20 +232,46 @@ def tratar_dados(filename: str) -&gt; dict:
     return product_caracteristics
 
 
-@task
+@task(nout=2)
 def save_data(info: dict, mode_redis: str = &#34;prod&#34;) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
     Concat all netcdf data and save partitioned by date on a csv
     &#34;&#34;&#34;
 
     log(&#34;Start saving product on a csv&#34;)
-    output_path = save_data_in_file(
+    output_path, output_filepath = save_data_in_file(
         product=info[&#34;product&#34;],
         variable=info[&#34;variable&#34;],
         datetime_save=info[&#34;datetime_save&#34;],
         mode_redis=mode_redis,
     )
-    return output_path</code></pre>
+    return output_path, output_filepath
+
+
+@task
+def create_image_and_upload_to_api(info: dict, output_filepath: Path):
+    &#34;&#34;&#34;
+    Create image from dataframe and send it to API
+    &#34;&#34;&#34;
+
+    dfr = pd.read_csv(output_filepath)
+
+    dfr = dfr.sort_values(by=[&#34;latitude&#34;, &#34;longitude&#34;], ascending=[False, True])
+
+    for var in info[&#34;variable&#34;]:
+        log(f&#34;\nStart creating image for variable {var}\n&#34;)
+
+        var = var.lower()
+        data_array = get_variable_values(dfr, var)
+
+        # Get the pixel values
+        data = data_array.data[:]
+        log(f&#34;\n[DEBUG] data {data}&#34;)
+        save_image_path = create_and_save_image(data, info, var)
+        log(f&#34;\nStart uploading image for variable {var} on API\n&#34;)
+        # upload_image_to_api(info, save_image_path)
+        log(save_image_path)
+        log(f&#34;\nEnd uploading image for variable {var} on API\n&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -283,11 +281,47 @@ def save_data(info: dict, mode_redis: str = &#34;prod&#34;) -&gt; Union[str, Pat
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="pipelines.rj_cor.meteorologia.satelite.tasks.create_image_and_upload_to_api"><code class="name flex">
+<span>def <span class="ident">create_image_and_upload_to_api</span></span>(<span>info: dict, output_filepath: pathlib.Path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create image from dataframe and send it to API</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def create_image_and_upload_to_api(info: dict, output_filepath: Path):
+    &#34;&#34;&#34;
+    Create image from dataframe and send it to API
+    &#34;&#34;&#34;
+
+    dfr = pd.read_csv(output_filepath)
+
+    dfr = dfr.sort_values(by=[&#34;latitude&#34;, &#34;longitude&#34;], ascending=[False, True])
+
+    for var in info[&#34;variable&#34;]:
+        log(f&#34;\nStart creating image for variable {var}\n&#34;)
+
+        var = var.lower()
+        data_array = get_variable_values(dfr, var)
+
+        # Get the pixel values
+        data = data_array.data[:]
+        log(f&#34;\n[DEBUG] data {data}&#34;)
+        save_image_path = create_and_save_image(data, info, var)
+        log(f&#34;\nStart uploading image for variable {var} on API\n&#34;)
+        # upload_image_to_api(info, save_image_path)
+        log(save_image_path)
+        log(f&#34;\nEnd uploading image for variable {var} on API\n&#34;)</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.tasks.download"><code class="name flex">
 <span>def <span class="ident">download</span></span>(<span>product: str, date_hour_info: dict, band: str = None, ref_filename: str = None, redis_files: list = [], wait=None, mode_redis: str = 'prod') ‑> Union[str, pathlib.Path]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Acessa o S3 e faz o download do primeiro arquivo da data-hora especificada</p></div>
+<div class="desc"><p>Access S3 or GCP and download the first file on this specified date hour
+that is not already saved on redis</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -303,81 +337,49 @@ def download(
     mode_redis: str = &#34;prod&#34;,
 ) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
-    Acessa o S3 e faz o download do primeiro arquivo da data-hora especificada
+    Access S3 or GCP and download the first file on this specified date hour
+    that is not already saved on redis
     &#34;&#34;&#34;
 
     year = date_hour_info[&#34;year&#34;]
     julian_day = date_hour_info[&#34;julian_day&#34;]
     hour_utc = date_hour_info[&#34;hour_utc&#34;][:2]
+    partition_path = f&#34;ABI-L2-{product}/{year}/{julian_day}/{hour_utc}/&#34;
 
-    try:
-        # Use the anonymous credentials to access public data
-        s3_fs = s3fs.S3FileSystem(anon=True)
+    storage_files_path, storage_origin, storage_conection = get_files_from_aws(
+        partition_path
+    )
+    log(storage_files_path)
+    if len(storage_files_path) == 0:
+        storage_files_path, storage_origin, storage_conection = get_files_from_gcp(
+            partition_path
+        )
 
-        # Get all files of GOES-16 data (multiband format) at this hour
-        path_files = np.sort(
-            np.array(
-                s3_fs.find(
-                    f&#34;noaa-goes16/ABI-L2-{product}/{year}/{julian_day}/{hour_utc}/&#34;
-                )
-                # s3_fs.find(f&#34;noaa-goes16/ABI-L2-CMIPF/2022/270/10/OR_ABI-L2-CMIPF-M6C13_G16_s20222701010208_e20222701019528_c20222701020005.nc&#34;)
-            )
-        )
-        print(&#34;product&#34;, product)
-        print(&#34;path_files&#34;, path_files)
-        # Mantém apenas arquivos de determinada banda
-        if product == &#34;CMIPF&#34;:
-            # para capturar banda 13
-            path_files = [f for f in path_files if bool(re.search(&#34;C&#34; + band, f))]
-        origem = &#34;aws&#34;
-    except IndexError:
-        bucket_name = &#34;gcp-public-data-goes-16&#34;
-        partition_file = f&#34;ABI-L2-{product}/{year}/{julian_day}/{hour_utc}/&#34;
-        path_files = get_blob_with_prefix(
-            bucket_name=bucket_name, prefix=partition_file, mode=&#34;prod&#34;
-        )
-        origem = &#34;gcp&#34;
+    # Keep only files from specified band
+    if product == &#34;CMIPF&#34;:
+        # para capturar banda 13
+        storage_files_path = [
+            f for f in storage_files_path if bool(re.search(&#34;C&#34; + band, f))
+        ]
 
     # Skip task if there is no file on API
-    if len(path_files) == 0:
+    if len(storage_files_path) == 0:
         log(&#34;No available files on API&#34;)
         skip = Skipped(&#34;No available files on API&#34;)
         raise ENDRUN(state=skip)
 
-    base_path = os.path.join(
-        os.getcwd(), mode_redis, &#34;data&#34;, &#34;satelite&#34;, product[:-1], &#34;input&#34;
-    )
+    base_path = os.path.join(os.getcwd(), &#34;temp&#34;, &#34;input&#34;, mode_redis, product[:-1])
 
     if not os.path.exists(base_path):
         os.makedirs(base_path)
 
     # Seleciona primeiro arquivo que não tem o nome salvo no redis
-    log(f&#34;\n\n[DEBUG]: available files on API: {path_files}&#34;)
-    log(f&#34;\n\n[DEBUG]: filenames already saved on redis_files: {redis_files}&#34;)
-    log(f&#34;\n\n[DEBUG]: ref_filename: {ref_filename}&#34;)
+    log(f&#34;\n\n[DEBUG]: available files on API: {storage_files_path}&#34;)
+    log(f&#34;\n\n[DEBUG]: filenames that are already saved on redis_files: {redis_files}&#34;)
 
-    # keep only ref_filename if it exists
-    if ref_filename is not None:
-        # extract this part of the name s_20222911230206_e20222911239514
-        ref_date = ref_filename[ref_filename.find(&#34;_s&#34;) + 1 : ref_filename.find(&#34;_e&#34;)]
-        log(f&#34;\n\n[DEBUG]: ref_date: {ref_date}&#34;)
-        match_text = re.compile(f&#34;.*{ref_date}&#34;)
-        path_files = list(filter(match_text.match, path_files))
-        log(f&#34;\n\n[DEBUG]: path_files: {path_files}&#34;)
-
-    # keep the first file if it is not on redis
-    path_files.sort()
-    download_file = None
-    for path_file in path_files:
-        filename = path_file.split(&#34;/&#34;)[-1]
-        log(f&#34;\n\n[DEBUG]: {filename} check if is in redis&#34;)
-        if filename not in redis_files:
-            log(f&#34;\n\n[DEBUG]: {filename} not in redis&#34;)
-            redis_files.append(filename)
-            path_filename = os.path.join(base_path, filename)
-            download_file = path_file
-            # log(f&#34;[DEBUG]: filename to be append on redis_files: {redis_files}&#34;)
-            break
+    redis_files, destination_file_path, download_file = choose_file_to_download(
+        storage_files_path, base_path, redis_files, ref_filename
+    )
 
     # Skip task if there is no new file
     if download_file is None:
@@ -385,18 +387,18 @@ def download(
         skip = Skipped(&#34;No new available files&#34;)
         raise ENDRUN(state=skip)
 
-    # Faz download da aws ou da gcp
-    if origem == &#34;aws&#34;:
-        s3_fs.get(download_file, path_filename)
+    # Download file from aws or gcp
+    if storage_origin == &#34;aws&#34;:
+        storage_conection.get(download_file, destination_file_path)
     else:
         download_blob(
-            bucket_name=bucket_name,
+            bucket_name=storage_conection,
             source_blob_name=download_file,
-            destination_file_name=path_filename,
+            destination_file_name=destination_file_path,
             mode=&#34;prod&#34;,
         )
 
-    return path_filename, redis_files</code></pre>
+    return destination_file_path, redis_files</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.tasks.get_dates"><code class="name flex">
@@ -435,20 +437,20 @@ def get_dates(current_time) -&gt; str:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@task
+<pre><code class="python">@task(nout=2)
 def save_data(info: dict, mode_redis: str = &#34;prod&#34;) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
     Concat all netcdf data and save partitioned by date on a csv
     &#34;&#34;&#34;
 
     log(&#34;Start saving product on a csv&#34;)
-    output_path = save_data_in_file(
+    output_path, output_filepath = save_data_in_file(
         product=info[&#34;product&#34;],
         variable=info[&#34;variable&#34;],
         datetime_save=info[&#34;datetime_save&#34;],
         mode_redis=mode_redis,
     )
-    return output_path</code></pre>
+    return output_path, output_filepath</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.tasks.slice_data"><code class="name flex">
@@ -495,8 +497,8 @@ def slice_data(current_time: str, ref_filename: str = None) -&gt; dict:
 <span>def <span class="ident">tratar_dados</span></span>(<span>filename: str) ‑> dict</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Converte coordenadas X, Y para latlon do arquivo netcdf
-e seleciona apenas a área especificada na variável extent</p></div>
+<div class="desc"><p>Convert X, Y coordinates from netcdf file to a latlon coordinates
+and select only the specified region on extent variable.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -504,8 +506,8 @@ e seleciona apenas a área especificada na variável extent</p></div>
 <pre><code class="python">@task
 def tratar_dados(filename: str) -&gt; dict:
     &#34;&#34;&#34;
-    Converte coordenadas X, Y para latlon do arquivo netcdf
-    e seleciona apenas a área especificada na variável extent
+    Convert X, Y coordinates from netcdf file to a latlon coordinates
+    and select only the specified region on extent variable.
     &#34;&#34;&#34;
     log(f&#34;\n Started treating file: {filename}&#34;)
     # Create the basemap reference for the Rectangular Projection.
@@ -539,6 +541,7 @@ def tratar_dados(filename: str) -&gt; dict:
 
     # Get informations from the nc file
     product_caracteristics = get_info(filename)
+    product_caracteristics[&#34;extent&#34;] = extent
 
     print(&#34;product_caracteristics[variable]&#34;, product_caracteristics[&#34;variable&#34;])
     # Call the remap function to convert x, y to lon, lat and save converted file
@@ -616,6 +619,7 @@ setTimeout(() => input.focus(), 100);
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="pipelines.rj_cor.meteorologia.satelite.tasks.create_image_and_upload_to_api" href="#pipelines.rj_cor.meteorologia.satelite.tasks.create_image_and_upload_to_api">create_image_and_upload_to_api</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.satelite.tasks.download" href="#pipelines.rj_cor.meteorologia.satelite.tasks.download">download</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.satelite.tasks.get_dates" href="#pipelines.rj_cor.meteorologia.satelite.tasks.get_dates">get_dates</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.satelite.tasks.save_data" href="#pipelines.rj_cor.meteorologia.satelite.tasks.save_data">save_data</a></code></li>
