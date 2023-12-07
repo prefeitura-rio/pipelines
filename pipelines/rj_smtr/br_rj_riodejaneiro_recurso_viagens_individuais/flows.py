@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Flows for br_rj_riodejaneiro_recurso
+Flows for br_rj_riodejaneiro_recurso_viagens_inviduais
 """
 from copy import deepcopy
 
