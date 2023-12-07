@@ -456,6 +456,24 @@ class constants(Enum):  # pylint: disable=c0103
             "primary_key": ["CD_CONSORCIO", "CD_LINHA"],  # id column to nest data on
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
         },
+        {
+            "table_id": "percentual_rateio_integracao",
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "ressarcimento_db",
+                "query": """
+                    SELECT
+                        *
+                    FROM
+                        percentual_rateio_integracao
+                    WHERE
+                        dt_inclusao BETWEEN '{start}'
+                        AND '{end}'
+                """,
+            },
+            "primary_key": ["id"],  # id column to nest data on
+            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+        },
     ]
 
     BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS = {
