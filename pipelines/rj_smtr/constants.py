@@ -241,12 +241,13 @@ class constants(Enum):  # pylint: disable=c0103
                 FROM
                     tracking_detalhe
                 WHERE
-                    data_tracking BETWEEN '{start}'
-                    AND '{end}'
+                    id > {last_id} AND id <= {max_id}
             """,
+            "page_size": 1000,
+            "max_pages": 100,
         },
         "primary_key": ["id"],
-        "interval_minutes": 1,
+        "interval_minutes": 5,
     }
 
     BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS = [
@@ -472,7 +473,7 @@ class constants(Enum):  # pylint: disable=c0103
 
     BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS = {
         "dataset_id": BILHETAGEM_DATASET_ID,
-        "table_id": "ordem_pagamento_validacao",
+        "table_id": "ordem_pagamento",
         "upstream": True,
         "exclude": f"+{BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS['table_id']}",
         "dbt_vars": {
@@ -503,6 +504,10 @@ class constants(Enum):  # pylint: disable=c0103
 
     GTFS_TABLE_CAPTURE_PARAMS = [
         {
+            "table_id": "shapes",
+            "primary_key": ["shape_id", "shape_pt_sequence"],
+        },
+        {
             "table_id": "agency",
             "primary_key": ["agency_id"],
         },
@@ -527,16 +532,8 @@ class constants(Enum):  # pylint: disable=c0103
             "primary_key": ["route_id"],
         },
         {
-            "table_id": "shapes",
-            "primary_key": ["shape_id", "shape_pt_sequence"],
-        },
-        {
             "table_id": "stops",
             "primary_key": ["stop_id"],
-        },
-        {
-            "table_id": "stop_times",
-            "primary_key": ["trip_id", "stop_sequence"],
         },
         {
             "table_id": "trips",
@@ -555,12 +552,50 @@ class constants(Enum):  # pylint: disable=c0103
             "primary_key": ["servico"],
             "extract_params": {"filename": "ordem_servico"},
         },
+        {
+            "table_id": "stop_times",
+            "primary_key": ["trip_id", "stop_sequence"],
+        },
     ]
 
     GTFS_MATERIALIZACAO_PARAMS = {
         "dataset_id": GTFS_DATASET_ID,
         "dbt_vars": {
             "data_versao_gtfs": "",
+            "version": {},
+        },
+    }
+
+    # SUBSÍDIO RECURSOS VIAGENS INDIVIDUAIS
+    SUBSIDIO_SPPO_RECURSOS_DATASET_ID = "br_rj_riodejaneiro_recurso"
+    SUBSIDIO_SPPO_RECURSO_API_BASE_URL = "https://api.movidesk.com/public/v1/tickets?"
+    SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH = "sppo_subsidio_recursos_api"
+    SUBSIDIO_SPPO_RECURSO_SERVICE = "serviceFull eq 'SPPO'"
+    SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS = {
+        "partition_date_only": True,
+        "table_id": "recurso_sppo",
+        "dataset_id": SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
+        "extract_params": {
+            "token": "",
+            "$select": "id,protocol,createdDate",
+            "$filter": "{dates} and serviceFull/any(serviceFull: {service})",
+            "$expand": "customFieldValues,customFieldValues($expand=items)",
+            "$orderby": "createdDate asc",
+        },
+        "interval_minutes": 1440,
+        "source_type": "movidesk",
+        "primary_key": ["protocol"],
+    }
+
+    SUBSIDIO_SPPO_RECURSOS_MATERIALIZACAO_PARAMS = {
+        "dataset_id": SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
+        "table_id": SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS["table_id"],
+        "upstream": True,
+        "dbt_vars": {
+            "date_range": {
+                "table_run_datetime_column_name": "data_recurso",
+                "delay_hours": 0,
+            },
             "version": {},
         },
     }

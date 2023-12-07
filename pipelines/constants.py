@@ -59,6 +59,8 @@ class constants(Enum):  # pylint: disable=c0103
 
     RJ_PGM_AGENT_LABEL = "rj-pgm"
 
+    RJ_SMAC_AGENT_LABEL = "rj-smac"
+
     ######################################
     # Other constants
     ######################################
@@ -144,6 +146,14 @@ class constants(Enum):  # pylint: disable=c0103
         },
         "carolinagomes": {
             "user_id": "620000269392019469",
+            "type": "user_nickname",
+        },
+        "karinappassos": {
+            "user_id": "222842688117014528",
+            "type": "user_nickname",
+        },
+        "danilo": {
+            "user_id": "1147152438487416873",
             "type": "user_nickname",
         },
     }
