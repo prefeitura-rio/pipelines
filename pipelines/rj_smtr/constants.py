@@ -680,6 +680,6 @@ class constants(Enum):  # pylint: disable=c0103
     }
 
     DIRETORIO_MATERIALIZACAO_TABLE_PARAMS = [
-        {"table_id": "diretorio_consorcio"},
-        {"table_id": "operadoras_contato"},
+        {"table_id": "diretorio_consorcios"},
+        {"table_id": "operadoras_contatos"},
     ]
