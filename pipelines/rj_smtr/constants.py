@@ -675,7 +675,7 @@ class constants(Enum):  # pylint: disable=c0103
     }
 
     DIRETORIO_MATERIALIZACAO_PARAMS = {
-        "dataset_id": "br_rj_riodejaneiro_diretorios",
+        "dataset_id": "cadastro",
         "upstream": True,
     }
 
