@@ -529,14 +529,14 @@ class constants(Enum):  # pylint: disable=c0103
         },
     }
 
-    # SUBSÍDIO RECURSOS VIAGENS INDIVIDUAIS
+    # SUBSÍDIO RECURSOS TODOS OS RECURSOS
     SUBSIDIO_SPPO_RECURSOS_DATASET_ID = "br_rj_riodejaneiro_recurso"
     SUBSIDIO_SPPO_RECURSO_API_BASE_URL = "https://api.movidesk.com/public/v1/tickets?"
     SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH = "sppo_subsidio_recursos_api"
     SUBSIDIO_SPPO_RECURSO_SERVICE = "serviceFull eq 'SPPO'"
     SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS = {
         "partition_date_only": True,
-        "table_id": "recurso_sppo_viagens_individuais",
+        "table_id": "recurso_sppo",
         "dataset_id": SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
         "extract_params": {
             "token": "",
