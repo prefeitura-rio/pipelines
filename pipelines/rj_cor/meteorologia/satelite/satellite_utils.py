@@ -613,14 +613,14 @@ def create_and_save_image(data: xr.DataArray, info: dict, variable) -> Path:
     # Plot the image
     img = axis.imshow(data, origin="upper", extent=img_extent, cmap=colormap, alpha=0.8)
 
-    # Find shapefile file "Limite_Bairros_RJ.shp" across the entire file system
-    for root, dirs, files in os.walk(os.sep):
-        if "Limite_Bairros_RJ.shp" in files:
-            log(f"[DEBUG] ROOT {root}")
-            shapefile_dir = root
-            break
-    else:
-        print("File not found.")
+    # # Find shapefile file "Limite_Bairros_RJ.shp" across the entire file system
+    # for root, dirs, files in os.walk(os.sep):
+    #     if "Limite_Bairros_RJ.shp" in files:
+    #         log(f"[DEBUG] ROOT {root}")
+    #         shapefile_dir = root
+    #         break
+    # else:
+    #     print("File not found.")
 
     # Add coastlines, borders and gridlines
     shapefile_dir = Path(
