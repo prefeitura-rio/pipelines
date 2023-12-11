@@ -86,5 +86,5 @@ with Flow(
 diretorios_materializacao.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 diretorios_materializacao.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
