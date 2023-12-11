@@ -70,8 +70,7 @@ with Flow(
 
     run_materializacao = create_flow_run.map(
         flow_name=unmapped(diretorios_materializacao_subflow.name),
-        project_name=unmapped("staging"),
-        # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+        project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
         labels=unmapped(LABELS),
         parameters=table_params,
     )
