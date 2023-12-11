@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=too-many-locals, R0913
+# pylint: disable=too-many-locals, R0913, R1732
 """
 Funções úteis no tratamento de dados de satélite
 """
@@ -47,17 +47,24 @@ Funções úteis no tratamento de dados de satélite
 # Required Libraries
 # ====================================================================
 
+import base64
 import datetime
 import os
 import shutil
 from pathlib import Path
 import re
 from typing import Union
+import requests
 
+
+import cartopy.crs as ccrs
+import cartopy.io.shapereader as shpreader
 from google.cloud import storage
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pendulum
+import s3fs
 import xarray as xr
 
 from pipelines.rj_cor.meteorologia.satelite.remap import remap
@@ -111,8 +118,8 @@ def download_blob(
 
 def converte_timezone(datetime_save: str) -> str:
     """
-    Recebe o formato de data hora em 'YYYYMMDD HHmm' no UTC e
-    retorna no mesmo formato no horário São Paulo
+    Get UTC date-hour on 'YYYYMMDD HHmm' format and returns im the same format but
+    on São Paulo timezone.
     """
     log(f">>>>>>> datetime_save {datetime_save}")
     datahora = pendulum.from_format(datetime_save, "YYYYMMDD HHmmss")
@@ -167,6 +174,74 @@ def convert_julian_to_conventional_day(year: int, julian_day: int):
     date_save = dayconventional.strftime("%Y%m%d")
 
     return date_save
+
+
+def get_files_from_aws(partition_path):
+    """
+    Get all available files from aws that is inside the partition path
+    """
+    log("Acessing AWS to get files")
+    # Use the anonymous credentials to access public data
+    s3_fs = s3fs.S3FileSystem(anon=True)
+
+    # Get all files of GOES-16 data (multiband format) at this hour
+    storage_files_path = np.sort(
+        np.array(
+            s3_fs.find(f"noaa-goes16/{partition_path}")
+            # s3_fs.find(f"noaa-goes16/ABI-L2-CMIPF/2022/270/10/OR_ABI-L2-CMIPF-M6C13_G16_s20222701010208_e20222701019528_c20222701020005.nc")
+        )
+    )
+    storage_origin = "aws"
+
+    return storage_files_path, storage_origin, s3_fs
+
+
+def get_files_from_gcp(partition_path):
+    """
+    Get all available files from gcp that is inside the partition path
+    """
+    log("Acessing GCP to get files")
+    bucket_name = "gcp-public-data-goes-16"
+    storage_files_path = get_blob_with_prefix(
+        bucket_name=bucket_name, prefix=partition_path, mode="prod"
+    )
+    storage_origin = "gcp"
+    return storage_files_path, storage_origin, bucket_name
+
+
+def choose_file_to_download(
+    storage_files_path: list, base_path: str, redis_files: str, ref_filename=None
+):
+    """
+    We can treat only one file each run, so we will first eliminate files that were
+    already trated and saved on redis and keep only the first one from this partition
+    """
+    # keep only ref_filename if it exists
+    if ref_filename is not None:
+        # extract this part of the name s_20222911230206_e20222911239514
+        ref_date = ref_filename[ref_filename.find("_s") + 1 : ref_filename.find("_e")]
+        log(f"\n\n[DEBUG]: ref_date: {ref_date}")
+        match_text = re.compile(f".*{ref_date}")
+        storage_files_path = list(filter(match_text.match, storage_files_path))
+
+    log(f"\n\n[DEBUG]: storage_files_path: {storage_files_path}")
+
+    # keep the first file if it is not on redis
+    storage_files_path.sort()
+    download_file = None
+
+    for path_file in storage_files_path:
+        filename = path_file.split("/")[-1]
+
+        log(f"\n\nChecking if {filename} is in redis")
+        if filename not in redis_files:
+            log(f"\n\n {filename} not in redis")
+            redis_files.append(filename)
+            destination_file_path = os.path.join(base_path, filename)
+            download_file = path_file
+            # log(f"[DEBUG]: filename to be append on redis_files: {redis_files}")
+            break
+    return redis_files, destination_file_path, download_file
 
 
 def get_info(path: str) -> dict:
@@ -323,7 +398,9 @@ def get_info(path: str) -> dict:
         "vmax": 60,
         "cmap": "jet",
     }
-    # TPWF - Total Precipitable Water: 'TPW'
+    # MCMIPF - Cloud and Moisture Imagery: 'MCMIP'
+    # https://developers.google.com/earth-engine/datasets/catalog/NOAA_GOES_16_MCMIPM#bands
+
     product_caracteristics["MCMIPF"] = {
         "variable": [
             "CMI_C01",
@@ -476,10 +553,141 @@ def save_data_in_file(
     print("cols", data.columns)
 
     file_name = files[0].split("_variable-")[0]
-    print(f"\n\n[DEGUB]: Saving {file_name} on {output_path}\n\n")
+    print(f"\n\n[DEGUB]: Saving {file_name} on {output_path}\n")
     print(f"Data_save: {date_save}, time_save: {time_save}")
     # log(f"\n\n[DEGUB]: Saving {file_name} on {parquet_path}\n\n")
     # log(f"Data_save: {date_save}, time_save: {time_save}")
     file_path = os.path.join(partitions_path, f"{file_name}.csv")
     data.to_csv(file_path, index=False)
-    return output_path
+    return output_path, file_path
+
+
+def get_variable_values(dfr: pd.DataFrame, variable: str) -> xr.DataArray:
+    """
+    Convert pandas dataframe to a matrix with latitude on rows, longitudes on
+    columns and the correspondent values on a xarray DataArray
+    """
+
+    log("Fill matrix")
+    dfr = dfr.sort_values(by=["latitude", "longitude"], ascending=[False, True])
+    matrix_temp = dfr.pivot(index="latitude", columns="longitude", values=variable)
+    matrix_temp = matrix_temp.sort_index(ascending=False)
+    log(
+        f"[DEBUG]: matriz de conversão deve estar com a latitude em ordem descendente\
+             e a longitude em ascendente: {matrix_temp.head(10)}"
+    )
+
+    # Create a NumPy matriz NumPy
+    matrix = matrix_temp.values
+
+    longitudes = list(matrix_temp.columns)
+    latitudes = list(matrix_temp.index)
+
+    log("Convert to xr dataarray")
+    data_array = xr.DataArray(
+        matrix, dims=("lat", "lon"), coords={"lon": longitudes, "lat": latitudes}
+    )
+    log("end")
+    return data_array
+
+
+def create_and_save_image(data: xr.DataArray, info: dict, variable) -> Path:
+    """
+    Create image from xarray ans save it as png file.
+    """
+
+    plt.figure(figsize=(10, 10))
+
+    # Use the Geostationary projection in cartopy
+    axis = plt.axes(projection=ccrs.PlateCarree())
+
+    extent = info["extent"]
+    img_extent = [extent[0], extent[2], extent[1], extent[3]]
+
+    # Define the color scale based on the channel
+    colormap = "jet"  # White to black for IR channels
+    # colormap = "gray_r" # White to black for IR channels
+
+    # Plot the image
+    img = axis.imshow(data, origin="upper", extent=img_extent, cmap=colormap, alpha=0.8)
+
+    # Add coastlines, borders and gridlines
+    shapefile_path_neighborhood = (
+        f"{os.getcwd()}/pipelines/utils/shapefiles/Limite_Bairros_RJ.shp"
+    )
+    shapefile_path_state = (
+        f"{os.getcwd()}/pipelines/utils/shapefiles/Limite_Estados_BR_IBGE.shp"
+    )
+    log("\nImporting shapefiles")
+    reader_neighborhood = shpreader.Reader(shapefile_path_neighborhood)
+    reader_state = shpreader.Reader(shapefile_path_state)
+    state = [record.geometry for record in reader_state.records()]
+    neighborhood = [record.geometry for record in reader_neighborhood.records()]
+    log("\nShapefiles imported")
+    axis.add_geometries(
+        state, ccrs.PlateCarree(), facecolor="none", edgecolor="black", linewidth=0.7
+    )
+    axis.add_geometries(
+        neighborhood,
+        ccrs.PlateCarree(),
+        facecolor="none",
+        edgecolor="black",
+        linewidth=0.2,
+    )
+    # axis.coastlines(resolution='10m', color='black', linewidth=1.0)
+    # axis.add_feature(cartopy.feature.BORDERS, edgecolor='black', linewidth=1.0)
+    grdln = axis.gridlines(
+        crs=ccrs.PlateCarree(),
+        color="gray",
+        alpha=0.7,
+        linestyle="--",
+        linewidth=0.7,
+        xlocs=np.arange(-180, 180, 1),
+        ylocs=np.arange(-90, 90, 1),
+        draw_labels=True,
+    )
+    grdln.top_labels = False
+    grdln.right_labels = False
+
+    plt.colorbar(
+        img,
+        label=variable.upper(),
+        extend="both",
+        orientation="horizontal",
+        pad=0.05,
+        fraction=0.05,
+    )
+
+    output_image_path = Path.joinpath(os.getcwd(), "output", "images")
+    log("\n Start saving image")
+    save_image_path = output_image_path / (
+        variable + "_" + info["datetime_save"] + ".png"
+    )
+
+    if not output_image_path.exists():
+        output_image_path.mkdir(parents=True, exist_ok=True)
+
+    plt.savefig(save_image_path, bbox_inches="tight", pad_inches=0, dpi=300)
+    log("\n Ended saving image")
+    return save_image_path
+
+
+def upload_image_to_api(info: dict, save_image_path: Path):
+    """
+    Upload image to api
+    """
+    username = "your-username"
+    password = "your-password"
+
+    image = base64.b64encode(open(save_image_path, "rb").read()).decode()
+
+    response = requests.post(
+        "https://api.example.com/upload-image",
+        data={"image": image, "timestamp": info["datetime_save"]},
+        auth=(username, password),
+    )
+
+    if response.status_code == 200:
+        print("Image sent to API")
+    else:
+        print("Problem senting imagem to API")
