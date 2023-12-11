@@ -120,7 +120,23 @@ _sigma_queries = {
                 DS_DETALHE_MATERIAL,
                 DT_DESATIVACAO,
                 ST_STATUS,
-                REMUME
+                REMUME,
+                ACONDICIONAMENTO,
+                TP_GENERO,
+                CD_MATERIAL_SUBSTITUTO,
+                NM_FANTASIA,
+                CD_COMPRASNET,
+                TP_MATERIAL,
+                ST_REFERENCIA,
+                ST_SISTEMA_REGISTRO_PRECO,
+                TERMOLABEL,
+                ST_CONTROLADO,
+                ST_PADRONIZADO,
+                ST_USO_GERAL,
+                ST_CONTINUADO,
+                ST_TABELADO,
+                ST_ITEM_SUSTENTAVEL,
+                OBSERVACAO
             FROM SIGMA.VW_MATERIAL
         """,  # noqa
     },
@@ -180,9 +196,23 @@ _sigma_queries = {
             SELECT
                 CD_SERV,
                 CD_SEQ,
+                DV,
                 CD_SERVICO,
                 DS_SERVICO,
-                ST_STATUS
+                ST_STATUS,
+                CD_COMPRASNET,
+                NM_PADRONIZADO,
+                UNIDADE_SERVICO,
+                ST_RESPONSAVEL_TECNICO,
+                ST_SISTEMA_REGISTRO_PRECO,
+                CD_ATIVIDADE_ECONOMICA,
+                CD_GRUPO_CAE,
+                CD_SUBGRUPO_CAE,
+                CD_ATIVIDADE_CAE,
+                DS_ATIVIDADE_ECONOMICA,
+                DS_SUBGRUPO_CAE,
+                ST_TABELADO,
+                ST_CADASTRO_FORNECEDOR
             FROM SIGMA.VW_SERVICO
         """,  # noqa
     },
@@ -211,6 +241,144 @@ _sigma_queries = {
                 UNIDADE,
                 DS_UNIDADE
             FROM SIGMA.VW_UNIDADE
+        """,  # noqa
+    },
+    "material_referencia": {
+        "biglake_table": True,
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "dump_mode": "overwrite",
+        "execute_query": """
+            SELECT
+                CD_MATERIAL,
+                CD_GRUPO,
+                CD_CLASSE,
+                CD_SUBCLASSE,
+                SEQUENCIAL,
+                DV1,
+                DV2,
+                CD_REFERENCIA,
+                DS_REFERENCIA,
+                ST_STATUS
+            FROM SIGMA.VW_MATERIAL_REFERENCIA
+        """,  # noqa
+    },
+    "usuario_sistema": {
+        "biglake_table": True,
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "dump_mode": "overwrite",
+        "execute_query": """
+            SELECT
+                NM_PRESTADOR_SERVICO,
+                CPF,
+                MATRICULA,
+                NM_FUNCIONARIO,
+                EMAIL_INSTITUCIONAL,
+                EMAIL_ALTERNATIVO,
+                TEL_CORPORATIVO1,
+                TEL_CORPORATIVO2,
+                TEL_ALTERNATIVO1,
+                TEL_ALTERNATIVO2,
+                CD_ORGAO_DESIGNACAO,
+                DS_ORGAO_DESIGNACAO,
+                CD_PERFIL,
+                DS_PERFIL,
+                PRIVILEGIO_ALMOXARIFADO,
+                HORA_ACESSO_INI,
+                MINUTO_ACESSO_INI,
+                HORA_ACESSO_FIM,
+                MINUTO_ACESSO_FIM,
+                DT_INCLUSAO,
+                ST_STATUS,
+                ST_SITUACAO,
+                CD_TERMINAL,
+                DT_ULTIMA_SESSAO,
+                HORA_ULTIMA_SESSAO
+            FROM SIGMA.VW_USUARIO_SISTEMA
+        """,  # noqa
+    },
+    "orgao": {
+        "biglake_table": True,
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "dump_mode": "overwrite",
+        "execute_query": """
+            SELECT
+                CD_ORGAO,
+                TP_ORGAO,
+                DS_TIPO_ORGAO,
+                CD_ORGAO_PAI,
+                CD_SECRETARIA_SDI,
+                DESCRICAO,
+                ENDERECO,
+                COMPLEMENTO,
+                CEP,
+                NUMERO_PORTA,
+                FAX1,
+                FAX2,
+                TEL1,
+                TEL2,
+                SIGLA,
+                EMAIL,
+                TP_UNIDADE,
+                ST_STATUS,
+                CNES,
+                MATRICULA_RESPONSAVEL,
+                NM_RESPONSAVEL,
+                DT_RESPONSAVEL
+            FROM SIGMA.VW_ORGAO
+        """,  # noqa
+    },
+    "usuario_responsavel_auxiliar": {
+        "biglake_table": True,
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "dump_mode": "overwrite",
+        "execute_query": """
+            SELECT
+                CD_ORGAO,
+                DS_ORGAO,
+                MATRICULA,
+                NM_FUNCIONARIO,
+                TP_FUNCIONARIO,
+                DT_INICIO,
+                DT_TERMINO,
+                DT_TERMO_RESPONSABILIDADE,
+                DT_EXCEPCIONALIDADE,
+                DT_PUBLICACAO_DESIGNACAO,
+                ESCOLARIDADE,
+                ST_CURSO_GESTAO_MATERIAL
+            FROM SIGMA.VW_USUARIO_RESPONSAVEL_AUXILIAR
+        """,  # noqa
+    },
+    "unidade_armazenadora": {
+        "biglake_table": True,
+        "materialize_after_dump": True,
+        "materialization_mode": "prod",
+        "dump_mode": "overwrite",
+        "execute_query": """
+            SELECT
+                CD_UNIDADE_ARMAZENADORA,
+                DS_UNIDADE_ARMAZENADORA,
+                TP_ALMOXARIFADO,
+                CD_UNIDADE_ADMINISTRATIVA,
+                DS_UNIDADE_ADMINISTRATIVA,
+                ST_STATUS,
+                CD_PROGRAMA_TRABALHO,
+                CNES,
+                ST_EXPR_MONETARIA_OITO_CASAS,
+                TP_UNIDADE_ARMAZENADORA,
+                MATRICULA_RESPONSAVEL,
+                NM_RESPONSAVEL,
+                DT_RESPONSAVEL,
+                MATRICULA_SUBSTITUTO1,
+                NM_SUBSTITUTO1,
+                DT_SUBSTITUTO1,
+                MATRICULA_SUBSTITUTO2,
+                NM_SUBSTITUTO2,
+                DT_SUBSTITUTO2
+            FROM SIGMA.VW_UNIDADE_ARMAZENADORA
         """,  # noqa
     },
 }
