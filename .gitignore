@@ -12,6 +12,7 @@ test/*.csv
 setup.py
 .vscode/*
 *.hdf
+.idea/*
 *.DS_Store
 
 
@@ -149,3 +150,4 @@ dmypy.json
 # Backfill stuff
 backfill.csv
 REVIEW.md
+.DS_Store
