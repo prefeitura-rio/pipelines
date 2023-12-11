@@ -13,6 +13,7 @@ from pipelines.rj_escritorio import *
 from pipelines.rj_iplanrio import *
 from pipelines.rj_pgm import *
 from pipelines.rj_rioaguas import *
+from pipelines.rj_smac import *
 from pipelines.rj_seconserva import *
 from pipelines.rj_segovi import *
 from pipelines.rj_seop import *
