@@ -14,6 +14,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.flows import *
 from pipelines.rj_smtr.materialize_to_datario.flows import *
 from pipelines.rj_smtr.registros_ocr_rir.flows import *
 from pipelines.rj_smtr.projeto_subsidio_sppo.flows import *
+from pipelines.rj_smtr.br_rj_riodejaneiro_recurso.flows import *
 from pipelines.rj_smtr.veiculo.flows import *
 from pipelines.rj_smtr.example.flows import *
 from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.flows import *
