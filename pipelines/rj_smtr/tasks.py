@@ -205,7 +205,9 @@ def create_dbt_run_vars(
                     "table_run_datetime_column_name"
                 ),
                 mode=mode,
-                delay_hours=dbt_vars["date_range"].get("delay_hours", 0),
+                timedelta_delay=timedelta(
+                    hours=dbt_vars["date_range"].get("delay_hours", 0)
+                ),
                 end_ts=timestamp,
             )
 
@@ -1103,7 +1105,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
     raw_table_id: str,
     table_run_datetime_column_name: str = None,
     mode: str = "prod",
-    delay_hours: int = 0,
+    timedelta_delay: timedelta = timedelta(hours=0),
     end_ts: datetime = None,
 ):
     """
@@ -1120,7 +1122,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
         on this field.
         rebuild (Optional, bool): if true, queries the minimum date value on the
         table and return a date range from that value to the datetime.now() time
-        delay(Optional, int): hours delayed from now time for materialization range
+        timedelta_delay (Optional, timedelta): delay to be applied to the end_ts
         end_ts(Optional, datetime): date range's final date
     Returns:
         dict: containing date_range_start and date_range_end
@@ -1179,9 +1181,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
             tzinfo=None, minute=0, second=0, microsecond=0
         )
 
-    end_ts = (end_ts - timedelta(hours=delay_hours)).replace(
-        minute=0, second=0, microsecond=0
-    )
+    end_ts = (end_ts - timedelta_delay).replace(minute=0, second=0, microsecond=0)
 
     end_ts = end_ts.strftime(timestr)
 

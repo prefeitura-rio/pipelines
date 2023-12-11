@@ -7,6 +7,8 @@ from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
+from datetime import timedelta
+
 # EMD Imports #
 
 from pipelines.constants import constants as emd_constants
@@ -26,6 +28,7 @@ from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.schedules import (
     every_minute,
     every_hour,
+    every_15_minutes_dev,
 )
 from pipelines.rj_smtr.tasks import (
     create_date_hour_partition,
@@ -86,7 +89,9 @@ with Flow(
         raw_table_id=raw_table_id,
         table_run_datetime_column_name="timestamp_gps",
         mode=MODE,
-        delay_hours=constants.GPS_BRT_MATERIALIZE_DELAY_HOURS.value,
+        timedelta_delay=timedelta(
+            hours=constants.GPS_BRT_MATERIALIZE_DELAY_HOURS.value
+        ),
     )
     dataset_sha = fetch_dataset_sha(
         dataset_id=dataset_id,
@@ -133,6 +138,90 @@ materialize_brt.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 materialize_brt.schedule = every_hour
+
+with Flow(
+    "SMTR: GPS BRT - 15 min - Materialização",
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
+) as materialize_brt_15:
+    # Rename flow run
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix=materialize_brt.name + ": ", now_time=get_now_time()
+    )
+
+    # Get default parameters #
+    raw_dataset_id = Parameter(
+        "raw_dataset_id", default=constants.GPS_BRT_RAW_DATASET_ID.value
+    )
+    raw_table_id = Parameter(
+        "raw_table_id", default=constants.GPS_BRT_RAW_TABLE_ID.value
+    )
+    dataset_id = Parameter("dataset_id", default=constants.GPS_BRT_DATASET_ID.value)
+    table_id = Parameter("table_id", default="gps_brt_15_minutos")
+    rebuild = Parameter("rebuild", False)
+
+    LABELS = get_current_flow_labels()
+    MODE = get_current_flow_mode(LABELS)
+
+    # Set dbt client #
+    dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
+    # Use the command below to get the dbt client in dev mode:
+    # dbt_client = get_local_dbt_client(host="localhost", port=3001)
+
+    # Set specific run parameters #
+    date_range = get_materialization_date_range(
+        dataset_id=dataset_id,
+        table_id=table_id,
+        raw_dataset_id=raw_dataset_id,
+        raw_table_id=raw_table_id,
+        table_run_datetime_column_name="timestamp_gps",
+        mode=MODE,
+        timedelta_delay=timedelta(minutes=15),
+    )
+    dataset_sha = fetch_dataset_sha(
+        dataset_id=dataset_id,
+    )
+
+    # Run materialization #
+    # with case(rebuild, True):
+    #     RUN = run_dbt_model(
+    #         dbt_client=dbt_client,
+    #         dataset_id=dataset_id,
+    #         table_id=table_id,
+    #         upstream=True,
+    #         exclude="+data_versao_efetiva",
+    #         _vars=[date_range, dataset_sha],
+    #         flags="--full-refresh",
+    #     )
+    #     set_last_run_timestamp(
+    #         dataset_id=dataset_id,
+    #         table_id=table_id,
+    #         timestamp=date_range["date_range_end"],
+    #         wait=RUN,
+    #         mode=MODE,
+    #     )
+    # with case(rebuild, False):
+    #     RUN = run_dbt_model(
+    #         dbt_client=dbt_client,
+    #         dataset_id=dataset_id,
+    #         table_id=table_id,
+    #         upstream=True,
+    #         exclude="+data_versao_efetiva",
+    #         _vars=[date_range, dataset_sha],
+    #     )
+    #     set_last_run_timestamp(
+    #         dataset_id=dataset_id,
+    #         table_id=table_id,
+    #         timestamp=date_range["date_range_end"],
+    #         wait=RUN,
+    #         mode=MODE,
+    #     )
+
+materialize_brt_15.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+materialize_brt_15.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+)
+materialize_brt_15.schedule = every_15_minutes_dev
 
 
 with Flow(

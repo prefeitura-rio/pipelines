@@ -9,6 +9,7 @@ from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect.utilities.edges import unmapped
 
+from datetime import timedelta
 
 # EMD Imports #
 
@@ -170,7 +171,9 @@ with Flow(
         raw_table_id=raw_table_id,
         table_run_datetime_column_name="timestamp_gps",
         mode=MODE,
-        delay_hours=constants.GPS_SPPO_MATERIALIZE_DELAY_HOURS.value,
+        timedelta_delay=timedelta(
+            hours=constants.GPS_SPPO_MATERIALIZE_DELAY_HOURS.value
+        ),
     )
     dataset_sha = fetch_dataset_sha(
         dataset_id=dataset_id,
