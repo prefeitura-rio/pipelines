@@ -537,7 +537,7 @@ class constants(Enum):  # pylint: disable=c0103
 'Viagem Individual - Recurso Viagens Subsídio')"
     SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS = {
         "partition_date_only": True,
-        "table_id": "recurso_sppo",
+        "table_id": "recurso_sppo_viagens_individuais",
         "dataset_id": SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
         "extract_params": {
             "token": "",
@@ -545,7 +545,7 @@ class constants(Enum):  # pylint: disable=c0103
             "$filter": "{service} and (updatedDate ge {start} and updatedDate le {end} \
 or createdDate ge {start} and createdDate le {end})",
             "$expand": "customFieldValues,customFieldValues($expand=items)",
-            "$orderby": "updatedDate asc",
+            "$orderby": "createdDate asc",
         },
         "interval_minutes": 1440,
         "source_type": "movidesk",
