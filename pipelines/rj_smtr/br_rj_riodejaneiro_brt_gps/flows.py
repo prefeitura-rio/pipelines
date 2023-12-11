@@ -208,13 +208,13 @@ with Flow(
             exclude="+data_versao_efetiva",
             _vars=[date_range, dataset_sha],
         )
-        # set_last_run_timestamp(
-        #     dataset_id=dataset_id,
-        #     table_id=table_id,
-        #     timestamp=date_range["date_range_end"],
-        #     wait=RUN,
-        #     mode=MODE,
-        # )
+        set_last_run_timestamp(
+            dataset_id=dataset_id,
+            table_id=table_id,
+            timestamp=date_range["date_range_end"],
+            wait=RUN,
+            mode=MODE,
+        )
 
 materialize_brt_15.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 materialize_brt_15.run_config = KubernetesRun(
