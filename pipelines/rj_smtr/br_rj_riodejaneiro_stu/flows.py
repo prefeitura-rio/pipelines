@@ -45,7 +45,7 @@ stu_captura_subflow.name = "SMTR: STU - Captura (subflow)"
 stu_captura_subflow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 stu_captura_subflow.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
 stu_captura_subflow = set_default_parameters(
@@ -87,8 +87,7 @@ with Flow(
 
     run_captura = create_flow_run.map(
         flow_name=unmapped(stu_captura_subflow.name),
-        # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
-        project_name=unmapped("staging"),
+        project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
         parameters=stu_capture_parameters,
         labels=unmapped(LABELS),
     )
@@ -105,5 +104,5 @@ with Flow(
 stu_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 stu_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
