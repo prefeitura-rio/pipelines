@@ -153,7 +153,11 @@ def create_or_append_table(
         partitions (str): partition string.
         bucket_name (str, Optional): The bucket name to save the data.
     """
-    tb_obj = Table(table_id=table_id, dataset_id=dataset_id, bucket_name=bucket_name)
+    table_arguments = {"table_id": table_id, "dataset_id": dataset_id}
+    if bucket_name is not None:
+        table_arguments["bucket_name"] = bucket_name
+
+    tb_obj = Table(**table_arguments)
     dirpath = path.split(partitions)[0]
 
     if bucket_name is not None:
@@ -697,7 +701,11 @@ def get_upload_storage_blob(
     Returns:
         Blob: blob object
     """
-    bucket = bd.Storage(dataset_id="", table_id="", bucket_name=bucket_name)
+    bucket_arguments = {"dataset_id": "", "table_id": ""}
+    if bucket_name is not None:
+        bucket_arguments["bucket_name"] = bucket_name
+
+    bucket = bd.Storage(**bucket_arguments)
     log(f"Filename: {filename}, dataset_id: {dataset_id}")
     blob_list = list(
         bucket.client["storage_staging"]
