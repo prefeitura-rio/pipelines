@@ -726,7 +726,9 @@ def create_request_params(
         request_params = extract_params["filename"]
 
     elif dataset_id == constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value:
-        data_recurso = datetime.fromisoformat(extract_params["data_recurso"])
+        data_recurso = extract_params.get("data_recurso", timestamp)
+        if isinstance(data_recurso, str):
+            data_recurso = datetime.fromisoformat(data_recurso)
         extract_params["token"] = get_vault_secret(
             constants.SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH.value
         )["data"]["token"]
