@@ -23,7 +23,7 @@ from pipelines.utils.tasks import (
 )
 
 
-from pipelines.utils.utils import set_default_parameters
+from pipelines.utils.utils import set_default_parameters, skip_if_running_handler
 
 # SMTR Imports #
 
@@ -36,7 +36,12 @@ from pipelines.rj_smtr.tasks import get_rounded_timestamp, get_current_timestamp
 
 from pipelines.rj_smtr.constants import constants
 
-from pipelines.rj_smtr.schedules import every_hour, every_minute, every_day_hour_five
+from pipelines.rj_smtr.schedules import (
+    every_hour,
+    every_minute,
+    every_day_hour_five,
+    every_5_minutes,
+)
 
 # Flows #
 
@@ -74,7 +79,10 @@ bilhetagem_tracking_captura = set_default_parameters(
     | constants.BILHETAGEM_TRACKING_CAPTURE_PARAMS.value,
 )
 
-bilhetagem_tracking_captura.schedule = every_minute
+bilhetagem_tracking_captura.state_handlers.append(skip_if_running_handler)
+
+
+bilhetagem_tracking_captura.schedule = every_5_minutes
 
 # BILHETAGEM RESSARCIMENTO - SUBFLOW PARA RODAR DIARIAMENTE #
 
@@ -309,44 +317,44 @@ bilhetagem_transacao_tratamento.run_config = KubernetesRun(
 bilhetagem_transacao_tratamento.schedule = every_hour
 
 
-with Flow(
-    "SMTR: Bilhetagem GPS Validador - Tratamento",
-    code_owners=["caio", "fernanda", "boris", "rodrigo", "rafaelpinheiro"],
-) as bilhetagem_gps_tratamento:
-    timestamp = get_rounded_timestamp(
-        interval_minutes=constants.BILHETAGEM_TRATAMENTO_INTERVAL.value
-    )
+# with Flow(
+#     "SMTR: Bilhetagem GPS Validador - Tratamento",
+#     code_owners=["caio", "fernanda", "boris", "rodrigo", "rafaelpinheiro"],
+# ) as bilhetagem_gps_tratamento:
+#     timestamp = get_rounded_timestamp(
+#         interval_minutes=constants.BILHETAGEM_TRATAMENTO_INTERVAL.value
+#     )
 
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix=bilhetagem_transacao_tratamento.name + " ",
-        now_time=timestamp,
-    )
+#     rename_flow_run = rename_current_flow_run_now_time(
+#         prefix=bilhetagem_transacao_tratamento.name + " ",
+#         now_time=timestamp,
+#     )
 
-    LABELS = get_current_flow_labels()
+#     LABELS = get_current_flow_labels()
 
-    # Recaptura GPS
+#     # Recaptura GPS
 
-    run_recaptura_gps = create_flow_run(
-        flow_name=bilhetagem_recaptura.name,
-        project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-        labels=LABELS,
-        parameters=constants.BILHETAGEM_TRACKING_CAPTURE_PARAMS.value,
-    )
+#     run_recaptura_gps = create_flow_run(
+#         flow_name=bilhetagem_recaptura.name,
+#         project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+#         labels=LABELS,
+#         parameters=constants.BILHETAGEM_TRACKING_CAPTURE_PARAMS.value,
+#     )
 
-    wait_recaptura_gps = wait_for_flow_run(
-        run_recaptura_gps,
-        stream_states=True,
-        stream_logs=True,
-        raise_final_state=True,
-    )
+#     wait_recaptura_gps = wait_for_flow_run(
+#         run_recaptura_gps,
+#         stream_states=True,
+#         stream_logs=True,
+#         raise_final_state=True,
+#     )
 
 
-bilhetagem_gps_tratamento.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-bilhetagem_gps_tratamento.run_config = KubernetesRun(
-    image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
-)
-bilhetagem_gps_tratamento.schedule = every_hour
+# bilhetagem_gps_tratamento.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+# bilhetagem_gps_tratamento.run_config = KubernetesRun(
+#     image=emd_constants.DOCKER_IMAGE.value,
+#     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+# )
+# # bilhetagem_gps_tratamento.schedule = every_hour
 
 with Flow(
     "SMTR: Bilhetagem Ordem Pagamento - Captura/Tratamento",
