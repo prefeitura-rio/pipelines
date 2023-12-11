@@ -17,16 +17,20 @@ import pytz
 import requests
 import basedosdados as bd
 from basedosdados import Table
+from basedosdados import Storage
+import math
 import pandas as pd
 from google.cloud.storage.blob import Blob
 import pymysql
 import psycopg2
 import psycopg2.extras
+import time
 
 
 from prefect.schedules.clocks import IntervalClock
 
 from pipelines.constants import constants as emd_constants
+
 
 from pipelines.rj_smtr.implicit_ftp import ImplicitFtpTls
 from pipelines.rj_smtr.constants import constants
@@ -637,8 +641,34 @@ def get_raw_data_gcs(
     return error, data, filetype
 
 
+def close_db_connection(connection, engine: str):
+    """
+    Safely close a database connection
+
+    Args:
+        connection: the database connection
+        engine (str): The datase management system
+    """
+    if engine == "postgresql":
+        if not connection.closed:
+            connection.close()
+            log("Database connection closed")
+    elif engine == "mysql":
+        if connection.open:
+            connection.close()
+            log("Database connection closed")
+    else:
+        raise NotImplementedError(f"Engine {engine} not supported")
+
+
 def get_raw_data_db(
-    query: str, engine: str, host: str, secret_path: str, database: str
+    query: str,
+    engine: str,
+    host: str,
+    secret_path: str,
+    database: str,
+    page_size: int = None,
+    max_pages: int = None,
 ) -> tuple[str, str, str]:
     """
     Get data from Databases
@@ -649,6 +679,9 @@ def get_raw_data_db(
         host (str): The database host
         secret_path (str): Secret path to get credentials
         database (str): The database to connect
+        page_size (int, Optional): The maximum number of rows returned by the paginated query
+            if you set a value for this argument, the query will have LIMIT and OFFSET appended to it
+        max_pages (int, Optional): The maximum number of paginated queries to execute
 
     Returns:
         tuple[str, str, str]: Error, data and filetype
@@ -662,22 +695,68 @@ def get_raw_data_db(
     error = None
     filetype = "json"
 
-    try:
-        credentials = get_vault_secret(secret_path)["data"]
+    if max_pages is None:
+        max_pages = 1
 
-        with connector_mapping[engine](
+    full_data = []
+    paginated_query = query
+    credentials = get_vault_secret(secret_path)["data"]
+    if page_size is not None:
+        paginated_query = paginated_query + f"LIMIT {page_size} OFFSET {{offset}}"
+
+    connector = connector_mapping[engine]
+
+    try:
+        connection = connector(
             host=host,
             user=credentials["user"],
             password=credentials["password"],
             database=database,
-        ) as connection:
-            data = pd.read_sql(sql=query, con=connection).to_dict(orient="records")
+        )
+        for page in range(max_pages):
+            retries = 10
+            formatted_query = paginated_query
+            if page_size is not None:
+                formatted_query = formatted_query.format(offset=page * page_size)
+
+            for retry in range(retries):
+                try:
+                    log(f"Executing query:\n{formatted_query}")
+                    data = pd.read_sql(sql=formatted_query, con=connection).to_dict(
+                        orient="records"
+                    )
+                    break
+                except Exception as err:
+                    log(f"[ATTEMPT {retry}]: {err}")
+                    close_db_connection(connection=connection, engine=engine)
+                    connection = connector(
+                        host=host,
+                        user=credentials["user"],
+                        password=credentials["password"],
+                        database=database,
+                    )
+                    if retry == retries - 1:
+                        raise err
+
+            full_data += data
+
+            log(f"Returned {len(data)} rows")
+
+            if page_size is None or len(data) < page_size:
+                log("Database Extraction Finished")
+                break
 
     except Exception:
+        full_data = []
         error = traceback.format_exc()
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+    finally:
+        try:
+            close_db_connection(connection=connection, engine=engine)
+        except Exception:
+            pass
 
-    return error, data, filetype
+    return error, full_data, filetype
 
 
 def save_treated_local_func(
@@ -828,3 +907,56 @@ def read_raw_data(filepath: str, csv_args: dict = None) -> tuple[str, pd.DataFra
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return error, data
+
+
+def get_raw_recursos(request_url: str, request_params: dict) -> tuple[str, str, str]:
+    """
+    Returns a dataframe with recursos data from movidesk api.
+    """
+    all_records = False
+    top = 1000
+    skip = 0
+    error = None
+    filetype = "json"
+    data = []
+
+    while not all_records:
+        try:
+            request_params["$top"] = top
+            request_params["$skip"] = skip
+
+            log(f"Request url {request_url}")
+
+            response = requests.get(
+                request_url,
+                params=request_params,
+                timeout=constants.MAX_TIMEOUT_SECONDS.value,
+            )
+            response.raise_for_status()
+
+            paginated_data = response.json()
+
+            if isinstance(paginated_data, dict):
+                paginated_data = [paginated_data]
+
+            if len(paginated_data) == top:
+                skip += top
+                time.sleep(60)  # aumenta tempo de espera para não sobrecarregar a api
+            else:
+                if len(paginated_data) == 0:
+                    log("Nenhum dado para tratar.")
+
+                all_records = True
+            data += paginated_data
+
+            log(f"Dados (paginados): {len(data)}")
+
+        except Exception as error:
+            error = traceback.format_exc()
+            log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+            data = []
+            break
+
+    log(f"Request concluído, tamanho dos dados: {len(data)}.")
+
+    return error, data, filetype
