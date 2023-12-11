@@ -736,8 +736,8 @@ def create_request_params(
         end = datetime.strftime(data_recurso, "%Y-%m-%dT%H:%M:%S.%MZ")
         log(f" Start date {start}, end date {end}")
         recurso_params = {
-            # "dates": f"createdDate ge {start} and createdDate le {end}",
-            "dates": f"createdDate le {end}",
+            "start": start,
+            "end": end,
             "service": constants.SUBSIDIO_SPPO_RECURSO_SERVICE.value,
         }
         extract_params["$filter"] = extract_params["$filter"].format(**recurso_params)

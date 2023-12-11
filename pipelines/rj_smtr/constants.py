@@ -531,9 +531,9 @@ class constants(Enum):  # pylint: disable=c0103
 
     # SUBSÍDIO RECURSOS TODOS OS RECURSOS
     SUBSIDIO_SPPO_RECURSOS_DATASET_ID = "br_rj_riodejaneiro_recurso"
-    SUBSIDIO_SPPO_RECURSO_API_BASE_URL = "https://api.movidesk.com/public/v1/tickets?"
+    SUBSIDIO_SPPO_RECURSO_API_BASE_URL = "https://api.movidesk.com/public/v1/tickets"
     SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH = "sppo_subsidio_recursos_api"
-    SUBSIDIO_SPPO_RECURSO_SERVICE = "serviceFull eq 'SPPO'"
+    SUBSIDIO_SPPO_RECURSO_SERVICE = "serviceFull/any(serviceFull: eq 'SPPO')"
     SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS = {
         "partition_date_only": True,
         "table_id": "recurso_sppo",
@@ -541,7 +541,7 @@ class constants(Enum):  # pylint: disable=c0103
         "extract_params": {
             "token": "",
             "$select": "id,protocol,createdDate",
-            "$filter": "{dates} and serviceFull/any(serviceFull: {service})",
+            "$filter": "createdDate ge {start} and createdDate le {end} and {service}",
             "$expand": "customFieldValues,customFieldValues($expand=items)",
             "$orderby": "createdDate asc",
         },
