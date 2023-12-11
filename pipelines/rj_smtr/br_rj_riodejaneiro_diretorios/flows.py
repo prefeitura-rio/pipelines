@@ -35,7 +35,7 @@ diretorios_materializacao_subflow.name = "SMTR: Diretórios - Materialização (
 diretorios_materializacao_subflow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 diretorios_materializacao_subflow.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
 diretorios_materializacao_subflow = set_default_parameters(
