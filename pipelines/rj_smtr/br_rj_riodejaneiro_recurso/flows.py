@@ -33,7 +33,9 @@ from pipelines.rj_smtr.schedules import every_day
 # CAPTURA DOS TICKETS #
 
 sppo_recurso_captura = deepcopy(default_capture_flow)
-sppo_recurso_captura.name = "SMTR: Subsídio SPPO Recursos - Captura (subflow)"
+sppo_recurso_captura.name = (
+    "SMTR: Subsídio Recursos Viagens Individuais - Captura (subflow)"
+)
 sppo_recurso_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_recurso_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
@@ -45,7 +47,9 @@ sppo_recurso_captura = set_default_parameters(
 )
 # RECAPTURA DOS TICKETS #
 sppo_recurso_recaptura = deepcopy(default_capture_flow)
-sppo_recurso_recaptura.name = "SMTR: Subsídio SPPO Recursos - Recaptura (subflow)"
+sppo_recurso_recaptura.name = (
+    "SMTR: Subsídio Recursos Viagens Individuais - Recaptura (subflow)"
+)
 sppo_recurso_recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_recurso_recaptura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
@@ -61,7 +65,7 @@ sppo_recurso_recaptura = set_default_parameters(
 
 sppo_recurso_materializacao = deepcopy(default_materialization_flow)
 sppo_recurso_materializacao.name = (
-    "SMTR: Subsídio SPPO Recursos - Materialização (subflow)"
+    "SMTR: Subsídio Recursos Viagens Individuais - Materialização (subflow)"
 )
 sppo_recurso_materializacao.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_recurso_materializacao.run_config = KubernetesRun(
@@ -89,6 +93,10 @@ with Flow(
         prefix=subsidio_sppo_recurso.name + " ",
         now_time=timestamp,
     )
+    recurso_capture_parameters = {
+        "data_recurso": timestamp,
+        **constants.SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS.value["extract_params"],
+    }
 
     recurso_capture_parameters = {
         "data_recurso": timestamp,
@@ -98,13 +106,12 @@ with Flow(
     LABELS = get_current_flow_labels()
 
     # Captura dos dados #
-
     with case(capture, True):
         run_captura = create_flow_run(
             flow_name=sppo_recurso_captura.name,
             project_name="staging",
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters={"timestamp": timestamp},
+            parameters={"extract_params": recurso_capture_parameters},
             labels=LABELS,
         )
 
@@ -131,6 +138,7 @@ with Flow(
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=LABELS,
         )
+
         run_recaptura.set_upstream(wait_captura)
 
         wait_recaptura_true = wait_for_flow_run(

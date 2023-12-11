@@ -925,6 +925,8 @@ def get_raw_recursos(request_url: str, request_params: dict) -> tuple[str, str, 
             request_params["$top"] = top
             request_params["$skip"] = skip
 
+            log(f'top: {request_params["$top"]}, skip: {request_params["$skip"]}')
+
             log(f"Request url {request_url}")
 
             response = requests.get(
