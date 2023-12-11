@@ -182,39 +182,39 @@ with Flow(
     )
 
     # Run materialization #
-    # with case(rebuild, True):
-    #     RUN = run_dbt_model(
-    #         dbt_client=dbt_client,
-    #         dataset_id=dataset_id,
-    #         table_id=table_id,
-    #         upstream=True,
-    #         exclude="+data_versao_efetiva",
-    #         _vars=[date_range, dataset_sha],
-    #         flags="--full-refresh",
-    #     )
-    #     set_last_run_timestamp(
-    #         dataset_id=dataset_id,
-    #         table_id=table_id,
-    #         timestamp=date_range["date_range_end"],
-    #         wait=RUN,
-    #         mode=MODE,
-    #     )
-    # with case(rebuild, False):
-    #     RUN = run_dbt_model(
-    #         dbt_client=dbt_client,
-    #         dataset_id=dataset_id,
-    #         table_id=table_id,
-    #         upstream=True,
-    #         exclude="+data_versao_efetiva",
-    #         _vars=[date_range, dataset_sha],
-    #     )
-    #     set_last_run_timestamp(
-    #         dataset_id=dataset_id,
-    #         table_id=table_id,
-    #         timestamp=date_range["date_range_end"],
-    #         wait=RUN,
-    #         mode=MODE,
-    #     )
+    with case(rebuild, True):
+        RUN = run_dbt_model(
+            dbt_client=dbt_client,
+            dataset_id=dataset_id,
+            table_id=table_id,
+            upstream=True,
+            exclude="+data_versao_efetiva",
+            _vars=[date_range, dataset_sha],
+            flags="--full-refresh",
+        )
+        set_last_run_timestamp(
+            dataset_id=dataset_id,
+            table_id=table_id,
+            timestamp=date_range["date_range_end"],
+            wait=RUN,
+            mode=MODE,
+        )
+    with case(rebuild, False):
+        RUN = run_dbt_model(
+            dbt_client=dbt_client,
+            dataset_id=dataset_id,
+            table_id=table_id,
+            upstream=True,
+            exclude="+data_versao_efetiva",
+            _vars=[date_range, dataset_sha],
+        )
+        set_last_run_timestamp(
+            dataset_id=dataset_id,
+            table_id=table_id,
+            timestamp=date_range["date_range_end"],
+            wait=RUN,
+            mode=MODE,
+        )
 
 materialize_brt_15.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 materialize_brt_15.run_config = KubernetesRun(
