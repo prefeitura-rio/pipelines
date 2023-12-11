@@ -737,11 +737,25 @@ def create_request_params(
         )
         end = datetime.strftime(data_recurso, "%Y-%m-%dT%H:%M:%S.%MZ")
         log(f" Start date {start}, end date {end}")
-        recurso_params = {
-            "start": start,
-            "end": end,
-            "service": constants.SUBSIDIO_SPPO_RECURSO_SERVICE.value,
-        }
+        if constants.SUBSIDIO_SPPO_RECURSO_SERVICE.value:
+            recurso_params = {
+                "start": start,
+                "end": end,
+                "service": constants.SUBSIDIO_SPPO_RECURSO_SERVICE.value,
+            }
+        elif constants.SUBSIDIO_SPPO_BLOQUEIO_VIA_SERVICE.value:
+            recurso_params = {
+                "start": start,
+                "end": end,
+                "service": constants.SUBSIDIO_SPPO_BLOQUEIO_VIA_SERVICE.value,
+            }
+        else:
+            recurso_params = {
+                "start": start,
+                "end": end,
+                "service": constants.SUBSIDIO_SPPO_RECURSO_SERVICE_REPROCESSAMENTO.value,
+            }
+
         extract_params["$filter"] = extract_params["$filter"].format(**recurso_params)
         request_params = extract_params
 
