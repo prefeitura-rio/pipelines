@@ -26,7 +26,7 @@ from pipelines.utils.utils import set_default_parameters
 from pipelines.rj_smtr.flows import (
     default_materialization_flow,
 )
-from pipelines.rj_smtr.tasks import get_rounded_timestamp, get_current_timestamp
+from pipelines.rj_smtr.tasks import get_rounded_timestamp
 from pipelines.rj_smtr.constants import constants
 
 diretorios_materializacao_subflow = deepcopy(default_materialization_flow)
