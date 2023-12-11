@@ -57,32 +57,11 @@ def read_stu_raw_file(blob: Blob) -> pd.DataFrame:
         pd.DataFrame: data
     """
 
-    stu_mode_mapping = {
-        "1": "Táxi",
-        "2": "Ônibus",
-        "3": "Escolar",
-        "4": "Complementar (cabritinho)",
-        "6": "Fretamento",
-        "7": "TEC",
-        "8": "Van",
-    }
-
-    stu_type_mapping = [
-        "Autônomo",
-        "Empresa",
-        "Cooperativa",
-        "Instituicao de Ensino",
-        "Associações",
-        "Autônomo Provisório",
-        "Contrato Público",
-        "Prestadora de Serviços",
-    ]
-
     log(f"Downloading blob: {blob.name}")
     data = blob.download_as_bytes().decode("latin-1")
     name_parts = blob.name.split("/")[-1].split("_")
-    mode = stu_mode_mapping[name_parts[1]]
-    perm_type = stu_type_mapping[int(name_parts[3]) - 1]
+    mode = constants.STU_MODE_MAPPING.value[name_parts[1]]
+    perm_type = constants.STU_TYPE_MAPPING.value[int(name_parts[3]) - 1]
 
     df = pd.read_csv(
         StringIO(data),

@@ -274,6 +274,8 @@ class constants(Enum):  # pylint: disable=c0103
 
     BILHETAGEM_TRATAMENTO_INTERVAL = 60
 
+    BILHETAGEM_PRIVATE_BUCKET = "rj-smtr-jae-private"
+
     BILHETAGEM_CAPTURE_PARAMS = [
         {
             "table_id": "linha",
@@ -394,7 +396,7 @@ class constants(Enum):  # pylint: disable=c0103
             },
             "primary_key": ["CD_CLIENTE"],  # id column to nest data on
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
-            "save_bucket_name": "rj-smtr-jae-private",
+            "save_bucket_name": BILHETAGEM_PRIVATE_BUCKET,
             "pre_treatment_reader_args": {"dtype": {"NR_DOCUMENTO": "object"}},
         },
         {
@@ -456,7 +458,7 @@ class constants(Enum):  # pylint: disable=c0103
             },
             "primary_key": ["CD_CLIENTE"],  # id column to nest data on
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
-            "save_bucket_name": "rj-smtr-jae-private",
+            "save_bucket_name": BILHETAGEM_PRIVATE_BUCKET,
         },
         {
             "table_id": "contato_pessoa_juridica",
@@ -478,7 +480,7 @@ class constants(Enum):  # pylint: disable=c0103
                 "CD_CLIENTE",
             ],  # id column to nest data on
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
-            "save_bucket_name": "rj-smtr-jae-private",
+            "save_bucket_name": BILHETAGEM_PRIVATE_BUCKET,
         },
     ]
 
@@ -595,6 +597,27 @@ class constants(Enum):  # pylint: disable=c0103
     STU_DATASET_ID = "br_rj_riodejaneiro_stu"
 
     STU_BUCKET_NAME = "rj-smtr-stu-private"
+
+    STU_MODE_MAPPING = {
+        "1": "Táxi",
+        "2": "Ônibus",
+        "3": "Escolar",
+        "4": "Complementar (cabritinho)",
+        "6": "Fretamento",
+        "7": "TEC",
+        "8": "Van",
+    }
+
+    STU_TYPE_MAPPING = [
+        "Autônomo",
+        "Empresa",
+        "Cooperativa",
+        "Instituicao de Ensino",
+        "Associações",
+        "Autônomo Provisório",
+        "Contrato Público",
+        "Prestadora de Serviços",
+    ]
 
     STU_GENERAL_CAPTURE_PARAMS = {
         "partition_date_only": True,
