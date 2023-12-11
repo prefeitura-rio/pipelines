@@ -542,10 +542,10 @@ class constants(Enum):  # pylint: disable=c0103
         "dataset_id": SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
         "extract_params": {
             "token": "",
-            "$select": "id,protocol,createdDate",
-            "$filter": "createdDate ge {start} and createdDate le {end} and {service}",
+            "$select": "id,protocol,createdDate,updatedDate",
+            "$filter": "updatedDate ge {start} and updatedDate le {end} and {service}",
             "$expand": "customFieldValues,customFieldValues($expand=items)",
-            "$orderby": "createdDate asc",
+            "$orderby": "updatedDate asc",
         },
         "interval_minutes": 1440,
         "source_type": "movidesk",
