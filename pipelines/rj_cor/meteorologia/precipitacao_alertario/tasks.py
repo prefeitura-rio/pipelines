@@ -129,7 +129,9 @@ def tratar_dados(
 
     # dados["data_medicao"] = dados["data_medicao"].dt.strftime("%Y-%m-%d %H:%M:%S")
     log(f"Dataframe after comparing with last data saved on redis {dados.head()}")
-    log(f"Dataframe after comparing with last data saved on redis {dados.iloc[0]}")
+
+    if dados.shape[0] > 0:
+        log(f"Dataframe after comparing with last data saved on redis {dados.iloc[0]}")
 
     empty_data = dados.shape[0] == 0
 
