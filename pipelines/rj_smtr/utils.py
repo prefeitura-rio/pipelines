@@ -960,3 +960,29 @@ def get_raw_recursos(request_url: str, request_params: dict) -> tuple[str, str, 
     log(f"Request concluído, tamanho dos dados: {len(data)}.")
 
     return error, data, filetype
+
+
+def round_datetime(dt: datetime, delta: timedelta) -> datetime:
+    """
+    Arredonda um datetime para o delta mais próximo.
+
+    Args:
+        dt (datetime): datetime a ser arredondado
+        delta (timedelta): delta para arredondamento
+
+    Returns:
+        datetime: datetime arredondado
+    """
+    # Calcula a diferença em segundos
+    delta_seconds = delta.total_seconds()
+
+    # Converte o datetime para um timestamp em segundos
+    timestamp = (dt - datetime(1970, 1, 1)).total_seconds()
+
+    # Calcula o número de deltas completos
+    rounded_timestamp = round(timestamp / delta_seconds) * delta_seconds
+
+    # Converte o timestamp de volta para um datetime
+    rounded_dt = datetime.utcfromtimestamp(rounded_timestamp)
+
+    return rounded_dt

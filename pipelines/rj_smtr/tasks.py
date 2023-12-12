@@ -39,6 +39,7 @@ from pipelines.rj_smtr.utils import (
     save_treated_local_func,
     save_raw_local_func,
     log_critical,
+    round_datetime,
 )
 from pipelines.utils.execute_dbt_model.utils import get_dbt_client
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
@@ -1171,19 +1172,15 @@ def get_materialization_date_range(  # pylint: disable=R0913
     if (not isinstance(last_run, datetime)) and (isinstance(last_run, date)):
         last_run = datetime(last_run.year, last_run.month, last_run.day)
 
-    # set start to last run hour (H)
-    start_ts = last_run.replace(minute=0, second=0, microsecond=0).strftime(timestr)
+    # set start to last run
+    start_ts = round_datetime(last_run, timedelta_delay).strftime(timestr)
 
     # set end to now - delay
 
     if not end_ts:
-        end_ts = pendulum.now(constants.TIMEZONE.value).replace(
-            tzinfo=None, minute=0, second=0, microsecond=0
-        )
-
-    end_ts = (end_ts - timedelta_delay).replace(minute=0, second=0, microsecond=0)
-
-    end_ts = end_ts.strftime(timestr)
+        end_ts = round_datetime(
+            pendulum.now(constants.TIMEZONE.value) - timedelta_delay, timedelta_delay
+        ).strftime(timestr)
 
     date_range = {"date_range_start": start_ts, "date_range_end": end_ts}
     log(f"Got date_range as: {date_range}")
