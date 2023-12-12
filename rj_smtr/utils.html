@@ -954,14 +954,28 @@ def get_raw_recursos(request_url: str, request_params: dict) -&gt; tuple[str, st
             request_params[&#34;$top&#34;] = top
             request_params[&#34;$skip&#34;] = skip
 
+            log(f&#39;top: {request_params[&#34;$top&#34;]}, skip: {request_params[&#34;$skip&#34;]}&#39;)
+
             log(f&#34;Request url {request_url}&#34;)
 
-            response = requests.get(
-                request_url,
-                params=request_params,
-                timeout=constants.MAX_TIMEOUT_SECONDS.value,
-            )
-            response.raise_for_status()
+            MAX_RETRIES = 3
+
+            for retry in range(MAX_RETRIES):
+                response = requests.get(
+                    request_url,
+                    params=request_params,
+                    timeout=constants.MAX_TIMEOUT_SECONDS.value,
+                )
+                if response.ok:
+                    break
+                elif response.status_code &gt;= 500:
+                    log(f&#34;Server error {response.status_code}&#34;)
+                    if retry == MAX_RETRIES - 1:
+                        response.raise_for_status()
+                    time.sleep(60)
+
+                else:
+                    response.raise_for_status()
 
             paginated_data = response.json()
 
@@ -970,7 +984,7 @@ def get_raw_recursos(request_url: str, request_params: dict) -&gt; tuple[str, st
 
             if len(paginated_data) == top:
                 skip += top
-                time.sleep(60)  # aumenta tempo de espera para não sobrecarregar a api
+                time.sleep(60)
             else:
                 if len(paginated_data) == 0:
                     log(&#34;Nenhum dado para tratar.&#34;)
@@ -1981,14 +1995,28 @@ if you set a value for this argument, the query will have LIMIT and OFFSET appen
             request_params[&#34;$top&#34;] = top
             request_params[&#34;$skip&#34;] = skip
 
+            log(f&#39;top: {request_params[&#34;$top&#34;]}, skip: {request_params[&#34;$skip&#34;]}&#39;)
+
             log(f&#34;Request url {request_url}&#34;)
 
-            response = requests.get(
-                request_url,
-                params=request_params,
-                timeout=constants.MAX_TIMEOUT_SECONDS.value,
-            )
-            response.raise_for_status()
+            MAX_RETRIES = 3
+
+            for retry in range(MAX_RETRIES):
+                response = requests.get(
+                    request_url,
+                    params=request_params,
+                    timeout=constants.MAX_TIMEOUT_SECONDS.value,
+                )
+                if response.ok:
+                    break
+                elif response.status_code &gt;= 500:
+                    log(f&#34;Server error {response.status_code}&#34;)
+                    if retry == MAX_RETRIES - 1:
+                        response.raise_for_status()
+                    time.sleep(60)
+
+                else:
+                    response.raise_for_status()
 
             paginated_data = response.json()
 
@@ -1997,7 +2025,7 @@ if you set a value for this argument, the query will have LIMIT and OFFSET appen
 
             if len(paginated_data) == top:
                 skip += top
-                time.sleep(60)  # aumenta tempo de espera para não sobrecarregar a api
+                time.sleep(60)
             else:
                 if len(paginated_data) == 0:
                     log(&#34;Nenhum dado para tratar.&#34;)

@@ -524,7 +524,7 @@ def query_logs(
                 SAFE_CAST(erro AS STRING) erro,
                 SAFE_CAST(DATA AS DATE) DATA
             FROM
-                rj-smtr-staging.{dataset_id}_staging.{table_id}_logs AS t
+                {bq_project(kind=&#34;bigquery_staging&#34;)}.{dataset_id}_staging.{table_id}_logs AS t
         ),
         logs AS (
             SELECT
@@ -755,16 +755,20 @@ def create_request_params(
         request_params = extract_params[&#34;filename&#34;]
 
     elif dataset_id == constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value:
+        data_recurso = extract_params.get(&#34;data_recurso&#34;, timestamp)
+        if isinstance(data_recurso, str):
+            data_recurso = datetime.fromisoformat(data_recurso)
         extract_params[&#34;token&#34;] = get_vault_secret(
             constants.SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH.value
         )[&#34;data&#34;][&#34;token&#34;]
         start = datetime.strftime(
-            timestamp - timedelta(minutes=interval_minutes), &#34;%Y-%m-%dT%H:%M:%S.%MZ&#34;
+            data_recurso - timedelta(minutes=interval_minutes), &#34;%Y-%m-%dT%H:%M:%S.%MZ&#34;
         )
-        end = datetime.strftime(timestamp, &#34;%Y-%m-%dT%H:%M:%S.%MZ&#34;)
+        end = datetime.strftime(data_recurso, &#34;%Y-%m-%dT%H:%M:%S.%MZ&#34;)
         log(f&#34; Start date {start}, end date {end}&#34;)
         recurso_params = {
-            &#34;dates&#34;: f&#34;createdDate ge {start} and createdDate le {end}&#34;,
+            &#34;start&#34;: start,
+            &#34;end&#34;: end,
             &#34;service&#34;: constants.SUBSIDIO_SPPO_RECURSO_SERVICE.value,
         }
         extract_params[&#34;$filter&#34;] = extract_params[&#34;$filter&#34;].format(**recurso_params)
@@ -2245,16 +2249,20 @@ def create_request_params(
         request_params = extract_params[&#34;filename&#34;]
 
     elif dataset_id == constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value:
+        data_recurso = extract_params.get(&#34;data_recurso&#34;, timestamp)
+        if isinstance(data_recurso, str):
+            data_recurso = datetime.fromisoformat(data_recurso)
         extract_params[&#34;token&#34;] = get_vault_secret(
             constants.SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH.value
         )[&#34;data&#34;][&#34;token&#34;]
         start = datetime.strftime(
-            timestamp - timedelta(minutes=interval_minutes), &#34;%Y-%m-%dT%H:%M:%S.%MZ&#34;
+            data_recurso - timedelta(minutes=interval_minutes), &#34;%Y-%m-%dT%H:%M:%S.%MZ&#34;
         )
-        end = datetime.strftime(timestamp, &#34;%Y-%m-%dT%H:%M:%S.%MZ&#34;)
+        end = datetime.strftime(data_recurso, &#34;%Y-%m-%dT%H:%M:%S.%MZ&#34;)
         log(f&#34; Start date {start}, end date {end}&#34;)
         recurso_params = {
-            &#34;dates&#34;: f&#34;createdDate ge {start} and createdDate le {end}&#34;,
+            &#34;start&#34;: start,
+            &#34;end&#34;: end,
             &#34;service&#34;: constants.SUBSIDIO_SPPO_RECURSO_SERVICE.value,
         }
         extract_params[&#34;$filter&#34;] = extract_params[&#34;$filter&#34;].format(**recurso_params)
@@ -3079,7 +3087,7 @@ def query_logs(
                 SAFE_CAST(erro AS STRING) erro,
                 SAFE_CAST(DATA AS DATE) DATA
             FROM
-                rj-smtr-staging.{dataset_id}_staging.{table_id}_logs AS t
+                {bq_project(kind=&#34;bigquery_staging&#34;)}.{dataset_id}_staging.{table_id}_logs AS t
         ),
         logs AS (
             SELECT

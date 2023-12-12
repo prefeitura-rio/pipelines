@@ -558,19 +558,22 @@ class constants(Enum):  # pylint: disable=c0103
         },
     }
 
-    # SUBSÍDIO RECURSOS VIAGENS INDIVIDUAIS
+    # SUBSÍDIO RECURSOS DE VIAGENS INDIVIDUAIS
     SUBSIDIO_SPPO_RECURSOS_DATASET_ID = &#34;br_rj_riodejaneiro_recurso&#34;
-    SUBSIDIO_SPPO_RECURSO_API_BASE_URL = &#34;https://api.movidesk.com/public/v1/tickets?&#34;
+    SUBSIDIO_SPPO_RECURSO_API_BASE_URL = &#34;https://api.movidesk.com/public/v1/tickets&#34;
     SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH = &#34;sppo_subsidio_recursos_api&#34;
-    SUBSIDIO_SPPO_RECURSO_SERVICE = &#34;serviceFull eq &#39;SPPO&#39;&#34;
+    SUBSIDIO_SPPO_RECURSO_SERVICE = (
+        &#34;serviceFirstLevel eq &#39;Viagem Individual - Recurso Viagens Subsídio&#39;&#34;
+    )
     SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS = {
         &#34;partition_date_only&#34;: True,
-        &#34;table_id&#34;: &#34;recurso_sppo&#34;,
+        &#34;table_id&#34;: &#34;recurso_sppo_viagens_individuais&#34;,
         &#34;dataset_id&#34;: SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
         &#34;extract_params&#34;: {
             &#34;token&#34;: &#34;&#34;,
             &#34;$select&#34;: &#34;id,protocol,createdDate&#34;,
-            &#34;$filter&#34;: &#34;{dates} and serviceFull/any(serviceFull: {service})&#34;,
+            &#34;$filter&#34;: &#34;{service} and (lastUpdate ge {start} and lastUpdate lt {end} \
+or createdDate ge {start} and createdDate lt {end})&#34;,
             &#34;$expand&#34;: &#34;customFieldValues,customFieldValues($expand=items)&#34;,
             &#34;$orderby&#34;: &#34;createdDate asc&#34;,
         },
@@ -585,7 +588,7 @@ class constants(Enum):  # pylint: disable=c0103
         &#34;upstream&#34;: True,
         &#34;dbt_vars&#34;: {
             &#34;date_range&#34;: {
-                &#34;table_run_datetime_column_name&#34;: &#34;data_recurso&#34;,
+                &#34;table_run_datetime_column_name&#34;: &#34;datetime_recurso&#34;,
                 &#34;delay_hours&#34;: 0,
             },
             &#34;version&#34;: {},
@@ -1135,19 +1138,22 @@ class constants(Enum):  # pylint: disable=c0103
         },
     }
 
-    # SUBSÍDIO RECURSOS VIAGENS INDIVIDUAIS
+    # SUBSÍDIO RECURSOS DE VIAGENS INDIVIDUAIS
     SUBSIDIO_SPPO_RECURSOS_DATASET_ID = &#34;br_rj_riodejaneiro_recurso&#34;
-    SUBSIDIO_SPPO_RECURSO_API_BASE_URL = &#34;https://api.movidesk.com/public/v1/tickets?&#34;
+    SUBSIDIO_SPPO_RECURSO_API_BASE_URL = &#34;https://api.movidesk.com/public/v1/tickets&#34;
     SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH = &#34;sppo_subsidio_recursos_api&#34;
-    SUBSIDIO_SPPO_RECURSO_SERVICE = &#34;serviceFull eq &#39;SPPO&#39;&#34;
+    SUBSIDIO_SPPO_RECURSO_SERVICE = (
+        &#34;serviceFirstLevel eq &#39;Viagem Individual - Recurso Viagens Subsídio&#39;&#34;
+    )
     SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS = {
         &#34;partition_date_only&#34;: True,
-        &#34;table_id&#34;: &#34;recurso_sppo&#34;,
+        &#34;table_id&#34;: &#34;recurso_sppo_viagens_individuais&#34;,
         &#34;dataset_id&#34;: SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
         &#34;extract_params&#34;: {
             &#34;token&#34;: &#34;&#34;,
             &#34;$select&#34;: &#34;id,protocol,createdDate&#34;,
-            &#34;$filter&#34;: &#34;{dates} and serviceFull/any(serviceFull: {service})&#34;,
+            &#34;$filter&#34;: &#34;{service} and (lastUpdate ge {start} and lastUpdate lt {end} \
+or createdDate ge {start} and createdDate lt {end})&#34;,
             &#34;$expand&#34;: &#34;customFieldValues,customFieldValues($expand=items)&#34;,
             &#34;$orderby&#34;: &#34;createdDate asc&#34;,
         },
@@ -1162,7 +1168,7 @@ class constants(Enum):  # pylint: disable=c0103
         &#34;upstream&#34;: True,
         &#34;dbt_vars&#34;: {
             &#34;date_range&#34;: {
-                &#34;table_run_datetime_column_name&#34;: &#34;data_recurso&#34;,
+                &#34;table_run_datetime_column_name&#34;: &#34;datetime_recurso&#34;,
                 &#34;delay_hours&#34;: 0,
             },
             &#34;version&#34;: {},
