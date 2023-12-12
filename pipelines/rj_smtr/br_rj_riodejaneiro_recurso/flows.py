@@ -102,7 +102,7 @@ with Flow(
 
     # Captura dos dados #
     with case(capture, True):
-        run_captura = create_flow_run.map(
+        run_captura = create_flow_run(
             flow_name=sppo_recurso_captura.name,
             project_name="staging",
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
