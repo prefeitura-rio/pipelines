@@ -32,49 +32,49 @@ from pipelines.rj_smtr.schedules import every_day
 
 # CAPTURA DOS TICKETS #
 
-sppo_recurso_captura = deepcopy(default_capture_flow)
-sppo_recurso_captura.name = (
+bloqueio_via_captura = deepcopy(default_capture_flow)
+bloqueio_via_captura.name = (
     "SMTR: Subsídio SPPO Recursos Bloqueio de Via - Captura (subflow)"
 )
-sppo_recurso_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-sppo_recurso_captura.run_config = KubernetesRun(
+bloqueio_via_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bloqueio_via_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
-sppo_recurso_captura = set_default_parameters(
-    flow=sppo_recurso_captura,
+bloqueio_via_captura = set_default_parameters(
+    flow=bloqueio_via_captura,
     default_parameters=constants.SUBSIDIO_SPPO_BLOQUEIO_VIA_CAPTURE_PARAMS.value,
 )
 # RECAPTURA DOS TICKETS #
-sppo_recurso_recaptura = deepcopy(default_capture_flow)
-sppo_recurso_recaptura.name = (
+bloqueio_via_recaptura = deepcopy(default_capture_flow)
+bloqueio_via_recaptura.name = (
     "SMTR: Subsídio SPPO Recursos Bloqueio de Via - Recaptura (subflow)"
 )
-sppo_recurso_recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-sppo_recurso_recaptura.run_config = KubernetesRun(
+bloqueio_via_recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bloqueio_via_recaptura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
-sppo_recurso_recaptura = set_default_parameters(
-    flow=sppo_recurso_recaptura,
+bloqueio_via_recaptura = set_default_parameters(
+    flow=bloqueio_via_recaptura,
     default_parameters=constants.SUBSIDIO_SPPO_BLOQUEIO_VIA_CAPTURE_PARAMS.value
     | {"recapture": True},
 )
 
 # MATERIALIZAÇÃO DOS TICKETS #
 
-sppo_recurso_materializacao = deepcopy(default_materialization_flow)
-sppo_recurso_materializacao.name = (
+bloqueio_via_materializacao = deepcopy(default_materialization_flow)
+bloqueio_via_materializacao.name = (
     "SMTR: Subsídio SPPO Recursos Bloqueio de Via - Materialização (subflow)"
 )
-sppo_recurso_materializacao.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-sppo_recurso_materializacao.run_config = KubernetesRun(
+bloqueio_via_materializacao.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bloqueio_via_materializacao.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 
-sppo_recurso_materializacao = set_default_parameters(
-    flow=sppo_recurso_materializacao,
+bloqueio_via_materializacao = set_default_parameters(
+    flow=bloqueio_via_materializacao,
     default_parameters=constants.SUBSIDIO_SPPO_BLOQUEIO_VIA_MATERIALIZACAO_PARAMS.value,
 )
 
@@ -94,13 +94,18 @@ with Flow(
         now_time=timestamp,
     )
 
+    recurso_capture_parameters = {
+        "data_recurso": timestamp,
+        **constants.SUBSIDIO_SPPO_BLOQUEIO_VIA_CAPTURE_PARAMS.value["extract_params"],
+    }
+
     LABELS = get_current_flow_labels()
 
     # Captura dos dados #
 
     with case(capture, True):
         run_captura = create_flow_run(
-            flow_name=sppo_recurso_captura.name,
+            flow_name=bloqueio_via_captura.name,
             project_name="staging",
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             parameters={"timestamp": timestamp},
@@ -125,7 +130,7 @@ with Flow(
 
     with case(recapture, True):
         run_recaptura = create_flow_run(
-            flow_name=sppo_recurso_recaptura.name,
+            flow_name=bloqueio_via_recaptura.name,
             project_name="staging",
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=LABELS,
@@ -150,7 +155,7 @@ with Flow(
 
     with case(materialize, True):
         run_materializacao = create_flow_run(
-            flow_name=sppo_recurso_materializacao.name,
+            flow_name=bloqueio_via_materializacao.name,
             project_name="staging",
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=LABELS,

@@ -576,7 +576,7 @@ or createdDate ge {start} and createdDate lt {end})",
         "dataset_id": SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
         "extract_params": {
             "token": "",
-            "$select": "id,protocol,createdDate,lastUpdate",
+            "$select": "id,protocol,createdDate",
             "$filter": "{service} and (lastUpdate ge {start} and lastUpdate lt {end} \
 or createdDate ge {start} and createdDate lt {end})",
             "$expand": "customFieldValues,customFieldValues($expand=items)",
@@ -593,7 +593,7 @@ or createdDate ge {start} and createdDate lt {end})",
         "upstream": True,
         "dbt_vars": {
             "date_range": {
-                "table_run_datetime_column_name": "data_recurso",
+                "table_run_datetime_column_name": "datetime_recurso",
                 "delay_hours": 0,
             },
             "version": {},
@@ -611,7 +611,7 @@ or createdDate ge {start} and createdDate lt {end})",
         "dataset_id": SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
         "extract_params": {
             "token": "",
-            "$select": "id,protocol,createdDate,lastUpdate",
+            "$select": "id,protocol,createdDate",
             "$filter": "{service} and (lastUpdate ge {start} and lastUpdate lt {end} \
 or createdDate ge {start} and createdDate lt {end})",
             "$expand": "customFieldValues,customFieldValues($expand=items)",
@@ -628,7 +628,7 @@ or createdDate ge {start} and createdDate lt {end})",
         "upstream": True,
         "dbt_vars": {
             "date_range": {
-                "table_run_datetime_column_name": "data_recurso",
+                "table_run_datetime_column_name": "datetime_recurso",
                 "delay_hours": 0,
             },
             "version": {},
