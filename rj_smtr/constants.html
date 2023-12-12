@@ -303,6 +303,8 @@ class constants(Enum):  # pylint: disable=c0103
 
     BILHETAGEM_TRATAMENTO_INTERVAL = 60
 
+    BILHETAGEM_PRIVATE_BUCKET = &#34;rj-smtr-jae-private&#34;
+
     BILHETAGEM_CAPTURE_PARAMS = [
         {
             &#34;table_id&#34;: &#34;linha&#34;,
@@ -386,9 +388,14 @@ class constants(Enum):  # pylint: disable=c0103
                 &#34;database&#34;: &#34;principal_db&#34;,
                 &#34;query&#34;: &#34;&#34;&#34;
                     SELECT
-                        *
+                        o.*,
+                        m.DS_TIPO_MODAL
                     FROM
-                        OPERADORA_TRANSPORTE
+                        OPERADORA_TRANSPORTE o
+                    LEFT JOIN
+                        TIPO_MODAL m
+                    ON
+                        o.CD_TIPO_MODAL = m.CD_TIPO_MODAL
                     WHERE
                         DT_INCLUSAO BETWEEN &#39;{start}&#39;
                         AND &#39;{end}&#39;
@@ -398,19 +405,28 @@ class constants(Enum):  # pylint: disable=c0103
             &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
         },
         {
-            &#34;table_id&#34;: &#34;pessoa_juridica&#34;,
+            &#34;table_id&#34;: &#34;cliente&#34;,
             &#34;partition_date_only&#34;: True,
             &#34;extract_params&#34;: {
                 &#34;database&#34;: &#34;principal_db&#34;,
                 &#34;query&#34;: &#34;&#34;&#34;
                     SELECT
-                        *
+                        c.*
                     FROM
-                        PESSOA_JURIDICA
+                        CLIENTE c
+                    JOIN
+                        OPERADORA_TRANSPORTE o
+                    ON
+                        c.CD_CLIENTE = o.CD_CLIENTE
+                    WHERE
+                        DT_CADASTRO BETWEEN &#39;{start}&#39;
+                        AND &#39;{end}&#39;
                 &#34;&#34;&#34;,
             },
             &#34;primary_key&#34;: [&#34;CD_CLIENTE&#34;],  # id column to nest data on
             &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
+            &#34;save_bucket_name&#34;: BILHETAGEM_PRIVATE_BUCKET,
+            &#34;pre_treatment_reader_args&#34;: {&#34;dtype&#34;: {&#34;NR_DOCUMENTO&#34;: &#34;object&#34;}},
         },
         {
             &#34;table_id&#34;: &#34;consorcio&#34;,
@@ -447,6 +463,53 @@ class constants(Enum):  # pylint: disable=c0103
             },
             &#34;primary_key&#34;: [&#34;CD_CONSORCIO&#34;, &#34;CD_LINHA&#34;],  # id column to nest data on
             &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
+        },
+        {
+            &#34;table_id&#34;: &#34;conta_bancaria&#34;,
+            &#34;partition_date_only&#34;: True,
+            &#34;extract_params&#34;: {
+                &#34;database&#34;: &#34;principal_db&#34;,
+                &#34;query&#34;: &#34;&#34;&#34;
+                    SELECT
+                        c.*,
+                        b.NM_BANCO
+                    FROM
+                        CONTA_BANCARIA c
+                    JOIN
+                        BANCO b
+                    ON
+                        b.NR_BANCO = c.NR_BANCO
+                    JOIN
+                        OPERADORA_TRANSPORTE o
+                    ON
+                        o.CD_CLIENTE = c.CD_CLIENTE
+                &#34;&#34;&#34;,
+            },
+            &#34;primary_key&#34;: [&#34;CD_CLIENTE&#34;],  # id column to nest data on
+            &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
+            &#34;save_bucket_name&#34;: BILHETAGEM_PRIVATE_BUCKET,
+        },
+        {
+            &#34;table_id&#34;: &#34;contato_pessoa_juridica&#34;,
+            &#34;partition_date_only&#34;: True,
+            &#34;extract_params&#34;: {
+                &#34;database&#34;: &#34;principal_db&#34;,
+                &#34;query&#34;: &#34;&#34;&#34;
+                    SELECT
+                        *
+                    FROM
+                        CONTATO_PESSOA_JURIDICA
+                    WHERE
+                        DT_INCLUSAO BETWEEN &#39;{start}&#39;
+                        AND &#39;{end}&#39;
+                &#34;&#34;&#34;,
+            },
+            &#34;primary_key&#34;: [
+                &#34;NR_SEQ_CONTATO&#34;,
+                &#34;CD_CLIENTE&#34;,
+            ],  # id column to nest data on
+            &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
+            &#34;save_bucket_name&#34;: BILHETAGEM_PRIVATE_BUCKET,
         },
     ]
 
@@ -558,7 +621,55 @@ class constants(Enum):  # pylint: disable=c0103
         },
     }
 
-    # SUBSÍDIO RECURSOS DE VIAGENS INDIVIDUAIS
+    # STU
+
+    STU_DATASET_ID = &#34;br_rj_riodejaneiro_stu&#34;
+
+    STU_BUCKET_NAME = &#34;rj-smtr-stu-private&#34;
+
+    STU_MODE_MAPPING = {
+        &#34;1&#34;: &#34;Táxi&#34;,
+        &#34;2&#34;: &#34;Ônibus&#34;,
+        &#34;3&#34;: &#34;Escolar&#34;,
+        &#34;4&#34;: &#34;Complementar (cabritinho)&#34;,
+        &#34;6&#34;: &#34;Fretamento&#34;,
+        &#34;7&#34;: &#34;TEC&#34;,
+        &#34;8&#34;: &#34;Van&#34;,
+    }
+
+    STU_TYPE_MAPPING = [
+        &#34;Autônomo&#34;,
+        &#34;Empresa&#34;,
+        &#34;Cooperativa&#34;,
+        &#34;Instituicao de Ensino&#34;,
+        &#34;Associações&#34;,
+        &#34;Autônomo Provisório&#34;,
+        &#34;Contrato Público&#34;,
+        &#34;Prestadora de Serviços&#34;,
+    ]
+
+    STU_GENERAL_CAPTURE_PARAMS = {
+        &#34;partition_date_only&#34;: True,
+        &#34;source_type&#34;: &#34;gcs&#34;,
+        &#34;dataset_id&#34;: STU_DATASET_ID,
+        &#34;save_bucket_name&#34;: STU_BUCKET_NAME,
+    }
+
+    STU_TABLE_CAPTURE_PARAMS = [
+        {
+            &#34;table_id&#34;: &#34;operadora_empresa&#34;,
+            &#34;primary_key&#34;: [&#34;Perm_Autor&#34;],
+            &#34;pre_treatment_reader_args&#34;: {&#34;dtype&#34;: &#34;object&#34;},
+        },
+        {
+            &#34;table_id&#34;: &#34;operadora_pessoa_fisica&#34;,
+            &#34;primary_key&#34;: [&#34;Perm_Autor&#34;],
+            &#34;pre_treatment_reader_args&#34;: {&#34;dtype&#34;: &#34;object&#34;},
+        },
+    ]
+
+    # SUBSÍDIO RECURSOS VIAGENS INDIVIDUAIS
+
     SUBSIDIO_SPPO_RECURSOS_DATASET_ID = &#34;br_rj_riodejaneiro_recurso&#34;
     SUBSIDIO_SPPO_RECURSO_API_BASE_URL = &#34;https://api.movidesk.com/public/v1/tickets&#34;
     SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH = &#34;sppo_subsidio_recursos_api&#34;
@@ -593,7 +704,17 @@ or createdDate ge {start} and createdDate lt {end})&#34;,
             },
             &#34;version&#34;: {},
         },
-    }</code></pre>
+    }
+
+    DIRETORIO_MATERIALIZACAO_PARAMS = {
+        &#34;dataset_id&#34;: &#34;cadastro&#34;,
+        &#34;upstream&#34;: True,
+    }
+
+    DIRETORIO_MATERIALIZACAO_TABLE_PARAMS = [
+        {&#34;table_id&#34;: &#34;diretorio_consorcios&#34;},
+        {&#34;table_id&#34;: &#34;operadoras_contatos&#34;},
+    ]</code></pre>
 </details>
 </section>
 <section>
@@ -883,6 +1004,8 @@ or createdDate ge {start} and createdDate lt {end})&#34;,
 
     BILHETAGEM_TRATAMENTO_INTERVAL = 60
 
+    BILHETAGEM_PRIVATE_BUCKET = &#34;rj-smtr-jae-private&#34;
+
     BILHETAGEM_CAPTURE_PARAMS = [
         {
             &#34;table_id&#34;: &#34;linha&#34;,
@@ -966,9 +1089,14 @@ or createdDate ge {start} and createdDate lt {end})&#34;,
                 &#34;database&#34;: &#34;principal_db&#34;,
                 &#34;query&#34;: &#34;&#34;&#34;
                     SELECT
-                        *
+                        o.*,
+                        m.DS_TIPO_MODAL
                     FROM
-                        OPERADORA_TRANSPORTE
+                        OPERADORA_TRANSPORTE o
+                    LEFT JOIN
+                        TIPO_MODAL m
+                    ON
+                        o.CD_TIPO_MODAL = m.CD_TIPO_MODAL
                     WHERE
                         DT_INCLUSAO BETWEEN &#39;{start}&#39;
                         AND &#39;{end}&#39;
@@ -978,19 +1106,28 @@ or createdDate ge {start} and createdDate lt {end})&#34;,
             &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
         },
         {
-            &#34;table_id&#34;: &#34;pessoa_juridica&#34;,
+            &#34;table_id&#34;: &#34;cliente&#34;,
             &#34;partition_date_only&#34;: True,
             &#34;extract_params&#34;: {
                 &#34;database&#34;: &#34;principal_db&#34;,
                 &#34;query&#34;: &#34;&#34;&#34;
                     SELECT
-                        *
+                        c.*
                     FROM
-                        PESSOA_JURIDICA
+                        CLIENTE c
+                    JOIN
+                        OPERADORA_TRANSPORTE o
+                    ON
+                        c.CD_CLIENTE = o.CD_CLIENTE
+                    WHERE
+                        DT_CADASTRO BETWEEN &#39;{start}&#39;
+                        AND &#39;{end}&#39;
                 &#34;&#34;&#34;,
             },
             &#34;primary_key&#34;: [&#34;CD_CLIENTE&#34;],  # id column to nest data on
             &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
+            &#34;save_bucket_name&#34;: BILHETAGEM_PRIVATE_BUCKET,
+            &#34;pre_treatment_reader_args&#34;: {&#34;dtype&#34;: {&#34;NR_DOCUMENTO&#34;: &#34;object&#34;}},
         },
         {
             &#34;table_id&#34;: &#34;consorcio&#34;,
@@ -1027,6 +1164,53 @@ or createdDate ge {start} and createdDate lt {end})&#34;,
             },
             &#34;primary_key&#34;: [&#34;CD_CONSORCIO&#34;, &#34;CD_LINHA&#34;],  # id column to nest data on
             &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
+        },
+        {
+            &#34;table_id&#34;: &#34;conta_bancaria&#34;,
+            &#34;partition_date_only&#34;: True,
+            &#34;extract_params&#34;: {
+                &#34;database&#34;: &#34;principal_db&#34;,
+                &#34;query&#34;: &#34;&#34;&#34;
+                    SELECT
+                        c.*,
+                        b.NM_BANCO
+                    FROM
+                        CONTA_BANCARIA c
+                    JOIN
+                        BANCO b
+                    ON
+                        b.NR_BANCO = c.NR_BANCO
+                    JOIN
+                        OPERADORA_TRANSPORTE o
+                    ON
+                        o.CD_CLIENTE = c.CD_CLIENTE
+                &#34;&#34;&#34;,
+            },
+            &#34;primary_key&#34;: [&#34;CD_CLIENTE&#34;],  # id column to nest data on
+            &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
+            &#34;save_bucket_name&#34;: BILHETAGEM_PRIVATE_BUCKET,
+        },
+        {
+            &#34;table_id&#34;: &#34;contato_pessoa_juridica&#34;,
+            &#34;partition_date_only&#34;: True,
+            &#34;extract_params&#34;: {
+                &#34;database&#34;: &#34;principal_db&#34;,
+                &#34;query&#34;: &#34;&#34;&#34;
+                    SELECT
+                        *
+                    FROM
+                        CONTATO_PESSOA_JURIDICA
+                    WHERE
+                        DT_INCLUSAO BETWEEN &#39;{start}&#39;
+                        AND &#39;{end}&#39;
+                &#34;&#34;&#34;,
+            },
+            &#34;primary_key&#34;: [
+                &#34;NR_SEQ_CONTATO&#34;,
+                &#34;CD_CLIENTE&#34;,
+            ],  # id column to nest data on
+            &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
+            &#34;save_bucket_name&#34;: BILHETAGEM_PRIVATE_BUCKET,
         },
     ]
 
@@ -1138,7 +1322,55 @@ or createdDate ge {start} and createdDate lt {end})&#34;,
         },
     }
 
-    # SUBSÍDIO RECURSOS DE VIAGENS INDIVIDUAIS
+    # STU
+
+    STU_DATASET_ID = &#34;br_rj_riodejaneiro_stu&#34;
+
+    STU_BUCKET_NAME = &#34;rj-smtr-stu-private&#34;
+
+    STU_MODE_MAPPING = {
+        &#34;1&#34;: &#34;Táxi&#34;,
+        &#34;2&#34;: &#34;Ônibus&#34;,
+        &#34;3&#34;: &#34;Escolar&#34;,
+        &#34;4&#34;: &#34;Complementar (cabritinho)&#34;,
+        &#34;6&#34;: &#34;Fretamento&#34;,
+        &#34;7&#34;: &#34;TEC&#34;,
+        &#34;8&#34;: &#34;Van&#34;,
+    }
+
+    STU_TYPE_MAPPING = [
+        &#34;Autônomo&#34;,
+        &#34;Empresa&#34;,
+        &#34;Cooperativa&#34;,
+        &#34;Instituicao de Ensino&#34;,
+        &#34;Associações&#34;,
+        &#34;Autônomo Provisório&#34;,
+        &#34;Contrato Público&#34;,
+        &#34;Prestadora de Serviços&#34;,
+    ]
+
+    STU_GENERAL_CAPTURE_PARAMS = {
+        &#34;partition_date_only&#34;: True,
+        &#34;source_type&#34;: &#34;gcs&#34;,
+        &#34;dataset_id&#34;: STU_DATASET_ID,
+        &#34;save_bucket_name&#34;: STU_BUCKET_NAME,
+    }
+
+    STU_TABLE_CAPTURE_PARAMS = [
+        {
+            &#34;table_id&#34;: &#34;operadora_empresa&#34;,
+            &#34;primary_key&#34;: [&#34;Perm_Autor&#34;],
+            &#34;pre_treatment_reader_args&#34;: {&#34;dtype&#34;: &#34;object&#34;},
+        },
+        {
+            &#34;table_id&#34;: &#34;operadora_pessoa_fisica&#34;,
+            &#34;primary_key&#34;: [&#34;Perm_Autor&#34;],
+            &#34;pre_treatment_reader_args&#34;: {&#34;dtype&#34;: &#34;object&#34;},
+        },
+    ]
+
+    # SUBSÍDIO RECURSOS VIAGENS INDIVIDUAIS
+
     SUBSIDIO_SPPO_RECURSOS_DATASET_ID = &#34;br_rj_riodejaneiro_recurso&#34;
     SUBSIDIO_SPPO_RECURSO_API_BASE_URL = &#34;https://api.movidesk.com/public/v1/tickets&#34;
     SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH = &#34;sppo_subsidio_recursos_api&#34;
@@ -1173,7 +1405,17 @@ or createdDate ge {start} and createdDate lt {end})&#34;,
             },
             &#34;version&#34;: {},
         },
-    }</code></pre>
+    }
+
+    DIRETORIO_MATERIALIZACAO_PARAMS = {
+        &#34;dataset_id&#34;: &#34;cadastro&#34;,
+        &#34;upstream&#34;: True,
+    }
+
+    DIRETORIO_MATERIALIZACAO_TABLE_PARAMS = [
+        {&#34;table_id&#34;: &#34;diretorio_consorcios&#34;},
+        {&#34;table_id&#34;: &#34;operadoras_contatos&#34;},
+    ]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1209,6 +1451,10 @@ or createdDate ge {start} and createdDate lt {end})&#34;,
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_PRIVATE_BUCKET"><code class="name">var <span class="ident">BILHETAGEM_PRIVATE_BUCKET</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_SECRET_PATH"><code class="name">var <span class="ident">BILHETAGEM_SECRET_PATH</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -1226,6 +1472,14 @@ or createdDate ge {start} and createdDate lt {end})&#34;,
 <div class="desc"></div>
 </dd>
 <dt id="pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH"><code class="name">var <span class="ident">CRITICAL_SECRET_PATH</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.DIRETORIO_MATERIALIZACAO_PARAMS"><code class="name">var <span class="ident">DIRETORIO_MATERIALIZACAO_PARAMS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.DIRETORIO_MATERIALIZACAO_TABLE_PARAMS"><code class="name">var <span class="ident">DIRETORIO_MATERIALIZACAO_TABLE_PARAMS</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1445,6 +1699,30 @@ or createdDate ge {start} and createdDate lt {end})&#34;,
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="pipelines.rj_smtr.constants.constants.STU_BUCKET_NAME"><code class="name">var <span class="ident">STU_BUCKET_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.STU_DATASET_ID"><code class="name">var <span class="ident">STU_DATASET_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.STU_GENERAL_CAPTURE_PARAMS"><code class="name">var <span class="ident">STU_GENERAL_CAPTURE_PARAMS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.STU_MODE_MAPPING"><code class="name">var <span class="ident">STU_MODE_MAPPING</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.STU_TABLE_CAPTURE_PARAMS"><code class="name">var <span class="ident">STU_TABLE_CAPTURE_PARAMS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.STU_TYPE_MAPPING"><code class="name">var <span class="ident">STU_TYPE_MAPPING</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID"><code class="name">var <span class="ident">SUBSIDIO_SPPO_DASHBOARD_DATASET_ID</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -1571,11 +1849,14 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS">BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS">BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS">BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_PRIVATE_BUCKET" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_PRIVATE_BUCKET">BILHETAGEM_PRIVATE_BUCKET</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_SECRET_PATH">BILHETAGEM_SECRET_PATH</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_TRACKING_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_TRACKING_CAPTURE_PARAMS">BILHETAGEM_TRACKING_CAPTURE_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS">BILHETAGEM_TRANSACAO_CAPTURE_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_TRATAMENTO_INTERVAL" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_TRATAMENTO_INTERVAL">BILHETAGEM_TRATAMENTO_INTERVAL</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH">CRITICAL_SECRET_PATH</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.DIRETORIO_MATERIALIZACAO_PARAMS" href="#pipelines.rj_smtr.constants.constants.DIRETORIO_MATERIALIZACAO_PARAMS">DIRETORIO_MATERIALIZACAO_PARAMS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.DIRETORIO_MATERIALIZACAO_TABLE_PARAMS" href="#pipelines.rj_smtr.constants.constants.DIRETORIO_MATERIALIZACAO_TABLE_PARAMS">DIRETORIO_MATERIALIZACAO_TABLE_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_API_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_API_SECRET_PATH">GPS_BRT_API_SECRET_PATH</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_API_URL" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_API_URL">GPS_BRT_API_URL</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.GPS_BRT_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.GPS_BRT_DATASET_ID">GPS_BRT_DATASET_ID</a></code></li>
@@ -1630,6 +1911,12 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.constants.constants.SPPO_RHO_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.SPPO_RHO_TABLE_ID">SPPO_RHO_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.STPL_RDO_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.STPL_RDO_TABLE_ID">STPL_RDO_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.STPL_RHO_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.STPL_RHO_TABLE_ID">STPL_RHO_TABLE_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.STU_BUCKET_NAME" href="#pipelines.rj_smtr.constants.constants.STU_BUCKET_NAME">STU_BUCKET_NAME</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.STU_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.STU_DATASET_ID">STU_DATASET_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.STU_GENERAL_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.STU_GENERAL_CAPTURE_PARAMS">STU_GENERAL_CAPTURE_PARAMS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.STU_MODE_MAPPING" href="#pipelines.rj_smtr.constants.constants.STU_MODE_MAPPING">STU_MODE_MAPPING</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.STU_TABLE_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.STU_TABLE_CAPTURE_PARAMS">STU_TABLE_CAPTURE_PARAMS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.STU_TYPE_MAPPING" href="#pipelines.rj_smtr.constants.constants.STU_TYPE_MAPPING">STU_TYPE_MAPPING</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID">SUBSIDIO_SPPO_DASHBOARD_DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DASHBOARD_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DASHBOARD_TABLE_ID">SUBSIDIO_SPPO_DASHBOARD_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DATASET_ID">SUBSIDIO_SPPO_DATASET_ID</a></code></li>
