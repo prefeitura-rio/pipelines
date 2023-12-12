@@ -495,7 +495,7 @@ def query_logs(
                 SAFE_CAST(erro AS STRING) erro,
                 SAFE_CAST(DATA AS DATE) DATA
             FROM
-                rj-smtr-dev.{dataset_id}_staging.{table_id}_logs AS t
+                rj-smtr-staging.{dataset_id}_staging.{table_id}_logs AS t
         ),
         logs AS (
             SELECT
