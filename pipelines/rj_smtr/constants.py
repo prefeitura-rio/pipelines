@@ -274,6 +274,8 @@ class constants(Enum):  # pylint: disable=c0103
 
     BILHETAGEM_TRATAMENTO_INTERVAL = 60
 
+    BILHETAGEM_PRIVATE_BUCKET = "rj-smtr-jae-private"
+
     BILHETAGEM_CAPTURE_PARAMS = [
         {
             "table_id": "linha",
@@ -357,9 +359,14 @@ class constants(Enum):  # pylint: disable=c0103
                 "database": "principal_db",
                 "query": """
                     SELECT
-                        *
+                        o.*,
+                        m.DS_TIPO_MODAL
                     FROM
-                        OPERADORA_TRANSPORTE
+                        OPERADORA_TRANSPORTE o
+                    LEFT JOIN
+                        TIPO_MODAL m
+                    ON
+                        o.CD_TIPO_MODAL = m.CD_TIPO_MODAL
                     WHERE
                         DT_INCLUSAO BETWEEN '{start}'
                         AND '{end}'
@@ -369,19 +376,28 @@ class constants(Enum):  # pylint: disable=c0103
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
         },
         {
-            "table_id": "pessoa_juridica",
+            "table_id": "cliente",
             "partition_date_only": True,
             "extract_params": {
                 "database": "principal_db",
                 "query": """
                     SELECT
-                        *
+                        c.*
                     FROM
-                        PESSOA_JURIDICA
+                        CLIENTE c
+                    JOIN
+                        OPERADORA_TRANSPORTE o
+                    ON
+                        c.CD_CLIENTE = o.CD_CLIENTE
+                    WHERE
+                        DT_CADASTRO BETWEEN '{start}'
+                        AND '{end}'
                 """,
             },
             "primary_key": ["CD_CLIENTE"],  # id column to nest data on
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+            "save_bucket_name": BILHETAGEM_PRIVATE_BUCKET,
+            "pre_treatment_reader_args": {"dtype": {"NR_DOCUMENTO": "object"}},
         },
         {
             "table_id": "consorcio",
@@ -418,6 +434,53 @@ class constants(Enum):  # pylint: disable=c0103
             },
             "primary_key": ["CD_CONSORCIO", "CD_LINHA"],  # id column to nest data on
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+        },
+        {
+            "table_id": "conta_bancaria",
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "principal_db",
+                "query": """
+                    SELECT
+                        c.*,
+                        b.NM_BANCO
+                    FROM
+                        CONTA_BANCARIA c
+                    JOIN
+                        BANCO b
+                    ON
+                        b.NR_BANCO = c.NR_BANCO
+                    JOIN
+                        OPERADORA_TRANSPORTE o
+                    ON
+                        o.CD_CLIENTE = c.CD_CLIENTE
+                """,
+            },
+            "primary_key": ["CD_CLIENTE"],  # id column to nest data on
+            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+            "save_bucket_name": BILHETAGEM_PRIVATE_BUCKET,
+        },
+        {
+            "table_id": "contato_pessoa_juridica",
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "principal_db",
+                "query": """
+                    SELECT
+                        *
+                    FROM
+                        CONTATO_PESSOA_JURIDICA
+                    WHERE
+                        DT_INCLUSAO BETWEEN '{start}'
+                        AND '{end}'
+                """,
+            },
+            "primary_key": [
+                "NR_SEQ_CONTATO",
+                "CD_CLIENTE",
+            ],  # id column to nest data on
+            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+            "save_bucket_name": BILHETAGEM_PRIVATE_BUCKET,
         },
     ]
 
@@ -529,7 +592,55 @@ class constants(Enum):  # pylint: disable=c0103
         },
     }
 
-    # SUBSÍDIO RECURSOS DE VIAGENS INDIVIDUAIS
+    # STU
+
+    STU_DATASET_ID = "br_rj_riodejaneiro_stu"
+
+    STU_BUCKET_NAME = "rj-smtr-stu-private"
+
+    STU_MODE_MAPPING = {
+        "1": "Táxi",
+        "2": "Ônibus",
+        "3": "Escolar",
+        "4": "Complementar (cabritinho)",
+        "6": "Fretamento",
+        "7": "TEC",
+        "8": "Van",
+    }
+
+    STU_TYPE_MAPPING = [
+        "Autônomo",
+        "Empresa",
+        "Cooperativa",
+        "Instituicao de Ensino",
+        "Associações",
+        "Autônomo Provisório",
+        "Contrato Público",
+        "Prestadora de Serviços",
+    ]
+
+    STU_GENERAL_CAPTURE_PARAMS = {
+        "partition_date_only": True,
+        "source_type": "gcs",
+        "dataset_id": STU_DATASET_ID,
+        "save_bucket_name": STU_BUCKET_NAME,
+    }
+
+    STU_TABLE_CAPTURE_PARAMS = [
+        {
+            "table_id": "operadora_empresa",
+            "primary_key": ["Perm_Autor"],
+            "pre_treatment_reader_args": {"dtype": "object"},
+        },
+        {
+            "table_id": "operadora_pessoa_fisica",
+            "primary_key": ["Perm_Autor"],
+            "pre_treatment_reader_args": {"dtype": "object"},
+        },
+    ]
+
+    # SUBSÍDIO RECURSOS VIAGENS INDIVIDUAIS
+
     SUBSIDIO_SPPO_RECURSOS_DATASET_ID = "br_rj_riodejaneiro_recurso"
     SUBSIDIO_SPPO_RECURSO_API_BASE_URL = "https://api.movidesk.com/public/v1/tickets"
     SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH = "sppo_subsidio_recursos_api"
@@ -565,3 +676,13 @@ or createdDate ge {start} and createdDate lt {end})",
             "version": {},
         },
     }
+
+    DIRETORIO_MATERIALIZACAO_PARAMS = {
+        "dataset_id": "cadastro",
+        "upstream": True,
+    }
+
+    DIRETORIO_MATERIALIZACAO_TABLE_PARAMS = [
+        {"table_id": "diretorio_consorcios"},
+        {"table_id": "operadoras_contatos"},
+    ]
