@@ -558,7 +558,7 @@ class constants(Enum):  # pylint: disable=c0103
         "upstream": True,
         "dbt_vars": {
             "date_range": {
-                "table_run_datetime_column_name": "data_recurso",
+                "table_run_datetime_column_name": "datetime_recurso",
                 "delay_hours": 0,
             },
             "version": {},
