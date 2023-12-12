@@ -59,7 +59,7 @@ with Flow(
     code_owners=["rodrigo", "rafaelpinheiro"],
 ) as stu_captura:
     # SETUP
-    data_versao_stu = Parameter("data_versao_stu", default=None)
+    data_versao_stu = Parameter("data_versao_stu", required=True)
 
     timestamp = get_current_timestamp()
 
