@@ -495,7 +495,7 @@ def query_logs(
                 SAFE_CAST(erro AS STRING) erro,
                 SAFE_CAST(DATA AS DATE) DATA
             FROM
-                rj-smtr-staging.{dataset_id}_staging.{table_id}_logs AS t
+                {bq_project(kind="bigquery_staging")}.{dataset_id}_staging.{table_id}_logs AS t
         ),
         logs AS (
             SELECT

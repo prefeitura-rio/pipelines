@@ -929,12 +929,24 @@ def get_raw_recursos(request_url: str, request_params: dict) -> tuple[str, str, 
 
             log(f"Request url {request_url}")
 
-            response = requests.get(
-                request_url,
-                params=request_params,
-                timeout=constants.MAX_TIMEOUT_SECONDS.value,
-            )
-            response.raise_for_status()
+            MAX_RETRIES = 3
+
+            for retry in range(MAX_RETRIES):
+                response = requests.get(
+                    request_url,
+                    params=request_params,
+                    timeout=constants.MAX_TIMEOUT_SECONDS.value,
+                )
+                if response.ok:
+                    break
+                elif response.status_code >= 500:
+                    log(f"Server error {response.status_code}")
+                    if retry == MAX_RETRIES - 1:
+                        response.raise_for_status()
+                    time.sleep(60)
+
+                else:
+                    response.raise_for_status()
 
             paginated_data = response.json()
 
