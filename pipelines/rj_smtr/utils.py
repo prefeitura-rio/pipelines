@@ -7,7 +7,7 @@ General purpose functions for rj_smtr
 from ftplib import FTP
 from pathlib import Path
 
-from datetime import timedelta, datetime, date
+from datetime import timedelta, datetime, date, timezone
 from typing import List, Union, Any
 import traceback
 import io
@@ -973,16 +973,24 @@ def round_datetime(dt: datetime, delta: timedelta) -> datetime:
     Returns:
         datetime: datetime arredondado
     """
-    # Calcula a diferença em segundos
+    # Garante que o datetime esteja no formato UTC para cálculos consistentes
+    dt_utc = dt.astimezone(timezone.utc)
+
+    # Converte o timedelta para segundos
     delta_seconds = delta.total_seconds()
 
     # Converte o datetime para um timestamp em segundos
-    timestamp = (dt - datetime(1970, 1, 1)).total_seconds()
+    timestamp = (dt_utc - datetime(1970, 1, 1, tzinfo=timezone.utc)).total_seconds()
 
     # Calcula o número de deltas completos
     rounded_timestamp = round(timestamp / delta_seconds) * delta_seconds
 
     # Converte o timestamp de volta para um datetime
-    rounded_dt = datetime.utcfromtimestamp(rounded_timestamp)
+    rounded_dt_utc = datetime.utcfromtimestamp(rounded_timestamp).replace(
+        tzinfo=timezone.utc
+    )
+
+    # Converte o datetime resultante de volta para o fuso horário original
+    rounded_dt = rounded_dt_utc.astimezone(dt.tzinfo)
 
     return rounded_dt
