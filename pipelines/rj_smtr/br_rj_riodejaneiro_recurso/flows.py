@@ -104,7 +104,7 @@ with Flow(
     with case(capture, True):
         run_captura = create_flow_run(
             flow_name=sppo_recurso_captura.name,
-            project_name="dev",
+            project_name="staging",
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             parameters={"extract_params": recurso_capture_parameters},
             labels=LABELS,
@@ -129,7 +129,7 @@ with Flow(
     with case(recapture, True):
         run_recaptura = create_flow_run(
             flow_name=sppo_recurso_recaptura.name,
-            project_name="dev",
+            project_name="staging",
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=LABELS,
         )
@@ -155,7 +155,7 @@ with Flow(
     with case(materialize, True):
         run_materializacao = create_flow_run(
             flow_name=sppo_recurso_materializacao.name,
-            project_name="dev",
+            project_name="staging",
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=LABELS,
             upstream_tasks=[wait_captura],
