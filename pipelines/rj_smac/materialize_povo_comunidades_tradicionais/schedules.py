@@ -20,7 +20,7 @@ from pipelines.utils.utils import untuple_clocks as untuple
 
 diariamente = [
     {
-        "dataset_id": "povo_comunidades_tradicionais",
+        "dataset_id": "povo_comunidades_tradicionais_indepit",
         "table_id": "indepit",
         "mode": "prod",
     },
