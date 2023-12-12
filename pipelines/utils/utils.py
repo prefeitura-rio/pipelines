@@ -1075,11 +1075,11 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
     # Keep on dataframe only the stations that has a time after the one that is saved on redis
     dataframe[date_column] = dataframe[date_column].apply(
         pd.to_datetime, format=date_format
-    )
+    ) + pd.DateOffset(hours=0)
 
     dataframe["last_update"] = dataframe["last_update"].apply(
-        pd.to_datetime, format="%Y-%m-%d %H:%M:%S"
-    )
+        pd.to_datetime, format="mixed"
+    ) + pd.DateOffset(hours=0)
 
     dataframe = dataframe[dataframe[date_column] > dataframe["last_update"]].dropna(
         subset=[unique_id]
