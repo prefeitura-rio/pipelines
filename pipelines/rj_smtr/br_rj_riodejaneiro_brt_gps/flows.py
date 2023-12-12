@@ -145,7 +145,7 @@ with Flow(
 ) as materialize_brt_15:
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=materialize_brt.name + ": ", now_time=get_now_time()
+        prefix=materialize_brt_15.name + ": ", now_time=get_now_time()
     )
 
     # Get default parameters #
