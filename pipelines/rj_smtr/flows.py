@@ -54,6 +54,7 @@ with Flow(
     dataset_id = Parameter("dataset_id", default=None)
     partition_date_only = Parameter("partition_date_only", default=None)
     partition_date_name = Parameter("partition_date_name", default="data")
+    save_bucket_name = Parameter("save_bucket_name", default=None)
 
     # Parâmetros Captura #
     extract_params = Parameter("extract_params", default=None)
@@ -66,6 +67,7 @@ with Flow(
 
     # Parâmetros Pré-tratamento #
     primary_key = Parameter("primary_key", default=None)
+    pre_treatment_reader_args = Parameter("pre_treatment_reader_args", default=None)
 
     get_run_name_prefix = task(
         lambda recap: "Recaptura" if recap else "Captura",
@@ -148,6 +150,7 @@ with Flow(
         table_id=unmapped(table_id),
         dataset_id=unmapped(dataset_id),
         partitions=partitions,
+        bucket_name=unmapped(save_bucket_name),
     )
 
     # Pré-tratamento #
@@ -158,6 +161,14 @@ with Flow(
         error=errors,
         timestamp=timestamps,
         primary_key=unmapped(primary_key),
+        flag_private_data=unmapped(
+            task(
+                lambda bucket: bucket is not None,
+                checkpoint=False,
+                name="create_flag_private_data",
+            )(bucket=save_bucket_name)
+        ),
+        reader_args=unmapped(pre_treatment_reader_args),
     )
 
     errors, staging_filepaths = unpack_mapped_results_nout2(
@@ -173,6 +184,7 @@ with Flow(
         partitions=partitions,
         previous_error=previous_errors,
         recapture=unmapped(recapture),
+        bucket_name=unmapped(save_bucket_name),
     )
 
 default_capture_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
