@@ -641,7 +641,7 @@ class constants(Enum):  # pylint: disable=c0103
 
     # SUBSÍDIO RECURSOS VIAGENS INDIVIDUAIS
 
-    SUBSIDIO_SPPO_RECURSOS_DATASET_ID = "br_rj_riodejaneiro_recurso"
+    SUBSIDIO_SPPO_RECURSOS_DATASET_ID = "br_rj_riodejaneiro_recursos"
     SUBSIDIO_SPPO_RECURSO_API_BASE_URL = "https://api.movidesk.com/public/v1/tickets"
     SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH = "sppo_subsidio_recursos_api"
     SUBSIDIO_SPPO_RECURSO_SERVICE = (
@@ -649,7 +649,7 @@ class constants(Enum):  # pylint: disable=c0103
     )
     SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS = {
         "partition_date_only": True,
-        "table_id": "recurso_sppo_viagens_individuais",
+        "table_id": "recursos_sppo_viagens_individuais",
         "dataset_id": SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
         "extract_params": {
             "token": "",
@@ -687,7 +687,7 @@ or createdDate ge {start} and createdDate lt {end})",
         "dataset_id": SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
         "extract_params": {
             "token": "",
-            "$select": "id,protocol,createdDate,lastUpdate",
+            "$select": "id,protocol,createdDate",
             "$filter": "{service} and (lastUpdate ge {start} and lastUpdate lt {end} \
 or createdDate ge {start} and createdDate lt {end})",
             "$expand": "customFieldValues,customFieldValues($expand=items)",
@@ -704,7 +704,7 @@ or createdDate ge {start} and createdDate lt {end})",
         "upstream": True,
         "dbt_vars": {
             "date_range": {
-                "table_run_datetime_column_name": "data_recurso",
+                "table_run_datetime_column_name": "datetime_recurso",
                 "delay_hours": 0,
             },
             "version": {},
@@ -722,7 +722,7 @@ or createdDate ge {start} and createdDate lt {end})",
         "dataset_id": SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
         "extract_params": {
             "token": "",
-            "$select": "id,protocol,createdDate,lastUpdate",
+            "$select": "id,protocol,createdDate",
             "$filter": "{service} and (lastUpdate ge {start} and lastUpdate lt {end} \
 or createdDate ge {start} and createdDate lt {end})",
             "$expand": "customFieldValues,customFieldValues($expand=items)",
@@ -739,7 +739,7 @@ or createdDate ge {start} and createdDate lt {end})",
         "upstream": True,
         "dbt_vars": {
             "date_range": {
-                "table_run_datetime_column_name": "data_recurso",
+                "table_run_datetime_column_name": "datetime_recurso",
                 "delay_hours": 0,
             },
             "version": {},
