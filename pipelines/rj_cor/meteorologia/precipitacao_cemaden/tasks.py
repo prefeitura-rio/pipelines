@@ -17,13 +17,11 @@ from prefect.engine.state import Skipped
 # from prefect import context
 
 from pipelines.constants import constants
-from pipelines.rj_cor.meteorologia.precipitacao_cemaden.utils import (
-    parse_date_columns,
-)
 from pipelines.utils.utils import (
     log,
-    to_partitions,
+    parse_date_columns,
     save_updated_rows_on_redis,
+    to_partitions,
 )
 
 
