@@ -490,6 +490,7 @@ class constants(Enum):  # pylint: disable=c0103
             "primary_key": ["id"],  # id column to nest data on
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
         },
+        {
             "table_id": "conta_bancaria",
             "partition_date_only": True,
             "extract_params": {
