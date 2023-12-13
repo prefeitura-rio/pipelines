@@ -21,3 +21,5 @@ from pipelines.rj_smtr.veiculo.flows import *
 from pipelines.rj_smtr.example.flows import *
 from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.flows import *
 from pipelines.rj_smtr.br_rj_riodejaneiro_gtfs.flows import *
+from pipelines.rj_smtr.br_rj_riodejaneiro_stu.flows import *
+from pipelines.rj_smtr.br_rj_riodejaneiro_diretorios.flows import *
