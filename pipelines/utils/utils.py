@@ -1041,8 +1041,7 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
         )
 
         log(f"Redis key: {key}\nRedis actual values:\n {last_updates}")
-    last_updates["last_update"] = last_updates.last_update.min()
-    log(f"Redis key: {key}\nRedis actual actual values:\n {last_updates}")
+
     # Garante that both are string
     dataframe[unique_id] = dataframe[unique_id].astype(str)
     last_updates[unique_id] = last_updates[unique_id].astype(str)
@@ -1078,7 +1077,7 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
     ) + pd.DateOffset(hours=0)
 
     dataframe["last_update"] = dataframe["last_update"].apply(
-        pd.to_datetime, format="mixed"
+        pd.to_datetime, format="%Y-%m-%d %H:%M:%S"
     ) + pd.DateOffset(hours=0)
 
     dataframe = dataframe[dataframe[date_column] > dataframe["last_update"]].dropna(
