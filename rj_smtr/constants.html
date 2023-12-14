@@ -682,7 +682,7 @@ class constants(Enum):  # pylint: disable=c0103
         &#34;dataset_id&#34;: SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
         &#34;extract_params&#34;: {
             &#34;token&#34;: &#34;&#34;,
-            &#34;$select&#34;: &#34;id,protocol,createdDate&#34;,
+            &#34;$select&#34;: &#34;id,protocol,createdDate,lastUpdate&#34;,
             &#34;$filter&#34;: &#34;{service} and (lastUpdate ge {start} and lastUpdate lt {end} \
 or createdDate ge {start} and createdDate lt {end})&#34;,
             &#34;$expand&#34;: &#34;customFieldValues,customFieldValues($expand=items)&#34;,
@@ -1383,7 +1383,7 @@ or createdDate ge {start} and createdDate lt {end})&#34;,
         &#34;dataset_id&#34;: SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
         &#34;extract_params&#34;: {
             &#34;token&#34;: &#34;&#34;,
-            &#34;$select&#34;: &#34;id,protocol,createdDate&#34;,
+            &#34;$select&#34;: &#34;id,protocol,createdDate,lastUpdate&#34;,
             &#34;$filter&#34;: &#34;{service} and (lastUpdate ge {start} and lastUpdate lt {end} \
 or createdDate ge {start} and createdDate lt {end})&#34;,
             &#34;$expand&#34;: &#34;customFieldValues,customFieldValues($expand=items)&#34;,
