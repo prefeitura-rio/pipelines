@@ -708,7 +708,7 @@ class constants(Enum):  # pylint: disable=c0103
         "dataset_id": SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
         "extract_params": {
             "token": "",
-            "$select": "id,protocol,createdDate",
+            "$select": "id,protocol,createdDate,lastUpdate",
             "$filter": "{service} and (lastUpdate ge {start} and lastUpdate lt {end} \
 or createdDate ge {start} and createdDate lt {end})",
             "$expand": "customFieldValues,customFieldValues($expand=items)",
