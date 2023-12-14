@@ -59,6 +59,7 @@ import requests
 
 import cartopy.crs as ccrs
 import cartopy.io.shapereader as shpreader
+import fiona
 from google.cloud import storage
 import matplotlib.pyplot as plt
 import numpy as np
@@ -591,6 +592,7 @@ def get_variable_values(dfr: pd.DataFrame, variable: str) -> xr.DataArray:
     return data_array
 
 
+# pylint: disable=unused-variable
 def create_and_save_image(data: xr.DataArray, info: dict, variable) -> Path:
     """
     Create image from xarray ans save it as png file.
@@ -611,14 +613,24 @@ def create_and_save_image(data: xr.DataArray, info: dict, variable) -> Path:
     # Plot the image
     img = axis.imshow(data, origin="upper", extent=img_extent, cmap=colormap, alpha=0.8)
 
+    # # Find shapefile file "Limite_Bairros_RJ.shp" across the entire file system
+    # for root, dirs, files in os.walk(os.sep):
+    #     if "Limite_Bairros_RJ.shp" in files:
+    #         log(f"[DEBUG] ROOT {root}")
+    #         shapefile_dir = root
+    #         break
+    # else:
+    #     print("File not found.")
+
     # Add coastlines, borders and gridlines
-    shapefile_path_neighborhood = (
-        f"{os.getcwd()}/pipelines/utils/shapefiles/Limite_Bairros_RJ.shp"
+    shapefile_dir = Path(
+        "/opt/venv/lib/python3.9/site-packages/pipelines/utils/shapefiles"
     )
-    shapefile_path_state = (
-        f"{os.getcwd()}/pipelines/utils/shapefiles/Limite_Estados_BR_IBGE.shp"
-    )
+    shapefile_path_neighborhood = shapefile_dir / "Limite_Bairros_RJ.shp"
+    shapefile_path_state = shapefile_dir / "Limite_Estados_BR_IBGE.shp"
+
     log("\nImporting shapefiles")
+    fiona.os.environ["SHAPE_RESTORE_SHX"] = "YES"
     reader_neighborhood = shpreader.Reader(shapefile_path_neighborhood)
     reader_state = shpreader.Reader(shapefile_path_state)
     state = [record.geometry for record in reader_state.records()]
@@ -658,11 +670,10 @@ def create_and_save_image(data: xr.DataArray, info: dict, variable) -> Path:
         fraction=0.05,
     )
 
-    output_image_path = Path.joinpath(os.getcwd(), "output", "images")
     log("\n Start saving image")
-    save_image_path = output_image_path / (
-        variable + "_" + info["datetime_save"] + ".png"
-    )
+    output_image_path = Path(os.getcwd()) / "output" / "images"
+
+    save_image_path = output_image_path / (f"{variable}_{info['datetime_save']}.png")
 
     if not output_image_path.exists():
         output_image_path.mkdir(parents=True, exist_ok=True)
