@@ -1098,20 +1098,21 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
 
     # Merge dfs using unique_id
     dataframe = dataframe.merge(last_updates, how=&#34;left&#34;, on=unique_id)
+    log(f&#34;Comparing times: {dataframe.sort_values(unique_id)}&#34;)
 
     # Keep on dataframe only the stations that has a time after the one that is saved on redis
     dataframe[date_column] = dataframe[date_column].apply(
         pd.to_datetime, format=date_format
-    )
+    ) + pd.DateOffset(hours=0)
 
     dataframe[&#34;last_update&#34;] = dataframe[&#34;last_update&#34;].apply(
         pd.to_datetime, format=&#34;%Y-%m-%d %H:%M:%S&#34;
-    )
+    ) + pd.DateOffset(hours=0)
 
     dataframe = dataframe[dataframe[date_column] &gt; dataframe[&#34;last_update&#34;]].dropna(
         subset=[unique_id]
     )
-
+    log(f&#34;Dataframe after comparison: {dataframe.sort_values(unique_id)}&#34;)
     # Keep only the last date for each unique_id
     keep_cols = [unique_id, date_column]
     new_updates = dataframe[keep_cols].sort_values(keep_cols)
@@ -2170,20 +2171,21 @@ updated unique_id as a DataFrame and save new dates on redis</p></div>
 
     # Merge dfs using unique_id
     dataframe = dataframe.merge(last_updates, how=&#34;left&#34;, on=unique_id)
+    log(f&#34;Comparing times: {dataframe.sort_values(unique_id)}&#34;)
 
     # Keep on dataframe only the stations that has a time after the one that is saved on redis
     dataframe[date_column] = dataframe[date_column].apply(
         pd.to_datetime, format=date_format
-    )
+    ) + pd.DateOffset(hours=0)
 
     dataframe[&#34;last_update&#34;] = dataframe[&#34;last_update&#34;].apply(
         pd.to_datetime, format=&#34;%Y-%m-%d %H:%M:%S&#34;
-    )
+    ) + pd.DateOffset(hours=0)
 
     dataframe = dataframe[dataframe[date_column] &gt; dataframe[&#34;last_update&#34;]].dropna(
         subset=[unique_id]
     )
-
+    log(f&#34;Dataframe after comparison: {dataframe.sort_values(unique_id)}&#34;)
     # Keep only the last date for each unique_id
     keep_cols = [unique_id, date_column]
     new_updates = dataframe[keep_cols].sort_values(keep_cols)

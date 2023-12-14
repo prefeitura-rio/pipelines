@@ -46,13 +46,11 @@ from prefect.engine.state import Skipped
 # from prefect import context
 
 from pipelines.constants import constants
-from pipelines.rj_cor.meteorologia.precipitacao_cemaden.utils import (
-    parse_date_columns,
-)
 from pipelines.utils.utils import (
     log,
-    to_partitions,
+    parse_date_columns,
     save_updated_rows_on_redis,
+    to_partitions,
 )
 
 
@@ -102,16 +100,20 @@ def tratar_dados(
     log(f&#34;\n[DEBUG]: df.head() {dados.head()}&#34;)
 
     # Converte de UTC para horário São Paulo
-    dados[&#34;data_medicao_utc&#34;] = pd.to_datetime(dados[&#34;data_medicao_utc&#34;], dayfirst=True)
-
-    see_cols = [&#34;data_medicao_utc&#34;, &#34;id_estacao&#34;, &#34;acumulado_chuva_1_h&#34;]
-    log(f&#34;DEBUG: data utc {dados[see_cols]}&#34;)
+    dados[&#34;data_medicao_utc&#34;] = pd.to_datetime(
+        dados[&#34;data_medicao_utc&#34;], dayfirst=True
+    ) + pd.DateOffset(hours=0)
+    dados[&#34;data_medicao&#34;] = (
+        dados[&#34;data_medicao_utc&#34;]
+        .dt.tz_localize(&#34;UTC&#34;)
+        .dt.tz_convert(&#34;America/Sao_Paulo&#34;)
+    )
+    see_cols = [&#34;data_medicao_utc&#34;, &#34;data_medicao&#34;, &#34;id_estacao&#34;, &#34;acumulado_chuva_1_h&#34;]
+    log(f&#34;DEBUG: data utc -&gt; GMT-3 {dados[see_cols]}&#34;)
 
     date_format = &#34;%Y-%m-%d %H:%M:%S&#34;
-    dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao_utc&#34;].dt.strftime(date_format)
+    dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao&#34;].dt.strftime(date_format)
 
-    log(f&#34;DEBUG: df dtypes {dados.dtypes}&#34;)
-    see_cols = [&#34;data_medicao&#34;, &#34;id_estacao&#34;, &#34;acumulado_chuva_1_h&#34;]
     log(f&#34;DEBUG: data {dados[see_cols]}&#34;)
 
     # Alterando valores &#39;-&#39; e np.nan para NULL
@@ -134,15 +136,6 @@ def tratar_dados(
     # Elimina linhas em que o id_estacao é igual mantendo a de menor valor nas colunas float
     dados.sort_values([&#34;id_estacao&#34;, &#34;data_medicao&#34;] + float_cols, inplace=True)
     dados.drop_duplicates(subset=[&#34;id_estacao&#34;, &#34;data_medicao&#34;], keep=&#34;first&#34;)
-
-    # Ajustando dados da meia-noite que vem sem o horário
-    for index, row in dados.iterrows():
-        try:
-            date = pd.to_datetime(row[&#34;data_medicao&#34;], format=&#34;%Y-%m-%d %H:%M:%S&#34;)
-        except ValueError:
-            date = pd.to_datetime(row[&#34;data_medicao&#34;]) + pd.DateOffset(hours=0)
-
-        dados.at[index, &#34;data_medicao&#34;] = date.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
 
     log(f&#34;Dataframe before comparing with last data saved on redis {dados.head()}&#34;)
 
@@ -306,16 +299,20 @@ def tratar_dados(
     log(f&#34;\n[DEBUG]: df.head() {dados.head()}&#34;)
 
     # Converte de UTC para horário São Paulo
-    dados[&#34;data_medicao_utc&#34;] = pd.to_datetime(dados[&#34;data_medicao_utc&#34;], dayfirst=True)
-
-    see_cols = [&#34;data_medicao_utc&#34;, &#34;id_estacao&#34;, &#34;acumulado_chuva_1_h&#34;]
-    log(f&#34;DEBUG: data utc {dados[see_cols]}&#34;)
+    dados[&#34;data_medicao_utc&#34;] = pd.to_datetime(
+        dados[&#34;data_medicao_utc&#34;], dayfirst=True
+    ) + pd.DateOffset(hours=0)
+    dados[&#34;data_medicao&#34;] = (
+        dados[&#34;data_medicao_utc&#34;]
+        .dt.tz_localize(&#34;UTC&#34;)
+        .dt.tz_convert(&#34;America/Sao_Paulo&#34;)
+    )
+    see_cols = [&#34;data_medicao_utc&#34;, &#34;data_medicao&#34;, &#34;id_estacao&#34;, &#34;acumulado_chuva_1_h&#34;]
+    log(f&#34;DEBUG: data utc -&gt; GMT-3 {dados[see_cols]}&#34;)
 
     date_format = &#34;%Y-%m-%d %H:%M:%S&#34;
-    dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao_utc&#34;].dt.strftime(date_format)
+    dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao&#34;].dt.strftime(date_format)
 
-    log(f&#34;DEBUG: df dtypes {dados.dtypes}&#34;)
-    see_cols = [&#34;data_medicao&#34;, &#34;id_estacao&#34;, &#34;acumulado_chuva_1_h&#34;]
     log(f&#34;DEBUG: data {dados[see_cols]}&#34;)
 
     # Alterando valores &#39;-&#39; e np.nan para NULL
@@ -338,15 +335,6 @@ def tratar_dados(
     # Elimina linhas em que o id_estacao é igual mantendo a de menor valor nas colunas float
     dados.sort_values([&#34;id_estacao&#34;, &#34;data_medicao&#34;] + float_cols, inplace=True)
     dados.drop_duplicates(subset=[&#34;id_estacao&#34;, &#34;data_medicao&#34;], keep=&#34;first&#34;)
-
-    # Ajustando dados da meia-noite que vem sem o horário
-    for index, row in dados.iterrows():
-        try:
-            date = pd.to_datetime(row[&#34;data_medicao&#34;], format=&#34;%Y-%m-%d %H:%M:%S&#34;)
-        except ValueError:
-            date = pd.to_datetime(row[&#34;data_medicao&#34;]) + pd.DateOffset(hours=0)
-
-        dados.at[index, &#34;data_medicao&#34;] = date.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
 
     log(f&#34;Dataframe before comparing with last data saved on redis {dados.head()}&#34;)
 
