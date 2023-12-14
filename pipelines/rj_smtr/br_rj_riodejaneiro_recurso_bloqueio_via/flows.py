@@ -108,7 +108,7 @@ with Flow(
             flow_name=bloqueio_via_captura.name,
             project_name="staging",
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters={"timestamp": timestamp},
+            parameters={"extract_params": recurso_capture_parameters},
             labels=LABELS,
         )
 
