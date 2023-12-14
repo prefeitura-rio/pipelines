@@ -17,13 +17,11 @@ from prefect.engine.state import Skipped
 # from prefect import context
 
 from pipelines.constants import constants
-from pipelines.rj_cor.meteorologia.precipitacao_cemaden.utils import (
-    parse_date_columns,
-)
 from pipelines.utils.utils import (
     log,
-    to_partitions,
+    parse_date_columns,
     save_updated_rows_on_redis,
+    to_partitions,
 )
 
 
@@ -73,16 +71,20 @@ def tratar_dados(
     log(f"\n[DEBUG]: df.head() {dados.head()}")
 
     # Converte de UTC para horário São Paulo
-    dados["data_medicao_utc"] = pd.to_datetime(dados["data_medicao_utc"], dayfirst=True)
-
-    see_cols = ["data_medicao_utc", "id_estacao", "acumulado_chuva_1_h"]
-    log(f"DEBUG: data utc {dados[see_cols]}")
+    dados["data_medicao_utc"] = pd.to_datetime(
+        dados["data_medicao_utc"], dayfirst=True
+    ) + pd.DateOffset(hours=0)
+    dados["data_medicao"] = (
+        dados["data_medicao_utc"]
+        .dt.tz_localize("UTC")
+        .dt.tz_convert("America/Sao_Paulo")
+    )
+    see_cols = ["data_medicao_utc", "data_medicao", "id_estacao", "acumulado_chuva_1_h"]
+    log(f"DEBUG: data utc -> GMT-3 {dados[see_cols]}")
 
     date_format = "%Y-%m-%d %H:%M:%S"
-    dados["data_medicao"] = dados["data_medicao_utc"].dt.strftime(date_format)
+    dados["data_medicao"] = dados["data_medicao"].dt.strftime(date_format)
 
-    log(f"DEBUG: df dtypes {dados.dtypes}")
-    see_cols = ["data_medicao", "id_estacao", "acumulado_chuva_1_h"]
     log(f"DEBUG: data {dados[see_cols]}")
 
     # Alterando valores '-' e np.nan para NULL
@@ -105,15 +107,6 @@ def tratar_dados(
     # Elimina linhas em que o id_estacao é igual mantendo a de menor valor nas colunas float
     dados.sort_values(["id_estacao", "data_medicao"] + float_cols, inplace=True)
     dados.drop_duplicates(subset=["id_estacao", "data_medicao"], keep="first")
-
-    # Ajustando dados da meia-noite que vem sem o horário
-    for index, row in dados.iterrows():
-        try:
-            date = pd.to_datetime(row["data_medicao"], format="%Y-%m-%d %H:%M:%S")
-        except ValueError:
-            date = pd.to_datetime(row["data_medicao"]) + pd.DateOffset(hours=0)
-
-        dados.at[index, "data_medicao"] = date.strftime("%Y-%m-%d %H:%M:%S")
 
     log(f"Dataframe before comparing with last data saved on redis {dados.head()}")
 
