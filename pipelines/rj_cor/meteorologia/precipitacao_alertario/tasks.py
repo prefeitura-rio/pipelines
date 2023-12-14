@@ -109,16 +109,8 @@ def tratar_dados(
 
     dados["id_estacao"] = dados["id_estacao"].astype(str)
 
-    # Ajustando dados da meia-noite que vem sem o horário
-    for index, row in dados.iterrows():
-        try:
-            date = pd.to_datetime(row["data_medicao"], format="%Y-%m-%d %H:%M:%S")
-        except ValueError:
-            date = pd.to_datetime(row["data_medicao"]) + pd.DateOffset(hours=0)
-
-        dados.at[index, "data_medicao"] = date.strftime("%Y-%m-%d %H:%M:%S")
-
     log(f"Dataframe before comparing with last data saved on redis {dados.head()}")
+    log(f"Dataframe before comparing with last data saved on redis {dados.iloc[0]}")
 
     dados = save_updated_rows_on_redis(
         dados,
@@ -130,7 +122,20 @@ def tratar_dados(
         mode=mode,
     )
 
+    # Ajustando dados da meia-noite que vem sem o horário
+    for index, row in dados.iterrows():
+        try:
+            date = pd.to_datetime(row["data_medicao"], format="%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            date = pd.to_datetime(row["data_medicao"]) + pd.DateOffset(hours=0)
+
+        dados.at[index, "data_medicao"] = date.strftime("%Y-%m-%d %H:%M:%S")
+
+    # dados["data_medicao"] = dados["data_medicao"].dt.strftime("%Y-%m-%d %H:%M:%S")
     log(f"Dataframe after comparing with last data saved on redis {dados.head()}")
+
+    if dados.shape[0] > 0:
+        log(f"Dataframe after comparing with last data saved on redis {dados.iloc[0]}")
 
     empty_data = dados.shape[0] == 0
 
