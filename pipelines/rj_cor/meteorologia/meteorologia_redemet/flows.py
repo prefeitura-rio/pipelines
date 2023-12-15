@@ -181,7 +181,7 @@ with Flow(
 
     dataframe = download_stations_data()
     dataframe = treat_stations_data(dataframe)
-    path = save_data(dataframe=dataframe, partition_column="data_alteracao")
+    path = save_data(dataframe=dataframe, partition_column="data_atualizacao")
 
     # Create table in BigQuery
     UPLOAD_TABLE = create_table_and_upload_to_gcs(
