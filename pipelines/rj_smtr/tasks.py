@@ -743,12 +743,6 @@ def create_request_params(
                 "end": end,
                 "service": constants.SUBSIDIO_SPPO_RECURSO_SERVICE.value,
             }
-        elif constants.SUBSIDIO_SPPO_BLOQUEIO_VIA_SERVICE.value:
-            recurso_params = {
-                "start": start,
-                "end": end,
-                "service": constants.SUBSIDIO_SPPO_BLOQUEIO_VIA_SERVICE.value,
-            }
         else:
             recurso_params = {
                 "start": start,
