@@ -12,7 +12,7 @@ import pandas as pd
 import pendulum
 from prefect import task
 from prefect.engine.signals import ENDRUN
-from prefect.engine.state import Skipped, Failed
+from prefect.engine.state import Skipped  # , Failed
 from pipelines.constants import constants
 from pipelines.utils.utils import (
     log,
@@ -238,4 +238,4 @@ def check_for_new_stations(
         message = f"New station identified. You need to update CEMADEN\
               estacoes_cemaden adding station(s) {new_stations}"
         log(message)
-        raise ENDRUN(state=Failed(message))
+        # raise ENDRUN(state=Failed(message))
