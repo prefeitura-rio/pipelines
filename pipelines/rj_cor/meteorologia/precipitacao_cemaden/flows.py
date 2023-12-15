@@ -43,7 +43,6 @@ wait_for_flow_run_with_2min_timeout = wait_for_flow_run_with_timeout(
 with Flow(
     name="COR: Meteorologia - Precipitacao CEMADEN",
     code_owners=[
-        "richardg867",
         "paty",
     ],
     # skip_if_running=True,

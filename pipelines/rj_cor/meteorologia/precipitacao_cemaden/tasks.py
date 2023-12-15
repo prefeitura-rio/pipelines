@@ -230,7 +230,9 @@ def check_for_new_stations(
         "Ilha de paqueta",
     ]
     new_stations = [
-        i for i in dataframe.id_estacao.unique() if i not in stations_before
+        i
+        for i in dataframe.id_estacao.unique()
+        if i.capitalize() not in stations_before
     ]
     if len(new_stations) != 0:
         message = f"New station identified. You need to update CEMADEN\

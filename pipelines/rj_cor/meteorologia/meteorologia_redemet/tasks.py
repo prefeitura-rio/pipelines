@@ -63,6 +63,7 @@ def download_data(first_date: str, last_date: str) -> pd.DataFrame:
     ]
 
     redemet_token = get_vault_secret("redemet-token")
+    redemet_token = redemet_token["data"]["token"]
 
     # Converte datas em int para cálculo de faixas.
     first_date_int = int(first_date.replace("-", ""))
@@ -70,7 +71,7 @@ def download_data(first_date: str, last_date: str) -> pd.DataFrame:
 
     raw = []
     for id_estacao in rj_stations:
-        base_url = f"https://api-redemet.decea.mil.br/aerodromos/info?api_key={redemet_token['data']['token']}"  # noqa
+        base_url = f"https://api-redemet.decea.mil.br/aerodromos/info?api_key={redemet_token}"  # noqa
         for data in range(first_date_int, last_date_int + 1):
             for hora in range(24):
                 url = f"{base_url}&localidade={id_estacao}&datahora={data:06}{hora:02}"
@@ -207,6 +208,7 @@ def download_stations_data() -> pd.DataFrame:
     """
 
     redemet_token = get_vault_secret("redemet-token")
+    redemet_token = redemet_token["data"]["token"]
     base_url = (
         f"https://api-redemet.decea.mil.br/aerodromos/?api_key={redemet_token}"  # noqa
     )
