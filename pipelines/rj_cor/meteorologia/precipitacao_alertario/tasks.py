@@ -143,7 +143,7 @@ def tratar_dados(
         save_str_on_redis(redis_key, "date", max_date)
     else:
         # If df is empty stop flow on flows.py
-        log(f"Dataframe is empty. Skipping update flow for datetime {date}.")
+        log("Dataframe is empty. Skipping update flow.")
 
     # Fixar ordem das colunas
     dados = dados[
