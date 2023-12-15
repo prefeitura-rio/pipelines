@@ -17,8 +17,8 @@ from pipelines.rj_cor.meteorologia.precipitacao_cemaden.constants import (
     constants as cemaden_constants,
 )
 from pipelines.rj_cor.meteorologia.precipitacao_cemaden.tasks import (
-    tratar_dados,
-    salvar_dados,
+    treat_data,
+    save_data,
 )
 from pipelines.rj_cor.meteorologia.precipitacao_cemaden.schedules import (
     minute_schedule,
@@ -46,10 +46,9 @@ with Flow(
     ],
     # skip_if_running=True,
 ) as cor_meteorologia_precipitacao_cemaden:
-    DATASET_ID = "clima_pluviometro"
-    TABLE_ID = "taxa_precipitacao_cemaden"
-    DUMP_MODE = "append"
-
+    DUMP_MODE = Parameter("dump_mode", default="append", required=True)
+    DATASET_ID = Parameter("dataset_id", default="clima_pluviometro", required=True)
+    TABLE_ID = Parameter("table_id", default="taxa_precipitacao_cemaden", required=True)
     # Materialization parameters
     MATERIALIZE_AFTER_DUMP = Parameter(
         "materialize_after_dump", default=False, required=False
@@ -71,12 +70,12 @@ with Flow(
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
 
-    dados = tratar_dados(
+    dataframe = treat_data(
         dataset_id=DATASET_ID,
         table_id=TABLE_ID,
         mode=MATERIALIZATION_MODE,
     )
-    path = salvar_dados(dados=dados)
+    path = save_data(dataframe=dataframe)
 
     # Create table in BigQuery
     UPLOAD_TABLE = create_table_and_upload_to_gcs(
