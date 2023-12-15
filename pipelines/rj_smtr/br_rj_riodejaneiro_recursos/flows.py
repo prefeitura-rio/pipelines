@@ -98,11 +98,6 @@ with Flow(
         **constants.SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS.value["extract_params"],
     }
 
-    recurso_capture_parameters = {
-        "data_recurso": timestamp,
-        **constants.SUBSIDIO_SPPO_BLOQUEIO_VIA_CAPTURE_PARAMS.value["extract_params"],
-    }
-
     LABELS = get_current_flow_labels()
 
     # Captura dos dados #
