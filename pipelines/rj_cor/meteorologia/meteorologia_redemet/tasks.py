@@ -76,11 +76,11 @@ def download_data(first_date: str, last_date: str) -> pd.DataFrame:
                 url = f"{base_url}&localidade={id_estacao}&datahora={data:06}{hora:02}"
                 res = requests.get(url)
                 if res.status_code != 200:
-                    log(f"Problema no id: {id_estacao}, {res.status_code}, {url}")
+                    log(f"Problema no id: {id_estacao}, {res.status_code}")
                     continue
                 res_data = json.loads(res.text)
                 if res_data["status"] is not True:
-                    log(f"Problema no id: {id_estacao}, {res_data['message']}, {url}")
+                    log(f"Problema no id: {id_estacao}, {res_data['message']}")
                     continue
                 if "data" not in res_data["data"]:
                     # Sem dataframe para esse horario
@@ -213,7 +213,7 @@ def download_stations_data() -> pd.DataFrame:
     url = f"{base_url}&pais=Brasil"
     res = requests.get(url)
     if res.status_code != 200:
-        print(f"Problem on request: {res.status_code}, {url}")
+        print(f"Problem on request: {res.status_code}")
     res_data = json.loads(res.text)
 
     dataframe = pd.DataFrame(res_data["data"])
