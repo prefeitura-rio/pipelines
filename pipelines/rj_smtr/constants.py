@@ -654,7 +654,8 @@ class constants(Enum):  # pylint: disable=c0103
         "extract_params": {
             "token": "",
             "$select": "id,protocol,createdDate,lastUpdate",
-            "$filter": "{service} and createdDate lt {end}",
+            "$filter": "{service} and (lastUpdate ge {start} and lastUpdate lt {end} \
+or createdDate ge {start} and createdDate lt {end})",
             "$expand": "customFieldValues,customFieldValues($expand=items)",
             "$orderby": "createdDate asc",
         },
