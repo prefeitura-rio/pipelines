@@ -33,7 +33,7 @@ hour_schedule = Schedule(
 month_schedule = Schedule(
     clocks=[
         IntervalClock(
-            interval=timedelta(months=1),
+            interval=timedelta(days=30),
             start_date=datetime(2023, 1, 1, 0, 12, 0),
             labels=[
                 constants.RJ_COR_AGENT_LABEL.value,
