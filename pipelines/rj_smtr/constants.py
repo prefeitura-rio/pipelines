@@ -683,13 +683,12 @@ or createdDate ge {start} and createdDate lt {end})",
     )
     SUBSIDIO_SPPO_RECURSO_REPROCESSAMENTO_CAPTURE_PARAMS = {
         "partition_date_only": True,
-        "table_id": "recurso_sppo_reprocessamento",
+        "table_id": "recursos_sppo_reprocessamento",
         "dataset_id": SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
         "extract_params": {
             "token": "",
             "$select": "id,protocol,createdDate",
-            "$filter": "{service} and (lastUpdate ge {start} and lastUpdate lt {end} \
-or createdDate ge {start} and createdDate lt {end})",
+            "$filter": "{service} and createdDate lt {end}",
             "$expand": "customFieldValues,customFieldValues($expand=items)",
             "$orderby": "createdDate asc",
         },

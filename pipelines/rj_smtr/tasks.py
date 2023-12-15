@@ -737,11 +737,16 @@ def create_request_params(
         )
         end = datetime.strftime(data_recurso, "%Y-%m-%dT%H:%M:%S.%MZ")
         log(f" Start date {start}, end date {end}")
-        if constants.SUBSIDIO_SPPO_RECURSO_SERVICE.value:
+        if (
+            constants.SUBSIDIO_SPPO_RECURSO_REPROCESSAMENTO_CAPTURE_PARAMS.value[
+                "table_id"
+            ]
+            == "recursos_sppo_reprocessamento"
+        ):
             recurso_params = {
                 "start": start,
                 "end": end,
-                "service": constants.SUBSIDIO_SPPO_RECURSO_SERVICE.value,
+                "service": constants.SUBSIDIO_SPPO_RECURSO_SERVICE_REPROCESSAMENTO.value,
             }
         else:
             recurso_params = {
