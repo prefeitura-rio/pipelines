@@ -70,9 +70,9 @@ with Flow(
 
     first_date_, last_date_, backfill = get_dates(first_date, last_date)
     # data = slice_data(current_time=CURRENT_TIME)
-    dados = download_data(first_date_, last_date_)
-    dados = treat_data(dados, backfill)
-    PATH = save_data(dados=dados)
+    dataframe = download_data(first_date_, last_date_)
+    dataframe = treat_data(dataframe, backfill)
+    PATH = save_data(dataframe=dataframe)
 
     # Create table in BigQuery
     UPLOAD_TABLE = create_table_and_upload_to_gcs(
