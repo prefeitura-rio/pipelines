@@ -676,11 +676,6 @@ or createdDate ge {start} and createdDate lt {end})",
             "version": {},
         },
     }
-
-    # SUBSÍDIO RECURSOS BLOQUEIO DE VIA
-    SUBSIDIO_SPPO_BLOQUEIO_VIA_SERVICE = (
-        "serviceFirstLevel eq 'Bloqueio da via - Recurso Viagens Subsídio'"
-    )
     # SUBSÍDIO RECURSOS REPROCESSAMENTO
 
     SUBSIDIO_SPPO_RECURSO_SERVICE_REPROCESSAMENTO = (
