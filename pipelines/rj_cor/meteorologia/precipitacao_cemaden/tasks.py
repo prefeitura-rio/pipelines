@@ -12,7 +12,7 @@ import pandas as pd
 import pendulum
 from prefect import task
 from prefect.engine.signals import ENDRUN
-from prefect.engine.state import Skipped
+from prefect.engine.state import Skipped, Failed
 from pipelines.constants import constants
 from pipelines.utils.utils import (
     log,
@@ -27,15 +27,27 @@ from pipelines.utils.utils import (
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def treat_data(
-    dataset_id: str, table_id: str, mode: str = "dev"
-) -> Tuple[pd.DataFrame, bool]:
+def download_data() -> pd.DataFrame:
     """
-    Rename cols and filter data using hour and minute from the nearest current timestamp
+    Download data from API
     """
 
     url = "http://sjc.salvar.cemaden.gov.br/resources/graficos/interativo/getJson2.php?uf=RJ"
     dataframe = pd.read_json(url)
+    return dataframe
+
+
+@task(
+    nout=2,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def treat_data(
+    dataframe: pd.DataFrame, dataset_id: str, table_id: str, mode: str = "dev"
+) -> Tuple[pd.DataFrame, bool]:
+    """
+    Rename cols and filter data using hour and minute from the nearest current timestamp
+    """
 
     drop_cols = [
         "uf",
@@ -168,3 +180,57 @@ def save_data(dataframe: pd.DataFrame) -> Union[str, Path]:
     )
     log(f"[DEBUG] Files saved on {prepath}")
     return prepath
+
+
+@task
+def check_for_new_stations(dataframe: pd.DataFrame):
+    """
+    Check if the updated stations are the same as before.
+    If not, consider flow as failed and call attention to
+    add this new station on estacoes_redemet.
+    I can't automatically update this new station, because
+    I couldn't find a url that gives me the lat and lon for
+    all the stations. To manually update enter
+    http://www2.cemaden.gov.br/mapainterativo/# >
+    Download de Dados > Estações Pluviométricas and fill the
+    requested information.
+    """
+
+    stations_before = [
+        "Abolicao",
+        "Tanque jacarepagua",
+        "Penha",
+        "Praca seca",
+        "Gloria",
+        "Est. pedra bonita",
+        "Jardim maravilha",
+        "Santa cruz",
+        "Realengo batan",
+        "Padre miguel",
+        "Salgueiro",
+        "Andarai",
+        "Ciep samuel wainer",
+        "Vargem pequena",
+        "Jacarepagua",
+        "Ciep dr. joao ramos de souza",
+        "Sao conrado",
+        "Catete",
+        "Pavuna",
+        "Vigario geral",
+        "Defesa civil santa cruz",
+        "Vicente de carvalho",
+        "Alto da boa vista",
+        "Tijuca",
+        "Usina",
+        "Higienopolis",
+        "Pilares",
+        "Ilha de paqueta",
+    ]
+    new_stations = [
+        i for i in dataframe.id_estacao.unique() if i not in stations_before
+    ]
+    if len(new_stations) != 0:
+        message = f"New station identified. You need to update CEMADEN\
+              estacoes_cemaden adding station(s) {new_stations}"
+        log(message)
+        raise ENDRUN(state=Failed(message))

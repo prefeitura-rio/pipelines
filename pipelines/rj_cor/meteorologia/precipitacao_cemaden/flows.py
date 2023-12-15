@@ -17,6 +17,8 @@ from pipelines.rj_cor.meteorologia.precipitacao_cemaden.constants import (
     constants as cemaden_constants,
 )
 from pipelines.rj_cor.meteorologia.precipitacao_cemaden.tasks import (
+    check_for_new_stations,
+    download_data,
     treat_data,
     save_data,
 )
@@ -70,7 +72,9 @@ with Flow(
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
 
+    dataframe = download_data()
     dataframe = treat_data(
+        dataframe=dataframe,
         dataset_id=DATASET_ID,
         table_id=TABLE_ID,
         mode=MATERIALIZATION_MODE,
@@ -180,6 +184,9 @@ with Flow(
                 stream_logs=True,
                 raise_final_state=True,
             )
+
+    check_for_new_stations(dataframe)
+    check_for_new_stations.set_upstream(UPLOAD_TABLE)
 
 # para rodar na cloud
 cor_meteorologia_precipitacao_cemaden.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
