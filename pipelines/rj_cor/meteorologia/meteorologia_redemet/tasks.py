@@ -214,9 +214,13 @@ def download_stations_data() -> pd.DataFrame:
     res = requests.get(url)
     if res.status_code != 200:
         print(f"Problem on request: {res.status_code}")
+
     res_data = json.loads(res.text)
+    log(f"API Return: {res_data}")
 
     dataframe = pd.DataFrame(res_data["data"])
+    log(f"Stations dataframe: {dataframe.head()}")
+
     return dataframe
 
 
@@ -253,7 +257,10 @@ def treat_stations_data(dataframe: pd.DataFrame) -> pd.DataFrame:
 
 
 @task
-def check_for_new_stations(dataframe: pd.DataFrame):
+def check_for_new_stations(
+    dataframe: pd.DataFrame,
+    wait=None,  # pylint: disable=unused-argument
+):
     """
     Check if the updated stations are the same as before.
     If not, consider flow as failed and call attention to

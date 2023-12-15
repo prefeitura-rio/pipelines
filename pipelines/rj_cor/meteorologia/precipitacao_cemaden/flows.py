@@ -185,8 +185,7 @@ with Flow(
                 raise_final_state=True,
             )
 
-    check_for_new_stations(dataframe)
-    check_for_new_stations.set_upstream(UPLOAD_TABLE)
+    check_for_new_stations(dataframe, wait=UPLOAD_TABLE)
 
 # para rodar na cloud
 cor_meteorologia_precipitacao_cemaden.storage = GCS(constants.GCS_FLOWS_BUCKET.value)

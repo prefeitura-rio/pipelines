@@ -183,7 +183,10 @@ def save_data(dataframe: pd.DataFrame) -> Union[str, Path]:
 
 
 @task
-def check_for_new_stations(dataframe: pd.DataFrame):
+def check_for_new_stations(
+    dataframe: pd.DataFrame,
+    wait=None,  # pylint: disable=unused-argument
+) -> None:
     """
     Check if the updated stations are the same as before.
     If not, consider flow as failed and call attention to

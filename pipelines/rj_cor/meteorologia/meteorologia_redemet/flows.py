@@ -250,7 +250,7 @@ with Flow(
                 raise_final_state=True,
             )
 
-    check_for_new_stations(dataframe)
+    check_for_new_stations(dataframe, wait=UPLOAD_TABLE)
 
 # para rodar na cloud
 cor_meteorologia_meteorologia_redemet_estacoes.storage = GCS(
