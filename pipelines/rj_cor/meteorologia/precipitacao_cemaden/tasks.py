@@ -12,7 +12,7 @@ import pandas as pd
 import pendulum
 from prefect import task
 from prefect.engine.signals import ENDRUN
-from prefect.engine.state import Skipped  # , Failed
+from prefect.engine.state import Skipped, Failed
 from pipelines.constants import constants
 from pipelines.utils.utils import (
     log,
@@ -190,52 +190,43 @@ def check_for_new_stations(
     """
     Check if the updated stations are the same as before.
     If not, consider flow as failed and call attention to
-    add this new station on estacoes_redemet.
+    add this new station on estacoes_cemaden.
     I can't automatically update this new station, because
     I couldn't find a url that gives me the lat and lon for
-    all the stations. To manually update enter
-    http://www2.cemaden.gov.br/mapainterativo/# >
-    Download de Dados > Estações Pluviométricas and fill the
-    requested information.
+    all the stations.
     """
 
     stations_before = [
-        "Abolicao",
-        "Tanque jacarepagua",
-        "Penha",
-        "Praca seca",
-        "Gloria",
-        "Est. pedra bonita",
-        "Jardim maravilha",
-        "Santa cruz",
-        "Realengo batan",
-        "Padre miguel",
-        "Salgueiro",
-        "Andarai",
-        "Ciep samuel wainer",
-        "Vargem pequena",
-        "Jacarepagua",
-        "Ciep dr. joao ramos de souza",
-        "Sao conrado",
-        "Catete",
-        "Pavuna",
-        "Vigario geral",
-        "Defesa civil santa cruz",
-        "Vicente de carvalho",
-        "Alto da boa vista",
-        "Tijuca",
-        "Usina",
-        "Higienopolis",
-        "Pilares",
-        "Ilha de paqueta",
+        "3043",
+        "3044",
+        "3045",
+        "3114",
+        "3215",
+        "7593",
+        "7594",
+        "7595",
+        "7596",
+        "7597",
+        "7599",
+        "7600",
+        "7601",
+        "7602",
+        "7603",
+        "7606",
+        "7609",
+        "7610",
+        "7611",
+        "7612",
+        "7613",
+        "7614",
+        "7615",
     ]
     new_stations = [
-        i
-        for i in dataframe.id_estacao.unique()
-        if i.capitalize() not in stations_before
+        i for i in dataframe.id_estacao.unique() if str(i) not in stations_before
     ]
     if len(new_stations) != 0:
         message = f"New station identified. You need to update CEMADEN\
-              estacoes_cemaden adding station(s) {new_stations}"
+              estacoes_cemaden adding station(s) {new_stations}: \
+              {dataframe[dataframe.id_estacao.isin(new_stations)]}  "
         log(message)
-        # raise ENDRUN(state=Failed(message))
+        raise ENDRUN(state=Failed(message))
