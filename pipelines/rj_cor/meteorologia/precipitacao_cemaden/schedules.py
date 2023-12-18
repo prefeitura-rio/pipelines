@@ -19,11 +19,13 @@ minute_schedule = Schedule(
             ],
             parameter_defaults={
                 # "trigger_rain_dashboard_update": True,
-                # "materialize_after_dump": True,
-                "materialize_after_dump": False,
-                # "mode": "prod",
-                "materialize_to_datario": False,
+                "materialize_after_dump": True,
+                "mode": "prod",
+                "materialize_to_datario": True,
                 "dump_to_gcs": False,
+                "dump_mode": "append",
+                "dataset_id": "clima_pluviometro",
+                "table_id": "taxa_precipitacao_cemaden",
             },
         ),
     ]
