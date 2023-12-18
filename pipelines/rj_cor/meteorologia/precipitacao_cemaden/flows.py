@@ -52,12 +52,12 @@ with Flow(
     TABLE_ID = Parameter("table_id", default="taxa_precipitacao_cemaden", required=True)
     # Materialization parameters
     MATERIALIZE_AFTER_DUMP = Parameter(
-        "materialize_after_dump", default=False, required=False
+        "materialize_after_dump", default=True, required=False
     )
     MATERIALIZE_TO_DATARIO = Parameter(
-        "materialize_to_datario", default=False, required=False
+        "materialize_to_datario", default=True, required=False
     )
-    MATERIALIZATION_MODE = Parameter("mode", default="dev", required=False)
+    MATERIALIZATION_MODE = Parameter("mode", default="prod", required=False)
     TRIGGER_RAIN_DASHBOARD_UPDATE = Parameter(
         "trigger_rain_dashboard_update", default=False, required=False
     )
