@@ -9,6 +9,7 @@ from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect import Parameter, case, task
 from prefect.tasks.control_flow import merge
+from prefect.utilities.edges import unmapped
 
 
 # EMD Imports #
@@ -91,21 +92,22 @@ Bloqueio de Via/ Reprocessamento - Captura/Tratamento",
         prefix=subsidio_sppo_recurso.name + " ",
         now_time=timestamp,
     )
-    recurso_capture_parameters = {
-        "data_recurso": timestamp,
-        **constants.SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS.value["extract_params"],
-    }
 
     LABELS = get_current_flow_labels()
 
     # Captura dos dados #
     with case(capture, True):
-        run_captura = create_flow_run(
-            flow_name=sppo_recurso_captura.name,
-            project_name="staging",
+        recursos_capture_parameters = [
+            {"data_recurso": timestamp, **d}
+            for d in constants.SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS.value
+        ]
+
+        run_captura = create_flow_run.map(
+            flow_name=unmapped(sppo_recurso_captura.name),
+            project_name=unmapped("staging"),
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters={"extract_params": recurso_capture_parameters},
-            labels=LABELS,
+            parameters=recursos_capture_parameters,
+            labels=unmapped(LABELS),
         )
 
         wait_captura_true = wait_for_flow_run(
@@ -125,11 +127,11 @@ Bloqueio de Via/ Reprocessamento - Captura/Tratamento",
     # Recaptura dos dados #
 
     with case(recapture, True):
-        run_recaptura = create_flow_run(
-            flow_name=sppo_recurso_recaptura.name,
-            project_name="staging",
+        run_recaptura = create_flow_run.map(
+            flow_name=unmapped(sppo_recurso_recaptura.name),
+            project_name=unmapped("staging"),
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            labels=LABELS,
+            labels=unmapped(LABELS),
         )
 
         run_recaptura.set_upstream(wait_captura)
@@ -151,11 +153,11 @@ Bloqueio de Via/ Reprocessamento - Captura/Tratamento",
     # Materialização dos dados #
 
     with case(materialize, True):
-        run_materializacao = create_flow_run(
-            flow_name=sppo_recurso_materializacao.name,
-            project="staging",
+        run_materializacao = create_flow_run.map(
+            flow_name=unmapped(sppo_recurso_materializacao.name),
+            project_name=unmapped("staging"),
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            labels=LABELS,
+            labels=unmapped(LABELS),
             upstream_tasks=[wait_captura],
         )
 

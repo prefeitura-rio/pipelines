@@ -725,30 +725,41 @@ def create_request_params(
     elif dataset_id == constants.GTFS_DATASET_ID.value:
         request_params = {"zip_filename": extract_params["filename"]}
 
-    elif dataset_id == constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value:
-        data_recurso = extract_params.get("data_recurso", timestamp)
-        if isinstance(data_recurso, str):
-            data_recurso = datetime.fromisoformat(data_recurso)
-        extract_params["token"] = get_vault_secret(
-            constants.SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH.value
-        )["data"]["token"]
-        start = datetime.strftime(
-            data_recurso - timedelta(minutes=interval_minutes), "%Y-%m-%dT%H:%M:%S.%MZ"
-        )
-        end = datetime.strftime(data_recurso, "%Y-%m-%dT%H:%M:%S.%MZ")
-        log(f" Start date {start}, end date {end}")
-        recurso_params = {
-            "start": start,
-            "end": end,
-            "service": constants.SUBSIDIO_SPPO_RECURSO_SERVICE.value,
-        }
-        extract_params["$filter"] = extract_params["$filter"].format(**recurso_params)
-        request_params = extract_params
-
-        request_url = constants.SUBSIDIO_SPPO_RECURSO_API_BASE_URL.value
-
     elif dataset_id == constants.STU_DATASET_ID.value:
         request_params = {"bucket_name": constants.STU_BUCKET_NAME.value}
+
+    elif dataset_id == constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value:
+        # Inicialize o $filter como uma lista vazia
+        filter_list = []
+
+        for (
+            service_params
+        ) in constants.SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS.value:
+            data_recurso = extract_params.get("data_recurso", timestamp)
+            if isinstance(data_recurso, str):
+                data_recurso = datetime.fromisoformat(data_recurso)
+            extract_params["token"] = get_vault_secret(
+                constants.SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH.value
+            )["data"]["token"]
+            start = datetime.strftime(
+                data_recurso - timedelta(minutes=interval_minutes),
+                "%Y-%m-%dT%H:%M:%S.%MZ",
+            )
+            end = datetime.strftime(data_recurso, "%Y-%m-%dT%H:%M:%S.%MZ")
+            log(f" Start date {start}, end date {end}")
+            recurso_params = {
+                "start": start,
+                "end": end,
+                "service": service_params["service"],
+            }
+            # Adicione o filtro atual à lista
+            filter_list.append(extract_params["$filter"].format(**recurso_params))
+
+    # Combine todos os filtros usando 'or' e atualize o $filter em extract_params
+    extract_params["$filter"] = " or ".join(filter_list)
+    request_params = extract_params
+
+    request_url = constants.SUBSIDIO_SPPO_RECURSO_API_BASE_URL.value
 
     return request_params, request_url
 
