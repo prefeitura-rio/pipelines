@@ -6,7 +6,7 @@
 <meta name="generator" content="pdoc 0.10.0" />
 <title>pipelines.rj_cor.meteorologia.meteorologia_redemet.schedules API documentation</title>
 <meta name="description" content="Schedules for meteorologia_redemet
-Rodar a cada 1 hora" />
+Dados são atualizados a cada 1 hora" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -24,7 +24,7 @@ Rodar a cada 1 hora" />
 </header>
 <section id="section-intro">
 <p>Schedules for meteorologia_redemet
-Rodar a cada 1 hora</p>
+Dados são atualizados a cada 1 hora</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -32,7 +32,7 @@ Rodar a cada 1 hora</p>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
 Schedules for meteorologia_redemet
-Rodar a cada 1 hora
+Dados são atualizados a cada 1 hora
 &#34;&#34;&#34;
 from datetime import timedelta, datetime
 from prefect.schedules import Schedule
@@ -42,8 +42,8 @@ from pipelines.constants import constants
 hour_schedule = Schedule(
     clocks=[
         IntervalClock(
-            interval=timedelta(days=30),
-            start_date=datetime(2023, 1, 1, 0, 12, 0),
+            interval=timedelta(minutes=60),
+            start_date=datetime(2023, 1, 1, 0, 10, 0),
             labels=[
                 constants.RJ_COR_AGENT_LABEL.value,
             ],

@@ -80,12 +80,12 @@ with Flow(
 
     # Materialization parameters
     MATERIALIZE_AFTER_DUMP = Parameter(
-        &#34;materialize_after_dump&#34;, default=False, required=False
+        &#34;materialize_after_dump&#34;, default=True, required=False
     )
     MATERIALIZE_TO_DATARIO = Parameter(
-        &#34;materialize_to_datario&#34;, default=False, required=False
+        &#34;materialize_to_datario&#34;, default=True, required=False
     )
-    MATERIALIZATION_MODE = Parameter(&#34;mode&#34;, default=&#34;dev&#34;, required=False)
+    MATERIALIZATION_MODE = Parameter(&#34;mode&#34;, default=&#34;prod&#34;, required=False)
 
     # Dump to GCS after? Should only dump to GCS if materializing to datario
     DUMP_TO_GCS = Parameter(&#34;dump_to_gcs&#34;, default=False, required=False)
