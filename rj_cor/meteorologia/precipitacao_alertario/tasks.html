@@ -147,17 +147,21 @@ def tratar_dados(
         mode=mode,
     )
 
-    # Ajustando dados da meia-noite que vem sem o horário
-    for index, row in dados.iterrows():
-        try:
-            date = pd.to_datetime(row[&#34;data_medicao&#34;], format=&#34;%Y-%m-%d %H:%M:%S&#34;)
-        except ValueError:
-            date = pd.to_datetime(row[&#34;data_medicao&#34;]) + pd.DateOffset(hours=0)
+    # # Ajustando dados da meia-noite que vem sem o horário
+    # for index, row in dados.iterrows():
+    #     try:
+    #         date = pd.to_datetime(row[&#34;data_medicao&#34;], format=&#34;%Y-%m-%d %H:%M:%S&#34;)
+    #     except ValueError:
+    #         date = pd.to_datetime(row[&#34;data_medicao&#34;]) + pd.DateOffset(hours=0)
 
-        dados.at[index, &#34;data_medicao&#34;] = date.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+    #     dados.at[index, &#34;data_medicao&#34;] = date.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
 
-    # dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao&#34;].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
-    log(f&#34;Dataframe after comparing with last data saved on redis {dados.head()}&#34;)
+    see_cols = [&#34;id_estacao&#34;, &#34;data_medicao&#34;, &#34;last_update&#34;]
+    log(
+        f&#34;Dataframe after comparing with last data saved on redis {dados[see_cols].head()}&#34;
+    )
+    dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao&#34;].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+    log(f&#34;Dataframe after converting to string {dados[see_cols].head()}&#34;)
 
     if dados.shape[0] &gt; 0:
         log(f&#34;Dataframe after comparing with last data saved on redis {dados.iloc[0]}&#34;)
@@ -172,7 +176,7 @@ def tratar_dados(
         save_str_on_redis(redis_key, &#34;date&#34;, max_date)
     else:
         # If df is empty stop flow on flows.py
-        log(f&#34;Dataframe is empty. Skipping update flow for datetime {date}.&#34;)
+        log(&#34;Dataframe is empty. Skipping update flow.&#34;)
 
     # Fixar ordem das colunas
     dados = dados[
@@ -455,17 +459,21 @@ def tratar_dados(
         mode=mode,
     )
 
-    # Ajustando dados da meia-noite que vem sem o horário
-    for index, row in dados.iterrows():
-        try:
-            date = pd.to_datetime(row[&#34;data_medicao&#34;], format=&#34;%Y-%m-%d %H:%M:%S&#34;)
-        except ValueError:
-            date = pd.to_datetime(row[&#34;data_medicao&#34;]) + pd.DateOffset(hours=0)
+    # # Ajustando dados da meia-noite que vem sem o horário
+    # for index, row in dados.iterrows():
+    #     try:
+    #         date = pd.to_datetime(row[&#34;data_medicao&#34;], format=&#34;%Y-%m-%d %H:%M:%S&#34;)
+    #     except ValueError:
+    #         date = pd.to_datetime(row[&#34;data_medicao&#34;]) + pd.DateOffset(hours=0)
 
-        dados.at[index, &#34;data_medicao&#34;] = date.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+    #     dados.at[index, &#34;data_medicao&#34;] = date.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
 
-    # dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao&#34;].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
-    log(f&#34;Dataframe after comparing with last data saved on redis {dados.head()}&#34;)
+    see_cols = [&#34;id_estacao&#34;, &#34;data_medicao&#34;, &#34;last_update&#34;]
+    log(
+        f&#34;Dataframe after comparing with last data saved on redis {dados[see_cols].head()}&#34;
+    )
+    dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao&#34;].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+    log(f&#34;Dataframe after converting to string {dados[see_cols].head()}&#34;)
 
     if dados.shape[0] &gt; 0:
         log(f&#34;Dataframe after comparing with last data saved on redis {dados.iloc[0]}&#34;)
@@ -480,7 +488,7 @@ def tratar_dados(
         save_str_on_redis(redis_key, &#34;date&#34;, max_date)
     else:
         # If df is empty stop flow on flows.py
-        log(f&#34;Dataframe is empty. Skipping update flow for datetime {date}.&#34;)
+        log(&#34;Dataframe is empty. Skipping update flow.&#34;)
 
     # Fixar ordem das colunas
     dados = dados[

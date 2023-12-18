@@ -35,10 +35,13 @@ from datetime import timedelta
 import json
 from pathlib import Path
 from typing import Tuple, Union
+from unidecode import unidecode
 
 import pandas as pd
 import pendulum
 from prefect import task
+from prefect.engine.signals import ENDRUN
+from prefect.engine.state import Failed
 import requests
 
 from pipelines.constants import constants
@@ -51,37 +54,36 @@ from pipelines.utils.utils import (
 
 
 @task(nout=3)
-def get_dates(data_inicio: str, data_fim: str) -&gt; Tuple[str, str]:
+def get_dates(first_date: str, last_date: str) -&gt; Tuple[str, str]:
     &#34;&#34;&#34;
-    Task para obter o dia de início e o de fim.
-    Se nenhuma data foi passada a data_inicio corresponde a ontem
-    e data_fim a hoje e não estamos fazendo backfill.
-    Caso contrário, retorna as datas inputadas mos parâmetros do flow.
+    Task to get first and last date.
+    If none date is passed on parameters or we are not doing a backfill
+    the first_date will be yesterday and last_date will be today.
+    Otherwise, this function will return date inputed on flow&#39;s parameters.
     &#34;&#34;&#34;
     # a API sempre retorna o dado em UTC
-    log(f&#34;data de inicio e fim antes do if {data_inicio} {data_fim}&#34;)
-    if data_inicio == &#34;&#34;:
-        data_fim = pendulum.now(&#34;UTC&#34;).format(&#34;YYYY-MM-DD&#34;)
-        data_inicio = pendulum.yesterday(&#34;UTC&#34;).format(&#34;YYYY-MM-DD&#34;)
-        backfill = 0
-    else:
+    if first_date:
         backfill = 1
-    log(f&#34;data de inicio e fim dps do if {data_inicio} {data_fim}&#34;)
+    else:
+        last_date = pendulum.now(&#34;UTC&#34;).format(&#34;YYYY-MM-DD&#34;)
+        first_date = pendulum.yesterday(&#34;UTC&#34;).format(&#34;YYYY-MM-DD&#34;)
+        backfill = 0
+    log(f&#34;Selected first_date as: {first_date} and last_date as: {last_date}&#34;)
 
-    return data_inicio, data_fim, backfill
+    return first_date, last_date, backfill
 
 
 @task(
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def download(data_inicio: str, data_fim: str) -&gt; pd.DataFrame:
+def download_data(first_date: str, last_date: str) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
-    Faz o request na data especificada e retorna dados
+    Request data from especified date range
     &#34;&#34;&#34;
 
-    # Lista com as estações da cidade do Rio de Janeiro
-    estacoes_unicas = [
+    # Stations inside Rio de Janeiro city
+    rj_stations = [
         &#34;SBAF&#34;,
         &#34;SBGL&#34;,
         &#34;SBJR&#34;,
@@ -89,90 +91,87 @@ def download(data_inicio: str, data_fim: str) -&gt; pd.DataFrame:
         &#34;SBSC&#34;,
     ]
 
-    dicionario = get_vault_secret(&#34;redemet-token&#34;)
+    redemet_token = get_vault_secret(&#34;redemet-token&#34;)
+    redemet_token = redemet_token[&#34;data&#34;][&#34;token&#34;]
 
     # Converte datas em int para cálculo de faixas.
-    data_inicio_int = int(data_inicio.replace(&#34;-&#34;, &#34;&#34;))
-    data_fim_int = int(data_fim.replace(&#34;-&#34;, &#34;&#34;))
+    first_date_int = int(first_date.replace(&#34;-&#34;, &#34;&#34;))
+    last_date_int = int(last_date.replace(&#34;-&#34;, &#34;&#34;))
 
     raw = []
-    for id_estacao in estacoes_unicas:
-        base_url = f&#34;https://api-redemet.decea.mil.br/aerodromos/info?api_key={dicionario[&#39;data&#39;][&#39;token&#39;]}&#34;  # noqa
-        for data in range(data_inicio_int, data_fim_int + 1):
+    for id_estacao in rj_stations:
+        base_url = f&#34;https://api-redemet.decea.mil.br/aerodromos/info?api_key={redemet_token}&#34;  # noqa
+        for data in range(first_date_int, last_date_int + 1):
             for hora in range(24):
                 url = f&#34;{base_url}&amp;localidade={id_estacao}&amp;datahora={data:06}{hora:02}&#34;
                 res = requests.get(url)
                 if res.status_code != 200:
-                    log(f&#34;Problema no id: {id_estacao}, {res.status_code}, {url}&#34;)
+                    log(f&#34;Problema no id: {id_estacao}, {res.status_code}&#34;)
                     continue
                 res_data = json.loads(res.text)
                 if res_data[&#34;status&#34;] is not True:
-                    log(f&#34;Problema no id: {id_estacao}, {res_data[&#39;message&#39;]}, {url}&#34;)
+                    log(f&#34;Problema no id: {id_estacao}, {res_data[&#39;message&#39;]}&#34;)
                     continue
                 if &#34;data&#34; not in res_data[&#34;data&#34;]:
-                    # Sem dados para esse horario
+                    # Sem dataframe para esse horario
                     continue
                 raw.append(res_data)
 
-    # Extrai objetos de dados
+    # Extrai objetos de dataframe
     raw = [res_data[&#34;data&#34;] for res_data in raw]
 
-    # converte para dados
-    dados = pd.DataFrame(raw)
+    # converte para dataframe
+    dataframe = pd.DataFrame(raw)
 
-    return dados
+    return dataframe
 
 
 @task
-def tratar_dados(dados: pd.DataFrame, backfill: bool = 0) -&gt; pd.DataFrame:
+def treat_data(dataframe: pd.DataFrame, backfill: bool = 0) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
-    Renomeia colunas e filtra dados com a hora do timestamp de execução
+    Rename cols, convert timestamp, filter data for the actual date
     &#34;&#34;&#34;
 
     drop_cols = [&#34;nome&#34;, &#34;cidade&#34;, &#34;lon&#34;, &#34;lat&#34;, &#34;localizacao&#34;, &#34;tempoImagem&#34;, &#34;metar&#34;]
-    # Checa se todas estão no df
-    drop_cols = [c for c in drop_cols if c in dados.columns]
+    # Check if all columns are on the dataframe
+    drop_cols = [c for c in drop_cols if c in dataframe.columns]
 
-    # Remove colunas que já temos os dados em outras tabelas
-    dados = dados.drop(drop_cols, axis=1)
+    # Remove columns that are already in another table
+    dataframe = dataframe.drop(drop_cols, axis=1)
 
-    # Adequando nome das variáveis
     rename_cols = {
         &#34;localidade&#34;: &#34;id_estacao&#34;,
         &#34;ur&#34;: &#34;umidade&#34;,
     }
 
-    dados = dados.rename(columns=rename_cols)
+    dataframe = dataframe.rename(columns=rename_cols)
 
-    # Converte horário de UTC para America/Sao Paulo
+    # Convert UTC time to America/Sao Paulo
     formato = &#34;DD/MM/YYYY HH:mm(z)&#34;
-    dados[&#34;data&#34;] = dados[&#34;data&#34;].apply(
+    dataframe[&#34;data&#34;] = dataframe[&#34;data&#34;].apply(
         lambda x: pendulum.from_format(x, formato)
         .in_tz(&#34;America/Sao_Paulo&#34;)
         .format(formato)
     )
 
-    # Ordenamento de variáveis
-    chaves_primarias = [&#34;id_estacao&#34;, &#34;data&#34;]
-    demais_cols = [c for c in dados.columns if c not in chaves_primarias]
+    # Order variables
+    primary_keys = [&#34;id_estacao&#34;, &#34;data&#34;]
+    other_cols = [c for c in dataframe.columns if c not in primary_keys]
 
-    dados = dados[chaves_primarias + demais_cols]
+    dataframe = dataframe[primary_keys + other_cols]
 
-    # Converte variáveis que deveriam ser int para int
-    dados[&#34;temperatura&#34;] = dados[&#34;temperatura&#34;].apply(
+    # Clean data
+    dataframe[&#34;temperatura&#34;] = dataframe[&#34;temperatura&#34;].apply(
         lambda x: None if x[:-2] == &#34;NIL&#34; else int(x[:-2])
     )
-    dados[&#34;umidade&#34;] = dados[&#34;umidade&#34;].apply(
+    dataframe[&#34;umidade&#34;] = dataframe[&#34;umidade&#34;].apply(
         lambda x: None if &#34;%&#34; not in x else int(x[:-1])
     )
 
-    dados[&#34;data&#34;] = pd.to_datetime(dados.data, format=&#34;%d/%m/%Y %H:%M(%Z)&#34;)
-
-    # Pegar o dia no nosso timezone como partição
-    br_timezone = pendulum.now(&#34;America/Sao_Paulo&#34;).format(&#34;YYYY-MM-DD&#34;)
+    dataframe[&#34;data&#34;] = pd.to_datetime(dataframe.data, format=&#34;%d/%m/%Y %H:%M(%Z)&#34;)
 
     # Define colunas que serão salvas
-    dados = dados[
+    dataframe = dataframe[
         [
             &#34;id_estacao&#34;,
             &#34;data&#34;,
@@ -185,39 +184,40 @@ def tratar_dados(dados: pd.DataFrame, backfill: bool = 0) -&gt; pd.DataFrame:
         ]
     ]
 
-    # Remover dados duplicados
-    dados = dados.drop_duplicates(subset=[&#34;id_estacao&#34;, &#34;data&#34;])
+    dataframe = dataframe.drop_duplicates(subset=[&#34;id_estacao&#34;, &#34;data&#34;])
 
-    log(f&#34;Dados antes do filtro dia:\n{dados[[&#39;id_estacao&#39;, &#39;data&#39;]]}&#34;)
+    log(f&#34;Dados antes do filtro dia:\n{dataframe[[&#39;id_estacao&#39;, &#39;data&#39;]]}&#34;)
 
     if not backfill:
-        # Seleciona apenas dados daquele dia (devido à UTC)
-        dados = dados[dados[&#34;data&#34;].dt.date.astype(str) == br_timezone]
+        # Select our date
+        br_timezone = pendulum.now(&#34;America/Sao_Paulo&#34;).format(&#34;YYYY-MM-DD&#34;)
 
-    log(f&#34;&gt;&gt;&gt;&gt; min hora {dados[~dados.temperatura.isna()].data.min()}&#34;)
-    log(f&#34;&gt;&gt;&gt;&gt; max hora {dados[~dados.temperatura.isna()].data.max()}&#34;)
+        # Select only data from that date
+        dataframe = dataframe[dataframe[&#34;data&#34;].dt.date.astype(str) == br_timezone]
 
-    # Remover fuso horário
-    dados[&#34;data&#34;] = dados[&#34;data&#34;].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
-    dados.rename(columns={&#34;data&#34;: &#34;data_medicao&#34;}, inplace=True)
+    log(f&#34;&gt;&gt;&gt;&gt; min hora {dataframe[~dataframe.temperatura.isna()].data.min()}&#34;)
+    log(f&#34;&gt;&gt;&gt;&gt; max hora {dataframe[~dataframe.temperatura.isna()].data.max()}&#34;)
 
-    # Capitalizar os dados da coluna céu
-    dados[&#34;ceu&#34;] = dados[&#34;ceu&#34;].str.capitalize()
+    dataframe[&#34;data&#34;] = dataframe[&#34;data&#34;].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+    dataframe.rename(columns={&#34;data&#34;: &#34;data_medicao&#34;}, inplace=True)
 
-    return dados
+    dataframe[&#34;ceu&#34;] = dataframe[&#34;ceu&#34;].str.capitalize()
+
+    return dataframe
 
 
 @task
-def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
+def save_data(
+    dataframe: pd.DataFrame, partition_column: str = &#34;data_medicao&#34;
+) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
-    Salvar dados em csv
+    Salve dataframe as a csv file
     &#34;&#34;&#34;
 
     prepath = Path(&#34;/tmp/meteorologia_redemet/&#34;)
     prepath.mkdir(parents=True, exist_ok=True)
 
-    partition_column = &#34;data_medicao&#34;
-    dataframe, partitions = parse_date_columns(dados, partition_column)
+    dataframe, partitions = parse_date_columns(dataframe, partition_column)
 
     # Cria partições a partir da data
     to_partitions(
@@ -227,7 +227,92 @@ def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
         data_type=&#34;csv&#34;,
     )
     log(f&#34;[DEBUG] Files saved on {prepath}&#34;)
-    return prepath</code></pre>
+    return prepath
+
+
+@task
+def download_stations_data() -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Download station information
+    &#34;&#34;&#34;
+
+    redemet_token = get_vault_secret(&#34;redemet-token&#34;)
+    redemet_token = redemet_token[&#34;data&#34;][&#34;token&#34;]
+    base_url = (
+        f&#34;https://api-redemet.decea.mil.br/aerodromos/?api_key={redemet_token}&#34;  # noqa
+    )
+    url = f&#34;{base_url}&amp;pais=Brasil&#34;
+    res = requests.get(url)
+    if res.status_code != 200:
+        print(f&#34;Problem on request: {res.status_code}&#34;)
+
+    res_data = json.loads(res.text)
+    log(f&#34;API Return: {res_data}&#34;)
+
+    dataframe = pd.DataFrame(res_data[&#34;data&#34;])
+    log(f&#34;Stations dataframe: {dataframe.head()}&#34;)
+
+    return dataframe
+
+
+@task
+def treat_stations_data(dataframe: pd.DataFrame) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Treat station data
+    &#34;&#34;&#34;
+    rename_cols = {
+        &#34;lat_dec&#34;: &#34;latitude&#34;,
+        &#34;lon_dec&#34;: &#34;longitude&#34;,
+        &#34;nome&#34;: &#34;estacao&#34;,
+        &#34;altitude_metros&#34;: &#34;altitude&#34;,
+        &#34;cod&#34;: &#34;id_estacao&#34;,
+    }
+    dataframe = dataframe.rename(rename_cols, axis=1)
+
+    dataframe = dataframe[dataframe.cidade.str.contains(&#34;Rio de Janeiro&#34;)]
+
+    dataframe[&#34;estacao&#34;] = dataframe[&#34;estacao&#34;].apply(unidecode)
+    dataframe[&#34;data_atualizacao&#34;] = pendulum.now(tz=&#34;America/Sao_Paulo&#34;).format(
+        &#34;YYYY-MM-DD&#34;
+    )
+
+    keep_cols = [
+        &#34;id_estacao&#34;,
+        &#34;estacao&#34;,
+        &#34;latitude&#34;,
+        &#34;longitude&#34;,
+        &#34;altitude&#34;,
+        &#34;data_atualizacao&#34;,
+    ]
+    return dataframe[keep_cols]
+
+
+@task
+def check_for_new_stations(
+    dataframe: pd.DataFrame,
+    wait=None,  # pylint: disable=unused-argument
+):
+    &#34;&#34;&#34;
+    Check if the updated stations are the same as before.
+    If not, consider flow as failed and call attention to
+    change treat_data task.
+    &#34;&#34;&#34;
+
+    stations_before = [
+        &#34;SBAF&#34;,
+        &#34;SBGL&#34;,
+        &#34;SBJR&#34;,
+        &#34;SBRJ&#34;,
+        &#34;SBSC&#34;,
+    ]
+    new_stations = [
+        i for i in dataframe.id_estacao.unique() if i not in stations_before
+    ]
+    if len(new_stations) != 0:
+        message = f&#34;New station identified. You need to update REDEMET\
+              flow and add station(s) {new_stations}&#34;
+        log(message)
+        raise ENDRUN(state=Failed(message))</code></pre>
 </details>
 </section>
 <section>
@@ -237,11 +322,50 @@ def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.download"><code class="name flex">
-<span>def <span class="ident">download</span></span>(<span>data_inicio: str, data_fim: str) ‑> pandas.core.frame.DataFrame</span>
+<dt id="pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.check_for_new_stations"><code class="name flex">
+<span>def <span class="ident">check_for_new_stations</span></span>(<span>dataframe: pandas.core.frame.DataFrame, wait=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Faz o request na data especificada e retorna dados</p></div>
+<div class="desc"><p>Check if the updated stations are the same as before.
+If not, consider flow as failed and call attention to
+change treat_data task.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def check_for_new_stations(
+    dataframe: pd.DataFrame,
+    wait=None,  # pylint: disable=unused-argument
+):
+    &#34;&#34;&#34;
+    Check if the updated stations are the same as before.
+    If not, consider flow as failed and call attention to
+    change treat_data task.
+    &#34;&#34;&#34;
+
+    stations_before = [
+        &#34;SBAF&#34;,
+        &#34;SBGL&#34;,
+        &#34;SBJR&#34;,
+        &#34;SBRJ&#34;,
+        &#34;SBSC&#34;,
+    ]
+    new_stations = [
+        i for i in dataframe.id_estacao.unique() if i not in stations_before
+    ]
+    if len(new_stations) != 0:
+        message = f&#34;New station identified. You need to update REDEMET\
+              flow and add station(s) {new_stations}&#34;
+        log(message)
+        raise ENDRUN(state=Failed(message))</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.download_data"><code class="name flex">
+<span>def <span class="ident">download_data</span></span>(<span>first_date: str, last_date: str) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request data from especified date range</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -250,13 +374,13 @@ def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def download(data_inicio: str, data_fim: str) -&gt; pd.DataFrame:
+def download_data(first_date: str, last_date: str) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
-    Faz o request na data especificada e retorna dados
+    Request data from especified date range
     &#34;&#34;&#34;
 
-    # Lista com as estações da cidade do Rio de Janeiro
-    estacoes_unicas = [
+    # Stations inside Rio de Janeiro city
+    rj_stations = [
         &#34;SBAF&#34;,
         &#34;SBGL&#34;,
         &#34;SBJR&#34;,
@@ -264,93 +388,128 @@ def download(data_inicio: str, data_fim: str) -&gt; pd.DataFrame:
         &#34;SBSC&#34;,
     ]
 
-    dicionario = get_vault_secret(&#34;redemet-token&#34;)
+    redemet_token = get_vault_secret(&#34;redemet-token&#34;)
+    redemet_token = redemet_token[&#34;data&#34;][&#34;token&#34;]
 
     # Converte datas em int para cálculo de faixas.
-    data_inicio_int = int(data_inicio.replace(&#34;-&#34;, &#34;&#34;))
-    data_fim_int = int(data_fim.replace(&#34;-&#34;, &#34;&#34;))
+    first_date_int = int(first_date.replace(&#34;-&#34;, &#34;&#34;))
+    last_date_int = int(last_date.replace(&#34;-&#34;, &#34;&#34;))
 
     raw = []
-    for id_estacao in estacoes_unicas:
-        base_url = f&#34;https://api-redemet.decea.mil.br/aerodromos/info?api_key={dicionario[&#39;data&#39;][&#39;token&#39;]}&#34;  # noqa
-        for data in range(data_inicio_int, data_fim_int + 1):
+    for id_estacao in rj_stations:
+        base_url = f&#34;https://api-redemet.decea.mil.br/aerodromos/info?api_key={redemet_token}&#34;  # noqa
+        for data in range(first_date_int, last_date_int + 1):
             for hora in range(24):
                 url = f&#34;{base_url}&amp;localidade={id_estacao}&amp;datahora={data:06}{hora:02}&#34;
                 res = requests.get(url)
                 if res.status_code != 200:
-                    log(f&#34;Problema no id: {id_estacao}, {res.status_code}, {url}&#34;)
+                    log(f&#34;Problema no id: {id_estacao}, {res.status_code}&#34;)
                     continue
                 res_data = json.loads(res.text)
                 if res_data[&#34;status&#34;] is not True:
-                    log(f&#34;Problema no id: {id_estacao}, {res_data[&#39;message&#39;]}, {url}&#34;)
+                    log(f&#34;Problema no id: {id_estacao}, {res_data[&#39;message&#39;]}&#34;)
                     continue
                 if &#34;data&#34; not in res_data[&#34;data&#34;]:
-                    # Sem dados para esse horario
+                    # Sem dataframe para esse horario
                     continue
                 raw.append(res_data)
 
-    # Extrai objetos de dados
+    # Extrai objetos de dataframe
     raw = [res_data[&#34;data&#34;] for res_data in raw]
 
-    # converte para dados
-    dados = pd.DataFrame(raw)
+    # converte para dataframe
+    dataframe = pd.DataFrame(raw)
 
-    return dados</code></pre>
+    return dataframe</code></pre>
 </details>
 </dd>
-<dt id="pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.get_dates"><code class="name flex">
-<span>def <span class="ident">get_dates</span></span>(<span>data_inicio: str, data_fim: str) ‑> Tuple[str, str]</span>
+<dt id="pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.download_stations_data"><code class="name flex">
+<span>def <span class="ident">download_stations_data</span></span>(<span>) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Task para obter o dia de início e o de fim.
-Se nenhuma data foi passada a data_inicio corresponde a ontem
-e data_fim a hoje e não estamos fazendo backfill.
-Caso contrário, retorna as datas inputadas mos parâmetros do flow.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task(nout=3)
-def get_dates(data_inicio: str, data_fim: str) -&gt; Tuple[str, str]:
-    &#34;&#34;&#34;
-    Task para obter o dia de início e o de fim.
-    Se nenhuma data foi passada a data_inicio corresponde a ontem
-    e data_fim a hoje e não estamos fazendo backfill.
-    Caso contrário, retorna as datas inputadas mos parâmetros do flow.
-    &#34;&#34;&#34;
-    # a API sempre retorna o dado em UTC
-    log(f&#34;data de inicio e fim antes do if {data_inicio} {data_fim}&#34;)
-    if data_inicio == &#34;&#34;:
-        data_fim = pendulum.now(&#34;UTC&#34;).format(&#34;YYYY-MM-DD&#34;)
-        data_inicio = pendulum.yesterday(&#34;UTC&#34;).format(&#34;YYYY-MM-DD&#34;)
-        backfill = 0
-    else:
-        backfill = 1
-    log(f&#34;data de inicio e fim dps do if {data_inicio} {data_fim}&#34;)
-
-    return data_inicio, data_fim, backfill</code></pre>
-</details>
-</dd>
-<dt id="pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.salvar_dados"><code class="name flex">
-<span>def <span class="ident">salvar_dados</span></span>(<span>dados: pandas.core.frame.DataFrame) ‑> Union[str, pathlib.Path]</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Salvar dados em csv</p></div>
+<div class="desc"><p>Download station information</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
+def download_stations_data() -&gt; pd.DataFrame:
     &#34;&#34;&#34;
-    Salvar dados em csv
+    Download station information
+    &#34;&#34;&#34;
+
+    redemet_token = get_vault_secret(&#34;redemet-token&#34;)
+    redemet_token = redemet_token[&#34;data&#34;][&#34;token&#34;]
+    base_url = (
+        f&#34;https://api-redemet.decea.mil.br/aerodromos/?api_key={redemet_token}&#34;  # noqa
+    )
+    url = f&#34;{base_url}&amp;pais=Brasil&#34;
+    res = requests.get(url)
+    if res.status_code != 200:
+        print(f&#34;Problem on request: {res.status_code}&#34;)
+
+    res_data = json.loads(res.text)
+    log(f&#34;API Return: {res_data}&#34;)
+
+    dataframe = pd.DataFrame(res_data[&#34;data&#34;])
+    log(f&#34;Stations dataframe: {dataframe.head()}&#34;)
+
+    return dataframe</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.get_dates"><code class="name flex">
+<span>def <span class="ident">get_dates</span></span>(<span>first_date: str, last_date: str) ‑> Tuple[str, str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Task to get first and last date.
+If none date is passed on parameters or we are not doing a backfill
+the first_date will be yesterday and last_date will be today.
+Otherwise, this function will return date inputed on flow's parameters.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(nout=3)
+def get_dates(first_date: str, last_date: str) -&gt; Tuple[str, str]:
+    &#34;&#34;&#34;
+    Task to get first and last date.
+    If none date is passed on parameters or we are not doing a backfill
+    the first_date will be yesterday and last_date will be today.
+    Otherwise, this function will return date inputed on flow&#39;s parameters.
+    &#34;&#34;&#34;
+    # a API sempre retorna o dado em UTC
+    if first_date:
+        backfill = 1
+    else:
+        last_date = pendulum.now(&#34;UTC&#34;).format(&#34;YYYY-MM-DD&#34;)
+        first_date = pendulum.yesterday(&#34;UTC&#34;).format(&#34;YYYY-MM-DD&#34;)
+        backfill = 0
+    log(f&#34;Selected first_date as: {first_date} and last_date as: {last_date}&#34;)
+
+    return first_date, last_date, backfill</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.save_data"><code class="name flex">
+<span>def <span class="ident">save_data</span></span>(<span>dataframe: pandas.core.frame.DataFrame, partition_column: str = 'data_medicao') ‑> Union[str, pathlib.Path]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Salve dataframe as a csv file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def save_data(
+    dataframe: pd.DataFrame, partition_column: str = &#34;data_medicao&#34;
+) -&gt; Union[str, Path]:
+    &#34;&#34;&#34;
+    Salve dataframe as a csv file
     &#34;&#34;&#34;
 
     prepath = Path(&#34;/tmp/meteorologia_redemet/&#34;)
     prepath.mkdir(parents=True, exist_ok=True)
 
-    partition_column = &#34;data_medicao&#34;
-    dataframe, partitions = parse_date_columns(dados, partition_column)
+    dataframe, partitions = parse_date_columns(dataframe, partition_column)
 
     # Cria partições a partir da data
     to_partitions(
@@ -363,65 +522,61 @@ def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
     return prepath</code></pre>
 </details>
 </dd>
-<dt id="pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.tratar_dados"><code class="name flex">
-<span>def <span class="ident">tratar_dados</span></span>(<span>dados: pandas.core.frame.DataFrame, backfill: bool = 0) ‑> pandas.core.frame.DataFrame</span>
+<dt id="pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.treat_data"><code class="name flex">
+<span>def <span class="ident">treat_data</span></span>(<span>dataframe: pandas.core.frame.DataFrame, backfill: bool = 0) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Renomeia colunas e filtra dados com a hora do timestamp de execução</p></div>
+<div class="desc"><p>Rename cols, convert timestamp, filter data for the actual date</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def tratar_dados(dados: pd.DataFrame, backfill: bool = 0) -&gt; pd.DataFrame:
+def treat_data(dataframe: pd.DataFrame, backfill: bool = 0) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
-    Renomeia colunas e filtra dados com a hora do timestamp de execução
+    Rename cols, convert timestamp, filter data for the actual date
     &#34;&#34;&#34;
 
     drop_cols = [&#34;nome&#34;, &#34;cidade&#34;, &#34;lon&#34;, &#34;lat&#34;, &#34;localizacao&#34;, &#34;tempoImagem&#34;, &#34;metar&#34;]
-    # Checa se todas estão no df
-    drop_cols = [c for c in drop_cols if c in dados.columns]
+    # Check if all columns are on the dataframe
+    drop_cols = [c for c in drop_cols if c in dataframe.columns]
 
-    # Remove colunas que já temos os dados em outras tabelas
-    dados = dados.drop(drop_cols, axis=1)
+    # Remove columns that are already in another table
+    dataframe = dataframe.drop(drop_cols, axis=1)
 
-    # Adequando nome das variáveis
     rename_cols = {
         &#34;localidade&#34;: &#34;id_estacao&#34;,
         &#34;ur&#34;: &#34;umidade&#34;,
     }
 
-    dados = dados.rename(columns=rename_cols)
+    dataframe = dataframe.rename(columns=rename_cols)
 
-    # Converte horário de UTC para America/Sao Paulo
+    # Convert UTC time to America/Sao Paulo
     formato = &#34;DD/MM/YYYY HH:mm(z)&#34;
-    dados[&#34;data&#34;] = dados[&#34;data&#34;].apply(
+    dataframe[&#34;data&#34;] = dataframe[&#34;data&#34;].apply(
         lambda x: pendulum.from_format(x, formato)
         .in_tz(&#34;America/Sao_Paulo&#34;)
         .format(formato)
     )
 
-    # Ordenamento de variáveis
-    chaves_primarias = [&#34;id_estacao&#34;, &#34;data&#34;]
-    demais_cols = [c for c in dados.columns if c not in chaves_primarias]
+    # Order variables
+    primary_keys = [&#34;id_estacao&#34;, &#34;data&#34;]
+    other_cols = [c for c in dataframe.columns if c not in primary_keys]
 
-    dados = dados[chaves_primarias + demais_cols]
+    dataframe = dataframe[primary_keys + other_cols]
 
-    # Converte variáveis que deveriam ser int para int
-    dados[&#34;temperatura&#34;] = dados[&#34;temperatura&#34;].apply(
+    # Clean data
+    dataframe[&#34;temperatura&#34;] = dataframe[&#34;temperatura&#34;].apply(
         lambda x: None if x[:-2] == &#34;NIL&#34; else int(x[:-2])
     )
-    dados[&#34;umidade&#34;] = dados[&#34;umidade&#34;].apply(
+    dataframe[&#34;umidade&#34;] = dataframe[&#34;umidade&#34;].apply(
         lambda x: None if &#34;%&#34; not in x else int(x[:-1])
     )
 
-    dados[&#34;data&#34;] = pd.to_datetime(dados.data, format=&#34;%d/%m/%Y %H:%M(%Z)&#34;)
-
-    # Pegar o dia no nosso timezone como partição
-    br_timezone = pendulum.now(&#34;America/Sao_Paulo&#34;).format(&#34;YYYY-MM-DD&#34;)
+    dataframe[&#34;data&#34;] = pd.to_datetime(dataframe.data, format=&#34;%d/%m/%Y %H:%M(%Z)&#34;)
 
     # Define colunas que serão salvas
-    dados = dados[
+    dataframe = dataframe[
         [
             &#34;id_estacao&#34;,
             &#34;data&#34;,
@@ -434,26 +589,67 @@ def tratar_dados(dados: pd.DataFrame, backfill: bool = 0) -&gt; pd.DataFrame:
         ]
     ]
 
-    # Remover dados duplicados
-    dados = dados.drop_duplicates(subset=[&#34;id_estacao&#34;, &#34;data&#34;])
+    dataframe = dataframe.drop_duplicates(subset=[&#34;id_estacao&#34;, &#34;data&#34;])
 
-    log(f&#34;Dados antes do filtro dia:\n{dados[[&#39;id_estacao&#39;, &#39;data&#39;]]}&#34;)
+    log(f&#34;Dados antes do filtro dia:\n{dataframe[[&#39;id_estacao&#39;, &#39;data&#39;]]}&#34;)
 
     if not backfill:
-        # Seleciona apenas dados daquele dia (devido à UTC)
-        dados = dados[dados[&#34;data&#34;].dt.date.astype(str) == br_timezone]
+        # Select our date
+        br_timezone = pendulum.now(&#34;America/Sao_Paulo&#34;).format(&#34;YYYY-MM-DD&#34;)
 
-    log(f&#34;&gt;&gt;&gt;&gt; min hora {dados[~dados.temperatura.isna()].data.min()}&#34;)
-    log(f&#34;&gt;&gt;&gt;&gt; max hora {dados[~dados.temperatura.isna()].data.max()}&#34;)
+        # Select only data from that date
+        dataframe = dataframe[dataframe[&#34;data&#34;].dt.date.astype(str) == br_timezone]
 
-    # Remover fuso horário
-    dados[&#34;data&#34;] = dados[&#34;data&#34;].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
-    dados.rename(columns={&#34;data&#34;: &#34;data_medicao&#34;}, inplace=True)
+    log(f&#34;&gt;&gt;&gt;&gt; min hora {dataframe[~dataframe.temperatura.isna()].data.min()}&#34;)
+    log(f&#34;&gt;&gt;&gt;&gt; max hora {dataframe[~dataframe.temperatura.isna()].data.max()}&#34;)
 
-    # Capitalizar os dados da coluna céu
-    dados[&#34;ceu&#34;] = dados[&#34;ceu&#34;].str.capitalize()
+    dataframe[&#34;data&#34;] = dataframe[&#34;data&#34;].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+    dataframe.rename(columns={&#34;data&#34;: &#34;data_medicao&#34;}, inplace=True)
 
-    return dados</code></pre>
+    dataframe[&#34;ceu&#34;] = dataframe[&#34;ceu&#34;].str.capitalize()
+
+    return dataframe</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.treat_stations_data"><code class="name flex">
+<span>def <span class="ident">treat_stations_data</span></span>(<span>dataframe: pandas.core.frame.DataFrame) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Treat station data</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def treat_stations_data(dataframe: pd.DataFrame) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Treat station data
+    &#34;&#34;&#34;
+    rename_cols = {
+        &#34;lat_dec&#34;: &#34;latitude&#34;,
+        &#34;lon_dec&#34;: &#34;longitude&#34;,
+        &#34;nome&#34;: &#34;estacao&#34;,
+        &#34;altitude_metros&#34;: &#34;altitude&#34;,
+        &#34;cod&#34;: &#34;id_estacao&#34;,
+    }
+    dataframe = dataframe.rename(rename_cols, axis=1)
+
+    dataframe = dataframe[dataframe.cidade.str.contains(&#34;Rio de Janeiro&#34;)]
+
+    dataframe[&#34;estacao&#34;] = dataframe[&#34;estacao&#34;].apply(unidecode)
+    dataframe[&#34;data_atualizacao&#34;] = pendulum.now(tz=&#34;America/Sao_Paulo&#34;).format(
+        &#34;YYYY-MM-DD&#34;
+    )
+
+    keep_cols = [
+        &#34;id_estacao&#34;,
+        &#34;estacao&#34;,
+        &#34;latitude&#34;,
+        &#34;longitude&#34;,
+        &#34;altitude&#34;,
+        &#34;data_atualizacao&#34;,
+    ]
+    return dataframe[keep_cols]</code></pre>
 </details>
 </dd>
 </dl>
@@ -520,10 +716,13 @@ setTimeout(() => input.focus(), 100);
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.download" href="#pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.download">download</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.check_for_new_stations" href="#pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.check_for_new_stations">check_for_new_stations</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.download_data" href="#pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.download_data">download_data</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.download_stations_data" href="#pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.download_stations_data">download_stations_data</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.get_dates" href="#pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.get_dates">get_dates</a></code></li>
-<li><code><a title="pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.salvar_dados" href="#pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.salvar_dados">salvar_dados</a></code></li>
-<li><code><a title="pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.tratar_dados" href="#pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.tratar_dados">tratar_dados</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.save_data" href="#pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.save_data">save_data</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.treat_data" href="#pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.treat_data">treat_data</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.treat_stations_data" href="#pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks.treat_stations_data">treat_stations_data</a></code></li>
 </ul>
 </li>
 </ul>

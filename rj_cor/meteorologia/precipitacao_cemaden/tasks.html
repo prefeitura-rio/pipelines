@@ -41,10 +41,7 @@ import pandas as pd
 import pendulum
 from prefect import task
 from prefect.engine.signals import ENDRUN
-from prefect.engine.state import Skipped
-
-# from prefect import context
-
+from prefect.engine.state import Skipped, Failed
 from pipelines.constants import constants
 from pipelines.utils.utils import (
     log,
@@ -59,16 +56,27 @@ from pipelines.utils.utils import (
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def tratar_dados(
-    dataset_id: str, table_id: str, mode: str = &#34;dev&#34;
-) -&gt; Tuple[pd.DataFrame, bool]:
+def download_data() -&gt; pd.DataFrame:
     &#34;&#34;&#34;
-    Renomeia colunas e filtra dados com a hora e minuto do timestamp
-    de execução mais próximo à este
+    Download data from API
     &#34;&#34;&#34;
 
     url = &#34;http://sjc.salvar.cemaden.gov.br/resources/graficos/interativo/getJson2.php?uf=RJ&#34;
-    dados = pd.read_json(url)
+    dataframe = pd.read_json(url)
+    return dataframe
+
+
+@task(
+    nout=2,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def treat_data(
+    dataframe: pd.DataFrame, dataset_id: str, table_id: str, mode: str = &#34;dev&#34;
+) -&gt; Tuple[pd.DataFrame, bool]:
+    &#34;&#34;&#34;
+    Rename cols and filter data using hour and minute from the nearest current timestamp
+    &#34;&#34;&#34;
 
     drop_cols = [
         &#34;uf&#34;,
@@ -92,34 +100,34 @@ def tratar_dados(
         &#34;acc96hr&#34;: &#34;acumulado_chuva_96_h&#34;,
     }
 
-    dados = (
-        dados[(dados[&#34;codibge&#34;] == 3304557) &amp; (dados[&#34;tipoestacao&#34;] == 1)]
+    dataframe = (
+        dataframe[(dataframe[&#34;codibge&#34;] == 3304557) &amp; (dataframe[&#34;tipoestacao&#34;] == 1)]
         .drop(drop_cols, axis=1)
         .rename(rename_cols, axis=1)
     )
-    log(f&#34;\n[DEBUG]: df.head() {dados.head()}&#34;)
+    log(f&#34;\n[DEBUG]: df.head() {dataframe.head()}&#34;)
 
-    # Converte de UTC para horário São Paulo
-    dados[&#34;data_medicao_utc&#34;] = pd.to_datetime(
-        dados[&#34;data_medicao_utc&#34;], dayfirst=True
+    # Convert from UTC to São Paulo timezone
+    dataframe[&#34;data_medicao_utc&#34;] = pd.to_datetime(
+        dataframe[&#34;data_medicao_utc&#34;], dayfirst=True
     ) + pd.DateOffset(hours=0)
-    dados[&#34;data_medicao&#34;] = (
-        dados[&#34;data_medicao_utc&#34;]
+    dataframe[&#34;data_medicao&#34;] = (
+        dataframe[&#34;data_medicao_utc&#34;]
         .dt.tz_localize(&#34;UTC&#34;)
         .dt.tz_convert(&#34;America/Sao_Paulo&#34;)
     )
     see_cols = [&#34;data_medicao_utc&#34;, &#34;data_medicao&#34;, &#34;id_estacao&#34;, &#34;acumulado_chuva_1_h&#34;]
-    log(f&#34;DEBUG: data utc -&gt; GMT-3 {dados[see_cols]}&#34;)
+    log(f&#34;DEBUG: data utc -&gt; GMT-3 {dataframe[see_cols]}&#34;)
 
     date_format = &#34;%Y-%m-%d %H:%M:%S&#34;
-    dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao&#34;].dt.strftime(date_format)
+    dataframe[&#34;data_medicao&#34;] = dataframe[&#34;data_medicao&#34;].dt.strftime(date_format)
 
-    log(f&#34;DEBUG: data {dados[see_cols]}&#34;)
+    log(f&#34;DEBUG: data {dataframe[see_cols]}&#34;)
 
-    # Alterando valores &#39;-&#39; e np.nan para NULL
-    dados.replace([&#34;-&#34;, np.nan], [0, None], inplace=True)
+    # Change values &#39;-&#39; and np.nan to NULL
+    dataframe.replace([&#34;-&#34;, np.nan], [0, None], inplace=True)
 
-    # Altera valores negativos para None
+    # Change negative values to None
     float_cols = [
         &#34;acumulado_chuva_10_min&#34;,
         &#34;acumulado_chuva_1_h&#34;,
@@ -131,16 +139,18 @@ def tratar_dados(
         &#34;acumulado_chuva_72_h&#34;,
         &#34;acumulado_chuva_96_h&#34;,
     ]
-    dados[float_cols] = np.where(dados[float_cols] &lt; 0, None, dados[float_cols])
+    dataframe[float_cols] = np.where(
+        dataframe[float_cols] &lt; 0, None, dataframe[float_cols]
+    )
 
-    # Elimina linhas em que o id_estacao é igual mantendo a de menor valor nas colunas float
-    dados.sort_values([&#34;id_estacao&#34;, &#34;data_medicao&#34;] + float_cols, inplace=True)
-    dados.drop_duplicates(subset=[&#34;id_estacao&#34;, &#34;data_medicao&#34;], keep=&#34;first&#34;)
+    # Eliminate where the id_estacao is the same keeping the smallest one
+    dataframe.sort_values([&#34;id_estacao&#34;, &#34;data_medicao&#34;] + float_cols, inplace=True)
+    dataframe.drop_duplicates(subset=[&#34;id_estacao&#34;, &#34;data_medicao&#34;], keep=&#34;first&#34;)
 
-    log(f&#34;Dataframe before comparing with last data saved on redis {dados.head()}&#34;)
+    log(f&#34;Dataframe before comparing with last data saved on redis {dataframe.head()}&#34;)
 
-    dados = save_updated_rows_on_redis(
-        dados,
+    dataframe = save_updated_rows_on_redis(
+        dataframe,
         dataset_id,
         table_id,
         unique_id=&#34;id_estacao&#34;,
@@ -149,16 +159,16 @@ def tratar_dados(
         mode=mode,
     )
 
-    log(f&#34;Dataframe after comparing with last data saved on redis {dados.head()}&#34;)
+    log(f&#34;Dataframe after comparing with last data saved on redis {dataframe.head()}&#34;)
 
     # If df is empty stop flow
-    if dados.shape[0] == 0:
+    if dataframe.shape[0] == 0:
         skip_text = &#34;No new data available on API&#34;
         log(skip_text)
         raise ENDRUN(state=Skipped(skip_text))
 
-    # Fixar ordem das colunas
-    dados = dados[
+    # Fix columns order
+    dataframe = dataframe[
         [
             &#34;id_estacao&#34;,
             &#34;data_medicao&#34;,
@@ -174,23 +184,22 @@ def tratar_dados(
         ]
     ]
 
-    return dados
+    return dataframe
 
 
 @task
-def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
+def save_data(dataframe: pd.DataFrame) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
-    Salvar dados tratados em csv para conseguir subir pro GCP
+    Save data on a csv file to be uploaded to GCP
     &#34;&#34;&#34;
 
     prepath = Path(&#34;/tmp/precipitacao_cemaden/&#34;)
     prepath.mkdir(parents=True, exist_ok=True)
 
     partition_column = &#34;data_medicao&#34;
-    dataframe, partitions = parse_date_columns(dados, partition_column)
+    dataframe, partitions = parse_date_columns(dataframe, partition_column)
     current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y%m%d%H%M&#34;)
 
-    # Cria partições a partir da data
     to_partitions(
         data=dataframe,
         partition_columns=partitions,
@@ -199,7 +208,57 @@ def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
         suffix=current_time,
     )
     log(f&#34;[DEBUG] Files saved on {prepath}&#34;)
-    return prepath</code></pre>
+    return prepath
+
+
+@task
+def check_for_new_stations(
+    dataframe: pd.DataFrame,
+    wait=None,  # pylint: disable=unused-argument
+) -&gt; None:
+    &#34;&#34;&#34;
+    Check if the updated stations are the same as before.
+    If not, consider flow as failed and call attention to
+    add this new station on estacoes_cemaden.
+    I can&#39;t automatically update this new station, because
+    I couldn&#39;t find a url that gives me the lat and lon for
+    all the stations.
+    &#34;&#34;&#34;
+
+    stations_before = [
+        &#34;3043&#34;,
+        &#34;3044&#34;,
+        &#34;3045&#34;,
+        &#34;3114&#34;,
+        &#34;3215&#34;,
+        &#34;7593&#34;,
+        &#34;7594&#34;,
+        &#34;7595&#34;,
+        &#34;7596&#34;,
+        &#34;7597&#34;,
+        &#34;7599&#34;,
+        &#34;7600&#34;,
+        &#34;7601&#34;,
+        &#34;7602&#34;,
+        &#34;7603&#34;,
+        &#34;7606&#34;,
+        &#34;7609&#34;,
+        &#34;7610&#34;,
+        &#34;7611&#34;,
+        &#34;7612&#34;,
+        &#34;7613&#34;,
+        &#34;7614&#34;,
+        &#34;7615&#34;,
+    ]
+    new_stations = [
+        i for i in dataframe.id_estacao.unique() if str(i) not in stations_before
+    ]
+    if len(new_stations) != 0:
+        message = f&#34;New station identified. You need to update CEMADEN\
+              estacoes_cemaden adding station(s) {new_stations}: \
+              {dataframe[dataframe.id_estacao.isin(new_stations)]}  &#34;
+        log(message)
+        raise ENDRUN(state=Failed(message))</code></pre>
 </details>
 </section>
 <section>
@@ -209,29 +268,116 @@ def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="pipelines.rj_cor.meteorologia.precipitacao_cemaden.tasks.salvar_dados"><code class="name flex">
-<span>def <span class="ident">salvar_dados</span></span>(<span>dados: pandas.core.frame.DataFrame) ‑> Union[str, pathlib.Path]</span>
+<dt id="pipelines.rj_cor.meteorologia.precipitacao_cemaden.tasks.check_for_new_stations"><code class="name flex">
+<span>def <span class="ident">check_for_new_stations</span></span>(<span>dataframe: pandas.core.frame.DataFrame, wait=None) ‑> None</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Salvar dados tratados em csv para conseguir subir pro GCP</p></div>
+<div class="desc"><p>Check if the updated stations are the same as before.
+If not, consider flow as failed and call attention to
+add this new station on estacoes_cemaden.
+I can't automatically update this new station, because
+I couldn't find a url that gives me the lat and lon for
+all the stations.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
+def check_for_new_stations(
+    dataframe: pd.DataFrame,
+    wait=None,  # pylint: disable=unused-argument
+) -&gt; None:
     &#34;&#34;&#34;
-    Salvar dados tratados em csv para conseguir subir pro GCP
+    Check if the updated stations are the same as before.
+    If not, consider flow as failed and call attention to
+    add this new station on estacoes_cemaden.
+    I can&#39;t automatically update this new station, because
+    I couldn&#39;t find a url that gives me the lat and lon for
+    all the stations.
+    &#34;&#34;&#34;
+
+    stations_before = [
+        &#34;3043&#34;,
+        &#34;3044&#34;,
+        &#34;3045&#34;,
+        &#34;3114&#34;,
+        &#34;3215&#34;,
+        &#34;7593&#34;,
+        &#34;7594&#34;,
+        &#34;7595&#34;,
+        &#34;7596&#34;,
+        &#34;7597&#34;,
+        &#34;7599&#34;,
+        &#34;7600&#34;,
+        &#34;7601&#34;,
+        &#34;7602&#34;,
+        &#34;7603&#34;,
+        &#34;7606&#34;,
+        &#34;7609&#34;,
+        &#34;7610&#34;,
+        &#34;7611&#34;,
+        &#34;7612&#34;,
+        &#34;7613&#34;,
+        &#34;7614&#34;,
+        &#34;7615&#34;,
+    ]
+    new_stations = [
+        i for i in dataframe.id_estacao.unique() if str(i) not in stations_before
+    ]
+    if len(new_stations) != 0:
+        message = f&#34;New station identified. You need to update CEMADEN\
+              estacoes_cemaden adding station(s) {new_stations}: \
+              {dataframe[dataframe.id_estacao.isin(new_stations)]}  &#34;
+        log(message)
+        raise ENDRUN(state=Failed(message))</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.precipitacao_cemaden.tasks.download_data"><code class="name flex">
+<span>def <span class="ident">download_data</span></span>(<span>) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Download data from API</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    nout=2,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def download_data() -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Download data from API
+    &#34;&#34;&#34;
+
+    url = &#34;http://sjc.salvar.cemaden.gov.br/resources/graficos/interativo/getJson2.php?uf=RJ&#34;
+    dataframe = pd.read_json(url)
+    return dataframe</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.precipitacao_cemaden.tasks.save_data"><code class="name flex">
+<span>def <span class="ident">save_data</span></span>(<span>dataframe: pandas.core.frame.DataFrame) ‑> Union[str, pathlib.Path]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Save data on a csv file to be uploaded to GCP</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def save_data(dataframe: pd.DataFrame) -&gt; Union[str, Path]:
+    &#34;&#34;&#34;
+    Save data on a csv file to be uploaded to GCP
     &#34;&#34;&#34;
 
     prepath = Path(&#34;/tmp/precipitacao_cemaden/&#34;)
     prepath.mkdir(parents=True, exist_ok=True)
 
     partition_column = &#34;data_medicao&#34;
-    dataframe, partitions = parse_date_columns(dados, partition_column)
+    dataframe, partitions = parse_date_columns(dataframe, partition_column)
     current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y%m%d%H%M&#34;)
 
-    # Cria partições a partir da data
     to_partitions(
         data=dataframe,
         partition_columns=partitions,
@@ -243,12 +389,11 @@ def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
     return prepath</code></pre>
 </details>
 </dd>
-<dt id="pipelines.rj_cor.meteorologia.precipitacao_cemaden.tasks.tratar_dados"><code class="name flex">
-<span>def <span class="ident">tratar_dados</span></span>(<span>dataset_id: str, table_id: str, mode: str = 'dev') ‑> Tuple[pandas.core.frame.DataFrame, bool]</span>
+<dt id="pipelines.rj_cor.meteorologia.precipitacao_cemaden.tasks.treat_data"><code class="name flex">
+<span>def <span class="ident">treat_data</span></span>(<span>dataframe: pandas.core.frame.DataFrame, dataset_id: str, table_id: str, mode: str = 'dev') ‑> Tuple[pandas.core.frame.DataFrame, bool]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Renomeia colunas e filtra dados com a hora e minuto do timestamp
-de execução mais próximo à este</p></div>
+<div class="desc"><p>Rename cols and filter data using hour and minute from the nearest current timestamp</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -258,16 +403,12 @@ de execução mais próximo à este</p></div>
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def tratar_dados(
-    dataset_id: str, table_id: str, mode: str = &#34;dev&#34;
+def treat_data(
+    dataframe: pd.DataFrame, dataset_id: str, table_id: str, mode: str = &#34;dev&#34;
 ) -&gt; Tuple[pd.DataFrame, bool]:
     &#34;&#34;&#34;
-    Renomeia colunas e filtra dados com a hora e minuto do timestamp
-    de execução mais próximo à este
+    Rename cols and filter data using hour and minute from the nearest current timestamp
     &#34;&#34;&#34;
-
-    url = &#34;http://sjc.salvar.cemaden.gov.br/resources/graficos/interativo/getJson2.php?uf=RJ&#34;
-    dados = pd.read_json(url)
 
     drop_cols = [
         &#34;uf&#34;,
@@ -291,34 +432,34 @@ def tratar_dados(
         &#34;acc96hr&#34;: &#34;acumulado_chuva_96_h&#34;,
     }
 
-    dados = (
-        dados[(dados[&#34;codibge&#34;] == 3304557) &amp; (dados[&#34;tipoestacao&#34;] == 1)]
+    dataframe = (
+        dataframe[(dataframe[&#34;codibge&#34;] == 3304557) &amp; (dataframe[&#34;tipoestacao&#34;] == 1)]
         .drop(drop_cols, axis=1)
         .rename(rename_cols, axis=1)
     )
-    log(f&#34;\n[DEBUG]: df.head() {dados.head()}&#34;)
+    log(f&#34;\n[DEBUG]: df.head() {dataframe.head()}&#34;)
 
-    # Converte de UTC para horário São Paulo
-    dados[&#34;data_medicao_utc&#34;] = pd.to_datetime(
-        dados[&#34;data_medicao_utc&#34;], dayfirst=True
+    # Convert from UTC to São Paulo timezone
+    dataframe[&#34;data_medicao_utc&#34;] = pd.to_datetime(
+        dataframe[&#34;data_medicao_utc&#34;], dayfirst=True
     ) + pd.DateOffset(hours=0)
-    dados[&#34;data_medicao&#34;] = (
-        dados[&#34;data_medicao_utc&#34;]
+    dataframe[&#34;data_medicao&#34;] = (
+        dataframe[&#34;data_medicao_utc&#34;]
         .dt.tz_localize(&#34;UTC&#34;)
         .dt.tz_convert(&#34;America/Sao_Paulo&#34;)
     )
     see_cols = [&#34;data_medicao_utc&#34;, &#34;data_medicao&#34;, &#34;id_estacao&#34;, &#34;acumulado_chuva_1_h&#34;]
-    log(f&#34;DEBUG: data utc -&gt; GMT-3 {dados[see_cols]}&#34;)
+    log(f&#34;DEBUG: data utc -&gt; GMT-3 {dataframe[see_cols]}&#34;)
 
     date_format = &#34;%Y-%m-%d %H:%M:%S&#34;
-    dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao&#34;].dt.strftime(date_format)
+    dataframe[&#34;data_medicao&#34;] = dataframe[&#34;data_medicao&#34;].dt.strftime(date_format)
 
-    log(f&#34;DEBUG: data {dados[see_cols]}&#34;)
+    log(f&#34;DEBUG: data {dataframe[see_cols]}&#34;)
 
-    # Alterando valores &#39;-&#39; e np.nan para NULL
-    dados.replace([&#34;-&#34;, np.nan], [0, None], inplace=True)
+    # Change values &#39;-&#39; and np.nan to NULL
+    dataframe.replace([&#34;-&#34;, np.nan], [0, None], inplace=True)
 
-    # Altera valores negativos para None
+    # Change negative values to None
     float_cols = [
         &#34;acumulado_chuva_10_min&#34;,
         &#34;acumulado_chuva_1_h&#34;,
@@ -330,16 +471,18 @@ def tratar_dados(
         &#34;acumulado_chuva_72_h&#34;,
         &#34;acumulado_chuva_96_h&#34;,
     ]
-    dados[float_cols] = np.where(dados[float_cols] &lt; 0, None, dados[float_cols])
+    dataframe[float_cols] = np.where(
+        dataframe[float_cols] &lt; 0, None, dataframe[float_cols]
+    )
 
-    # Elimina linhas em que o id_estacao é igual mantendo a de menor valor nas colunas float
-    dados.sort_values([&#34;id_estacao&#34;, &#34;data_medicao&#34;] + float_cols, inplace=True)
-    dados.drop_duplicates(subset=[&#34;id_estacao&#34;, &#34;data_medicao&#34;], keep=&#34;first&#34;)
+    # Eliminate where the id_estacao is the same keeping the smallest one
+    dataframe.sort_values([&#34;id_estacao&#34;, &#34;data_medicao&#34;] + float_cols, inplace=True)
+    dataframe.drop_duplicates(subset=[&#34;id_estacao&#34;, &#34;data_medicao&#34;], keep=&#34;first&#34;)
 
-    log(f&#34;Dataframe before comparing with last data saved on redis {dados.head()}&#34;)
+    log(f&#34;Dataframe before comparing with last data saved on redis {dataframe.head()}&#34;)
 
-    dados = save_updated_rows_on_redis(
-        dados,
+    dataframe = save_updated_rows_on_redis(
+        dataframe,
         dataset_id,
         table_id,
         unique_id=&#34;id_estacao&#34;,
@@ -348,16 +491,16 @@ def tratar_dados(
         mode=mode,
     )
 
-    log(f&#34;Dataframe after comparing with last data saved on redis {dados.head()}&#34;)
+    log(f&#34;Dataframe after comparing with last data saved on redis {dataframe.head()}&#34;)
 
     # If df is empty stop flow
-    if dados.shape[0] == 0:
+    if dataframe.shape[0] == 0:
         skip_text = &#34;No new data available on API&#34;
         log(skip_text)
         raise ENDRUN(state=Skipped(skip_text))
 
-    # Fixar ordem das colunas
-    dados = dados[
+    # Fix columns order
+    dataframe = dataframe[
         [
             &#34;id_estacao&#34;,
             &#34;data_medicao&#34;,
@@ -373,7 +516,7 @@ def tratar_dados(
         ]
     ]
 
-    return dados</code></pre>
+    return dataframe</code></pre>
 </details>
 </dd>
 </dl>
@@ -440,8 +583,10 @@ setTimeout(() => input.focus(), 100);
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_cemaden.tasks.salvar_dados" href="#pipelines.rj_cor.meteorologia.precipitacao_cemaden.tasks.salvar_dados">salvar_dados</a></code></li>
-<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_cemaden.tasks.tratar_dados" href="#pipelines.rj_cor.meteorologia.precipitacao_cemaden.tasks.tratar_dados">tratar_dados</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_cemaden.tasks.check_for_new_stations" href="#pipelines.rj_cor.meteorologia.precipitacao_cemaden.tasks.check_for_new_stations">check_for_new_stations</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_cemaden.tasks.download_data" href="#pipelines.rj_cor.meteorologia.precipitacao_cemaden.tasks.download_data">download_data</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_cemaden.tasks.save_data" href="#pipelines.rj_cor.meteorologia.precipitacao_cemaden.tasks.save_data">save_data</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_cemaden.tasks.treat_data" href="#pipelines.rj_cor.meteorologia.precipitacao_cemaden.tasks.treat_data">treat_data</a></code></li>
 </ul>
 </li>
 </ul>

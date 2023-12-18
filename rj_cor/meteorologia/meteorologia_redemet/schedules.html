@@ -42,11 +42,42 @@ from pipelines.constants import constants
 hour_schedule = Schedule(
     clocks=[
         IntervalClock(
-            interval=timedelta(hours=1),
+            interval=timedelta(days=30),
             start_date=datetime(2023, 1, 1, 0, 12, 0),
             labels=[
                 constants.RJ_COR_AGENT_LABEL.value,
             ],
+            parameter_defaults={
+                # &#34;trigger_rain_dashboard_update&#34;: True,
+                &#34;materialize_after_dump&#34;: True,
+                &#34;mode&#34;: &#34;prod&#34;,
+                &#34;materialize_to_datario&#34;: True,
+                &#34;dump_to_gcs&#34;: False,
+                &#34;dump_mode&#34;: &#34;append&#34;,
+                &#34;dataset_id&#34;: &#34;clima_estacao_meteorologica&#34;,
+                &#34;table_id&#34;: &#34;meteorologia_redemet&#34;,
+            },
+        ),
+    ]
+)
+
+month_schedule = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(days=30),
+            start_date=datetime(2023, 1, 1, 0, 12, 0),
+            labels=[
+                constants.RJ_COR_AGENT_LABEL.value,
+            ],
+            parameter_defaults={
+                &#34;materialize_after_dump&#34;: True,
+                &#34;mode&#34;: &#34;prod&#34;,
+                &#34;materialize_to_datario&#34;: True,
+                &#34;dump_to_gcs&#34;: False,
+                # &#34;dump_mode&#34;: &#34;overwrite&#34;,
+                # &#34;dataset_id&#34;: &#34;clima_estacao_meteorologica&#34;,
+                # &#34;table_id&#34;: &#34;estacoes_redemet&#34;,
+            },
         ),
     ]
 )</code></pre>

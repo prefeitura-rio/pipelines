@@ -42,12 +42,18 @@ from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from pipelines.constants import constants
 from pipelines.utils.constants import constants as utils_constants
 from pipelines.rj_cor.meteorologia.meteorologia_redemet.tasks import (
+    check_for_new_stations,
     get_dates,
-    download,
-    tratar_dados,
-    salvar_dados,
+    download_data,
+    download_stations_data,
+    treat_data,
+    treat_stations_data,
+    save_data,
 )
-from pipelines.rj_cor.meteorologia.meteorologia_redemet.schedules import hour_schedule
+from pipelines.rj_cor.meteorologia.meteorologia_redemet.schedules import (
+    hour_schedule,
+    month_schedule,
+)
 from pipelines.utils.decorators import Flow
 from pipelines.utils.dump_db.constants import constants as dump_db_constants
 from pipelines.utils.dump_to_gcs.constants import constants as dump_to_gcs_constants
@@ -56,21 +62,21 @@ from pipelines.utils.tasks import (
     get_current_flow_labels,
 )
 
-
 with Flow(
     name=&#34;COR: Meteorologia - Meteorologia REDEMET&#34;,
     code_owners=[
-        &#34;richardg867&#34;,
         &#34;paty&#34;,
     ],
 ) as cor_meteorologia_meteorologia_redemet:
-    DATASET_ID = &#34;clima_estacao_meteorologica&#34;
-    TABLE_ID = &#34;meteorologia_redemet&#34;
-    DUMP_MODE = &#34;append&#34;
+    DUMP_MODE = Parameter(&#34;dump_mode&#34;, default=&#34;append&#34;, required=True)
+    DATASET_ID = Parameter(
+        &#34;dataset_id&#34;, default=&#34;clima_estacao_meteorologica&#34;, required=True
+    )
+    TABLE_ID = Parameter(&#34;table_id&#34;, default=&#34;meteorologia_redemet&#34;, required=True)
 
-    # data_inicio e data_fim devem ser strings no formato &#34;YYYY-MM-DD&#34;
-    data_inicio = Parameter(&#34;data_inicio&#34;, default=&#34;&#34;, required=False)
-    data_fim = Parameter(&#34;data_fim&#34;, default=&#34;&#34;, required=False)
+    # first_date and last_date must be strings as &#34;YYYY-MM-DD&#34;
+    first_date = Parameter(&#34;first_date&#34;, default=None, required=False)
+    last_date = Parameter(&#34;last_date&#34;, default=None, required=False)
 
     # Materialization parameters
     MATERIALIZE_AFTER_DUMP = Parameter(
@@ -90,11 +96,11 @@ with Flow(
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
 
-    data_inicio_, data_fim_, backfill = get_dates(data_inicio, data_fim)
+    first_date_, last_date_, backfill = get_dates(first_date, last_date)
     # data = slice_data(current_time=CURRENT_TIME)
-    dados = download(data_inicio_, data_fim_)
-    dados = tratar_dados(dados, backfill)
-    PATH = salvar_dados(dados=dados)
+    dataframe = download_data(first_date_, last_date_)
+    dataframe = treat_data(dataframe, backfill)
+    PATH = save_data(dataframe=dataframe)
 
     # Create table in BigQuery
     UPLOAD_TABLE = create_table_and_upload_to_gcs(
@@ -163,13 +169,126 @@ with Flow(
             )
 
 
-# para rodar na cloud
 cor_meteorologia_meteorologia_redemet.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 cor_meteorologia_meteorologia_redemet.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_COR_AGENT_LABEL.value],
 )
-cor_meteorologia_meteorologia_redemet.schedule = hour_schedule</code></pre>
+cor_meteorologia_meteorologia_redemet.schedule = hour_schedule
+
+
+with Flow(
+    name=&#34;COR: Meteorologia REDEMET - Atualização das estações&#34;,
+    code_owners=[
+        &#34;karinappassos&#34;,
+        &#34;paty&#34;,
+    ],
+) as cor_meteorologia_meteorologia_redemet_estacoes:
+    DUMP_MODE = Parameter(&#34;dump_mode&#34;, default=&#34;overwrite&#34;, required=True)
+    DATASET_ID = Parameter(
+        &#34;dataset_id&#34;, default=&#34;clima_estacao_meteorologica&#34;, required=True
+    )
+    TABLE_ID = Parameter(&#34;table_id&#34;, default=&#34;estacoes_redemet&#34;, required=True)
+
+    # Materialization parameters
+    MATERIALIZE_AFTER_DUMP = Parameter(
+        &#34;materialize_after_dump&#34;, default=False, required=False
+    )
+    MATERIALIZE_TO_DATARIO = Parameter(
+        &#34;materialize_to_datario&#34;, default=False, required=False
+    )
+    MATERIALIZATION_MODE = Parameter(&#34;mode&#34;, default=&#34;dev&#34;, required=False)
+
+    # Dump to GCS after? Should only dump to GCS if materializing to datario
+    DUMP_TO_GCS = Parameter(&#34;dump_to_gcs&#34;, default=False, required=False)
+
+    MAXIMUM_BYTES_PROCESSED = Parameter(
+        &#34;maximum_bytes_processed&#34;,
+        required=False,
+        default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
+    )
+
+    dataframe = download_stations_data()
+    dataframe = treat_stations_data(dataframe)
+    path = save_data(dataframe=dataframe, partition_column=&#34;data_atualizacao&#34;)
+
+    # Create table in BigQuery
+    UPLOAD_TABLE = create_table_and_upload_to_gcs(
+        data_path=path,
+        dataset_id=DATASET_ID,
+        table_id=TABLE_ID,
+        dump_mode=DUMP_MODE,
+        wait=path,
+    )
+
+    # Trigger DBT flow run
+    with case(MATERIALIZE_AFTER_DUMP, True):
+        current_flow_labels = get_current_flow_labels()
+        materialization_flow = create_flow_run(
+            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+            parameters={
+                &#34;dataset_id&#34;: DATASET_ID,
+                &#34;table_id&#34;: TABLE_ID,
+                &#34;mode&#34;: MATERIALIZATION_MODE,
+                &#34;materialize_to_datario&#34;: MATERIALIZE_TO_DATARIO,
+            },
+            labels=current_flow_labels,
+            run_name=f&#34;Materialize {DATASET_ID}.{TABLE_ID}&#34;,
+        )
+
+        materialization_flow.set_upstream(UPLOAD_TABLE)
+
+        wait_for_materialization = wait_for_flow_run(
+            materialization_flow,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+
+        wait_for_materialization.max_retries = (
+            dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
+        )
+        wait_for_materialization.retry_delay = timedelta(
+            seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
+        )
+
+        with case(DUMP_TO_GCS, True):
+            # Trigger Dump to GCS flow run with project id as datario
+            dump_to_gcs_flow = create_flow_run(
+                flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
+                project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                parameters={
+                    &#34;project_id&#34;: &#34;datario&#34;,
+                    &#34;dataset_id&#34;: DATASET_ID,
+                    &#34;table_id&#34;: TABLE_ID,
+                    &#34;maximum_bytes_processed&#34;: MAXIMUM_BYTES_PROCESSED,
+                },
+                labels=[
+                    &#34;datario&#34;,
+                ],
+                run_name=f&#34;Dump to GCS {DATASET_ID}.{TABLE_ID}&#34;,
+            )
+            dump_to_gcs_flow.set_upstream(wait_for_materialization)
+
+            wait_for_dump_to_gcs = wait_for_flow_run(
+                dump_to_gcs_flow,
+                stream_states=True,
+                stream_logs=True,
+                raise_final_state=True,
+            )
+
+    check_for_new_stations(dataframe, wait=UPLOAD_TABLE)
+
+# para rodar na cloud
+cor_meteorologia_meteorologia_redemet_estacoes.storage = GCS(
+    constants.GCS_FLOWS_BUCKET.value
+)
+cor_meteorologia_meteorologia_redemet_estacoes.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[constants.RJ_COR_AGENT_LABEL.value],
+)
+cor_meteorologia_meteorologia_redemet_estacoes.schedule = month_schedule</code></pre>
 </details>
 </section>
 <section>
