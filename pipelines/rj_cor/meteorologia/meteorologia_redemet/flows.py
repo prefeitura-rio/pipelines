@@ -149,7 +149,7 @@ cor_meteorologia_meteorologia_redemet.schedule = hour_schedule
 
 
 with Flow(
-    name="COR: Meteorologia REDEMET - Atualização das estações",
+    name="COR: Meteorologia - Meteorologia REDEMET - Atualização das estações",
     code_owners=[
         "karinappassos",
         "paty",
