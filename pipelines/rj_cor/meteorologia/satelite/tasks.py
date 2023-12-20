@@ -32,7 +32,7 @@ from pipelines.utils.utils import log
 
 
 @task()
-def get_dates(current_time) -> str:
+def get_dates(current_time, product) -> str:
     """
     Task para obter o dia atual caso nenhuma data tenha sido passada
     Subtraimos 5 minutos da hora atual pois o último arquivo que sobre na aws
@@ -42,6 +42,9 @@ def get_dates(current_time) -> str:
     """
     if current_time is None:
         current_time = pendulum.now("UTC").subtract(minutes=5).to_datetime_string()
+    # Product sst is updating one hour later
+    if product == "SSTF":
+        current_time = pendulum.now("UTC").subtract(minutes=55).to_datetime_string()
     return current_time
 
 

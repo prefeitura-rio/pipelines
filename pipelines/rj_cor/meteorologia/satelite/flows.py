@@ -72,7 +72,7 @@ with Flow(
     create_image = Parameter("create_image", default=False, required=False)
 
     # Starting tasks
-    current_time = get_dates(current_time)
+    current_time = get_dates(current_time, product)
 
     date_hour_info = slice_data(current_time=current_time, ref_filename=ref_filename)
 
