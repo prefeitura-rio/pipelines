@@ -229,7 +229,7 @@ def choose_file_to_download(
 
     # keep the first file if it is not on redis
     storage_files_path.sort()
-    download_file = None
+    destination_file_path, download_file = None, None
 
     for path_file in storage_files_path:
         filename = path_file.split("/")[-1]
@@ -242,6 +242,8 @@ def choose_file_to_download(
             download_file = path_file
             # log(f"[DEBUG]: filename to be append on redis_files: {redis_files}")
             break
+        log(f"\n{filename} is already in redis")
+
     return redis_files, destination_file_path, download_file
 
 

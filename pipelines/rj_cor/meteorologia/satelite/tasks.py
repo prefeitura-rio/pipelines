@@ -95,6 +95,7 @@ def download(
     julian_day = date_hour_info["julian_day"]
     hour_utc = date_hour_info["hour_utc"][:2]
     partition_path = f"ABI-L2-{product}/{year}/{julian_day}/{hour_utc}/"
+    log(f"Getting files from {partition_path}")
 
     storage_files_path, storage_origin, storage_conection = get_files_from_aws(
         partition_path
