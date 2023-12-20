@@ -150,12 +150,10 @@ bilhetagem_materializacao_transacao.run_config = KubernetesRun(
 bilhetagem_materializacao_transacao_parameters = {
     "source_table_ids": [
         constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value["table_id"]
-    ]
-    + [d["table_id"] for d in constants.BILHETAGEM_CAPTURE_PARAMS.value],
+    ],
     "capture_intervals_minutes": [
         constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value["interval_minutes"]
-    ]
-    + [d["interval_minutes"] for d in constants.BILHETAGEM_CAPTURE_PARAMS.value],
+    ],
 } | constants.BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS.value
 
 bilhetagem_materializacao_transacao = set_default_parameters(
@@ -181,14 +179,12 @@ bilhetagem_materializacao_ordem_pagamento_parameters = {
     "source_table_ids": [
         constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value["table_id"]
     ]
-    + [d["table_id"] for d in constants.BILHETAGEM_CAPTURE_PARAMS.value]
     + [
         d["table_id"] for d in constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS.value
     ],
     "capture_intervals_minutes": [
         constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value["interval_minutes"]
     ]
-    + [d["interval_minutes"] for d in constants.BILHETAGEM_CAPTURE_PARAMS.value]
     + [
         d["interval_minutes"]
         for d in constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS.value
@@ -200,6 +196,31 @@ bilhetagem_materializacao_ordem_pagamento = set_default_parameters(
     default_parameters=bilhetagem_materializacao_ordem_pagamento_parameters,
 )
 
+# Integração
+
+bilhetagem_materializacao_integracao = deepcopy(default_materialization_flow)
+bilhetagem_materializacao_integracao.name = (
+    "SMTR: Bilhetagem Integração - Materialização (subflow)"
+)
+bilhetagem_materializacao_integracao.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bilhetagem_materializacao_integracao.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+
+bilhetagem_materializacao_integracao_parameters = {
+    "source_table_ids": [
+        constants.BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS.value["table_id"]
+    ],
+    "capture_intervals_minutes": [
+        constants.BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS.value["interval_minutes"]
+    ],
+} | constants.BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS.value
+
+bilhetagem_materializacao_integracao = set_default_parameters(
+    flow=bilhetagem_materializacao_integracao,
+    default_parameters=bilhetagem_materializacao_integracao_parameters,
+)
 
 # RECAPTURA #
 
@@ -251,6 +272,23 @@ with Flow(
             raise_final_state=True,
         )
 
+        # Recaptura Integração
+
+        run_recaptura_integracao = create_flow_run(
+            flow_name=bilhetagem_recaptura.name,
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            labels=LABELS,
+            parameters=constants.BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS.value,
+            upstream_tasks=[wait_recaptura_transacao_true],
+        )
+
+        wait_recaptura_integracao_true = wait_for_flow_run(
+            run_recaptura_integracao,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+
         # Captura Auxiliar
 
         runs_captura = create_flow_run.map(
@@ -290,8 +328,9 @@ with Flow(
             wait_captura_false,
             wait_recaptura_auxiliar_false,
             wait_recaptura_transacao_false,
+            wait_recaptura_integracao_false,
         ) = task(
-            lambda: [None, None, None], name="assign_none_to_capture_runs", nout=3
+            lambda: [None, None, None, None], name="assign_none_to_capture_runs", nout=3
         )()
 
     wait_captura = merge(wait_captura_false, wait_captura_true)
@@ -301,10 +340,16 @@ with Flow(
     wait_recaptura_transacao = merge(
         wait_recaptura_transacao_false, wait_recaptura_transacao_true
     )
+    wait_recaptura_integracao = merge(
+        wait_recaptura_integracao_false, wait_recaptura_integracao_true
+    )
 
     with case(materialize, True):
+        materialize_timestamp = get_current_timestamp(
+            timestamp=timestamp, return_str=True
+        )
         # Materialização
-        run_materializacao = create_flow_run(
+        run_materializacao_transacao = create_flow_run(
             flow_name=bilhetagem_materializacao_transacao.name,
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=LABELS,
@@ -312,16 +357,34 @@ with Flow(
                 wait_captura,
                 wait_recaptura_auxiliar,
                 wait_recaptura_transacao,
+                wait_recaptura_integracao,
             ],
             parameters={
-                "timestamp": get_current_timestamp(
-                    timestamp=timestamp, return_str=True
-                ),
+                "timestamp": materialize_timestamp,
             },
         )
 
-        wait_materializacao = wait_for_flow_run(
-            run_materializacao,
+        wait_materializacao_transacao = wait_for_flow_run(
+            run_materializacao_transacao,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+
+        run_materializacao_integracao = create_flow_run(
+            flow_name=bilhetagem_materializacao_integracao.name,
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            labels=LABELS,
+            upstream_tasks=[
+                wait_materializacao_transacao,
+            ],
+            parameters={
+                "timestamp": materialize_timestamp,
+            },
+        )
+
+        wait_materializacao_integracao = wait_for_flow_run(
+            run_materializacao_integracao,
             stream_states=True,
             stream_logs=True,
             raise_final_state=True,
