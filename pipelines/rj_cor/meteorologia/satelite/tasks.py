@@ -195,7 +195,6 @@ def tratar_dados(filename: str) -> dict:
     product_caracteristics = get_info(filename)
     product_caracteristics["extent"] = extent
 
-    print("product_caracteristics[variable]", product_caracteristics["variable"])
     # Call the remap function to convert x, y to lon, lat and save converted file
     remap_g16(
         filename,

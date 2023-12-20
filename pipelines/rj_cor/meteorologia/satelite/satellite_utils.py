@@ -472,6 +472,9 @@ def remap_g16(
 
     os.makedirs(remap_path)
     for i in range(n_variables):
+        log(
+            f"Starting remap for path: {path}, remap_path: {remap_path}, variable: {variable[i]}"
+        )
         remap(path, remap_path, variable[i], extent)
 
 
