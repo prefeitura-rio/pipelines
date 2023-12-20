@@ -156,7 +156,7 @@ cor_meteorologia_goes16_rrqpe.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_COR_AGENT_LABEL.value],
 )
-cor_meteorologia_goes16.schedule = rrqpe
+cor_meteorologia_goes16_rrqpe.schedule = rrqpe
 
 cor_meteorologia_goes16_tpw = deepcopy(cor_meteorologia_goes16)
 cor_meteorologia_goes16_tpw.name = "COR: Meteorologia - Satelite GOES 16 - TPW"
