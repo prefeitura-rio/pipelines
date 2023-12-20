@@ -389,7 +389,7 @@ def get_info(path: str) -> dict:
     }
     # SSTF - Sea Surface (Skin) Temperature: 'SST'
     product_caracteristics["SSTF"] = {
-        "variable": ["SSTF"],
+        "variable": ["SST"],
         "vmin": 268,
         "vmax": 308,
         "cmap": "jet",
@@ -444,7 +444,7 @@ def get_info(path: str) -> dict:
     else:
         product_caracteristics["band"] = np.nan
 
-    print(f"Product Caracteristics: {product_caracteristics}")
+    log(f"Product Caracteristics: {product_caracteristics}")
 
     return product_caracteristics
 
