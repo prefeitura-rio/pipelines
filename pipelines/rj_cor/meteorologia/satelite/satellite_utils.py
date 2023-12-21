@@ -229,7 +229,7 @@ def choose_file_to_download(
 
     # keep the first file if it is not on redis
     storage_files_path.sort()
-    download_file = None
+    destination_file_path, download_file = None, None
 
     for path_file in storage_files_path:
         filename = path_file.split("/")[-1]
@@ -242,6 +242,8 @@ def choose_file_to_download(
             download_file = path_file
             # log(f"[DEBUG]: filename to be append on redis_files: {redis_files}")
             break
+        log(f"\n{filename} is already in redis")
+
     return redis_files, destination_file_path, download_file
 
 
@@ -387,7 +389,7 @@ def get_info(path: str) -> dict:
     }
     # SSTF - Sea Surface (Skin) Temperature: 'SST'
     product_caracteristics["SSTF"] = {
-        "variable": ["SSTF"],
+        "variable": ["SST"],
         "vmin": 268,
         "vmax": 308,
         "cmap": "jet",
@@ -442,7 +444,7 @@ def get_info(path: str) -> dict:
     else:
         product_caracteristics["band"] = np.nan
 
-    print(f"Product Caracteristics: {product_caracteristics}")
+    log(f"Product Caracteristics: {product_caracteristics}")
 
     return product_caracteristics
 
@@ -470,6 +472,9 @@ def remap_g16(
 
     os.makedirs(remap_path)
     for i in range(n_variables):
+        log(
+            f"Starting remap for path: {path}, remap_path: {remap_path}, variable: {variable[i]}"
+        )
         remap(path, remap_path, variable[i], extent)
 
 
