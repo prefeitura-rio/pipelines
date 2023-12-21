@@ -72,7 +72,7 @@ with Flow(
     create_image = Parameter("create_image", default=False, required=False)
 
     # Starting tasks
-    current_time = get_dates(current_time)
+    current_time = get_dates(current_time, product)
 
     date_hour_info = slice_data(current_time=current_time, ref_filename=ref_filename)
 
@@ -156,7 +156,7 @@ cor_meteorologia_goes16_rrqpe.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_COR_AGENT_LABEL.value],
 )
-cor_meteorologia_goes16.schedule = rrqpe
+cor_meteorologia_goes16_rrqpe.schedule = rrqpe
 
 cor_meteorologia_goes16_tpw = deepcopy(cor_meteorologia_goes16)
 cor_meteorologia_goes16_tpw.name = "COR: Meteorologia - Satelite GOES 16 - TPW"
