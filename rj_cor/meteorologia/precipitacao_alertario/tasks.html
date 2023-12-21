@@ -156,40 +156,38 @@ def tratar_dados(
 
     #     dados.at[index, &#34;data_medicao&#34;] = date.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
 
-    see_cols = [&#34;id_estacao&#34;, &#34;data_medicao&#34;, &#34;last_update&#34;]
-    log(
-        f&#34;Dataframe after comparing with last data saved on redis {dados[see_cols].head()}&#34;
-    )
-    dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao&#34;].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
-    log(f&#34;Dataframe after converting to string {dados[see_cols].head()}&#34;)
-
-    if dados.shape[0] &gt; 0:
-        log(f&#34;Dataframe after comparing with last data saved on redis {dados.iloc[0]}&#34;)
-
     empty_data = dados.shape[0] == 0
 
-    # Save max date on redis to compare this with last dbt run
     if not empty_data:
+        see_cols = [&#34;id_estacao&#34;, &#34;data_medicao&#34;, &#34;last_update&#34;]
+        log(
+            f&#34;Dataframe after comparing with last data saved on redis {dados[see_cols].head()}&#34;
+        )
+        log(f&#34;Dataframe first row after comparing {dados.iloc[0]}&#34;)
+        dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao&#34;].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+        log(f&#34;Dataframe after converting to string {dados[see_cols].head()}&#34;)
+
+        # Save max date on redis to compare this with last dbt run
         max_date = str(dados[&#34;data_medicao&#34;].max())
         redis_key = build_redis_key(dataset_id, table_id, name=&#34;last_update&#34;, mode=mode)
         log(f&#34;Dataframe is not empty. Redis key: {redis_key} and new date: {max_date}&#34;)
         save_str_on_redis(redis_key, &#34;date&#34;, max_date)
+
+        # Fix columns order
+        dados = dados[
+            [
+                &#34;data_medicao&#34;,
+                &#34;id_estacao&#34;,
+                &#34;acumulado_chuva_15_min&#34;,
+                &#34;acumulado_chuva_1_h&#34;,
+                &#34;acumulado_chuva_4_h&#34;,
+                &#34;acumulado_chuva_24_h&#34;,
+                &#34;acumulado_chuva_96_h&#34;,
+            ]
+        ]
     else:
         # If df is empty stop flow on flows.py
         log(&#34;Dataframe is empty. Skipping update flow.&#34;)
-
-    # Fixar ordem das colunas
-    dados = dados[
-        [
-            &#34;data_medicao&#34;,
-            &#34;id_estacao&#34;,
-            &#34;acumulado_chuva_15_min&#34;,
-            &#34;acumulado_chuva_1_h&#34;,
-            &#34;acumulado_chuva_4_h&#34;,
-            &#34;acumulado_chuva_24_h&#34;,
-            &#34;acumulado_chuva_96_h&#34;,
-        ]
-    ]
 
     return dados, empty_data
 
@@ -204,10 +202,13 @@ def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
     prepath.mkdir(parents=True, exist_ok=True)
 
     partition_column = &#34;data_medicao&#34;
+    log(f&#34;Dataframe before partitions {dados.iloc[0]}&#34;)
+    log(f&#34;Dataframe before partitions {dados.dtypes}&#34;)
     dataframe, partitions = parse_date_columns(dados, partition_column)
     current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y%m%d%H%M&#34;)
+    log(f&#34;Dataframe after partitions {dataframe.iloc[0]}&#34;)
+    log(f&#34;Dataframe after partitions {dataframe.dtypes}&#34;)
 
-    # Cria partições a partir da data
     to_partitions(
         data=dataframe,
         partition_columns=partitions,
@@ -323,10 +324,13 @@ def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
     prepath.mkdir(parents=True, exist_ok=True)
 
     partition_column = &#34;data_medicao&#34;
+    log(f&#34;Dataframe before partitions {dados.iloc[0]}&#34;)
+    log(f&#34;Dataframe before partitions {dados.dtypes}&#34;)
     dataframe, partitions = parse_date_columns(dados, partition_column)
     current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y%m%d%H%M&#34;)
+    log(f&#34;Dataframe after partitions {dataframe.iloc[0]}&#34;)
+    log(f&#34;Dataframe after partitions {dataframe.dtypes}&#34;)
 
-    # Cria partições a partir da data
     to_partitions(
         data=dataframe,
         partition_columns=partitions,
@@ -468,40 +472,38 @@ def tratar_dados(
 
     #     dados.at[index, &#34;data_medicao&#34;] = date.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
 
-    see_cols = [&#34;id_estacao&#34;, &#34;data_medicao&#34;, &#34;last_update&#34;]
-    log(
-        f&#34;Dataframe after comparing with last data saved on redis {dados[see_cols].head()}&#34;
-    )
-    dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao&#34;].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
-    log(f&#34;Dataframe after converting to string {dados[see_cols].head()}&#34;)
-
-    if dados.shape[0] &gt; 0:
-        log(f&#34;Dataframe after comparing with last data saved on redis {dados.iloc[0]}&#34;)
-
     empty_data = dados.shape[0] == 0
 
-    # Save max date on redis to compare this with last dbt run
     if not empty_data:
+        see_cols = [&#34;id_estacao&#34;, &#34;data_medicao&#34;, &#34;last_update&#34;]
+        log(
+            f&#34;Dataframe after comparing with last data saved on redis {dados[see_cols].head()}&#34;
+        )
+        log(f&#34;Dataframe first row after comparing {dados.iloc[0]}&#34;)
+        dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao&#34;].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+        log(f&#34;Dataframe after converting to string {dados[see_cols].head()}&#34;)
+
+        # Save max date on redis to compare this with last dbt run
         max_date = str(dados[&#34;data_medicao&#34;].max())
         redis_key = build_redis_key(dataset_id, table_id, name=&#34;last_update&#34;, mode=mode)
         log(f&#34;Dataframe is not empty. Redis key: {redis_key} and new date: {max_date}&#34;)
         save_str_on_redis(redis_key, &#34;date&#34;, max_date)
+
+        # Fix columns order
+        dados = dados[
+            [
+                &#34;data_medicao&#34;,
+                &#34;id_estacao&#34;,
+                &#34;acumulado_chuva_15_min&#34;,
+                &#34;acumulado_chuva_1_h&#34;,
+                &#34;acumulado_chuva_4_h&#34;,
+                &#34;acumulado_chuva_24_h&#34;,
+                &#34;acumulado_chuva_96_h&#34;,
+            ]
+        ]
     else:
         # If df is empty stop flow on flows.py
         log(&#34;Dataframe is empty. Skipping update flow.&#34;)
-
-    # Fixar ordem das colunas
-    dados = dados[
-        [
-            &#34;data_medicao&#34;,
-            &#34;id_estacao&#34;,
-            &#34;acumulado_chuva_15_min&#34;,
-            &#34;acumulado_chuva_1_h&#34;,
-            &#34;acumulado_chuva_4_h&#34;,
-            &#34;acumulado_chuva_24_h&#34;,
-            &#34;acumulado_chuva_96_h&#34;,
-        ]
-    ]
 
     return dados, empty_data</code></pre>
 </details>

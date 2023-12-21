@@ -37,6 +37,7 @@ import re
 import netCDF4 as nc
 import numpy as np
 from osgeo import osr, gdal  # pylint: disable=E0401
+from pipelines.utils.utils import log
 
 
 def extract_resolution(input_string: str):
@@ -95,6 +96,7 @@ def remap(
     Converte coordenada X, Y para latlon
     &#34;&#34;&#34;
     # Open the file
+    log(f&#34;Remaping NETCDF:{path}:{variable}&#34;)
     img = gdal.Open(f&#34;NETCDF:{path}:&#34; + variable)
 
     # Read the header metadata
@@ -272,6 +274,7 @@ def remap(
     Converte coordenada X, Y para latlon
     &#34;&#34;&#34;
     # Open the file
+    log(f&#34;Remaping NETCDF:{path}:{variable}&#34;)
     img = gdal.Open(f&#34;NETCDF:{path}:&#34; + variable)
 
     # Read the header metadata

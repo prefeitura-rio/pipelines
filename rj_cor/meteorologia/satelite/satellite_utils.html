@@ -258,7 +258,7 @@ def choose_file_to_download(
 
     # keep the first file if it is not on redis
     storage_files_path.sort()
-    download_file = None
+    destination_file_path, download_file = None, None
 
     for path_file in storage_files_path:
         filename = path_file.split(&#34;/&#34;)[-1]
@@ -271,6 +271,8 @@ def choose_file_to_download(
             download_file = path_file
             # log(f&#34;[DEBUG]: filename to be append on redis_files: {redis_files}&#34;)
             break
+        log(f&#34;\n{filename} is already in redis&#34;)
+
     return redis_files, destination_file_path, download_file
 
 
@@ -416,7 +418,7 @@ def get_info(path: str) -&gt; dict:
     }
     # SSTF - Sea Surface (Skin) Temperature: &#39;SST&#39;
     product_caracteristics[&#34;SSTF&#34;] = {
-        &#34;variable&#34;: [&#34;SSTF&#34;],
+        &#34;variable&#34;: [&#34;SST&#34;],
         &#34;vmin&#34;: 268,
         &#34;vmax&#34;: 308,
         &#34;cmap&#34;: &#34;jet&#34;,
@@ -471,7 +473,7 @@ def get_info(path: str) -&gt; dict:
     else:
         product_caracteristics[&#34;band&#34;] = np.nan
 
-    print(f&#34;Product Caracteristics: {product_caracteristics}&#34;)
+    log(f&#34;Product Caracteristics: {product_caracteristics}&#34;)
 
     return product_caracteristics
 
@@ -499,6 +501,9 @@ def remap_g16(
 
     os.makedirs(remap_path)
     for i in range(n_variables):
+        log(
+            f&#34;Starting remap for path: {path}, remap_path: {remap_path}, variable: {variable[i]}&#34;
+        )
         remap(path, remap_path, variable[i], extent)
 
 
@@ -769,7 +774,7 @@ already trated and saved on redis and keep only the first one from this partitio
 
     # keep the first file if it is not on redis
     storage_files_path.sort()
-    download_file = None
+    destination_file_path, download_file = None, None
 
     for path_file in storage_files_path:
         filename = path_file.split(&#34;/&#34;)[-1]
@@ -782,6 +787,8 @@ already trated and saved on redis and keep only the first one from this partitio
             download_file = path_file
             # log(f&#34;[DEBUG]: filename to be append on redis_files: {redis_files}&#34;)
             break
+        log(f&#34;\n{filename} is already in redis&#34;)
+
     return redis_files, destination_file_path, download_file</code></pre>
 </details>
 </dd>
@@ -1259,7 +1266,7 @@ Mode needs to be "prod" or "staging"</p></div>
     }
     # SSTF - Sea Surface (Skin) Temperature: &#39;SST&#39;
     product_caracteristics[&#34;SSTF&#34;] = {
-        &#34;variable&#34;: [&#34;SSTF&#34;],
+        &#34;variable&#34;: [&#34;SST&#34;],
         &#34;vmin&#34;: 268,
         &#34;vmax&#34;: 308,
         &#34;cmap&#34;: &#34;jet&#34;,
@@ -1314,7 +1321,7 @@ Mode needs to be "prod" or "staging"</p></div>
     else:
         product_caracteristics[&#34;band&#34;] = np.nan
 
-    print(f&#34;Product Caracteristics: {product_caracteristics}&#34;)
+    log(f&#34;Product Caracteristics: {product_caracteristics}&#34;)
 
     return product_caracteristics</code></pre>
 </details>
@@ -1433,6 +1440,9 @@ a different netcdf file inside temp/ folder.</p></div>
 
     os.makedirs(remap_path)
     for i in range(n_variables):
+        log(
+            f&#34;Starting remap for path: {path}, remap_path: {remap_path}, variable: {variable[i]}&#34;
+        )
         remap(path, remap_path, variable[i], extent)</code></pre>
 </details>
 </dd>
