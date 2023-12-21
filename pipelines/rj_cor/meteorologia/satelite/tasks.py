@@ -32,7 +32,7 @@ from pipelines.utils.utils import log
 
 
 @task()
-def get_dates(current_time) -> str:
+def get_dates(current_time, product) -> str:
     """
     Task para obter o dia atual caso nenhuma data tenha sido passada
     Subtraimos 5 minutos da hora atual pois o último arquivo que sobre na aws
@@ -42,6 +42,9 @@ def get_dates(current_time) -> str:
     """
     if current_time is None:
         current_time = pendulum.now("UTC").subtract(minutes=5).to_datetime_string()
+    # Product sst is updating one hour later
+    if product == "SSTF":
+        current_time = pendulum.now("UTC").subtract(minutes=55).to_datetime_string()
     return current_time
 
 
@@ -95,6 +98,7 @@ def download(
     julian_day = date_hour_info["julian_day"]
     hour_utc = date_hour_info["hour_utc"][:2]
     partition_path = f"ABI-L2-{product}/{year}/{julian_day}/{hour_utc}/"
+    log(f"Getting files from {partition_path}")
 
     storage_files_path, storage_origin, storage_conection = get_files_from_aws(
         partition_path
@@ -191,7 +195,6 @@ def tratar_dados(filename: str) -> dict:
     product_caracteristics = get_info(filename)
     product_caracteristics["extent"] = extent
 
-    print("product_caracteristics[variable]", product_caracteristics["variable"])
     # Call the remap function to convert x, y to lon, lat and save converted file
     remap_g16(
         filename,
