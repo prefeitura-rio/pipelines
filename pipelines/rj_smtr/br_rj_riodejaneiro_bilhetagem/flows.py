@@ -353,8 +353,7 @@ with Flow(
         # Materialização
         run_materializacao_transacao = create_flow_run(
             flow_name=bilhetagem_materializacao_transacao.name,
-            # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            project_name="staging",
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=LABELS,
             upstream_tasks=[
                 wait_captura,
@@ -376,8 +375,7 @@ with Flow(
 
         run_materializacao_integracao = create_flow_run(
             flow_name=bilhetagem_materializacao_integracao.name,
-            # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            project_name="staging",
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=LABELS,
             upstream_tasks=[
                 wait_materializacao_transacao,
