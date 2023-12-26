@@ -188,3 +188,5 @@ subsidio_sppo_recurso.run_config = KubernetesRun(
 
 # Schedule
 subsidio_sppo_recurso.schedule = every_day
+
+## trigger
