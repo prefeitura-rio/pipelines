@@ -813,6 +813,49 @@ def close_db_connection(connection, engine: str):
         raise NotImplementedError(f&#34;Engine {engine} not supported&#34;)
 
 
+def execute_db_query(
+    engine: str,
+    query: str,
+    connection,
+    connector,
+    connection_info: dict,
+) -&gt; list[dict]:
+    &#34;&#34;&#34;
+    Execute a query if retries
+
+    Args:
+        query (str): the SQL Query to execute
+        engine (str): The database management system
+        connection: The database connection
+        connector: The database connector (to do reconnections)
+        connection_info (dict): The database connector params (to do reconnections)
+
+    Returns:
+        list[dict]: The query results
+
+    &#34;&#34;&#34;
+    retries = 10
+    for retry in range(retries):
+        try:
+            log(f&#34;Executing query:\n{query}&#34;)
+            data = pd.read_sql(sql=query, con=connection).to_dict(orient=&#34;records&#34;)
+            for d in data:
+                for k, v in d.items():
+                    if pd.isna(v):
+                        d[k] = None
+            break
+        except Exception as err:
+            log(f&#34;[ATTEMPT {retry}]: {err}&#34;)
+            close_db_connection(connection=connection, engine=engine)
+            if retry &lt; retries - 1:
+                connection = connector(**connection_info)
+            else:
+                raise err
+
+    close_db_connection(connection=connection, engine=engine)
+    return data
+
+
 def get_raw_data_db(
     query: str,
     engine: str,
@@ -827,7 +870,7 @@ def get_raw_data_db(
 
     Args:
         query (str): the SQL Query to execute
-        engine (str): The datase management system
+        engine (str): The database management system
         host (str): The database host
         secret_path (str): Secret path to get credentials
         database (str): The database to connect
@@ -845,13 +888,11 @@ def get_raw_data_db(
 
     data = None
     error = None
-    filetype = &#34;json&#34;
 
     if max_pages is None:
         max_pages = 1
 
     full_data = []
-    paginated_query = query
     credentials = get_vault_secret(secret_path)[&#34;data&#34;]
     if page_size is not None:
         paginated_query = paginated_query + f&#34;LIMIT {page_size} OFFSET {{offset}}&#34;
@@ -859,36 +900,27 @@ def get_raw_data_db(
     connector = connector_mapping[engine]
 
     try:
-        connection = connector(
-            host=host,
-            user=credentials[&#34;user&#34;],
-            password=credentials[&#34;password&#34;],
-            database=database,
-        )
-        for page in range(max_pages):
-            retries = 10
-            formatted_query = paginated_query
-            if page_size is not None:
-                formatted_query = formatted_query.format(offset=page * page_size)
+        connection_info = {
+            &#34;host&#34;: host,
+            &#34;user&#34;: credentials[&#34;user&#34;],
+            &#34;password&#34;: credentials[&#34;password&#34;],
+            &#34;database&#34;: database,
+        }
+        connection = connector(**connection_info)
 
-            for retry in range(retries):
-                try:
-                    log(f&#34;Executing query:\n{formatted_query}&#34;)
-                    data = pd.read_sql(sql=formatted_query, con=connection).to_dict(
-                        orient=&#34;records&#34;
-                    )
-                    break
-                except Exception as err:
-                    log(f&#34;[ATTEMPT {retry}]: {err}&#34;)
-                    close_db_connection(connection=connection, engine=engine)
-                    connection = connector(
-                        host=host,
-                        user=credentials[&#34;user&#34;],
-                        password=credentials[&#34;password&#34;],
-                        database=database,
-                    )
-                    if retry == retries - 1:
-                        raise err
+        for page in range(max_pages):
+            paginated_query = query
+
+            if page_size is not None:
+                paginated_query = query + f&#34;LIMIT {page_size} OFFSET {page * page_size}&#34;
+
+            data = execute_db_query(
+                engine=engine,
+                query=paginated_query,
+                connection=connection,
+                connector=connector,
+                connection_info=connection_info,
+            )
 
             full_data += data
 
@@ -902,13 +934,8 @@ def get_raw_data_db(
         full_data = []
         error = traceback.format_exc()
         log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
-    finally:
-        try:
-            close_db_connection(connection=connection, engine=engine)
-        except Exception:
-            pass
 
-    return error, full_data, filetype
+    return error, full_data, &#34;json&#34;
 
 
 def save_treated_local_func(
@@ -1658,6 +1685,76 @@ Defaults to 'bigquery_prod'.</p>
     return all(x in input_dict.keys() for x in keys)</code></pre>
 </details>
 </dd>
+<dt id="pipelines.rj_smtr.utils.execute_db_query"><code class="name flex">
+<span>def <span class="ident">execute_db_query</span></span>(<span>engine: str, query: str, connection, connector, connection_info: dict) ‑> list[dict]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Execute a query if retries</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>query</code></strong> :&ensp;<code>str</code></dt>
+<dd>the SQL Query to execute</dd>
+<dt><strong><code>engine</code></strong> :&ensp;<code>str</code></dt>
+<dd>The database management system</dd>
+<dt><strong><code>connection</code></strong></dt>
+<dd>The database connection</dd>
+<dt><strong><code>connector</code></strong></dt>
+<dd>The database connector (to do reconnections)</dd>
+<dt><strong><code>connection_info</code></strong> :&ensp;<code>dict</code></dt>
+<dd>The database connector params (to do reconnections)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list[dict]</code></dt>
+<dd>The query results</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def execute_db_query(
+    engine: str,
+    query: str,
+    connection,
+    connector,
+    connection_info: dict,
+) -&gt; list[dict]:
+    &#34;&#34;&#34;
+    Execute a query if retries
+
+    Args:
+        query (str): the SQL Query to execute
+        engine (str): The database management system
+        connection: The database connection
+        connector: The database connector (to do reconnections)
+        connection_info (dict): The database connector params (to do reconnections)
+
+    Returns:
+        list[dict]: The query results
+
+    &#34;&#34;&#34;
+    retries = 10
+    for retry in range(retries):
+        try:
+            log(f&#34;Executing query:\n{query}&#34;)
+            data = pd.read_sql(sql=query, con=connection).to_dict(orient=&#34;records&#34;)
+            for d in data:
+                for k, v in d.items():
+                    if pd.isna(v):
+                        d[k] = None
+            break
+        except Exception as err:
+            log(f&#34;[ATTEMPT {retry}]: {err}&#34;)
+            close_db_connection(connection=connection, engine=engine)
+            if retry &lt; retries - 1:
+                connection = connector(**connection_info)
+            else:
+                raise err
+
+    close_db_connection(connection=connection, engine=engine)
+    return data</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_smtr.utils.filter_data"><code class="name flex">
 <span>def <span class="ident">filter_data</span></span>(<span>data: pandas.core.frame.DataFrame, filters: list, subset_query: str = None)</span>
 </code></dt>
@@ -2061,7 +2158,7 @@ mode (str):</p>
 <dt><strong><code>query</code></strong> :&ensp;<code>str</code></dt>
 <dd>the SQL Query to execute</dd>
 <dt><strong><code>engine</code></strong> :&ensp;<code>str</code></dt>
-<dd>The datase management system</dd>
+<dd>The database management system</dd>
 <dt><strong><code>host</code></strong> :&ensp;<code>str</code></dt>
 <dd>The database host</dd>
 <dt><strong><code>secret_path</code></strong> :&ensp;<code>str</code></dt>
@@ -2097,7 +2194,7 @@ if you set a value for this argument, the query will have LIMIT and OFFSET appen
 
     Args:
         query (str): the SQL Query to execute
-        engine (str): The datase management system
+        engine (str): The database management system
         host (str): The database host
         secret_path (str): Secret path to get credentials
         database (str): The database to connect
@@ -2115,13 +2212,11 @@ if you set a value for this argument, the query will have LIMIT and OFFSET appen
 
     data = None
     error = None
-    filetype = &#34;json&#34;
 
     if max_pages is None:
         max_pages = 1
 
     full_data = []
-    paginated_query = query
     credentials = get_vault_secret(secret_path)[&#34;data&#34;]
     if page_size is not None:
         paginated_query = paginated_query + f&#34;LIMIT {page_size} OFFSET {{offset}}&#34;
@@ -2129,36 +2224,27 @@ if you set a value for this argument, the query will have LIMIT and OFFSET appen
     connector = connector_mapping[engine]
 
     try:
-        connection = connector(
-            host=host,
-            user=credentials[&#34;user&#34;],
-            password=credentials[&#34;password&#34;],
-            database=database,
-        )
-        for page in range(max_pages):
-            retries = 10
-            formatted_query = paginated_query
-            if page_size is not None:
-                formatted_query = formatted_query.format(offset=page * page_size)
+        connection_info = {
+            &#34;host&#34;: host,
+            &#34;user&#34;: credentials[&#34;user&#34;],
+            &#34;password&#34;: credentials[&#34;password&#34;],
+            &#34;database&#34;: database,
+        }
+        connection = connector(**connection_info)
 
-            for retry in range(retries):
-                try:
-                    log(f&#34;Executing query:\n{formatted_query}&#34;)
-                    data = pd.read_sql(sql=formatted_query, con=connection).to_dict(
-                        orient=&#34;records&#34;
-                    )
-                    break
-                except Exception as err:
-                    log(f&#34;[ATTEMPT {retry}]: {err}&#34;)
-                    close_db_connection(connection=connection, engine=engine)
-                    connection = connector(
-                        host=host,
-                        user=credentials[&#34;user&#34;],
-                        password=credentials[&#34;password&#34;],
-                        database=database,
-                    )
-                    if retry == retries - 1:
-                        raise err
+        for page in range(max_pages):
+            paginated_query = query
+
+            if page_size is not None:
+                paginated_query = query + f&#34;LIMIT {page_size} OFFSET {page * page_size}&#34;
+
+            data = execute_db_query(
+                engine=engine,
+                query=paginated_query,
+                connection=connection,
+                connector=connector,
+                connection_info=connection_info,
+            )
 
             full_data += data
 
@@ -2172,13 +2258,8 @@ if you set a value for this argument, the query will have LIMIT and OFFSET appen
         full_data = []
         error = traceback.format_exc()
         log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
-    finally:
-        try:
-            close_db_connection(connection=connection, engine=engine)
-        except Exception:
-            pass
 
-    return error, full_data, filetype</code></pre>
+    return error, full_data, &#34;json&#34;</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.utils.get_raw_data_gcs"><code class="name flex">
@@ -2898,6 +2979,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.utils.custom_serialization" href="#pipelines.rj_smtr.utils.custom_serialization">custom_serialization</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.data_info_str" href="#pipelines.rj_smtr.utils.data_info_str">data_info_str</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.dict_contains_keys" href="#pipelines.rj_smtr.utils.dict_contains_keys">dict_contains_keys</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.execute_db_query" href="#pipelines.rj_smtr.utils.execute_db_query">execute_db_query</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.filter_data" href="#pipelines.rj_smtr.utils.filter_data">filter_data</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.filter_null" href="#pipelines.rj_smtr.utils.filter_null">filter_null</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.generate_df_and_save" href="#pipelines.rj_smtr.utils.generate_df_and_save">generate_df_and_save</a></code></li>
