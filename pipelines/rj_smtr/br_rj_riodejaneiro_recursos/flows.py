@@ -98,15 +98,15 @@ with Flow(
             for d in constants.SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS.value
         ]
 
-        run_captura = create_flow_run(
-            flow_name=sppo_recurso_captura.name,
-            project_name="staging",
+        run_captura = create_flow_run.map(
+            flow_name=unmapped(sppo_recurso_captura.name),
+            project_name=unmapped("staging"),
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters=recursos_capture_parameters,
-            labels=LABELS,
+            parameters=unmapped(recursos_capture_parameters),
+            labels=unmapped(LABELS),
         )
 
-        wait_captura_true = wait_for_flow_run(
+        wait_captura_true = wait_for_flow_run.map(
             run_captura,
             stream_states=True,
             stream_logs=True,
@@ -123,16 +123,16 @@ with Flow(
     # Recaptura dos dados #
 
     with case(recapture, True):
-        run_recaptura = create_flow_run(
-            flow_name=sppo_recurso_recaptura.name,
-            project_name="staging",
+        run_recaptura = create_flow_run.map(
+            flow_name=unmapped(sppo_recurso_recaptura.name),
+            project_name=unmapped("staging"),
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            labels=LABELS,
+            labels=unmapped(LABELS),
         )
 
         run_recaptura.set_upstream(wait_captura)
 
-        wait_recaptura_true = wait_for_flow_run(
+        wait_recaptura_true = wait_for_flow_run.map(
             run_recaptura,
             stream_states=True,
             stream_logs=True,
@@ -149,17 +149,17 @@ with Flow(
     # Materialização dos dados #
 
     with case(materialize, True):
-        run_materializacao = create_flow_run(
-            flow_name=sppo_recurso_materializacao.name,
-            project_name="staging",
+        run_materializacao = create_flow_run.map(
+            flow_name=unmapped(sppo_recurso_materializacao.name),
+            project_name=unmapped("staging"),
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            labels=LABELS,
-            upstream_tasks=[wait_captura],
+            labels=unmapped(LABELS),
+            upstream_tasks=unmapped([wait_captura]),
         )
 
         run_materializacao.set_upstream(wait_recaptura)
 
-        wait_materializacao_true = wait_for_flow_run(
+        wait_materializacao_true = wait_for_flow_run.map(
             run_materializacao,
             stream_states=True,
             stream_logs=True,
