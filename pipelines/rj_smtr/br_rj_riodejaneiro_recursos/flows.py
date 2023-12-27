@@ -34,8 +34,7 @@ from pipelines.rj_smtr.schedules import every_day
 # CAPTURA DOS TICKETS #
 
 sppo_recurso_captura = deepcopy(default_capture_flow)
-sppo_recurso_captura.name = "SMTR: Subsídio Recursos Viagens Individuais/\
-Bloqueio de Via/ Reprocessamento  - Captura (subflow)"
+sppo_recurso_captura.name = "SMTR: Subsídio Recursos - Captura (subflow)"
 sppo_recurso_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_recurso_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
@@ -47,8 +46,7 @@ sppo_recurso_captura = set_default_parameters(
 )
 # RECAPTURA DOS TICKETS #
 sppo_recurso_recaptura = deepcopy(default_capture_flow)
-sppo_recurso_recaptura.name = "SMTR: Subsídio Recursos Viagens Individuais/\
-Bloqueio de Via/ Reprocessamento  - Recaptura (subflow)"
+sppo_recurso_recaptura.name = "SMTR: Subsídio Recursos - Recaptura (subflow)"
 sppo_recurso_recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_recurso_recaptura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
@@ -63,8 +61,7 @@ sppo_recurso_recaptura = set_default_parameters(
 # MATERIALIZAÇÃO DOS TICKETS #
 
 sppo_recurso_materializacao = deepcopy(default_materialization_flow)
-sppo_recurso_materializacao.name = "SMTR: Subsídio Recursos Viagens Individuais/\
-Bloqueio de Via/ Reprocessamento  - Materialização (subflow)"
+sppo_recurso_materializacao.name = "SMTR: Subsídio Recursos - Materialização (subflow)"
 sppo_recurso_materializacao.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_recurso_materializacao.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
@@ -77,8 +74,7 @@ sppo_recurso_materializacao = set_default_parameters(
 )
 
 with Flow(
-    "SMTR: Subsídio Recursos Viagens Individuais/\
-Bloqueio de Via/ Reprocessamento - Captura/Tratamento",
+    "SMTR: Subsídio Recursos - Captura/Tratamento",
     code_owners=["carolinagomes", "rafaelpinheiro"],
 ) as subsidio_sppo_recurso:
     capture = Parameter("capture", default=True)
