@@ -134,9 +134,9 @@ with Flow(
 
         wait_recaptura_true = wait_for_flow_run.map(
             run_recaptura,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
+            stream_states=unmapped(True),
+            stream_logs=unmapped(True),
+            raise_final_state=unmapped(True),
         )
 
     with case(recapture, False):
