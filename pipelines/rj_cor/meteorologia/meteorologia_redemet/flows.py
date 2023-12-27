@@ -51,12 +51,12 @@ with Flow(
 
     # Materialization parameters
     MATERIALIZE_AFTER_DUMP = Parameter(
-        "materialize_after_dump", default=False, required=False
+        "materialize_after_dump", default=True, required=False
     )
     MATERIALIZE_TO_DATARIO = Parameter(
-        "materialize_to_datario", default=False, required=False
+        "materialize_to_datario", default=True, required=False
     )
-    MATERIALIZATION_MODE = Parameter("mode", default="dev", required=False)
+    MATERIALIZATION_MODE = Parameter("mode", default="prod", required=False)
 
     # Dump to GCS after? Should only dump to GCS if materializing to datario
     DUMP_TO_GCS = Parameter("dump_to_gcs", default=False, required=False)
@@ -149,7 +149,7 @@ cor_meteorologia_meteorologia_redemet.schedule = hour_schedule
 
 
 with Flow(
-    name="COR: Meteorologia REDEMET - Atualização das estações",
+    name="COR: Meteorologia - Meteorologia REDEMET - Atualização das estações",
     code_owners=[
         "karinappassos",
         "paty",
