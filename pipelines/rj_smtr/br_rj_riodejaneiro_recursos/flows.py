@@ -154,7 +154,7 @@ with Flow(
             project_name=unmapped("staging"),
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=unmapped(LABELS),
-            upstream_tasks=unmapped([wait_captura]),
+            upstream_tasks=[wait_captura],
         )
 
         run_materializacao.set_upstream(wait_recaptura)
