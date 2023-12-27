@@ -102,7 +102,7 @@ with Flow(
             flow_name=unmapped(sppo_recurso_captura.name),
             project_name=unmapped("staging"),
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters=unmapped(recursos_capture_parameters),
+            parameters=recursos_capture_parameters,
             labels=unmapped(LABELS),
         )
 
