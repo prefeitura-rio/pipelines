@@ -10,6 +10,7 @@ from pathlib import Path
 import traceback
 from typing import Dict, List, Union, Iterable, Any
 import io
+import time
 
 from basedosdados import Storage, Table
 import basedosdados as bd
@@ -764,6 +765,7 @@ def create_request_params(
         request_params = {"bucket_name": constants.STU_BUCKET_NAME.value}
 
     elif dataset_id == constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value:
+        # Seção para o dataset SUBSIDIO_SPPO_RECURSOS
         # Inicialize o $filter como uma lista vazia
         filter_list = []
 
@@ -773,20 +775,24 @@ def create_request_params(
             data_recurso = extract_params.get("data_recurso", timestamp)
             if isinstance(data_recurso, str):
                 data_recurso = datetime.fromisoformat(data_recurso)
+
             extract_params["token"] = get_vault_secret(
                 constants.SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH.value
             )["data"]["token"]
+
             start = datetime.strftime(
                 data_recurso - timedelta(minutes=interval_minutes),
                 "%Y-%m-%dT%H:%M:%S.%MZ",
             )
             end = datetime.strftime(data_recurso, "%Y-%m-%dT%H:%M:%S.%MZ")
             log(f" Start date {start}, end date {end}")
+
             recurso_params = {
                 "start": start,
                 "end": end,
                 "service": service_params["service"],
             }
+            log(f'Baixando dados do serviço: {service_params["service"]}.')
             # Adicione o filtro atual à lista
             filter_list.append(extract_params["$filter"].format(**recurso_params))
 
