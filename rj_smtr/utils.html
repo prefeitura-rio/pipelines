@@ -894,8 +894,6 @@ def get_raw_data_db(
 
     full_data = []
     credentials = get_vault_secret(secret_path)[&#34;data&#34;]
-    if page_size is not None:
-        paginated_query = paginated_query + f&#34;LIMIT {page_size} OFFSET {{offset}}&#34;
 
     connector = connector_mapping[engine]
 
@@ -909,10 +907,12 @@ def get_raw_data_db(
         connection = connector(**connection_info)
 
         for page in range(max_pages):
-            paginated_query = query
-
             if page_size is not None:
-                paginated_query = query + f&#34;LIMIT {page_size} OFFSET {page * page_size}&#34;
+                paginated_query = (
+                    query + f&#34; LIMIT {page_size} OFFSET {page * page_size}&#34;
+                )
+            else:
+                paginated_query = query
 
             data = execute_db_query(
                 engine=engine,
@@ -2218,8 +2218,6 @@ if you set a value for this argument, the query will have LIMIT and OFFSET appen
 
     full_data = []
     credentials = get_vault_secret(secret_path)[&#34;data&#34;]
-    if page_size is not None:
-        paginated_query = paginated_query + f&#34;LIMIT {page_size} OFFSET {{offset}}&#34;
 
     connector = connector_mapping[engine]
 
@@ -2233,10 +2231,12 @@ if you set a value for this argument, the query will have LIMIT and OFFSET appen
         connection = connector(**connection_info)
 
         for page in range(max_pages):
-            paginated_query = query
-
             if page_size is not None:
-                paginated_query = query + f&#34;LIMIT {page_size} OFFSET {page * page_size}&#34;
+                paginated_query = (
+                    query + f&#34; LIMIT {page_size} OFFSET {page * page_size}&#34;
+                )
+            else:
+                paginated_query = query
 
             data = execute_db_query(
                 engine=engine,
