@@ -905,11 +905,6 @@ def get_raw_data_db(
         full_data = []
         error = traceback.format_exc()
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
-    finally:
-        try:
-            close_db_connection(connection=connection, engine=engine)
-        except Exception:
-            pass
 
     return error, full_data, "json"
 
