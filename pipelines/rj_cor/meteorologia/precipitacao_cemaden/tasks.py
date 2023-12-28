@@ -12,18 +12,13 @@ import pandas as pd
 import pendulum
 from prefect import task
 from prefect.engine.signals import ENDRUN
-from prefect.engine.state import Skipped
-
-# from prefect import context
-
+from prefect.engine.state import Skipped, Failed
 from pipelines.constants import constants
-from pipelines.rj_cor.meteorologia.precipitacao_cemaden.utils import (
-    parse_date_columns,
-)
 from pipelines.utils.utils import (
     log,
-    to_partitions,
+    parse_date_columns,
     save_updated_rows_on_redis,
+    to_partitions,
 )
 
 
@@ -32,16 +27,27 @@ from pipelines.utils.utils import (
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def tratar_dados(
-    dataset_id: str, table_id: str, mode: str = "dev"
-) -> Tuple[pd.DataFrame, bool]:
+def download_data() -> pd.DataFrame:
     """
-    Renomeia colunas e filtra dados com a hora e minuto do timestamp
-    de execução mais próximo à este
+    Download data from API
     """
 
     url = "http://sjc.salvar.cemaden.gov.br/resources/graficos/interativo/getJson2.php?uf=RJ"
-    dados = pd.read_json(url)
+    dataframe = pd.read_json(url)
+    return dataframe
+
+
+@task(
+    nout=2,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def treat_data(
+    dataframe: pd.DataFrame, dataset_id: str, table_id: str, mode: str = "dev"
+) -> Tuple[pd.DataFrame, bool]:
+    """
+    Rename cols and filter data using hour and minute from the nearest current timestamp
+    """
 
     drop_cols = [
         "uf",
@@ -65,30 +71,34 @@ def tratar_dados(
         "acc96hr": "acumulado_chuva_96_h",
     }
 
-    dados = (
-        dados[(dados["codibge"] == 3304557) & (dados["tipoestacao"] == 1)]
+    dataframe = (
+        dataframe[(dataframe["codibge"] == 3304557) & (dataframe["tipoestacao"] == 1)]
         .drop(drop_cols, axis=1)
         .rename(rename_cols, axis=1)
     )
-    log(f"\n[DEBUG]: df.head() {dados.head()}")
+    log(f"\n[DEBUG]: df.head() {dataframe.head()}")
 
-    # Converte de UTC para horário São Paulo
-    dados["data_medicao_utc"] = pd.to_datetime(dados["data_medicao_utc"], dayfirst=True)
-
-    see_cols = ["data_medicao_utc", "id_estacao", "acumulado_chuva_1_h"]
-    log(f"DEBUG: data utc {dados[see_cols]}")
+    # Convert from UTC to São Paulo timezone
+    dataframe["data_medicao_utc"] = pd.to_datetime(
+        dataframe["data_medicao_utc"], dayfirst=True
+    ) + pd.DateOffset(hours=0)
+    dataframe["data_medicao"] = (
+        dataframe["data_medicao_utc"]
+        .dt.tz_localize("UTC")
+        .dt.tz_convert("America/Sao_Paulo")
+    )
+    see_cols = ["data_medicao_utc", "data_medicao", "id_estacao", "acumulado_chuva_1_h"]
+    log(f"DEBUG: data utc -> GMT-3 {dataframe[see_cols]}")
 
     date_format = "%Y-%m-%d %H:%M:%S"
-    dados["data_medicao"] = dados["data_medicao_utc"].dt.strftime(date_format)
+    dataframe["data_medicao"] = dataframe["data_medicao"].dt.strftime(date_format)
 
-    log(f"DEBUG: df dtypes {dados.dtypes}")
-    see_cols = ["data_medicao", "id_estacao", "acumulado_chuva_1_h"]
-    log(f"DEBUG: data {dados[see_cols]}")
+    log(f"DEBUG: data {dataframe[see_cols]}")
 
-    # Alterando valores '-' e np.nan para NULL
-    dados.replace(["-", np.nan], [0, None], inplace=True)
+    # Change values '-' and np.nan to NULL
+    dataframe.replace(["-", np.nan], [0, None], inplace=True)
 
-    # Altera valores negativos para None
+    # Change negative values to None
     float_cols = [
         "acumulado_chuva_10_min",
         "acumulado_chuva_1_h",
@@ -100,25 +110,18 @@ def tratar_dados(
         "acumulado_chuva_72_h",
         "acumulado_chuva_96_h",
     ]
-    dados[float_cols] = np.where(dados[float_cols] < 0, None, dados[float_cols])
+    dataframe[float_cols] = np.where(
+        dataframe[float_cols] < 0, None, dataframe[float_cols]
+    )
 
-    # Elimina linhas em que o id_estacao é igual mantendo a de menor valor nas colunas float
-    dados.sort_values(["id_estacao", "data_medicao"] + float_cols, inplace=True)
-    dados.drop_duplicates(subset=["id_estacao", "data_medicao"], keep="first")
+    # Eliminate where the id_estacao is the same keeping the smallest one
+    dataframe.sort_values(["id_estacao", "data_medicao"] + float_cols, inplace=True)
+    dataframe.drop_duplicates(subset=["id_estacao", "data_medicao"], keep="first")
 
-    # Ajustando dados da meia-noite que vem sem o horário
-    for index, row in dados.iterrows():
-        try:
-            date = pd.to_datetime(row["data_medicao"], format="%Y-%m-%d %H:%M:%S")
-        except ValueError:
-            date = pd.to_datetime(row["data_medicao"]) + pd.DateOffset(hours=0)
+    log(f"Dataframe before comparing with last data saved on redis {dataframe.head()}")
 
-        dados.at[index, "data_medicao"] = date.strftime("%Y-%m-%d %H:%M:%S")
-
-    log(f"Dataframe before comparing with last data saved on redis {dados.head()}")
-
-    dados = save_updated_rows_on_redis(
-        dados,
+    dataframe = save_updated_rows_on_redis(
+        dataframe,
         dataset_id,
         table_id,
         unique_id="id_estacao",
@@ -127,16 +130,16 @@ def tratar_dados(
         mode=mode,
     )
 
-    log(f"Dataframe after comparing with last data saved on redis {dados.head()}")
+    log(f"Dataframe after comparing with last data saved on redis {dataframe.head()}")
 
     # If df is empty stop flow
-    if dados.shape[0] == 0:
+    if dataframe.shape[0] == 0:
         skip_text = "No new data available on API"
         log(skip_text)
         raise ENDRUN(state=Skipped(skip_text))
 
-    # Fixar ordem das colunas
-    dados = dados[
+    # Fix columns order
+    dataframe = dataframe[
         [
             "id_estacao",
             "data_medicao",
@@ -152,23 +155,22 @@ def tratar_dados(
         ]
     ]
 
-    return dados
+    return dataframe
 
 
 @task
-def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
+def save_data(dataframe: pd.DataFrame) -> Union[str, Path]:
     """
-    Salvar dados tratados em csv para conseguir subir pro GCP
+    Save data on a csv file to be uploaded to GCP
     """
 
     prepath = Path("/tmp/precipitacao_cemaden/")
     prepath.mkdir(parents=True, exist_ok=True)
 
     partition_column = "data_medicao"
-    dataframe, partitions = parse_date_columns(dados, partition_column)
+    dataframe, partitions = parse_date_columns(dataframe, partition_column)
     current_time = pendulum.now("America/Sao_Paulo").strftime("%Y%m%d%H%M")
 
-    # Cria partições a partir da data
     to_partitions(
         data=dataframe,
         partition_columns=partitions,
@@ -178,3 +180,53 @@ def salvar_dados(dados: pd.DataFrame) -> Union[str, Path]:
     )
     log(f"[DEBUG] Files saved on {prepath}")
     return prepath
+
+
+@task
+def check_for_new_stations(
+    dataframe: pd.DataFrame,
+    wait=None,  # pylint: disable=unused-argument
+) -> None:
+    """
+    Check if the updated stations are the same as before.
+    If not, consider flow as failed and call attention to
+    add this new station on estacoes_cemaden.
+    I can't automatically update this new station, because
+    I couldn't find a url that gives me the lat and lon for
+    all the stations.
+    """
+
+    stations_before = [
+        "3043",
+        "3044",
+        "3045",
+        "3114",
+        "3215",
+        "7593",
+        "7594",
+        "7595",
+        "7596",
+        "7597",
+        "7599",
+        "7600",
+        "7601",
+        "7602",
+        "7603",
+        "7606",
+        "7609",
+        "7610",
+        "7611",
+        "7612",
+        "7613",
+        "7614",
+        "7615",
+    ]
+    new_stations = [
+        i for i in dataframe.id_estacao.unique() if str(i) not in stations_before
+    ]
+    if len(new_stations) != 0:
+        message = f"New station identified. You need to update CEMADEN\
+              estacoes_cemaden adding station(s) {new_stations}: \
+              {dataframe[dataframe.id_estacao.isin(new_stations)]}  "
+        log(message)
+        raise ENDRUN(state=Failed(message))

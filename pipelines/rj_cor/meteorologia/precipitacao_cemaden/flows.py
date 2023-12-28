@@ -17,8 +17,10 @@ from pipelines.rj_cor.meteorologia.precipitacao_cemaden.constants import (
     constants as cemaden_constants,
 )
 from pipelines.rj_cor.meteorologia.precipitacao_cemaden.tasks import (
-    tratar_dados,
-    salvar_dados,
+    check_for_new_stations,
+    download_data,
+    treat_data,
+    save_data,
 )
 from pipelines.rj_cor.meteorologia.precipitacao_cemaden.schedules import (
     minute_schedule,
@@ -41,23 +43,21 @@ wait_for_flow_run_with_2min_timeout = wait_for_flow_run_with_timeout(
 with Flow(
     name="COR: Meteorologia - Precipitacao CEMADEN",
     code_owners=[
-        "richardg867",
         "paty",
     ],
     # skip_if_running=True,
 ) as cor_meteorologia_precipitacao_cemaden:
-    DATASET_ID = "clima_pluviometro"
-    TABLE_ID = "taxa_precipitacao_cemaden"
-    DUMP_MODE = "append"
-
+    DUMP_MODE = Parameter("dump_mode", default="append", required=True)
+    DATASET_ID = Parameter("dataset_id", default="clima_pluviometro", required=True)
+    TABLE_ID = Parameter("table_id", default="taxa_precipitacao_cemaden", required=True)
     # Materialization parameters
     MATERIALIZE_AFTER_DUMP = Parameter(
-        "materialize_after_dump", default=False, required=False
+        "materialize_after_dump", default=True, required=False
     )
     MATERIALIZE_TO_DATARIO = Parameter(
-        "materialize_to_datario", default=False, required=False
+        "materialize_to_datario", default=True, required=False
     )
-    MATERIALIZATION_MODE = Parameter("mode", default="dev", required=False)
+    MATERIALIZATION_MODE = Parameter("mode", default="prod", required=False)
     TRIGGER_RAIN_DASHBOARD_UPDATE = Parameter(
         "trigger_rain_dashboard_update", default=False, required=False
     )
@@ -71,12 +71,14 @@ with Flow(
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
 
-    dados = tratar_dados(
+    dataframe = download_data()
+    dataframe = treat_data(
+        dataframe=dataframe,
         dataset_id=DATASET_ID,
         table_id=TABLE_ID,
         mode=MATERIALIZATION_MODE,
     )
-    path = salvar_dados(dados=dados)
+    path = save_data(dataframe=dataframe)
 
     # Create table in BigQuery
     UPLOAD_TABLE = create_table_and_upload_to_gcs(
@@ -181,6 +183,8 @@ with Flow(
                 stream_logs=True,
                 raise_final_state=True,
             )
+
+    check_for_new_stations(dataframe, wait=UPLOAD_TABLE)
 
 # para rodar na cloud
 cor_meteorologia_precipitacao_cemaden.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
