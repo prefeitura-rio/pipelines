@@ -10,7 +10,7 @@ from pathlib import Path
 import traceback
 from typing import Dict, List, Union, Iterable, Any
 import io
-import time
+
 
 from basedosdados import Storage, Table
 import basedosdados as bd
