@@ -765,8 +765,6 @@ def create_request_params(
         request_params = {"bucket_name": constants.STU_BUCKET_NAME.value}
 
     elif dataset_id == constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value:
-        # Seção para o dataset SUBSIDIO_SPPO_RECURSOS
-        # Inicialize o $filter como uma lista vazia
         filter_list = []
 
         for (
@@ -861,7 +859,7 @@ def get_raw_from_sources(
             )
         elif source_type == "movidesk":
             error, data, filetype = get_raw_recursos(
-                request_url=source_path, request_params=request_params
+                request_url=source_path, **request_params
             )
         else:
             raise NotImplementedError(f"{source_type} not supported")

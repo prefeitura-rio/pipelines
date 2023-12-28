@@ -1062,7 +1062,9 @@ def read_raw_data(filepath: str, reader_args: dict = None) -> tuple[str, pd.Data
     return error, data
 
 
-def get_raw_recursos(request_url: str, request_params: dict) -> tuple[str, str, str]:
+def get_raw_recursos(
+    request_url: str, request_params: dict, service: str
+) -> tuple[str, str, str]:
     """
     Returns a dataframe with recursos data from movidesk api.
     """
@@ -1077,6 +1079,7 @@ def get_raw_recursos(request_url: str, request_params: dict) -> tuple[str, str, 
         try:
             request_params["$top"] = top
             request_params["$skip"] = skip
+            request_params["service"] = f"serviceFirstLevel eq '{service}'"
 
             log(f'top: {request_params["$top"]}, skip: {request_params["$skip"]}')
 
