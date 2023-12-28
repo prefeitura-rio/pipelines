@@ -717,7 +717,6 @@ def create_request_params(
             request_params["page_size"] = extract_params["page_size"]
             request_params["max_pages"] = extract_params["max_pages"]
         else:
-
             if "get_updates" in extract_params.keys():
                 project = bq_project()
                 log(f"project = {project}")
@@ -751,7 +750,6 @@ def create_request_params(
                 request_params["query"] = request_params["query"].format(
                     update=update_condition
                 )
-
 
             datetime_range = get_datetime_range(
                 timestamp=timestamp, interval=timedelta(minutes=interval_minutes)

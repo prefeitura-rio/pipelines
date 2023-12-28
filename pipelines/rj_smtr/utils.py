@@ -783,6 +783,7 @@ def close_db_connection(connection, engine: str):
     else:
         raise NotImplementedError(f"Engine {engine} not supported")
 
+
 def execute_db_query(
     engine: str,
     query: str,
@@ -825,7 +826,7 @@ def execute_db_query(
     close_db_connection(connection=connection, engine=engine)
     return data
 
-  
+
 def get_raw_data_db(
     query: str,
     engine: str,
