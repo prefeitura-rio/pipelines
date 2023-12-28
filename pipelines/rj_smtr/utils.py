@@ -1063,7 +1063,8 @@ def read_raw_data(filepath: str, reader_args: dict = None) -> tuple[str, pd.Data
 
 
 def get_raw_recursos(
-    request_url: str, request_params: dict, table_id: str
+    request_url: str,
+    request_params: dict,
 ) -> tuple[str, str, str]:
     """
     Returns a dataframe with recursos data from movidesk api.
@@ -1079,7 +1080,6 @@ def get_raw_recursos(
         try:
             request_params["$top"] = top
             request_params["$skip"] = skip
-            request_params["service"] = f"serviceFirstLevel eq '{table_id}'"
 
             log(f'top: {request_params["$top"]}, skip: {request_params["$skip"]}')
 
