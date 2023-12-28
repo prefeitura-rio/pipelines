@@ -233,7 +233,9 @@ bilhetagem_recaptura = set_default_parameters(
     | {"recapture": True},
 )
 
-# TRATAMENTO - RODA DE HORA EM HORA, RECAPTURAS + CAPTURA AUXILIAR + MATERIALIZAÇÃO #
+
+# TRATAMENTO TRANSAÇÃO:
+# RODA DE HORA EM HORA, RECAPTURAS + CAPTURA AUXILIAR + MATERIALIZAÇÃO
 
 with Flow(
     "SMTR: Bilhetagem Transação - Tratamento",
@@ -438,6 +440,10 @@ bilhetagem_transacao_tratamento.schedule = every_hour
 #     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 # )
 # # bilhetagem_gps_tratamento.schedule = every_hour
+
+
+# CAPTURA/TRATAMENTO - ORDEM PAGAMENTO:
+# CAPTURA + RECAPTURA + MATERIALIZAÇÃO
 
 with Flow(
     "SMTR: Bilhetagem Ordem Pagamento - Captura/Tratamento",
