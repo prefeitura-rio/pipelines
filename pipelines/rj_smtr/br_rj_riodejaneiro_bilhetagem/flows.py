@@ -356,6 +356,9 @@ bilhetagem_transacao_tratamento.schedule = every_hour
 # )
 # # bilhetagem_gps_tratamento.schedule = every_hour
 
+# CAPTURA/TRATAMENTO - ORDEM PAGAMENTO:
+# CAPTURA + RECAPTURA + MATERIALIZAÇÃO
+
 with Flow(
     "SMTR: Bilhetagem Ordem Pagamento - Captura/Tratamento",
     code_owners=["caio", "fernanda", "boris", "rodrigo", "rafaelpinheiro"],
