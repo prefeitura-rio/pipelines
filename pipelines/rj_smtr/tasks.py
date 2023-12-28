@@ -859,7 +859,7 @@ def get_raw_from_sources(
             )
         elif source_type == "movidesk":
             error, data, filetype = get_raw_recursos(
-                request_url=source_path, **request_params
+                request_url=source_path, request_params=request_params
             )
         else:
             raise NotImplementedError(f"{source_type} not supported")
