@@ -6,7 +6,7 @@ from prefect import Flow
 from prefect.storage import GCS
 from pipelines.constants import constants
 from prefect.run_configs import KubernetesRun
-from pipelines.rj_sms.utils import upload_to_datalake
+from pipelines.rj_sms.tasks import upload_to_datalake
 from pipelines.rj_sms.dump_api_regulacao_sisreg.tasks import get_patients, save_patients
 from pipelines.rj_sms.dump_api_regulacao_sisreg.schedules import every_day_at_six_am
 

@@ -9,7 +9,7 @@ import pandas as pd
 from prefect import task
 from pipelines.utils.utils import log, get_vault_secret
 from datetime import datetime, timedelta
-from pipelines.rj_sms.utils import create_partitions
+from pipelines.rj_sms.tasks import create_partitions
 
 
 @task
