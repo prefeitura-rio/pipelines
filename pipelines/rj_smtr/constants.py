@@ -496,6 +496,7 @@ class constants(Enum):  # pylint: disable=c0103
             "date_range": {
                 "table_run_datetime_column_name": "datetime_inclusao",
                 "delay_hours": 1,
+                "table_alias": "integracao",
             },
             "version": {},
         },
