@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=W0102, W0613, R0913, R0914
+# pylint: disable=W0102, W0613, R0913, R0914, R0915
 """
 Tasks for emd
 """
@@ -10,25 +10,29 @@ import re
 from pathlib import Path
 from typing import Union
 
-import numpy as np
+import pandas as pd
 import pendulum
 from prefect import task
 from prefect.engine.signals import ENDRUN
 from prefect.engine.state import Skipped
-import s3fs
 
 from pipelines.rj_cor.meteorologia.satelite.satellite_utils import (
-    extract_julian_day_and_hour_from_filename,
-    main,
-    save_data_in_file,
-    get_blob_with_prefix,
+    create_and_save_image,
+    choose_file_to_download,
     download_blob,
+    extract_julian_day_and_hour_from_filename,
+    get_files_from_aws,
+    get_files_from_gcp,
+    get_info,
+    get_variable_values,
+    remap_g16,
+    save_data_in_file,
 )
 from pipelines.utils.utils import log
 
 
 @task()
-def get_dates(current_time) -> str:
+def get_dates(current_time, product) -> str:
     """
     Task para obter o dia atual caso nenhuma data tenha sido passada
     Subtraimos 5 minutos da hora atual pois o último arquivo que sobre na aws
@@ -38,6 +42,9 @@ def get_dates(current_time) -> str:
     """
     if current_time is None:
         current_time = pendulum.now("UTC").subtract(minutes=5).to_datetime_string()
+    # Product sst is updating one hour later
+    if product == "SSTF":
+        current_time = pendulum.now("UTC").subtract(minutes=55).to_datetime_string()
     return current_time
 
 
@@ -74,7 +81,7 @@ def slice_data(current_time: str, ref_filename: str = None) -> dict:
 
 @task(nout=2, max_retries=10, retry_delay=dt.timedelta(seconds=60))
 def download(
-    variavel: str,
+    product: str,
     date_hour_info: dict,
     band: str = None,
     ref_filename: str = None,
@@ -83,79 +90,50 @@ def download(
     mode_redis: str = "prod",
 ) -> Union[str, Path]:
     """
-    Acessa o S3 e faz o download do primeiro arquivo da data-hora especificada
+    Access S3 or GCP and download the first file on this specified date hour
+    that is not already saved on redis
     """
 
     year = date_hour_info["year"]
     julian_day = date_hour_info["julian_day"]
     hour_utc = date_hour_info["hour_utc"][:2]
+    partition_path = f"ABI-L2-{product}/{year}/{julian_day}/{hour_utc}/"
+    log(f"Getting files from {partition_path}")
 
-    try:
-        # Use the anonymous credentials to access public data
-        s3_fs = s3fs.S3FileSystem(anon=True)
+    storage_files_path, storage_origin, storage_conection = get_files_from_aws(
+        partition_path
+    )
+    log(storage_files_path)
+    if len(storage_files_path) == 0:
+        storage_files_path, storage_origin, storage_conection = get_files_from_gcp(
+            partition_path
+        )
 
-        # Get all files of GOES-16 data (multiband format) at this hour
-        path_files = np.sort(
-            np.array(
-                s3_fs.find(
-                    f"noaa-goes16/ABI-L2-{variavel}/{year}/{julian_day}/{hour_utc}/"
-                )
-                # s3_fs.find(f"noaa-goes16/ABI-L2-CMIPF/2022/270/10/OR_ABI-L2-CMIPF-M6C13_G16_s20222701010208_e20222701019528_c20222701020005.nc")
-            )
-        )
-        # Mantém apenas arquivos de determinada banda
-        if variavel == "CMIPF":
-            # para capturar banda 13
-            path_files = [f for f in path_files if bool(re.search("C" + band, f))]
-        origem = "aws"
-    except IndexError:
-        bucket_name = "gcp-public-data-goes-16"
-        partition_file = f"ABI-L2-{variavel}/{year}/{julian_day}/{hour_utc}/"
-        path_files = get_blob_with_prefix(
-            bucket_name=bucket_name, prefix=partition_file, mode="prod"
-        )
-        origem = "gcp"
+    # Keep only files from specified band
+    if product == "CMIPF":
+        # para capturar banda 13
+        storage_files_path = [
+            f for f in storage_files_path if bool(re.search("C" + band, f))
+        ]
 
     # Skip task if there is no file on API
-    if len(path_files) == 0:
+    if len(storage_files_path) == 0:
         log("No available files on API")
         skip = Skipped("No available files on API")
         raise ENDRUN(state=skip)
 
-    base_path = os.path.join(
-        os.getcwd(), mode_redis, "data", "satelite", variavel[:-1], "input"
-    )
+    base_path = os.path.join(os.getcwd(), "temp", "input", mode_redis, product[:-1])
 
     if not os.path.exists(base_path):
         os.makedirs(base_path)
 
     # Seleciona primeiro arquivo que não tem o nome salvo no redis
-    log(f"\n\n[DEBUG]: available files on API: {path_files}")
-    log(f"\n\n[DEBUG]: filenames already saved on redis_files: {redis_files}")
-    log(f"\n\n[DEBUG]: ref_filename: {ref_filename}")
+    log(f"\n\n[DEBUG]: available files on API: {storage_files_path}")
+    log(f"\n\n[DEBUG]: filenames that are already saved on redis_files: {redis_files}")
 
-    # keep only ref_filename if it exists
-    if ref_filename is not None:
-        # extract this part of the name s_20222911230206_e20222911239514
-        ref_date = ref_filename[ref_filename.find("_s") + 1 : ref_filename.find("_e")]
-        log(f"\n\n[DEBUG]: ref_date: {ref_date}")
-        match_text = re.compile(f".*{ref_date}")
-        path_files = list(filter(match_text.match, path_files))
-        log(f"\n\n[DEBUG]: path_files: {path_files}")
-
-    # keep the first file if it is not on redis
-    path_files.sort()
-    download_file = None
-    for path_file in path_files:
-        filename = path_file.split("/")[-1]
-        log(f"\n\n[DEBUG]: {filename} check if is in redis")
-        if filename not in redis_files:
-            log(f"\n\n[DEBUG]: {filename} not in redis")
-            redis_files.append(filename)
-            path_filename = os.path.join(base_path, filename)
-            download_file = path_file
-            # log(f"[DEBUG]: filename to be append on redis_files: {redis_files}")
-            break
+    redis_files, destination_file_path, download_file = choose_file_to_download(
+        storage_files_path, base_path, redis_files, ref_filename
+    )
 
     # Skip task if there is no new file
     if download_file is None:
@@ -163,39 +141,108 @@ def download(
         skip = Skipped("No new available files")
         raise ENDRUN(state=skip)
 
-    # Faz download da aws ou da gcp
-    if origem == "aws":
-        s3_fs.get(download_file, path_filename)
+    # Download file from aws or gcp
+    if storage_origin == "aws":
+        storage_conection.get(download_file, destination_file_path)
     else:
         download_blob(
-            bucket_name=bucket_name,
+            bucket_name=storage_conection,
             source_blob_name=download_file,
-            destination_file_name=path_filename,
+            destination_file_name=destination_file_path,
             mode="prod",
         )
 
-    return path_filename, redis_files
+    return destination_file_path, redis_files
 
 
 @task
-def tratar_dados(filename: str, mode_redis: str = "prod") -> dict:
+def tratar_dados(filename: str) -> dict:
     """
-    Converte coordenadas X, Y para latlon e recorta área
+    Convert X, Y coordinates from netcdf file to a latlon coordinates
+    and select only the specified region on extent variable.
     """
-    log(f"\n>>>> Started treating file: {filename}")
-    grid, goes16_extent, info = main(filename, mode_redis)
-    del grid, goes16_extent
-    return info
+    log(f"\n Started treating file: {filename}")
+    # Create the basemap reference for the Rectangular Projection.
+    # You may choose the region you want.
+
+    # Full Disk Extent
+    # extent = [-156.00, -81.30, 6.30, 81.30]
+
+    # Brazil region
+    # extent = [-90.0, -40.0, -20.0, 10.0]
+
+    # Estado do RJ
+    # lat_max, lon_max = (-20.69080839963545, -40.28483671464648)
+    # lat_min, lon_min = (-23.801876626302175, -45.05290312102409)
+
+    # Região da cidade do Rio de Janeiro
+    # lat_max, lon_min = (-22.802842397418548, -43.81200531887697)
+    # lat_min, lon_max = (-23.073487725280266, -43.11300020870994)
+
+    # Recorte da região da cidade do Rio de Janeiro segundo meteorologista
+    lat_max, lon_max = (
+        -21.699774257353113,
+        -42.35676996062447,
+    )  # canto superior direito
+    lat_min, lon_min = (
+        -23.801876626302175,
+        -45.05290312102409,
+    )  # canto inferior esquerdo
+
+    extent = [lon_min, lat_min, lon_max, lat_max]
+
+    # Get informations from the nc file
+    product_caracteristics = get_info(filename)
+    product_caracteristics["extent"] = extent
+
+    # Call the remap function to convert x, y to lon, lat and save converted file
+    remap_g16(
+        filename,
+        extent,
+        product=product_caracteristics["product"],
+        variable=product_caracteristics["variable"],
+    )
+
+    return product_caracteristics
+
+
+@task(nout=2)
+def save_data(info: dict, mode_redis: str = "prod") -> Union[str, Path]:
+    """
+    Concat all netcdf data and save partitioned by date on a csv
+    """
+
+    log("Start saving product on a csv")
+    output_path, output_filepath = save_data_in_file(
+        product=info["product"],
+        variable=info["variable"],
+        datetime_save=info["datetime_save"],
+        mode_redis=mode_redis,
+    )
+    return output_path, output_filepath
 
 
 @task
-def save_data(info: dict, file_path: str, mode_redis: str = "prod") -> Union[str, Path]:
+def create_image_and_upload_to_api(info: dict, output_filepath: Path):
     """
-    Convert tif data to csv
+    Create image from dataframe and send it to API
     """
 
-    variable = info["variable"]
-    datetime_save = info["datetime_save"]
-    print(f"Saving {variable} in parquet")
-    output_path = save_data_in_file(variable, datetime_save, file_path, mode_redis)
-    return output_path
+    dfr = pd.read_csv(output_filepath)
+
+    dfr = dfr.sort_values(by=["latitude", "longitude"], ascending=[False, True])
+
+    for var in info["variable"]:
+        log(f"\nStart creating image for variable {var}\n")
+
+        var = var.lower()
+        data_array = get_variable_values(dfr, var)
+
+        # Get the pixel values
+        data = data_array.data[:]
+        log(f"\n[DEBUG] data {data}")
+        save_image_path = create_and_save_image(data, info, var)
+        log(f"\nStart uploading image for variable {var} on API\n")
+        # upload_image_to_api(info, save_image_path)
+        log(save_image_path)
+        log(f"\nEnd uploading image for variable {var} on API\n")

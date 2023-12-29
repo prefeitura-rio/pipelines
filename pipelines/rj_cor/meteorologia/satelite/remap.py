@@ -3,10 +3,35 @@
 """
 Converte coordenada X,Y para latlon
 """
-
+import math
+import re
 import netCDF4 as nc
 import numpy as np
 from osgeo import osr, gdal  # pylint: disable=E0401
+from pipelines.utils.utils import log
+
+
+def extract_resolution(input_string: str):
+    """
+    Extract resolution from file and convert it from rad to degrees
+    """
+    # Define the regular expression pattern
+    pattern = r"y:\s*([0-9.]+)\s*rad\s*x:\s*([0-9.]+)\s*rad"
+
+    # Use re.search to find the pattern in the input string
+    match = re.search(pattern, input_string)
+
+    # Check if the pattern was found
+    if match:
+        # Extract y and x values
+        y_value = math.degrees(float(match.group(1)))
+        x_value = math.degrees(float(match.group(2)))
+
+        # Print the extracted values
+        print(f"y value: {y_value}, x value: {x_value}")
+    else:
+        print("Pattern not found in the input string.")
+    return y_value, x_value
 
 
 def export_image(image, path):
@@ -15,15 +40,6 @@ def export_image(image, path):
     """
     driver = gdal.GetDriverByName("netCDF")
     return driver.CreateCopy(path, image, 0)
-
-
-def get_geot(extent, nlines, ncols):
-    """
-    Compute resolution based on data dimension
-    """
-    resx = (extent[2] - extent[0]) / ncols
-    resy = (extent[3] - extent[1]) / nlines
-    return [extent[0], resx, 0, extent[3], 0, -resy]
 
 
 def get_scale_offset(path, variable):
@@ -45,93 +61,86 @@ def get_scale_offset(path, variable):
 
 
 def remap(
-    path, variable, extent, resolution, goes16_extent
+    path: str, remap_path: str, variable: list, extent: list
 ):  # pylint: disable=too-many-locals
     """
     Converte coordenada X, Y para latlon
     """
-    scale = 1
-    offset = 0
+    # Open the file
+    log(f"Remaping NETCDF:{path}:{variable}")
+    img = gdal.Open(f"NETCDF:{path}:" + variable)
 
-    # Define KM_PER_DEGREE
-    km_per_degree = 111.32
+    # Read the header metadata
+    metadata = img.GetMetadata()
+    scale = float(metadata.get(variable + "#scale_factor"))
+    offset = float(metadata.get(variable + "#add_offset"))
+    # units = metadata.get(variable + '#units')
+    dqf_variable = metadata.get(variable + "#ancillary_variables").split(" ")[0]
+    resolution = metadata.get(variable + "#resolution")
+    undef = (
+        float(metadata.get(variable + "#_FillValue"))
+        if metadata.get(variable + "#_FillValue") != ""
+        else np.nan
+    )
 
-    # GOES-16 Spatial Reference System
+    print(f"scale/offset/undef/resolution: {scale}/{offset}/{undef}/{resolution}")
+    print(variable.lower())
+
+    # Open dqf file
+    dqf = gdal.Open(f"NETCDF:{path}:{dqf_variable}")  # adicionado
+
+    # Load the data
+    data = img.ReadAsArray(0, 0, img.RasterXSize, img.RasterYSize).astype(float)
+    data_dqf = dqf.ReadAsArray(0, 0, dqf.RasterXSize, dqf.RasterYSize).astype(
+        float
+    )  # adicionado
+
+    # Remove undef
+    data[data == undef] = np.nan  # adicionado
+
+    # Apply the scale, offset and convert to celsius if necessary
+    data = data * scale + offset
+
+    # Apply NaN's where the quality flag is greater than 1
+    data[data_dqf > 0] = np.nan  # adicionado
+
+    # Read the original file projection and configure the output projection
     source_prj = osr.SpatialReference()
-    # sourcePrj.ImportFromProj4('+proj=geos +h=35786023.0 +a=6378137.0\
-    # +b=6356752.31414 +f=0.00335281068119356027489803406172 +lat_0=0.0\
-    # +lon_0=-75 +sweep=x +no_defs')
-    source_prj.ImportFromProj4(
-        "+proj=geos +h=35786000 +a=6378140 +b=6356750 +lon_0=-75 +sweep=x"
-    )
+    source_prj.ImportFromProj4(img.GetProjectionRef())
 
-    # Lat/lon WSG84 Spatial Reference System
     target_prj = osr.SpatialReference()
-    # targetPrj.ImportFromProj4('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
-    target_prj.ImportFromProj4("+proj=latlong +datum=WGS84")
+    target_prj.ImportFromProj4("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
 
-    # GOES-16 Extent (satellite projection) [llx, lly, urx, ury]
-    # goes16_extent = [x_1, y_1, x_2, y_2]
+    # Reproject the data
+    geot = img.GetGeoTransform()
+    driver = gdal.GetDriverByName("MEM")
+    raw = driver.Create("raw", data.shape[0], data.shape[1], 1, gdal.GDT_Float32)
+    raw.SetGeoTransform(geot)
+    raw.GetRasterBand(1).WriteArray(data)
 
-    # Setup NetCDF driver
-    gdal.SetConfigOption("GDAL_NETCDF_BOTTOMUP", "NO")
+    y_res, x_res = extract_resolution(resolution)
 
-    if not variable == "DQF":
-        # Read scale/offset from file
-        scale, offset = get_scale_offset(path, variable)
-
-    connection_info = 'NETCDF:"' + path + '"://' + variable
-
-    raw = gdal.Open(connection_info)
-
-    # Setup projection and geo-transformation
-    raw.SetProjection(source_prj.ExportToWkt())
-    # raw.SetGeoTransform(get_geot(goes16_extent, raw.RasterYSize, raw.RasterXSize))
-    raw.SetGeoTransform(get_geot(goes16_extent, raw.RasterYSize, raw.RasterXSize))
-
-    # Compute grid dimension
-    sizex = int(((extent[2] - extent[0]) * km_per_degree) / resolution)
-    sizey = int(((extent[3] - extent[1]) * km_per_degree) / resolution)
-
-    # Get memory driver
-    mem_driver = gdal.GetDriverByName("MEM")
-
-    # Create grid
-    grid = mem_driver.Create("grid", sizex, sizey, 1, gdal.GDT_Float32)
-
-    # Setup projection and geo-transformation
-    grid.SetProjection(target_prj.ExportToWkt())
-    grid.SetGeoTransform(get_geot(extent, grid.RasterYSize, grid.RasterXSize))
-
-    # Perform the projection/resampling
-
-    # print("Remapping", path)
-
-    gdal.ReprojectImage(
-        raw,
-        grid,
-        source_prj.ExportToWkt(),
-        target_prj.ExportToWkt(),
-        gdal.GRA_NearestNeighbour,
-        options=["NUM_THREADS=ALL_CPUS"],
+    # Define the parameters of the output file
+    options = gdal.WarpOptions(
+        format="netCDF",
+        srcSRS=source_prj,
+        dstSRS=target_prj,
+        outputBounds=(extent[0], extent[3], extent[2], extent[1]),
+        outputBoundsSRS=target_prj,
+        outputType=gdal.GDT_Float32,
+        srcNodata=undef,
+        dstNodata="nan",
+        xRes=x_res,
+        yRes=y_res,
+        multithread=True,
+        resampleAlg=gdal.GRA_NearestNeighbour,
+        copyMetadata=True,
     )
 
-    # Close file
-    raw = None
+    # Write the reprojected file on disk
+    remap_filename = (
+        f"{path.split('/')[-1].split('.nc')[0]}_variable-{variable.lower()}.nc"
+    )
 
-    # Read grid data
-    array = grid.ReadAsArray()
-
-    # Mask fill values (i.e. invalid values)
-    np.ma.masked_where(array, array == -1, False)
-
-    array = array.astype(np.uint16)
-
-    # Apply scale and offset
-    array = array * scale + offset
-    # np.ma.masked_where(array, array == 100, False)
-
-    # grid.GetRasterBand(1).SetNoDataValue(-1)
-    grid.GetRasterBand(1).WriteArray(array)
-
-    return grid
+    gdal.Warp(remap_path + remap_filename, raw, options=options)
+    print(f"\nRemap saved as {remap_filename} on {remap_path}")

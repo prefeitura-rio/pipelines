@@ -211,6 +211,25 @@ class constants(Enum):  # pylint: disable=c0103
         "interval_minutes": 1,
     }
 
+    BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS = {
+        "table_id": "integracao_transacao",
+        "partition_date_only": False,
+        "extract_params": {
+            "database": "ressarcimento_db",
+            "query": """
+                SELECT
+                    *
+                FROM
+                    integracao_transacao
+                WHERE
+                    data_inclusao BETWEEN '{start}'
+                    AND '{end}'
+            """,
+        },
+        "primary_key": ["id"],
+        "interval_minutes": 1,
+    }
+
     BILHETAGEM_TRACKING_CAPTURE_PARAMS = {
         "table_id": "gps_validador",
         "partition_date_only": False,
@@ -222,12 +241,13 @@ class constants(Enum):  # pylint: disable=c0103
                 FROM
                     tracking_detalhe
                 WHERE
-                    data_tracking BETWEEN '{start}'
-                    AND '{end}'
+                    id > {last_id} AND id <= {max_id}
             """,
+            "page_size": 1000,
+            "max_pages": 100,
         },
         "primary_key": ["id"],
-        "interval_minutes": 1,
+        "interval_minutes": 5,
     }
 
     BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS = [
@@ -273,6 +293,8 @@ class constants(Enum):  # pylint: disable=c0103
 
     BILHETAGEM_TRATAMENTO_INTERVAL = 60
 
+    BILHETAGEM_PRIVATE_BUCKET = "rj-smtr-jae-private"
+
     BILHETAGEM_CAPTURE_PARAMS = [
         {
             "table_id": "linha",
@@ -293,72 +315,20 @@ class constants(Enum):  # pylint: disable=c0103
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
         },
         {
-            "table_id": "grupo",
-            "partition_date_only": True,
-            "extract_params": {
-                "database": "principal_db",
-                "query": """
-                    SELECT
-                        *
-                    FROM
-                        GRUPO
-                    WHERE
-                        DT_INCLUSAO BETWEEN '{start}'
-                        AND '{end}'
-                """,
-            },
-            "primary_key": ["CD_GRUPO"],  # id column to nest data on
-            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
-        },
-        {
-            "table_id": "grupo_linha",
-            "partition_date_only": True,
-            "extract_params": {
-                "database": "principal_db",
-                "query": """
-                    SELECT
-                        *
-                    FROM
-                        GRUPO_LINHA
-                    WHERE
-                        DT_INCLUSAO BETWEEN '{start}'
-                        AND '{end}'
-                """,
-            },
-            "primary_key": ["CD_GRUPO", "CD_LINHA"],
-            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
-        },
-        {
-            "table_id": "matriz_integracao",
-            "partition_date_only": True,
-            "extract_params": {
-                "database": "tarifa_db",
-                "query": """
-                    SELECT
-                        *
-                    FROM
-                        matriz_integracao
-                    WHERE
-                        dt_inclusao BETWEEN '{start}'
-                        AND '{end}'
-                """,
-            },
-            "primary_key": [
-                "cd_versao_matriz",
-                "cd_integracao",
-            ],  # id column to nest data on
-            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
-        },
-        {
             "table_id": "operadora_transporte",
             "partition_date_only": True,
             "extract_params": {
                 "database": "principal_db",
                 "query": """
                     SELECT
-                        *
+                        o.*,
+                        m.DS_TIPO_MODAL
                     FROM
-                        OPERADORA_TRANSPORTE
+                        OPERADORA_TRANSPORTE o
+                    LEFT JOIN
+                        TIPO_MODAL m
+                    ON
+                        o.CD_TIPO_MODAL = m.CD_TIPO_MODAL
                     WHERE
                         DT_INCLUSAO BETWEEN '{start}'
                         AND '{end}'
@@ -368,19 +338,28 @@ class constants(Enum):  # pylint: disable=c0103
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
         },
         {
-            "table_id": "pessoa_juridica",
+            "table_id": "cliente",
             "partition_date_only": True,
             "extract_params": {
                 "database": "principal_db",
                 "query": """
                     SELECT
-                        *
+                        c.*
                     FROM
-                        PESSOA_JURIDICA
+                        CLIENTE c
+                    JOIN
+                        OPERADORA_TRANSPORTE o
+                    ON
+                        c.CD_CLIENTE = o.CD_CLIENTE
+                    WHERE
+                        DT_CADASTRO BETWEEN '{start}'
+                        AND '{end}'
                 """,
             },
             "primary_key": ["CD_CLIENTE"],  # id column to nest data on
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+            "save_bucket_name": BILHETAGEM_PRIVATE_BUCKET,
+            "pre_treatment_reader_args": {"dtype": {"NR_DOCUMENTO": "object"}},
         },
         {
             "table_id": "consorcio",
@@ -401,7 +380,59 @@ class constants(Enum):  # pylint: disable=c0103
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
         },
         {
-            "table_id": "linha_consorcio",
+            "table_id": "percentual_rateio_integracao",
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "ressarcimento_db",
+                "query": """
+                      SELECT
+                          *
+                      FROM
+                          percentual_rateio_integracao
+                      WHERE
+                          dt_inclusao BETWEEN '{start}'
+                          AND '{end}'
+                  """,
+            },
+            "primary_key": ["id"],  # id column to nest data on
+            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+        },
+        {
+            "table_id": "conta_bancaria",
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "principal_db",
+                "query": """
+                    SELECT
+                        c.*,
+                        b.NM_BANCO
+                    FROM
+                        CONTA_BANCARIA c
+                    JOIN
+                        BANCO b
+                    ON
+                        b.NR_BANCO = c.NR_BANCO
+                    JOIN
+                        OPERADORA_TRANSPORTE o
+                    ON
+                        o.CD_CLIENTE = c.CD_CLIENTE
+                    WHERE
+                        {update}
+                """,
+                "get_updates": [
+                    "c.cd_cliente",
+                    "c.cd_agencia",
+                    "c.cd_tipo_conta",
+                    "c.nr_banco",
+                    "c.nr_conta",
+                ],
+            },
+            "primary_key": ["CD_CLIENTE"],  # id column to nest data on
+            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+            "save_bucket_name": BILHETAGEM_PRIVATE_BUCKET,
+        },
+        {
+            "table_id": "contato_pessoa_juridica",
             "partition_date_only": True,
             "extract_params": {
                 "database": "principal_db",
@@ -409,13 +440,37 @@ class constants(Enum):  # pylint: disable=c0103
                     SELECT
                         *
                     FROM
-                        LINHA_CONSORCIO
+                        CONTATO_PESSOA_JURIDICA
                     WHERE
                         DT_INCLUSAO BETWEEN '{start}'
                         AND '{end}'
                 """,
             },
-            "primary_key": ["CD_CONSORCIO", "CD_LINHA"],  # id column to nest data on
+            "primary_key": [
+                "NR_SEQ_CONTATO",
+                "CD_CLIENTE",
+            ],  # id column to nest data on
+            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+            "save_bucket_name": BILHETAGEM_PRIVATE_BUCKET,
+        },
+        {
+            "table_id": "tipo_modal",
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "principal_db",
+                "query": """
+                    SELECT
+                        *
+                    FROM
+                        TIPO_MODAL
+                    WHERE
+                        {update}
+                """,
+                "get_updates": ["cd_tipo_modal", "ds_tipo_modal"],
+            },
+            "primary_key": [
+                "CD_TIPO_MODAL",
+            ],  # id column to nest data on
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
         },
     ]
@@ -433,9 +488,23 @@ class constants(Enum):  # pylint: disable=c0103
         },
     }
 
+    BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS = {
+        "dataset_id": BILHETAGEM_DATASET_ID,
+        "table_id": BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS["table_id"],
+        "upstream": True,
+        "dbt_vars": {
+            "date_range": {
+                "table_run_datetime_column_name": "datetime_inclusao",
+                "delay_hours": 1,
+            },
+            "version": {},
+        },
+        "exclude": "+diretorio_operadoras +diretorio_consorcios",
+    }
+
     BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS = {
         "dataset_id": BILHETAGEM_DATASET_ID,
-        "table_id": "ordem_pagamento_validacao",
+        "table_id": "ordem_pagamento",
         "upstream": True,
         "exclude": f"+{BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS['table_id']}",
         "dbt_vars": {
@@ -527,3 +596,98 @@ class constants(Enum):  # pylint: disable=c0103
             "version": {},
         },
     }
+
+    # STU
+
+    STU_DATASET_ID = "br_rj_riodejaneiro_stu"
+
+    STU_BUCKET_NAME = "rj-smtr-stu-private"
+
+    STU_MODE_MAPPING = {
+        "1": "Táxi",
+        "2": "Ônibus",
+        "3": "Escolar",
+        "4": "Complementar (cabritinho)",
+        "6": "Fretamento",
+        "7": "TEC",
+        "8": "Van",
+    }
+
+    STU_TYPE_MAPPING = [
+        "Autônomo",
+        "Empresa",
+        "Cooperativa",
+        "Instituicao de Ensino",
+        "Associações",
+        "Autônomo Provisório",
+        "Contrato Público",
+        "Prestadora de Serviços",
+    ]
+
+    STU_GENERAL_CAPTURE_PARAMS = {
+        "partition_date_only": True,
+        "source_type": "gcs",
+        "dataset_id": STU_DATASET_ID,
+        "save_bucket_name": STU_BUCKET_NAME,
+    }
+
+    STU_TABLE_CAPTURE_PARAMS = [
+        {
+            "table_id": "operadora_empresa",
+            "primary_key": ["Perm_Autor"],
+            "pre_treatment_reader_args": {"dtype": "object"},
+        },
+        {
+            "table_id": "operadora_pessoa_fisica",
+            "primary_key": ["Perm_Autor"],
+            "pre_treatment_reader_args": {"dtype": "object"},
+        },
+    ]
+
+    # SUBSÍDIO RECURSOS VIAGENS INDIVIDUAIS
+
+    SUBSIDIO_SPPO_RECURSOS_DATASET_ID = "br_rj_riodejaneiro_recursos"
+    SUBSIDIO_SPPO_RECURSO_API_BASE_URL = "https://api.movidesk.com/public/v1/tickets"
+    SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH = "sppo_subsidio_recursos_api"
+    SUBSIDIO_SPPO_RECURSO_SERVICE = (
+        "serviceFirstLevel eq 'Viagem Individual - Recurso Viagens Subsídio'"
+    )
+    SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS = {
+        "partition_date_only": True,
+        "table_id": "recursos_sppo_viagens_individuais",
+        "dataset_id": SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
+        "extract_params": {
+            "token": "",
+            "$select": "id,protocol,createdDate,lastUpdate",
+            "$filter": "{service} and (lastUpdate ge {start} and lastUpdate lt {end} \
+or createdDate ge {start} and createdDate lt {end})",
+            "$expand": "customFieldValues,customFieldValues($expand=items)",
+            "$orderby": "createdDate asc",
+        },
+        "interval_minutes": 1440,
+        "source_type": "movidesk",
+        "primary_key": ["protocol"],
+    }
+
+    SUBSIDIO_SPPO_RECURSOS_MATERIALIZACAO_PARAMS = {
+        "dataset_id": SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
+        "table_id": SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS["table_id"],
+        "upstream": True,
+        "dbt_vars": {
+            "date_range": {
+                "table_run_datetime_column_name": "datetime_recurso",
+                "delay_hours": 0,
+            },
+            "version": {},
+        },
+    }
+
+    DIRETORIO_MATERIALIZACAO_PARAMS = {
+        "dataset_id": "cadastro",
+        "upstream": True,
+    }
+
+    DIRETORIO_MATERIALIZACAO_TABLE_PARAMS = [
+        {"table_id": "diretorio_consorcios"},
+        {"table_id": "operadoras_contatos"},
+    ]

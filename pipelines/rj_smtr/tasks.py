@@ -19,6 +19,7 @@ import pendulum
 from prefect import task
 from pytz import timezone
 import requests
+from pandas_gbq.exceptions import GenericGBQException
 
 from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.utils import (
@@ -31,6 +32,7 @@ from pipelines.rj_smtr.utils import (
     get_raw_data_api,
     get_raw_data_gcs,
     get_raw_data_db,
+    get_raw_recursos,
     upload_run_logs_to_bq,
     get_datetime_range,
     read_raw_data,
@@ -252,7 +254,7 @@ def create_dbt_run_vars(
 
 ###############
 #
-# Local file managment
+# Local file management
 #
 ###############
 
@@ -493,7 +495,7 @@ def query_logs(
                 SAFE_CAST(erro AS STRING) erro,
                 SAFE_CAST(DATA AS DATE) DATA
             FROM
-                rj-smtr-staging.{dataset_id}_staging.{table_id}_logs AS t
+                {bq_project(kind="bigquery_staging")}.{dataset_id}_staging.{table_id}_logs AS t
         ),
         logs AS (
             SELECT
@@ -656,18 +658,132 @@ def create_request_params(
         ]
         request_url = database["host"]
 
-        datetime_range = get_datetime_range(
-            timestamp=timestamp, interval=timedelta(minutes=interval_minutes)
-        )
-
         request_params = {
             "database": extract_params["database"],
             "engine": database["engine"],
-            "query": extract_params["query"].format(**datetime_range),
+            "query": extract_params["query"],
         }
 
+        if table_id == constants.BILHETAGEM_TRACKING_CAPTURE_PARAMS.value["table_id"]:
+            project = bq_project(kind="bigquery_staging")
+            log(f"project = {project}")
+            try:
+                logs_query = f"""
+                SELECT
+                    timestamp_captura
+                FROM
+                    `{project}.{dataset_id}_staging.{table_id}_logs`
+                WHERE
+                    data <= '{timestamp.strftime("%Y-%m-%d")}'
+                    AND sucesso = "True"
+                ORDER BY
+                    timestamp_captura DESC
+                """
+                last_success_dates = bd.read_sql(
+                    query=logs_query, billing_project_id=project
+                )
+                last_success_dates = last_success_dates.iloc[:, 0].to_list()
+                for success_ts in last_success_dates:
+                    success_ts = datetime.fromisoformat(success_ts)
+                    last_id_query = f"""
+                    SELECT
+                        MAX(id)
+                    FROM
+                        `{project}.{dataset_id}_staging.{table_id}`
+                    WHERE
+                        data = '{success_ts.strftime("%Y-%m-%d")}'
+                        and hora = "{success_ts.hour}";
+                    """
+
+                    last_captured_id = bd.read_sql(
+                        query=last_id_query, billing_project_id=project
+                    )
+                    last_captured_id = last_captured_id.iloc[0][0]
+                    if last_captured_id is None:
+                        print("ID is None, trying next timestamp")
+                    else:
+                        log(f"last_captured_id = {last_captured_id}")
+                        break
+            except GenericGBQException as err:
+                if "404 Not found" in str(err):
+                    log("Table Not found, returning id = 0")
+                    last_captured_id = 0
+
+            request_params["query"] = request_params["query"].format(
+                last_id=last_captured_id,
+                max_id=int(last_captured_id)
+                + extract_params["page_size"] * extract_params["max_pages"],
+            )
+            request_params["page_size"] = extract_params["page_size"]
+            request_params["max_pages"] = extract_params["max_pages"]
+        else:
+            if "get_updates" in extract_params.keys():
+                project = bq_project()
+                log(f"project = {project}")
+                columns_to_concat_bq = [
+                    c.split(".")[-1] for c in extract_params["get_updates"]
+                ]
+                concat_arg = ",'_',"
+
+                try:
+                    query = f"""
+                    SELECT
+                        CONCAT("'", {concat_arg.join(columns_to_concat_bq)}, "'")
+                    FROM
+                        `{project}.{dataset_id}_staging.{table_id}`
+                    """
+                    log(query)
+                    last_values = bd.read_sql(query=query, billing_project_id=project)
+
+                    last_values = last_values.iloc[:, 0].to_list()
+                    last_values = ", ".join(last_values)
+                    update_condition = f"""CONCAT(
+                            {concat_arg.join(extract_params['get_updates'])}
+                        ) NOT IN ({last_values})
+                    """
+
+                except GenericGBQException as err:
+                    if "404 Not found" in str(err):
+                        log("table not found, setting updates to 1=1")
+                        update_condition = "1=1"
+
+                request_params["query"] = request_params["query"].format(
+                    update=update_condition
+                )
+
+            datetime_range = get_datetime_range(
+                timestamp=timestamp, interval=timedelta(minutes=interval_minutes)
+            )
+
+            request_params["query"] = request_params["query"].format(**datetime_range)
+
     elif dataset_id == constants.GTFS_DATASET_ID.value:
-        request_params = extract_params["filename"]
+        request_params = {"zip_filename": extract_params["filename"]}
+
+    elif dataset_id == constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value:
+        data_recurso = extract_params.get("data_recurso", timestamp)
+        if isinstance(data_recurso, str):
+            data_recurso = datetime.fromisoformat(data_recurso)
+        extract_params["token"] = get_vault_secret(
+            constants.SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH.value
+        )["data"]["token"]
+        start = datetime.strftime(
+            data_recurso - timedelta(minutes=interval_minutes), "%Y-%m-%dT%H:%M:%S.%MZ"
+        )
+        end = datetime.strftime(data_recurso, "%Y-%m-%dT%H:%M:%S.%MZ")
+        log(f" Start date {start}, end date {end}")
+        recurso_params = {
+            "start": start,
+            "end": end,
+            "service": constants.SUBSIDIO_SPPO_RECURSO_SERVICE.value,
+        }
+        extract_params["$filter"] = extract_params["$filter"].format(**recurso_params)
+        request_params = extract_params
+
+        request_url = constants.SUBSIDIO_SPPO_RECURSO_API_BASE_URL.value
+
+    elif dataset_id == constants.STU_DATASET_ID.value:
+        request_params = {"bucket_name": constants.STU_BUCKET_NAME.value}
 
     return request_params, request_url
 
@@ -720,11 +836,15 @@ def get_raw_from_sources(
             )
         elif source_type == "gcs":
             error, data, filetype = get_raw_data_gcs(
-                dataset_id=dataset_id, table_id=table_id, zip_filename=request_params
+                dataset_id=dataset_id, table_id=table_id, **request_params
             )
         elif source_type == "db":
             error, data, filetype = get_raw_data_db(
                 host=source_path, secret_path=secret_path, **request_params
+            )
+        elif source_type == "movidesk":
+            error, data, filetype = get_raw_recursos(
+                request_url=source_path, request_params=request_params
             )
         else:
             raise NotImplementedError(f"{source_type} not supported")
@@ -921,6 +1041,7 @@ def upload_raw_data_to_gcs(
     table_id: str,
     dataset_id: str,
     partitions: list,
+    bucket_name: str = None,
 ) -> Union[str, None]:
     """
     Upload raw data to GCS.
@@ -937,7 +1058,9 @@ def upload_raw_data_to_gcs(
     """
     if error is None:
         try:
-            st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
+            st_obj = Storage(
+                table_id=table_id, dataset_id=dataset_id, bucket_name=bucket_name
+            )
             log(
                 f"""Uploading raw file to bucket {st_obj.bucket_name} at
                 {st_obj.bucket_name}/{dataset_id}/{table_id}"""
@@ -962,9 +1085,10 @@ def upload_staging_data_to_gcs(
     timestamp: datetime,
     table_id: str,
     dataset_id: str,
-    partitions: list,
+    partitions: str,
     previous_error: str = None,
     recapture: bool = False,
+    bucket_name: str = None,
 ) -> Union[str, None]:
     """
     Upload staging data to GCS.
@@ -975,11 +1099,15 @@ def upload_staging_data_to_gcs(
         timestamp (datetime): timestamp for flow run.
         table_id (str): table_id on BigQuery.
         dataset_id (str): dataset_id on BigQuery.
-        partitions (list): list of partition strings.
+        partitions (str): partition string.
+        previous_error (str, Optional): Previous error on recaptures.
+        recapture: (bool, Optional): Flag that indicates if the run is recapture or not.
+        bucket_name (str, Optional): The bucket name to save the data.
 
     Returns:
         Union[str, None]: if there is an error returns it traceback, otherwise returns None
     """
+    log(f"FILE PATH: {staging_filepath}")
     if error is None:
         try:
             # Creates and publish table if it does not exist, append to it otherwise
@@ -988,6 +1116,7 @@ def upload_staging_data_to_gcs(
                 table_id=table_id,
                 path=staging_filepath,
                 partitions=partitions,
+                bucket_name=bucket_name,
             )
         except Exception:
             error = traceback.format_exc()
@@ -1001,6 +1130,7 @@ def upload_staging_data_to_gcs(
         mode="staging",
         previous_error=previous_error,
         recapture=recapture,
+        bucket_name=bucket_name,
     )
 
     return error
@@ -1242,6 +1372,8 @@ def transform_raw_to_nested_structure(
     error: str,
     timestamp: datetime,
     primary_key: list = None,
+    flag_private_data: bool = False,
+    reader_args: dict = None,
 ) -> tuple[str, str]:
     """
     Task to transform raw data to nested structure
@@ -1252,6 +1384,8 @@ def transform_raw_to_nested_structure(
         error (str): Error catched from upstream tasks
         timestamp (datetime): timestamp for flow run
         primary_key (list, optional): Primary key to be used on nested structure
+        flag_private_data (bool, optional): Flag to indicate if the task should log the data
+        reader_args (dict): arguments to pass to pandas.read_csv or read_json
 
     Returns:
         str: Error traceback
@@ -1260,52 +1394,59 @@ def transform_raw_to_nested_structure(
     if error is None:
         try:
             # leitura do dado raw
-            error, data = read_raw_data(filepath=raw_filepath)
+            error, data = read_raw_data(filepath=raw_filepath, reader_args=reader_args)
 
             if primary_key is None:
                 primary_key = []
 
-            log(
-                f"""
-                Received inputs:
-                - timestamp:\n{timestamp}
-                - data:\n{data.head()}"""
-            )
-
-            # Check empty dataframe
-            if data.empty:
-                log("Empty dataframe, skipping transformation...")
-            else:
-                log(f"Raw data:\n{data_info_str(data)}", level="info")
-
-                log("Adding captured timestamp column...", level="info")
-                data["timestamp_captura"] = timestamp
-
-                log("Striping string columns...", level="info")
-                for col in data.columns[data.dtypes == "object"].to_list():
-                    data[col] = data[col].str.strip()
-
-                log(f"Finished cleaning! Data:\n{data_info_str(data)}", level="info")
-
-                log("Creating nested structure...", level="info")
-                pk_cols = primary_key + ["timestamp_captura"]
-                data = (
-                    data.groupby(pk_cols)
-                    .apply(
-                        lambda x: x[data.columns.difference(pk_cols)].to_json(
-                            orient="records"
-                        )
-                    )
-                    .str.strip("[]")
-                    .reset_index(name="content")[
-                        primary_key + ["content", "timestamp_captura"]
-                    ]
-                )
-
+            if not flag_private_data:
                 log(
-                    f"Finished nested structure! Data:\n{data_info_str(data)}",
-                    level="info",
+                    f"""
+                    Received inputs:
+                    - timestamp:\n{timestamp}
+                    - data:\n{data.head()}"""
                 )
+
+            if error is None:
+                # Check empty dataframe
+                if data.empty:
+                    log("Empty dataframe, skipping transformation...")
+
+                else:
+                    log(f"Raw data:\n{data_info_str(data)}", level="info")
+
+                    log("Adding captured timestamp column...", level="info")
+                    data["timestamp_captura"] = timestamp
+
+                    if "customFieldValues" not in data:
+                        log("Striping string columns...", level="info")
+                        for col in data.columns[data.dtypes == "object"].to_list():
+                            data[col] = data[col].str.strip()
+
+                    log(
+                        f"Finished cleaning! Data:\n{data_info_str(data)}", level="info"
+                    )
+
+                    log("Creating nested structure...", level="info")
+                    pk_cols = primary_key + ["timestamp_captura"]
+
+                    data = (
+                        data.groupby(pk_cols)
+                        .apply(
+                            lambda x: x[data.columns.difference(pk_cols)].to_json(
+                                orient="records"
+                            )
+                        )
+                        .str.strip("[]")
+                        .reset_index(name="content")[
+                            primary_key + ["content", "timestamp_captura"]
+                        ]
+                    )
+
+                    log(
+                        f"Finished nested structure! Data:\n{data_info_str(data)}",
+                        level="info",
+                    )
 
             # save treated local
             filepath = save_treated_local_func(
