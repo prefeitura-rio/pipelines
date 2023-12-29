@@ -701,6 +701,7 @@ def upload_to_datalake(
     except Exception as e:
         log(f"An error occurred: {e}", level="error")
 
+
 @task
 def cloud_function_request_patients(
     url: str,
