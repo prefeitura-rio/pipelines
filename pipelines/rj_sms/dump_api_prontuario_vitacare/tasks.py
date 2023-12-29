@@ -32,7 +32,7 @@ def get_patients(context):
     for cnes in list_cnes:
         params = '{"cnes": "' + cnes + '", "date": "' + data_formatada + '"}'
         response = cloud_function_request.run(
-            url=url, request_type="POST", body_params=params, env="prod"
+            url=url, request_type="POST", body_params=params, env="staging"
         )
         if response.text.startswith("A solicitação não foi bem-sucedida"):
             list_cnes_error.append(cnes)
