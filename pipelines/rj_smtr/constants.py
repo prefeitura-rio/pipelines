@@ -648,16 +648,16 @@ class constants(Enum):  # pylint: disable=c0103
 
     SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS = [
         {
-            "service": "serviceFirstLevel eq 'Viagem Individual - Recurso Viagens Subsídio'",
             "table_id": "recursos_sppo_viagens_individuais",
+            "service": "serviceFirstLevel eq 'Viagem Individual - Recurso Viagens Subsídio'",
         },
         {
-            "service": "serviceFirstLevel eq 'Bloqueio da via - Recurso Viagens Subsídio'",
             "table_id": "recursos_sppo_bloqueio_via",
+            "service": "serviceFirstLevel eq 'Bloqueio da via - Recurso Viagens Subsídio'",
         },
         {
-            "service": "serviceFirstLevel eq 'Reprocessamento - Recurso Viagens Subsídio'",
             "table_id": "recursos_sppo_reprocessamento",
+            "service": "serviceFirstLevel eq 'Reprocessamento - Recurso Viagens Subsídio'",
         },
     ]
 
