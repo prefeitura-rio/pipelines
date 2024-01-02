@@ -795,9 +795,9 @@ def create_request_params(
                 "end": end,
                 "service": f"{service_value}",
             }
-            request_params = {
-                "table_id": table_id,
-            }
+            # table_id_param = {
+            #     "table_id": table_id,
+            # }
 
         extract_params["$filter"] = extract_params["$filter"].format(**recurso_params)
 
