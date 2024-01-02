@@ -784,6 +784,49 @@ def close_db_connection(connection, engine: str):
         raise NotImplementedError(f"Engine {engine} not supported")
 
 
+def execute_db_query(
+    engine: str,
+    query: str,
+    connection,
+    connector,
+    connection_info: dict,
+) -> list[dict]:
+    """
+    Execute a query if retries
+
+    Args:
+        query (str): the SQL Query to execute
+        engine (str): The database management system
+        connection: The database connection
+        connector: The database connector (to do reconnections)
+        connection_info (dict): The database connector params (to do reconnections)
+
+    Returns:
+        list[dict]: The query results
+
+    """
+    retries = 10
+    for retry in range(retries):
+        try:
+            log(f"Executing query:\n{query}")
+            data = pd.read_sql(sql=query, con=connection).to_dict(orient="records")
+            for d in data:
+                for k, v in d.items():
+                    if pd.isna(v):
+                        d[k] = None
+            break
+        except Exception as err:
+            log(f"[ATTEMPT {retry}]: {err}")
+            close_db_connection(connection=connection, engine=engine)
+            if retry < retries - 1:
+                connection = connector(**connection_info)
+            else:
+                raise err
+
+    close_db_connection(connection=connection, engine=engine)
+    return data
+
+
 def get_raw_data_db(
     query: str,
     engine: str,
@@ -798,7 +841,7 @@ def get_raw_data_db(
 
     Args:
         query (str): the SQL Query to execute
-        engine (str): The datase management system
+        engine (str): The database management system
         host (str): The database host
         secret_path (str): Secret path to get credentials
         database (str): The database to connect
@@ -816,50 +859,39 @@ def get_raw_data_db(
 
     data = None
     error = None
-    filetype = "json"
 
     if max_pages is None:
         max_pages = 1
 
     full_data = []
-    paginated_query = query
     credentials = get_vault_secret(secret_path)["data"]
-    if page_size is not None:
-        paginated_query = paginated_query + f"LIMIT {page_size} OFFSET {{offset}}"
 
     connector = connector_mapping[engine]
 
     try:
-        connection = connector(
-            host=host,
-            user=credentials["user"],
-            password=credentials["password"],
-            database=database,
-        )
-        for page in range(max_pages):
-            retries = 10
-            formatted_query = paginated_query
-            if page_size is not None:
-                formatted_query = formatted_query.format(offset=page * page_size)
+        connection_info = {
+            "host": host,
+            "user": credentials["user"],
+            "password": credentials["password"],
+            "database": database,
+        }
+        connection = connector(**connection_info)
 
-            for retry in range(retries):
-                try:
-                    log(f"Executing query:\n{formatted_query}")
-                    data = pd.read_sql(sql=formatted_query, con=connection).to_dict(
-                        orient="records"
-                    )
-                    break
-                except Exception as err:
-                    log(f"[ATTEMPT {retry}]: {err}")
-                    close_db_connection(connection=connection, engine=engine)
-                    connection = connector(
-                        host=host,
-                        user=credentials["user"],
-                        password=credentials["password"],
-                        database=database,
-                    )
-                    if retry == retries - 1:
-                        raise err
+        for page in range(max_pages):
+            if page_size is not None:
+                paginated_query = (
+                    query + f" LIMIT {page_size} OFFSET {page * page_size}"
+                )
+            else:
+                paginated_query = query
+
+            data = execute_db_query(
+                engine=engine,
+                query=paginated_query,
+                connection=connection,
+                connector=connector,
+                connection_info=connection_info,
+            )
 
             full_data += data
 
@@ -873,13 +905,8 @@ def get_raw_data_db(
         full_data = []
         error = traceback.format_exc()
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
-    finally:
-        try:
-            close_db_connection(connection=connection, engine=engine)
-        except Exception:
-            pass
 
-    return error, full_data, filetype
+    return error, full_data, "json"
 
 
 def save_treated_local_func(
