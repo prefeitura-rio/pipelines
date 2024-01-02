@@ -601,8 +601,7 @@ class constants(Enum):  # pylint: disable=c0103
 
     STU_DATASET_ID = "br_rj_riodejaneiro_stu"
 
-    # STU_BUCKET_NAME = "rj-smtr-stu-private"
-    STU_BUCKET_NAME = "rj-smtr-dev-private"
+    STU_BUCKET_NAME = "rj-smtr-stu-private"
 
     STU_MODE_MAPPING = {
         "1": "Táxi",

@@ -87,8 +87,7 @@ with Flow(
 
     run_captura = create_flow_run.map(
         flow_name=unmapped(stu_captura_subflow.name),
-        # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
-        project_name=unmapped("staging"),
+        project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
         parameters=stu_capture_parameters,
         labels=unmapped(LABELS),
     )
