@@ -81,6 +81,7 @@ with Flow(
     materialize = Parameter("materialize", default=True)
     recapture = Parameter("recapture", default=True)
     data_recurso = Parameter("data_recurso", default=None)
+    table_id = Parameter("table_id", default=None)
     interval_minutes = Parameter("interval_minutes", default=1440)
     timestamp = get_current_timestamp(data_recurso, return_str=True)
 
@@ -94,9 +95,23 @@ with Flow(
     # Captura dos dados #
     with case(capture, True):
         recursos_capture_parameters = [
-            {"data_recurso": timestamp, **d}
-            for d in constants.SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS.value
+            {
+                "table_id": v,
+                "extract_params": {
+                    "data_recurso": timestamp,
+                    **constants.SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS.value[
+                        "extract_params"
+                    ],
+                },
+            }
+            for v in constants.SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS.value
         ]
+
+        # recursos_capture_parameters = [
+        #     {"data_recurso": timestamp,
+        #      "table_id": table_id, **d}
+        #     for d in constants.SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS.value
+        # ]
 
         run_captura = create_flow_run.map(
             flow_name=unmapped(sppo_recurso_captura.name),

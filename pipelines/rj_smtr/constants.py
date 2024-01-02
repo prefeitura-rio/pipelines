@@ -646,20 +646,14 @@ class constants(Enum):  # pylint: disable=c0103
 
     # SUBSÍDIO RECURSOS
 
-    SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS = [
-        {
-            "table_id": "recursos_sppo_viagens_individuais",
-            "service": "serviceFirstLevel eq 'Viagem Individual - Recurso Viagens Subsídio'",
-        },
-        {
-            "table_id": "recursos_sppo_bloqueio_via",
-            "service": "serviceFirstLevel eq 'Bloqueio da via - Recurso Viagens Subsídio'",
-        },
-        {
-            "table_id": "recursos_sppo_reprocessamento",
-            "service": "serviceFirstLevel eq 'Reprocessamento - Recurso Viagens Subsídio'",
-        },
-    ]
+    SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS = {
+        "recursos_sppo_viagens_individuais": "serviceFirstLevel eq 'Viagem Individual - \
+        Recurso Viagens Subsídio'",
+        "recursos_sppo_bloqueio_via": "serviceFirstLevel eq 'Bloqueio da via - \
+            Recurso Viagens Subsídio'",
+        "recursos_sppo_reprocessamento": "serviceFirstLevel eq 'Reprocessamento - \
+            Recurso Viagens Subsídio'",
+    }
 
     SUBSIDIO_SPPO_RECURSOS_DATASET_ID = "br_rj_riodejaneiro_recursos"
     SUBSIDIO_SPPO_RECURSO_API_BASE_URL = "https://api.movidesk.com/public/v1/tickets"

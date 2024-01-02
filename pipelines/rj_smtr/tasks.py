@@ -773,25 +773,34 @@ def create_request_params(
         )
         end = datetime.strftime(data_recurso, "%Y-%m-%dT%H:%M:%S.%MZ")
         log(f" Start date {start}, end date {end}")
-        if table_id == "recursos_sppo_viagens_individuais":
+
+    elif dataset_id == constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value:
+        data_recurso = extract_params.get("data_recurso", timestamp)
+        if isinstance(data_recurso, str):
+            data_recurso = datetime.fromisoformat(data_recurso)
+        extract_params["token"] = get_vault_secret(
+            constants.SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH.value
+        )["data"]["token"]
+        start = datetime.strftime(
+            data_recurso - timedelta(minutes=interval_minutes), "%Y-%m-%dT%H:%M:%S.%MZ"
+        )
+        end = datetime.strftime(data_recurso, "%Y-%m-%dT%H:%M:%S.%MZ")
+        log(f" Start date {start}, end date {end}")
+        for (
+            table_id,
+            service_value,
+        ) in constants.SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS.value.items():
             recurso_params = {
                 "start": start,
                 "end": end,
-                "service": "serviceFirstLevel eq 'Viagem Individual - Recurso Viagens Subsídio'",
+                "service": f"{service_value}",
             }
-        elif table_id == "recursos_sppo_bloqueio_via":
-            recurso_params = {
-                "start": start,
-                "end": end,
-                "service": "serviceFirstLevel eq 'Bloqueio da via - Recurso Viagens Subsídio'",
+            request_params = {
+                "table_id": table_id,
             }
-        elif table_id == "recursos_sppo_reprocessamento":
-            recurso_params = {
-                "start": start,
-                "end": end,
-                "service": "serviceFirstLevel eq 'Reprocessamento - Recurso Viagens Subsídio'",
-            }
+
         extract_params["$filter"] = extract_params["$filter"].format(**recurso_params)
+
         request_params = extract_params
 
         request_url = constants.SUBSIDIO_SPPO_RECURSO_API_BASE_URL.value
