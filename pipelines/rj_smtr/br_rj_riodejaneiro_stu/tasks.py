@@ -60,7 +60,8 @@ def read_stu_raw_file(blob: Blob) -> pd.DataFrame:
     log(f"Downloading blob: {blob.name}")
     data = blob.download_as_bytes().decode("latin-1")
     name_parts = blob.name.split("/")[-1].split("_")
-    mode = constants.STU_MODE_MAPPING.value[name_parts[1]]
+    mode_id = name_parts[1]
+    mode = constants.STU_MODE_MAPPING.value[mode_id]
     perm_type = constants.STU_TYPE_MAPPING.value[int(name_parts[3]) - 1]
 
     df = pd.read_csv(
@@ -72,6 +73,7 @@ def read_stu_raw_file(blob: Blob) -> pd.DataFrame:
     )
 
     df["modo"] = mode
+    df["id_modo"] = mode_id
     df["tipo_permissao"] = perm_type
     df.columns = [c.replace("/", " ").replace(" ", "_") for c in df.columns]
 
