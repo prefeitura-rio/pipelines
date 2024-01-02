@@ -198,7 +198,7 @@ def create_dbt_run_vars(
 
             date_var = get_materialization_date_range.run(
                 dataset_id=dataset_id,
-                table_id=table_id,
+                table_id=dbt_vars["date_range"].get("table_alias", table_id),
                 raw_dataset_id=raw_dataset_id,
                 raw_table_id=raw_table_id,
                 table_run_datetime_column_name=dbt_vars["date_range"].get(
@@ -661,6 +661,7 @@ def create_request_params(
         request_params = {
             "database": extract_params["database"],
             "engine": database["engine"],
+            "query": extract_params["query"],
         }
 
         if table_id == constants.BILHETAGEM_TRACKING_CAPTURE_PARAMS.value["table_id"]:
@@ -708,7 +709,7 @@ def create_request_params(
                     log("Table Not found, returning id = 0")
                     last_captured_id = 0
 
-            request_params["query"] = extract_params["query"].format(
+            request_params["query"] = request_params["query"].format(
                 last_id=last_captured_id,
                 max_id=int(last_captured_id)
                 + extract_params["page_size"] * extract_params["max_pages"],
@@ -716,11 +717,45 @@ def create_request_params(
             request_params["page_size"] = extract_params["page_size"]
             request_params["max_pages"] = extract_params["max_pages"]
         else:
+            if "get_updates" in extract_params.keys():
+                project = bq_project()
+                log(f"project = {project}")
+                columns_to_concat_bq = [
+                    c.split(".")[-1] for c in extract_params["get_updates"]
+                ]
+                concat_arg = ",'_',"
+
+                try:
+                    query = f"""
+                    SELECT
+                        CONCAT("'", {concat_arg.join(columns_to_concat_bq)}, "'")
+                    FROM
+                        `{project}.{dataset_id}_staging.{table_id}`
+                    """
+                    log(query)
+                    last_values = bd.read_sql(query=query, billing_project_id=project)
+
+                    last_values = last_values.iloc[:, 0].to_list()
+                    last_values = ", ".join(last_values)
+                    update_condition = f"""CONCAT(
+                            {concat_arg.join(extract_params['get_updates'])}
+                        ) NOT IN ({last_values})
+                    """
+
+                except GenericGBQException as err:
+                    if "404 Not found" in str(err):
+                        log("table not found, setting updates to 1=1")
+                        update_condition = "1=1"
+
+                request_params["query"] = request_params["query"].format(
+                    update=update_condition
+                )
+
             datetime_range = get_datetime_range(
                 timestamp=timestamp, interval=timedelta(minutes=interval_minutes)
             )
 
-            request_params["query"] = extract_params["query"].format(**datetime_range)
+            request_params["query"] = request_params["query"].format(**datetime_range)
 
     elif dataset_id == constants.GTFS_DATASET_ID.value:
         request_params = {"zip_filename": extract_params["filename"]}
@@ -1395,6 +1430,7 @@ def transform_raw_to_nested_structure(
 
                     log("Creating nested structure...", level="info")
                     pk_cols = primary_key + ["timestamp_captura"]
+
                     data = (
                         data.groupby(pk_cols)
                         .apply(
