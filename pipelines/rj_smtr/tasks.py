@@ -774,7 +774,6 @@ def create_request_params(
         )
         end = datetime.strftime(data_recurso, "%Y-%m-%dT%H:%M:%S.%MZ")
         log(f" Start date {start}, end date {end}")
-        log("Teste ....")
 
         service = constants.SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS.value[table_id]
 
@@ -785,7 +784,6 @@ def create_request_params(
         }
 
         extract_params["$filter"] = extract_params["$filter"].format(**recurso_params)
-        log(f"{extract_params}")
 
         request_params = extract_params
 
