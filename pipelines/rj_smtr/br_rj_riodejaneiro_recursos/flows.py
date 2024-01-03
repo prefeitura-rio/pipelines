@@ -29,6 +29,7 @@ from pipelines.rj_smtr.tasks import get_current_timestamp
 
 from pipelines.rj_smtr.flows import default_capture_flow, default_materialization_flow
 from pipelines.rj_smtr.schedules import every_day
+from pipelines.utils.utils import log
 
 
 # CAPTURA DOS TICKETS #
@@ -107,11 +108,7 @@ with Flow(
             for v in constants.SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS.value
         ]
 
-        # recursos_capture_parameters = [
-        #     {"data_recurso": timestamp,
-        #      "table_id": table_id, **d}
-        #     for d in constants.SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS.value
-        # ]
+        task(lambda: log(f"{recursos_capture_parameters}"))()
 
         run_captura = create_flow_run.map(
             flow_name=unmapped(sppo_recurso_captura.name),

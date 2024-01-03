@@ -775,6 +775,7 @@ def create_request_params(
         log(f" Start date {start}, end date {end}")
 
     elif dataset_id == constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value:
+        request_params = {}
         data_recurso = extract_params.get("data_recurso", timestamp)
         if isinstance(data_recurso, str):
             data_recurso = datetime.fromisoformat(data_recurso)
@@ -786,20 +787,18 @@ def create_request_params(
         )
         end = datetime.strftime(data_recurso, "%Y-%m-%dT%H:%M:%S.%MZ")
         log(f" Start date {start}, end date {end}")
-        for (
-            table_id,
-            service_value,
-        ) in constants.SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS.value.items():
-            recurso_params = {
-                "start": start,
-                "end": end,
-                "service": f"{service_value}",
-            }
-            # table_id_param = {
-            #     "table_id": table_id,
-            # }
+        log("Teste ....")
+
+        service = constants.SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS.value[table_id]
+
+        recurso_params = {
+            "start": start,
+            "end": end,
+            "service": service,
+        }
 
         extract_params["$filter"] = extract_params["$filter"].format(**recurso_params)
+        log(f"{extract_params}")
 
         request_params = extract_params
 

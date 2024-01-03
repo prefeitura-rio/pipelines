@@ -1075,7 +1075,7 @@ def get_raw_recursos(
     error = None
     filetype = "json"
     data = []
-
+    log(f"request params: {request_params}")
     while not all_records:
         try:
             request_params["$top"] = top
