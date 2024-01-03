@@ -648,12 +648,9 @@ class constants(Enum):  # pylint: disable=c0103
     # SUBSÍDIO RECURSOS
 
     SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS = {
-        "recursos_sppo_viagens_individuais": "serviceFirstLevel eq 'Viagem Individual - \
-        Recurso Viagens Subsídio'",
-        "recursos_sppo_bloqueio_via": "serviceFirstLevel eq 'Bloqueio da via - \
-            Recurso Viagens Subsídio'",
-        "recursos_sppo_reprocessamento": "serviceFirstLevel eq 'Reprocessamento - \
-            Recurso Viagens Subsídio'",
+        "recursos_sppo_viagens_individuais": "Viagem Individual",
+        "recursos_sppo_bloqueio_via": "Bloqueio da via",
+        "recursos_sppo_reprocessamento": "Reprocessamento",
     }
 
     SUBSIDIO_SPPO_RECURSOS_DATASET_ID = "br_rj_riodejaneiro_recursos"
@@ -665,8 +662,9 @@ class constants(Enum):  # pylint: disable=c0103
         "extract_params": {
             "token": "",
             "$select": "id,protocol,createdDate,lastUpdate",
-            "$filter": "{service} and (lastUpdate ge {start} and lastUpdate lt {end} \
-or createdDate ge {start} and createdDate lt {end})",
+            "$filter": "serviceFirstLevel eq '{service} - Recurso Viagens Subsídio' \
+and (lastUpdate ge {start} and lastUpdate lt {end} or createdDate ge {start} \
+and createdDate lt {end})",
             "$expand": "customFieldValues,customFieldValues($expand=items)",
             "$orderby": "createdDate asc",
         },
