@@ -27,6 +27,7 @@ run_dbt_smfp_dashboard_metas_flow.run_config = KubernetesRun(
 smfp_dashboard_metas_default_parameters = {
     "dataset_id": "planejamento_gestao_dashboard_metas",
     "upstream": True,
+    "materialize_to_datario": False,
 }
 run_dbt_smfp_dashboard_metas_flow = set_default_parameters(
     run_dbt_smfp_dashboard_metas_flow,
