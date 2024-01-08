@@ -32,6 +32,7 @@ egpweb_default_parameters = {
     "vault_secret_path": "egpweb-prod",
     "materialization_mode": "prod",
     "dataset_id": "planejamento_gestao_acordo_resultados",
+    "materialize_to_datario": False,
 }
 smfp_egpweb_flow = set_default_parameters(
     smfp_egpweb_flow, default_parameters=egpweb_default_parameters
