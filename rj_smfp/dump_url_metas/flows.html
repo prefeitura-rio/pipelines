@@ -53,7 +53,9 @@ smfp_gsheets_flow.run_config = KubernetesRun(
     ],
 )
 
-smfp_gsheets_default_parameters = {}
+smfp_gsheets_default_parameters = {
+    &#34;materialize_to_datario&#34;: False,
+}
 smfp_gsheets_flow = set_default_parameters(
     smfp_gsheets_flow, default_parameters=smfp_gsheets_default_parameters
 )
