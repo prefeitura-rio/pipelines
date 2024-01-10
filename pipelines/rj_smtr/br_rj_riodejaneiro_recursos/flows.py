@@ -115,8 +115,6 @@ with Flow(
             parameters=recursos_capture_parameters,
             labels=unmapped(LABELS),
         )
-        for r in run_captura:
-            log(f" Run captura: {r}")
 
         wait_captura_true = wait_for_flow_run.map(
             run_captura,
@@ -146,9 +144,6 @@ with Flow(
 
         run_recaptura.set_upstream(wait_captura)
 
-        for r in run_recaptura:
-            log(f" Run recaptura: {r}")
-
         wait_recaptura_true = wait_for_flow_run.map(
             run_recaptura,
             stream_states=unmapped(True),
@@ -176,10 +171,7 @@ with Flow(
 
         run_materializacao.set_upstream(wait_recaptura)
 
-        for r in run_materializacao:
-            log(f" Run materialização: {r}")
-
-        wait_materializacao_true = wait_for_flow_run(
+        wait_materializacao_true = wait_for_flow_run.map(
             run_materializacao,
             stream_states=unmapped(True),
             stream_logs=unmapped(True),
