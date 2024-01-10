@@ -30,7 +30,7 @@ from pipelines.rj_smtr.tasks import get_current_timestamp
 
 from pipelines.rj_smtr.flows import default_capture_flow, default_materialization_flow
 from pipelines.rj_smtr.schedules import every_day
-
+from pipelines.rj_smtr.br_rj_riodejaneiro_recursos.tasks import log_all
 
 # CAPTURA DOS TICKETS #
 
@@ -115,12 +115,13 @@ with Flow(
             parameters=recursos_capture_parameters,
             labels=unmapped(LABELS),
         )
-        log(f" Run captura: {run_captura}")
+
+        log_all.map(run_captura)
         wait_captura_true = wait_for_flow_run.map(
             run_captura,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
+            stream_states=unmapped(True),
+            stream_logs=unmapped(True),
+            raise_final_state=unmapped(True),
         )
 
     with case(capture, False):
@@ -141,10 +142,8 @@ with Flow(
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=unmapped(LABELS),
         )
-
+        log_all.map(run_recaptura)
         run_recaptura.set_upstream(wait_captura)
-
-        log(f" Run recaptura: {run_recaptura}")
 
         wait_recaptura_true = wait_for_flow_run.map(
             run_recaptura,
@@ -170,12 +169,10 @@ with Flow(
             labels=unmapped(LABELS),
             upstream_tasks=[wait_captura],
         )
-
+        log_all.map(run_materializacao)
         run_materializacao.set_upstream(wait_recaptura)
 
-        log(f" Run materialização: {run_materializacao}")
-
-        wait_materializacao_true = wait_for_flow_run(
+        wait_materializacao_true = wait_for_flow_run.map(
             run_materializacao,
             stream_states=unmapped(True),
             stream_logs=unmapped(True),
