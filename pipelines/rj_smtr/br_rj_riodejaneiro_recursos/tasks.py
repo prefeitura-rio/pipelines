@@ -6,7 +6,7 @@ from pipelines.utils.utils import log
 @task
 def log_all(value, function) -> None:
 <<<<<<< HEAD
-    
+
     log(f'{function}: {value}')
 =======
     log(function, value)
