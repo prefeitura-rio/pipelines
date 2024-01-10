@@ -117,7 +117,7 @@ with Flow(
         )
         for r in run_captura:
             log(f" Run captura: {r}")
-        
+
         wait_captura_true = wait_for_flow_run.map(
             run_captura,
             stream_states=True,
