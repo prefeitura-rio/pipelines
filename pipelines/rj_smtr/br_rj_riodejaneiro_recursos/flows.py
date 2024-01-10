@@ -116,7 +116,7 @@ with Flow(
             labels=unmapped(LABELS),
         )
 
-        log_all.map(run_captura, unmapped('captura'))
+        log_all.map(run_captura, unmapped("captura"))
         wait_captura_true = wait_for_flow_run.map(
             run_captura,
             stream_states=unmapped(True),
@@ -142,7 +142,7 @@ with Flow(
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=unmapped(LABELS),
         )
-        log_all.map(run_recaptura, unmapped('recaptura'))
+        log_all.map(run_recaptura, unmapped("recaptura"))
         run_recaptura.set_upstream(wait_captura)
 
         wait_recaptura_true = wait_for_flow_run.map(
@@ -169,7 +169,7 @@ with Flow(
             labels=unmapped(LABELS),
             upstream_tasks=[wait_captura],
         )
-        log_all.map(run_materializacao, unmapped('materialização'))
+        log_all.map(run_materializacao, unmapped("materialização"))
         run_materializacao.set_upstream(wait_recaptura)
 
         wait_materializacao_true = wait_for_flow_run.map(
