@@ -108,15 +108,15 @@ with Flow(
             for v in constants.SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS.value
         ]
 
-        run_captura = create_flow_run(
-            flow_name=sppo_recurso_captura.name,
-            project_name="staging",
+        run_captura = create_flow_run.map(
+            flow_name=unmapped(sppo_recurso_captura.name),
+            project_name=unmapped("staging"),
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             parameters=recursos_capture_parameters,
-            labels=LABELS,
+            labels=unmapped(LABELS),
         )
         log(f" Run captura: {run_captura}")
-        wait_captura_true = wait_for_flow_run(
+        wait_captura_true = wait_for_flow_run.map(
             run_captura,
             stream_states=True,
             stream_logs=True,
