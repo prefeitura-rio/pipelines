@@ -10,7 +10,8 @@ from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect import Parameter, case, task
 from prefect.tasks.control_flow import merge
 from prefect.utilities.edges import unmapped
-
+from pipelines.utils.utils import log
+from prefect.client import Client
 
 # EMD Imports #
 
@@ -114,7 +115,7 @@ with Flow(
             parameters=recursos_capture_parameters,
             labels=unmapped(LABELS),
         )
-
+        log(f" Run captura {run_captura}")
         wait_captura_true = wait_for_flow_run.map(
             run_captura,
             stream_states=unmapped(True),
@@ -124,7 +125,9 @@ with Flow(
 
     with case(capture, False):
         wait_captura_false = task(
-            lambda: [None], checkpoint=False, name="assign_none_to_previous_runs"
+            lambda: [None],
+            checkpoint=False,
+            name="assign_none_to_previous_runs",
         )()
 
     wait_captura = merge(wait_captura_true, wait_captura_false)
