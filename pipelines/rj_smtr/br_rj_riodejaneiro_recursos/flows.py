@@ -108,19 +108,19 @@ with Flow(
             for v in constants.SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS.value
         ]
 
-        run_captura = create_flow_run.map(
-            flow_name=unmapped(sppo_recurso_captura.name),
-            project_name=unmapped("staging"),
+        run_captura = create_flow_run(
+            flow_name=sppo_recurso_captura.name,
+            project_name="staging",
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             parameters=recursos_capture_parameters,
-            labels=unmapped(LABELS),
+            labels=LABELS,
         )
-        log(f" Run captura {run_captura}")
-        wait_captura_true = wait_for_flow_run.map(
+        log(f" Run captura: {run_captura}")
+        wait_captura_true = wait_for_flow_run(
             run_captura,
-            stream_states=unmapped(True),
-            stream_logs=unmapped(True),
-            raise_final_state=unmapped(True),
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
         )
 
     with case(capture, False):
@@ -144,11 +144,13 @@ with Flow(
 
         run_recaptura.set_upstream(wait_captura)
 
+        log(f" Run recaptura: {run_recaptura}")
+
         wait_recaptura_true = wait_for_flow_run.map(
             run_recaptura,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
+            stream_states=unmapped(True),
+            stream_logs=unmapped(True),
+            raise_final_state=unmapped(True),
         )
 
     with case(recapture, False):
@@ -171,7 +173,9 @@ with Flow(
 
         run_materializacao.set_upstream(wait_recaptura)
 
-        wait_materializacao_true = wait_for_flow_run.map(
+        log(f" Run materialização: {run_materializacao}")
+
+        wait_materializacao_true = wait_for_flow_run(
             run_materializacao,
             stream_states=unmapped(True),
             stream_logs=unmapped(True),
