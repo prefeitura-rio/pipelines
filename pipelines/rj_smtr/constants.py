@@ -674,7 +674,7 @@ and createdDate lt {end})",
     }
 
     SUBSIDIO_SPPO_RECURSOS_MATERIALIZACAO_PARAMS = {
-        "dataset_id": SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
+        "dataset_id": "br_rj_riodejaneiro_recursos",
         "upstream": True,
         "dbt_vars": {
             "date_range": {
