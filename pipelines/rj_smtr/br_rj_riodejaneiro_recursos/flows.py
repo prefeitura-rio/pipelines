@@ -136,20 +136,20 @@ with Flow(
     # Recaptura dos dados #
 
     with case(recapture, True):
-        run_recaptura = create_flow_run.map(
-            flow_name=unmapped(sppo_recurso_recaptura.name),
-            project_name=unmapped("staging"),
+        run_recaptura = create_flow_run(
+            flow_name=sppo_recurso_recaptura.name,
+            project_name="staging",
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            labels=unmapped(LABELS),
+            labels=LABELS,
         )
         log_all.map(run_recaptura, unmapped("recaptura"))
         run_recaptura.set_upstream(wait_captura)
 
-        wait_recaptura_true = wait_for_flow_run.map(
+        wait_recaptura_true = wait_for_flow_run(
             run_recaptura,
-            stream_states=unmapped(True),
-            stream_logs=unmapped(True),
-            raise_final_state=unmapped(True),
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
         )
 
     with case(recapture, False):
