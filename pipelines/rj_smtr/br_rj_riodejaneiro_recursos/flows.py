@@ -145,7 +145,7 @@ with Flow(
         )
         log_all.map(run_recaptura, unmapped("recaptura"))
 
-        # run_recaptura.set_upstream(wait_captura)
+        # run_recaptura.set_upstream(wait_captura) -> checar se está correto
 
         wait_recaptura_true = wait_for_flow_run.map(
             run_recaptura,

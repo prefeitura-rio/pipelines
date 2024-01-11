@@ -681,6 +681,7 @@ and createdDate lt {end})",
                 "table_run_datetime_column_name": "datetime_recurso",
                 "delay_hours": 0,
             },
+            # passar uma lista de dicionários com os parâmetros de cada tabela
             "version": {},
         },
     }
