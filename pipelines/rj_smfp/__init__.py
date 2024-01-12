@@ -2,7 +2,6 @@
 """
 Prefect flows for rj_smfp project in RJ
 """
-from pipelines.rj_smfp.dump_db_ergon.flows import *
 from pipelines.rj_smfp.dump_db_ergon_comlurb.flows import *
 from pipelines.rj_smfp.dump_db_metas.flows import *
 from pipelines.rj_smfp.dump_db_sigma.flows import *
