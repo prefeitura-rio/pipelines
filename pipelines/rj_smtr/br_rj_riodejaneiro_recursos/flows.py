@@ -179,7 +179,7 @@ with Flow(
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=unmapped(LABELS),
             parameters=table_params,
-            # upstream_tasks=[wait_captura],
+            upstream_tasks=[wait_captura],
         )
         log_all.map(run_materializacao, unmapped("materialização"))
         # run_materializacao.set_upstream(wait_recaptura)
