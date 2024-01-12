@@ -85,6 +85,7 @@ with Flow(
     table_id = Parameter("table_id", default=None)
     interval_minutes = Parameter("interval_minutes", default=1440)
     timestamp = get_current_timestamp(data_recurso, return_str=True)
+    exclude = Parameter("exclude", default=None)
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=subsidio_sppo_recurso.name + " ",
@@ -105,6 +106,14 @@ with Flow(
         }
         for v in constants.SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS.value
     ]
+
+    table_params = task(
+        lambda tables, exclude: [t for t in tables if t["table_id"] not in exclude]
+        if exclude is not None
+        else tables,
+        checkpoint=False,
+        name="get_tables_to_run",
+    )(tables=constants.SUBSIDIO_SPPO_RECURSOS_TABLE_IDS.value, exclude=exclude)
 
     # Captura dos dados #
     with case(capture, True):
@@ -164,21 +173,22 @@ with Flow(
     # Materialização dos dados #
 
     with case(materialize, True):
-        run_materializacao = create_flow_run(
-            flow_name=sppo_recurso_materializacao.name,
-            project_name="staging",
+        run_materializacao = create_flow_run.map(
+            flow_name=unmapped(sppo_recurso_materializacao.name),
+            project_name=unmapped("staging"),
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            labels=LABELS,
+            labels=unmapped(LABELS),
+            parameters=table_params,
             # upstream_tasks=[wait_captura],
         )
         log_all.map(run_materializacao, unmapped("materialização"))
         # run_materializacao.set_upstream(wait_recaptura)
 
-        wait_materializacao_true = wait_for_flow_run(
+        wait_materializacao_true = wait_for_flow_run.map(
             run_materializacao,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
+            stream_states=unmapped(True),
+            stream_logs=unmapped(True),
+            raise_final_state=unmapped(True),
         )
 
     with case(materialize, False):

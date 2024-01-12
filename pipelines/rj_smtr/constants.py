@@ -673,6 +673,12 @@ and createdDate lt {end})",
         "primary_key": ["protocol"],
     }
 
+    SUBSIDIO_SPPO_RECURSOS_TABLE_IDS = [
+        {"table_id": "recursos_sppo_viagens_individuais"},
+        {"table_id": "recursos_sppo_bloqueio_via"},
+        {"table_id": "recursos_sppo_reprocessamento"},
+    ]
+
     SUBSIDIO_SPPO_RECURSOS_MATERIALIZACAO_PARAMS = {
         "dataset_id": "br_rj_riodejaneiro_recursos",
         "upstream": True,
@@ -681,7 +687,6 @@ and createdDate lt {end})",
                 "table_run_datetime_column_name": "datetime_recurso",
                 "delay_hours": 0,
             },
-            # passar uma lista de dicionários com os parâmetros de cada tabela
             "version": {},
         },
     }
