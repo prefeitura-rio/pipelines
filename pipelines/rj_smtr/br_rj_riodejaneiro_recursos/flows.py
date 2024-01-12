@@ -173,22 +173,22 @@ with Flow(
     # Materialização dos dados #
 
     with case(materialize, True):
-        run_materializacao = create_flow_run(
-            flow_name=sppo_recurso_materializacao.name,
-            project_name="staging",
+        run_materializacao = create_flow_run.map(
+            flow_name=unmapped(sppo_recurso_materializacao.name),
+            project_name=unmapped("staging"),
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            labels=LABELS,
+            labels=unmapped(LABELS),
             parameters=table_params,
-            upstream_tasks=[wait_captura],
+            upstream_tasks=unmapped([wait_captura]),
         )
         log_all.map(run_materializacao, unmapped("materialização"))
         # run_materializacao.set_upstream(wait_recaptura)
 
-        wait_materializacao_true = wait_for_flow_run(
+        wait_materializacao_true = wait_for_flow_run.map(
             run_materializacao,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
+            stream_states=unmapped(True),
+            stream_logs=unmapped(True),
+            raise_final_state=unmapped(True),
         )
 
     with case(materialize, False):
