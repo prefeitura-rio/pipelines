@@ -306,9 +306,10 @@ def pick_cameras(
                 "url_camera": row["rtsp"],
                 "latitude": row["geometry"].y,
                 "longitude": row["geometry"].x,
-                "attempt_classification": (
-                    row["status"] not in ["sem chuva", "chuva fraca"]
-                ),
+                # "attempt_classification": (
+                #     row["status"] not in ["sem chuva", "chuva fraca"]
+                # ),
+                "attempt_classification": True,
             }
         )
     log(f"Picked cameras: {output}")
