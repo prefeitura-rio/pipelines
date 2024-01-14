@@ -99,7 +99,7 @@ with Flow(
 
 
 rj_escritorio__flooding_detection__flow.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-rj_escritorio__flooding_detection__flow.executor = LocalDaskExecutor(num_workers=10)
+rj_escritorio__flooding_detection__flow.executor = LocalDaskExecutor(num_workers=50)
 rj_escritorio__flooding_detection__flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_ESCRITORIO_AGENT_LABEL.value],
