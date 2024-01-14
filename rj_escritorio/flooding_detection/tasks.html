@@ -334,9 +334,10 @@ def pick_cameras(
                 &#34;url_camera&#34;: row[&#34;rtsp&#34;],
                 &#34;latitude&#34;: row[&#34;geometry&#34;].y,
                 &#34;longitude&#34;: row[&#34;geometry&#34;].x,
-                &#34;attempt_classification&#34;: (
-                    row[&#34;status&#34;] not in [&#34;sem chuva&#34;, &#34;chuva fraca&#34;]
-                ),
+                # &#34;attempt_classification&#34;: (
+                #     row[&#34;status&#34;] not in [&#34;sem chuva&#34;, &#34;chuva fraca&#34;]
+                # ),
+                &#34;attempt_classification&#34;: True,
             }
         )
     log(f&#34;Picked cameras: {output}&#34;)
@@ -864,9 +865,10 @@ def pick_cameras(
                 &#34;url_camera&#34;: row[&#34;rtsp&#34;],
                 &#34;latitude&#34;: row[&#34;geometry&#34;].y,
                 &#34;longitude&#34;: row[&#34;geometry&#34;].x,
-                &#34;attempt_classification&#34;: (
-                    row[&#34;status&#34;] not in [&#34;sem chuva&#34;, &#34;chuva fraca&#34;]
-                ),
+                # &#34;attempt_classification&#34;: (
+                #     row[&#34;status&#34;] not in [&#34;sem chuva&#34;, &#34;chuva fraca&#34;]
+                # ),
+                &#34;attempt_classification&#34;: True,
             }
         )
     log(f&#34;Picked cameras: {output}&#34;)
