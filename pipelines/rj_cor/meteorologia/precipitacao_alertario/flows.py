@@ -168,7 +168,7 @@ with Flow(
                     run_name="Update rain dashboard data (triggered by precipitacao_alertario last 2h flow)",  # noqa
                 )
                 rain_dashboard_last_2h_update_flow.set_upstream(
-                    wait_for_materialization
+                    wait_for_rain_dashboard_update
                 )
 
                 wait_for_rain_dashboard_last_2h_update = wait_for_flow_run(
