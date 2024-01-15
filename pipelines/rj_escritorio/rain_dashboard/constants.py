@@ -15,7 +15,7 @@ class constants(Enum):  # pylint: disable=c0103
     RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS = {
         "query_data": """
         WITH
-            alertario AS ( -- seleciona a última medição do alertario
+            alertario AS ( -- seleciona a última medição do alertario de cada estação nos últimos 30min
             SELECT
                 id_estacao,
                 acumulado_chuva_15_min,
@@ -32,11 +32,12 @@ class constants(Enum):  # pylint: disable=c0103
                 ) AS row_num
                 FROM `rj-cor.clima_pluviometro.taxa_precipitacao_alertario`
                 WHERE data_particao> DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY)
+                    AND horario >= TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE)
             )AS a
             WHERE a.row_num = 1
             ),
 
-            websirene AS ( -- seleciona a última medição do websirene
+            websirene AS ( -- seleciona a última medição do websirene de cada estação nos últimos 30min
             SELECT
                 id_estacao,
                 acumulado_chuva_15_min,
@@ -53,11 +54,12 @@ class constants(Enum):  # pylint: disable=c0103
                 ) AS row_num
                 FROM `rj-cor.clima_pluviometro.taxa_precipitacao_websirene`
                 WHERE data_particao> DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY)
+                    AND horario >= TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE)
             )AS a
             WHERE a.row_num = 1
             ),
 
-            cemaden AS ( -- seleciona a última medição do cemaden
+            cemaden AS ( -- seleciona a última medição do cemaden de cada estação nos últimos 30min
             SELECT
                 id_estacao,
                 acumulado_chuva_10_min AS acumulado_chuva_15_min,
@@ -74,6 +76,7 @@ class constants(Enum):  # pylint: disable=c0103
                 ) AS row_num
                 FROM `rj-cor.clima_pluviometro.taxa_precipitacao_cemaden`
                 WHERE data_particao> DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY)
+                        AND data_medicao >= TIMESTAMP_SUB(CURRENT_DATETIME('America/Sao_Paulo'), INTERVAL 30 MINUTE)
             )AS a
             WHERE a.row_num = 1
             ),
@@ -225,28 +228,37 @@ class constants(Enum):  # pylint: disable=c0103
         """,
         "query_update": """
         WITH datas AS (
-            (SELECT
-                    MAX(
-                    DATETIME(
-                        CONCAT(data_particao," ", horario)
-                    )
-                    ) AS last_update
-                FROM `rj-cor.clima_pluviometro.taxa_precipitacao_alertario`
-                WHERE data_particao> DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 2 DAY))
+            (
+              SELECT
+                MAX(
+                  DATETIME(
+                      CONCAT(data_particao," ", horario)
+                  )
+                ) AS last_update
+              FROM `rj-cor.clima_pluviometro.taxa_precipitacao_alertario`
+              WHERE data_particao> DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 2 DAY)
+                AND CAST(CONCAT(data_particao, " ", horario) AS DATETIME) <= CURRENT_DATETIME('America/Sao_Paulo')
+            )
             UNION ALL
-            (SELECT
-                    MAX(
-                    DATETIME(
-                        CONCAT(data_particao," ", horario)
-                    )
-                    ) AS last_update
-                FROM `rj-cor.clima_pluviometro.taxa_precipitacao_websirene`
-                WHERE data_particao> DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 2 DAY))
+            (
+              SELECT
+                MAX(
+                  DATETIME(
+                      CONCAT(data_particao," ", horario)
+                  )
+                ) AS last_update
+              FROM `rj-cor.clima_pluviometro.taxa_precipitacao_websirene`
+              WHERE data_particao> DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 2 DAY)
+                AND CAST(CONCAT(data_particao, " ", horario) AS DATETIME) <= CURRENT_DATETIME('America/Sao_Paulo')
+            )
             UNION ALL
-            (SELECT
-                    MAX(DATETIME(data_medicao)) AS last_update
-                FROM `rj-cor.clima_pluviometro.taxa_precipitacao_cemaden`
-                WHERE data_particao> DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 2 DAY))
+            (
+              SELECT
+                MAX(DATETIME(data_medicao)) AS last_update
+              FROM `rj-cor.clima_pluviometro.taxa_precipitacao_cemaden`
+              WHERE data_particao> DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 2 DAY)
+                AND data_medicao <= CURRENT_DATETIME('America/Sao_Paulo')
+            )
         )
         SELECT
             MAX(last_update) AS last_update
