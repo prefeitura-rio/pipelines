@@ -24,7 +24,7 @@ with Flow(
     code_owners=[
         "gabriel",
     ],
-    skip_if_running=True,
+    # skip_if_running=True,
 ) as rj_escritorio_rain_dashboard_flow:
     # Parameters
     query_data = Parameter("query_data")
