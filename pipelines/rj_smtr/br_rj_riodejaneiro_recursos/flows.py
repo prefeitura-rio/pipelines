@@ -10,8 +10,6 @@ from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect import Parameter, case, task
 from prefect.tasks.control_flow import merge
 from prefect.utilities.edges import unmapped
-from pipelines.utils.utils import log
-from prefect.client import Client
 
 # EMD Imports #
 
@@ -39,7 +37,7 @@ sppo_recurso_captura.name = "SMTR: Subsídio Recursos - Captura (subflow)"
 sppo_recurso_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_recurso_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 sppo_recurso_captura = set_default_parameters(
     flow=sppo_recurso_captura,
@@ -51,7 +49,7 @@ sppo_recurso_recaptura.name = "SMTR: Subsídio Recursos - Recaptura (subflow)"
 sppo_recurso_recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_recurso_recaptura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 sppo_recurso_recaptura = set_default_parameters(
     flow=sppo_recurso_recaptura,
@@ -66,7 +64,7 @@ sppo_recurso_materializacao.name = "SMTR: Subsídio Recursos - Materialização 
 sppo_recurso_materializacao.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_recurso_materializacao.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
 sppo_recurso_materializacao = set_default_parameters(
@@ -119,8 +117,7 @@ with Flow(
     with case(capture, True):
         run_captura = create_flow_run.map(
             flow_name=unmapped(sppo_recurso_captura.name),
-            project_name=unmapped("staging"),
-            # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             parameters=recursos_capture_parameters,
             labels=unmapped(LABELS),
         )
@@ -146,12 +143,10 @@ with Flow(
     with case(recapture, True):
         run_recaptura = create_flow_run.map(
             flow_name=unmapped(sppo_recurso_recaptura.name),
-            project_name=unmapped("staging"),
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             parameters=recursos_capture_parameters,
-            # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=unmapped(LABELS),
         )
-        # run_recaptura.set_upstream(wait_captura) -> checar se está correto
 
         wait_recaptura_true = wait_for_flow_run.map(
             run_recaptura,
@@ -172,13 +167,11 @@ with Flow(
     with case(materialize, True):
         run_materializacao = create_flow_run.map(
             flow_name=unmapped(sppo_recurso_materializacao.name),
-            project_name=unmapped("staging"),
-            # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=unmapped(LABELS),
             parameters=table_params,
             upstream_tasks=[wait_captura],
         )
-        # run_materializacao.set_upstream(wait_recaptura)
 
         wait_materializacao_true = wait_for_flow_run.map(
             run_materializacao,
@@ -200,7 +193,7 @@ with Flow(
 subsidio_sppo_recurso.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 subsidio_sppo_recurso.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
 # Schedule
