@@ -645,23 +645,26 @@ class constants(Enum):  # pylint: disable=c0103
         },
     ]
 
-    # SUBSÍDIO RECURSOS VIAGENS INDIVIDUAIS
+    # SUBSÍDIO RECURSOS
+
+    SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS = {
+        "recursos_sppo_viagens_individuais": "Viagem Individual",
+        "recursos_sppo_bloqueio_via": "Bloqueio da via",
+        "recursos_sppo_reprocessamento": "Reprocessamento",
+    }
 
     SUBSIDIO_SPPO_RECURSOS_DATASET_ID = "br_rj_riodejaneiro_recursos"
     SUBSIDIO_SPPO_RECURSO_API_BASE_URL = "https://api.movidesk.com/public/v1/tickets"
     SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH = "sppo_subsidio_recursos_api"
-    SUBSIDIO_SPPO_RECURSO_SERVICE = (
-        "serviceFirstLevel eq 'Viagem Individual - Recurso Viagens Subsídio'"
-    )
     SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS = {
         "partition_date_only": True,
-        "table_id": "recursos_sppo_viagens_individuais",
         "dataset_id": SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
         "extract_params": {
             "token": "",
             "$select": "id,protocol,createdDate,lastUpdate",
-            "$filter": "{service} and (lastUpdate ge {start} and lastUpdate lt {end} \
-or createdDate ge {start} and createdDate lt {end})",
+            "$filter": "serviceFirstLevel eq '{service} - Recurso Viagens Subsídio' \
+and (lastUpdate ge {start} and lastUpdate lt {end} or createdDate ge {start} \
+and createdDate lt {end})",
             "$expand": "customFieldValues,customFieldValues($expand=items)",
             "$orderby": "createdDate asc",
         },
@@ -670,9 +673,14 @@ or createdDate ge {start} and createdDate lt {end})",
         "primary_key": ["protocol"],
     }
 
+    SUBSIDIO_SPPO_RECURSOS_TABLE_IDS = [
+        {"table_id": "recursos_sppo_viagens_individuais"},
+        {"table_id": "recursos_sppo_bloqueio_via"},
+        {"table_id": "recursos_sppo_reprocessamento"},
+    ]
+
     SUBSIDIO_SPPO_RECURSOS_MATERIALIZACAO_PARAMS = {
-        "dataset_id": SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
-        "table_id": SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS["table_id"],
+        "dataset_id": "br_rj_riodejaneiro_recursos",
         "upstream": True,
         "dbt_vars": {
             "date_range": {
