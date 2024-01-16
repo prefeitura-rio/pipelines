@@ -11,6 +11,7 @@ import traceback
 from typing import Dict, List, Union, Iterable, Any
 import io
 
+
 from basedosdados import Storage, Table
 import basedosdados as bd
 from dbt_client import DbtClient
@@ -761,6 +762,7 @@ def create_request_params(
         request_params = {"zip_filename": extract_params["filename"]}
 
     elif dataset_id == constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value:
+        request_params = {}
         data_recurso = extract_params.get("data_recurso", timestamp)
         if isinstance(data_recurso, str):
             data_recurso = datetime.fromisoformat(data_recurso)
@@ -772,12 +774,17 @@ def create_request_params(
         )
         end = datetime.strftime(data_recurso, "%Y-%m-%dT%H:%M:%S.%MZ")
         log(f" Start date {start}, end date {end}")
+
+        service = constants.SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS.value[table_id]
+
         recurso_params = {
             "start": start,
             "end": end,
-            "service": constants.SUBSIDIO_SPPO_RECURSO_SERVICE.value,
+            "service": service,
         }
+
         extract_params["$filter"] = extract_params["$filter"].format(**recurso_params)
+
         request_params = extract_params
 
         request_url = constants.SUBSIDIO_SPPO_RECURSO_API_BASE_URL.value
