@@ -258,5 +258,5 @@ veiculo_sppo_infracao_agente_verao_captura.storage = GCS(
 )
 veiculo_sppo_infracao_agente_verao_captura = set_default_parameters(
     flow=veiculo_sppo_infracao_agente_verao_captura,
-    default_parameters=constants.AGENTES_VERAO_CAPTURE_PARAMS.value,
+    default_parameters=constants.SPPO_INFRACAO_AGENTE_VERAO_PARAMS.value,
 )

@@ -762,10 +762,14 @@ and createdDate lt {end})",
     SPPO_VEICULO_DIA_TABLE_ID = "sppo_veiculo_dia"
 
     # AUTUAÇÕES - AGENTES DE VERÃO
-    AGENTES_VERAO_CAPTURE_PARAMS = {
+    SPPO_INFRACAO_AGENTE_VERAO_COLUMNS = ["datetime_registro", "email", "id_veiculo", "servico", "link_foto", "validacao"]
+
+    SPPO_INFRACAO_AGENTE_VERAO_PARAMS = {
         "partition_date_only": True,
         "source_type": "api-csv",
         "dataset_id": VEICULO_DATASET_ID,
         "table_id": "sppo_infracao_agente_verao",
         "extract_params": {"secret_path": "smtr_agentes_verao"},
+        "pre_treatment_reader_args": {"skiprows": 2, "names": SPPO_INFRACAO_AGENTE_VERAO_COLUMNS},
+        "primary_key": ["datetime_registro", "email"],
     }
