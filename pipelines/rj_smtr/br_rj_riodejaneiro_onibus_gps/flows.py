@@ -76,13 +76,16 @@ with Flow(
         "table_id", default=constants.GPS_SPPO_REALOCACAO_TREATED_TABLE_ID.value
     )
     rebuild = Parameter("rebuild", False)
+    timestamp = Parameter("timestamp", default=None)
+    previous_error = Parameter("previous_error", default=None)
+    recapture = Parameter("recapture", default=None)
 
     # SETUP
-    timestamp = get_current_timestamp()
+    timestamp = get_current_timestamp(timestamp)
 
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix=realocacao_sppo.name + ": ", now_time=timestamp
-    )
+    # rename_flow_run = rename_current_flow_run_now_time(
+    #     prefix=realocacao_sppo.name + ": ", now_time=timestamp
+    # )
 
     partitions = create_date_hour_partition(timestamp)
 
@@ -124,6 +127,8 @@ with Flow(
         parent_table_id=constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
         error=error,
         timestamp=timestamp,
+        previous_error=previous_error,
+        recapture=recapture,
     )
 
 realocacao_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
@@ -223,13 +228,16 @@ with Flow(
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as captura_sppo_v2:
     version = Parameter("version", default=2)
+    timestamp = Parameter("timestamp", default=None)
+    previous_error = Parameter("previous_error", default=None)
+    recapture = Parameter("recapture", default=None)
 
     # SETUP #
-    timestamp = get_current_timestamp()
+    timestamp = get_current_timestamp(timestamp)
 
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix=captura_sppo_v2.name + ": ", now_time=timestamp
-    )
+    # rename_flow_run = rename_current_flow_run_now_time(
+    #     prefix=captura_sppo_v2.name + ": ", now_time=timestamp
+    # )
 
     partitions = create_date_hour_partition(timestamp)
 
@@ -271,6 +279,8 @@ with Flow(
         parent_table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
         error=error,
         timestamp=timestamp,
+        previous_error=previous_error,
+        recapture=recapture,
     )
 
 captura_sppo_v2.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
