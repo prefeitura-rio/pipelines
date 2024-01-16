@@ -517,6 +517,20 @@ class constants(Enum):  # pylint: disable=c0103
         },
     }
 
+    BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_PARAMS = {
+        "dataset_id": BILHETAGEM_DATASET_ID,
+        "table_id": "gps_validador",
+        "upstream": True,
+        "exclude": "+operadoras +consorcios",
+        "dbt_vars": {
+            "date_range": {
+                "table_run_datetime_column_name": "datetime_captura",
+                "delay_hours": 0,
+            },
+            "version": {},
+        },
+    }
+
     BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS = {
         "dataset_id": BILHETAGEM_DATASET_ID,
         "secret_path": BILHETAGEM_SECRET_PATH,
