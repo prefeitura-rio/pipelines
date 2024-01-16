@@ -753,7 +753,6 @@ or createdDate ge {start} and createdDate lt {end})",
     # VEÍCULO DIA
     SPPO_VEICULO_DIA_TABLE_ID = "sppo_veiculo_dia"
 
-
     # AUTUAÇÕES - AGENTES DE VERÃO
     AGENTES_VERAO_CAPTURE_PARAMS = {
         "partition_date_only": True,

@@ -786,7 +786,9 @@ def create_request_params(
         request_params = {"bucket_name": constants.STU_BUCKET_NAME.value}
 
     elif dataset_id == constants.VEICULO_DATASET_ID.value:
-        request_url = get_vault_secret(extract_params["secret_path"])["data"]["request_url"]
+        request_url = get_vault_secret(extract_params["secret_path"])["data"][
+            "request_url"
+        ]
 
     return request_params, request_url
 
