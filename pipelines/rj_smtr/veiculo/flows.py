@@ -4,17 +4,18 @@
 Flows for veiculos
 """
 
+from copy import deepcopy
 from prefect import Parameter
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.utilities.edges import unmapped
-from datetime import timedelta
 
 # EMD Imports #
 
 from pipelines.constants import constants as emd_constants
 from pipelines.utils.decorators import Flow
 from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
+from pipelines.utils.utils import set_default_parameters
 
 from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
@@ -24,7 +25,7 @@ from pipelines.utils.tasks import (
 
 # SMTR Imports #
 
-from pipelines.rj_smtr.veiculo.constants import constants
+from pipelines.rj_smtr.constants import constants
 
 from pipelines.rj_smtr.schedules import (
     every_day_hour_seven,
@@ -52,11 +53,13 @@ from pipelines.rj_smtr.veiculo.tasks import (
 
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
+from pipelines.rj_smtr.flows import default_capture_flow
+
 # Flows #
 
 # flake8: noqa: E501
 with Flow(
-    f"SMTR: {constants.DATASET_ID.value} {constants.SPPO_LICENCIAMENTO_TABLE_ID.value} - Captura",
+    f"SMTR: {constants.VEICULO_DATASET_ID.value} {constants.SPPO_LICENCIAMENTO_TABLE_ID.value} - Captura",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as sppo_licenciamento_captura:
     timestamp = get_current_timestamp()
@@ -75,7 +78,7 @@ with Flow(
     filename = parse_timestamp_to_string(timestamp)
 
     filepath = create_local_partition_path(
-        dataset_id=constants.DATASET_ID.value,
+        dataset_id=constants.VEICULO_DATASET_ID.value,
         table_id=constants.SPPO_LICENCIAMENTO_TABLE_ID.value,
         filename=filename,
         partitions=partitions,
@@ -99,7 +102,7 @@ with Flow(
 
     # LOAD
     error = bq_upload(
-        dataset_id=constants.DATASET_ID.value,
+        dataset_id=constants.VEICULO_DATASET_ID.value,
         table_id=constants.SPPO_LICENCIAMENTO_TABLE_ID.value,
         filepath=treated_filepath,
         raw_filepath=raw_filepath,
@@ -107,7 +110,7 @@ with Flow(
         status=treated_status,
     )
     upload_logs_to_bq(
-        dataset_id=constants.DATASET_ID.value,
+        dataset_id=constants.VEICULO_DATASET_ID.value,
         parent_table_id=constants.SPPO_LICENCIAMENTO_TABLE_ID.value,
         timestamp=timestamp,
         error=error,
@@ -124,7 +127,7 @@ sppo_licenciamento_captura.run_config = KubernetesRun(
 sppo_licenciamento_captura.schedule = every_day_hour_seven
 
 with Flow(
-    f"SMTR: {constants.DATASET_ID.value} {constants.SPPO_INFRACAO_TABLE_ID.value} - Captura",
+    f"SMTR: {constants.VEICULO_DATASET_ID.value} {constants.SPPO_INFRACAO_TABLE_ID.value} - Captura",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as sppo_infracao_captura:
     timestamp = get_current_timestamp()
@@ -143,7 +146,7 @@ with Flow(
     filename = parse_timestamp_to_string(timestamp)
 
     filepath = create_local_partition_path(
-        dataset_id=constants.DATASET_ID.value,
+        dataset_id=constants.VEICULO_DATASET_ID.value,
         table_id=constants.SPPO_INFRACAO_TABLE_ID.value,
         filename=filename,
         partitions=partitions,
@@ -165,7 +168,7 @@ with Flow(
 
     # LOAD
     error = bq_upload(
-        dataset_id=constants.DATASET_ID.value,
+        dataset_id=constants.VEICULO_DATASET_ID.value,
         table_id=constants.SPPO_INFRACAO_TABLE_ID.value,
         filepath=treated_filepath,
         raw_filepath=raw_filepath,
@@ -173,7 +176,7 @@ with Flow(
         status=treated_status,
     )
     upload_logs_to_bq(
-        dataset_id=constants.DATASET_ID.value,
+        dataset_id=constants.VEICULO_DATASET_ID.value,
         parent_table_id=constants.SPPO_INFRACAO_TABLE_ID.value,
         timestamp=timestamp,
         error=error,
@@ -191,7 +194,7 @@ sppo_infracao_captura.schedule = every_day_hour_seven
 
 # flake8: noqa: E501
 with Flow(
-    f"SMTR: {constants.DATASET_ID.value} {constants.SPPO_VEICULO_DIA_TABLE_ID.value} - Materialização (subflow)",
+    f"SMTR: {constants.VEICULO_DATASET_ID.value} {constants.SPPO_VEICULO_DIA_TABLE_ID.value} - Materialização (subflow)",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as sppo_veiculo_dia:
     # 1. SETUP #
@@ -220,7 +223,7 @@ with Flow(
     # Get models version #
     # TODO: include version in a column in the table
     dataset_sha = fetch_dataset_sha(
-        dataset_id=constants.DATASET_ID.value,
+        dataset_id=constants.VEICULO_DATASET_ID.value,
     )
 
     dict_list = get_join_dict(dict_list=run_dates, new_dict=dataset_sha)
@@ -231,7 +234,7 @@ with Flow(
     # 2. TREAT #
     run_dbt_model.map(
         dbt_client=unmapped(dbt_client),
-        dataset_id=unmapped(constants.DATASET_ID.value),
+        dataset_id=unmapped(constants.VEICULO_DATASET_ID.value),
         _vars=_vars,
     )
 
@@ -239,4 +242,17 @@ sppo_veiculo_dia.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_veiculo_dia.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+
+veiculo_sppo_infracao_agente_verao_captura = deepcopy(default_capture_flow)
+veiculo_sppo_infracao_agente_verao_captura.name = f"SMTR: {constants.VEICULO_DATASET_ID.value} sppo_infracao_agente_verao - Captura (subflow)"
+veiculo_sppo_infracao_agente_verao_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+veiculo_sppo_infracao_agente_verao_captura.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+veiculo_sppo_infracao_agente_verao_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+veiculo_sppo_infracao_agente_verao_captura = set_default_parameters(
+    flow=veiculo_sppo_infracao_agente_verao_captura,
+    default_parameters=constants.AGENTES_VERAO_CAPTURE_PARAMS.value,
 )
