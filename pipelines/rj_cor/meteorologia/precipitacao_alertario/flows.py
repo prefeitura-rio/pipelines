@@ -40,8 +40,8 @@ from pipelines.utils.tasks import (
     get_current_flow_labels,
 )
 
-wait_for_flow_run_with_2min_timeout = wait_for_flow_run_with_timeout(
-    timeout=timedelta(minutes=2)
+wait_for_flow_run_with_5min_timeout = wait_for_flow_run_with_timeout(
+    timeout=timedelta(minutes=5)
 )
 
 with Flow(
@@ -120,7 +120,7 @@ with Flow(
             current_flow_labels.set_upstream(run_dbt)
             materialization_flow.set_upstream(current_flow_labels)
 
-            wait_for_materialization = wait_for_flow_run_with_2min_timeout(
+            wait_for_materialization = wait_for_flow_run_with_5min_timeout(
                 flow_run_id=materialization_flow,
                 stream_states=True,
                 stream_logs=True,
@@ -200,7 +200,7 @@ with Flow(
                 )
                 dump_to_gcs_flow.set_upstream(wait_for_materialization)
 
-                wait_for_dump_to_gcs = wait_for_flow_run_with_2min_timeout(
+                wait_for_dump_to_gcs = wait_for_flow_run_with_5min_timeout(
                     flow_run_id=dump_to_gcs_flow,
                     stream_states=True,
                     stream_logs=True,
