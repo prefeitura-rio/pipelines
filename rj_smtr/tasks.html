@@ -40,6 +40,7 @@ import traceback
 from typing import Dict, List, Union, Iterable, Any
 import io
 
+
 from basedosdados import Storage, Table
 import basedosdados as bd
 from dbt_client import DbtClient
@@ -790,6 +791,7 @@ def create_request_params(
         request_params = {&#34;zip_filename&#34;: extract_params[&#34;filename&#34;]}
 
     elif dataset_id == constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value:
+        request_params = {}
         data_recurso = extract_params.get(&#34;data_recurso&#34;, timestamp)
         if isinstance(data_recurso, str):
             data_recurso = datetime.fromisoformat(data_recurso)
@@ -801,12 +803,17 @@ def create_request_params(
         )
         end = datetime.strftime(data_recurso, &#34;%Y-%m-%dT%H:%M:%S.%MZ&#34;)
         log(f&#34; Start date {start}, end date {end}&#34;)
+
+        service = constants.SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS.value[table_id]
+
         recurso_params = {
             &#34;start&#34;: start,
             &#34;end&#34;: end,
-            &#34;service&#34;: constants.SUBSIDIO_SPPO_RECURSO_SERVICE.value,
+            &#34;service&#34;: service,
         }
+
         extract_params[&#34;$filter&#34;] = extract_params[&#34;$filter&#34;].format(**recurso_params)
+
         request_params = extract_params
 
         request_url = constants.SUBSIDIO_SPPO_RECURSO_API_BASE_URL.value
@@ -2341,6 +2348,7 @@ def create_request_params(
         request_params = {&#34;zip_filename&#34;: extract_params[&#34;filename&#34;]}
 
     elif dataset_id == constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value:
+        request_params = {}
         data_recurso = extract_params.get(&#34;data_recurso&#34;, timestamp)
         if isinstance(data_recurso, str):
             data_recurso = datetime.fromisoformat(data_recurso)
@@ -2352,12 +2360,17 @@ def create_request_params(
         )
         end = datetime.strftime(data_recurso, &#34;%Y-%m-%dT%H:%M:%S.%MZ&#34;)
         log(f&#34; Start date {start}, end date {end}&#34;)
+
+        service = constants.SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS.value[table_id]
+
         recurso_params = {
             &#34;start&#34;: start,
             &#34;end&#34;: end,
-            &#34;service&#34;: constants.SUBSIDIO_SPPO_RECURSO_SERVICE.value,
+            &#34;service&#34;: service,
         }
+
         extract_params[&#34;$filter&#34;] = extract_params[&#34;$filter&#34;].format(**recurso_params)
+
         request_params = extract_params
 
         request_url = constants.SUBSIDIO_SPPO_RECURSO_API_BASE_URL.value

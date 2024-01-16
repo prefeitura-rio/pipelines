@@ -1091,7 +1091,10 @@ def read_raw_data(filepath: str, reader_args: dict = None) -&gt; tuple[str, pd.D
     return error, data
 
 
-def get_raw_recursos(request_url: str, request_params: dict) -&gt; tuple[str, str, str]:
+def get_raw_recursos(
+    request_url: str,
+    request_params: dict,
+) -&gt; tuple[str, str, str]:
     &#34;&#34;&#34;
     Returns a dataframe with recursos data from movidesk api.
     &#34;&#34;&#34;
@@ -2344,7 +2347,10 @@ if you set a value for this argument, the query will have LIMIT and OFFSET appen
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_raw_recursos(request_url: str, request_params: dict) -&gt; tuple[str, str, str]:
+<pre><code class="python">def get_raw_recursos(
+    request_url: str,
+    request_params: dict,
+) -&gt; tuple[str, str, str]:
     &#34;&#34;&#34;
     Returns a dataframe with recursos data from movidesk api.
     &#34;&#34;&#34;

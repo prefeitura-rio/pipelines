@@ -674,23 +674,26 @@ class constants(Enum):  # pylint: disable=c0103
         },
     ]
 
-    # SUBSÍDIO RECURSOS VIAGENS INDIVIDUAIS
+    # SUBSÍDIO RECURSOS
+
+    SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS = {
+        &#34;recursos_sppo_viagens_individuais&#34;: &#34;Viagem Individual&#34;,
+        &#34;recursos_sppo_bloqueio_via&#34;: &#34;Bloqueio da via&#34;,
+        &#34;recursos_sppo_reprocessamento&#34;: &#34;Reprocessamento&#34;,
+    }
 
     SUBSIDIO_SPPO_RECURSOS_DATASET_ID = &#34;br_rj_riodejaneiro_recursos&#34;
     SUBSIDIO_SPPO_RECURSO_API_BASE_URL = &#34;https://api.movidesk.com/public/v1/tickets&#34;
     SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH = &#34;sppo_subsidio_recursos_api&#34;
-    SUBSIDIO_SPPO_RECURSO_SERVICE = (
-        &#34;serviceFirstLevel eq &#39;Viagem Individual - Recurso Viagens Subsídio&#39;&#34;
-    )
     SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS = {
         &#34;partition_date_only&#34;: True,
-        &#34;table_id&#34;: &#34;recursos_sppo_viagens_individuais&#34;,
         &#34;dataset_id&#34;: SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
         &#34;extract_params&#34;: {
             &#34;token&#34;: &#34;&#34;,
             &#34;$select&#34;: &#34;id,protocol,createdDate,lastUpdate&#34;,
-            &#34;$filter&#34;: &#34;{service} and (lastUpdate ge {start} and lastUpdate lt {end} \
-or createdDate ge {start} and createdDate lt {end})&#34;,
+            &#34;$filter&#34;: &#34;serviceFirstLevel eq &#39;{service} - Recurso Viagens Subsídio&#39; \
+and (lastUpdate ge {start} and lastUpdate lt {end} or createdDate ge {start} \
+and createdDate lt {end})&#34;,
             &#34;$expand&#34;: &#34;customFieldValues,customFieldValues($expand=items)&#34;,
             &#34;$orderby&#34;: &#34;createdDate asc&#34;,
         },
@@ -699,9 +702,14 @@ or createdDate ge {start} and createdDate lt {end})&#34;,
         &#34;primary_key&#34;: [&#34;protocol&#34;],
     }
 
+    SUBSIDIO_SPPO_RECURSOS_TABLE_IDS = [
+        {&#34;table_id&#34;: &#34;recursos_sppo_viagens_individuais&#34;},
+        {&#34;table_id&#34;: &#34;recursos_sppo_bloqueio_via&#34;},
+        {&#34;table_id&#34;: &#34;recursos_sppo_reprocessamento&#34;},
+    ]
+
     SUBSIDIO_SPPO_RECURSOS_MATERIALIZACAO_PARAMS = {
-        &#34;dataset_id&#34;: SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
-        &#34;table_id&#34;: SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS[&#34;table_id&#34;],
+        &#34;dataset_id&#34;: &#34;br_rj_riodejaneiro_recursos&#34;,
         &#34;upstream&#34;: True,
         &#34;dbt_vars&#34;: {
             &#34;date_range&#34;: {
@@ -1381,23 +1389,26 @@ or createdDate ge {start} and createdDate lt {end})&#34;,
         },
     ]
 
-    # SUBSÍDIO RECURSOS VIAGENS INDIVIDUAIS
+    # SUBSÍDIO RECURSOS
+
+    SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS = {
+        &#34;recursos_sppo_viagens_individuais&#34;: &#34;Viagem Individual&#34;,
+        &#34;recursos_sppo_bloqueio_via&#34;: &#34;Bloqueio da via&#34;,
+        &#34;recursos_sppo_reprocessamento&#34;: &#34;Reprocessamento&#34;,
+    }
 
     SUBSIDIO_SPPO_RECURSOS_DATASET_ID = &#34;br_rj_riodejaneiro_recursos&#34;
     SUBSIDIO_SPPO_RECURSO_API_BASE_URL = &#34;https://api.movidesk.com/public/v1/tickets&#34;
     SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH = &#34;sppo_subsidio_recursos_api&#34;
-    SUBSIDIO_SPPO_RECURSO_SERVICE = (
-        &#34;serviceFirstLevel eq &#39;Viagem Individual - Recurso Viagens Subsídio&#39;&#34;
-    )
     SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS = {
         &#34;partition_date_only&#34;: True,
-        &#34;table_id&#34;: &#34;recursos_sppo_viagens_individuais&#34;,
         &#34;dataset_id&#34;: SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
         &#34;extract_params&#34;: {
             &#34;token&#34;: &#34;&#34;,
             &#34;$select&#34;: &#34;id,protocol,createdDate,lastUpdate&#34;,
-            &#34;$filter&#34;: &#34;{service} and (lastUpdate ge {start} and lastUpdate lt {end} \
-or createdDate ge {start} and createdDate lt {end})&#34;,
+            &#34;$filter&#34;: &#34;serviceFirstLevel eq &#39;{service} - Recurso Viagens Subsídio&#39; \
+and (lastUpdate ge {start} and lastUpdate lt {end} or createdDate ge {start} \
+and createdDate lt {end})&#34;,
             &#34;$expand&#34;: &#34;customFieldValues,customFieldValues($expand=items)&#34;,
             &#34;$orderby&#34;: &#34;createdDate asc&#34;,
         },
@@ -1406,9 +1417,14 @@ or createdDate ge {start} and createdDate lt {end})&#34;,
         &#34;primary_key&#34;: [&#34;protocol&#34;],
     }
 
+    SUBSIDIO_SPPO_RECURSOS_TABLE_IDS = [
+        {&#34;table_id&#34;: &#34;recursos_sppo_viagens_individuais&#34;},
+        {&#34;table_id&#34;: &#34;recursos_sppo_bloqueio_via&#34;},
+        {&#34;table_id&#34;: &#34;recursos_sppo_reprocessamento&#34;},
+    ]
+
     SUBSIDIO_SPPO_RECURSOS_MATERIALIZACAO_PARAMS = {
-        &#34;dataset_id&#34;: SUBSIDIO_SPPO_RECURSOS_DATASET_ID,
-        &#34;table_id&#34;: SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS[&#34;table_id&#34;],
+        &#34;dataset_id&#34;: &#34;br_rj_riodejaneiro_recursos&#34;,
         &#34;upstream&#34;: True,
         &#34;dbt_vars&#34;: {
             &#34;date_range&#34;: {
@@ -1763,6 +1779,10 @@ or createdDate ge {start} and createdDate lt {end})&#34;,
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_RECURSOS_TABLE_IDS"><code class="name">var <span class="ident">SUBSIDIO_SPPO_RECURSOS_TABLE_IDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_RECURSO_API_BASE_URL"><code class="name">var <span class="ident">SUBSIDIO_SPPO_RECURSO_API_BASE_URL</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -1775,7 +1795,7 @@ or createdDate ge {start} and createdDate lt {end})&#34;,
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_RECURSO_SERVICE"><code class="name">var <span class="ident">SUBSIDIO_SPPO_RECURSO_SERVICE</span></code></dt>
+<dt id="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS"><code class="name">var <span class="ident">SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1944,10 +1964,11 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DATASET_ID">SUBSIDIO_SPPO_DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID">SUBSIDIO_SPPO_RECURSOS_DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_RECURSOS_MATERIALIZACAO_PARAMS" href="#pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_RECURSOS_MATERIALIZACAO_PARAMS">SUBSIDIO_SPPO_RECURSOS_MATERIALIZACAO_PARAMS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_RECURSOS_TABLE_IDS" href="#pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_RECURSOS_TABLE_IDS">SUBSIDIO_SPPO_RECURSOS_TABLE_IDS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_RECURSO_API_BASE_URL" href="#pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_RECURSO_API_BASE_URL">SUBSIDIO_SPPO_RECURSO_API_BASE_URL</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH">SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS">SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS</a></code></li>
-<li><code><a title="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_RECURSO_SERVICE" href="#pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_RECURSO_SERVICE">SUBSIDIO_SPPO_RECURSO_SERVICE</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS">SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_TABLE_ID">SUBSIDIO_SPPO_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.TASK_MAX_RETRIES" href="#pipelines.rj_smtr.constants.constants.TASK_MAX_RETRIES">TASK_MAX_RETRIES</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.TASK_RETRY_DELAY" href="#pipelines.rj_smtr.constants.constants.TASK_RETRY_DELAY">TASK_RETRY_DELAY</a></code></li>

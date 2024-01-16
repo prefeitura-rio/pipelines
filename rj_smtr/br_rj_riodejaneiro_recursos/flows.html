@@ -38,7 +38,7 @@ from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect import Parameter, case, task
 from prefect.tasks.control_flow import merge
-
+from prefect.utilities.edges import unmapped
 
 # EMD Imports #
 
@@ -62,9 +62,7 @@ from pipelines.rj_smtr.schedules import every_day
 # CAPTURA DOS TICKETS #
 
 sppo_recurso_captura = deepcopy(default_capture_flow)
-sppo_recurso_captura.name = (
-    &#34;SMTR: Subsídio Recursos Viagens Individuais - Captura (subflow)&#34;
-)
+sppo_recurso_captura.name = &#34;SMTR: Subsídio Recursos - Captura (subflow)&#34;
 sppo_recurso_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_recurso_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
@@ -76,9 +74,7 @@ sppo_recurso_captura = set_default_parameters(
 )
 # RECAPTURA DOS TICKETS #
 sppo_recurso_recaptura = deepcopy(default_capture_flow)
-sppo_recurso_recaptura.name = (
-    &#34;SMTR: Subsídio Recursos Viagens Individuais - Recaptura (subflow)&#34;
-)
+sppo_recurso_recaptura.name = &#34;SMTR: Subsídio Recursos - Recaptura (subflow)&#34;
 sppo_recurso_recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_recurso_recaptura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
@@ -93,9 +89,7 @@ sppo_recurso_recaptura = set_default_parameters(
 # MATERIALIZAÇÃO DOS TICKETS #
 
 sppo_recurso_materializacao = deepcopy(default_materialization_flow)
-sppo_recurso_materializacao.name = (
-    &#34;SMTR: Subsídio Recursos Viagens Individuais - Materialização (subflow)&#34;
-)
+sppo_recurso_materializacao.name = &#34;SMTR: Subsídio Recursos - Materialização (subflow)&#34;
 sppo_recurso_materializacao.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_recurso_materializacao.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
@@ -108,46 +102,67 @@ sppo_recurso_materializacao = set_default_parameters(
 )
 
 with Flow(
-    &#34;SMTR: Subsídio Recursos Viagens Individuais - Captura/Tratamento&#34;,
+    &#34;SMTR: Subsídio Recursos - Captura/Tratamento&#34;,
     code_owners=[&#34;carolinagomes&#34;, &#34;rafaelpinheiro&#34;],
 ) as subsidio_sppo_recurso:
     capture = Parameter(&#34;capture&#34;, default=True)
     materialize = Parameter(&#34;materialize&#34;, default=True)
     recapture = Parameter(&#34;recapture&#34;, default=True)
     data_recurso = Parameter(&#34;data_recurso&#34;, default=None)
+    table_id = Parameter(&#34;table_id&#34;, default=None)
     interval_minutes = Parameter(&#34;interval_minutes&#34;, default=1440)
     timestamp = get_current_timestamp(data_recurso, return_str=True)
+    exclude = Parameter(&#34;exclude&#34;, default=None)
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=subsidio_sppo_recurso.name + &#34; &#34;,
         now_time=timestamp,
     )
-    recurso_capture_parameters = {
-        &#34;data_recurso&#34;: timestamp,
-        **constants.SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS.value[&#34;extract_params&#34;],
-    }
 
     LABELS = get_current_flow_labels()
 
+    recursos_capture_parameters = [
+        {
+            &#34;table_id&#34;: v,
+            &#34;extract_params&#34;: {
+                &#34;data_recurso&#34;: timestamp,
+                **constants.SUBSIDIO_SPPO_RECURSO_CAPTURE_PARAMS.value[
+                    &#34;extract_params&#34;
+                ],
+            },
+        }
+        for v in constants.SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS.value
+    ]
+
+    table_params = task(
+        lambda tables, exclude: [t for t in tables if t[&#34;table_id&#34;] not in exclude]
+        if exclude is not None
+        else tables,
+        checkpoint=False,
+        name=&#34;get_tables_to_run&#34;,
+    )(tables=constants.SUBSIDIO_SPPO_RECURSOS_TABLE_IDS.value, exclude=exclude)
+
     # Captura dos dados #
     with case(capture, True):
-        run_captura = create_flow_run(
-            flow_name=sppo_recurso_captura.name,
-            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters={&#34;extract_params&#34;: recurso_capture_parameters},
-            labels=LABELS,
+        run_captura = create_flow_run.map(
+            flow_name=unmapped(sppo_recurso_captura.name),
+            project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+            parameters=recursos_capture_parameters,
+            labels=unmapped(LABELS),
         )
 
-        wait_captura_true = wait_for_flow_run(
+        wait_captura_true = wait_for_flow_run.map(
             run_captura,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
+            stream_states=unmapped(True),
+            stream_logs=unmapped(True),
+            raise_final_state=unmapped(True),
         )
 
     with case(capture, False):
         wait_captura_false = task(
-            lambda: [None], checkpoint=False, name=&#34;assign_none_to_previous_runs&#34;
+            lambda: [None],
+            checkpoint=False,
+            name=&#34;assign_none_to_previous_runs&#34;,
         )()
 
     wait_captura = merge(wait_captura_true, wait_captura_false)
@@ -155,19 +170,18 @@ with Flow(
     # Recaptura dos dados #
 
     with case(recapture, True):
-        run_recaptura = create_flow_run(
-            flow_name=sppo_recurso_recaptura.name,
-            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            labels=LABELS,
+        run_recaptura = create_flow_run.map(
+            flow_name=unmapped(sppo_recurso_recaptura.name),
+            project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+            parameters=recursos_capture_parameters,
+            labels=unmapped(LABELS),
         )
 
-        run_recaptura.set_upstream(wait_captura)
-
-        wait_recaptura_true = wait_for_flow_run(
+        wait_recaptura_true = wait_for_flow_run.map(
             run_recaptura,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
+            stream_states=unmapped(True),
+            stream_logs=unmapped(True),
+            raise_final_state=unmapped(True),
         )
 
     with case(recapture, False):
@@ -180,20 +194,19 @@ with Flow(
     # Materialização dos dados #
 
     with case(materialize, True):
-        run_materializacao = create_flow_run(
-            flow_name=sppo_recurso_materializacao.name,
-            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            labels=LABELS,
+        run_materializacao = create_flow_run.map(
+            flow_name=unmapped(sppo_recurso_materializacao.name),
+            project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+            labels=unmapped(LABELS),
+            parameters=table_params,
             upstream_tasks=[wait_captura],
         )
 
-        run_materializacao.set_upstream(wait_recaptura)
-
-        wait_materializacao_true = wait_for_flow_run(
+        wait_materializacao_true = wait_for_flow_run.map(
             run_materializacao,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
+            stream_states=unmapped(True),
+            stream_logs=unmapped(True),
+            raise_final_state=unmapped(True),
         )
 
     with case(materialize, False):
@@ -223,6 +236,18 @@ subsidio_sppo_recurso.schedule = every_day</code></pre>
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="pipelines.rj_smtr.br_rj_riodejaneiro_recursos.flows.table_params"><code class="name flex">
+<span>def <span class="ident">table_params</span></span>(<span>tables, exclude)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">lambda tables, exclude: [t for t in tables if t[&#34;table_id&#34;] not in exclude]</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_smtr.br_rj_riodejaneiro_recursos.flows.wait_captura_false"><code class="name flex">
 <span>def <span class="ident">wait_captura_false</span></span>(<span>)</span>
 </code></dt>
@@ -232,7 +257,7 @@ subsidio_sppo_recurso.schedule = every_day</code></pre>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">lambda: [None], checkpoint=False, name=&#34;assign_none_to_previous_runs&#34;</code></pre>
+<pre><code class="python">lambda: [None],</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.br_rj_riodejaneiro_recursos.flows.wait_materializacao_false"><code class="name flex">
@@ -323,6 +348,7 @@ setTimeout(() => input.focus(), 100);
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_recursos.flows.table_params" href="#pipelines.rj_smtr.br_rj_riodejaneiro_recursos.flows.table_params">table_params</a></code></li>
 <li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_recursos.flows.wait_captura_false" href="#pipelines.rj_smtr.br_rj_riodejaneiro_recursos.flows.wait_captura_false">wait_captura_false</a></code></li>
 <li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_recursos.flows.wait_materializacao_false" href="#pipelines.rj_smtr.br_rj_riodejaneiro_recursos.flows.wait_materializacao_false">wait_materializacao_false</a></code></li>
 <li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_recursos.flows.wait_recaptura_false" href="#pipelines.rj_smtr.br_rj_riodejaneiro_recursos.flows.wait_recaptura_false">wait_recaptura_false</a></code></li>
