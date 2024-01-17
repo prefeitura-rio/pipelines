@@ -245,7 +245,7 @@ sppo_veiculo_dia.run_config = KubernetesRun(
 )
 
 veiculo_sppo_infracao_agente_verao_captura = deepcopy(default_capture_flow)
-veiculo_sppo_infracao_agente_verao_captura.name = f"SMTR: {constants.VEICULO_DATASET_ID.value} sppo_infracao_agente_verao - Captura (subflow)"
+veiculo_sppo_infracao_agente_verao_captura.name = f"SMTR: {constants.VEICULO_DATASET_ID.value} {constants.SPPO_INFRACAO_AGENTE_VERAO_PARAMS.value['table_id']} - Captura"
 veiculo_sppo_infracao_agente_verao_captura.storage = GCS(
     emd_constants.GCS_FLOWS_BUCKET.value
 )
