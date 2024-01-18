@@ -987,6 +987,7 @@ def compare_dates_between_tables_redis(
     date_1 = redis_client.hgetall(key_table_1)
     date_2 = redis_client.hgetall(key_table_2)
 
+    # Return true if there is no date_1 or date_2 saved on redis
     if (len(date_1) == 0) | (len(date_2) == 0):
         return True
 
@@ -996,8 +997,9 @@ def compare_dates_between_tables_redis(
     # Convert date to pendulum
     date_1 = pendulum.from_format(date_1["date"], format_date_table_1)
     date_2 = pendulum.from_format(date_2["date"], format_date_table_2)
-
-    return date_1 < date_2
+    comparison = date_1 < date_2
+    log(f"Is {date_2} bigger than {date_1}? {comparison}")
+    return comparison
 
 
 # pylint: disable=W0106
