@@ -260,3 +260,4 @@ veiculo_sppo_registro_agente_verao_captura = set_default_parameters(
     flow=veiculo_sppo_registro_agente_verao_captura,
     default_parameters=constants.SPPO_REGISTRO_AGENTE_VERAO_PARAMS.value,
 )
+veiculo_sppo_registro_agente_verao_captura.schedule = every_day_hour_seven
