@@ -19,12 +19,15 @@ from pipelines.rj_cor.meteorologia.precipitacao_alertario.constants import (
 )
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks import (
     check_to_run_dbt,
+    dump_from_ssh,
     tratar_dados,
+    treat_dumped_data,
     salvar_dados,
     save_last_dbt_update,
 )
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.schedules import (
     minute_schedule,
+    day_schedule,
 )
 from pipelines.rj_escritorio.rain_dashboard.constants import (
     constants as rain_dashboard_constants,
@@ -212,3 +215,28 @@ cor_meteorologia_precipitacao_alertario.run_config = KubernetesRun(
 )
 cor_meteorologia_precipitacao_alertario.executor = LocalDaskExecutor(num_workers=10)
 cor_meteorologia_precipitacao_alertario.schedule = minute_schedule
+
+with Flow(
+    name="COR: Meteorologia - Precipitacao ALERTARIO Backfill",
+    code_owners=[
+        "paty",
+    ],
+    # skip_if_running=True,
+) as cor_meteorologia_precipitacao_alertario_backfill:
+    mode = Parameter("mode", default="prod", required=False)
+    start_date = Parameter("start_date", default=None, required=False)
+    end_date = Parameter("end_date", default=None, required=False)
+
+    filepath = dump_from_ssh()
+    treat_dumped_data(filepath)
+    # dfr = treat_dumped_data(filepath, start_date, end_date)
+
+# para rodar na cloud
+cor_meteorologia_precipitacao_alertario_backfill.storage = GCS(
+    constants.GCS_FLOWS_BUCKET.value
+)
+cor_meteorologia_precipitacao_alertario_backfill.run_config = KubernetesRun(
+    image=constants.DOCKER_IMAGE.value,
+    labels=[constants.RJ_COR_AGENT_LABEL.value],
+)
+cor_meteorologia_precipitacao_alertario_backfill.schedule = day_schedule
