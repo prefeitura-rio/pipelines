@@ -208,7 +208,7 @@ def save_last_dbt_update(
     last_update = get_redis_output(last_update_key)
     redis_key = build_redis_key(dataset_id, table_id, name="dbt_last_update", mode=mode)
     log(f"Saving {last_update} as last time dbt was updated")
-    save_str_on_redis(redis_key, "date", last_update)
+    save_str_on_redis(redis_key, "date", last_update["date"])
 
 
 @task(skip_on_upstream_skip=False)
