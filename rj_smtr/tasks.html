@@ -821,6 +821,11 @@ def create_request_params(
     elif dataset_id == constants.STU_DATASET_ID.value:
         request_params = {&#34;bucket_name&#34;: constants.STU_BUCKET_NAME.value}
 
+    elif dataset_id == constants.VEICULO_DATASET_ID.value:
+        request_url = get_vault_secret(extract_params[&#34;secret_path&#34;])[&#34;data&#34;][
+            &#34;request_url&#34;
+        ]
+
     return request_params, request_url
 
 
@@ -2377,6 +2382,11 @@ def create_request_params(
 
     elif dataset_id == constants.STU_DATASET_ID.value:
         request_params = {&#34;bucket_name&#34;: constants.STU_BUCKET_NAME.value}
+
+    elif dataset_id == constants.VEICULO_DATASET_ID.value:
+        request_url = get_vault_secret(extract_params[&#34;secret_path&#34;])[&#34;data&#34;][
+            &#34;request_url&#34;
+        ]
 
     return request_params, request_url</code></pre>
 </details>

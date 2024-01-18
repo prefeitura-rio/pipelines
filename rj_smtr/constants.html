@@ -728,7 +728,90 @@ and createdDate lt {end})&#34;,
     DIRETORIO_MATERIALIZACAO_TABLE_PARAMS = [
         {&#34;table_id&#34;: &#34;diretorio_consorcios&#34;},
         {&#34;table_id&#34;: &#34;operadoras_contatos&#34;},
-    ]</code></pre>
+    ]
+
+    # VEICULO
+    VEICULO_DATASET_ID = &#34;veiculo&#34;
+
+    # VEÍCULOS LICENCIADOS
+    # flake8: noqa: E501
+    SPPO_LICENCIAMENTO_URL = &#34;https://siurblab.rio.rj.gov.br/SMTR/DADOS%20CADASTRAIS/Cadastro%20de%20Veiculos.txt&#34;
+    SPPO_LICENCIAMENTO_MAPPING_KEYS = {
+        &#34;placa&#34;: &#34;placa&#34;,
+        &#34;ordem&#34;: &#34;id_veiculo&#34;,
+        &#34;permissao&#34;: &#34;permissao&#34;,
+        &#34;modal&#34;: &#34;modo&#34;,
+        &#34;ultima_vistoria&#34;: &#34;data_ultima_vistoria&#34;,
+        &#34;cod_planta&#34;: &#34;id_planta&#34;,
+        &#34;cod_mod_carroceria&#34;: &#34;id_carroceria&#34;,
+        &#34;cod_fab_carroceria&#34;: &#34;id_interno_carroceria&#34;,
+        &#34;des_mod_carroceria&#34;: &#34;carroceria&#34;,
+        &#34;cod_mod_chassi&#34;: &#34;id_chassi&#34;,
+        &#34;cod_fab_chassi&#34;: &#34;id_fabricante_chassi&#34;,
+        &#34;des_mod_chassi&#34;: &#34;nome_chassi&#34;,
+        &#34;lotacao_sentado&#34;: &#34;quantidade_lotacao_sentado&#34;,
+        &#34;lotacao_pe&#34;: &#34;quantidade_lotacao_pe&#34;,
+        &#34;elevador&#34;: &#34;indicador_elevador&#34;,
+        &#34;ar_condicionado&#34;: &#34;indicador_ar_condicionado_stu&#34;,
+        &#34;tipo_veiculo&#34;: &#34;tipo_veiculo&#34;,
+        &#34;combustivel&#34;: &#34;tipo_combustivel&#34;,
+        &#34;portas&#34;: &#34;quantidade_portas&#34;,
+        &#34;ano_fabricacao&#34;: &#34;ano_fabricacao&#34;,
+        &#34;wifi&#34;: &#34;indicador_wifi&#34;,
+        &#34;usb&#34;: &#34;indicador_usb&#34;,
+        &#34;data_inicio_vinculo&#34;: &#34;data_inicio_vinculo&#34;,
+    }
+    SPPO_LICENCIAMENTO_CSV_ARGS = {
+        &#34;sep&#34;: &#34;;&#34;,
+        &#34;names&#34;: SPPO_LICENCIAMENTO_MAPPING_KEYS.keys(),  # pylint: disable=e1101
+    }
+    SPPO_LICENCIAMENTO_TABLE_ID = &#34;sppo_licenciamento_stu&#34;
+
+    # INFRAÇÃO
+    SPPO_INFRACAO_URL = &#34;https://siurblab.rio.rj.gov.br/SMTR/Multas/multas.txt&#34;
+    SPPO_INFRACAO_MAPPING_KEYS = {
+        &#34;permissao&#34;: &#34;permissao&#34;,
+        &#34;modal&#34;: &#34;modo&#34;,
+        &#34;placa&#34;: &#34;placa&#34;,
+        &#34;cm&#34;: &#34;id_auto_infracao&#34;,
+        &#34;data_infracao&#34;: &#34;data_infracao&#34;,
+        &#34;valor&#34;: &#34;valor&#34;,
+        &#34;cod_infracao&#34;: &#34;id_infracao&#34;,
+        &#34;des_infracao&#34;: &#34;infracao&#34;,
+        &#34;status&#34;: &#34;status&#34;,
+        &#34;data_pagamento&#34;: &#34;data_pagamento&#34;,
+    }
+    SPPO_INFRACAO_CSV_ARGS = {
+        &#34;sep&#34;: &#34;;&#34;,
+        &#34;names&#34;: SPPO_INFRACAO_MAPPING_KEYS.keys(),  # pylint: disable=e1101
+    }
+    SPPO_INFRACAO_TABLE_ID = &#34;sppo_infracao&#34;
+
+    # VEÍCULO DIA
+    SPPO_VEICULO_DIA_TABLE_ID = &#34;sppo_veiculo_dia&#34;
+
+    # AUTUAÇÕES - AGENTES DE VERÃO
+    SPPO_REGISTRO_AGENTE_VERAO_COLUMNS = [
+        &#34;datetime_registro&#34;,
+        &#34;email&#34;,
+        &#34;id_veiculo&#34;,
+        &#34;servico&#34;,
+        &#34;link_foto&#34;,
+        &#34;validacao&#34;,
+    ]
+
+    SPPO_REGISTRO_AGENTE_VERAO_PARAMS = {
+        &#34;partition_date_only&#34;: True,
+        &#34;source_type&#34;: &#34;api-csv&#34;,
+        &#34;dataset_id&#34;: VEICULO_DATASET_ID,
+        &#34;table_id&#34;: &#34;sppo_registro_agente_verao&#34;,
+        &#34;extract_params&#34;: {&#34;secret_path&#34;: &#34;smtr_agentes_verao&#34;},
+        &#34;pre_treatment_reader_args&#34;: {
+            &#34;skiprows&#34;: 2,
+            &#34;names&#34;: SPPO_REGISTRO_AGENTE_VERAO_COLUMNS,
+        },
+        &#34;primary_key&#34;: [&#34;datetime_registro&#34;, &#34;email&#34;],
+    }</code></pre>
 </details>
 </section>
 <section>
@@ -1443,7 +1526,90 @@ and createdDate lt {end})&#34;,
     DIRETORIO_MATERIALIZACAO_TABLE_PARAMS = [
         {&#34;table_id&#34;: &#34;diretorio_consorcios&#34;},
         {&#34;table_id&#34;: &#34;operadoras_contatos&#34;},
-    ]</code></pre>
+    ]
+
+    # VEICULO
+    VEICULO_DATASET_ID = &#34;veiculo&#34;
+
+    # VEÍCULOS LICENCIADOS
+    # flake8: noqa: E501
+    SPPO_LICENCIAMENTO_URL = &#34;https://siurblab.rio.rj.gov.br/SMTR/DADOS%20CADASTRAIS/Cadastro%20de%20Veiculos.txt&#34;
+    SPPO_LICENCIAMENTO_MAPPING_KEYS = {
+        &#34;placa&#34;: &#34;placa&#34;,
+        &#34;ordem&#34;: &#34;id_veiculo&#34;,
+        &#34;permissao&#34;: &#34;permissao&#34;,
+        &#34;modal&#34;: &#34;modo&#34;,
+        &#34;ultima_vistoria&#34;: &#34;data_ultima_vistoria&#34;,
+        &#34;cod_planta&#34;: &#34;id_planta&#34;,
+        &#34;cod_mod_carroceria&#34;: &#34;id_carroceria&#34;,
+        &#34;cod_fab_carroceria&#34;: &#34;id_interno_carroceria&#34;,
+        &#34;des_mod_carroceria&#34;: &#34;carroceria&#34;,
+        &#34;cod_mod_chassi&#34;: &#34;id_chassi&#34;,
+        &#34;cod_fab_chassi&#34;: &#34;id_fabricante_chassi&#34;,
+        &#34;des_mod_chassi&#34;: &#34;nome_chassi&#34;,
+        &#34;lotacao_sentado&#34;: &#34;quantidade_lotacao_sentado&#34;,
+        &#34;lotacao_pe&#34;: &#34;quantidade_lotacao_pe&#34;,
+        &#34;elevador&#34;: &#34;indicador_elevador&#34;,
+        &#34;ar_condicionado&#34;: &#34;indicador_ar_condicionado_stu&#34;,
+        &#34;tipo_veiculo&#34;: &#34;tipo_veiculo&#34;,
+        &#34;combustivel&#34;: &#34;tipo_combustivel&#34;,
+        &#34;portas&#34;: &#34;quantidade_portas&#34;,
+        &#34;ano_fabricacao&#34;: &#34;ano_fabricacao&#34;,
+        &#34;wifi&#34;: &#34;indicador_wifi&#34;,
+        &#34;usb&#34;: &#34;indicador_usb&#34;,
+        &#34;data_inicio_vinculo&#34;: &#34;data_inicio_vinculo&#34;,
+    }
+    SPPO_LICENCIAMENTO_CSV_ARGS = {
+        &#34;sep&#34;: &#34;;&#34;,
+        &#34;names&#34;: SPPO_LICENCIAMENTO_MAPPING_KEYS.keys(),  # pylint: disable=e1101
+    }
+    SPPO_LICENCIAMENTO_TABLE_ID = &#34;sppo_licenciamento_stu&#34;
+
+    # INFRAÇÃO
+    SPPO_INFRACAO_URL = &#34;https://siurblab.rio.rj.gov.br/SMTR/Multas/multas.txt&#34;
+    SPPO_INFRACAO_MAPPING_KEYS = {
+        &#34;permissao&#34;: &#34;permissao&#34;,
+        &#34;modal&#34;: &#34;modo&#34;,
+        &#34;placa&#34;: &#34;placa&#34;,
+        &#34;cm&#34;: &#34;id_auto_infracao&#34;,
+        &#34;data_infracao&#34;: &#34;data_infracao&#34;,
+        &#34;valor&#34;: &#34;valor&#34;,
+        &#34;cod_infracao&#34;: &#34;id_infracao&#34;,
+        &#34;des_infracao&#34;: &#34;infracao&#34;,
+        &#34;status&#34;: &#34;status&#34;,
+        &#34;data_pagamento&#34;: &#34;data_pagamento&#34;,
+    }
+    SPPO_INFRACAO_CSV_ARGS = {
+        &#34;sep&#34;: &#34;;&#34;,
+        &#34;names&#34;: SPPO_INFRACAO_MAPPING_KEYS.keys(),  # pylint: disable=e1101
+    }
+    SPPO_INFRACAO_TABLE_ID = &#34;sppo_infracao&#34;
+
+    # VEÍCULO DIA
+    SPPO_VEICULO_DIA_TABLE_ID = &#34;sppo_veiculo_dia&#34;
+
+    # AUTUAÇÕES - AGENTES DE VERÃO
+    SPPO_REGISTRO_AGENTE_VERAO_COLUMNS = [
+        &#34;datetime_registro&#34;,
+        &#34;email&#34;,
+        &#34;id_veiculo&#34;,
+        &#34;servico&#34;,
+        &#34;link_foto&#34;,
+        &#34;validacao&#34;,
+    ]
+
+    SPPO_REGISTRO_AGENTE_VERAO_PARAMS = {
+        &#34;partition_date_only&#34;: True,
+        &#34;source_type&#34;: &#34;api-csv&#34;,
+        &#34;dataset_id&#34;: VEICULO_DATASET_ID,
+        &#34;table_id&#34;: &#34;sppo_registro_agente_verao&#34;,
+        &#34;extract_params&#34;: {&#34;secret_path&#34;: &#34;smtr_agentes_verao&#34;},
+        &#34;pre_treatment_reader_args&#34;: {
+            &#34;skiprows&#34;: 2,
+            &#34;names&#34;: SPPO_REGISTRO_AGENTE_VERAO_COLUMNS,
+        },
+        &#34;primary_key&#34;: [&#34;datetime_registro&#34;, &#34;email&#34;],
+    }</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1719,11 +1885,55 @@ and createdDate lt {end})&#34;,
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="pipelines.rj_smtr.constants.constants.SPPO_INFRACAO_CSV_ARGS"><code class="name">var <span class="ident">SPPO_INFRACAO_CSV_ARGS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.SPPO_INFRACAO_MAPPING_KEYS"><code class="name">var <span class="ident">SPPO_INFRACAO_MAPPING_KEYS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.SPPO_INFRACAO_TABLE_ID"><code class="name">var <span class="ident">SPPO_INFRACAO_TABLE_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.SPPO_INFRACAO_URL"><code class="name">var <span class="ident">SPPO_INFRACAO_URL</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.SPPO_LICENCIAMENTO_CSV_ARGS"><code class="name">var <span class="ident">SPPO_LICENCIAMENTO_CSV_ARGS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.SPPO_LICENCIAMENTO_MAPPING_KEYS"><code class="name">var <span class="ident">SPPO_LICENCIAMENTO_MAPPING_KEYS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.SPPO_LICENCIAMENTO_TABLE_ID"><code class="name">var <span class="ident">SPPO_LICENCIAMENTO_TABLE_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.SPPO_LICENCIAMENTO_URL"><code class="name">var <span class="ident">SPPO_LICENCIAMENTO_URL</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="pipelines.rj_smtr.constants.constants.SPPO_RDO_TABLE_ID"><code class="name">var <span class="ident">SPPO_RDO_TABLE_ID</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="pipelines.rj_smtr.constants.constants.SPPO_REGISTRO_AGENTE_VERAO_COLUMNS"><code class="name">var <span class="ident">SPPO_REGISTRO_AGENTE_VERAO_COLUMNS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.SPPO_REGISTRO_AGENTE_VERAO_PARAMS"><code class="name">var <span class="ident">SPPO_REGISTRO_AGENTE_VERAO_PARAMS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="pipelines.rj_smtr.constants.constants.SPPO_RHO_TABLE_ID"><code class="name">var <span class="ident">SPPO_RHO_TABLE_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.SPPO_VEICULO_DIA_TABLE_ID"><code class="name">var <span class="ident">SPPO_VEICULO_DIA_TABLE_ID</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1812,6 +2022,10 @@ and createdDate lt {end})&#34;,
 <div class="desc"></div>
 </dd>
 <dt id="pipelines.rj_smtr.constants.constants.TIMEZONE"><code class="name">var <span class="ident">TIMEZONE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.VEICULO_DATASET_ID"><code class="name">var <span class="ident">VEICULO_DATASET_ID</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1949,8 +2163,19 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.constants.constants.SIGMOB_ENDPOINTS" href="#pipelines.rj_smtr.constants.constants.SIGMOB_ENDPOINTS">SIGMOB_ENDPOINTS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SIGMOB_GET_REQUESTS_TIMEOUT" href="#pipelines.rj_smtr.constants.constants.SIGMOB_GET_REQUESTS_TIMEOUT">SIGMOB_GET_REQUESTS_TIMEOUT</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SIGMOB_PAGES_FOR_CSV_FILE" href="#pipelines.rj_smtr.constants.constants.SIGMOB_PAGES_FOR_CSV_FILE">SIGMOB_PAGES_FOR_CSV_FILE</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.SPPO_INFRACAO_CSV_ARGS" href="#pipelines.rj_smtr.constants.constants.SPPO_INFRACAO_CSV_ARGS">SPPO_INFRACAO_CSV_ARGS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.SPPO_INFRACAO_MAPPING_KEYS" href="#pipelines.rj_smtr.constants.constants.SPPO_INFRACAO_MAPPING_KEYS">SPPO_INFRACAO_MAPPING_KEYS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.SPPO_INFRACAO_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.SPPO_INFRACAO_TABLE_ID">SPPO_INFRACAO_TABLE_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.SPPO_INFRACAO_URL" href="#pipelines.rj_smtr.constants.constants.SPPO_INFRACAO_URL">SPPO_INFRACAO_URL</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.SPPO_LICENCIAMENTO_CSV_ARGS" href="#pipelines.rj_smtr.constants.constants.SPPO_LICENCIAMENTO_CSV_ARGS">SPPO_LICENCIAMENTO_CSV_ARGS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.SPPO_LICENCIAMENTO_MAPPING_KEYS" href="#pipelines.rj_smtr.constants.constants.SPPO_LICENCIAMENTO_MAPPING_KEYS">SPPO_LICENCIAMENTO_MAPPING_KEYS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.SPPO_LICENCIAMENTO_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.SPPO_LICENCIAMENTO_TABLE_ID">SPPO_LICENCIAMENTO_TABLE_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.SPPO_LICENCIAMENTO_URL" href="#pipelines.rj_smtr.constants.constants.SPPO_LICENCIAMENTO_URL">SPPO_LICENCIAMENTO_URL</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SPPO_RDO_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.SPPO_RDO_TABLE_ID">SPPO_RDO_TABLE_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.SPPO_REGISTRO_AGENTE_VERAO_COLUMNS" href="#pipelines.rj_smtr.constants.constants.SPPO_REGISTRO_AGENTE_VERAO_COLUMNS">SPPO_REGISTRO_AGENTE_VERAO_COLUMNS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.SPPO_REGISTRO_AGENTE_VERAO_PARAMS" href="#pipelines.rj_smtr.constants.constants.SPPO_REGISTRO_AGENTE_VERAO_PARAMS">SPPO_REGISTRO_AGENTE_VERAO_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SPPO_RHO_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.SPPO_RHO_TABLE_ID">SPPO_RHO_TABLE_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.SPPO_VEICULO_DIA_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.SPPO_VEICULO_DIA_TABLE_ID">SPPO_VEICULO_DIA_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.STPL_RDO_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.STPL_RDO_TABLE_ID">STPL_RDO_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.STPL_RHO_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.STPL_RHO_TABLE_ID">STPL_RHO_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.STU_BUCKET_NAME" href="#pipelines.rj_smtr.constants.constants.STU_BUCKET_NAME">STU_BUCKET_NAME</a></code></li>
@@ -1973,6 +2198,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.constants.constants.TASK_MAX_RETRIES" href="#pipelines.rj_smtr.constants.constants.TASK_MAX_RETRIES">TASK_MAX_RETRIES</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.TASK_RETRY_DELAY" href="#pipelines.rj_smtr.constants.constants.TASK_RETRY_DELAY">TASK_RETRY_DELAY</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.TIMEZONE" href="#pipelines.rj_smtr.constants.constants.TIMEZONE">TIMEZONE</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.VEICULO_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.VEICULO_DATASET_ID">VEICULO_DATASET_ID</a></code></li>
 </ul>
 </li>
 </ul>
