@@ -453,26 +453,6 @@ class constants(Enum):  # pylint: disable=c0103
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
             "save_bucket_name": BILHETAGEM_PRIVATE_BUCKET,
         },
-        {
-            "table_id": "tipo_modal",
-            "partition_date_only": True,
-            "extract_params": {
-                "database": "principal_db",
-                "query": """
-                    SELECT
-                        *
-                    FROM
-                        TIPO_MODAL
-                    WHERE
-                        {update}
-                """,
-                "get_updates": ["cd_tipo_modal", "ds_tipo_modal"],
-            },
-            "primary_key": [
-                "CD_TIPO_MODAL",
-            ],  # id column to nest data on
-            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
-        },
     ]
 
     BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS = {
