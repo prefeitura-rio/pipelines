@@ -242,6 +242,8 @@ bilhetagem_materializacao_gps_validador = set_default_parameters(
     default_parameters=constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_PARAMS.value,
 )
 
+bilhetagem_materializacao_gps_validador.state_handlers.append(skip_if_running_handler)
+
 
 # RECAPTURA #
 
