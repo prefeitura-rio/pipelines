@@ -962,6 +962,18 @@ def save_str_on_redis(
     redis_client.hset(redis_key, key, value)
 
 
+def get_redis_output(redis_key):
+    """
+    Get Redis output
+    Example: {b'date': b'2023-02-27 07:29:04'}
+    """
+    redis_client = get_redis_client()
+    output = redis_client.hgetall(redis_key)
+    if len(output) > 0:
+        output = treat_redis_output(output)
+    return output
+
+
 def treat_redis_output(text):
     """
     Redis returns a dict where both key and value are byte string
@@ -981,23 +993,20 @@ def compare_dates_between_tables_redis(
     table is bigger then the first one
     """
 
-    redis_client = get_redis_client()
-
     # get saved date on redis
-    date_1 = redis_client.hgetall(key_table_1)
-    date_2 = redis_client.hgetall(key_table_2)
+    date_1 = get_redis_output(key_table_1)
+    date_2 = get_redis_output(key_table_2)
 
+    # Return true if there is no date_1 or date_2 saved on redis
     if (len(date_1) == 0) | (len(date_2) == 0):
         return True
-
-    date_1 = treat_redis_output(date_1)
-    date_2 = treat_redis_output(date_2)
 
     # Convert date to pendulum
     date_1 = pendulum.from_format(date_1["date"], format_date_table_1)
     date_2 = pendulum.from_format(date_2["date"], format_date_table_2)
-
-    return date_1 < date_2
+    comparison = date_1 < date_2
+    log(f"Is {date_2} bigger than {date_1}? {comparison}")
+    return comparison
 
 
 # pylint: disable=W0106
