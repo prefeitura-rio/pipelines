@@ -24,6 +24,7 @@ from pipelines.rj_cor.meteorologia.precipitacao_alertario.utils import (
 from pipelines.utils.utils import (
     build_redis_key,
     compare_dates_between_tables_redis,
+    get_redis_output,
     log,
     to_partitions,
     save_str_on_redis,
@@ -201,9 +202,13 @@ def save_last_dbt_update(
     """
     Save on dbt last timestamp where it was updated
     """
-    now = pendulum.now("America/Sao_Paulo").to_datetime_string()
+    last_update_key = build_redis_key(
+        dataset_id, table_id, name="last_update", mode=mode
+    )
+    last_update = get_redis_output(last_update_key)
     redis_key = build_redis_key(dataset_id, table_id, name="dbt_last_update", mode=mode)
-    save_str_on_redis(redis_key, "date", now)
+    log(f"Saving {last_update} as last time dbt was updated")
+    save_str_on_redis(redis_key, "date", last_update["date"])
 
 
 @task(skip_on_upstream_skip=False)
