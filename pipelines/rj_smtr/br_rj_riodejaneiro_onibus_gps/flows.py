@@ -419,7 +419,8 @@ with Flow(
 
     materialize_no_error = create_flow_run(
         flow_name=materialize_sppo.name,
-        project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+        # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+        project_name="staging",
         labels=LABELS,
         run_name=materialize_sppo.name,
         parameters={
