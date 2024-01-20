@@ -411,6 +411,7 @@ with Flow(
         dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
         table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
         datetime_filter=datetime_filter,
+        overwrite_project="rj-smtr-staging",
     )
 
     rename_flow_run = rename_current_flow_run_now_time(

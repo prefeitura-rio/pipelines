@@ -443,6 +443,7 @@ def query_logs(
     max_recaptures: int = 90,
     interval_minutes: int = 1,
     recapture_window_days: int = 1,
+    overwrite_project: str = None,
 ):
     """
     Queries capture logs to check for errors
@@ -473,6 +474,7 @@ def query_logs(
         )
 
     datetime_filter = datetime_filter.strftime("%Y-%m-%d %H:%M:%S")
+    project = overwrite_project or bq_project(kind="bigquery_staging")
 
     query = f"""
     WITH
@@ -496,7 +498,7 @@ def query_logs(
                 SAFE_CAST(erro AS STRING) erro,
                 SAFE_CAST(DATA AS DATE) DATA
             FROM
-                {bq_project(kind="bigquery_staging")}.{dataset_id}_staging.{table_id}_logs AS t
+                {project}.{dataset_id}_staging.{table_id}_logs AS t
         ),
         logs AS (
             SELECT
