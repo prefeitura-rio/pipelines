@@ -53,7 +53,7 @@ from pipelines.rj_smtr.schedules import (
     every_hour_minute_six,
     every_minute,
     every_10_minutes,
-    every_15_minute_dev
+    every_15_minute_dev,
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
