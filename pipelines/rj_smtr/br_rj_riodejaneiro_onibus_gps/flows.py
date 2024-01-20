@@ -401,41 +401,39 @@ with Flow(
 ) as recaptura:
     version = Parameter("version", default=2)
     datetime_filter = Parameter("datetime_filter", default=None)
-    materialize = Parameter("materialize", default=True)
     rebuild = Parameter("rebuild", default=False)
 
     # SETUP #
     LABELS = get_current_flow_labels()
 
-    errors, timestamps, previous_errors = query_logs(
-        dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
-        table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
-        datetime_filter=datetime_filter,
-        overwrite_project="rj-smtr-staging",
-    )
+    # errors, timestamps, previous_errors = query_logs(
+    #     dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
+    #     table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
+    #     datetime_filter=datetime_filter,
+    #     overwrite_project="rj-smtr-staging",
+    # )
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=recaptura.name + ": ", now_time=get_now_time(), wait=timestamps
     )
-    with case(errors, False):
-        with case(materialize, True):
-            materialize_no_error = create_flow_run(
-                flow_name=materialize_sppo.name,
-                project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-                labels=LABELS,
-                run_name=materialize_sppo.name,
-                parameters={
-                    "table_id": constants.GPS_SPPO_15_MIN_TREATED_TABLE_ID.value,
-                    "rebuild": rebuild,
-                    "materialize_delay_hours": 0.25,
-                },
-            )
-            wait_materialize_no_error = wait_for_flow_run(
-                materialize_no_error,
-                stream_states=True,
-                stream_logs=True,
-                raise_final_state=True,
-            )
+
+    materialize_no_error = create_flow_run(
+        flow_name=materialize_sppo.name,
+        project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+        labels=LABELS,
+        run_name=materialize_sppo.name,
+        parameters={
+            "table_id": constants.GPS_SPPO_15_MIN_TREATED_TABLE_ID.value,
+            "rebuild": rebuild,
+            "materialize_delay_hours": 0.25,
+        },
+    )
+    wait_materialize_no_error = wait_for_flow_run(
+        materialize_no_error,
+        stream_states=True,
+        stream_logs=True,
+        raise_final_state=True,
+    )
     # with case(errors, True):
     #     # SETUP #
     #     partitions = create_date_hour_partition.map(timestamps)
