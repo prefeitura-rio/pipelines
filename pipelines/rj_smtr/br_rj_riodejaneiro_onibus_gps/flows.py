@@ -414,7 +414,7 @@ with Flow(
     # )
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=recaptura.name + ": ", now_time=get_now_time(), wait=timestamps
+        prefix=recaptura.name + ": ", now_time=get_now_time()
     )
 
     materialize_no_error = create_flow_run(
