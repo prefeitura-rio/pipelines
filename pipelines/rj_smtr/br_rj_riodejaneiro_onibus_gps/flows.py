@@ -391,11 +391,14 @@ recaptura.schedule = every_hour_minute_six
 
 
 with Flow(
-    "SMTR: GPS SPPO - Tratamento", code_owners=["caio", "fernanda", "boris", "rodrigo"]
+    "SMTR: GPS SPPO 15 Minutos - Tratamento",
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as recaptura:
     version = Parameter("version", default=2)
     datetime_filter = Parameter("datetime_filter", default=None)
     materialize = Parameter("materialize", default=True)
+    rebuild = Parameter("rebuild", default=False)
+
     # SETUP #
     LABELS = get_current_flow_labels()
 
@@ -415,6 +418,10 @@ with Flow(
                 project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
                 labels=LABELS,
                 run_name=materialize_sppo.name,
+                parameters={
+                    "table_id": constants.GPS_SPPO_15_MIN_TREATED_TABLE_ID.value,
+                    "rebuild": rebuild,
+                },
             )
             wait_materialize_no_error = wait_for_flow_run(
                 materialize_no_error,
@@ -478,6 +485,10 @@ with Flow(
                 project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
                 labels=LABELS,
                 run_name=materialize_sppo.name,
+                parameters={
+                    "table_id": constants.GPS_SPPO_15_MIN_TREATED_TABLE_ID.value,
+                    "rebuild": rebuild,
+                },
             )
             wait_materialize = wait_for_flow_run(
                 run_materialize,
