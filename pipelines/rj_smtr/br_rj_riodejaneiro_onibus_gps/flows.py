@@ -160,6 +160,8 @@ with Flow(
         default=constants.GPS_SPPO_MATERIALIZE_DELAY_HOURS.value,
     )
 
+    truncate_minutes = Parameter("truncate_minutes", default=True)
+
     LABELS = get_current_flow_labels()
     MODE = get_current_flow_mode(LABELS)
 
@@ -177,6 +179,7 @@ with Flow(
         table_run_datetime_column_name="timestamp_gps",
         mode=MODE,
         delay_hours=materialize_delay_hours,
+        truncate_minutes=truncate_minutes,
     )
     dataset_sha = fetch_dataset_sha(
         dataset_id=dataset_id,
@@ -427,6 +430,7 @@ with Flow(
             "table_id": constants.GPS_SPPO_15_MIN_TREATED_TABLE_ID.value,
             "rebuild": rebuild,
             "materialize_delay_hours": 0.25,
+            "truncate_minutes": False,
         },
     )
     wait_materialize_no_error = wait_for_flow_run(
