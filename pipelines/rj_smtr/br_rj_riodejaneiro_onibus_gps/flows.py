@@ -429,7 +429,7 @@ with Flow(
         parameters={
             "table_id": constants.GPS_SPPO_15_MIN_TREATED_TABLE_ID.value,
             "rebuild": rebuild,
-            "materialize_delay_hours": 0.25,
+            "materialize_delay_hours": 0,
             "truncate_minutes": False,
         },
     )
