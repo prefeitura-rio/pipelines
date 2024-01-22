@@ -192,17 +192,33 @@ class constants(Enum):  # pylint: disable=c0103
             GROUP BY id_h3
             ),
 
+            -- choosing the neighborhood that shares the most intersection with the given H3 ID
+            intersected_areas AS (
+              SELECT
+                h3_grid.id AS id_h3,
+                bairros.nome AS bairro,
+                -- h3_grid.geometry,
+                -- bairros.geometry,
+                ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) AS intersection_area,
+                ROW_NUMBER() OVER (PARTITION BY h3_grid.id ORDER BY ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) DESC) AS row_num
+              FROM
+                `rj-cor.dados_mestres.h3_grid_res8` h3_grid
+              LEFT JOIN
+                `rj-cor.dados_mestres.bairro` AS bairros
+              ON
+                ST_INTERSECTS(bairros.geometry, h3_grid.geometry)
+            ),
+
             final_table AS (
             SELECT
                 h3_media.id_h3,
-                nome AS bairro,
-                estacoes,
+                intersected_areas.bairro,
+                h3_media.estacoes,
                 cast(round(h3_media.chuva_15min,2) AS decimal) AS chuva_15min,
             FROM h3_media
-            LEFT JOIN `rj-cor.dados_mestres.h3_grid_res8` h3_grid
-                ON h3_grid.id=h3_media.id_h3
-            LEFT JOIN `rj-cor.dados_mestres.bairro`
-                ON ST_CONTAINS(`rj-cor.dados_mestres.bairro`.geometry, ST_CENTROID(h3_grid.geometry))
+            LEFT JOIN intersected_areas
+                ON intersected_areas.id_h3=h3_media.id_h3
+            WHERE  intersected_areas.row_num = 1
             )
 
         SELECT
