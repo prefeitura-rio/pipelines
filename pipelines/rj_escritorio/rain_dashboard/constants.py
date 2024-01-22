@@ -216,7 +216,7 @@ class constants(Enum):  # pylint: disable=c0103
                 h3_media.estacoes,
                 cast(round(h3_media.chuva_15min,2) AS decimal) AS chuva_15min,
             FROM h3_media
-            LEFT JOIN intersected_areas
+            INNER JOIN intersected_areas
                 ON intersected_areas.id_h3=h3_media.id_h3
             WHERE  intersected_areas.row_num = 1
             )
