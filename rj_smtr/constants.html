@@ -482,26 +482,6 @@ class constants(Enum):  # pylint: disable=c0103
             &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
             &#34;save_bucket_name&#34;: BILHETAGEM_PRIVATE_BUCKET,
         },
-        {
-            &#34;table_id&#34;: &#34;tipo_modal&#34;,
-            &#34;partition_date_only&#34;: True,
-            &#34;extract_params&#34;: {
-                &#34;database&#34;: &#34;principal_db&#34;,
-                &#34;query&#34;: &#34;&#34;&#34;
-                    SELECT
-                        *
-                    FROM
-                        TIPO_MODAL
-                    WHERE
-                        {update}
-                &#34;&#34;&#34;,
-                &#34;get_updates&#34;: [&#34;cd_tipo_modal&#34;, &#34;ds_tipo_modal&#34;],
-            },
-            &#34;primary_key&#34;: [
-                &#34;CD_TIPO_MODAL&#34;,
-            ],  # id column to nest data on
-            &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
-        },
     ]
 
     BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS = {
@@ -540,6 +520,20 @@ class constants(Enum):  # pylint: disable=c0103
         &#34;dbt_vars&#34;: {
             &#34;date_range&#34;: {
                 &#34;table_run_datetime_column_name&#34;: &#34;data_ordem&#34;,
+                &#34;delay_hours&#34;: 0,
+            },
+            &#34;version&#34;: {},
+        },
+    }
+
+    BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_PARAMS = {
+        &#34;dataset_id&#34;: BILHETAGEM_DATASET_ID,
+        &#34;table_id&#34;: &#34;gps_validador&#34;,
+        &#34;upstream&#34;: True,
+        &#34;exclude&#34;: &#34;+operadoras +consorcios&#34;,
+        &#34;dbt_vars&#34;: {
+            &#34;date_range&#34;: {
+                &#34;table_run_datetime_column_name&#34;: &#34;datetime_captura&#34;,
                 &#34;delay_hours&#34;: 0,
             },
             &#34;version&#34;: {},
@@ -1280,26 +1274,6 @@ and createdDate lt {end})&#34;,
             &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
             &#34;save_bucket_name&#34;: BILHETAGEM_PRIVATE_BUCKET,
         },
-        {
-            &#34;table_id&#34;: &#34;tipo_modal&#34;,
-            &#34;partition_date_only&#34;: True,
-            &#34;extract_params&#34;: {
-                &#34;database&#34;: &#34;principal_db&#34;,
-                &#34;query&#34;: &#34;&#34;&#34;
-                    SELECT
-                        *
-                    FROM
-                        TIPO_MODAL
-                    WHERE
-                        {update}
-                &#34;&#34;&#34;,
-                &#34;get_updates&#34;: [&#34;cd_tipo_modal&#34;, &#34;ds_tipo_modal&#34;],
-            },
-            &#34;primary_key&#34;: [
-                &#34;CD_TIPO_MODAL&#34;,
-            ],  # id column to nest data on
-            &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
-        },
     ]
 
     BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS = {
@@ -1338,6 +1312,20 @@ and createdDate lt {end})&#34;,
         &#34;dbt_vars&#34;: {
             &#34;date_range&#34;: {
                 &#34;table_run_datetime_column_name&#34;: &#34;data_ordem&#34;,
+                &#34;delay_hours&#34;: 0,
+            },
+            &#34;version&#34;: {},
+        },
+    }
+
+    BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_PARAMS = {
+        &#34;dataset_id&#34;: BILHETAGEM_DATASET_ID,
+        &#34;table_id&#34;: &#34;gps_validador&#34;,
+        &#34;upstream&#34;: True,
+        &#34;exclude&#34;: &#34;+operadoras +consorcios&#34;,
+        &#34;dbt_vars&#34;: {
+            &#34;date_range&#34;: {
+                &#34;table_run_datetime_column_name&#34;: &#34;datetime_captura&#34;,
                 &#34;delay_hours&#34;: 0,
             },
             &#34;version&#34;: {},
@@ -1634,6 +1622,10 @@ and createdDate lt {end})&#34;,
 <div class="desc"></div>
 </dd>
 <dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS"><code class="name">var <span class="ident">BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_PARAMS"><code class="name">var <span class="ident">BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_PARAMS</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -2101,6 +2093,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS">BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS">BILHETAGEM_GENERAL_CAPTURE_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS">BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_PARAMS">BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS">BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS">BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS">BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS</a></code></li>

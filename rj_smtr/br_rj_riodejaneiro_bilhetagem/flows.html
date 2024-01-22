@@ -251,6 +251,29 @@ bilhetagem_materializacao_integracao = set_default_parameters(
     default_parameters=bilhetagem_materializacao_integracao_parameters,
 )
 
+
+# GPS Validador
+
+bilhetagem_materializacao_gps_validador = deepcopy(default_materialization_flow)
+bilhetagem_materializacao_gps_validador.name = (
+    &#34;SMTR: Bilhetagem GPS Validador - Materialização (subflow)&#34;
+)
+bilhetagem_materializacao_gps_validador.storage = GCS(
+    emd_constants.GCS_FLOWS_BUCKET.value
+)
+bilhetagem_materializacao_gps_validador.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+
+bilhetagem_materializacao_gps_validador = set_default_parameters(
+    flow=bilhetagem_materializacao_gps_validador,
+    default_parameters=constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_PARAMS.value,
+)
+
+bilhetagem_materializacao_gps_validador.state_handlers.append(skip_if_running_handler)
+
+
 # RECAPTURA #
 
 bilhetagem_recaptura = deepcopy(default_capture_flow)
@@ -421,52 +444,31 @@ with Flow(
             raise_final_state=True,
         )
 
+        run_materializacao_gps_validador = create_flow_run(
+            flow_name=bilhetagem_materializacao_gps_validador.name,
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            labels=LABELS,
+            upstream_tasks=[
+                wait_materializacao_integracao,
+            ],
+            parameters={
+                &#34;timestamp&#34;: materialize_timestamp,
+            },
+        )
+
+        wait_materializacao_gps_validador = wait_for_flow_run(
+            run_materializacao_gps_validador,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+
 bilhetagem_transacao_tratamento.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 bilhetagem_transacao_tratamento.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 bilhetagem_transacao_tratamento.schedule = every_hour
-
-
-# with Flow(
-#     &#34;SMTR: Bilhetagem GPS Validador - Tratamento&#34;,
-#     code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;, &#34;rafaelpinheiro&#34;],
-# ) as bilhetagem_gps_tratamento:
-#     timestamp = get_rounded_timestamp(
-#         interval_minutes=constants.BILHETAGEM_TRATAMENTO_INTERVAL.value
-#     )
-
-#     rename_flow_run = rename_current_flow_run_now_time(
-#         prefix=bilhetagem_transacao_tratamento.name + &#34; &#34;,
-#         now_time=timestamp,
-#     )
-
-#     LABELS = get_current_flow_labels()
-
-#     # Recaptura GPS
-
-#     run_recaptura_gps = create_flow_run(
-#         flow_name=bilhetagem_recaptura.name,
-#         project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-#         labels=LABELS,
-#         parameters=constants.BILHETAGEM_TRACKING_CAPTURE_PARAMS.value,
-#     )
-
-#     wait_recaptura_gps = wait_for_flow_run(
-#         run_recaptura_gps,
-#         stream_states=True,
-#         stream_logs=True,
-#         raise_final_state=True,
-#     )
-
-
-# bilhetagem_gps_tratamento.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-# bilhetagem_gps_tratamento.run_config = KubernetesRun(
-#     image=emd_constants.DOCKER_IMAGE.value,
-#     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
-# )
-# # bilhetagem_gps_tratamento.schedule = every_hour
 
 # CAPTURA/TRATAMENTO - ORDEM PAGAMENTO:
 # CAPTURA + RECAPTURA + MATERIALIZAÇÃO
