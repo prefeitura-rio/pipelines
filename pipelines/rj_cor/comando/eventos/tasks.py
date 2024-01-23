@@ -42,7 +42,7 @@ def get_redis_output(redis_key, is_df: bool = False):
     Get Redis output
     Example: {b'date': b'2023-02-27 07:29:04'}
     """
-    redis_client = get_redis_client(host="127.0.0.1")
+    redis_client = get_redis_client()  # (host="127.0.0.1")
 
     if is_df:
         json_data = redis_client.get(redis_key)
