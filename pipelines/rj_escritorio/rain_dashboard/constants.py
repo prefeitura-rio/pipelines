@@ -104,6 +104,27 @@ class constants(Enum):  # pylint: disable=c0103
             -- FROM cemaden)
             ),
 
+            -- choosing the neighborhood that shares the most intersection with the given H3 ID
+            intersected_areas AS (
+              SELECT
+                h3_grid.id,
+                bairros.nome AS bairro,
+                ST_CENTROID(h3_grid.geometry) AS geom,
+                -- h3_grid.geometry,
+                -- bairros.geometry,
+                ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) AS intersection_area,
+                ROW_NUMBER() OVER (PARTITION BY h3_grid.id ORDER BY ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) DESC) AS row_num
+              FROM
+                `rj-cor.dados_mestres.h3_grid_res8` h3_grid
+              LEFT JOIN
+                `rj-cor.dados_mestres.bairro` AS bairros
+              ON
+                ST_INTERSECTS(bairros.geometry, h3_grid.geometry)
+              WHERE NOT ST_CONTAINS(ST_GEOGFROMTEXT('POLYGON((-43.35167114973923 -23.03719187431942, -43.21742224531541 -23.11411703410819, -43.05787930227852 -23.08560586153892, -43.13797293161925 -22.9854505090441, -43.24908435505957 -23.01309491285712, -43.29357259322761 -23.02302500142027, -43.35372293867113 -23.02286949608791, -43.35167114973923 -23.03719187431942))'), h3_grid.geometry)
+                AND NOT ST_CONTAINS(ST_GEOGFROMTEXT('POLYGON((-43.17255470033881 -22.80357287766821, -43.16164114820394 -22.8246787848653, -43.1435175784006 -22.83820699694974, -43.08831858222521 -22.79901386772875, -43.09812065965735 -22.76990583135868, -43.11917632397501 -22.77502040608505, -43.12252626904735 -22.74275730775724, -43.13510053525226 -22.7443347361711, -43.1568784870256 -22.79110122556994, -43.17255470033881 -22.80357287766821))'), h3_grid.geometry)
+                AND h3_grid.id not in ("88a8a06a31fffff", "88a8a069b5fffff", "88a8a3d357fffff", "88a8a3d355fffff", "88a8a068adfffff", "88a8a06991fffff", "88a8a06999fffff")
+            ),
+
             h3_chuvas AS ( -- calcula qnt de chuva para cada h3
             SELECT
                 h3.*,
@@ -114,9 +135,9 @@ class constants(Enum):  # pylint: disable=c0103
             FROM (
                 WITH centroid_h3 AS (
                     SELECT
-                        *,
-                        ST_CENTROID(geometry) AS geom
-                    FROM `rj-cor.dados_mestres.h3_grid_res8`
+                        *
+                    FROM intersected_areas
+                    WHERE row_num = 1
                 ),
 
                 estacoes_pluviometricas AS (
@@ -153,15 +174,16 @@ class constants(Enum):  # pylint: disable=c0103
                                 STRUCT<id_h3 STRING,
                                 id_estacao STRING,
                                 estacao STRING,
+                                bairro STRING,
                                 dist FLOAT64,
                                 sistema STRING>(
-                                a.id, b.id, b.estacao,
-                                ST_DISTANCE(a.geom, b.geom),
-                                b.sistema
+                                    a.id, b.id, b.estacao, a.bairro,
+                                    ST_DISTANCE(a.geom, b.geom),
+                                    b.sistema
                                 )
                                 ORDER BY ST_DISTANCE(a.geom, b.geom)
                             ) AS ar
-                        FROM (SELECT id, geom FROM centroid_h3) a
+                        FROM (SELECT id, geom, bairro FROM centroid_h3) a
                         CROSS JOIN(
                             SELECT id, estacao, sistema, geom
                             FROM estacoes_pluviometricas
@@ -182,27 +204,15 @@ class constants(Enum):  # pylint: disable=c0103
                     ON lm.id_estacao=h3.id_estacao AND lm.sistema=h3.sistema
             ),
 
-            h3_media AS ( -- calcula média de chuva para as 3 estações mais próximas
+            final_table AS ( -- calcula média de chuva para as 3 estações mais próximas
             SELECT
                 id_h3,
-                CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL) AS chuva_15min,
+                bairro,
+                cast(round(CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL),2) AS decimal) AS chuva_15min,
                 STRING_AGG(estacao ORDER BY estacao) estacoes
             FROM h3_chuvas
             -- WHERE ranking < 4
-            GROUP BY id_h3
-            ),
-
-            final_table AS (
-            SELECT
-                h3_media.id_h3,
-                nome AS bairro,
-                estacoes,
-                cast(round(h3_media.chuva_15min,2) AS decimal) AS chuva_15min,
-            FROM h3_media
-            LEFT JOIN `rj-cor.dados_mestres.h3_grid_res8` h3_grid
-                ON h3_grid.id=h3_media.id_h3
-            LEFT JOIN `rj-cor.dados_mestres.bairro`
-                ON ST_CONTAINS(`rj-cor.dados_mestres.bairro`.geometry, ST_CENTROID(h3_grid.geometry))
+            GROUP BY id_h3, bairro
             )
 
         SELECT
