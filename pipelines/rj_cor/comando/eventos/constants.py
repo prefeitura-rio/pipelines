@@ -14,10 +14,11 @@ class constants(Enum):  # pylint: disable=c0103
 
     PATH_BASE_ENDERECOS = "/tmp/base_enderecos.csv"
     DATASET_ID = "adm_cor_comando"
-    TABLE_ID_EVENTOS = "ocorrencias"
-    TABLE_ID_ATIVIDADES_EVENTOS = "ocorrencias_orgaos_responsaveis"
-    TABLE_ID_POPS = "procedimento_operacional_padrao"
-    TABLE_ID_ATIVIDADES_POPS = "procedimento_operacional_padrao_orgaos_responsaveis"
+    TABLE_ID_EVENTOS = "ocorrencias_nova_api"
+    REDIS_NAME = "cor_api_last_days"
+    # TABLE_ID_ATIVIDADES_EVENTOS = "ocorrencias_orgaos_responsaveis"
+    # TABLE_ID_POPS = "procedimento_operacional_padrao"
+    # TABLE_ID_ATIVIDADES_POPS = "procedimento_operacional_padrao_orgaos_responsaveis"
     RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS = {
         "redis_data_key": "data_alagamento_recente_comando",
         "redis_update_key": "data_update_alagamento_recente_comando",

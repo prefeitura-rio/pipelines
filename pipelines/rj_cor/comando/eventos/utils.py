@@ -7,7 +7,74 @@ import json
 import requests
 from requests.adapters import HTTPAdapter, Retry
 
+import pendulum
 from pipelines.utils.utils import get_vault_secret, log
+
+
+def format_date(first_date, last_date):
+    """
+    Format date to "dd/mm/yyyy" and add one day to last date because
+    the API has open interval at the end: [first_date, last_date).
+    """
+    first_date = pendulum.from_format(first_date, "YYYY-MM-DD").strftime("%d/%m/%Y")
+    last_date = (
+        pendulum.from_format(last_date, "YYYY-MM-DD").add(days=1).strftime("%d/%m/%Y")
+    )
+    return first_date, last_date
+
+
+def treat_wrong_id_pop(dfr):
+    """
+    Create id_pop based on pop_titulo column
+    """
+    pop = {
+        "Ajuste de banco": 0,
+        "Acidente/enguiço sem vítima": 1,
+        "Acidente com vítima(s)": 2,
+        "Acidente com vítima(s) fatal(is)": 3,
+        "Incêndio em veículo(s)": 4,
+        "Bolsão d'água em via": 5,
+        "Alagamentos e enchentes": 6,
+        "Manifestação em local público": 7,
+        "Incêndio em imóvel": 8,
+        "Sinais de trânsito com mau funcionamento": 9,
+        "Reintegração de posse": 10,
+        "Queda de árvore": 11,
+        "Queda de poste": 12,
+        "Acidente com queda de carga": 13,
+        "Incêndio no entorno de vias públicas": 14,
+        "Incêndio dentro de túneis": 15,
+        "Vazamento de água / esgoto": 16,
+        "Falta de luz / apagão": 17,
+        "Implosão": 18,
+        "Queda de estrutura de alvenaria": 19,
+        "Vazamento de gás": 20,
+        "Evento em local público ou particular": 21,
+        "Atropelamento": 22,
+        "Afundamento de pista / buraco na via": 23,
+        "Abalroamento": 24,
+        "Obra em local público": 25,
+        "Operação policial": 26,
+        "Bloco de rua": 27,
+        "Deslizamento": 28,
+        "Animal em local público": 29,
+        "Acionamento de sirenes": 30,
+        "Alagamento": 31,
+        "Enchente": 32,
+        "Lâmina d'água": 33,
+        "Acidente ambiental": 34,
+        "Bueiro": 35,
+        "Incidente com bueiro": 35,
+        "Resgate ou remoção de animais terrestres e aéreos": 36,
+        "Remoção de animais mortos na areia": 37,
+        "Resgate de animal marinho preso em rede / encalhado": 38,
+        "Incendio em vegetacao": 39,
+        "Queda de árvore sobre fiação": 40,
+        "Residuos na via": 41,
+        "Evento não programado": 99,
+    }
+    dfr["id_pop"] = dfr["pop_titulo"].map(pop)
+    return dfr
 
 
 def build_redis_key(dataset_id: str, table_id: str, name: str, mode: str = "prod"):
