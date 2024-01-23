@@ -36,7 +36,7 @@ class constants(Enum):  # pylint: disable=c0103
             -- FROM `rj-cor.adm_cor_comando_staging.ocorrencias`
             FROM `rj-cor.adm_cor_comando_staging.ocorrencias_nova_api`
             WHERE id_pop IN ("5", "6", "31", "32", "33")
-                AND data_particao >= DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 1 day), day)
+                AND data_particao >= CAST(DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 1 day), day) AS STRING)
                 AND CAST(data_inicio AS DATETIME) >= TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 1 hour)
                 -- AND data_fim IS NULL
             ),
@@ -92,12 +92,12 @@ class constants(Enum):  # pylint: disable=c0103
         FROM final_table
         """,
         "query_update": """
-        SELECT
-                MAX(data_inicio) AS last_update
+            SELECT
+                CAST(MAX(data_inicio) AS DATETIME) AS last_update
             FROM
                 `rj-cor.adm_cor_comando_staging.ocorrencias_nova_api`
             WHERE
-                data_particao> DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY)
+                WHERE data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
         """,
     }
     RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS = {
@@ -161,10 +161,10 @@ class constants(Enum):  # pylint: disable=c0103
         """,
         "query_update": """
             SELECT
-                MAX(data_inicio) AS last_update
+                CAST(MAX(data_inicio) AS DATETIME) AS last_update
             FROM
                 `rj-cor.adm_cor_comando_staging.ocorrencias_nova_api`
             WHERE
-                data_particao> DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY)
+                WHERE data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
         """,
     }
