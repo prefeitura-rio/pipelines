@@ -15,6 +15,13 @@ every_hour = Schedule(
             labels=[
                 constants.RJ_COR_AGENT_LABEL.value,
             ],
+            parameter_defaults={
+                "materialize_after_dump": True,
+                "materialization_mode": "prod",
+                "materialize_to_datario": True,
+                "dump_to_gcs": True,
+                "trigger_rain_dashboard_update": True,
+            },
         ),
     ]
 )
@@ -32,6 +39,7 @@ every_month = Schedule(
                 "materialization_mode": "prod",
                 "materialize_to_datario": True,
                 "dump_to_gcs": True,
+                "redis_mode": "prod",
             },
         ),
     ]
