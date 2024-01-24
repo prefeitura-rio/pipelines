@@ -96,7 +96,6 @@ class constants(Enum):  # pylint: disable=c0103
                 CAST(MAX(data_inicio) AS DATETIME) AS last_update
             FROM
                 `rj-cor.adm_cor_comando_staging.ocorrencias_nova_api`
-            WHERE
                 WHERE data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
         """,
     }
