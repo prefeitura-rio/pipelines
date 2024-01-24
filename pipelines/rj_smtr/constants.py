@@ -466,6 +466,7 @@ class constants(Enum):  # pylint: disable=c0103
             },
             "version": {},
         },
+        "exclude": f"+{BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS['table_id']}",
     }
 
     BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS = {
