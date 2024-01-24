@@ -455,6 +455,20 @@ class constants(Enum):  # pylint: disable=c0103
         },
     ]
 
+    BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS = {
+        "dataset_id": BILHETAGEM_DATASET_ID,
+        "table_id": "integracao",
+        "upstream": True,
+        "dbt_vars": {
+            "date_range": {
+                "table_run_datetime_column_name": "datetime_captura",
+                "delay_hours": 1,
+            },
+            "version": {},
+        },
+        "exclude": "+operadoras +consorcios",
+    }
+
     BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS = {
         "dataset_id": BILHETAGEM_DATASET_ID,
         "table_id": BILHETAGEM_TRANSACAO_CAPTURE_PARAMS["table_id"],
@@ -466,22 +480,7 @@ class constants(Enum):  # pylint: disable=c0103
             },
             "version": {},
         },
-        "exclude": f"+{BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS['table_id']}",
-    }
-
-    BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS = {
-        "dataset_id": BILHETAGEM_DATASET_ID,
-        "table_id": BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS["table_id"],
-        "upstream": True,
-        "dbt_vars": {
-            "date_range": {
-                "table_run_datetime_column_name": "datetime_captura",
-                "delay_hours": 1,
-                "table_alias": "integracao",
-            },
-            "version": {},
-        },
-        "exclude": "+diretorio_operadoras +diretorio_consorcios",
+        "exclude": f"+{BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS['table_id']}",
     }
 
     BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS = {
