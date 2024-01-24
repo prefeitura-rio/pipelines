@@ -227,7 +227,7 @@ class constants(Enum):  # pylint: disable=c0103
             """,
         },
         "primary_key": ["id"],
-        "interval_minutes": 1,
+        "interval_minutes": 1440,
     }
 
     BILHETAGEM_TRACKING_CAPTURE_PARAMS = {
