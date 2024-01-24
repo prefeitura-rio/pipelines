@@ -462,7 +462,7 @@ class constants(Enum):  # pylint: disable=c0103
         "dbt_vars": {
             "date_range": {
                 "table_run_datetime_column_name": "datetime_captura",
-                "delay_hours": 1,
+                "delay_hours": 0,
             },
             "version": {},
         },
