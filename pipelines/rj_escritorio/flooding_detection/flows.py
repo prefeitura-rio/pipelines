@@ -10,9 +10,7 @@ from prefect.tasks.control_flow.filter import FilterTask
 from prefect.utilities.edges import unmapped
 
 from pipelines.constants import constants
-from pipelines.rj_escritorio.flooding_detection.schedules import (
-    update_flooding_data_schedule,
-)
+
 from pipelines.rj_escritorio.flooding_detection.tasks import (
     get_last_update,
     get_openai_api_key,
@@ -104,4 +102,3 @@ rj_escritorio__flooding_detection__flow.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value,
     labels=[constants.RJ_ESCRITORIO_AGENT_LABEL.value],
 )
-rj_escritorio__flooding_detection__flow.schedule = update_flooding_data_schedule
