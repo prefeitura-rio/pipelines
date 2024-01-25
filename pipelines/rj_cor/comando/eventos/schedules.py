@@ -21,6 +21,7 @@ every_hour = Schedule(
                 "materialize_to_datario": True,
                 "dump_to_gcs": True,
                 "trigger_rain_dashboard_update": True,
+                "redis_mode": "prod",
             },
         ),
     ]
@@ -39,7 +40,6 @@ every_month = Schedule(
                 "materialization_mode": "prod",
                 "materialize_to_datario": True,
                 "dump_to_gcs": True,
-                "redis_mode": "prod",
             },
         ),
     ]

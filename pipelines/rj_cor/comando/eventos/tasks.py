@@ -252,6 +252,11 @@ def treat_data(
     # Set the order to match the original table
     dfr = dfr[mandatory_cols]
 
+    # Create a column with time of row creation to keep last event on dbt
+    dfr["created_at"] = pendulum.now(tz="America/Sao_Paulo").strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+
     return dfr.drop_duplicates(), dfr_redis
 
 
