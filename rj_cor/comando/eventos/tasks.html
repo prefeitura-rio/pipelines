@@ -34,101 +34,143 @@
 Tasks for comando
 &#34;&#34;&#34;
 
-from copy import deepcopy
+# from copy import deepcopy
 from datetime import timedelta
 import json
 import os
 from pathlib import Path
-import time
 from typing import Any, Union, Tuple
 from uuid import uuid4
+from unidecode import unidecode
 
 import pandas as pd
 import pendulum
 from prefect import task
-from prefect.engine.signals import ENDRUN
-from prefect.engine.state import Skipped
-from prefect.triggers import all_successful
 
-from pipelines.rj_cor.comando.eventos.utils import get_token, get_url, build_redis_key
-from pipelines.utils.utils import get_redis_client, get_vault_secret, log, to_partitions
+# from prefect.engine.signals import ENDRUN
+# from prefect.engine.state import Skipped
+# from prefect.triggers import all_successful
+
+from pipelines.rj_cor.comando.eventos.utils import (
+    build_redis_key,
+    format_date,
+    treat_wrong_id_pop,
+)
+from pipelines.utils.utils import (
+    get_redis_client,
+    get_vault_secret,
+    log,
+    parse_date_columns,
+    to_partitions,
+    treat_redis_output,
+)
 
 
-@task(nout=2)
-def get_date_interval(
-    date_interval_text: str,
-    dataset_id: str,
-    table_id: str,
-    mode: str = &#34;prod&#34;,
-) -&gt; Tuple[dict, str]:
+def get_redis_output(redis_key, is_df: bool = False):
     &#34;&#34;&#34;
-    If `date_interval_text` is provided, parse it for the date interval. Else,
-    get the date interval from Redis.
-    Example of date_interval_text to use when selecting type string:
-    {&#34;inicio&#34;: &#34;2023-04-19 08:54:41.0&#34;, &#34;fim&#34;: &#34;2023-04-19 10:40:41.0&#34;}
+    Get Redis output
+    Example: {b&#39;date&#39;: b&#39;2023-02-27 07:29:04&#39;}
     &#34;&#34;&#34;
-    if date_interval_text:
-        log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Date interval was provided: {date_interval_text}&#34;)
-        date_interval = json.loads(date_interval_text)
-        current_time = date_interval[&#34;fim&#34;]
-        log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Date interval: {date_interval}&#34;)
-        return date_interval, current_time
+    redis_client = get_redis_client()  # (host=&#34;127.0.0.1&#34;)
 
-    log(&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Date interval was not provided&#34;)
-    redis_client = get_redis_client()
+    if is_df:
+        json_data = redis_client.get(redis_key)
+        print(type(json_data))
+        print(json_data)
+        if json_data:
+            # If data is found, parse the JSON string back to a Python object (dictionary)
+            data_dict = json.loads(json_data)
+            # Convert the dictionary back to a DataFrame
+            return pd.DataFrame(data_dict)
 
-    key_last_update = build_redis_key(dataset_id, table_id, &#34;last_update&#34;, mode)
+        return pd.DataFrame()
 
-    current_time = pendulum.now(&#34;America/Sao_Paulo&#34;)
-
-    last_update = redis_client.get(key_last_update)
-    if last_update is None:
-        log(&#34;Last update was not found in Redis, setting it to D-30&#34;)
-        # Set to current_time - 30 days
-        last_update = current_time.subtract(days=30).strftime(&#34;%Y-%m-%d %H:%M:%S.0&#34;)
-    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Last update: {last_update}&#34;)
-
-    current_time_str = current_time.strftime(&#34;%Y-%m-%d %H:%M:%S.0&#34;)
-
-    date_interval = {
-        &#34;inicio&#34;: last_update,
-        &#34;fim&#34;: current_time_str,
-    }
-
-    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; date_interval: {date_interval}&#34;)
-
-    return date_interval, current_time_str
+    output = redis_client.hgetall(redis_key)
+    if len(output) &gt; 0:
+        output = treat_redis_output(output)
+    return output
 
 
-@task(trigger=all_successful)
-def set_last_updated_on_redis(
-    dataset_id: str,
-    table_id: str,
-    mode: str = &#34;prod&#34;,
-    current_time: str = None,
-    problem_ids_atividade: str = None,
-) -&gt; None:
+def compare_actual_df_with_redis_df(
+    dfr: pd.DataFrame,
+    dfr_redis: pd.DataFrame,
+    columns: list,
+) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
-    Set the last updated time on Redis.
+    Compare df from redis to actual df and return only the rows from actual df
+    that are not already saved on redis.
     &#34;&#34;&#34;
-    redis_client = get_redis_client()
+    for col in columns:
+        if col not in dfr_redis.columns:
+            dfr_redis[col] = None
+        dfr_redis[col] = dfr_redis[col].astype(dfr[col].dtypes)
+    log(f&#34;\nEnded conversion types from dfr to dfr_redis: \n{dfr_redis.dtypes}&#34;)
 
-    if not current_time:
-        current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y-%m-%d %H:%M:%S.0&#34;)
+    dfr_diff = (
+        pd.merge(dfr, dfr_redis, how=&#34;left&#34;, on=columns, indicator=True)
+        .query(&#39;_merge == &#34;left_only&#34;&#39;)
+        .drop(&#34;_merge&#34;, axis=1)
+    )
+    log(
+        f&#34;\nDf resulted from the difference between dft_redis and dfr: \n{dfr_diff.head()}&#34;
+    )
 
-    key_last_update = build_redis_key(dataset_id, table_id, &#34;last_update&#34;, mode)
-    redis_client.set(key_last_update, current_time)
+    updated_dfr_redis = pd.concat([dfr_redis, dfr_diff[columns]])
 
-    key_problema_ids = build_redis_key(dataset_id, table_id, &#34;problema_ids&#34;, mode)
+    return dfr_diff, updated_dfr_redis
 
-    problem_ids_atividade_antigos = redis_client.get(key_problema_ids)
 
-    if problem_ids_atividade_antigos is not None:
-        problem_ids_atividade = problem_ids_atividade + list(
-            problem_ids_atividade_antigos
+@task
+def get_date_interval(first_date, last_date) -&gt; Tuple[dict, str]:
+    &#34;&#34;&#34;
+    If `first_date` and `last_date` are provided, format it to DD/MM/YYYY. Else,
+    get data from last 3 days.
+    first_date: str YYYY-MM-DD
+    last_date: str YYYY-MM-DD
+    &#34;&#34;&#34;
+    if first_date and last_date:
+        first_date, last_date = format_date(first_date, last_date)
+    else:
+        last_date = pendulum.today(tz=&#34;America/Sao_Paulo&#34;).date()
+        first_date = last_date.subtract(days=1)  # atenção mudar para 3
+        first_date, last_date = format_date(
+            first_date.strftime(&#34;%Y-%m-%d&#34;), last_date.strftime(&#34;%Y-%m-%d&#34;)
         )
+    return first_date, last_date
 
-    redis_client.set(key_problema_ids, list(set(problem_ids_atividade)))
+
+@task
+def get_redis_df(
+    dataset_id: str,
+    table_id: str,
+    name: str,
+    mode: str = &#34;prod&#34;,
+) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Acess redis to get the last saved df and compare to actual df,
+    return only the rows from actual df that are not already saved.
+    &#34;&#34;&#34;
+    redis_key = build_redis_key(dataset_id, table_id, name, mode)
+    log(f&#34;Acessing redis_key: {redis_key}&#34;)
+
+    dfr_redis = get_redis_output(redis_key, is_df=True)
+    log(f&#34;Redis output: {dfr_redis}&#34;)
+
+    # if len(dfr_redis) == 0:
+    #     dfr_redis = pd.DataFrame()
+    #     dict_redis = {k: None for k in columns}
+    #     print(f&#34;\nCreating Redis fake values for key: {redis_key}\n&#34;)
+    #     print(dict_redis)
+    #     dfr_redis = pd.DataFrame(
+    #         dict_redis, index=[0]
+    #     )
+    # else:
+    #     dfr_redis = pd.DataFrame(
+    #         dict_redis.items(), columns=columns
+    #         )
+    # print(f&#34;\nConverting redis dict to df: \n{dfr_redis.head()}&#34;)
+
+    return dfr_redis
 
 
 @task(
@@ -136,87 +178,68 @@ def set_last_updated_on_redis(
     max_retries=3,
     retry_delay=timedelta(seconds=60),
 )
-def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
+def download_data(first_date, last_date, wait=None) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
-    Faz o request dos dados de eventos e das atividades do evento
+    Download data from API
     &#34;&#34;&#34;
-
-    auth_token = get_token()
+    # auth_token = get_token()
 
     url_secret = get_vault_secret(&#34;comando&#34;)[&#34;data&#34;]
     url_eventos = url_secret[&#34;endpoint_eventos&#34;]
-    url_atividades_evento = url_secret[&#34;endpoint_atividades_evento&#34;]
+    ## url_atividades_evento = url_secret[&#34;endpoint_atividades_evento&#34;]
 
-    # Request Eventos
-    response = get_url(url=url_eventos, parameters=date_interval, token=auth_token)
+    dfr = pd.read_json(f&#34;{url_eventos}/?data_i={first_date}&amp;data_f={last_date}&#34;)
 
-    if &#34;eventos&#34; in response and len(response[&#34;eventos&#34;]) &gt; 0:
-        eventos = pd.DataFrame(response[&#34;eventos&#34;])
-    elif (&#34;eventos&#34; in response) and (len(response[&#34;eventos&#34;])) == 0:
-        log(&#34;No events found on this date interval&#34;)
-        skip = Skipped(&#34;No events found on this date interval&#34;)
-        raise ENDRUN(state=skip)
-    else:
-        raise Exception(f&#34;{response}&#34;)
+    return dfr
 
-    rename_columns = {
-        &#34;id&#34;: &#34;id_evento&#34;,
-        &#34;titulo&#34;: &#34;pop_titulo&#34;,
-        &#34;pop_id&#34;: &#34;id_pop&#34;,
-        &#34;inicio&#34;: &#34;data_inicio&#34;,
-        &#34;fim&#34;: &#34;data_fim&#34;,
-    }
 
-    eventos.rename(rename_columns, inplace=True, axis=1)
-    eventos[&#34;id_evento&#34;] = eventos[&#34;id_evento&#34;].astype(&#34;int&#34;)
-    evento_id_list = eventos[&#34;id_evento&#34;].unique()
+@task(nout=2)
+def treat_data(
+    dfr: pd.DataFrame,
+    dfr_redis: pd.DataFrame,
+    columns: list,
+) -&gt; Tuple[pd.DataFrame, pd.DataFrame]:
+    &#34;&#34;&#34;
+    Rename cols and normalize data.
+    &#34;&#34;&#34;
 
-    atividades_evento = []
-    problema_ids_atividade = []
-    problema_ids_request = []
-
-    # Request AtividadesDoEvento
-    for i in evento_id_list:
-        # log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting AtividadesDoEvento for id_evento: {i}&#34;)
-        try:
-            response = get_url(
-                url=url_atividades_evento + f&#34;?eventoId={i}&#34;, token=auth_token
-            )
-            if &#34;atividades&#34; in response.keys():
-                response = response[&#34;atividades&#34;]
-                for elem in response:
-                    elem[&#34;id_evento&#34;] = i
-                    atividades_evento.append(elem)
-            else:
-                problema_ids_atividade.append(i)
-        except Exception as exc:
-            log(
-                f&#34;Request AtividadesDoEvento for id_evento: {i}&#34;
-                + f&#34;resulted in the following error: {exc}&#34;
-            )
-            problema_ids_request.append(i)
-            raise exc
-    log(f&#34;\n&gt;&gt;&gt;&gt;&gt;&gt;&gt; problema_ids_request: {problema_ids_request}&#34;)
-    log(f&#34;\n&gt;&gt;&gt;&gt;&gt;&gt;&gt; problema_ids_atividade: {problema_ids_atividade}&#34;)
-
-    problema_ids_atividade = problema_ids_atividade + problema_ids_request
-
-    atividades_evento = pd.DataFrame(atividades_evento)
-    atividades_evento.rename(
-        {
-            &#34;orgao&#34;: &#34;sigla&#34;,
-            &#34;titulo&#34;: &#34;pop_titulo&#34;,
-            &#34;evento_id&#34;: &#34;id_evento&#34;,
+    log(&#34;Start treating data&#34;)
+    dfr = dfr.rename(
+        columns={
+            &#34;id&#34;: &#34;id_evento&#34;,
             &#34;pop_id&#34;: &#34;id_pop&#34;,
             &#34;inicio&#34;: &#34;data_inicio&#34;,
-            &#34;fim&#34;: &#34;data_fim&#34;,
-            &#34;chegada&#34;: &#34;data_chegada&#34;,
-        },
-        inplace=True,
-        axis=1,
+            &#34;pop&#34;: &#34;pop_titulo&#34;,
+            &#34;titulo&#34;: &#34;pop_especificacao&#34;,
+        }
     )
 
-    eventos_cols = [
+    dfr[&#34;id_evento&#34;] = dfr[&#34;id_evento&#34;].astype(float).astype(int).astype(str)
+
+    log(f&#34;Dataframe before comparing with last data saved on redis \n{dfr.head()}&#34;)
+    columns = [&#34;id_evento&#34;, &#34;data_inicio&#34;, &#34;status&#34;]
+    dfr, dfr_redis = compare_actual_df_with_redis_df(
+        dfr,
+        dfr_redis,
+        columns,
+    )
+    log(f&#34;Dataframe after comparing with last data saved on redis {dfr.head()}&#34;)
+
+    # If df is empty stop flow
+    if dfr.shape[0] == 0:
+        skip_text = &#34;No new data available on API&#34;
+        print(skip_text)
+        # raise ENDRUN(state=Skipped(skip_text))
+
+    dfr[&#34;tipo&#34;] = dfr[&#34;tipo&#34;].replace(
+        {
+            &#34;Primária&#34;: &#34;Primario&#34;,
+            &#34;Secundária&#34;: &#34;Secundario&#34;,
+        }
+    )
+    dfr[&#34;descricao&#34;] = dfr[&#34;descricao&#34;].apply(unidecode)
+
+    mandatory_cols = [
         &#34;id_pop&#34;,
         &#34;id_evento&#34;,
         &#34;bairro&#34;,
@@ -230,190 +253,64 @@ def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
         &#34;status&#34;,
         &#34;tipo&#34;,
     ]
-    for col in eventos_cols:
-        if col not in eventos.columns:
-            eventos[col] = None
+    # Create cols if they don exist on new API
+    for col in mandatory_cols:
+        if col not in dfr.columns:
+            dfr[col] = None
 
-    atividades_evento_cols = [
-        &#34;id_evento&#34;,
-        &#34;sigla&#34;,
-        &#34;data_chegada&#34;,
-        &#34;data_inicio&#34;,
-        &#34;data_fim&#34;,
-        &#34;descricao&#34;,
-        &#34;status&#34;,
-    ]
-    for col in atividades_evento_cols:
-        if col not in atividades_evento.columns:
-            atividades_evento[col] = None
-
-    eventos_categorical_cols = [
+    categorical_cols = [
         &#34;bairro&#34;,
         &#34;prazo&#34;,
         &#34;descricao&#34;,
         &#34;gravidade&#34;,
         &#34;status&#34;,
         &#34;tipo&#34;,
+        &#34;pop_titulo&#34;,
     ]
-    for i in eventos_categorical_cols:
-        eventos[i] = eventos[i].str.capitalize()
+    for i in categorical_cols:
+        dfr[i] = dfr[i].str.capitalize()
 
-    atividade_evento_categorical_cols = [&#34;sigla&#34;, &#34;descricao&#34;, &#34;status&#34;]
-    for i in atividade_evento_categorical_cols:
-        atividades_evento[i] = atividades_evento[i].str.capitalize()
-
-    eventos_datas_cols = [&#34;data_inicio&#34;, &#34;data_fim&#34;]
-    atividades_eventos_datas_cols = [&#34;data_chegada&#34;, &#34;data_inicio&#34;, &#34;data_fim&#34;]
-    eventos[eventos_datas_cols] = eventos[eventos_datas_cols].fillna(
-        &#34;1970-01-01 00:00:00&#34;
-    )
-    atividades_evento[atividades_eventos_datas_cols] = atividades_evento[
-        atividades_eventos_datas_cols
-    ].fillna(&#34;1970-01-01 00:00:00&#34;)
+    # This treatment is temporary. Now the id_pop from API is comming with the same value as id_evento
+    dfr = treat_wrong_id_pop(dfr)
+    log(f&#34;This id_pop are missing {dfr[dfr.id_pop.isna()]} they were replaced by 99&#34;)
+    dfr[&#34;id_pop&#34;] = dfr[&#34;id_pop&#34;].fillna(99)
 
     # Treat id_pop col
-    eventos[&#34;id_pop&#34;] = eventos[&#34;id_pop&#34;].astype(float).astype(int)
+    dfr[&#34;id_pop&#34;] = dfr[&#34;id_pop&#34;].astype(float).astype(int)
 
-    # Fixa colunas e ordem
-    eventos = eventos[eventos_cols].drop_duplicates()
-    atividades_evento = atividades_evento[atividades_evento_cols].drop_duplicates()
-    return eventos, atividades_evento, problema_ids_atividade
+    # Set the order to match the original table
+    dfr = dfr[mandatory_cols]
+
+    # Create a column with time of row creation to keep last event on dbt
+    dfr[&#34;created_at&#34;] = pendulum.now(tz=&#34;America/Sao_Paulo&#34;).strftime(
+        &#34;%Y-%m-%d %H:%M:%S&#34;
+    )
+
+    return dfr.drop_duplicates(), dfr_redis
 
 
 @task
-def get_pops() -&gt; pd.DataFrame:
+def save_data(dataframe: pd.DataFrame) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
-    Get the list of POPS from the API
-    &#34;&#34;&#34;
-    log(&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting POPS&#34;)
-
-    auth_token = get_token()
-
-    url_secret = get_vault_secret(&#34;comando&#34;)[&#34;data&#34;]
-    url = url_secret[&#34;endpoint_pops&#34;]
-
-    response = get_url(url=url, token=auth_token)
-
-    pops = pd.DataFrame(response[&#34;objeto&#34;])
-    pops[&#34;id&#34;] = pops[&#34;id&#34;].astype(&#34;int&#34;)
-    pops = pops.rename({&#34;id&#34;: &#34;id_pop&#34;, &#34;titulo&#34;: &#34;pop_titulo&#34;}, axis=1).sort_values(
-        &#34;id_pop&#34;
-    )
-    pops[&#34;pop_titulo&#34;] = pops[
-        &#34;pop_titulo&#34;
-    ].str.capitalize()  # pylint: disable=unsubscriptable-object, E1137
-
-    return pops[[&#34;id_pop&#34;, &#34;pop_titulo&#34;]]  # pylint: disable=unsubscriptable-object
-
-
-@task(nout=2)
-def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    Get the list of POP&#39;s activities from API
-    &#34;&#34;&#34;
-    log(&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting POP&#39;s activities&#34;)
-
-    auth_token = get_token()
-
-    url_secret = get_vault_secret(&#34;comando&#34;)[&#34;data&#34;]
-    url = url_secret[&#34;endpoint_atividades_pop&#34;]
-
-    pop_ids = pops[&#34;id_pop&#34;].unique()
-
-    # remove pop_id 0
-    pop_ids = [i for i in pop_ids if i not in [0, &#34;0&#34;]]
-
-    atividades_pops = []
-    for pop_id in pop_ids:
-        log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting POP&#39;s activities for pop_id: {pop_id}&#34;)
-        response = get_url(url=url + f&#34;?popId={pop_id}&#34;, token=auth_token)
-
-        tentativa = 0
-        while (
-            &#34;error&#34; in response.keys() or response == {&#34;response&#34;: None}
-        ) and tentativa &lt;= 5:
-            log(
-                f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting POP&#39;s activities for pop_id: {pop_id} Time: {tentativa+1}&#34;
-            )
-            time.sleep(60)
-            response = get_url(url=url + f&#34;?popId={pop_id}&#34;, token=auth_token)
-            tentativa += 1
-
-        if (
-            &#34;error&#34; in response.keys() or response == {&#34;response&#34;: None}
-        ) and tentativa &gt; 5:
-            continue
-
-        try:
-            row_template = {
-                &#34;pop_titulo&#34;: response[&#34;pop&#34;],
-                &#34;id_pop&#34;: pop_id,
-                &#34;sigla&#34;: &#34;&#34;,
-                &#34;orgao&#34;: &#34;&#34;,
-                &#34;acao&#34;: &#34;&#34;,
-            }
-        except:
-            log(f&#34;Problem on response {response}&#34;)
-
-        for activity in response[&#34;atividades&#34;]:
-            row = deepcopy(row_template)
-            row[&#34;sigla&#34;] = activity[&#34;sigla&#34;]
-            row[&#34;orgao&#34;] = activity[&#34;orgao&#34;]
-            row[&#34;acao&#34;] = activity[&#34;acao&#34;]
-            atividades_pops.append(row)
-
-    dataframe = pd.DataFrame(atividades_pops)
-    dataframe = dataframe.sort_values([&#34;id_pop&#34;, &#34;sigla&#34;, &#34;acao&#34;])
-
-    for i in [&#34;sigla&#34;, &#34;orgao&#34;, &#34;acao&#34;]:
-        dataframe[i] = dataframe[i].str.capitalize()
-
-    dataframe[&#34;key&#34;] = (
-        dataframe[&#34;id_pop&#34;].astype(str)
-        + &#34;_&#34;
-        + dataframe[&#34;sigla&#34;]
-        + &#34;_&#34;
-        + dataframe[&#34;acao&#34;]
-    )
-    update_pops_redis = dataframe[&#34;key&#34;].unique()
-
-    # Checar pop_ids não salvos no redis
-    update_pops_redis = [i for i in update_pops_redis if i not in redis_pops]
-
-    if len(update_pops_redis) &lt; 1:
-        update_pops_redis = None
-        dataframe = pd.DataFrame()
-    else:
-        # mantém apenas esses pop_ids no dataframe
-        dataframe = dataframe[dataframe[&#34;key&#34;].isin(update_pops_redis)]
-        dataframe = dataframe[[&#34;id_pop&#34;, &#34;sigla&#34;, &#34;orgao&#34;, &#34;acao&#34;]]
-
-    return dataframe, update_pops_redis
-
-
-@task
-def salvar_dados(dfr: pd.DataFrame, current_time: str, name: str) -&gt; Union[str, Path]:
-    &#34;&#34;&#34;
-    Salvar dados tratados em csv para conseguir subir pro GCP
+    Save data on a csv file to be uploaded to GCP
     &#34;&#34;&#34;
 
-    dfr[&#34;ano_particao&#34;] = pd.to_datetime(dfr[&#34;data_inicio&#34;]).dt.year
-    dfr[&#34;mes_particao&#34;] = pd.to_datetime(dfr[&#34;data_inicio&#34;]).dt.month
-    dfr[&#34;data_particao&#34;] = pd.to_datetime(dfr[&#34;data_inicio&#34;]).dt.date
-    dfr[&#34;ano_particao&#34;] = dfr[&#34;ano_particao&#34;].astype(&#34;int&#34;)
-    dfr[&#34;mes_particao&#34;] = dfr[&#34;mes_particao&#34;].astype(&#34;int&#34;)
+    prepath = Path(&#34;/tmp/data/&#34;)
+    prepath.mkdir(parents=True, exist_ok=True)
 
-    partitions_path = Path(os.getcwd(), &#34;data&#34;, &#34;comando&#34;, name)
-    if not os.path.exists(partitions_path):
-        os.makedirs(partitions_path)
+    partition_column = &#34;data_inicio&#34;
+    dataframe, partitions = parse_date_columns(dataframe, partition_column)
+    current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y%m%d%H%M&#34;)
 
     to_partitions(
-        dfr,
-        partition_columns=[&#34;ano_particao&#34;, &#34;mes_particao&#34;, &#34;data_particao&#34;],
-        savepath=partitions_path,
+        data=dataframe,
+        partition_columns=partitions,
+        savepath=prepath,
+        data_type=&#34;csv&#34;,
         suffix=current_time,
     )
-    return partitions_path
+    log(f&#34;[DEBUG] Files saved on {prepath}&#34;)
+    return prepath
 
 
 @task
@@ -452,11 +349,50 @@ def not_none(something: Any) -&gt; bool:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="pipelines.rj_cor.comando.eventos.tasks.download_eventos"><code class="name flex">
-<span>def <span class="ident">download_eventos</span></span>(<span>date_interval, wait=None) ‑> Tuple[pandas.core.frame.DataFrame, str]</span>
+<dt id="pipelines.rj_cor.comando.eventos.tasks.compare_actual_df_with_redis_df"><code class="name flex">
+<span>def <span class="ident">compare_actual_df_with_redis_df</span></span>(<span>dfr: pandas.core.frame.DataFrame, dfr_redis: pandas.core.frame.DataFrame, columns: list) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Faz o request dos dados de eventos e das atividades do evento</p></div>
+<div class="desc"><p>Compare df from redis to actual df and return only the rows from actual df
+that are not already saved on redis.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compare_actual_df_with_redis_df(
+    dfr: pd.DataFrame,
+    dfr_redis: pd.DataFrame,
+    columns: list,
+) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Compare df from redis to actual df and return only the rows from actual df
+    that are not already saved on redis.
+    &#34;&#34;&#34;
+    for col in columns:
+        if col not in dfr_redis.columns:
+            dfr_redis[col] = None
+        dfr_redis[col] = dfr_redis[col].astype(dfr[col].dtypes)
+    log(f&#34;\nEnded conversion types from dfr to dfr_redis: \n{dfr_redis.dtypes}&#34;)
+
+    dfr_diff = (
+        pd.merge(dfr, dfr_redis, how=&#34;left&#34;, on=columns, indicator=True)
+        .query(&#39;_merge == &#34;left_only&#34;&#39;)
+        .drop(&#34;_merge&#34;, axis=1)
+    )
+    log(
+        f&#34;\nDf resulted from the difference between dft_redis and dfr: \n{dfr_diff.head()}&#34;
+    )
+
+    updated_dfr_redis = pd.concat([dfr_redis, dfr_diff[columns]])
+
+    return dfr_diff, updated_dfr_redis</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.comando.eventos.tasks.download_data"><code class="name flex">
+<span>def <span class="ident">download_data</span></span>(<span>first_date, last_date, wait=None) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Download data from API</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -466,334 +402,129 @@ def not_none(something: Any) -&gt; bool:
     max_retries=3,
     retry_delay=timedelta(seconds=60),
 )
-def download_eventos(date_interval, wait=None) -&gt; Tuple[pd.DataFrame, str]:
+def download_data(first_date, last_date, wait=None) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
-    Faz o request dos dados de eventos e das atividades do evento
+    Download data from API
     &#34;&#34;&#34;
-
-    auth_token = get_token()
+    # auth_token = get_token()
 
     url_secret = get_vault_secret(&#34;comando&#34;)[&#34;data&#34;]
     url_eventos = url_secret[&#34;endpoint_eventos&#34;]
-    url_atividades_evento = url_secret[&#34;endpoint_atividades_evento&#34;]
+    ## url_atividades_evento = url_secret[&#34;endpoint_atividades_evento&#34;]
 
-    # Request Eventos
-    response = get_url(url=url_eventos, parameters=date_interval, token=auth_token)
+    dfr = pd.read_json(f&#34;{url_eventos}/?data_i={first_date}&amp;data_f={last_date}&#34;)
 
-    if &#34;eventos&#34; in response and len(response[&#34;eventos&#34;]) &gt; 0:
-        eventos = pd.DataFrame(response[&#34;eventos&#34;])
-    elif (&#34;eventos&#34; in response) and (len(response[&#34;eventos&#34;])) == 0:
-        log(&#34;No events found on this date interval&#34;)
-        skip = Skipped(&#34;No events found on this date interval&#34;)
-        raise ENDRUN(state=skip)
-    else:
-        raise Exception(f&#34;{response}&#34;)
-
-    rename_columns = {
-        &#34;id&#34;: &#34;id_evento&#34;,
-        &#34;titulo&#34;: &#34;pop_titulo&#34;,
-        &#34;pop_id&#34;: &#34;id_pop&#34;,
-        &#34;inicio&#34;: &#34;data_inicio&#34;,
-        &#34;fim&#34;: &#34;data_fim&#34;,
-    }
-
-    eventos.rename(rename_columns, inplace=True, axis=1)
-    eventos[&#34;id_evento&#34;] = eventos[&#34;id_evento&#34;].astype(&#34;int&#34;)
-    evento_id_list = eventos[&#34;id_evento&#34;].unique()
-
-    atividades_evento = []
-    problema_ids_atividade = []
-    problema_ids_request = []
-
-    # Request AtividadesDoEvento
-    for i in evento_id_list:
-        # log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting AtividadesDoEvento for id_evento: {i}&#34;)
-        try:
-            response = get_url(
-                url=url_atividades_evento + f&#34;?eventoId={i}&#34;, token=auth_token
-            )
-            if &#34;atividades&#34; in response.keys():
-                response = response[&#34;atividades&#34;]
-                for elem in response:
-                    elem[&#34;id_evento&#34;] = i
-                    atividades_evento.append(elem)
-            else:
-                problema_ids_atividade.append(i)
-        except Exception as exc:
-            log(
-                f&#34;Request AtividadesDoEvento for id_evento: {i}&#34;
-                + f&#34;resulted in the following error: {exc}&#34;
-            )
-            problema_ids_request.append(i)
-            raise exc
-    log(f&#34;\n&gt;&gt;&gt;&gt;&gt;&gt;&gt; problema_ids_request: {problema_ids_request}&#34;)
-    log(f&#34;\n&gt;&gt;&gt;&gt;&gt;&gt;&gt; problema_ids_atividade: {problema_ids_atividade}&#34;)
-
-    problema_ids_atividade = problema_ids_atividade + problema_ids_request
-
-    atividades_evento = pd.DataFrame(atividades_evento)
-    atividades_evento.rename(
-        {
-            &#34;orgao&#34;: &#34;sigla&#34;,
-            &#34;titulo&#34;: &#34;pop_titulo&#34;,
-            &#34;evento_id&#34;: &#34;id_evento&#34;,
-            &#34;pop_id&#34;: &#34;id_pop&#34;,
-            &#34;inicio&#34;: &#34;data_inicio&#34;,
-            &#34;fim&#34;: &#34;data_fim&#34;,
-            &#34;chegada&#34;: &#34;data_chegada&#34;,
-        },
-        inplace=True,
-        axis=1,
-    )
-
-    eventos_cols = [
-        &#34;id_pop&#34;,
-        &#34;id_evento&#34;,
-        &#34;bairro&#34;,
-        &#34;data_inicio&#34;,
-        &#34;data_fim&#34;,
-        &#34;prazo&#34;,
-        &#34;descricao&#34;,
-        &#34;gravidade&#34;,
-        &#34;latitude&#34;,
-        &#34;longitude&#34;,
-        &#34;status&#34;,
-        &#34;tipo&#34;,
-    ]
-    for col in eventos_cols:
-        if col not in eventos.columns:
-            eventos[col] = None
-
-    atividades_evento_cols = [
-        &#34;id_evento&#34;,
-        &#34;sigla&#34;,
-        &#34;data_chegada&#34;,
-        &#34;data_inicio&#34;,
-        &#34;data_fim&#34;,
-        &#34;descricao&#34;,
-        &#34;status&#34;,
-    ]
-    for col in atividades_evento_cols:
-        if col not in atividades_evento.columns:
-            atividades_evento[col] = None
-
-    eventos_categorical_cols = [
-        &#34;bairro&#34;,
-        &#34;prazo&#34;,
-        &#34;descricao&#34;,
-        &#34;gravidade&#34;,
-        &#34;status&#34;,
-        &#34;tipo&#34;,
-    ]
-    for i in eventos_categorical_cols:
-        eventos[i] = eventos[i].str.capitalize()
-
-    atividade_evento_categorical_cols = [&#34;sigla&#34;, &#34;descricao&#34;, &#34;status&#34;]
-    for i in atividade_evento_categorical_cols:
-        atividades_evento[i] = atividades_evento[i].str.capitalize()
-
-    eventos_datas_cols = [&#34;data_inicio&#34;, &#34;data_fim&#34;]
-    atividades_eventos_datas_cols = [&#34;data_chegada&#34;, &#34;data_inicio&#34;, &#34;data_fim&#34;]
-    eventos[eventos_datas_cols] = eventos[eventos_datas_cols].fillna(
-        &#34;1970-01-01 00:00:00&#34;
-    )
-    atividades_evento[atividades_eventos_datas_cols] = atividades_evento[
-        atividades_eventos_datas_cols
-    ].fillna(&#34;1970-01-01 00:00:00&#34;)
-
-    # Treat id_pop col
-    eventos[&#34;id_pop&#34;] = eventos[&#34;id_pop&#34;].astype(float).astype(int)
-
-    # Fixa colunas e ordem
-    eventos = eventos[eventos_cols].drop_duplicates()
-    atividades_evento = atividades_evento[atividades_evento_cols].drop_duplicates()
-    return eventos, atividades_evento, problema_ids_atividade</code></pre>
-</details>
-</dd>
-<dt id="pipelines.rj_cor.comando.eventos.tasks.get_atividades_pops"><code class="name flex">
-<span>def <span class="ident">get_atividades_pops</span></span>(<span>pops: pandas.core.frame.DataFrame, redis_pops: list) ‑> pandas.core.frame.DataFrame</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Get the list of POP's activities from API</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task(nout=2)
-def get_atividades_pops(pops: pd.DataFrame, redis_pops: list) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    Get the list of POP&#39;s activities from API
-    &#34;&#34;&#34;
-    log(&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting POP&#39;s activities&#34;)
-
-    auth_token = get_token()
-
-    url_secret = get_vault_secret(&#34;comando&#34;)[&#34;data&#34;]
-    url = url_secret[&#34;endpoint_atividades_pop&#34;]
-
-    pop_ids = pops[&#34;id_pop&#34;].unique()
-
-    # remove pop_id 0
-    pop_ids = [i for i in pop_ids if i not in [0, &#34;0&#34;]]
-
-    atividades_pops = []
-    for pop_id in pop_ids:
-        log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting POP&#39;s activities for pop_id: {pop_id}&#34;)
-        response = get_url(url=url + f&#34;?popId={pop_id}&#34;, token=auth_token)
-
-        tentativa = 0
-        while (
-            &#34;error&#34; in response.keys() or response == {&#34;response&#34;: None}
-        ) and tentativa &lt;= 5:
-            log(
-                f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting POP&#39;s activities for pop_id: {pop_id} Time: {tentativa+1}&#34;
-            )
-            time.sleep(60)
-            response = get_url(url=url + f&#34;?popId={pop_id}&#34;, token=auth_token)
-            tentativa += 1
-
-        if (
-            &#34;error&#34; in response.keys() or response == {&#34;response&#34;: None}
-        ) and tentativa &gt; 5:
-            continue
-
-        try:
-            row_template = {
-                &#34;pop_titulo&#34;: response[&#34;pop&#34;],
-                &#34;id_pop&#34;: pop_id,
-                &#34;sigla&#34;: &#34;&#34;,
-                &#34;orgao&#34;: &#34;&#34;,
-                &#34;acao&#34;: &#34;&#34;,
-            }
-        except:
-            log(f&#34;Problem on response {response}&#34;)
-
-        for activity in response[&#34;atividades&#34;]:
-            row = deepcopy(row_template)
-            row[&#34;sigla&#34;] = activity[&#34;sigla&#34;]
-            row[&#34;orgao&#34;] = activity[&#34;orgao&#34;]
-            row[&#34;acao&#34;] = activity[&#34;acao&#34;]
-            atividades_pops.append(row)
-
-    dataframe = pd.DataFrame(atividades_pops)
-    dataframe = dataframe.sort_values([&#34;id_pop&#34;, &#34;sigla&#34;, &#34;acao&#34;])
-
-    for i in [&#34;sigla&#34;, &#34;orgao&#34;, &#34;acao&#34;]:
-        dataframe[i] = dataframe[i].str.capitalize()
-
-    dataframe[&#34;key&#34;] = (
-        dataframe[&#34;id_pop&#34;].astype(str)
-        + &#34;_&#34;
-        + dataframe[&#34;sigla&#34;]
-        + &#34;_&#34;
-        + dataframe[&#34;acao&#34;]
-    )
-    update_pops_redis = dataframe[&#34;key&#34;].unique()
-
-    # Checar pop_ids não salvos no redis
-    update_pops_redis = [i for i in update_pops_redis if i not in redis_pops]
-
-    if len(update_pops_redis) &lt; 1:
-        update_pops_redis = None
-        dataframe = pd.DataFrame()
-    else:
-        # mantém apenas esses pop_ids no dataframe
-        dataframe = dataframe[dataframe[&#34;key&#34;].isin(update_pops_redis)]
-        dataframe = dataframe[[&#34;id_pop&#34;, &#34;sigla&#34;, &#34;orgao&#34;, &#34;acao&#34;]]
-
-    return dataframe, update_pops_redis</code></pre>
+    return dfr</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.comando.eventos.tasks.get_date_interval"><code class="name flex">
-<span>def <span class="ident">get_date_interval</span></span>(<span>date_interval_text: str, dataset_id: str, table_id: str, mode: str = 'prod') ‑> Tuple[dict, str]</span>
+<span>def <span class="ident">get_date_interval</span></span>(<span>first_date, last_date) ‑> Tuple[dict, str]</span>
 </code></dt>
 <dd>
-<div class="desc"><p 08:54:41.0_="08:54:41.0&quot;," 10:40:41.0_="10:40:41.0&quot;" _2023-04-19="&quot;2023-04-19" _fim_:="&quot;fim&quot;:" _inicio_:="&quot;inicio&quot;:">If <code>date_interval_text</code> is provided, parse it for the date interval. Else,
-get the date interval from Redis.
-Example of date_interval_text to use when selecting type string:</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task(nout=2)
-def get_date_interval(
-    date_interval_text: str,
-    dataset_id: str,
-    table_id: str,
-    mode: str = &#34;prod&#34;,
-) -&gt; Tuple[dict, str]:
-    &#34;&#34;&#34;
-    If `date_interval_text` is provided, parse it for the date interval. Else,
-    get the date interval from Redis.
-    Example of date_interval_text to use when selecting type string:
-    {&#34;inicio&#34;: &#34;2023-04-19 08:54:41.0&#34;, &#34;fim&#34;: &#34;2023-04-19 10:40:41.0&#34;}
-    &#34;&#34;&#34;
-    if date_interval_text:
-        log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Date interval was provided: {date_interval_text}&#34;)
-        date_interval = json.loads(date_interval_text)
-        current_time = date_interval[&#34;fim&#34;]
-        log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Date interval: {date_interval}&#34;)
-        return date_interval, current_time
-
-    log(&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Date interval was not provided&#34;)
-    redis_client = get_redis_client()
-
-    key_last_update = build_redis_key(dataset_id, table_id, &#34;last_update&#34;, mode)
-
-    current_time = pendulum.now(&#34;America/Sao_Paulo&#34;)
-
-    last_update = redis_client.get(key_last_update)
-    if last_update is None:
-        log(&#34;Last update was not found in Redis, setting it to D-30&#34;)
-        # Set to current_time - 30 days
-        last_update = current_time.subtract(days=30).strftime(&#34;%Y-%m-%d %H:%M:%S.0&#34;)
-    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Last update: {last_update}&#34;)
-
-    current_time_str = current_time.strftime(&#34;%Y-%m-%d %H:%M:%S.0&#34;)
-
-    date_interval = {
-        &#34;inicio&#34;: last_update,
-        &#34;fim&#34;: current_time_str,
-    }
-
-    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; date_interval: {date_interval}&#34;)
-
-    return date_interval, current_time_str</code></pre>
-</details>
-</dd>
-<dt id="pipelines.rj_cor.comando.eventos.tasks.get_pops"><code class="name flex">
-<span>def <span class="ident">get_pops</span></span>(<span>) ‑> pandas.core.frame.DataFrame</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Get the list of POPS from the API</p></div>
+<div class="desc"><p>If <code>first_date</code> and <code>last_date</code> are provided, format it to DD/MM/YYYY. Else,
+get data from last 3 days.
+first_date: str YYYY-MM-DD
+last_date: str YYYY-MM-DD</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def get_pops() -&gt; pd.DataFrame:
+def get_date_interval(first_date, last_date) -&gt; Tuple[dict, str]:
     &#34;&#34;&#34;
-    Get the list of POPS from the API
+    If `first_date` and `last_date` are provided, format it to DD/MM/YYYY. Else,
+    get data from last 3 days.
+    first_date: str YYYY-MM-DD
+    last_date: str YYYY-MM-DD
     &#34;&#34;&#34;
-    log(&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Requesting POPS&#34;)
+    if first_date and last_date:
+        first_date, last_date = format_date(first_date, last_date)
+    else:
+        last_date = pendulum.today(tz=&#34;America/Sao_Paulo&#34;).date()
+        first_date = last_date.subtract(days=1)  # atenção mudar para 3
+        first_date, last_date = format_date(
+            first_date.strftime(&#34;%Y-%m-%d&#34;), last_date.strftime(&#34;%Y-%m-%d&#34;)
+        )
+    return first_date, last_date</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.comando.eventos.tasks.get_redis_df"><code class="name flex">
+<span>def <span class="ident">get_redis_df</span></span>(<span>dataset_id: str, table_id: str, name: str, mode: str = 'prod') ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Acess redis to get the last saved df and compare to actual df,
+return only the rows from actual df that are not already saved.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_redis_df(
+    dataset_id: str,
+    table_id: str,
+    name: str,
+    mode: str = &#34;prod&#34;,
+) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Acess redis to get the last saved df and compare to actual df,
+    return only the rows from actual df that are not already saved.
+    &#34;&#34;&#34;
+    redis_key = build_redis_key(dataset_id, table_id, name, mode)
+    log(f&#34;Acessing redis_key: {redis_key}&#34;)
 
-    auth_token = get_token()
+    dfr_redis = get_redis_output(redis_key, is_df=True)
+    log(f&#34;Redis output: {dfr_redis}&#34;)
 
-    url_secret = get_vault_secret(&#34;comando&#34;)[&#34;data&#34;]
-    url = url_secret[&#34;endpoint_pops&#34;]
+    # if len(dfr_redis) == 0:
+    #     dfr_redis = pd.DataFrame()
+    #     dict_redis = {k: None for k in columns}
+    #     print(f&#34;\nCreating Redis fake values for key: {redis_key}\n&#34;)
+    #     print(dict_redis)
+    #     dfr_redis = pd.DataFrame(
+    #         dict_redis, index=[0]
+    #     )
+    # else:
+    #     dfr_redis = pd.DataFrame(
+    #         dict_redis.items(), columns=columns
+    #         )
+    # print(f&#34;\nConverting redis dict to df: \n{dfr_redis.head()}&#34;)
 
-    response = get_url(url=url, token=auth_token)
+    return dfr_redis</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.comando.eventos.tasks.get_redis_output"><code class="name flex">
+<span>def <span class="ident">get_redis_output</span></span>(<span>redis_key, is_df: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get Redis output
+Example: {b'date': b'2023-02-27 07:29:04'}</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_redis_output(redis_key, is_df: bool = False):
+    &#34;&#34;&#34;
+    Get Redis output
+    Example: {b&#39;date&#39;: b&#39;2023-02-27 07:29:04&#39;}
+    &#34;&#34;&#34;
+    redis_client = get_redis_client()  # (host=&#34;127.0.0.1&#34;)
 
-    pops = pd.DataFrame(response[&#34;objeto&#34;])
-    pops[&#34;id&#34;] = pops[&#34;id&#34;].astype(&#34;int&#34;)
-    pops = pops.rename({&#34;id&#34;: &#34;id_pop&#34;, &#34;titulo&#34;: &#34;pop_titulo&#34;}, axis=1).sort_values(
-        &#34;id_pop&#34;
-    )
-    pops[&#34;pop_titulo&#34;] = pops[
-        &#34;pop_titulo&#34;
-    ].str.capitalize()  # pylint: disable=unsubscriptable-object, E1137
+    if is_df:
+        json_data = redis_client.get(redis_key)
+        print(type(json_data))
+        print(json_data)
+        if json_data:
+            # If data is found, parse the JSON string back to a Python object (dictionary)
+            data_dict = json.loads(json_data)
+            # Convert the dictionary back to a DataFrame
+            return pd.DataFrame(data_dict)
 
-    return pops[[&#34;id_pop&#34;, &#34;pop_titulo&#34;]]  # pylint: disable=unsubscriptable-object</code></pre>
+        return pd.DataFrame()
+
+    output = redis_client.hgetall(redis_key)
+    if len(output) &gt; 0:
+        output = treat_redis_output(output)
+    return output</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.comando.eventos.tasks.not_none"><code class="name flex">
@@ -813,38 +544,37 @@ def not_none(something: Any) -&gt; bool:
     return something is not None</code></pre>
 </details>
 </dd>
-<dt id="pipelines.rj_cor.comando.eventos.tasks.salvar_dados"><code class="name flex">
-<span>def <span class="ident">salvar_dados</span></span>(<span>dfr: pandas.core.frame.DataFrame, current_time: str, name: str) ‑> Union[str, pathlib.Path]</span>
+<dt id="pipelines.rj_cor.comando.eventos.tasks.save_data"><code class="name flex">
+<span>def <span class="ident">save_data</span></span>(<span>dataframe: pandas.core.frame.DataFrame) ‑> Union[str, pathlib.Path]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Salvar dados tratados em csv para conseguir subir pro GCP</p></div>
+<div class="desc"><p>Save data on a csv file to be uploaded to GCP</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def salvar_dados(dfr: pd.DataFrame, current_time: str, name: str) -&gt; Union[str, Path]:
+def save_data(dataframe: pd.DataFrame) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
-    Salvar dados tratados em csv para conseguir subir pro GCP
+    Save data on a csv file to be uploaded to GCP
     &#34;&#34;&#34;
 
-    dfr[&#34;ano_particao&#34;] = pd.to_datetime(dfr[&#34;data_inicio&#34;]).dt.year
-    dfr[&#34;mes_particao&#34;] = pd.to_datetime(dfr[&#34;data_inicio&#34;]).dt.month
-    dfr[&#34;data_particao&#34;] = pd.to_datetime(dfr[&#34;data_inicio&#34;]).dt.date
-    dfr[&#34;ano_particao&#34;] = dfr[&#34;ano_particao&#34;].astype(&#34;int&#34;)
-    dfr[&#34;mes_particao&#34;] = dfr[&#34;mes_particao&#34;].astype(&#34;int&#34;)
+    prepath = Path(&#34;/tmp/data/&#34;)
+    prepath.mkdir(parents=True, exist_ok=True)
 
-    partitions_path = Path(os.getcwd(), &#34;data&#34;, &#34;comando&#34;, name)
-    if not os.path.exists(partitions_path):
-        os.makedirs(partitions_path)
+    partition_column = &#34;data_inicio&#34;
+    dataframe, partitions = parse_date_columns(dataframe, partition_column)
+    current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y%m%d%H%M&#34;)
 
     to_partitions(
-        dfr,
-        partition_columns=[&#34;ano_particao&#34;, &#34;mes_particao&#34;, &#34;data_particao&#34;],
-        savepath=partitions_path,
+        data=dataframe,
+        partition_columns=partitions,
+        savepath=prepath,
+        data_type=&#34;csv&#34;,
         suffix=current_time,
     )
-    return partitions_path</code></pre>
+    log(f&#34;[DEBUG] Files saved on {prepath}&#34;)
+    return prepath</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.comando.eventos.tasks.save_no_partition"><code class="name flex">
@@ -877,44 +607,109 @@ def save_no_partition(dataframe: pd.DataFrame, append: bool = False) -&gt; str:
     return path_to_directory</code></pre>
 </details>
 </dd>
-<dt id="pipelines.rj_cor.comando.eventos.tasks.set_last_updated_on_redis"><code class="name flex">
-<span>def <span class="ident">set_last_updated_on_redis</span></span>(<span>dataset_id: str, table_id: str, mode: str = 'prod', current_time: str = None, problem_ids_atividade: str = None) ‑> None</span>
+<dt id="pipelines.rj_cor.comando.eventos.tasks.treat_data"><code class="name flex">
+<span>def <span class="ident">treat_data</span></span>(<span>dfr: pandas.core.frame.DataFrame, dfr_redis: pandas.core.frame.DataFrame, columns: list) ‑> Tuple[pandas.core.frame.DataFrame, pandas.core.frame.DataFrame]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Set the last updated time on Redis.</p></div>
+<div class="desc"><p>Rename cols and normalize data.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@task(trigger=all_successful)
-def set_last_updated_on_redis(
-    dataset_id: str,
-    table_id: str,
-    mode: str = &#34;prod&#34;,
-    current_time: str = None,
-    problem_ids_atividade: str = None,
-) -&gt; None:
+<pre><code class="python">@task(nout=2)
+def treat_data(
+    dfr: pd.DataFrame,
+    dfr_redis: pd.DataFrame,
+    columns: list,
+) -&gt; Tuple[pd.DataFrame, pd.DataFrame]:
     &#34;&#34;&#34;
-    Set the last updated time on Redis.
+    Rename cols and normalize data.
     &#34;&#34;&#34;
-    redis_client = get_redis_client()
 
-    if not current_time:
-        current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y-%m-%d %H:%M:%S.0&#34;)
+    log(&#34;Start treating data&#34;)
+    dfr = dfr.rename(
+        columns={
+            &#34;id&#34;: &#34;id_evento&#34;,
+            &#34;pop_id&#34;: &#34;id_pop&#34;,
+            &#34;inicio&#34;: &#34;data_inicio&#34;,
+            &#34;pop&#34;: &#34;pop_titulo&#34;,
+            &#34;titulo&#34;: &#34;pop_especificacao&#34;,
+        }
+    )
 
-    key_last_update = build_redis_key(dataset_id, table_id, &#34;last_update&#34;, mode)
-    redis_client.set(key_last_update, current_time)
+    dfr[&#34;id_evento&#34;] = dfr[&#34;id_evento&#34;].astype(float).astype(int).astype(str)
 
-    key_problema_ids = build_redis_key(dataset_id, table_id, &#34;problema_ids&#34;, mode)
+    log(f&#34;Dataframe before comparing with last data saved on redis \n{dfr.head()}&#34;)
+    columns = [&#34;id_evento&#34;, &#34;data_inicio&#34;, &#34;status&#34;]
+    dfr, dfr_redis = compare_actual_df_with_redis_df(
+        dfr,
+        dfr_redis,
+        columns,
+    )
+    log(f&#34;Dataframe after comparing with last data saved on redis {dfr.head()}&#34;)
 
-    problem_ids_atividade_antigos = redis_client.get(key_problema_ids)
+    # If df is empty stop flow
+    if dfr.shape[0] == 0:
+        skip_text = &#34;No new data available on API&#34;
+        print(skip_text)
+        # raise ENDRUN(state=Skipped(skip_text))
 
-    if problem_ids_atividade_antigos is not None:
-        problem_ids_atividade = problem_ids_atividade + list(
-            problem_ids_atividade_antigos
-        )
+    dfr[&#34;tipo&#34;] = dfr[&#34;tipo&#34;].replace(
+        {
+            &#34;Primária&#34;: &#34;Primario&#34;,
+            &#34;Secundária&#34;: &#34;Secundario&#34;,
+        }
+    )
+    dfr[&#34;descricao&#34;] = dfr[&#34;descricao&#34;].apply(unidecode)
 
-    redis_client.set(key_problema_ids, list(set(problem_ids_atividade)))</code></pre>
+    mandatory_cols = [
+        &#34;id_pop&#34;,
+        &#34;id_evento&#34;,
+        &#34;bairro&#34;,
+        &#34;data_inicio&#34;,
+        &#34;data_fim&#34;,
+        &#34;prazo&#34;,
+        &#34;descricao&#34;,
+        &#34;gravidade&#34;,
+        &#34;latitude&#34;,
+        &#34;longitude&#34;,
+        &#34;status&#34;,
+        &#34;tipo&#34;,
+    ]
+    # Create cols if they don exist on new API
+    for col in mandatory_cols:
+        if col not in dfr.columns:
+            dfr[col] = None
+
+    categorical_cols = [
+        &#34;bairro&#34;,
+        &#34;prazo&#34;,
+        &#34;descricao&#34;,
+        &#34;gravidade&#34;,
+        &#34;status&#34;,
+        &#34;tipo&#34;,
+        &#34;pop_titulo&#34;,
+    ]
+    for i in categorical_cols:
+        dfr[i] = dfr[i].str.capitalize()
+
+    # This treatment is temporary. Now the id_pop from API is comming with the same value as id_evento
+    dfr = treat_wrong_id_pop(dfr)
+    log(f&#34;This id_pop are missing {dfr[dfr.id_pop.isna()]} they were replaced by 99&#34;)
+    dfr[&#34;id_pop&#34;] = dfr[&#34;id_pop&#34;].fillna(99)
+
+    # Treat id_pop col
+    dfr[&#34;id_pop&#34;] = dfr[&#34;id_pop&#34;].astype(float).astype(int)
+
+    # Set the order to match the original table
+    dfr = dfr[mandatory_cols]
+
+    # Create a column with time of row creation to keep last event on dbt
+    dfr[&#34;created_at&#34;] = pendulum.now(tz=&#34;America/Sao_Paulo&#34;).strftime(
+        &#34;%Y-%m-%d %H:%M:%S&#34;
+    )
+
+    return dfr.drop_duplicates(), dfr_redis</code></pre>
 </details>
 </dd>
 </dl>
@@ -981,14 +776,15 @@ setTimeout(() => input.focus(), 100);
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="pipelines.rj_cor.comando.eventos.tasks.download_eventos" href="#pipelines.rj_cor.comando.eventos.tasks.download_eventos">download_eventos</a></code></li>
-<li><code><a title="pipelines.rj_cor.comando.eventos.tasks.get_atividades_pops" href="#pipelines.rj_cor.comando.eventos.tasks.get_atividades_pops">get_atividades_pops</a></code></li>
+<li><code><a title="pipelines.rj_cor.comando.eventos.tasks.compare_actual_df_with_redis_df" href="#pipelines.rj_cor.comando.eventos.tasks.compare_actual_df_with_redis_df">compare_actual_df_with_redis_df</a></code></li>
+<li><code><a title="pipelines.rj_cor.comando.eventos.tasks.download_data" href="#pipelines.rj_cor.comando.eventos.tasks.download_data">download_data</a></code></li>
 <li><code><a title="pipelines.rj_cor.comando.eventos.tasks.get_date_interval" href="#pipelines.rj_cor.comando.eventos.tasks.get_date_interval">get_date_interval</a></code></li>
-<li><code><a title="pipelines.rj_cor.comando.eventos.tasks.get_pops" href="#pipelines.rj_cor.comando.eventos.tasks.get_pops">get_pops</a></code></li>
+<li><code><a title="pipelines.rj_cor.comando.eventos.tasks.get_redis_df" href="#pipelines.rj_cor.comando.eventos.tasks.get_redis_df">get_redis_df</a></code></li>
+<li><code><a title="pipelines.rj_cor.comando.eventos.tasks.get_redis_output" href="#pipelines.rj_cor.comando.eventos.tasks.get_redis_output">get_redis_output</a></code></li>
 <li><code><a title="pipelines.rj_cor.comando.eventos.tasks.not_none" href="#pipelines.rj_cor.comando.eventos.tasks.not_none">not_none</a></code></li>
-<li><code><a title="pipelines.rj_cor.comando.eventos.tasks.salvar_dados" href="#pipelines.rj_cor.comando.eventos.tasks.salvar_dados">salvar_dados</a></code></li>
+<li><code><a title="pipelines.rj_cor.comando.eventos.tasks.save_data" href="#pipelines.rj_cor.comando.eventos.tasks.save_data">save_data</a></code></li>
 <li><code><a title="pipelines.rj_cor.comando.eventos.tasks.save_no_partition" href="#pipelines.rj_cor.comando.eventos.tasks.save_no_partition">save_no_partition</a></code></li>
-<li><code><a title="pipelines.rj_cor.comando.eventos.tasks.set_last_updated_on_redis" href="#pipelines.rj_cor.comando.eventos.tasks.set_last_updated_on_redis">set_last_updated_on_redis</a></code></li>
+<li><code><a title="pipelines.rj_cor.comando.eventos.tasks.treat_data" href="#pipelines.rj_cor.comando.eventos.tasks.treat_data">treat_data</a></code></li>
 </ul>
 </li>
 </ul>
