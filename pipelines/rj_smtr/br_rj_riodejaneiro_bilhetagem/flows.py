@@ -46,20 +46,23 @@ from pipelines.rj_smtr.schedules import (
 
 from pipelines.utils.utils import get_redis_client
 
-with Flow("Corrige Key Redis Bilhetagem") as redis_key_flow:
-    redis_client = task(get_redis_client, name="get_redis_client")()
+
+@task
+def set_key():
+    redis_client = get_redis_client()
     key = (
         constants.BILHETAGEM_DATASET_ID.value
         + "."
         + constants.BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS.value["table_id"]
     )
 
-    content = task(
-        lambda: {"last_run_timestamp": "2024-01-26T13:00:00"}, name="set_content"
-    )()
-    task(lambda key, content: redis_client.set(key, content), name="set_key")(
-        key=key, content=content
-    )
+    content = {"last_run_timestamp": "2024-01-26T13:00:00"}
+
+    redis_client.set(key, content)
+
+
+with Flow("Corrige Key Redis Bilhetagem") as redis_key_flow:
+    set_key()
 
 redis_key_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 redis_key_flow.run_config = KubernetesRun(
