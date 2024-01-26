@@ -256,7 +256,7 @@ class constants(Enum):  # pylint: disable=c0103
             &#34;&#34;&#34;,
         },
         &#34;primary_key&#34;: [&#34;id&#34;],
-        &#34;interval_minutes&#34;: 1,
+        &#34;interval_minutes&#34;: 1440,
     }
 
     BILHETAGEM_TRACKING_CAPTURE_PARAMS = {
@@ -484,9 +484,23 @@ class constants(Enum):  # pylint: disable=c0103
         },
     ]
 
+    BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS = {
+        &#34;dataset_id&#34;: BILHETAGEM_DATASET_ID,
+        &#34;table_id&#34;: &#34;integracao&#34;,
+        &#34;upstream&#34;: True,
+        &#34;dbt_vars&#34;: {
+            &#34;date_range&#34;: {
+                &#34;table_run_datetime_column_name&#34;: &#34;datetime_captura&#34;,
+                &#34;delay_hours&#34;: 0,
+            },
+            &#34;version&#34;: {},
+        },
+        &#34;exclude&#34;: &#34;+operadoras +consorcios&#34;,
+    }
+
     BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS = {
         &#34;dataset_id&#34;: BILHETAGEM_DATASET_ID,
-        &#34;table_id&#34;: BILHETAGEM_TRANSACAO_CAPTURE_PARAMS[&#34;table_id&#34;],
+        &#34;table_id&#34;: &#34;passageiros_hora&#34;,
         &#34;upstream&#34;: True,
         &#34;dbt_vars&#34;: {
             &#34;date_range&#34;: {
@@ -495,21 +509,7 @@ class constants(Enum):  # pylint: disable=c0103
             },
             &#34;version&#34;: {},
         },
-    }
-
-    BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS = {
-        &#34;dataset_id&#34;: BILHETAGEM_DATASET_ID,
-        &#34;table_id&#34;: BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS[&#34;table_id&#34;],
-        &#34;upstream&#34;: True,
-        &#34;dbt_vars&#34;: {
-            &#34;date_range&#34;: {
-                &#34;table_run_datetime_column_name&#34;: &#34;datetime_captura&#34;,
-                &#34;delay_hours&#34;: 1,
-                &#34;table_alias&#34;: &#34;integracao&#34;,
-            },
-            &#34;version&#34;: {},
-        },
-        &#34;exclude&#34;: &#34;+diretorio_operadoras +diretorio_consorcios&#34;,
+        &#34;exclude&#34;: &#34;integracao matriz_integracao&#34;,
     }
 
     BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS = {
@@ -1048,7 +1048,7 @@ and createdDate lt {end})&#34;,
             &#34;&#34;&#34;,
         },
         &#34;primary_key&#34;: [&#34;id&#34;],
-        &#34;interval_minutes&#34;: 1,
+        &#34;interval_minutes&#34;: 1440,
     }
 
     BILHETAGEM_TRACKING_CAPTURE_PARAMS = {
@@ -1276,9 +1276,23 @@ and createdDate lt {end})&#34;,
         },
     ]
 
+    BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS = {
+        &#34;dataset_id&#34;: BILHETAGEM_DATASET_ID,
+        &#34;table_id&#34;: &#34;integracao&#34;,
+        &#34;upstream&#34;: True,
+        &#34;dbt_vars&#34;: {
+            &#34;date_range&#34;: {
+                &#34;table_run_datetime_column_name&#34;: &#34;datetime_captura&#34;,
+                &#34;delay_hours&#34;: 0,
+            },
+            &#34;version&#34;: {},
+        },
+        &#34;exclude&#34;: &#34;+operadoras +consorcios&#34;,
+    }
+
     BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS = {
         &#34;dataset_id&#34;: BILHETAGEM_DATASET_ID,
-        &#34;table_id&#34;: BILHETAGEM_TRANSACAO_CAPTURE_PARAMS[&#34;table_id&#34;],
+        &#34;table_id&#34;: &#34;passageiros_hora&#34;,
         &#34;upstream&#34;: True,
         &#34;dbt_vars&#34;: {
             &#34;date_range&#34;: {
@@ -1287,21 +1301,7 @@ and createdDate lt {end})&#34;,
             },
             &#34;version&#34;: {},
         },
-    }
-
-    BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS = {
-        &#34;dataset_id&#34;: BILHETAGEM_DATASET_ID,
-        &#34;table_id&#34;: BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS[&#34;table_id&#34;],
-        &#34;upstream&#34;: True,
-        &#34;dbt_vars&#34;: {
-            &#34;date_range&#34;: {
-                &#34;table_run_datetime_column_name&#34;: &#34;datetime_captura&#34;,
-                &#34;delay_hours&#34;: 1,
-                &#34;table_alias&#34;: &#34;integracao&#34;,
-            },
-            &#34;version&#34;: {},
-        },
-        &#34;exclude&#34;: &#34;+diretorio_operadoras +diretorio_consorcios&#34;,
+        &#34;exclude&#34;: &#34;integracao matriz_integracao&#34;,
     }
 
     BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS = {
