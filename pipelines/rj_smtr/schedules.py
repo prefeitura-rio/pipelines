@@ -38,20 +38,6 @@ every_minute_dev = Schedule(
     ]
 )
 
-every_5_minutes = Schedule(
-    clocks=[
-        IntervalClock(
-            interval=timedelta(minutes=5),
-            start_date=datetime(
-                2021, 1, 1, 0, 0, 0, tzinfo=timezone(constants.TIMEZONE.value)
-            ),
-            labels=[
-                emd_constants.RJ_SMTR_AGENT_LABEL.value,
-            ],
-        ),
-    ]
-)
-
 every_7_minutes = Schedule(
     clocks=[
         IntervalClock(
