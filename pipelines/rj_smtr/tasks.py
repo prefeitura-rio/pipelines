@@ -1193,6 +1193,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
         dict: containing date_range_start and date_range_end
     """
     timestr = "%Y-%m-%dT%H:%M:%S"
+    log(f"Truncate minutes? -> {truncate_minutes}")
     # get start from redis
     last_run = get_last_run_timestamp(
         dataset_id=dataset_id, table_id=table_id, mode=mode
@@ -1240,15 +1241,19 @@ def get_materialization_date_range(  # pylint: disable=R0913
     start_ts = last_run.replace(second=0, microsecond=0).strftime(timestr)
     if truncate_minutes:
         start_ts = start_ts.replace(minute=0)
-
+    log(f"Got start_ts as {start_ts}")
     # set end to now - delay
 
     if not end_ts:
         end_ts = pendulum.now(constants.TIMEZONE.value).replace(
             tzinfo=None, second=0, microsecond=0
         )
+        log(f"end_ts not passed. Got end_ts as {end_ts}")
+    else:
+        log(f"end_ts is {end_ts}")
 
     end_ts = (end_ts - timedelta(hours=delay_hours)).replace(second=0, microsecond=0)
+    log(f"After subtracting delay_hours, end_ts is {end_ts}")
 
     if truncate_minutes:
         end_ts = end_ts.replace(minute=0)
