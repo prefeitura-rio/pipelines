@@ -149,6 +149,8 @@ with Flow(
     "SMTR: RHO - Captura/Tratamento",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as rho_captura_tratamento:
+    LABELS = get_current_flow_labels()
+
     run_captura = create_flow_run(
         flow_name=captura_sppo_rho.name,
         project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
