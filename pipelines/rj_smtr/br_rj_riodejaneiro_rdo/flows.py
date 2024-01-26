@@ -5,7 +5,7 @@ Flows for br_rj_riodejaneiro_rdo
 
 from prefect import Parameter, case
 
-# from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
+from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect.utilities.edges import unmapped
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
@@ -38,7 +38,7 @@ from pipelines.utils.tasks import (
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
 with Flow(
-    "SMTR: SPPO RHO - Materialização", code_owners=["rodrigo"]
+    "SMTR: SPPO RHO - Materialização (subflow)", code_owners=["rodrigo"]
 ) as sppo_rho_materialize:
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
@@ -99,7 +99,7 @@ sppo_rho_materialize.run_config = KubernetesRun(
 )
 
 with Flow(
-    "SMTR: RHO - Captura",
+    "SMTR: RHO - Captura (subflow)",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as captura_sppo_rho:
     # SETUP
@@ -144,7 +144,44 @@ captura_sppo_rho.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-captura_sppo_rho.schedule = every_day
+
+with Flow(
+    "SMTR: RHO - Captura/Tratamento",
+    code_owners=["caio", "fernanda", "boris", "rodrigo"],
+) as rho_captura_tratamento:
+    run_captura = create_flow_run(
+        flow_name=captura_sppo_rho.name,
+        project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+        labels=LABELS,
+    )
+
+    wait_captura = wait_for_flow_run(
+        run_captura,
+        stream_states=True,
+        stream_logs=True,
+        raise_final_state=True,
+    )
+
+    run_materializacao = create_flow_run(
+        flow_name=sppo_rho_materialize.name,
+        project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+        labels=LABELS,
+        upstream_tasks=[wait_captura],
+    )
+
+    wait_materializacao = wait_for_flow_run(
+        run_materializacao,
+        stream_states=True,
+        stream_logs=True,
+        raise_final_state=True,
+    )
+
+rho_captura_tratamento.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+rho_captura_tratamento.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+rho_captura_tratamento.schedule = every_day
 
 with Flow(
     "SMTR: RDO - Captura",
