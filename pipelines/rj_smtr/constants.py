@@ -471,7 +471,6 @@ class constants(Enum):  # pylint: disable=c0103
 
     BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS = {
         "dataset_id": BILHETAGEM_DATASET_ID,
-        # "table_id": BILHETAGEM_TRANSACAO_CAPTURE_PARAMS["table_id"],
         "table_id": "passageiros_hora",
         "upstream": True,
         "dbt_vars": {
