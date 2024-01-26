@@ -66,7 +66,7 @@ bilhetagem_transacao_captura.schedule = every_minute
 # BILHETAGEM INTEGRAÇÃO - CAPTURA A CADA MINUTO #
 
 bilhetagem_integracao_captura = deepcopy(default_capture_flow)
-bilhetagem_integracao_captura.name = "SMTR: Bilhetagem Integração - Captura"
+bilhetagem_integracao_captura.name = "SMTR: Bilhetagem Integração - Captura (subflow)"
 bilhetagem_integracao_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 bilhetagem_integracao_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
@@ -79,7 +79,6 @@ bilhetagem_integracao_captura = set_default_parameters(
     | constants.BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS.value,
 )
 
-bilhetagem_integracao_captura.schedule = every_minute
 
 # BILHETAGEM GPS - CAPTURA A CADA 5 MINUTOS #
 
@@ -295,23 +294,6 @@ with Flow(
             raise_final_state=True,
         )
 
-        # Recaptura Integração
-
-        run_recaptura_integracao = create_flow_run(
-            flow_name=bilhetagem_recaptura.name,
-            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            labels=LABELS,
-            parameters=constants.BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS.value,
-            upstream_tasks=[wait_recaptura_transacao_true],
-        )
-
-        wait_recaptura_integracao_true = wait_for_flow_run(
-            run_recaptura_integracao,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
-        )
-
         # Captura Auxiliar
 
         runs_captura = create_flow_run.map(
@@ -321,7 +303,7 @@ with Flow(
             labels=unmapped(LABELS),
         )
 
-        runs_captura.set_upstream(wait_recaptura_integracao_true)
+        runs_captura.set_upstream(wait_recaptura_transacao_true)
 
         wait_captura_true = wait_for_flow_run.map(
             runs_captura,
@@ -353,9 +335,8 @@ with Flow(
             wait_captura_false,
             wait_recaptura_auxiliar_false,
             wait_recaptura_transacao_false,
-            wait_recaptura_integracao_false,
         ) = task(
-            lambda: [None, None, None, None], name="assign_none_to_capture_runs", nout=4
+            lambda: [None, None, None], name="assign_none_to_capture_runs", nout=3
         )()
 
     wait_captura = merge(wait_captura_false, wait_captura_true)
@@ -364,9 +345,6 @@ with Flow(
     )
     wait_recaptura_transacao = merge(
         wait_recaptura_transacao_false, wait_recaptura_transacao_true
-    )
-    wait_recaptura_integracao = merge(
-        wait_recaptura_integracao_false, wait_recaptura_integracao_true
     )
 
     with case(materialize, True):
@@ -382,7 +360,6 @@ with Flow(
                 wait_captura,
                 wait_recaptura_auxiliar,
                 wait_recaptura_transacao,
-                wait_recaptura_integracao,
             ],
             parameters={
                 "timestamp": materialize_timestamp,
@@ -396,31 +373,12 @@ with Flow(
             raise_final_state=True,
         )
 
-        run_materializacao_integracao = create_flow_run(
-            flow_name=bilhetagem_materializacao_integracao.name,
-            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            labels=LABELS,
-            upstream_tasks=[
-                wait_materializacao_transacao,
-            ],
-            parameters={
-                "timestamp": materialize_timestamp,
-            },
-        )
-
-        wait_materializacao_integracao = wait_for_flow_run(
-            run_materializacao_integracao,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
-        )
-
         run_materializacao_gps_validador = create_flow_run(
             flow_name=bilhetagem_materializacao_gps_validador.name,
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=LABELS,
             upstream_tasks=[
-                wait_materializacao_integracao,
+                wait_materializacao_transacao,
             ],
             parameters={
                 "timestamp": materialize_timestamp,
@@ -478,6 +436,20 @@ with Flow(
             raise_final_state=unmapped(True),
         )
 
+        runs_captura_integracao = create_flow_run(
+            flow_name=unmapped(bilhetagem_integracao_captura.name),
+            project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+            labels=unmapped(LABELS),
+            upstream_tasks=[wait_captura],
+        )
+
+        wait_captura_integracao = wait_for_flow_run(
+            runs_captura_integracao,
+            stream_states=unmapped(True),
+            stream_logs=unmapped(True),
+            raise_final_state=unmapped(True),
+        )
+
         # Recaptura #
 
         runs_recaptura = create_flow_run.map(
@@ -496,23 +468,48 @@ with Flow(
             raise_final_state=unmapped(True),
         )
 
+        # Recaptura Integração
+
+        run_recaptura_integracao = create_flow_run(
+            flow_name=bilhetagem_recaptura.name,
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            labels=LABELS,
+            parameters=constants.BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS.value,
+            upstream_tasks=[wait_recaptura_true, wait_captura_integracao],
+        )
+
+        wait_recaptura_integracao_true = wait_for_flow_run(
+            run_recaptura_integracao,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+
     with case(capture, False):
-        wait_recaptura_false = task(lambda: None, name="assign_none_to_recapture")()
+        wait_recaptura_false, wait_recaptura_integracao_false = task(
+            lambda: [None, None], name="assign_none_to_recapture", nout=2
+        )()
 
     wait_recaptura = merge(wait_recaptura_true, wait_recaptura_false)
+    wait_recaptura_integracao = merge(
+        wait_recaptura_integracao_true, wait_recaptura_integracao_false
+    )
 
     # Materialização #
 
     with case(materialize, True):
+        materialize_timestamp = get_current_timestamp(
+            timestamp=timestamp,
+            return_str=True,
+        )
+
         run_materializacao = create_flow_run(
             flow_name=bilhetagem_materializacao_ordem_pagamento.name,
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=LABELS,
-            upstream_tasks=[wait_recaptura],
+            upstream_tasks=[wait_recaptura, wait_recaptura_integracao],
             parameters={
-                "timestamp": get_current_timestamp(
-                    timestamp=timestamp, return_str=True
-                ),
+                "timestamp": materialize_timestamp,
             },
         )
 
@@ -523,8 +520,27 @@ with Flow(
             raise_final_state=True,
         )
 
+        run_materializacao_integracao = create_flow_run(
+            flow_name=bilhetagem_materializacao_integracao.name,
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            labels=LABELS,
+            upstream_tasks=[
+                wait_materializacao,
+            ],
+            parameters={
+                "timestamp": materialize_timestamp,
+            },
+        )
+
+        wait_materializacao_integracao = wait_for_flow_run(
+            run_materializacao_integracao,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+
     bilhetagem_ordem_pagamento_captura_tratamento.set_reference_tasks(
-        [wait_materializacao, wait_recaptura]
+        [wait_materializacao_integracao, wait_recaptura]
     )
 
 bilhetagem_ordem_pagamento_captura_tratamento.storage = GCS(
