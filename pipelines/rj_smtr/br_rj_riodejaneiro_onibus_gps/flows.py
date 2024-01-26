@@ -2,7 +2,7 @@
 """
 Flows for br_rj_riodejaneiro_onibus_gps
 """
-
+from copy import deepcopy
 from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
@@ -398,6 +398,9 @@ recaptura.run_config = KubernetesRun(
 recaptura.schedule = every_hour_minute_six
 
 
+materialize_gps_15_min = deepcopy(materialize_sppo)
+materialize_gps_15_min.name = "SMTR: GPS SPPO 15 Minutos - Materialização (subflow)"
+
 with Flow(
     "SMTR: GPS SPPO 15 Minutos - Tratamento",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
@@ -421,11 +424,11 @@ with Flow(
     )
 
     materialize_no_error = create_flow_run(
-        flow_name=materialize_sppo.name,
+        flow_name=materialize_gps_15_min.name,
         # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
         project_name="staging",
         labels=LABELS,
-        run_name=materialize_sppo.name,
+        run_name=materialize_gps_15_min.name,
         parameters={
             "table_id": constants.GPS_SPPO_15_MIN_TREATED_TABLE_ID.value,
             "rebuild": rebuild,
