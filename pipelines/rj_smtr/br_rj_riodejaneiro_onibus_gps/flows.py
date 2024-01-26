@@ -404,7 +404,7 @@ materialize_gps_15_min.name = "SMTR: GPS SPPO 15 Minutos - Materialização (sub
 with Flow(
     "SMTR: GPS SPPO 15 Minutos - Tratamento",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
-) as recaptura:
+) as recaptura_15min:
     version = Parameter("version", default=2)
     datetime_filter = Parameter("datetime_filter", default=None)
     rebuild = Parameter("rebuild", default=False)
@@ -515,9 +515,9 @@ with Flow(
     #     upstream_tasks=[UPLOAD_LOGS],
     # )
 
-recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-recaptura.run_config = KubernetesRun(
+recaptura_15min.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+recaptura_15min.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
-recaptura.schedule = every_15_minute_dev
+recaptura_15min.schedule = every_15_minute_dev
