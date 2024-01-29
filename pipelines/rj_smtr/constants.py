@@ -297,7 +297,8 @@ class constants(Enum):  # pylint: disable=c0103
 
     BILHETAGEM_TRATAMENTO_INTERVAL = 60
 
-    BILHETAGEM_PRIVATE_BUCKET = "rj-smtr-jae-private"
+    # BILHETAGEM_PRIVATE_BUCKET = "rj-smtr-jae-private"
+    BILHETAGEM_PRIVATE_BUCKET = "rj-smtr-dev-private"
 
     BILHETAGEM_CAPTURE_PARAMS = [
         {
@@ -368,15 +369,20 @@ class constants(Enum):  # pylint: disable=c0103
                 "database": "gratuidade_db",
                 "query": """
                     SELECT
-                        *
+                        g.*,
+                        t.descricao AS tipo_gratuidade
                     FROM
-                        gratuidade
+                        gratuidade g
+                    LEFT JOIN
+                        tipo_gratuidade t
+                    ON
+                        g.id_tipo_gratuidade = t.id
                     WHERE
-                        dt_inclusao BETWEEN '{start}'
+                        g.dt_inclusao BETWEEN '{start}'
                         AND '{end}'
                 """,
             },
-            "primary_key": ["CD_CLIENTE"],  # id column to nest data on
+            "primary_key": ["id"],  # id column to nest data on
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
             "save_bucket_name": BILHETAGEM_PRIVATE_BUCKET,
         },
