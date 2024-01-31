@@ -5,7 +5,7 @@ import pendulum
 from prefect import task
 from prefect.client import Client
 
-from pipelines.utils.utils import log, get_redis_client
+from pipelines.utils.utils import log, send_discord_message, get_vault_secret
 
 
 def query_active_flow_names(prefix, prefect_client=None):
@@ -33,6 +33,16 @@ query ($prefix: String, $offset: Int){
         flow_names.append(flow["name"])
     flow_names = list(set(flow_names))
     return flow_names
+
+
+def send_cancelled_run_on_discord(cancelled_runs, flow_name, webhook_url):
+    message = f"""
+O Flow {flow_name} teve {len(cancelled_runs)} canceladas.
+Link para as runs:\n
+"""
+    for run_id in cancelled_runs:
+        message.append(f"https://prefect.dados.rio/{run_id}")
+    send_discord_message(message=message, webhook_url=webhook_url)
 
 
 @task
@@ -102,7 +112,7 @@ query($flow_name: String, $offset: Int){
     #     response = prefect_client.graphql(query=query, variables=variables)
     if archived_flow_runs:
         log(f"O Flow {flow_name} possui runs a serem canceladas")
-    return archived_flow_runs
+    return {"flow_name": flow_name, "flow_runs": archived_flow_runs}
 
 
 @task
@@ -110,10 +120,11 @@ def cancel_flow_runs(flow_runs: List[Dict[str, str]], client: Client = None) -> 
     """
     Cancels a flow run from the API.
     """
-    if not flow_runs:
-        log("No flow runs to cancel")
+    if not flow_runs["flow_runs"]:
+        log(f"O flow {flow_runs['flow_name']} não possui runs para cancelar")
         return
-    flow_run_ids = [flow_run["id"] for flow_run in flow_runs]
+    flow_run_ids = [flow_run["id"] for flow_run in flow_runs["flow_runs"]]
+    cancelled_runs = []
     log(f">>>>>>>>>> Cancelling flow runs\n{flow_run_ids}")
     if not client:
         client = Client()
@@ -136,5 +147,15 @@ def cancel_flow_runs(flow_runs: List[Dict[str, str]], client: Client = None) -> 
             )
             state: str = response["data"]["cancel_flow_run"]["state"]
             log(f">>>>>>>>>> Flow run {flow_run_id} is now {state}")
+            cancelled_runs.append(flow_run_id)
         except Exception:
             log(f"Flow_run {flow_run_id} could not be cancelled")
+
+    # Notify cancellation
+    try:
+        url = get_vault_secret("cancelled_runs_webhook")
+        send_cancelled_run_on_discord(
+            cancelled_runs, flow_runs["flow_name"], webhook_url=url
+        )
+    except Exception:
+        log("Could not get a webhook to send messages to")

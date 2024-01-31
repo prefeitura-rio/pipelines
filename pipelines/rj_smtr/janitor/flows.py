@@ -7,7 +7,7 @@ from pipelines.utils.decorators import Flow
 
 # from pipelines.rj_escritorio.cleanup.tasks import cancel_flow_run
 
-from pipelines.rj_smtr.schedules import every_10_minutes
+from pipelines.rj_smtr.schedules import every_5_minutes
 from pipelines.rj_smtr.janitor.tasks import (
     get_active_flow_names,
     query_archived_scheduled_runs,
@@ -26,4 +26,4 @@ janitor_flow.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-janitor_flow.schedule = every_10_minutes
+janitor_flow.schedule = every_5_minutes
