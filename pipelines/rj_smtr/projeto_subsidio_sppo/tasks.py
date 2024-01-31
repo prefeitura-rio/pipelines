@@ -10,11 +10,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 from pipelines.constants import constants
-from pipelines.utils.utils import (
-    send_discord_message,
-    log,
-    get_vault_secret
-)
+from pipelines.utils.utils import send_discord_message, log, get_vault_secret
 
 from pipelines.rj_smtr.utils import data_info_str
 from pipelines.rj_smtr.constants import constants as smtr_constants
@@ -27,12 +23,11 @@ def check_param(param: str) -> bool:
     """
     return param is None
 
+
 @task
 def subsidio_data_quality_check(
-        mode: str,
-        params: dict,
-        code_owners: list = ["rodrigo"]
-    ) -> None:
+    mode: str, params: dict, code_owners: list = ["rodrigo"]
+) -> None:
     """
     Verifica qualidade dos dados para apuração de subsídio
 
@@ -49,7 +44,9 @@ def subsidio_data_quality_check(
     if mode == "pre":
         # Checagem de captura dos dados de GPS
         start_timestamp = f"""{params["start_date"]} 00:00:00"""
-        end_timestamp = (datetime.strptime(params["end_date"],"%Y-%m-%d") + timedelta(hours=27)).strftime("%Y-%m-%d %H:%M:%S")
+        end_timestamp = (
+            datetime.strptime(params["end_date"], "%Y-%m-%d") + timedelta(hours=27)
+        ).strftime("%Y-%m-%d %H:%M:%S")
         q = f"""
             WITH
                 t AS (
@@ -93,22 +90,23 @@ def subsidio_data_quality_check(
         log(q)
         df = bd.read_sql(q)
 
-        check_status = (len(df) == 0)
+        check_status = len(df) == 0
 
-        check_status_dict = {"desc": "Captura dos dados de GPS",
-                             "status": check_status}
+        check_status_dict = {"desc": "Captura dos dados de GPS", "status": check_status}
 
         log(check_status_dict)
 
-        if(check_status == False):
+        if check_status == False:
             log(data_info_str(df))
-            log(df.sort_values(by=['timestamp_array']))
+            log(df.sort_values(by=["timestamp_array"]))
 
         checks.append(check_status_dict)
 
         # Checagem de captura dos dados de realocação de GPS
         start_timestamp = f"""{params["start_date"]} 00:00:00"""
-        end_timestamp = (datetime.strptime(params["end_date"],"%Y-%m-%d") + timedelta(hours=27)).strftime("%Y-%m-%d %H:%M:%S")
+        end_timestamp = (
+            datetime.strptime(params["end_date"], "%Y-%m-%d") + timedelta(hours=27)
+        ).strftime("%Y-%m-%d %H:%M:%S")
         q = f"""
             WITH
                 t AS (
@@ -152,16 +150,18 @@ def subsidio_data_quality_check(
         log(q)
         df = bd.read_sql(q)
 
-        check_status = (len(df) == 0)
+        check_status = len(df) == 0
 
-        check_status_dict = {"desc": "Captura dos dados de realocação de GPS",
-                             "status": check_status}
+        check_status_dict = {
+            "desc": "Captura dos dados de realocação de GPS",
+            "status": check_status,
+        }
 
         log(check_status_dict)
 
-        if(check_status == False):
+        if check_status == False:
             log(data_info_str(df))
-            log(df.sort_values(by=['timestamp_array']))
+            log(df.sort_values(by=["timestamp_array"]))
 
         checks.append(check_status_dict)
 
@@ -244,13 +244,13 @@ def subsidio_data_quality_check(
                 SELECT
                     *,
                     CASE
-                    WHEN (((q_gps_raw <= q_gps_filtrada) 
-                            OR ((q_gps_filtrada+q_gps_realocacao) <= q_gps_treated))) 
-                            OR q_gps_raw = 0 OR q_gps_filtrada = 0 
-                            OR q_gps_treated = 0 
-                            OR q_gps_raw IS NULL 
-                            OR q_gps_filtrada IS NULL 
-                            OR q_gps_treated IS NULL 
+                    WHEN (((q_gps_raw <= q_gps_filtrada)
+                            OR ((q_gps_filtrada+q_gps_realocacao) <= q_gps_treated)))
+                            OR q_gps_raw = 0 OR q_gps_filtrada = 0
+                            OR q_gps_treated = 0
+                            OR q_gps_raw IS NULL
+                            OR q_gps_filtrada IS NULL
+                            OR q_gps_treated IS NULL
                             THEN FALSE
                     ELSE
                     TRUE
@@ -289,16 +289,18 @@ def subsidio_data_quality_check(
         log(q)
         df = bd.read_sql(q)
 
-        check_status = (len(df) == 0)
+        check_status = len(df) == 0
 
-        check_status_dict = {"desc": "Tratamento dos dados de GPS",
-                             "status": check_status}
+        check_status_dict = {
+            "desc": "Tratamento dos dados de GPS",
+            "status": check_status,
+        }
 
         log(check_status_dict)
 
-        if(check_status == False):
+        if check_status == False:
             log(data_info_str(df))
-            log(df.sort_values(by=['DATA', 'hora']))
+            log(df.sort_values(by=["DATA", "hora"]))
 
         checks.append(check_status_dict)
 
@@ -363,14 +365,14 @@ def subsidio_data_quality_check(
                 *
             FROM
                 count_dist_status
-            
+
             UNION ALL
-            
+
             SELECT
                 *
             FROM
                 count_duplicated_status_agg
-            
+
             UNION ALL
 
             SELECT
@@ -382,16 +384,18 @@ def subsidio_data_quality_check(
         log(q)
         df = bd.read_sql(q)
 
-        check_status = (len(df) == 0)
+        check_status = len(df) == 0
 
-        check_status_dict = {"desc": "Tratamento da sppo_veiculo_dia",
-                             "status": check_status}
+        check_status_dict = {
+            "desc": "Tratamento da sppo_veiculo_dia",
+            "status": check_status,
+        }
 
         log(check_status_dict)
 
-        if(check_status == False):
+        if check_status == False:
             log(data_info_str(df))
-            log(df.sort_values(by=['DATA']))
+            log(df.sort_values(by=["DATA"]))
 
         checks.append(check_status_dict)
 
@@ -401,12 +405,14 @@ def subsidio_data_quality_check(
 
     log(checks)
 
-    if params["start_date"] == params["end_date"]: 
-        date_range = params["start_date"] 
-    else: 
+    if params["start_date"] == params["end_date"]:
+        date_range = params["start_date"]
+    else:
         date_range = f"""{params["start_date"]} a {params["end_date"]}"""
 
-    formatted_message = f"""**Data Quality Checks - Apuração de Subsídio - {date_range}**\n\n"""
+    formatted_message = (
+        f"""**Data Quality Checks - Apuração de Subsídio - {date_range}**\n\n"""
+    )
     call_admin = False
     for check in checks:
         formatted_message += f"""{":white_check_mark:" if check["status"] is True else ":x:"} {check["desc"]}\n"""
@@ -416,8 +422,12 @@ def subsidio_data_quality_check(
     at_code_owners = []
     if call_admin:
         for code_owner in code_owners:
-            code_owner_id = constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["user_id"]
-            code_owner_type = constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["type"]
+            code_owner_id = constants.OWNERS_DISCORD_MENTIONS.value[code_owner][
+                "user_id"
+            ]
+            code_owner_type = constants.OWNERS_DISCORD_MENTIONS.value[code_owner][
+                "type"
+            ]
 
             if code_owner_type == "user":
                 at_code_owners.append(f"    - <@{code_owner_id}>\n")
@@ -427,7 +437,7 @@ def subsidio_data_quality_check(
                 at_code_owners.append(f"    - <#{code_owner_id}>\n")
             elif code_owner_type == "role":
                 at_code_owners.append(f"    - <@&{code_owner_id}>\n")
-        
+
         formatted_message += "".join(at_code_owners)
 
         formatted_message = f":red_circle: {formatted_message}"
@@ -438,5 +448,7 @@ def subsidio_data_quality_check(
 
     send_discord_message(
         message=formatted_message,
-        webhook_url=get_vault_secret(secret_path=smtr_constants.SUBSIDIO_SPPO_SECRET_PATH.value)["data"]["discord_data_check_webhook"],
-    ) 
+        webhook_url=get_vault_secret(
+            secret_path=smtr_constants.SUBSIDIO_SPPO_SECRET_PATH.value
+        )["data"]["discord_data_check_webhook"],
+    )

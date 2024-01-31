@@ -47,7 +47,10 @@ from pipelines.rj_smtr.veiculo.flows import (
 from pipelines.rj_smtr.schedules import every_day_hour_five, every_day_hour_seven
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
-from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import check_param, subsidio_data_quality_check
+from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import (
+    check_param,
+    subsidio_data_quality_check,
+)
 
 # Flows #
 
