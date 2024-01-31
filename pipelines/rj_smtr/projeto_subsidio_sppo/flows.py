@@ -47,12 +47,12 @@ from pipelines.rj_smtr.veiculo.flows import (
 from pipelines.rj_smtr.schedules import every_day_hour_five, every_day_hour_seven
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
-from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import check_param
+from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import check_param, subsidio_data_quality_check
 
 # Flows #
 
 with Flow(
-    "SMTR: Viagens SPPO - Materialização",
+    "SMTR: Viagens SPPO - Tratamento",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as viagens_sppo:
     # Rename flow run
@@ -99,7 +99,7 @@ viagens_sppo.run_config = KubernetesRun(
 viagens_sppo.schedule = every_day_hour_five
 
 with Flow(
-    "SMTR: Subsídio SPPO Apuração - Materialização",
+    "SMTR: Subsídio SPPO Apuração - Tratamento",
     code_owners=["rodrigo"],
 ) as subsidio_sppo_apuracao:
     # 1. SETUP #
@@ -176,19 +176,26 @@ with Flow(
             raise_final_state=True,
         )
 
-        # 3. CALCULATE #
-        # TODO: Check if sppo_veiculo_dia was really materialized
-        # (could be a fail in capture or in materialize)
+        # 3. DATA QUALITY CHECK #
+        SUBSIDIO_SPPO_DATA_QUALITY_RUN = subsidio_data_quality_check(
+            mode="pre",
+            params=_vars,
+        )
+
+        SUBSIDIO_SPPO_DATA_QUALITY_RUN.set_upstream(SPPO_VEICULO_DIA_RUN_WAIT)
+
+        # 4. CALCULATE #
         SUBSIDIO_SPPO_APURACAO_RUN = run_dbt_model(
             dbt_client=dbt_client,
             dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
             _vars=_vars,
         )
 
-        SUBSIDIO_SPPO_APURACAO_RUN.set_upstream(SPPO_VEICULO_DIA_RUN_WAIT)
+        SUBSIDIO_SPPO_APURACAO_RUN.set_upstream(SUBSIDIO_SPPO_DATA_QUALITY_RUN)
 
     with case(materialize_sppo_veiculo_dia, False):
-        # 3. CALCULATE #
+        # TODO: ADD DATA QUALITY CHECK #
+        # 4. CALCULATE #
         SUBSIDIO_SPPO_DASHBOARD_RUN = run_dbt_model(
             dbt_client=dbt_client,
             dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
@@ -228,6 +235,6 @@ with Flow(
 
 subsidio_sppo_apuracao.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 subsidio_sppo_apuracao.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value, labels=[constants.RJ_SMTR_AGENT_LABEL.value]
+    image=constants.DOCKER_IMAGE.value, labels=[constants.RJ_SMTR_DEV_AGENT_LABEL.value]
 )
 subsidio_sppo_apuracao.schedule = every_day_hour_seven
