@@ -47,15 +47,7 @@ def get_prefect_client():
 
 @task
 def get_active_flow_names(prefix="%SMTR%"):
-    redis = get_redis_client()
-    try:
-        flow_names = redis.get("active_flow_names")
-    except ValueError:
-        flow_names = query_active_flow_names(prefix=prefix)
-        redis.set("active_flow_names", flow_names)
-    except TypeError:
-        flow_names = query_active_flow_names(prefix=prefix)
-        redis.set("active_flow_names", flow_names)
+    flow_names = query_active_flow_names(prefix=prefix)
     log(f"Got flow_names\n{flow_names[:10]}\n...\n{flow_names[-10:-1]}")
     return flow_names
 
