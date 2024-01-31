@@ -4,7 +4,6 @@ from typing import Dict, List
 import pendulum
 from prefect import task
 from prefect.client import Client
-from redis_pal import RedisPal
 
 from pipelines.utils.utils import log, get_redis_client
 
@@ -49,6 +48,9 @@ def get_active_flow_names(prefix="%SMTR%"):
     try:
         flow_names = redis.get("active_flow_names")
     except ValueError:
+        flow_names = query_active_flow_names(prefix=prefix)
+        redis.set("active_flow_names", flow_names)
+    except TypeError:
         flow_names = query_active_flow_names(prefix=prefix)
         redis.set("active_flow_names", flow_names)
     return flow_names
@@ -112,6 +114,9 @@ def cancel_flow_runs(flow_runs: List[Dict[str, str]], client: Client = None) -> 
     """
     Cancels a flow run from the API.
     """
+    if not flow_runs:
+        log("No flows to cancel")
+        return
     flow_run_ids = [flow_run["id"] for flow_run in flow_runs]
     log(f">>>>>>>>>> Cancelling flow runs\n{flow_run_ids}")
     if not client:
