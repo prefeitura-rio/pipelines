@@ -53,6 +53,7 @@ def get_active_flow_names(prefix="%SMTR%"):
     except TypeError:
         flow_names = query_active_flow_names(prefix=prefix)
         redis.set("active_flow_names", flow_names)
+    log(f"Got flow_names\n{flow_names[:10]}\n...\n{flow_names[-10:-1]}")
     return flow_names
 
 
@@ -105,7 +106,8 @@ query($flow_name: String, $offset: Int){
                 )
         variables["offset"] += len(response)
         response = prefect_client.graphql(query=query, variables=variables)
-
+    if archived_flow_runs:
+        log(f"O Flow {response['flow']['name']} possui runs a serem canceladas")
     return archived_flow_runs
 
 
