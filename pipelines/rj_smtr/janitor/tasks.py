@@ -25,10 +25,7 @@ query ($prefix: String, $offset: Int){
 }
 """
     if not prefect_client:
-        prefect_client = Client(
-            api_server="https://prefect.dados.rio/api",
-            api_key="8743e419-a40e-42d1-a577-9ca27d51beda",
-        )
+        prefect_client = Client()
     variables = {"prefix": prefix, "offset": 0}
     flow_names = []
     response = prefect_client.graphql(query=query, variables=variables)["data"]
