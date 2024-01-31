@@ -1,0 +1,133 @@
+# -*- coding: utf-8 -*-
+from typing import Dict, List
+
+import pendulum
+from prefect import task
+from prefect.client import Client
+from redis_pal import RedisPal
+
+from pipelines.utils.utils import log, get_redis_client
+
+
+def query_active_flow_names(prefix, prefect_client=None):
+    query = """
+query ($prefix: String, $offset: Int){
+    flow(
+        where: {
+            name: {_like: $prefix},
+            archived: {_eq: false}
+        }
+        offset: $offset
+    ){
+        name
+        version
+    }
+}
+"""
+    if not prefect_client:
+        prefect_client = Client()
+    variables = {"prefix": prefix, "offset": 0}
+    flow_names = []
+    response = prefect_client.graphql(query=query, variables=variables)["data"]
+
+    while len(response):
+        for flow in response["flow"]:
+            flow_names.append(flow["name"])
+        variables["offset"] += len(response)
+        response = prefect_client.graphql(query=query, variables=variables)["data"]
+    return flow_names
+
+
+@task
+def get_prefect_client():
+    return Client()
+
+
+@task
+def get_active_flow_names(prefix="%SMTR%"):
+    redis = get_redis_client()
+    try:
+        flow_names = redis.get("active_flow_names")
+    except ValueError:
+        flow_names = query_active_flow_names(prefix=prefix)
+        redis.set("active_flow_names", flow_names)
+    return flow_names
+
+
+@task
+def query_archived_scheduled_runs(flow_name, prefect_client=None):
+    """
+    Queries the graphql API for scheduled flow_runs of
+    archived versions of <flow_name>
+
+    Args:
+        flow_name (str): flow name
+    """
+    query = """
+query($flow_name: String, $offset: Int){
+    flow(
+        where:{
+            name: {_eq:$flow_name},
+            archived: {_eq:true},
+            project: {name:{_eq:"main"}}
+        }
+        offset: $offset
+        order_by: {version:desc}
+    ){
+        name
+        version
+        flow_runs(
+            where:{
+                state: {_eq: "Scheduled"}
+            }
+            order_by: {version:desc}
+        ){
+            id
+            scheduled_start_time
+        }
+    }
+}
+"""
+    if not prefect_client:
+        prefect_client = Client()
+    variables = {"flow_name": flow_name, "offset": 0}
+    archived_flow_runs = []
+    response = prefect_client.graphql(query=query, variables=variables)["data"]
+
+    while len(response):
+        if len(response["flow"]["flow_runs"]):
+            for flow_run in response["flow"]["flow_runs"]:
+                archived_flow_runs.append(flow_run)
+                log(
+                    f"Got flow_run {flow_run['id']}, scheduled: {flow_run['scheduled_start_time']}"
+                )
+        variables["offset"] += len(response)
+        response = prefect_client.graphql(query=query, variables=variables)
+
+    return archived_flow_runs
+
+
+@task
+def cancel_flow_runs(flow_runs: List[Dict[str, str]], client: Client = None) -> None:
+    """
+    Cancels a flow run from the API.
+    """
+    flow_run_ids = [flow_run["id"] for flow_run in flow_runs]
+    log(f">>>>>>>>>> Cancelling flow runs\n{flow_run_ids}")
+    if not client:
+        client = Client()
+    query = """
+        mutation($flow_run_id: UUID!) {
+            cancel_flow_run (
+                input: {
+                    flow_run_id: $flow_run_id
+                }
+            ) {
+                state
+            }
+        }
+    """
+    for flow_run_id in flow_run_ids:
+        response = client.graphql(query=query, variables=dict(flow_run_id=flow_run_id))
+        state: str = response["data"]["cancel_flow_run"]["state"]
+        log(f">>>>>>>>>> Flow run {flow_run_id} is now {state}")
