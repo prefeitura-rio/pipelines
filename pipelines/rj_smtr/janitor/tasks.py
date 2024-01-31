@@ -25,17 +25,15 @@ query ($prefix: String, $offset: Int){
 }
 """
     if not prefect_client:
-        prefect_client = Client()
+        prefect_client = Client(
+            api_server="https://prefect.dados.rio/api",
+            api_key="8743e419-a40e-42d1-a577-9ca27d51beda",
+        )
     variables = {"prefix": prefix, "offset": 0}
     flow_names = []
     response = prefect_client.graphql(query=query, variables=variables)["data"]
-
-    while len(response):
-        for flow in response["flow"]:
-            flow_names.append(flow["name"])
-        variables["offset"] += len(response)
-        response = prefect_client.graphql(query=query, variables=variables)["data"]
-    # Remove possible duplication in flow_names
+    for flow in response["flow"]:
+        flow_names.append(flow["name"])
     flow_names = list(set(flow_names))
     return flow_names
 
@@ -88,21 +86,25 @@ query($flow_name: String, $offset: Int){
 """
     if not prefect_client:
         prefect_client = Client()
+
     variables = {"flow_name": flow_name, "offset": 0}
     archived_flow_runs = []
     response = prefect_client.graphql(query=query, variables=variables)["data"]
 
-    while len(response):
-        if len(response["flow"]["flow_runs"]):
-            for flow_run in response["flow"]["flow_runs"]:
+    for flow in response["flow"]:
+        for flow_run in flow["flow_runs"]:
+            if flow["flow_runs"]:
                 archived_flow_runs.append(flow_run)
-                log(
-                    f"Got flow_run {flow_run['id']}, scheduled: {flow_run['scheduled_start_time']}"
-                )
-        variables["offset"] += len(response)
-        response = prefect_client.graphql(query=query, variables=variables)
+            log(
+                f"Got flow_run {flow_run['id']}, scheduled: {flow_run['scheduled_start_time']}"
+            )
+    # while len(response):
+    #     if len(response["flow"]["flow_runs"]):
+
+    #     variables["offset"] += len(response)
+    #     response = prefect_client.graphql(query=query, variables=variables)
     if archived_flow_runs:
-        log(f"O Flow {response['flow']['name']} possui runs a serem canceladas")
+        log(f"O Flow {flow_name} possui runs a serem canceladas")
     return archived_flow_runs
 
 
@@ -112,12 +114,13 @@ def cancel_flow_runs(flow_runs: List[Dict[str, str]], client: Client = None) -> 
     Cancels a flow run from the API.
     """
     if not flow_runs:
-        log("No flows to cancel")
+        log("No flow runs to cancel")
         return
     flow_run_ids = [flow_run["id"] for flow_run in flow_runs]
     log(f">>>>>>>>>> Cancelling flow runs\n{flow_run_ids}")
     if not client:
         client = Client()
+
     query = """
         mutation($flow_run_id: UUID!) {
             cancel_flow_run (
