@@ -14,7 +14,8 @@ query ($prefix: String, $offset: Int){
     flow(
         where: {
             name: {_like: $prefix},
-            archived: {_eq: false}
+            archived: {_eq: false},
+            project: {name:{_eq:"main"}}
         }
         offset: $offset
     ){
@@ -34,6 +35,8 @@ query ($prefix: String, $offset: Int){
             flow_names.append(flow["name"])
         variables["offset"] += len(response)
         response = prefect_client.graphql(query=query, variables=variables)["data"]
+    # Remove possible duplication in flow_names
+    flow_names = list(set(flow_names))
     return flow_names
 
 
@@ -135,6 +138,11 @@ def cancel_flow_runs(flow_runs: List[Dict[str, str]], client: Client = None) -> 
         }
     """
     for flow_run_id in flow_run_ids:
-        response = client.graphql(query=query, variables=dict(flow_run_id=flow_run_id))
-        state: str = response["data"]["cancel_flow_run"]["state"]
-        log(f">>>>>>>>>> Flow run {flow_run_id} is now {state}")
+        try:
+            response = client.graphql(
+                query=query, variables=dict(flow_run_id=flow_run_id)
+            )
+            state: str = response["data"]["cancel_flow_run"]["state"]
+            log(f">>>>>>>>>> Flow run {flow_run_id} is now {state}")
+        except Exception:
+            log(f"Flow_run {flow_run_id} could not be cancelled")
