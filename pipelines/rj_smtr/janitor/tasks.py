@@ -41,7 +41,7 @@ O Flow {flow_name} teve {len(cancelled_runs)} canceladas.
 Link para as runs:\n
 """
     for run_id in cancelled_runs:
-        message.append(f"https://prefect.dados.rio/{run_id}")
+        message.append(f"https://prefect.dados.rio/default/flow-run/{run_id}")
     send_discord_message(message=message, webhook_url=webhook_url)
 
 
@@ -153,7 +153,7 @@ def cancel_flow_runs(flow_runs: List[Dict[str, str]], client: Client = None) -> 
 
     # Notify cancellation
     try:
-        url = get_vault_secret("cancelled_runs_webhook")
+        url = get_vault_secret("cancelled_runs_webhook")["url"]
         send_cancelled_run_on_discord(
             cancelled_runs, flow_runs["flow_name"], webhook_url=url
         )
