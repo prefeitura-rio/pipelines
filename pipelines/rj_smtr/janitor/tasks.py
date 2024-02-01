@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from typing import Dict, List
 
-import pendulum
 from prefect import task
 from prefect.client import Client
 
@@ -105,11 +104,7 @@ query($flow_name: String, $offset: Int){
             log(
                 f"Got flow_run {flow_run['id']}, scheduled: {flow_run['scheduled_start_time']}"
             )
-    # while len(response):
-    #     if len(response["flow"]["flow_runs"]):
 
-    #     variables["offset"] += len(response)
-    #     response = prefect_client.graphql(query=query, variables=variables)
     if archived_flow_runs:
         log(f"O Flow {flow_name} possui runs a serem canceladas")
     return {"flow_name": flow_name, "flow_runs": archived_flow_runs}
