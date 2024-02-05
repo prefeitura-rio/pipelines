@@ -219,6 +219,10 @@ class constants(Enum):  # pylint: disable=c0103
                 &#34;engine&#34;: &#34;postgresql&#34;,
                 &#34;host&#34;: &#34;10.5.15.127&#34;,
             },
+            &#34;gratuidade_db&#34;: {
+                &#34;engine&#34;: &#34;postgresql&#34;,
+                &#34;host&#34;: &#34;10.5.12.107&#34;,
+            },
         },
         &#34;source_type&#34;: &#34;db&#34;,
     }
@@ -378,10 +382,6 @@ class constants(Enum):  # pylint: disable=c0103
                         c.*
                     FROM
                         CLIENTE c
-                    JOIN
-                        OPERADORA_TRANSPORTE o
-                    ON
-                        c.CD_CLIENTE = o.CD_CLIENTE
                     WHERE
                         DT_CADASTRO BETWEEN &#39;{start}&#39;
                         AND &#39;{end}&#39;
@@ -391,6 +391,54 @@ class constants(Enum):  # pylint: disable=c0103
             &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
             &#34;save_bucket_name&#34;: BILHETAGEM_PRIVATE_BUCKET,
             &#34;pre_treatment_reader_args&#34;: {&#34;dtype&#34;: {&#34;NR_DOCUMENTO&#34;: &#34;object&#34;}},
+        },
+        {
+            &#34;table_id&#34;: &#34;pessoa_fisica&#34;,
+            &#34;partition_date_only&#34;: True,
+            &#34;extract_params&#34;: {
+                &#34;database&#34;: &#34;principal_db&#34;,
+                &#34;query&#34;: &#34;&#34;&#34;
+                    SELECT
+                        p.*,
+                        c.DT_CADASTRO
+                    FROM
+                        PESSOA_FISICA p
+                    JOIN
+                        CLIENTE c
+                    ON
+                        p.CD_CLIENTE = c.CD_CLIENTE
+                    WHERE
+                        c.DT_CADASTRO BETWEEN &#39;{start}&#39;
+                        AND &#39;{end}&#39;
+                &#34;&#34;&#34;,
+            },
+            &#34;primary_key&#34;: [&#34;CD_CLIENTE&#34;],  # id column to nest data on
+            &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
+            &#34;save_bucket_name&#34;: BILHETAGEM_PRIVATE_BUCKET,
+        },
+        {
+            &#34;table_id&#34;: &#34;gratuidade&#34;,
+            &#34;partition_date_only&#34;: True,
+            &#34;extract_params&#34;: {
+                &#34;database&#34;: &#34;gratuidade_db&#34;,
+                &#34;query&#34;: &#34;&#34;&#34;
+                    SELECT
+                        g.*,
+                        t.descricao AS tipo_gratuidade
+                    FROM
+                        gratuidade g
+                    LEFT JOIN
+                        tipo_gratuidade t
+                    ON
+                        g.id_tipo_gratuidade = t.id
+                    WHERE
+                        g.dt_inclusao BETWEEN &#39;{start}&#39;
+                        AND &#39;{end}&#39;
+                &#34;&#34;&#34;,
+            },
+            &#34;primary_key&#34;: [&#34;id&#34;],  # id column to nest data on
+            &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
+            &#34;save_bucket_name&#34;: BILHETAGEM_PRIVATE_BUCKET,
         },
         {
             &#34;table_id&#34;: &#34;consorcio&#34;,
@@ -1013,6 +1061,10 @@ and createdDate lt {end})&#34;,
                 &#34;engine&#34;: &#34;postgresql&#34;,
                 &#34;host&#34;: &#34;10.5.15.127&#34;,
             },
+            &#34;gratuidade_db&#34;: {
+                &#34;engine&#34;: &#34;postgresql&#34;,
+                &#34;host&#34;: &#34;10.5.12.107&#34;,
+            },
         },
         &#34;source_type&#34;: &#34;db&#34;,
     }
@@ -1172,10 +1224,6 @@ and createdDate lt {end})&#34;,
                         c.*
                     FROM
                         CLIENTE c
-                    JOIN
-                        OPERADORA_TRANSPORTE o
-                    ON
-                        c.CD_CLIENTE = o.CD_CLIENTE
                     WHERE
                         DT_CADASTRO BETWEEN &#39;{start}&#39;
                         AND &#39;{end}&#39;
@@ -1185,6 +1233,54 @@ and createdDate lt {end})&#34;,
             &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
             &#34;save_bucket_name&#34;: BILHETAGEM_PRIVATE_BUCKET,
             &#34;pre_treatment_reader_args&#34;: {&#34;dtype&#34;: {&#34;NR_DOCUMENTO&#34;: &#34;object&#34;}},
+        },
+        {
+            &#34;table_id&#34;: &#34;pessoa_fisica&#34;,
+            &#34;partition_date_only&#34;: True,
+            &#34;extract_params&#34;: {
+                &#34;database&#34;: &#34;principal_db&#34;,
+                &#34;query&#34;: &#34;&#34;&#34;
+                    SELECT
+                        p.*,
+                        c.DT_CADASTRO
+                    FROM
+                        PESSOA_FISICA p
+                    JOIN
+                        CLIENTE c
+                    ON
+                        p.CD_CLIENTE = c.CD_CLIENTE
+                    WHERE
+                        c.DT_CADASTRO BETWEEN &#39;{start}&#39;
+                        AND &#39;{end}&#39;
+                &#34;&#34;&#34;,
+            },
+            &#34;primary_key&#34;: [&#34;CD_CLIENTE&#34;],  # id column to nest data on
+            &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
+            &#34;save_bucket_name&#34;: BILHETAGEM_PRIVATE_BUCKET,
+        },
+        {
+            &#34;table_id&#34;: &#34;gratuidade&#34;,
+            &#34;partition_date_only&#34;: True,
+            &#34;extract_params&#34;: {
+                &#34;database&#34;: &#34;gratuidade_db&#34;,
+                &#34;query&#34;: &#34;&#34;&#34;
+                    SELECT
+                        g.*,
+                        t.descricao AS tipo_gratuidade
+                    FROM
+                        gratuidade g
+                    LEFT JOIN
+                        tipo_gratuidade t
+                    ON
+                        g.id_tipo_gratuidade = t.id
+                    WHERE
+                        g.dt_inclusao BETWEEN &#39;{start}&#39;
+                        AND &#39;{end}&#39;
+                &#34;&#34;&#34;,
+            },
+            &#34;primary_key&#34;: [&#34;id&#34;],  # id column to nest data on
+            &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
+            &#34;save_bucket_name&#34;: BILHETAGEM_PRIVATE_BUCKET,
         },
         {
             &#34;table_id&#34;: &#34;consorcio&#34;,
