@@ -22,6 +22,8 @@ class constants(Enum):  # pylint: disable=c0103
     MAX_RETRIES = 3
     RETRY_DELAY = 10
 
+    DEFAULT_CODE_OWNERS = ["fernanda", "rodrigo", "rafaelpinheiro", "carolinagomes"]
+
     # GPS STPL #
     GPS_STPL_API_BASE_URL = "http://zn4.m2mcontrol.com.br/api/integracao/veiculos"
     GPS_STPL_API_SECRET_PATH = "stpl_api"
@@ -188,6 +190,10 @@ class constants(Enum):  # pylint: disable=c0103
                 "engine": "postgresql",
                 "host": "10.5.15.127",
             },
+            "gratuidade_db": {
+                "engine": "postgresql",
+                "host": "10.5.12.107",
+            },
         },
         "source_type": "db",
     }
@@ -347,10 +353,6 @@ class constants(Enum):  # pylint: disable=c0103
                         c.*
                     FROM
                         CLIENTE c
-                    JOIN
-                        OPERADORA_TRANSPORTE o
-                    ON
-                        c.CD_CLIENTE = o.CD_CLIENTE
                     WHERE
                         DT_CADASTRO BETWEEN '{start}'
                         AND '{end}'
@@ -360,6 +362,54 @@ class constants(Enum):  # pylint: disable=c0103
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
             "save_bucket_name": BILHETAGEM_PRIVATE_BUCKET,
             "pre_treatment_reader_args": {"dtype": {"NR_DOCUMENTO": "object"}},
+        },
+        {
+            "table_id": "pessoa_fisica",
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "principal_db",
+                "query": """
+                    SELECT
+                        p.*,
+                        c.DT_CADASTRO
+                    FROM
+                        PESSOA_FISICA p
+                    JOIN
+                        CLIENTE c
+                    ON
+                        p.CD_CLIENTE = c.CD_CLIENTE
+                    WHERE
+                        c.DT_CADASTRO BETWEEN '{start}'
+                        AND '{end}'
+                """,
+            },
+            "primary_key": ["CD_CLIENTE"],  # id column to nest data on
+            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+            "save_bucket_name": BILHETAGEM_PRIVATE_BUCKET,
+        },
+        {
+            "table_id": "gratuidade",
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "gratuidade_db",
+                "query": """
+                    SELECT
+                        g.*,
+                        t.descricao AS tipo_gratuidade
+                    FROM
+                        gratuidade g
+                    LEFT JOIN
+                        tipo_gratuidade t
+                    ON
+                        g.id_tipo_gratuidade = t.id
+                    WHERE
+                        g.dt_inclusao BETWEEN '{start}'
+                        AND '{end}'
+                """,
+            },
+            "primary_key": ["id"],  # id column to nest data on
+            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+            "save_bucket_name": BILHETAGEM_PRIVATE_BUCKET,
         },
         {
             "table_id": "consorcio",
