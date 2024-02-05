@@ -297,8 +297,7 @@ class constants(Enum):  # pylint: disable=c0103
 
     BILHETAGEM_TRATAMENTO_INTERVAL = 60
 
-    # BILHETAGEM_PRIVATE_BUCKET = "rj-smtr-jae-private"
-    BILHETAGEM_PRIVATE_BUCKET = "rj-smtr-dev-private"
+    BILHETAGEM_PRIVATE_BUCKET = "rj-smtr-jae-private"
 
     BILHETAGEM_CAPTURE_PARAMS = [
         {
@@ -361,6 +360,30 @@ class constants(Enum):  # pylint: disable=c0103
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
             "save_bucket_name": BILHETAGEM_PRIVATE_BUCKET,
             "pre_treatment_reader_args": {"dtype": {"NR_DOCUMENTO": "object"}},
+        },
+        {
+            "table_id": "pessoa_fisica",
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "principal_db",
+                "query": """
+                    SELECT
+                        p.*,
+                        c.DT_CADASTRO
+                    FROM
+                        PESSOA_FISICA p
+                    JOIN
+                        CLIENTE c
+                    ON
+                        p.CD_CLIENTE = c.CD_CLIENTE
+                    WHERE
+                        c.DT_CADASTRO BETWEEN '{start}'
+                        AND '{end}'
+                """,
+            },
+            "primary_key": ["CD_CLIENTE"],  # id column to nest data on
+            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
+            "save_bucket_name": BILHETAGEM_PRIVATE_BUCKET,
         },
         {
             "table_id": "gratuidade",
