@@ -432,7 +432,7 @@ class constants(Enum):  # pylint: disable=c0103
                     ON
                         g.id_tipo_gratuidade = t.id
                     WHERE
-                        g.dt_inclusao BETWEEN &#39;{start}&#39;
+                        g.data_inclusao BETWEEN &#39;{start}&#39;
                         AND &#39;{end}&#39;
                 &#34;&#34;&#34;,
             },
@@ -1274,7 +1274,7 @@ and createdDate lt {end})&#34;,
                     ON
                         g.id_tipo_gratuidade = t.id
                     WHERE
-                        g.dt_inclusao BETWEEN &#39;{start}&#39;
+                        g.data_inclusao BETWEEN &#39;{start}&#39;
                         AND &#39;{end}&#39;
                 &#34;&#34;&#34;,
             },

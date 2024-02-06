@@ -722,7 +722,7 @@ def create_request_params(
                         `{project}.{dataset_id}_staging.{table_id}`
                     WHERE
                         data = &#39;{success_ts.strftime(&#34;%Y-%m-%d&#34;)}&#39;
-                        and hora = &#34;{success_ts.hour}&#34;;
+                        and hora = &#34;{success_ts.strftime(&#34;%H&#34;)}&#34;;
                     &#34;&#34;&#34;
 
                     last_captured_id = bd.read_sql(
@@ -2284,7 +2284,7 @@ def create_request_params(
                         `{project}.{dataset_id}_staging.{table_id}`
                     WHERE
                         data = &#39;{success_ts.strftime(&#34;%Y-%m-%d&#34;)}&#39;
-                        and hora = &#34;{success_ts.hour}&#34;;
+                        and hora = &#34;{success_ts.strftime(&#34;%H&#34;)}&#34;;
                     &#34;&#34;&#34;
 
                     last_captured_id = bd.read_sql(
