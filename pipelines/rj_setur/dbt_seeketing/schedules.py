@@ -44,10 +44,12 @@ setur_seeketing_clocks = [
             "dataset_id": "turismo_fluxo_visitantes",
             "table_id": table_id,
             "mode": "prod",
-            "materialize_to_datario": True,
         },
     )
     for count, (_, table_id) in enumerate(setur_seeketing_tables.items())
 ]
+
+# Add parameter materialize_to_datario as True only for the table rede_hoteleira_ocupacao_eventos
+setur_seeketing_clocks[6].parameter_defaults["materialize_to_datario"] = True
 
 setur_seeketing_daily_update_schedule = Schedule(clocks=untuple(setur_seeketing_clocks))
