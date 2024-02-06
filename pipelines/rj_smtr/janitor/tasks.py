@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 from typing import Dict, List
+from datetime import datetime
 
 from prefect import task
 from prefect.client import Client
 
-from pipelines.utils.utils import log, send_discord_message, get_vault_secret
+from pipelines.utils.utils import log, get_vault_secret
 
+import requests
 
-def query_active_flow_names(prefix, prefect_client=None):
+@task
+def query_active_flow_names(prefix='%SMTR%', prefect_client=None):
     query = """
 query ($prefix: String, $offset: Int){
     flow(
@@ -26,22 +29,89 @@ query ($prefix: String, $offset: Int){
     if not prefect_client:
         prefect_client = Client()
     variables = {"prefix": prefix, "offset": 0}
-    flow_names = []
+    # flow_names = []
     response = prefect_client.graphql(query=query, variables=variables)["data"]
+    active_flows = []
     for flow in response["flow"]:
-        flow_names.append(flow["name"])
-    flow_names = list(set(flow_names))
-    return flow_names
+        active_flows.append((flow["name"], flow["version"]))
+        # flow_names.append(flow["name"])
+    # flow_names = list(set(flow_names))
+    active_flows = list(set(active_flows))
+    return active_flows
 
+@task
+def query_not_active_flows(flows, prefect_client=None):
+    """
+    Queries the graphql API for scheduled flow_runs of
+    archived versions of <flow_name>
 
-def send_cancelled_run_on_discord(cancelled_runs, flow_name, webhook_url):
-    message = f"""
-O Flow {flow_name} teve {len(cancelled_runs)} canceladas.
-Link para as runs:\n
+    Args:
+        flow_name (str): flow name
+    """
+    flow_name, last_version = flows
+    now = datetime.now().isoformat()
+    query = """
+query($flow_name: String, $last_version: Int, $now: timestamptz!, $offset: Int){
+    flow(
+        where:{
+            name: {_eq:$flow_name},
+            version: {_lt:$last_version}
+            project: {name:{_eq:"main"}}
+        }
+        offset: $offset
+        order_by: {version:desc}
+    ){
+        id
+        name
+        version
+        flow_runs(
+            where:{
+                scheduled_start_time: {_gte: $now},
+              	state: {_neq: "Cancelled"}
+            }
+            order_by: {version:desc}
+        ){
+            id
+            scheduled_start_time
+        }
+    }
+}
 """
-    for run_id in cancelled_runs:
-        message.append(f"https://prefect.dados.rio/default/flow-run/{run_id}")
-    send_discord_message(message=message, webhook_url=webhook_url)
+    if not prefect_client:
+        prefect_client = Client()
+
+    variables = {"flow_name": flow_name, "last_version": last_version, "now": now, "offset": 0}
+    archived_flows = []
+    response = prefect_client.graphql(query=query, variables=variables)["data"]
+    # log(response)
+    for flow in response["flow"]:
+        if flow["flow_runs"]:
+            try:
+                archived_flows.append({'id': flow['id'], 'name': flow['name'], 'version': flow['version'], 'count': len(flow['flow_runs'])})
+                # log(
+                #     f"Insurgent flow {flow['name']}, version: {flow['version']}, count: {len(flow['flow_runs'])}"
+            # )
+            except:
+                log(flow)
+
+    return archived_flows
+
+def send_cancelled_run_on_discord(flows, webhook_url):
+
+    message = f"""
+Os Flows de nome {flows[0]['name']} tiveram as seguintes versões arquivadas:
+Link para as versões:\n
+"""
+    for flow in flows:
+        message.append(f"Versão {flow['version']}: https://prefect.dados.rio/default/flow-run/{flow['id']}")
+
+    r = requests.post(
+        webhook_url,
+        data={"content": message},
+    )
+
+    log(r.status_code)
+    log(r.text)
 
 
 @task
@@ -111,46 +181,49 @@ query($flow_name: String, $offset: Int){
 
 
 @task
-def cancel_flow_runs(flow_runs: List[Dict[str, str]], client: Client = None) -> None:
+def cancel_flows(flows, prefect_client: Client = None) -> None:
     """
     Cancels a flow run from the API.
     """
-    if not flow_runs["flow_runs"]:
-        log(f"O flow {flow_runs['flow_name']} não possui runs para cancelar")
+    if not flows:
+        # log(f"O flow {flow_runs['flow_name']} não possui runs para cancelar")
         return
-    flow_run_ids = [flow_run["id"] for flow_run in flow_runs["flow_runs"]]
-    cancelled_runs = []
-    log(f">>>>>>>>>> Cancelling flow runs\n{flow_run_ids}")
-    if not client:
-        client = Client()
+    log(f">>>>>>>>>> Cancelling flows")
+
+    if not prefect_client:
+        prefect_client = Client()
 
     query = """
-        mutation($flow_run_id: UUID!) {
-            cancel_flow_run (
+        mutation($flow_id: UUID!) {
+            archive_flow (
                 input: {
-                    flow_run_id: $flow_run_id
+                    flow_id: $flow_id
                 }
             ) {
-                state
+                archived
             }
         }
     """
-    for flow_run_id in flow_run_ids:
+    cancelled_flows = []
+    import traceback
+    for flow in flows:
         try:
-            response = client.graphql(
-                query=query, variables=dict(flow_run_id=flow_run_id)
+            response = prefect_client.graphql(
+                query=query, variables=dict(flow_id=flow['id'])
             )
             state: str = response["data"]["cancel_flow_run"]["state"]
-            log(f">>>>>>>>>> Flow run {flow_run_id} is now {state}")
-            cancelled_runs.append(flow_run_id)
+            log(f">>>>>>>>>> Flow run {flow['id']} arquivada")
+            cancelled_flows.append(flow)
         except Exception:
-            log(f"Flow_run {flow_run_id} could not be cancelled")
+            log(traceback.format_exc())
+            log(f"Flow {flow['id']} could not be cancelled")
 
     # Notify cancellation
+    
     try:
         url = get_vault_secret("cancelled_runs_webhook")["url"]
         send_cancelled_run_on_discord(
-            cancelled_runs, flow_runs["flow_name"], webhook_url=url
+            cancelled_flows, flows, webhook_url=url
         )
     except Exception:
         log("Could not get a webhook to send messages to")

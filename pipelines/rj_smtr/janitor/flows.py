@@ -4,22 +4,22 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from pipelines.constants import constants as emd_constants
 from pipelines.utils.decorators import Flow
-
-# from pipelines.rj_escritorio.cleanup.tasks import cancel_flow_run
-
+from prefect.utilities.edges import unmapped
 from pipelines.rj_smtr.schedules import every_5_minutes
 from pipelines.rj_smtr.janitor.tasks import (
-    get_active_flow_names,
-    query_archived_scheduled_runs,
-    cancel_flow_runs,
+    query_active_flow_names,
+    query_not_active_flows,
+    cancel_flows,
+    get_prefect_client
 )
 
 with Flow(
     "SMTR: Desagendamento de runs arquivadas", code_owners=["caio"]
 ) as janitor_flow:
-    flow_names = get_active_flow_names()
-    archived_flow_runs = query_archived_scheduled_runs.map(flow_name=flow_names)
-    cancel_flow_runs.map(flow_runs=archived_flow_runs)
+    client = get_prefect_client()
+    flows = query_active_flow_names(prefect_client=client)
+    archived_flow_runs = query_not_active_flows.map(flows=flows, prefect_client=unmapped(client))
+    cancel_flows.map(flows=archived_flow_runs, prefect_client=unmapped(client))
 
 janitor_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 janitor_flow.run_config = KubernetesRun(
