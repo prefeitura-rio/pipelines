@@ -10,7 +10,7 @@ from pipelines.rj_smtr.janitor.tasks import (
     query_active_flow_names,
     query_not_active_flows,
     cancel_flows,
-    get_prefect_client
+    get_prefect_client,
 )
 
 with Flow(
@@ -18,7 +18,9 @@ with Flow(
 ) as janitor_flow:
     client = get_prefect_client()
     flows = query_active_flow_names(prefect_client=client)
-    archived_flow_runs = query_not_active_flows.map(flows=flows, prefect_client=unmapped(client))
+    archived_flow_runs = query_not_active_flows.map(
+        flows=flows, prefect_client=unmapped(client)
+    )
     cancel_flows.map(flows=archived_flow_runs, prefect_client=unmapped(client))
 
 janitor_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)

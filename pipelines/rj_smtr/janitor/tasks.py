@@ -9,8 +9,9 @@ from pipelines.utils.utils import log, get_vault_secret
 
 import requests
 
+
 @task
-def query_active_flow_names(prefix='%SMTR%', prefect_client=None):
+def query_active_flow_names(prefix="%SMTR%", prefect_client=None):
     query = """
 query ($prefix: String, $offset: Int){
     flow(
@@ -38,6 +39,7 @@ query ($prefix: String, $offset: Int){
     # flow_names = list(set(flow_names))
     active_flows = list(set(active_flows))
     return active_flows
+
 
 @task
 def query_not_active_flows(flows, prefect_client=None):
@@ -80,14 +82,26 @@ query($flow_name: String, $last_version: Int, $now: timestamptz!, $offset: Int){
     if not prefect_client:
         prefect_client = Client()
 
-    variables = {"flow_name": flow_name, "last_version": last_version, "now": now, "offset": 0}
+    variables = {
+        "flow_name": flow_name,
+        "last_version": last_version,
+        "now": now,
+        "offset": 0,
+    }
     archived_flows = []
     response = prefect_client.graphql(query=query, variables=variables)["data"]
     # log(response)
     for flow in response["flow"]:
         if flow["flow_runs"]:
             try:
-                archived_flows.append({'id': flow['id'], 'name': flow['name'], 'version': flow['version'], 'count': len(flow['flow_runs'])})
+                archived_flows.append(
+                    {
+                        "id": flow["id"],
+                        "name": flow["name"],
+                        "version": flow["version"],
+                        "count": len(flow["flow_runs"]),
+                    }
+                )
                 # log(
                 #     f"Insurgent flow {flow['name']}, version: {flow['version']}, count: {len(flow['flow_runs'])}"
             # )
@@ -96,14 +110,16 @@ query($flow_name: String, $last_version: Int, $now: timestamptz!, $offset: Int){
 
     return archived_flows
 
-def send_cancelled_run_on_discord(flows, webhook_url):
 
+def send_cancelled_run_on_discord(flows, webhook_url):
     message = f"""
 Os Flows de nome {flows[0]['name']} tiveram as seguintes versões arquivadas:
 Link para as versões:\n
 """
     for flow in flows:
-        message.append(f"Versão {flow['version']}: https://prefect.dados.rio/default/flow-run/{flow['id']}")
+        message.append(
+            f"Versão {flow['version']}: https://prefect.dados.rio/default/flow-run/{flow['id']}"
+        )
 
     r = requests.post(
         webhook_url,
@@ -206,10 +222,11 @@ def cancel_flows(flows, prefect_client: Client = None) -> None:
     """
     cancelled_flows = []
     import traceback
+
     for flow in flows:
         try:
             response = prefect_client.graphql(
-                query=query, variables=dict(flow_id=flow['id'])
+                query=query, variables=dict(flow_id=flow["id"])
             )
             state: str = response["data"]["cancel_flow_run"]["state"]
             log(f">>>>>>>>>> Flow run {flow['id']} arquivada")
@@ -219,11 +236,9 @@ def cancel_flows(flows, prefect_client: Client = None) -> None:
             log(f"Flow {flow['id']} could not be cancelled")
 
     # Notify cancellation
-    
+
     try:
         url = get_vault_secret("cancelled_runs_webhook")["url"]
-        send_cancelled_run_on_discord(
-            cancelled_flows, flows, webhook_url=url
-        )
+        send_cancelled_run_on_discord(cancelled_flows, flows, webhook_url=url)
     except Exception:
         log("Could not get a webhook to send messages to")
