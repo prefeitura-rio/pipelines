@@ -44,8 +44,10 @@ setur_seeketing_clocks = [
             "dataset_id": "turismo_fluxo_visitantes",
             "table_id": table_id,
             "mode": "prod",
+            "materialize_to_datario": True,
         },
     )
     for count, (_, table_id) in enumerate(setur_seeketing_tables.items())
 ]
+
 setur_seeketing_daily_update_schedule = Schedule(clocks=untuple(setur_seeketing_clocks))
