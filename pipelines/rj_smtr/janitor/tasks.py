@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from typing import Dict, List
+import traceback
 from datetime import datetime
 
 from prefect import task
@@ -69,7 +70,7 @@ query($flow_name: String, $last_version: Int, $now: timestamptz!, $offset: Int){
         flow_runs(
             where:{
                 scheduled_start_time: {_gte: $now},
-              	state: {_neq: "Cancelled"}
+                state: {_nin: ["Cancelled", "Running"]}
             }
             order_by: {version:desc}
         ){
@@ -102,10 +103,7 @@ query($flow_name: String, $last_version: Int, $now: timestamptz!, $offset: Int){
                         "count": len(flow["flow_runs"]),
                     }
                 )
-                # log(
-                #     f"Insurgent flow {flow['name']}, version: {flow['version']}, count: {len(flow['flow_runs'])}"
-            # )
-            except:
+            except Exception:
                 log(flow)
 
     return archived_flows
@@ -204,7 +202,7 @@ def cancel_flows(flows, prefect_client: Client = None) -> None:
     if not flows:
         # log(f"O flow {flow_runs['flow_name']} não possui runs para cancelar")
         return
-    log(f">>>>>>>>>> Cancelling flows")
+    log(">>>>>>>>>> Cancelling flows")
 
     if not prefect_client:
         prefect_client = Client()
@@ -221,14 +219,14 @@ def cancel_flows(flows, prefect_client: Client = None) -> None:
         }
     """
     cancelled_flows = []
-    import traceback
 
     for flow in flows:
         try:
             response = prefect_client.graphql(
                 query=query, variables=dict(flow_id=flow["id"])
             )
-            state: str = response["data"]["cancel_flow_run"]["state"]
+            # state: str = response["data"]["cancel_flow_run"]["state"]
+            log(response)
             log(f">>>>>>>>>> Flow run {flow['id']} arquivada")
             cancelled_flows.append(flow)
         except Exception:
