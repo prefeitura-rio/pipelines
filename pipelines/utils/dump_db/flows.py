@@ -36,7 +36,6 @@ with Flow(
     name=utils_constants.FLOW_DUMP_DB_NAME.value,
     code_owners=[
         "diego",
-        "gabriel",
     ],
 ) as dump_sql_flow:
     #####################################
@@ -243,7 +242,6 @@ with Flow(
     name="EMD: template - Executar query SQL",
     code_owners=[
         "diego",
-        "gabriel",
     ],
 ) as run_sql_flow:
     #####################################
