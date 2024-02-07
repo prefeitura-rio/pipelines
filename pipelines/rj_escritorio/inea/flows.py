@@ -124,9 +124,6 @@ inea_backfill_radar_flow.schedule = None
 
 with Flow(
     "INEA: Executar comando no terminal",
-    code_owners=[
-        "gabriel",
-    ],
 ) as inea_execute_shell_command_flow:
     command = Parameter("command")
     execute_shell_command(command=command)
@@ -138,9 +135,6 @@ inea_execute_shell_command_flow.run_config = LocalRun(
 
 with Flow(
     "INEA: Fazer upload de arquivo para o GCS",
-    code_owners=[
-        "gabriel",
-    ],
 ) as inea_upload_file_to_gcs_flow:
     filename = Parameter("filename")
     bucket_name = Parameter("bucket_name")
