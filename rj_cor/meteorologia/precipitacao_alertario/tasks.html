@@ -35,27 +35,27 @@ Tasks for precipitacao_alertario
 from datetime import timedelta
 from pathlib import Path
 from typing import Union, Tuple
+import requests
 
+from bs4 import BeautifulSoup
 import numpy as np
 import pandas as pd
 import pendulum
 from prefect import task
 
-import pandas_read_xml as pdx
-
-# from prefect import context
-
 from pipelines.constants import constants
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.utils import (
-    parse_date_columns,
+    parse_date_columns_old_api,
     treat_date_col,
 )
 from pipelines.utils.utils import (
     build_redis_key,
     compare_dates_between_tables_redis,
     get_redis_output,
+    get_vault_secret,
     log,
     to_partitions,
+    parse_date_columns,
     save_str_on_redis,
     save_updated_rows_on_redis,
 )
@@ -66,146 +66,173 @@ from pipelines.utils.utils import (
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def tratar_dados(
-    dataset_id: str, table_id: str, mode: str = &#34;dev&#34;
+def download_data() -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Request data from API and return each data in a different dataframe.
+    &#34;&#34;&#34;
+
+    dicionario = get_vault_secret(&#34;alertario_api&#34;)
+    url = dicionario[&#34;data&#34;][&#34;url&#34;]
+
+    try:
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, &#34;html.parser&#34;)
+
+            # Get all tables from HTML structure
+            tables = soup.find_all(&#34;table&#34;)
+
+            # Data cames in Brazillian format and has some extra newline
+            tables = [
+                str(table).replace(&#34;,&#34;, &#34;.&#34;).replace(&#34;\n&#34;, &#34;&#34;) for table in tables
+            ]
+
+            # Convert HTML table to pandas dataframe
+            dfr = pd.read_html(str(tables), decimal=&#34;,&#34;)
+        else:
+            log(
+                f&#34;Erro ao fazer a solicitação. Código de status: {response.status_code}&#34;
+            )
+
+    except requests.RequestException as e:
+        log(f&#34;Erro durante a solicitação: {e}&#34;)
+
+    dfr_pluviometric = dfr[0]
+    dfr_meteorological = dfr[1]
+    # dfr_rain_conditions = dfr[2]
+    # dfr_landslide_probability = dfr[3]
+
+    log(f&#34;\nPluviometric df {dfr_pluviometric.iloc[0]}&#34;)
+    log(f&#34;\nMeteorological df {dfr_meteorological.iloc[0]}&#34;)
+
+    return (
+        dfr_pluviometric,
+        dfr_meteorological,
+    )  # , dfr_rain_conditions, dfr_landslide_probability
+
+
+@task(
+    nout=2,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def treat_pluviometer_and_meteorological_data(
+    dfr: pd.DataFrame, dataset_id: str, table_id: str, mode: str = &#34;dev&#34;
 ) -&gt; Tuple[pd.DataFrame, bool]:
     &#34;&#34;&#34;
     Renomeia colunas e filtra dados com a hora e minuto do timestamp
     de execução mais próximo à este
     &#34;&#34;&#34;
 
-    url = &#34;http://alertario.rio.rj.gov.br/upload/xml/Chuvas.xml&#34;
-    dados = pdx.read_xml(url, [&#34;estacoes&#34;])
-    dados = pdx.fully_flatten(dados)
+    # Treat dfr if is from pluviometers
+    if isinstance(dfr.columns, pd.MultiIndex):
+        # Keeping only the rightmost level of the MultiIndex columns
+        dfr.columns = dfr.columns.droplevel(level=0)
 
-    drop_cols = [
-        &#34;@hora&#34;,
-        &#34;estacao|@nome&#34;,
-        &#34;estacao|@type&#34;,
-        &#34;estacao|localizacao|@bacia&#34;,
-        &#34;estacao|localizacao|@latitude&#34;,
-        &#34;estacao|localizacao|@longitude&#34;,
-    ]
-    rename_cols = {
-        &#34;estacao|@id&#34;: &#34;id_estacao&#34;,
-        &#34;estacao|chuvas|@h01&#34;: &#34;acumulado_chuva_1_h&#34;,
-        &#34;estacao|chuvas|@h04&#34;: &#34;acumulado_chuva_4_h&#34;,
-        &#34;estacao|chuvas|@h24&#34;: &#34;acumulado_chuva_24_h&#34;,
-        &#34;estacao|chuvas|@h96&#34;: &#34;acumulado_chuva_96_h&#34;,
-        &#34;estacao|chuvas|@hora&#34;: &#34;data_medicao_utc&#34;,
-        &#34;estacao|chuvas|@m15&#34;: &#34;acumulado_chuva_15_min&#34;,
-        &#34;estacao|chuvas|@mes&#34;: &#34;acumulado_chuva_mes&#34;,
-    }
+        rename_cols = {
+            &#34;N°&#34;: &#34;id_estacao&#34;,
+            &#34;Hora Leitura&#34;: &#34;data_medicao&#34;,
+            &#34;05 min&#34;: &#34;acumulado_chuva_5min&#34;,
+            &#34;10 min&#34;: &#34;acumulado_chuva_10min&#34;,
+            &#34;15 min&#34;: &#34;acumulado_chuva_15min&#34;,
+            &#34;30 min&#34;: &#34;acumulado_chuva_30min&#34;,
+            &#34;1h&#34;: &#34;acumulado_chuva_1h&#34;,
+            &#34;2h&#34;: &#34;acumulado_chuva_2h&#34;,
+            &#34;3h&#34;: &#34;acumulado_chuva_3h&#34;,
+            &#34;4h&#34;: &#34;acumulado_chuva_4h&#34;,
+            &#34;6h&#34;: &#34;acumulado_chuva_6h&#34;,
+            &#34;12h&#34;: &#34;acumulado_chuva_12h&#34;,
+            &#34;24h&#34;: &#34;acumulado_chuva_24h&#34;,
+            &#34;96h&#34;: &#34;acumulado_chuva_96h&#34;,
+            &#34;No Mês&#34;: &#34;acumulado_chuva_mes&#34;,
+        }
 
-    dados = pdx.fully_flatten(dados).drop(drop_cols, axis=1).rename(rename_cols, axis=1)
-    log(f&#34;\n[DEBUG]: df.head() {dados.head()}&#34;)
+    else:
+        rename_cols = {
+            &#34;N°&#34;: &#34;id_estacao&#34;,
+            &#34;Hora Leitura&#34;: &#34;data_medicao&#34;,
+            &#34;Temp. (°C)&#34;: &#34;temperatura&#34;,
+            &#34;Umi. do Ar (%)&#34;: &#34;umidade_ar&#34;,
+            &#34;Sen. Térmica (°C)&#34;: &#34;sensacao_termica&#34;,
+            &#34;P. Atm. (hPa)&#34;: &#34;pressao_atmosferica&#34;,
+            &#34;P. de Orvalho (°C)&#34;: &#34;temperatura_orvalho&#34;,
+            &#34;Vel. do Vento (Km/h)&#34;: &#34;velocidade_vento&#34;,
+            &#34;Dir. do Vento (°)&#34;: &#34;direcao_vento&#34;,
+        }  # confirmar nome das colunas com inmet
 
-    # Converte de UTC para horário São Paulo
-    dados[&#34;data_medicao_utc&#34;] = pd.to_datetime(dados[&#34;data_medicao_utc&#34;])
+    dfr.rename(columns=rename_cols, inplace=True)
 
-    see_cols = [&#34;data_medicao_utc&#34;, &#34;id_estacao&#34;, &#34;acumulado_chuva_15_min&#34;]
-    log(f&#34;DEBUG: data utc {dados[see_cols]}&#34;)
-
-    date_format = &#34;%Y-%m-%d %H:%M:%S&#34;
-    dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao_utc&#34;].dt.strftime(date_format)
-
-    see_cols = [&#34;data_medicao&#34;, &#34;id_estacao&#34;, &#34;acumulado_chuva_15_min&#34;]
-
-    dados.data_medicao = dados.data_medicao.apply(treat_date_col)
-
-    # Alterando valores ND, &#39;-&#39; e np.nan para NULL
-    dados.replace([&#34;ND&#34;, &#34;-&#34;, np.nan], [None, None, None], inplace=True)
-
-    # Converte variáveis que deveriam ser float para float
-    float_cols = [
-        &#34;acumulado_chuva_15_min&#34;,
-        &#34;acumulado_chuva_1_h&#34;,
-        &#34;acumulado_chuva_4_h&#34;,
-        &#34;acumulado_chuva_24_h&#34;,
-        &#34;acumulado_chuva_96_h&#34;,
-    ]
-    dados[float_cols] = dados[float_cols].apply(pd.to_numeric, errors=&#34;coerce&#34;)
-
-    # Altera valores negativos para None
-    dados[float_cols] = np.where(dados[float_cols] &lt; 0, None, dados[float_cols])
+    keep_cols = list(rename_cols.values())
 
     # Elimina linhas em que o id_estacao é igual mantendo a de menor valor nas colunas float
-    dados.sort_values([&#34;id_estacao&#34;, &#34;data_medicao&#34;] + float_cols, inplace=True)
-    dados.drop_duplicates(subset=[&#34;id_estacao&#34;, &#34;data_medicao&#34;], keep=&#34;first&#34;)
+    # dfr.sort_values([&#34;id_estacao&#34;, &#34;data_medicao&#34;] + float_cols, inplace=True)
+    dfr.drop_duplicates(subset=[&#34;id_estacao&#34;, &#34;data_medicao&#34;], keep=&#34;first&#34;)
 
-    dados[&#34;id_estacao&#34;] = dados[&#34;id_estacao&#34;].astype(str)
+    dfr[&#34;data_medicao&#34;] = pd.to_datetime(
+        dfr[&#34;data_medicao&#34;], format=&#34;%d/%m/%Y - %H:%M:%S&#34;
+    )
 
-    log(f&#34;Dataframe before comparing with last data saved on redis {dados.head()}&#34;)
-    log(f&#34;Dataframe before comparing with last data saved on redis {dados.iloc[0]}&#34;)
+    log(f&#34;Dataframe before comparing with last data saved on redis {dfr.head()}&#34;)
+    log(f&#34;Dataframe before comparing with last data saved on redis {dfr.iloc[0]}&#34;)
 
-    dados = save_updated_rows_on_redis(
-        dados,
+    dfr = save_updated_rows_on_redis(
+        dfr,
         dataset_id,
         table_id,
         unique_id=&#34;id_estacao&#34;,
         date_column=&#34;data_medicao&#34;,
-        date_format=date_format,
+        date_format=&#34;%Y-%m-%d %H:%M:%S&#34;,
         mode=mode,
     )
 
-    # # Ajustando dados da meia-noite que vem sem o horário
-    # for index, row in dados.iterrows():
-    #     try:
-    #         date = pd.to_datetime(row[&#34;data_medicao&#34;], format=&#34;%Y-%m-%d %H:%M:%S&#34;)
-    #     except ValueError:
-    #         date = pd.to_datetime(row[&#34;data_medicao&#34;]) + pd.DateOffset(hours=0)
-
-    #     dados.at[index, &#34;data_medicao&#34;] = date.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
-
-    empty_data = dados.shape[0] == 0
+    empty_data = dfr.shape[0] == 0
 
     if not empty_data:
         see_cols = [&#34;id_estacao&#34;, &#34;data_medicao&#34;, &#34;last_update&#34;]
         log(
-            f&#34;Dataframe after comparing with last data saved on redis {dados[see_cols].head()}&#34;
+            f&#34;Dataframe after comparing with last data saved on redis {dfr[see_cols].head()}&#34;
         )
-        log(f&#34;Dataframe first row after comparing {dados.iloc[0]}&#34;)
-        dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao&#34;].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
-        log(f&#34;Dataframe after converting to string {dados[see_cols].head()}&#34;)
+        log(f&#34;Dataframe first row after comparing {dfr.iloc[0]}&#34;)
+        dfr[&#34;data_medicao&#34;] = dfr[&#34;data_medicao&#34;].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+        log(f&#34;Dataframe after converting to string {dfr[see_cols].head()}&#34;)
 
         # Save max date on redis to compare this with last dbt run
-        max_date = str(dados[&#34;data_medicao&#34;].max())
+        max_date = str(dfr[&#34;data_medicao&#34;].max())
         redis_key = build_redis_key(dataset_id, table_id, name=&#34;last_update&#34;, mode=mode)
         log(f&#34;Dataframe is not empty. Redis key: {redis_key} and new date: {max_date}&#34;)
         save_str_on_redis(redis_key, &#34;date&#34;, max_date)
 
+        if not empty_data:
+            # Changin values &#34;ND&#34; and &#34;-&#34; to &#34;None&#34;
+            dfr.replace([&#34;ND&#34;, &#34;-&#34;], [None, None], inplace=True)
+
         # Fix columns order
-        dados = dados[
-            [
-                &#34;data_medicao&#34;,
-                &#34;id_estacao&#34;,
-                &#34;acumulado_chuva_15_min&#34;,
-                &#34;acumulado_chuva_1_h&#34;,
-                &#34;acumulado_chuva_4_h&#34;,
-                &#34;acumulado_chuva_24_h&#34;,
-                &#34;acumulado_chuva_96_h&#34;,
-            ]
-        ]
+        dfr = dfr[keep_cols]
     else:
         # If df is empty stop flow on flows.py
         log(&#34;Dataframe is empty. Skipping update flow.&#34;)
 
-    return dados, empty_data
+    return dfr, empty_data
 
 
 @task
-def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
+def save_data(
+    dfr: pd.DataFrame,
+    data_name: str = &#34;temp&#34;,
+    wait=None,  # pylint: disable=unused-argument
+) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
-    Salvar dados tratados em csv para conseguir subir pro GCP
+    Salvar dfr tratados em csv para conseguir subir pro GCP
     &#34;&#34;&#34;
 
-    prepath = Path(&#34;/tmp/precipitacao_alertario/&#34;)
+    prepath = Path(f&#34;/tmp/precipitacao_alertario/{data_name}&#34;)
     prepath.mkdir(parents=True, exist_ok=True)
 
     partition_column = &#34;data_medicao&#34;
-    log(f&#34;Dataframe before partitions {dados.iloc[0]}&#34;)
-    log(f&#34;Dataframe before partitions {dados.dtypes}&#34;)
-    dataframe, partitions = parse_date_columns(dados, partition_column)
+    log(f&#34;Dataframe before partitions {dfr.iloc[0]}&#34;)
+    log(f&#34;Dataframe before partitions {dfr.dtypes}&#34;)
+    dataframe, partitions = parse_date_columns(dfr, partition_column)
     current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y%m%d%H%M&#34;)
     log(f&#34;Dataframe after partitions {dataframe.iloc[0]}&#34;)
     log(f&#34;Dataframe after partitions {dataframe.dtypes}&#34;)
@@ -264,7 +291,91 @@ def check_to_run_dbt(
         key_table_1, format_date_table_1, key_table_2, format_date_table_2
     )
     log(f&#34;&gt;&gt;&gt;&gt; debug data alertario &gt; data dbt: {run_dbt}&#34;)
-    return run_dbt</code></pre>
+    return run_dbt
+
+
+@task(
+    nout=2,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def treat_old_pluviometer(dfr: pd.DataFrame) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Renomeia colunas no estilo do antigo flow.
+    &#34;&#34;&#34;
+
+    rename_cols = {
+        &#34;acumulado_chuva_15min&#34;: &#34;acumulado_chuva_15_min&#34;,
+        &#34;acumulado_chuva_1h&#34;: &#34;acumulado_chuva_1_h&#34;,
+        &#34;acumulado_chuva_4h&#34;: &#34;acumulado_chuva_4_h&#34;,
+        &#34;acumulado_chuva_24h&#34;: &#34;acumulado_chuva_24_h&#34;,
+        &#34;acumulado_chuva_96h&#34;: &#34;acumulado_chuva_96_h&#34;,
+    }
+
+    dfr.rename(columns=rename_cols, inplace=True)
+
+    # date_format = &#34;%Y-%m-%d %H:%M:%S&#34;
+    # dfr[&#34;data_medicao&#34;] = dfr[&#34;data_medicao&#34;].dt.strftime(date_format)
+    dfr.data_medicao = dfr.data_medicao.apply(treat_date_col)
+
+    # Converte variáveis que deveriam ser float para float
+    float_cols = [
+        &#34;acumulado_chuva_15_min&#34;,
+        &#34;acumulado_chuva_1_h&#34;,
+        &#34;acumulado_chuva_4_h&#34;,
+        &#34;acumulado_chuva_24_h&#34;,
+        &#34;acumulado_chuva_96_h&#34;,
+    ]
+    dfr[float_cols] = dfr[float_cols].apply(pd.to_numeric, errors=&#34;coerce&#34;)
+
+    # Altera valores negativos para None
+    dfr[float_cols] = np.where(dfr[float_cols] &lt; 0, None, dfr[float_cols])
+
+    # Elimina linhas em que o id_estacao é igual mantendo a de menor valor nas colunas float
+    dfr.sort_values([&#34;id_estacao&#34;, &#34;data_medicao&#34;] + float_cols, inplace=True)
+    dfr.drop_duplicates(subset=[&#34;id_estacao&#34;, &#34;data_medicao&#34;], keep=&#34;first&#34;)
+
+    # Fix columns order
+    dfr = dfr[
+        [
+            &#34;data_medicao&#34;,
+            &#34;id_estacao&#34;,
+            &#34;acumulado_chuva_15_min&#34;,
+            &#34;acumulado_chuva_1_h&#34;,
+            &#34;acumulado_chuva_4_h&#34;,
+            &#34;acumulado_chuva_24_h&#34;,
+            &#34;acumulado_chuva_96_h&#34;,
+        ]
+    ]
+    return dfr
+
+
+@task
+def save_data_old(
+    dfr: pd.DataFrame,
+    data_name: str = &#34;temp&#34;,
+    wait=None,  # pylint: disable=unused-argument
+) -&gt; Union[str, Path]:
+    &#34;&#34;&#34;
+    Salvar dfr tratados em csv para conseguir subir pro GCP
+    &#34;&#34;&#34;
+
+    prepath = Path(f&#34;/tmp/precipitacao_alertario/{data_name}&#34;)
+    prepath.mkdir(parents=True, exist_ok=True)
+
+    partition_column = &#34;data_medicao&#34;
+    dataframe, partitions = parse_date_columns_old_api(dfr, partition_column)
+    current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y%m%d%H%M&#34;)
+
+    to_partitions(
+        data=dataframe,
+        partition_columns=partitions,
+        savepath=prepath,
+        data_type=&#34;csv&#34;,
+        suffix=current_time,
+    )
+    log(f&#34;{data_name} files saved on {prepath}&#34;)
+    return prepath</code></pre>
 </details>
 </section>
 <section>
@@ -310,28 +421,92 @@ def check_to_run_dbt(
     return run_dbt</code></pre>
 </details>
 </dd>
-<dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.salvar_dados"><code class="name flex">
-<span>def <span class="ident">salvar_dados</span></span>(<span>dados: pandas.core.frame.DataFrame) ‑> Union[str, pathlib.Path]</span>
+<dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.download_data"><code class="name flex">
+<span>def <span class="ident">download_data</span></span>(<span>) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Salvar dados tratados em csv para conseguir subir pro GCP</p></div>
+<div class="desc"><p>Request data from API and return each data in a different dataframe.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    nout=2,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def download_data() -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Request data from API and return each data in a different dataframe.
+    &#34;&#34;&#34;
+
+    dicionario = get_vault_secret(&#34;alertario_api&#34;)
+    url = dicionario[&#34;data&#34;][&#34;url&#34;]
+
+    try:
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, &#34;html.parser&#34;)
+
+            # Get all tables from HTML structure
+            tables = soup.find_all(&#34;table&#34;)
+
+            # Data cames in Brazillian format and has some extra newline
+            tables = [
+                str(table).replace(&#34;,&#34;, &#34;.&#34;).replace(&#34;\n&#34;, &#34;&#34;) for table in tables
+            ]
+
+            # Convert HTML table to pandas dataframe
+            dfr = pd.read_html(str(tables), decimal=&#34;,&#34;)
+        else:
+            log(
+                f&#34;Erro ao fazer a solicitação. Código de status: {response.status_code}&#34;
+            )
+
+    except requests.RequestException as e:
+        log(f&#34;Erro durante a solicitação: {e}&#34;)
+
+    dfr_pluviometric = dfr[0]
+    dfr_meteorological = dfr[1]
+    # dfr_rain_conditions = dfr[2]
+    # dfr_landslide_probability = dfr[3]
+
+    log(f&#34;\nPluviometric df {dfr_pluviometric.iloc[0]}&#34;)
+    log(f&#34;\nMeteorological df {dfr_meteorological.iloc[0]}&#34;)
+
+    return (
+        dfr_pluviometric,
+        dfr_meteorological,
+    )  # , dfr_rain_conditions, dfr_landslide_probability</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.save_data"><code class="name flex">
+<span>def <span class="ident">save_data</span></span>(<span>dfr: pandas.core.frame.DataFrame, data_name: str = 'temp', wait=None) ‑> Union[str, pathlib.Path]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Salvar dfr tratados em csv para conseguir subir pro GCP</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task
-def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
+def save_data(
+    dfr: pd.DataFrame,
+    data_name: str = &#34;temp&#34;,
+    wait=None,  # pylint: disable=unused-argument
+) -&gt; Union[str, Path]:
     &#34;&#34;&#34;
-    Salvar dados tratados em csv para conseguir subir pro GCP
+    Salvar dfr tratados em csv para conseguir subir pro GCP
     &#34;&#34;&#34;
 
-    prepath = Path(&#34;/tmp/precipitacao_alertario/&#34;)
+    prepath = Path(f&#34;/tmp/precipitacao_alertario/{data_name}&#34;)
     prepath.mkdir(parents=True, exist_ok=True)
 
     partition_column = &#34;data_medicao&#34;
-    log(f&#34;Dataframe before partitions {dados.iloc[0]}&#34;)
-    log(f&#34;Dataframe before partitions {dados.dtypes}&#34;)
-    dataframe, partitions = parse_date_columns(dados, partition_column)
+    log(f&#34;Dataframe before partitions {dfr.iloc[0]}&#34;)
+    log(f&#34;Dataframe before partitions {dfr.dtypes}&#34;)
+    dataframe, partitions = parse_date_columns(dfr, partition_column)
     current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y%m%d%H%M&#34;)
     log(f&#34;Dataframe after partitions {dataframe.iloc[0]}&#34;)
     log(f&#34;Dataframe after partitions {dataframe.dtypes}&#34;)
@@ -344,6 +519,43 @@ def salvar_dados(dados: pd.DataFrame) -&gt; Union[str, Path]:
         suffix=current_time,
     )
     log(f&#34;Files saved on {prepath}&#34;)
+    return prepath</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.save_data_old"><code class="name flex">
+<span>def <span class="ident">save_data_old</span></span>(<span>dfr: pandas.core.frame.DataFrame, data_name: str = 'temp', wait=None) ‑> Union[str, pathlib.Path]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Salvar dfr tratados em csv para conseguir subir pro GCP</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def save_data_old(
+    dfr: pd.DataFrame,
+    data_name: str = &#34;temp&#34;,
+    wait=None,  # pylint: disable=unused-argument
+) -&gt; Union[str, Path]:
+    &#34;&#34;&#34;
+    Salvar dfr tratados em csv para conseguir subir pro GCP
+    &#34;&#34;&#34;
+
+    prepath = Path(f&#34;/tmp/precipitacao_alertario/{data_name}&#34;)
+    prepath.mkdir(parents=True, exist_ok=True)
+
+    partition_column = &#34;data_medicao&#34;
+    dataframe, partitions = parse_date_columns_old_api(dfr, partition_column)
+    current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y%m%d%H%M&#34;)
+
+    to_partitions(
+        data=dataframe,
+        partition_columns=partitions,
+        savepath=prepath,
+        data_type=&#34;csv&#34;,
+        suffix=current_time,
+    )
+    log(f&#34;{data_name} files saved on {prepath}&#34;)
     return prepath</code></pre>
 </details>
 </dd>
@@ -375,8 +587,73 @@ def save_last_dbt_update(
     save_str_on_redis(redis_key, &#34;date&#34;, last_update[&#34;date&#34;])</code></pre>
 </details>
 </dd>
-<dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.tratar_dados"><code class="name flex">
-<span>def <span class="ident">tratar_dados</span></span>(<span>dataset_id: str, table_id: str, mode: str = 'dev') ‑> Tuple[pandas.core.frame.DataFrame, bool]</span>
+<dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.treat_old_pluviometer"><code class="name flex">
+<span>def <span class="ident">treat_old_pluviometer</span></span>(<span>dfr: pandas.core.frame.DataFrame) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Renomeia colunas no estilo do antigo flow.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    nout=2,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def treat_old_pluviometer(dfr: pd.DataFrame) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Renomeia colunas no estilo do antigo flow.
+    &#34;&#34;&#34;
+
+    rename_cols = {
+        &#34;acumulado_chuva_15min&#34;: &#34;acumulado_chuva_15_min&#34;,
+        &#34;acumulado_chuva_1h&#34;: &#34;acumulado_chuva_1_h&#34;,
+        &#34;acumulado_chuva_4h&#34;: &#34;acumulado_chuva_4_h&#34;,
+        &#34;acumulado_chuva_24h&#34;: &#34;acumulado_chuva_24_h&#34;,
+        &#34;acumulado_chuva_96h&#34;: &#34;acumulado_chuva_96_h&#34;,
+    }
+
+    dfr.rename(columns=rename_cols, inplace=True)
+
+    # date_format = &#34;%Y-%m-%d %H:%M:%S&#34;
+    # dfr[&#34;data_medicao&#34;] = dfr[&#34;data_medicao&#34;].dt.strftime(date_format)
+    dfr.data_medicao = dfr.data_medicao.apply(treat_date_col)
+
+    # Converte variáveis que deveriam ser float para float
+    float_cols = [
+        &#34;acumulado_chuva_15_min&#34;,
+        &#34;acumulado_chuva_1_h&#34;,
+        &#34;acumulado_chuva_4_h&#34;,
+        &#34;acumulado_chuva_24_h&#34;,
+        &#34;acumulado_chuva_96_h&#34;,
+    ]
+    dfr[float_cols] = dfr[float_cols].apply(pd.to_numeric, errors=&#34;coerce&#34;)
+
+    # Altera valores negativos para None
+    dfr[float_cols] = np.where(dfr[float_cols] &lt; 0, None, dfr[float_cols])
+
+    # Elimina linhas em que o id_estacao é igual mantendo a de menor valor nas colunas float
+    dfr.sort_values([&#34;id_estacao&#34;, &#34;data_medicao&#34;] + float_cols, inplace=True)
+    dfr.drop_duplicates(subset=[&#34;id_estacao&#34;, &#34;data_medicao&#34;], keep=&#34;first&#34;)
+
+    # Fix columns order
+    dfr = dfr[
+        [
+            &#34;data_medicao&#34;,
+            &#34;id_estacao&#34;,
+            &#34;acumulado_chuva_15_min&#34;,
+            &#34;acumulado_chuva_1_h&#34;,
+            &#34;acumulado_chuva_4_h&#34;,
+            &#34;acumulado_chuva_24_h&#34;,
+            &#34;acumulado_chuva_96_h&#34;,
+        ]
+    ]
+    return dfr</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.treat_pluviometer_and_meteorological_data"><code class="name flex">
+<span>def <span class="ident">treat_pluviometer_and_meteorological_data</span></span>(<span>dfr: pandas.core.frame.DataFrame, dataset_id: str, table_id: str, mode: str = 'dev') ‑> Tuple[pandas.core.frame.DataFrame, bool]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Renomeia colunas e filtra dados com a hora e minuto do timestamp
@@ -390,131 +667,103 @@ de execução mais próximo à este</p></div>
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def tratar_dados(
-    dataset_id: str, table_id: str, mode: str = &#34;dev&#34;
+def treat_pluviometer_and_meteorological_data(
+    dfr: pd.DataFrame, dataset_id: str, table_id: str, mode: str = &#34;dev&#34;
 ) -&gt; Tuple[pd.DataFrame, bool]:
     &#34;&#34;&#34;
     Renomeia colunas e filtra dados com a hora e minuto do timestamp
     de execução mais próximo à este
     &#34;&#34;&#34;
 
-    url = &#34;http://alertario.rio.rj.gov.br/upload/xml/Chuvas.xml&#34;
-    dados = pdx.read_xml(url, [&#34;estacoes&#34;])
-    dados = pdx.fully_flatten(dados)
+    # Treat dfr if is from pluviometers
+    if isinstance(dfr.columns, pd.MultiIndex):
+        # Keeping only the rightmost level of the MultiIndex columns
+        dfr.columns = dfr.columns.droplevel(level=0)
 
-    drop_cols = [
-        &#34;@hora&#34;,
-        &#34;estacao|@nome&#34;,
-        &#34;estacao|@type&#34;,
-        &#34;estacao|localizacao|@bacia&#34;,
-        &#34;estacao|localizacao|@latitude&#34;,
-        &#34;estacao|localizacao|@longitude&#34;,
-    ]
-    rename_cols = {
-        &#34;estacao|@id&#34;: &#34;id_estacao&#34;,
-        &#34;estacao|chuvas|@h01&#34;: &#34;acumulado_chuva_1_h&#34;,
-        &#34;estacao|chuvas|@h04&#34;: &#34;acumulado_chuva_4_h&#34;,
-        &#34;estacao|chuvas|@h24&#34;: &#34;acumulado_chuva_24_h&#34;,
-        &#34;estacao|chuvas|@h96&#34;: &#34;acumulado_chuva_96_h&#34;,
-        &#34;estacao|chuvas|@hora&#34;: &#34;data_medicao_utc&#34;,
-        &#34;estacao|chuvas|@m15&#34;: &#34;acumulado_chuva_15_min&#34;,
-        &#34;estacao|chuvas|@mes&#34;: &#34;acumulado_chuva_mes&#34;,
-    }
+        rename_cols = {
+            &#34;N°&#34;: &#34;id_estacao&#34;,
+            &#34;Hora Leitura&#34;: &#34;data_medicao&#34;,
+            &#34;05 min&#34;: &#34;acumulado_chuva_5min&#34;,
+            &#34;10 min&#34;: &#34;acumulado_chuva_10min&#34;,
+            &#34;15 min&#34;: &#34;acumulado_chuva_15min&#34;,
+            &#34;30 min&#34;: &#34;acumulado_chuva_30min&#34;,
+            &#34;1h&#34;: &#34;acumulado_chuva_1h&#34;,
+            &#34;2h&#34;: &#34;acumulado_chuva_2h&#34;,
+            &#34;3h&#34;: &#34;acumulado_chuva_3h&#34;,
+            &#34;4h&#34;: &#34;acumulado_chuva_4h&#34;,
+            &#34;6h&#34;: &#34;acumulado_chuva_6h&#34;,
+            &#34;12h&#34;: &#34;acumulado_chuva_12h&#34;,
+            &#34;24h&#34;: &#34;acumulado_chuva_24h&#34;,
+            &#34;96h&#34;: &#34;acumulado_chuva_96h&#34;,
+            &#34;No Mês&#34;: &#34;acumulado_chuva_mes&#34;,
+        }
 
-    dados = pdx.fully_flatten(dados).drop(drop_cols, axis=1).rename(rename_cols, axis=1)
-    log(f&#34;\n[DEBUG]: df.head() {dados.head()}&#34;)
+    else:
+        rename_cols = {
+            &#34;N°&#34;: &#34;id_estacao&#34;,
+            &#34;Hora Leitura&#34;: &#34;data_medicao&#34;,
+            &#34;Temp. (°C)&#34;: &#34;temperatura&#34;,
+            &#34;Umi. do Ar (%)&#34;: &#34;umidade_ar&#34;,
+            &#34;Sen. Térmica (°C)&#34;: &#34;sensacao_termica&#34;,
+            &#34;P. Atm. (hPa)&#34;: &#34;pressao_atmosferica&#34;,
+            &#34;P. de Orvalho (°C)&#34;: &#34;temperatura_orvalho&#34;,
+            &#34;Vel. do Vento (Km/h)&#34;: &#34;velocidade_vento&#34;,
+            &#34;Dir. do Vento (°)&#34;: &#34;direcao_vento&#34;,
+        }  # confirmar nome das colunas com inmet
 
-    # Converte de UTC para horário São Paulo
-    dados[&#34;data_medicao_utc&#34;] = pd.to_datetime(dados[&#34;data_medicao_utc&#34;])
+    dfr.rename(columns=rename_cols, inplace=True)
 
-    see_cols = [&#34;data_medicao_utc&#34;, &#34;id_estacao&#34;, &#34;acumulado_chuva_15_min&#34;]
-    log(f&#34;DEBUG: data utc {dados[see_cols]}&#34;)
-
-    date_format = &#34;%Y-%m-%d %H:%M:%S&#34;
-    dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao_utc&#34;].dt.strftime(date_format)
-
-    see_cols = [&#34;data_medicao&#34;, &#34;id_estacao&#34;, &#34;acumulado_chuva_15_min&#34;]
-
-    dados.data_medicao = dados.data_medicao.apply(treat_date_col)
-
-    # Alterando valores ND, &#39;-&#39; e np.nan para NULL
-    dados.replace([&#34;ND&#34;, &#34;-&#34;, np.nan], [None, None, None], inplace=True)
-
-    # Converte variáveis que deveriam ser float para float
-    float_cols = [
-        &#34;acumulado_chuva_15_min&#34;,
-        &#34;acumulado_chuva_1_h&#34;,
-        &#34;acumulado_chuva_4_h&#34;,
-        &#34;acumulado_chuva_24_h&#34;,
-        &#34;acumulado_chuva_96_h&#34;,
-    ]
-    dados[float_cols] = dados[float_cols].apply(pd.to_numeric, errors=&#34;coerce&#34;)
-
-    # Altera valores negativos para None
-    dados[float_cols] = np.where(dados[float_cols] &lt; 0, None, dados[float_cols])
+    keep_cols = list(rename_cols.values())
 
     # Elimina linhas em que o id_estacao é igual mantendo a de menor valor nas colunas float
-    dados.sort_values([&#34;id_estacao&#34;, &#34;data_medicao&#34;] + float_cols, inplace=True)
-    dados.drop_duplicates(subset=[&#34;id_estacao&#34;, &#34;data_medicao&#34;], keep=&#34;first&#34;)
+    # dfr.sort_values([&#34;id_estacao&#34;, &#34;data_medicao&#34;] + float_cols, inplace=True)
+    dfr.drop_duplicates(subset=[&#34;id_estacao&#34;, &#34;data_medicao&#34;], keep=&#34;first&#34;)
 
-    dados[&#34;id_estacao&#34;] = dados[&#34;id_estacao&#34;].astype(str)
+    dfr[&#34;data_medicao&#34;] = pd.to_datetime(
+        dfr[&#34;data_medicao&#34;], format=&#34;%d/%m/%Y - %H:%M:%S&#34;
+    )
 
-    log(f&#34;Dataframe before comparing with last data saved on redis {dados.head()}&#34;)
-    log(f&#34;Dataframe before comparing with last data saved on redis {dados.iloc[0]}&#34;)
+    log(f&#34;Dataframe before comparing with last data saved on redis {dfr.head()}&#34;)
+    log(f&#34;Dataframe before comparing with last data saved on redis {dfr.iloc[0]}&#34;)
 
-    dados = save_updated_rows_on_redis(
-        dados,
+    dfr = save_updated_rows_on_redis(
+        dfr,
         dataset_id,
         table_id,
         unique_id=&#34;id_estacao&#34;,
         date_column=&#34;data_medicao&#34;,
-        date_format=date_format,
+        date_format=&#34;%Y-%m-%d %H:%M:%S&#34;,
         mode=mode,
     )
 
-    # # Ajustando dados da meia-noite que vem sem o horário
-    # for index, row in dados.iterrows():
-    #     try:
-    #         date = pd.to_datetime(row[&#34;data_medicao&#34;], format=&#34;%Y-%m-%d %H:%M:%S&#34;)
-    #     except ValueError:
-    #         date = pd.to_datetime(row[&#34;data_medicao&#34;]) + pd.DateOffset(hours=0)
-
-    #     dados.at[index, &#34;data_medicao&#34;] = date.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
-
-    empty_data = dados.shape[0] == 0
+    empty_data = dfr.shape[0] == 0
 
     if not empty_data:
         see_cols = [&#34;id_estacao&#34;, &#34;data_medicao&#34;, &#34;last_update&#34;]
         log(
-            f&#34;Dataframe after comparing with last data saved on redis {dados[see_cols].head()}&#34;
+            f&#34;Dataframe after comparing with last data saved on redis {dfr[see_cols].head()}&#34;
         )
-        log(f&#34;Dataframe first row after comparing {dados.iloc[0]}&#34;)
-        dados[&#34;data_medicao&#34;] = dados[&#34;data_medicao&#34;].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
-        log(f&#34;Dataframe after converting to string {dados[see_cols].head()}&#34;)
+        log(f&#34;Dataframe first row after comparing {dfr.iloc[0]}&#34;)
+        dfr[&#34;data_medicao&#34;] = dfr[&#34;data_medicao&#34;].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+        log(f&#34;Dataframe after converting to string {dfr[see_cols].head()}&#34;)
 
         # Save max date on redis to compare this with last dbt run
-        max_date = str(dados[&#34;data_medicao&#34;].max())
+        max_date = str(dfr[&#34;data_medicao&#34;].max())
         redis_key = build_redis_key(dataset_id, table_id, name=&#34;last_update&#34;, mode=mode)
         log(f&#34;Dataframe is not empty. Redis key: {redis_key} and new date: {max_date}&#34;)
         save_str_on_redis(redis_key, &#34;date&#34;, max_date)
 
+        if not empty_data:
+            # Changin values &#34;ND&#34; and &#34;-&#34; to &#34;None&#34;
+            dfr.replace([&#34;ND&#34;, &#34;-&#34;], [None, None], inplace=True)
+
         # Fix columns order
-        dados = dados[
-            [
-                &#34;data_medicao&#34;,
-                &#34;id_estacao&#34;,
-                &#34;acumulado_chuva_15_min&#34;,
-                &#34;acumulado_chuva_1_h&#34;,
-                &#34;acumulado_chuva_4_h&#34;,
-                &#34;acumulado_chuva_24_h&#34;,
-                &#34;acumulado_chuva_96_h&#34;,
-            ]
-        ]
+        dfr = dfr[keep_cols]
     else:
         # If df is empty stop flow on flows.py
         log(&#34;Dataframe is empty. Skipping update flow.&#34;)
 
-    return dados, empty_data</code></pre>
+    return dfr, empty_data</code></pre>
 </details>
 </dd>
 </dl>
@@ -582,9 +831,12 @@ setTimeout(() => input.focus(), 100);
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.check_to_run_dbt" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.check_to_run_dbt">check_to_run_dbt</a></code></li>
-<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.salvar_dados" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.salvar_dados">salvar_dados</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.download_data" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.download_data">download_data</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.save_data" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.save_data">save_data</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.save_data_old" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.save_data_old">save_data_old</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.save_last_dbt_update" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.save_last_dbt_update">save_last_dbt_update</a></code></li>
-<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.tratar_dados" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.tratar_dados">tratar_dados</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.treat_old_pluviometer" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.treat_old_pluviometer">treat_old_pluviometer</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.treat_pluviometer_and_meteorological_data" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks.treat_pluviometer_and_meteorological_data">treat_pluviometer_and_meteorological_data</a></code></li>
 </ul>
 </li>
 </ul>
