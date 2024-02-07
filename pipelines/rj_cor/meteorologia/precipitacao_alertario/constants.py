@@ -13,6 +13,12 @@ class constants(Enum):  # pylint: disable=c0103
     The constants for actual values are on rain_dashboard_constants file
     """
 
+    DATASET_ID_PLUVIOMETRIC = "clima_pluviometro"
+    TABLE_ID_PLUVIOMETRIC = "taxa_precipitacao_alertario_5min"
+    TABLE_ID_PLUVIOMETRIC_OLD_API = "taxa_precipitacao_alertario"
+    DATASET_ID_METEOROLOGICAL = "clima_estacao_meteorologica"
+    TABLE_ID_METEOROLOGICAL = "meteorologia_alertario"
+
     RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS = {
         "redis_data_key": "data_chuva_passado_alertario",
         "redis_update_key": "data_update_chuva_passado_alertario",
