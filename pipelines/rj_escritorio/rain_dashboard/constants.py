@@ -18,21 +18,20 @@ class constants(Enum):  # pylint: disable=c0103
             alertario AS ( -- seleciona a última medição do alertario de cada estação nos últimos 30min
             SELECT
                 id_estacao,
-                CAST(acumulado_chuva_15_min AS FLOAT64) acumulado_chuva_15_min,
+                CAST(acumulado_chuva_15min AS FLOAT64) acumulado_chuva_15min,
                 CURRENT_DATE('America/Sao_Paulo') as data,
                 data_update
             FROM (
                 SELECT
                 id_estacao,
-                acumulado_chuva_15_min,
+                acumulado_chuva_15min,
                 DATETIME(data_medicao) AS data_update,
                 ROW_NUMBER() OVER (
                     PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
                 ) AS row_num
-                FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario`
+                FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
                 WHERE data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
-                -- WHERE data_particao> DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY)
-                --     AND horario >= TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE)
+                    AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
             )AS a
             WHERE a.row_num = 1
             ),
@@ -86,7 +85,7 @@ class constants(Enum):  # pylint: disable=c0103
                 id_estacao,
                 data_update,
                 "alertario" AS sistema,
-                acumulado_chuva_15_min,
+                acumulado_chuva_15min,
             FROM alertario)
             -- UNION ALL
             -- (SELECT
@@ -129,8 +128,8 @@ class constants(Enum):  # pylint: disable=c0103
             SELECT
                 h3.*,
                 lm.id_estacao,
-                lm.acumulado_chuva_15_min,
-                lm.acumulado_chuva_15_min/power(h3.dist,5) AS p1_15min,
+                lm.acumulado_chuva_15min,
+                lm.acumulado_chuva_15min/power(h3.dist,5) AS p1_15min,
                 1/power(h3.dist,5) AS inv_dist
             FROM (
                 WITH centroid_h3 AS (
@@ -218,7 +217,7 @@ class constants(Enum):  # pylint: disable=c0103
         SELECT
         final_table.id_h3,
         bairro,
-        chuva_15min,
+        chuva_15min chuva_15min,
         estacoes,
         CASE
             WHEN chuva_15min> 0     AND chuva_15min<= 1.25 THEN 'chuva fraca'
@@ -243,8 +242,9 @@ class constants(Enum):  # pylint: disable=c0103
                 MAX(
                   DATETIME(data_medicao)
                 ) AS last_update
-              FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario`
+              FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
               WHERE data_medicao> CAST(DATE_SUB(CURRENT_DATETIME('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
+                AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
             )
             -- UNION ALL
             -- (
