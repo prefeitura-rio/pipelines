@@ -23,7 +23,6 @@ with Flow(
     name=utils_constants.FLOW_DUMP_EARTH_ENGINE_ASSET_NAME.value,
     code_owners=[
         "diego",
-        "gabriel",
     ],
 ) as dump_earth_engine_asset_flow:
     project_id = Parameter("project_id", required=False)
