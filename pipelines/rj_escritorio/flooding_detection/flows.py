@@ -24,7 +24,6 @@ from pipelines.utils.decorators import Flow
 with Flow(
     name="EMD: flooding_detection - Atualizar detecção de alagamento (IA) na API",
     code_owners=[
-        "gabriel",
         "diego",
     ],
     skip_if_running=True,

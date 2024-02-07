@@ -29,7 +29,6 @@ with Flow(
     name=utils_constants.FLOW_DUMP_URL_NAME.value,
     code_owners=[
         "diego",
-        "gabriel",
     ],
 ) as dump_url_flow:
     #####################################
