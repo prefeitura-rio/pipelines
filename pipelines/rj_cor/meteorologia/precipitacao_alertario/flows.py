@@ -43,14 +43,16 @@ wait_for_flow_run_with_5min_timeout = wait_for_flow_run_with_timeout(
 )
 
 with Flow(
-    name="COR: Meteorologia - Precipitacao ALERTARIO",
+    name="COR: Meteorologia - Precipitacao e Meteorologia ALERTARIO",
     code_owners=[
         "paty",
     ],
     # skip_if_running=True,
 ) as cor_meteorologia_precipitacao_alertario:
-    DATASET_ID = "clima_pluviometro"
-    TABLE_ID = "taxa_precipitacao_alertario_5min"
+    DATASET_ID_PLUVIOMETRIC = alertario_constants.DATASET_ID_PLUVIOMETRIC.value
+    TABLE_ID_PLUVIOMETRIC = alertario_constants.TABLE_ID_PLUVIOMETRIC.value
+    DATASET_ID_METEOROLOGICAL = alertario_constants.DATASET_ID_METEOROLOGICAL.value
+    TABLE_ID_METEOROLOGICAL = alertario_constants.TABLE_ID_METEOROLOGICAL.value
     DUMP_MODE = "append"
 
     # Materialization parameters
@@ -74,23 +76,35 @@ with Flow(
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
 
-    dfr_pluviometric = download_data()
-    dados, empty_data = treat_pluviometer_and_meteorological_data(
+    dfr_pluviometric, dfr_meteorological = download_data()
+    (
+        dfr_pluviometric,
+        empty_data_pluviometric,
+    ) = treat_pluviometer_and_meteorological_data(
         dfr=dfr_pluviometric,
-        dataset_id=DATASET_ID,
-        table_id=TABLE_ID,
+        dataset_id=DATASET_ID_PLUVIOMETRIC,
+        table_id=TABLE_ID_PLUVIOMETRIC,
+        mode=MATERIALIZATION_MODE,
+    )
+    (
+        dfr_meteorological,
+        empty_data_meteorological,
+    ) = treat_pluviometer_and_meteorological_data(
+        dfr=dfr_meteorological,
+        dataset_id=DATASET_ID_METEOROLOGICAL,
+        table_id=TABLE_ID_METEOROLOGICAL,
         mode=MATERIALIZATION_MODE,
     )
 
-    with case(empty_data, False):
-        path = save_data(dados=dados)
+    with case(empty_data_pluviometric, False):
+        path_pluviometric = save_data(dfr_pluviometric, "pluviometric")
         # Create table in BigQuery
         UPLOAD_TABLE = create_table_and_upload_to_gcs(
-            data_path=path,
-            dataset_id=DATASET_ID,
-            table_id=TABLE_ID,
+            data_path=path_pluviometric,
+            dataset_id=DATASET_ID_PLUVIOMETRIC,
+            table_id=TABLE_ID_PLUVIOMETRIC,
             dump_mode=DUMP_MODE,
-            wait=path,
+            wait=path_pluviometric,
         )
 
         with case(TRIGGER_RAIN_DASHBOARD_UPDATE, True):
@@ -133,8 +147,8 @@ with Flow(
             )
 
     run_dbt = check_to_run_dbt(
-        dataset_id=DATASET_ID,
-        table_id=TABLE_ID,
+        dataset_id=DATASET_ID_PLUVIOMETRIC,
+        table_id=TABLE_ID_PLUVIOMETRIC,
         mode=MATERIALIZATION_MODE,
     )
     run_dbt.set_upstream(UPLOAD_TABLE)
@@ -147,13 +161,13 @@ with Flow(
                 flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
                 project_name=constants.PREFECT_DEFAULT_PROJECT.value,
                 parameters={
-                    "dataset_id": DATASET_ID,
-                    "table_id": TABLE_ID,
+                    "dataset_id": DATASET_ID_PLUVIOMETRIC,
+                    "table_id": TABLE_ID_PLUVIOMETRIC,
                     "mode": MATERIALIZATION_MODE,
                     "materialize_to_datario": MATERIALIZE_TO_DATARIO,
                 },
                 labels=current_flow_labels,
-                run_name=f"Materialize {DATASET_ID}.{TABLE_ID}",
+                run_name=f"Materialize {DATASET_ID_PLUVIOMETRIC}.{TABLE_ID_PLUVIOMETRIC}",
             )
 
             current_flow_labels.set_upstream(run_dbt)
@@ -167,8 +181,8 @@ with Flow(
             )
 
             last_dbt_update = save_last_dbt_update(
-                dataset_id=DATASET_ID,
-                table_id=TABLE_ID,
+                dataset_id=DATASET_ID_PLUVIOMETRIC,
+                table_id=TABLE_ID_PLUVIOMETRIC,
                 mode=MATERIALIZATION_MODE,
                 wait=wait_for_materialization,
             )
@@ -187,14 +201,83 @@ with Flow(
                     project_name=constants.PREFECT_DEFAULT_PROJECT.value,
                     parameters={
                         "project_id": "datario",
-                        "dataset_id": DATASET_ID,
-                        "table_id": TABLE_ID,
+                        "dataset_id": DATASET_ID_PLUVIOMETRIC,
+                        "table_id": TABLE_ID_PLUVIOMETRIC,
                         "maximum_bytes_processed": MAXIMUM_BYTES_PROCESSED,
                     },
                     labels=[
                         "datario",
                     ],
-                    run_name=f"Dump to GCS {DATASET_ID}.{TABLE_ID}",
+                    run_name=f"Dump to GCS {DATASET_ID_PLUVIOMETRIC}.{TABLE_ID_PLUVIOMETRIC}",
+                )
+                dump_to_gcs_flow.set_upstream(wait_for_materialization)
+
+                wait_for_dump_to_gcs = wait_for_flow_run_with_5min_timeout(
+                    flow_run_id=dump_to_gcs_flow,
+                    stream_states=True,
+                    stream_logs=True,
+                    raise_final_state=True,
+                )
+
+    # Save meteorological data
+    with case(empty_data_meteorological, False):
+        path_meteorological = save_data(dfr_meteorological, "meteorological")
+        # Create table in BigQuery
+        UPLOAD_TABLE = create_table_and_upload_to_gcs(
+            data_path=path_meteorological,
+            dataset_id=DATASET_ID_METEOROLOGICAL,
+            table_id=TABLE_ID_METEOROLOGICAL,
+            dump_mode=DUMP_MODE,
+            wait=path_meteorological,
+        )
+
+        with case(MATERIALIZE_AFTER_DUMP, True):
+            current_flow_labels = get_current_flow_labels()
+            materialization_flow = create_flow_run(
+                flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+                project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                parameters={
+                    "dataset_id": DATASET_ID_METEOROLOGICAL,
+                    "table_id": TABLE_ID_METEOROLOGICAL,
+                    "mode": MATERIALIZATION_MODE,
+                    "materialize_to_datario": MATERIALIZE_TO_DATARIO,
+                },
+                labels=current_flow_labels,
+                run_name=f"Materialize {DATASET_ID_METEOROLOGICAL}.{TABLE_ID_METEOROLOGICAL}",
+            )
+
+            current_flow_labels.set_upstream(run_dbt)
+            materialization_flow.set_upstream(current_flow_labels)
+
+            wait_for_materialization = wait_for_flow_run_with_5min_timeout(
+                flow_run_id=materialization_flow,
+                stream_states=True,
+                stream_logs=True,
+                raise_final_state=True,
+            )
+
+            wait_for_materialization.max_retries = (
+                dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
+            )
+            wait_for_materialization.retry_delay = timedelta(
+                seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
+            )
+
+            with case(DUMP_TO_GCS, True):
+                # Trigger Dump to GCS flow run with project id as datario
+                dump_to_gcs_flow = create_flow_run(
+                    flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
+                    project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                    parameters={
+                        "project_id": "datario",
+                        "dataset_id": DATASET_ID_METEOROLOGICAL,
+                        "table_id": TABLE_ID_METEOROLOGICAL,
+                        "maximum_bytes_processed": MAXIMUM_BYTES_PROCESSED,
+                    },
+                    labels=[
+                        "datario",
+                    ],
+                    run_name=f"Dump to GCS {DATASET_ID_METEOROLOGICAL}.{TABLE_ID_METEOROLOGICAL}",
                 )
                 dump_to_gcs_flow.set_upstream(wait_for_materialization)
 

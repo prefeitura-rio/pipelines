@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-# TODO: adicionar novas tabelas
-# TODO: materialização em prod
 # pylint: disable=C0103,R0914
 """
 Tasks for precipitacao_alertario
@@ -29,7 +27,7 @@ from pipelines.utils.utils import (
 
 
 @task(
-    nout=1,
+    nout=2,
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
@@ -64,11 +62,14 @@ def download_data() -> pd.DataFrame:
         print(f"Erro durante a solicitação: {e}")
 
     dfr_pluviometric = dfr[0]
-    # dfr_meteorological = dfr[1]
+    dfr_meteorological = dfr[1]
     # dfr_rain_conditions = dfr[2]
     # dfr_landslide_probability = dfr[3]
 
-    return dfr_pluviometric  # , dfr_meteorological, dfr_rain_conditions, dfr_landslide_probability
+    return (
+        dfr_pluviometric,
+        dfr_meteorological,
+    )  # , dfr_rain_conditions, dfr_landslide_probability
 
 
 @task(
@@ -162,6 +163,10 @@ def treat_pluviometer_and_meteorological_data(
         log(f"Dataframe is not empty. Redis key: {redis_key} and new date: {max_date}")
         save_str_on_redis(redis_key, "date", max_date)
 
+        if not empty_data:
+            # Changin values "ND" and "-" to "None"
+            dfr.replace(["ND", "-"], [None, None], inplace=True)
+
         # Fix columns order
         dfr = dfr[keep_cols]
     else:
@@ -172,18 +177,18 @@ def treat_pluviometer_and_meteorological_data(
 
 
 @task
-def save_data(dados: pd.DataFrame) -> Union[str, Path]:
+def save_data(dfr: pd.DataFrame, data_name: str = "temp") -> Union[str, Path]:
     """
-    Salvar dados tratados em csv para conseguir subir pro GCP
+    Salvar dfr tratados em csv para conseguir subir pro GCP
     """
 
-    prepath = Path("/tmp/precipitacao_alertario/")
+    prepath = Path(f"/tmp/precipitacao_alertario/{data_name}")
     prepath.mkdir(parents=True, exist_ok=True)
 
     partition_column = "data_medicao"
-    log(f"Dataframe before partitions {dados.iloc[0]}")
-    log(f"Dataframe before partitions {dados.dtypes}")
-    dataframe, partitions = parse_date_columns(dados, partition_column)
+    log(f"Dataframe before partitions {dfr.iloc[0]}")
+    log(f"Dataframe before partitions {dfr.dtypes}")
+    dataframe, partitions = parse_date_columns(dfr, partition_column)
     current_time = pendulum.now("America/Sao_Paulo").strftime("%Y%m%d%H%M")
     log(f"Dataframe after partitions {dataframe.iloc[0]}")
     log(f"Dataframe after partitions {dataframe.dtypes}")
