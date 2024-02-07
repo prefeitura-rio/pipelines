@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# TODO: adicionar novas tabelas
+# TODO: materialização em prod
 # pylint: disable=C0103,R0914
 """
 Tasks for precipitacao_alertario
@@ -13,19 +15,14 @@ import pandas as pd
 import pendulum
 from prefect import task
 
-# from prefect import context
-
 from pipelines.constants import constants
-from pipelines.rj_cor.meteorologia.precipitacao_alertario.utils import (
-    parse_date_columns,
-    # treat_date_col,
-)
 from pipelines.utils.utils import (
     build_redis_key,
     compare_dates_between_tables_redis,
     get_redis_output,
     log,
     to_partitions,
+    parse_date_columns,
     save_str_on_redis,
     save_updated_rows_on_redis,
 )
