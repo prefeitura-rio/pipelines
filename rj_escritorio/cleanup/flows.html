@@ -52,9 +52,6 @@ from pipelines.utils.decorators import Flow
 
 with Flow(
     &#34;EMD: Limpeza de histórico de runs&#34;,
-    code_owners=[
-        &#34;gabriel&#34;,
-    ],
 ) as database_cleanup_flow:
     # Parameters
     days_old = Parameter(&#34;days_old&#34;, default=60, required=False)
@@ -80,9 +77,6 @@ database_cleanup_flow.schedule = daily_at_3am_cleanup
 
 with Flow(
     &#34;EMD: Limpeza de runs em execução&#34;,
-    code_owners=[
-        &#34;gabriel&#34;,
-    ],
 ) as rj_escritorio__cleanup__running_flows_cleanup:
     # Parameters
     older_than_days = Parameter(&#34;older_than_days&#34;, default=14, required=False)
