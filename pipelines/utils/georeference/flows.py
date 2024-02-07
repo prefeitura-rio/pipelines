@@ -30,7 +30,6 @@ from pipelines.utils.tasks import (
 with Flow(
     "EMD: template - Geolocalizar tabela",
     code_owners=[
-        "gabriel",
         "paty",
     ],
 ) as utils_georeference_flow:
