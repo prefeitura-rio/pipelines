@@ -18,13 +18,13 @@ class constants(Enum):  # pylint: disable=c0103
             alertario AS ( -- seleciona a última medição do alertario de cada estação nos últimos 30min
             SELECT
                 id_estacao,
-                CAST(acumulado_chuva_5min AS FLOAT64) acumulado_chuva_5min,
+                CAST(acumulado_chuva_15min AS FLOAT64) acumulado_chuva_15min,
                 CURRENT_DATE('America/Sao_Paulo') as data,
                 data_update
             FROM (
                 SELECT
                 id_estacao,
-                acumulado_chuva_5min,
+                acumulado_chuva_15min,
                 DATETIME(data_medicao) AS data_update,
                 ROW_NUMBER() OVER (
                     PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
@@ -85,7 +85,7 @@ class constants(Enum):  # pylint: disable=c0103
                 id_estacao,
                 data_update,
                 "alertario" AS sistema,
-                acumulado_chuva_5min,
+                acumulado_chuva_15min,
             FROM alertario)
             -- UNION ALL
             -- (SELECT
@@ -128,8 +128,8 @@ class constants(Enum):  # pylint: disable=c0103
             SELECT
                 h3.*,
                 lm.id_estacao,
-                lm.acumulado_chuva_5min,
-                lm.acumulado_chuva_5min/power(h3.dist,5) AS p1_5min,
+                lm.acumulado_chuva_15min,
+                lm.acumulado_chuva_15min/power(h3.dist,5) AS p1_15min,
                 1/power(h3.dist,5) AS inv_dist
             FROM (
                 WITH centroid_h3 AS (
@@ -207,7 +207,7 @@ class constants(Enum):  # pylint: disable=c0103
             SELECT
                 id_h3,
                 bairro,
-                cast(round(CAST(sum(p1_5min)/sum(inv_dist) AS DECIMAL),2) AS decimal) AS chuva_5min,
+                cast(round(CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL),2) AS decimal) AS chuva_15min,
                 STRING_AGG(estacao ORDER BY estacao) estacoes
             FROM h3_chuvas
             -- WHERE ranking < 4
@@ -217,20 +217,20 @@ class constants(Enum):  # pylint: disable=c0103
         SELECT
         final_table.id_h3,
         bairro,
-        chuva_5min chuva_15min,
+        chuva_15min chuva_15min,
         estacoes,
         CASE
-            WHEN chuva_5min> 0     AND chuva_5min<= 1.25 THEN 'chuva fraca'
-            WHEN chuva_5min> 1.25  AND chuva_5min<= 6.25 THEN 'chuva moderada'
-            WHEN chuva_5min> 6.25  AND chuva_5min<= 12.5 THEN 'chuva forte'
-            WHEN chuva_5min> 12.5                         THEN 'chuva muito forte'
+            WHEN chuva_15min> 0     AND chuva_15min<= 1.25 THEN 'chuva fraca'
+            WHEN chuva_15min> 1.25  AND chuva_15min<= 6.25 THEN 'chuva moderada'
+            WHEN chuva_15min> 6.25  AND chuva_15min<= 12.5 THEN 'chuva forte'
+            WHEN chuva_15min> 12.5                         THEN 'chuva muito forte'
             ELSE 'sem chuva'
         END AS status,
         CASE
-            WHEN chuva_5min> 0     AND chuva_5min<= 1.25 THEN '#DAECFB'
-            WHEN chuva_5min> 1.25  AND chuva_5min<= 6.25 THEN '#A9CBE8'
-            WHEN chuva_5min> 6.25  AND chuva_5min<= 12.5 THEN '#77A9D5'
-            WHEN chuva_5min> 12.5                         THEN '#125999'
+            WHEN chuva_15min> 0     AND chuva_15min<= 1.25 THEN '#DAECFB'
+            WHEN chuva_15min> 1.25  AND chuva_15min<= 6.25 THEN '#A9CBE8'
+            WHEN chuva_15min> 6.25  AND chuva_15min<= 12.5 THEN '#77A9D5'
+            WHEN chuva_15min> 12.5                         THEN '#125999'
             ELSE '#ffffff'
         END AS color
         FROM final_table
