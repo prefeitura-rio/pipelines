@@ -54,17 +54,20 @@ def download_data() -> pd.DataFrame:
             # Convert HTML table to pandas dataframe
             dfr = pd.read_html(str(tables), decimal=",")
         else:
-            print(
+            log(
                 f"Erro ao fazer a solicitação. Código de status: {response.status_code}"
             )
 
     except requests.RequestException as e:
-        print(f"Erro durante a solicitação: {e}")
+        log(f"Erro durante a solicitação: {e}")
 
     dfr_pluviometric = dfr[0]
     dfr_meteorological = dfr[1]
     # dfr_rain_conditions = dfr[2]
     # dfr_landslide_probability = dfr[3]
+
+    log(f"\nPluviometric df {dfr_pluviometric.iloc[0]}")
+    log(f"\nMeteorological df {dfr_meteorological.iloc[0]}")
 
     return (
         dfr_pluviometric,
@@ -177,7 +180,11 @@ def treat_pluviometer_and_meteorological_data(
 
 
 @task
-def save_data(dfr: pd.DataFrame, data_name: str = "temp") -> Union[str, Path]:
+def save_data(
+    dfr: pd.DataFrame,
+    data_name: str = "temp",
+    wait=None,  # pylint: disable=unused-argument
+) -> Union[str, Path]:
     """
     Salvar dfr tratados em csv para conseguir subir pro GCP
     """

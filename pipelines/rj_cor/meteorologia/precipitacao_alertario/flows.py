@@ -97,7 +97,9 @@ with Flow(
     )
 
     with case(empty_data_pluviometric, False):
-        path_pluviometric = save_data(dfr_pluviometric, "pluviometric")
+        path_pluviometric = save_data(
+            dfr_pluviometric, "pluviometric", wait=empty_data_pluviometric
+        )
         # Create table in BigQuery
         UPLOAD_TABLE = create_table_and_upload_to_gcs(
             data_path=path_pluviometric,
@@ -221,7 +223,9 @@ with Flow(
 
     # Save meteorological data
     with case(empty_data_meteorological, False):
-        path_meteorological = save_data(dfr_meteorological, "meteorological")
+        path_meteorological = save_data(
+            dfr_meteorological, "meteorological", wait=empty_data_meteorological
+        )
         # Create table in BigQuery
         UPLOAD_TABLE = create_table_and_upload_to_gcs(
             data_path=path_meteorological,
