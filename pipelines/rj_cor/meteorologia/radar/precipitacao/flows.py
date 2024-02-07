@@ -141,4 +141,4 @@ cor_meteorologia_precipitacao_radar_flow.run_config = KubernetesRun(
     memory_limit="3Gi",
 )
 
-cor_meteorologia_precipitacao_radar_flow.schedule = TIME_SCHEDULE
+# cor_meteorologia_precipitacao_radar_flow.schedule = TIME_SCHEDULE
