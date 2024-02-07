@@ -282,8 +282,8 @@ def treat_old_pluviometer(dfr: pd.DataFrame) -> pd.DataFrame:
 
     dfr.rename(columns=rename_cols, inplace=True)
 
-    date_format = "%Y-%m-%d %H:%M:%S"
-    dfr["data_medicao"] = dfr["data_medicao"].dt.strftime(date_format)
+    # date_format = "%Y-%m-%d %H:%M:%S"
+    # dfr["data_medicao"] = dfr["data_medicao"].dt.strftime(date_format)
     dfr.data_medicao = dfr.data_medicao.apply(treat_date_col)
 
     # Converte variáveis que deveriam ser float para float
