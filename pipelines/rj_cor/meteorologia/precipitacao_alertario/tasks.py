@@ -32,7 +32,7 @@ from pipelines.utils.utils import (
 
 
 @task(
-    nout=4,
+    nout=1,
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
@@ -92,46 +92,47 @@ def treat_pluviometer_and_meteorological_data(
         # Keeping only the rightmost level of the MultiIndex columns
         dfr.columns = dfr.columns.droplevel(level=0)
 
-        keep_cols = [
-            "N°",
-            "Estação",
-            "Localização",
-            "Hora Leitura",
-            "05 min",
-            "10 min",
-            "15 min",
-            "30 min",
-            "1h",
-            "2h",
-            "3h",
-            "4h",
-            "6h",
-            "12h",
-            "24h",
-            "96h",
-            "No Mês",
-        ]
-        dfr = dfr[keep_cols]
+        rename_cols = {
+            "N°": "id_estacao",
+            "Hora Leitura": "data_medicao",
+            "05 min": "acumulado_chuva_5min",
+            "10 min": "acumulado_chuva_10min",
+            "15 min": "acumulado_chuva_15min",
+            "30 min": "acumulado_chuva_30min",
+            "1h": "acumulado_chuva_1h",
+            "2h": "acumulado_chuva_2h",
+            "3h": "acumulado_chuva_3h",
+            "4h": "acumulado_chuva_4h",
+            "6h": "acumulado_chuva_6h",
+            "12h": "acumulado_chuva_12h",
+            "24h": "acumulado_chuva_24h",
+            "96h": "acumulado_chuva_96h",
+            "No Mês": "acumulado_chuva_mes",
+        }
+
     else:
-        keep_cols = [
-            "N°",
-            "Estação",
-            "Hora Leitura",
-            "Temp. (°C)",
-            "Umi. do Ar (%)",
-            "Sen. Térmica (°C)",
-            "P. Atm. (hPa)",
-            "P. de Orvalho (°C)",
-            "Vel. do Vento (Km/h)",
-            "Dir. do Vento (°)",
-        ]
+        rename_cols = {
+            "N°": "id_estacao",
+            "Hora Leitura": "data_medicao",
+            "Temp. (°C)": "temperatura",
+            "Umi. do Ar (%)": "umidade_ar",
+            "Sen. Térmica (°C)": "sensacao_termica",
+            "P. Atm. (hPa)": "pressao_atmosferica",
+            "P. de Orvalho (°C)": "temperatura_orvalho",
+            "Vel. do Vento (Km/h)": "velocidade_vento",
+            "Dir. do Vento (°)": "direcao_vento",
+        }  # confirmar nome das colunas com inmet
+
+    dfr.rename(columns=rename_cols, inplace=True)
+
+    keep_cols = list(rename_cols.values())
 
     # Elimina linhas em que o id_estacao é igual mantendo a de menor valor nas colunas float
-    # dfr.sort_values(["N°", "Hora Leitura"] + float_cols, inplace=True)
-    dfr.drop_duplicates(subset=["N°", "Hora Leitura"], keep="first")
+    # dfr.sort_values(["id_estacao", "data_medicao"] + float_cols, inplace=True)
+    dfr.drop_duplicates(subset=["id_estacao", "data_medicao"], keep="first")
 
-    dfr["Hora Leitura"] = pd.to_datetime(
-        dfr["Hora Leitura"], format="%d/%m/%Y - %H:%M:%S"
+    dfr["data_medicao"] = pd.to_datetime(
+        dfr["data_medicao"], format="%d/%m/%Y - %H:%M:%S"
     )
 
     log(f"Dataframe before comparing with last data saved on redis {dfr.head()}")
@@ -141,8 +142,8 @@ def treat_pluviometer_and_meteorological_data(
         dfr,
         dataset_id,
         table_id,
-        unique_id="N°",
-        date_column="Hora Leitura",
+        unique_id="id_estacao",
+        date_column="data_medicao",
         date_format="%Y-%m-%d %H:%M:%S",
         mode=mode,
     )
@@ -150,16 +151,16 @@ def treat_pluviometer_and_meteorological_data(
     empty_data = dfr.shape[0] == 0
 
     if not empty_data:
-        see_cols = ["N°", "Hora Leitura", "last_update"]
+        see_cols = ["id_estacao", "data_medicao", "last_update"]
         log(
             f"Dataframe after comparing with last data saved on redis {dfr[see_cols].head()}"
         )
         log(f"Dataframe first row after comparing {dfr.iloc[0]}")
-        dfr["Hora Leitura"] = dfr["Hora Leitura"].dt.strftime("%Y-%m-%d %H:%M:%S")
+        dfr["data_medicao"] = dfr["data_medicao"].dt.strftime("%Y-%m-%d %H:%M:%S")
         log(f"Dataframe after converting to string {dfr[see_cols].head()}")
 
         # Save max date on redis to compare this with last dbt run
-        max_date = str(dfr["Hora Leitura"].max())
+        max_date = str(dfr["data_medicao"].max())
         redis_key = build_redis_key(dataset_id, table_id, name="last_update", mode=mode)
         log(f"Dataframe is not empty. Redis key: {redis_key} and new date: {max_date}")
         save_str_on_redis(redis_key, "date", max_date)
@@ -182,7 +183,7 @@ def save_data(dados: pd.DataFrame) -> Union[str, Path]:
     prepath = Path("/tmp/precipitacao_alertario/")
     prepath.mkdir(parents=True, exist_ok=True)
 
-    partition_column = "Hora Leitura"
+    partition_column = "data_medicao"
     log(f"Dataframe before partitions {dados.iloc[0]}")
     log(f"Dataframe before partitions {dados.dtypes}")
     dataframe, partitions = parse_date_columns(dados, partition_column)
