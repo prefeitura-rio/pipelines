@@ -24,7 +24,6 @@ from pipelines.utils.decorators import Flow
 with Flow(
     name="EMD: utils - Gerar catálogo de dados",
     code_owners=[
-        "gabriel",
         "diego",
     ],
 ) as rj_escritorio_data_catalog_flow:
