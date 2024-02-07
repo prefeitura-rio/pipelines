@@ -19,8 +19,9 @@ from pipelines.rj_cor.meteorologia.precipitacao_alertario.constants import (
 )
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks import (
     check_to_run_dbt,
-    tratar_dados,
-    salvar_dados,
+    download_data,
+    treat_pluviometer_and_meteorological_data,
+    save_data,
     save_last_dbt_update,
 )
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.schedules import (
@@ -49,7 +50,7 @@ with Flow(
     # skip_if_running=True,
 ) as cor_meteorologia_precipitacao_alertario:
     DATASET_ID = "clima_pluviometro"
-    TABLE_ID = "taxa_precipitacao_alertario"
+    TABLE_ID = "taxa_precipitacao_alertario_5min"
     DUMP_MODE = "append"
 
     # Materialization parameters
@@ -73,14 +74,16 @@ with Flow(
         default=dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
     )
 
-    dados, empty_data = tratar_dados(
+    dfr_pluviometric = download_data()
+    dados, empty_data = treat_pluviometer_and_meteorological_data(
+        dfr=dfr_pluviometric,
         dataset_id=DATASET_ID,
         table_id=TABLE_ID,
         mode=MATERIALIZATION_MODE,
     )
 
     with case(empty_data, False):
-        path = salvar_dados(dados=dados)
+        path = save_data(dados=dados)
         # Create table in BigQuery
         UPLOAD_TABLE = create_table_and_upload_to_gcs(
             data_path=path,
