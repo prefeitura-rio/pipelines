@@ -23,9 +23,6 @@ from pipelines.utils.decorators import Flow
 
 with Flow(
     name="EMD: Sistemas prioritários - Telegram Bot",
-    code_owners=[
-        "gabriel",
-    ],
 ) as systems_telegram_bot_flow:
     # Parameters
     sheet_id = Parameter("sheet_id")

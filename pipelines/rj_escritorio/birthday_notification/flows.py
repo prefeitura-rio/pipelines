@@ -18,9 +18,6 @@ from pipelines.utils.decorators import Flow
 
 with Flow(
     "EMD: Aniversariante do dia",
-    code_owners=[
-        "gabriel",
-    ],
 ) as rj_escritorio_birthdays_birthday_flow:
     secret_path = Parameter("secret_path")
 

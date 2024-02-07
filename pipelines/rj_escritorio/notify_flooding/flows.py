@@ -22,9 +22,6 @@ from pipelines.utils.decorators import Flow
 
 with Flow(
     name="EMD: Waze - Notificar ocorrências de alagamento",
-    code_owners=[
-        "gabriel",
-    ],
 ) as rj_escritorio_notify_flooding_flow:
     # Parameters
     api_url = Parameter(
