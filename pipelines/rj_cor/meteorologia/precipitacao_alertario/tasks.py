@@ -23,6 +23,7 @@ from pipelines.utils.utils import (
     build_redis_key,
     compare_dates_between_tables_redis,
     get_redis_output,
+    get_vault_secret,
     log,
     to_partitions,
     parse_date_columns,
@@ -40,7 +41,9 @@ def download_data() -> pd.DataFrame:
     """
     Request data from API and return each data in a different dataframe.
     """
-    url = "https://websempre.rio.rj.gov.br/estacoes/"
+
+    dicionario = get_vault_secret("alertario_api")
+    url = dicionario["data"]["url"]
 
     try:
         response = requests.get(url)
