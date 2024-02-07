@@ -21,9 +21,6 @@ from pipelines.utils.decorators import Flow
 
 with Flow(
     name=utils_constants.FLOW_BACKFILL_NAME.value,
-    code_owners=[
-        "gabriel",
-    ],
 ) as backfill_flow_definition:
     # Parameters
     agent_label = Parameter("agent_label")

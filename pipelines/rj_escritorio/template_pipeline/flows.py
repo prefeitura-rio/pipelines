@@ -68,9 +68,6 @@ from pipelines.utils.decorators import Flow
 
 with Flow(
     name="EMD: template - Template Pipeline",
-    code_owners=[
-        "gabriel",
-    ],
 ) as flow:
     say_hello()
 

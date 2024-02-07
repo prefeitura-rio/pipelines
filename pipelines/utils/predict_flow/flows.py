@@ -19,9 +19,6 @@ from pipelines.utils.tasks import create_table_and_upload_to_gcs
 
 with Flow(
     name=utils_constants.FLOW_PREDICT_NAME.value,
-    code_owners=[
-        "gabriel",
-    ],
 ) as predict_with_mlflow_model_flow:
     # MLflow parameters
     tracking_server_uri = Parameter("tracking_server_uri", default=None, required=False)

@@ -19,10 +19,6 @@ from pipelines.utils.decorators import Flow
 
 with Flow(
     name="COR: CET semáforos - Telegram Bot",
-    code_owners=[
-        "anderson",
-        "gabriel",
-    ],
 ) as cet_telegram_flow:
     secret_path = Parameter("secret_path")
 

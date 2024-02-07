@@ -29,7 +29,6 @@ with Flow(
     name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
     code_owners=[
         "diego",
-        "gabriel",
     ],
 ) as utils_run_dbt_model_flow:
     # Parameters

@@ -23,9 +23,6 @@ from pipelines.utils.tasks import get_current_flow_labels
 
 with Flow(
     name="EMD: escritorio - Exemplo de flow para predição com modelo",
-    code_owners=[
-        "gabriel",
-    ],
 ) as dummy_predict_example_flow:
     ###########################
     #     Your parameters     #
