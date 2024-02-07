@@ -31,7 +31,6 @@ from pipelines.utils.tasks import (
 with Flow(
     "EMD: utils - Gerar matriz de políticas de acesso",
     code_owners=[
-        "gabriel",
         "diego",
     ],
 ) as utils_policy_matrix_flow:

@@ -21,9 +21,6 @@ from pipelines.utils.decorators import Flow
 
 with Flow(
     name=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_NAME.value,
-    code_owners=[
-        "gabriel",
-    ],
     # skip_if_running=True,
 ) as rj_escritorio_rain_dashboard_flow:
     # Parameters
