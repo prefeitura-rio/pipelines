@@ -9,11 +9,16 @@ from typing import Union, Tuple
 import requests
 
 from bs4 import BeautifulSoup
+import numpy as np
 import pandas as pd
 import pendulum
 from prefect import task
 
 from pipelines.constants import constants
+from pipelines.rj_cor.meteorologia.precipitacao_alertario.utils import (
+    parse_date_columns_old_api,
+    treat_date_col,
+)
 from pipelines.utils.utils import (
     build_redis_key,
     compare_dates_between_tables_redis,
@@ -255,3 +260,87 @@ def check_to_run_dbt(
     )
     log(f">>>> debug data alertario > data dbt: {run_dbt}")
     return run_dbt
+
+
+@task(
+    nout=2,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def treat_old_pluviometer(dfr: pd.DataFrame) -> pd.DataFrame:
+    """
+    Renomeia colunas no estilo do antigo flow.
+    """
+
+    rename_cols = {
+        "acumulado_chuva_15min": "acumulado_chuva_15_min",
+        "acumulado_chuva_1h": "acumulado_chuva_1_h",
+        "acumulado_chuva_4h": "acumulado_chuva_4_h",
+        "acumulado_chuva_24h": "acumulado_chuva_24_h",
+        "acumulado_chuva_96h": "acumulado_chuva_96_h",
+    }
+
+    dfr.rename(columns=rename_cols, inplace=True)
+
+    date_format = "%Y-%m-%d %H:%M:%S"
+    dfr["data_medicao"] = dfr["data_medicao"].dt.strftime(date_format)
+    dfr.data_medicao = dfr.data_medicao.apply(treat_date_col)
+
+    # Converte variáveis que deveriam ser float para float
+    float_cols = [
+        "acumulado_chuva_15_min",
+        "acumulado_chuva_1_h",
+        "acumulado_chuva_4_h",
+        "acumulado_chuva_24_h",
+        "acumulado_chuva_96_h",
+    ]
+    dfr[float_cols] = dfr[float_cols].apply(pd.to_numeric, errors="coerce")
+
+    # Altera valores negativos para None
+    dfr[float_cols] = np.where(dfr[float_cols] < 0, None, dfr[float_cols])
+
+    # Elimina linhas em que o id_estacao é igual mantendo a de menor valor nas colunas float
+    dfr.sort_values(["id_estacao", "data_medicao"] + float_cols, inplace=True)
+    dfr.drop_duplicates(subset=["id_estacao", "data_medicao"], keep="first")
+
+    # Fix columns order
+    dfr = dfr[
+        [
+            "data_medicao",
+            "id_estacao",
+            "acumulado_chuva_15_min",
+            "acumulado_chuva_1_h",
+            "acumulado_chuva_4_h",
+            "acumulado_chuva_24_h",
+            "acumulado_chuva_96_h",
+        ]
+    ]
+    return dfr
+
+
+@task
+def save_data_old(
+    dfr: pd.DataFrame,
+    data_name: str = "temp",
+    wait=None,  # pylint: disable=unused-argument
+) -> Union[str, Path]:
+    """
+    Salvar dfr tratados em csv para conseguir subir pro GCP
+    """
+
+    prepath = Path(f"/tmp/precipitacao_alertario/{data_name}")
+    prepath.mkdir(parents=True, exist_ok=True)
+
+    partition_column = "data_medicao"
+    dataframe, partitions = parse_date_columns_old_api(dfr, partition_column)
+    current_time = pendulum.now("America/Sao_Paulo").strftime("%Y%m%d%H%M")
+
+    to_partitions(
+        data=dataframe,
+        partition_columns=partitions,
+        savepath=prepath,
+        data_type="csv",
+        suffix=current_time,
+    )
+    log(f"{data_name} files saved on {prepath}")
+    return prepath

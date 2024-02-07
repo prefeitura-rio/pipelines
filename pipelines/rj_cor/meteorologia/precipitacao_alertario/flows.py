@@ -20,8 +20,10 @@ from pipelines.rj_cor.meteorologia.precipitacao_alertario.constants import (
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.tasks import (
     check_to_run_dbt,
     download_data,
+    treat_old_pluviometer,
     treat_pluviometer_and_meteorological_data,
     save_data,
+    save_data_old,
     save_last_dbt_update,
 )
 from pipelines.rj_cor.meteorologia.precipitacao_alertario.schedules import (
@@ -51,11 +53,20 @@ with Flow(
 ) as cor_meteorologia_precipitacao_alertario:
     DATASET_ID_PLUVIOMETRIC = alertario_constants.DATASET_ID_PLUVIOMETRIC.value
     TABLE_ID_PLUVIOMETRIC = alertario_constants.TABLE_ID_PLUVIOMETRIC.value
+    TABLE_ID_PLUVIOMETRIC_OLD_API = (
+        alertario_constants.TABLE_ID_PLUVIOMETRIC_OLD_API.value
+    )
     DATASET_ID_METEOROLOGICAL = alertario_constants.DATASET_ID_METEOROLOGICAL.value
     TABLE_ID_METEOROLOGICAL = alertario_constants.TABLE_ID_METEOROLOGICAL.value
     DUMP_MODE = "append"
 
     # Materialization parameters
+    MATERIALIZE_AFTER_DUMP_OLD_API = Parameter(
+        "materialize_after_dump_old_api", default=False, required=False
+    )
+    MATERIALIZE_TO_DATARIO_OLD_API = Parameter(
+        "materialize_to_datario_old_api", default=False, required=False
+    )
     MATERIALIZE_AFTER_DUMP = Parameter(
         "materialize_after_dump", default=False, required=False
     )
@@ -148,6 +159,56 @@ with Flow(
                 raise_final_state=False,
             )
 
+        # Treat data to save on old table
+        dfr_pluviometric_old_api = treat_old_pluviometer(dfr_pluviometric)
+
+        path_pluviometric_old_api = save_data_old(
+            dfr_pluviometric_old_api,
+            "pluviometric_old_api",
+            wait=dfr_pluviometric_old_api,
+        )
+        # Create table in BigQuery
+        UPLOAD_TABLE = create_table_and_upload_to_gcs(
+            data_path=path_pluviometric_old_api,
+            dataset_id=DATASET_ID_PLUVIOMETRIC,
+            table_id=TABLE_ID_PLUVIOMETRIC_OLD_API,
+            dump_mode=DUMP_MODE,
+            wait=path_pluviometric_old_api,
+        )
+
+        # Trigger DBT flow run
+        with case(MATERIALIZE_AFTER_DUMP_OLD_API, True):
+            current_flow_labels = get_current_flow_labels()
+            materialization_flow = create_flow_run(
+                flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
+                project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                parameters={
+                    "dataset_id": DATASET_ID_PLUVIOMETRIC,
+                    "table_id": TABLE_ID_PLUVIOMETRIC_OLD_API,
+                    "mode": MATERIALIZATION_MODE,
+                    "materialize_to_datario": MATERIALIZE_TO_DATARIO_OLD_API,
+                },
+                labels=current_flow_labels,
+                run_name=f"Materialize {DATASET_ID_PLUVIOMETRIC}.{TABLE_ID_PLUVIOMETRIC_OLD_API}",
+            )
+
+            materialization_flow.set_upstream(current_flow_labels)
+
+            wait_for_materialization = wait_for_flow_run_with_5min_timeout(
+                flow_run_id=materialization_flow,
+                stream_states=True,
+                stream_logs=True,
+                raise_final_state=True,
+            )
+
+            wait_for_materialization.max_retries = (
+                dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
+            )
+            wait_for_materialization.retry_delay = timedelta(
+                seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
+            )
+
+    # Trigger DBT for new API
     run_dbt = check_to_run_dbt(
         dataset_id=DATASET_ID_PLUVIOMETRIC,
         table_id=TABLE_ID_PLUVIOMETRIC,
@@ -221,7 +282,7 @@ with Flow(
                     raise_final_state=True,
                 )
 
-    # Save meteorological data
+    # Save and materialize meteorological data
     with case(empty_data_meteorological, False):
         path_meteorological = save_data(
             dfr_meteorological, "meteorological", wait=empty_data_meteorological
@@ -250,7 +311,6 @@ with Flow(
                 run_name=f"Materialize {DATASET_ID_METEOROLOGICAL}.{TABLE_ID_METEOROLOGICAL}",
             )
 
-            current_flow_labels.set_upstream(run_dbt)
             materialization_flow.set_upstream(current_flow_labels)
 
             wait_for_materialization = wait_for_flow_run_with_5min_timeout(

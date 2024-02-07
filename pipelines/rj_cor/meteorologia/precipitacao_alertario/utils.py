@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 
-def parse_date_columns(
+def parse_date_columns_old_api(
     dataframe: pd.DataFrame, partition_date_column: str
 ) -> Tuple[pd.DataFrame, List[str]]:
     """

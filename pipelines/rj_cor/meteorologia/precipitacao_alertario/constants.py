@@ -15,6 +15,7 @@ class constants(Enum):  # pylint: disable=c0103
 
     DATASET_ID_PLUVIOMETRIC = "clima_pluviometro"
     TABLE_ID_PLUVIOMETRIC = "taxa_precipitacao_alertario_5min"
+    TABLE_ID_PLUVIOMETRIC_OLD_API = "taxa_precipitacao_alertario"
     DATASET_ID_METEOROLOGICAL = "clima_estacao_meteorologica"
     TABLE_ID_METEOROLOGICAL = "meteorologia_alertario"
 
