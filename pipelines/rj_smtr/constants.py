@@ -482,6 +482,40 @@ class constants(Enum):  # pylint: disable=c0103
                 COUNT(*) > 1
             """,
         },
+        "sumario_servico_dia_checa_data": {
+            "query": """
+            WITH
+                time_array AS (
+                SELECT
+                    *
+                FROM
+                    UNNEST(GENERATE_DATE_ARRAY(DATE("{start_timestamp}"), DATE("{end_timestamp}"))) AS DATA ),
+                sumario_servico_dia AS (
+                SELECT
+                    DATA,
+                    COUNT(*) AS q_registros
+                FROM
+                    `rj-smtr`.`dashboard_subsidio_sppo`.`sumario_servico_dia`
+                WHERE
+                    DATA BETWEEN DATE("{start_timestamp}")
+                    AND DATE("{end_timestamp}")
+                GROUP BY
+                    1 )
+            SELECT
+                DATA,
+                q_registros
+            FROM
+                time_array
+            LEFT JOIN
+                sumario_servico_dia
+            USING
+                (DATA)
+            WHERE
+                q_registros IS NULL
+                OR q_registros = 0
+            """,
+            "order_columns": ["DATA"],
+        },
     }
 
     # BILHETAGEM

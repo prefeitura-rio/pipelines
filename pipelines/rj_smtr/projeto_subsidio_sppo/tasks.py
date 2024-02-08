@@ -49,14 +49,14 @@ def subsidio_data_quality_check(
 
     checks = list()
 
-    general_request_params = {
-        "start_timestamp": f"""{params["start_date"]} 00:00:00""",
-        "end_timestamp": (
-            datetime.strptime(params["end_date"], "%Y-%m-%d") + timedelta(hours=27)
-        ).strftime("%Y-%m-%d %H:%M:%S"),
-    }
-
     if mode == "pre":
+        general_request_params = {
+            "start_timestamp": f"""{params["start_date"]} 00:00:00""",
+            "end_timestamp": (
+                datetime.strptime(params["end_date"], "%Y-%m-%d") + timedelta(hours=27)
+            ).strftime("%Y-%m-%d %H:%M:%S"),
+        }
+
         request_params = general_request_params | {
             "interval": 1,
             "dataset_id": smtr_constants.GPS_SPPO_RAW_DATASET_ID.value,
@@ -91,6 +91,7 @@ def subsidio_data_quality_check(
             )
         )
 
+        general_request_params["end_timestamp"] = f"""{params["end_date"]} 00:00:00"""
         checks.append(
             perform_check(
                 "Tratamento da sppo_veiculo_dia",
@@ -100,10 +101,20 @@ def subsidio_data_quality_check(
         )
 
     if mode == "pos":
-        request_params = general_request_params | {
+        request_params = {
+            "start_timestamp": f"""{params["start_date"]} 00:00:00""",
+            "end_timestamp": f"""{params["end_date"]} 00:00:00""",
             "dataset_id": smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
             "table_id": smtr_constants.SUBSIDIO_SPPO_DASHBOARD_TABLE_ID.value,
         }
+
+        checks.append(
+            perform_check(
+                "sumario_servico_dia - Checagem de Data",
+                check_params.get("sumario_servico_dia_checa_data"),
+                request_params,
+            )
+        )
 
         checks.append(
             perform_check(
