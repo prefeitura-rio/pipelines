@@ -202,9 +202,8 @@ with Flow(
             dbt_client=dbt_client,
             dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
             _vars=_vars,
+            upstream_tasks=[SUBSIDIO_SPPO_DATA_QUALITY_PRE],
         )
-
-        SUBSIDIO_SPPO_APURACAO_RUN.set_upstream(SUBSIDIO_SPPO_DATA_QUALITY_PRE)
 
         SUBSIDIO_SPPO_DATA_QUALITY_POS = subsidio_data_quality_check(
             mode="pos",
