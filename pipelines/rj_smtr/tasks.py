@@ -11,7 +11,6 @@ import traceback
 from typing import Dict, List, Union, Iterable, Any
 import io
 
-
 from basedosdados import Storage, Table
 import basedosdados as bd
 from dbt_client import DbtClient
@@ -41,7 +40,7 @@ from pipelines.rj_smtr.utils import (
     save_raw_local_func,
     log_critical,
 )
-from pipelines.utils.execute_dbt_model.utils import get_dbt_client
+from pipelines.utils.execute_dbt_model.utils import get_dbt_client, parse_dbt_logs
 from pipelines.utils.utils import log, get_redis_client, get_vault_secret
 
 from pipelines.utils.tasks import get_now_date
@@ -1569,3 +1568,90 @@ def get_scheduled_start_times(
         timestamps.append(last_schedule)
 
     return timestamps
+
+
+@task(
+    checkpoint=False,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+# pylint: disable=too-many-arguments, too-many-locals
+def test_dbt_model(
+    dbt_client: DbtClient,
+    dataset_id: str,
+    table_id: str = None,
+    dbt_alias: bool = False,
+    upstream: bool = None,
+    downstream: bool = None,
+    exclude: str = None,
+    flags: str = None,
+    _vars: Union[dict, List[Dict]] = None,
+    sync: bool = True,
+    wait=None,
+):
+    """
+    Run a DBT model.
+
+    Args:
+        dbt_client (DbtClient): DBT client.
+        dataset_id (str): Dataset ID of the dbt model.
+        table_id (str, optional): Table ID of the dbt model. If None, the
+        whole dataset will be run.
+        dbt_alias (bool, optional): If True, the model will be run by
+        its alias. Defaults to False.
+        upstream (bool, optional): If True, the upstream models will be run.
+        downstream (bool, optional): If True, the downstream models will
+        be run.
+        exclude (str, optional): Models to exclude from the run.
+        flags (str, optional): Flags to pass to the dbt run command.
+        See:
+        https://docs.getdbt.com/reference/dbt-jinja-functions/flags/
+        _vars (Union[dict, List[Dict]], optional): Variables to pass to
+        dbt. Defaults to None.
+        sync (bool, optional): Whether to run the command synchronously.
+    """
+
+    # Set models and upstream/downstream for dbt
+    run_command = "dbt test --select "
+
+    if upstream:
+        run_command += "+"
+
+    if table_id:
+        if dbt_alias:
+            table_id = f"{dataset_id}.{dataset_id}__{table_id}"
+        else:
+            table_id = f"{dataset_id}.{table_id}"
+    else:
+        table_id = dataset_id
+
+    run_command += f"{table_id}"
+
+    if downstream:
+        run_command += "+"
+
+    if exclude:
+        run_command += f" --exclude {exclude}"
+
+    if _vars:
+        if isinstance(_vars, list):
+            vars_dict = {}
+            for elem in _vars:
+                vars_dict.update(elem)
+            vars_str = f'"{vars_dict}"'
+            run_command += f" --vars {vars_str}"
+        else:
+            vars_str = f'"{_vars}"'
+            run_command += f" --vars {vars_str}"
+
+    if flags:
+        run_command += f" {flags}"
+
+    log(f"Will run the following command:\n{run_command}")
+    logs_dict = dbt_client.cli(
+        run_command,
+        sync=sync,
+        logs=True,
+    )
+    parse_dbt_logs(logs_dict, log_queries=True)
+    return log("Finished running dbt model")

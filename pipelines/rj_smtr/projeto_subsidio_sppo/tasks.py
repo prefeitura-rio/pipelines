@@ -26,89 +26,76 @@ def check_param(param: str) -> bool:
 
 @task
 def subsidio_data_quality_check(
-    mode: str, params: dict, code_owners: list = None, queries: dict = None
+    params: dict, code_owners: list = None, check_params: dict = None
 ) -> bool:
     """
     Verify data quality for the subsídio process
 
     Args:
-        mode (str): Execution mode (pre or post)
         params (dict): Parameters for the checks
         code_owners (list): Code owners to be notified
-        queries (dict): SQL queries for the checks
+        check_params (dict): queries and order columns for the checks
 
     Returns:
         test_check (bool): True if all checks passed, False otherwise
     """
 
-    if mode not in ["pre", "post"]:
-        raise ValueError(f"Invalid mode: {mode}")
-
-    if queries is None:
-        queries = smtr_constants.SUBSIDIO_SPPO_DATA_CHECKS_QUERIES.value
+    if check_params is None:
+        check_params = smtr_constants.SUBSIDIO_SPPO_DATA_CHECKS_PARAMS.value
 
     if code_owners is None:
         code_owners = ["rodrigo"]
 
     checks = list()
 
-    if mode == "pre":
-        general_request_params = {
-            "start_timestamp": f"""{params["start_date"]} 00:00:00""",
-            "end_timestamp": (
-                datetime.strptime(params["end_date"], "%Y-%m-%d") + timedelta(hours=27)
-            ).strftime("%Y-%m-%d %H:%M:%S"),
-        }
+    general_request_params = {
+        "start_timestamp": f"""{params["start_date"]} 00:00:00""",
+        "end_timestamp": (
+            datetime.strptime(params["end_date"], "%Y-%m-%d") + timedelta(hours=27)
+        ).strftime("%Y-%m-%d %H:%M:%S"),
+    }
 
-        request_params = general_request_params | {
-            "interval": 1,
-            "dataset_id": smtr_constants.GPS_SPPO_RAW_DATASET_ID.value,
-            "table_id": smtr_constants.GPS_SPPO_RAW_TABLE_ID.value,
-        }
-        check_params = queries.get("check_gps_capture")
-        checks.append(
-            perform_check(
-                "Captura dos dados de GPS",
-                check_params["query"].format(**request_params),
-                check_params["order_columns"],
-            )
+    request_params = general_request_params | {
+        "interval": 1,
+        "dataset_id": smtr_constants.GPS_SPPO_RAW_DATASET_ID.value,
+        "table_id": smtr_constants.GPS_SPPO_RAW_TABLE_ID.value,
+    }
+    checks.append(
+        perform_check(
+            "Captura dos dados de GPS",
+            check_params.get("check_gps_capture"),
+            request_params,
         )
+    )
 
-        request_params = general_request_params | {
-            "interval": 10,
-            "dataset_id": smtr_constants.GPS_SPPO_RAW_DATASET_ID.value,
-            "table_id": smtr_constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
-        }
-        check_params = queries.get("check_gps_capture")
-        checks.append(
-            perform_check(
-                "Captura dos dados de GPS - Realocação",
-                check_params["query"].format(**request_params),
-                check_params["order_columns"],
-            )
+    request_params = general_request_params | {
+        "interval": 10,
+        "dataset_id": smtr_constants.GPS_SPPO_RAW_DATASET_ID.value,
+        "table_id": smtr_constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
+    }
+    checks.append(
+        perform_check(
+            "Captura dos dados de GPS - Realocação",
+            check_params.get("check_gps_capture"),
+            request_params,
         )
+    )
 
-        check_params = queries.get("check_gps_treatment")
-        checks.append(
-            perform_check(
-                "Tratamento dos dados de GPS",
-                check_params["query"].format(**request_params),
-                check_params["order_columns"],
-            )
+    checks.append(
+        perform_check(
+            "Tratamento dos dados de GPS",
+            check_params.get("check_gps_treatment"),
+            general_request_params,
         )
+    )
 
-        check_params = queries.get("check_sppo_veiculo_dia")
-        checks.append(
-            perform_check(
-                "Tratamento da sppo_veiculo_dia",
-                check_params["query"].format(**request_params),
-                check_params["order_columns"],
-            )
+    checks.append(
+        perform_check(
+            "Tratamento da sppo_veiculo_dia",
+            check_params.get("check_sppo_veiculo_dia"),
+            general_request_params,
         )
-
-        if mode == "post":
-            # Adicionar testes após o subsídio ou adicionar testes do dia anterior
-            return
+    )
 
     log(checks)
 
@@ -120,14 +107,12 @@ def subsidio_data_quality_check(
     formatted_messages = [
         f"**Data Quality Checks - Apuração de Subsídio - {date_range}**\n\n"
     ]
-    test_check = True
+    test_check = all(check["status"] for check in checks)
 
     for check in checks:
         formatted_messages.append(
             f'{":white_check_mark:" if check["status"] else ":x:"} {check["desc"]}\n'
         )
-        if not check["status"]:
-            test_check = False
 
     if not test_check:
         at_code_owners = [
@@ -143,12 +128,9 @@ def subsidio_data_quality_check(
         ]
 
         formatted_messages.extend(at_code_owners)
-        formatted_messages.insert(0, ":red_circle: ")
 
-        formatted_message = "".join(formatted_messages)
-
-    else:
-        formatted_messages.insert(0, ":green_circle: ")
+    formatted_messages.insert(0, ":green_circle: " if test_check else ":red_circle: ")
+    formatted_message = "".join(formatted_messages)
 
     log(formatted_message)
 

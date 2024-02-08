@@ -28,11 +28,9 @@ import psycopg2
 import psycopg2.extras
 import time
 
-
 from prefect.schedules.clocks import IntervalClock
 
 from pipelines.constants import constants as emd_constants
-
 
 from pipelines.rj_smtr.implicit_ftp import ImplicitFtpTls
 from pipelines.rj_smtr.constants import constants
@@ -43,7 +41,6 @@ from pipelines.utils.utils import (
     send_discord_message,
     get_redis_client,
 )
-
 
 # Set BD config to run on cloud #
 bd.config.from_file = True
@@ -1132,29 +1129,37 @@ def get_raw_recursos(
     return error, data, filetype
 
 
-def perform_check(desc: str, q: str, order_columns: list):
+def perform_check(desc: str, check_params: dict, request_params: dict):
     """
     Perform a check on a query
 
     Args:
         desc (str): The check description
-        q (str): The query to check
-        order_columns (list): The columns to order the results
+        check_params (dict): The check parameters
+            * query (str): SQL query to be executed
+            * order_columns (list): order columns for query log results, in case of failure
+        request_params (dict): The request parameters
 
     Returns:
         dict: The check status
     """
+    try:
+        q = check_params["query"].format(**request_params)
+        order_columns = check_params["order_columns"]
+    except KeyError as e:
+        raise ValueError(f"Missing key in check_params: {e}")
+
     log(q)
     df = bd.read_sql(q)
 
-    check_status = len(df) == 0
+    check_status = df.empty
 
     check_status_dict = {"desc": desc, "status": check_status}
 
-    log(check_status_dict)
+    log(f"Check status:\n{check_status_dict}")
 
     if not check_status:
-        log(data_info_str(df))
-        log(df.sort_values(by=order_columns))
+        log(f"Data info:\n{data_info_str(df)}")
+        log(f"Sorted data:\n{df.sort_values(by=order_columns)}")
 
     return check_status_dict
