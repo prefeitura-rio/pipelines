@@ -167,8 +167,7 @@ class constants(Enum):  # pylint: disable=c0103
     SUBSIDIO_SPPO_DASHBOARD_TABLE_ID = "sumario_servico_dia"
     SUBSIDIO_SPPO_DATA_CHECKS_QUERIES = {
         "check_gps_capture": {
-        "query":
-        """WITH
+            "query": """WITH
             t AS (
             SELECT
                 DATETIME(timestamp_array) AS timestamp_array
@@ -206,9 +205,8 @@ class constants(Enum):  # pylint: disable=c0103
                 logs.timestamp_array = t.timestamp_array
             WHERE
                 logs.sucesso IS NOT TRUE""",
-            "order_columns": ["timestamp_captura"]
+            "order_columns": ["timestamp_captura"],
         },
-
         "check_gps_treatment": {
             "query": """
             WITH
@@ -311,9 +309,8 @@ class constants(Enum):  # pylint: disable=c0103
             WHERE
                 status IS FALSE
             """,
-            "order_columns": ["DATA", "hora"]
+            "order_columns": ["DATA", "hora"],
         },
-            
         "check_sppo_veiculo_dia": {
             "query": """
             WITH
@@ -390,8 +387,8 @@ class constants(Enum):  # pylint: disable=c0103
             FROM
                 count_null_status
             """,
-            "order_columns": ["DATA"]
-        }
+            "order_columns": ["DATA"],
+        },
     }
 
     # BILHETAGEM

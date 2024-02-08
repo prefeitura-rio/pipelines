@@ -25,7 +25,9 @@ def check_param(param: str) -> bool:
 
 
 @task
-def subsidio_data_quality_check(mode: str, params: dict, code_owners: list = None, queries: dict = None) -> bool:
+def subsidio_data_quality_check(
+    mode: str, params: dict, code_owners: list = None, queries: dict = None
+) -> bool:
     """
     Verify data quality for the subsídio process
 
@@ -55,62 +57,99 @@ def subsidio_data_quality_check(mode: str, params: dict, code_owners: list = Non
             "start_timestamp": f"""{params["start_date"]} 00:00:00""",
             "end_timestamp": (
                 datetime.strptime(params["end_date"], "%Y-%m-%d") + timedelta(hours=27)
-            ).strftime("%Y-%m-%d %H:%M:%S")
+            ).strftime("%Y-%m-%d %H:%M:%S"),
         }
 
         request_params = general_request_params | {
             "interval": 1,
             "dataset_id": smtr_constants.GPS_SPPO_RAW_DATASET_ID.value,
-            "table_id": smtr_constants.GPS_SPPO_RAW_TABLE_ID.value
+            "table_id": smtr_constants.GPS_SPPO_RAW_TABLE_ID.value,
         }
         check_params = queries.get("check_gps_capture")
-        checks.append(perform_check("Captura dos dados de GPS", check_params["query"].format(**request_params), check_params["order_columns"]))
+        checks.append(
+            perform_check(
+                "Captura dos dados de GPS",
+                check_params["query"].format(**request_params),
+                check_params["order_columns"],
+            )
+        )
 
         request_params = general_request_params | {
             "interval": 10,
             "dataset_id": smtr_constants.GPS_SPPO_RAW_DATASET_ID.value,
-            "table_id": smtr_constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value
+            "table_id": smtr_constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
         }
         check_params = queries.get("check_gps_capture")
-        checks.append(perform_check("Captura dos dados de GPS - Realocação", check_params["query"].format(**request_params), check_params["order_columns"]))
-        
+        checks.append(
+            perform_check(
+                "Captura dos dados de GPS - Realocação",
+                check_params["query"].format(**request_params),
+                check_params["order_columns"],
+            )
+        )
+
         check_params = queries.get("check_gps_treatment")
-        checks.append(perform_check("Tratamento dos dados de GPS", check_params["query"].format(**request_params), check_params["order_columns"]))
+        checks.append(
+            perform_check(
+                "Tratamento dos dados de GPS",
+                check_params["query"].format(**request_params),
+                check_params["order_columns"],
+            )
+        )
 
         check_params = queries.get("check_sppo_veiculo_dia")
-        checks.append(perform_check("Tratamento da sppo_veiculo_dia", check_params["query"].format(**request_params), check_params["order_columns"]))
+        checks.append(
+            perform_check(
+                "Tratamento da sppo_veiculo_dia",
+                check_params["query"].format(**request_params),
+                check_params["order_columns"],
+            )
+        )
 
         if mode == "post":
-        # Adicionar testes após o subsídio ou adicionar testes do dia anterior
+            # Adicionar testes após o subsídio ou adicionar testes do dia anterior
             return
 
     log(checks)
 
-    date_range = params["start_date"] if params["start_date"] == params["end_date"] else f'{params["start_date"]} a {params["end_date"]}'
-    formatted_messages = [f'**Data Quality Checks - Apuração de Subsídio - {date_range}**\n\n']
+    date_range = (
+        params["start_date"]
+        if params["start_date"] == params["end_date"]
+        else f'{params["start_date"]} a {params["end_date"]}'
+    )
+    formatted_messages = [
+        f"**Data Quality Checks - Apuração de Subsídio - {date_range}**\n\n"
+    ]
     test_check = True
 
     for check in checks:
-        formatted_messages.append(f'{":white_check_mark:" if check["status"] else ":x:"} {check["desc"]}\n')
+        formatted_messages.append(
+            f'{":white_check_mark:" if check["status"] else ":x:"} {check["desc"]}\n'
+        )
         if not check["status"]:
             test_check = False
 
     if not test_check:
         at_code_owners = [
-            f'    - <@{constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["user_id"]}>\n' if constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["type"] == "user" else
-            f'    - <@!{constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["user_id"]}>\n' if constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["type"] == "user_nickname" else
-            f'    - <#{constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["user_id"]}>\n' if constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["type"] == "channel" else
-            f'    - <@&{constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["user_id"]}>\n' for code_owner in code_owners
+            f'    - <@{constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["user_id"]}>\n'
+            if constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["type"] == "user"
+            else f'    - <@!{constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["user_id"]}>\n'
+            if constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["type"]
+            == "user_nickname"
+            else f'    - <#{constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["user_id"]}>\n'
+            if constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["type"] == "channel"
+            else f'    - <@&{constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["user_id"]}>\n'
+            for code_owner in code_owners
         ]
-    
+
         formatted_messages.extend(at_code_owners)
         formatted_messages.insert(0, ":red_circle: ")
 
         formatted_message = "".join(formatted_messages)
-        
+
     else:
         formatted_messages.insert(0, ":green_circle: ")
-    
+
     log(formatted_message)
 
     send_discord_message(

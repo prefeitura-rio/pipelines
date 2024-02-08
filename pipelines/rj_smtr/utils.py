@@ -1131,6 +1131,7 @@ def get_raw_recursos(
 
     return error, data, filetype
 
+
 def perform_check(desc: str, q: str, order_columns: list):
     """
     Perform a check on a query
