@@ -189,15 +189,17 @@ with Flow(
             )
 
         # Treat data to save on old table
-        dfr_pluviometric_old_api = treat_old_pluviometer(dfr_pluviometric)
+        dfr_pluviometric_old_api = treat_old_pluviometer(
+            dfr_pluviometric, wait=UPLOAD_TABLE
+        )
 
         path_pluviometric_old_api = save_data_old(
             dfr_pluviometric_old_api,
             &#34;pluviometric_old_api&#34;,
             wait=dfr_pluviometric_old_api,
         )
-        # Create table in BigQuery
-        UPLOAD_TABLE = create_table_and_upload_to_gcs(
+        # Create table in BigQuery for old table
+        UPLOAD_TABLE_OLD_API = create_table_and_upload_to_gcs(
             data_path=path_pluviometric_old_api,
             dataset_id=DATASET_ID_PLUVIOMETRIC,
             table_id=TABLE_ID_PLUVIOMETRIC_OLD_API,
@@ -205,7 +207,7 @@ with Flow(
             wait=path_pluviometric_old_api,
         )
 
-        # Trigger DBT flow run
+        # Trigger DBT flow run for old table
         with case(MATERIALIZE_AFTER_DUMP_OLD_API, True):
             current_flow_labels = get_current_flow_labels()
             materialization_flow = create_flow_run(
@@ -317,7 +319,7 @@ with Flow(
             dfr_meteorological, &#34;meteorological&#34;, wait=empty_data_meteorological
         )
         # Create table in BigQuery
-        UPLOAD_TABLE = create_table_and_upload_to_gcs(
+        UPLOAD_TABLE_METEOROLOGICAL = create_table_and_upload_to_gcs(
             data_path=path_meteorological,
             dataset_id=DATASET_ID_METEOROLOGICAL,
             table_id=TABLE_ID_METEOROLOGICAL,
