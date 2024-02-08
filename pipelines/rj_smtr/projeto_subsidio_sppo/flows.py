@@ -181,29 +181,30 @@ with Flow(
         )
 
         # 3. DATA QUALITY CHECK #
-        SUBSIDIO_SPPO_DATA_QUALITY_RUN = subsidio_data_quality_check(
+        SUBSIDIO_SPPO_DATA_QUALITY = subsidio_data_quality_check(
             params=_vars,
         )
 
-        SUBSIDIO_SPPO_DATA_QUALITY_RUN.set_upstream(SPPO_VEICULO_DIA_RUN_WAIT)
+        SUBSIDIO_SPPO_DATA_QUALITY.set_upstream(SPPO_VEICULO_DIA_RUN_WAIT)
 
-        # 4. CALCULATE #
-        SUBSIDIO_SPPO_APURACAO_RUN = run_dbt_model(
-            dbt_client=dbt_client,
-            dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
-            _vars=_vars,
-        )
+        with case(SUBSIDIO_SPPO_DATA_QUALITY, True):
+            # 4. CALCULATE #
+            SUBSIDIO_SPPO_APURACAO_RUN = run_dbt_model(
+                dbt_client=dbt_client,
+                dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
+                _vars=_vars,
+            )
 
-        SUBSIDIO_SPPO_APURACAO_RUN.set_upstream(SUBSIDIO_SPPO_DATA_QUALITY_RUN)
+            SUBSIDIO_SPPO_APURACAO_RUN.set_upstream(SUBSIDIO_SPPO_DATA_QUALITY)
 
-        # with case(_vars["start_date"].strftime("%Y-%m-%d").day in [1, 16], True):
-        SUBSIDIO_SPPO_APURACAO_TEST_RUN = test_dbt_model(
-            dbt_client=dbt_client,
-            dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
-            _vars=_vars,
-        )
+            # with case(_vars["start_date"].strftime("%Y-%m-%d").day in [1, 16], True):
+            SUBSIDIO_SPPO_APURACAO_TEST_RUN = test_dbt_model(
+                dbt_client=dbt_client,
+                dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
+                _vars=_vars,
+            )
 
-        SUBSIDIO_SPPO_APURACAO_TEST_RUN.set_upstream(SUBSIDIO_SPPO_APURACAO_RUN)
+            SUBSIDIO_SPPO_APURACAO_TEST_RUN.set_upstream(SUBSIDIO_SPPO_APURACAO_RUN)
 
     with case(materialize_sppo_veiculo_dia, False):
         # TODO: ADD DATA QUALITY CHECK #
