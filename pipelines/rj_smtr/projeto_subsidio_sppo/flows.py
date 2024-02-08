@@ -32,7 +32,6 @@ from pipelines.rj_smtr.tasks import (
     get_run_dates,
     get_join_dict,
     get_previous_date,
-    test_dbt_model,
     # get_local_dbt_client,
     # set_last_run_timestamp,
 )
