@@ -45,7 +45,7 @@ def subsidio_data_quality_check(
         check_params = smtr_constants.SUBSIDIO_SPPO_DATA_CHECKS_PARAMS.value
 
     if code_owners is None:
-        code_owners = ["rodrigo"]
+        code_owners = smtr_constants.SUBSIDIO_SPPO_CODE_OWNERS.value
 
     checks = list()
 
@@ -107,7 +107,7 @@ def subsidio_data_quality_check(
 
         checks.append(
             perform_check(
-                "sumario_servico_dia - valor_penalidade aceitos",
+                "sumario_servico_dia - Valores de penalidade aceitos",
                 check_params.get(
                     "accepted_values_sumario_servico_dia_valor_penalidade"
                 ),
