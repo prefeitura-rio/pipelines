@@ -567,6 +567,10 @@ class constants(Enum):  # pylint: disable=c0103
         {
             "table_id": "gps_validador_van",
         },
+        {
+            "dataset_id": "dashboard_bilhetagem_implantacao",
+            "upstream": False,
+        },
     ]
 
     BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS = {
