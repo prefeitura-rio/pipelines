@@ -1137,7 +1137,7 @@ def perform_check(desc: str, check_params: dict, request_params: dict):
         desc (str): The check description
         check_params (dict): The check parameters
             * query (str): SQL query to be executed
-            * order_columns (list): order columns for query log results, in case of failure
+            * order_columns (list): order columns for query log results, in case of failure (optional)
         request_params (dict): The request parameters
 
     Returns:
@@ -1145,9 +1145,9 @@ def perform_check(desc: str, check_params: dict, request_params: dict):
     """
     try:
         q = check_params["query"].format(**request_params)
-        order_columns = check_params["order_columns"]
+        order_columns = check_params.get("order_columns", None)
     except KeyError as e:
-        raise ValueError(f"Missing key in check_params: {e}")
+        raise ValueError(f"Missing key in check_params: {e}") from e
 
     log(q)
     df = bd.read_sql(q)
@@ -1160,6 +1160,8 @@ def perform_check(desc: str, check_params: dict, request_params: dict):
 
     if not check_status:
         log(f"Data info:\n{data_info_str(df)}")
-        log(f"Sorted data:\n{df.sort_values(by=order_columns)}")
+        log(
+            f"Sorted data:\n{df.sort_values(by=order_columns) if order_columns else df}"
+        )
 
     return check_status_dict
