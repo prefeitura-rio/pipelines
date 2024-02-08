@@ -238,7 +238,7 @@ bilhetagem_materializacao_gps_validador.run_config = KubernetesRun(
 
 bilhetagem_materializacao_gps_validador = set_default_parameters(
     flow=bilhetagem_materializacao_gps_validador,
-    default_parameters=constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_PARAMS.value,
+    default_parameters=constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_GENERAL_PARAMS.value,
 )
 
 bilhetagem_materializacao_gps_validador.state_handlers.append(skip_if_running_handler)
@@ -373,23 +373,25 @@ with Flow(
             raise_final_state=True,
         )
 
-        run_materializacao_gps_validador = create_flow_run(
-            flow_name=bilhetagem_materializacao_gps_validador.name,
-            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            labels=LABELS,
-            upstream_tasks=[
-                wait_materializacao_transacao,
-            ],
-            parameters={
-                "timestamp": materialize_timestamp,
-            },
+        gps_params = [
+            p | {"timestamp": materialize_timestamp}
+            for p in constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_TABLE_PARAMS
+        ]
+
+        run_materializacao_gps_validador = create_flow_run.map(
+            flow_name=unmapped(bilhetagem_materializacao_gps_validador.name),
+            project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+            labels=unmapped(LABELS),
+            parameters=gps_params,
         )
 
-        wait_materializacao_gps_validador = wait_for_flow_run(
+        run_materializacao_gps_validador.set_upstream(wait_materializacao_transacao)
+
+        wait_materializacao_gps_validador = wait_for_flow_run.map(
             run_materializacao_gps_validador,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
+            stream_states=unmapped(True),
+            stream_logs=unmapped(True),
+            raise_final_state=unmapped(True),
         )
 
 bilhetagem_transacao_tratamento.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
