@@ -165,6 +165,234 @@ class constants(Enum):  # pylint: disable=c0103
     # SUBSÍDIO DASHBOARD
     SUBSIDIO_SPPO_DASHBOARD_DATASET_ID = "dashboard_subsidio_sppo"
     SUBSIDIO_SPPO_DASHBOARD_TABLE_ID = "sumario_servico_dia"
+    SUBSIDIO_SPPO_DATA_CHECKS_QUERIES = {
+        "check_gps_capture": {
+        "query":
+        """WITH
+            t AS (
+            SELECT
+                DATETIME(timestamp_array) AS timestamp_array
+            FROM
+                UNNEST( GENERATE_TIMESTAMP_ARRAY( TIMESTAMP("{start_timestamp}"), TIMESTAMP("{end_timestamp}"), INTERVAL {interval} minute) ) AS timestamp_array
+            WHERE
+                timestamp_array < TIMESTAMP("{end_timestamp}") ),
+            logs_table AS (
+            SELECT
+                SAFE_CAST(DATETIME(TIMESTAMP(timestamp_captura), "America/Sao_Paulo") AS DATETIME) timestamp_captura,
+                SAFE_CAST(sucesso AS BOOLEAN) sucesso,
+                SAFE_CAST(erro AS STRING) erro,
+                SAFE_CAST(DATA AS DATE) DATA
+            FROM
+                rj-smtr-staging.{dataset_id}_staging.{table_id}_logs AS t ),
+            logs AS (
+            SELECT
+                *,
+                TIMESTAMP_TRUNC(timestamp_captura, minute) AS timestamp_array
+            FROM
+                logs_table
+            WHERE
+                DATA BETWEEN DATE(TIMESTAMP("{start_timestamp}"))
+                AND DATE(TIMESTAMP("{end_timestamp}"))
+                AND timestamp_captura BETWEEN "{start_timestamp}"
+                AND "{end_timestamp}" )
+            SELECT
+                COALESCE(logs.timestamp_captura, t.timestamp_array) AS timestamp_captura,
+                logs.erro
+            FROM
+                t
+            LEFT JOIN
+                logs
+            ON
+                logs.timestamp_array = t.timestamp_array
+            WHERE
+                logs.sucesso IS NOT TRUE""",
+            "order_columns": ["timestamp_captura"]
+        },
+
+        "check_gps_treatment": {
+            "query": """
+            WITH
+            data_hora AS (
+                SELECT
+                    EXTRACT(date
+                    FROM
+                    timestamp_array) AS DATA,
+                    EXTRACT(hour
+                    FROM
+                    timestamp_array) AS hora,
+                FROM
+                    UNNEST(GENERATE_TIMESTAMP_ARRAY("{start_timestamp}", "{end_timestamp}", INTERVAL 1 hour)) AS timestamp_array ),
+            gps_raw AS (
+                SELECT
+                    EXTRACT(date
+                    FROM
+                    timestamp_gps) AS DATA,
+                    EXTRACT(hour
+                    FROM
+                    timestamp_gps) AS hora,
+                    COUNT(*) AS q_gps_raw
+                FROM
+                    `rj-smtr.br_rj_riodejaneiro_onibus_gps.registros`
+                WHERE
+                    DATA BETWEEN DATE("{start_timestamp}")
+                    AND DATE("{end_timestamp}")
+                GROUP BY
+                    1,
+                    2 ),
+            gps_filtrada AS (
+                SELECT
+                    EXTRACT(date
+                            FROM
+                            timestamp_gps) AS DATA,
+                    EXTRACT(hour
+                    FROM
+                    timestamp_gps) AS hora,
+                    COUNT(*) AS q_gps_filtrada
+                FROM
+                    `rj-smtr.br_rj_riodejaneiro_onibus_gps.sppo_aux_registros_filtrada`
+                WHERE
+                    DATA BETWEEN DATE("{start_timestamp}")
+                    AND DATE("{end_timestamp}")
+                GROUP BY
+                    1,
+                    2 ),
+            gps_sppo AS (
+                SELECT
+                    DATA,
+                    EXTRACT(hour
+                    FROM
+                    timestamp_gps) AS hora,
+                    COUNT(*) AS q_gps_treated
+                FROM
+                    `rj-smtr.br_rj_riodejaneiro_veiculos.gps_sppo`
+                WHERE
+                    DATA BETWEEN DATE("{start_timestamp}")
+                    AND DATE("{end_timestamp}")
+                GROUP BY
+                    1,
+                    2),
+            gps_join AS (
+                SELECT
+                    *,
+                    SAFE_DIVIDE(q_gps_filtrada, q_gps_raw) as indice_tratamento_raw,
+                    SAFE_DIVIDE(q_gps_treated, q_gps_filtrada) as indice_tratamento_filtrada,
+                    CASE
+                        WHEN    q_gps_raw = 0 OR q_gps_filtrada = 0 OR q_gps_treated = 0                -- Hipótese de perda de dados no tratamento
+                                OR q_gps_raw IS NULL OR q_gps_filtrada IS NULL OR q_gps_treated IS NULL -- Hipótese de perda de dados no tratamento
+                                OR (q_gps_raw <= q_gps_filtrada) OR (q_gps_filtrada < q_gps_treated)   -- Hipótese de duplicação de dados
+                                OR (COALESCE(SAFE_DIVIDE(q_gps_filtrada, q_gps_raw), 0) < 0.96)         -- Hipótese de perda de dados no tratamento (superior a 3%)
+                                OR (COALESCE(SAFE_DIVIDE(q_gps_treated, q_gps_filtrada), 0) < 0.96)     -- Hipótese de perda de dados no tratamento (superior a 3%)
+                                THEN FALSE
+                    ELSE
+                    TRUE
+                END
+                    AS status
+                FROM
+                    data_hora
+                LEFT JOIN
+                    gps_raw
+                USING
+                    (DATA,
+                    hora)
+                LEFT JOIN
+                    gps_filtrada
+                USING
+                    (DATA,
+                    hora)
+                LEFT JOIN
+                    gps_sppo
+                USING
+                    (DATA,
+                    hora))
+            SELECT
+                *
+            FROM
+                gps_join
+            WHERE
+                status IS FALSE
+            """,
+            "order_columns": ["DATA", "hora"]
+        },
+            
+        "check_sppo_veiculo_dia": {
+            "query": """
+            WITH
+                count_dist_status AS (
+                SELECT
+                    DATA,
+                    COUNT(DISTINCT status) AS q_dist_status,
+                    NULL AS q_duplicated_status,
+                    NULL AS q_null_status
+                FROM
+                    rj-smtr.veiculo.sppo_veiculo_dia
+                WHERE
+                    DATA BETWEEN DATE("{start_timestamp}")
+                    AND DATE("{end_timestamp}")
+                GROUP BY
+                    1
+                HAVING
+                    COUNT(DISTINCT status) = 1 ),
+                count_duplicated_status AS (
+                SELECT
+                    DATA,
+                    id_veiculo,
+                    COUNT(*) AS q_status,
+                FROM
+                    rj-smtr.veiculo.sppo_veiculo_dia
+                WHERE
+                    DATA BETWEEN DATE("{start_timestamp}")
+                    AND DATE("{end_timestamp}")
+                GROUP BY
+                    1,
+                    2
+                HAVING
+                    COUNT(*) > 1 ),
+                count_duplicated_status_agg AS (
+                SELECT
+                    DATA,
+                    NULL AS q_dist_status,
+                    SUM(q_status) AS q_duplicated_status,
+                    NULL AS q_null_status
+                FROM
+                    count_duplicated_status
+                GROUP BY
+                    1),
+                count_null_status AS (
+                SELECT
+                    DATA,
+                    NULL AS q_dist_status,
+                    NULL AS q_duplicated_status,
+                    COUNT(*) AS q_null_status
+                FROM
+                    rj-smtr.veiculo.sppo_veiculo_dia
+                WHERE
+                    DATA BETWEEN DATE("{start_timestamp}")
+                    AND DATE("{end_timestamp}")
+                    AND status IS NULL
+                GROUP BY
+                    1 )
+            SELECT
+                *
+            FROM
+                count_dist_status
+
+            UNION ALL
+
+            SELECT
+                *
+            FROM
+                count_duplicated_status_agg
+
+            UNION ALL
+
+            SELECT
+                *
+            FROM
+                count_null_status
+            """,
+            "order_columns": ["DATA"]
+        }
+    }
 
     # BILHETAGEM
     BILHETAGEM_DATASET_ID = "br_rj_riodejaneiro_bilhetagem"

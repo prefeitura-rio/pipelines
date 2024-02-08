@@ -1130,3 +1130,30 @@ def get_raw_recursos(
     log(f"Request concluído, tamanho dos dados: {len(data)}.")
 
     return error, data, filetype
+
+def perform_check(desc: str, q: str, order_columns: list):
+    """
+    Perform a check on a query
+
+    Args:
+        desc (str): The check description
+        q (str): The query to check
+        order_columns (list): The columns to order the results
+
+    Returns:
+        dict: The check status
+    """
+    log(q)
+    df = bd.read_sql(q)
+
+    check_status = len(df) == 0
+
+    check_status_dict = {"desc": desc, "status": check_status}
+
+    log(check_status_dict)
+
+    if not check_status:
+        log(data_info_str(df))
+        log(df.sort_values(by=order_columns))
+
+    return check_status_dict
