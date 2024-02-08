@@ -14,19 +14,18 @@ import traceback
 import io
 import json
 import zipfile
+import time
 import pytz
 import requests
 import basedosdados as bd
 from basedosdados import Table, Storage
 from basedosdados.upload.datatypes import Datatype
-import math
 import pandas as pd
 from google.cloud.storage.blob import Blob
 from google.cloud import bigquery
 import pymysql
 import psycopg2
 import psycopg2.extras
-import time
 
 from prefect.schedules.clocks import IntervalClock
 
