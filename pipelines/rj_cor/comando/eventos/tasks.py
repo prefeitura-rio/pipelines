@@ -231,7 +231,6 @@ def treat_data(
 
     categorical_cols = [
         "bairro",
-        "prazo",
         "descricao",
         "gravidade",
         "status",
