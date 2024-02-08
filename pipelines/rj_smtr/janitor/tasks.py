@@ -70,7 +70,7 @@ query($flow_name: String, $last_version: Int, $now: timestamptz!, $offset: Int){
         flow_runs(
             where:{
                 scheduled_start_time: {_gte: $now},
-                state: {_nin: ["Cancelled", "Running"]}
+                state: {_nin: ["Cancelled"]}
             }
             order_by: {version:desc}
         ){
