@@ -29,7 +29,7 @@ def subsidio_data_quality_check(
     params: dict, code_owners: list = None, check_params: dict = None
 ) -> bool:
     """
-    Verify data quality for the subsídio process
+    Verifica qualidade de dados para o processo de apuração de subsídio
 
     Args:
         params (dict): Parameters for the checks
