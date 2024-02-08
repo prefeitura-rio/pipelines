@@ -900,10 +900,10 @@ class constants(Enum):  # pylint: disable=c0103
         },
     }
 
-    BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_PARAMS = {
+    BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_GENERAL_PARAMS = {
         "dataset_id": BILHETAGEM_DATASET_ID,
-        "table_id": "gps_validador",
         "upstream": True,
+        "downstream": True,
         "exclude": "+operadoras +consorcios",
         "dbt_vars": {
             "date_range": {
@@ -913,6 +913,9 @@ class constants(Enum):  # pylint: disable=c0103
             "version": {},
         },
     }
+
+    BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_TABLE_ID = "gps_validador"
+    BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_VAN_TABLE_ID = "gps_validador_van"
 
     BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS = {
         "dataset_id": BILHETAGEM_DATASET_ID,
