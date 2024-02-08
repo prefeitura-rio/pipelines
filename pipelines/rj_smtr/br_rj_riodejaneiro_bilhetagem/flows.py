@@ -375,7 +375,7 @@ with Flow(
 
         gps_params = [
             p | {"timestamp": materialize_timestamp}
-            for p in constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_TABLE_PARAMS
+            for p in constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_TABLE_PARAMS.value
         ]
 
         run_materializacao_gps_validador = create_flow_run.map(

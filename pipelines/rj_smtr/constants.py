@@ -568,8 +568,10 @@ class constants(Enum):  # pylint: disable=c0103
             "table_id": "gps_validador_van",
         },
         {
-            "dataset_id": "dashboard_bilhetagem_implantacao",
+            "dataset_id": "dashboard_bilhetagem_implantacao_jae",
             "upstream": False,
+            "exclude": None,
+            "dbt_vars": {},
         },
     ]
 
