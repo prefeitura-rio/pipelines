@@ -18,11 +18,11 @@ from pipelines.rj_cor.comando.eventos.constants import (
 )
 from pipelines.rj_cor.comando.eventos.schedules import every_hour  # , every_month
 from pipelines.rj_cor.comando.eventos.tasks import (
-    download_data,
+    download_data_ocorrencias,
     get_date_interval,
     get_redis_df,
     save_data,
-    treat_data,
+    treat_data_ocorrencias,
 )
 
 from pipelines.rj_escritorio.rain_dashboard.constants import (
@@ -81,7 +81,7 @@ with Flow(
 
     first_date, last_date = get_date_interval(first_date, last_date)
 
-    dfr = download_data(first_date, last_date)
+    dfr = download_data_ocorrencias(first_date, last_date)
 
     dfr_redis = get_redis_df(
         dataset_id=dataset_id,
@@ -90,7 +90,7 @@ with Flow(
         mode=redis_mode,
     )
 
-    dfr_treated, dfr_redis = treat_data(
+    dfr_treated, dfr_redis = treat_data_ocorrencias(
         dfr,
         dfr_redis=dfr_redis,
         columns=["id_evento", "data_inicio", "status"],

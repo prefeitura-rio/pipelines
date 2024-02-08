@@ -149,7 +149,7 @@ def get_redis_df(
     max_retries=3,
     retry_delay=timedelta(seconds=60),
 )
-def download_data(first_date, last_date, wait=None) -> pd.DataFrame:
+def download_data_ocorrencias(first_date, last_date, wait=None) -> pd.DataFrame:
     """
     Download data from API
     """
@@ -165,7 +165,7 @@ def download_data(first_date, last_date, wait=None) -> pd.DataFrame:
 
 
 @task(nout=2)
-def treat_data(
+def treat_data_ocorrencias(
     dfr: pd.DataFrame,
     dfr_redis: pd.DataFrame,
     columns: list,
