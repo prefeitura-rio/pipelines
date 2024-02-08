@@ -270,11 +270,18 @@ def check_to_run_dbt(
     max_retries=constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
-def treat_old_pluviometer(dfr: pd.DataFrame) -> pd.DataFrame:
+def treat_old_pluviometer(
+    dfr: pd.DataFrame,
+    wait=None,  # pylint: disable=unused-argument
+) -> pd.DataFrame:
     """
     Renomeia colunas no estilo do antigo flow.
     """
 
+    log(
+        f"Starting treating pluviometer data to match old API.\
+            Pluviometer table enter as\n{dfr.iloc[0]}"
+    )
     rename_cols = {
         "acumulado_chuva_15min": "acumulado_chuva_15_min",
         "acumulado_chuva_1h": "acumulado_chuva_1_h",
@@ -318,6 +325,10 @@ def treat_old_pluviometer(dfr: pd.DataFrame) -> pd.DataFrame:
             "acumulado_chuva_96_h",
         ]
     ]
+    log(
+        f"Ending treating pluviometer data to match old API.\
+            Pluviometer table finished as\n{dfr.iloc[0]}"
+    )
     return dfr
 
 
@@ -334,9 +345,11 @@ def save_data_old(
     prepath = Path(f"/tmp/precipitacao_alertario/{data_name}")
     prepath.mkdir(parents=True, exist_ok=True)
 
+    log(f"Dataframe before partitions old api {dfr.iloc[0]}")
     partition_column = "data_medicao"
     dataframe, partitions = parse_date_columns_old_api(dfr, partition_column)
     current_time = pendulum.now("America/Sao_Paulo").strftime("%Y%m%d%H%M")
+    log(f"Dataframe after partitions old api {dataframe.iloc[0]}")
 
     to_partitions(
         data=dataframe,
