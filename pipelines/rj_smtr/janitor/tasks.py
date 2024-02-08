@@ -214,7 +214,7 @@ def cancel_flows(flows, prefect_client: Client = None) -> None:
                     flow_id: $flow_id
                 }
             ) {
-                archived
+                success
             }
         }
     """
@@ -239,4 +239,5 @@ def cancel_flows(flows, prefect_client: Client = None) -> None:
         url = get_vault_secret("cancelled_runs_webhook")["url"]
         send_cancelled_run_on_discord(cancelled_flows, flows, webhook_url=url)
     except Exception:
+        log(traceback.format_exc())
         log("Could not get a webhook to send messages to")
