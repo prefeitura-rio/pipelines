@@ -108,66 +108,53 @@ def subsidio_data_quality_check(
             "table_id": smtr_constants.SUBSIDIO_SPPO_DASHBOARD_TABLE_ID.value,
         }
 
-        checks.append(
-            perform_check(
-                "sumario_servico_dia - Checagem de Data",
-                check_params.get("sumario_servico_dia_checa_data"),
-                request_params,
-            )
-        )
-
-        checks.append(
-            perform_check(
-                "sumario_servico_dia - Valores de penalidade aceitos",
-                check_params.get(
-                    "accepted_values_sumario_servico_dia_valor_penalidade"
-                ),
-                request_params,
-            )
-        )
-
-        checks.append(
-            perform_check(
-                "sumario_servico_dia - Teto de Pagamento de Valor de Subsídio",
-                check_params.get(
-                    "teto_pagamento_sumario_servico_dia_valor_subsidio_pago"
-                ),
-                request_params,
-            )
-        )
-
-        request_params["expression"] = "data, servico"
-        checks.append(
-            perform_check(
-                "sumario_servico_dia - Unicidade da chave data-servico",
-                check_params.get("unique_combination"),
-                request_params,
-            )
-        )
-
-        expressions = {
-            "data IS NOT NULL": "Data não é nulo",
-            "tipo_dia IS NOT NULL": "Tipo de dia não é nulo",
-            "consorcio IS NOT NULL": "Consórcio não é nulo",
-            "servico IS NOT NULL": "Serviço não é nulo",
-            "viagens IS NOT NULL": "Quantidade de Viagens não é nulo",
-            "viagens >= 0": "Quantidade de Viagens >= 0",
-            "km_apurada IS NOT NULL": "Quilometragem Apurada não é nulo",
-            "km_apurada >= 0": "Quilometragem Apurada >= 0",
-            "km_planejada IS NOT NULL": "Quilometragem Planejada não é nulo",
-            "km_planejada >= 0": "Quilometragem Planejada >= 0",
-            "perc_km_planejada IS NOT NULL": "Percentual de Operação Diário não é nulo",
-            "perc_km_planejada >= 0": "Percentual de Operação Diário >= 0",
-            "valor_subsidio_pago IS NOT NULL": "Valor de Subsídio Pago não é nulo",
-            "valor_subsidio_pago >= 0": "Valor de Subsídio Pago >= 0",
+        test_check_list = {
+            "Checagem de Data": {"test": "sumario_servico_dia_checa_data"},
+            "Valores de penalidade aceitos": {
+                "test": "accepted_values_sumario_servico_dia_valor_penalidade"
+            },
+            "Teto de Pagamento de Valor de Subsídio": {
+                "test": "teto_pagamento_sumario_servico_dia_valor_subsidio_pago"
+            },
+            "Unicidade da chave data-servico": {
+                "test": "unique_combination",
+                "expression": "data, servico",
+            },
+            "Data não é nulo": {
+                "expression": "data IS NOT NULL",
+            },
+            "Tipo de dia não é nulo": {
+                "expression": "tipo_dia IS NOT NULL",
+            },
+            "Consórcio não é nulo": {
+                "expression": "consorcio IS NOT NULL",
+            },
+            "Serviço não é nulo": {
+                "expression": "servico IS NOT NULL",
+            },
+            "Quantidade de Viagens não nulo e maior ou igual a zero": {
+                "expression": "viagens IS NOT NULL AND viagens >= 0",
+            },
+            "Quilometragem Apurada não nulo e maior ou igual a zero": {
+                "expression": "km_apurada IS NOT NULL AND km_apurada >= 0",
+            },
+            "Quilometragem Planejada não nulo e maior ou igual a zero": {
+                "expression": "km_planejada IS NOT NULL AND km_planejada >= 0",
+            },
+            "Percentual de Operação Diário não nulo e maior ou igual a zero": {
+                "expression": "perc_km_planejada IS NOT NULL AND perc_km_planejada >= 0",
+            },
+            "Valor de Subsídio Pago não nulo e maior ou igual a zero": {
+                "expression": "valor_subsidio_pago IS NOT NULL AND valor_subsidio_pago >= 0",
+            },
         }
 
-        for expression, description in expressions.items():
-            request_params["expression"] = expression
+        for description, test_check in test_check_list.items():
+            request_params["expression"] = test_check.get("expression", "")
             checks.append(
                 perform_check(
                     f"sumario_servico_dia - {description}",
-                    check_params.get("expression_is_true"),
+                    check_params.get(test_check.get("test", "expression_is_true")),
                     request_params,
                 )
             )
