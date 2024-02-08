@@ -389,6 +389,98 @@ class constants(Enum):  # pylint: disable=c0103
             """,
             "order_columns": ["DATA"],
         },
+        "accepted_values_sumario_servico_dia_valor_penalidade": {
+            "query": """
+            WITH
+                all_values AS (
+                SELECT
+                    DISTINCT valor_penalidade AS value_field,
+                    COUNT(*) AS n_records
+                FROM
+                    `rj-smtr`.`dashboard_subsidio_sppo`.`sumario_servico_dia`
+                WHERE
+                    DATA BETWEEN DATE("{start_timestamp}")
+                    AND DATE("{end_timestamp}")
+                GROUP BY
+                    valor_penalidade )
+                SELECT
+                    *
+                FROM
+                    all_values
+                WHERE
+                    value_field NOT IN (
+                        SELECT
+                            valor
+                        FROM
+                            `rj-smtr`.`dashboard_subsidio_sppo`.`valor_tipo_penalidade` )
+            """,
+            "order_columns": ["n_records"],
+        },
+        "teto_pagamento_sumario_servico_dia_valor_subsidio_pago": {
+            "query": """
+                WITH
+                    sumario_servico_dia AS (
+                        SELECT
+                            *
+                        FROM
+                            `rj-smtr`.`dashboard_subsidio_sppo`.`sumario_servico_dia`
+                        WHERE
+                            DATA BETWEEN DATE("{start_timestamp}")
+                            AND DATE("{end_timestamp}")),
+                    subsidio_parametros AS (
+                        SELECT
+                            data_inicio,
+                            data_fim,
+                            MAX(subsidio_km) AS subsidio_km_teto
+                        FROM
+                            `rj-smtr`.`dashboard_subsidio_sppo`.`subsidio_parametros`
+                        WHERE
+                            subsidio_km > 0
+                        GROUP BY
+                            1,
+                            2)
+                    SELECT
+                        *
+                    FROM
+                        sumario_servico_dia AS s
+                    LEFT JOIN
+                        subsidio_parametros AS p
+                    ON
+                        s.data BETWEEN p.data_inicio
+                        AND p.data_fim
+                    WHERE
+                        NOT(ROUND(valor_subsidio_pago/subsidio_km_teto,2) <= ROUND(km_apurada+0.01,2))
+            """,
+            "order_columns": ["data"],
+        },
+        "expression_is_true": {
+            "query": """
+                SELECT
+                    *
+                FROM
+                    `rj-smtr`.`{dataset_id}`.`{table_id}`
+                WHERE
+                    (DATA BETWEEN DATE("{start_timestamp}")
+                    AND DATE("{end_timestamp}"))
+                    AND NOT({expression})
+            """,
+            "order_columns": ["data"],
+        },
+        "unique_combination": {
+            "query": """
+            SELECT
+                {expression}
+            FROM
+                `rj-smtr`.`{dataset_id}`.`{table_id}`
+            WHERE
+                DATA BETWEEN DATE("{start_timestamp}")
+                AND DATE("{end_timestamp}")
+            GROUP BY
+                {expression}
+            HAVING
+                COUNT(*) > 1
+            """,
+        },
     }
 
     # BILHETAGEM
