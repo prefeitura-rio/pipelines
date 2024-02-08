@@ -130,6 +130,7 @@ def subsidio_data_quality_check(
         formatted_messages.extend(at_code_owners)
 
     formatted_messages.insert(0, ":green_circle: " if test_check else ":red_circle: ")
+    formatted_messages.insert(0, "[Teste Dev]\n\n")
     formatted_message = "".join(formatted_messages)
 
     log(formatted_message)
