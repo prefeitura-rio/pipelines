@@ -373,25 +373,61 @@ with Flow(
             raise_final_state=True,
         )
 
-        gps_params = [
-            p | {"timestamp": materialize_timestamp}
-            for p in constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_TABLE_PARAMS.value
-        ]
-
-        run_materializacao_gps_validador = create_flow_run.map(
-            flow_name=unmapped(bilhetagem_materializacao_gps_validador.name),
-            project_name=unmapped("staging"),
-            labels=unmapped(LABELS),
-            parameters=gps_params,
+        run_materializacao_gps_validador = create_flow_run(
+            flow_name=bilhetagem_materializacao_gps_validador.name,
+            project_name="staging",
+            labels=LABELS,
+            parameters={
+                "table_id": constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_TABLE_ID.value,
+                "timestamp": materialize_timestamp,
+            },
+            upstream_tasks=[wait_materializacao_transacao],
         )
 
-        run_materializacao_gps_validador.set_upstream(wait_materializacao_transacao)
-
-        wait_materializacao_gps_validador = wait_for_flow_run.map(
+        wait_materializacao_gps_validador = wait_for_flow_run(
             run_materializacao_gps_validador,
-            stream_states=unmapped(True),
-            stream_logs=unmapped(True),
-            raise_final_state=unmapped(True),
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+
+        run_materializacao_gps_validador_van = create_flow_run(
+            flow_name=bilhetagem_materializacao_gps_validador.name,
+            project_name="staging",
+            labels=LABELS,
+            parameters={
+                "table_id": constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_VAN_TABLE_ID.value,
+                "timestamp": materialize_timestamp,
+            },
+            upstream_tasks=[wait_materializacao_gps_validador],
+        )
+
+        wait_materializacao_gps_validador_van = wait_for_flow_run(
+            run_materializacao_gps_validador_van,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+
+        run_materializacao_gps_validador_dash = create_flow_run(
+            flow_name=bilhetagem_materializacao_gps_validador.name,
+            project_name="staging",
+            labels=LABELS,
+            parameters=constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_DASH_PARAMS.value
+            | {
+                "timestamp": materialize_timestamp,
+            },
+            upstream_tasks=[
+                wait_materializacao_gps_validador,
+                wait_materializacao_gps_validador_van,
+            ],
+        )
+
+        wait_materializacao_gps_validador_dash = wait_for_flow_run(
+            run_materializacao_gps_validador,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
         )
 
 bilhetagem_transacao_tratamento.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)

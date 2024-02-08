@@ -560,20 +560,14 @@ class constants(Enum):  # pylint: disable=c0103
         },
     }
 
-    BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_TABLE_PARAMS = [
-        {
-            "table_id": "gps_validador",
-        },
-        {
-            "table_id": "gps_validador_van",
-        },
-        {
-            "dataset_id": "dashboard_bilhetagem_implantacao_jae",
-            "upstream": False,
-            "exclude": None,
-            "dbt_vars": {},
-        },
-    ]
+    BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_TABLE_ID = "gps_validador"
+    BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_VAN_TABLE_ID = "gps_validador_van"
+    BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_DASH_PARAMS = {
+        "dataset_id": "dashboard_bilhetagem_implantacao_jae",
+        "upstream": False,
+        "exclude": None,
+        "dbt_vars": {},
+    }
 
     BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS = {
         "dataset_id": BILHETAGEM_DATASET_ID,
