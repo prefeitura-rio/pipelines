@@ -238,7 +238,7 @@ bilhetagem_materializacao_gps_validador.run_config = KubernetesRun(
 
 bilhetagem_materializacao_gps_validador = set_default_parameters(
     flow=bilhetagem_materializacao_gps_validador,
-    default_parameters=constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_PARAMS.value,
+    default_parameters=constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_GENERAL_PARAMS.value,
 )
 
 bilhetagem_materializacao_gps_validador.state_handlers.append(skip_if_running_handler)
@@ -377,16 +377,33 @@ with Flow(
             flow_name=bilhetagem_materializacao_gps_validador.name,
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=LABELS,
-            upstream_tasks=[
-                wait_materializacao_transacao,
-            ],
             parameters={
+                "table_id": constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_TABLE_ID.value,
                 "timestamp": materialize_timestamp,
             },
+            upstream_tasks=[wait_materializacao_transacao],
         )
 
         wait_materializacao_gps_validador = wait_for_flow_run(
             run_materializacao_gps_validador,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+
+        run_materializacao_gps_validador_van = create_flow_run(
+            flow_name=bilhetagem_materializacao_gps_validador.name,
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            labels=LABELS,
+            parameters={
+                "table_id": constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_VAN_TABLE_ID.value,
+                "timestamp": materialize_timestamp,
+            },
+            upstream_tasks=[wait_materializacao_gps_validador],
+        )
+
+        wait_materializacao_gps_validador_van = wait_for_flow_run(
+            run_materializacao_gps_validador_van,
             stream_states=True,
             stream_logs=True,
             raise_final_state=True,
