@@ -409,27 +409,6 @@ with Flow(
             raise_final_state=True,
         )
 
-        run_materializacao_gps_validador_dash = create_flow_run(
-            flow_name=bilhetagem_materializacao_gps_validador.name,
-            project_name="staging",
-            labels=LABELS,
-            parameters=constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_DASH_PARAMS.value
-            | {
-                "timestamp": materialize_timestamp,
-            },
-            upstream_tasks=[
-                wait_materializacao_gps_validador,
-                wait_materializacao_gps_validador_van,
-            ],
-        )
-
-        wait_materializacao_gps_validador_dash = wait_for_flow_run(
-            run_materializacao_gps_validador,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
-        )
-
 bilhetagem_transacao_tratamento.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 bilhetagem_transacao_tratamento.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
