@@ -576,10 +576,10 @@ class constants(Enum):  # pylint: disable=c0103
         },
     }
 
-    BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_PARAMS = {
+    BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_GENERAL_PARAMS = {
         &#34;dataset_id&#34;: BILHETAGEM_DATASET_ID,
-        &#34;table_id&#34;: &#34;gps_validador&#34;,
         &#34;upstream&#34;: True,
+        &#34;downstream&#34;: True,
         &#34;exclude&#34;: &#34;+operadoras +consorcios&#34;,
         &#34;dbt_vars&#34;: {
             &#34;date_range&#34;: {
@@ -589,6 +589,9 @@ class constants(Enum):  # pylint: disable=c0103
             &#34;version&#34;: {},
         },
     }
+
+    BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_TABLE_ID = &#34;gps_validador&#34;
+    BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_VAN_TABLE_ID = &#34;gps_validador_van&#34;
 
     BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS = {
         &#34;dataset_id&#34;: BILHETAGEM_DATASET_ID,
@@ -1418,10 +1421,10 @@ and createdDate lt {end})&#34;,
         },
     }
 
-    BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_PARAMS = {
+    BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_GENERAL_PARAMS = {
         &#34;dataset_id&#34;: BILHETAGEM_DATASET_ID,
-        &#34;table_id&#34;: &#34;gps_validador&#34;,
         &#34;upstream&#34;: True,
+        &#34;downstream&#34;: True,
         &#34;exclude&#34;: &#34;+operadoras +consorcios&#34;,
         &#34;dbt_vars&#34;: {
             &#34;date_range&#34;: {
@@ -1431,6 +1434,9 @@ and createdDate lt {end})&#34;,
             &#34;version&#34;: {},
         },
     }
+
+    BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_TABLE_ID = &#34;gps_validador&#34;
+    BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_VAN_TABLE_ID = &#34;gps_validador_van&#34;
 
     BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS = {
         &#34;dataset_id&#34;: BILHETAGEM_DATASET_ID,
@@ -1725,7 +1731,15 @@ and createdDate lt {end})&#34;,
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_PARAMS"><code class="name">var <span class="ident">BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_PARAMS</span></code></dt>
+<dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_GENERAL_PARAMS"><code class="name">var <span class="ident">BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_GENERAL_PARAMS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_TABLE_ID"><code class="name">var <span class="ident">BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_TABLE_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_VAN_TABLE_ID"><code class="name">var <span class="ident">BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_VAN_TABLE_ID</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -2197,7 +2211,9 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS">BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS">BILHETAGEM_GENERAL_CAPTURE_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS">BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS</a></code></li>
-<li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_PARAMS">BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_PARAMS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_GENERAL_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_GENERAL_PARAMS">BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_GENERAL_PARAMS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_TABLE_ID">BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_TABLE_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_VAN_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_VAN_TABLE_ID">BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_VAN_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS">BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS">BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS">BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS</a></code></li>
