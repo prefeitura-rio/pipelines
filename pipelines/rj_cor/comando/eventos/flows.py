@@ -77,7 +77,7 @@ with Flow(
     redis_mode = Parameter("redis_mode", default="dev", required=False)
 
     dataset_id = comando_constants.DATASET_ID.value
-    table_id_eventos = comando_constants.TABLE_ID_EVENTOS.value
+    table_id = comando_constants.TABLE_ID_EVENTOS.value
     redis_name = comando_constants.REDIS_NAME.value
 
     first_date, last_date = get_date_interval(first_date, last_date)
@@ -86,7 +86,7 @@ with Flow(
 
     dfr_redis = get_redis_df(
         dataset_id=dataset_id,
-        table_id=table_id_eventos,
+        table_id=table_id,
         name=redis_name,
         mode=redis_mode,
     )
@@ -114,10 +114,10 @@ with Flow(
     # )
 
     path = save_data(dfr_treated)
-    task_upload_eventos = create_table_and_upload_to_gcs(
+    task_upload = create_table_and_upload_to_gcs(
         data_path=path,
         dataset_id=dataset_id,
-        table_id=table_id_eventos,
+        table_id=table_id,
         dump_mode=dump_mode,
         biglake_table=False,
         wait=path,
@@ -141,7 +141,7 @@ with Flow(
     with case(materialize_after_dump, True):
         # Trigger DBT flow run
         current_flow_labels = get_current_flow_labels()
-        eventos_materialization_flow = create_flow_run(
+        materialization_flow = create_flow_run(
             flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
             project_name=constants.PREFECT_DEFAULT_PROJECT.value,
             parameters={
@@ -152,46 +152,46 @@ with Flow(
                 "materialize_to_datario": materialize_to_datario,
             },
             labels=current_flow_labels,
-            run_name=f"Materialize {dataset_id}.{table_id_eventos}",
+            run_name=f"Materialize {dataset_id}.{table_id}",
         )
 
-        eventos_materialization_flow.set_upstream(task_upload_eventos)
+        materialization_flow.set_upstream(task_upload)
 
-        wait_for_eventos_materialization = wait_for_flow_run(
-            eventos_materialization_flow,
+        wait_for_materialization = wait_for_flow_run(
+            materialization_flow,
             stream_states=True,
             stream_logs=True,
             raise_final_state=True,
         )
 
-        wait_for_eventos_materialization.max_retries = (
+        wait_for_materialization.max_retries = (
             dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
         )
 
-        wait_for_eventos_materialization.retry_delay = timedelta(
+        wait_for_materialization.retry_delay = timedelta(
             seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
         )
 
         with case(dump_to_gcs, True):
             # Trigger Dump to GCS flow run with project id as datario
-            dump_eventos_to_gcs_flow = create_flow_run(
+            dump_to_gcs_flow = create_flow_run(
                 flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
                 project_name=constants.PREFECT_DEFAULT_PROJECT.value,
                 parameters={
                     "project_id": "datario",
                     "dataset_id": dataset_id,
-                    "table_id": table_id_eventos,
+                    "table_id": table_id,
                     "maximum_bytes_processed": maximum_bytes_processed,
                 },
                 labels=[
                     "datario",
                 ],
-                run_name=f"Dump to GCS {dataset_id}.{table_id_eventos}",
+                run_name=f"Dump to GCS {dataset_id}.{table_id}",
             )
-            dump_eventos_to_gcs_flow.set_upstream(wait_for_eventos_materialization)
+            dump_to_gcs_flow.set_upstream(wait_for_materialization)
 
             wait_for_dump_to_gcs = wait_for_flow_run(
-                dump_eventos_to_gcs_flow,
+                dump_to_gcs_flow,
                 stream_states=True,
                 stream_logs=True,
                 raise_final_state=True,
@@ -211,7 +211,7 @@ with Flow(
                 skip_on_upstream_skip=False,
             ),
         )
-        rain_radar_dashboard_update_flow.set_upstream(task_upload_eventos)
+        rain_radar_dashboard_update_flow.set_upstream(task_upload)
 
         wait_for_rain_dashboard_update = wait_for_flow_run(
             flow_run_id=rain_radar_dashboard_update_flow,
@@ -233,7 +233,7 @@ with Flow(
                 skip_on_upstream_skip=False,
             ),
         )
-        rain_radar_dashboard_last_2h_update_flow.set_upstream(task_upload_eventos)
+        rain_radar_dashboard_last_2h_update_flow.set_upstream(task_upload)
 
         wait_for_rain_dashboard_last_2h_update = wait_for_flow_run(
             flow_run_id=rain_radar_dashboard_last_2h_update_flow,
@@ -291,7 +291,7 @@ with Flow(
 
     dataset_id = comando_constants.DATASET_ID.value
     redis_name = comando_constants.REDIS_NAME.value
-    table_id_atividades_eventos = comando_constants.TABLE_ID_ATIVIDADES_EVENTOS.value
+    table_id = comando_constants.TABLE_ID_ATIVIDADES_EVENTOS.value
 
     first_date, last_date = get_date_interval(first_date, last_date)
 
@@ -299,7 +299,7 @@ with Flow(
 
     dfr_redis = get_redis_df(
         dataset_id=dataset_id,
-        table_id=table_id_eventos,
+        table_id=table_id,
         name=redis_name,
         mode=redis_mode,
     )
@@ -328,10 +328,10 @@ with Flow(
 
     path = save_data(dfr_treated)
 
-    task_upload_atividade_eventos = create_table_and_upload_to_gcs(
+    task_upload = create_table_and_upload_to_gcs(
         data_path=path,
         dataset_id=dataset_id,
-        table_id=table_id_atividades_eventos,
+        table_id=table_id,
         dump_mode=dump_mode,
         biglake_table=False,
         wait=path,
@@ -356,59 +356,55 @@ with Flow(
         # Trigger DBT flow run
         current_flow_labels = get_current_flow_labels()
 
-        atividade_eventos_materialization_flow = create_flow_run(
+        materialization_flow = create_flow_run(
             flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
             project_name=constants.PREFECT_DEFAULT_PROJECT.value,
             parameters={
                 "dataset_id": dataset_id,
-                "table_id": table_id_atividades_eventos,
+                "table_id": table_id,
                 "mode": materialization_mode,
                 "materialize_to_datario": materialize_to_datario,
             },
             labels=current_flow_labels,
-            run_name=f"Materialize {dataset_id}.{table_id_atividades_eventos}",
+            run_name=f"Materialize {dataset_id}.{table_id}",
         )
 
-        atividade_eventos_materialization_flow.set_upstream(
-            task_upload_atividade_eventos
-        )
+        materialization_flow.set_upstream(task_upload)
 
-        wait_for_atividade_eventos_materialization = wait_for_flow_run(
-            atividade_eventos_materialization_flow,
+        wait_for_materialization = wait_for_flow_run(
+            materialization_flow,
             stream_states=True,
             stream_logs=True,
             raise_final_state=True,
         )
 
-        wait_for_atividade_eventos_materialization.max_retries = (
+        wait_for_materialization.max_retries = (
             dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
         )
-        wait_for_atividade_eventos_materialization.retry_delay = timedelta(
+        wait_for_materialization.retry_delay = timedelta(
             seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
         )
 
         with case(dump_to_gcs, True):
             # Trigger Dump to GCS flow run with project id as datario
-            dump_atividade_eventos_to_gcs_flow = create_flow_run(
+            dump_to_gcs_flow = create_flow_run(
                 flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
                 project_name=constants.PREFECT_DEFAULT_PROJECT.value,
                 parameters={
                     "project_id": "datario",
                     "dataset_id": dataset_id,
-                    "table_id": table_id_atividades_eventos,
+                    "table_id": table_id,
                     "maximum_bytes_processed": maximum_bytes_processed,
                 },
                 labels=[
                     "datario",
                 ],
-                run_name=f"Dump to GCS {dataset_id}.{table_id_atividades_eventos}",
+                run_name=f"Dump to GCS {dataset_id}.{table_id}",
             )
-            dump_atividade_eventos_to_gcs_flow.set_upstream(
-                wait_for_atividade_eventos_materialization
-            )
+            dump_to_gcs_flow.set_upstream(wait_for_materialization)
 
-            wait_for_dump_atividade_eventos_to_gcs = wait_for_flow_run(
-                dump_atividade_eventos_to_gcs_flow,
+            wait_for_dump_to_gcs = wait_for_flow_run(
+                dump_to_gcs_flow,
                 stream_states=True,
                 stream_logs=True,
                 raise_final_state=True,
