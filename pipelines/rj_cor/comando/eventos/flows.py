@@ -154,7 +154,8 @@ with Flow(
             project_name=constants.PREFECT_DEFAULT_PROJECT.value,
             parameters={
                 "dataset_id": dataset_id,
-                "table_id": table_id_eventos,
+                # "table_id": table_id_eventos,
+                "table_id": "ocorrencias",
                 "mode": materialization_mode,
                 "materialize_to_datario": materialize_to_datario,
             },
