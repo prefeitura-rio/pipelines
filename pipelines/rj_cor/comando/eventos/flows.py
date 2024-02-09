@@ -366,7 +366,7 @@ with Flow(
                 "materialize_to_datario": materialize_to_datario,
             },
             labels=current_flow_labels,
-            run_name=f"Materialize {dataset_id}.{table_id}",
+            run_name=f"Materialize {dataset_id}.ocorrencias_orgaos_responsaveis",
         )
 
         materialization_flow.set_upstream(task_upload)
