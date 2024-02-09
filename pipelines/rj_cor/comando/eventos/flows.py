@@ -147,7 +147,7 @@ with Flow(
             parameters={
                 "dataset_id": dataset_id,
                 # "table_id": table_id_eventos,
-                "table_id": "ocorrencias",
+                "table_id": "ocorrencias",  # change to table_id
                 "mode": materialization_mode,
                 "materialize_to_datario": materialize_to_datario,
             },
@@ -361,7 +361,7 @@ with Flow(
             project_name=constants.PREFECT_DEFAULT_PROJECT.value,
             parameters={
                 "dataset_id": dataset_id,
-                "table_id": table_id,
+                "table_id": "ocorrencias_orgaos_responsaveis_nova_api",  # change to table_id
                 "mode": materialization_mode,
                 "materialize_to_datario": materialize_to_datario,
             },
