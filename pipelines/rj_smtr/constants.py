@@ -390,7 +390,7 @@ class constants(Enum):  # pylint: disable=c0103
             """,
             "order_columns": ["DATA"],
         },
-        "accepted_values_sumario_servico_dia_valor_penalidade": {
+        "accepted_values_valor_penalidade": {
             "query": """
             WITH
                 all_values AS (
@@ -398,7 +398,7 @@ class constants(Enum):  # pylint: disable=c0103
                     DISTINCT valor_penalidade AS value_field,
                     COUNT(*) AS n_records
                 FROM
-                    `rj-smtr`.`dashboard_subsidio_sppo`.`sumario_servico_dia`
+                    `rj-smtr`.`{dataset_id}`.`{table_id}`
                 WHERE
                     DATA BETWEEN DATE("{start_timestamp}")
                     AND DATE("{end_timestamp}")
@@ -417,14 +417,14 @@ class constants(Enum):  # pylint: disable=c0103
             """,
             "order_columns": ["n_records"],
         },
-        "teto_pagamento_sumario_servico_dia_valor_subsidio_pago": {
+        "teto_pagamento_valor_subsidio_pago": {
             "query": """
                 WITH
-                    sumario_servico_dia AS (
+                    {table_id} AS (
                         SELECT
                             *
                         FROM
-                            `rj-smtr`.`dashboard_subsidio_sppo`.`sumario_servico_dia`
+                            `rj-smtr`.`{dataset_id}`.`{table_id}`
                         WHERE
                             DATA BETWEEN DATE("{start_timestamp}")
                             AND DATE("{end_timestamp}")),
@@ -443,14 +443,14 @@ class constants(Enum):  # pylint: disable=c0103
                     SELECT
                         *
                     FROM
-                        sumario_servico_dia AS s
+                        {table_id} AS s
                     LEFT JOIN
                         subsidio_parametros AS p
                     ON
                         s.data BETWEEN p.data_inicio
                         AND p.data_fim
                     WHERE
-                        NOT(ROUND(valor_subsidio_pago/subsidio_km_teto,2) <= ROUND(km_apurada+0.01,2))
+                        NOT({expression})
             """,
             "order_columns": ["data"],
         },
@@ -482,7 +482,7 @@ class constants(Enum):  # pylint: disable=c0103
                 COUNT(*) > 1
             """,
         },
-        "sumario_servico_dia_checa_data": {
+        "teste_completude": {
             "query": """
             WITH
                 time_array AS (
@@ -490,12 +490,12 @@ class constants(Enum):  # pylint: disable=c0103
                     *
                 FROM
                     UNNEST(GENERATE_DATE_ARRAY(DATE("{start_timestamp}"), DATE("{end_timestamp}"))) AS DATA ),
-                sumario_servico_dia AS (
+                {table_id} AS (
                 SELECT
                     DATA,
                     COUNT(*) AS q_registros
                 FROM
-                    `rj-smtr`.`dashboard_subsidio_sppo`.`sumario_servico_dia`
+                    `rj-smtr`.`{dataset_id}`.`{table_id}`
                 WHERE
                     DATA BETWEEN DATE("{start_timestamp}")
                     AND DATE("{end_timestamp}")
@@ -507,7 +507,7 @@ class constants(Enum):  # pylint: disable=c0103
             FROM
                 time_array
             LEFT JOIN
-                sumario_servico_dia
+                {table_id}
             USING
                 (DATA)
             WHERE
@@ -515,6 +515,180 @@ class constants(Enum):  # pylint: disable=c0103
                 OR q_registros = 0
             """,
             "order_columns": ["DATA"],
+        },
+        "teste_sumario_servico_dia_tipo_soma_km": {
+            "query": """
+            WITH
+                kms AS (
+                SELECT
+                    * EXCEPT(km_apurada),
+                    km_apurada,
+                    ROUND(COALESCE(km_apurada_registrado_com_ar_inoperante,0) + COALESCE(km_apurada_n_licenciado,0) + COALESCE(km_apurada_autuado_ar_inoperante,0) + COALESCE(km_apurada_autuado_seguranca,0) + COALESCE(km_apurada_autuado_limpezaequipamento,0) + COALESCE(km_apurada_licenciado_sem_ar_n_autuado,0) + COALESCE(km_apurada_licenciado_com_ar_n_autuado,0),2) AS km_apurada2
+                FROM
+                    `rj-smtr.dashboard_subsidio_sppo.sumario_servico_dia_tipo`
+                WHERE
+                    DATA BETWEEN DATE("{start_timestamp}")
+                    AND DATE("{end_timestamp}"))
+            SELECT
+                *,
+                ABS(km_apurada2-km_apurada) AS dif
+            FROM
+                kms
+            WHERE
+                ABS(km_apurada2-km_apurada) > 0.015
+            """,
+            "order_columns": ["dif"],
+        },
+    }
+    SUBSIDIO_SPPO_DATA_CHECKS_LIST = {
+        "sumario_servico_dia": {
+            "Todas as datas possuem dados": {"test": "teste_completude"},
+            "Todos serviços com valores de penalidade aceitos": {
+                "test": "accepted_values_valor_penalidade"
+            },
+            "Todos serviços abaixo do teto de pagamento de valor do subsídio": {
+                "test": "teto_pagamento_valor_subsidio_pago",
+                "expression": "ROUND(valor_subsidio_pago/subsidio_km_teto,2) <= ROUND(km_apurada+0.01,2)",
+            },
+            "Todos serviços são únicos em cada data": {
+                "test": "unique_combination",
+                "expression": "data, servico",
+            },
+            "Todos serviços possuem data não nula": {
+                "expression": "data IS NOT NULL",
+            },
+            "Todos serviços possuem tipo de dia não nulo": {
+                "expression": "tipo_dia IS NOT NULL",
+            },
+            "Todos serviços possuem consórcio não nulo": {
+                "expression": "consorcio IS NOT NULL",
+            },
+            "Todas as datas possuem serviço não nulo": {
+                "expression": "servico IS NOT NULL",
+            },
+            "Todos serviços com quantidade de viagens não nula e maior ou igual a zero": {
+                "expression": "viagens IS NOT NULL AND viagens >= 0",
+            },
+            "Todos serviços com quilometragem apurada não nula e maior ou igual a zero": {
+                "expression": "km_apurada IS NOT NULL AND km_apurada >= 0",
+            },
+            "Todos serviços com quilometragem planejada não nula e maior ou igual a zero": {
+                "expression": "km_planejada IS NOT NULL AND km_planejada >= 0",
+            },
+            "Todos serviços com Percentual de Operação Diário (POD) não nulo e maior ou igual a zero": {
+                "expression": "perc_km_planejada IS NOT NULL AND perc_km_planejada >= 0",
+            },
+            "Todos serviços com valor de subsídio pago não nulo e maior ou igual a zero": {
+                "expression": "valor_subsidio_pago IS NOT NULL AND valor_subsidio_pago >= 0",
+            },
+        },
+        "sumario_servico_dia_tipo_sem_glosa": {
+            "Todas as somas dos tipos de quilometragem são equivalentes a quilometragem total": {
+                "test": "teste_sumario_servico_dia_tipo_soma_km"
+            },
+            "Todas as datas possuem dados": {"test": "teste_completude"},
+            "Todos serviços abaixo do teto de pagamento de valor do subsídio": {
+                "test": "teto_pagamento_valor_subsidio_pago",
+                "expression": "ROUND(valor_total_subsidio/subsidio_km_teto,2) <= ROUND(distancia_total_subsidio+0.01,2)",
+            },
+            "Todos serviços são únicos em cada data": {
+                "test": "unique_combination",
+                "expression": "data, servico",
+            },
+            "Todos serviços possuem data não nula": {
+                "expression": "data IS NOT NULL",
+            },
+            "Todos serviços possuem tipo de dia não nulo": {
+                "expression": "tipo_dia IS NOT NULL",
+            },
+            "Todos serviços possuem consórcio não nulo": {
+                "expression": "consorcio IS NOT NULL",
+            },
+            "Todas as datas possuem serviço não nulo": {
+                "expression": "servico IS NOT NULL",
+            },
+            "Todos serviços com quantidade de viagens não nula e maior ou igual a zero": {
+                "expression": "viagens_subsidio IS NOT NULL AND viagens_subsidio >= 0",
+            },
+            "Todos serviços com quilometragem apurada não nula e maior ou igual a zero": {
+                "expression": "distancia_total_subsidio IS NOT NULL AND distancia_total_subsidio >= 0",
+            },
+            "Todos serviços com quilometragem planejada não nula e maior ou igual a zero": {
+                "expression": "distancia_total_planejada IS NOT NULL AND distancia_total_planejada >= 0",
+            },
+            "Todos serviços com Percentual de Operação Diário (POD) não nulo e maior ou igual a zero": {
+                "expression": "perc_distancia_total_subsidio IS NOT NULL AND perc_distancia_total_subsidio >= 0",
+            },
+            "Todos serviços com valor total de subsídio não nulo e maior ou igual a zero": {
+                "expression": "valor_total_subsidio IS NOT NULL AND valor_total_subsidio >= 0",
+            },
+            "Todos serviços com viagens por veículos não licenciados não nulo e maior ou igual a zero": {
+                "expression": "viagens_n_licenciado IS NOT NULL AND viagens_n_licenciado >= 0",
+            },
+            "Todos serviços com quilometragem apurada por veículos não licenciados não nulo e maior ou igual a zero": {
+                "expression": "km_apurada_n_licenciado IS NOT NULL AND km_apurada_n_licenciado >= 0",
+            },
+            "Todos serviços com viagens por veículos autuados por ar condicionado inoperante não nulo e maior ou igual a zero": {
+                "expression": "viagens_autuado_ar_inoperante IS NOT NULL AND viagens_autuado_ar_inoperante >= 0",
+            },
+            "Todos serviços com quilometragem apurada por veículos autuados por ar condicionado inoperante não nulo e maior ou igual a zero": {
+                "expression": "km_apurada_autuado_ar_inoperante IS NOT NULL AND km_apurada_autuado_ar_inoperante >= 0",
+            },
+            "Todos serviços com viagens por veículos autuados por segurança não nulo e maior ou igual a zero": {
+                "expression": "viagens_autuado_seguranca IS NOT NULL AND viagens_autuado_seguranca >= 0",
+            },
+            "Todos serviços com quilometragem apurada por veículos autuados por segurança não nulo e maior ou igual a zero": {
+                "expression": "km_apurada_autuado_seguranca IS NOT NULL AND km_apurada_autuado_seguranca >= 0",
+            },
+            "Todos serviços com viagens por veículos autuados por limpeza/equipamento não nulo e maior ou igual a zero": {
+                "expression": "viagens_autuado_limpezaequipamento IS NOT NULL AND viagens_autuado_limpezaequipamento >= 0",
+            },
+            "Todos serviços com quilometragem apurada por veículos autuados por limpeza/equipamento não nulo e maior ou igual a zero": {
+                "expression": "km_apurada_autuado_limpezaequipamento IS NOT NULL AND km_apurada_autuado_limpezaequipamento >= 0",
+            },
+            "Todos serviços com viagens por veículos sem ar condicionado e não autuado não nulo e maior ou igual a zero": {
+                "expression": "viagens_licenciado_sem_ar_n_autuado IS NOT NULL AND viagens_licenciado_sem_ar_n_autuado >= 0",
+            },
+            "Todos serviços com quilometragem apurada por veículos sem ar condicionado e não autuado não nulo e maior ou igual a zero": {
+                "expression": "km_apurada_licenciado_sem_ar_n_autuado IS NOT NULL AND km_apurada_licenciado_sem_ar_n_autuado >= 0",
+            },
+            "Todos serviços com viagens por veículos com ar condicionado e não autuado não nulo e maior ou igual a zero": {
+                "expression": "viagens_licenciado_com_ar_n_autuado IS NOT NULL AND viagens_licenciado_com_ar_n_autuado >= 0",
+            },
+            "Todos serviços com quilometragem apurada por veículos com ar condicionado e não autuado não nulo e maior ou igual a zero": {
+                "expression": "km_apurada_licenciado_com_ar_n_autuado IS NOT NULL AND km_apurada_licenciado_com_ar_n_autuado >= 0",
+            },
+            "Todos serviços com viagens por veículos registrados com ar condicionado inoperante não nulo e maior ou igual a zero": {
+                "expression": "viagens_registrado_com_ar_inoperante IS NOT NULL AND viagens_registrado_com_ar_inoperante >= 0",
+            },
+            "Todos serviços com quilometragem apurada por veículos registrados com ar condicionado inoperante não nulo e maior ou igual a zero": {
+                "expression": "km_apurada_registrado_com_ar_inoperante IS NOT NULL AND km_apurada_registrado_com_ar_inoperante >= 0",
+            },
+        },
+        "viagens_remuneradas": {
+            "Todas as datas possuem dados": {"test": "teste_completude"},
+            "Todas viagens são únicas": {
+                "test": "unique_combination",
+                "expression": "id_viagem",
+            },
+            "Todas viagens possuem data": {
+                "expression": "data IS NOT NULL",
+            },
+            "Todas viagens possuem serviço não nulo": {
+                "expression": "servico IS NOT NULL",
+            },
+            "Todas viagens possuem ID não nulo": {
+                "expression": "id_viagem IS NOT NULL",
+            },
+            "Todas viagens possuem indicador de viagem remunerada não nulo e verdadeiro/falso": {
+                "expression": "indicador_viagem_remunerada IS NOT NULL AND indicador_viagem_remunerada IN (TRUE, FALSE)",
+            },
+            "Todas viagens com distância planejada não nula e maior ou igual a zero": {
+                "expression": "distancia_planejada IS NOT NULL AND distancia_planejada >= 0",
+            },
+            "Todas viagens com valor de subsídio por km não nulo e maior ou igual a zero": {
+                "expression": "subsidio_km IS NOT NULL AND subsidio_km >= 0",
+            },
         },
     }
 

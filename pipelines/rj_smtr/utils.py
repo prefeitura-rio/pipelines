@@ -1164,3 +1164,74 @@ def perform_check(desc: str, check_params: dict, request_params: dict):
         )
 
     return check_status_dict
+
+
+def perform_checks_for_table(
+    table_id: str, request_params: dict, test_check_list: dict, check_params: dict
+) -> dict:
+    """
+    Perform checks for a table
+
+    Args:
+        table_id (str): The table id
+        request_params (dict): The request parameters
+        test_check_list (dict): The test check list
+        check_params (dict): The check parameters
+
+    Returns:
+        dict: The checks
+    """
+    request_params["table_id"] = table_id
+    checks = list()
+
+    for description, test_check in test_check_list.items():
+        request_params["expression"] = test_check.get("expression", "")
+        checks.append(
+            perform_check(
+                description,
+                check_params.get(test_check.get("test", "expression_is_true")),
+                request_params,
+            )
+        )
+
+    return checks
+
+
+def format_send_discord_message(formatted_messages: list, webhook_url: str):
+    """
+    Format and send a message to discord
+
+    Args:
+        formatted_messages (list): The formatted messages
+        webhook_url (str): The webhook url
+
+    Returns:
+        None
+    """
+    formatted_message = "".join(formatted_messages)
+    log(formatted_message)
+    msg_ext = len(formatted_message)
+    if msg_ext > 2000:
+        log(
+            f"** Message too long ({msg_ext} characters), will be split into multiple messages **"
+        )
+        # Split message into lines
+        lines = formatted_message.split("\n")
+        message_chunks = []
+        chunk = ""
+        for line in lines:
+            if len(chunk) + len(line) + 1 > 2000:  # +1 for the newline character
+                message_chunks.append(chunk)
+                chunk = ""
+            chunk += line + "\n"
+        message_chunks.append(chunk)  # Append the last chunk
+        for chunk in message_chunks:
+            send_discord_message(
+                message=chunk,
+                webhook_url=webhook_url,
+            )
+    else:
+        send_discord_message(
+            message=formatted_message,
+            webhook_url=webhook_url,
+        )
