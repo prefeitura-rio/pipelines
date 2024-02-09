@@ -3,9 +3,9 @@
 Tasks for projeto_subsidio_sppo
 """
 
-from prefect import task
-
 from datetime import datetime, timedelta
+
+from prefect import task
 
 from pipelines.constants import constants
 from pipelines.utils.utils import log, get_vault_secret
@@ -150,13 +150,13 @@ def subsidio_data_quality_check(
 
     format_send_discord_message(formatted_messages, webhook_url)
 
-    for table_id in checks:
+    for table_id, checks_ in checks.items():
         if table_id != "general":
             formatted_messages = [
                 f"*{table_id}:*\n"
                 + "\n".join(
                     f'{":white_check_mark:" if check["status"] else ":x:"} {check["desc"]}'
-                    for check in checks[table_id]
+                    for check in checks_
                 )
             ]
             format_send_discord_message(formatted_messages, webhook_url)
