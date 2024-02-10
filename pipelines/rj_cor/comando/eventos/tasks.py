@@ -289,6 +289,10 @@ def treat_data_atividades(
     for col in ["data_inicio", "data_fim", "data_chegada"]:
         dfr[col] = pd.to_datetime(dfr[col], errors="coerce")
 
+    # TODO: Essa conversão é temporária
+    for col in ["data_inicio", "data_fim", "data_chegada"]:
+        dfr[col] = dfr[col].dt.tz_convert("America/Sao_Paulo")
+
     for col in ["data_inicio", "data_fim", "data_chegada"]:
         dfr[col] = dfr[col].dt.strftime("%Y-%m-%d %H:%M:%S")
 
