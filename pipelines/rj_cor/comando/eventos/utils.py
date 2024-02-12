@@ -31,7 +31,7 @@ def format_date(first_date, last_date):
 
 def get_redis_output(redis_key, is_df: bool = False):
     """
-    Get Redis output. Use .get to obtain a df from redis or hgetall if is a key value pair.
+    Get Redis output. Use get to obtain a df from redis or hgetall if is a key value pair.
     """
     redis_client = get_redis_client()  # (host="127.0.0.1")
 
