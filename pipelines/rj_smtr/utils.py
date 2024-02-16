@@ -1190,7 +1190,7 @@ def perform_checks_for_table(
             perform_check(
                 description,
                 check_params.get(test_check.get("test", "expression_is_true")),
-                request_params,
+                request_params | test_check.get("params", {}),
             )
         )
 

@@ -540,7 +540,33 @@ class constants(Enum):  # pylint: disable=c0103
             "order_columns": ["dif"],
         },
     }
-    SUBSIDIO_SPPO_DATA_CHECKS_LIST = {
+    SUBSIDIO_SPPO_DATA_CHECKS_PRE_LIST = {
+        "general": {
+            "Todos os dados de GPS foram capturados": {
+                "test": "check_gps_capture",
+                "params": {
+                    "interval": 1,
+                    "dataset_id": GPS_SPPO_RAW_DATASET_ID,
+                    "table_id": GPS_SPPO_RAW_TABLE_ID,
+                },
+            },
+            "Todos os dados de realocação foram capturados": {
+                "test": "check_gps_capture",
+                "params": {
+                    "interval": 10,
+                    "dataset_id": GPS_SPPO_RAW_DATASET_ID,
+                    "table_id": GPS_SPPO_REALOCACAO_RAW_TABLE_ID,
+                },
+            },
+            "Todos os dados de GPS foram devidamente tratados": {
+                "test": "check_gps_treatment",
+            },
+            "Todos os dados de status dos veículos foram devidamente tratados": {
+                "test": "check_sppo_veiculo_dia",
+            },
+        }
+    }
+    SUBSIDIO_SPPO_DATA_CHECKS_POS_LIST = {
         "sumario_servico_dia": {
             "Todas as datas possuem dados": {"test": "teste_completude"},
             "Todos serviços com valores de penalidade aceitos": {

@@ -52,74 +52,33 @@ def subsidio_data_quality_check(
         code_owners = smtr_constants.SUBSIDIO_SPPO_CODE_OWNERS.value
 
     checks = dict()
-    table_id = "general"
-    checks[table_id] = list()
 
-    if mode == "pre":
-        general_request_params = {
-            "start_timestamp": f"""{params["start_date"]} 00:00:00""",
-            "end_timestamp": (
-                datetime.strptime(params["end_date"], "%Y-%m-%d") + timedelta(hours=27)
-            ).strftime("%Y-%m-%d %H:%M:%S"),
-        }
-
-        check_list = [
-            {
-                "description": "Todos os dados de GPS foram capturados",
-                "check": "check_gps_capture",
-                "params": general_request_params
-                | {
-                    "interval": 1,
-                    "dataset_id": smtr_constants.GPS_SPPO_RAW_DATASET_ID.value,
-                    "table_id": smtr_constants.GPS_SPPO_RAW_TABLE_ID.value,
-                },
-            },
-            {
-                "description": "Todos os dados de realocação foram capturados",
-                "check": "check_gps_capture",
-                "params": general_request_params
-                | {
-                    "interval": 10,
-                    "dataset_id": smtr_constants.GPS_SPPO_RAW_DATASET_ID.value,
-                    "table_id": smtr_constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
-                },
-            },
-            {
-                "description": "Todos os dados de GPS foram devidamente tratados",
-                "check": "check_gps_treatment",
-                "params": general_request_params,
-            },
-            {
-                "description": "Todos os dados de status dos veículos foram devidamente tratados",
-                "check": "check_sppo_veiculo_dia",
-                "params": general_request_params
-                | {"end_timestamp": f"""{params["end_date"]} 00:00:00"""},
-            },
-        ]
-
-        for check in check_list:
-            checks[table_id].append(
-                perform_check(
-                    check["description"],
-                    check_params.get(check["check"]),
-                    check["params"],
-                )
-            )
+    request_params = {
+        "start_timestamp": f"""{params["start_date"]} 00:00:00""",
+        "end_timestamp": (
+            datetime.strptime(params["end_date"], "%Y-%m-%d") + timedelta(hours=27)
+        ).strftime("%Y-%m-%d %H:%M:%S"),
+    }
 
     if mode == "pos":
-        request_params = {
-            "start_timestamp": f"""{params["start_date"]} 00:00:00""",
-            "end_timestamp": f"""{params["end_date"]} 00:00:00""",
-            "dataset_id": smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
-        }
+        request_params["end_timestamp"] = f"""{params["end_date"]} 00:00:00"""
+        request_params[
+            "dataset_id"
+        ] = smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value
 
-        for (
-            table_id,
-            test_check_list,
-        ) in smtr_constants.SUBSIDIO_SPPO_DATA_CHECKS_LIST.value.items():
-            checks[table_id] = perform_checks_for_table(
-                table_id, request_params, test_check_list, check_params
-            )
+    checks_list = (
+        smtr_constants.SUBSIDIO_SPPO_DATA_CHECKS_PRE_LIST.value
+        if mode == "pre"
+        else smtr_constants.SUBSIDIO_SPPO_DATA_CHECKS_POS_LIST.value
+    )
+
+    for (
+        table_id,
+        test_check_list,
+    ) in checks_list.items():
+        checks[table_id] = perform_checks_for_table(
+            table_id, request_params, test_check_list, check_params
+        )
 
     log(checks)
 
@@ -167,8 +126,7 @@ def subsidio_data_quality_check(
         formatted_messages.append(
             ""
             if test_check
-            else """:warning: **Status:** Run cancelada.
-            Necessidade de revisão dos dados de entrada!\n"""
+            else """:warning: **Status:** Necessidade de revisão dos dados de entrada!\n"""
         )
 
     if mode == "pos":
