@@ -1128,7 +1128,7 @@ def get_raw_recursos(
     return error, data, filetype
 
 
-def perform_check(desc: str, check_params: dict, request_params: dict):
+def perform_check(desc: str, check_params: dict, request_params: dict) -> dict:
     """
     Perform a check on a query
 
