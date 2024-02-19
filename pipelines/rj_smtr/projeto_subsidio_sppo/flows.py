@@ -4,7 +4,7 @@
 Flows for projeto_subsidio_sppo
 """
 
-from prefect import Parameter, case
+from prefect import Parameter, case, task
 from prefect.tasks.control_flow import merge
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
@@ -47,12 +47,15 @@ from pipelines.rj_smtr.veiculo.flows import (
 from pipelines.rj_smtr.schedules import every_day_hour_five, every_day_hour_seven
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
-from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import check_param
+from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import (
+    check_param,
+    subsidio_data_quality_check,
+)
 
 # Flows #
 
 with Flow(
-    "SMTR: Viagens SPPO - Materialização",
+    "SMTR: Viagens SPPO - Tratamento",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as viagens_sppo:
     # Rename flow run
@@ -99,8 +102,8 @@ viagens_sppo.run_config = KubernetesRun(
 viagens_sppo.schedule = every_day_hour_five
 
 with Flow(
-    "SMTR: Subsídio SPPO Apuração - Materialização",
-    code_owners=["rodrigo"],
+    "SMTR: Subsídio SPPO Apuração - Tratamento",
+    code_owners=smtr_constants.SUBSIDIO_SPPO_CODE_OWNERS.value,
 ) as subsidio_sppo_apuracao:
     # 1. SETUP #
 
@@ -130,6 +133,7 @@ with Flow(
 
     stu_data_versao = Parameter("stu_data_versao", default="")
     materialize_sppo_veiculo_dia = Parameter("materialize_sppo_veiculo_dia", True)
+    test_only = Parameter("test_only", False)
     # publish = Parameter("publish", False)
 
     run_dates = get_run_dates(start_date, end_date)
@@ -155,76 +159,101 @@ with Flow(
     _vars = {"start_date": start_date, "end_date": end_date}
 
     # 2. MATERIALIZE DATA #
-    with case(materialize_sppo_veiculo_dia, True):
-        parameters = {
-            "start_date": start_date,
-            "end_date": end_date,
-            "stu_data_versao": stu_data_versao,
-        }
+    with case(test_only, False):
+        with case(materialize_sppo_veiculo_dia, True):
+            parameters = {
+                "start_date": start_date,
+                "end_date": end_date,
+                "stu_data_versao": stu_data_versao,
+            }
 
-        SPPO_VEICULO_DIA_RUN = create_flow_run(
-            flow_name=sppo_veiculo_dia.name,
-            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-            run_name=sppo_veiculo_dia.name,
-            parameters=parameters,
+            SPPO_VEICULO_DIA_RUN = create_flow_run(
+                flow_name=sppo_veiculo_dia.name,
+                project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                run_name=sppo_veiculo_dia.name,
+                parameters=parameters,
+            )
+
+            SPPO_VEICULO_DIA_RUN_WAIT_TRUE = wait_for_flow_run(
+                SPPO_VEICULO_DIA_RUN,
+                stream_states=True,
+                stream_logs=True,
+                raise_final_state=True,
+            )
+
+        with case(materialize_sppo_veiculo_dia, False):
+            SPPO_VEICULO_DIA_RUN_WAIT_FALSE = task(
+                lambda: [None], checkpoint=False, name="assign_none_to_previous_runs"
+            )()
+
+        SPPO_VEICULO_DIA_RUN_WAIT = merge(
+            SPPO_VEICULO_DIA_RUN_WAIT_TRUE, SPPO_VEICULO_DIA_RUN_WAIT_FALSE
         )
 
-        SPPO_VEICULO_DIA_RUN_WAIT = wait_for_flow_run(
-            SPPO_VEICULO_DIA_RUN,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
+        # 3. PRE-DATA QUALITY CHECK #
+        SUBSIDIO_SPPO_DATA_QUALITY_PRE = subsidio_data_quality_check(
+            mode="pre",
+            params=_vars,
+            upstream_tasks=[SPPO_VEICULO_DIA_RUN_WAIT],
         )
 
-        # 3. CALCULATE #
-        # TODO: Check if sppo_veiculo_dia was really materialized
-        # (could be a fail in capture or in materialize)
-        SUBSIDIO_SPPO_APURACAO_RUN = run_dbt_model(
-            dbt_client=dbt_client,
-            dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
-            _vars=_vars,
+        with case(SUBSIDIO_SPPO_DATA_QUALITY_PRE, True):
+            # 4. CALCULATE #
+            SUBSIDIO_SPPO_APURACAO_RUN = run_dbt_model(
+                dbt_client=dbt_client,
+                dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
+                _vars=_vars,
+                upstream_tasks=[SUBSIDIO_SPPO_DATA_QUALITY_PRE],
+            )
+
+            # 5. POST-DATA QUALITY CHECK #
+            SUBSIDIO_SPPO_DATA_QUALITY_POS = subsidio_data_quality_check(
+                mode="pos",
+                params=_vars,
+                upstream_tasks=[SUBSIDIO_SPPO_APURACAO_RUN],
+            )
+
+            # TODO: test upstream_tasks=[SUBSIDIO_SPPO_DASHBOARD_RUN]
+            # 6. PUBLISH #
+            # with case(publish, True):
+
+            #     SMTR_MATERIALIZE_TO_DATARIO_VIAGEM_SPPO_RUN = create_flow_run(
+            #         flow_name=smtr_materialize_to_datario_viagem_sppo_flow.name,
+            #         project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+            #         labels=[
+            #             constants.RJ_DATARIO_AGENT_LABEL.value,
+            #         ],
+            #         run_name=smtr_materialize_to_datario_viagem_sppo_flow.name,
+            #         parameters={
+            #             "dataset_id": "transporte_rodoviario_municipal",
+            #             "table_id": "viagem_onibus",
+            #             "mode": "prod",
+            #             "dbt_model_parameters": _vars,
+            #         },
+            #         upstream_tasks=[SUBSIDIO_SPPO_DASHBOARD_RUN],
+            #     )
+
+            #     wait_for_flow_run(
+            #         SMTR_MATERIALIZE_TO_DATARIO_VIAGEM_SPPO_RUN,
+            #         stream_states=True,
+            #         stream_logs=True,
+            #         raise_final_state=True,
+            #     )
+
+            #     SMTR_MATERIALIZE_TO_DATARIO_VIAGEM_SPPO_RUN.set_upstream(
+            #         SUBSIDIO_SPPO_DASHBOARD_RUN
+            #     )
+    with case(test_only, True):
+        SUBSIDIO_SPPO_DATA_QUALITY_PRE = subsidio_data_quality_check(
+            mode="pre",
+            params=_vars,
         )
 
-        SUBSIDIO_SPPO_APURACAO_RUN.set_upstream(SPPO_VEICULO_DIA_RUN_WAIT)
-
-    with case(materialize_sppo_veiculo_dia, False):
-        # 3. CALCULATE #
-        SUBSIDIO_SPPO_DASHBOARD_RUN = run_dbt_model(
-            dbt_client=dbt_client,
-            dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
-            _vars=_vars,
+        SUBSIDIO_SPPO_DATA_QUALITY_POS = subsidio_data_quality_check(
+            mode="pos",
+            params=_vars,
+            upstream_tasks=[SUBSIDIO_SPPO_DATA_QUALITY_PRE],
         )
-
-    # TODO: test upstream_tasks=[SUBSIDIO_SPPO_DASHBOARD_RUN]
-    # 4. PUBLISH #
-    # with case(publish, True):
-
-    #     SMTR_MATERIALIZE_TO_DATARIO_VIAGEM_SPPO_RUN = create_flow_run(
-    #         flow_name=smtr_materialize_to_datario_viagem_sppo_flow.name,
-    #         project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-    #         labels=[
-    #             constants.RJ_DATARIO_AGENT_LABEL.value,
-    #         ],
-    #         run_name=smtr_materialize_to_datario_viagem_sppo_flow.name,
-    #         parameters={
-    #             "dataset_id": "transporte_rodoviario_municipal",
-    #             "table_id": "viagem_onibus",
-    #             "mode": "prod",
-    #             "dbt_model_parameters": _vars,
-    #         },
-    #         upstream_tasks=[SUBSIDIO_SPPO_DASHBOARD_RUN],
-    #     )
-
-    #     wait_for_flow_run(
-    #         SMTR_MATERIALIZE_TO_DATARIO_VIAGEM_SPPO_RUN,
-    #         stream_states=True,
-    #         stream_logs=True,
-    #         raise_final_state=True,
-    #     )
-
-    #     SMTR_MATERIALIZE_TO_DATARIO_VIAGEM_SPPO_RUN.set_upstream(
-    #         SUBSIDIO_SPPO_DASHBOARD_RUN
-    #     )
 
 subsidio_sppo_apuracao.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 subsidio_sppo_apuracao.run_config = KubernetesRun(
