@@ -43,25 +43,22 @@ import traceback
 import io
 import json
 import zipfile
+import time
 import pytz
 import requests
 import basedosdados as bd
 from basedosdados import Table, Storage
 from basedosdados.upload.datatypes import Datatype
-import math
 import pandas as pd
 from google.cloud.storage.blob import Blob
 from google.cloud import bigquery
 import pymysql
 import psycopg2
 import psycopg2.extras
-import time
-
 
 from prefect.schedules.clocks import IntervalClock
 
 from pipelines.constants import constants as emd_constants
-
 
 from pipelines.rj_smtr.implicit_ftp import ImplicitFtpTls
 from pipelines.rj_smtr.constants import constants
@@ -72,7 +69,6 @@ from pipelines.utils.utils import (
     send_discord_message,
     get_redis_client,
 )
-
 
 # Set BD config to run on cloud #
 bd.config.from_file = True
@@ -1158,7 +1154,116 @@ def get_raw_recursos(
 
     log(f&#34;Request concluído, tamanho dos dados: {len(data)}.&#34;)
 
-    return error, data, filetype</code></pre>
+    return error, data, filetype
+
+
+def perform_check(desc: str, check_params: dict, request_params: dict) -&gt; dict:
+    &#34;&#34;&#34;
+    Perform a check on a query
+
+    Args:
+        desc (str): The check description
+        check_params (dict): The check parameters
+            * query (str): SQL query to be executed
+            * order_columns (list): order columns for query log results, in case of failure (optional)
+        request_params (dict): The request parameters
+
+    Returns:
+        dict: The check status
+    &#34;&#34;&#34;
+    try:
+        q = check_params[&#34;query&#34;].format(**request_params)
+        order_columns = check_params.get(&#34;order_columns&#34;, None)
+    except KeyError as e:
+        raise ValueError(f&#34;Missing key in check_params: {e}&#34;) from e
+
+    log(q)
+    df = bd.read_sql(q)
+
+    check_status = df.empty
+
+    check_status_dict = {&#34;desc&#34;: desc, &#34;status&#34;: check_status}
+
+    log(f&#34;Check status:\n{check_status_dict}&#34;)
+
+    if not check_status:
+        log(f&#34;Data info:\n{data_info_str(df)}&#34;)
+        log(
+            f&#34;Sorted data:\n{df.sort_values(by=order_columns) if order_columns else df}&#34;
+        )
+
+    return check_status_dict
+
+
+def perform_checks_for_table(
+    table_id: str, request_params: dict, test_check_list: dict, check_params: dict
+) -&gt; dict:
+    &#34;&#34;&#34;
+    Perform checks for a table
+
+    Args:
+        table_id (str): The table id
+        request_params (dict): The request parameters
+        test_check_list (dict): The test check list
+        check_params (dict): The check parameters
+
+    Returns:
+        dict: The checks
+    &#34;&#34;&#34;
+    request_params[&#34;table_id&#34;] = table_id
+    checks = list()
+
+    for description, test_check in test_check_list.items():
+        request_params[&#34;expression&#34;] = test_check.get(&#34;expression&#34;, &#34;&#34;)
+        checks.append(
+            perform_check(
+                description,
+                check_params.get(test_check.get(&#34;test&#34;, &#34;expression_is_true&#34;)),
+                request_params | test_check.get(&#34;params&#34;, {}),
+            )
+        )
+
+    return checks
+
+
+def format_send_discord_message(formatted_messages: list, webhook_url: str):
+    &#34;&#34;&#34;
+    Format and send a message to discord
+
+    Args:
+        formatted_messages (list): The formatted messages
+        webhook_url (str): The webhook url
+
+    Returns:
+        None
+    &#34;&#34;&#34;
+    formatted_message = &#34;&#34;.join(formatted_messages)
+    log(formatted_message)
+    msg_ext = len(formatted_message)
+    if msg_ext &gt; 2000:
+        log(
+            f&#34;** Message too long ({msg_ext} characters), will be split into multiple messages **&#34;
+        )
+        # Split message into lines
+        lines = formatted_message.split(&#34;\n&#34;)
+        message_chunks = []
+        chunk = &#34;&#34;
+        for line in lines:
+            if len(chunk) + len(line) + 1 &gt; 2000:  # +1 for the newline character
+                message_chunks.append(chunk)
+                chunk = &#34;&#34;
+            chunk += line + &#34;\n&#34;
+        message_chunks.append(chunk)  # Append the last chunk
+        for chunk in message_chunks:
+            send_discord_message(
+                message=chunk,
+                webhook_url=webhook_url,
+            )
+    else:
+        send_discord_message(
+            message=formatted_message,
+            webhook_url=webhook_url,
+        )</code></pre>
 </details>
 </section>
 <section>
@@ -1866,6 +1971,64 @@ Defaults to 'bigquery_prod'.</p>
     return data</code></pre>
 </details>
 </dd>
+<dt id="pipelines.rj_smtr.utils.format_send_discord_message"><code class="name flex">
+<span>def <span class="ident">format_send_discord_message</span></span>(<span>formatted_messages: list, webhook_url: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Format and send a message to discord</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>formatted_messages</code></strong> :&ensp;<code>list</code></dt>
+<dd>The formatted messages</dd>
+<dt><strong><code>webhook_url</code></strong> :&ensp;<code>str</code></dt>
+<dd>The webhook url</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def format_send_discord_message(formatted_messages: list, webhook_url: str):
+    &#34;&#34;&#34;
+    Format and send a message to discord
+
+    Args:
+        formatted_messages (list): The formatted messages
+        webhook_url (str): The webhook url
+
+    Returns:
+        None
+    &#34;&#34;&#34;
+    formatted_message = &#34;&#34;.join(formatted_messages)
+    log(formatted_message)
+    msg_ext = len(formatted_message)
+    if msg_ext &gt; 2000:
+        log(
+            f&#34;** Message too long ({msg_ext} characters), will be split into multiple messages **&#34;
+        )
+        # Split message into lines
+        lines = formatted_message.split(&#34;\n&#34;)
+        message_chunks = []
+        chunk = &#34;&#34;
+        for line in lines:
+            if len(chunk) + len(line) + 1 &gt; 2000:  # +1 for the newline character
+                message_chunks.append(chunk)
+                chunk = &#34;&#34;
+            chunk += line + &#34;\n&#34;
+        message_chunks.append(chunk)  # Append the last chunk
+        for chunk in message_chunks:
+            send_discord_message(
+                message=chunk,
+                webhook_url=webhook_url,
+            )
+    else:
+        send_discord_message(
+            message=formatted_message,
+            webhook_url=webhook_url,
+        )</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_smtr.utils.generate_df_and_save"><code class="name flex">
 <span>def <span class="ident">generate_df_and_save</span></span>(<span>data: dict, fname: pathlib.Path)</span>
 </code></dt>
@@ -2569,6 +2732,125 @@ Useful to incrementally materialize tables via DBT</p>
     return data</code></pre>
 </details>
 </dd>
+<dt id="pipelines.rj_smtr.utils.perform_check"><code class="name flex">
+<span>def <span class="ident">perform_check</span></span>(<span>desc: str, check_params: dict, request_params: dict) ‑> dict</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Perform a check on a query</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>desc</code></strong> :&ensp;<code>str</code></dt>
+<dd>The check description</dd>
+<dt><strong><code>check_params</code></strong> :&ensp;<code>dict</code></dt>
+<dd>The check parameters
+* query (str): SQL query to be executed
+* order_columns (list): order columns for query log results, in case of failure (optional)</dd>
+<dt><strong><code>request_params</code></strong> :&ensp;<code>dict</code></dt>
+<dd>The request parameters</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>The check status</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def perform_check(desc: str, check_params: dict, request_params: dict) -&gt; dict:
+    &#34;&#34;&#34;
+    Perform a check on a query
+
+    Args:
+        desc (str): The check description
+        check_params (dict): The check parameters
+            * query (str): SQL query to be executed
+            * order_columns (list): order columns for query log results, in case of failure (optional)
+        request_params (dict): The request parameters
+
+    Returns:
+        dict: The check status
+    &#34;&#34;&#34;
+    try:
+        q = check_params[&#34;query&#34;].format(**request_params)
+        order_columns = check_params.get(&#34;order_columns&#34;, None)
+    except KeyError as e:
+        raise ValueError(f&#34;Missing key in check_params: {e}&#34;) from e
+
+    log(q)
+    df = bd.read_sql(q)
+
+    check_status = df.empty
+
+    check_status_dict = {&#34;desc&#34;: desc, &#34;status&#34;: check_status}
+
+    log(f&#34;Check status:\n{check_status_dict}&#34;)
+
+    if not check_status:
+        log(f&#34;Data info:\n{data_info_str(df)}&#34;)
+        log(
+            f&#34;Sorted data:\n{df.sort_values(by=order_columns) if order_columns else df}&#34;
+        )
+
+    return check_status_dict</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.utils.perform_checks_for_table"><code class="name flex">
+<span>def <span class="ident">perform_checks_for_table</span></span>(<span>table_id: str, request_params: dict, test_check_list: dict, check_params: dict) ‑> dict</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Perform checks for a table</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>table_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>The table id</dd>
+<dt><strong><code>request_params</code></strong> :&ensp;<code>dict</code></dt>
+<dd>The request parameters</dd>
+<dt><strong><code>test_check_list</code></strong> :&ensp;<code>dict</code></dt>
+<dd>The test check list</dd>
+<dt><strong><code>check_params</code></strong> :&ensp;<code>dict</code></dt>
+<dd>The check parameters</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>The checks</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def perform_checks_for_table(
+    table_id: str, request_params: dict, test_check_list: dict, check_params: dict
+) -&gt; dict:
+    &#34;&#34;&#34;
+    Perform checks for a table
+
+    Args:
+        table_id (str): The table id
+        request_params (dict): The request parameters
+        test_check_list (dict): The test check list
+        check_params (dict): The check parameters
+
+    Returns:
+        dict: The checks
+    &#34;&#34;&#34;
+    request_params[&#34;table_id&#34;] = table_id
+    checks = list()
+
+    for description, test_check in test_check_list.items():
+        request_params[&#34;expression&#34;] = test_check.get(&#34;expression&#34;, &#34;&#34;)
+        checks.append(
+            perform_check(
+                description,
+                check_params.get(test_check.get(&#34;test&#34;, &#34;expression_is_true&#34;)),
+                request_params | test_check.get(&#34;params&#34;, {}),
+            )
+        )
+
+    return checks</code></pre>
+</details>
+</dd>
 <dt id="pipelines.rj_smtr.utils.read_raw_data"><code class="name flex">
 <span>def <span class="ident">read_raw_data</span></span>(<span>filepath: str, reader_args: dict = None) ‑> tuple[str, pandas.core.frame.DataFrame]</span>
 </code></dt>
@@ -2988,6 +3270,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.utils.execute_db_query" href="#pipelines.rj_smtr.utils.execute_db_query">execute_db_query</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.filter_data" href="#pipelines.rj_smtr.utils.filter_data">filter_data</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.filter_null" href="#pipelines.rj_smtr.utils.filter_null">filter_null</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.format_send_discord_message" href="#pipelines.rj_smtr.utils.format_send_discord_message">format_send_discord_message</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.generate_df_and_save" href="#pipelines.rj_smtr.utils.generate_df_and_save">generate_df_and_save</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.generate_execute_schedules" href="#pipelines.rj_smtr.utils.generate_execute_schedules">generate_execute_schedules</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.get_datetime_range" href="#pipelines.rj_smtr.utils.get_datetime_range">get_datetime_range</a></code></li>
@@ -3000,6 +3283,8 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.utils.get_upload_storage_blob" href="#pipelines.rj_smtr.utils.get_upload_storage_blob">get_upload_storage_blob</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.log_critical" href="#pipelines.rj_smtr.utils.log_critical">log_critical</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.map_dict_keys" href="#pipelines.rj_smtr.utils.map_dict_keys">map_dict_keys</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.perform_check" href="#pipelines.rj_smtr.utils.perform_check">perform_check</a></code></li>
+<li><code><a title="pipelines.rj_smtr.utils.perform_checks_for_table" href="#pipelines.rj_smtr.utils.perform_checks_for_table">perform_checks_for_table</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.read_raw_data" href="#pipelines.rj_smtr.utils.read_raw_data">read_raw_data</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.safe_cast" href="#pipelines.rj_smtr.utils.safe_cast">safe_cast</a></code></li>
 <li><code><a title="pipelines.rj_smtr.utils.save_raw_local_func" href="#pipelines.rj_smtr.utils.save_raw_local_func">save_raw_local_func</a></code></li>
