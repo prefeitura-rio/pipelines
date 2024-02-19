@@ -34,6 +34,7 @@ def subsidio_data_quality_check(
     Verifica qualidade de dados para o processo de apuração de subsídio
 
     Args:
+        mode (str): Modo de execução (pre ou pos)
         params (dict): Parameters for the checks
         code_owners (list): Code owners to be notified
         check_params (dict): queries and order columns for the checks
