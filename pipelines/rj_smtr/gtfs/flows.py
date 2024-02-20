@@ -34,32 +34,32 @@ from pipelines.rj_smtr.flows import default_capture_flow, default_materializatio
 # SETUP dos Flows
 
 gtfs_captura = deepcopy(default_capture_flow)
-gtfs_captura.name = "SMTR: GTFS - Captura (subflow)"
+gtfs_captura.name = "SMTR: GTFS - Captura (novo subflow)"
 gtfs_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 gtfs_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 gtfs_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 gtfs_captura = set_default_parameters(
     flow=gtfs_captura,
-    default_parameters=constants.GTFS_GENERAL_CAPTURE_PARAMS.value,
+    default_parameters=constants.GTFS_GENERAL_CAPTURE_PARAMS_NEW.value,
 )
 
 gtfs_materializacao = deepcopy(default_materialization_flow)
-gtfs_materializacao.name = "SMTR: GTFS - Materialização (subflow)"
+gtfs_materializacao.name = "SMTR: GTFS - Materialização (novo subflow)"
 gtfs_materializacao.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 gtfs_materializacao.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 gtfs_materializacao = set_default_parameters(
     flow=gtfs_materializacao,
-    default_parameters=constants.GTFS_MATERIALIZACAO_PARAMS.value,
+    default_parameters=constants.GTFS_MATERIALIZACAO_PARAMS_NEW.value,
 )
 
 with Flow(
-    "SMTR: GTFS - Captura/Tratamento",
+    "SMTR: GTFS - Captura/Tratamento (novo flow)",
     code_owners=["rodrigo", "carolinagomes"],
 ) as gtfs_captura_tratamento:
     # SETUP
@@ -79,12 +79,13 @@ with Flow(
     with case(capture, True):
         gtfs_capture_parameters = [
             {"timestamp": data_versao_gtfs, **d}
-            for d in constants.GTFS_TABLE_CAPTURE_PARAMS.value
+            for d in constants.GTFS_TABLE_CAPTURE_PARAMS_NEW.value
         ]
 
         run_captura = create_flow_run.map(
             flow_name=unmapped(gtfs_captura.name),
-            project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+            project_name=unmapped("staging"),
+            # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
             parameters=gtfs_capture_parameters,
             labels=unmapped(LABELS),
             scheduled_start_time=get_scheduled_start_times(
@@ -118,7 +119,8 @@ with Flow(
 
         run_materializacao = create_flow_run(
             flow_name=gtfs_materializacao.name,
-            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            project_name="staging",
+            # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             parameters=gtfs_materializacao_parameters,
             labels=LABELS,
             upstream_tasks=[wait_captura],
@@ -134,5 +136,7 @@ with Flow(
 gtfs_captura_tratamento.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 gtfs_captura_tratamento.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
+
+#
