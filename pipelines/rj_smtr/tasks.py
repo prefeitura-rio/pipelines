@@ -761,7 +761,7 @@ def create_request_params(
         request_params = {"zip_filename": extract_params["filename"]}
 
     elif dataset_id == constants.GTFS_DATASET_ID_NEW.value:
-        request_params = {"zip_filename": extract_params["filename"]}  # comentário
+        request_params = {"zip_filename": extract_params["filename"]}
 
     elif dataset_id == constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value:
         request_params = {}
