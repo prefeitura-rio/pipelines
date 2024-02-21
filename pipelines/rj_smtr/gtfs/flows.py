@@ -34,7 +34,7 @@ from pipelines.rj_smtr.flows import default_capture_flow, default_materializatio
 # SETUP dos Flows
 
 gtfs_captura = deepcopy(default_capture_flow)
-gtfs_captura.name = "SMTR: GTFS - Captura (novo subflow)"
+gtfs_captura.name = "SMTR: GTFS Novo - Captura (subflow)"
 gtfs_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 gtfs_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
@@ -47,7 +47,7 @@ gtfs_captura = set_default_parameters(
 )
 
 gtfs_materializacao = deepcopy(default_materialization_flow)
-gtfs_materializacao.name = "SMTR: GTFS - Materialização (novo subflow)"
+gtfs_materializacao.name = "SMTR: GTFS Novo - Materialização (subflow)"
 gtfs_materializacao.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 gtfs_materializacao.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
@@ -59,7 +59,7 @@ gtfs_materializacao = set_default_parameters(
 )
 
 with Flow(
-    "SMTR: GTFS - Captura/Tratamento (novo flow)",
+    "SMTR: GTFS Novo - Captura/Tratamento",
     code_owners=["rodrigo", "carolinagomes"],
 ) as gtfs_captura_tratamento:
     # SETUP
@@ -79,7 +79,7 @@ with Flow(
     with case(capture, True):
         gtfs_capture_parameters = [
             {"timestamp": data_versao_gtfs, **d}
-            for d in constants.GTFS_TABLE_CAPTURE_PARAMS_NEW.value
+            for d in constants.GTFS_TABLE_CAPTURE_PARAMS.value
         ]
 
         run_captura = create_flow_run.map(

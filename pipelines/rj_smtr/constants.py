@@ -1209,62 +1209,6 @@ class constants(Enum):  # pylint: disable=c0103
         "partition_date_name": "data_versao",
     }
 
-    GTFS_TABLE_CAPTURE_PARAMS_NEW = [
-        {
-            "table_id": "shapes",
-            "primary_key": ["shape_id", "shape_pt_sequence"],
-        },
-        {
-            "table_id": "agency",
-            "primary_key": ["agency_id"],
-        },
-        {
-            "table_id": "calendar_dates",
-            "primary_key": ["service_id", "date"],
-        },
-        {
-            "table_id": "calendar",
-            "primary_key": ["service_id"],
-        },
-        {
-            "table_id": "feed_info",
-            "primary_key": ["feed_publisher_name"],
-        },
-        {
-            "table_id": "frequencies",
-            "primary_key": ["trip_id", "start_time"],
-        },
-        {
-            "table_id": "routes",
-            "primary_key": ["route_id"],
-        },
-        {
-            "table_id": "stops",
-            "primary_key": ["stop_id"],
-        },
-        {
-            "table_id": "trips",
-            "primary_key": ["trip_id"],
-        },
-        {
-            "table_id": "fare_attributes",
-            "primary_key": ["fare_id"],
-        },
-        {
-            "table_id": "fare_rules",
-            "primary_key": [],
-        },
-        {
-            "table_id": "ordem_servico",
-            "primary_key": ["servico"],
-            "extract_params": {"filename": "ordem_servico"},
-        },
-        {
-            "table_id": "stop_times",
-            "primary_key": ["trip_id", "stop_sequence"],
-        },
-    ]
-
     GTFS_MATERIALIZACAO_PARAMS_NEW = {
         "dataset_id": GTFS_DATASET_ID_NEW,
         "dbt_vars": {
