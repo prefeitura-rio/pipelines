@@ -91,7 +91,7 @@ with Flow(
             scheduled_start_time=get_scheduled_start_times(
                 timestamp=timestamp,
                 parameters=gtfs_capture_parameters,
-                intervals={"agency": timedelta(minutes=13)},
+                intervals={"agency": timedelta(minutes=15)},
             ),
         )
 
