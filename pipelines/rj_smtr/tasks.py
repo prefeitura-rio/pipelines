@@ -757,10 +757,7 @@ def create_request_params(
 
             request_params["query"] = request_params["query"].format(**datetime_range)
 
-    elif dataset_id in [
-        constants.GTFS_DATASET_ID.value,
-        constants.GTFS_DATASET_ID_NEW.value,
-    ]:
+    elif dataset_id == constants.GTFS_DATASET_ID.value:
         request_params = {"zip_filename": extract_params["filename"]}
 
     elif dataset_id == constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value:
