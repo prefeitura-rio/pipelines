@@ -59,7 +59,7 @@ gtfs_materializacao = set_default_parameters(
 )
 
 gtfs_materializacao_new = deepcopy(default_materialization_flow)
-gtfs_materializacao_new.name = "SMTR: GTFS - Materialização (subflow)"
+gtfs_materializacao_new.name = "SMTR: GTFS - Materialização nova (subflow)"
 gtfs_materializacao_new.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 gtfs_materializacao_new.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
