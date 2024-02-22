@@ -126,7 +126,7 @@ with Flow(
 
         run_materializacao = create_flow_run(
             flow_name=gtfs_materializacao.name,
-            project_name=unmapped("staging"),
+            project_name="staging",
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             parameters=gtfs_materializacao_parameters,
             labels=LABELS,
@@ -135,7 +135,7 @@ with Flow(
 
         run_materializacao_new_dataset_id = create_flow_run(
             flow_name=gtfs_materializacao.name,
-            project_name=unmapped("staging"),
+            project_name="staging",
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             parameters=gtfs_materializacao_parameters_new,
             labels=LABELS,
