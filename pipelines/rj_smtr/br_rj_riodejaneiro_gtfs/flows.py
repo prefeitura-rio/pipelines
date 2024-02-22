@@ -66,7 +66,7 @@ gtfs_materializacao_new.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 gtfs_materializacao_new = set_default_parameters(
-    flow=gtfs_materializacao,
+    flow=gtfs_materializacao_new,
     default_parameters=constants.GTFS_MATERIALIZACAO_PARAMS.value,
 )
 
@@ -129,6 +129,12 @@ with Flow(
                 "version": {},
             },
         }
+        gtfs_materializacao_parameters_new = {
+            "dbt_vars": {
+                "data_versao_gtfs": data_versao_gtfs,
+                "version": {},
+            },
+        }
 
         run_materializacao = create_flow_run(
             flow_name=gtfs_materializacao.name,
@@ -143,7 +149,7 @@ with Flow(
             flow_name=gtfs_materializacao_new.name,
             project_name="staging",
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters=gtfs_materializacao_parameters,
+            parameters=gtfs_materializacao_parameters_new,
             labels=LABELS,
             upstream_tasks=[wait_captura],
         )
