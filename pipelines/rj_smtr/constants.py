@@ -1198,14 +1198,6 @@ class constants(Enum):  # pylint: disable=c0103
         },
     }
 
-    GTFS_MATERIALIZACAO_PARAMS_NEW = {
-        "dataset_id": "gtfs",
-        "dbt_vars": {
-            "data_versao_gtfs": "",
-            "version": {},
-        },
-    }
-
     # STU
 
     STU_DATASET_ID = "br_rj_riodejaneiro_stu"
