@@ -58,6 +58,19 @@ gtfs_materializacao = set_default_parameters(
     default_parameters=constants.GTFS_MATERIALIZACAO_PARAMS.value,
 )
 
+gtfs_materializacao_new = deepcopy(default_materialization_flow)
+gtfs_materializacao_new.name = "SMTR: GTFS - Materialização (subflow)"
+gtfs_materializacao_new.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+gtfs_materializacao_new.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+)
+gtfs_materializacao_new = set_default_parameters(
+    flow=gtfs_materializacao,
+    default_parameters=constants.GTFS_MATERIALIZACAO_PARAMS.value,
+)
+
+
 with Flow(
     "SMTR: GTFS - Captura/Tratamento",
     code_owners=["rodrigo", "carolinagomes"],
@@ -116,13 +129,6 @@ with Flow(
                 "version": {},
             },
         }
-        gtfs_materializacao_parameters_new = {
-            "dataset_id": "gtfs",
-            "dbt_vars": {
-                "data_versao_gtfs": data_versao_gtfs,
-                "version": {},
-            },
-        }
 
         run_materializacao = create_flow_run(
             flow_name=gtfs_materializacao.name,
@@ -134,10 +140,10 @@ with Flow(
         )
 
         run_materializacao_new_dataset_id = create_flow_run(
-            flow_name=gtfs_materializacao.name,
+            flow_name=gtfs_materializacao_new.name,
             project_name="staging",
             # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters=gtfs_materializacao_parameters_new,
+            parameters=gtfs_materializacao_parameters,
             labels=LABELS,
             upstream_tasks=[wait_captura],
         )
