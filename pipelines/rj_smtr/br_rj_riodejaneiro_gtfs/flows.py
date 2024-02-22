@@ -67,7 +67,7 @@ gtfs_materializacao_new.run_config = KubernetesRun(
 )
 gtfs_materializacao_new = set_default_parameters(
     flow=gtfs_materializacao_new,
-    default_parameters=constants.GTFS_MATERIALIZACAO_PARAMS.value,
+    default_parameters=constants.GTFS_MATERIALIZACAO_PARAMS_NEW.value,
 )
 
 
