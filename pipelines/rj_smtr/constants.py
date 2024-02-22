@@ -1124,12 +1124,12 @@ class constants(Enum):  # pylint: disable=c0103
     }
 
     # GTFS
-    GTFS_DATASET_ID = "gtfs"
+    GTFS_DATASET_ID = "br_rj_riodejaneiro_gtfs"
 
     GTFS_GENERAL_CAPTURE_PARAMS = {
         "partition_date_only": True,
         "source_type": "gcs",
-        "dataset_id": "gtfs",
+        "dataset_id": "br_rj_riodejaneiro_gtfs",
         "extract_params": {"filename": "gtfs"},
         "partition_date_name": "data_versao",
     }
