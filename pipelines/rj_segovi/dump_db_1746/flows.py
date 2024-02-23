@@ -32,7 +32,7 @@ _1746_default_parameters = {
     "db_host": "10.70.1.34",
     "db_port": "1433",
     "db_type": "sql_server",
-    "dataset_id": "administracao_servicos_publicos",
+    "dataset_id": "adm_central_atendimento_1746",
     "vault_secret_path": "clustersql2",
     "lower_bound_date": "2021-01-01",
 }
