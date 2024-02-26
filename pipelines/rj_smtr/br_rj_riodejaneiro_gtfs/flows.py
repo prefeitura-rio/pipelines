@@ -115,6 +115,13 @@ with Flow(
                 "version": {},
             },
         }
+        gtfs_materializacao_parameters_new = {
+            "dataset_id": "gtfs",
+            "dbt_vars": {
+                "data_versao_gtfs": data_versao_gtfs,
+                "version": {},
+            },
+        }
 
         run_materializacao = create_flow_run(
             flow_name=gtfs_materializacao.name,
@@ -124,8 +131,23 @@ with Flow(
             upstream_tasks=[wait_captura],
         )
 
+        run_materializacao_new_dataset_id = create_flow_run(
+            flow_name=gtfs_materializacao.name,
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            parameters=gtfs_materializacao_parameters_new,
+            labels=LABELS,
+            upstream_tasks=[wait_captura],
+        )
+
         wait_materializacao = wait_for_flow_run(
             run_materializacao,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+
+        wait_materializacao_new_dataset_id = wait_for_flow_run(
+            run_materializacao_new_dataset_id,
             stream_states=True,
             stream_logs=True,
             raise_final_state=True,
