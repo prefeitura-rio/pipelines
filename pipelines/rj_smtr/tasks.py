@@ -11,7 +11,6 @@ import traceback
 from typing import Dict, List, Union, Iterable, Any
 import io
 
-
 from basedosdados import Storage, Table
 import basedosdados as bd
 from dbt_client import DbtClient
