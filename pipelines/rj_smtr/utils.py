@@ -14,25 +14,22 @@ import traceback
 import io
 import json
 import zipfile
+import time
 import pytz
 import requests
 import basedosdados as bd
 from basedosdados import Table, Storage
 from basedosdados.upload.datatypes import Datatype
-import math
 import pandas as pd
 from google.cloud.storage.blob import Blob
 from google.cloud import bigquery
 import pymysql
 import psycopg2
 import psycopg2.extras
-import time
-
 
 from prefect.schedules.clocks import IntervalClock
 
 from pipelines.constants import constants as emd_constants
-
 
 from pipelines.rj_smtr.implicit_ftp import ImplicitFtpTls
 from pipelines.rj_smtr.constants import constants
@@ -43,7 +40,6 @@ from pipelines.utils.utils import (
     send_discord_message,
     get_redis_client,
 )
-
 
 # Set BD config to run on cloud #
 bd.config.from_file = True
@@ -1130,3 +1126,112 @@ def get_raw_recursos(
     log(f"Request concluído, tamanho dos dados: {len(data)}.")
 
     return error, data, filetype
+
+
+def perform_check(desc: str, check_params: dict, request_params: dict) -> dict:
+    """
+    Perform a check on a query
+
+    Args:
+        desc (str): The check description
+        check_params (dict): The check parameters
+            * query (str): SQL query to be executed
+            * order_columns (list): order columns for query log results, in case of failure (optional)
+        request_params (dict): The request parameters
+
+    Returns:
+        dict: The check status
+    """
+    try:
+        q = check_params["query"].format(**request_params)
+        order_columns = check_params.get("order_columns", None)
+    except KeyError as e:
+        raise ValueError(f"Missing key in check_params: {e}") from e
+
+    log(q)
+    df = bd.read_sql(q)
+
+    check_status = df.empty
+
+    check_status_dict = {"desc": desc, "status": check_status}
+
+    log(f"Check status:\n{check_status_dict}")
+
+    if not check_status:
+        log(f"Data info:\n{data_info_str(df)}")
+        log(
+            f"Sorted data:\n{df.sort_values(by=order_columns) if order_columns else df}"
+        )
+
+    return check_status_dict
+
+
+def perform_checks_for_table(
+    table_id: str, request_params: dict, test_check_list: dict, check_params: dict
+) -> dict:
+    """
+    Perform checks for a table
+
+    Args:
+        table_id (str): The table id
+        request_params (dict): The request parameters
+        test_check_list (dict): The test check list
+        check_params (dict): The check parameters
+
+    Returns:
+        dict: The checks
+    """
+    request_params["table_id"] = table_id
+    checks = list()
+
+    for description, test_check in test_check_list.items():
+        request_params["expression"] = test_check.get("expression", "")
+        checks.append(
+            perform_check(
+                description,
+                check_params.get(test_check.get("test", "expression_is_true")),
+                request_params | test_check.get("params", {}),
+            )
+        )
+
+    return checks
+
+
+def format_send_discord_message(formatted_messages: list, webhook_url: str):
+    """
+    Format and send a message to discord
+
+    Args:
+        formatted_messages (list): The formatted messages
+        webhook_url (str): The webhook url
+
+    Returns:
+        None
+    """
+    formatted_message = "".join(formatted_messages)
+    log(formatted_message)
+    msg_ext = len(formatted_message)
+    if msg_ext > 2000:
+        log(
+            f"** Message too long ({msg_ext} characters), will be split into multiple messages **"
+        )
+        # Split message into lines
+        lines = formatted_message.split("\n")
+        message_chunks = []
+        chunk = ""
+        for line in lines:
+            if len(chunk) + len(line) + 1 > 2000:  # +1 for the newline character
+                message_chunks.append(chunk)
+                chunk = ""
+            chunk += line + "\n"
+        message_chunks.append(chunk)  # Append the last chunk
+        for chunk in message_chunks:
+            send_discord_message(
+                message=chunk,
+                webhook_url=webhook_url,
+            )
+    else:
+        send_discord_message(
+            message=formatted_message,
+            webhook_url=webhook_url,
+        )
