@@ -140,6 +140,44 @@ with Flow(
                 raise_final_state=False,
             )
 
+            # Trigger rain dashboard update last 30min flow run
+            rain_dashboard_last_30min_update_flow = create_flow_run(
+                flow_name=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_NAME.value,
+                project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                parameters=alertario_constants.RAIN_DASHBOARD_LAST_30MIN_FLOW_SCHEDULE_PARAMETERS.value,  # noqa
+                labels=[
+                    "rj-escritorio-dev",
+                ],
+                run_name="Update rain dashboard data (triggered by precipitacao_alertario last 30min flow)",  # noqa
+            )
+            rain_dashboard_last_30min_update_flow.set_upstream(UPLOAD_TABLE)
+
+            wait_for_rain_dashboard_last_30min_update = wait_for_flow_run(
+                flow_run_id=rain_dashboard_last_30min_update_flow,
+                stream_states=True,
+                stream_logs=True,
+                raise_final_state=False,
+            )
+
+            # Trigger rain dashboard update last 60min flow run
+            rain_dashboard_last_60min_update_flow = create_flow_run(
+                flow_name=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_NAME.value,
+                project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                parameters=alertario_constants.RAIN_DASHBOARD_LAST_60MIN_FLOW_SCHEDULE_PARAMETERS.value,  # noqa
+                labels=[
+                    "rj-escritorio-dev",
+                ],
+                run_name="Update rain dashboard data (triggered by precipitacao_alertario last 60min flow)",  # noqa
+            )
+            rain_dashboard_last_60min_update_flow.set_upstream(UPLOAD_TABLE)
+
+            wait_for_rain_dashboard_last_60min_update = wait_for_flow_run(
+                flow_run_id=rain_dashboard_last_60min_update_flow,
+                stream_states=True,
+                stream_logs=True,
+                raise_final_state=False,
+            )
+
             # Trigger rain dashboard update last 2h flow run
             rain_dashboard_last_2h_update_flow = create_flow_run(
                 flow_name=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_NAME.value,
@@ -154,6 +192,25 @@ with Flow(
 
             wait_for_rain_dashboard_last_2h_update = wait_for_flow_run(
                 flow_run_id=rain_dashboard_last_2h_update_flow,
+                stream_states=True,
+                stream_logs=True,
+                raise_final_state=False,
+            )
+
+            # Trigger rain dashboard update last 24h flow run
+            rain_dashboard_last_24h_update_flow = create_flow_run(
+                flow_name=rain_dashboard_constants.RAIN_DASHBOARD_FLOW_NAME.value,
+                project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                parameters=alertario_constants.RAIN_DASHBOARD_LAST_24H_FLOW_SCHEDULE_PARAMETERS.value,  # noqa
+                labels=[
+                    "rj-escritorio-dev",
+                ],
+                run_name="Update rain dashboard data (triggered by precipitacao_alertario last 24h flow)",  # noqa
+            )
+            rain_dashboard_last_24h_update_flow.set_upstream(UPLOAD_TABLE)
+
+            wait_for_rain_dashboard_last_24h_update = wait_for_flow_run(
+                flow_run_id=rain_dashboard_last_24h_update_flow,
                 stream_states=True,
                 stream_logs=True,
                 raise_final_state=False,
