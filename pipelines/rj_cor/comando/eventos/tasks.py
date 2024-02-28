@@ -7,7 +7,6 @@ Tasks for comando
 
 # from copy import deepcopy
 from datetime import timedelta
-import json
 import os
 from pathlib import Path
 from typing import Any, Union, Tuple
@@ -18,77 +17,24 @@ import pandas as pd
 import pendulum
 from prefect import task
 
-# from prefect.engine.signals import ENDRUN
-# from prefect.engine.state import Skipped
+from prefect.engine.signals import ENDRUN
+from prefect.engine.state import Skipped
+
 # from prefect.triggers import all_successful
 
 from pipelines.rj_cor.comando.eventos.utils import (
     build_redis_key,
+    compare_actual_df_with_redis_df,
+    get_redis_output,  # TODO: atualizar o do utils.utils
     format_date,
     treat_wrong_id_pop,
 )
 from pipelines.utils.utils import (
-    get_redis_client,
     get_vault_secret,
     log,
     parse_date_columns,
     to_partitions,
-    treat_redis_output,
 )
-
-
-def get_redis_output(redis_key, is_df: bool = False):
-    """
-    Get Redis output
-    Example: {b'date': b'2023-02-27 07:29:04'}
-    """
-    redis_client = get_redis_client()  # (host="127.0.0.1")
-
-    if is_df:
-        json_data = redis_client.get(redis_key)
-        print(type(json_data))
-        print(json_data)
-        if json_data:
-            # If data is found, parse the JSON string back to a Python object (dictionary)
-            data_dict = json.loads(json_data)
-            # Convert the dictionary back to a DataFrame
-            return pd.DataFrame(data_dict)
-
-        return pd.DataFrame()
-
-    output = redis_client.hgetall(redis_key)
-    if len(output) > 0:
-        output = treat_redis_output(output)
-    return output
-
-
-def compare_actual_df_with_redis_df(
-    dfr: pd.DataFrame,
-    dfr_redis: pd.DataFrame,
-    columns: list,
-) -> pd.DataFrame:
-    """
-    Compare df from redis to actual df and return only the rows from actual df
-    that are not already saved on redis.
-    """
-    for col in columns:
-        if col not in dfr_redis.columns:
-            dfr_redis[col] = None
-        dfr_redis[col] = dfr_redis[col].astype(dfr[col].dtypes)
-    log(f"\nEnded conversion types from dfr to dfr_redis: \n{dfr_redis.dtypes}")
-
-    dfr_diff = (
-        pd.merge(dfr, dfr_redis, how="left", on=columns, indicator=True)
-        .query('_merge == "left_only"')
-        .drop("_merge", axis=1)
-    )
-    log(
-        f"\nDf resulted from the difference between dft_redis and dfr: \n{dfr_diff.head()}"
-    )
-
-    updated_dfr_redis = pd.concat([dfr_redis, dfr_diff[columns]])
-
-    return dfr_diff, updated_dfr_redis
 
 
 @task
@@ -145,11 +91,11 @@ def get_redis_df(
 
 
 @task(
-    nout=3,
+    nout=1,
     max_retries=3,
     retry_delay=timedelta(seconds=60),
 )
-def download_data(first_date, last_date, wait=None) -> pd.DataFrame:
+def download_data_ocorrencias(first_date, last_date, wait=None) -> pd.DataFrame:
     """
     Download data from API
     """
@@ -157,7 +103,6 @@ def download_data(first_date, last_date, wait=None) -> pd.DataFrame:
 
     url_secret = get_vault_secret("comando")["data"]
     url_eventos = url_secret["endpoint_eventos"]
-    ## url_atividades_evento = url_secret["endpoint_atividades_evento"]
 
     dfr = pd.read_json(f"{url_eventos}/?data_i={first_date}&data_f={last_date}")
 
@@ -165,7 +110,7 @@ def download_data(first_date, last_date, wait=None) -> pd.DataFrame:
 
 
 @task(nout=2)
-def treat_data(
+def treat_data_ocorrencias(
     dfr: pd.DataFrame,
     dfr_redis: pd.DataFrame,
     columns: list,
@@ -200,7 +145,7 @@ def treat_data(
     if dfr.shape[0] == 0:
         skip_text = "No new data available on API"
         print(skip_text)
-        # raise ENDRUN(state=Skipped(skip_text))
+        raise ENDRUN(state=Skipped(skip_text))
 
     dfr["tipo"] = dfr["tipo"].replace(
         {
@@ -247,6 +192,109 @@ def treat_data(
 
     # Treat id_pop col
     dfr["id_pop"] = dfr["id_pop"].astype(float).astype(int)
+
+    for col in ["data_inicio", "data_fim"]:
+        dfr[col] = pd.to_datetime(dfr[col], errors="coerce")
+
+    for col in ["data_inicio", "data_fim"]:
+        dfr[col] = dfr[col].dt.strftime("%Y-%m-%d %H:%M:%S")
+
+    # Set the order to match the original table
+    dfr = dfr[mandatory_cols]
+
+    # Create a column with time of row creation to keep last event on dbt
+    dfr["created_at"] = pendulum.now(tz="America/Sao_Paulo").strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+
+    return dfr.drop_duplicates(), dfr_redis
+
+
+@task(
+    nout=1,
+    max_retries=3,
+    retry_delay=timedelta(seconds=60),
+)
+def download_data_atividades(first_date, last_date, wait=None) -> pd.DataFrame:
+    """
+    Download data from API
+    """
+
+    url_secret = get_vault_secret("comando")["data"]
+    url_atividades_evento = url_secret["endpoint_atividades_evento"]
+
+    dfr = pd.read_json(
+        f"{url_atividades_evento}/?data_i={first_date}&data_f={last_date}"
+    )
+
+    return dfr
+
+
+@task(nout=2)
+def treat_data_atividades(
+    dfr: pd.DataFrame,
+    dfr_redis: pd.DataFrame,
+    columns: list,
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Normalize data to be similiar to old API.
+    """
+
+    print("Start treating data")
+    dfr.orgao = dfr.orgao.replace(["\r", "\n"], ["", ""], regex=True)
+
+    print(f"Dataframe before comparing with last data saved on redis {dfr.head()}")
+
+    dfr, dfr_redis = compare_actual_df_with_redis_df(
+        dfr,
+        dfr_redis,
+        columns,
+    )
+    print(f"Dataframe after comparing with last data saved on redis {dfr.head()}")
+
+    # If df is empty stop flow
+    if dfr.shape[0] == 0:
+        skip_text = "No new data available on API"
+        print(skip_text)
+        raise ENDRUN(state=Skipped(skip_text))
+
+    mandatory_cols = [
+        "id_evento",
+        "sigla",
+        "orgao",  # esse não tem na tabela antiga
+        "data_chegada",
+        "data_inicio",
+        "data_fim",
+        "descricao",
+        "status",
+    ]
+
+    # Create cols if they don exist on new API
+    for col in mandatory_cols:
+        if col not in dfr.columns:
+            dfr[col] = None
+
+    categorical_cols = [
+        "sigla",
+        "orgao",
+        "descricao",
+        "status",
+    ]
+
+    print("\n\nDEBUG", dfr[categorical_cols])
+    for i in categorical_cols:
+        dfr[i] = dfr[i].str.capitalize()
+        # dfr[i] = dfr[i].apply(unidecode)
+
+    for col in ["data_inicio", "data_fim", "data_chegada"]:
+        dfr[col] = pd.to_datetime(dfr[col], errors="coerce")
+
+    # TODO: Essa conversão é temporária
+    for col in ["data_inicio", "data_fim", "data_chegada"]:
+        dfr[col] = dfr[col].dt.tz_convert("America/Sao_Paulo")
+
+    for col in ["data_inicio", "data_fim", "data_chegada"]:
+        dfr[col] = dfr[col].dt.strftime("%Y-%m-%d %H:%M:%S")
 
     # Set the order to match the original table
     dfr = dfr[mandatory_cols]
