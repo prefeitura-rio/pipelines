@@ -90,6 +90,7 @@ sme_queries = {
         "partition_date_format": "%Y",
         "materialization_mode": "prod",
         "dump_mode": "append",
+        "dbt_model_secret_parameters": {"hash_seed": "hash_seed"},
         "execute_query": """
             SELECT
                 *
@@ -388,7 +389,7 @@ sme_queries = {
     },
     "turma_aula_aluno": {
         "dataset_id": "educacao_basica_frequencia",
-        "partition_columns": "tau_dataAlteracao",
+        "partition_columns": "taa_dataAlteracao",
         "partition_date_format": "%Y-%m-%d",
         "lower_bound_date": "current_month",
         "dump_mode": "overwrite",
