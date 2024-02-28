@@ -36,7 +36,6 @@ Tasks for comando
 
 # from copy import deepcopy
 from datetime import timedelta
-import json
 import os
 from pathlib import Path
 from typing import Any, Union, Tuple
@@ -47,77 +46,24 @@ import pandas as pd
 import pendulum
 from prefect import task
 
-# from prefect.engine.signals import ENDRUN
-# from prefect.engine.state import Skipped
+from prefect.engine.signals import ENDRUN
+from prefect.engine.state import Skipped
+
 # from prefect.triggers import all_successful
 
 from pipelines.rj_cor.comando.eventos.utils import (
     build_redis_key,
+    compare_actual_df_with_redis_df,
+    get_redis_output,  # TODO: atualizar o do utils.utils
     format_date,
     treat_wrong_id_pop,
 )
 from pipelines.utils.utils import (
-    get_redis_client,
     get_vault_secret,
     log,
     parse_date_columns,
     to_partitions,
-    treat_redis_output,
 )
-
-
-def get_redis_output(redis_key, is_df: bool = False):
-    &#34;&#34;&#34;
-    Get Redis output
-    Example: {b&#39;date&#39;: b&#39;2023-02-27 07:29:04&#39;}
-    &#34;&#34;&#34;
-    redis_client = get_redis_client()  # (host=&#34;127.0.0.1&#34;)
-
-    if is_df:
-        json_data = redis_client.get(redis_key)
-        print(type(json_data))
-        print(json_data)
-        if json_data:
-            # If data is found, parse the JSON string back to a Python object (dictionary)
-            data_dict = json.loads(json_data)
-            # Convert the dictionary back to a DataFrame
-            return pd.DataFrame(data_dict)
-
-        return pd.DataFrame()
-
-    output = redis_client.hgetall(redis_key)
-    if len(output) &gt; 0:
-        output = treat_redis_output(output)
-    return output
-
-
-def compare_actual_df_with_redis_df(
-    dfr: pd.DataFrame,
-    dfr_redis: pd.DataFrame,
-    columns: list,
-) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    Compare df from redis to actual df and return only the rows from actual df
-    that are not already saved on redis.
-    &#34;&#34;&#34;
-    for col in columns:
-        if col not in dfr_redis.columns:
-            dfr_redis[col] = None
-        dfr_redis[col] = dfr_redis[col].astype(dfr[col].dtypes)
-    log(f&#34;\nEnded conversion types from dfr to dfr_redis: \n{dfr_redis.dtypes}&#34;)
-
-    dfr_diff = (
-        pd.merge(dfr, dfr_redis, how=&#34;left&#34;, on=columns, indicator=True)
-        .query(&#39;_merge == &#34;left_only&#34;&#39;)
-        .drop(&#34;_merge&#34;, axis=1)
-    )
-    log(
-        f&#34;\nDf resulted from the difference between dft_redis and dfr: \n{dfr_diff.head()}&#34;
-    )
-
-    updated_dfr_redis = pd.concat([dfr_redis, dfr_diff[columns]])
-
-    return dfr_diff, updated_dfr_redis
 
 
 @task
@@ -174,11 +120,11 @@ def get_redis_df(
 
 
 @task(
-    nout=3,
+    nout=1,
     max_retries=3,
     retry_delay=timedelta(seconds=60),
 )
-def download_data(first_date, last_date, wait=None) -&gt; pd.DataFrame:
+def download_data_ocorrencias(first_date, last_date, wait=None) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     Download data from API
     &#34;&#34;&#34;
@@ -186,7 +132,6 @@ def download_data(first_date, last_date, wait=None) -&gt; pd.DataFrame:
 
     url_secret = get_vault_secret(&#34;comando&#34;)[&#34;data&#34;]
     url_eventos = url_secret[&#34;endpoint_eventos&#34;]
-    ## url_atividades_evento = url_secret[&#34;endpoint_atividades_evento&#34;]
 
     dfr = pd.read_json(f&#34;{url_eventos}/?data_i={first_date}&amp;data_f={last_date}&#34;)
 
@@ -194,7 +139,7 @@ def download_data(first_date, last_date, wait=None) -&gt; pd.DataFrame:
 
 
 @task(nout=2)
-def treat_data(
+def treat_data_ocorrencias(
     dfr: pd.DataFrame,
     dfr_redis: pd.DataFrame,
     columns: list,
@@ -229,7 +174,7 @@ def treat_data(
     if dfr.shape[0] == 0:
         skip_text = &#34;No new data available on API&#34;
         print(skip_text)
-        # raise ENDRUN(state=Skipped(skip_text))
+        raise ENDRUN(state=Skipped(skip_text))
 
     dfr[&#34;tipo&#34;] = dfr[&#34;tipo&#34;].replace(
         {
@@ -276,6 +221,109 @@ def treat_data(
 
     # Treat id_pop col
     dfr[&#34;id_pop&#34;] = dfr[&#34;id_pop&#34;].astype(float).astype(int)
+
+    for col in [&#34;data_inicio&#34;, &#34;data_fim&#34;]:
+        dfr[col] = pd.to_datetime(dfr[col], errors=&#34;coerce&#34;)
+
+    for col in [&#34;data_inicio&#34;, &#34;data_fim&#34;]:
+        dfr[col] = dfr[col].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+
+    # Set the order to match the original table
+    dfr = dfr[mandatory_cols]
+
+    # Create a column with time of row creation to keep last event on dbt
+    dfr[&#34;created_at&#34;] = pendulum.now(tz=&#34;America/Sao_Paulo&#34;).strftime(
+        &#34;%Y-%m-%d %H:%M:%S&#34;
+    )
+
+    return dfr.drop_duplicates(), dfr_redis
+
+
+@task(
+    nout=1,
+    max_retries=3,
+    retry_delay=timedelta(seconds=60),
+)
+def download_data_atividades(first_date, last_date, wait=None) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Download data from API
+    &#34;&#34;&#34;
+
+    url_secret = get_vault_secret(&#34;comando&#34;)[&#34;data&#34;]
+    url_atividades_evento = url_secret[&#34;endpoint_atividades_evento&#34;]
+
+    dfr = pd.read_json(
+        f&#34;{url_atividades_evento}/?data_i={first_date}&amp;data_f={last_date}&#34;
+    )
+
+    return dfr
+
+
+@task(nout=2)
+def treat_data_atividades(
+    dfr: pd.DataFrame,
+    dfr_redis: pd.DataFrame,
+    columns: list,
+) -&gt; Tuple[pd.DataFrame, pd.DataFrame]:
+    &#34;&#34;&#34;
+    Normalize data to be similiar to old API.
+    &#34;&#34;&#34;
+
+    print(&#34;Start treating data&#34;)
+    dfr.orgao = dfr.orgao.replace([&#34;\r&#34;, &#34;\n&#34;], [&#34;&#34;, &#34;&#34;], regex=True)
+
+    print(f&#34;Dataframe before comparing with last data saved on redis {dfr.head()}&#34;)
+
+    dfr, dfr_redis = compare_actual_df_with_redis_df(
+        dfr,
+        dfr_redis,
+        columns,
+    )
+    print(f&#34;Dataframe after comparing with last data saved on redis {dfr.head()}&#34;)
+
+    # If df is empty stop flow
+    if dfr.shape[0] == 0:
+        skip_text = &#34;No new data available on API&#34;
+        print(skip_text)
+        raise ENDRUN(state=Skipped(skip_text))
+
+    mandatory_cols = [
+        &#34;id_evento&#34;,
+        &#34;sigla&#34;,
+        &#34;orgao&#34;,  # esse não tem na tabela antiga
+        &#34;data_chegada&#34;,
+        &#34;data_inicio&#34;,
+        &#34;data_fim&#34;,
+        &#34;descricao&#34;,
+        &#34;status&#34;,
+    ]
+
+    # Create cols if they don exist on new API
+    for col in mandatory_cols:
+        if col not in dfr.columns:
+            dfr[col] = None
+
+    categorical_cols = [
+        &#34;sigla&#34;,
+        &#34;orgao&#34;,
+        &#34;descricao&#34;,
+        &#34;status&#34;,
+    ]
+
+    print(&#34;\n\nDEBUG&#34;, dfr[categorical_cols])
+    for i in categorical_cols:
+        dfr[i] = dfr[i].str.capitalize()
+        # dfr[i] = dfr[i].apply(unidecode)
+
+    for col in [&#34;data_inicio&#34;, &#34;data_fim&#34;, &#34;data_chegada&#34;]:
+        dfr[col] = pd.to_datetime(dfr[col], errors=&#34;coerce&#34;)
+
+    # TODO: Essa conversão é temporária
+    for col in [&#34;data_inicio&#34;, &#34;data_fim&#34;, &#34;data_chegada&#34;]:
+        dfr[col] = dfr[col].dt.tz_convert(&#34;America/Sao_Paulo&#34;)
+
+    for col in [&#34;data_inicio&#34;, &#34;data_fim&#34;, &#34;data_chegada&#34;]:
+        dfr[col] = dfr[col].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
 
     # Set the order to match the original table
     dfr = dfr[mandatory_cols]
@@ -348,47 +396,8 @@ def not_none(something: Any) -&gt; bool:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="pipelines.rj_cor.comando.eventos.tasks.compare_actual_df_with_redis_df"><code class="name flex">
-<span>def <span class="ident">compare_actual_df_with_redis_df</span></span>(<span>dfr: pandas.core.frame.DataFrame, dfr_redis: pandas.core.frame.DataFrame, columns: list) ‑> pandas.core.frame.DataFrame</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Compare df from redis to actual df and return only the rows from actual df
-that are not already saved on redis.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def compare_actual_df_with_redis_df(
-    dfr: pd.DataFrame,
-    dfr_redis: pd.DataFrame,
-    columns: list,
-) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    Compare df from redis to actual df and return only the rows from actual df
-    that are not already saved on redis.
-    &#34;&#34;&#34;
-    for col in columns:
-        if col not in dfr_redis.columns:
-            dfr_redis[col] = None
-        dfr_redis[col] = dfr_redis[col].astype(dfr[col].dtypes)
-    log(f&#34;\nEnded conversion types from dfr to dfr_redis: \n{dfr_redis.dtypes}&#34;)
-
-    dfr_diff = (
-        pd.merge(dfr, dfr_redis, how=&#34;left&#34;, on=columns, indicator=True)
-        .query(&#39;_merge == &#34;left_only&#34;&#39;)
-        .drop(&#34;_merge&#34;, axis=1)
-    )
-    log(
-        f&#34;\nDf resulted from the difference between dft_redis and dfr: \n{dfr_diff.head()}&#34;
-    )
-
-    updated_dfr_redis = pd.concat([dfr_redis, dfr_diff[columns]])
-
-    return dfr_diff, updated_dfr_redis</code></pre>
-</details>
-</dd>
-<dt id="pipelines.rj_cor.comando.eventos.tasks.download_data"><code class="name flex">
-<span>def <span class="ident">download_data</span></span>(<span>first_date, last_date, wait=None) ‑> pandas.core.frame.DataFrame</span>
+<dt id="pipelines.rj_cor.comando.eventos.tasks.download_data_atividades"><code class="name flex">
+<span>def <span class="ident">download_data_atividades</span></span>(<span>first_date, last_date, wait=None) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Download data from API</p></div>
@@ -397,11 +406,40 @@ that are not already saved on redis.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task(
-    nout=3,
+    nout=1,
     max_retries=3,
     retry_delay=timedelta(seconds=60),
 )
-def download_data(first_date, last_date, wait=None) -&gt; pd.DataFrame:
+def download_data_atividades(first_date, last_date, wait=None) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Download data from API
+    &#34;&#34;&#34;
+
+    url_secret = get_vault_secret(&#34;comando&#34;)[&#34;data&#34;]
+    url_atividades_evento = url_secret[&#34;endpoint_atividades_evento&#34;]
+
+    dfr = pd.read_json(
+        f&#34;{url_atividades_evento}/?data_i={first_date}&amp;data_f={last_date}&#34;
+    )
+
+    return dfr</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.comando.eventos.tasks.download_data_ocorrencias"><code class="name flex">
+<span>def <span class="ident">download_data_ocorrencias</span></span>(<span>first_date, last_date, wait=None) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Download data from API</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    nout=1,
+    max_retries=3,
+    retry_delay=timedelta(seconds=60),
+)
+def download_data_ocorrencias(first_date, last_date, wait=None) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     Download data from API
     &#34;&#34;&#34;
@@ -409,7 +447,6 @@ def download_data(first_date, last_date, wait=None) -&gt; pd.DataFrame:
 
     url_secret = get_vault_secret(&#34;comando&#34;)[&#34;data&#34;]
     url_eventos = url_secret[&#34;endpoint_eventos&#34;]
-    ## url_atividades_evento = url_secret[&#34;endpoint_atividades_evento&#34;]
 
     dfr = pd.read_json(f&#34;{url_eventos}/?data_i={first_date}&amp;data_f={last_date}&#34;)
 
@@ -489,41 +526,6 @@ def get_redis_df(
     # print(f&#34;\nConverting redis dict to df: \n{dfr_redis.head()}&#34;)
 
     return dfr_redis</code></pre>
-</details>
-</dd>
-<dt id="pipelines.rj_cor.comando.eventos.tasks.get_redis_output"><code class="name flex">
-<span>def <span class="ident">get_redis_output</span></span>(<span>redis_key, is_df: bool = False)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Get Redis output
-Example: {b'date': b'2023-02-27 07:29:04'}</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_redis_output(redis_key, is_df: bool = False):
-    &#34;&#34;&#34;
-    Get Redis output
-    Example: {b&#39;date&#39;: b&#39;2023-02-27 07:29:04&#39;}
-    &#34;&#34;&#34;
-    redis_client = get_redis_client()  # (host=&#34;127.0.0.1&#34;)
-
-    if is_df:
-        json_data = redis_client.get(redis_key)
-        print(type(json_data))
-        print(json_data)
-        if json_data:
-            # If data is found, parse the JSON string back to a Python object (dictionary)
-            data_dict = json.loads(json_data)
-            # Convert the dictionary back to a DataFrame
-            return pd.DataFrame(data_dict)
-
-        return pd.DataFrame()
-
-    output = redis_client.hgetall(redis_key)
-    if len(output) &gt; 0:
-        output = treat_redis_output(output)
-    return output</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_cor.comando.eventos.tasks.not_none"><code class="name flex">
@@ -606,8 +608,94 @@ def save_no_partition(dataframe: pd.DataFrame, append: bool = False) -&gt; str:
     return path_to_directory</code></pre>
 </details>
 </dd>
-<dt id="pipelines.rj_cor.comando.eventos.tasks.treat_data"><code class="name flex">
-<span>def <span class="ident">treat_data</span></span>(<span>dfr: pandas.core.frame.DataFrame, dfr_redis: pandas.core.frame.DataFrame, columns: list) ‑> Tuple[pandas.core.frame.DataFrame, pandas.core.frame.DataFrame]</span>
+<dt id="pipelines.rj_cor.comando.eventos.tasks.treat_data_atividades"><code class="name flex">
+<span>def <span class="ident">treat_data_atividades</span></span>(<span>dfr: pandas.core.frame.DataFrame, dfr_redis: pandas.core.frame.DataFrame, columns: list) ‑> Tuple[pandas.core.frame.DataFrame, pandas.core.frame.DataFrame]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Normalize data to be similiar to old API.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(nout=2)
+def treat_data_atividades(
+    dfr: pd.DataFrame,
+    dfr_redis: pd.DataFrame,
+    columns: list,
+) -&gt; Tuple[pd.DataFrame, pd.DataFrame]:
+    &#34;&#34;&#34;
+    Normalize data to be similiar to old API.
+    &#34;&#34;&#34;
+
+    print(&#34;Start treating data&#34;)
+    dfr.orgao = dfr.orgao.replace([&#34;\r&#34;, &#34;\n&#34;], [&#34;&#34;, &#34;&#34;], regex=True)
+
+    print(f&#34;Dataframe before comparing with last data saved on redis {dfr.head()}&#34;)
+
+    dfr, dfr_redis = compare_actual_df_with_redis_df(
+        dfr,
+        dfr_redis,
+        columns,
+    )
+    print(f&#34;Dataframe after comparing with last data saved on redis {dfr.head()}&#34;)
+
+    # If df is empty stop flow
+    if dfr.shape[0] == 0:
+        skip_text = &#34;No new data available on API&#34;
+        print(skip_text)
+        raise ENDRUN(state=Skipped(skip_text))
+
+    mandatory_cols = [
+        &#34;id_evento&#34;,
+        &#34;sigla&#34;,
+        &#34;orgao&#34;,  # esse não tem na tabela antiga
+        &#34;data_chegada&#34;,
+        &#34;data_inicio&#34;,
+        &#34;data_fim&#34;,
+        &#34;descricao&#34;,
+        &#34;status&#34;,
+    ]
+
+    # Create cols if they don exist on new API
+    for col in mandatory_cols:
+        if col not in dfr.columns:
+            dfr[col] = None
+
+    categorical_cols = [
+        &#34;sigla&#34;,
+        &#34;orgao&#34;,
+        &#34;descricao&#34;,
+        &#34;status&#34;,
+    ]
+
+    print(&#34;\n\nDEBUG&#34;, dfr[categorical_cols])
+    for i in categorical_cols:
+        dfr[i] = dfr[i].str.capitalize()
+        # dfr[i] = dfr[i].apply(unidecode)
+
+    for col in [&#34;data_inicio&#34;, &#34;data_fim&#34;, &#34;data_chegada&#34;]:
+        dfr[col] = pd.to_datetime(dfr[col], errors=&#34;coerce&#34;)
+
+    # TODO: Essa conversão é temporária
+    for col in [&#34;data_inicio&#34;, &#34;data_fim&#34;, &#34;data_chegada&#34;]:
+        dfr[col] = dfr[col].dt.tz_convert(&#34;America/Sao_Paulo&#34;)
+
+    for col in [&#34;data_inicio&#34;, &#34;data_fim&#34;, &#34;data_chegada&#34;]:
+        dfr[col] = dfr[col].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+
+    # Set the order to match the original table
+    dfr = dfr[mandatory_cols]
+
+    # Create a column with time of row creation to keep last event on dbt
+    dfr[&#34;created_at&#34;] = pendulum.now(tz=&#34;America/Sao_Paulo&#34;).strftime(
+        &#34;%Y-%m-%d %H:%M:%S&#34;
+    )
+
+    return dfr.drop_duplicates(), dfr_redis</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.comando.eventos.tasks.treat_data_ocorrencias"><code class="name flex">
+<span>def <span class="ident">treat_data_ocorrencias</span></span>(<span>dfr: pandas.core.frame.DataFrame, dfr_redis: pandas.core.frame.DataFrame, columns: list) ‑> Tuple[pandas.core.frame.DataFrame, pandas.core.frame.DataFrame]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Rename cols and normalize data.</p></div>
@@ -616,7 +704,7 @@ def save_no_partition(dataframe: pd.DataFrame, append: bool = False) -&gt; str:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@task(nout=2)
-def treat_data(
+def treat_data_ocorrencias(
     dfr: pd.DataFrame,
     dfr_redis: pd.DataFrame,
     columns: list,
@@ -651,7 +739,7 @@ def treat_data(
     if dfr.shape[0] == 0:
         skip_text = &#34;No new data available on API&#34;
         print(skip_text)
-        # raise ENDRUN(state=Skipped(skip_text))
+        raise ENDRUN(state=Skipped(skip_text))
 
     dfr[&#34;tipo&#34;] = dfr[&#34;tipo&#34;].replace(
         {
@@ -698,6 +786,12 @@ def treat_data(
 
     # Treat id_pop col
     dfr[&#34;id_pop&#34;] = dfr[&#34;id_pop&#34;].astype(float).astype(int)
+
+    for col in [&#34;data_inicio&#34;, &#34;data_fim&#34;]:
+        dfr[col] = pd.to_datetime(dfr[col], errors=&#34;coerce&#34;)
+
+    for col in [&#34;data_inicio&#34;, &#34;data_fim&#34;]:
+        dfr[col] = dfr[col].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
 
     # Set the order to match the original table
     dfr = dfr[mandatory_cols]
@@ -774,15 +868,15 @@ setTimeout(() => input.focus(), 100);
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="pipelines.rj_cor.comando.eventos.tasks.compare_actual_df_with_redis_df" href="#pipelines.rj_cor.comando.eventos.tasks.compare_actual_df_with_redis_df">compare_actual_df_with_redis_df</a></code></li>
-<li><code><a title="pipelines.rj_cor.comando.eventos.tasks.download_data" href="#pipelines.rj_cor.comando.eventos.tasks.download_data">download_data</a></code></li>
+<li><code><a title="pipelines.rj_cor.comando.eventos.tasks.download_data_atividades" href="#pipelines.rj_cor.comando.eventos.tasks.download_data_atividades">download_data_atividades</a></code></li>
+<li><code><a title="pipelines.rj_cor.comando.eventos.tasks.download_data_ocorrencias" href="#pipelines.rj_cor.comando.eventos.tasks.download_data_ocorrencias">download_data_ocorrencias</a></code></li>
 <li><code><a title="pipelines.rj_cor.comando.eventos.tasks.get_date_interval" href="#pipelines.rj_cor.comando.eventos.tasks.get_date_interval">get_date_interval</a></code></li>
 <li><code><a title="pipelines.rj_cor.comando.eventos.tasks.get_redis_df" href="#pipelines.rj_cor.comando.eventos.tasks.get_redis_df">get_redis_df</a></code></li>
-<li><code><a title="pipelines.rj_cor.comando.eventos.tasks.get_redis_output" href="#pipelines.rj_cor.comando.eventos.tasks.get_redis_output">get_redis_output</a></code></li>
 <li><code><a title="pipelines.rj_cor.comando.eventos.tasks.not_none" href="#pipelines.rj_cor.comando.eventos.tasks.not_none">not_none</a></code></li>
 <li><code><a title="pipelines.rj_cor.comando.eventos.tasks.save_data" href="#pipelines.rj_cor.comando.eventos.tasks.save_data">save_data</a></code></li>
 <li><code><a title="pipelines.rj_cor.comando.eventos.tasks.save_no_partition" href="#pipelines.rj_cor.comando.eventos.tasks.save_no_partition">save_no_partition</a></code></li>
-<li><code><a title="pipelines.rj_cor.comando.eventos.tasks.treat_data" href="#pipelines.rj_cor.comando.eventos.tasks.treat_data">treat_data</a></code></li>
+<li><code><a title="pipelines.rj_cor.comando.eventos.tasks.treat_data_atividades" href="#pipelines.rj_cor.comando.eventos.tasks.treat_data_atividades">treat_data_atividades</a></code></li>
+<li><code><a title="pipelines.rj_cor.comando.eventos.tasks.treat_data_ocorrencias" href="#pipelines.rj_cor.comando.eventos.tasks.treat_data_ocorrencias">treat_data_ocorrencias</a></code></li>
 </ul>
 </li>
 </ul>
