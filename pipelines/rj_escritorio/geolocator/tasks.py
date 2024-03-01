@@ -45,7 +45,7 @@ def seleciona_enderecos_novos() -> Tuple[pd.DataFrame, bool]:
         SAFE_CAST(SAFE_CAST(ds_endereco_numero AS INT) AS STRING) numero_porta,
         CONCAT(no_logradouro, ' ', SAFE_CAST(SAFE_CAST(ds_endereco_numero AS INT) AS STRING), ', ', no_bairro,
             ', ', 'Rio de Janeiro, RJ, Brasil') endereco_completo
-        FROM `rj-segovi.administracao_servicos_publicos_staging.chamado_1746`
+        FROM `rj-segovi.adm_central_atendimento_1746_staging.chamado`
         WHERE no_logradouro IS NOT NULL
             AND CAST(dt_inicio AS TIMESTAMP) BETWEEN DATE_ADD(CAST(CURRENT_DATE() AS TIMESTAMP), INTERVAL -1 DAY) AND CURRENT_TIMESTAMP()
         )
