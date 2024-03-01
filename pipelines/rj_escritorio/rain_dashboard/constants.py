@@ -218,6 +218,7 @@ class constants(Enum):  # pylint: disable=c0103
         final_table.id_h3,
         bairro,
         chuva_15min chuva_15min,
+        chuva_15min quantidade,
         estacoes,
         CASE
             WHEN chuva_15min> 0     AND chuva_15min<= 1.25 THEN 'chuva fraca'
