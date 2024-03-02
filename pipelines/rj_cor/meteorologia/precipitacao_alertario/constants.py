@@ -341,7 +341,7 @@ class constants(Enum):  # pylint: disable=c0103
     RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS = {
         "redis_data_key": "data_last_120min_rain",
         "redis_update_key": "data_last_120min_rain_update",
-        "query_data": """rec
+        "query_data": """
         WITH
             alertario AS ( -- seleciona a última medição do alertario de cada estação nos últimos 30min
             SELECT
