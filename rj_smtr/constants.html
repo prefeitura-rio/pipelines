@@ -875,6 +875,42 @@ class constants(Enum):  # pylint: disable=c0103
             &#34;primary_key&#34;: [&#34;id&#34;],
             &#34;interval_minutes&#34;: 1440,
         },
+        {
+            &#34;table_id&#34;: &#34;ordem_rateio&#34;,
+            &#34;partition_date_only&#34;: True,
+            &#34;extract_params&#34;: {
+                &#34;database&#34;: &#34;ressarcimento_db&#34;,
+                &#34;query&#34;: &#34;&#34;&#34;
+                SELECT
+                    *
+                FROM
+                    ordem_rateio
+                WHERE
+                    data_inclusao BETWEEN &#39;{start}&#39;
+                    AND &#39;{end}&#39;
+            &#34;&#34;&#34;,
+            },
+            &#34;primary_key&#34;: [&#34;id&#34;],
+            &#34;interval_minutes&#34;: 1440,
+        },
+        {
+            &#34;table_id&#34;: &#34;linha_sem_ressarcimento&#34;,
+            &#34;partition_date_only&#34;: True,
+            &#34;extract_params&#34;: {
+                &#34;database&#34;: &#34;ressarcimento_db&#34;,
+                &#34;query&#34;: &#34;&#34;&#34;
+                SELECT
+                    *
+                FROM
+                    linha_sem_ressarcimento
+                WHERE
+                    dt_inclusao BETWEEN &#39;{start}&#39;
+                    AND &#39;{end}&#39;
+            &#34;&#34;&#34;,
+            },
+            &#34;primary_key&#34;: [&#34;id_linha&#34;],
+            &#34;interval_minutes&#34;: 1440,
+        },
     ]
 
     BILHETAGEM_SECRET_PATH = &#34;smtr_jae_access_data&#34;
@@ -1084,6 +1120,29 @@ class constants(Enum):  # pylint: disable=c0103
             ],  # id column to nest data on
             &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
             &#34;save_bucket_name&#34;: BILHETAGEM_PRIVATE_BUCKET,
+        },
+        {
+            &#34;table_id&#34;: &#34;servico_motorista&#34;,
+            &#34;partition_date_only&#34;: True,
+            &#34;extract_params&#34;: {
+                &#34;database&#34;: &#34;principal_db&#34;,
+                &#34;query&#34;: &#34;&#34;&#34;
+                    SELECT
+                        *
+                    FROM
+                        SERVICO_MOTORISTA
+                    WHERE
+                        DT_ABERTURA BETWEEN &#39;{start}&#39;
+                        AND &#39;{end}&#39;
+                        OR DT_FECHAMENTO BETWEEN &#39;{start}&#39;
+                        AND &#39;{end}&#39;
+                &#34;&#34;&#34;,
+            },
+            &#34;primary_key&#34;: [
+                &#34;NR_LOGICO_MIDIA&#34;,
+                &#34;ID_SERVICO&#34;,
+            ],  # id column to nest data on
+            &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
         },
     ]
 
@@ -2273,6 +2332,42 @@ and createdDate lt {end})&#34;,
             &#34;primary_key&#34;: [&#34;id&#34;],
             &#34;interval_minutes&#34;: 1440,
         },
+        {
+            &#34;table_id&#34;: &#34;ordem_rateio&#34;,
+            &#34;partition_date_only&#34;: True,
+            &#34;extract_params&#34;: {
+                &#34;database&#34;: &#34;ressarcimento_db&#34;,
+                &#34;query&#34;: &#34;&#34;&#34;
+                SELECT
+                    *
+                FROM
+                    ordem_rateio
+                WHERE
+                    data_inclusao BETWEEN &#39;{start}&#39;
+                    AND &#39;{end}&#39;
+            &#34;&#34;&#34;,
+            },
+            &#34;primary_key&#34;: [&#34;id&#34;],
+            &#34;interval_minutes&#34;: 1440,
+        },
+        {
+            &#34;table_id&#34;: &#34;linha_sem_ressarcimento&#34;,
+            &#34;partition_date_only&#34;: True,
+            &#34;extract_params&#34;: {
+                &#34;database&#34;: &#34;ressarcimento_db&#34;,
+                &#34;query&#34;: &#34;&#34;&#34;
+                SELECT
+                    *
+                FROM
+                    linha_sem_ressarcimento
+                WHERE
+                    dt_inclusao BETWEEN &#39;{start}&#39;
+                    AND &#39;{end}&#39;
+            &#34;&#34;&#34;,
+            },
+            &#34;primary_key&#34;: [&#34;id_linha&#34;],
+            &#34;interval_minutes&#34;: 1440,
+        },
     ]
 
     BILHETAGEM_SECRET_PATH = &#34;smtr_jae_access_data&#34;
@@ -2482,6 +2577,29 @@ and createdDate lt {end})&#34;,
             ],  # id column to nest data on
             &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
             &#34;save_bucket_name&#34;: BILHETAGEM_PRIVATE_BUCKET,
+        },
+        {
+            &#34;table_id&#34;: &#34;servico_motorista&#34;,
+            &#34;partition_date_only&#34;: True,
+            &#34;extract_params&#34;: {
+                &#34;database&#34;: &#34;principal_db&#34;,
+                &#34;query&#34;: &#34;&#34;&#34;
+                    SELECT
+                        *
+                    FROM
+                        SERVICO_MOTORISTA
+                    WHERE
+                        DT_ABERTURA BETWEEN &#39;{start}&#39;
+                        AND &#39;{end}&#39;
+                        OR DT_FECHAMENTO BETWEEN &#39;{start}&#39;
+                        AND &#39;{end}&#39;
+                &#34;&#34;&#34;,
+            },
+            &#34;primary_key&#34;: [
+                &#34;NR_LOGICO_MIDIA&#34;,
+                &#34;ID_SERVICO&#34;,
+            ],  # id column to nest data on
+            &#34;interval_minutes&#34;: BILHETAGEM_TRATAMENTO_INTERVAL,
         },
     ]
 
