@@ -131,7 +131,8 @@ with Flow(
             ],
             run_name="Update rain dashboard data (triggered by precipitacao_alertario flow)",  # noqa
         )
-        rain_dashboard_update_flow.set_upstream(UPLOAD_TABLE)
+        # rain_dashboard_update_flow.set_upstream(UPLOAD_TABLE)
+        rain_dashboard_update_flow.set_upstream(empty_data_pluviometric)
 
         wait_for_rain_dashboard_update = wait_for_flow_run(
             flow_run_id=rain_dashboard_update_flow,
@@ -150,7 +151,8 @@ with Flow(
             ],
             run_name="Update rain dashboard data (triggered by precipitacao_alertario last 30min flow)",  # noqa
         )
-        rain_dashboard_last_30min_update_flow.set_upstream(UPLOAD_TABLE)
+        # rain_dashboard_last_30min_update_flow.set_upstream(UPLOAD_TABLE)
+        rain_dashboard_last_30min_update_flow.set_upstream(empty_data_pluviometric)
 
         wait_for_rain_dashboard_last_30min_update = wait_for_flow_run(
             flow_run_id=rain_dashboard_last_30min_update_flow,
@@ -169,7 +171,8 @@ with Flow(
             ],
             run_name="Update rain dashboard data (triggered by precipitacao_alertario last 60min flow)",  # noqa
         )
-        rain_dashboard_last_60min_update_flow.set_upstream(UPLOAD_TABLE)
+        # rain_dashboard_last_60min_update_flow.set_upstream(UPLOAD_TABLE)
+        rain_dashboard_last_60min_update_flow.set_upstream(empty_data_pluviometric)
 
         wait_for_rain_dashboard_last_60min_update = wait_for_flow_run(
             flow_run_id=rain_dashboard_last_60min_update_flow,
@@ -188,7 +191,8 @@ with Flow(
             ],
             run_name="Update rain dashboard data (triggered by precipitacao_alertario last 2h flow)",  # noqa
         )
-        rain_dashboard_last_2h_update_flow.set_upstream(UPLOAD_TABLE)
+        # rain_dashboard_last_2h_update_flow.set_upstream(UPLOAD_TABLE)
+        rain_dashboard_last_2h_update_flow.set_upstream(empty_data_pluviometric)
 
         wait_for_rain_dashboard_last_2h_update = wait_for_flow_run(
             flow_run_id=rain_dashboard_last_2h_update_flow,
@@ -207,7 +211,8 @@ with Flow(
             ],
             run_name="Update rain dashboard data (triggered by precipitacao_alertario last 3h flow)",  # noqa
         )
-        rain_dashboard_last_3h_update_flow.set_upstream(UPLOAD_TABLE)
+        # rain_dashboard_last_3h_update_flow.set_upstream(UPLOAD_TABLE)
+        rain_dashboard_last_3h_update_flow.set_upstream(empty_data_pluviometric)
 
         wait_for_rain_dashboard_last_3h_update = wait_for_flow_run(
             flow_run_id=rain_dashboard_last_3h_update_flow,
@@ -226,7 +231,7 @@ with Flow(
             ],
             run_name="Update rain dashboard data (triggered by precipitacao_alertario last 6h flow)",  # noqa
         )
-        rain_dashboard_last_6h_update_flow.set_upstream(UPLOAD_TABLE)
+        # rain_dashboard_last_6h_update_flow.set_upstream(UPLOAD_TABLE)
 
         wait_for_rain_dashboard_last_6h_update = wait_for_flow_run(
             flow_run_id=rain_dashboard_last_6h_update_flow,
@@ -245,7 +250,7 @@ with Flow(
             ],
             run_name="Update rain dashboard data (triggered by precipitacao_alertario last 12h flow)",  # noqa
         )
-        rain_dashboard_last_12h_update_flow.set_upstream(UPLOAD_TABLE)
+        # rain_dashboard_last_12h_update_flow.set_upstream(UPLOAD_TABLE)
 
         wait_for_rain_dashboard_last_12h_update = wait_for_flow_run(
             flow_run_id=rain_dashboard_last_12h_update_flow,
@@ -264,7 +269,7 @@ with Flow(
             ],
             run_name="Update rain dashboard data (triggered by precipitacao_alertario last 24h flow)",  # noqa
         )
-        rain_dashboard_last_24h_update_flow.set_upstream(UPLOAD_TABLE)
+        # rain_dashboard_last_24h_update_flow.set_upstream(UPLOAD_TABLE)
 
         wait_for_rain_dashboard_last_24h_update = wait_for_flow_run(
             flow_run_id=rain_dashboard_last_24h_update_flow,
@@ -283,7 +288,7 @@ with Flow(
             ],
             run_name="Update rain dashboard data (triggered by precipitacao_alertario last 96h flow)",  # noqa
         )
-        rain_dashboard_last_96h_update_flow.set_upstream(UPLOAD_TABLE)
+        # rain_dashboard_last_96h_update_flow.set_upstream(UPLOAD_TABLE)
 
         wait_for_rain_dashboard_last_96h_update = wait_for_flow_run(
             flow_run_id=rain_dashboard_last_96h_update_flow,
