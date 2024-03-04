@@ -846,6 +846,42 @@ class constants(Enum):  # pylint: disable=c0103
             "primary_key": ["id"],
             "interval_minutes": 1440,
         },
+        {
+            "table_id": "ordem_rateio",
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "ressarcimento_db",
+                "query": """
+                SELECT
+                    *
+                FROM
+                    ordem_rateio
+                WHERE
+                    data_inclusao BETWEEN '{start}'
+                    AND '{end}'
+            """,
+            },
+            "primary_key": ["id"],
+            "interval_minutes": 1440,
+        },
+        {
+            "table_id": "linha_sem_ressarcimento",
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "ressarcimento_db",
+                "query": """
+                SELECT
+                    *
+                FROM
+                    linha_sem_ressarcimento
+                WHERE
+                    dt_inclusao BETWEEN '{start}'
+                    AND '{end}'
+            """,
+            },
+            "primary_key": ["id_linha"],
+            "interval_minutes": 1440,
+        },
     ]
 
     BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
@@ -1055,6 +1091,29 @@ class constants(Enum):  # pylint: disable=c0103
             ],  # id column to nest data on
             "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
             "save_bucket_name": BILHETAGEM_PRIVATE_BUCKET,
+        },
+        {
+            "table_id": "servico_motorista",
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "principal_db",
+                "query": """
+                    SELECT
+                        *
+                    FROM
+                        SERVICO_MOTORISTA
+                    WHERE
+                        DT_ABERTURA BETWEEN '{start}'
+                        AND '{end}'
+                        OR DT_FECHAMENTO BETWEEN '{start}'
+                        AND '{end}'
+                """,
+            },
+            "primary_key": [
+                "NR_LOGICO_MIDIA",
+                "ID_SERVICO",
+            ],  # id column to nest data on
+            "interval_minutes": BILHETAGEM_TRATAMENTO_INTERVAL,
         },
     ]
 
