@@ -40,9 +40,8 @@ class constants(Enum):  # pylint: disable=c0103
                     PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
                 ) AS row_num
                 FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
-                WHERE -- data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
-                    -- AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
-                    data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 4 DAY) AS STRING)
+                WHERE data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
+                    AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
             )AS a
             WHERE a.row_num = 1
             ),
@@ -177,9 +176,8 @@ class constants(Enum):  # pylint: disable=c0103
             DATETIME(data_medicao)
             ) AS last_update
         FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
-        WHERE -- data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
-              -- AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
-              data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 4 DAY) AS STRING)
+        WHERE data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
+              AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
         """,
     }
 
@@ -203,9 +201,8 @@ class constants(Enum):  # pylint: disable=c0103
                     PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
                 ) AS row_num
                 FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
-                WHERE -- data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
-                    -- AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
-                    data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 4 DAY) AS STRING)
+                WHERE data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
+                        AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
             )AS a
             WHERE a.row_num = 1
             ),
@@ -339,9 +336,8 @@ class constants(Enum):  # pylint: disable=c0103
             DATETIME(data_medicao)
             ) AS last_update
         FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
-        WHERE -- data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
-              -- AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
-                data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 4 DAY) AS STRING)
+        WHERE data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
+              AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
         """,
     }
 
@@ -365,9 +361,8 @@ class constants(Enum):  # pylint: disable=c0103
                     PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
                 ) AS row_num
                 FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
-                WHERE -- data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
-                    -- AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
-                    data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 4 DAY) AS STRING)
+                WHERE data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
+                        AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
             )AS a
             WHERE a.row_num = 1
             ),
@@ -503,9 +498,8 @@ class constants(Enum):  # pylint: disable=c0103
             DATETIME(data_medicao)
             ) AS last_update
         FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
-        WHERE -- data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
-                -- AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
-                    data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 4 DAY) AS STRING)
+        WHERE data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
+                AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
         """,
     }
 
@@ -529,9 +523,8 @@ class constants(Enum):  # pylint: disable=c0103
                     PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
                 ) AS row_num
                 FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
-                WHERE -- data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
-                -- AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
-                    data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 4 DAY) AS STRING)
+                WHERE data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
+                    AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
             )AS a
             WHERE a.row_num = 1
             ),
@@ -666,9 +659,8 @@ class constants(Enum):  # pylint: disable=c0103
             DATETIME(data_medicao)
             ) AS last_update
         FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
-        WHERE -- data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
-                -- AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
-                    data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 4 DAY) AS STRING)
+        WHERE data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
+                AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
         """,
     }
 
@@ -692,9 +684,8 @@ class constants(Enum):  # pylint: disable=c0103
                     PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
                 ) AS row_num
                 FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
-                WHERE -- data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
-                -- AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
-                    data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 4 DAY) AS STRING)
+                WHERE data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
+                        AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
             )AS a
             WHERE a.row_num = 1
             ),
@@ -829,9 +820,8 @@ class constants(Enum):  # pylint: disable=c0103
             DATETIME(data_medicao)
             ) AS last_update
         FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
-        WHERE -- data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
-                -- AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
-                    data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 4 DAY) AS STRING)
+        WHERE data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
+                AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
         """,
     }
 
@@ -855,9 +845,8 @@ class constants(Enum):  # pylint: disable=c0103
                     PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
                 ) AS row_num
                 FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
-                WHERE -- data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
-                -- AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
-                    data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 4 DAY) AS STRING)
+                WHERE data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
+                    AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
             )AS a
             WHERE a.row_num = 1
             ),
@@ -991,9 +980,8 @@ class constants(Enum):  # pylint: disable=c0103
             DATETIME(data_medicao)
             ) AS last_update
         FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
-        WHERE -- data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
-                -- AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
-                    data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 4 DAY) AS STRING)
+        WHERE data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
+                AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
         """,
     }
 
@@ -1017,9 +1005,8 @@ class constants(Enum):  # pylint: disable=c0103
                     PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
                 ) AS row_num
                 FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
-                WHERE -- data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
-                -- AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
-                    data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 4 DAY) AS STRING)
+                WHERE data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
+                        AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
             )AS a
             WHERE a.row_num = 1
             ),
@@ -1153,9 +1140,8 @@ class constants(Enum):  # pylint: disable=c0103
             DATETIME(data_medicao)
             ) AS last_update
         FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
-        WHERE -- data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
-                -- AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
-                    data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 4 DAY) AS STRING)
+        WHERE data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
+                AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
         """,
     }
 
@@ -1179,9 +1165,8 @@ class constants(Enum):  # pylint: disable=c0103
                     PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
                 ) AS row_num
                 FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
-                WHERE -- data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
-                -- AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
-                    data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 4 DAY) AS STRING)
+                WHERE data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
+                    AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
             )AS a
             WHERE a.row_num = 1
             ),
@@ -1315,8 +1300,7 @@ class constants(Enum):  # pylint: disable=c0103
             DATETIME(data_medicao)
             ) AS last_update
         FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
-        WHERE -- data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
-                -- AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
-                    data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 4 DAY) AS STRING)
+        WHERE data_medicao >= CAST(TIME_SUB(CURRENT_TIME('America/Sao_Paulo'), INTERVAL 30 MINUTE) AS STRING)
+              AND data_particao >= CAST(DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS STRING)
         """,
     }
