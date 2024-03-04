@@ -29,6 +29,7 @@
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 # flake8: noqa: E501
+# pylint: disable=C0302
 &#34;&#34;&#34;
 Constant values for the rj_cor.meteorologia.precipitacao_alertario project
 &#34;&#34;&#34;
@@ -48,124 +49,88 @@ class constants(Enum):  # pylint: disable=c0103
     DATASET_ID_METEOROLOGICAL = &#34;clima_estacao_meteorologica&#34;
     TABLE_ID_METEOROLOGICAL = &#34;meteorologia_alertario&#34;
 
-    RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS = {
-        &#34;redis_data_key&#34;: &#34;data_chuva_passado_alertario&#34;,
-        &#34;redis_update_key&#34;: &#34;data_update_chuva_passado_alertario&#34;,
+    RAIN_DASHBOARD_LAST_30MIN_FLOW_SCHEDULE_PARAMETERS = {
+        &#34;redis_data_key&#34;: &#34;data_last_30min_rain&#34;,
+        &#34;redis_update_key&#34;: &#34;data_last_30min_rain_update&#34;,
         &#34;query_data&#34;: &#34;&#34;&#34;
         WITH
-            last_update_date AS (
-                SELECT
-                    CAST(MAX(data_particao) AS DATETIME) AS last_update
-                FROM `rj-cor.clima_pluviometro.taxa_precipitacao_alertario`
-                WHERE data_particao &gt;= DATE_SUB(CURRENT_DATETIME(&#39;America/Sao_Paulo&#39;), INTERVAL 2 DAY)
-            ),
-            alertario AS ( -- seleciona as últimas 2h de medição do alertario antes da última atualização
+            alertario AS ( -- seleciona a última medição do alertario de cada estação nos últimos 30min
             SELECT
                 id_estacao,
-                acumulado_chuva_15_min,
+                CAST(acumulado_chuva AS FLOAT64) acumulado_chuva,
                 CURRENT_DATE(&#39;America/Sao_Paulo&#39;) as data,
-                data_particao,
-                DATETIME(CONCAT(data_particao,&#34; &#34;, horario)) AS data_update,
-                FROM `rj-cor.clima_pluviometro.taxa_precipitacao_alertario`
-                INNER JOIN last_update_date lup ON 1=1
-                WHERE data_particao &gt;= DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 2 DAY)
-                  AND CAST(CONCAT(data_particao, &#34; &#34;, horario) AS DATETIME) &gt;= DATE_SUB(lup.last_update, INTERVAL 2 HOUR)
+                data_update
+            FROM (
+                SELECT
+                id_estacao,
+                acumulado_chuva_30min acumulado_chuva,
+                DATETIME(data_medicao) AS data_update,
+                ROW_NUMBER() OVER (
+                    PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
+                ) AS row_num
+                FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+                WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                    AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+            )AS a
+            WHERE a.row_num = 1
             ),
 
-            websirene AS ( -- seleciona as últimas 2h de medição do websirene antes da última atualização
-                SELECT
-                    id_estacao,
-                    acumulado_chuva_15_min,
-                    CURRENT_DATE(&#39;America/Sao_Paulo&#39;) as data,
-                    data_particao,
-                    DATETIME(CONCAT(data_particao,&#34; &#34;, horario)) AS data_update,
-                    FROM `rj-cor.clima_pluviometro.taxa_precipitacao_websirene`
-                    INNER JOIN last_update_date lup ON 1=1
-                    WHERE data_particao &gt;= DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 2 DAY)
-                    AND CAST(CONCAT(data_particao, &#34; &#34;, horario) AS DATETIME) &gt;= DATE_SUB(lup.last_update, INTERVAL 2 HOUR)
-                ),
+            last_measurements AS (
+            (SELECT
+                id_estacao,
+                data_update,
+                &#34;alertario&#34; AS sistema,
+                acumulado_chuva,
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL
+            )
+            ),
 
-            cemaden AS ( -- seleciona as últimas 2h de medição do cemaden antes da última atualização
-                SELECT
-                    id_estacao,
-                    acumulado_chuva_10_min acumulado_chuva_15_min,
-                    CURRENT_DATE(&#39;America/Sao_Paulo&#39;) as data,
-                    data_particao,
-                    DATETIME(data_medicao) AS data_update,
-                    FROM `rj-cor.clima_pluviometro.taxa_precipitacao_cemaden`
-                    INNER JOIN last_update_date lup ON 1=1
-                    WHERE data_particao &gt;= DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 2 DAY)
-                    AND CAST(data_medicao AS DATETIME) &gt;= DATE_SUB(lup.last_update, INTERVAL 2 HOUR)
-                ),
-
-            last_measurements AS (-- soma a quantidade chuva das últimas 2h e concatena medições do alertario, cemaden e websirene
-              (SELECT
-                  id_estacao,
-                  &#34;alertario&#34; AS sistema,
-                  MAX(data_update) AS data_update,
-                  SUM(acumulado_chuva_15_min) AS acumulado_chuva_15_min,
-              FROM alertario
-              GROUP BY id_estacao, sistema)
-              UNION ALL
-              (SELECT
-                  id_estacao,
-                  &#34;websirene&#34; AS sistema,
-                  MAX(data_update) AS data_update,
-                  SUM(acumulado_chuva_15_min) AS acumulado_chuva_15_min,
-              FROM websirene
-              GROUP BY id_estacao, sistema)
-              UNION ALL
-              (SELECT
-                  id_estacao,
-                  &#34;cemaden&#34; AS sistema,
-                  MAX(data_update) AS data_update,
-                  SUM(acumulado_chuva_15_min) AS acumulado_chuva_15_min,
-              FROM cemaden
-              GROUP BY id_estacao, sistema)
+            -- choosing the neighborhood that shares the most intersection with the given H3 ID
+            intersected_areas AS (
+              SELECT
+                h3_grid.id,
+                bairros.nome AS bairro,
+                ST_CENTROID(h3_grid.geometry) AS geom,
+                ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) AS intersection_area,
+                ROW_NUMBER() OVER (PARTITION BY h3_grid.id ORDER BY ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) DESC) AS row_num
+              FROM
+                `rj-cor.dados_mestres.h3_grid_res8` h3_grid
+              LEFT JOIN
+                `rj-cor.dados_mestres.bairro` AS bairros
+              ON
+                ST_INTERSECTS(bairros.geometry, h3_grid.geometry)
+              WHERE NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.35167114973923 -23.03719187431942, -43.21742224531541 -23.11411703410819, -43.05787930227852 -23.08560586153892, -43.13797293161925 -22.9854505090441, -43.24908435505957 -23.01309491285712, -43.29357259322761 -23.02302500142027, -43.35372293867113 -23.02286949608791, -43.35167114973923 -23.03719187431942))&#39;), h3_grid.geometry)
+                AND NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.17255470033881 -22.80357287766821, -43.16164114820394 -22.8246787848653, -43.1435175784006 -22.83820699694974, -43.08831858222521 -22.79901386772875, -43.09812065965735 -22.76990583135868, -43.11917632397501 -22.77502040608505, -43.12252626904735 -22.74275730775724, -43.13510053525226 -22.7443347361711, -43.1568784870256 -22.79110122556994, -43.17255470033881 -22.80357287766821))&#39;), h3_grid.geometry)
+                AND h3_grid.id not in (&#34;88a8a06a31fffff&#34;, &#34;88a8a069b5fffff&#34;, &#34;88a8a3d357fffff&#34;, &#34;88a8a3d355fffff&#34;, &#34;88a8a068adfffff&#34;, &#34;88a8a06991fffff&#34;, &#34;88a8a06999fffff&#34;)
             ),
 
             h3_chuvas AS ( -- calcula qnt de chuva para cada h3
-                SELECT
-                    h3.*,
-                    lm.id_estacao,
-                    lm.acumulado_chuva_15_min,
-                    lm.acumulado_chuva_15_min/power(h3.dist,5) AS p1_15min,
-                    1/power(h3.dist,5) AS inv_dist
-                FROM (
-                    WITH centroid_h3 AS (
-                        SELECT
-                            *,
-                            ST_CENTROID(geometry) AS geom
-                        FROM `rj-cor.dados_mestres.h3_grid_res8`
-                    ),
-
-                    estacoes_pluviometricas AS (
-                        (SELECT
-                            id_estacao AS id,
-                            estacao,
-                            &#34;alertario&#34; AS sistema,
-                            ST_GEOGPOINT(CAST(longitude AS FLOAT64),
-                            CAST(latitude AS FLOAT64)) AS geom
-                        FROM `rj-cor.clima_pluviometro.estacoes_alertario`)
-                        UNION ALL
-                        (SELECT
-                            id_estacao AS id,
-                            estacao,
-                            &#34;websirene&#34; AS sistema,
-                            ST_GEOGPOINT(CAST(longitude AS FLOAT64),
-                            CAST(latitude AS FLOAT64)) AS geom
-                        FROM `rj-cor.clima_pluviometro.estacoes_websirene`)
-                        UNION ALL
-                        (SELECT
-                            id_estacao AS id,
-                            estacao,
-                            &#34;cemaden&#34; AS sistema,
-                            ST_GEOGPOINT(CAST(longitude AS FLOAT64),
-                            CAST(latitude AS FLOAT64)) AS geom
-                        FROM `rj-cor.clima_pluviometro.estacoes_cemaden`)
+            SELECT
+                h3.*,
+                lm.id_estacao,
+                lm.acumulado_chuva,
+                lm.acumulado_chuva/power(h3.dist,5) AS p1_15min,
+                1/power(h3.dist,5) AS inv_dist
+            FROM (
+                WITH centroid_h3 AS (
+                    SELECT
+                        *
+                    FROM intersected_areas
+                    WHERE row_num = 1
                 ),
 
-                estacoes_mais_proximas AS ( -- calcula distância das estações para cada centróide do h3
+                estacoes_pluviometricas AS (
+                    (SELECT
+                        id_estacao AS id,
+                        estacao,
+                        &#34;alertario&#34; AS sistema,
+                        ST_GEOGPOINT(CAST(longitude AS FLOAT64),
+                        CAST(latitude AS FLOAT64)) AS geom
+                    FROM `rj-cor.clima_pluviometro.estacoes_alertario`)
+                ),
+
+                estacoes_mais_proximas AS (
                     SELECT AS VALUE s
                     FROM (
                         SELECT
@@ -173,15 +138,16 @@ class constants(Enum):  # pylint: disable=c0103
                                 STRUCT&lt;id_h3 STRING,
                                 id_estacao STRING,
                                 estacao STRING,
+                                bairro STRING,
                                 dist FLOAT64,
                                 sistema STRING&gt;(
-                                a.id, b.id, b.estacao,
-                                ST_DISTANCE(a.geom, b.geom),
-                                b.sistema
+                                    a.id, b.id, b.estacao, a.bairro,
+                                    ST_DISTANCE(a.geom, b.geom),
+                                    b.sistema
                                 )
                                 ORDER BY ST_DISTANCE(a.geom, b.geom)
                             ) AS ar
-                        FROM (SELECT id, geom FROM centroid_h3) a
+                        FROM (SELECT id, geom, bairro FROM centroid_h3) a
                         CROSS JOIN(
                             SELECT id, estacao, sistema, geom
                             FROM estacoes_pluviometricas
@@ -202,78 +168,1169 @@ class constants(Enum):  # pylint: disable=c0103
                     ON lm.id_estacao=h3.id_estacao AND lm.sistema=h3.sistema
             ),
 
-            h3_media AS ( -- calcula média de chuva para as 3 estações mais próximas
-                SELECT
-                    id_h3,
-                    CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL) AS chuva_15min,
-                    STRING_AGG(estacao ORDER BY estacao) estacoes
-                FROM h3_chuvas
-                -- WHERE ranking &lt; 4
-                GROUP BY id_h3
-            ),
-
-            final_table AS (
-                SELECT
-                    h3_media.id_h3,
-                    h3_media.estacoes,
-                    nome AS bairro,
-                    cast(round(h3_media.chuva_15min,2) AS decimal) AS chuva_15min,
-                FROM h3_media
-                LEFT JOIN `rj-cor.dados_mestres.h3_grid_res8` h3_grid
-                    ON h3_grid.id=h3_media.id_h3
-                LEFT JOIN `rj-cor.dados_mestres.bairro`
-                    ON ST_CONTAINS(`rj-cor.dados_mestres.bairro`.geometry, ST_CENTROID(h3_grid.geometry))
+            final_table AS ( -- calcula média de chuva para as 3 estações mais próximas
+            SELECT
+                id_h3,
+                bairro,
+                cast(round(CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL),2) AS decimal) AS qnt_chuva,
+                STRING_AGG(estacao ORDER BY estacao) estacoes
+            FROM h3_chuvas
+            GROUP BY id_h3, bairro
             )
 
         SELECT
         final_table.id_h3,
         bairro,
-        chuva_15min,
+        COALESCE(qnt_chuva, 0) quantidade,
         estacoes,
         CASE
-            WHEN chuva_15min&gt; 0   AND chuva_15min&lt;= 10  THEN &#39;chuva fraca&#39;
-            WHEN chuva_15min&gt; 10  AND chuva_15min&lt;= 50  THEN &#39;chuva moderada&#39;
-            WHEN chuva_15min&gt; 50  AND chuva_15min&lt;= 100 THEN &#39;chuva forte&#39;
-            WHEN chuva_15min&gt; 100                       THEN &#39;chuva muito forte&#39;
+            WHEN qnt_chuva &gt; 2*0     AND qnt_chuva &lt;= 2*1.25 THEN &#39;chuva fraca&#39;
+            WHEN qnt_chuva &gt; 2*1.25  AND qnt_chuva &lt;= 2*6.25 THEN &#39;chuva moderada&#39;
+            WHEN qnt_chuva &gt; 2*6.25  AND qnt_chuva &lt;= 2*12.5 THEN &#39;chuva forte&#39;
+            WHEN qnt_chuva &gt; 2*12.5                          THEN &#39;chuva muito forte&#39;
             ELSE &#39;sem chuva&#39;
         END AS status,
         CASE
-            WHEN chuva_15min&gt; 0  AND chuva_15min&lt;= 10  THEN &#39;#DAECFB&#39;
-            WHEN chuva_15min&gt; 1  AND chuva_15min&lt;= 50  THEN &#39;#A9CBE8&#39;
-            WHEN chuva_15min&gt; 50 AND chuva_15min&lt;= 100 THEN &#39;#77A9D5&#39;
-            WHEN chuva_15min&gt; 100                      THEN &#39;#125999&#39;
+            WHEN qnt_chuva &gt; 2*0     AND qnt_chuva &lt;= 2*1.25 THEN &#39;#DAECFB&#39;
+            WHEN qnt_chuva &gt; 2*1.25  AND qnt_chuva &lt;= 2*6.25 THEN &#39;#A9CBE8&#39;
+            WHEN qnt_chuva &gt; 2*6.25  AND qnt_chuva &lt;= 2*12.5 THEN &#39;#77A9D5&#39;
+            WHEN qnt_chuva &gt; 2*12.5                          THEN &#39;#125999&#39;
             ELSE &#39;#ffffff&#39;
         END AS color
         FROM final_table
         &#34;&#34;&#34;,
         &#34;query_update&#34;: &#34;&#34;&#34;
-        WITH datas AS (
-            (SELECT
-                    MAX(
-                    DATETIME(
-                        CONCAT(data_particao,&#34; &#34;, horario)
-                    )
-                    ) AS last_update
-                FROM `rj-cor.clima_pluviometro.taxa_precipitacao_alertario`
-                WHERE data_particao&gt; DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 2 DAY))
-            UNION ALL
-            (SELECT
-                    MAX(
-                    DATETIME(
-                        CONCAT(data_particao,&#34; &#34;, horario)
-                    )
-                    ) AS last_update
-                FROM `rj-cor.clima_pluviometro.taxa_precipitacao_websirene`
-                WHERE data_particao&gt; DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 2 DAY))
-            UNION ALL
-            (SELECT
-                    MAX(DATETIME(data_medicao)) AS last_update
-                FROM `rj-cor.clima_pluviometro.taxa_precipitacao_cemaden`
-                WHERE data_particao&gt; DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 2 DAY))
-        )
         SELECT
-            MAX(last_update) AS last_update
-        FROM datas
+            MAX(
+            DATETIME(data_medicao)
+            ) AS last_update
+        FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+        WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+              AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+        &#34;&#34;&#34;,
+    }
+
+    RAIN_DASHBOARD_LAST_60MIN_FLOW_SCHEDULE_PARAMETERS = {
+        &#34;redis_data_key&#34;: &#34;data_last_60min_rain&#34;,
+        &#34;redis_update_key&#34;: &#34;data_last_60min_rain_update&#34;,
+        &#34;query_data&#34;: &#34;&#34;&#34;
+        WITH
+            alertario AS ( -- seleciona a última medição do alertario de cada estação nos últimos 30min
+            SELECT
+                id_estacao,
+                CAST(acumulado_chuva AS FLOAT64) acumulado_chuva,
+                CURRENT_DATE(&#39;America/Sao_Paulo&#39;) as data,
+                data_update
+            FROM (
+                SELECT
+                id_estacao,
+                acumulado_chuva_1h acumulado_chuva,
+                DATETIME(data_medicao) AS data_update,
+                ROW_NUMBER() OVER (
+                    PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
+                ) AS row_num
+                FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+                WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                        AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+            )AS a
+            WHERE a.row_num = 1
+            ),
+
+            last_measurements AS (
+            (SELECT
+                id_estacao,
+                data_update,
+                &#34;alertario&#34; AS sistema,
+                acumulado_chuva,
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL)
+            ),
+
+            -- choosing the neighborhood that shares the most intersection with the given H3 ID
+            intersected_areas AS (
+              SELECT
+                h3_grid.id,
+                bairros.nome AS bairro,
+                ST_CENTROID(h3_grid.geometry) AS geom,
+                ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) AS intersection_area,
+                ROW_NUMBER() OVER (PARTITION BY h3_grid.id ORDER BY ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) DESC) AS row_num
+              FROM
+                `rj-cor.dados_mestres.h3_grid_res8` h3_grid
+              LEFT JOIN
+                `rj-cor.dados_mestres.bairro` AS bairros
+              ON
+                ST_INTERSECTS(bairros.geometry, h3_grid.geometry)
+              WHERE NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.35167114973923 -23.03719187431942, -43.21742224531541 -23.11411703410819, -43.05787930227852 -23.08560586153892, -43.13797293161925 -22.9854505090441, -43.24908435505957 -23.01309491285712, -43.29357259322761 -23.02302500142027, -43.35372293867113 -23.02286949608791, -43.35167114973923 -23.03719187431942))&#39;), h3_grid.geometry)
+                AND NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.17255470033881 -22.80357287766821, -43.16164114820394 -22.8246787848653, -43.1435175784006 -22.83820699694974, -43.08831858222521 -22.79901386772875, -43.09812065965735 -22.76990583135868, -43.11917632397501 -22.77502040608505, -43.12252626904735 -22.74275730775724, -43.13510053525226 -22.7443347361711, -43.1568784870256 -22.79110122556994, -43.17255470033881 -22.80357287766821))&#39;), h3_grid.geometry)
+                AND h3_grid.id not in (&#34;88a8a06a31fffff&#34;, &#34;88a8a069b5fffff&#34;, &#34;88a8a3d357fffff&#34;, &#34;88a8a3d355fffff&#34;, &#34;88a8a068adfffff&#34;, &#34;88a8a06991fffff&#34;, &#34;88a8a06999fffff&#34;)
+            ),
+
+            h3_chuvas AS ( -- calcula qnt de chuva para cada h3
+            SELECT
+                h3.*,
+                lm.id_estacao,
+                lm.acumulado_chuva,
+                lm.acumulado_chuva/power(h3.dist,5) AS p1_15min,
+                1/power(h3.dist,5) AS inv_dist
+            FROM (
+                WITH centroid_h3 AS (
+                    SELECT
+                        *
+                    FROM intersected_areas
+                    WHERE row_num = 1
+                ),
+
+                estacoes_pluviometricas AS (
+                    (SELECT
+                        id_estacao AS id,
+                        estacao,
+                        &#34;alertario&#34; AS sistema,
+                        ST_GEOGPOINT(CAST(longitude AS FLOAT64),
+                        CAST(latitude AS FLOAT64)) AS geom
+                    FROM `rj-cor.clima_pluviometro.estacoes_alertario`)
+                ),
+
+                estacoes_mais_proximas AS (
+                    SELECT AS VALUE s
+                    FROM (
+                        SELECT
+                            ARRAY_AGG(
+                                STRUCT&lt;id_h3 STRING,
+                                id_estacao STRING,
+                                estacao STRING,
+                                bairro STRING,
+                                dist FLOAT64,
+                                sistema STRING&gt;(
+                                    a.id, b.id, b.estacao, a.bairro,
+                                    ST_DISTANCE(a.geom, b.geom),
+                                    b.sistema
+                                )
+                                ORDER BY ST_DISTANCE(a.geom, b.geom)
+                            ) AS ar
+                        FROM (SELECT id, geom, bairro FROM centroid_h3) a
+                        CROSS JOIN(
+                            SELECT id, estacao, sistema, geom
+                            FROM estacoes_pluviometricas
+                            WHERE geom is not null
+                        ) b
+                    WHERE a.id &lt;&gt; b.id
+                    GROUP BY a.id
+                    ) ab
+                    CROSS JOIN UNNEST(ab.ar) s
+                )
+
+                SELECT
+                    *,
+                    row_number() OVER (PARTITION BY id_h3 ORDER BY dist) AS ranking
+                FROM estacoes_mais_proximas
+                ORDER BY id_h3, ranking) h3
+                LEFT JOIN last_measurements lm
+                    ON lm.id_estacao=h3.id_estacao AND lm.sistema=h3.sistema
+            ),
+
+            final_table AS ( -- calcula média de chuva para as 3 estações mais próximas
+            SELECT
+                id_h3,
+                bairro,
+                cast(round(CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL),2) AS decimal) AS qnt_chuva,
+                STRING_AGG(estacao ORDER BY estacao) estacoes
+            FROM h3_chuvas
+            GROUP BY id_h3, bairro
+            )
+
+        SELECT
+        final_table.id_h3,
+        bairro,
+        COALESCE(qnt_chuva, 0) quantidade,
+        estacoes,
+        CASE
+            WHEN qnt_chuva &gt; 4*0     AND qnt_chuva &lt;= 4*1.25 THEN &#39;chuva fraca&#39;
+            WHEN qnt_chuva &gt; 4*1.25  AND qnt_chuva &lt;= 4*6.25 THEN &#39;chuva moderada&#39;
+            WHEN qnt_chuva &gt; 4*6.25  AND qnt_chuva &lt;= 4*12.5 THEN &#39;chuva forte&#39;
+            WHEN qnt_chuva &gt; 4*12.5                          THEN &#39;chuva muito forte&#39;
+            ELSE &#39;sem chuva&#39;
+        END AS status,
+        CASE
+            WHEN qnt_chuva &gt; 4*0     AND qnt_chuva &lt;= 4*1.25 THEN &#39;#DAECFB&#39;
+            WHEN qnt_chuva &gt; 4*1.25  AND qnt_chuva &lt;= 4*6.25 THEN &#39;#A9CBE8&#39;
+            WHEN qnt_chuva &gt; 4*6.25  AND qnt_chuva &lt;= 4*12.5 THEN &#39;#77A9D5&#39;
+            WHEN qnt_chuva &gt; 4*12.5                          THEN &#39;#125999&#39;
+            ELSE &#39;#ffffff&#39;
+        END AS color
+        FROM final_table
+        &#34;&#34;&#34;,
+        &#34;query_update&#34;: &#34;&#34;&#34;
+        SELECT
+            MAX(
+            DATETIME(data_medicao)
+            ) AS last_update
+        FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+        WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+              AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+        &#34;&#34;&#34;,
+    }
+
+    RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS = {
+        &#34;redis_data_key&#34;: &#34;data_last_120min_rain&#34;,
+        &#34;redis_update_key&#34;: &#34;data_last_120min_rain_update&#34;,
+        &#34;query_data&#34;: &#34;&#34;&#34;
+        WITH
+            alertario AS ( -- seleciona a última medição do alertario de cada estação nos últimos 30min
+            SELECT
+                id_estacao,
+                CAST(acumulado_chuva AS FLOAT64) acumulado_chuva,
+                CURRENT_DATE(&#39;America/Sao_Paulo&#39;) as data,
+                data_update
+            FROM (
+                SELECT
+                id_estacao,
+                acumulado_chuva_2h acumulado_chuva,
+                DATETIME(data_medicao) AS data_update,
+                ROW_NUMBER() OVER (
+                    PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
+                ) AS row_num
+                FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+                WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                        AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+            )AS a
+            WHERE a.row_num = 1
+            ),
+
+            last_measurements AS (
+            (SELECT
+                id_estacao,
+                data_update,
+                &#34;alertario&#34; AS sistema,
+                acumulado_chuva,
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL
+            )
+            ),
+
+            -- choosing the neighborhood that shares the most intersection with the given H3 ID
+            intersected_areas AS (
+              SELECT
+                h3_grid.id,
+                bairros.nome AS bairro,
+                ST_CENTROID(h3_grid.geometry) AS geom,
+                ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) AS intersection_area,
+                ROW_NUMBER() OVER (PARTITION BY h3_grid.id ORDER BY ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) DESC) AS row_num
+              FROM
+                `rj-cor.dados_mestres.h3_grid_res8` h3_grid
+              LEFT JOIN
+                `rj-cor.dados_mestres.bairro` AS bairros
+              ON
+                ST_INTERSECTS(bairros.geometry, h3_grid.geometry)
+              WHERE NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.35167114973923 -23.03719187431942, -43.21742224531541 -23.11411703410819, -43.05787930227852 -23.08560586153892, -43.13797293161925 -22.9854505090441, -43.24908435505957 -23.01309491285712, -43.29357259322761 -23.02302500142027, -43.35372293867113 -23.02286949608791, -43.35167114973923 -23.03719187431942))&#39;), h3_grid.geometry)
+                AND NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.17255470033881 -22.80357287766821, -43.16164114820394 -22.8246787848653, -43.1435175784006 -22.83820699694974, -43.08831858222521 -22.79901386772875, -43.09812065965735 -22.76990583135868, -43.11917632397501 -22.77502040608505, -43.12252626904735 -22.74275730775724, -43.13510053525226 -22.7443347361711, -43.1568784870256 -22.79110122556994, -43.17255470033881 -22.80357287766821))&#39;), h3_grid.geometry)
+                AND h3_grid.id not in (&#34;88a8a06a31fffff&#34;, &#34;88a8a069b5fffff&#34;, &#34;88a8a3d357fffff&#34;, &#34;88a8a3d355fffff&#34;, &#34;88a8a068adfffff&#34;, &#34;88a8a06991fffff&#34;, &#34;88a8a06999fffff&#34;)
+            ),
+
+            h3_chuvas AS ( -- calcula qnt de chuva para cada h3
+            SELECT
+                h3.*,
+                lm.id_estacao,
+                lm.acumulado_chuva,
+                lm.acumulado_chuva/power(h3.dist,5) AS p1_15min,
+                1/power(h3.dist,5) AS inv_dist
+            FROM (
+                WITH centroid_h3 AS (
+                    SELECT
+                        *
+                    FROM intersected_areas
+                    WHERE row_num = 1
+                ),
+
+                estacoes_pluviometricas AS (
+                    (SELECT
+                        id_estacao AS id,
+                        estacao,
+                        &#34;alertario&#34; AS sistema,
+                        ST_GEOGPOINT(CAST(longitude AS FLOAT64),
+                        CAST(latitude AS FLOAT64)) AS geom
+                    FROM `rj-cor.clima_pluviometro.estacoes_alertario`)
+                ),
+
+                estacoes_mais_proximas AS (
+                    SELECT AS VALUE s
+                    FROM (
+                        SELECT
+                            ARRAY_AGG(
+                                STRUCT&lt;id_h3 STRING,
+                                id_estacao STRING,
+                                estacao STRING,
+                                bairro STRING,
+                                dist FLOAT64,
+                                sistema STRING&gt;(
+                                    a.id, b.id, b.estacao, a.bairro,
+                                    ST_DISTANCE(a.geom, b.geom),
+                                    b.sistema
+                                )
+                                ORDER BY ST_DISTANCE(a.geom, b.geom)
+                            ) AS ar
+                        FROM (SELECT id, geom, bairro FROM centroid_h3) a
+                        CROSS JOIN(
+                            SELECT id, estacao, sistema, geom
+                            FROM estacoes_pluviometricas
+                            WHERE geom is not null
+                        ) b
+                    WHERE a.id &lt;&gt; b.id
+                    GROUP BY a.id
+                    ) ab
+                    CROSS JOIN UNNEST(ab.ar) s
+                )
+
+                SELECT
+                    *,
+                    row_number() OVER (PARTITION BY id_h3 ORDER BY dist) AS ranking
+                FROM estacoes_mais_proximas
+                ORDER BY id_h3, ranking) h3
+                LEFT JOIN last_measurements lm
+                    ON lm.id_estacao=h3.id_estacao AND lm.sistema=h3.sistema
+            ),
+
+            final_table AS ( -- calcula média de chuva para as 3 estações mais próximas
+            SELECT
+                id_h3,
+                bairro,
+                cast(round(CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL),2) AS decimal) AS qnt_chuva,
+                STRING_AGG(estacao ORDER BY estacao) estacoes
+            FROM h3_chuvas
+            GROUP BY id_h3, bairro
+            )
+
+        SELECT
+        final_table.id_h3,
+        bairro,
+        COALESCE(qnt_chuva, 0) quantidade,
+        COALESCE(qnt_chuva, 0) chuva_15min,
+        estacoes,
+        CASE
+            WHEN qnt_chuva &gt; 8*0     AND qnt_chuva &lt;= 8*1.25 THEN &#39;chuva fraca&#39;
+            WHEN qnt_chuva &gt; 8*1.25  AND qnt_chuva &lt;= 8*6.25 THEN &#39;chuva moderada&#39;
+            WHEN qnt_chuva &gt; 8*6.25  AND qnt_chuva &lt;= 8*12.5 THEN &#39;chuva forte&#39;
+            WHEN qnt_chuva &gt; 8*12.5                         THEN &#39;chuva muito forte&#39;
+            ELSE &#39;sem chuva&#39;
+        END AS status,
+        CASE
+            WHEN qnt_chuva &gt; 8*0     AND qnt_chuva &lt;= 8*1.25 THEN &#39;#DAECFB&#39;
+            WHEN qnt_chuva &gt; 8*1.25  AND qnt_chuva &lt;= 8*6.25 THEN &#39;#A9CBE8&#39;
+            WHEN qnt_chuva &gt; 8*6.25  AND qnt_chuva &lt;= 8*12.5 THEN &#39;#77A9D5&#39;
+            WHEN qnt_chuva &gt; 8*12.5                         THEN &#39;#125999&#39;
+            ELSE &#39;#ffffff&#39;
+        END AS color
+        FROM final_table
+        &#34;&#34;&#34;,
+        &#34;query_update&#34;: &#34;&#34;&#34;
+        SELECT
+            MAX(
+            DATETIME(data_medicao)
+            ) AS last_update
+        FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+        WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+        &#34;&#34;&#34;,
+    }
+
+    RAIN_DASHBOARD_LAST_3H_FLOW_SCHEDULE_PARAMETERS = {
+        &#34;redis_data_key&#34;: &#34;data_last_3h_rain&#34;,
+        &#34;redis_update_key&#34;: &#34;data_last_3h_rain_update&#34;,
+        &#34;query_data&#34;: &#34;&#34;&#34;
+        WITH
+            alertario AS ( -- seleciona a última medição do alertario de cada estação nos últimos 30min
+            SELECT
+                id_estacao,
+                CAST(acumulado_chuva AS FLOAT64) acumulado_chuva,
+                CURRENT_DATE(&#39;America/Sao_Paulo&#39;) as data,
+                data_update
+            FROM (
+                SELECT
+                id_estacao,
+                acumulado_chuva_3h acumulado_chuva,
+                DATETIME(data_medicao) AS data_update,
+                ROW_NUMBER() OVER (
+                    PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
+                ) AS row_num
+                FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+                WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                    AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+            )AS a
+            WHERE a.row_num = 1
+            ),
+
+            last_measurements AS (
+            (SELECT
+                id_estacao,
+                data_update,
+                &#34;alertario&#34; AS sistema,
+                acumulado_chuva,
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL
+            )
+            ),
+
+            -- choosing the neighborhood that shares the most intersection with the given H3 ID
+            intersected_areas AS (
+              SELECT
+                h3_grid.id,
+                bairros.nome AS bairro,
+                ST_CENTROID(h3_grid.geometry) AS geom,
+                ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) AS intersection_area,
+                ROW_NUMBER() OVER (PARTITION BY h3_grid.id ORDER BY ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) DESC) AS row_num
+              FROM
+                `rj-cor.dados_mestres.h3_grid_res8` h3_grid
+              LEFT JOIN
+                `rj-cor.dados_mestres.bairro` AS bairros
+              ON
+                ST_INTERSECTS(bairros.geometry, h3_grid.geometry)
+              WHERE NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.35167114973923 -23.03719187431942, -43.21742224531541 -23.11411703410819, -43.05787930227852 -23.08560586153892, -43.13797293161925 -22.9854505090441, -43.24908435505957 -23.01309491285712, -43.29357259322761 -23.02302500142027, -43.35372293867113 -23.02286949608791, -43.35167114973923 -23.03719187431942))&#39;), h3_grid.geometry)
+                AND NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.17255470033881 -22.80357287766821, -43.16164114820394 -22.8246787848653, -43.1435175784006 -22.83820699694974, -43.08831858222521 -22.79901386772875, -43.09812065965735 -22.76990583135868, -43.11917632397501 -22.77502040608505, -43.12252626904735 -22.74275730775724, -43.13510053525226 -22.7443347361711, -43.1568784870256 -22.79110122556994, -43.17255470033881 -22.80357287766821))&#39;), h3_grid.geometry)
+                AND h3_grid.id not in (&#34;88a8a06a31fffff&#34;, &#34;88a8a069b5fffff&#34;, &#34;88a8a3d357fffff&#34;, &#34;88a8a3d355fffff&#34;, &#34;88a8a068adfffff&#34;, &#34;88a8a06991fffff&#34;, &#34;88a8a06999fffff&#34;)
+            ),
+
+            h3_chuvas AS ( -- calcula qnt de chuva para cada h3
+            SELECT
+                h3.*,
+                lm.id_estacao,
+                lm.acumulado_chuva,
+                lm.acumulado_chuva/power(h3.dist,5) AS p1_15min,
+                1/power(h3.dist,5) AS inv_dist
+            FROM (
+                WITH centroid_h3 AS (
+                    SELECT
+                        *
+                    FROM intersected_areas
+                    WHERE row_num = 1
+                ),
+
+                estacoes_pluviometricas AS (
+                    (SELECT
+                        id_estacao AS id,
+                        estacao,
+                        &#34;alertario&#34; AS sistema,
+                        ST_GEOGPOINT(CAST(longitude AS FLOAT64),
+                        CAST(latitude AS FLOAT64)) AS geom
+                    FROM `rj-cor.clima_pluviometro.estacoes_alertario`)
+                ),
+
+                estacoes_mais_proximas AS (
+                    SELECT AS VALUE s
+                    FROM (
+                        SELECT
+                            ARRAY_AGG(
+                                STRUCT&lt;id_h3 STRING,
+                                id_estacao STRING,
+                                estacao STRING,
+                                bairro STRING,
+                                dist FLOAT64,
+                                sistema STRING&gt;(
+                                    a.id, b.id, b.estacao, a.bairro,
+                                    ST_DISTANCE(a.geom, b.geom),
+                                    b.sistema
+                                )
+                                ORDER BY ST_DISTANCE(a.geom, b.geom)
+                            ) AS ar
+                        FROM (SELECT id, geom, bairro FROM centroid_h3) a
+                        CROSS JOIN(
+                            SELECT id, estacao, sistema, geom
+                            FROM estacoes_pluviometricas
+                            WHERE geom is not null
+                        ) b
+                    WHERE a.id &lt;&gt; b.id
+                    GROUP BY a.id
+                    ) ab
+                    CROSS JOIN UNNEST(ab.ar) s
+                )
+
+                SELECT
+                    *,
+                    row_number() OVER (PARTITION BY id_h3 ORDER BY dist) AS ranking
+                FROM estacoes_mais_proximas
+                ORDER BY id_h3, ranking) h3
+                LEFT JOIN last_measurements lm
+                    ON lm.id_estacao=h3.id_estacao AND lm.sistema=h3.sistema
+            ),
+
+            final_table AS ( -- calcula média de chuva para as 3 estações mais próximas
+            SELECT
+                id_h3,
+                bairro,
+                cast(round(CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL),2) AS decimal) AS qnt_chuva,
+                STRING_AGG(estacao ORDER BY estacao) estacoes
+            FROM h3_chuvas
+            GROUP BY id_h3, bairro
+            )
+
+        SELECT
+        final_table.id_h3,
+        bairro,
+        COALESCE(qnt_chuva, 0) quantidade,
+        estacoes,
+        CASE
+            WHEN qnt_chuva &gt; 12*0     AND qnt_chuva &lt;= 12*1.25 THEN &#39;chuva fraca&#39;
+            WHEN qnt_chuva &gt; 12*1.25  AND qnt_chuva &lt;= 12*6.25 THEN &#39;chuva moderada&#39;
+            WHEN qnt_chuva &gt; 12*6.25  AND qnt_chuva &lt;= 12*12.5 THEN &#39;chuva forte&#39;
+            WHEN qnt_chuva &gt; 12*12.5                         THEN &#39;chuva muito forte&#39;
+            ELSE &#39;sem chuva&#39;
+        END AS status,
+        CASE
+            WHEN qnt_chuva &gt; 12*0     AND qnt_chuva &lt;= 12*1.25 THEN &#39;#DAECFB&#39;
+            WHEN qnt_chuva &gt; 12*1.25  AND qnt_chuva &lt;= 12*6.25 THEN &#39;#A9CBE8&#39;
+            WHEN qnt_chuva &gt; 12*6.25  AND qnt_chuva &lt;= 12*12.5 THEN &#39;#77A9D5&#39;
+            WHEN qnt_chuva &gt; 12*12.5                         THEN &#39;#125999&#39;
+            ELSE &#39;#ffffff&#39;
+        END AS color
+        FROM final_table
+        &#34;&#34;&#34;,
+        &#34;query_update&#34;: &#34;&#34;&#34;
+        SELECT
+            MAX(
+            DATETIME(data_medicao)
+            ) AS last_update
+        FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+        WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+        &#34;&#34;&#34;,
+    }
+
+    RAIN_DASHBOARD_LAST_6H_FLOW_SCHEDULE_PARAMETERS = {
+        &#34;redis_data_key&#34;: &#34;data_last_6h_rain&#34;,
+        &#34;redis_update_key&#34;: &#34;data_last_6h_rain_update&#34;,
+        &#34;query_data&#34;: &#34;&#34;&#34;
+        WITH
+            alertario AS ( -- seleciona a última medição do alertario de cada estação nos últimos 30min
+            SELECT
+                id_estacao,
+                CAST(acumulado_chuva AS FLOAT64) acumulado_chuva,
+                CURRENT_DATE(&#39;America/Sao_Paulo&#39;) as data,
+                data_update
+            FROM (
+                SELECT
+                id_estacao,
+                acumulado_chuva_6h acumulado_chuva,
+                DATETIME(data_medicao) AS data_update,
+                ROW_NUMBER() OVER (
+                    PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
+                ) AS row_num
+                FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+                WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                        AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+            )AS a
+            WHERE a.row_num = 1
+            ),
+
+            last_measurements AS (
+            (SELECT
+                id_estacao,
+                data_update,
+                &#34;alertario&#34; AS sistema,
+                acumulado_chuva,
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL
+            )
+            ),
+
+            -- choosing the neighborhood that shares the most intersection with the given H3 ID
+            intersected_areas AS (
+              SELECT
+                h3_grid.id,
+                bairros.nome AS bairro,
+                ST_CENTROID(h3_grid.geometry) AS geom,
+                ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) AS intersection_area,
+                ROW_NUMBER() OVER (PARTITION BY h3_grid.id ORDER BY ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) DESC) AS row_num
+              FROM
+                `rj-cor.dados_mestres.h3_grid_res8` h3_grid
+              LEFT JOIN
+                `rj-cor.dados_mestres.bairro` AS bairros
+              ON
+                ST_INTERSECTS(bairros.geometry, h3_grid.geometry)
+              WHERE NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.35167114973923 -23.03719187431942, -43.21742224531541 -23.11411703410819, -43.05787930227852 -23.08560586153892, -43.13797293161925 -22.9854505090441, -43.24908435505957 -23.01309491285712, -43.29357259322761 -23.02302500142027, -43.35372293867113 -23.02286949608791, -43.35167114973923 -23.03719187431942))&#39;), h3_grid.geometry)
+                AND NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.17255470033881 -22.80357287766821, -43.16164114820394 -22.8246787848653, -43.1435175784006 -22.83820699694974, -43.08831858222521 -22.79901386772875, -43.09812065965735 -22.76990583135868, -43.11917632397501 -22.77502040608505, -43.12252626904735 -22.74275730775724, -43.13510053525226 -22.7443347361711, -43.1568784870256 -22.79110122556994, -43.17255470033881 -22.80357287766821))&#39;), h3_grid.geometry)
+                AND h3_grid.id not in (&#34;88a8a06a31fffff&#34;, &#34;88a8a069b5fffff&#34;, &#34;88a8a3d357fffff&#34;, &#34;88a8a3d355fffff&#34;, &#34;88a8a068adfffff&#34;, &#34;88a8a06991fffff&#34;, &#34;88a8a06999fffff&#34;)
+            ),
+
+            h3_chuvas AS ( -- calcula qnt de chuva para cada h3
+            SELECT
+                h3.*,
+                lm.id_estacao,
+                lm.acumulado_chuva,
+                lm.acumulado_chuva/power(h3.dist,5) AS p1_15min,
+                1/power(h3.dist,5) AS inv_dist
+            FROM (
+                WITH centroid_h3 AS (
+                    SELECT
+                        *
+                    FROM intersected_areas
+                    WHERE row_num = 1
+                ),
+
+                estacoes_pluviometricas AS (
+                    (SELECT
+                        id_estacao AS id,
+                        estacao,
+                        &#34;alertario&#34; AS sistema,
+                        ST_GEOGPOINT(CAST(longitude AS FLOAT64),
+                        CAST(latitude AS FLOAT64)) AS geom
+                    FROM `rj-cor.clima_pluviometro.estacoes_alertario`)
+                ),
+
+                estacoes_mais_proximas AS (
+                    SELECT AS VALUE s
+                    FROM (
+                        SELECT
+                            ARRAY_AGG(
+                                STRUCT&lt;id_h3 STRING,
+                                id_estacao STRING,
+                                estacao STRING,
+                                bairro STRING,
+                                dist FLOAT64,
+                                sistema STRING&gt;(
+                                    a.id, b.id, b.estacao, a.bairro,
+                                    ST_DISTANCE(a.geom, b.geom),
+                                    b.sistema
+                                )
+                                ORDER BY ST_DISTANCE(a.geom, b.geom)
+                            ) AS ar
+                        FROM (SELECT id, geom, bairro FROM centroid_h3) a
+                        CROSS JOIN(
+                            SELECT id, estacao, sistema, geom
+                            FROM estacoes_pluviometricas
+                            WHERE geom is not null
+                        ) b
+                    WHERE a.id &lt;&gt; b.id
+                    GROUP BY a.id
+                    ) ab
+                    CROSS JOIN UNNEST(ab.ar) s
+                )
+
+                SELECT
+                    *,
+                    row_number() OVER (PARTITION BY id_h3 ORDER BY dist) AS ranking
+                FROM estacoes_mais_proximas
+                ORDER BY id_h3, ranking) h3
+                LEFT JOIN last_measurements lm
+                    ON lm.id_estacao=h3.id_estacao AND lm.sistema=h3.sistema
+            ),
+
+            final_table AS ( -- calcula média de chuva para as 3 estações mais próximas
+            SELECT
+                id_h3,
+                bairro,
+                cast(round(CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL),2) AS decimal) AS qnt_chuva,
+                STRING_AGG(estacao ORDER BY estacao) estacoes
+            FROM h3_chuvas
+            GROUP BY id_h3, bairro
+            )
+
+        SELECT
+        final_table.id_h3,
+        bairro,
+        COALESCE(qnt_chuva, 0) quantidade,
+        estacoes,
+        CASE
+            WHEN qnt_chuva &gt; 24*0     AND qnt_chuva &lt;= 24*1.25 THEN &#39;chuva fraca&#39;
+            WHEN qnt_chuva &gt; 24*1.25  AND qnt_chuva &lt;= 24*6.25 THEN &#39;chuva moderada&#39;
+            WHEN qnt_chuva &gt; 24*6.25  AND qnt_chuva &lt;= 24*12.5 THEN &#39;chuva forte&#39;
+            WHEN qnt_chuva &gt; 24*12.5                         THEN &#39;chuva muito forte&#39;
+            ELSE &#39;sem chuva&#39;
+        END AS status,
+        CASE
+            WHEN qnt_chuva &gt; 24*0     AND qnt_chuva &lt;= 24*1.25 THEN &#39;#DAECFB&#39;
+            WHEN qnt_chuva &gt; 24*1.25  AND qnt_chuva &lt;= 24*6.25 THEN &#39;#A9CBE8&#39;
+            WHEN qnt_chuva &gt; 24*6.25  AND qnt_chuva &lt;= 24*12.5 THEN &#39;#77A9D5&#39;
+            WHEN qnt_chuva &gt; 24*12.5                         THEN &#39;#125999&#39;
+            ELSE &#39;#ffffff&#39;
+        END AS color
+        FROM final_table
+        &#34;&#34;&#34;,
+        &#34;query_update&#34;: &#34;&#34;&#34;
+        SELECT
+            MAX(
+            DATETIME(data_medicao)
+            ) AS last_update
+        FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+        WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+        &#34;&#34;&#34;,
+    }
+
+    RAIN_DASHBOARD_LAST_12H_FLOW_SCHEDULE_PARAMETERS = {
+        &#34;redis_data_key&#34;: &#34;data_last_12h_rain&#34;,
+        &#34;redis_update_key&#34;: &#34;data_last_12h_rain_update&#34;,
+        &#34;query_data&#34;: &#34;&#34;&#34;
+        WITH
+            alertario AS ( -- seleciona a última medição do alertario de cada estação nos últimos 30min
+            SELECT
+                id_estacao,
+                CAST(acumulado_chuva AS FLOAT64) acumulado_chuva,
+                CURRENT_DATE(&#39;America/Sao_Paulo&#39;) as data,
+                data_update
+            FROM (
+                SELECT
+                id_estacao,
+                acumulado_chuva_12h acumulado_chuva,
+                DATETIME(data_medicao) AS data_update,
+                ROW_NUMBER() OVER (
+                    PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
+                ) AS row_num
+                FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+                WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                    AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+            )AS a
+            WHERE a.row_num = 1
+            ),
+
+            last_measurements AS (
+            (SELECT
+                id_estacao,
+                data_update,
+                &#34;alertario&#34; AS sistema,
+                acumulado_chuva,
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL)
+            ),
+
+            -- choosing the neighborhood that shares the most intersection with the given H3 ID
+            intersected_areas AS (
+              SELECT
+                h3_grid.id,
+                bairros.nome AS bairro,
+                ST_CENTROID(h3_grid.geometry) AS geom,
+                ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) AS intersection_area,
+                ROW_NUMBER() OVER (PARTITION BY h3_grid.id ORDER BY ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) DESC) AS row_num
+              FROM
+                `rj-cor.dados_mestres.h3_grid_res8` h3_grid
+              LEFT JOIN
+                `rj-cor.dados_mestres.bairro` AS bairros
+              ON
+                ST_INTERSECTS(bairros.geometry, h3_grid.geometry)
+              WHERE NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.35167114973923 -23.03719187431942, -43.21742224531541 -23.11411703410819, -43.05787930227852 -23.08560586153892, -43.13797293161925 -22.9854505090441, -43.24908435505957 -23.01309491285712, -43.29357259322761 -23.02302500142027, -43.35372293867113 -23.02286949608791, -43.35167114973923 -23.03719187431942))&#39;), h3_grid.geometry)
+                AND NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.17255470033881 -22.80357287766821, -43.16164114820394 -22.8246787848653, -43.1435175784006 -22.83820699694974, -43.08831858222521 -22.79901386772875, -43.09812065965735 -22.76990583135868, -43.11917632397501 -22.77502040608505, -43.12252626904735 -22.74275730775724, -43.13510053525226 -22.7443347361711, -43.1568784870256 -22.79110122556994, -43.17255470033881 -22.80357287766821))&#39;), h3_grid.geometry)
+                AND h3_grid.id not in (&#34;88a8a06a31fffff&#34;, &#34;88a8a069b5fffff&#34;, &#34;88a8a3d357fffff&#34;, &#34;88a8a3d355fffff&#34;, &#34;88a8a068adfffff&#34;, &#34;88a8a06991fffff&#34;, &#34;88a8a06999fffff&#34;)
+            ),
+
+            h3_chuvas AS ( -- calcula qnt de chuva para cada h3
+            SELECT
+                h3.*,
+                lm.id_estacao,
+                lm.acumulado_chuva,
+                lm.acumulado_chuva/power(h3.dist,5) AS p1_15min,
+                1/power(h3.dist,5) AS inv_dist
+            FROM (
+                WITH centroid_h3 AS (
+                    SELECT
+                        *
+                    FROM intersected_areas
+                    WHERE row_num = 1
+                ),
+
+                estacoes_pluviometricas AS (
+                    (SELECT
+                        id_estacao AS id,
+                        estacao,
+                        &#34;alertario&#34; AS sistema,
+                        ST_GEOGPOINT(CAST(longitude AS FLOAT64),
+                        CAST(latitude AS FLOAT64)) AS geom
+                    FROM `rj-cor.clima_pluviometro.estacoes_alertario`)
+                ),
+
+                estacoes_mais_proximas AS (
+                    SELECT AS VALUE s
+                    FROM (
+                        SELECT
+                            ARRAY_AGG(
+                                STRUCT&lt;id_h3 STRING,
+                                id_estacao STRING,
+                                estacao STRING,
+                                bairro STRING,
+                                dist FLOAT64,
+                                sistema STRING&gt;(
+                                    a.id, b.id, b.estacao, a.bairro,
+                                    ST_DISTANCE(a.geom, b.geom),
+                                    b.sistema
+                                )
+                                ORDER BY ST_DISTANCE(a.geom, b.geom)
+                            ) AS ar
+                        FROM (SELECT id, geom, bairro FROM centroid_h3) a
+                        CROSS JOIN(
+                            SELECT id, estacao, sistema, geom
+                            FROM estacoes_pluviometricas
+                            WHERE geom is not null
+                        ) b
+                    WHERE a.id &lt;&gt; b.id
+                    GROUP BY a.id
+                    ) ab
+                    CROSS JOIN UNNEST(ab.ar) s
+                )
+
+                SELECT
+                    *,
+                    row_number() OVER (PARTITION BY id_h3 ORDER BY dist) AS ranking
+                FROM estacoes_mais_proximas
+                ORDER BY id_h3, ranking) h3
+                LEFT JOIN last_measurements lm
+                    ON lm.id_estacao=h3.id_estacao AND lm.sistema=h3.sistema
+            ),
+
+            final_table AS ( -- calcula média de chuva para as 3 estações mais próximas
+            SELECT
+                id_h3,
+                bairro,
+                cast(round(CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL),2) AS decimal) AS qnt_chuva,
+                STRING_AGG(estacao ORDER BY estacao) estacoes
+            FROM h3_chuvas
+            GROUP BY id_h3, bairro
+            )
+
+        SELECT
+        final_table.id_h3,
+        bairro,
+        COALESCE(qnt_chuva, 0) quantidade,
+        estacoes,
+        CASE
+            WHEN qnt_chuva &gt; 48*0     AND qnt_chuva &lt;= 48*1.25 THEN &#39;chuva fraca&#39;
+            WHEN qnt_chuva &gt; 48*1.25  AND qnt_chuva &lt;= 48*6.25 THEN &#39;chuva moderada&#39;
+            WHEN qnt_chuva &gt; 48*6.25  AND qnt_chuva &lt;= 48*12.5 THEN &#39;chuva forte&#39;
+            WHEN qnt_chuva &gt; 48*12.5                           THEN &#39;chuva muito forte&#39;
+            ELSE &#39;sem chuva&#39;
+        END AS status,
+        CASE
+            WHEN qnt_chuva &gt; 48*0     AND qnt_chuva &lt;= 48*1.25 THEN &#39;#DAECFB&#39;
+            WHEN qnt_chuva &gt; 48*1.25  AND qnt_chuva &lt;= 48*6.25 THEN &#39;#A9CBE8&#39;
+            WHEN qnt_chuva &gt; 48*6.25  AND qnt_chuva &lt;= 48*12.5 THEN &#39;#77A9D5&#39;
+            WHEN qnt_chuva &gt; 48*12.5                           THEN &#39;#125999&#39;
+            ELSE &#39;#ffffff&#39;
+        END AS color
+        FROM final_table
+        &#34;&#34;&#34;,
+        &#34;query_update&#34;: &#34;&#34;&#34;
+        SELECT
+            MAX(
+            DATETIME(data_medicao)
+            ) AS last_update
+        FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+        WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+        &#34;&#34;&#34;,
+    }
+
+    RAIN_DASHBOARD_LAST_24H_FLOW_SCHEDULE_PARAMETERS = {
+        &#34;redis_data_key&#34;: &#34;data_last_24h_rain&#34;,
+        &#34;redis_update_key&#34;: &#34;data_last_24h_rain_update&#34;,
+        &#34;query_data&#34;: &#34;&#34;&#34;
+        WITH
+            alertario AS ( -- seleciona a última medição do alertario de cada estação nos últimos 30min
+            SELECT
+                id_estacao,
+                CAST(acumulado_chuva AS FLOAT64) acumulado_chuva,
+                CURRENT_DATE(&#39;America/Sao_Paulo&#39;) as data,
+                data_update
+            FROM (
+                SELECT
+                id_estacao,
+                acumulado_chuva_24h acumulado_chuva,
+                DATETIME(data_medicao) AS data_update,
+                ROW_NUMBER() OVER (
+                    PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
+                ) AS row_num
+                FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+                WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                        AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+            )AS a
+            WHERE a.row_num = 1
+            ),
+
+            last_measurements AS (
+            (SELECT
+                id_estacao,
+                data_update,
+                &#34;alertario&#34; AS sistema,
+                acumulado_chuva,
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL)
+            ),
+
+            -- choosing the neighborhood that shares the most intersection with the given H3 ID
+            intersected_areas AS (
+              SELECT
+                h3_grid.id,
+                bairros.nome AS bairro,
+                ST_CENTROID(h3_grid.geometry) AS geom,
+                ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) AS intersection_area,
+                ROW_NUMBER() OVER (PARTITION BY h3_grid.id ORDER BY ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) DESC) AS row_num
+              FROM
+                `rj-cor.dados_mestres.h3_grid_res8` h3_grid
+              LEFT JOIN
+                `rj-cor.dados_mestres.bairro` AS bairros
+              ON
+                ST_INTERSECTS(bairros.geometry, h3_grid.geometry)
+              WHERE NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.35167114973923 -23.03719187431942, -43.21742224531541 -23.11411703410819, -43.05787930227852 -23.08560586153892, -43.13797293161925 -22.9854505090441, -43.24908435505957 -23.01309491285712, -43.29357259322761 -23.02302500142027, -43.35372293867113 -23.02286949608791, -43.35167114973923 -23.03719187431942))&#39;), h3_grid.geometry)
+                AND NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.17255470033881 -22.80357287766821, -43.16164114820394 -22.8246787848653, -43.1435175784006 -22.83820699694974, -43.08831858222521 -22.79901386772875, -43.09812065965735 -22.76990583135868, -43.11917632397501 -22.77502040608505, -43.12252626904735 -22.74275730775724, -43.13510053525226 -22.7443347361711, -43.1568784870256 -22.79110122556994, -43.17255470033881 -22.80357287766821))&#39;), h3_grid.geometry)
+                AND h3_grid.id not in (&#34;88a8a06a31fffff&#34;, &#34;88a8a069b5fffff&#34;, &#34;88a8a3d357fffff&#34;, &#34;88a8a3d355fffff&#34;, &#34;88a8a068adfffff&#34;, &#34;88a8a06991fffff&#34;, &#34;88a8a06999fffff&#34;)
+            ),
+
+            h3_chuvas AS ( -- calcula qnt de chuva para cada h3
+            SELECT
+                h3.*,
+                lm.id_estacao,
+                lm.acumulado_chuva,
+                lm.acumulado_chuva/power(h3.dist,5) AS p1_15min,
+                1/power(h3.dist,5) AS inv_dist
+            FROM (
+                WITH centroid_h3 AS (
+                    SELECT
+                        *
+                    FROM intersected_areas
+                    WHERE row_num = 1
+                ),
+
+                estacoes_pluviometricas AS (
+                    (SELECT
+                        id_estacao AS id,
+                        estacao,
+                        &#34;alertario&#34; AS sistema,
+                        ST_GEOGPOINT(CAST(longitude AS FLOAT64),
+                        CAST(latitude AS FLOAT64)) AS geom
+                    FROM `rj-cor.clima_pluviometro.estacoes_alertario`)
+                ),
+
+                estacoes_mais_proximas AS (
+                    SELECT AS VALUE s
+                    FROM (
+                        SELECT
+                            ARRAY_AGG(
+                                STRUCT&lt;id_h3 STRING,
+                                id_estacao STRING,
+                                estacao STRING,
+                                bairro STRING,
+                                dist FLOAT64,
+                                sistema STRING&gt;(
+                                    a.id, b.id, b.estacao, a.bairro,
+                                    ST_DISTANCE(a.geom, b.geom),
+                                    b.sistema
+                                )
+                                ORDER BY ST_DISTANCE(a.geom, b.geom)
+                            ) AS ar
+                        FROM (SELECT id, geom, bairro FROM centroid_h3) a
+                        CROSS JOIN(
+                            SELECT id, estacao, sistema, geom
+                            FROM estacoes_pluviometricas
+                            WHERE geom is not null
+                        ) b
+                    WHERE a.id &lt;&gt; b.id
+                    GROUP BY a.id
+                    ) ab
+                    CROSS JOIN UNNEST(ab.ar) s
+                )
+
+                SELECT
+                    *,
+                    row_number() OVER (PARTITION BY id_h3 ORDER BY dist) AS ranking
+                FROM estacoes_mais_proximas
+                ORDER BY id_h3, ranking) h3
+                LEFT JOIN last_measurements lm
+                    ON lm.id_estacao=h3.id_estacao AND lm.sistema=h3.sistema
+            ),
+
+            final_table AS ( -- calcula média de chuva para as 3 estações mais próximas
+            SELECT
+                id_h3,
+                bairro,
+                cast(round(CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL),2) AS decimal) AS qnt_chuva,
+                STRING_AGG(estacao ORDER BY estacao) estacoes
+            FROM h3_chuvas
+            GROUP BY id_h3, bairro
+            )
+
+        SELECT
+        final_table.id_h3,
+        bairro,
+        COALESCE(qnt_chuva, 0) quantidade,
+        estacoes,
+        CASE
+            WHEN qnt_chuva &gt; 24*4*0     AND qnt_chuva &lt;= 24*4*1.25 THEN &#39;chuva fraca&#39;
+            WHEN qnt_chuva &gt; 24*4*1.25  AND qnt_chuva &lt;= 24*4*6.25 THEN &#39;chuva moderada&#39;
+            WHEN qnt_chuva &gt; 24*4*6.25  AND qnt_chuva &lt;= 24*4*12.5 THEN &#39;chuva forte&#39;
+            WHEN qnt_chuva &gt; 24*4*12.5                             THEN &#39;chuva muito forte&#39;
+            ELSE &#39;sem chuva&#39;
+        END AS status,
+        CASE
+            WHEN qnt_chuva &gt; 24*4*0     AND qnt_chuva &lt;= 24*4*1.25 THEN &#39;#DAECFB&#39;
+            WHEN qnt_chuva &gt; 24*4*1.25  AND qnt_chuva &lt;= 24*4*6.25 THEN &#39;#A9CBE8&#39;
+            WHEN qnt_chuva &gt; 24*4*6.25  AND qnt_chuva &lt;= 24*4*12.5 THEN &#39;#77A9D5&#39;
+            WHEN qnt_chuva &gt; 24*4*12.5                             THEN &#39;#125999&#39;
+            ELSE &#39;#ffffff&#39;
+        END AS color
+        FROM final_table
+        &#34;&#34;&#34;,
+        &#34;query_update&#34;: &#34;&#34;&#34;
+        SELECT
+            MAX(
+            DATETIME(data_medicao)
+            ) AS last_update
+        FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+        WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+        &#34;&#34;&#34;,
+    }
+
+    RAIN_DASHBOARD_LAST_96H_FLOW_SCHEDULE_PARAMETERS = {
+        &#34;redis_data_key&#34;: &#34;data_last_96h_rain&#34;,
+        &#34;redis_update_key&#34;: &#34;data_last_96h_rain_update&#34;,
+        &#34;query_data&#34;: &#34;&#34;&#34;
+        WITH
+            alertario AS ( -- seleciona a última medição do alertario de cada estação nos últimos 30min
+            SELECT
+                id_estacao,
+                CAST(acumulado_chuva AS FLOAT64) acumulado_chuva,
+                CURRENT_DATE(&#39;America/Sao_Paulo&#39;) as data,
+                data_update
+            FROM (
+                SELECT
+                id_estacao,
+                acumulado_chuva_96h acumulado_chuva,
+                DATETIME(data_medicao) AS data_update,
+                ROW_NUMBER() OVER (
+                    PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
+                ) AS row_num
+                FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+                WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                    AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+            )AS a
+            WHERE a.row_num = 1
+            ),
+
+            last_measurements AS (
+            (SELECT
+                id_estacao,
+                data_update,
+                &#34;alertario&#34; AS sistema,
+                acumulado_chuva,
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL)
+            ),
+
+            -- choosing the neighborhood that shares the most intersection with the given H3 ID
+            intersected_areas AS (
+              SELECT
+                h3_grid.id,
+                bairros.nome AS bairro,
+                ST_CENTROID(h3_grid.geometry) AS geom,
+                ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) AS intersection_area,
+                ROW_NUMBER() OVER (PARTITION BY h3_grid.id ORDER BY ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) DESC) AS row_num
+              FROM
+                `rj-cor.dados_mestres.h3_grid_res8` h3_grid
+              LEFT JOIN
+                `rj-cor.dados_mestres.bairro` AS bairros
+              ON
+                ST_INTERSECTS(bairros.geometry, h3_grid.geometry)
+              WHERE NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.35167114973923 -23.03719187431942, -43.21742224531541 -23.11411703410819, -43.05787930227852 -23.08560586153892, -43.13797293161925 -22.9854505090441, -43.24908435505957 -23.01309491285712, -43.29357259322761 -23.02302500142027, -43.35372293867113 -23.02286949608791, -43.35167114973923 -23.03719187431942))&#39;), h3_grid.geometry)
+                AND NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.17255470033881 -22.80357287766821, -43.16164114820394 -22.8246787848653, -43.1435175784006 -22.83820699694974, -43.08831858222521 -22.79901386772875, -43.09812065965735 -22.76990583135868, -43.11917632397501 -22.77502040608505, -43.12252626904735 -22.74275730775724, -43.13510053525226 -22.7443347361711, -43.1568784870256 -22.79110122556994, -43.17255470033881 -22.80357287766821))&#39;), h3_grid.geometry)
+                AND h3_grid.id not in (&#34;88a8a06a31fffff&#34;, &#34;88a8a069b5fffff&#34;, &#34;88a8a3d357fffff&#34;, &#34;88a8a3d355fffff&#34;, &#34;88a8a068adfffff&#34;, &#34;88a8a06991fffff&#34;, &#34;88a8a06999fffff&#34;)
+            ),
+
+            h3_chuvas AS ( -- calcula qnt de chuva para cada h3
+            SELECT
+                h3.*,
+                lm.id_estacao,
+                lm.acumulado_chuva,
+                lm.acumulado_chuva/power(h3.dist,5) AS p1_15min,
+                1/power(h3.dist,5) AS inv_dist
+            FROM (
+                WITH centroid_h3 AS (
+                    SELECT
+                        *
+                    FROM intersected_areas
+                    WHERE row_num = 1
+                ),
+
+                estacoes_pluviometricas AS (
+                    (SELECT
+                        id_estacao AS id,
+                        estacao,
+                        &#34;alertario&#34; AS sistema,
+                        ST_GEOGPOINT(CAST(longitude AS FLOAT64),
+                        CAST(latitude AS FLOAT64)) AS geom
+                    FROM `rj-cor.clima_pluviometro.estacoes_alertario`)
+                ),
+
+                estacoes_mais_proximas AS (
+                    SELECT AS VALUE s
+                    FROM (
+                        SELECT
+                            ARRAY_AGG(
+                                STRUCT&lt;id_h3 STRING,
+                                id_estacao STRING,
+                                estacao STRING,
+                                bairro STRING,
+                                dist FLOAT64,
+                                sistema STRING&gt;(
+                                    a.id, b.id, b.estacao, a.bairro,
+                                    ST_DISTANCE(a.geom, b.geom),
+                                    b.sistema
+                                )
+                                ORDER BY ST_DISTANCE(a.geom, b.geom)
+                            ) AS ar
+                        FROM (SELECT id, geom, bairro FROM centroid_h3) a
+                        CROSS JOIN(
+                            SELECT id, estacao, sistema, geom
+                            FROM estacoes_pluviometricas
+                            WHERE geom is not null
+                        ) b
+                    WHERE a.id &lt;&gt; b.id
+                    GROUP BY a.id
+                    ) ab
+                    CROSS JOIN UNNEST(ab.ar) s
+                )
+
+                SELECT
+                    *,
+                    row_number() OVER (PARTITION BY id_h3 ORDER BY dist) AS ranking
+                FROM estacoes_mais_proximas
+                ORDER BY id_h3, ranking) h3
+                LEFT JOIN last_measurements lm
+                    ON lm.id_estacao=h3.id_estacao AND lm.sistema=h3.sistema
+            ),
+
+            final_table AS ( -- calcula média de chuva para as 3 estações mais próximas
+            SELECT
+                id_h3,
+                bairro,
+                cast(round(CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL),2) AS decimal) AS qnt_chuva,
+                STRING_AGG(estacao ORDER BY estacao) estacoes
+            FROM h3_chuvas
+            GROUP BY id_h3, bairro
+            )
+
+        SELECT
+        final_table.id_h3,
+        bairro,
+        COALESCE(qnt_chuva, 0) quantidade,
+        estacoes,
+        CASE
+            WHEN qnt_chuva &gt; 4*96*0     AND qnt_chuva &lt;= 4*96*1.25 THEN &#39;chuva fraca&#39;
+            WHEN qnt_chuva &gt; 4*96*1.25  AND qnt_chuva &lt;= 4*96*6.25 THEN &#39;chuva moderada&#39;
+            WHEN qnt_chuva &gt; 4*96*6.25  AND qnt_chuva &lt;= 4*96*12.5 THEN &#39;chuva forte&#39;
+            WHEN qnt_chuva &gt; 4*96*12.5                             THEN &#39;chuva muito forte&#39;
+            ELSE &#39;sem chuva&#39;
+        END AS status,
+        CASE
+            WHEN qnt_chuva &gt; 4*96*0     AND qnt_chuva &lt;= 4*96*1.25 THEN &#39;#DAECFB&#39;
+            WHEN qnt_chuva &gt; 4*96*1.25  AND qnt_chuva &lt;= 4*96*6.25 THEN &#39;#A9CBE8&#39;
+            WHEN qnt_chuva &gt; 4*96*6.25  AND qnt_chuva &lt;= 4*96*12.5 THEN &#39;#77A9D5&#39;
+            WHEN qnt_chuva &gt; 4*96*12.5                             THEN &#39;#125999&#39;
+            ELSE &#39;#ffffff&#39;
+        END AS color
+        FROM final_table
+        &#34;&#34;&#34;,
+        &#34;query_update&#34;: &#34;&#34;&#34;
+        SELECT
+            MAX(
+            DATETIME(data_medicao)
+            ) AS last_update
+        FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+        WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+              AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
         &#34;&#34;&#34;,
     }</code></pre>
 </details>
@@ -310,124 +1367,88 @@ The constants for actual values are on rain_dashboard_constants file</p></div>
     DATASET_ID_METEOROLOGICAL = &#34;clima_estacao_meteorologica&#34;
     TABLE_ID_METEOROLOGICAL = &#34;meteorologia_alertario&#34;
 
-    RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS = {
-        &#34;redis_data_key&#34;: &#34;data_chuva_passado_alertario&#34;,
-        &#34;redis_update_key&#34;: &#34;data_update_chuva_passado_alertario&#34;,
+    RAIN_DASHBOARD_LAST_30MIN_FLOW_SCHEDULE_PARAMETERS = {
+        &#34;redis_data_key&#34;: &#34;data_last_30min_rain&#34;,
+        &#34;redis_update_key&#34;: &#34;data_last_30min_rain_update&#34;,
         &#34;query_data&#34;: &#34;&#34;&#34;
         WITH
-            last_update_date AS (
-                SELECT
-                    CAST(MAX(data_particao) AS DATETIME) AS last_update
-                FROM `rj-cor.clima_pluviometro.taxa_precipitacao_alertario`
-                WHERE data_particao &gt;= DATE_SUB(CURRENT_DATETIME(&#39;America/Sao_Paulo&#39;), INTERVAL 2 DAY)
-            ),
-            alertario AS ( -- seleciona as últimas 2h de medição do alertario antes da última atualização
+            alertario AS ( -- seleciona a última medição do alertario de cada estação nos últimos 30min
             SELECT
                 id_estacao,
-                acumulado_chuva_15_min,
+                CAST(acumulado_chuva AS FLOAT64) acumulado_chuva,
                 CURRENT_DATE(&#39;America/Sao_Paulo&#39;) as data,
-                data_particao,
-                DATETIME(CONCAT(data_particao,&#34; &#34;, horario)) AS data_update,
-                FROM `rj-cor.clima_pluviometro.taxa_precipitacao_alertario`
-                INNER JOIN last_update_date lup ON 1=1
-                WHERE data_particao &gt;= DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 2 DAY)
-                  AND CAST(CONCAT(data_particao, &#34; &#34;, horario) AS DATETIME) &gt;= DATE_SUB(lup.last_update, INTERVAL 2 HOUR)
+                data_update
+            FROM (
+                SELECT
+                id_estacao,
+                acumulado_chuva_30min acumulado_chuva,
+                DATETIME(data_medicao) AS data_update,
+                ROW_NUMBER() OVER (
+                    PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
+                ) AS row_num
+                FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+                WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                    AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+            )AS a
+            WHERE a.row_num = 1
             ),
 
-            websirene AS ( -- seleciona as últimas 2h de medição do websirene antes da última atualização
-                SELECT
-                    id_estacao,
-                    acumulado_chuva_15_min,
-                    CURRENT_DATE(&#39;America/Sao_Paulo&#39;) as data,
-                    data_particao,
-                    DATETIME(CONCAT(data_particao,&#34; &#34;, horario)) AS data_update,
-                    FROM `rj-cor.clima_pluviometro.taxa_precipitacao_websirene`
-                    INNER JOIN last_update_date lup ON 1=1
-                    WHERE data_particao &gt;= DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 2 DAY)
-                    AND CAST(CONCAT(data_particao, &#34; &#34;, horario) AS DATETIME) &gt;= DATE_SUB(lup.last_update, INTERVAL 2 HOUR)
-                ),
+            last_measurements AS (
+            (SELECT
+                id_estacao,
+                data_update,
+                &#34;alertario&#34; AS sistema,
+                acumulado_chuva,
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL
+            )
+            ),
 
-            cemaden AS ( -- seleciona as últimas 2h de medição do cemaden antes da última atualização
-                SELECT
-                    id_estacao,
-                    acumulado_chuva_10_min acumulado_chuva_15_min,
-                    CURRENT_DATE(&#39;America/Sao_Paulo&#39;) as data,
-                    data_particao,
-                    DATETIME(data_medicao) AS data_update,
-                    FROM `rj-cor.clima_pluviometro.taxa_precipitacao_cemaden`
-                    INNER JOIN last_update_date lup ON 1=1
-                    WHERE data_particao &gt;= DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 2 DAY)
-                    AND CAST(data_medicao AS DATETIME) &gt;= DATE_SUB(lup.last_update, INTERVAL 2 HOUR)
-                ),
-
-            last_measurements AS (-- soma a quantidade chuva das últimas 2h e concatena medições do alertario, cemaden e websirene
-              (SELECT
-                  id_estacao,
-                  &#34;alertario&#34; AS sistema,
-                  MAX(data_update) AS data_update,
-                  SUM(acumulado_chuva_15_min) AS acumulado_chuva_15_min,
-              FROM alertario
-              GROUP BY id_estacao, sistema)
-              UNION ALL
-              (SELECT
-                  id_estacao,
-                  &#34;websirene&#34; AS sistema,
-                  MAX(data_update) AS data_update,
-                  SUM(acumulado_chuva_15_min) AS acumulado_chuva_15_min,
-              FROM websirene
-              GROUP BY id_estacao, sistema)
-              UNION ALL
-              (SELECT
-                  id_estacao,
-                  &#34;cemaden&#34; AS sistema,
-                  MAX(data_update) AS data_update,
-                  SUM(acumulado_chuva_15_min) AS acumulado_chuva_15_min,
-              FROM cemaden
-              GROUP BY id_estacao, sistema)
+            -- choosing the neighborhood that shares the most intersection with the given H3 ID
+            intersected_areas AS (
+              SELECT
+                h3_grid.id,
+                bairros.nome AS bairro,
+                ST_CENTROID(h3_grid.geometry) AS geom,
+                ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) AS intersection_area,
+                ROW_NUMBER() OVER (PARTITION BY h3_grid.id ORDER BY ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) DESC) AS row_num
+              FROM
+                `rj-cor.dados_mestres.h3_grid_res8` h3_grid
+              LEFT JOIN
+                `rj-cor.dados_mestres.bairro` AS bairros
+              ON
+                ST_INTERSECTS(bairros.geometry, h3_grid.geometry)
+              WHERE NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.35167114973923 -23.03719187431942, -43.21742224531541 -23.11411703410819, -43.05787930227852 -23.08560586153892, -43.13797293161925 -22.9854505090441, -43.24908435505957 -23.01309491285712, -43.29357259322761 -23.02302500142027, -43.35372293867113 -23.02286949608791, -43.35167114973923 -23.03719187431942))&#39;), h3_grid.geometry)
+                AND NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.17255470033881 -22.80357287766821, -43.16164114820394 -22.8246787848653, -43.1435175784006 -22.83820699694974, -43.08831858222521 -22.79901386772875, -43.09812065965735 -22.76990583135868, -43.11917632397501 -22.77502040608505, -43.12252626904735 -22.74275730775724, -43.13510053525226 -22.7443347361711, -43.1568784870256 -22.79110122556994, -43.17255470033881 -22.80357287766821))&#39;), h3_grid.geometry)
+                AND h3_grid.id not in (&#34;88a8a06a31fffff&#34;, &#34;88a8a069b5fffff&#34;, &#34;88a8a3d357fffff&#34;, &#34;88a8a3d355fffff&#34;, &#34;88a8a068adfffff&#34;, &#34;88a8a06991fffff&#34;, &#34;88a8a06999fffff&#34;)
             ),
 
             h3_chuvas AS ( -- calcula qnt de chuva para cada h3
-                SELECT
-                    h3.*,
-                    lm.id_estacao,
-                    lm.acumulado_chuva_15_min,
-                    lm.acumulado_chuva_15_min/power(h3.dist,5) AS p1_15min,
-                    1/power(h3.dist,5) AS inv_dist
-                FROM (
-                    WITH centroid_h3 AS (
-                        SELECT
-                            *,
-                            ST_CENTROID(geometry) AS geom
-                        FROM `rj-cor.dados_mestres.h3_grid_res8`
-                    ),
-
-                    estacoes_pluviometricas AS (
-                        (SELECT
-                            id_estacao AS id,
-                            estacao,
-                            &#34;alertario&#34; AS sistema,
-                            ST_GEOGPOINT(CAST(longitude AS FLOAT64),
-                            CAST(latitude AS FLOAT64)) AS geom
-                        FROM `rj-cor.clima_pluviometro.estacoes_alertario`)
-                        UNION ALL
-                        (SELECT
-                            id_estacao AS id,
-                            estacao,
-                            &#34;websirene&#34; AS sistema,
-                            ST_GEOGPOINT(CAST(longitude AS FLOAT64),
-                            CAST(latitude AS FLOAT64)) AS geom
-                        FROM `rj-cor.clima_pluviometro.estacoes_websirene`)
-                        UNION ALL
-                        (SELECT
-                            id_estacao AS id,
-                            estacao,
-                            &#34;cemaden&#34; AS sistema,
-                            ST_GEOGPOINT(CAST(longitude AS FLOAT64),
-                            CAST(latitude AS FLOAT64)) AS geom
-                        FROM `rj-cor.clima_pluviometro.estacoes_cemaden`)
+            SELECT
+                h3.*,
+                lm.id_estacao,
+                lm.acumulado_chuva,
+                lm.acumulado_chuva/power(h3.dist,5) AS p1_15min,
+                1/power(h3.dist,5) AS inv_dist
+            FROM (
+                WITH centroid_h3 AS (
+                    SELECT
+                        *
+                    FROM intersected_areas
+                    WHERE row_num = 1
                 ),
 
-                estacoes_mais_proximas AS ( -- calcula distância das estações para cada centróide do h3
+                estacoes_pluviometricas AS (
+                    (SELECT
+                        id_estacao AS id,
+                        estacao,
+                        &#34;alertario&#34; AS sistema,
+                        ST_GEOGPOINT(CAST(longitude AS FLOAT64),
+                        CAST(latitude AS FLOAT64)) AS geom
+                    FROM `rj-cor.clima_pluviometro.estacoes_alertario`)
+                ),
+
+                estacoes_mais_proximas AS (
                     SELECT AS VALUE s
                     FROM (
                         SELECT
@@ -435,15 +1456,16 @@ The constants for actual values are on rain_dashboard_constants file</p></div>
                                 STRUCT&lt;id_h3 STRING,
                                 id_estacao STRING,
                                 estacao STRING,
+                                bairro STRING,
                                 dist FLOAT64,
                                 sistema STRING&gt;(
-                                a.id, b.id, b.estacao,
-                                ST_DISTANCE(a.geom, b.geom),
-                                b.sistema
+                                    a.id, b.id, b.estacao, a.bairro,
+                                    ST_DISTANCE(a.geom, b.geom),
+                                    b.sistema
                                 )
                                 ORDER BY ST_DISTANCE(a.geom, b.geom)
                             ) AS ar
-                        FROM (SELECT id, geom FROM centroid_h3) a
+                        FROM (SELECT id, geom, bairro FROM centroid_h3) a
                         CROSS JOIN(
                             SELECT id, estacao, sistema, geom
                             FROM estacoes_pluviometricas
@@ -464,78 +1486,1169 @@ The constants for actual values are on rain_dashboard_constants file</p></div>
                     ON lm.id_estacao=h3.id_estacao AND lm.sistema=h3.sistema
             ),
 
-            h3_media AS ( -- calcula média de chuva para as 3 estações mais próximas
-                SELECT
-                    id_h3,
-                    CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL) AS chuva_15min,
-                    STRING_AGG(estacao ORDER BY estacao) estacoes
-                FROM h3_chuvas
-                -- WHERE ranking &lt; 4
-                GROUP BY id_h3
-            ),
-
-            final_table AS (
-                SELECT
-                    h3_media.id_h3,
-                    h3_media.estacoes,
-                    nome AS bairro,
-                    cast(round(h3_media.chuva_15min,2) AS decimal) AS chuva_15min,
-                FROM h3_media
-                LEFT JOIN `rj-cor.dados_mestres.h3_grid_res8` h3_grid
-                    ON h3_grid.id=h3_media.id_h3
-                LEFT JOIN `rj-cor.dados_mestres.bairro`
-                    ON ST_CONTAINS(`rj-cor.dados_mestres.bairro`.geometry, ST_CENTROID(h3_grid.geometry))
+            final_table AS ( -- calcula média de chuva para as 3 estações mais próximas
+            SELECT
+                id_h3,
+                bairro,
+                cast(round(CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL),2) AS decimal) AS qnt_chuva,
+                STRING_AGG(estacao ORDER BY estacao) estacoes
+            FROM h3_chuvas
+            GROUP BY id_h3, bairro
             )
 
         SELECT
         final_table.id_h3,
         bairro,
-        chuva_15min,
+        COALESCE(qnt_chuva, 0) quantidade,
         estacoes,
         CASE
-            WHEN chuva_15min&gt; 0   AND chuva_15min&lt;= 10  THEN &#39;chuva fraca&#39;
-            WHEN chuva_15min&gt; 10  AND chuva_15min&lt;= 50  THEN &#39;chuva moderada&#39;
-            WHEN chuva_15min&gt; 50  AND chuva_15min&lt;= 100 THEN &#39;chuva forte&#39;
-            WHEN chuva_15min&gt; 100                       THEN &#39;chuva muito forte&#39;
+            WHEN qnt_chuva &gt; 2*0     AND qnt_chuva &lt;= 2*1.25 THEN &#39;chuva fraca&#39;
+            WHEN qnt_chuva &gt; 2*1.25  AND qnt_chuva &lt;= 2*6.25 THEN &#39;chuva moderada&#39;
+            WHEN qnt_chuva &gt; 2*6.25  AND qnt_chuva &lt;= 2*12.5 THEN &#39;chuva forte&#39;
+            WHEN qnt_chuva &gt; 2*12.5                          THEN &#39;chuva muito forte&#39;
             ELSE &#39;sem chuva&#39;
         END AS status,
         CASE
-            WHEN chuva_15min&gt; 0  AND chuva_15min&lt;= 10  THEN &#39;#DAECFB&#39;
-            WHEN chuva_15min&gt; 1  AND chuva_15min&lt;= 50  THEN &#39;#A9CBE8&#39;
-            WHEN chuva_15min&gt; 50 AND chuva_15min&lt;= 100 THEN &#39;#77A9D5&#39;
-            WHEN chuva_15min&gt; 100                      THEN &#39;#125999&#39;
+            WHEN qnt_chuva &gt; 2*0     AND qnt_chuva &lt;= 2*1.25 THEN &#39;#DAECFB&#39;
+            WHEN qnt_chuva &gt; 2*1.25  AND qnt_chuva &lt;= 2*6.25 THEN &#39;#A9CBE8&#39;
+            WHEN qnt_chuva &gt; 2*6.25  AND qnt_chuva &lt;= 2*12.5 THEN &#39;#77A9D5&#39;
+            WHEN qnt_chuva &gt; 2*12.5                          THEN &#39;#125999&#39;
             ELSE &#39;#ffffff&#39;
         END AS color
         FROM final_table
         &#34;&#34;&#34;,
         &#34;query_update&#34;: &#34;&#34;&#34;
-        WITH datas AS (
-            (SELECT
-                    MAX(
-                    DATETIME(
-                        CONCAT(data_particao,&#34; &#34;, horario)
-                    )
-                    ) AS last_update
-                FROM `rj-cor.clima_pluviometro.taxa_precipitacao_alertario`
-                WHERE data_particao&gt; DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 2 DAY))
-            UNION ALL
-            (SELECT
-                    MAX(
-                    DATETIME(
-                        CONCAT(data_particao,&#34; &#34;, horario)
-                    )
-                    ) AS last_update
-                FROM `rj-cor.clima_pluviometro.taxa_precipitacao_websirene`
-                WHERE data_particao&gt; DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 2 DAY))
-            UNION ALL
-            (SELECT
-                    MAX(DATETIME(data_medicao)) AS last_update
-                FROM `rj-cor.clima_pluviometro.taxa_precipitacao_cemaden`
-                WHERE data_particao&gt; DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 2 DAY))
-        )
         SELECT
-            MAX(last_update) AS last_update
-        FROM datas
+            MAX(
+            DATETIME(data_medicao)
+            ) AS last_update
+        FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+        WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+              AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+        &#34;&#34;&#34;,
+    }
+
+    RAIN_DASHBOARD_LAST_60MIN_FLOW_SCHEDULE_PARAMETERS = {
+        &#34;redis_data_key&#34;: &#34;data_last_60min_rain&#34;,
+        &#34;redis_update_key&#34;: &#34;data_last_60min_rain_update&#34;,
+        &#34;query_data&#34;: &#34;&#34;&#34;
+        WITH
+            alertario AS ( -- seleciona a última medição do alertario de cada estação nos últimos 30min
+            SELECT
+                id_estacao,
+                CAST(acumulado_chuva AS FLOAT64) acumulado_chuva,
+                CURRENT_DATE(&#39;America/Sao_Paulo&#39;) as data,
+                data_update
+            FROM (
+                SELECT
+                id_estacao,
+                acumulado_chuva_1h acumulado_chuva,
+                DATETIME(data_medicao) AS data_update,
+                ROW_NUMBER() OVER (
+                    PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
+                ) AS row_num
+                FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+                WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                        AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+            )AS a
+            WHERE a.row_num = 1
+            ),
+
+            last_measurements AS (
+            (SELECT
+                id_estacao,
+                data_update,
+                &#34;alertario&#34; AS sistema,
+                acumulado_chuva,
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL)
+            ),
+
+            -- choosing the neighborhood that shares the most intersection with the given H3 ID
+            intersected_areas AS (
+              SELECT
+                h3_grid.id,
+                bairros.nome AS bairro,
+                ST_CENTROID(h3_grid.geometry) AS geom,
+                ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) AS intersection_area,
+                ROW_NUMBER() OVER (PARTITION BY h3_grid.id ORDER BY ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) DESC) AS row_num
+              FROM
+                `rj-cor.dados_mestres.h3_grid_res8` h3_grid
+              LEFT JOIN
+                `rj-cor.dados_mestres.bairro` AS bairros
+              ON
+                ST_INTERSECTS(bairros.geometry, h3_grid.geometry)
+              WHERE NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.35167114973923 -23.03719187431942, -43.21742224531541 -23.11411703410819, -43.05787930227852 -23.08560586153892, -43.13797293161925 -22.9854505090441, -43.24908435505957 -23.01309491285712, -43.29357259322761 -23.02302500142027, -43.35372293867113 -23.02286949608791, -43.35167114973923 -23.03719187431942))&#39;), h3_grid.geometry)
+                AND NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.17255470033881 -22.80357287766821, -43.16164114820394 -22.8246787848653, -43.1435175784006 -22.83820699694974, -43.08831858222521 -22.79901386772875, -43.09812065965735 -22.76990583135868, -43.11917632397501 -22.77502040608505, -43.12252626904735 -22.74275730775724, -43.13510053525226 -22.7443347361711, -43.1568784870256 -22.79110122556994, -43.17255470033881 -22.80357287766821))&#39;), h3_grid.geometry)
+                AND h3_grid.id not in (&#34;88a8a06a31fffff&#34;, &#34;88a8a069b5fffff&#34;, &#34;88a8a3d357fffff&#34;, &#34;88a8a3d355fffff&#34;, &#34;88a8a068adfffff&#34;, &#34;88a8a06991fffff&#34;, &#34;88a8a06999fffff&#34;)
+            ),
+
+            h3_chuvas AS ( -- calcula qnt de chuva para cada h3
+            SELECT
+                h3.*,
+                lm.id_estacao,
+                lm.acumulado_chuva,
+                lm.acumulado_chuva/power(h3.dist,5) AS p1_15min,
+                1/power(h3.dist,5) AS inv_dist
+            FROM (
+                WITH centroid_h3 AS (
+                    SELECT
+                        *
+                    FROM intersected_areas
+                    WHERE row_num = 1
+                ),
+
+                estacoes_pluviometricas AS (
+                    (SELECT
+                        id_estacao AS id,
+                        estacao,
+                        &#34;alertario&#34; AS sistema,
+                        ST_GEOGPOINT(CAST(longitude AS FLOAT64),
+                        CAST(latitude AS FLOAT64)) AS geom
+                    FROM `rj-cor.clima_pluviometro.estacoes_alertario`)
+                ),
+
+                estacoes_mais_proximas AS (
+                    SELECT AS VALUE s
+                    FROM (
+                        SELECT
+                            ARRAY_AGG(
+                                STRUCT&lt;id_h3 STRING,
+                                id_estacao STRING,
+                                estacao STRING,
+                                bairro STRING,
+                                dist FLOAT64,
+                                sistema STRING&gt;(
+                                    a.id, b.id, b.estacao, a.bairro,
+                                    ST_DISTANCE(a.geom, b.geom),
+                                    b.sistema
+                                )
+                                ORDER BY ST_DISTANCE(a.geom, b.geom)
+                            ) AS ar
+                        FROM (SELECT id, geom, bairro FROM centroid_h3) a
+                        CROSS JOIN(
+                            SELECT id, estacao, sistema, geom
+                            FROM estacoes_pluviometricas
+                            WHERE geom is not null
+                        ) b
+                    WHERE a.id &lt;&gt; b.id
+                    GROUP BY a.id
+                    ) ab
+                    CROSS JOIN UNNEST(ab.ar) s
+                )
+
+                SELECT
+                    *,
+                    row_number() OVER (PARTITION BY id_h3 ORDER BY dist) AS ranking
+                FROM estacoes_mais_proximas
+                ORDER BY id_h3, ranking) h3
+                LEFT JOIN last_measurements lm
+                    ON lm.id_estacao=h3.id_estacao AND lm.sistema=h3.sistema
+            ),
+
+            final_table AS ( -- calcula média de chuva para as 3 estações mais próximas
+            SELECT
+                id_h3,
+                bairro,
+                cast(round(CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL),2) AS decimal) AS qnt_chuva,
+                STRING_AGG(estacao ORDER BY estacao) estacoes
+            FROM h3_chuvas
+            GROUP BY id_h3, bairro
+            )
+
+        SELECT
+        final_table.id_h3,
+        bairro,
+        COALESCE(qnt_chuva, 0) quantidade,
+        estacoes,
+        CASE
+            WHEN qnt_chuva &gt; 4*0     AND qnt_chuva &lt;= 4*1.25 THEN &#39;chuva fraca&#39;
+            WHEN qnt_chuva &gt; 4*1.25  AND qnt_chuva &lt;= 4*6.25 THEN &#39;chuva moderada&#39;
+            WHEN qnt_chuva &gt; 4*6.25  AND qnt_chuva &lt;= 4*12.5 THEN &#39;chuva forte&#39;
+            WHEN qnt_chuva &gt; 4*12.5                          THEN &#39;chuva muito forte&#39;
+            ELSE &#39;sem chuva&#39;
+        END AS status,
+        CASE
+            WHEN qnt_chuva &gt; 4*0     AND qnt_chuva &lt;= 4*1.25 THEN &#39;#DAECFB&#39;
+            WHEN qnt_chuva &gt; 4*1.25  AND qnt_chuva &lt;= 4*6.25 THEN &#39;#A9CBE8&#39;
+            WHEN qnt_chuva &gt; 4*6.25  AND qnt_chuva &lt;= 4*12.5 THEN &#39;#77A9D5&#39;
+            WHEN qnt_chuva &gt; 4*12.5                          THEN &#39;#125999&#39;
+            ELSE &#39;#ffffff&#39;
+        END AS color
+        FROM final_table
+        &#34;&#34;&#34;,
+        &#34;query_update&#34;: &#34;&#34;&#34;
+        SELECT
+            MAX(
+            DATETIME(data_medicao)
+            ) AS last_update
+        FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+        WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+              AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+        &#34;&#34;&#34;,
+    }
+
+    RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS = {
+        &#34;redis_data_key&#34;: &#34;data_last_120min_rain&#34;,
+        &#34;redis_update_key&#34;: &#34;data_last_120min_rain_update&#34;,
+        &#34;query_data&#34;: &#34;&#34;&#34;
+        WITH
+            alertario AS ( -- seleciona a última medição do alertario de cada estação nos últimos 30min
+            SELECT
+                id_estacao,
+                CAST(acumulado_chuva AS FLOAT64) acumulado_chuva,
+                CURRENT_DATE(&#39;America/Sao_Paulo&#39;) as data,
+                data_update
+            FROM (
+                SELECT
+                id_estacao,
+                acumulado_chuva_2h acumulado_chuva,
+                DATETIME(data_medicao) AS data_update,
+                ROW_NUMBER() OVER (
+                    PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
+                ) AS row_num
+                FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+                WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                        AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+            )AS a
+            WHERE a.row_num = 1
+            ),
+
+            last_measurements AS (
+            (SELECT
+                id_estacao,
+                data_update,
+                &#34;alertario&#34; AS sistema,
+                acumulado_chuva,
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL
+            )
+            ),
+
+            -- choosing the neighborhood that shares the most intersection with the given H3 ID
+            intersected_areas AS (
+              SELECT
+                h3_grid.id,
+                bairros.nome AS bairro,
+                ST_CENTROID(h3_grid.geometry) AS geom,
+                ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) AS intersection_area,
+                ROW_NUMBER() OVER (PARTITION BY h3_grid.id ORDER BY ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) DESC) AS row_num
+              FROM
+                `rj-cor.dados_mestres.h3_grid_res8` h3_grid
+              LEFT JOIN
+                `rj-cor.dados_mestres.bairro` AS bairros
+              ON
+                ST_INTERSECTS(bairros.geometry, h3_grid.geometry)
+              WHERE NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.35167114973923 -23.03719187431942, -43.21742224531541 -23.11411703410819, -43.05787930227852 -23.08560586153892, -43.13797293161925 -22.9854505090441, -43.24908435505957 -23.01309491285712, -43.29357259322761 -23.02302500142027, -43.35372293867113 -23.02286949608791, -43.35167114973923 -23.03719187431942))&#39;), h3_grid.geometry)
+                AND NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.17255470033881 -22.80357287766821, -43.16164114820394 -22.8246787848653, -43.1435175784006 -22.83820699694974, -43.08831858222521 -22.79901386772875, -43.09812065965735 -22.76990583135868, -43.11917632397501 -22.77502040608505, -43.12252626904735 -22.74275730775724, -43.13510053525226 -22.7443347361711, -43.1568784870256 -22.79110122556994, -43.17255470033881 -22.80357287766821))&#39;), h3_grid.geometry)
+                AND h3_grid.id not in (&#34;88a8a06a31fffff&#34;, &#34;88a8a069b5fffff&#34;, &#34;88a8a3d357fffff&#34;, &#34;88a8a3d355fffff&#34;, &#34;88a8a068adfffff&#34;, &#34;88a8a06991fffff&#34;, &#34;88a8a06999fffff&#34;)
+            ),
+
+            h3_chuvas AS ( -- calcula qnt de chuva para cada h3
+            SELECT
+                h3.*,
+                lm.id_estacao,
+                lm.acumulado_chuva,
+                lm.acumulado_chuva/power(h3.dist,5) AS p1_15min,
+                1/power(h3.dist,5) AS inv_dist
+            FROM (
+                WITH centroid_h3 AS (
+                    SELECT
+                        *
+                    FROM intersected_areas
+                    WHERE row_num = 1
+                ),
+
+                estacoes_pluviometricas AS (
+                    (SELECT
+                        id_estacao AS id,
+                        estacao,
+                        &#34;alertario&#34; AS sistema,
+                        ST_GEOGPOINT(CAST(longitude AS FLOAT64),
+                        CAST(latitude AS FLOAT64)) AS geom
+                    FROM `rj-cor.clima_pluviometro.estacoes_alertario`)
+                ),
+
+                estacoes_mais_proximas AS (
+                    SELECT AS VALUE s
+                    FROM (
+                        SELECT
+                            ARRAY_AGG(
+                                STRUCT&lt;id_h3 STRING,
+                                id_estacao STRING,
+                                estacao STRING,
+                                bairro STRING,
+                                dist FLOAT64,
+                                sistema STRING&gt;(
+                                    a.id, b.id, b.estacao, a.bairro,
+                                    ST_DISTANCE(a.geom, b.geom),
+                                    b.sistema
+                                )
+                                ORDER BY ST_DISTANCE(a.geom, b.geom)
+                            ) AS ar
+                        FROM (SELECT id, geom, bairro FROM centroid_h3) a
+                        CROSS JOIN(
+                            SELECT id, estacao, sistema, geom
+                            FROM estacoes_pluviometricas
+                            WHERE geom is not null
+                        ) b
+                    WHERE a.id &lt;&gt; b.id
+                    GROUP BY a.id
+                    ) ab
+                    CROSS JOIN UNNEST(ab.ar) s
+                )
+
+                SELECT
+                    *,
+                    row_number() OVER (PARTITION BY id_h3 ORDER BY dist) AS ranking
+                FROM estacoes_mais_proximas
+                ORDER BY id_h3, ranking) h3
+                LEFT JOIN last_measurements lm
+                    ON lm.id_estacao=h3.id_estacao AND lm.sistema=h3.sistema
+            ),
+
+            final_table AS ( -- calcula média de chuva para as 3 estações mais próximas
+            SELECT
+                id_h3,
+                bairro,
+                cast(round(CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL),2) AS decimal) AS qnt_chuva,
+                STRING_AGG(estacao ORDER BY estacao) estacoes
+            FROM h3_chuvas
+            GROUP BY id_h3, bairro
+            )
+
+        SELECT
+        final_table.id_h3,
+        bairro,
+        COALESCE(qnt_chuva, 0) quantidade,
+        COALESCE(qnt_chuva, 0) chuva_15min,
+        estacoes,
+        CASE
+            WHEN qnt_chuva &gt; 8*0     AND qnt_chuva &lt;= 8*1.25 THEN &#39;chuva fraca&#39;
+            WHEN qnt_chuva &gt; 8*1.25  AND qnt_chuva &lt;= 8*6.25 THEN &#39;chuva moderada&#39;
+            WHEN qnt_chuva &gt; 8*6.25  AND qnt_chuva &lt;= 8*12.5 THEN &#39;chuva forte&#39;
+            WHEN qnt_chuva &gt; 8*12.5                         THEN &#39;chuva muito forte&#39;
+            ELSE &#39;sem chuva&#39;
+        END AS status,
+        CASE
+            WHEN qnt_chuva &gt; 8*0     AND qnt_chuva &lt;= 8*1.25 THEN &#39;#DAECFB&#39;
+            WHEN qnt_chuva &gt; 8*1.25  AND qnt_chuva &lt;= 8*6.25 THEN &#39;#A9CBE8&#39;
+            WHEN qnt_chuva &gt; 8*6.25  AND qnt_chuva &lt;= 8*12.5 THEN &#39;#77A9D5&#39;
+            WHEN qnt_chuva &gt; 8*12.5                         THEN &#39;#125999&#39;
+            ELSE &#39;#ffffff&#39;
+        END AS color
+        FROM final_table
+        &#34;&#34;&#34;,
+        &#34;query_update&#34;: &#34;&#34;&#34;
+        SELECT
+            MAX(
+            DATETIME(data_medicao)
+            ) AS last_update
+        FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+        WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+        &#34;&#34;&#34;,
+    }
+
+    RAIN_DASHBOARD_LAST_3H_FLOW_SCHEDULE_PARAMETERS = {
+        &#34;redis_data_key&#34;: &#34;data_last_3h_rain&#34;,
+        &#34;redis_update_key&#34;: &#34;data_last_3h_rain_update&#34;,
+        &#34;query_data&#34;: &#34;&#34;&#34;
+        WITH
+            alertario AS ( -- seleciona a última medição do alertario de cada estação nos últimos 30min
+            SELECT
+                id_estacao,
+                CAST(acumulado_chuva AS FLOAT64) acumulado_chuva,
+                CURRENT_DATE(&#39;America/Sao_Paulo&#39;) as data,
+                data_update
+            FROM (
+                SELECT
+                id_estacao,
+                acumulado_chuva_3h acumulado_chuva,
+                DATETIME(data_medicao) AS data_update,
+                ROW_NUMBER() OVER (
+                    PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
+                ) AS row_num
+                FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+                WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                    AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+            )AS a
+            WHERE a.row_num = 1
+            ),
+
+            last_measurements AS (
+            (SELECT
+                id_estacao,
+                data_update,
+                &#34;alertario&#34; AS sistema,
+                acumulado_chuva,
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL
+            )
+            ),
+
+            -- choosing the neighborhood that shares the most intersection with the given H3 ID
+            intersected_areas AS (
+              SELECT
+                h3_grid.id,
+                bairros.nome AS bairro,
+                ST_CENTROID(h3_grid.geometry) AS geom,
+                ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) AS intersection_area,
+                ROW_NUMBER() OVER (PARTITION BY h3_grid.id ORDER BY ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) DESC) AS row_num
+              FROM
+                `rj-cor.dados_mestres.h3_grid_res8` h3_grid
+              LEFT JOIN
+                `rj-cor.dados_mestres.bairro` AS bairros
+              ON
+                ST_INTERSECTS(bairros.geometry, h3_grid.geometry)
+              WHERE NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.35167114973923 -23.03719187431942, -43.21742224531541 -23.11411703410819, -43.05787930227852 -23.08560586153892, -43.13797293161925 -22.9854505090441, -43.24908435505957 -23.01309491285712, -43.29357259322761 -23.02302500142027, -43.35372293867113 -23.02286949608791, -43.35167114973923 -23.03719187431942))&#39;), h3_grid.geometry)
+                AND NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.17255470033881 -22.80357287766821, -43.16164114820394 -22.8246787848653, -43.1435175784006 -22.83820699694974, -43.08831858222521 -22.79901386772875, -43.09812065965735 -22.76990583135868, -43.11917632397501 -22.77502040608505, -43.12252626904735 -22.74275730775724, -43.13510053525226 -22.7443347361711, -43.1568784870256 -22.79110122556994, -43.17255470033881 -22.80357287766821))&#39;), h3_grid.geometry)
+                AND h3_grid.id not in (&#34;88a8a06a31fffff&#34;, &#34;88a8a069b5fffff&#34;, &#34;88a8a3d357fffff&#34;, &#34;88a8a3d355fffff&#34;, &#34;88a8a068adfffff&#34;, &#34;88a8a06991fffff&#34;, &#34;88a8a06999fffff&#34;)
+            ),
+
+            h3_chuvas AS ( -- calcula qnt de chuva para cada h3
+            SELECT
+                h3.*,
+                lm.id_estacao,
+                lm.acumulado_chuva,
+                lm.acumulado_chuva/power(h3.dist,5) AS p1_15min,
+                1/power(h3.dist,5) AS inv_dist
+            FROM (
+                WITH centroid_h3 AS (
+                    SELECT
+                        *
+                    FROM intersected_areas
+                    WHERE row_num = 1
+                ),
+
+                estacoes_pluviometricas AS (
+                    (SELECT
+                        id_estacao AS id,
+                        estacao,
+                        &#34;alertario&#34; AS sistema,
+                        ST_GEOGPOINT(CAST(longitude AS FLOAT64),
+                        CAST(latitude AS FLOAT64)) AS geom
+                    FROM `rj-cor.clima_pluviometro.estacoes_alertario`)
+                ),
+
+                estacoes_mais_proximas AS (
+                    SELECT AS VALUE s
+                    FROM (
+                        SELECT
+                            ARRAY_AGG(
+                                STRUCT&lt;id_h3 STRING,
+                                id_estacao STRING,
+                                estacao STRING,
+                                bairro STRING,
+                                dist FLOAT64,
+                                sistema STRING&gt;(
+                                    a.id, b.id, b.estacao, a.bairro,
+                                    ST_DISTANCE(a.geom, b.geom),
+                                    b.sistema
+                                )
+                                ORDER BY ST_DISTANCE(a.geom, b.geom)
+                            ) AS ar
+                        FROM (SELECT id, geom, bairro FROM centroid_h3) a
+                        CROSS JOIN(
+                            SELECT id, estacao, sistema, geom
+                            FROM estacoes_pluviometricas
+                            WHERE geom is not null
+                        ) b
+                    WHERE a.id &lt;&gt; b.id
+                    GROUP BY a.id
+                    ) ab
+                    CROSS JOIN UNNEST(ab.ar) s
+                )
+
+                SELECT
+                    *,
+                    row_number() OVER (PARTITION BY id_h3 ORDER BY dist) AS ranking
+                FROM estacoes_mais_proximas
+                ORDER BY id_h3, ranking) h3
+                LEFT JOIN last_measurements lm
+                    ON lm.id_estacao=h3.id_estacao AND lm.sistema=h3.sistema
+            ),
+
+            final_table AS ( -- calcula média de chuva para as 3 estações mais próximas
+            SELECT
+                id_h3,
+                bairro,
+                cast(round(CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL),2) AS decimal) AS qnt_chuva,
+                STRING_AGG(estacao ORDER BY estacao) estacoes
+            FROM h3_chuvas
+            GROUP BY id_h3, bairro
+            )
+
+        SELECT
+        final_table.id_h3,
+        bairro,
+        COALESCE(qnt_chuva, 0) quantidade,
+        estacoes,
+        CASE
+            WHEN qnt_chuva &gt; 12*0     AND qnt_chuva &lt;= 12*1.25 THEN &#39;chuva fraca&#39;
+            WHEN qnt_chuva &gt; 12*1.25  AND qnt_chuva &lt;= 12*6.25 THEN &#39;chuva moderada&#39;
+            WHEN qnt_chuva &gt; 12*6.25  AND qnt_chuva &lt;= 12*12.5 THEN &#39;chuva forte&#39;
+            WHEN qnt_chuva &gt; 12*12.5                         THEN &#39;chuva muito forte&#39;
+            ELSE &#39;sem chuva&#39;
+        END AS status,
+        CASE
+            WHEN qnt_chuva &gt; 12*0     AND qnt_chuva &lt;= 12*1.25 THEN &#39;#DAECFB&#39;
+            WHEN qnt_chuva &gt; 12*1.25  AND qnt_chuva &lt;= 12*6.25 THEN &#39;#A9CBE8&#39;
+            WHEN qnt_chuva &gt; 12*6.25  AND qnt_chuva &lt;= 12*12.5 THEN &#39;#77A9D5&#39;
+            WHEN qnt_chuva &gt; 12*12.5                         THEN &#39;#125999&#39;
+            ELSE &#39;#ffffff&#39;
+        END AS color
+        FROM final_table
+        &#34;&#34;&#34;,
+        &#34;query_update&#34;: &#34;&#34;&#34;
+        SELECT
+            MAX(
+            DATETIME(data_medicao)
+            ) AS last_update
+        FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+        WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+        &#34;&#34;&#34;,
+    }
+
+    RAIN_DASHBOARD_LAST_6H_FLOW_SCHEDULE_PARAMETERS = {
+        &#34;redis_data_key&#34;: &#34;data_last_6h_rain&#34;,
+        &#34;redis_update_key&#34;: &#34;data_last_6h_rain_update&#34;,
+        &#34;query_data&#34;: &#34;&#34;&#34;
+        WITH
+            alertario AS ( -- seleciona a última medição do alertario de cada estação nos últimos 30min
+            SELECT
+                id_estacao,
+                CAST(acumulado_chuva AS FLOAT64) acumulado_chuva,
+                CURRENT_DATE(&#39;America/Sao_Paulo&#39;) as data,
+                data_update
+            FROM (
+                SELECT
+                id_estacao,
+                acumulado_chuva_6h acumulado_chuva,
+                DATETIME(data_medicao) AS data_update,
+                ROW_NUMBER() OVER (
+                    PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
+                ) AS row_num
+                FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+                WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                        AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+            )AS a
+            WHERE a.row_num = 1
+            ),
+
+            last_measurements AS (
+            (SELECT
+                id_estacao,
+                data_update,
+                &#34;alertario&#34; AS sistema,
+                acumulado_chuva,
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL
+            )
+            ),
+
+            -- choosing the neighborhood that shares the most intersection with the given H3 ID
+            intersected_areas AS (
+              SELECT
+                h3_grid.id,
+                bairros.nome AS bairro,
+                ST_CENTROID(h3_grid.geometry) AS geom,
+                ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) AS intersection_area,
+                ROW_NUMBER() OVER (PARTITION BY h3_grid.id ORDER BY ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) DESC) AS row_num
+              FROM
+                `rj-cor.dados_mestres.h3_grid_res8` h3_grid
+              LEFT JOIN
+                `rj-cor.dados_mestres.bairro` AS bairros
+              ON
+                ST_INTERSECTS(bairros.geometry, h3_grid.geometry)
+              WHERE NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.35167114973923 -23.03719187431942, -43.21742224531541 -23.11411703410819, -43.05787930227852 -23.08560586153892, -43.13797293161925 -22.9854505090441, -43.24908435505957 -23.01309491285712, -43.29357259322761 -23.02302500142027, -43.35372293867113 -23.02286949608791, -43.35167114973923 -23.03719187431942))&#39;), h3_grid.geometry)
+                AND NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.17255470033881 -22.80357287766821, -43.16164114820394 -22.8246787848653, -43.1435175784006 -22.83820699694974, -43.08831858222521 -22.79901386772875, -43.09812065965735 -22.76990583135868, -43.11917632397501 -22.77502040608505, -43.12252626904735 -22.74275730775724, -43.13510053525226 -22.7443347361711, -43.1568784870256 -22.79110122556994, -43.17255470033881 -22.80357287766821))&#39;), h3_grid.geometry)
+                AND h3_grid.id not in (&#34;88a8a06a31fffff&#34;, &#34;88a8a069b5fffff&#34;, &#34;88a8a3d357fffff&#34;, &#34;88a8a3d355fffff&#34;, &#34;88a8a068adfffff&#34;, &#34;88a8a06991fffff&#34;, &#34;88a8a06999fffff&#34;)
+            ),
+
+            h3_chuvas AS ( -- calcula qnt de chuva para cada h3
+            SELECT
+                h3.*,
+                lm.id_estacao,
+                lm.acumulado_chuva,
+                lm.acumulado_chuva/power(h3.dist,5) AS p1_15min,
+                1/power(h3.dist,5) AS inv_dist
+            FROM (
+                WITH centroid_h3 AS (
+                    SELECT
+                        *
+                    FROM intersected_areas
+                    WHERE row_num = 1
+                ),
+
+                estacoes_pluviometricas AS (
+                    (SELECT
+                        id_estacao AS id,
+                        estacao,
+                        &#34;alertario&#34; AS sistema,
+                        ST_GEOGPOINT(CAST(longitude AS FLOAT64),
+                        CAST(latitude AS FLOAT64)) AS geom
+                    FROM `rj-cor.clima_pluviometro.estacoes_alertario`)
+                ),
+
+                estacoes_mais_proximas AS (
+                    SELECT AS VALUE s
+                    FROM (
+                        SELECT
+                            ARRAY_AGG(
+                                STRUCT&lt;id_h3 STRING,
+                                id_estacao STRING,
+                                estacao STRING,
+                                bairro STRING,
+                                dist FLOAT64,
+                                sistema STRING&gt;(
+                                    a.id, b.id, b.estacao, a.bairro,
+                                    ST_DISTANCE(a.geom, b.geom),
+                                    b.sistema
+                                )
+                                ORDER BY ST_DISTANCE(a.geom, b.geom)
+                            ) AS ar
+                        FROM (SELECT id, geom, bairro FROM centroid_h3) a
+                        CROSS JOIN(
+                            SELECT id, estacao, sistema, geom
+                            FROM estacoes_pluviometricas
+                            WHERE geom is not null
+                        ) b
+                    WHERE a.id &lt;&gt; b.id
+                    GROUP BY a.id
+                    ) ab
+                    CROSS JOIN UNNEST(ab.ar) s
+                )
+
+                SELECT
+                    *,
+                    row_number() OVER (PARTITION BY id_h3 ORDER BY dist) AS ranking
+                FROM estacoes_mais_proximas
+                ORDER BY id_h3, ranking) h3
+                LEFT JOIN last_measurements lm
+                    ON lm.id_estacao=h3.id_estacao AND lm.sistema=h3.sistema
+            ),
+
+            final_table AS ( -- calcula média de chuva para as 3 estações mais próximas
+            SELECT
+                id_h3,
+                bairro,
+                cast(round(CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL),2) AS decimal) AS qnt_chuva,
+                STRING_AGG(estacao ORDER BY estacao) estacoes
+            FROM h3_chuvas
+            GROUP BY id_h3, bairro
+            )
+
+        SELECT
+        final_table.id_h3,
+        bairro,
+        COALESCE(qnt_chuva, 0) quantidade,
+        estacoes,
+        CASE
+            WHEN qnt_chuva &gt; 24*0     AND qnt_chuva &lt;= 24*1.25 THEN &#39;chuva fraca&#39;
+            WHEN qnt_chuva &gt; 24*1.25  AND qnt_chuva &lt;= 24*6.25 THEN &#39;chuva moderada&#39;
+            WHEN qnt_chuva &gt; 24*6.25  AND qnt_chuva &lt;= 24*12.5 THEN &#39;chuva forte&#39;
+            WHEN qnt_chuva &gt; 24*12.5                         THEN &#39;chuva muito forte&#39;
+            ELSE &#39;sem chuva&#39;
+        END AS status,
+        CASE
+            WHEN qnt_chuva &gt; 24*0     AND qnt_chuva &lt;= 24*1.25 THEN &#39;#DAECFB&#39;
+            WHEN qnt_chuva &gt; 24*1.25  AND qnt_chuva &lt;= 24*6.25 THEN &#39;#A9CBE8&#39;
+            WHEN qnt_chuva &gt; 24*6.25  AND qnt_chuva &lt;= 24*12.5 THEN &#39;#77A9D5&#39;
+            WHEN qnt_chuva &gt; 24*12.5                         THEN &#39;#125999&#39;
+            ELSE &#39;#ffffff&#39;
+        END AS color
+        FROM final_table
+        &#34;&#34;&#34;,
+        &#34;query_update&#34;: &#34;&#34;&#34;
+        SELECT
+            MAX(
+            DATETIME(data_medicao)
+            ) AS last_update
+        FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+        WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+        &#34;&#34;&#34;,
+    }
+
+    RAIN_DASHBOARD_LAST_12H_FLOW_SCHEDULE_PARAMETERS = {
+        &#34;redis_data_key&#34;: &#34;data_last_12h_rain&#34;,
+        &#34;redis_update_key&#34;: &#34;data_last_12h_rain_update&#34;,
+        &#34;query_data&#34;: &#34;&#34;&#34;
+        WITH
+            alertario AS ( -- seleciona a última medição do alertario de cada estação nos últimos 30min
+            SELECT
+                id_estacao,
+                CAST(acumulado_chuva AS FLOAT64) acumulado_chuva,
+                CURRENT_DATE(&#39;America/Sao_Paulo&#39;) as data,
+                data_update
+            FROM (
+                SELECT
+                id_estacao,
+                acumulado_chuva_12h acumulado_chuva,
+                DATETIME(data_medicao) AS data_update,
+                ROW_NUMBER() OVER (
+                    PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
+                ) AS row_num
+                FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+                WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                    AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+            )AS a
+            WHERE a.row_num = 1
+            ),
+
+            last_measurements AS (
+            (SELECT
+                id_estacao,
+                data_update,
+                &#34;alertario&#34; AS sistema,
+                acumulado_chuva,
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL)
+            ),
+
+            -- choosing the neighborhood that shares the most intersection with the given H3 ID
+            intersected_areas AS (
+              SELECT
+                h3_grid.id,
+                bairros.nome AS bairro,
+                ST_CENTROID(h3_grid.geometry) AS geom,
+                ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) AS intersection_area,
+                ROW_NUMBER() OVER (PARTITION BY h3_grid.id ORDER BY ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) DESC) AS row_num
+              FROM
+                `rj-cor.dados_mestres.h3_grid_res8` h3_grid
+              LEFT JOIN
+                `rj-cor.dados_mestres.bairro` AS bairros
+              ON
+                ST_INTERSECTS(bairros.geometry, h3_grid.geometry)
+              WHERE NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.35167114973923 -23.03719187431942, -43.21742224531541 -23.11411703410819, -43.05787930227852 -23.08560586153892, -43.13797293161925 -22.9854505090441, -43.24908435505957 -23.01309491285712, -43.29357259322761 -23.02302500142027, -43.35372293867113 -23.02286949608791, -43.35167114973923 -23.03719187431942))&#39;), h3_grid.geometry)
+                AND NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.17255470033881 -22.80357287766821, -43.16164114820394 -22.8246787848653, -43.1435175784006 -22.83820699694974, -43.08831858222521 -22.79901386772875, -43.09812065965735 -22.76990583135868, -43.11917632397501 -22.77502040608505, -43.12252626904735 -22.74275730775724, -43.13510053525226 -22.7443347361711, -43.1568784870256 -22.79110122556994, -43.17255470033881 -22.80357287766821))&#39;), h3_grid.geometry)
+                AND h3_grid.id not in (&#34;88a8a06a31fffff&#34;, &#34;88a8a069b5fffff&#34;, &#34;88a8a3d357fffff&#34;, &#34;88a8a3d355fffff&#34;, &#34;88a8a068adfffff&#34;, &#34;88a8a06991fffff&#34;, &#34;88a8a06999fffff&#34;)
+            ),
+
+            h3_chuvas AS ( -- calcula qnt de chuva para cada h3
+            SELECT
+                h3.*,
+                lm.id_estacao,
+                lm.acumulado_chuva,
+                lm.acumulado_chuva/power(h3.dist,5) AS p1_15min,
+                1/power(h3.dist,5) AS inv_dist
+            FROM (
+                WITH centroid_h3 AS (
+                    SELECT
+                        *
+                    FROM intersected_areas
+                    WHERE row_num = 1
+                ),
+
+                estacoes_pluviometricas AS (
+                    (SELECT
+                        id_estacao AS id,
+                        estacao,
+                        &#34;alertario&#34; AS sistema,
+                        ST_GEOGPOINT(CAST(longitude AS FLOAT64),
+                        CAST(latitude AS FLOAT64)) AS geom
+                    FROM `rj-cor.clima_pluviometro.estacoes_alertario`)
+                ),
+
+                estacoes_mais_proximas AS (
+                    SELECT AS VALUE s
+                    FROM (
+                        SELECT
+                            ARRAY_AGG(
+                                STRUCT&lt;id_h3 STRING,
+                                id_estacao STRING,
+                                estacao STRING,
+                                bairro STRING,
+                                dist FLOAT64,
+                                sistema STRING&gt;(
+                                    a.id, b.id, b.estacao, a.bairro,
+                                    ST_DISTANCE(a.geom, b.geom),
+                                    b.sistema
+                                )
+                                ORDER BY ST_DISTANCE(a.geom, b.geom)
+                            ) AS ar
+                        FROM (SELECT id, geom, bairro FROM centroid_h3) a
+                        CROSS JOIN(
+                            SELECT id, estacao, sistema, geom
+                            FROM estacoes_pluviometricas
+                            WHERE geom is not null
+                        ) b
+                    WHERE a.id &lt;&gt; b.id
+                    GROUP BY a.id
+                    ) ab
+                    CROSS JOIN UNNEST(ab.ar) s
+                )
+
+                SELECT
+                    *,
+                    row_number() OVER (PARTITION BY id_h3 ORDER BY dist) AS ranking
+                FROM estacoes_mais_proximas
+                ORDER BY id_h3, ranking) h3
+                LEFT JOIN last_measurements lm
+                    ON lm.id_estacao=h3.id_estacao AND lm.sistema=h3.sistema
+            ),
+
+            final_table AS ( -- calcula média de chuva para as 3 estações mais próximas
+            SELECT
+                id_h3,
+                bairro,
+                cast(round(CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL),2) AS decimal) AS qnt_chuva,
+                STRING_AGG(estacao ORDER BY estacao) estacoes
+            FROM h3_chuvas
+            GROUP BY id_h3, bairro
+            )
+
+        SELECT
+        final_table.id_h3,
+        bairro,
+        COALESCE(qnt_chuva, 0) quantidade,
+        estacoes,
+        CASE
+            WHEN qnt_chuva &gt; 48*0     AND qnt_chuva &lt;= 48*1.25 THEN &#39;chuva fraca&#39;
+            WHEN qnt_chuva &gt; 48*1.25  AND qnt_chuva &lt;= 48*6.25 THEN &#39;chuva moderada&#39;
+            WHEN qnt_chuva &gt; 48*6.25  AND qnt_chuva &lt;= 48*12.5 THEN &#39;chuva forte&#39;
+            WHEN qnt_chuva &gt; 48*12.5                           THEN &#39;chuva muito forte&#39;
+            ELSE &#39;sem chuva&#39;
+        END AS status,
+        CASE
+            WHEN qnt_chuva &gt; 48*0     AND qnt_chuva &lt;= 48*1.25 THEN &#39;#DAECFB&#39;
+            WHEN qnt_chuva &gt; 48*1.25  AND qnt_chuva &lt;= 48*6.25 THEN &#39;#A9CBE8&#39;
+            WHEN qnt_chuva &gt; 48*6.25  AND qnt_chuva &lt;= 48*12.5 THEN &#39;#77A9D5&#39;
+            WHEN qnt_chuva &gt; 48*12.5                           THEN &#39;#125999&#39;
+            ELSE &#39;#ffffff&#39;
+        END AS color
+        FROM final_table
+        &#34;&#34;&#34;,
+        &#34;query_update&#34;: &#34;&#34;&#34;
+        SELECT
+            MAX(
+            DATETIME(data_medicao)
+            ) AS last_update
+        FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+        WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+        &#34;&#34;&#34;,
+    }
+
+    RAIN_DASHBOARD_LAST_24H_FLOW_SCHEDULE_PARAMETERS = {
+        &#34;redis_data_key&#34;: &#34;data_last_24h_rain&#34;,
+        &#34;redis_update_key&#34;: &#34;data_last_24h_rain_update&#34;,
+        &#34;query_data&#34;: &#34;&#34;&#34;
+        WITH
+            alertario AS ( -- seleciona a última medição do alertario de cada estação nos últimos 30min
+            SELECT
+                id_estacao,
+                CAST(acumulado_chuva AS FLOAT64) acumulado_chuva,
+                CURRENT_DATE(&#39;America/Sao_Paulo&#39;) as data,
+                data_update
+            FROM (
+                SELECT
+                id_estacao,
+                acumulado_chuva_24h acumulado_chuva,
+                DATETIME(data_medicao) AS data_update,
+                ROW_NUMBER() OVER (
+                    PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
+                ) AS row_num
+                FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+                WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                        AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+            )AS a
+            WHERE a.row_num = 1
+            ),
+
+            last_measurements AS (
+            (SELECT
+                id_estacao,
+                data_update,
+                &#34;alertario&#34; AS sistema,
+                acumulado_chuva,
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL)
+            ),
+
+            -- choosing the neighborhood that shares the most intersection with the given H3 ID
+            intersected_areas AS (
+              SELECT
+                h3_grid.id,
+                bairros.nome AS bairro,
+                ST_CENTROID(h3_grid.geometry) AS geom,
+                ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) AS intersection_area,
+                ROW_NUMBER() OVER (PARTITION BY h3_grid.id ORDER BY ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) DESC) AS row_num
+              FROM
+                `rj-cor.dados_mestres.h3_grid_res8` h3_grid
+              LEFT JOIN
+                `rj-cor.dados_mestres.bairro` AS bairros
+              ON
+                ST_INTERSECTS(bairros.geometry, h3_grid.geometry)
+              WHERE NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.35167114973923 -23.03719187431942, -43.21742224531541 -23.11411703410819, -43.05787930227852 -23.08560586153892, -43.13797293161925 -22.9854505090441, -43.24908435505957 -23.01309491285712, -43.29357259322761 -23.02302500142027, -43.35372293867113 -23.02286949608791, -43.35167114973923 -23.03719187431942))&#39;), h3_grid.geometry)
+                AND NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.17255470033881 -22.80357287766821, -43.16164114820394 -22.8246787848653, -43.1435175784006 -22.83820699694974, -43.08831858222521 -22.79901386772875, -43.09812065965735 -22.76990583135868, -43.11917632397501 -22.77502040608505, -43.12252626904735 -22.74275730775724, -43.13510053525226 -22.7443347361711, -43.1568784870256 -22.79110122556994, -43.17255470033881 -22.80357287766821))&#39;), h3_grid.geometry)
+                AND h3_grid.id not in (&#34;88a8a06a31fffff&#34;, &#34;88a8a069b5fffff&#34;, &#34;88a8a3d357fffff&#34;, &#34;88a8a3d355fffff&#34;, &#34;88a8a068adfffff&#34;, &#34;88a8a06991fffff&#34;, &#34;88a8a06999fffff&#34;)
+            ),
+
+            h3_chuvas AS ( -- calcula qnt de chuva para cada h3
+            SELECT
+                h3.*,
+                lm.id_estacao,
+                lm.acumulado_chuva,
+                lm.acumulado_chuva/power(h3.dist,5) AS p1_15min,
+                1/power(h3.dist,5) AS inv_dist
+            FROM (
+                WITH centroid_h3 AS (
+                    SELECT
+                        *
+                    FROM intersected_areas
+                    WHERE row_num = 1
+                ),
+
+                estacoes_pluviometricas AS (
+                    (SELECT
+                        id_estacao AS id,
+                        estacao,
+                        &#34;alertario&#34; AS sistema,
+                        ST_GEOGPOINT(CAST(longitude AS FLOAT64),
+                        CAST(latitude AS FLOAT64)) AS geom
+                    FROM `rj-cor.clima_pluviometro.estacoes_alertario`)
+                ),
+
+                estacoes_mais_proximas AS (
+                    SELECT AS VALUE s
+                    FROM (
+                        SELECT
+                            ARRAY_AGG(
+                                STRUCT&lt;id_h3 STRING,
+                                id_estacao STRING,
+                                estacao STRING,
+                                bairro STRING,
+                                dist FLOAT64,
+                                sistema STRING&gt;(
+                                    a.id, b.id, b.estacao, a.bairro,
+                                    ST_DISTANCE(a.geom, b.geom),
+                                    b.sistema
+                                )
+                                ORDER BY ST_DISTANCE(a.geom, b.geom)
+                            ) AS ar
+                        FROM (SELECT id, geom, bairro FROM centroid_h3) a
+                        CROSS JOIN(
+                            SELECT id, estacao, sistema, geom
+                            FROM estacoes_pluviometricas
+                            WHERE geom is not null
+                        ) b
+                    WHERE a.id &lt;&gt; b.id
+                    GROUP BY a.id
+                    ) ab
+                    CROSS JOIN UNNEST(ab.ar) s
+                )
+
+                SELECT
+                    *,
+                    row_number() OVER (PARTITION BY id_h3 ORDER BY dist) AS ranking
+                FROM estacoes_mais_proximas
+                ORDER BY id_h3, ranking) h3
+                LEFT JOIN last_measurements lm
+                    ON lm.id_estacao=h3.id_estacao AND lm.sistema=h3.sistema
+            ),
+
+            final_table AS ( -- calcula média de chuva para as 3 estações mais próximas
+            SELECT
+                id_h3,
+                bairro,
+                cast(round(CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL),2) AS decimal) AS qnt_chuva,
+                STRING_AGG(estacao ORDER BY estacao) estacoes
+            FROM h3_chuvas
+            GROUP BY id_h3, bairro
+            )
+
+        SELECT
+        final_table.id_h3,
+        bairro,
+        COALESCE(qnt_chuva, 0) quantidade,
+        estacoes,
+        CASE
+            WHEN qnt_chuva &gt; 24*4*0     AND qnt_chuva &lt;= 24*4*1.25 THEN &#39;chuva fraca&#39;
+            WHEN qnt_chuva &gt; 24*4*1.25  AND qnt_chuva &lt;= 24*4*6.25 THEN &#39;chuva moderada&#39;
+            WHEN qnt_chuva &gt; 24*4*6.25  AND qnt_chuva &lt;= 24*4*12.5 THEN &#39;chuva forte&#39;
+            WHEN qnt_chuva &gt; 24*4*12.5                             THEN &#39;chuva muito forte&#39;
+            ELSE &#39;sem chuva&#39;
+        END AS status,
+        CASE
+            WHEN qnt_chuva &gt; 24*4*0     AND qnt_chuva &lt;= 24*4*1.25 THEN &#39;#DAECFB&#39;
+            WHEN qnt_chuva &gt; 24*4*1.25  AND qnt_chuva &lt;= 24*4*6.25 THEN &#39;#A9CBE8&#39;
+            WHEN qnt_chuva &gt; 24*4*6.25  AND qnt_chuva &lt;= 24*4*12.5 THEN &#39;#77A9D5&#39;
+            WHEN qnt_chuva &gt; 24*4*12.5                             THEN &#39;#125999&#39;
+            ELSE &#39;#ffffff&#39;
+        END AS color
+        FROM final_table
+        &#34;&#34;&#34;,
+        &#34;query_update&#34;: &#34;&#34;&#34;
+        SELECT
+            MAX(
+            DATETIME(data_medicao)
+            ) AS last_update
+        FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+        WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+        &#34;&#34;&#34;,
+    }
+
+    RAIN_DASHBOARD_LAST_96H_FLOW_SCHEDULE_PARAMETERS = {
+        &#34;redis_data_key&#34;: &#34;data_last_96h_rain&#34;,
+        &#34;redis_update_key&#34;: &#34;data_last_96h_rain_update&#34;,
+        &#34;query_data&#34;: &#34;&#34;&#34;
+        WITH
+            alertario AS ( -- seleciona a última medição do alertario de cada estação nos últimos 30min
+            SELECT
+                id_estacao,
+                CAST(acumulado_chuva AS FLOAT64) acumulado_chuva,
+                CURRENT_DATE(&#39;America/Sao_Paulo&#39;) as data,
+                data_update
+            FROM (
+                SELECT
+                id_estacao,
+                acumulado_chuva_96h acumulado_chuva,
+                DATETIME(data_medicao) AS data_update,
+                ROW_NUMBER() OVER (
+                    PARTITION BY id_estacao ORDER BY DATETIME(data_medicao) DESC
+                ) AS row_num
+                FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+                WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+                    AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
+            )AS a
+            WHERE a.row_num = 1
+            ),
+
+            last_measurements AS (
+            (SELECT
+                id_estacao,
+                data_update,
+                &#34;alertario&#34; AS sistema,
+                acumulado_chuva,
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL)
+            ),
+
+            -- choosing the neighborhood that shares the most intersection with the given H3 ID
+            intersected_areas AS (
+              SELECT
+                h3_grid.id,
+                bairros.nome AS bairro,
+                ST_CENTROID(h3_grid.geometry) AS geom,
+                ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) AS intersection_area,
+                ROW_NUMBER() OVER (PARTITION BY h3_grid.id ORDER BY ST_AREA(ST_INTERSECTION(bairros.geometry, h3_grid.geometry)) DESC) AS row_num
+              FROM
+                `rj-cor.dados_mestres.h3_grid_res8` h3_grid
+              LEFT JOIN
+                `rj-cor.dados_mestres.bairro` AS bairros
+              ON
+                ST_INTERSECTS(bairros.geometry, h3_grid.geometry)
+              WHERE NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.35167114973923 -23.03719187431942, -43.21742224531541 -23.11411703410819, -43.05787930227852 -23.08560586153892, -43.13797293161925 -22.9854505090441, -43.24908435505957 -23.01309491285712, -43.29357259322761 -23.02302500142027, -43.35372293867113 -23.02286949608791, -43.35167114973923 -23.03719187431942))&#39;), h3_grid.geometry)
+                AND NOT ST_CONTAINS(ST_GEOGFROMTEXT(&#39;POLYGON((-43.17255470033881 -22.80357287766821, -43.16164114820394 -22.8246787848653, -43.1435175784006 -22.83820699694974, -43.08831858222521 -22.79901386772875, -43.09812065965735 -22.76990583135868, -43.11917632397501 -22.77502040608505, -43.12252626904735 -22.74275730775724, -43.13510053525226 -22.7443347361711, -43.1568784870256 -22.79110122556994, -43.17255470033881 -22.80357287766821))&#39;), h3_grid.geometry)
+                AND h3_grid.id not in (&#34;88a8a06a31fffff&#34;, &#34;88a8a069b5fffff&#34;, &#34;88a8a3d357fffff&#34;, &#34;88a8a3d355fffff&#34;, &#34;88a8a068adfffff&#34;, &#34;88a8a06991fffff&#34;, &#34;88a8a06999fffff&#34;)
+            ),
+
+            h3_chuvas AS ( -- calcula qnt de chuva para cada h3
+            SELECT
+                h3.*,
+                lm.id_estacao,
+                lm.acumulado_chuva,
+                lm.acumulado_chuva/power(h3.dist,5) AS p1_15min,
+                1/power(h3.dist,5) AS inv_dist
+            FROM (
+                WITH centroid_h3 AS (
+                    SELECT
+                        *
+                    FROM intersected_areas
+                    WHERE row_num = 1
+                ),
+
+                estacoes_pluviometricas AS (
+                    (SELECT
+                        id_estacao AS id,
+                        estacao,
+                        &#34;alertario&#34; AS sistema,
+                        ST_GEOGPOINT(CAST(longitude AS FLOAT64),
+                        CAST(latitude AS FLOAT64)) AS geom
+                    FROM `rj-cor.clima_pluviometro.estacoes_alertario`)
+                ),
+
+                estacoes_mais_proximas AS (
+                    SELECT AS VALUE s
+                    FROM (
+                        SELECT
+                            ARRAY_AGG(
+                                STRUCT&lt;id_h3 STRING,
+                                id_estacao STRING,
+                                estacao STRING,
+                                bairro STRING,
+                                dist FLOAT64,
+                                sistema STRING&gt;(
+                                    a.id, b.id, b.estacao, a.bairro,
+                                    ST_DISTANCE(a.geom, b.geom),
+                                    b.sistema
+                                )
+                                ORDER BY ST_DISTANCE(a.geom, b.geom)
+                            ) AS ar
+                        FROM (SELECT id, geom, bairro FROM centroid_h3) a
+                        CROSS JOIN(
+                            SELECT id, estacao, sistema, geom
+                            FROM estacoes_pluviometricas
+                            WHERE geom is not null
+                        ) b
+                    WHERE a.id &lt;&gt; b.id
+                    GROUP BY a.id
+                    ) ab
+                    CROSS JOIN UNNEST(ab.ar) s
+                )
+
+                SELECT
+                    *,
+                    row_number() OVER (PARTITION BY id_h3 ORDER BY dist) AS ranking
+                FROM estacoes_mais_proximas
+                ORDER BY id_h3, ranking) h3
+                LEFT JOIN last_measurements lm
+                    ON lm.id_estacao=h3.id_estacao AND lm.sistema=h3.sistema
+            ),
+
+            final_table AS ( -- calcula média de chuva para as 3 estações mais próximas
+            SELECT
+                id_h3,
+                bairro,
+                cast(round(CAST(sum(p1_15min)/sum(inv_dist) AS DECIMAL),2) AS decimal) AS qnt_chuva,
+                STRING_AGG(estacao ORDER BY estacao) estacoes
+            FROM h3_chuvas
+            GROUP BY id_h3, bairro
+            )
+
+        SELECT
+        final_table.id_h3,
+        bairro,
+        COALESCE(qnt_chuva, 0) quantidade,
+        estacoes,
+        CASE
+            WHEN qnt_chuva &gt; 4*96*0     AND qnt_chuva &lt;= 4*96*1.25 THEN &#39;chuva fraca&#39;
+            WHEN qnt_chuva &gt; 4*96*1.25  AND qnt_chuva &lt;= 4*96*6.25 THEN &#39;chuva moderada&#39;
+            WHEN qnt_chuva &gt; 4*96*6.25  AND qnt_chuva &lt;= 4*96*12.5 THEN &#39;chuva forte&#39;
+            WHEN qnt_chuva &gt; 4*96*12.5                             THEN &#39;chuva muito forte&#39;
+            ELSE &#39;sem chuva&#39;
+        END AS status,
+        CASE
+            WHEN qnt_chuva &gt; 4*96*0     AND qnt_chuva &lt;= 4*96*1.25 THEN &#39;#DAECFB&#39;
+            WHEN qnt_chuva &gt; 4*96*1.25  AND qnt_chuva &lt;= 4*96*6.25 THEN &#39;#A9CBE8&#39;
+            WHEN qnt_chuva &gt; 4*96*6.25  AND qnt_chuva &lt;= 4*96*12.5 THEN &#39;#77A9D5&#39;
+            WHEN qnt_chuva &gt; 4*96*12.5                             THEN &#39;#125999&#39;
+            ELSE &#39;#ffffff&#39;
+        END AS color
+        FROM final_table
+        &#34;&#34;&#34;,
+        &#34;query_update&#34;: &#34;&#34;&#34;
+        SELECT
+            MAX(
+            DATETIME(data_medicao)
+            ) AS last_update
+        FROM `rj-cor.clima_pluviometro_staging.taxa_precipitacao_alertario_5min`
+        WHERE data_medicao &gt;= CAST(TIME_SUB(CURRENT_TIME(&#39;America/Sao_Paulo&#39;), INTERVAL 30 MINUTE) AS STRING)
+              AND data_particao &gt;= CAST(DATE_SUB(CURRENT_DATE(&#39;America/Sao_Paulo&#39;), INTERVAL 1 DAY) AS STRING)
         &#34;&#34;&#34;,
     }</code></pre>
 </details>
@@ -553,7 +2666,35 @@ The constants for actual values are on rain_dashboard_constants file</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_12H_FLOW_SCHEDULE_PARAMETERS"><code class="name">var <span class="ident">RAIN_DASHBOARD_LAST_12H_FLOW_SCHEDULE_PARAMETERS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_24H_FLOW_SCHEDULE_PARAMETERS"><code class="name">var <span class="ident">RAIN_DASHBOARD_LAST_24H_FLOW_SCHEDULE_PARAMETERS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS"><code class="name">var <span class="ident">RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_30MIN_FLOW_SCHEDULE_PARAMETERS"><code class="name">var <span class="ident">RAIN_DASHBOARD_LAST_30MIN_FLOW_SCHEDULE_PARAMETERS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_3H_FLOW_SCHEDULE_PARAMETERS"><code class="name">var <span class="ident">RAIN_DASHBOARD_LAST_3H_FLOW_SCHEDULE_PARAMETERS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_60MIN_FLOW_SCHEDULE_PARAMETERS"><code class="name">var <span class="ident">RAIN_DASHBOARD_LAST_60MIN_FLOW_SCHEDULE_PARAMETERS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_6H_FLOW_SCHEDULE_PARAMETERS"><code class="name">var <span class="ident">RAIN_DASHBOARD_LAST_6H_FLOW_SCHEDULE_PARAMETERS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_96H_FLOW_SCHEDULE_PARAMETERS"><code class="name">var <span class="ident">RAIN_DASHBOARD_LAST_96H_FLOW_SCHEDULE_PARAMETERS</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -638,7 +2779,14 @@ setTimeout(() => input.focus(), 100);
 <ul class="">
 <li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.DATASET_ID_METEOROLOGICAL" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.DATASET_ID_METEOROLOGICAL">DATASET_ID_METEOROLOGICAL</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.DATASET_ID_PLUVIOMETRIC" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.DATASET_ID_PLUVIOMETRIC">DATASET_ID_PLUVIOMETRIC</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_12H_FLOW_SCHEDULE_PARAMETERS" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_12H_FLOW_SCHEDULE_PARAMETERS">RAIN_DASHBOARD_LAST_12H_FLOW_SCHEDULE_PARAMETERS</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_24H_FLOW_SCHEDULE_PARAMETERS" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_24H_FLOW_SCHEDULE_PARAMETERS">RAIN_DASHBOARD_LAST_24H_FLOW_SCHEDULE_PARAMETERS</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS">RAIN_DASHBOARD_LAST_2H_FLOW_SCHEDULE_PARAMETERS</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_30MIN_FLOW_SCHEDULE_PARAMETERS" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_30MIN_FLOW_SCHEDULE_PARAMETERS">RAIN_DASHBOARD_LAST_30MIN_FLOW_SCHEDULE_PARAMETERS</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_3H_FLOW_SCHEDULE_PARAMETERS" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_3H_FLOW_SCHEDULE_PARAMETERS">RAIN_DASHBOARD_LAST_3H_FLOW_SCHEDULE_PARAMETERS</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_60MIN_FLOW_SCHEDULE_PARAMETERS" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_60MIN_FLOW_SCHEDULE_PARAMETERS">RAIN_DASHBOARD_LAST_60MIN_FLOW_SCHEDULE_PARAMETERS</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_6H_FLOW_SCHEDULE_PARAMETERS" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_6H_FLOW_SCHEDULE_PARAMETERS">RAIN_DASHBOARD_LAST_6H_FLOW_SCHEDULE_PARAMETERS</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_96H_FLOW_SCHEDULE_PARAMETERS" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.RAIN_DASHBOARD_LAST_96H_FLOW_SCHEDULE_PARAMETERS">RAIN_DASHBOARD_LAST_96H_FLOW_SCHEDULE_PARAMETERS</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.TABLE_ID_METEOROLOGICAL" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.TABLE_ID_METEOROLOGICAL">TABLE_ID_METEOROLOGICAL</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.TABLE_ID_PLUVIOMETRIC" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.TABLE_ID_PLUVIOMETRIC">TABLE_ID_PLUVIOMETRIC</a></code></li>
 <li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.TABLE_ID_PLUVIOMETRIC_OLD_API" href="#pipelines.rj_cor.meteorologia.precipitacao_alertario.constants.constants.TABLE_ID_PLUVIOMETRIC_OLD_API">TABLE_ID_PLUVIOMETRIC_OLD_API</a></code></li>
