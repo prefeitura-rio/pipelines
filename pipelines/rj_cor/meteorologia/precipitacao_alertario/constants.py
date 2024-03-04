@@ -53,7 +53,9 @@ class constants(Enum):  # pylint: disable=c0103
                 data_update,
                 "alertario" AS sistema,
                 acumulado_chuva,
-            FROM alertario)
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL
+            )
             ),
 
             -- choosing the neighborhood that shares the most intersection with the given H3 ID
@@ -151,7 +153,7 @@ class constants(Enum):  # pylint: disable=c0103
         SELECT
         final_table.id_h3,
         bairro,
-        qnt_chuva quantidade,
+        COALESCE(qnt_chuva, 0) quantidade,
         estacoes,
         CASE
             WHEN qnt_chuva > 2*0     AND qnt_chuva <= 2*1.25 THEN 'chuva fraca'
@@ -214,7 +216,8 @@ class constants(Enum):  # pylint: disable=c0103
                 data_update,
                 "alertario" AS sistema,
                 acumulado_chuva,
-            FROM alertario)
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL)
             ),
 
             -- choosing the neighborhood that shares the most intersection with the given H3 ID
@@ -312,7 +315,7 @@ class constants(Enum):  # pylint: disable=c0103
         SELECT
         final_table.id_h3,
         bairro,
-        qnt_chuva quantidade,
+        COALESCE(qnt_chuva, 0) quantidade,
         estacoes,
         CASE
             WHEN qnt_chuva > 4*0     AND qnt_chuva <= 4*1.25 THEN 'chuva fraca'
@@ -375,7 +378,9 @@ class constants(Enum):  # pylint: disable=c0103
                 data_update,
                 "alertario" AS sistema,
                 acumulado_chuva,
-            FROM alertario)
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL
+            )
             ),
 
             -- choosing the neighborhood that shares the most intersection with the given H3 ID
@@ -473,8 +478,8 @@ class constants(Enum):  # pylint: disable=c0103
         SELECT
         final_table.id_h3,
         bairro,
-        qnt_chuva quantidade,
-        qnt_chuva chuva_15min,
+        COALESCE(qnt_chuva, 0) quantidade,
+        COALESCE(qnt_chuva, 0) chuva_15min,
         estacoes,
         CASE
             WHEN qnt_chuva > 8*0     AND qnt_chuva <= 8*1.25 THEN 'chuva fraca'
@@ -537,7 +542,9 @@ class constants(Enum):  # pylint: disable=c0103
                 data_update,
                 "alertario" AS sistema,
                 acumulado_chuva,
-            FROM alertario)
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL
+            )
             ),
 
             -- choosing the neighborhood that shares the most intersection with the given H3 ID
@@ -635,7 +642,7 @@ class constants(Enum):  # pylint: disable=c0103
         SELECT
         final_table.id_h3,
         bairro,
-        qnt_chuva quantidade,
+        COALESCE(qnt_chuva, 0) quantidade,
         estacoes,
         CASE
             WHEN qnt_chuva > 12*0     AND qnt_chuva <= 12*1.25 THEN 'chuva fraca'
@@ -698,7 +705,9 @@ class constants(Enum):  # pylint: disable=c0103
                 data_update,
                 "alertario" AS sistema,
                 acumulado_chuva,
-            FROM alertario)
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL
+            )
             ),
 
             -- choosing the neighborhood that shares the most intersection with the given H3 ID
@@ -796,7 +805,7 @@ class constants(Enum):  # pylint: disable=c0103
         SELECT
         final_table.id_h3,
         bairro,
-        qnt_chuva quantidade,
+        COALESCE(qnt_chuva, 0) quantidade,
         estacoes,
         CASE
             WHEN qnt_chuva > 24*0     AND qnt_chuva <= 24*1.25 THEN 'chuva fraca'
@@ -859,7 +868,8 @@ class constants(Enum):  # pylint: disable=c0103
                 data_update,
                 "alertario" AS sistema,
                 acumulado_chuva,
-            FROM alertario)
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL)
             ),
 
             -- choosing the neighborhood that shares the most intersection with the given H3 ID
@@ -957,7 +967,7 @@ class constants(Enum):  # pylint: disable=c0103
         SELECT
         final_table.id_h3,
         bairro,
-        qnt_chuva quantidade,
+        COALESCE(qnt_chuva, 0) quantidade,
         estacoes,
         CASE
             WHEN qnt_chuva > 48*0     AND qnt_chuva <= 48*1.25 THEN 'chuva fraca'
@@ -1020,7 +1030,8 @@ class constants(Enum):  # pylint: disable=c0103
                 data_update,
                 "alertario" AS sistema,
                 acumulado_chuva,
-            FROM alertario)
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL)
             ),
 
             -- choosing the neighborhood that shares the most intersection with the given H3 ID
@@ -1118,7 +1129,7 @@ class constants(Enum):  # pylint: disable=c0103
         SELECT
         final_table.id_h3,
         bairro,
-        qnt_chuva quantidade,
+        COALESCE(qnt_chuva, 0) quantidade,
         estacoes,
         CASE
             WHEN qnt_chuva > 24*4*0     AND qnt_chuva <= 24*4*1.25 THEN 'chuva fraca'
@@ -1181,7 +1192,8 @@ class constants(Enum):  # pylint: disable=c0103
                 data_update,
                 "alertario" AS sistema,
                 acumulado_chuva,
-            FROM alertario)
+            FROM alertario
+            WHERE acumulado_chuva IS NOT NULL)
             ),
 
             -- choosing the neighborhood that shares the most intersection with the given H3 ID
@@ -1279,7 +1291,7 @@ class constants(Enum):  # pylint: disable=c0103
         SELECT
         final_table.id_h3,
         bairro,
-        qnt_chuva quantidade,
+        COALESCE(qnt_chuva, 0) quantidade,
         estacoes,
         CASE
             WHEN qnt_chuva > 4*96*0     AND qnt_chuva <= 4*96*1.25 THEN 'chuva fraca'
