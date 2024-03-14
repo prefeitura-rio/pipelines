@@ -15,6 +15,7 @@ from pipelines.utils.constants import constants as utils_constants
 from pipelines.utils.custom import wait_for_flow_run_with_timeout
 from pipelines.rj_cor.meteorologia.precipitacao_inea.tasks import (
     check_for_new_stations,
+    check_new_data,
     download_data,
     treat_data,
     save_data,
@@ -80,138 +81,150 @@ with Flow(
         table_id=TABLE_ID_PLUVIOMETRIC,
         mode=MATERIALIZATION_MODE,
     )
-    path_pluviometric = save_data(dataframe=dfr_pluviometric, folder_name="pluviometer")
-    path_fluviometric = save_data(dataframe=dfr_fluviometric, folder_name="fluviometer")
-
-    # Create pluviometric table in BigQuery
-    UPLOAD_TABLE_PLUVIOMETRIC = create_table_and_upload_to_gcs(
-        data_path=path_pluviometric,
-        dataset_id=DATASET_ID_PLUVIOMETRIC,
-        table_id=TABLE_ID_PLUVIOMETRIC,
-        dump_mode=DUMP_MODE,
-        wait=path_pluviometric,
+    new_pluviometric_data, new_fluviometric_data = check_new_data(
+        dfr_pluviometric, dfr_fluviometric
     )
 
-    # Trigger pluviometric DBT flow run
-    with case(MATERIALIZE_AFTER_DUMP, True):
-        current_flow_labels = get_current_flow_labels()
-        materialization_flow = create_flow_run(
-            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
-            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters={
-                "dataset_id": DATASET_ID_PLUVIOMETRIC,
-                "table_id": TABLE_ID_PLUVIOMETRIC,
-                "mode": MATERIALIZATION_MODE,
-                "materialize_to_datario": MATERIALIZE_TO_DATARIO,
-            },
-            labels=current_flow_labels,
-            run_name=f"Materialize {DATASET_ID_PLUVIOMETRIC}.{TABLE_ID_PLUVIOMETRIC}",
+    with case(new_pluviometric_data, True):
+        path_pluviometric = save_data(
+            dataframe=dfr_pluviometric, folder_name="pluviometer"
         )
 
-        materialization_flow.set_upstream(current_flow_labels)
-
-        wait_for_materialization = wait_for_flow_run_with_2min_timeout(
-            flow_run_id=materialization_flow,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
-        )
-        wait_for_materialization.max_retries = (
-            dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
-        )
-        wait_for_materialization.retry_delay = timedelta(
-            seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
+        # Create pluviometric table in BigQuery
+        UPLOAD_TABLE_PLUVIOMETRIC = create_table_and_upload_to_gcs(
+            data_path=path_pluviometric,
+            dataset_id=DATASET_ID_PLUVIOMETRIC,
+            table_id=TABLE_ID_PLUVIOMETRIC,
+            dump_mode=DUMP_MODE,
+            wait=path_pluviometric,
         )
 
-        with case(DUMP_TO_GCS, True):
-            # Trigger Dump to GCS flow run with project id as datario
-            dump_to_gcs_flow = create_flow_run(
-                flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
+        # Trigger pluviometric DBT flow run
+        with case(MATERIALIZE_AFTER_DUMP, True):
+            current_flow_labels = get_current_flow_labels()
+            materialization_flow = create_flow_run(
+                flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
                 project_name=constants.PREFECT_DEFAULT_PROJECT.value,
                 parameters={
-                    "project_id": "datario",
                     "dataset_id": DATASET_ID_PLUVIOMETRIC,
                     "table_id": TABLE_ID_PLUVIOMETRIC,
-                    "maximum_bytes_processed": MAXIMUM_BYTES_PROCESSED,
+                    "mode": MATERIALIZATION_MODE,
+                    "materialize_to_datario": MATERIALIZE_TO_DATARIO,
                 },
-                labels=[
-                    "datario",
-                ],
-                run_name=f"Dump to GCS {DATASET_ID_PLUVIOMETRIC}.{TABLE_ID_PLUVIOMETRIC}",
+                labels=current_flow_labels,
+                run_name=f"Materialize {DATASET_ID_PLUVIOMETRIC}.{TABLE_ID_PLUVIOMETRIC}",
             )
-            dump_to_gcs_flow.set_upstream(wait_for_materialization)
 
-            wait_for_dump_to_gcs = wait_for_flow_run_with_2min_timeout(
-                flow_run_id=dump_to_gcs_flow,
+            materialization_flow.set_upstream(current_flow_labels)
+
+            wait_for_materialization = wait_for_flow_run_with_2min_timeout(
+                flow_run_id=materialization_flow,
                 stream_states=True,
                 stream_logs=True,
                 raise_final_state=True,
             )
+            wait_for_materialization.max_retries = (
+                dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
+            )
+            wait_for_materialization.retry_delay = timedelta(
+                seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
+            )
 
-    # Create fluviometric table in BigQuery
-    UPLOAD_TABLE_FLUVIOMETRIC = create_table_and_upload_to_gcs(
-        data_path=path_fluviometric,
-        dataset_id=DATASET_ID_FLUVIOMETRIC,
-        table_id=TABLE_ID_FLUVIOMETRIC,
-        dump_mode=DUMP_MODE,
-        wait=path_fluviometric,
-    )
+            with case(DUMP_TO_GCS, True):
+                # Trigger Dump to GCS flow run with project id as datario
+                dump_to_gcs_flow = create_flow_run(
+                    flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
+                    project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                    parameters={
+                        "project_id": "datario",
+                        "dataset_id": DATASET_ID_PLUVIOMETRIC,
+                        "table_id": TABLE_ID_PLUVIOMETRIC,
+                        "maximum_bytes_processed": MAXIMUM_BYTES_PROCESSED,
+                    },
+                    labels=[
+                        "datario",
+                    ],
+                    run_name=f"Dump to GCS {DATASET_ID_PLUVIOMETRIC}.{TABLE_ID_PLUVIOMETRIC}",
+                )
+                dump_to_gcs_flow.set_upstream(wait_for_materialization)
 
-    # Trigger DBT flow run
-    with case(MATERIALIZE_AFTER_DUMP, True):
-        current_flow_labels = get_current_flow_labels()
-        materialization_flow = create_flow_run(
-            flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
-            project_name=constants.PREFECT_DEFAULT_PROJECT.value,
-            parameters={
-                "dataset_id": DATASET_ID_FLUVIOMETRIC,
-                "table_id": TABLE_ID_FLUVIOMETRIC,
-                "mode": MATERIALIZATION_MODE,
-                "materialize_to_datario": MATERIALIZE_TO_DATARIO,
-            },
-            labels=current_flow_labels,
-            run_name=f"Materialize {DATASET_ID_FLUVIOMETRIC}.{TABLE_ID_FLUVIOMETRIC}",
+                wait_for_dump_to_gcs = wait_for_flow_run_with_2min_timeout(
+                    flow_run_id=dump_to_gcs_flow,
+                    stream_states=True,
+                    stream_logs=True,
+                    raise_final_state=True,
+                )
+
+    with case(new_pluviometric_data, True):
+        path_fluviometric = save_data(
+            dataframe=dfr_fluviometric, folder_name="fluviometer"
+        )
+        path_fluviometric.set_upstream(path_pluviometric)
+
+        # Create fluviometric table in BigQuery
+        UPLOAD_TABLE_FLUVIOMETRIC = create_table_and_upload_to_gcs(
+            data_path=path_fluviometric,
+            dataset_id=DATASET_ID_FLUVIOMETRIC,
+            table_id=TABLE_ID_FLUVIOMETRIC,
+            dump_mode=DUMP_MODE,
+            wait=path_fluviometric,
         )
 
-        materialization_flow.set_upstream(current_flow_labels)
-
-        wait_for_materialization = wait_for_flow_run_with_2min_timeout(
-            flow_run_id=materialization_flow,
-            stream_states=True,
-            stream_logs=True,
-            raise_final_state=True,
-        )
-        wait_for_materialization.max_retries = (
-            dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
-        )
-        wait_for_materialization.retry_delay = timedelta(
-            seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
-        )
-
-        with case(DUMP_TO_GCS, True):
-            # Trigger Dump to GCS flow run with project id as datario
-            dump_to_gcs_flow = create_flow_run(
-                flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
+        # Trigger DBT flow run
+        with case(MATERIALIZE_AFTER_DUMP, True):
+            current_flow_labels = get_current_flow_labels()
+            materialization_flow = create_flow_run(
+                flow_name=utils_constants.FLOW_EXECUTE_DBT_MODEL_NAME.value,
                 project_name=constants.PREFECT_DEFAULT_PROJECT.value,
                 parameters={
-                    "project_id": "datario",
                     "dataset_id": DATASET_ID_FLUVIOMETRIC,
                     "table_id": TABLE_ID_FLUVIOMETRIC,
-                    "maximum_bytes_processed": MAXIMUM_BYTES_PROCESSED,
+                    "mode": MATERIALIZATION_MODE,
+                    "materialize_to_datario": MATERIALIZE_TO_DATARIO,
                 },
-                labels=[
-                    "datario",
-                ],
-                run_name=f"Dump to GCS {DATASET_ID_FLUVIOMETRIC}.{TABLE_ID_FLUVIOMETRIC}",
+                labels=current_flow_labels,
+                run_name=f"Materialize {DATASET_ID_FLUVIOMETRIC}.{TABLE_ID_FLUVIOMETRIC}",
             )
-            dump_to_gcs_flow.set_upstream(wait_for_materialization)
 
-            wait_for_dump_to_gcs = wait_for_flow_run_with_2min_timeout(
-                flow_run_id=dump_to_gcs_flow,
+            materialization_flow.set_upstream(current_flow_labels)
+
+            wait_for_materialization = wait_for_flow_run_with_2min_timeout(
+                flow_run_id=materialization_flow,
                 stream_states=True,
                 stream_logs=True,
                 raise_final_state=True,
             )
+            wait_for_materialization.max_retries = (
+                dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_ATTEMPTS.value
+            )
+            wait_for_materialization.retry_delay = timedelta(
+                seconds=dump_db_constants.WAIT_FOR_MATERIALIZATION_RETRY_INTERVAL.value
+            )
+
+            with case(DUMP_TO_GCS, True):
+                # Trigger Dump to GCS flow run with project id as datario
+                dump_to_gcs_flow = create_flow_run(
+                    flow_name=utils_constants.FLOW_DUMP_TO_GCS_NAME.value,
+                    project_name=constants.PREFECT_DEFAULT_PROJECT.value,
+                    parameters={
+                        "project_id": "datario",
+                        "dataset_id": DATASET_ID_FLUVIOMETRIC,
+                        "table_id": TABLE_ID_FLUVIOMETRIC,
+                        "maximum_bytes_processed": MAXIMUM_BYTES_PROCESSED,
+                    },
+                    labels=[
+                        "datario",
+                    ],
+                    run_name=f"Dump to GCS {DATASET_ID_FLUVIOMETRIC}.{TABLE_ID_FLUVIOMETRIC}",
+                )
+                dump_to_gcs_flow.set_upstream(wait_for_materialization)
+
+                wait_for_dump_to_gcs = wait_for_flow_run_with_2min_timeout(
+                    flow_run_id=dump_to_gcs_flow,
+                    stream_states=True,
+                    stream_logs=True,
+                    raise_final_state=True,
+                )
 
     check_for_new_stations(dataframe, wait=UPLOAD_TABLE_PLUVIOMETRIC)
 

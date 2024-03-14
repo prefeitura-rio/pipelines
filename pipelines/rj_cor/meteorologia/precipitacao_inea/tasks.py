@@ -56,7 +56,7 @@ def download_data() -> pd.DataFrame:
 )
 def treat_data(
     dataframe: pd.DataFrame, dataset_id: str, table_id: str, mode: str = "dev"
-) -> Tuple[pd.DataFrame, bool]:
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Rename cols and filter data using Redis
     """
@@ -132,7 +132,7 @@ def treat_data(
         dataframe["altura_agua"] != "Estação pluviométrica", fluviometric_cols
     ].copy()
 
-    # Replace all values bigger than 10000 on altura_agua to nan
+    # Replace all values bigger than 10000 on "altura_agua" to nan
     dfr_fluviometric.loc[
         dfr_fluviometric["altura_agua"] > 10000, "altura_agua"
     ] = np.nan
@@ -151,7 +151,32 @@ def treat_data(
     return dfr_pluviometric, dfr_fluviometric
 
 
-@task
+@task(
+    nout=2,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def check_new_data(
+    dfr_pluviometric: pd.DataFrame,
+    dfr_fluviometric: pd.DataFrame,
+) -> Tuple[bool, bool]:
+    """
+    Check if the dataframes are empty
+    """
+
+    new_pluviometric_data = True
+    new_fluviometric_data = True
+
+    if dfr_pluviometric.shape[0] == 0:
+        log("No new pluviometric data available on API")
+        new_pluviometric_data = False
+    if dfr_fluviometric.shape[0] == 0:
+        log("No new fluviometric data available on API")
+        new_fluviometric_data = False
+    return new_pluviometric_data, new_fluviometric_data
+
+
+@task(skip_on_upstream_skip=False)
 def save_data(dataframe: pd.DataFrame, folder_name: str = None) -> Union[str, Path]:
     """
     Save data on a csv file to be uploaded to GCP
