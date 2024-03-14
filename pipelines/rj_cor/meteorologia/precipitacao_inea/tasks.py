@@ -113,8 +113,6 @@ def treat_data(
         log(skip_text)
         raise ENDRUN(state=Skipped(skip_text))
 
-    dataframe["id_reservatorio"] = dataframe["id_estacao"]
-
     pluviometric_cols = [
         "id_estacao",
         "data_medicao",
@@ -125,7 +123,7 @@ def treat_data(
         "acumulado_chuva_96_h",
         "acumulado_chuva_30_d",
     ]
-    fluviometric_cols = ["id_reservatorio", "data_medicao", "altura_agua"]
+    fluviometric_cols = ["id_estacao", "data_medicao", "altura_agua"]
 
     dfr_pluviometric = dataframe[pluviometric_cols].copy()
     dfr_fluviometric = dataframe.loc[
@@ -137,12 +135,9 @@ def treat_data(
         dfr_fluviometric["altura_agua"] > 10000, "altura_agua"
     ] = np.nan
 
-    dfr_fluviometric["tipo_reservatorio"] = "rio"
-
     fluviometric_cols_order = [
-        "id_reservatorio",
+        "id_estacao",
         "data_medicao",
-        "tipo_reservatorio",
         "altura_agua",
     ]
     dfr_fluviometric = dfr_fluviometric[fluviometric_cols_order].copy()
@@ -176,10 +171,9 @@ def check_new_data(
 
 
 @task(skip_on_upstream_skip=False)
-def wait_task():
+def wait_task() -> None:
     """Task create because prefect was messing up paths to be saved on each table"""
     log("End waiting pluviometric task to end.")
-    return "continue"
 
 
 @task
