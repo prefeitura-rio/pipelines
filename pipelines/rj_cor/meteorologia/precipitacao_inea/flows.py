@@ -155,11 +155,11 @@ with Flow(
                     raise_final_state=True,
                 )
 
-    with case(new_pluviometric_data, True):
+    with case(new_fluviometric_data, True):
         path_fluviometric = save_data(
             dataframe=dfr_fluviometric, folder_name="fluviometer"
         )
-        path_fluviometric.set_upstream(path_pluviometric)
+        path_fluviometric.set_upstream(UPLOAD_TABLE_PLUVIOMETRIC)
 
         # Create fluviometric table in BigQuery
         UPLOAD_TABLE_FLUVIOMETRIC = create_table_and_upload_to_gcs(
