@@ -65,6 +65,7 @@ def treat_data(
         pd.to_datetime(dataframe.Data, format="%d/%m/%Y").dt.strftime("%Y-%m-%d")
         + " "
         + dataframe["Hora"]
+        + ":00"
     )
 
     rename_cols = {
