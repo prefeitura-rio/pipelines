@@ -127,9 +127,7 @@ def treat_data(
     ]
     fluviometric_cols = ["id_reservatorio", "data_medicao", "altura_agua"]
 
-    dfr_pluviometric = dataframe.loc[
-        dataframe["altura_agua"] == "Estação pluviométrica", pluviometric_cols
-    ].copy()
+    dfr_pluviometric = dataframe[pluviometric_cols].copy()
     dfr_fluviometric = dataframe.loc[
         dataframe["altura_agua"] != "Estação pluviométrica", fluviometric_cols
     ].copy()
@@ -178,6 +176,13 @@ def check_new_data(
 
 
 @task(skip_on_upstream_skip=False)
+def wait_task():
+    """Task create because prefect was messing up paths to be saved on each table"""
+    log("End waiting pluviometric task to end.")
+    return "continue"
+
+
+@task
 def save_data(dataframe: pd.DataFrame, folder_name: str = None) -> Union[str, Path]:
     """
     Save data on a csv file to be uploaded to GCP
@@ -187,6 +192,9 @@ def save_data(dataframe: pd.DataFrame, folder_name: str = None) -> Union[str, Pa
     if folder_name:
         prepath = Path("/tmp/precipitacao") / folder_name
     prepath.mkdir(parents=True, exist_ok=True)
+
+    log(f"Start saving data on {prepath}")
+    log(f"Data to be saved {dataframe.head()}")
 
     partition_column = "data_medicao"
     dataframe, partitions = parse_date_columns(dataframe, partition_column)

@@ -19,6 +19,7 @@ from pipelines.rj_cor.meteorologia.precipitacao_inea.tasks import (
     download_data,
     treat_data,
     save_data,
+    wait_task,
 )
 from pipelines.rj_cor.meteorologia.precipitacao_inea.schedules import (
     minute_schedule,
@@ -156,10 +157,12 @@ with Flow(
                 )
 
     with case(new_fluviometric_data, True):
+        status = wait_task()
+        status.set_upstream(UPLOAD_TABLE_PLUVIOMETRIC)
         path_fluviometric = save_data(
             dataframe=dfr_fluviometric, folder_name="fluviometer"
         )
-        path_fluviometric.set_upstream(UPLOAD_TABLE_PLUVIOMETRIC)
+        path_fluviometric.set_upstream(status)
 
         # Create fluviometric table in BigQuery
         UPLOAD_TABLE_FLUVIOMETRIC = create_table_and_upload_to_gcs(
