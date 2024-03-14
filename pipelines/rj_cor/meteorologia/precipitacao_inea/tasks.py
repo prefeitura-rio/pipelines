@@ -113,6 +113,8 @@ def treat_data(
         log(skip_text)
         raise ENDRUN(state=Skipped(skip_text))
 
+    dataframe["id_reservatorio"] = dataframe["id_estacao"]
+
     pluviometric_cols = [
         "id_estacao",
         "data_medicao",
@@ -123,7 +125,7 @@ def treat_data(
         "acumulado_chuva_96_h",
         "acumulado_chuva_30_d",
     ]
-    fluviometric_cols = ["data_medicao", "altura_agua"]
+    fluviometric_cols = ["id_reservatorio", "data_medicao", "altura_agua"]
 
     dfr_pluviometric = dataframe.loc[
         dataframe["altura_agua"] == "Estação pluviométrica", pluviometric_cols
@@ -137,7 +139,6 @@ def treat_data(
         dfr_fluviometric["altura_agua"] > 10000, "altura_agua"
     ] = np.nan
 
-    dfr_fluviometric["id_reservatorio"] = dfr_fluviometric["id_estacao"]
     dfr_fluviometric["tipo_reservatorio"] = "rio"
 
     fluviometric_cols_order = [
