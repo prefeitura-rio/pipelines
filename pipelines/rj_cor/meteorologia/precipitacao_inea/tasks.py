@@ -137,7 +137,7 @@ def treat_data(
         dfr_fluviometric["altura_agua"] > 10000, "altura_agua"
     ] = np.nan
 
-    dfr_fluviometric["id_reservatorio"] = 1
+    dfr_fluviometric["id_reservatorio"] = dfr_fluviometric["id_estacao"]
     dfr_fluviometric["tipo_reservatorio"] = "rio"
 
     fluviometric_cols_order = [

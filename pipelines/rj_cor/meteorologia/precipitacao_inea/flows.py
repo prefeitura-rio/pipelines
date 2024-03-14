@@ -35,7 +35,7 @@ wait_for_flow_run_with_2min_timeout = wait_for_flow_run_with_timeout(
 )
 
 with Flow(
-    name="COR: Meteorologia - Precipitacao INEA",
+    name="COR: Meteorologia - Precipitacao e Fluviometria INEA",
     code_owners=[
         "paty",
     ],
@@ -150,11 +150,11 @@ with Flow(
 
     # Create fluviometric table in BigQuery
     UPLOAD_TABLE_FLUVIOMETRIC = create_table_and_upload_to_gcs(
-        data_path=path_pluviometric,
+        data_path=path_fluviometric,
         dataset_id=DATASET_ID_FLUVIOMETRIC,
         table_id=TABLE_ID_FLUVIOMETRIC,
         dump_mode=DUMP_MODE,
-        wait=path_pluviometric,
+        wait=path_fluviometric,
     )
 
     # Trigger DBT flow run
