@@ -156,9 +156,9 @@ with Flow(
                     raise_final_state=True,
                 )
 
+    status = wait_task()
+    status.set_upstream(UPLOAD_TABLE_PLUVIOMETRIC)
     with case(new_fluviometric_data, True):
-        status = wait_task()
-        status.set_upstream(UPLOAD_TABLE_PLUVIOMETRIC)
         path_fluviometric = save_data(
             dataframe=dfr_fluviometric, folder_name="fluviometer"
         )
