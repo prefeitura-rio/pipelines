@@ -4,8 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_cor API documentation</title>
-<meta name="description" content="Prefect flows for cor project" />
+<title>pipelines.rj_cor.meteorologia.precipitacao_inea.schedules API documentation</title>
+<meta name="description" content="Schedules for precipitacao_inea
+Rodar a cada 1 minuto" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,55 +20,52 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_cor</code></h1>
+<h1 class="title">Module <code>pipelines.rj_cor.meteorologia.precipitacao_inea.schedules</code></h1>
 </header>
 <section id="section-intro">
-<p>Prefect flows for cor project</p>
+<p>Schedules for precipitacao_inea
+Rodar a cada 1 minuto</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
+# pylint: disable=C0103
 &#34;&#34;&#34;
-Prefect flows for cor project
+Schedules for precipitacao_inea
+Rodar a cada 1 minuto
 &#34;&#34;&#34;
-from pipelines.rj_cor.bot_semaforo.flows import *
-from pipelines.rj_cor.meteorologia.meteorologia_inmet.flows import *
-from pipelines.rj_cor.meteorologia.meteorologia_redemet.flows import *
-from pipelines.rj_cor.meteorologia.precipitacao_alertario.flows import *
-from pipelines.rj_cor.meteorologia.precipitacao_cemaden.flows import *
-from pipelines.rj_cor.meteorologia.precipitacao_inea.flows import *
-from pipelines.rj_cor.meteorologia.satelite.flows import *
-from pipelines.rj_cor.meteorologia.precipitacao_websirene.flows import *
-from pipelines.rj_cor.meteorologia.radar.precipitacao.flows import *
-from pipelines.rj_cor.comando.eventos.flows import *</code></pre>
+from datetime import timedelta, datetime
+from prefect.schedules import Schedule
+from prefect.schedules.clocks import IntervalClock
+from pipelines.constants import constants
+
+minute_schedule = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(minutes=5),
+            start_date=datetime(2023, 1, 1, 0, 1, 0),
+            labels=[
+                constants.RJ_COR_AGENT_LABEL.value,
+            ],
+            parameter_defaults={
+                # &#34;trigger_rain_dashboard_update&#34;: True,
+                &#34;materialize_after_dump&#34;: True,
+                &#34;mode&#34;: &#34;prod&#34;,
+                &#34;materialize_to_datario&#34;: True,
+                &#34;dump_to_gcs&#34;: False,
+                &#34;dump_mode&#34;: &#34;append&#34;,
+                &#34;dataset_id_pluviometric&#34;: &#34;clima_pluviometro&#34;,
+                &#34;table_id_pluviometric&#34;: &#34;taxa_precipitacao_inea&#34;,
+                &#34;dataset_id_fluviometric&#34;: &#34;clima_fluviometro&#34;,
+                &#34;table_id_fluviometric&#34;: &#34;lamina_agua_inea&#34;,
+            },
+        ),
+    ]
+)</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
-<dl>
-<dt><code class="name"><a title="pipelines.rj_cor.bot_semaforo" href="bot_semaforo/index.html">pipelines.rj_cor.bot_semaforo</a></code></dt>
-<dd>
-<div class="desc"><p>CET Semaphores Telegram Bot</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_cor.comando" href="comando/index.html">pipelines.rj_cor.comando</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_cor.meteorologia" href="meteorologia/index.html">pipelines.rj_cor.meteorologia</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_cor.tasks" href="tasks.html">pipelines.rj_cor.tasks</a></code></dt>
-<dd>
-<div class="desc"><p>Common
-Tasks for rj-cor</p></div>
-</dd>
-<dt><code class="name"><a title="pipelines.rj_cor.utils" href="utils.html">pipelines.rj_cor.utils</a></code></dt>
-<dd>
-<div class="desc"><p>Utils for rj-cor</p></div>
-</dd>
-</dl>
 </section>
 <section>
 </section>
@@ -111,7 +109,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../../doc-search.html#' + encodeURIComponent(query);
+const url = '../../../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -130,16 +128,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines" href="../index.html">pipelines</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="pipelines.rj_cor.bot_semaforo" href="bot_semaforo/index.html">pipelines.rj_cor.bot_semaforo</a></code></li>
-<li><code><a title="pipelines.rj_cor.comando" href="comando/index.html">pipelines.rj_cor.comando</a></code></li>
-<li><code><a title="pipelines.rj_cor.meteorologia" href="meteorologia/index.html">pipelines.rj_cor.meteorologia</a></code></li>
-<li><code><a title="pipelines.rj_cor.tasks" href="tasks.html">pipelines.rj_cor.tasks</a></code></li>
-<li><code><a title="pipelines.rj_cor.utils" href="utils.html">pipelines.rj_cor.utils</a></code></li>
+<li><code><a title="pipelines.rj_cor.meteorologia.precipitacao_inea" href="index.html">pipelines.rj_cor.meteorologia.precipitacao_inea</a></code></li>
 </ul>
 </li>
 </ul>
