@@ -54,7 +54,7 @@ with Flow(
         "dataset_id_fluviometric", default="clima_fluviometro", required=True
     )
     TABLE_ID_FLUVIOMETRIC = Parameter(
-        "table_id_fluviometric", default="taxa_precipitacao_inea", required=True
+        "table_id_fluviometric", default="lamina_agua_inea", required=True
     )
 
     # Materialization parameters
