@@ -131,9 +131,9 @@ def treat_data(
     ].copy()
 
     # Replace all values bigger than 10000 on "altura_agua" to nan
-    dfr_fluviometric.loc[
-        dfr_fluviometric["altura_agua"] > 10000, "altura_agua"
-    ] = np.nan
+    dfr_fluviometric.loc[dfr_fluviometric["altura_agua"] > 10000, "altura_agua"] = (
+        np.nan
+    )
 
     fluviometric_cols_order = [
         "id_estacao",
