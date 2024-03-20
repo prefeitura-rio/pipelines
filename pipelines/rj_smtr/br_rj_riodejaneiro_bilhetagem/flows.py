@@ -273,6 +273,7 @@ bilhetagem_recaptura = set_default_parameters(
     | {"recapture": True},
 )
 
+
 # TRATAMENTO - RODA DE HORA EM HORA, RECAPTURAS + CAPTURA AUXILIAR + MATERIALIZAÇÃO #
 
 with Flow(
@@ -307,6 +308,22 @@ with Flow(
 
         wait_recaptura_transacao_true = wait_for_flow_run(
             run_recaptura_transacao,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+
+        # Recaptura Fiscalização
+
+        run_recaptura_fiscalizacao = create_flow_run(
+            flow_name=bilhetagem_recaptura.name,
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            labels=LABELS,
+            parameters=constants.BILHETAGEM_FISCALIZACAO_CAPTURE_PARAMS.value,
+        )
+
+        wait_recaptura_fiscalizacao_true = wait_for_flow_run(
+            run_recaptura_fiscalizacao,
             stream_states=True,
             stream_logs=True,
             raise_final_state=True,
