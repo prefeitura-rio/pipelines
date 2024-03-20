@@ -747,9 +747,15 @@ class constants(Enum):  # pylint: disable=c0103
                 "engine": "postgresql",
                 "host": "10.5.12.107",
             },
+            "fiscalizacao_db": {
+                "engine": "postgresql",
+                "host": "10.5.115.29",
+            },
         },
         "source_type": "db",
     }
+
+    BILHETAGEM_PRIVATE_BUCKET = "rj-smtr-jae-private"
 
     BILHETAGEM_TRANSACAO_CAPTURE_PARAMS = {
         "table_id": "transacao",
@@ -768,6 +774,26 @@ class constants(Enum):  # pylint: disable=c0103
         },
         "primary_key": ["id"],
         "interval_minutes": 1,
+    }
+
+    BILHETAGEM_FISCALIZACAO_CAPTURE_PARAMS = {
+        "table_id": "fiscalizacao",
+        "partition_date_only": False,
+        "extract_params": {
+            "database": "fiscalizacao_db",
+            "query": """
+                SELECT
+                    *
+                FROM
+                    fiscalizacao
+                WHERE
+                    dt_inclusao >= '{start}'
+                    dt_inclusao < '{end}'
+            """,
+        },
+        "primary_key": ["id"],
+        "interval_minutes": 5,
+        "save_bucket_name": BILHETAGEM_PRIVATE_BUCKET,
     }
 
     BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS = {
@@ -887,8 +913,6 @@ class constants(Enum):  # pylint: disable=c0103
     BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
 
     BILHETAGEM_TRATAMENTO_INTERVAL = 60
-
-    BILHETAGEM_PRIVATE_BUCKET = "rj-smtr-jae-private"
 
     BILHETAGEM_CAPTURE_PARAMS = [
         {

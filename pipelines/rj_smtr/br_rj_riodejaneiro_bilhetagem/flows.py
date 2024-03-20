@@ -63,6 +63,24 @@ bilhetagem_transacao_captura = set_default_parameters(
 
 bilhetagem_transacao_captura.schedule = every_minute
 
+# BILHETAGEM FISCALIZAÇÃO - CAPTURA A CADA 5 MINUTOS #
+
+bilhetagem_fiscalizacao_captura = deepcopy(default_capture_flow)
+bilhetagem_fiscalizacao_captura.name = "SMTR: Bilhetagem Fiscalização - Captura"
+bilhetagem_fiscalizacao_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bilhetagem_fiscalizacao_captura.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+
+bilhetagem_fiscalizacao_captura = set_default_parameters(
+    flow=bilhetagem_fiscalizacao_captura,
+    default_parameters=constants.BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS.value
+    | constants.BILHETAGEM_FISCALIZACAO_CAPTURE_PARAMS.value,
+)
+
+bilhetagem_fiscalizacao_captura.schedule = every_5_minutes
+
 # BILHETAGEM INTEGRAÇÃO - CAPTURA A CADA MINUTO #
 
 bilhetagem_integracao_captura = deepcopy(default_capture_flow)
