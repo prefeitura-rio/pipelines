@@ -78,9 +78,9 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
 
         log("Update indicador_ar_condicionado based on tipo_veiculo...", level="info")
         data["indicador_ar_condicionado"] = data["tipo_veiculo"].map(
-            lambda x: None
-            if not isinstance(x, str)
-            else bool("C/AR" in x.replace(" ", ""))
+            lambda x: (
+                None if not isinstance(x, str) else bool("C/AR" in x.replace(" ", ""))
+            )
         )
 
         log("Update status...", level="info")
