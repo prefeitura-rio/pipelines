@@ -164,6 +164,12 @@ def generate_dump_url_schedules(  # pylint: disable=too-many-arguments,too-many-
             parameter_defaults[&#34;materialize_to_datario&#34;] = parameters[
                 &#34;materialize_to_datario&#34;
             ]
+        if &#34;encoding&#34; in parameters:
+            parameter_defaults[&#34;encoding&#34;] = parameters[&#34;encoding&#34;]
+        if &#34;on_bad_lines&#34; in parameters:
+            parameter_defaults[&#34;on_bad_lines&#34;] = parameters[&#34;on_bad_lines&#34;]
+        if &#34;separator&#34; in parameters:
+            parameter_defaults[&#34;separator&#34;] = parameters[&#34;separator&#34;]
         # if &#34;dbt_model_secret_parameters&#34; in parameters:
         #     parameter_defaults[&#34;dbt_model_secret_parameters&#34;] = parameters[
         #         &#34;dbt_model_secret_parameters&#34;
@@ -263,6 +269,12 @@ def generate_dump_url_schedules(  # pylint: disable=too-many-arguments,too-many-
             parameter_defaults[&#34;materialize_to_datario&#34;] = parameters[
                 &#34;materialize_to_datario&#34;
             ]
+        if &#34;encoding&#34; in parameters:
+            parameter_defaults[&#34;encoding&#34;] = parameters[&#34;encoding&#34;]
+        if &#34;on_bad_lines&#34; in parameters:
+            parameter_defaults[&#34;on_bad_lines&#34;] = parameters[&#34;on_bad_lines&#34;]
+        if &#34;separator&#34; in parameters:
+            parameter_defaults[&#34;separator&#34;] = parameters[&#34;separator&#34;]
         # if &#34;dbt_model_secret_parameters&#34; in parameters:
         #     parameter_defaults[&#34;dbt_model_secret_parameters&#34;] = parameters[
         #         &#34;dbt_model_secret_parameters&#34;

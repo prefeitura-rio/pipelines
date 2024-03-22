@@ -180,12 +180,23 @@ def dump_files(
     chunksize: int = 10**6,
     build_json_dataframe: bool = False,
     dataframe_key_column: str = None,
+    encoding: str = &#34;utf-8&#34;,
+    on_bad_lines: str = &#34;error&#34;,
+    separator: str = &#34;,&#34;,
 ) -&gt; None:
     &#34;&#34;&#34;
-    Dump files according to chunk size
+    Dump files according to chunk size and read mode
     &#34;&#34;&#34;
     event_id = datetime.now().strftime(&#34;%Y%m%d-%H%M%S&#34;)
-    for idx, chunk in enumerate(pd.read_csv(Path(file_path), chunksize=chunksize)):
+    for idx, chunk in enumerate(
+        pd.read_csv(
+            Path(file_path),
+            chunksize=chunksize,
+            encoding=encoding,
+            on_bad_lines=on_bad_lines,
+            sep=separator,
+        )
+    ):
         log(f&#34;Dumping batch {idx} with size {chunksize}&#34;)
         handle_dataframe_chunk(
             dataframe=chunk,
@@ -349,10 +360,10 @@ def download_url(  # pylint: disable=too-many-arguments
 </details>
 </dd>
 <dt id="pipelines.utils.dump_url.tasks.dump_files"><code class="name flex">
-<span>def <span class="ident">dump_files</span></span>(<span>file_path: str, partition_columns: List[str], save_path: str = '.', chunksize: int = 1000000, build_json_dataframe: bool = False, dataframe_key_column: str = None) ‑> None</span>
+<span>def <span class="ident">dump_files</span></span>(<span>file_path: str, partition_columns: List[str], save_path: str = '.', chunksize: int = 1000000, build_json_dataframe: bool = False, dataframe_key_column: str = None, encoding: str = 'utf-8', on_bad_lines: str = 'error', separator: str = ',') ‑> None</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Dump files according to chunk size</p></div>
+<div class="desc"><p>Dump files according to chunk size and read mode</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -370,12 +381,23 @@ def dump_files(
     chunksize: int = 10**6,
     build_json_dataframe: bool = False,
     dataframe_key_column: str = None,
+    encoding: str = &#34;utf-8&#34;,
+    on_bad_lines: str = &#34;error&#34;,
+    separator: str = &#34;,&#34;,
 ) -&gt; None:
     &#34;&#34;&#34;
-    Dump files according to chunk size
+    Dump files according to chunk size and read mode
     &#34;&#34;&#34;
     event_id = datetime.now().strftime(&#34;%Y%m%d-%H%M%S&#34;)
-    for idx, chunk in enumerate(pd.read_csv(Path(file_path), chunksize=chunksize)):
+    for idx, chunk in enumerate(
+        pd.read_csv(
+            Path(file_path),
+            chunksize=chunksize,
+            encoding=encoding,
+            on_bad_lines=on_bad_lines,
+            sep=separator,
+        )
+    ):
         log(f&#34;Dumping batch {idx} with size {chunksize}&#34;)
         handle_dataframe_chunk(
             dataframe=chunk,

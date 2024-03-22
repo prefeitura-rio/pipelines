@@ -57,12 +57,12 @@ sme_gsheets_flow.run_config = KubernetesRun(
     ],
 )
 
-sme_gsheets_default_parameters = {
-    &#34;dataset_id&#34;: &#34;educacao_basica_alocacao&#34;,
-}
-sme_gsheets_flow = set_default_parameters(
-    sme_gsheets_flow, default_parameters=sme_gsheets_default_parameters
-)
+# sme_gsheets_default_parameters = {
+#     &#34;dataset_id&#34;: &#34;educacao_basica_alocacao&#34;,
+# }
+# sme_gsheets_flow = set_default_parameters(
+#     sme_gsheets_flow, default_parameters=sme_gsheets_default_parameters
+# )
 
 sme_gsheets_flow.schedule = gsheets_year_update_schedule</code></pre>
 </details>

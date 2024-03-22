@@ -77,6 +77,9 @@ with Flow(
 
     # Table parameters
     partition_columns = Parameter(&#34;partition_columns&#34;, required=False, default=&#34;&#34;)
+    encoding = Parameter(&#34;encoding&#34;, required=False, default=&#34;utf-8&#34;)
+    on_bad_lines = Parameter(&#34;on_bad_lines&#34;, required=False, default=&#34;error&#34;)
+    separator = Parameter(&#34;separator&#34;, required=False, default=&#34;,&#34;)
 
     # Materialization parameters
     materialize_after_dump = Parameter(
@@ -150,6 +153,9 @@ with Flow(
         save_path=DUMP_DATA_PATH,
         build_json_dataframe=build_json_dataframe,
         dataframe_key_column=dataframe_key_column,
+        encoding=encoding,
+        on_bad_lines=on_bad_lines,
+        separator=separator,
     )
     DUMP_CHUNKS_TASK.set_upstream(DOWNLOAD_URL_TASK)
 
