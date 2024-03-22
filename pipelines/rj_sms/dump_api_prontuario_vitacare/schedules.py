@@ -5,9 +5,10 @@ Schedules for the vitacare dump pipeline
 """
 
 from datetime import timedelta, datetime
-
+from prefect.schedules.clocks import IntervalClock
 from prefect.schedules import Schedule
 import pytz
+import pendulum
 
 
 from pipelines.constants import constants
@@ -56,3 +57,27 @@ vitacare_clocks = generate_dump_api_schedules(
 )
 
 vitacare_daily_update_schedule = Schedule(clocks=untuple(vitacare_clocks))
+
+vitacare_every_day_at_six_am = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(days=1),
+            start_date=pendulum.datetime(2023, 1, 1, 6, 0, 0, tz="America/Sao_Paulo"),
+            labels=[
+                constants.RJ_SMS_DEV_AGENT_LABEL.value,
+            ],
+        )
+    ]
+)
+
+vitacare_every_day_at_seven_am = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(days=1),
+            start_date=pendulum.datetime(2023, 1, 1, 7, 0, 0, tz="America/Sao_Paulo"),
+            labels=[
+                constants.RJ_SMS_DEV_AGENT_LABEL.value,
+            ],
+        )
+    ]
+)
