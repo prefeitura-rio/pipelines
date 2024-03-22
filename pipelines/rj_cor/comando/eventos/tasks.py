@@ -125,6 +125,7 @@ def treat_data_ocorrencias(
             "id": "id_evento",
             "pop_id": "id_pop",
             "inicio": "data_inicio",
+            "fim": "data_fim",
             "pop": "pop_titulo",
             "titulo": "pop_especificacao",
         }
