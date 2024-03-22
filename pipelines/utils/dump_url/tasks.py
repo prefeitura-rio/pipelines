@@ -151,12 +151,23 @@ def dump_files(
     chunksize: int = 10**6,
     build_json_dataframe: bool = False,
     dataframe_key_column: str = None,
+    encoding: str = "utf-8",
+    on_bad_lines: str = "error",
+    separator: str = ",",
 ) -> None:
     """
-    Dump files according to chunk size
+    Dump files according to chunk size and read mode
     """
     event_id = datetime.now().strftime("%Y%m%d-%H%M%S")
-    for idx, chunk in enumerate(pd.read_csv(Path(file_path), chunksize=chunksize)):
+    for idx, chunk in enumerate(
+        pd.read_csv(
+            Path(file_path),
+            chunksize=chunksize,
+            encoding=encoding,
+            on_bad_lines=on_bad_lines,
+            sep=separator,
+        )
+    ):
         log(f"Dumping batch {idx} with size {chunksize}")
         handle_dataframe_chunk(
             dataframe=chunk,
