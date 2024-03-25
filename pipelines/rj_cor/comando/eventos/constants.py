@@ -41,7 +41,6 @@ class constants(Enum):  # pylint: disable=c0103
             FROM `rj-cor.adm_cor_comando_staging.ocorrencias_nova_api`
             WHERE id_pop IN ("5", "6", "31", "32", "33")
                 AND CAST(data_particao AS DATE) >= CAST(DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 15 MINUTE), day) AS date)
-             AND CAST(data_inicio AS DATETIME) >= TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 15 MINUTE)
                 -- AND data_fim IS NULL # data_fim não está confiável, temos status fechados sem esse campo
             ),
 
@@ -74,9 +73,9 @@ class constants(Enum):  # pylint: disable=c0103
             LEFT JOIN alagamentos
                 ON ST_CONTAINS(intersected_areas.geometry, alagamentos.geometry)
                 AND alagamentos.last_update = 1
-                AND CAST(data_inicio AS DATETIME) >= TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 15 MINUTE) -- seleciona ocorrencias que iniciaram nos últimos 15min
-                -- AND (CAST(data_inicio AS DATETIME) >= TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 15 MINUTE)
-                --   OR status_ocorrencia = "Aberto") -- seleciona ocorrencias que iniciaram nos últimos 15min ou ainda não finalizaram
+                -- AND CAST(data_inicio AS DATETIME) >= TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 15 MINUTE) -- seleciona ocorrencias que iniciaram nos últimos 15min
+                AND (CAST(data_inicio AS DATETIME) >= TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 15 MINUTE)
+                  OR status_ocorrencia = "Aberto") -- seleciona ocorrencias que iniciaram nos últimos 15min ou ainda não finalizaram
             WHERE  intersected_areas.row_num = 1
             GROUP BY id_h3, bairro
             )
@@ -102,7 +101,7 @@ class constants(Enum):  # pylint: disable=c0103
                 WHEN tipo = 2 THEN '#A9CBE8'--'#BFA230'
                 WHEN tipo = 3 THEN '#125999'--'#E0701F'
                 ELSE '#ffffff'
-            END AS color
+            END AS color,
         FROM final_table
         -- order by qnt_alagamentos
         """,
