@@ -115,10 +115,12 @@ class constants(Enum):  # pylint: disable=c0103
             -- FROM `rj-cor.adm_cor_comando_staging.ocorrencias`
             FROM `rj-cor.adm_cor_comando_staging.ocorrencias_nova_api`
             WHERE id_pop IN ("5", "6", "31", "32", "33")
-                AND data_particao >= CAST(DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 120 MINUTE), day) AS STRING)
-                AND (CAST(data_fim AS DATETIME) >= TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 120 MINUTE)
+                AND CAST(data_particao AS DATE) >= CAST(DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 24 hour), day) AS date)
+                AND CAST(data_inicio AS DATETIME) >= TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 24 HOUR)
+                -- AND data_particao >= CAST(DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 24 hour), day) AS STRING)
+                -- AND (CAST(data_fim AS DATETIME) >= TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 24 hour)
                     -- OR data_fim IS NULL
-                    )
+                    -- )
                 AND status = "Aberto"
             ),
 
