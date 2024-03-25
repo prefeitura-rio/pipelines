@@ -75,7 +75,8 @@ class constants(Enum):  # pylint: disable=c0103
                 AND alagamentos.last_update = 1
                 -- AND CAST(data_inicio AS DATETIME) >= TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 15 MINUTE) -- seleciona ocorrencias que iniciaram nos últimos 15min
                 AND (CAST(data_inicio AS DATETIME) >= TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 15 MINUTE)
-                  OR status_ocorrencia = "Aberto") -- seleciona ocorrencias que iniciaram nos últimos 15min ou ainda não finalizaram
+                  OR CAST(data_fim AS DATETIME) >= TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 15 MINUTE)
+                  OR status_ocorrencia = "Aberto") -- seleciona ocorrencias que iniciaram ou finalizaram nos últimos 15min ou ainda não finalizaram
             WHERE  intersected_areas.row_num = 1
             GROUP BY id_h3, bairro
             )
@@ -163,7 +164,8 @@ class constants(Enum):  # pylint: disable=c0103
                 ON ST_CONTAINS(intersected_areas.geometry, alagamentos.geometry)
                 AND alagamentos.last_update = 1
                 AND (CAST(data_inicio AS DATETIME) >= TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 2 HOUR)
-                  OR status_ocorrencia = "Aberto") -- seleciona ocorrencias que iniciaram nas últimas 2h ou ainda não finalizaram
+                  OR CAST(data_fim AS DATETIME) >= TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 2 HOUR)
+                  OR status_ocorrencia = "Aberto") -- seleciona ocorrencias que iniciaram ou finalizaram nas últimas 2h ou ainda não finalizaram
                 -- AND (CAST(data_fim AS DATETIME) >= TIMESTAMP_SUB(CURRENT_DATETIME("America/Sao_Paulo"), INTERVAL 24 hour)
                     -- OR data_fim IS NULL # data_fim não está confiável, temos status fechados sem esse campo
                     -- )
