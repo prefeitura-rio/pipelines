@@ -319,14 +319,12 @@ def save_data(dataframe: pd.DataFrame) -> Union[str, Path]:
 
     partition_column = "data_inicio"
     dataframe, partitions = parse_date_columns(dataframe, partition_column)
-    current_time = pendulum.now("America/Sao_Paulo").strftime("%Y%m%d%H%M")
 
     to_partitions(
         data=dataframe,
         partition_columns=partitions,
         savepath=prepath,
         data_type="csv",
-        suffix=current_time,
     )
     log(f"[DEBUG] Files saved on {prepath}")
     return prepath
