@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=R0914,W0613,W0102,W0613,R0912,R0915,E1136,E1137,W0702
 # flake8: noqa: E722
+# TODO: colocar id_pops novos
+# TODO: gerar alerta quando tiver id_pop novo
+# TODO: apagar histórico da nova api para ter o id_pop novo
+# TODO: criar tabela dim do id_pop novo
+# TODO: salvar no redis o máximo entre as colunas de data_inicio e data_fim, seguir flow só se tiver novidades em alguma dessas colunas
 """
 Tasks for comando
 """
@@ -21,18 +26,20 @@ from prefect.engine.signals import ENDRUN
 from prefect.engine.state import Skipped
 
 # from prefect.triggers import all_successful
-
+# url_eventos = "http://aplicativo.cocr.com.br/comando/ocorrencias_api_nova"
+from pipelines.rj_cor.utils import compare_actual_df_with_redis_df
 from pipelines.rj_cor.comando.eventos.utils import (
-    build_redis_key,
-    compare_actual_df_with_redis_df,
-    get_redis_output,  # TODO: atualizar o do utils.utils
+    # build_redis_key,
     format_date,
     treat_wrong_id_pop,
 )
 from pipelines.utils.utils import (
+    build_redis_key,
+    get_redis_output,
     get_vault_secret,
     log,
     parse_date_columns,
+    save_str_on_redis,
     to_partitions,
 )
 
@@ -49,7 +56,7 @@ def get_date_interval(first_date, last_date) -> Tuple[dict, str]:
         first_date, last_date = format_date(first_date, last_date)
     else:
         last_date = pendulum.today(tz="America/Sao_Paulo").date()
-        first_date = last_date.subtract(days=1)  # atenção mudar para 3
+        first_date = last_date.subtract(days=3)
         first_date, last_date = format_date(
             first_date.strftime("%Y-%m-%d"), last_date.strftime("%Y-%m-%d")
         )
@@ -70,7 +77,8 @@ def get_redis_df(
     redis_key = build_redis_key(dataset_id, table_id, name, mode)
     log(f"Acessing redis_key: {redis_key}")
 
-    dfr_redis = get_redis_output(redis_key, is_df=True)
+    dfr_redis = get_redis_output(redis_key)
+    # dfr_redis = get_redis_output(redis_key, is_df=True)
     log(f"Redis output: {dfr_redis}")
 
     # if len(dfr_redis) == 0:
@@ -90,6 +98,48 @@ def get_redis_df(
     return dfr_redis
 
 
+@task
+def get_redis_max_date(
+    dataset_id: str,
+    table_id: str,
+    name: str = None,
+    mode: str = "prod",
+) -> str:
+    """
+    Acess redis to get the last saved date and compare to actual df.
+    """
+    redis_key = build_redis_key(dataset_id, table_id, name, mode)
+    log(f"Acessing redis_key: {redis_key}")
+
+    redis_max_date = get_redis_output(redis_key)
+
+    try:
+        redis_max_date = redis_max_date["max_date"]
+    except KeyError:
+        redis_max_date = "1990-01-01"
+        log("Creating a fake date because this key doesn't exist.")
+
+    log(f"Redis output: {redis_max_date}")
+    return redis_max_date
+
+
+@task
+def save_redis_max_date(
+    dataset_id: str,
+    table_id: str,
+    name: str = None,
+    mode: str = "prod",
+    redis_max_date: str = None,
+) -> str:
+    """
+    Acess redis to save last date.
+    """
+    redis_key = build_redis_key(dataset_id, table_id, name, mode)
+    log(f"Acessing redis_key: {redis_key}")
+
+    save_str_on_redis(redis_key, "max_date", redis_max_date)
+
+
 @task(
     nout=1,
     max_retries=3,
@@ -104,6 +154,7 @@ def download_data_ocorrencias(first_date, last_date, wait=None) -> pd.DataFrame:
     url_secret = get_vault_secret("comando")["data"]
     url_eventos = url_secret["endpoint_eventos"]
 
+    log(f"\n\nDownloading data from {first_date} to {last_date} (not included)")
     dfr = pd.read_json(f"{url_eventos}/?data_i={first_date}&data_f={last_date}")
 
     return dfr
@@ -112,8 +163,7 @@ def download_data_ocorrencias(first_date, last_date, wait=None) -> pd.DataFrame:
 @task(nout=2)
 def treat_data_ocorrencias(
     dfr: pd.DataFrame,
-    dfr_redis: pd.DataFrame,
-    columns: list,
+    redis_max_date: str,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Rename cols and normalize data.
@@ -133,20 +183,17 @@ def treat_data_ocorrencias(
 
     dfr["id_evento"] = dfr["id_evento"].astype(float).astype(int).astype(str)
 
-    log(f"Dataframe before comparing with last data saved on redis \n{dfr.head()}")
-    columns = ["id_evento", "data_inicio", "status"]
-    dfr, dfr_redis = compare_actual_df_with_redis_df(
-        dfr,
-        dfr_redis,
-        columns,
-    )
-    log(f"Dataframe after comparing with last data saved on redis {dfr.head()}")
+    max_date = dfr[["data_inicio", "data_fim"]].max().max()
 
-    # If df is empty stop flow
-    if dfr.shape[0] == 0:
+    log(f"Last API data was {max_date} and last redis uptade was {redis_max_date}")
+
+    if max_date <= redis_max_date:
         skip_text = "No new data available on API"
         print(skip_text)
         raise ENDRUN(state=Skipped(skip_text))
+
+    # Get new max_date to save on redis
+    redis_max_date = max_date
 
     dfr["tipo"] = dfr["tipo"].replace(
         {
@@ -208,7 +255,7 @@ def treat_data_ocorrencias(
         "%Y-%m-%d %H:%M:%S"
     )
 
-    return dfr.drop_duplicates(), dfr_redis
+    return dfr.drop_duplicates(), redis_max_date
 
 
 @task(
