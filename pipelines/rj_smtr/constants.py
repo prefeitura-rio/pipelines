@@ -1156,8 +1156,7 @@ class constants(Enum):  # pylint: disable=c0103
     }
 
     BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS = {
-        "dataset_id": BILHETAGEM_DATASET_ID,
-        "table_id": "passageiros_hora",
+        "dataset_id": "dashboard_bilhetagem_jae",
         "upstream": True,
         "dbt_vars": {
             "date_range": {
@@ -1166,7 +1165,7 @@ class constants(Enum):  # pylint: disable=c0103
             },
             "version": {},
         },
-        "exclude": "integracao matriz_integracao",
+        "exclude": "integracao matriz_integracao stops_gtfs2 routes_gtfs2 feed_info_gtfs2",
     }
 
     BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS = {
