@@ -1172,7 +1172,7 @@ class constants(Enum):  # pylint: disable=c0103
         "dataset_id": BILHETAGEM_DATASET_ID,
         "table_id": "ordem_pagamento",
         "upstream": True,
-        "exclude": f"+{BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS['table_id']}",
+        "exclude": "+transacao",
         "dbt_vars": {
             "date_range": {
                 "table_run_datetime_column_name": "data_ordem",
