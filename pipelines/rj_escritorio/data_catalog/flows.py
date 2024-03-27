@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Flow definition for generating a data catalog from BigQuery.
+Flow definition for generating a data catalog from BigQuery to GSheets.
 """
 from prefect import Parameter
 from prefect.run_configs import KubernetesRun
