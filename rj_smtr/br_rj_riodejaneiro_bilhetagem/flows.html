@@ -194,6 +194,7 @@ bilhetagem_materializacao_transacao.run_config = KubernetesRun(
 )
 
 bilhetagem_materializacao_transacao_parameters = {
+    &#34;source_dataset_ids&#34;: [constants.BILHETAGEM_DATASET_ID.value],
     &#34;source_table_ids&#34;: [
         constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value[&#34;table_id&#34;]
     ],
@@ -221,13 +222,16 @@ bilhetagem_materializacao_ordem_pagamento.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
+
+ordem_pagamento_sources_table_ids = [
+    constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value[&#34;table_id&#34;]
+] + [d[&#34;table_id&#34;] for d in constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS.value]
+
 bilhetagem_materializacao_ordem_pagamento_parameters = {
-    &#34;source_table_ids&#34;: [
-        constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value[&#34;table_id&#34;]
-    ]
-    + [
-        d[&#34;table_id&#34;] for d in constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS.value
+    &#34;source_dataset_ids&#34;: [
+        constants.BILHETAGEM_DATASET_ID.value for _ in ordem_pagamento_sources_table_ids
     ],
+    &#34;source_table_ids&#34;: ordem_pagamento_sources_table_ids,
     &#34;capture_intervals_minutes&#34;: [
         constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value[&#34;interval_minutes&#34;]
     ]
@@ -255,6 +259,7 @@ bilhetagem_materializacao_integracao.run_config = KubernetesRun(
 )
 
 bilhetagem_materializacao_integracao_parameters = {
+    &#34;source_dataset_ids&#34;: [constants.BILHETAGEM_DATASET_ID.value],
     &#34;source_table_ids&#34;: [
         constants.BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS.value[&#34;table_id&#34;]
     ],
