@@ -788,7 +788,7 @@ class constants(Enum):  # pylint: disable=c0103
                     fiscalizacao
                 WHERE
                     dt_inclusao >= '{start}'
-                    dt_inclusao < '{end}'
+                    AND dt_inclusao < '{end}'
             """,
         },
         "primary_key": ["id"],
@@ -1143,26 +1143,29 @@ class constants(Enum):  # pylint: disable=c0103
 
     BILHETAGEM_EXCLUDE = "+operadoras +consorcios"
 
+    BILHETAGEM_JAE_DASHBOARD_DATASET_ID = "dashboard_bilhetagem_jae"
+
     BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS = {
-        "dataset_id": BILHETAGEM_DATASET_ID,
-        "table_id": "integracao",
+        "dataset_id": BILHETAGEM_JAE_DASHBOARD_DATASET_ID,
+        "table_id": "view_integracao",
         "upstream": True,
         "dbt_vars": {
             "date_range": {
-                "table_run_datetime_column_name": "datetime_captura",
+                "table_run_datetime_column_name": "data",
                 "delay_hours": 0,
             },
             "version": {},
         },
-        "exclude": BILHETAGEM_EXCLUDE,
+        "exclude": f"{BILHETAGEM_EXCLUDE} stops_gtfs2 routes_gtfs2 feed_info_gtfs2",
     }
 
     BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS = {
-        "dataset_id": "dashboard_bilhetagem_jae",
+        "dataset_id": BILHETAGEM_JAE_DASHBOARD_DATASET_ID,
+        "table_id": "view_passageiros_hora",
         "upstream": True,
         "dbt_vars": {
             "date_range": {
-                "table_run_datetime_column_name": "datetime_transacao",
+                "table_run_datetime_column_name": "data",
                 "delay_hours": 1,
             },
             "version": {},
