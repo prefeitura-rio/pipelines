@@ -190,10 +190,6 @@ def create_dbt_run_vars(
             }
         # Create date_range using Redis
         else:
-            if not table_id:
-                log("table_id are blank. Skiping task...")
-                return [None], None, False
-
             raw_table_id = raw_table_id or table_id
 
             date_var = get_materialization_date_range.run(
@@ -1195,37 +1191,42 @@ def get_materialization_date_range(  # pylint: disable=R0913
     )
     # if there's no timestamp set on redis, get max timestamp on source table
     if last_run is None:
-        log("Failed to fetch key from Redis...\n Querying tables for last suceeded run")
-        if Table(dataset_id=dataset_id, table_id=table_id).table_exists("prod"):
-            last_run = get_table_min_max_value(
-                query_project_id=bq_project(),
-                dataset_id=dataset_id,
-                table_id=table_id,
-                field_name=table_run_datetime_column_name,
-                kind="max",
+        if table_id is None:
+            last_run = datetime.min
+        else:
+            log(
+                "Failed to fetch key from Redis...\n Querying tables for last suceeded run"
             )
+            if Table(dataset_id=dataset_id, table_id=table_id).table_exists("prod"):
+                last_run = get_table_min_max_value(
+                    query_project_id=bq_project(),
+                    dataset_id=dataset_id,
+                    table_id=table_id,
+                    field_name=table_run_datetime_column_name,
+                    kind="max",
+                )
+                log(
+                    f"""
+                Queried last run from {dataset_id}.{table_id}
+                Got:
+                {last_run} as type {type(last_run)}
+                """
+                )
+            else:
+                last_run = get_table_min_max_value(
+                    query_project_id=bq_project(),
+                    dataset_id=raw_dataset_id,
+                    table_id=raw_table_id,
+                    field_name=table_run_datetime_column_name,
+                    kind="max",
+                )
             log(
                 f"""
-            Queried last run from {dataset_id}.{table_id}
-            Got:
-            {last_run} as type {type(last_run)}
-            """
+                Queried last run from {raw_dataset_id}.{raw_table_id}
+                Got:
+                {last_run} as type {type(last_run)}
+                """
             )
-        else:
-            last_run = get_table_min_max_value(
-                query_project_id=bq_project(),
-                dataset_id=raw_dataset_id,
-                table_id=raw_table_id,
-                field_name=table_run_datetime_column_name,
-                kind="max",
-            )
-        log(
-            f"""
-            Queried last run from {raw_dataset_id}.{raw_table_id}
-            Got:
-            {last_run} as type {type(last_run)}
-            """
-        )
     else:
         last_run = datetime.strptime(last_run, timestr)
 
