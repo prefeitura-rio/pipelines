@@ -817,7 +817,7 @@ class constants(Enum):  # pylint: disable=c0103
                     fiscalizacao
                 WHERE
                     dt_inclusao &gt;= &#39;{start}&#39;
-                    dt_inclusao &lt; &#39;{end}&#39;
+                    AND dt_inclusao &lt; &#39;{end}&#39;
             &#34;&#34;&#34;,
         },
         &#34;primary_key&#34;: [&#34;id&#34;],
@@ -1172,26 +1172,29 @@ class constants(Enum):  # pylint: disable=c0103
 
     BILHETAGEM_EXCLUDE = &#34;+operadoras +consorcios&#34;
 
+    BILHETAGEM_JAE_DASHBOARD_DATASET_ID = &#34;dashboard_bilhetagem_jae&#34;
+
     BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS = {
-        &#34;dataset_id&#34;: BILHETAGEM_DATASET_ID,
-        &#34;table_id&#34;: &#34;integracao&#34;,
+        &#34;dataset_id&#34;: BILHETAGEM_JAE_DASHBOARD_DATASET_ID,
+        &#34;table_id&#34;: &#34;view_integracao&#34;,
         &#34;upstream&#34;: True,
         &#34;dbt_vars&#34;: {
             &#34;date_range&#34;: {
-                &#34;table_run_datetime_column_name&#34;: &#34;datetime_captura&#34;,
+                &#34;table_run_datetime_column_name&#34;: &#34;data&#34;,
                 &#34;delay_hours&#34;: 0,
             },
             &#34;version&#34;: {},
         },
-        &#34;exclude&#34;: BILHETAGEM_EXCLUDE,
+        &#34;exclude&#34;: f&#34;{BILHETAGEM_EXCLUDE} stops_gtfs2 routes_gtfs2 feed_info_gtfs2&#34;,
     }
 
     BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS = {
-        &#34;dataset_id&#34;: &#34;dashboard_bilhetagem_jae&#34;,
+        &#34;dataset_id&#34;: BILHETAGEM_JAE_DASHBOARD_DATASET_ID,
+        &#34;table_id&#34;: &#34;view_passageiros_hora&#34;,
         &#34;upstream&#34;: True,
         &#34;dbt_vars&#34;: {
             &#34;date_range&#34;: {
-                &#34;table_run_datetime_column_name&#34;: &#34;datetime_transacao&#34;,
+                &#34;table_run_datetime_column_name&#34;: &#34;data&#34;,
                 &#34;delay_hours&#34;: 1,
             },
             &#34;version&#34;: {},
@@ -2299,7 +2302,7 @@ and createdDate lt {end})&#34;,
                     fiscalizacao
                 WHERE
                     dt_inclusao &gt;= &#39;{start}&#39;
-                    dt_inclusao &lt; &#39;{end}&#39;
+                    AND dt_inclusao &lt; &#39;{end}&#39;
             &#34;&#34;&#34;,
         },
         &#34;primary_key&#34;: [&#34;id&#34;],
@@ -2654,26 +2657,29 @@ and createdDate lt {end})&#34;,
 
     BILHETAGEM_EXCLUDE = &#34;+operadoras +consorcios&#34;
 
+    BILHETAGEM_JAE_DASHBOARD_DATASET_ID = &#34;dashboard_bilhetagem_jae&#34;
+
     BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS = {
-        &#34;dataset_id&#34;: BILHETAGEM_DATASET_ID,
-        &#34;table_id&#34;: &#34;integracao&#34;,
+        &#34;dataset_id&#34;: BILHETAGEM_JAE_DASHBOARD_DATASET_ID,
+        &#34;table_id&#34;: &#34;view_integracao&#34;,
         &#34;upstream&#34;: True,
         &#34;dbt_vars&#34;: {
             &#34;date_range&#34;: {
-                &#34;table_run_datetime_column_name&#34;: &#34;datetime_captura&#34;,
+                &#34;table_run_datetime_column_name&#34;: &#34;data&#34;,
                 &#34;delay_hours&#34;: 0,
             },
             &#34;version&#34;: {},
         },
-        &#34;exclude&#34;: BILHETAGEM_EXCLUDE,
+        &#34;exclude&#34;: f&#34;{BILHETAGEM_EXCLUDE} stops_gtfs2 routes_gtfs2 feed_info_gtfs2&#34;,
     }
 
     BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS = {
-        &#34;dataset_id&#34;: &#34;dashboard_bilhetagem_jae&#34;,
+        &#34;dataset_id&#34;: BILHETAGEM_JAE_DASHBOARD_DATASET_ID,
+        &#34;table_id&#34;: &#34;view_passageiros_hora&#34;,
         &#34;upstream&#34;: True,
         &#34;dbt_vars&#34;: {
             &#34;date_range&#34;: {
-                &#34;table_run_datetime_column_name&#34;: &#34;datetime_transacao&#34;,
+                &#34;table_run_datetime_column_name&#34;: &#34;data&#34;,
                 &#34;delay_hours&#34;: 1,
             },
             &#34;version&#34;: {},
@@ -3010,6 +3016,10 @@ and createdDate lt {end})&#34;,
 <div class="desc"></div>
 </dd>
 <dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS"><code class="name">var <span class="ident">BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_JAE_DASHBOARD_DATASET_ID"><code class="name">var <span class="ident">BILHETAGEM_JAE_DASHBOARD_DATASET_ID</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -3515,6 +3525,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS">BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS">BILHETAGEM_GENERAL_CAPTURE_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS">BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_JAE_DASHBOARD_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_JAE_DASHBOARD_DATASET_ID">BILHETAGEM_JAE_DASHBOARD_DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_GENERAL_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_GENERAL_PARAMS">BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_GENERAL_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_TABLE_ID">BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_VAN_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_VAN_TABLE_ID">BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_VAN_TABLE_ID</a></code></li>
