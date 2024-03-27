@@ -124,13 +124,14 @@ def get_redis_max_date(
 
 
 @task
-def save_redis_max_date(
+def save_redis_max_date(  # pylint: disable=too-many-arguments
     dataset_id: str,
     table_id: str,
     name: str = None,
     mode: str = "prod",
     redis_max_date: str = None,
-) -> str:
+    wait=None,  # pylint: disable=unused-argument
+):
     """
     Acess redis to save last date.
     """

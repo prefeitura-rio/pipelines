@@ -114,9 +114,10 @@ with Flow(
         name=redis_name,
         mode=redis_mode,
         redis_max_date=redis_max_date,
+        wait=task_upload,
     )
 
-    save_redis_max_date.set_upstream(task_upload)
+    # save_redis_max_date.set_upstream(task_upload)
 
     # Warning: this task won't execute if we provide a date interval
     # on parameters. The reason this happens is for if we want to
