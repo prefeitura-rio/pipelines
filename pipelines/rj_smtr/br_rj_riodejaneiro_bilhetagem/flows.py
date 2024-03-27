@@ -165,9 +165,7 @@ bilhetagem_materializacao_transacao.run_config = KubernetesRun(
 )
 
 bilhetagem_materializacao_transacao_parameters = {
-    "source_dataset_ids": [
-        constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value["table_id"]
-    ],
+    "source_dataset_ids": [constants.BILHETAGEM_DATASET_ID.value],
     "source_table_ids": [
         constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value["table_id"]
     ],
