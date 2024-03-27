@@ -1220,13 +1220,13 @@ def get_materialization_date_range(  # pylint: disable=R0913
                     field_name=table_run_datetime_column_name,
                     kind="max",
                 )
-            log(
-                f"""
-                Queried last run from {raw_dataset_id}.{raw_table_id}
-                Got:
-                {last_run} as type {type(last_run)}
-                """
-            )
+                log(
+                    f"""
+                    Queried last run from {raw_dataset_id}.{raw_table_id}
+                    Got:
+                    {last_run} as type {type(last_run)}
+                    """
+                )
     else:
         last_run = datetime.strptime(last_run, timestr)
 
