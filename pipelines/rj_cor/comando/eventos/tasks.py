@@ -181,10 +181,14 @@ def treat_data_ocorrencias(
         }
     )
 
+    log(f"First row: \n{dfr.iloc[0]}")
+
     dfr["id_evento"] = dfr["id_evento"].astype(float).astype(int).astype(str)
 
+    for col in ["data_inicio", "data_fim"]:
+        dfr[col] = pd.to_datetime(dfr[col], errors="coerce")
     max_date = dfr[["data_inicio", "data_fim"]].max().max()
-
+    max_date = max_date.strftime("%Y-%m-%d %H:%M:%S")
     log(f"Last API data was {max_date} and last redis uptade was {redis_max_date}")
 
     if max_date <= redis_max_date:
@@ -240,9 +244,6 @@ def treat_data_ocorrencias(
 
     # Treat id_pop col
     dfr["id_pop"] = dfr["id_pop"].astype(float).astype(int)
-
-    for col in ["data_inicio", "data_fim"]:
-        dfr[col] = pd.to_datetime(dfr[col], errors="coerce")
 
     for col in ["data_inicio", "data_fim"]:
         dfr[col] = dfr[col].dt.strftime("%Y-%m-%d %H:%M:%S")
