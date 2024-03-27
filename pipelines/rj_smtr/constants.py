@@ -747,9 +747,15 @@ class constants(Enum):  # pylint: disable=c0103
                 "engine": "postgresql",
                 "host": "10.5.12.107",
             },
+            "fiscalizacao_db": {
+                "engine": "postgresql",
+                "host": "10.5.115.29",
+            },
         },
         "source_type": "db",
     }
+
+    BILHETAGEM_PRIVATE_BUCKET = "rj-smtr-jae-private"
 
     BILHETAGEM_TRANSACAO_CAPTURE_PARAMS = {
         "table_id": "transacao",
@@ -768,6 +774,26 @@ class constants(Enum):  # pylint: disable=c0103
         },
         "primary_key": ["id"],
         "interval_minutes": 1,
+    }
+
+    BILHETAGEM_FISCALIZACAO_CAPTURE_PARAMS = {
+        "table_id": "fiscalizacao",
+        "partition_date_only": False,
+        "extract_params": {
+            "database": "fiscalizacao_db",
+            "query": """
+                SELECT
+                    *
+                FROM
+                    fiscalizacao
+                WHERE
+                    dt_inclusao >= '{start}'
+                    dt_inclusao < '{end}'
+            """,
+        },
+        "primary_key": ["id"],
+        "interval_minutes": 5,
+        "save_bucket_name": BILHETAGEM_PRIVATE_BUCKET,
     }
 
     BILHETAGEM_INTEGRACAO_CAPTURE_PARAMS = {
@@ -887,8 +913,6 @@ class constants(Enum):  # pylint: disable=c0103
     BILHETAGEM_SECRET_PATH = "smtr_jae_access_data"
 
     BILHETAGEM_TRATAMENTO_INTERVAL = 60
-
-    BILHETAGEM_PRIVATE_BUCKET = "rj-smtr-jae-private"
 
     BILHETAGEM_CAPTURE_PARAMS = [
         {
@@ -1117,6 +1141,8 @@ class constants(Enum):  # pylint: disable=c0103
         },
     ]
 
+    BILHETAGEM_EXCLUDE = "+operadoras +consorcios"
+
     BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS = {
         "dataset_id": BILHETAGEM_DATASET_ID,
         "table_id": "integracao",
@@ -1128,12 +1154,11 @@ class constants(Enum):  # pylint: disable=c0103
             },
             "version": {},
         },
-        "exclude": "+operadoras +consorcios",
+        "exclude": BILHETAGEM_EXCLUDE,
     }
 
     BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS = {
-        "dataset_id": BILHETAGEM_DATASET_ID,
-        "table_id": "passageiros_hora",
+        "dataset_id": "dashboard_bilhetagem_jae",
         "upstream": True,
         "dbt_vars": {
             "date_range": {
@@ -1142,14 +1167,14 @@ class constants(Enum):  # pylint: disable=c0103
             },
             "version": {},
         },
-        "exclude": "integracao matriz_integracao",
+        "exclude": "integracao matriz_integracao stops_gtfs2 routes_gtfs2 feed_info_gtfs2",
     }
 
     BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS = {
         "dataset_id": BILHETAGEM_DATASET_ID,
         "table_id": "ordem_pagamento",
         "upstream": True,
-        "exclude": f"+{BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS['table_id']}",
+        "exclude": BILHETAGEM_EXCLUDE,
         "dbt_vars": {
             "date_range": {
                 "table_run_datetime_column_name": "data_ordem",
@@ -1163,7 +1188,7 @@ class constants(Enum):  # pylint: disable=c0103
         "dataset_id": BILHETAGEM_DATASET_ID,
         "upstream": True,
         "downstream": True,
-        "exclude": "+operadoras +consorcios",
+        "exclude": BILHETAGEM_EXCLUDE,
         "dbt_vars": {
             "date_range": {
                 "table_run_datetime_column_name": "datetime_captura",

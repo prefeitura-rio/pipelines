@@ -63,6 +63,24 @@ bilhetagem_transacao_captura = set_default_parameters(
 
 bilhetagem_transacao_captura.schedule = every_minute
 
+# BILHETAGEM FISCALIZAÇÃO - CAPTURA A CADA 5 MINUTOS #
+
+bilhetagem_fiscalizacao_captura = deepcopy(default_capture_flow)
+bilhetagem_fiscalizacao_captura.name = "SMTR: Bilhetagem Fiscalização - Captura"
+bilhetagem_fiscalizacao_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bilhetagem_fiscalizacao_captura.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+
+bilhetagem_fiscalizacao_captura = set_default_parameters(
+    flow=bilhetagem_fiscalizacao_captura,
+    default_parameters=constants.BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS.value
+    | constants.BILHETAGEM_FISCALIZACAO_CAPTURE_PARAMS.value,
+)
+
+bilhetagem_fiscalizacao_captura.schedule = every_5_minutes
+
 # BILHETAGEM INTEGRAÇÃO - CAPTURA A CADA MINUTO #
 
 bilhetagem_integracao_captura = deepcopy(default_capture_flow)
@@ -255,6 +273,7 @@ bilhetagem_recaptura = set_default_parameters(
     | {"recapture": True},
 )
 
+
 # TRATAMENTO - RODA DE HORA EM HORA, RECAPTURAS + CAPTURA AUXILIAR + MATERIALIZAÇÃO #
 
 with Flow(
@@ -289,6 +308,22 @@ with Flow(
 
         wait_recaptura_transacao_true = wait_for_flow_run(
             run_recaptura_transacao,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+
+        # Recaptura Fiscalização
+
+        run_recaptura_fiscalizacao = create_flow_run(
+            flow_name=bilhetagem_recaptura.name,
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            labels=LABELS,
+            parameters=constants.BILHETAGEM_FISCALIZACAO_CAPTURE_PARAMS.value,
+        )
+
+        wait_recaptura_fiscalizacao_true = wait_for_flow_run(
+            run_recaptura_fiscalizacao,
             stream_states=True,
             stream_logs=True,
             raise_final_state=True,
