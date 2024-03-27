@@ -1151,7 +1151,7 @@ class constants(Enum):  # pylint: disable=c0103
         "upstream": True,
         "dbt_vars": {
             "date_range": {
-                "table_run_datetime_column_name": "datetime_captura",
+                "table_run_datetime_column_name": "data",
                 "delay_hours": 0,
             },
             "version": {},
@@ -1165,7 +1165,7 @@ class constants(Enum):  # pylint: disable=c0103
         "upstream": True,
         "dbt_vars": {
             "date_range": {
-                "table_run_datetime_column_name": "datetime_transacao",
+                "table_run_datetime_column_name": "data",
                 "delay_hours": 1,
             },
             "version": {},
