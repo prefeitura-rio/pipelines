@@ -1141,6 +1141,8 @@ class constants(Enum):  # pylint: disable=c0103
         },
     ]
 
+    BILHETAGEM_EXCLUDE = "+operadoras +consorcios"
+
     BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS = {
         "dataset_id": BILHETAGEM_DATASET_ID,
         "table_id": "integracao",
@@ -1152,7 +1154,7 @@ class constants(Enum):  # pylint: disable=c0103
             },
             "version": {},
         },
-        "exclude": "+operadoras +consorcios",
+        "exclude": BILHETAGEM_EXCLUDE,
     }
 
     BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS = {
@@ -1172,7 +1174,7 @@ class constants(Enum):  # pylint: disable=c0103
         "dataset_id": BILHETAGEM_DATASET_ID,
         "table_id": "ordem_pagamento",
         "upstream": True,
-        "exclude": "+transacao",
+        "exclude": BILHETAGEM_EXCLUDE,
         "dbt_vars": {
             "date_range": {
                 "table_run_datetime_column_name": "data_ordem",
@@ -1186,7 +1188,7 @@ class constants(Enum):  # pylint: disable=c0103
         "dataset_id": BILHETAGEM_DATASET_ID,
         "upstream": True,
         "downstream": True,
-        "exclude": "+operadoras +consorcios",
+        "exclude": BILHETAGEM_EXCLUDE,
         "dbt_vars": {
             "date_range": {
                 "table_run_datetime_column_name": "datetime_captura",
