@@ -788,7 +788,7 @@ class constants(Enum):  # pylint: disable=c0103
                     fiscalizacao
                 WHERE
                     dt_inclusao >= '{start}'
-                    dt_inclusao < '{end}'
+                    AND dt_inclusao < '{end}'
             """,
         },
         "primary_key": ["id"],
