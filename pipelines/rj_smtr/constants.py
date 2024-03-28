@@ -535,7 +535,7 @@ class constants(Enum):  # pylint: disable=c0103
             FROM
                 kms
             WHERE
-                ABS(km_apurada2-km_apurada) > 0.015
+                ABS(km_apurada2-km_apurada) > 0.02
             """,
             "order_columns": ["dif"],
         },
