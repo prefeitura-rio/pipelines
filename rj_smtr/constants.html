@@ -902,6 +902,42 @@ class constants(Enum):  # pylint: disable=c0103
             &#34;interval_minutes&#34;: 1440,
         },
         {
+            &#34;table_id&#34;: &#34;ordem_pagamento_consorcio_operadora&#34;,
+            &#34;partition_date_only&#34;: True,
+            &#34;extract_params&#34;: {
+                &#34;database&#34;: &#34;ressarcimento_db&#34;,
+                &#34;query&#34;: &#34;&#34;&#34;
+                SELECT
+                    *
+                FROM
+                    ordem_pagamento_consorcio_operadora
+                WHERE
+                    data_inclusao BETWEEN &#39;{start}&#39;
+                    AND &#39;{end}&#39;
+            &#34;&#34;&#34;,
+            },
+            &#34;primary_key&#34;: [&#34;id&#34;],
+            &#34;interval_minutes&#34;: 1440,
+        },
+        {
+            &#34;table_id&#34;: &#34;ordem_pagamento_consorcio&#34;,
+            &#34;partition_date_only&#34;: True,
+            &#34;extract_params&#34;: {
+                &#34;database&#34;: &#34;ressarcimento_db&#34;,
+                &#34;query&#34;: &#34;&#34;&#34;
+                SELECT
+                    *
+                FROM
+                    ordem_pagamento_consorcio
+                WHERE
+                    data_inclusao BETWEEN &#39;{start}&#39;
+                    AND &#39;{end}&#39;
+            &#34;&#34;&#34;,
+            },
+            &#34;primary_key&#34;: [&#34;id&#34;],
+            &#34;interval_minutes&#34;: 1440,
+        },
+        {
             &#34;table_id&#34;: &#34;ordem_rateio&#34;,
             &#34;partition_date_only&#34;: True,
             &#34;extract_params&#34;: {
@@ -1204,7 +1240,7 @@ class constants(Enum):  # pylint: disable=c0103
 
     BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS = {
         &#34;dataset_id&#34;: BILHETAGEM_DATASET_ID,
-        &#34;table_id&#34;: &#34;ordem_pagamento&#34;,
+        &#34;table_id&#34;: &#34;ordem_pagamento_dia&#34;,
         &#34;upstream&#34;: True,
         &#34;exclude&#34;: BILHETAGEM_EXCLUDE,
         &#34;dbt_vars&#34;: {
@@ -2387,6 +2423,42 @@ and createdDate lt {end})&#34;,
             &#34;interval_minutes&#34;: 1440,
         },
         {
+            &#34;table_id&#34;: &#34;ordem_pagamento_consorcio_operadora&#34;,
+            &#34;partition_date_only&#34;: True,
+            &#34;extract_params&#34;: {
+                &#34;database&#34;: &#34;ressarcimento_db&#34;,
+                &#34;query&#34;: &#34;&#34;&#34;
+                SELECT
+                    *
+                FROM
+                    ordem_pagamento_consorcio_operadora
+                WHERE
+                    data_inclusao BETWEEN &#39;{start}&#39;
+                    AND &#39;{end}&#39;
+            &#34;&#34;&#34;,
+            },
+            &#34;primary_key&#34;: [&#34;id&#34;],
+            &#34;interval_minutes&#34;: 1440,
+        },
+        {
+            &#34;table_id&#34;: &#34;ordem_pagamento_consorcio&#34;,
+            &#34;partition_date_only&#34;: True,
+            &#34;extract_params&#34;: {
+                &#34;database&#34;: &#34;ressarcimento_db&#34;,
+                &#34;query&#34;: &#34;&#34;&#34;
+                SELECT
+                    *
+                FROM
+                    ordem_pagamento_consorcio
+                WHERE
+                    data_inclusao BETWEEN &#39;{start}&#39;
+                    AND &#39;{end}&#39;
+            &#34;&#34;&#34;,
+            },
+            &#34;primary_key&#34;: [&#34;id&#34;],
+            &#34;interval_minutes&#34;: 1440,
+        },
+        {
             &#34;table_id&#34;: &#34;ordem_rateio&#34;,
             &#34;partition_date_only&#34;: True,
             &#34;extract_params&#34;: {
@@ -2689,7 +2761,7 @@ and createdDate lt {end})&#34;,
 
     BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS = {
         &#34;dataset_id&#34;: BILHETAGEM_DATASET_ID,
-        &#34;table_id&#34;: &#34;ordem_pagamento&#34;,
+        &#34;table_id&#34;: &#34;ordem_pagamento_dia&#34;,
         &#34;upstream&#34;: True,
         &#34;exclude&#34;: BILHETAGEM_EXCLUDE,
         &#34;dbt_vars&#34;: {
