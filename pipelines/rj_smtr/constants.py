@@ -873,6 +873,42 @@ class constants(Enum):  # pylint: disable=c0103
             "interval_minutes": 1440,
         },
         {
+            "table_id": "ordem_pagamento_consorcio_operadora",
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "ressarcimento_db",
+                "query": """
+                SELECT
+                    *
+                FROM
+                    ordem_pagamento_consorcio_operadora
+                WHERE
+                    data_inclusao BETWEEN '{start}'
+                    AND '{end}'
+            """,
+            },
+            "primary_key": ["id"],
+            "interval_minutes": 1440,
+        },
+        {
+            "table_id": "ordem_pagamento_consorcio",
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "ressarcimento_db",
+                "query": """
+                SELECT
+                    *
+                FROM
+                    ordem_pagamento_consorcio
+                WHERE
+                    data_inclusao BETWEEN '{start}'
+                    AND '{end}'
+            """,
+            },
+            "primary_key": ["id"],
+            "interval_minutes": 1440,
+        },
+        {
             "table_id": "ordem_rateio",
             "partition_date_only": True,
             "extract_params": {
