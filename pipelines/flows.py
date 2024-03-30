@@ -22,5 +22,4 @@ from pipelines.rj_sme import *
 from pipelines.rj_smfp import *
 from pipelines.rj_smi import *
 from pipelines.rj_smtr import *
-from pipelines.rj_sms import *
 from pipelines.utils import *
