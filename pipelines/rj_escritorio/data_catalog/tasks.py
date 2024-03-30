@@ -5,7 +5,7 @@ Tasks for generating a data catalog from BigQuery.
 """
 from typing import List
 
-from google.api_core.exceptions import NotFound
+from google.api_core.exceptions import BadRequest, NotFound
 from google.cloud import bigquery
 from googleapiclient import discovery
 import gspread
@@ -120,6 +120,10 @@ def list_tables(  # pylint: disable=too-many-arguments
                     "private": not project_id == "datario",
                 }
                 tables.append(table_info)
+    except BadRequest:
+        # This will happen if BigQuery API is not enabled for this project. Just return an empty
+        # list
+        return tables
     except NotFound:
         # This will happen if BigQuery API is not enabled for this project. Just return an empty
         # list
