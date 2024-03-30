@@ -191,7 +191,7 @@ def create_dbt_run_vars(
         # Create date_range using Redis
         else:
             if not table_id:
-                log("table_id are blank. Skiping task...")
+                log("table_id is blank. Skiping task...")
                 return [None], None, False
 
             raw_table_id = raw_table_id or table_id

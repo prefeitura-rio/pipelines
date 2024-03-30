@@ -202,6 +202,7 @@ with Flow(
     timestamp = Parameter("timestamp", default=None)
 
     # Parametros Verificação de Recapturas
+    source_dataset_ids = Parameter("source_dataset_ids", default=[])
     source_table_ids = Parameter("source_table_ids", default=[])
     capture_intervals_minutes = Parameter("capture_intervals_minutes", default=[])
 
@@ -226,7 +227,7 @@ with Flow(
     )
 
     query_logs_output = query_logs.map(
-        dataset_id=unmapped(dataset_id),
+        dataset_id=source_dataset_ids,
         table_id=source_table_ids,
         interval_minutes=capture_intervals_minutes,
         datetime_filter=query_logs_timestamps,
