@@ -428,13 +428,13 @@ class constants(Enum):  # pylint: disable=c0103
                         WHERE
                             DATA BETWEEN DATE("{start_timestamp}")
                             AND DATE("{end_timestamp}")),
-                    subsidio_parametros AS (
+                    subsidio_valor_km_tipo_viagem AS (
                         SELECT
                             data_inicio,
                             data_fim,
                             MAX(subsidio_km) AS subsidio_km_teto
                         FROM
-                            `rj-smtr`.`dashboard_subsidio_sppo`.`subsidio_parametros`
+                            `rj-smtr`.`dashboard_subsidio_sppo_staging`.`subsidio_valor_km_tipo_viagem`
                         WHERE
                             subsidio_km > 0
                         GROUP BY
@@ -445,7 +445,7 @@ class constants(Enum):  # pylint: disable=c0103
                     FROM
                         {table_id} AS s
                     LEFT JOIN
-                        subsidio_parametros AS p
+                        subsidio_valor_km_tipo_viagem AS p
                     ON
                         s.data BETWEEN p.data_inicio
                         AND p.data_fim
