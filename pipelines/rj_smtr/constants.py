@@ -165,6 +165,7 @@ class constants(Enum):  # pylint: disable=c0103
 
     # SUBSÍDIO DASHBOARD
     SUBSIDIO_SPPO_DASHBOARD_DATASET_ID = "dashboard_subsidio_sppo"
+    SUBSIDIO_SPPO_DASHBOARD_STAGING_DATASET_ID = "dashboard_subsidio_sppo_staging"
     SUBSIDIO_SPPO_DASHBOARD_TABLE_ID = "sumario_servico_dia"
     SUBSIDIO_SPPO_DATA_CHECKS_PARAMS = {
         "check_gps_capture": {
