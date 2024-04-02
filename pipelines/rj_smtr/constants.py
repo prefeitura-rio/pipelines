@@ -428,13 +428,13 @@ class constants(Enum):  # pylint: disable=c0103
                         WHERE
                             DATA BETWEEN DATE("{start_timestamp}")
                             AND DATE("{end_timestamp}")),
-                    subsidio_parametros AS (
+                    subsidio_valor_km_tipo_viagem AS (
                         SELECT
                             data_inicio,
                             data_fim,
                             MAX(subsidio_km) AS subsidio_km_teto
                         FROM
-                            `rj-smtr`.`dashboard_subsidio_sppo`.`subsidio_parametros`
+                            `rj-smtr`.`dashboard_subsidio_sppo_staging`.`subsidio_valor_km_tipo_viagem`
                         WHERE
                             subsidio_km > 0
                         GROUP BY
@@ -445,7 +445,7 @@ class constants(Enum):  # pylint: disable=c0103
                     FROM
                         {table_id} AS s
                     LEFT JOIN
-                        subsidio_parametros AS p
+                        subsidio_valor_km_tipo_viagem AS p
                     ON
                         s.data BETWEEN p.data_inicio
                         AND p.data_fim
@@ -523,7 +523,7 @@ class constants(Enum):  # pylint: disable=c0103
                 SELECT
                     * EXCEPT(km_apurada),
                     km_apurada,
-                    ROUND(COALESCE(km_apurada_registrado_com_ar_inoperante,0) + COALESCE(km_apurada_n_licenciado,0) + COALESCE(km_apurada_autuado_ar_inoperante,0) + COALESCE(km_apurada_autuado_seguranca,0) + COALESCE(km_apurada_autuado_limpezaequipamento,0) + COALESCE(km_apurada_licenciado_sem_ar_n_autuado,0) + COALESCE(km_apurada_licenciado_com_ar_n_autuado,0),2) AS km_apurada2
+                    ROUND(COALESCE(km_apurada_registrado_com_ar_inoperante,0) + COALESCE(km_apurada_n_licenciado,0) + COALESCE(km_apurada_autuado_ar_inoperante,0) + COALESCE(km_apurada_autuado_seguranca,0) + COALESCE(km_apurada_autuado_limpezaequipamento,0) + COALESCE(km_apurada_licenciado_sem_ar_n_autuado,0) + COALESCE(km_apurada_licenciado_com_ar_n_autuado,0) + COALESCE(km_apurada_n_vistoriado, 0),2) AS km_apurada2
                 FROM
                     `rj-smtr.dashboard_subsidio_sppo.sumario_servico_dia_tipo`
                 WHERE
@@ -535,7 +535,7 @@ class constants(Enum):  # pylint: disable=c0103
             FROM
                 kms
             WHERE
-                ABS(km_apurada2-km_apurada) > 0.015
+                ABS(km_apurada2-km_apurada) > 0.02
             """,
             "order_columns": ["dif"],
         },
@@ -873,6 +873,42 @@ class constants(Enum):  # pylint: disable=c0103
             "interval_minutes": 1440,
         },
         {
+            "table_id": "ordem_pagamento_consorcio_operadora",
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "ressarcimento_db",
+                "query": """
+                SELECT
+                    *
+                FROM
+                    ordem_pagamento_consorcio_operadora
+                WHERE
+                    data_inclusao BETWEEN '{start}'
+                    AND '{end}'
+            """,
+            },
+            "primary_key": ["id"],
+            "interval_minutes": 1440,
+        },
+        {
+            "table_id": "ordem_pagamento_consorcio",
+            "partition_date_only": True,
+            "extract_params": {
+                "database": "ressarcimento_db",
+                "query": """
+                SELECT
+                    *
+                FROM
+                    ordem_pagamento_consorcio
+                WHERE
+                    data_inclusao BETWEEN '{start}'
+                    AND '{end}'
+            """,
+            },
+            "primary_key": ["id"],
+            "interval_minutes": 1440,
+        },
+        {
             "table_id": "ordem_rateio",
             "partition_date_only": True,
             "extract_params": {
@@ -1175,7 +1211,7 @@ class constants(Enum):  # pylint: disable=c0103
 
     BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS = {
         "dataset_id": BILHETAGEM_DATASET_ID,
-        "table_id": "ordem_pagamento",
+        "table_id": "ordem_pagamento_dia",
         "upstream": True,
         "exclude": BILHETAGEM_EXCLUDE,
         "dbt_vars": {
