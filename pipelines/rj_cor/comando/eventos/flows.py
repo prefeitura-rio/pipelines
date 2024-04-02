@@ -349,6 +349,15 @@ with Flow(
         wait=path,
     )
 
+    save_redis_max_date(
+        dataset_id=dataset_id,
+        table_id=table_id,
+        name=redis_name,
+        mode=redis_mode,
+        redis_max_date=redis_max_date,
+        wait=task_upload,
+    )
+
     # Warning: this task won't execute if we provide a date interval
     # on parameters. The reason this happens is for if we want to
     # perform backfills, it won't mess with the Redis interval.

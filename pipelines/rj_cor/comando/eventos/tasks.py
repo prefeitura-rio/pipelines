@@ -377,6 +377,7 @@ def save_data(dataframe: pd.DataFrame) -> Union[str, Path]:
     Save data on a csv file to be uploaded to GCP
     """
 
+    log(f"Data that will be saved {dataframe.iloc[0]}")
     prepath = Path("/tmp/data/")
     prepath.mkdir(parents=True, exist_ok=True)
 
