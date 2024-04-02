@@ -375,13 +375,26 @@ def treat_data_atividades(
 def save_data(dataframe: pd.DataFrame) -> Union[str, Path]:
     """
     Save data on a csv file to be uploaded to GCP
+    PS: It's not mandatory to start an activity of an event. As a result we have some activities
+    without any start date, but with an end date. The main problem is that the partition column
+    is based on data_inicio that is null. To try to solve this, the partition_column will be
+    created based on the min date between data_inicio, data_fim and created_at.
     """
 
     log(f"Data that will be saved {dataframe.iloc[0]}")
     prepath = Path("/tmp/data/")
     prepath.mkdir(parents=True, exist_ok=True)
 
-    partition_column = "data_inicio"
+    dataframe[["data_inicio", "data_fim", "created_at"]] = dataframe[
+        ["data_inicio", "data_fim", "created_at"]
+    ].apply(pd.to_datetime)
+    dataframe["min_date"] = (
+        dataframe[["data_inicio", "data_fim", "created_at"]]
+        .min(axis=1)
+        .dt.strftime("%Y-%m-%d %H:%M:%S")
+    )
+
+    partition_column = "min_date"
     dataframe, partitions = parse_date_columns(dataframe, partition_column)
 
     to_partitions(
