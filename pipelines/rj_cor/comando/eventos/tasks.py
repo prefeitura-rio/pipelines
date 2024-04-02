@@ -5,7 +5,7 @@
 # TODO: gerar alerta quando tiver id_pop novo
 # TODO: apagar histórico da nova api para ter o id_pop novo
 # TODO: criar tabela dim do id_pop novo
-# TODO: salvar no redis o máximo entre as colunas de data_inicio e data_fim, seguir flow só se tiver novidades em alguma dessas colunas
+# TODO: pipe atividades dos eventos
 """
 Tasks for comando
 """
@@ -27,7 +27,7 @@ from prefect.engine.state import Skipped
 
 # from prefect.triggers import all_successful
 # url_eventos = "http://aplicativo.cocr.com.br/comando/ocorrencias_api_nova"
-from pipelines.rj_cor.utils import compare_actual_df_with_redis_df
+# from pipelines.rj_cor.utils import compare_actual_df_with_redis_df
 from pipelines.rj_cor.comando.eventos.utils import (
     # build_redis_key,
     format_date,
@@ -165,7 +165,7 @@ def download_data_ocorrencias(first_date, last_date, wait=None) -> pd.DataFrame:
 def treat_data_ocorrencias(
     dfr: pd.DataFrame,
     redis_max_date: str,
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
+) -> Tuple[pd.DataFrame, str]:
     """
     Rename cols and normalize data.
     """
@@ -280,33 +280,54 @@ def download_data_atividades(first_date, last_date, wait=None) -> pd.DataFrame:
     return dfr
 
 
+# @task(nout=2)
+# def treat_data_atividades(
+#     dfr: pd.DataFrame,
+#     dfr_redis: pd.DataFrame,
+#     columns: list,
+# ) -> Tuple[pd.DataFrame, pd.DataFrame]:
 @task(nout=2)
 def treat_data_atividades(
     dfr: pd.DataFrame,
-    dfr_redis: pd.DataFrame,
-    columns: list,
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    redis_max_date: str,
+) -> Tuple[pd.DataFrame, str]:
     """
     Normalize data to be similiar to old API.
     """
 
     print("Start treating data")
+    dfr["id_evento"] = dfr["id_evento"].astype(float).astype(int).astype(str)
     dfr.orgao = dfr.orgao.replace(["\r", "\n"], ["", ""], regex=True)
 
     print(f"Dataframe before comparing with last data saved on redis {dfr.head()}")
+    for col in ["data_inicio", "data_fim", "data_chegada"]:
+        dfr[col] = pd.to_datetime(dfr[col], errors="coerce")
 
-    dfr, dfr_redis = compare_actual_df_with_redis_df(
-        dfr,
-        dfr_redis,
-        columns,
-    )
-    print(f"Dataframe after comparing with last data saved on redis {dfr.head()}")
+    max_date = dfr[["data_inicio", "data_fim", "data_chegada"]].max().max()
+    max_date = max_date.strftime("%Y-%m-%d %H:%M:%S")
 
-    # If df is empty stop flow
-    if dfr.shape[0] == 0:
+    log(f"Last API data was {max_date} and last redis uptade was {redis_max_date}")
+
+    if max_date <= redis_max_date:
         skip_text = "No new data available on API"
         print(skip_text)
         raise ENDRUN(state=Skipped(skip_text))
+
+    # Get new max_date to save on redis
+    redis_max_date = max_date
+
+    # dfr, dfr_redis = compare_actual_df_with_redis_df(
+    #     dfr,
+    #     dfr_redis,
+    #     columns,
+    # )
+    # print(f"Dataframe after comparing with last data saved on redis {dfr.head()}")
+
+    # # If df is empty stop flow
+    # if dfr.shape[0] == 0:
+    #     skip_text = "No new data available on API"
+    #     print(skip_text)
+    #     raise ENDRUN(state=Skipped(skip_text))
 
     mandatory_cols = [
         "id_evento",
@@ -334,14 +355,7 @@ def treat_data_atividades(
     print("\n\nDEBUG", dfr[categorical_cols])
     for i in categorical_cols:
         dfr[i] = dfr[i].str.capitalize()
-        # dfr[i] = dfr[i].apply(unidecode)
-
-    for col in ["data_inicio", "data_fim", "data_chegada"]:
-        dfr[col] = pd.to_datetime(dfr[col], errors="coerce")
-
-    # TODO: Essa conversão é temporária
-    for col in ["data_inicio", "data_fim", "data_chegada"]:
-        dfr[col] = dfr[col].dt.tz_convert("America/Sao_Paulo")
+        dfr[i] = dfr[i].apply(unidecode)
 
     for col in ["data_inicio", "data_fim", "data_chegada"]:
         dfr[col] = dfr[col].dt.strftime("%Y-%m-%d %H:%M:%S")
@@ -354,7 +368,7 @@ def treat_data_atividades(
         "%Y-%m-%d %H:%M:%S"
     )
 
-    return dfr.drop_duplicates(), dfr_redis
+    return dfr.drop_duplicates(), redis_max_date
 
 
 @task
@@ -377,6 +391,25 @@ def save_data(dataframe: pd.DataFrame) -> Union[str, Path]:
     )
     log(f"[DEBUG] Files saved on {prepath}")
     return prepath
+
+
+@task(
+    nout=1,
+    max_retries=3,
+    retry_delay=timedelta(seconds=60),
+)
+def download_data_pops() -> pd.DataFrame:
+    """
+    Download data from POP's API
+    """
+
+    url_secret = get_vault_secret("comando")["data"]
+    url = url_secret["endpoint_pops"]
+
+    log("\n\nDownloading POP's data")
+    dfr = pd.read_json(f"{url}")
+
+    return dfr
 
 
 @task
