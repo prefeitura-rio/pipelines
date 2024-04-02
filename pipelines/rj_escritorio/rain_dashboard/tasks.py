@@ -76,3 +76,4 @@ def set_redis_key(
     redis_client = get_redis_client(host=host, port=port, db=db)
     redis_client.set(key, value)
     log("Redis key set successfully.")
+    log(f"key: {key} and value: {value}")
