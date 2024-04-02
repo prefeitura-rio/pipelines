@@ -398,7 +398,7 @@ def save_data(dataframe: pd.DataFrame) -> Union[str, Path]:
     dataframe, partitions = parse_date_columns(dataframe, partition_column)
 
     to_partitions(
-        data=dataframe,
+        data=dataframe.drop(columns="min_date"),
         partition_columns=partitions,
         savepath=prepath,
         data_type="csv",
