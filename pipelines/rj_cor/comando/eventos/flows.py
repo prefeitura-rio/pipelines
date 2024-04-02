@@ -338,8 +338,6 @@ with Flow(
     #     mode = mode,
     # )
 
-    path = save_data(dfr_treated)
-
     task_upload = create_table_and_upload_to_gcs(
         data_path=path,
         dataset_id=dataset_id,
