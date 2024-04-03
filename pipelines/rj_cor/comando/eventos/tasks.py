@@ -15,7 +15,6 @@ import os
 from pathlib import Path
 from typing import Any, Union, Tuple
 from uuid import uuid4
-from urllib.error import HTTPError
 from unidecode import unidecode
 
 import pandas as pd
@@ -30,6 +29,7 @@ from prefect.engine.state import Skipped
 # from pipelines.rj_cor.utils import compare_actual_df_with_redis_df
 from pipelines.rj_cor.comando.eventos.utils import (
     # build_redis_key,
+    download_data,
     treat_wrong_id_pop,
 )
 from pipelines.utils.utils import (
@@ -152,22 +152,9 @@ def download_data_ocorrencias(first_date, last_date, wait=None) -> pd.DataFrame:
     # auth_token = get_token()
 
     url_secret = get_vault_secret("comando")["data"]
-    url_eventos = url_secret["endpoint_eventos"]
+    url = url_secret["endpoint_eventos"]
 
-    dfr = pd.DataFrame()
-    temp_date = first_date.add(days=1)
-
-    while temp_date <= last_date:
-        log(f"\n\nDownloading data from {first_date} to {temp_date} (not included)")
-        try:
-            dfr_temp = pd.read_json(
-                f"{url_eventos}/?data_i={first_date.strftime('%d/%m/%Y')}&data_f={temp_date.strftime('%d/%m/%Y')}"
-            )
-            dfr_temp["create_partition"] = first_date.strftime("%Y-%m-%d")
-            dfr = pd.concat([dfr, dfr_temp])
-        except HTTPError as error:
-            print(f"Error downloading this data: {error}")
-        first_date, temp_date = first_date.add(days=1), temp_date.add(days=1)
+    dfr = download_data(first_date, last_date, url)
     return dfr
 
 
@@ -231,6 +218,7 @@ def treat_data_ocorrencias(
         "longitude",
         "status",
         "tipo",
+        "create_partition",
     ]
     # Create cols if they don exist on new API
     for col in mandatory_cols:
@@ -281,12 +269,9 @@ def download_data_atividades(first_date, last_date, wait=None) -> pd.DataFrame:
     """
 
     url_secret = get_vault_secret("comando")["data"]
-    url_atividades_evento = url_secret["endpoint_atividades_evento"]
+    url = url_secret["endpoint_atividades_evento"]
 
-    dfr = pd.read_json(
-        f"{url_atividades_evento}/?data_i={first_date}&data_f={last_date}"
-    )
-
+    dfr = download_data(first_date, last_date, url)
     return dfr
 
 
@@ -348,6 +333,7 @@ def treat_data_atividades(
         "data_fim",
         "descricao",
         "status",
+        "create_partition",
     ]
 
     # Create cols if they don exist on new API
