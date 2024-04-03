@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=R0914,W0613,W0102,W0613,R0912,R0915,E1136,E1137,W0702
 # flake8: noqa: E722
-# TODO: colocar id_pops novos
+# TODO: colocar id_pops novos no redis toda vez que atualizar e buscar nos flows
 # TODO: gerar alerta quando tiver id_pop novo
 # TODO: apagar histórico da nova api para ter o id_pop novo
 # TODO: criar tabela dim do id_pop novo
@@ -30,7 +30,6 @@ from prefect.engine.state import Skipped
 from pipelines.rj_cor.comando.eventos.utils import (
     # build_redis_key,
     download_data,
-    treat_wrong_id_pop,
 )
 from pipelines.utils.utils import (
     build_redis_key,
@@ -174,7 +173,6 @@ def treat_data_ocorrencias(
             "pop_id": "id_pop",
             "inicio": "data_inicio",
             "fim": "data_fim",
-            "pop": "pop_titulo",
             "titulo": "pop_especificacao",
         }
     )
@@ -203,11 +201,11 @@ def treat_data_ocorrencias(
             "Secundária": "Secundario",
         }
     )
-    dfr["descricao"] = dfr["descricao"].apply(unidecode)
+    dfr[["pop", "descricao"]] = dfr[["pop", "descricao"]].apply(unidecode)
 
     mandatory_cols = [
-        "id_pop",
         "id_evento",
+        "pop",
         "bairro",
         "data_inicio",
         "data_fim",
@@ -231,29 +229,16 @@ def treat_data_ocorrencias(
         "gravidade",
         "status",
         "tipo",
-        "pop_titulo",
+        "pop",
     ]
     for i in categorical_cols:
         dfr[i] = dfr[i].str.capitalize()
-
-    # This treatment is temporary. Now the id_pop from API is comming with the same value as id_evento
-    dfr = treat_wrong_id_pop(dfr)
-    log(f"This id_pop are missing {dfr[dfr.id_pop.isna()]} they were replaced by 99")
-    dfr["id_pop"] = dfr["id_pop"].fillna(99)
-
-    # Treat id_pop col
-    dfr["id_pop"] = dfr["id_pop"].astype(float).astype(int)
 
     for col in ["data_inicio", "data_fim"]:
         dfr[col] = dfr[col].dt.strftime("%Y-%m-%d %H:%M:%S")
 
     # Set the order to match the original table
     dfr = dfr[mandatory_cols]
-
-    # Create a column with time of row creation to keep last event on dbt
-    dfr["created_at"] = pendulum.now(tz="America/Sao_Paulo").strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
 
     return dfr.drop_duplicates(), redis_max_date
 
@@ -358,11 +343,6 @@ def treat_data_atividades(
 
     # Set the order to match the original table
     dfr = dfr[mandatory_cols]
-
-    # Create a column with time of row creation to keep last event on dbt
-    dfr["created_at"] = pendulum.now(tz="America/Sao_Paulo").strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
 
     return dfr.drop_duplicates(), redis_max_date
 
