@@ -30,7 +30,6 @@ from prefect.engine.state import Skipped
 # from pipelines.rj_cor.utils import compare_actual_df_with_redis_df
 from pipelines.rj_cor.comando.eventos.utils import (
     # build_redis_key,
-    format_date,
     treat_wrong_id_pop,
 )
 from pipelines.utils.utils import (
@@ -47,19 +46,17 @@ from pipelines.utils.utils import (
 @task
 def get_date_interval(first_date, last_date) -> Tuple[dict, str]:
     """
-    If `first_date` and `last_date` are provided, format it to DD/MM/YYYY. Else,
-    get data from last 3 days.
+    If `first_date` and `last_date` are provided, convert it to pendulum
+    and add one day to `last_date`. Else, get data from last 3 days.
     first_date: str YYYY-MM-DD
     last_date: str YYYY-MM-DD
     """
     if first_date and last_date:
-        first_date, last_date = format_date(first_date, last_date)
+        first_date = pendulum.from_format(first_date, "YYYY-MM-DD")
+        last_date = pendulum.from_format(last_date, "YYYY-MM-DD").add(days=1)
     else:
-        last_date = pendulum.today(tz="America/Sao_Paulo").date()
-        first_date = last_date.subtract(days=3)
-        first_date, last_date = format_date(
-            first_date.strftime("%Y-%m-%d"), last_date.strftime("%Y-%m-%d")
-        )
+        last_date = pendulum.today(tz="America/Sao_Paulo").date().add(days=1)
+        first_date = last_date.subtract(days=4)
     return first_date, last_date
 
 
@@ -148,16 +145,26 @@ def save_redis_max_date(  # pylint: disable=too-many-arguments
 )
 def download_data_ocorrencias(first_date, last_date, wait=None) -> pd.DataFrame:
     """
-    Download data from API
+    Download data from API adding one day at a time so we can save
+    the date in a new column `data_particao` that will be used to
+    create the partitions when saving data.
     """
     # auth_token = get_token()
 
     url_secret = get_vault_secret("comando")["data"]
     url_eventos = url_secret["endpoint_eventos"]
 
-    log(f"\n\nDownloading data from {first_date} to {last_date} (not included)")
-    dfr = pd.read_json(f"{url_eventos}/?data_i={first_date}&data_f={last_date}")
+    dfr = pd.DataFrame()
+    temp_date = first_date.add(days=1)
 
+    while temp_date <= last_date:
+        log(f"\n\nDownloading data from {first_date} to {temp_date} (not included)")
+        dfr_temp = pd.read_json(
+            f"{url_eventos}/?data_i={first_date.strftime('%d/%m/%Y')}&data_f={temp_date.strftime('%d/%m/%Y')}"
+        )
+        dfr_temp["create_partition"] = first_date.strftime("%Y-%m-%d")
+        dfr = pd.concat([dfr, dfr_temp])
+        first_date, temp_date = first_date.add(days=1), temp_date.add(days=1)
     return dfr
 
 
@@ -376,29 +383,20 @@ def save_data(dataframe: pd.DataFrame) -> Union[str, Path]:
     """
     Save data on a csv file to be uploaded to GCP
     PS: It's not mandatory to start an activity of an event. As a result we have some activities
-    without any start date, but with an end date. The main problem is that the partition column
-    is based on data_inicio that is null. To try to solve this, the partition_column will be
-    created based on the min date between data_inicio, data_fim and created_at.
+    without any start date, but with an end date. The main problem is that we can not create the
+    partition column from data_inicio, that's why we created the column create_partition when
+    requesting the API.
     """
 
     log(f"Data that will be saved {dataframe.iloc[0]}")
     prepath = Path("/tmp/data/")
     prepath.mkdir(parents=True, exist_ok=True)
 
-    dataframe[["data_inicio", "data_fim", "created_at"]] = dataframe[
-        ["data_inicio", "data_fim", "created_at"]
-    ].apply(pd.to_datetime)
-    dataframe["min_date"] = (
-        dataframe[["data_inicio", "data_fim", "created_at"]]
-        .min(axis=1)
-        .dt.strftime("%Y-%m-%d %H:%M:%S")
-    )
-
-    partition_column = "min_date"
+    partition_column = "create_partition"
     dataframe, partitions = parse_date_columns(dataframe, partition_column)
 
     to_partitions(
-        data=dataframe.drop(columns="min_date"),
+        data=dataframe.drop(columns="create_partition"),
         partition_columns=partitions,
         savepath=prepath,
         data_type="csv",
