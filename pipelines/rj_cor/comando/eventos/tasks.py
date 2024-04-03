@@ -201,7 +201,8 @@ def treat_data_ocorrencias(
             "Secundária": "Secundario",
         }
     )
-    dfr[["pop", "descricao"]] = dfr[["pop", "descricao"]].apply(unidecode)
+    dfr["pop"] = dfr["pop"].apply(unidecode)
+    dfr["descricao"] = dfr["descricao"].apply(unidecode)
 
     mandatory_cols = [
         "id_evento",
