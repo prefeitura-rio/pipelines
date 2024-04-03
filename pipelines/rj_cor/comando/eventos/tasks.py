@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=R0914,W0613,W0102,W0613,R0912,R0915,E1136,E1137,W0702
 # flake8: noqa: E722
-# TODO: colocar id_pops novos no redis toda vez que atualizar e buscar nos flows
-# TODO: gerar alerta quando tiver id_pop novo
 # TODO: apagar histórico da nova api para ter o id_pop novo
-# TODO: criar tabela dim do id_pop novo
 """
 Tasks for comando
 """
@@ -25,7 +21,6 @@ from prefect.engine.signals import ENDRUN
 from prefect.engine.state import Skipped
 
 # from prefect.triggers import all_successful
-# url_eventos = "http://aplicativo.cocr.com.br/comando/ocorrencias_api_nova"
 # from pipelines.rj_cor.utils import compare_actual_df_with_redis_df
 from pipelines.rj_cor.comando.eventos.utils import (
     # build_redis_key,
@@ -43,7 +38,7 @@ from pipelines.utils.utils import (
 
 
 @task
-def get_date_interval(first_date, last_date) -> Tuple[dict, str]:
+def get_date_interval(first_date: str = None, last_date: str = None):
     """
     If `first_date` and `last_date` are provided, convert it to pendulum
     and add one day to `last_date`. Else, get data from last 3 days.
@@ -142,7 +137,11 @@ def save_redis_max_date(  # pylint: disable=too-many-arguments
     max_retries=3,
     retry_delay=timedelta(seconds=60),
 )
-def download_data_ocorrencias(first_date, last_date, wait=None) -> pd.DataFrame:
+def download_data_ocorrencias(
+    first_date: pendulum,
+    last_date: pendulum,
+    wait=None,  # pylint: disable=unused-argument
+) -> pd.DataFrame:
     """
     Download data from API adding one day at a time so we can save
     the date in a new column `data_particao` that will be used to
@@ -201,8 +200,10 @@ def treat_data_ocorrencias(
             "Secundária": "Secundario",
         }
     )
-    dfr["pop"] = dfr["pop"].apply(unidecode)
-    dfr["descricao"] = dfr["descricao"].apply(unidecode)
+    categorical_cols = ["pop", "descricao", "bairro", "gravidade", "status"]
+    for i in categorical_cols:
+        dfr[i] = dfr[i].str.capitalize()
+        dfr[i] = dfr[i].apply(unidecode)
 
     mandatory_cols = [
         "id_evento",
@@ -249,7 +250,11 @@ def treat_data_ocorrencias(
     max_retries=3,
     retry_delay=timedelta(seconds=60),
 )
-def download_data_atividades(first_date, last_date, wait=None) -> pd.DataFrame:
+def download_data_atividades(
+    first_date,
+    last_date,
+    wait=None,  # pylint: disable=unused-argument
+) -> pd.DataFrame:
     """
     Download data from API
     """
