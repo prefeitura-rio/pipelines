@@ -5,7 +5,6 @@
 # TODO: gerar alerta quando tiver id_pop novo
 # TODO: apagar histórico da nova api para ter o id_pop novo
 # TODO: criar tabela dim do id_pop novo
-# TODO: pipe atividades dos eventos
 """
 Tasks for comando
 """
@@ -16,6 +15,7 @@ import os
 from pathlib import Path
 from typing import Any, Union, Tuple
 from uuid import uuid4
+from urllib.error import HTTPError
 from unidecode import unidecode
 
 import pandas as pd
@@ -159,11 +159,14 @@ def download_data_ocorrencias(first_date, last_date, wait=None) -> pd.DataFrame:
 
     while temp_date <= last_date:
         log(f"\n\nDownloading data from {first_date} to {temp_date} (not included)")
-        dfr_temp = pd.read_json(
-            f"{url_eventos}/?data_i={first_date.strftime('%d/%m/%Y')}&data_f={temp_date.strftime('%d/%m/%Y')}"
-        )
-        dfr_temp["create_partition"] = first_date.strftime("%Y-%m-%d")
-        dfr = pd.concat([dfr, dfr_temp])
+        try:
+            dfr_temp = pd.read_json(
+                f"{url_eventos}/?data_i={first_date.strftime('%d/%m/%Y')}&data_f={temp_date.strftime('%d/%m/%Y')}"
+            )
+            dfr_temp["create_partition"] = first_date.strftime("%Y-%m-%d")
+            dfr = pd.concat([dfr, dfr_temp])
+        except HTTPError as error:
+            print(f"Error downloading this data: {error}")
         first_date, temp_date = first_date.add(days=1), temp_date.add(days=1)
     return dfr
 
