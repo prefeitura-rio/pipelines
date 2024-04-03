@@ -1475,6 +1475,7 @@ and createdDate lt {end})",
         "des_infracao": "infracao",
         "status": "status",
         "data_pagamento": "data_pagamento",
+        "linha": "servico",
     }
     SPPO_INFRACAO_CSV_ARGS = {
         "sep": ";",
