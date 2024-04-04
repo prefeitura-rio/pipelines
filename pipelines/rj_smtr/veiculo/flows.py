@@ -235,6 +235,9 @@ with Flow(
     run_dbt_model.map(
         dbt_client=unmapped(dbt_client),
         dataset_id=unmapped(constants.VEICULO_DATASET_ID.value),
+        table_id=unmapped(constants.SPPO_VEICULO_DIA_TABLE_ID.value),
+        upstream=unmapped(True),
+        exclude=unmapped("+gps_sppo"),
         _vars=_vars,
     )
 
