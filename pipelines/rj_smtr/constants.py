@@ -1309,6 +1309,11 @@ class constants(Enum):  # pylint: disable=c0103
             "extract_params": {"filename": "ordem_servico"},
         },
         {
+            "table_id": "ordem_servico_trajeto_alternativo",
+            "primary_key": ["servico"],
+            "extract_params": {"filename": "ordem_servico_trajeto_alternativo"},
+        },
+        {
             "table_id": "stop_times",
             "primary_key": ["trip_id", "stop_sequence"],
         },
