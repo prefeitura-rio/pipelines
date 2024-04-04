@@ -36,7 +36,7 @@ from pipelines.utils.utils import (
 )
 
 
-@task
+@task(nout=2)
 def get_date_interval(first_date: str = None, last_date: str = None):
     """
     If `first_date` and `last_date` are provided, convert it to pendulum
