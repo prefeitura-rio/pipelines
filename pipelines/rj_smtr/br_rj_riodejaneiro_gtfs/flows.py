@@ -38,7 +38,7 @@ gtfs_captura.name = "SMTR: GTFS - Captura (subflow)"
 gtfs_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 gtfs_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 gtfs_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 gtfs_captura = set_default_parameters(
@@ -51,7 +51,7 @@ gtfs_materializacao.name = "SMTR: GTFS - Materialização (subflow)"
 gtfs_materializacao.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 gtfs_materializacao.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 gtfs_materializacao = set_default_parameters(
     flow=gtfs_materializacao,
@@ -84,7 +84,8 @@ with Flow(
 
         run_captura = create_flow_run.map(
             flow_name=unmapped(gtfs_captura.name),
-            project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+            # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+            project_name=unmapped("staging"),
             parameters=gtfs_capture_parameters,
             labels=unmapped(LABELS),
             scheduled_start_time=get_scheduled_start_times(
@@ -125,7 +126,8 @@ with Flow(
 
         run_materializacao = create_flow_run(
             flow_name=gtfs_materializacao.name,
-            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+            project_name="staging",
             parameters=gtfs_materializacao_parameters,
             labels=LABELS,
             upstream_tasks=[wait_captura],
@@ -133,7 +135,8 @@ with Flow(
 
         run_materializacao_new_dataset_id = create_flow_run(
             flow_name=gtfs_materializacao.name,
-            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            # project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+            project_name="staging",
             parameters=gtfs_materializacao_parameters_new,
             labels=LABELS,
             upstream_tasks=[wait_captura],
@@ -156,5 +159,5 @@ with Flow(
 gtfs_captura_tratamento.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 gtfs_captura_tratamento.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
