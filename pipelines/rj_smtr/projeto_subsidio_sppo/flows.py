@@ -199,11 +199,18 @@ with Flow(
 
         with case(SUBSIDIO_SPPO_DATA_QUALITY_PRE, True):
             # 4. CALCULATE #
+            SUBSIDIO_SPPO_STAGING_RUN = run_dbt_model(
+                dbt_client=dbt_client,
+                dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_STAGING_DATASET_ID.value,
+                _vars=_vars,
+                upstream_tasks=[SUBSIDIO_SPPO_DATA_QUALITY_PRE],
+            )
+
             SUBSIDIO_SPPO_APURACAO_RUN = run_dbt_model(
                 dbt_client=dbt_client,
                 dataset_id=smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value,
                 _vars=_vars,
-                upstream_tasks=[SUBSIDIO_SPPO_DATA_QUALITY_PRE],
+                upstream_tasks=[SUBSIDIO_SPPO_STAGING_RUN],
             )
 
             # 5. POST-DATA QUALITY CHECK #
