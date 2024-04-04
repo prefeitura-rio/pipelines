@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # flake8: noqa: E722
-# TODO: apagar histórico da nova api para ter o id_pop novo
 """
 Tasks for comando
 """
@@ -242,6 +241,11 @@ def treat_data_ocorrencias(
     # Set the order to match the original table
     dfr = dfr[mandatory_cols]
 
+    # Create a column with time of row update to keep last event on dbt
+    dfr["last_updated_at"] = pendulum.now(tz="America/Sao_Paulo").strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+
     return dfr.drop_duplicates(), redis_max_date
 
 
@@ -349,6 +353,11 @@ def treat_data_atividades(
 
     # Set the order to match the original table
     dfr = dfr[mandatory_cols]
+
+    # Create a column with time of row update to keep last event on dbt
+    dfr["last_updated_at"] = pendulum.now(tz="America/Sao_Paulo").strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
 
     return dfr.drop_duplicates(), redis_max_date
 
