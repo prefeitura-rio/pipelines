@@ -1228,6 +1228,17 @@ class constants(Enum):  # pylint: disable=c0103
         "exclude": "integracao matriz_integracao stops_gtfs2 routes_gtfs2 feed_info_gtfs2",
     }
 
+    BILHETAGEM_MATERIALIZACAO_TRANSACAO_RIOCARD_PARAMS = {
+        "dataset_id": "dashboard_controle_vinculo_jae_riocard",
+        "table_id": "veiculo_indicadores_dia",
+        "upstream": True,
+        "dbt_vars": {
+            "run_date": {},
+            "version": {},
+        },
+        "exclude": "+gps_sppo +sppo_licenciamento +gps_validador",
+    }
+
     BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS = {
         "dataset_id": BILHETAGEM_DATASET_ID,
         "table_id": "ordem_pagamento_dia",

@@ -198,6 +198,26 @@ bilhetagem_materializacao_transacao = set_default_parameters(
     default_parameters=bilhetagem_materializacao_transacao_parameters,
 )
 
+
+bilhetagem_materializacao_transacao_riocard = deepcopy(default_materialization_flow)
+bilhetagem_materializacao_transacao_riocard.name = (
+    "SMTR: Bilhetagem Transação RioCard - Materialização"
+)
+bilhetagem_materializacao_transacao_riocard.storage = GCS(
+    emd_constants.GCS_FLOWS_BUCKET.value
+)
+bilhetagem_materializacao_transacao_riocard.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+
+bilhetagem_materializacao_transacao_riocard = set_default_parameters(
+    flow=bilhetagem_materializacao_transacao_riocard,
+    default_parameters=constants.BILHETAGEM_MATERIALIZACAO_TRANSACAO_RIOCARD_PARAMS.value,
+)
+
+bilhetagem_materializacao_transacao_riocard.schedule = every_day_hour_five
+
 # Ordem Pagamento
 
 bilhetagem_materializacao_ordem_pagamento = deepcopy(default_materialization_flow)
