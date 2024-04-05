@@ -787,8 +787,8 @@ class constants(Enum):  # pylint: disable=c0103
                 FROM
                     transacao_riocard
                 WHERE
-                    data_processamento BETWEEN '{start}'
-                    AND '{end}'
+                    data_processamento >= '{start}'
+                    AND data_processamento < '{end}'
             """,
         },
         "primary_key": ["id"],
