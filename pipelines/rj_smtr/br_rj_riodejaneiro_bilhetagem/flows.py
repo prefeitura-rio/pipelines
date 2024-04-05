@@ -63,6 +63,25 @@ bilhetagem_transacao_captura = set_default_parameters(
 
 bilhetagem_transacao_captura.schedule = every_minute
 
+
+bilhetagem_transacao_riocard_captura = deepcopy(default_capture_flow)
+bilhetagem_transacao_riocard_captura.name = (
+    "SMTR: Bilhetagem Transação RioCard - Captura"
+)
+bilhetagem_transacao_riocard_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bilhetagem_transacao_riocard_captura.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+
+bilhetagem_transacao_riocard_captura = set_default_parameters(
+    flow=bilhetagem_transacao_riocard_captura,
+    default_parameters=constants.BILHETAGEM_GENERAL_CAPTURE_DEFAULT_PARAMS.value
+    | constants.BILHETAGEM_TRANSACAO_RIOCARD_CAPTURE_PARAMS.value,
+)
+
+bilhetagem_transacao_riocard_captura.schedule = every_minute
+
 # BILHETAGEM FISCALIZAÇÃO - CAPTURA A CADA 5 MINUTOS #
 
 bilhetagem_fiscalizacao_captura = deepcopy(default_capture_flow)
@@ -313,6 +332,20 @@ with Flow(
 
         wait_recaptura_transacao_true = wait_for_flow_run(
             run_recaptura_transacao,
+            stream_states=True,
+            stream_logs=True,
+            raise_final_state=True,
+        )
+
+        run_recaptura_transacao_riocard = create_flow_run(
+            flow_name=bilhetagem_recaptura.name,
+            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            labels=LABELS,
+            parameters=constants.BILHETAGEM_TRANSACAO_RIOCARD_CAPTURE_PARAMS.value,
+        )
+
+        wait_recaptura_transacao_riocard_true = wait_for_flow_run(
+            run_recaptura_transacao_riocard,
             stream_states=True,
             stream_logs=True,
             raise_final_state=True,

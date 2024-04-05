@@ -776,6 +776,25 @@ class constants(Enum):  # pylint: disable=c0103
         "interval_minutes": 1,
     }
 
+    BILHETAGEM_TRANSACAO_RIOCARD_CAPTURE_PARAMS = {
+        "table_id": "transacao_riocard",
+        "partition_date_only": False,
+        "extract_params": {
+            "database": "transacao_db",
+            "query": """
+                SELECT
+                    *
+                FROM
+                    transacao_riocard
+                WHERE
+                    data_processamento BETWEEN '{start}'
+                    AND '{end}'
+            """,
+        },
+        "primary_key": ["id"],
+        "interval_minutes": 1,
+    }
+
     BILHETAGEM_FISCALIZACAO_CAPTURE_PARAMS = {
         "table_id": "fiscalizacao",
         "partition_date_only": False,
