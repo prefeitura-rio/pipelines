@@ -777,6 +777,25 @@ class constants(Enum):  # pylint: disable=c0103
         "interval_minutes": 1,
     }
 
+    BILHETAGEM_TRANSACAO_RIOCARD_CAPTURE_PARAMS = {
+        "table_id": "transacao_riocard",
+        "partition_date_only": False,
+        "extract_params": {
+            "database": "transacao_db",
+            "query": """
+                SELECT
+                    *
+                FROM
+                    transacao_riocard
+                WHERE
+                    data_processamento >= '{start}'
+                    AND data_processamento < '{end}'
+            """,
+        },
+        "primary_key": ["id"],
+        "interval_minutes": 1,
+    }
+
     BILHETAGEM_FISCALIZACAO_CAPTURE_PARAMS = {
         "table_id": "fiscalizacao",
         "partition_date_only": False,
@@ -1208,6 +1227,17 @@ class constants(Enum):  # pylint: disable=c0103
             "version": {},
         },
         "exclude": "integracao matriz_integracao stops_gtfs2 routes_gtfs2 feed_info_gtfs2",
+    }
+
+    BILHETAGEM_MATERIALIZACAO_TRANSACAO_RIOCARD_PARAMS = {
+        "dataset_id": "dashboard_controle_vinculo_jae_riocard",
+        "table_id": "veiculo_indicadores_dia",
+        "upstream": True,
+        "dbt_vars": {
+            "run_date": {},
+            "version": {},
+        },
+        "exclude": "+gps_sppo +sppo_licenciamento +gps_validador",
     }
 
     BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS = {
