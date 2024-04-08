@@ -224,7 +224,7 @@ def create_dbt_run_vars(
             day_datetime=timestamp,
         )
 
-        final_vars.append([d.copy() for d in date_var])
+        final_vars += [d.copy() for d in date_var]
 
         log(f"run_date created: {date_var}")
 
