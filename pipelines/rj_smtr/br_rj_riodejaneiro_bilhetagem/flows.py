@@ -362,6 +362,7 @@ with Flow(
             project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
             labels=LABELS,
             parameters=constants.BILHETAGEM_TRANSACAO_RIOCARD_CAPTURE_PARAMS.value,
+            upstream_tasks=[wait_recaptura_transacao_true],
         )
 
         wait_recaptura_transacao_riocard_true = wait_for_flow_run(
