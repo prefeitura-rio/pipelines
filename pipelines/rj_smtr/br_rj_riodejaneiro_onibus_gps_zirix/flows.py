@@ -277,7 +277,6 @@ with Flow(
     "SMTR: GPS SPPO Zirix - Tratamento",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as recaptura:
-    version = Parameter("version", default=2)
     datetime_filter = Parameter("datetime_filter", default=None)
     materialize = Parameter("materialize", default=True)
     # SETUP #
@@ -318,9 +317,7 @@ with Flow(
             partitions=partitions,
         )
 
-        url = create_api_url_onibus_gps.map(
-            version=unmapped(version), timestamp=timestamps
-        )
+        url = create_api_url_onibus_gps.map(timestamp=timestamps)
 
         # EXTRACT #
         raw_status = get_raw.map(url)
@@ -331,7 +328,7 @@ with Flow(
         trated_status = pre_treatment_br_rj_riodejaneiro_onibus_gps.map(
             status=raw_status,
             timestamp=timestamps,
-            version=unmapped(version),
+            version=unmapped(2),
         )
 
         treated_filepath = save_treated_local.map(
