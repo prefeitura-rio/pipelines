@@ -18,6 +18,6 @@ class constants(Enum):  # pylint: disable=c0103
         "partition_date_only": False,
         "extract_params": {"delay_minutes": 5},
         "primary_key": ["id_viagem"],
-        "interval_minutes": 5,
+        "interval_minutes": 10,
         "source_type": "api-json",
     }
