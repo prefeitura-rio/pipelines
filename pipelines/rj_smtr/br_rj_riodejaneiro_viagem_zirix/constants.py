@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Constant values for br_rj_riodejaneiro_onibus_gps_zirix
+Constant values for br_rj_riodejaneiro_viagem_zirix
 """
 
 from enum import Enum
@@ -9,7 +9,7 @@ from pipelines.rj_smtr.constants import constants as smtr_constants
 
 class constants(Enum):  # pylint: disable=c0103
     """
-    Constant values for br_rj_riodejaneiro_onibus_gps_zirix
+    Constant values for br_rj_riodejaneiro_viagem_zirix
     """
 
     VIAGEM_CAPTURE_PARAMETERS = {
