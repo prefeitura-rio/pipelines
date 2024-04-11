@@ -805,10 +805,15 @@ def create_request_params(
             "data_final": (timestamp - timedelta(minutes=delay_minutes)).strftime(
                 "%Y-%m-%d %H:%M:%S"
             ),
-            "guidIdentificacao": get_vault_secret(constants.ZIRIX_API_SECRET_PATH)[
-                "data"
-            ]["guidIdentificacao"],
+            "guidIdentificacao": get_vault_secret(
+                constants.ZIRIX_API_SECRET_PATH.value
+            )["data"]["guidIdentificacao"],
         }
+        log(
+            f"""Params:
+            data_inicial: {request_params['data_inicial']}
+            data_final: {request_params['data_final']}"""
+        )
 
     return request_params, request_url
 
