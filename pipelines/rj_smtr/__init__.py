@@ -22,3 +22,4 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.flows import *
 from pipelines.rj_smtr.br_rj_riodejaneiro_gtfs.flows import *
 from pipelines.rj_smtr.br_rj_riodejaneiro_stu.flows import *
 from pipelines.rj_smtr.br_rj_riodejaneiro_diretorios.flows import *
+from pipelines.rj_smtr.br_rj_riodejaneiro_viagem_zirix.flows import *

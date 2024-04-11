@@ -17,9 +17,6 @@ from pipelines.utils.utils import log, get_vault_secret
 # SMTR Imports #
 
 from pipelines.rj_smtr.constants import constants
-from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps_zirix.constants import (
-    constants as zirix_constants,
-)
 
 # Tasks #
 
@@ -28,7 +25,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps_zirix.constants import (
 def create_api_url_onibus_realocacao(
     interval_minutes: int = 10,
     timestamp: datetime = None,
-    secret_path: str = zirix_constants.ZIRIX_API_SECRET_PATH.value,
+    secret_path: str = constants.ZIRIX_API_SECRET_PATH.value,
 ) -> str:
     """
     start_date: datahora mínima do sinal de GPS avaliado
@@ -42,9 +39,7 @@ def create_api_url_onibus_realocacao(
         ),
         "date_range_end": timestamp.strftime("%Y-%m-%dT%H:%M:%S"),
     }
-    url = (
-        "https://integration.systemsatx.com.br/Globalbus/SMTR/EnvioViagensRetroativas?"
-    )
+    url = f"{constants.ZIRIX_BASE_URL.value}/EnvioViagensRetroativas?"
 
     headers = get_vault_secret(secret_path)["data"]
     key = list(headers)[0]
@@ -145,9 +140,9 @@ def create_api_url_onibus_gps(timestamp: datetime = None) -> str:
             second=0, microsecond=0
         )
 
-    headers = get_vault_secret(zirix_constants.ZIRIX_API_SECRET_PATH.value)["data"]
+    headers = get_vault_secret(constants.ZIRIX_API_SECRET_PATH.value)["data"]
     key = list(headers)[0]
-    url = f"https://integration.systemsatx.com.br/Globalbus/SMTR/EnvioIplan?{key}={{secret}}"
+    url = f"{constants.ZIRIX_BASE_URL.value}/EnvioIplan?{key}={{secret}}"
 
     date_range = {
         "start": (timestamp - timedelta(minutes=6)).strftime("%Y-%m-%d+%H:%M:%S"),
