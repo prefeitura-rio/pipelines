@@ -798,6 +798,8 @@ def create_request_params(
     elif dataset_id == constants.VIAGEM_ZIRIX_RAW_DATASET_ID.value:
         request_url = f"{constants.ZIRIX_BASE_URL.value}/EnvioViagensConsolidadas"
         delay_minutes = extract_params["delay_minutes"]
+        token = get_vault_secret(constants.ZIRIX_API_SECRET_PATH.value)["data"]
+        token_key = list(token)[0]
         request_params = {
             "data_inicial": (
                 timestamp - timedelta(minutes=delay_minutes + interval_minutes)
@@ -805,9 +807,9 @@ def create_request_params(
             "data_final": (timestamp - timedelta(minutes=delay_minutes)).strftime(
                 "%Y-%m-%d %H:%M:%S"
             ),
-            "guidIdentificacao": get_vault_secret(
-                constants.ZIRIX_API_SECRET_PATH.value
-            )["data"]["guidIdentificacao"],
+            token_key: get_vault_secret(constants.ZIRIX_API_SECRET_PATH.value)["data"][
+                token_key
+            ],
         }
         log(
             f"""Params:
