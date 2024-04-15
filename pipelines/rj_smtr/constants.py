@@ -1538,3 +1538,7 @@ and createdDate lt {end})",
         },
         "primary_key": ["datetime_registro", "email"],
     }
+
+    ZIRIX_API_SECRET_PATH = "zirix_api"
+    VIAGEM_ZIRIX_RAW_DATASET_ID = "br_rj_riodejaneiro_viagem_zirix"
+    ZIRIX_BASE_URL = "https://integration.systemsatx.com.br/Globalbus/SMTR"
