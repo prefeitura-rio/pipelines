@@ -28,9 +28,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_viagem_zirix.constants import (
     constants as zirix_constants,
 )
 
-from pipelines.rj_smtr.schedules import (
-    every_10_minutes,
-)
+from pipelines.rj_smtr.schedules import every_10_minutes, every_hour
 
 # from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
@@ -50,3 +48,20 @@ viagens_captura = set_default_parameters(
 )
 
 viagens_captura.schedule = every_10_minutes
+
+
+viagens_recaptura = deepcopy(default_capture_flow)
+viagens_recaptura.name = "SMTR: Viagens Ônibus Zirix - Recaptura"
+viagens_recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+viagens_recaptura.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+
+viagens_recaptura = set_default_parameters(
+    flow=viagens_recaptura,
+    default_parameters=zirix_constants.VIAGEM_CAPTURE_PARAMETERS.value
+    | {"recapture": True},
+)
+
+viagens_recaptura.schedule = every_hour
