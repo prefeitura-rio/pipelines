@@ -162,7 +162,7 @@ with Flow(
     # Set specific run parameters #
     date_range = get_materialization_date_range(
         dataset_id=dataset_id,
-        table_id=table_id,
+        table_id="gps_sppo",
         raw_dataset_id=raw_dataset_id,
         raw_table_id=raw_table_id,
         table_run_datetime_column_name="timestamp_gps",
