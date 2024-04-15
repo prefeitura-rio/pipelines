@@ -41,7 +41,7 @@ viagens_captura.name = "SMTR: Viagens Ônibus Zirix - Captura"
 viagens_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 viagens_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
 viagens_captura = set_default_parameters(
