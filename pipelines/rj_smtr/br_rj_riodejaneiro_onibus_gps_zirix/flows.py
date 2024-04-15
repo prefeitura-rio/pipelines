@@ -160,15 +160,15 @@ with Flow(
     # dbt_client = get_local_dbt_client(host="localhost", port=3001)
 
     # Set specific run parameters #
-    # date_range = get_materialization_date_range(
-    #     dataset_id=dataset_id,
-    #     table_id=table_id,
-    #     raw_dataset_id=raw_dataset_id,
-    #     raw_table_id=raw_table_id,
-    #     table_run_datetime_column_name="timestamp_gps",
-    #     mode=MODE,
-    #     delay_hours=constants.GPS_SPPO_MATERIALIZE_DELAY_HOURS.value,
-    # )
+    date_range = get_materialization_date_range(
+        dataset_id=dataset_id,
+        table_id=table_id,
+        raw_dataset_id=raw_dataset_id,
+        raw_table_id=raw_table_id,
+        table_run_datetime_column_name="timestamp_gps",
+        mode=MODE,
+        delay_hours=constants.GPS_SPPO_MATERIALIZE_DELAY_HOURS.value,
+    )
     dataset_sha = fetch_dataset_sha(
         dataset_id=dataset_id,
     )
@@ -181,34 +181,32 @@ with Flow(
             table_id=table_id,
             upstream=True,
             exclude="+data_versao_efetiva",
-            _vars=dataset_sha,
-            # _vars=[date_range, dataset_sha],
+            _vars=[date_range, dataset_sha],
             flags="--full-refresh",
         )
-        # set_last_run_timestamp(
-        #     dataset_id=dataset_id,
-        #     table_id=table_id,
-        #     timestamp=date_range["date_range_end"],
-        #     wait=RUN,
-        #     mode=MODE,
-        # )
+        set_last_run_timestamp(
+            dataset_id=dataset_id,
+            table_id=table_id,
+            timestamp=date_range["date_range_end"],
+            wait=RUN,
+            mode=MODE,
+        )
     with case(rebuild, False):
         RUN = run_dbt_model(
             dbt_client=dbt_client,
             dataset_id=dataset_id,
             table_id=table_id,
             exclude="+data_versao_efetiva",
-            _vars=dataset_sha,
-            # _vars=[date_range, dataset_sha],
+            _vars=[date_range, dataset_sha],
             upstream=True,
         )
-        # set_last_run_timestamp(
-        #     dataset_id=dataset_id,
-        #     table_id=table_id,
-        #     timestamp=date_range["date_range_end"],
-        #     wait=RUN,
-        #     mode=MODE,
-        # )
+        set_last_run_timestamp(
+            dataset_id=dataset_id,
+            table_id=table_id,
+            timestamp=date_range["date_range_end"],
+            wait=RUN,
+            mode=MODE,
+        )
 
 materialize_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 materialize_sppo.run_config = KubernetesRun(
