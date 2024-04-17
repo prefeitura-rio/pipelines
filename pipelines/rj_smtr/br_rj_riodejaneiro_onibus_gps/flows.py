@@ -212,6 +212,7 @@ with Flow(
             mode=MODE,
         )
 
+# Pula run se já houver outra execução em andamento
 materialize_sppo.state_handlers.append(skip_if_running_handler)
 materialize_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 materialize_sppo.run_config = KubernetesRun(
@@ -382,7 +383,7 @@ with Flow(
         task=run_materialize,
         upstream_tasks=[UPLOAD_LOGS],
     )
-
+# Pula run se já houver outra execução em andamento
 recaptura.state_handlers.append(skip_if_running_handler)
 recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 recaptura.run_config = KubernetesRun(
