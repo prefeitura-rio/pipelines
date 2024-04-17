@@ -6,6 +6,7 @@ Flows for veiculos
 
 from copy import deepcopy
 from prefect import Parameter
+from prefect.tasks.control_flow import ifelse, merge
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.utilities.edges import unmapped
@@ -49,6 +50,7 @@ from pipelines.rj_smtr.tasks import (
 from pipelines.rj_smtr.veiculo.tasks import (
     pre_treatment_sppo_licenciamento,
     pre_treatment_sppo_infracao,
+    get_raw_from_file,
 )
 
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
@@ -130,15 +132,17 @@ with Flow(
     f"SMTR: {constants.VEICULO_DATASET_ID.value} {constants.SPPO_INFRACAO_TABLE_ID.value} - Captura",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as sppo_infracao_captura:
+    source_filepath = Parameter("source_filepath", default=None)
+
     timestamp = get_current_timestamp()
 
     LABELS = get_current_flow_labels()
     MODE = get_current_flow_mode(LABELS)
 
     # Rename flow run
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix=f"{sppo_infracao_captura.name} - ", now_time=timestamp
-    )
+    # rename_flow_run = rename_current_flow_run_now_time(
+    #     prefix=f"{sppo_infracao_captura.name} - ", now_time=timestamp
+    # )
 
     # SETUP #
     partitions = create_date_hour_partition(timestamp, partition_date_only=True)
@@ -153,11 +157,18 @@ with Flow(
     )
 
     # EXTRACT
-    raw_status = get_raw(
+    raw_status_file = get_raw_from_file(
+        filepath=source_filepath,
+        csv_args=constants.SPPO_INFRACAO_CSV_ARGS.value,
+    )
+    raw_status_url = get_raw(
         url=constants.SPPO_INFRACAO_URL.value,
         filetype="txt",
         csv_args=constants.SPPO_INFRACAO_CSV_ARGS.value,
     )
+    ifelse(source_filepath.is_equal(None), raw_status_url, raw_status_file)
+
+    raw_status = merge(raw_status_file, raw_status_url)
 
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
 
@@ -181,9 +192,9 @@ with Flow(
         timestamp=timestamp,
         error=error,
     )
-    sppo_infracao_captura.set_dependencies(
-        task=partitions, upstream_tasks=[rename_flow_run]
-    )
+    # sppo_infracao_captura.set_dependencies(
+    #     task=partitions, upstream_tasks=[rename_flow_run]
+    # )
 
 sppo_infracao_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_infracao_captura.run_config = KubernetesRun(

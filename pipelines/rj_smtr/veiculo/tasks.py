@@ -2,7 +2,7 @@
 """
 Tasks for veiculos
 """
-
+import traceback
 from datetime import datetime
 import pandas as pd
 import numpy as np
@@ -21,6 +21,19 @@ from pipelines.rj_smtr.utils import (
 )
 
 # Tasks #
+
+
+@task
+def get_raw_from_file(filepath: str, csv_args: dict):
+    data = None
+    error = None
+    try:
+        data = pd.read_csv(filepath, **csv_args).to_dict(orient="records")
+    except Exception:
+        error = traceback.format_exc()
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+
+    return {"data": data, "error": error}
 
 
 @task
@@ -78,9 +91,9 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
 
         log("Update indicador_ar_condicionado based on tipo_veiculo...", level="info")
         data["indicador_ar_condicionado"] = data["tipo_veiculo"].map(
-            lambda x: None
-            if not isinstance(x, str)
-            else bool("C/AR" in x.replace(" ", ""))
+            lambda x: (
+                None if not isinstance(x, str) else bool("C/AR" in x.replace(" ", ""))
+            )
         )
 
         log("Update status...", level="info")
