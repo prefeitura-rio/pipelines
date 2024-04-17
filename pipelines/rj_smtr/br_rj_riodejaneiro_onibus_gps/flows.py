@@ -284,7 +284,6 @@ with Flow(
     "SMTR: GPS SPPO Realocação - Recaptura (subflow)",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as recaptura_realocacao_sppo:
-
     version = Parameter("version", default=2)
     datetime_filter = Parameter("datetime_filter", default=None)
     materialize = Parameter("materialize", default=True)
