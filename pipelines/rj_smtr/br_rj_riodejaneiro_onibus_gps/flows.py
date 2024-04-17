@@ -55,6 +55,7 @@ from pipelines.rj_smtr.schedules import (
     every_10_minutes,
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
+from pipelines.utils.utils import skip_if_running_handler
 
 # Flows #
 
@@ -211,6 +212,7 @@ with Flow(
             mode=MODE,
         )
 
+materialize_sppo.state_handlers.append(skip_if_running_handler)
 materialize_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 materialize_sppo.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
@@ -381,6 +383,7 @@ with Flow(
         upstream_tasks=[UPLOAD_LOGS],
     )
 
+recaptura.state_handlers.append(skip_if_running_handler)
 recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 recaptura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
