@@ -321,9 +321,7 @@ with Flow(
             partitions=partitions,
         )
 
-        url = create_api_url_onibus_realocacao.map(
-            version=unmapped(version), timestamp=timestamps
-        )
+        url = create_api_url_onibus_realocacao.map(timestamp=timestamps)
 
         # EXTRACT #
         raw_status = get_raw.map(url)
@@ -332,7 +330,7 @@ with Flow(
 
         # CLEAN #
         treated_status = pre_treatment_br_rj_riodejaneiro_onibus_realocacao.map(
-            status=raw_status, timestamp=timestamps, version=unmapped(version)
+            status=raw_status, timestamp=timestamps
         )
 
         treated_filepath = save_treated_local.map(
