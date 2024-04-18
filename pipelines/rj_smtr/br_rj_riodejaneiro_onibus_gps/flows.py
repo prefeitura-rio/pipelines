@@ -55,6 +55,7 @@ from pipelines.rj_smtr.schedules import (
     every_10_minutes,
 )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
+from pipelines.utils.utils import skip_if_running_handler
 
 # Flows #
 
@@ -216,6 +217,7 @@ materialize_sppo.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
+materialize_sppo.state_handlers.append(skip_if_running_handler)
 
 
 with Flow(
@@ -386,4 +388,7 @@ recaptura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
+
+recaptura.state_handlers.append(skip_if_running_handler)
+
 recaptura.schedule = every_hour_minute_six
