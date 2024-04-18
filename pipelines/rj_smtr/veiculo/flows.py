@@ -50,7 +50,7 @@ from pipelines.rj_smtr.tasks import (
 from pipelines.rj_smtr.veiculo.tasks import (
     pre_treatment_sppo_licenciamento,
     pre_treatment_sppo_infracao,
-    get_raw_from_file,
+    get_veiculo_raw_storage,
 )
 
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
@@ -64,7 +64,10 @@ with Flow(
     f"SMTR: {constants.VEICULO_DATASET_ID.value} {constants.SPPO_LICENCIAMENTO_TABLE_ID.value} - Captura",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as sppo_licenciamento_captura:
-    timestamp = get_current_timestamp()
+    timestamp = Parameter("timestamp", default=None)
+    get_from_storage = Parameter("get_from_storage", default=False)
+
+    timestamp = get_current_timestamp(timestamp=timestamp)
 
     LABELS = get_current_flow_labels()
     MODE = get_current_flow_mode(LABELS)
@@ -87,11 +90,22 @@ with Flow(
     )
 
     # EXTRACT
-    raw_status = get_raw(
+    raw_status_gcs = get_veiculo_raw_storage(
+        dataset_id=constants.VEICULO_DATASET_ID.value,
+        table_id=constants.SPPO_LICENCIAMENTO_TABLE_ID.value,
+        timestamp=timestamp,
+        csv_args=constants.SPPO_LICENCIAMENTO_CSV_ARGS.value,
+    )
+
+    raw_status_url = get_raw(
         url=constants.SPPO_LICENCIAMENTO_URL.value,
         filetype="txt",
         csv_args=constants.SPPO_LICENCIAMENTO_CSV_ARGS.value,
     )
+
+    ifelse(get_from_storage.is_equal(True), raw_status_gcs, raw_status_url)
+
+    raw_status = merge(raw_status_gcs, raw_status_url)
 
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
 
@@ -132,17 +146,18 @@ with Flow(
     f"SMTR: {constants.VEICULO_DATASET_ID.value} {constants.SPPO_INFRACAO_TABLE_ID.value} - Captura",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as sppo_infracao_captura:
-    source_filepath = Parameter("source_filepath", default=None)
+    timestamp = Parameter("timestamp", default=None)
+    get_from_storage = Parameter("get_from_storage", default=False)
 
-    timestamp = get_current_timestamp()
+    timestamp = get_current_timestamp(timestamp=timestamp)
 
     LABELS = get_current_flow_labels()
     MODE = get_current_flow_mode(LABELS)
 
     # Rename flow run
-    # rename_flow_run = rename_current_flow_run_now_time(
-    #     prefix=f"{sppo_infracao_captura.name} - ", now_time=timestamp
-    # )
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix=f"{sppo_infracao_captura.name} - ", now_time=timestamp
+    )
 
     # SETUP #
     partitions = create_date_hour_partition(timestamp, partition_date_only=True)
@@ -157,8 +172,10 @@ with Flow(
     )
 
     # EXTRACT
-    raw_status_file = get_raw_from_file(
-        filepath=source_filepath,
+    raw_status_gcs = get_veiculo_raw_storage(
+        dataset_id=constants.VEICULO_DATASET_ID.value,
+        table_id=constants.SPPO_INFRACAO_TABLE_ID.value,
+        timestamp=timestamp,
         csv_args=constants.SPPO_INFRACAO_CSV_ARGS.value,
     )
     raw_status_url = get_raw(
@@ -166,9 +183,9 @@ with Flow(
         filetype="txt",
         csv_args=constants.SPPO_INFRACAO_CSV_ARGS.value,
     )
-    ifelse(source_filepath.is_equal(None), raw_status_url, raw_status_file)
+    ifelse(get_from_storage.is_equal(True), raw_status_gcs, raw_status_url)
 
-    raw_status = merge(raw_status_file, raw_status_url)
+    raw_status = merge(raw_status_gcs, raw_status_url)
 
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
 
@@ -192,9 +209,9 @@ with Flow(
         timestamp=timestamp,
         error=error,
     )
-    # sppo_infracao_captura.set_dependencies(
-    #     task=partitions, upstream_tasks=[rename_flow_run]
-    # )
+    sppo_infracao_captura.set_dependencies(
+        task=partitions, upstream_tasks=[rename_flow_run]
+    )
 
 sppo_infracao_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 sppo_infracao_captura.run_config = KubernetesRun(
