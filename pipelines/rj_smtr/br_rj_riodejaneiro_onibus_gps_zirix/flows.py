@@ -67,14 +67,14 @@ from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 with Flow(
     "SMTR: GPS SPPO Realocação Zirix - Captura",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
-) as realocacao_sppo:
+) as realocacao_sppo_zirix:
     # SETUP #
 
     # SETUP
     timestamp = get_current_timestamp()
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=realocacao_sppo.name + ": ", now_time=timestamp
+        prefix=realocacao_sppo_zirix.name + ": ", now_time=timestamp
     )
 
     partitions = create_date_hour_partition(timestamp)
@@ -119,21 +119,21 @@ with Flow(
         timestamp=timestamp,
     )
 
-realocacao_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-realocacao_sppo.run_config = KubernetesRun(
+realocacao_sppo_zirix.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+realocacao_sppo_zirix.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-realocacao_sppo.schedule = every_10_minutes
+realocacao_sppo_zirix.schedule = every_10_minutes
 
 
 with Flow(
     "SMTR: GPS SPPO Zirix - Materialização (subflow)",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
-) as materialize_sppo:
+) as materialize_sppo_zirix:
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=materialize_sppo.name + ": ", now_time=get_now_time()
+        prefix=materialize_sppo_zirix.name + ": ", now_time=get_now_time()
     )
 
     # Get default parameters #
@@ -208,8 +208,8 @@ with Flow(
             mode=MODE,
         )
 
-materialize_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-materialize_sppo.run_config = KubernetesRun(
+materialize_sppo_zirix.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+materialize_sppo_zirix.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
@@ -218,12 +218,12 @@ materialize_sppo.run_config = KubernetesRun(
 with Flow(
     "SMTR: GPS SPPO Zirix - Captura",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
-) as captura_sppo_v2:
+) as captura_sppo_zirix:
     # SETUP #
     timestamp = get_current_timestamp()
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=captura_sppo_v2.name + ": ", now_time=timestamp
+        prefix=captura_sppo_zirix.name + ": ", now_time=timestamp
     )
 
     partitions = create_date_hour_partition(timestamp)
@@ -268,18 +268,18 @@ with Flow(
         timestamp=timestamp,
     )
 
-captura_sppo_v2.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-captura_sppo_v2.run_config = KubernetesRun(
+captura_sppo_zirix.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+captura_sppo_zirix.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-captura_sppo_v2.schedule = every_minute
+captura_sppo_zirix.schedule = every_minute
 
 
 with Flow(
     "SMTR: GPS SPPO Zirix - Tratamento",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
-) as recaptura:
+) as recaptura_zirix:
     datetime_filter = Parameter("datetime_filter", default=None)
     materialize = Parameter("materialize", default=True)
     # SETUP #
@@ -292,15 +292,15 @@ with Flow(
     )
 
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=recaptura.name + ": ", now_time=get_now_time(), wait=timestamps
+        prefix=recaptura_zirix.name + ": ", now_time=get_now_time(), wait=timestamps
     )
     with case(errors, False):
         with case(materialize, True):
             materialize_no_error = create_flow_run(
-                flow_name=materialize_sppo.name,
+                flow_name=materialize_sppo_zirix.name,
                 project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
                 labels=LABELS,
-                run_name=materialize_sppo.name,
+                run_name=materialize_sppo_zirix.name,
             )
             wait_materialize_no_error = wait_for_flow_run(
                 materialize_no_error,
@@ -358,10 +358,10 @@ with Flow(
         )
         with case(materialize, True):
             run_materialize = create_flow_run(
-                flow_name=materialize_sppo.name,
+                flow_name=materialize_sppo_zirix.name,
                 project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
                 labels=LABELS,
-                run_name=materialize_sppo.name,
+                run_name=materialize_sppo_zirix.name,
             )
             wait_materialize = wait_for_flow_run(
                 run_materialize,
@@ -369,14 +369,14 @@ with Flow(
                 stream_logs=True,
                 raise_final_state=True,
             )
-    recaptura.set_dependencies(
+    recaptura_zirix.set_dependencies(
         task=run_materialize,
         upstream_tasks=[UPLOAD_LOGS],
     )
 
-recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-recaptura.run_config = KubernetesRun(
+recaptura_zirix.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+recaptura_zirix.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-recaptura.schedule = every_hour_minute_six
+recaptura_zirix.schedule = every_hour_minute_six
