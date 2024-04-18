@@ -321,7 +321,7 @@ with Flow(
             partitions=partitions,
         )
 
-        url = create_api_url_onibus_gps.map(
+        url = create_api_url_onibus_realocacao.map(
             version=unmapped(version), timestamp=timestamps
         )
 
@@ -330,8 +330,8 @@ with Flow(
 
         raw_filepath = save_raw_local.map(status=raw_status, file_path=filepath)
 
-        # # CLEAN #
-        treated_status = pre_treatment_br_rj_riodejaneiro_onibus_gps.map(
+        # CLEAN #
+        treated_status = pre_treatment_br_rj_riodejaneiro_onibus_realocacao.map(
             status=raw_status, timestamp=timestamps, version=unmapped(version)
         )
 
@@ -339,7 +339,7 @@ with Flow(
             status=treated_status, file_path=filepath
         )
 
-        # # LOAD #
+        # LOAD #
         error = bq_upload.map(
             dataset_id=unmapped(constants.GPS_SPPO_RAW_DATASET_ID.value),
             table_id=unmapped(constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value),
@@ -349,7 +349,7 @@ with Flow(
             status=treated_status,
         )
 
-        UPLOAD_LOGS = upload_logs_to_bq.map(
+        upload_logs_to_bq.map(
             dataset_id=unmapped(constants.GPS_SPPO_RAW_DATASET_ID.value),
             parent_table_id=unmapped(constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value),
             error=error,
@@ -485,6 +485,6 @@ recaptura.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
-materialize_sppo.state_handlers.append(skip_if_running_handler)
+recaptura.state_handlers.append(skip_if_running_handler)
 
 recaptura.schedule = every_hour_minute_six
