@@ -4,8 +4,8 @@
 
 ### Adicionado
 
-- Adiciona nova tabela de `ordem_servico_trajeto_alternativo` na captura e tratamento
+- Adiciona nova tabela de `ordem_servico_trajeto_alternativo` na captura e tratamento (https://github.com/prefeitura-rio/pipelines/pull/656)
 
 ### Alterado
 
-- Altera parâmetros de materialização para otimização do flow `gtfs_captura_tratamento`
+- Altera parâmetros de materialização para otimização do flow `gtfs_captura_tratamento` (https://github.com/prefeitura-rio/pipelines/pull/656)

@@ -4,4 +4,4 @@
 
 ### Alterado
 
-- Altera parâmetros de materialização para otimização do flow `viagens_sppo` em razão de alterações dos modelos relacionados
+- Altera parâmetros de materialização para otimização do flow `viagens_sppo` em razão de alterações dos modelos relacionados (https://github.com/prefeitura-rio/pipelines/pull/656)
