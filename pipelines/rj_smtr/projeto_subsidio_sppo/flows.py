@@ -90,7 +90,7 @@ with Flow(
         dataset_id=unmapped(smtr_constants.SUBSIDIO_SPPO_DATASET_ID.value),
         table_id=unmapped(smtr_constants.SUBSIDIO_SPPO_TABLE_ID.value),
         upstream=unmapped(True),
-        exclude=unmapped("+gps_sppo"),
+        exclude=unmapped("+gps_sppo +ordem_servico_trips_shapes_gtfs2"),
         _vars=_vars,
     )
 
