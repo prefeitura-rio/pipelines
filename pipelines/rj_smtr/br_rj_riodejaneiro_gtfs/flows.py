@@ -109,19 +109,17 @@ with Flow(
     wait_captura = merge(wait_captura_true, wait_captura_false)
 
     with case(materialize, True):
-        gtfs_materializacao_parameters = {
+        dbt_vars = {
             "dbt_vars": {
                 "data_versao_gtfs": data_versao_gtfs,
                 "version": {},
             },
         }
+
+        gtfs_materializacao_parameters = dbt_vars
         gtfs_materializacao_parameters_new = {
             "dataset_id": "gtfs",
-            "dbt_vars": {
-                "data_versao_gtfs": data_versao_gtfs,
-                "version": {},
-            },
-        }
+        } | dbt_vars
 
         run_materializacao = create_flow_run(
             flow_name=gtfs_materializacao.name,
