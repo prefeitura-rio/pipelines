@@ -291,11 +291,10 @@ with Flow(
     version = Parameter("version", default=2)
     datetime_filter = Parameter("datetime_filter", default=None)
     materialize = Parameter("materialize", default=True)
+    recapture_window_days = Parameter("recapture_window_days", default=1)
 
     # SETUP #
     LABELS = get_current_flow_labels()
-
-    recapture_window_days = Parameter("recapture_window_days", default=1)
 
     # Consulta de logs para verificar erros
     errors, timestamps, previous_errors = query_logs(
@@ -303,7 +302,7 @@ with Flow(
         table_id=constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
         datetime_filter=datetime_filter,
         interval_minutes=10,
-        recapture_window_days=Parameter("recapture_window_days"),
+        recapture_window_days=recapture_window_days,
     )
 
     rename_flow_run = rename_current_flow_run_now_time(
