@@ -442,6 +442,7 @@ def query_logs(
     max_recaptures: int = 90,
     interval_minutes: int = 1,
     recapture_window_days: int = 1,
+    overwrite_project: str = None,
 ):
     """
     Queries capture logs to check for errors
@@ -472,6 +473,7 @@ def query_logs(
         )
 
     datetime_filter = datetime_filter.strftime("%Y-%m-%d %H:%M:%S")
+    project = overwrite_project or bq_project(kind="bigquery_staging")
 
     query = f"""
     WITH
@@ -495,7 +497,7 @@ def query_logs(
                 SAFE_CAST(erro AS STRING) erro,
                 SAFE_CAST(DATA AS DATE) DATA
             FROM
-                {bq_project(kind="bigquery_staging")}.{dataset_id}_staging.{table_id}_logs AS t
+                {project}.{dataset_id}_staging.{table_id}_logs AS t
         ),
         logs AS (
             SELECT
@@ -1189,6 +1191,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
     mode: str = "prod",
     delay_hours: int = 0,
     end_ts: datetime = None,
+    truncate_minutes: bool = True,
 ):
     """
     Task for generating dict with variables to be passed to the
@@ -1210,6 +1213,7 @@ def get_materialization_date_range(  # pylint: disable=R0913
         dict: containing date_range_start and date_range_end
     """
     timestr = "%Y-%m-%dT%H:%M:%S"
+    log(f"Truncate minutes? -> {truncate_minutes}")
     # get start from redis
     last_run = get_last_run_timestamp(
         dataset_id=dataset_id, table_id=table_id, mode=mode
@@ -1254,18 +1258,25 @@ def get_materialization_date_range(  # pylint: disable=R0913
         last_run = datetime(last_run.year, last_run.month, last_run.day)
 
     # set start to last run hour (H)
-    start_ts = last_run.replace(minute=0, second=0, microsecond=0).strftime(timestr)
-
+    start_ts = last_run.replace(second=0, microsecond=0).strftime(timestr)
+    if truncate_minutes:
+        start_ts = start_ts.replace(minute=0)
+    log(f"Got start_ts as {start_ts}")
     # set end to now - delay
 
     if not end_ts:
         end_ts = pendulum.now(constants.TIMEZONE.value).replace(
-            tzinfo=None, minute=0, second=0, microsecond=0
+            tzinfo=None, second=0, microsecond=0
         )
+        log(f"end_ts not passed. Got end_ts as {end_ts}")
+    else:
+        log(f"end_ts is {end_ts}")
 
-    end_ts = (end_ts - timedelta(hours=delay_hours)).replace(
-        minute=0, second=0, microsecond=0
-    )
+    end_ts = (end_ts - timedelta(hours=delay_hours)).replace(second=0, microsecond=0)
+    log(f"After subtracting delay_hours, end_ts is {end_ts}")
+
+    if truncate_minutes:
+        end_ts = end_ts.replace(minute=0)
 
     end_ts = end_ts.strftime(timestr)
 

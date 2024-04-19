@@ -163,3 +163,17 @@ every_dayofmonth_one_and_sixteen = Schedule(
         ),
     ]
 )
+
+every_15_minute_dev = Schedule(
+    clocks=[
+        IntervalClock(
+            interval=timedelta(minutes=15),
+            start_date=datetime(
+                2021, 1, 1, 0, 0, 0, tzinfo=timezone(constants.TIMEZONE.value)
+            ),
+            labels=[
+                emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value,
+            ],
+        ),
+    ]
+)
