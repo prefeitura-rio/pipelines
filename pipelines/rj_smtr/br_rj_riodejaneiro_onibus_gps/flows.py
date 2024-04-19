@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-
-# -*- coding: utf-8 -*-
 """
 Flows for br_rj_riodejaneiro_onibus_gps
 """
