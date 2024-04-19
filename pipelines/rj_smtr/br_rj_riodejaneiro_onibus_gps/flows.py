@@ -34,6 +34,7 @@ from pipelines.rj_smtr.tasks import (
     get_materialization_date_range,
     # get_local_dbt_client,
     get_raw,
+    get_rounded_timestamp,
     parse_timestamp_to_string,
     query_logs,
     save_raw_local,
@@ -79,7 +80,7 @@ with Flow(
     rebuild = Parameter("rebuild", False)
 
     # SETUP
-    timestamp = get_current_timestamp()
+    timestamp = get_rounded_timestamp(interval_minutes=10)
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=realocacao_sppo.name + ": ", now_time=timestamp
@@ -286,9 +287,7 @@ with Flow(
     "SMTR: GPS SPPO Realocação - Recaptura (subflow)",
     code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as recaptura_realocacao_sppo:
-    version = Parameter("version", default=2)
-    datetime_filter = Parameter("datetime_filter", default=None)
-    materialize = Parameter("materialize", default=True)
+    timestamp = Parameter("timestamp", default=None)
     recapture_window_days = Parameter("recapture_window_days", default=1)
 
     # SETUP #
@@ -298,7 +297,7 @@ with Flow(
     errors, timestamps, previous_errors = query_logs(
         dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
         table_id=constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
-        datetime_filter=datetime_filter,
+        datetime_filter=get_rounded_timestamp(timestamp=timestamp, interval_minutes=10),
         interval_minutes=10,
         recapture_window_days=recapture_window_days,
     )
