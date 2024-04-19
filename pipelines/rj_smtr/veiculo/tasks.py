@@ -2,11 +2,14 @@
 """
 Tasks for veiculos
 """
-
+import traceback
+import zipfile
+import io
 from datetime import datetime
 import pandas as pd
 import numpy as np
 from prefect import task
+import basedosdados as bd
 
 # EMD Imports #
 
@@ -21,6 +24,51 @@ from pipelines.rj_smtr.utils import (
 )
 
 # Tasks #
+
+
+@task
+def get_veiculo_raw_storage(
+    dataset_id: str,
+    table_id: str,
+    timestamp: datetime,
+    csv_args: dict,
+) -> dict:
+    """Get data from daily manually extracted files received by email
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+        timestamp (datetime): file extraction date
+        csv_args (dict): Arguments for read_csv
+    """
+    data = None
+    error = None
+    filename_map = {
+        constants.SPPO_LICENCIAMENTO_TABLE_ID.value: "Cadastro de Veiculos",
+        constants.SPPO_INFRACAO_TABLE_ID.value: "MULTAS",
+    }
+
+    filename = f"{filename_map[table_id]}_{timestamp.date().strftime('%Y%m%d')}"
+
+    try:
+        bucket = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+        blob = (
+            bucket.client["storage_staging"]
+            .bucket(bucket.bucket_name)
+            .get_blob(f"upload/{dataset_id}/{table_id}/{filename}.zip")
+        )
+        data = blob.download_as_bytes()
+        with zipfile.ZipFile(io.BytesIO(data), "r") as zipped_file:
+            data = zipped_file.read(f"{filename}.txt")
+
+        data = data.decode(encoding="utf-8")
+
+        data = pd.read_csv(io.StringIO(data), **csv_args).to_dict(orient="records")
+    except Exception:
+        error = traceback.format_exc()
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+
+    return {"data": data, "error": error}
 
 
 @task
@@ -78,9 +126,9 @@ def pre_treatment_sppo_licenciamento(status: dict, timestamp: datetime):
 
         log("Update indicador_ar_condicionado based on tipo_veiculo...", level="info")
         data["indicador_ar_condicionado"] = data["tipo_veiculo"].map(
-            lambda x: None
-            if not isinstance(x, str)
-            else bool("C/AR" in x.replace(" ", ""))
+            lambda x: (
+                None if not isinstance(x, str) else bool("C/AR" in x.replace(" ", ""))
+            )
         )
 
         log("Update status...", level="info")
