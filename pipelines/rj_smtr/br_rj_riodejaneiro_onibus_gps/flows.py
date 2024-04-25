@@ -390,7 +390,7 @@ with Flow(
         dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
         table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
         datetime_filter=datetime_filter,
-        upstream_tasks=[wait_recaptura_realocacao_sppo]
+        upstream_tasks=[wait_recaptura_realocacao_sppo],
     )
 
     rename_flow_run = rename_current_flow_run_now_time(
