@@ -379,8 +379,7 @@ with Flow(
     # roda o subflow de reacptura da realocação
     run_recaptura_realocacao_sppo = create_flow_run(
         flow_name=recaptura_realocacao_sppo.name,
-        project_name="staging",
-        # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+        project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
         labels=LABELS,
         run_name=recaptura_realocacao_sppo.name,
         parameters={"timestamp": rounded_timestamp_str},
