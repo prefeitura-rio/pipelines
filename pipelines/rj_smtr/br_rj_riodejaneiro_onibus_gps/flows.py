@@ -171,7 +171,7 @@ with Flow(
 
     # Set specific run parameters #
     with case(rematerialization, False):
-        rematerialization_false = date_range = get_materialization_date_range(
+        rematerialization_dates_false = date_range = get_materialization_date_range(
             dataset_id=dataset_id,
             table_id=table_id,
             raw_dataset_id=raw_dataset_id,
@@ -185,13 +185,13 @@ with Flow(
             "date_range_start": date_range_start,
             "date_range_end": date_range_end,
         }
-        rematerialization_true = clean_br_rj_riodejaneiro_onibus_gps(date_range)
+        rematerialization_dates_true = clean_br_rj_riodejaneiro_onibus_gps(date_range)
 
-    rematerialization = merge(rematerialization_true, rematerialization_false)
+    rematerialization_dates = merge(rematerialization_dates_true, rematerialization_dates_false)
 
     dataset_sha = fetch_dataset_sha(
         dataset_id=dataset_id,
-        upstream_tasks=[rematerialization],
+        upstream_tasks=[rematerialization_dates],
     )
 
     # Run materialization #
@@ -236,7 +236,7 @@ with Flow(
 
     SET = merge(SET_TRUE, SET_FALSE)
 
-    materialize_sppo.set_reference_tasks([RUN, rematerialization, SET])
+    materialize_sppo.set_reference_tasks([RUN, rematerialization_dates, SET])
 
 materialize_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 materialize_sppo.run_config = KubernetesRun(
