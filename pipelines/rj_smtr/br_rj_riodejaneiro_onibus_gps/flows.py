@@ -376,7 +376,7 @@ with Flow(
         timestamp=rounded_timestamp, pattern="%Y-%m-%d %H:%M:%S"
     )
 
-    # roda o subflow de reacptura da realocação
+    # roda o subflow de recaptura da realocação
     run_recaptura_realocacao_sppo = create_flow_run(
         flow_name=recaptura_realocacao_sppo.name,
         project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
