@@ -299,7 +299,7 @@ def clean_br_rj_riodejaneiro_onibus_gps(date_range: dict) -> Union[str, None]:
                 (data BETWEEN DATE("{date_range['date_range_start']}")
                     AND DATE("{date_range['date_range_end']}"))
                 AND (timestamp_gps > "{date_range['date_range_start']}"
-                    AND timestamp_gps <= "{date_range['date_range_end']})";
+                    AND timestamp_gps <= "{date_range['date_range_end']}");
             DELETE
             FROM
                 `rj-smtr-dev.br_rj_riodejaneiro_veiculos.gps_sppo`
@@ -307,7 +307,7 @@ def clean_br_rj_riodejaneiro_onibus_gps(date_range: dict) -> Union[str, None]:
                 (data BETWEEN DATE("{date_range['date_range_start']}")
                     AND DATE("{date_range['date_range_end']}"))
                 AND (timestamp_gps > "{date_range['date_range_start']}"
-                    AND timestamp_gps <= "{date_range['date_range_end']})";
+                    AND timestamp_gps <= "{date_range['date_range_end']}");
             """
         log(q)
 
