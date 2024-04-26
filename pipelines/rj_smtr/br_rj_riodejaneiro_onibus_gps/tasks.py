@@ -257,6 +257,7 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
 
     return {"data": df_gps, "error": error}
 
+
 @task
 def clean_br_rj_riodejaneiro_onibus_gps(date_range: dict) -> Union[str, None]:
     """

@@ -180,7 +180,10 @@ with Flow(
             delay_hours=constants.GPS_SPPO_MATERIALIZE_DELAY_HOURS.value,
         )
     with case(rematerialization, True):
-        date_range = {"date_range_start": date_range_start, "date_range_end": date_range_end}
+        date_range = {
+            "date_range_start": date_range_start,
+            "date_range_end": date_range_end,
+        }
         rematerialization_true = clean_br_rj_riodejaneiro_onibus_gps(date_range)
 
     rematerialization = merge(rematerialization_true, rematerialization_false)
@@ -211,9 +214,9 @@ with Flow(
             _vars=[date_range, dataset_sha],
             upstream=True,
         )
-    
+
     RUN = merge(RUN_TRUE, RUN_FALSE)
-    
+
     with case(rematerialization, False):
         set_last_run_timestamp(
             dataset_id=dataset_id,
