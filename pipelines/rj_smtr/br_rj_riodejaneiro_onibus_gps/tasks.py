@@ -268,13 +268,16 @@ def clean_br_rj_riodejaneiro_onibus_gps(date_range: dict) -> Union[str, None]:
     - `rj-smtr-dev.br_rj_riodejaneiro_onibus_gps.sppo_aux_registros_realocacao`
     - `rj-smtr-dev.br_rj_riodejaneiro_veiculos.gps_sppo`
 
-    The records to be deleted are determined by the provided date range and the timestamp_gps column.
+    The records to be deleted are determined by the provided
+    date range and the timestamp_gps column.
 
     Parameters:
-        - date_range (dict): A dictionary containing the start and end dates for the data to be cleaned.
+        - date_range (dict): A dictionary containing the start
+        and end dates for the data to be cleaned.
 
     Returns:
-        - str or None: If an error occurs during the cleaning process, the error message is returned. Otherwise, None is returned.
+        - str or None: If an error occurs during the cleaning process,
+            the error message is returned. Otherwise, None is returned.
 
     """
     error = None
@@ -285,25 +288,36 @@ def clean_br_rj_riodejaneiro_onibus_gps(date_range: dict) -> Union[str, None]:
             FROM
                 `rj-smtr-dev.br_rj_riodejaneiro_onibus_gps.sppo_aux_registros_filtrada`
             WHERE
-                data between DATE("{date_range['start']}") and DATE("{date_range['end']}")
-                AND timestamp_gps > "{date_range['start']}" and timestamp_gps <="{date_range['end']}";
+                (data BETWEEN DATE("{date_range['date_range_start']}")
+                    AND DATE("{date_range['date_range_end']}"))
+                AND (timestamp_gps > "{date_range['date_range_start']}"
+                    AND timestamp_gps <="{date_range['date_range_end']}");
             DELETE
             FROM
                 `rj-smtr-dev.br_rj_riodejaneiro_onibus_gps.sppo_aux_registros_realocacao`
             WHERE
-                data between DATE("{date_range['start']}") and DATE("{date_range['end']}")
-                AND timestamp_gps > "{date_range['start']}" and timestamp_gps <="{date_range['end']}";
+                (data BETWEEN DATE("{date_range['date_range_start']}")
+                    AND DATE("{date_range['date_range_end']}"))
+                AND (timestamp_gps > "{date_range['date_range_start']}"
+                    AND timestamp_gps <="{date_range['date_range_end']})";
             DELETE
             FROM
                 `rj-smtr-dev.br_rj_riodejaneiro_veiculos.gps_sppo`
             WHERE
-                data between DATE("{date_range['start']}") and DATE("{date_range['end']}")
-                AND timestamp_gps > "{date_range['start']}" and timestamp_gps <="{date_range['end']}";
+                (data BETWEEN DATE("{date_range['date_range_start']}")
+                    AND DATE("{date_range['date_range_end']}"))
+                AND (timestamp_gps > "{date_range['date_range_start']}"
+                    AND timestamp_gps <="{date_range['date_range_end']})";
             """
 
-        bd.read_sql(q)
+        results = bd.read_sql(q)
 
-        log(f"Cleaned GPS data for {date_range['start']} to {date_range['end']}")
+        log(
+            f"""Cleaned GPS data for {date_range['date_range_start']} to
+                {date_range['date_range_end']}\n
+                Resulting:\n
+                {results}"""
+        )
     except Exception:  # pylint: disable = W0703
         error = traceback.format_exc()
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
