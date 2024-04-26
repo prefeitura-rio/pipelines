@@ -187,7 +187,9 @@ with Flow(
         }
         rematerialization_dates_true = clean_br_rj_riodejaneiro_onibus_gps(date_range)
 
-    rematerialization_dates = merge(rematerialization_dates_true, rematerialization_dates_false)
+    rematerialization_dates = merge(
+        rematerialization_dates_true, rematerialization_dates_false
+    )
 
     dataset_sha = fetch_dataset_sha(
         dataset_id=dataset_id,
