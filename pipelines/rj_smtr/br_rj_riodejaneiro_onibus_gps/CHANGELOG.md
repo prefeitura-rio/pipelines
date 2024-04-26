@@ -1,6 +1,6 @@
 # Changelog - br_rj_riodejaneiro_onibus_gps
 
-## [1.0.0] - 2024-04-25
+## [1.0.0] - 2024-04-26
 
 ### Adicionado
 
