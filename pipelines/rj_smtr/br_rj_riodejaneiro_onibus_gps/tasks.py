@@ -313,8 +313,8 @@ def clean_br_rj_riodejaneiro_onibus_gps(date_range: dict) -> Union[str, None]:
         results = bd.read_sql(q)
 
         log(
-            f"""Cleaned GPS data for {date_range['date_range_start']} to
-                {date_range['date_range_end']}\n
+            f"""Cleaned GPS data for
+                {date_range['date_range_start']} to {date_range['date_range_end']}\n
                 Resulting:\n
                 {results}"""
         )
