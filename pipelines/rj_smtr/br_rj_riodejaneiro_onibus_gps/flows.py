@@ -366,17 +366,22 @@ with Flow(
     "SMTR: GPS SPPO - Tratamento", code_owners=["caio", "fernanda", "boris", "rodrigo"]
 ) as recaptura:
     version = Parameter("version", default=2)
-    datetime_filter = Parameter("datetime_filter", default=None)
+    datetime_filter_gps = Parameter("datetime_filter_gps", default=None)
     materialize = Parameter("materialize", default=True)
     # SETUP #
     LABELS = get_current_flow_labels()
 
+    rounded_timestamp = get_rounded_timestamp(interval_minutes=60)
+    rounded_timestamp_str = parse_timestamp_to_string(rounded_timestamp)
+
     # roda o subflow de reacptura da realocação
     run_recaptura_realocacao_sppo = create_flow_run(
         flow_name=recaptura_realocacao_sppo.name,
-        project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+        project_name="staging",
+        # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
         labels=LABELS,
         run_name=recaptura_realocacao_sppo.name,
+        parameters={"timestamp": rounded_timestamp_str},
     )
 
     wait_recaptura_realocacao_sppo = wait_for_flow_run(
@@ -389,7 +394,7 @@ with Flow(
     errors, timestamps, previous_errors = query_logs(
         dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
         table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
-        datetime_filter=datetime_filter,
+        datetime_filter=datetime_filter_gps,
         upstream_tasks=[wait_recaptura_realocacao_sppo],
     )
 
@@ -400,7 +405,8 @@ with Flow(
         with case(materialize, True):
             materialize_no_error = create_flow_run(
                 flow_name=materialize_sppo.name,
-                project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+                project_name="staging",
+                # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
                 labels=LABELS,
                 run_name=materialize_sppo.name,
             )
@@ -463,7 +469,8 @@ with Flow(
         with case(materialize, True):
             run_materialize = create_flow_run(
                 flow_name=materialize_sppo.name,
-                project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+                project_name="staging",
+                # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
                 labels=LABELS,
                 run_name=materialize_sppo.name,
             )
