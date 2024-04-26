@@ -264,9 +264,9 @@ def clean_br_rj_riodejaneiro_onibus_gps(date_range: dict) -> Union[str, None]:
     Clean GPS data for a given date range.
 
     This function deletes records from three different tables in the database:
-    - `rj-smtr-dev.br_rj_riodejaneiro_onibus_gps.sppo_aux_registros_filtrada`
-    - `rj-smtr-dev.br_rj_riodejaneiro_onibus_gps.sppo_aux_registros_realocacao`
-    - `rj-smtr-dev.br_rj_riodejaneiro_veiculos.gps_sppo`
+    - `rj-smtr.br_rj_riodejaneiro_onibus_gps.sppo_aux_registros_filtrada`
+    - `rj-smtr.br_rj_riodejaneiro_onibus_gps.sppo_aux_registros_realocacao`
+    - `rj-smtr.br_rj_riodejaneiro_veiculos.gps_sppo`
 
     The records to be deleted are determined by the provided
     date range and the timestamp_gps column.
