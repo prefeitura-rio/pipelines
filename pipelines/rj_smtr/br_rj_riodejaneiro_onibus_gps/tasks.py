@@ -9,6 +9,8 @@ from typing import Dict
 import pandas as pd
 from prefect import task
 import pendulum
+import basedosdados as bd
+from typing import Union
 
 # EMD Imports #
 
@@ -254,3 +256,55 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return {"data": df_gps, "error": error}
+
+@task
+def clean_br_rj_riodejaneiro_onibus_gps(date_range: dict) -> Union[str, None]:
+    """
+    Clean GPS data for a given date range.
+
+    This function deletes records from three different tables in the database:
+    - `rj-smtr-dev.br_rj_riodejaneiro_onibus_gps.sppo_aux_registros_filtrada`
+    - `rj-smtr-dev.br_rj_riodejaneiro_onibus_gps.sppo_aux_registros_realocacao`
+    - `rj-smtr-dev.br_rj_riodejaneiro_veiculos.gps_sppo`
+
+    The records to be deleted are determined by the provided date range and the timestamp_gps column.
+
+    Parameters:
+        - date_range (dict): A dictionary containing the start and end dates for the data to be cleaned.
+
+    Returns:
+        - str or None: If an error occurs during the cleaning process, the error message is returned. Otherwise, None is returned.
+
+    """
+    error = None
+
+    try:
+        q = f"""
+            DELETE
+            FROM
+                `rj-smtr-dev.br_rj_riodejaneiro_onibus_gps.sppo_aux_registros_filtrada`
+            WHERE
+                data between DATE("{date_range['start']}") and DATE("{date_range['end']}")
+                AND timestamp_gps > "{date_range['start']}" and timestamp_gps <="{date_range['end']}";
+            DELETE
+            FROM
+                `rj-smtr-dev.br_rj_riodejaneiro_onibus_gps.sppo_aux_registros_realocacao`
+            WHERE
+                data between DATE("{date_range['start']}") and DATE("{date_range['end']}")
+                AND timestamp_gps > "{date_range['start']}" and timestamp_gps <="{date_range['end']}";
+            DELETE
+            FROM
+                `rj-smtr-dev.br_rj_riodejaneiro_veiculos.gps_sppo`
+            WHERE
+                data between DATE("{date_range['start']}") and DATE("{date_range['end']}")
+                AND timestamp_gps > "{date_range['start']}" and timestamp_gps <="{date_range['end']}";
+            """
+
+        bd.read_sql(q)
+
+        log(f"Cleaned GPS data for {date_range['start']} to {date_range['end']}")
+    except Exception:  # pylint: disable = W0703
+        error = traceback.format_exc()
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
+
+    return error
