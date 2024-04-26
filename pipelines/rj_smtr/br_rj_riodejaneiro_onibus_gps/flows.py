@@ -241,7 +241,7 @@ with Flow(
 materialize_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 materialize_sppo.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 materialize_sppo.state_handlers.append(skip_if_running_handler)
 
