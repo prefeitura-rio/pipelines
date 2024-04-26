@@ -3,7 +3,7 @@
 Flows for br_rj_riodejaneiro_onibus_gps
 """
 
-from prefect import Parameter, case
+from prefect import Parameter, case, task
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
@@ -219,13 +219,24 @@ with Flow(
     RUN = merge(RUN_TRUE, RUN_FALSE)
 
     with case(rematerialization, False):
-        set_last_run_timestamp(
+        SET_FALSE = set_last_run_timestamp(
             dataset_id=dataset_id,
             table_id=table_id,
             timestamp=date_range["date_range_end"],
             wait=RUN,
             mode=MODE,
         )
+
+    with case(rematerialization, True):
+        SET_TRUE = task(
+            lambda: [None],
+            checkpoint=False,
+            name="assign_none_to_previous_runs",
+        )()
+
+    SET = merge(SET_TRUE, SET_FALSE)
+
+    materialize_sppo.set_reference_tasks([RUN, rematerialization, SET])
 
 materialize_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 materialize_sppo.run_config = KubernetesRun(
