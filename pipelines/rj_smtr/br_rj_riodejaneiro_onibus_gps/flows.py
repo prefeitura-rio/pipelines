@@ -372,7 +372,9 @@ with Flow(
     LABELS = get_current_flow_labels()
 
     rounded_timestamp = get_rounded_timestamp(interval_minutes=60)
-    rounded_timestamp_str = parse_timestamp_to_string(rounded_timestamp)
+    rounded_timestamp_str = parse_timestamp_to_string(
+        timestamp=rounded_timestamp, pattern="%Y-%m-%d %H:%M:%S"
+    )
 
     # roda o subflow de reacptura da realocação
     run_recaptura_realocacao_sppo = create_flow_run(
