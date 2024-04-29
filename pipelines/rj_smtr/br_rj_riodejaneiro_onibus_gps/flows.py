@@ -200,7 +200,6 @@ with Flow(
     dataset_sha = fetch_dataset_sha(
         dataset_id=dataset_id,
         upstream_tasks=[RUN_CLEAN],
-
     )
 
     # Run materialization #
