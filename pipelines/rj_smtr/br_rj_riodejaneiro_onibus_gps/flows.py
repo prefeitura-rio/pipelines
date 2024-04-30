@@ -193,6 +193,7 @@ with Flow(
                 "date_range_end": end,
             }
         )(start=date_range_start, end=date_range_end)
+
         RUN_CLEAN_TRUE = clean_br_rj_riodejaneiro_onibus_gps(date_range_true)
 
     RUN_CLEAN = merge(RUN_CLEAN_TRUE, RUN_CLEAN_FALSE)
