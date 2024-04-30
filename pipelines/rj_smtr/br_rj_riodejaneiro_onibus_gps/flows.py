@@ -187,10 +187,12 @@ with Flow(
             name="assign_none_to_previous_runs",
         )()
     with case(rematerialization, True):
-        date_range_true = {
-            "date_range_start": date_range_start,
-            "date_range_end": date_range_end,
-        }
+        date_range_true = task(
+            lambda start, end: {
+                "date_range_start": start,
+                "date_range_end": end,
+            }
+        )(start=date_range_start, end=date_range_end)
         RUN_CLEAN_TRUE = clean_br_rj_riodejaneiro_onibus_gps(date_range_true)
 
     RUN_CLEAN = merge(RUN_CLEAN_TRUE, RUN_CLEAN_FALSE)
