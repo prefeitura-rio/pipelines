@@ -44,6 +44,7 @@ bilhetagem_materializacao_madonna.run_config = KubernetesRun(
 bilhetagem_materializacao_madonna_parameters = {
     "dataset_id": "dashboard_bilhetagem_madonna",
     "table_id": "transacao_gentileza",
+    # "table_id": "transacao_madonna",
     "upstream": True,
 }
 
@@ -64,7 +65,7 @@ with Flow("SMTR: Bilhetagem Madonna - Tratamento") as bilhetagem_madonna:
         parameters=constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value,
     )
 
-    wait_recaptura_transacao_true = wait_for_flow_run(
+    wait_recaptura_transacao = wait_for_flow_run(
         run_recaptura_transacao,
         stream_states=True,
         stream_logs=True,
@@ -72,24 +73,14 @@ with Flow("SMTR: Bilhetagem Madonna - Tratamento") as bilhetagem_madonna:
     )
 
     # Materialização
-    materialize_timestamp = get_current_timestamp(return_str=True)
-
     run_materializacao_madonna = create_flow_run(
         flow_name=bilhetagem_materializacao_madonna.name,
         # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
         project_name="staging",
         labels=LABELS,
-        upstream_tasks=[
-            wait_recaptura_transacao_true,
-        ],
-        parameters={
-            "dbt_vars": {
-                "run_date": {
-                    "date_range_start": materialize_timestamp,
-                    "date_range_end": materialize_timestamp,
-                }
-            }
-        },
+        # upstream_tasks=[
+        #     wait_recaptura_transacao,
+        # ],
     )
 
     wait_materializacao_madonna = wait_for_flow_run(
