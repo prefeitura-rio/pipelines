@@ -12,9 +12,11 @@ from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 
 from pipelines.rj_smtr.tasks import get_current_timestamp
 from pipelines.utils.decorators import Flow
+
 from pipelines.utils.tasks import (
     get_current_flow_labels,
 )
+
 from pipelines.utils.utils import set_default_parameters
 
 
@@ -22,6 +24,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.flows import bilhetagem_rec
 from pipelines.rj_smtr.flows import (
     default_materialization_flow,
 )
+
 
 from pipelines.constants import constants as emd_constants
 from pipelines.rj_smtr.constants import constants
@@ -39,9 +42,9 @@ bilhetagem_materializacao_madonna.run_config = KubernetesRun(
 )
 
 bilhetagem_materializacao_madonna_parameters = {
-    "source_dataset_ids": ["dashboard_bilhetagem_madonna"],
-    "source_table_ids": ["transacao_madonna", "transacao_gentileza"],
-    "capture_intervals_minutes": [10],  # precisa disso ??????
+    "dataset_id": "dashboard_bilhetagem_madonna",
+    "table_id": "transacao_gentileza",
+    "upstream": True,
 }
 
 bilhetagem_materializacao_madonna = set_default_parameters(
@@ -79,7 +82,14 @@ with Flow("SMTR: Bilhetagem Madonna - Tratamento") as bilhetagem_madonna:
         upstream_tasks=[
             wait_recaptura_transacao_true,
         ],
-        parameters={"dbt_vars": {"run_date": materialize_timestamp}},
+        parameters={
+            "dbt_vars": {
+                "run_date": {
+                    "date_range_start": materialize_timestamp,
+                    "date_range_end": materialize_timestamp,
+                }
+            }
+        },
     )
 
     wait_materializacao_madonna = wait_for_flow_run(
