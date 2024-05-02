@@ -1,0 +1,98 @@
+# -*- coding: utf-8 -*-
+"""
+Flows for dashboard_bilhetagem_madonna
+"""
+
+
+from copy import deepcopy
+
+from prefect.run_configs import KubernetesRun
+from prefect.storage import GCS
+from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
+
+from pipelines.rj_smtr.tasks import get_current_timestamp
+from pipelines.utils.decorators import Flow
+from pipelines.utils.tasks import (
+    get_current_flow_labels,
+)
+from pipelines.utils.utils import set_default_parameters
+
+
+from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.flows import bilhetagem_recaptura
+from pipelines.rj_smtr.flows import (
+    default_materialization_flow,
+)
+
+from pipelines.constants import constants as emd_constants
+from pipelines.rj_smtr.constants import constants
+
+from pipelines.rj_smtr.schedules import every_10_minutes
+
+bilhetagem_materializacao_madonna = deepcopy(default_materialization_flow)
+bilhetagem_materializacao_madonna.name = (
+    "SMTR: Bilhetagem Madonna - Materialização (subflow)"
+)
+bilhetagem_materializacao_madonna.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bilhetagem_materializacao_madonna.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+
+bilhetagem_materializacao_madonna_parameters = {
+    "source_dataset_ids": ["dashboard_bilhetagem_madonna"],
+    "source_table_ids": ["transacao_madonna", "transacao_gentileza"],
+    "capture_intervals_minutes": [10],  # precisa disso ??????
+}
+
+bilhetagem_materializacao_madonna = set_default_parameters(
+    flow=bilhetagem_materializacao_madonna,
+    default_parameters=bilhetagem_materializacao_madonna_parameters,
+)
+
+with Flow("SMTR: Bilhetagem Madonna - Tratamento") as bilhetagem_madonna:
+    LABELS = get_current_flow_labels()
+
+    # Recaptura
+    run_recaptura_transacao = create_flow_run(
+        flow_name=bilhetagem_recaptura.name,
+        # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+        project_name="staging",
+        labels=LABELS,
+        parameters=constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value,
+    )
+
+    wait_recaptura_transacao_true = wait_for_flow_run(
+        run_recaptura_transacao,
+        stream_states=True,
+        stream_logs=True,
+        raise_final_state=True,
+    )
+
+    # Materialização
+    materialize_timestamp = get_current_timestamp(return_str=True)
+
+    run_materializacao_madonna = create_flow_run(
+        flow_name=bilhetagem_materializacao_madonna.name,
+        # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+        project_name="staging",
+        labels=LABELS,
+        upstream_tasks=[
+            wait_recaptura_transacao_true,
+        ],
+        parameters={"dbt_vars": {"run_date": materialize_timestamp}},
+    )
+
+    wait_materializacao_madonna = wait_for_flow_run(
+        run_materializacao_madonna,
+        stream_states=True,
+        stream_logs=True,
+        raise_final_state=True,
+    )
+
+bilhetagem_materializacao_madonna.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bilhetagem_materializacao_madonna.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+
+bilhetagem_madonna.schedule = every_10_minutes
