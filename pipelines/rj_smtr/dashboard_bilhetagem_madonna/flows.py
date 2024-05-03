@@ -63,7 +63,7 @@ with Flow("SMTR: Bilhetagem Madonna - Tratamento") as bilhetagem_madonna:
         flow_name=bilhetagem_recaptura.name,
         # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
         project_name="staging",
-        labels=LABELS,
+        labels=emd_constants.RJ_SMTR_AGENT_LABEL.value,
         parameters=constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value,
     )
 
