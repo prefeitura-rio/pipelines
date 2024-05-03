@@ -10,7 +10,6 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 
-from pipelines.rj_smtr.tasks import get_current_timestamp
 from pipelines.utils.decorators import Flow
 
 from pipelines.utils.tasks import (
@@ -56,21 +55,21 @@ bilhetagem_materializacao_madonna = set_default_parameters(
 with Flow("SMTR: Bilhetagem Madonna - Tratamento") as bilhetagem_madonna:
     LABELS = get_current_flow_labels()
 
-    # Recaptura
-    run_recaptura_transacao = create_flow_run(
-        flow_name=bilhetagem_recaptura.name,
-        # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
-        project_name="staging",
-        labels=LABELS,
-        parameters=constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value,
-    )
+    # # Recaptura
+    # run_recaptura_transacao = create_flow_run(
+    #     flow_name=bilhetagem_recaptura.name,
+    #     # project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+    #     project_name="staging",
+    #     labels=LABELS,
+    #     parameters=constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value,
+    # )
 
-    wait_recaptura_transacao = wait_for_flow_run(
-        run_recaptura_transacao,
-        stream_states=True,
-        stream_logs=True,
-        raise_final_state=True,
-    )
+    # wait_recaptura_transacao = wait_for_flow_run(
+    #     run_recaptura_transacao,
+    #     stream_states=True,
+    #     stream_logs=True,
+    #     raise_final_state=True,
+    # )
 
     # Materialização
     run_materializacao_madonna = create_flow_run(
