@@ -30,7 +30,7 @@ from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
 from pipelines.constants import constants as emd_constants
 from pipelines.rj_smtr.constants import constants
 
-from pipelines.rj_smtr.schedules import every_10_minutes
+from pipelines.rj_smtr.schedules import every_10_minutes_dev
 
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
@@ -114,4 +114,4 @@ bilhetagem_madonna.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 
-bilhetagem_madonna.schedule = every_10_minutes
+bilhetagem_madonna.schedule = every_10_minutes_dev
