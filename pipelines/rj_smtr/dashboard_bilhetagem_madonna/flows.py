@@ -57,7 +57,6 @@ bilhetagem_materializacao_madonna = set_default_parameters(
     default_parameters=bilhetagem_materializacao_madonna_parameters,
 )
 
-bilhetagem_materializacao_madonna.schedule = every_10_minutes
 
 with Flow("SMTR: Bilhetagem Madonna - Tratamento") as bilhetagem_madonna:
     LABELS = get_current_flow_labels()
