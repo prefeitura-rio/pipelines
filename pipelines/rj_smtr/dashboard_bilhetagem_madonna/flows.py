@@ -37,7 +37,8 @@ bilhetagem_materializacao_madonna.name = (
 bilhetagem_materializacao_madonna.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 bilhetagem_materializacao_madonna.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    # labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 
 bilhetagem_materializacao_madonna_parameters = {
@@ -91,10 +92,11 @@ with Flow("SMTR: Bilhetagem Madonna - Tratamento") as bilhetagem_madonna:
         raise_final_state=True,
     )
 
-bilhetagem_materializacao_madonna.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-bilhetagem_materializacao_madonna.run_config = KubernetesRun(
+bilhetagem_madonna.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+bilhetagem_madonna.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    # labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
 
 bilhetagem_madonna.schedule = every_10_minutes
