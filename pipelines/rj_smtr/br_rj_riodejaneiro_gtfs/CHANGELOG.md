@@ -1,5 +1,11 @@
 # Changelog - br_rj_riodejaneiro_gtfs
 
+## [1.0.1] - 2024-05-10
+
+### Alterado
+
+- Cria parâmetro `project_name` no flow `gtfs_captura_tratamento` para possibilitar alterar o `project_name` na criação de runs (https://github.com/prefeitura-rio/pipelines/pull/678)
+
 ## [1.0.0] - 2024-04-18
 
 ### Adicionado
