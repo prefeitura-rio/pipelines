@@ -95,6 +95,7 @@ with Flow(
                 parameters=gtfs_capture_parameters,
                 intervals={"agency": timedelta(minutes=11)},
             ),
+            run_config=unmapped(gtfs_captura_tratamento.run_config),
         )
 
         wait_captura_true = wait_for_flow_run.map(
@@ -130,6 +131,7 @@ with Flow(
             parameters=gtfs_materializacao_parameters,
             labels=LABELS,
             upstream_tasks=[wait_captura],
+            run_config=gtfs_captura_tratamento.run_config,
         )
 
         run_materializacao_new_dataset_id = create_flow_run(
@@ -138,6 +140,7 @@ with Flow(
             parameters=gtfs_materializacao_parameters_new,
             labels=LABELS,
             upstream_tasks=[wait_captura],
+            run_config=gtfs_captura_tratamento.run_config,
         )
 
         wait_materializacao = wait_for_flow_run(
