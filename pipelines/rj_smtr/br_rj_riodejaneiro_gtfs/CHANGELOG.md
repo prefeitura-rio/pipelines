@@ -4,7 +4,8 @@
 
 ### Alterado
 
-- Cria parâmetro `project_name` no flow `gtfs_captura_tratamento` para possibilitar alterar o `project_name` na criação de runs (https://github.com/prefeitura-rio/pipelines/pull/678)
+- Cria parâmetro `project_name` no flow `gtfs_captura_tratamento` para possibilitar alterar o `project_name` ao usar a task `create_flow_run` (https://github.com/prefeitura-rio/pipelines/pull/678)
+- Inclui argumento `run_config` ao usar a task `create_flow_run`, usando sempre como referência a `run_config` do flow principal (https://github.com/prefeitura-rio/pipelines/pull/678)
 
 ## [1.0.0] - 2024-04-18
 
