@@ -1212,7 +1212,7 @@ class constants(Enum):  # pylint: disable=c0103
             },
             "version": {},
         },
-        "exclude": f"{BILHETAGEM_EXCLUDE} stops_gtfs2 routes_gtfs2 feed_info_gtfs2",
+        "exclude": f"{BILHETAGEM_EXCLUDE} stops_gtfs routes_gtfs feed_info_gtfs",
     }
 
     BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS = {
@@ -1226,7 +1226,7 @@ class constants(Enum):  # pylint: disable=c0103
             },
             "version": {},
         },
-        "exclude": "integracao matriz_integracao stops_gtfs2 routes_gtfs2 feed_info_gtfs2",
+        "exclude": "integracao matriz_integracao stops_gtfs routes_gtfs feed_info_gtfs",
     }
 
     BILHETAGEM_MATERIALIZACAO_TRANSACAO_RIOCARD_PARAMS = {
@@ -1278,7 +1278,7 @@ class constants(Enum):  # pylint: disable=c0103
     }
 
     # GTFS
-    GTFS_DATASET_ID = "br_rj_riodejaneiro_gtfs"
+    GTFS_DATASET_ID = "gtfs"
 
     GTFS_GENERAL_CAPTURE_PARAMS = {
         "partition_date_only": True,
