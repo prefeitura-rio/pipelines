@@ -98,9 +98,9 @@ def download_and_save_local_from_ftp(
     )
 
     # Set general local path to save file (bucket_modes: raw or staging)
-    file_info["local_path"] = (
-        f"""{base_path}/{table_id}/{file_info["partitions"]}/{file_info['filename']}.{{file_ext}}"""
-    )
+    file_info[
+        "local_path"
+    ] = f"""{base_path}/{table_id}/{file_info["partitions"]}/{file_info['filename']}.{{file_ext}}"""
 
     # Get raw data
     file_info["raw_path"] = file_info["local_path"].format(

@@ -68,7 +68,6 @@ with Flow(
     f"SMTR: {constants.VEICULO_DATASET_ID.value} {constants.SPPO_LICENCIAMENTO_TABLE_ID.value} - Captura",
     # code_owners=["caio", "fernanda", "boris", "rodrigo"],
 ) as sppo_licenciamento_captura:
-
     timestamp = Parameter("timestamp", default=None)
     search_dir = Parameter("search_dir", default="licenciamento")
     dataset_id = Parameter("dataset_id", default=constants.VEICULO_DATASET_ID.value)
