@@ -98,9 +98,10 @@ with Flow(
     )
 
     raw_status_url = get_raw_ftp(
-        ftp_path=constants.SPPO_LICENCIAMENTO_URL.value,
+        ftp_path="licenciamento/CadastroVeiculos",
         filetype="csv",
         csv_args=constants.SPPO_LICENCIAMENTO_CSV_ARGS.value,
+        timestamp=timestamp,
     )
 
     ifelse(get_from_storage.is_equal(True), raw_status_gcs, raw_status_url)
@@ -179,9 +180,10 @@ with Flow(
         csv_args=constants.SPPO_INFRACAO_CSV_ARGS.value,
     )
     raw_status_url = get_raw_ftp(
-        ftp_path=constants.SPPO_INFRACAO_URL.value,
+        ftp_path="multas/multas",
         filetype="csv",
         csv_args=constants.SPPO_INFRACAO_CSV_ARGS.value,
+        timestamp=timestamp,
     )
     ifelse(get_from_storage.is_equal(True), raw_status_gcs, raw_status_url)
 

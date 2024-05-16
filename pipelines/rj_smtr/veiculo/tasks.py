@@ -248,10 +248,11 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
 
 
 @task
-def get_raw_ftp(ftp_path: str, filetype: str, csv_args: dict):
+def get_raw_ftp(ftp_path: str, filetype: str, csv_args: dict, timestamp: datetime):
     data = None
     error = None
     try:
+        ftp_path = f"{ftp_path}_{timestamp.strftime('%Y%m%d')}.{filetype}"
         ftp_client = connect_ftp(constants.RDO_FTPS_SECRET_PATH.value)
         buffer = io.BytesIO()
         ftp_client.retrbinary("RETR " + ftp_path, buffer.write)
