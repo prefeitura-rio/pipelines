@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=R0914,W0613,W0102,W0613,R0912,R0915,E1136,E1137,W0702
 # flake8: noqa: E722
-# TODO: colocar id_pops novos
-# TODO: gerar alerta quando tiver id_pop novo
-# TODO: apagar histórico da nova api para ter o id_pop novo
-# TODO: criar tabela dim do id_pop novo
-# TODO: salvar no redis o máximo entre as colunas de data_inicio e data_fim, seguir flow só se tiver novidades em alguma dessas colunas
 """
 Tasks for comando
 """
@@ -26,12 +20,10 @@ from prefect.engine.signals import ENDRUN
 from prefect.engine.state import Skipped
 
 # from prefect.triggers import all_successful
-# url_eventos = "http://aplicativo.cocr.com.br/comando/ocorrencias_api_nova"
-from pipelines.rj_cor.utils import compare_actual_df_with_redis_df
+# from pipelines.rj_cor.utils import compare_actual_df_with_redis_df
 from pipelines.rj_cor.comando.eventos.utils import (
     # build_redis_key,
-    format_date,
-    treat_wrong_id_pop,
+    download_data,
 )
 from pipelines.utils.utils import (
     build_redis_key,
@@ -44,22 +36,20 @@ from pipelines.utils.utils import (
 )
 
 
-@task
-def get_date_interval(first_date, last_date) -> Tuple[dict, str]:
+@task(nout=2)
+def get_date_interval(first_date: str = None, last_date: str = None):
     """
-    If `first_date` and `last_date` are provided, format it to DD/MM/YYYY. Else,
-    get data from last 3 days.
+    If `first_date` and `last_date` are provided, convert it to pendulum
+    and add one day to `last_date`. Else, get data from last 3 days.
     first_date: str YYYY-MM-DD
     last_date: str YYYY-MM-DD
     """
     if first_date and last_date:
-        first_date, last_date = format_date(first_date, last_date)
+        first_date = pendulum.from_format(first_date, "YYYY-MM-DD")
+        last_date = pendulum.from_format(last_date, "YYYY-MM-DD").add(days=1)
     else:
-        last_date = pendulum.today(tz="America/Sao_Paulo").date()
-        first_date = last_date.subtract(days=3)
-        first_date, last_date = format_date(
-            first_date.strftime("%Y-%m-%d"), last_date.strftime("%Y-%m-%d")
-        )
+        last_date = pendulum.today(tz="America/Sao_Paulo").date().add(days=1)
+        first_date = last_date.subtract(days=4)
     return first_date, last_date
 
 
@@ -146,18 +136,22 @@ def save_redis_max_date(  # pylint: disable=too-many-arguments
     max_retries=3,
     retry_delay=timedelta(seconds=60),
 )
-def download_data_ocorrencias(first_date, last_date, wait=None) -> pd.DataFrame:
+def download_data_ocorrencias(
+    first_date: pendulum,
+    last_date: pendulum,
+    wait=None,  # pylint: disable=unused-argument
+) -> pd.DataFrame:
     """
-    Download data from API
+    Download data from API adding one day at a time so we can save
+    the date in a new column `data_particao` that will be used to
+    create the partitions when saving data.
     """
     # auth_token = get_token()
 
     url_secret = get_vault_secret("comando")["data"]
-    url_eventos = url_secret["endpoint_eventos"]
+    url = url_secret["endpoint_eventos"]
 
-    log(f"\n\nDownloading data from {first_date} to {last_date} (not included)")
-    dfr = pd.read_json(f"{url_eventos}/?data_i={first_date}&data_f={last_date}")
-
+    dfr = download_data(first_date, last_date, url)
     return dfr
 
 
@@ -165,7 +159,7 @@ def download_data_ocorrencias(first_date, last_date, wait=None) -> pd.DataFrame:
 def treat_data_ocorrencias(
     dfr: pd.DataFrame,
     redis_max_date: str,
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
+) -> Tuple[pd.DataFrame, str]:
     """
     Rename cols and normalize data.
     """
@@ -177,7 +171,6 @@ def treat_data_ocorrencias(
             "pop_id": "id_pop",
             "inicio": "data_inicio",
             "fim": "data_fim",
-            "pop": "pop_titulo",
             "titulo": "pop_especificacao",
         }
     )
@@ -206,11 +199,14 @@ def treat_data_ocorrencias(
             "Secundária": "Secundario",
         }
     )
-    dfr["descricao"] = dfr["descricao"].apply(unidecode)
+    categorical_cols = ["pop", "descricao", "bairro", "gravidade", "status"]
+    for i in categorical_cols:
+        dfr[i] = dfr[i].str.capitalize()
+        dfr[i] = dfr[i].apply(unidecode)
 
     mandatory_cols = [
-        "id_pop",
         "id_evento",
+        "pop",
         "bairro",
         "data_inicio",
         "data_fim",
@@ -221,6 +217,7 @@ def treat_data_ocorrencias(
         "longitude",
         "status",
         "tipo",
+        "create_partition",
     ]
     # Create cols if they don exist on new API
     for col in mandatory_cols:
@@ -233,18 +230,10 @@ def treat_data_ocorrencias(
         "gravidade",
         "status",
         "tipo",
-        "pop_titulo",
+        "pop",
     ]
     for i in categorical_cols:
         dfr[i] = dfr[i].str.capitalize()
-
-    # This treatment is temporary. Now the id_pop from API is comming with the same value as id_evento
-    dfr = treat_wrong_id_pop(dfr)
-    log(f"This id_pop are missing {dfr[dfr.id_pop.isna()]} they were replaced by 99")
-    dfr["id_pop"] = dfr["id_pop"].fillna(99)
-
-    # Treat id_pop col
-    dfr["id_pop"] = dfr["id_pop"].astype(float).astype(int)
 
     for col in ["data_inicio", "data_fim"]:
         dfr[col] = dfr[col].dt.strftime("%Y-%m-%d %H:%M:%S")
@@ -252,8 +241,8 @@ def treat_data_ocorrencias(
     # Set the order to match the original table
     dfr = dfr[mandatory_cols]
 
-    # Create a column with time of row creation to keep last event on dbt
-    dfr["created_at"] = pendulum.now(tz="America/Sao_Paulo").strftime(
+    # Create a column with time of row update to keep last event on dbt
+    dfr["last_updated_at"] = pendulum.now(tz="America/Sao_Paulo").strftime(
         "%Y-%m-%d %H:%M:%S"
     )
 
@@ -265,48 +254,70 @@ def treat_data_ocorrencias(
     max_retries=3,
     retry_delay=timedelta(seconds=60),
 )
-def download_data_atividades(first_date, last_date, wait=None) -> pd.DataFrame:
+def download_data_atividades(
+    first_date,
+    last_date,
+    wait=None,  # pylint: disable=unused-argument
+) -> pd.DataFrame:
     """
     Download data from API
     """
 
     url_secret = get_vault_secret("comando")["data"]
-    url_atividades_evento = url_secret["endpoint_atividades_evento"]
+    url = url_secret["endpoint_atividades_evento"]
 
-    dfr = pd.read_json(
-        f"{url_atividades_evento}/?data_i={first_date}&data_f={last_date}"
-    )
-
+    dfr = download_data(first_date, last_date, url)
     return dfr
 
 
+# @task(nout=2)
+# def treat_data_atividades(
+#     dfr: pd.DataFrame,
+#     dfr_redis: pd.DataFrame,
+#     columns: list,
+# ) -> Tuple[pd.DataFrame, pd.DataFrame]:
 @task(nout=2)
 def treat_data_atividades(
     dfr: pd.DataFrame,
-    dfr_redis: pd.DataFrame,
-    columns: list,
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    redis_max_date: str,
+) -> Tuple[pd.DataFrame, str]:
     """
     Normalize data to be similiar to old API.
     """
 
     print("Start treating data")
+    dfr["id_evento"] = dfr["id_evento"].astype(float).astype(int).astype(str)
     dfr.orgao = dfr.orgao.replace(["\r", "\n"], ["", ""], regex=True)
 
     print(f"Dataframe before comparing with last data saved on redis {dfr.head()}")
+    for col in ["data_inicio", "data_fim", "data_chegada"]:
+        dfr[col] = pd.to_datetime(dfr[col], errors="coerce")
 
-    dfr, dfr_redis = compare_actual_df_with_redis_df(
-        dfr,
-        dfr_redis,
-        columns,
-    )
-    print(f"Dataframe after comparing with last data saved on redis {dfr.head()}")
+    max_date = dfr[["data_inicio", "data_fim", "data_chegada"]].max().max()
+    max_date = max_date.strftime("%Y-%m-%d %H:%M:%S")
 
-    # If df is empty stop flow
-    if dfr.shape[0] == 0:
+    log(f"Last API data was {max_date} and last redis uptade was {redis_max_date}")
+
+    if max_date <= redis_max_date:
         skip_text = "No new data available on API"
         print(skip_text)
         raise ENDRUN(state=Skipped(skip_text))
+
+    # Get new max_date to save on redis
+    redis_max_date = max_date
+
+    # dfr, dfr_redis = compare_actual_df_with_redis_df(
+    #     dfr,
+    #     dfr_redis,
+    #     columns,
+    # )
+    # print(f"Dataframe after comparing with last data saved on redis {dfr.head()}")
+
+    # # If df is empty stop flow
+    # if dfr.shape[0] == 0:
+    #     skip_text = "No new data available on API"
+    #     print(skip_text)
+    #     raise ENDRUN(state=Skipped(skip_text))
 
     mandatory_cols = [
         "id_evento",
@@ -317,6 +328,7 @@ def treat_data_atividades(
         "data_fim",
         "descricao",
         "status",
+        "create_partition",
     ]
 
     # Create cols if they don exist on new API
@@ -334,14 +346,7 @@ def treat_data_atividades(
     print("\n\nDEBUG", dfr[categorical_cols])
     for i in categorical_cols:
         dfr[i] = dfr[i].str.capitalize()
-        # dfr[i] = dfr[i].apply(unidecode)
-
-    for col in ["data_inicio", "data_fim", "data_chegada"]:
-        dfr[col] = pd.to_datetime(dfr[col], errors="coerce")
-
-    # TODO: Essa conversão é temporária
-    for col in ["data_inicio", "data_fim", "data_chegada"]:
-        dfr[col] = dfr[col].dt.tz_convert("America/Sao_Paulo")
+        dfr[i] = dfr[i].apply(unidecode)
 
     for col in ["data_inicio", "data_fim", "data_chegada"]:
         dfr[col] = dfr[col].dt.strftime("%Y-%m-%d %H:%M:%S")
@@ -349,34 +354,58 @@ def treat_data_atividades(
     # Set the order to match the original table
     dfr = dfr[mandatory_cols]
 
-    # Create a column with time of row creation to keep last event on dbt
-    dfr["created_at"] = pendulum.now(tz="America/Sao_Paulo").strftime(
+    # Create a column with time of row update to keep last event on dbt
+    dfr["last_updated_at"] = pendulum.now(tz="America/Sao_Paulo").strftime(
         "%Y-%m-%d %H:%M:%S"
     )
 
-    return dfr.drop_duplicates(), dfr_redis
+    return dfr.drop_duplicates(), redis_max_date
 
 
 @task
 def save_data(dataframe: pd.DataFrame) -> Union[str, Path]:
     """
     Save data on a csv file to be uploaded to GCP
+    PS: It's not mandatory to start an activity of an event. As a result we have some activities
+    without any start date, but with an end date. The main problem is that we can not create the
+    partition column from data_inicio, that's why we created the column create_partition when
+    requesting the API.
     """
 
+    log(f"Data that will be saved {dataframe.iloc[0]}")
     prepath = Path("/tmp/data/")
     prepath.mkdir(parents=True, exist_ok=True)
 
-    partition_column = "data_inicio"
+    partition_column = "create_partition"
     dataframe, partitions = parse_date_columns(dataframe, partition_column)
 
     to_partitions(
-        data=dataframe,
+        data=dataframe.drop(columns="create_partition"),
         partition_columns=partitions,
         savepath=prepath,
         data_type="csv",
     )
     log(f"[DEBUG] Files saved on {prepath}")
     return prepath
+
+
+@task(
+    nout=1,
+    max_retries=3,
+    retry_delay=timedelta(seconds=60),
+)
+def download_data_pops() -> pd.DataFrame:
+    """
+    Download data from POP's API
+    """
+
+    url_secret = get_vault_secret("comando")["data"]
+    url = url_secret["endpoint_pops"]
+
+    log("\n\nDownloading POP's data")
+    dfr = pd.read_json(f"{url}")
+
+    return dfr
 
 
 @task

@@ -17,7 +17,7 @@ class constants(Enum):  # pylint: disable=c0103
     TABLE_ID_EVENTOS = "ocorrencias_nova_api"
     REDIS_NAME = "last_update"
     TABLE_ID_ATIVIDADES_EVENTOS = "ocorrencias_orgaos_responsaveis_nova_api"
-    # TABLE_ID_POPS = "procedimento_operacional_padrao"
+    TABLE_ID_POPS = "procedimento_operacional_padrao_nova_api"
     # TABLE_ID_ATIVIDADES_POPS = "procedimento_operacional_padrao_orgaos_responsaveis"
     RAIN_DASHBOARD_FLOW_SCHEDULE_PARAMETERS = {
         "redis_data_key": "data_alagamento_recente_comando",
