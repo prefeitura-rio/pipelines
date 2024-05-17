@@ -35,7 +35,6 @@ from pipelines.rj_smtr.tasks import (
     create_date_hour_partition,
     create_local_partition_path,
     get_current_timestamp,
-    get_raw,
     parse_timestamp_to_string,
     save_raw_local,
     save_treated_local,
@@ -48,6 +47,7 @@ from pipelines.rj_smtr.tasks import (
 )
 
 from pipelines.rj_smtr.veiculo.tasks import (
+    get_raw_ftp,
     pre_treatment_sppo_licenciamento,
     pre_treatment_sppo_infracao,
     get_veiculo_raw_storage,
@@ -97,10 +97,11 @@ with Flow(
         csv_args=constants.SPPO_LICENCIAMENTO_CSV_ARGS.value,
     )
 
-    raw_status_url = get_raw(
-        url=constants.SPPO_LICENCIAMENTO_URL.value,
+    raw_status_url = get_raw_ftp(
+        ftp_path="LICENCIAMENTO/CadastrodeVeiculos",
         filetype="txt",
         csv_args=constants.SPPO_LICENCIAMENTO_CSV_ARGS.value,
+        timestamp=timestamp,
     )
 
     ifelse(get_from_storage.is_equal(True), raw_status_gcs, raw_status_url)
@@ -140,7 +141,7 @@ sppo_licenciamento_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-# sppo_licenciamento_captura.schedule = every_day_hour_seven
+sppo_licenciamento_captura.schedule = every_day_hour_seven
 
 with Flow(
     f"SMTR: {constants.VEICULO_DATASET_ID.value} {constants.SPPO_INFRACAO_TABLE_ID.value} - Captura",
@@ -178,10 +179,11 @@ with Flow(
         timestamp=timestamp,
         csv_args=constants.SPPO_INFRACAO_CSV_ARGS.value,
     )
-    raw_status_url = get_raw(
-        url=constants.SPPO_INFRACAO_URL.value,
+    raw_status_url = get_raw_ftp(
+        ftp_path="MULTAS/MULTAS",
         filetype="txt",
         csv_args=constants.SPPO_INFRACAO_CSV_ARGS.value,
+        timestamp=timestamp,
     )
     ifelse(get_from_storage.is_equal(True), raw_status_gcs, raw_status_url)
 
@@ -218,7 +220,7 @@ sppo_infracao_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-# sppo_infracao_captura.schedule = every_day_hour_seven
+sppo_infracao_captura.schedule = every_day_hour_seven
 
 # flake8: noqa: E501
 with Flow(
