@@ -274,13 +274,14 @@ def get_raw_ftp(
     try:
         if filetype in ("csv", "txt"):
             ftp_client = connect_ftp(constants.RDO_FTPS_SECRET_PATH.value)
+            data = io.BytesIO()
+            ftp_client.retrbinary(
+                f"RETR {ftp_path}_{timestamp.strftime('%Y%m%d')}.{filetype}",
+                data.write,
+            )
+            data.seek(0)
             data = pd.read_csv(
-                io.StringIO(
-                    ftp_client.retrbinary(
-                        f"RETR {ftp_path}_{timestamp.strftime('%Y%m%d')}.{filetype}",
-                        io.BytesIO().write,
-                    )
-                ),
+                io.StringIO(data.read().decode("utf-8")),
                 **csv_args,
             ).to_dict(orient="records")
             ftp_client.quit()
@@ -289,6 +290,7 @@ def get_raw_ftp(
 
     except Exception:
         error = traceback.format_exc()
+        data = None
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return {"data": data, "error": error}
