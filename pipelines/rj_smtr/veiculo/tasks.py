@@ -19,6 +19,7 @@ from pipelines.utils.utils import log  # ,get_vault_secret
 
 from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.utils import (
+    connect_ftp,
     data_info_str,
     filter_data,
 )
@@ -241,5 +242,53 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
 
     except Exception as exp:  # pylint: disable=W0703
         error = exp
+
+    return {"data": data, "error": error}
+
+
+@task
+def get_raw_ftp(
+    ftp_path: str,
+    filetype: str,
+    csv_args: dict,
+    timestamp: datetime,
+):
+    """
+    Retrieves raw data from an FTP server.
+
+    Args:
+        ftp_path (str): The path to the file on the FTP server.
+        filetype (str): The file extension of the raw data file.
+        csv_args (dict): Additional arguments to be passed to the `pd.read_csv` function.
+        timestamp (datetime): The timestamp used to construct the file name.
+
+    Returns:
+        dict: A dictionary containing the retrieved data and any error messages.
+            The 'data' key holds the retrieved data as a list of dictionaries.
+            The 'error' key holds any error message encountered during the retrieval process.
+    """
+    data = None
+    error = None
+    try:
+        if filetype in ("csv", "txt"):
+            ftp_client = connect_ftp(constants.RDO_FTPS_SECRET_PATH.value)
+            data = io.BytesIO()
+            ftp_client.retrbinary(
+                f"RETR {ftp_path}_{timestamp.strftime('%Y%m%d')}.{filetype}",
+                data.write,
+            )
+            data.seek(0)
+            data = pd.read_csv(
+                io.StringIO(data.read().decode("utf-8")),
+                **csv_args,
+            ).to_dict(orient="records")
+            ftp_client.quit()
+        else:
+            error = "Unsupported raw file extension. Supported only: csv and txt"
+
+    except Exception:
+        error = traceback.format_exc()
+        data = None
+        log(f"[CATCHED] Task failed with error: \n{error}", level="error")
 
     return {"data": data, "error": error}
