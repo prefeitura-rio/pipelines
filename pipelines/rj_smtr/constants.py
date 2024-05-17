@@ -1559,3 +1559,25 @@ and createdDate lt {end})",
     ZIRIX_API_SECRET_PATH = "zirix_api"
     VIAGEM_ZIRIX_RAW_DATASET_ID = "br_rj_riodejaneiro_viagem_zirix"
     ZIRIX_BASE_URL = "https://integration.systemsatx.com.br/Globalbus/SMTR"
+
+    CSV_CONTROLE_CCT_CB = {
+        "url": "https://docs.google.com/spreadsheets/d/1QVfa9b8jzpQr3gac0FIlozmTaVeArtJROA343A2lMVM/export?format=csv&gid=454453523",
+        "dataset_id": "controle_cct",
+        "table_id": "controle_financeiro_cb",
+    }
+
+    CSV_CONTROLE_CCT_CETT = {
+        "url": "https://docs.google.com/spreadsheets/d/1QVfa9b8jzpQr3gac0FIlozmTaVeArtJROA343A2lMVM/export?format=csv&gid=454453523",
+        "dataset_id": "controle_cct",
+        "table_id": "controle_financeiro_cett",
+    }
+    CSV_CONTROLE_CCT_COLUMNS = {
+        "Data": "data",
+        "LanÃ§amento": "lancamento",
+        "OperaÃ§Ã£o": "operacao",
+        "Tipo": "tipo",
+        "Valor": "valor",
+        "Saldo Final": "saldo_final",
+        "Favorecido": "favorecido",
+        "Modal": "modal",
+    }
