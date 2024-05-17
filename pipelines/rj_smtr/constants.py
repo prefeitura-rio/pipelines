@@ -1510,6 +1510,7 @@ and createdDate lt {end})",
 
     # INFRAÇÃO
     SPPO_INFRACAO_URL = "https://siurblab.rio.rj.gov.br/SMTR/Multas/multas.txt"
+
     SPPO_INFRACAO_MAPPING_KEYS = {
         "permissao": "permissao",
         "modal": "modo",
