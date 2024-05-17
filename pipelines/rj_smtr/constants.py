@@ -1277,6 +1277,17 @@ class constants(Enum):  # pylint: disable=c0103
         "source_type": BILHETAGEM_GENERAL_CAPTURE_PARAMS["source_type"],
     }
 
+    BILHETAGEM_MATERIALIZACAO_VALIDACAO_JAE_PARAMS = {
+        "dataset_id": "validacao_dados_jae",
+        "upstream": True,
+        "exclude": "+gps_sppo +sppo_veiculo_dia +gps_validador +transacao\
++ordem_pagamento_dia +integracao +servicos",
+        "dbt_vars": {
+            "run_date": {},
+            "version": {},
+        },
+    }
+
     # GTFS
     GTFS_DATASET_ID = "gtfs"
 
