@@ -1197,7 +1197,7 @@ class constants(Enum):  # pylint: disable=c0103
         },
     ]
 
-    BILHETAGEM_EXCLUDE = "+operadoras +consorcios"
+    BILHETAGEM_EXCLUDE = "+operadoras +consorcios +servicos"
 
     BILHETAGEM_JAE_DASHBOARD_DATASET_ID = "dashboard_bilhetagem_jae"
 
