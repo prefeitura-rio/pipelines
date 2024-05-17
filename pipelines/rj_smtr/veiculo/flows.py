@@ -98,8 +98,8 @@ with Flow(
     )
 
     raw_status_url = get_raw_ftp(
-        ftp_path="licenciamento/CadastroVeiculos",
-        filetype="csv",
+        ftp_path="LICENCIAMENTO/CadastrodeVeiculos",
+        filetype="txt",
         csv_args=constants.SPPO_LICENCIAMENTO_CSV_ARGS.value,
         timestamp=timestamp,
     )
@@ -180,8 +180,8 @@ with Flow(
         csv_args=constants.SPPO_INFRACAO_CSV_ARGS.value,
     )
     raw_status_url = get_raw_ftp(
-        ftp_path="multas/multas",
-        filetype="csv",
+        ftp_path="MULTAS/MULTAS",
+        filetype="txt",
         csv_args=constants.SPPO_INFRACAO_CSV_ARGS.value,
         timestamp=timestamp,
     )
