@@ -2,8 +2,6 @@
 """
 Tasks for veiculos
 """
-import os
-from pathlib import Path
 import traceback
 import zipfile
 import io
