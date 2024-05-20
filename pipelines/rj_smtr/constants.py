@@ -1258,7 +1258,7 @@ class constants(Enum):  # pylint: disable=c0103
         "dataset_id": BILHETAGEM_DATASET_ID,
         "upstream": True,
         "downstream": True,
-        "exclude": BILHETAGEM_EXCLUDE,
+        "exclude": f"{BILHETAGEM_EXCLUDE} veiculo_validacao veiculo_indicadores_dia",
         "dbt_vars": {
             "date_range": {
                 "table_run_datetime_column_name": "datetime_captura",
