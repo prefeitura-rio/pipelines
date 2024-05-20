@@ -2,16 +2,15 @@
 from datetime import datetime
 import pandas as pd
 from prefect import task
-import unidecode
+
 
 from pipelines.rj_smtr.constants import constants
 from pipelines.utils.utils import log
 from pipelines.rj_smtr.utils import data_info_str
-from unidecode import unidecode
 
 
 @task
-def pre_treatment_dashboard_controle_cct(status: dict, timestamp: datetime) -> None:
+def pre_treatment_controle_cct(status: dict, timestamp: datetime) -> None:
 
     if status["error"] is not None:
         return {"data": pd.DataFrame(), "error": status["error"]}
@@ -30,9 +29,9 @@ def pre_treatment_dashboard_controle_cct(status: dict, timestamp: datetime) -> N
         log(f"Raw data:\n{data_info_str(data)}", level="info")
 
         log("Renaming columns...", level="info")
+        data.columns = [col.encode("latin1").decode("utf-8") for col in data.columns]
         data = data.rename(columns=constants.CSV_CONTROLE_CCT_COLUMNS.value)
 
-        # encode utf8 para valores do tipo object
         data = data.applymap(
             lambda x: (
                 str(x).encode("latin1").decode("utf-8") if isinstance(x, object) else x
@@ -54,10 +53,5 @@ def pre_treatment_dashboard_controle_cct(status: dict, timestamp: datetime) -> N
 
     if error is not None:
         log(f"[CATCHED] Task failed with error: \n{error}", level="error")
-    log(
-        f"""
-        Outputs:
-        - timestamp:\n{timestamp}
-        - data:\n{data.head()}"""
-    )
+
     return {"data": data, "error": error}
