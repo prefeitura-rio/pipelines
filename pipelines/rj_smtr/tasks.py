@@ -113,7 +113,7 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
 
     if refresh:
         log("Running in full refresh mode")
-        log(f"DBT will run the following command:\n{run_command+' --full-refresh'}")
+        log(f"DBT will run the following command:\n{run_command + ' --full-refresh'}")
         dbt_client.cli(run_command + " --full-refresh", sync=True)
         last_mat_date = get_table_min_max_value(
             query_project_id, dataset_id, mat_table_id, field_name, "max"
