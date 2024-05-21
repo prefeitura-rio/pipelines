@@ -1,11 +1,5 @@
 # Changelog - br_rj_riodejaneiro_gtfs
 
-## [1.0.1] - 2024-05-21
-
-### Alterado
-
-- Altera constantes e parâmetros de captura e materialização do flow `gtfs_captura` (https://github.com/prefeitura-rio/pipelines/pull/687)
-
 ## [1.0.0] - 2024-04-18
 
 ### Adicionado
