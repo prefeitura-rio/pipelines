@@ -1289,7 +1289,7 @@ class constants(Enum):  # pylint: disable=c0103
     }
 
     # GTFS
-    GTFS_DATASET_ID = "gtfs"
+    GTFS_DATASET_ID = "br_rj_riodejaneiro_gtfs"
 
     GTFS_GENERAL_CAPTURE_PARAMS = {
         "partition_date_only": True,
@@ -1346,12 +1346,12 @@ class constants(Enum):  # pylint: disable=c0103
         },
         {
             "table_id": "ordem_servico",
-            "primary_key": ["servico"],
+            "primary_key": ["servico", "tipo_os"],
             "extract_params": {"filename": "ordem_servico"},
         },
         {
             "table_id": "ordem_servico_trajeto_alternativo",
-            "primary_key": ["servico"],
+            "primary_key": ["servico", "tipo_os"],
             "extract_params": {"filename": "ordem_servico_trajeto_alternativo"},
         },
         {
@@ -1361,7 +1361,7 @@ class constants(Enum):  # pylint: disable=c0103
     ]
 
     GTFS_MATERIALIZACAO_PARAMS = {
-        "dataset_id": GTFS_DATASET_ID,
+        "dataset_id": "gtfs",
         "dbt_vars": {
             "data_versao_gtfs": "",
             "version": {},
