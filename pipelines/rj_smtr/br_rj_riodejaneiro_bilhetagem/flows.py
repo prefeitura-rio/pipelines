@@ -319,7 +319,7 @@ bilhetagem_validacao_jae.run_config = KubernetesRun(
 
 bilhetagem_validacao_jae = set_default_parameters(
     flow=bilhetagem_validacao_jae,
-    default_parameters=constants.BILHETAGEM_MATERIALIZACAO_GPS_VALIDADOR_GENERAL_PARAMS.value,
+    default_parameters=constants.BILHETAGEM_MATERIALIZACAO_VALIDACAO_JAE_PARAMS.value,
 )
 
 bilhetagem_validacao_jae.schedule = every_day_hour_seven
