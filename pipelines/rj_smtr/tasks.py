@@ -858,17 +858,6 @@ def get_raw_from_sources(
 
     log(f"Getting raw data from source type: {source_type}")
 
-    log(
-        f"""
-        source_type: {source_type}
-        local_filepath: {local_filepath}
-        source_path: {source_path}
-        dataset_id: {dataset_id}
-        table_id: {table_id}
-        secret_path: {secret_path}
-        request_params: {request_params}"""
-    )
-
     try:
         if source_type == "api":
             error, data, filetype = get_raw_data_api(
