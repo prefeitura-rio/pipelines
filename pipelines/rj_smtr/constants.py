@@ -1280,7 +1280,7 @@ class constants(Enum):  # pylint: disable=c0103
     BILHETAGEM_MATERIALIZACAO_VALIDACAO_JAE_PARAMS = {
         "dataset_id": "validacao_dados_jae",
         "upstream": True,
-        "exclude": "+gps_sppo +sppo_veiculo_dia +gps_validador +transacao\
+        "exclude": "+gps_sppo +sppo_veiculo_dia +gps_validador +transacao \
 +ordem_pagamento_dia +integracao +servicos",
         "dbt_vars": {
             "run_date": {},
