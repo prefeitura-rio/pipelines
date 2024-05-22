@@ -1559,3 +1559,23 @@ and createdDate lt {end})",
     ZIRIX_API_SECRET_PATH = "zirix_api"
     VIAGEM_ZIRIX_RAW_DATASET_ID = "br_rj_riodejaneiro_viagem_zirix"
     ZIRIX_BASE_URL = "https://integration.systemsatx.com.br/Globalbus/SMTR"
+
+    CONTROLE_FINANCEIRO_DATASET_ID = "controle_financeiro"
+
+    CONTROLE_FINANCEIRO_BASE_URL = "https://docs.google.com/spreadsheets/d/1QVfa9b8jzpQr3gac0FIlozmTaVeArtJROA343A2lMVM/\
+export?format=csv&gid="
+
+    CONTROLE_FINANCEIRO_CAPTURE_DEFAULT_PARAMS = {
+        "dataset_id": CONTROLE_FINANCEIRO_DATASET_ID,
+        "source_type": "api-csv",
+        "partition_date_only": True,
+    }
+
+    CONTROLE_FINANCEIRO_CB_CAPTURE_PARAMS = {
+        "extract_params": {"sheet_id": "454453523"},
+        "table_id": "cb",
+    }
+    CONTROLE_FINANCEIRO_CETT_CAPTURE_PARAMS = {
+        "extract_params": {"sheet_id": "0"},
+        "table_id": "cett",
+    }

@@ -816,6 +816,10 @@ def create_request_params(
             data_inicial: {request_params['data_inicial']}
             data_final: {request_params['data_final']}"""
         )
+    elif dataset_id == constants.CONTROLE_FINANCEIRO_DATASET_ID.value:
+        request_url = (
+            constants.CONTROLE_FINANCEIRO_BASE_URL.value + extract_params["sheet_id"]
+        )
 
     return request_params, request_url
 
@@ -1473,7 +1477,11 @@ def transform_raw_to_nested_structure(
                         data.groupby(pk_cols)
                         .apply(
                             lambda x: x[data.columns.difference(pk_cols)].to_json(
-                                orient="records"
+                                orient="records",
+                                force_ascii=(
+                                    constants.CONTROLE_FINANCEIRO_DATASET_ID.value
+                                    not in raw_filepath
+                                ),
                             )
                         )
                         .str.strip("[]")
