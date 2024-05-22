@@ -1560,25 +1560,43 @@ and createdDate lt {end})",
     VIAGEM_ZIRIX_RAW_DATASET_ID = "br_rj_riodejaneiro_viagem_zirix"
     ZIRIX_BASE_URL = "https://integration.systemsatx.com.br/Globalbus/SMTR"
 
-    CONTROLE_CCT_DATASET_ID = "controle_cct"
-    CSV_CONTROLE_CCT_CB = {
+    CONTROLE_FINANCEIRO_DATASET_ID = "controle_financeiro"
+    CONTROLE_FINANCEIRO_CB_PARAMS = {
         "url": "https://docs.google.com/spreadsheets/d/1QVfa9b8jzpQr3gac0FIlozmTaVeArtJROA343A2lMVM/export?format=csv&gid=454453523",
-        "dataset_id": CONTROLE_CCT_DATASET_ID,
-        "table_id": "controle_financeiro_cb",
+        "dataset_id": CONTROLE_FINANCEIRO_DATASET_ID,
+        "table_id": "CB",
     }
 
-    CSV_CONTROLE_CCT_CETT = {
+    CONTROLE_FINANCEIRO_CETT_PARAMS = {
         "url": "https://docs.google.com/spreadsheets/d/1QVfa9b8jzpQr3gac0FIlozmTaVeArtJROA343A2lMVM/export?format=csv&gid=454453523",
-        "dataset_id": CONTROLE_CCT_DATASET_ID,
-        "table_id": "controle_financeiro_cett",
+        "dataset_id": CONTROLE_FINANCEIRO_DATASET_ID,
+        "table_id": "CETT",
     }
-    CSV_CONTROLE_CCT_COLUMNS = {
-        "Data": "data_lancamento",
-        "Lançamento": "lancamento",
-        "Operação": "operacao",
-        "Tipo": "tipo",
-        "Valor": "valor",
-        "Saldo Final": "saldo_final",
-        "Favorecido": "favorecido",
-        "Modal": "modal",
+
+    CSV_CONTROLE_CCT_COLUMNS = [
+        "data",
+        "lancamento",
+        "operacao",
+        "tipo",
+        "valor",
+        "saldo_final",
+        "favorecido",
+        "modal",
+    ]
+
+    CONTROLE_FINANCEIRO_CAPTURE_DEFAULT_PARAMS = {
+        "dataset_id": CONTROLE_FINANCEIRO_DATASET_ID,
+        "source_type": "api-csv",
+        "pre_treatment_reader_args": {
+            "encoding": "latin1",
+            "names": CSV_CONTROLE_CCT_COLUMNS,
+            "skiprows": 1,
+        },
+    }
+
+    CONTROLE_FINANCEIRO_CB_CAPTURE_PARAMS = {
+        "table_id": "CB",
+    }
+    CONTROLE_FINANCEIRO_CETT_CAPTURE_PARAMS = {
+        "table_id": "CETT",
     }

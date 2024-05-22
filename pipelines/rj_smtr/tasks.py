@@ -816,6 +816,11 @@ def create_request_params(
             data_inicial: {request_params['data_inicial']}
             data_final: {request_params['data_final']}"""
         )
+    elif dataset_id == constants.CONTROLE_FINANCEIRO_DATASET_ID.value:
+        if table_id == constants.CONTROLE_FINANCEIRO_CB_PARAMS.value["table_id"]:
+            request_url = constants.CONTROLE_FINANCEIRO_CB_PARAMS.value["url"]
+        if table_id == constants.CONTROLE_FINANCEIRO_CETT_PARAMS.value["table_id"]:
+            request_url = constants.CONTROLE_FINANCEIRO_CETT_PARAMS.value["url"]
 
     return request_params, request_url
 

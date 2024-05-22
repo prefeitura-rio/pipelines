@@ -30,7 +30,7 @@ def pre_treatment_controle_cct(status: dict, timestamp: datetime) -> None:
 
         log("Renaming columns...", level="info")
         data.columns = [col.encode("latin1").decode("utf-8") for col in data.columns]
-        data = data.rename(columns=constants.CSV_CONTROLE_CCT_COLUMNS.value)
+        data = data.rename(columns=constants.CONTROLE_FINANCEIRO_COLUMNS.value)
 
         data = data.applymap(
             lambda x: (
