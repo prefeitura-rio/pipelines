@@ -4,7 +4,7 @@
 
 ### Alterado
 
-- Altera constante `GTFS_TABLE_CAPTURE_PARAMS` (https://github.com/prefeitura-rio/pipelines/pull/690)
+- Altera `primary_key` da constante `GTFS_TABLE_CAPTURE_PARAMS` relativa a `ordem_servico_trajeto_alternativo` (https://github.com/prefeitura-rio/pipelines/pull/690)
 
 ## [1.0.0] - 2024-05-21
 
