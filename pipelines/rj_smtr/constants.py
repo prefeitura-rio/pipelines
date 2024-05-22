@@ -1197,7 +1197,7 @@ class constants(Enum):  # pylint: disable=c0103
         },
     ]
 
-    BILHETAGEM_EXCLUDE = "+operadoras +consorcios"
+    BILHETAGEM_EXCLUDE = "+operadoras +consorcios +servicos"
 
     BILHETAGEM_JAE_DASHBOARD_DATASET_ID = "dashboard_bilhetagem_jae"
 
@@ -1258,7 +1258,7 @@ class constants(Enum):  # pylint: disable=c0103
         "dataset_id": BILHETAGEM_DATASET_ID,
         "upstream": True,
         "downstream": True,
-        "exclude": BILHETAGEM_EXCLUDE,
+        "exclude": f"{BILHETAGEM_EXCLUDE} veiculo_validacao veiculo_indicadores_dia",
         "dbt_vars": {
             "date_range": {
                 "table_run_datetime_column_name": "datetime_captura",
@@ -1289,7 +1289,7 @@ class constants(Enum):  # pylint: disable=c0103
     }
 
     # GTFS
-    GTFS_DATASET_ID = "gtfs"
+    GTFS_DATASET_ID = "br_rj_riodejaneiro_gtfs"
 
     GTFS_GENERAL_CAPTURE_PARAMS = {
         "partition_date_only": True,
@@ -1346,12 +1346,12 @@ class constants(Enum):  # pylint: disable=c0103
         },
         {
             "table_id": "ordem_servico",
-            "primary_key": ["servico"],
+            "primary_key": ["servico", "tipo_os"],
             "extract_params": {"filename": "ordem_servico"},
         },
         {
             "table_id": "ordem_servico_trajeto_alternativo",
-            "primary_key": ["servico"],
+            "primary_key": ["servico", "tipo_os"],
             "extract_params": {"filename": "ordem_servico_trajeto_alternativo"},
         },
         {
@@ -1361,7 +1361,7 @@ class constants(Enum):  # pylint: disable=c0103
     ]
 
     GTFS_MATERIALIZACAO_PARAMS = {
-        "dataset_id": GTFS_DATASET_ID,
+        "dataset_id": "gtfs",
         "dbt_vars": {
             "data_versao_gtfs": "",
             "version": {},
