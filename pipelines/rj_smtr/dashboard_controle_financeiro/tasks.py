@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # a task that download a csv file from a url and upload it to a BigQuery table
 from datetime import datetime
 import pandas as pd
@@ -11,7 +12,6 @@ from pipelines.rj_smtr.utils import data_info_str
 
 @task
 def pre_treatment_controle_cct(status: dict, timestamp: datetime) -> None:
-
     if status["error"] is not None:
         return {"data": pd.DataFrame(), "error": status["error"]}
 
