@@ -1473,10 +1473,6 @@ def transform_raw_to_nested_structure(
                     log("Creating nested structure...", level="info")
                     pk_cols = primary_key + ["timestamp_captura"]
 
-                    log(
-                        constants.CONTROLE_FINANCEIRO_DATASET_ID.value
-                        not in raw_filepath
-                    )
                     data = (
                         data.groupby(pk_cols)
                         .apply(
