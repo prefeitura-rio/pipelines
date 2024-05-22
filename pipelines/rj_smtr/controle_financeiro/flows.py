@@ -32,7 +32,7 @@ controle_cct_cb_captura.name = "SMTR: Controle Financeiro CB - Captura"
 controle_cct_cb_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 controle_cct_cb_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
 controle_cct_cb_captura = set_default_parameters(
@@ -47,7 +47,7 @@ controle_cct_cett_captura.name = "SMTR: Controle Financeiro CETT - Captura"
 controle_cct_cett_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 controle_cct_cett_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
 controle_cct_cett_captura = set_default_parameters(
