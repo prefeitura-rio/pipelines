@@ -627,7 +627,12 @@ def save_raw_local_func(
             json.dump(data, fi, default=custom_serialization)
 
     if filetype in ("txt", "csv"):
-        with open(_filepath, "w", encoding="utf-8") as file:
+        if constants.CONTROLE_FINANCEIRO_DATASET_ID.value in _filepath:
+            encoding = "Windows-1252"
+        else:
+            encoding = "utf-8"
+
+        with open(_filepath, "w", encoding=encoding) as file:
             file.write(data)
 
     log(f"Raw data saved to: {_filepath}")
@@ -923,7 +928,10 @@ def save_treated_local_func(
     _filepath = filepath.format(mode=mode, filetype="csv")
     Path(_filepath).parent.mkdir(parents=True, exist_ok=True)
     if error is None:
-        data.to_csv(_filepath, index=False)
+        data.to_csv(
+            _filepath,
+            index=False,
+        )
         log(f"Treated data saved to: {_filepath}")
     return _filepath
 
