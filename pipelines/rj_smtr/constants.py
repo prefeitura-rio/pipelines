@@ -1351,7 +1351,7 @@ class constants(Enum):  # pylint: disable=c0103
         },
         {
             "table_id": "ordem_servico_trajeto_alternativo",
-            "primary_key": ["servico", "tipo_os"],
+            "primary_key": ["servico", "tipo_os", "evento"],
             "extract_params": {"filename": "ordem_servico_trajeto_alternativo"},
         },
         {
