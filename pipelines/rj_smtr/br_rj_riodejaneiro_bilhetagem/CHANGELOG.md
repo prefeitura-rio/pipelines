@@ -1,5 +1,11 @@
 # Changelog - br_rj_riodejaneiro_bilhetagem
 
+## [1.0.1] - 2024-05-22
+
+### Corrigido
+
+- Corrige exclude nos parâmetros da pipeline `bilhetagem_validacao_jae` (https://github.com/prefeitura-rio/pipelines/pull/689)
+
 ## [1.0.0] - 2024-05-17
 
 ### Alterado
