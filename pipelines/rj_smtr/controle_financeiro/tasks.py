@@ -68,7 +68,7 @@ def create_cct_arquivo_retorno_params(
             }
         ]
 
-    redis_client = get_redis_client(host="localhost")
+    redis_client = get_redis_client()
 
     log(f"Getting pending dates on Redis. key = {redis_key}")
     redis_return = redis_client.get(redis_key)
@@ -151,7 +151,7 @@ def cct_arquivo_retorno_save_redis(redis_key: str, raw_filepath: str):
     log(f"The API returned the following dates: {sorted(all_returned_dates)}")
     log(f"the following dates are not paid: {sorted(pending_dates)}")
 
-    redis_client = get_redis_client(host="localhost")
+    redis_client = get_redis_client()
     redis_return = redis_client.get(redis_key)
 
     if redis_return is None:
