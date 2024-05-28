@@ -39,7 +39,7 @@ from pipelines.rj_smtr.tasks import (
 
 from pipelines.rj_smtr.constants import constants as smtr_constants
 
-from pipelines.rj_smtr.schedules import every_day
+from pipelines.rj_smtr.schedules import every_day, every_friday_seven_thirty
 
 from pipelines.rj_smtr.controle_financeiro.constants import constants
 from pipelines.rj_smtr.controle_financeiro.tasks import (
@@ -163,3 +163,5 @@ arquivo_retorno_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
 )
+
+arquivo_retorno_captura.schedule = every_friday_seven_thirty
