@@ -1,5 +1,11 @@
 # Changelog - br_rj_riodejaneiro_bilhetagem
 
+## [1.0.2] - 2024-05-28
+
+### Alterado
+
+- Remove schedule do flow `bilhetagem_validacao_jae`, por conta da arquitetura das tabelas que será alterado (https://github.com/prefeitura-rio/pipelines/pull/691)
+
 ## [1.0.1] - 2024-05-22
 
 ### Corrigido
