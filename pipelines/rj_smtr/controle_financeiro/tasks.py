@@ -145,7 +145,18 @@ def cct_arquivo_retorno_save_redis(redis_key: str, raw_filepath: str):
     df["dataOrdem"] = pd.to_datetime(df["dataOrdem"]).dt.strftime("%Y-%m-%d")
     all_returned_dates = df["dataOrdem"].unique().tolist()
     pending_dates = (
-        df.loc[~df["isPago"]]["dataOrdem"].unique().tolist()  # pylint: disable=E1101
+        df.groupby(  # pylint: disable=E1101
+            [
+                "idConsorcio",
+                "idOperadora",
+                "dataOrdem",
+            ]
+        )["isPago"]
+        .max()
+        .reset_index()
+        .loc[~df["isPago"]]["dataOrdem"]
+        .unique()
+        .tolist()
     )
 
     log(f"The API returned the following dates: {sorted(all_returned_dates)}")
@@ -169,7 +180,7 @@ def cct_arquivo_retorno_save_redis(redis_key: str, raw_filepath: str):
         f"""
         Saving values on redis
         last_date: {redis_return["last_date"]}
-        pending_dates: {redis_return["pending_dates"]}
+        pending_dates: {sorted(redis_return["pending_dates"])}
         """
     )
 
