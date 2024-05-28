@@ -7,6 +7,10 @@
 
 - Cria flow de captura do arquivo de retorno da Caixa, enviado via api pela CCT (https://github.com/prefeitura-rio/pipelines/pull/691)
 
+### Modificado
+
+- Move as constantes dos flows `controle_cct_cb_captura` e `controle_cct_cett_captura` para o arquivo de constantes dentro da pasta do dataset (https://github.com/prefeitura-rio/pipelines/pull/691)
+
 ## [1.0.0] - 2024-05-22
 
 ### Adicionado
