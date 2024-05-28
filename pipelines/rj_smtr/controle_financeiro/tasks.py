@@ -144,7 +144,7 @@ def cct_arquivo_retorno_save_redis(redis_key: str, raw_filepath: str):
     df = pd.read_json(raw_filepath)
     df["dataOrdem"] = pd.to_datetime(df["dataOrdem"]).dt.strftime("%Y-%m-%d")
     all_returned_dates = df["dataOrdem"].unique().tolist()
-    pending_dates = (
+    df = (
         df.groupby(  # pylint: disable=E1101
             [
                 "idConsorcio",
@@ -154,10 +154,8 @@ def cct_arquivo_retorno_save_redis(redis_key: str, raw_filepath: str):
         )["isPago"]
         .max()
         .reset_index()
-        .loc[~df["isPago"]]["dataOrdem"]
-        .unique()
-        .tolist()
     )
+    pending_dates = df.loc[~df["isPago"]]["dataOrdem"].unique().tolist()
 
     log(f"The API returned the following dates: {sorted(all_returned_dates)}")
     log(f"the following dates are not paid: {sorted(pending_dates)}")
