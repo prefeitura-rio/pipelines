@@ -858,18 +858,6 @@ def get_raw_from_sources(
         source_values if len(source_values) == 2 else (source_values[0], None)
     )
 
-    log(
-        f"""
-        Received arguments:
-        source_type: {source_type}
-        local_filepath: {local_filepath}
-        source_path: {source_path}
-        dataset_id: {dataset_id}
-        table_id: {table_id}
-        secret_path: {secret_path}
-        request_params: {request_params}"""
-    )
-
     log(f"Getting raw data from source type: {source_type}")
 
     try:
