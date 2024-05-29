@@ -40,7 +40,7 @@ from pipelines.rj_smtr.schedules import (
     every_hour,
     every_minute,
     every_day_hour_five,
-    every_day_hour_seven,
+    # every_day_hour_seven,
     every_5_minutes,
 )
 
@@ -322,7 +322,7 @@ bilhetagem_validacao_jae = set_default_parameters(
     default_parameters=constants.BILHETAGEM_MATERIALIZACAO_VALIDACAO_JAE_PARAMS.value,
 )
 
-bilhetagem_validacao_jae.schedule = every_day_hour_seven
+# bilhetagem_validacao_jae.schedule = every_day_hour_seven
 
 
 # RECAPTURA #

@@ -817,9 +817,7 @@ def create_request_params(
             data_final: {request_params['data_final']}"""
         )
     elif dataset_id == constants.CONTROLE_FINANCEIRO_DATASET_ID.value:
-        request_url = (
-            constants.CONTROLE_FINANCEIRO_BASE_URL.value + extract_params["sheet_id"]
-        )
+        request_url = extract_params["base_url"] + extract_params["sheet_id"]
 
     return request_params, request_url
 
