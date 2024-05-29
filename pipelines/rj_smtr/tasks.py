@@ -113,7 +113,7 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
 
     if refresh:
         log("Running in full refresh mode")
-        log(f"DBT will run the following command:\n{run_command+' --full-refresh'}")
+        log(f"DBT will run the following command:\n{run_command + ' --full-refresh'}")
         dbt_client.cli(run_command + " --full-refresh", sync=True)
         last_mat_date = get_table_min_max_value(
             query_project_id, dataset_id, mat_table_id, field_name, "max"
@@ -816,6 +816,8 @@ def create_request_params(
             data_inicial: {request_params['data_inicial']}
             data_final: {request_params['data_final']}"""
         )
+    elif dataset_id == constants.CONTROLE_FINANCEIRO_DATASET_ID.value:
+        request_url = extract_params["base_url"] + extract_params["sheet_id"]
 
     return request_params, request_url
 
@@ -1467,6 +1469,13 @@ def transform_raw_to_nested_structure(
                         for col in data.columns[data.dtypes == "object"].to_list():
                             data[col] = data[col].str.strip()
 
+                    if (
+                        constants.GTFS_DATASET_ID.value in raw_filepath
+                        and "ordem_servico" in raw_filepath
+                        and "tipo_os" not in data.columns
+                    ):
+                        data["tipo_os"] = "Regular"
+
                     log(
                         f"Finished cleaning! Data:\n{data_info_str(data)}", level="info"
                     )
@@ -1478,7 +1487,11 @@ def transform_raw_to_nested_structure(
                         data.groupby(pk_cols)
                         .apply(
                             lambda x: x[data.columns.difference(pk_cols)].to_json(
-                                orient="records"
+                                orient="records",
+                                force_ascii=(
+                                    constants.CONTROLE_FINANCEIRO_DATASET_ID.value
+                                    not in raw_filepath
+                                ),
                             )
                         )
                         .str.strip("[]")

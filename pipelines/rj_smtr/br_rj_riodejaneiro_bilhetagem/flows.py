@@ -40,6 +40,7 @@ from pipelines.rj_smtr.schedules import (
     every_hour,
     every_minute,
     every_day_hour_five,
+    # every_day_hour_seven,
     every_5_minutes,
 )
 
@@ -304,6 +305,24 @@ bilhetagem_materializacao_gps_validador = set_default_parameters(
 )
 
 bilhetagem_materializacao_gps_validador.state_handlers.append(skip_if_running_handler)
+
+
+# Validação dos dados
+
+bilhetagem_validacao_jae = deepcopy(default_materialization_flow)
+bilhetagem_validacao_jae.name = "SMTR: Bilhetagem Validação Jaé - Materialização"
+
+bilhetagem_validacao_jae.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+
+bilhetagem_validacao_jae = set_default_parameters(
+    flow=bilhetagem_validacao_jae,
+    default_parameters=constants.BILHETAGEM_MATERIALIZACAO_VALIDACAO_JAE_PARAMS.value,
+)
+
+# bilhetagem_validacao_jae.schedule = every_day_hour_seven
 
 
 # RECAPTURA #
