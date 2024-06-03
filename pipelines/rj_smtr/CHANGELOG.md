@@ -1,5 +1,12 @@
 # Changelog - rj_smtr
 
+## [1.0.2] - 2024-06-03
+
+### Corrigido
+
+- Altera label de DEV para PROD no schedule `every_friday_seven_thirty`
+
+
 ## [1.0.1] - 2024-05-22
 
 ### Alterado
