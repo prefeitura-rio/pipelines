@@ -4,7 +4,7 @@
 
 ### Corrigido
 
-- Altera label de DEV para PROD no schedule `every_friday_seven_thirty`
+- Altera label de DEV para PROD no schedule `every_friday_seven_thirty` (https://github.com/prefeitura-rio/pipelines/pull/697)
 
 
 ## [1.0.1] - 2024-05-22
