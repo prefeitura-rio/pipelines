@@ -1,5 +1,10 @@
 # Changelog - controle_financeiro
 
+## [1.1.1] - 2024-06-03
+
+### Corrigido
+
+- Altera label de DEV para PROD no flow `arquivo_retorno_captura` (https://github.com/prefeitura-rio/pipelines/pull/697)
 
 ## [1.1.0] - 2024-05-28
 
