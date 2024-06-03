@@ -161,7 +161,7 @@ with Flow(
 arquivo_retorno_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 arquivo_retorno_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_DEV_AGENT_LABEL.value],
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
 arquivo_retorno_captura.schedule = every_friday_seven_thirty
