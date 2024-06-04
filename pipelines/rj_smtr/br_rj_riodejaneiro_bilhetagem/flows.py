@@ -62,7 +62,7 @@ bilhetagem_transacao_captura = set_default_parameters(
     | constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS.value,
 )
 
-bilhetagem_transacao_captura.schedule = every_minute
+# bilhetagem_transacao_captura.schedule = every_minute
 
 
 bilhetagem_transacao_riocard_captura = deepcopy(default_capture_flow)
@@ -81,7 +81,7 @@ bilhetagem_transacao_riocard_captura = set_default_parameters(
     | constants.BILHETAGEM_TRANSACAO_RIOCARD_CAPTURE_PARAMS.value,
 )
 
-bilhetagem_transacao_riocard_captura.schedule = every_minute
+# bilhetagem_transacao_riocard_captura.schedule = every_minute
 
 # BILHETAGEM FISCALIZAÇÃO - CAPTURA A CADA 5 MINUTOS #
 
@@ -99,7 +99,7 @@ bilhetagem_fiscalizacao_captura = set_default_parameters(
     | constants.BILHETAGEM_FISCALIZACAO_CAPTURE_PARAMS.value,
 )
 
-bilhetagem_fiscalizacao_captura.schedule = every_5_minutes
+# bilhetagem_fiscalizacao_captura.schedule = every_5_minutes
 
 # BILHETAGEM INTEGRAÇÃO - CAPTURA A CADA MINUTO #
 
@@ -217,7 +217,7 @@ bilhetagem_materializacao_transacao_riocard = set_default_parameters(
     default_parameters=constants.BILHETAGEM_MATERIALIZACAO_TRANSACAO_RIOCARD_PARAMS.value,
 )
 
-bilhetagem_materializacao_transacao_riocard.schedule = every_day_hour_five
+# bilhetagem_materializacao_transacao_riocard.schedule = every_day_hour_five
 
 # Ordem Pagamento
 
@@ -527,7 +527,7 @@ bilhetagem_transacao_tratamento.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-bilhetagem_transacao_tratamento.schedule = every_hour
+# bilhetagem_transacao_tratamento.schedule = every_hour
 
 # CAPTURA/TRATAMENTO - ORDEM PAGAMENTO:
 # CAPTURA + RECAPTURA + MATERIALIZAÇÃO
@@ -682,4 +682,4 @@ bilhetagem_ordem_pagamento_captura_tratamento.run_config = KubernetesRun(
 )
 
 
-bilhetagem_ordem_pagamento_captura_tratamento.schedule = every_day_hour_five
+# bilhetagem_ordem_pagamento_captura_tratamento.schedule = every_day_hour_five
