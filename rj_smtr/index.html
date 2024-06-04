@@ -39,6 +39,7 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.flows import *
 from pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps.flows import *
 from pipelines.rj_smtr.br_rj_riodejaneiro_sigmob.flows import *
 from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.flows import *
+from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps_zirix.flows import *
 from pipelines.rj_smtr.br_rj_riodejaneiro_brt_gps.flows import *
 from pipelines.rj_smtr.materialize_to_datario.flows import *
 from pipelines.rj_smtr.registros_ocr_rir.flows import *
@@ -49,7 +50,9 @@ from pipelines.rj_smtr.example.flows import *
 from pipelines.rj_smtr.br_rj_riodejaneiro_bilhetagem.flows import *
 from pipelines.rj_smtr.br_rj_riodejaneiro_gtfs.flows import *
 from pipelines.rj_smtr.br_rj_riodejaneiro_stu.flows import *
-from pipelines.rj_smtr.br_rj_riodejaneiro_diretorios.flows import *</code></pre>
+from pipelines.rj_smtr.br_rj_riodejaneiro_diretorios.flows import *
+from pipelines.rj_smtr.br_rj_riodejaneiro_viagem_zirix.flows import *
+from pipelines.rj_smtr.controle_financeiro.flows import *</code></pre>
 </details>
 </section>
 <section>
@@ -75,6 +78,10 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_diretorios.flows import *</code></pre>
 <dd>
 <div class="desc"></div>
 </dd>
+<dt><code class="name"><a title="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps_zirix" href="br_rj_riodejaneiro_onibus_gps_zirix/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps_zirix</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt><code class="name"><a title="pipelines.rj_smtr.br_rj_riodejaneiro_rdo" href="br_rj_riodejaneiro_rdo/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_rdo</a></code></dt>
 <dd>
 <div class="desc"></div>
@@ -95,9 +102,17 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_diretorios.flows import *</code></pre>
 <dd>
 <div class="desc"></div>
 </dd>
+<dt><code class="name"><a title="pipelines.rj_smtr.br_rj_riodejaneiro_viagem_zirix" href="br_rj_riodejaneiro_viagem_zirix/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_viagem_zirix</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt><code class="name"><a title="pipelines.rj_smtr.constants" href="constants.html">pipelines.rj_smtr.constants</a></code></dt>
 <dd>
 <div class="desc"><p>Constant values for the rj_smtr projects</p></div>
+</dd>
+<dt><code class="name"><a title="pipelines.rj_smtr.controle_financeiro" href="controle_financeiro/index.html">pipelines.rj_smtr.controle_financeiro</a></code></dt>
+<dd>
+<div class="desc"></div>
 </dd>
 <dt><code class="name"><a title="pipelines.rj_smtr.example" href="example/index.html">pipelines.rj_smtr.example</a></code></dt>
 <dd>
@@ -212,12 +227,15 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_diretorios" href="br_rj_riodejaneiro_diretorios/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_diretorios</a></code></li>
 <li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_gtfs" href="br_rj_riodejaneiro_gtfs/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_gtfs</a></code></li>
 <li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps" href="br_rj_riodejaneiro_onibus_gps/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps</a></code></li>
+<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps_zirix" href="br_rj_riodejaneiro_onibus_gps_zirix/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps_zirix</a></code></li>
 <li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_rdo" href="br_rj_riodejaneiro_rdo/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_rdo</a></code></li>
 <li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_recursos" href="br_rj_riodejaneiro_recursos/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_recursos</a></code></li>
 <li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_sigmob" href="br_rj_riodejaneiro_sigmob/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_sigmob</a></code></li>
 <li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps" href="br_rj_riodejaneiro_stpl_gps/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_stpl_gps</a></code></li>
 <li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_stu" href="br_rj_riodejaneiro_stu/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_stu</a></code></li>
+<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_viagem_zirix" href="br_rj_riodejaneiro_viagem_zirix/index.html">pipelines.rj_smtr.br_rj_riodejaneiro_viagem_zirix</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants" href="constants.html">pipelines.rj_smtr.constants</a></code></li>
+<li><code><a title="pipelines.rj_smtr.controle_financeiro" href="controle_financeiro/index.html">pipelines.rj_smtr.controle_financeiro</a></code></li>
 <li><code><a title="pipelines.rj_smtr.example" href="example/index.html">pipelines.rj_smtr.example</a></code></li>
 <li><code><a title="pipelines.rj_smtr.flows" href="flows.html">pipelines.rj_smtr.flows</a></code></li>
 <li><code><a title="pipelines.rj_smtr.implicit_ftp" href="implicit_ftp.html">pipelines.rj_smtr.implicit_ftp</a></code></li>

@@ -190,10 +190,11 @@ class constants(Enum):  # pylint: disable=c0103
     SUBSIDIO_SPPO_DATASET_ID = &#34;projeto_subsidio_sppo&#34;
     SUBSIDIO_SPPO_SECRET_PATH = &#34;projeto_subsidio_sppo&#34;
     SUBSIDIO_SPPO_TABLE_ID = &#34;viagem_completa&#34;
-    SUBSIDIO_SPPO_CODE_OWNERS = [&#34;rodrigo&#34;]
+    SUBSIDIO_SPPO_CODE_OWNERS = [&#34;dados_smtr&#34;]
 
     # SUBSÍDIO DASHBOARD
     SUBSIDIO_SPPO_DASHBOARD_DATASET_ID = &#34;dashboard_subsidio_sppo&#34;
+    SUBSIDIO_SPPO_DASHBOARD_STAGING_DATASET_ID = &#34;dashboard_subsidio_sppo_staging&#34;
     SUBSIDIO_SPPO_DASHBOARD_TABLE_ID = &#34;sumario_servico_dia&#34;
     SUBSIDIO_SPPO_DATA_CHECKS_PARAMS = {
         &#34;check_gps_capture&#34;: {
@@ -457,13 +458,13 @@ class constants(Enum):  # pylint: disable=c0103
                         WHERE
                             DATA BETWEEN DATE(&#34;{start_timestamp}&#34;)
                             AND DATE(&#34;{end_timestamp}&#34;)),
-                    subsidio_parametros AS (
+                    subsidio_valor_km_tipo_viagem AS (
                         SELECT
                             data_inicio,
                             data_fim,
                             MAX(subsidio_km) AS subsidio_km_teto
                         FROM
-                            `rj-smtr`.`dashboard_subsidio_sppo`.`subsidio_parametros`
+                            `rj-smtr`.`dashboard_subsidio_sppo_staging`.`subsidio_valor_km_tipo_viagem`
                         WHERE
                             subsidio_km &gt; 0
                         GROUP BY
@@ -474,7 +475,7 @@ class constants(Enum):  # pylint: disable=c0103
                     FROM
                         {table_id} AS s
                     LEFT JOIN
-                        subsidio_parametros AS p
+                        subsidio_valor_km_tipo_viagem AS p
                     ON
                         s.data BETWEEN p.data_inicio
                         AND p.data_fim
@@ -552,7 +553,7 @@ class constants(Enum):  # pylint: disable=c0103
                 SELECT
                     * EXCEPT(km_apurada),
                     km_apurada,
-                    ROUND(COALESCE(km_apurada_registrado_com_ar_inoperante,0) + COALESCE(km_apurada_n_licenciado,0) + COALESCE(km_apurada_autuado_ar_inoperante,0) + COALESCE(km_apurada_autuado_seguranca,0) + COALESCE(km_apurada_autuado_limpezaequipamento,0) + COALESCE(km_apurada_licenciado_sem_ar_n_autuado,0) + COALESCE(km_apurada_licenciado_com_ar_n_autuado,0),2) AS km_apurada2
+                    ROUND(COALESCE(km_apurada_registrado_com_ar_inoperante,0) + COALESCE(km_apurada_n_licenciado,0) + COALESCE(km_apurada_autuado_ar_inoperante,0) + COALESCE(km_apurada_autuado_seguranca,0) + COALESCE(km_apurada_autuado_limpezaequipamento,0) + COALESCE(km_apurada_licenciado_sem_ar_n_autuado,0) + COALESCE(km_apurada_licenciado_com_ar_n_autuado,0) + COALESCE(km_apurada_n_vistoriado, 0),2) AS km_apurada2
                 FROM
                     `rj-smtr.dashboard_subsidio_sppo.sumario_servico_dia_tipo`
                 WHERE
@@ -564,7 +565,7 @@ class constants(Enum):  # pylint: disable=c0103
             FROM
                 kms
             WHERE
-                ABS(km_apurada2-km_apurada) &gt; 0.015
+                ABS(km_apurada2-km_apurada) &gt; 0.02
             &#34;&#34;&#34;,
             &#34;order_columns&#34;: [&#34;dif&#34;],
         },
@@ -799,6 +800,25 @@ class constants(Enum):  # pylint: disable=c0103
                 WHERE
                     data_processamento BETWEEN &#39;{start}&#39;
                     AND &#39;{end}&#39;
+            &#34;&#34;&#34;,
+        },
+        &#34;primary_key&#34;: [&#34;id&#34;],
+        &#34;interval_minutes&#34;: 1,
+    }
+
+    BILHETAGEM_TRANSACAO_RIOCARD_CAPTURE_PARAMS = {
+        &#34;table_id&#34;: &#34;transacao_riocard&#34;,
+        &#34;partition_date_only&#34;: False,
+        &#34;extract_params&#34;: {
+            &#34;database&#34;: &#34;transacao_db&#34;,
+            &#34;query&#34;: &#34;&#34;&#34;
+                SELECT
+                    *
+                FROM
+                    transacao_riocard
+                WHERE
+                    data_processamento &gt;= &#39;{start}&#39;
+                    AND data_processamento &lt; &#39;{end}&#39;
             &#34;&#34;&#34;,
         },
         &#34;primary_key&#34;: [&#34;id&#34;],
@@ -1206,7 +1226,7 @@ class constants(Enum):  # pylint: disable=c0103
         },
     ]
 
-    BILHETAGEM_EXCLUDE = &#34;+operadoras +consorcios&#34;
+    BILHETAGEM_EXCLUDE = &#34;+operadoras +consorcios +servicos&#34;
 
     BILHETAGEM_JAE_DASHBOARD_DATASET_ID = &#34;dashboard_bilhetagem_jae&#34;
 
@@ -1221,7 +1241,7 @@ class constants(Enum):  # pylint: disable=c0103
             },
             &#34;version&#34;: {},
         },
-        &#34;exclude&#34;: f&#34;{BILHETAGEM_EXCLUDE} stops_gtfs2 routes_gtfs2 feed_info_gtfs2&#34;,
+        &#34;exclude&#34;: f&#34;{BILHETAGEM_EXCLUDE} stops_gtfs routes_gtfs feed_info_gtfs&#34;,
     }
 
     BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS = {
@@ -1235,7 +1255,18 @@ class constants(Enum):  # pylint: disable=c0103
             },
             &#34;version&#34;: {},
         },
-        &#34;exclude&#34;: &#34;integracao matriz_integracao stops_gtfs2 routes_gtfs2 feed_info_gtfs2&#34;,
+        &#34;exclude&#34;: &#34;integracao matriz_integracao stops_gtfs routes_gtfs feed_info_gtfs&#34;,
+    }
+
+    BILHETAGEM_MATERIALIZACAO_TRANSACAO_RIOCARD_PARAMS = {
+        &#34;dataset_id&#34;: &#34;dashboard_controle_vinculo_jae_riocard&#34;,
+        &#34;table_id&#34;: &#34;veiculo_indicadores_dia&#34;,
+        &#34;upstream&#34;: True,
+        &#34;dbt_vars&#34;: {
+            &#34;run_date&#34;: {},
+            &#34;version&#34;: {},
+        },
+        &#34;exclude&#34;: &#34;+gps_sppo +sppo_licenciamento +gps_validador&#34;,
     }
 
     BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS = {
@@ -1256,7 +1287,7 @@ class constants(Enum):  # pylint: disable=c0103
         &#34;dataset_id&#34;: BILHETAGEM_DATASET_ID,
         &#34;upstream&#34;: True,
         &#34;downstream&#34;: True,
-        &#34;exclude&#34;: BILHETAGEM_EXCLUDE,
+        &#34;exclude&#34;: f&#34;{BILHETAGEM_EXCLUDE} veiculo_validacao veiculo_indicadores_dia&#34;,
         &#34;dbt_vars&#34;: {
             &#34;date_range&#34;: {
                 &#34;table_run_datetime_column_name&#34;: &#34;datetime_captura&#34;,
@@ -1273,6 +1304,17 @@ class constants(Enum):  # pylint: disable=c0103
         &#34;dataset_id&#34;: BILHETAGEM_DATASET_ID,
         &#34;secret_path&#34;: BILHETAGEM_SECRET_PATH,
         &#34;source_type&#34;: BILHETAGEM_GENERAL_CAPTURE_PARAMS[&#34;source_type&#34;],
+    }
+
+    BILHETAGEM_MATERIALIZACAO_VALIDACAO_JAE_PARAMS = {
+        &#34;dataset_id&#34;: &#34;validacao_dados_jae&#34;,
+        &#34;upstream&#34;: True,
+        &#34;exclude&#34;: &#34;+gps_sppo +sppo_veiculo_dia +gps_validador +transacao \
++ordem_pagamento_dia +integracao +servicos&#34;,
+        &#34;dbt_vars&#34;: {
+            &#34;run_date&#34;: {},
+            &#34;version&#34;: {},
+        },
     }
 
     # GTFS
@@ -1333,8 +1375,13 @@ class constants(Enum):  # pylint: disable=c0103
         },
         {
             &#34;table_id&#34;: &#34;ordem_servico&#34;,
-            &#34;primary_key&#34;: [&#34;servico&#34;],
+            &#34;primary_key&#34;: [&#34;servico&#34;, &#34;tipo_os&#34;],
             &#34;extract_params&#34;: {&#34;filename&#34;: &#34;ordem_servico&#34;},
+        },
+        {
+            &#34;table_id&#34;: &#34;ordem_servico_trajeto_alternativo&#34;,
+            &#34;primary_key&#34;: [&#34;servico&#34;, &#34;tipo_os&#34;, &#34;evento&#34;],
+            &#34;extract_params&#34;: {&#34;filename&#34;: &#34;ordem_servico_trajeto_alternativo&#34;},
         },
         {
             &#34;table_id&#34;: &#34;stop_times&#34;,
@@ -1343,7 +1390,7 @@ class constants(Enum):  # pylint: disable=c0103
     ]
 
     GTFS_MATERIALIZACAO_PARAMS = {
-        &#34;dataset_id&#34;: GTFS_DATASET_ID,
+        &#34;dataset_id&#34;: &#34;gtfs&#34;,
         &#34;dbt_vars&#34;: {
             &#34;data_versao_gtfs&#34;: &#34;&#34;,
             &#34;version&#34;: {},
@@ -1492,6 +1539,7 @@ and createdDate lt {end})&#34;,
 
     # INFRAÇÃO
     SPPO_INFRACAO_URL = &#34;https://siurblab.rio.rj.gov.br/SMTR/Multas/multas.txt&#34;
+
     SPPO_INFRACAO_MAPPING_KEYS = {
         &#34;permissao&#34;: &#34;permissao&#34;,
         &#34;modal&#34;: &#34;modo&#34;,
@@ -1503,6 +1551,7 @@ and createdDate lt {end})&#34;,
         &#34;des_infracao&#34;: &#34;infracao&#34;,
         &#34;status&#34;: &#34;status&#34;,
         &#34;data_pagamento&#34;: &#34;data_pagamento&#34;,
+        &#34;linha&#34;: &#34;servico&#34;,
     }
     SPPO_INFRACAO_CSV_ARGS = {
         &#34;sep&#34;: &#34;;&#34;,
@@ -1534,7 +1583,13 @@ and createdDate lt {end})&#34;,
             &#34;names&#34;: SPPO_REGISTRO_AGENTE_VERAO_COLUMNS,
         },
         &#34;primary_key&#34;: [&#34;datetime_registro&#34;, &#34;email&#34;],
-    }</code></pre>
+    }
+
+    ZIRIX_API_SECRET_PATH = &#34;zirix_api&#34;
+    VIAGEM_ZIRIX_RAW_DATASET_ID = &#34;br_rj_riodejaneiro_viagem_zirix&#34;
+    ZIRIX_BASE_URL = &#34;https://integration.systemsatx.com.br/Globalbus/SMTR&#34;
+
+    CONTROLE_FINANCEIRO_DATASET_ID = &#34;controle_financeiro&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -1711,10 +1766,11 @@ and createdDate lt {end})&#34;,
     SUBSIDIO_SPPO_DATASET_ID = &#34;projeto_subsidio_sppo&#34;
     SUBSIDIO_SPPO_SECRET_PATH = &#34;projeto_subsidio_sppo&#34;
     SUBSIDIO_SPPO_TABLE_ID = &#34;viagem_completa&#34;
-    SUBSIDIO_SPPO_CODE_OWNERS = [&#34;rodrigo&#34;]
+    SUBSIDIO_SPPO_CODE_OWNERS = [&#34;dados_smtr&#34;]
 
     # SUBSÍDIO DASHBOARD
     SUBSIDIO_SPPO_DASHBOARD_DATASET_ID = &#34;dashboard_subsidio_sppo&#34;
+    SUBSIDIO_SPPO_DASHBOARD_STAGING_DATASET_ID = &#34;dashboard_subsidio_sppo_staging&#34;
     SUBSIDIO_SPPO_DASHBOARD_TABLE_ID = &#34;sumario_servico_dia&#34;
     SUBSIDIO_SPPO_DATA_CHECKS_PARAMS = {
         &#34;check_gps_capture&#34;: {
@@ -1978,13 +2034,13 @@ and createdDate lt {end})&#34;,
                         WHERE
                             DATA BETWEEN DATE(&#34;{start_timestamp}&#34;)
                             AND DATE(&#34;{end_timestamp}&#34;)),
-                    subsidio_parametros AS (
+                    subsidio_valor_km_tipo_viagem AS (
                         SELECT
                             data_inicio,
                             data_fim,
                             MAX(subsidio_km) AS subsidio_km_teto
                         FROM
-                            `rj-smtr`.`dashboard_subsidio_sppo`.`subsidio_parametros`
+                            `rj-smtr`.`dashboard_subsidio_sppo_staging`.`subsidio_valor_km_tipo_viagem`
                         WHERE
                             subsidio_km &gt; 0
                         GROUP BY
@@ -1995,7 +2051,7 @@ and createdDate lt {end})&#34;,
                     FROM
                         {table_id} AS s
                     LEFT JOIN
-                        subsidio_parametros AS p
+                        subsidio_valor_km_tipo_viagem AS p
                     ON
                         s.data BETWEEN p.data_inicio
                         AND p.data_fim
@@ -2073,7 +2129,7 @@ and createdDate lt {end})&#34;,
                 SELECT
                     * EXCEPT(km_apurada),
                     km_apurada,
-                    ROUND(COALESCE(km_apurada_registrado_com_ar_inoperante,0) + COALESCE(km_apurada_n_licenciado,0) + COALESCE(km_apurada_autuado_ar_inoperante,0) + COALESCE(km_apurada_autuado_seguranca,0) + COALESCE(km_apurada_autuado_limpezaequipamento,0) + COALESCE(km_apurada_licenciado_sem_ar_n_autuado,0) + COALESCE(km_apurada_licenciado_com_ar_n_autuado,0),2) AS km_apurada2
+                    ROUND(COALESCE(km_apurada_registrado_com_ar_inoperante,0) + COALESCE(km_apurada_n_licenciado,0) + COALESCE(km_apurada_autuado_ar_inoperante,0) + COALESCE(km_apurada_autuado_seguranca,0) + COALESCE(km_apurada_autuado_limpezaequipamento,0) + COALESCE(km_apurada_licenciado_sem_ar_n_autuado,0) + COALESCE(km_apurada_licenciado_com_ar_n_autuado,0) + COALESCE(km_apurada_n_vistoriado, 0),2) AS km_apurada2
                 FROM
                     `rj-smtr.dashboard_subsidio_sppo.sumario_servico_dia_tipo`
                 WHERE
@@ -2085,7 +2141,7 @@ and createdDate lt {end})&#34;,
             FROM
                 kms
             WHERE
-                ABS(km_apurada2-km_apurada) &gt; 0.015
+                ABS(km_apurada2-km_apurada) &gt; 0.02
             &#34;&#34;&#34;,
             &#34;order_columns&#34;: [&#34;dif&#34;],
         },
@@ -2320,6 +2376,25 @@ and createdDate lt {end})&#34;,
                 WHERE
                     data_processamento BETWEEN &#39;{start}&#39;
                     AND &#39;{end}&#39;
+            &#34;&#34;&#34;,
+        },
+        &#34;primary_key&#34;: [&#34;id&#34;],
+        &#34;interval_minutes&#34;: 1,
+    }
+
+    BILHETAGEM_TRANSACAO_RIOCARD_CAPTURE_PARAMS = {
+        &#34;table_id&#34;: &#34;transacao_riocard&#34;,
+        &#34;partition_date_only&#34;: False,
+        &#34;extract_params&#34;: {
+            &#34;database&#34;: &#34;transacao_db&#34;,
+            &#34;query&#34;: &#34;&#34;&#34;
+                SELECT
+                    *
+                FROM
+                    transacao_riocard
+                WHERE
+                    data_processamento &gt;= &#39;{start}&#39;
+                    AND data_processamento &lt; &#39;{end}&#39;
             &#34;&#34;&#34;,
         },
         &#34;primary_key&#34;: [&#34;id&#34;],
@@ -2727,7 +2802,7 @@ and createdDate lt {end})&#34;,
         },
     ]
 
-    BILHETAGEM_EXCLUDE = &#34;+operadoras +consorcios&#34;
+    BILHETAGEM_EXCLUDE = &#34;+operadoras +consorcios +servicos&#34;
 
     BILHETAGEM_JAE_DASHBOARD_DATASET_ID = &#34;dashboard_bilhetagem_jae&#34;
 
@@ -2742,7 +2817,7 @@ and createdDate lt {end})&#34;,
             },
             &#34;version&#34;: {},
         },
-        &#34;exclude&#34;: f&#34;{BILHETAGEM_EXCLUDE} stops_gtfs2 routes_gtfs2 feed_info_gtfs2&#34;,
+        &#34;exclude&#34;: f&#34;{BILHETAGEM_EXCLUDE} stops_gtfs routes_gtfs feed_info_gtfs&#34;,
     }
 
     BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS = {
@@ -2756,7 +2831,18 @@ and createdDate lt {end})&#34;,
             },
             &#34;version&#34;: {},
         },
-        &#34;exclude&#34;: &#34;integracao matriz_integracao stops_gtfs2 routes_gtfs2 feed_info_gtfs2&#34;,
+        &#34;exclude&#34;: &#34;integracao matriz_integracao stops_gtfs routes_gtfs feed_info_gtfs&#34;,
+    }
+
+    BILHETAGEM_MATERIALIZACAO_TRANSACAO_RIOCARD_PARAMS = {
+        &#34;dataset_id&#34;: &#34;dashboard_controle_vinculo_jae_riocard&#34;,
+        &#34;table_id&#34;: &#34;veiculo_indicadores_dia&#34;,
+        &#34;upstream&#34;: True,
+        &#34;dbt_vars&#34;: {
+            &#34;run_date&#34;: {},
+            &#34;version&#34;: {},
+        },
+        &#34;exclude&#34;: &#34;+gps_sppo +sppo_licenciamento +gps_validador&#34;,
     }
 
     BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS = {
@@ -2777,7 +2863,7 @@ and createdDate lt {end})&#34;,
         &#34;dataset_id&#34;: BILHETAGEM_DATASET_ID,
         &#34;upstream&#34;: True,
         &#34;downstream&#34;: True,
-        &#34;exclude&#34;: BILHETAGEM_EXCLUDE,
+        &#34;exclude&#34;: f&#34;{BILHETAGEM_EXCLUDE} veiculo_validacao veiculo_indicadores_dia&#34;,
         &#34;dbt_vars&#34;: {
             &#34;date_range&#34;: {
                 &#34;table_run_datetime_column_name&#34;: &#34;datetime_captura&#34;,
@@ -2794,6 +2880,17 @@ and createdDate lt {end})&#34;,
         &#34;dataset_id&#34;: BILHETAGEM_DATASET_ID,
         &#34;secret_path&#34;: BILHETAGEM_SECRET_PATH,
         &#34;source_type&#34;: BILHETAGEM_GENERAL_CAPTURE_PARAMS[&#34;source_type&#34;],
+    }
+
+    BILHETAGEM_MATERIALIZACAO_VALIDACAO_JAE_PARAMS = {
+        &#34;dataset_id&#34;: &#34;validacao_dados_jae&#34;,
+        &#34;upstream&#34;: True,
+        &#34;exclude&#34;: &#34;+gps_sppo +sppo_veiculo_dia +gps_validador +transacao \
++ordem_pagamento_dia +integracao +servicos&#34;,
+        &#34;dbt_vars&#34;: {
+            &#34;run_date&#34;: {},
+            &#34;version&#34;: {},
+        },
     }
 
     # GTFS
@@ -2854,8 +2951,13 @@ and createdDate lt {end})&#34;,
         },
         {
             &#34;table_id&#34;: &#34;ordem_servico&#34;,
-            &#34;primary_key&#34;: [&#34;servico&#34;],
+            &#34;primary_key&#34;: [&#34;servico&#34;, &#34;tipo_os&#34;],
             &#34;extract_params&#34;: {&#34;filename&#34;: &#34;ordem_servico&#34;},
+        },
+        {
+            &#34;table_id&#34;: &#34;ordem_servico_trajeto_alternativo&#34;,
+            &#34;primary_key&#34;: [&#34;servico&#34;, &#34;tipo_os&#34;, &#34;evento&#34;],
+            &#34;extract_params&#34;: {&#34;filename&#34;: &#34;ordem_servico_trajeto_alternativo&#34;},
         },
         {
             &#34;table_id&#34;: &#34;stop_times&#34;,
@@ -2864,7 +2966,7 @@ and createdDate lt {end})&#34;,
     ]
 
     GTFS_MATERIALIZACAO_PARAMS = {
-        &#34;dataset_id&#34;: GTFS_DATASET_ID,
+        &#34;dataset_id&#34;: &#34;gtfs&#34;,
         &#34;dbt_vars&#34;: {
             &#34;data_versao_gtfs&#34;: &#34;&#34;,
             &#34;version&#34;: {},
@@ -3013,6 +3115,7 @@ and createdDate lt {end})&#34;,
 
     # INFRAÇÃO
     SPPO_INFRACAO_URL = &#34;https://siurblab.rio.rj.gov.br/SMTR/Multas/multas.txt&#34;
+
     SPPO_INFRACAO_MAPPING_KEYS = {
         &#34;permissao&#34;: &#34;permissao&#34;,
         &#34;modal&#34;: &#34;modo&#34;,
@@ -3024,6 +3127,7 @@ and createdDate lt {end})&#34;,
         &#34;des_infracao&#34;: &#34;infracao&#34;,
         &#34;status&#34;: &#34;status&#34;,
         &#34;data_pagamento&#34;: &#34;data_pagamento&#34;,
+        &#34;linha&#34;: &#34;servico&#34;,
     }
     SPPO_INFRACAO_CSV_ARGS = {
         &#34;sep&#34;: &#34;;&#34;,
@@ -3055,7 +3159,13 @@ and createdDate lt {end})&#34;,
             &#34;names&#34;: SPPO_REGISTRO_AGENTE_VERAO_COLUMNS,
         },
         &#34;primary_key&#34;: [&#34;datetime_registro&#34;, &#34;email&#34;],
-    }</code></pre>
+    }
+
+    ZIRIX_API_SECRET_PATH = &#34;zirix_api&#34;
+    VIAGEM_ZIRIX_RAW_DATASET_ID = &#34;br_rj_riodejaneiro_viagem_zirix&#34;
+    ZIRIX_BASE_URL = &#34;https://integration.systemsatx.com.br/Globalbus/SMTR&#34;
+
+    CONTROLE_FINANCEIRO_DATASET_ID = &#34;controle_financeiro&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -3119,6 +3229,14 @@ and createdDate lt {end})&#34;,
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_TRANSACAO_RIOCARD_PARAMS"><code class="name">var <span class="ident">BILHETAGEM_MATERIALIZACAO_TRANSACAO_RIOCARD_PARAMS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_VALIDACAO_JAE_PARAMS"><code class="name">var <span class="ident">BILHETAGEM_MATERIALIZACAO_VALIDACAO_JAE_PARAMS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS"><code class="name">var <span class="ident">BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -3139,7 +3257,15 @@ and createdDate lt {end})&#34;,
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_TRANSACAO_RIOCARD_CAPTURE_PARAMS"><code class="name">var <span class="ident">BILHETAGEM_TRANSACAO_RIOCARD_CAPTURE_PARAMS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="pipelines.rj_smtr.constants.constants.BILHETAGEM_TRATAMENTO_INTERVAL"><code class="name">var <span class="ident">BILHETAGEM_TRATAMENTO_INTERVAL</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.CONTROLE_FINANCEIRO_DATASET_ID"><code class="name">var <span class="ident">CONTROLE_FINANCEIRO_DATASET_ID</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -3451,6 +3577,10 @@ and createdDate lt {end})&#34;,
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DASHBOARD_STAGING_DATASET_ID"><code class="name">var <span class="ident">SUBSIDIO_SPPO_DASHBOARD_STAGING_DATASET_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DASHBOARD_TABLE_ID"><code class="name">var <span class="ident">SUBSIDIO_SPPO_DASHBOARD_TABLE_ID</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -3520,6 +3650,18 @@ and createdDate lt {end})&#34;,
 <div class="desc"></div>
 </dd>
 <dt id="pipelines.rj_smtr.constants.constants.VEICULO_DATASET_ID"><code class="name">var <span class="ident">VEICULO_DATASET_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.VIAGEM_ZIRIX_RAW_DATASET_ID"><code class="name">var <span class="ident">VIAGEM_ZIRIX_RAW_DATASET_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.ZIRIX_API_SECRET_PATH"><code class="name">var <span class="ident">ZIRIX_API_SECRET_PATH</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pipelines.rj_smtr.constants.constants.ZIRIX_BASE_URL"><code class="name">var <span class="ident">ZIRIX_BASE_URL</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -3604,12 +3746,16 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS">BILHETAGEM_MATERIALIZACAO_INTEGRACAO_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS">BILHETAGEM_MATERIALIZACAO_ORDEM_PAGAMENTO_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS">BILHETAGEM_MATERIALIZACAO_TRANSACAO_PARAMS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_TRANSACAO_RIOCARD_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_TRANSACAO_RIOCARD_PARAMS">BILHETAGEM_MATERIALIZACAO_TRANSACAO_RIOCARD_PARAMS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_VALIDACAO_JAE_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_MATERIALIZACAO_VALIDACAO_JAE_PARAMS">BILHETAGEM_MATERIALIZACAO_VALIDACAO_JAE_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS">BILHETAGEM_ORDEM_PAGAMENTO_CAPTURE_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_PRIVATE_BUCKET" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_PRIVATE_BUCKET">BILHETAGEM_PRIVATE_BUCKET</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_SECRET_PATH">BILHETAGEM_SECRET_PATH</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_TRACKING_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_TRACKING_CAPTURE_PARAMS">BILHETAGEM_TRACKING_CAPTURE_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_TRANSACAO_CAPTURE_PARAMS">BILHETAGEM_TRANSACAO_CAPTURE_PARAMS</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_TRANSACAO_RIOCARD_CAPTURE_PARAMS" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_TRANSACAO_RIOCARD_CAPTURE_PARAMS">BILHETAGEM_TRANSACAO_RIOCARD_CAPTURE_PARAMS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.BILHETAGEM_TRATAMENTO_INTERVAL" href="#pipelines.rj_smtr.constants.constants.BILHETAGEM_TRATAMENTO_INTERVAL">BILHETAGEM_TRATAMENTO_INTERVAL</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.CONTROLE_FINANCEIRO_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.CONTROLE_FINANCEIRO_DATASET_ID">CONTROLE_FINANCEIRO_DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.CRITICAL_SECRET_PATH">CRITICAL_SECRET_PATH</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.DEFAULT_CODE_OWNERS" href="#pipelines.rj_smtr.constants.constants.DEFAULT_CODE_OWNERS">DEFAULT_CODE_OWNERS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.DIRETORIO_MATERIALIZACAO_PARAMS" href="#pipelines.rj_smtr.constants.constants.DIRETORIO_MATERIALIZACAO_PARAMS">DIRETORIO_MATERIALIZACAO_PARAMS</a></code></li>
@@ -3687,6 +3833,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.constants.constants.STU_TYPE_MAPPING" href="#pipelines.rj_smtr.constants.constants.STU_TYPE_MAPPING">STU_TYPE_MAPPING</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_CODE_OWNERS" href="#pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_CODE_OWNERS">SUBSIDIO_SPPO_CODE_OWNERS</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID">SUBSIDIO_SPPO_DASHBOARD_DATASET_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DASHBOARD_STAGING_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DASHBOARD_STAGING_DATASET_ID">SUBSIDIO_SPPO_DASHBOARD_STAGING_DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DASHBOARD_TABLE_ID" href="#pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DASHBOARD_TABLE_ID">SUBSIDIO_SPPO_DASHBOARD_TABLE_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DATASET_ID">SUBSIDIO_SPPO_DATASET_ID</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DATA_CHECKS_PARAMS" href="#pipelines.rj_smtr.constants.constants.SUBSIDIO_SPPO_DATA_CHECKS_PARAMS">SUBSIDIO_SPPO_DATA_CHECKS_PARAMS</a></code></li>
@@ -3705,6 +3852,9 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="pipelines.rj_smtr.constants.constants.TASK_RETRY_DELAY" href="#pipelines.rj_smtr.constants.constants.TASK_RETRY_DELAY">TASK_RETRY_DELAY</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.TIMEZONE" href="#pipelines.rj_smtr.constants.constants.TIMEZONE">TIMEZONE</a></code></li>
 <li><code><a title="pipelines.rj_smtr.constants.constants.VEICULO_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.VEICULO_DATASET_ID">VEICULO_DATASET_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.VIAGEM_ZIRIX_RAW_DATASET_ID" href="#pipelines.rj_smtr.constants.constants.VIAGEM_ZIRIX_RAW_DATASET_ID">VIAGEM_ZIRIX_RAW_DATASET_ID</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.ZIRIX_API_SECRET_PATH" href="#pipelines.rj_smtr.constants.constants.ZIRIX_API_SECRET_PATH">ZIRIX_API_SECRET_PATH</a></code></li>
+<li><code><a title="pipelines.rj_smtr.constants.constants.ZIRIX_BASE_URL" href="#pipelines.rj_smtr.constants.constants.ZIRIX_BASE_URL">ZIRIX_BASE_URL</a></code></li>
 </ul>
 </li>
 </ul>

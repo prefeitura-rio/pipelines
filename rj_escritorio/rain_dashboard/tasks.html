@@ -104,7 +104,8 @@ def set_redis_key(
     log(&#34;Setting Redis key...&#34;)
     redis_client = get_redis_client(host=host, port=port, db=db)
     redis_client.set(key, value)
-    log(&#34;Redis key set successfully.&#34;)</code></pre>
+    log(&#34;Redis key set successfully.&#34;)
+    log(f&#34;key: {key} and value: {value}&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -204,7 +205,8 @@ def set_redis_key(
     log(&#34;Setting Redis key...&#34;)
     redis_client = get_redis_client(host=host, port=port, db=db)
     redis_client.set(key, value)
-    log(&#34;Redis key set successfully.&#34;)</code></pre>
+    log(&#34;Redis key set successfully.&#34;)
+    log(f&#34;key: {key} and value: {value}&#34;)</code></pre>
 </details>
 </dd>
 </dl>

@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>pipelines.rj_smtr.controle_financeiro.tasks API documentation</title>
+<meta name="description" content="tasks for rj-smtr.controle_financeiro" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pipelines.rj_smtr.controle_financeiro.tasks</code></h1>
+</header>
+<section id="section-intro">
+<p>tasks for rj-smtr.controle_financeiro</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># -*- coding: utf-8 -*-
+&#34;&#34;&#34;
+tasks for rj-smtr.controle_financeiro
+&#34;&#34;&#34;
+
+from typing import Union
+from datetime import date
+import requests
+import pandas as pd
+from prefect import task
+from pipelines.utils.utils import log, get_redis_client, get_vault_secret
+
+from pipelines.rj_smtr.constants import constants as smtr_constants
+from pipelines.rj_smtr.controle_financeiro.constants import constants
+from pipelines.rj_smtr.utils import save_raw_local_func
+
+from pipelines.rj_smtr.controle_financeiro.utils import get_date_ranges
+
+
+@task
+def get_cct_arquivo_retorno_redis_key(mode: str) -&gt; str:
+    &#34;&#34;&#34;
+    Gets the key to search and store pending dates on Redis
+
+    Args:
+        mode (str): dev or prod
+
+    Returns:
+        str: Redis key
+    &#34;&#34;&#34;
+    return (
+        mode
+        + &#34;.&#34;
+        + smtr_constants.CONTROLE_FINANCEIRO_DATASET_ID.value
+        + &#34;.&#34;
+        + constants.ARQUIVO_RETORNO_TABLE_ID.value
+    )
+
+
+@task(nout=2)
+def create_cct_arquivo_retorno_params(
+    redis_key: str, start_date: Union[str, None], end_date: Union[str, None]
+) -&gt; tuple[dict, list[dict]]:
+    &#34;&#34;&#34;
+    Create parameters to get data from cct api&#39;s arquivoPublicacao
+
+    Args:
+        redis_key (str): Redis key to get pending dates
+        start_date (str): Initial data_ordem to filter
+        end_date (str): Final data_ordem to filter
+
+    Returns:
+        dict: headers
+        list[dict]: parameters
+    &#34;&#34;&#34;
+    auth_resp = requests.post(
+        f&#34;{constants.CCT_API_BASE_URL.value}/auth/admin/email/login&#34;,
+        data=get_vault_secret(constants.CCT_API_SECRET_PATH.value)[&#34;data&#34;],
+    )
+    auth_resp.raise_for_status()
+    headers = {&#34;Authorization&#34;: f&#34;Bearer {auth_resp.json()[&#39;token&#39;]}&#34;}
+
+    if start_date is not None and end_date is not None:
+        return headers, [
+            {
+                &#34;dt_inicio&#34;: start_date,
+                &#34;dt_fim&#34;: end_date,
+            }
+        ]
+
+    redis_client = get_redis_client()
+
+    log(f&#34;Getting pending dates on Redis. key = {redis_key}&#34;)
+    redis_return = redis_client.get(redis_key)
+    log(f&#34;Got value from Redis: {redis_return}&#34;)
+
+    if redis_return is None:
+        params = [
+            {
+                &#34;dt_inicio&#34;: &#34;2024-05-09&#34;,
+                &#34;dt_fim&#34;: date.today().isoformat(),
+            }
+        ]
+
+    else:
+        pending_dates = redis_return[&#34;pending_dates&#34;]
+
+        params = get_date_ranges(
+            last_date=redis_return[&#34;last_date&#34;],
+            pending_dates=pending_dates,
+        )
+
+    return headers, params
+
+
+@task
+def get_raw_cct_arquivo_retorno(
+    headers: dict, params: list[dict], local_filepath: str
+) -&gt; str:
+    &#34;&#34;&#34;
+    Get data from cct api arquivoPublicacao
+
+    Args:
+        headers (dict): Request headers
+        params (list[dict]): List of request query params
+        local_filepath (str): Path to save the data
+
+    Returns:
+        str: filepath to raw data
+    &#34;&#34;&#34;
+    data = []
+    url = f&#34;{constants.CCT_API_BASE_URL.value}/cnab/arquivoPublicacao&#34;
+    for param in params:
+        log(
+            f&#34;&#34;&#34;Getting raw data:
+            url: {url},
+            params: {param}&#34;&#34;&#34;
+        )
+        resp = requests.get(
+            url,
+            headers=headers,
+            params=param,
+        )
+
+        resp.raise_for_status()
+        new_data = resp.json()
+
+        data += new_data
+
+        log(f&#34;returned {len(new_data)} rows&#34;)
+
+    return save_raw_local_func(data=data, filepath=local_filepath)
+
+
+@task
+def cct_arquivo_retorno_save_redis(redis_key: str, raw_filepath: str):
+    &#34;&#34;&#34;
+    Set control info on Redis
+
+    Args:
+        redis_key (str): Key on Redis
+        raw_filepath (str): Filepath to raw data
+    &#34;&#34;&#34;
+    df = pd.read_json(raw_filepath)
+    df[&#34;dataOrdem&#34;] = pd.to_datetime(df[&#34;dataOrdem&#34;]).dt.strftime(&#34;%Y-%m-%d&#34;)
+    all_returned_dates = df[&#34;dataOrdem&#34;].unique().tolist()
+    df = (
+        df.groupby(  # pylint: disable=E1101
+            [
+                &#34;idConsorcio&#34;,
+                &#34;idOperadora&#34;,
+                &#34;dataOrdem&#34;,
+            ]
+        )[&#34;isPago&#34;]
+        .max()
+        .reset_index()
+    )
+    pending_dates = df.loc[~df[&#34;isPago&#34;]][&#34;dataOrdem&#34;].unique().tolist()
+
+    log(f&#34;The API returned the following dates: {sorted(all_returned_dates)}&#34;)
+    log(f&#34;the following dates are not paid: {sorted(pending_dates)}&#34;)
+
+    redis_client = get_redis_client()
+    redis_return = redis_client.get(redis_key)
+
+    if redis_return is None:
+        redis_return = {}
+
+    redis_return[&#34;last_date&#34;] = max(
+        [df[&#34;dataOrdem&#34;].max(), redis_return.get(&#34;last_date&#34;, &#34;2024-05-09&#34;)]
+    )
+
+    redis_return[&#34;pending_dates&#34;] = pending_dates + [
+        d for d in redis_return.get(&#34;pending_dates&#34;, []) if d not in all_returned_dates
+    ]
+
+    log(
+        f&#34;&#34;&#34;
+        Saving values on redis
+        last_date: {redis_return[&#34;last_date&#34;]}
+        pending_dates: {sorted(redis_return[&#34;pending_dates&#34;])}
+        &#34;&#34;&#34;
+    )
+
+    redis_client.set(redis_key, redis_return)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pipelines.rj_smtr.controle_financeiro.tasks.cct_arquivo_retorno_save_redis"><code class="name flex">
+<span>def <span class="ident">cct_arquivo_retorno_save_redis</span></span>(<span>redis_key: str, raw_filepath: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set control info on Redis</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>redis_key</code></strong> :&ensp;<code>str</code></dt>
+<dd>Key on Redis</dd>
+<dt><strong><code>raw_filepath</code></strong> :&ensp;<code>str</code></dt>
+<dd>Filepath to raw data</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def cct_arquivo_retorno_save_redis(redis_key: str, raw_filepath: str):
+    &#34;&#34;&#34;
+    Set control info on Redis
+
+    Args:
+        redis_key (str): Key on Redis
+        raw_filepath (str): Filepath to raw data
+    &#34;&#34;&#34;
+    df = pd.read_json(raw_filepath)
+    df[&#34;dataOrdem&#34;] = pd.to_datetime(df[&#34;dataOrdem&#34;]).dt.strftime(&#34;%Y-%m-%d&#34;)
+    all_returned_dates = df[&#34;dataOrdem&#34;].unique().tolist()
+    df = (
+        df.groupby(  # pylint: disable=E1101
+            [
+                &#34;idConsorcio&#34;,
+                &#34;idOperadora&#34;,
+                &#34;dataOrdem&#34;,
+            ]
+        )[&#34;isPago&#34;]
+        .max()
+        .reset_index()
+    )
+    pending_dates = df.loc[~df[&#34;isPago&#34;]][&#34;dataOrdem&#34;].unique().tolist()
+
+    log(f&#34;The API returned the following dates: {sorted(all_returned_dates)}&#34;)
+    log(f&#34;the following dates are not paid: {sorted(pending_dates)}&#34;)
+
+    redis_client = get_redis_client()
+    redis_return = redis_client.get(redis_key)
+
+    if redis_return is None:
+        redis_return = {}
+
+    redis_return[&#34;last_date&#34;] = max(
+        [df[&#34;dataOrdem&#34;].max(), redis_return.get(&#34;last_date&#34;, &#34;2024-05-09&#34;)]
+    )
+
+    redis_return[&#34;pending_dates&#34;] = pending_dates + [
+        d for d in redis_return.get(&#34;pending_dates&#34;, []) if d not in all_returned_dates
+    ]
+
+    log(
+        f&#34;&#34;&#34;
+        Saving values on redis
+        last_date: {redis_return[&#34;last_date&#34;]}
+        pending_dates: {sorted(redis_return[&#34;pending_dates&#34;])}
+        &#34;&#34;&#34;
+    )
+
+    redis_client.set(redis_key, redis_return)</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.controle_financeiro.tasks.create_cct_arquivo_retorno_params"><code class="name flex">
+<span>def <span class="ident">create_cct_arquivo_retorno_params</span></span>(<span>redis_key: str, start_date: Optional[str], end_date: Optional[str]) ‑> tuple[dict, list[dict]]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create parameters to get data from cct api's arquivoPublicacao</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>redis_key</code></strong> :&ensp;<code>str</code></dt>
+<dd>Redis key to get pending dates</dd>
+<dt><strong><code>start_date</code></strong> :&ensp;<code>str</code></dt>
+<dd>Initial data_ordem to filter</dd>
+<dt><strong><code>end_date</code></strong> :&ensp;<code>str</code></dt>
+<dd>Final data_ordem to filter</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>headers</dd>
+<dt><code>list[dict]</code></dt>
+<dd>parameters</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(nout=2)
+def create_cct_arquivo_retorno_params(
+    redis_key: str, start_date: Union[str, None], end_date: Union[str, None]
+) -&gt; tuple[dict, list[dict]]:
+    &#34;&#34;&#34;
+    Create parameters to get data from cct api&#39;s arquivoPublicacao
+
+    Args:
+        redis_key (str): Redis key to get pending dates
+        start_date (str): Initial data_ordem to filter
+        end_date (str): Final data_ordem to filter
+
+    Returns:
+        dict: headers
+        list[dict]: parameters
+    &#34;&#34;&#34;
+    auth_resp = requests.post(
+        f&#34;{constants.CCT_API_BASE_URL.value}/auth/admin/email/login&#34;,
+        data=get_vault_secret(constants.CCT_API_SECRET_PATH.value)[&#34;data&#34;],
+    )
+    auth_resp.raise_for_status()
+    headers = {&#34;Authorization&#34;: f&#34;Bearer {auth_resp.json()[&#39;token&#39;]}&#34;}
+
+    if start_date is not None and end_date is not None:
+        return headers, [
+            {
+                &#34;dt_inicio&#34;: start_date,
+                &#34;dt_fim&#34;: end_date,
+            }
+        ]
+
+    redis_client = get_redis_client()
+
+    log(f&#34;Getting pending dates on Redis. key = {redis_key}&#34;)
+    redis_return = redis_client.get(redis_key)
+    log(f&#34;Got value from Redis: {redis_return}&#34;)
+
+    if redis_return is None:
+        params = [
+            {
+                &#34;dt_inicio&#34;: &#34;2024-05-09&#34;,
+                &#34;dt_fim&#34;: date.today().isoformat(),
+            }
+        ]
+
+    else:
+        pending_dates = redis_return[&#34;pending_dates&#34;]
+
+        params = get_date_ranges(
+            last_date=redis_return[&#34;last_date&#34;],
+            pending_dates=pending_dates,
+        )
+
+    return headers, params</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.controle_financeiro.tasks.get_cct_arquivo_retorno_redis_key"><code class="name flex">
+<span>def <span class="ident">get_cct_arquivo_retorno_redis_key</span></span>(<span>mode: str) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Gets the key to search and store pending dates on Redis</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>mode</code></strong> :&ensp;<code>str</code></dt>
+<dd>dev or prod</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>Redis key</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_cct_arquivo_retorno_redis_key(mode: str) -&gt; str:
+    &#34;&#34;&#34;
+    Gets the key to search and store pending dates on Redis
+
+    Args:
+        mode (str): dev or prod
+
+    Returns:
+        str: Redis key
+    &#34;&#34;&#34;
+    return (
+        mode
+        + &#34;.&#34;
+        + smtr_constants.CONTROLE_FINANCEIRO_DATASET_ID.value
+        + &#34;.&#34;
+        + constants.ARQUIVO_RETORNO_TABLE_ID.value
+    )</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.controle_financeiro.tasks.get_raw_cct_arquivo_retorno"><code class="name flex">
+<span>def <span class="ident">get_raw_cct_arquivo_retorno</span></span>(<span>headers: dict, params: list[dict], local_filepath: str) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get data from cct api arquivoPublicacao</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>headers</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Request headers</dd>
+<dt><strong><code>params</code></strong> :&ensp;<code>list[dict]</code></dt>
+<dd>List of request query params</dd>
+<dt><strong><code>local_filepath</code></strong> :&ensp;<code>str</code></dt>
+<dd>Path to save the data</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>filepath to raw data</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_raw_cct_arquivo_retorno(
+    headers: dict, params: list[dict], local_filepath: str
+) -&gt; str:
+    &#34;&#34;&#34;
+    Get data from cct api arquivoPublicacao
+
+    Args:
+        headers (dict): Request headers
+        params (list[dict]): List of request query params
+        local_filepath (str): Path to save the data
+
+    Returns:
+        str: filepath to raw data
+    &#34;&#34;&#34;
+    data = []
+    url = f&#34;{constants.CCT_API_BASE_URL.value}/cnab/arquivoPublicacao&#34;
+    for param in params:
+        log(
+            f&#34;&#34;&#34;Getting raw data:
+            url: {url},
+            params: {param}&#34;&#34;&#34;
+        )
+        resp = requests.get(
+            url,
+            headers=headers,
+            params=param,
+        )
+
+        resp.raise_for_status()
+        new_data = resp.json()
+
+        data += new_data
+
+        log(f&#34;returned {len(new_data)} rows&#34;)
+
+    return save_raw_local_func(data=data, filepath=local_filepath)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<form>
+<input id="lunr-search" name="q" placeholder="🔎 Search ..." aria-label="Search"
+disabled minlength="2">
+</form>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.css" integrity="sha512-j1u8eUJ4f23xPPxwOrLUPQaCD2dwzNqqmDDcWS4deWsMv2ohLqmXXuP3hU7g8TyzbMSakP/mMqoNBYWj8AEIFg==" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.js" integrity="sha512-plGUER9JkeEWPPqQBE4sdLqBoQug5Ap+BCGMc7bJ8BXkm+VVj6QzkpBz5Yv2yPkkq+cqg9IpkBaGCas6uDbW8g==" crossorigin></script>
+<style>
+.modal-dialog iframe {
+width: 100vw;
+height: calc(100vh - 80px);
+}
+@media screen and (min-width: 700px) {
+.modal-dialog iframe {
+width: 70vw;
+height: 80vh;
+}
+}
+.modal-dialog .tingle-modal-box {width: auto;}
+.modal-dialog .tingle-modal-box__content {padding: 0;}
+</style>
+<script>
+const input = document.getElementById('lunr-search');
+input.disabled = false;
+input.form.addEventListener('submit', (ev) => {
+ev.preventDefault();
+const url = new URL(window.location);
+url.searchParams.set('q', input.value);
+history.replaceState({}, null, url.toString());
+search(input.value);
+});
+const query = new URL(window.location).searchParams.get('q');
+if (query)
+search(query);
+function search(query) {
+const url = '../../../doc-search.html#' + encodeURIComponent(query);
+new tingle.modal({
+cssClass: ['modal-dialog'],
+onClose: () => {
+const url = new URL(window.location);
+url.searchParams.delete('q');
+history.replaceState({}, null, url.toString());
+setTimeout(() => input.focus(), 100);
+}
+}).setContent('<iframe src="' + url + '"></iframe>').open();
+}
+</script>
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pipelines.rj_smtr.controle_financeiro" href="index.html">pipelines.rj_smtr.controle_financeiro</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pipelines.rj_smtr.controle_financeiro.tasks.cct_arquivo_retorno_save_redis" href="#pipelines.rj_smtr.controle_financeiro.tasks.cct_arquivo_retorno_save_redis">cct_arquivo_retorno_save_redis</a></code></li>
+<li><code><a title="pipelines.rj_smtr.controle_financeiro.tasks.create_cct_arquivo_retorno_params" href="#pipelines.rj_smtr.controle_financeiro.tasks.create_cct_arquivo_retorno_params">create_cct_arquivo_retorno_params</a></code></li>
+<li><code><a title="pipelines.rj_smtr.controle_financeiro.tasks.get_cct_arquivo_retorno_redis_key" href="#pipelines.rj_smtr.controle_financeiro.tasks.get_cct_arquivo_retorno_redis_key">get_cct_arquivo_retorno_redis_key</a></code></li>
+<li><code><a title="pipelines.rj_smtr.controle_financeiro.tasks.get_raw_cct_arquivo_retorno" href="#pipelines.rj_smtr.controle_financeiro.tasks.get_raw_cct_arquivo_retorno">get_raw_cct_arquivo_retorno</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

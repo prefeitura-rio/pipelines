@@ -44,7 +44,7 @@ class constants(Enum):  # pylint: disable=c0103
     PATH_BASE_ENDERECOS = &#34;/tmp/base_enderecos.csv&#34;
     DATASET_ID = &#34;adm_cor_comando&#34;
     TABLE_ID_EVENTOS = &#34;ocorrencias_nova_api&#34;
-    REDIS_NAME = &#34;cor_api_last_days&#34;
+    REDIS_NAME = &#34;last_update&#34;
     TABLE_ID_ATIVIDADES_EVENTOS = &#34;ocorrencias_orgaos_responsaveis_nova_api&#34;
     # TABLE_ID_POPS = &#34;procedimento_operacional_padrao&#34;
     # TABLE_ID_ATIVIDADES_POPS = &#34;procedimento_operacional_padrao_orgaos_responsaveis&#34;
@@ -61,14 +61,16 @@ class constants(Enum):  # pylint: disable=c0103
                 WHEN id_pop = &#34;33&#34; THEN 1 -- &#34;Lâmina d&#39;água&#34;
                 END AS tipo,
                 ST_GEOGPOINT(CAST(longitude AS FLOAT64),
-                CAST(latitude AS FLOAT64)) AS geometry
+                CAST(latitude AS FLOAT64)) AS geometry,
+                status AS status_ocorrencia,
+                data_inicio,
+                data_fim,
+                row_number() OVER (PARTITION BY id_evento ORDER BY created_at DESC) AS last_update
             -- FROM `rj-cor.adm_cor_comando_staging.ocorrencias`
             FROM `rj-cor.adm_cor_comando_staging.ocorrencias_nova_api`
             WHERE id_pop IN (&#34;5&#34;, &#34;6&#34;, &#34;31&#34;, &#34;32&#34;, &#34;33&#34;)
-                AND data_particao &gt;= CAST(DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE), day) AS STRING)
-                AND CAST(data_inicio AS DATETIME) &gt;= TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE)
-                -- AND data_fim IS NULL
-                AND status = &#34;Aberto&#34;
+                AND CAST(data_particao AS DATE) &gt;= CAST(DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE), day) AS date)
+                -- AND data_fim IS NULL # data_fim não está confiável, temos status fechados sem esse campo
             ),
 
             intersected_areas AS (
@@ -99,6 +101,11 @@ class constants(Enum):  # pylint: disable=c0103
             FROM intersected_areas
             LEFT JOIN alagamentos
                 ON ST_CONTAINS(intersected_areas.geometry, alagamentos.geometry)
+                AND alagamentos.last_update = 1
+                -- AND CAST(data_inicio AS DATETIME) &gt;= TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE) -- seleciona ocorrencias que iniciaram nos últimos 15min
+                AND (CAST(data_inicio AS DATETIME) &gt;= TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE)
+                  OR CAST(data_fim AS DATETIME) &gt;= TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE)
+                  OR status_ocorrencia = &#34;Aberto&#34;) -- seleciona ocorrencias que iniciaram ou finalizaram nos últimos 15min ou ainda não finalizaram
             WHERE  intersected_areas.row_num = 1
             GROUP BY id_h3, bairro
             )
@@ -106,7 +113,13 @@ class constants(Enum):  # pylint: disable=c0103
         SELECT
             id_h3,
             bairro,
-            tipo AS qnt_alagamentos,
+            -- tipo AS qnt_alagamentos,
+            CASE
+                WHEN tipo = 3 THEN &#34;Alagamento&#34;
+                WHEN tipo = 2 THEN &#34;Bolsão d&#39;água&#34;
+                WHEN tipo = 1 THEN &#34;Lâmina d&#39;água&#34;
+                ELSE &#34;sem alagamento&#34;
+                END AS qnt_alagamentos,
             CASE
                 WHEN tipo = 3 THEN &#34;extremamente crítico&#34; --&#34;Alagamento&#34;
                 WHEN tipo = 2 THEN &#34;crítico&#34; -- &#34;Bolsão d&#39;água&#34;
@@ -118,8 +131,9 @@ class constants(Enum):  # pylint: disable=c0103
                 WHEN tipo = 2 THEN &#39;#A9CBE8&#39;--&#39;#BFA230&#39;
                 WHEN tipo = 3 THEN &#39;#125999&#39;--&#39;#E0701F&#39;
                 ELSE &#39;#ffffff&#39;
-            END AS color
+            END AS color,
         FROM final_table
+        -- order by qnt_alagamentos
         &#34;&#34;&#34;,
         &#34;query_update&#34;: &#34;&#34;&#34;
             SELECT date_trunc(current_datetime(&#34;America/Sao_Paulo&#34;), minute) AS last_update
@@ -138,15 +152,15 @@ class constants(Enum):  # pylint: disable=c0103
                 WHEN id_pop = &#34;33&#34; THEN 1 -- &#34;Lâmina d&#39;água&#34;
                 END AS tipo,
                 ST_GEOGPOINT(CAST(longitude AS FLOAT64),
-                CAST(latitude AS FLOAT64)) AS geometry
+                CAST(latitude AS FLOAT64)) AS geometry,
+                status AS status_ocorrencia,
+                data_inicio,
+                data_fim,
+                row_number() OVER (PARTITION BY id_evento ORDER BY created_at DESC) AS last_update
             -- FROM `rj-cor.adm_cor_comando_staging.ocorrencias`
             FROM `rj-cor.adm_cor_comando_staging.ocorrencias_nova_api`
             WHERE id_pop IN (&#34;5&#34;, &#34;6&#34;, &#34;31&#34;, &#34;32&#34;, &#34;33&#34;)
-                AND data_particao &gt;= CAST(DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 120 MINUTE), day) AS STRING)
-                AND (CAST(data_fim AS DATETIME) &gt;= TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 120 MINUTE)
-                    -- OR data_fim IS NULL
-                    )
-                AND status = &#34;Aberto&#34;
+            AND CAST(data_particao AS DATE) &gt;= CAST(DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 2 HOUR), day) AS date)
             ),
 
             intersected_areas AS (
@@ -177,6 +191,13 @@ class constants(Enum):  # pylint: disable=c0103
             FROM intersected_areas
             LEFT JOIN alagamentos
                 ON ST_CONTAINS(intersected_areas.geometry, alagamentos.geometry)
+                AND alagamentos.last_update = 1
+                AND (CAST(data_inicio AS DATETIME) &gt;= TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 2 HOUR)
+                  OR CAST(data_fim AS DATETIME) &gt;= TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 2 HOUR)
+                  OR status_ocorrencia = &#34;Aberto&#34;) -- seleciona ocorrencias que iniciaram ou finalizaram nas últimas 2h ou ainda não finalizaram
+                -- AND (CAST(data_fim AS DATETIME) &gt;= TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 24 hour)
+                    -- OR data_fim IS NULL # data_fim não está confiável, temos status fechados sem esse campo
+                    -- )
             WHERE  intersected_areas.row_num = 1
             GROUP BY id_h3, bairro
             )
@@ -203,6 +224,7 @@ class constants(Enum):  # pylint: disable=c0103
                 ELSE &#39;#ffffff&#39;
             END AS color
         FROM final_table
+        # order by qnt_alagamentos
         &#34;&#34;&#34;,
         &#34;query_update&#34;: &#34;&#34;&#34;
             SELECT date_trunc(current_datetime(&#34;America/Sao_Paulo&#34;), minute) AS last_update
@@ -237,7 +259,7 @@ class constants(Enum):  # pylint: disable=c0103
     PATH_BASE_ENDERECOS = &#34;/tmp/base_enderecos.csv&#34;
     DATASET_ID = &#34;adm_cor_comando&#34;
     TABLE_ID_EVENTOS = &#34;ocorrencias_nova_api&#34;
-    REDIS_NAME = &#34;cor_api_last_days&#34;
+    REDIS_NAME = &#34;last_update&#34;
     TABLE_ID_ATIVIDADES_EVENTOS = &#34;ocorrencias_orgaos_responsaveis_nova_api&#34;
     # TABLE_ID_POPS = &#34;procedimento_operacional_padrao&#34;
     # TABLE_ID_ATIVIDADES_POPS = &#34;procedimento_operacional_padrao_orgaos_responsaveis&#34;
@@ -254,14 +276,16 @@ class constants(Enum):  # pylint: disable=c0103
                 WHEN id_pop = &#34;33&#34; THEN 1 -- &#34;Lâmina d&#39;água&#34;
                 END AS tipo,
                 ST_GEOGPOINT(CAST(longitude AS FLOAT64),
-                CAST(latitude AS FLOAT64)) AS geometry
+                CAST(latitude AS FLOAT64)) AS geometry,
+                status AS status_ocorrencia,
+                data_inicio,
+                data_fim,
+                row_number() OVER (PARTITION BY id_evento ORDER BY created_at DESC) AS last_update
             -- FROM `rj-cor.adm_cor_comando_staging.ocorrencias`
             FROM `rj-cor.adm_cor_comando_staging.ocorrencias_nova_api`
             WHERE id_pop IN (&#34;5&#34;, &#34;6&#34;, &#34;31&#34;, &#34;32&#34;, &#34;33&#34;)
-                AND data_particao &gt;= CAST(DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE), day) AS STRING)
-                AND CAST(data_inicio AS DATETIME) &gt;= TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE)
-                -- AND data_fim IS NULL
-                AND status = &#34;Aberto&#34;
+                AND CAST(data_particao AS DATE) &gt;= CAST(DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE), day) AS date)
+                -- AND data_fim IS NULL # data_fim não está confiável, temos status fechados sem esse campo
             ),
 
             intersected_areas AS (
@@ -292,6 +316,11 @@ class constants(Enum):  # pylint: disable=c0103
             FROM intersected_areas
             LEFT JOIN alagamentos
                 ON ST_CONTAINS(intersected_areas.geometry, alagamentos.geometry)
+                AND alagamentos.last_update = 1
+                -- AND CAST(data_inicio AS DATETIME) &gt;= TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE) -- seleciona ocorrencias que iniciaram nos últimos 15min
+                AND (CAST(data_inicio AS DATETIME) &gt;= TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE)
+                  OR CAST(data_fim AS DATETIME) &gt;= TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 15 MINUTE)
+                  OR status_ocorrencia = &#34;Aberto&#34;) -- seleciona ocorrencias que iniciaram ou finalizaram nos últimos 15min ou ainda não finalizaram
             WHERE  intersected_areas.row_num = 1
             GROUP BY id_h3, bairro
             )
@@ -299,7 +328,13 @@ class constants(Enum):  # pylint: disable=c0103
         SELECT
             id_h3,
             bairro,
-            tipo AS qnt_alagamentos,
+            -- tipo AS qnt_alagamentos,
+            CASE
+                WHEN tipo = 3 THEN &#34;Alagamento&#34;
+                WHEN tipo = 2 THEN &#34;Bolsão d&#39;água&#34;
+                WHEN tipo = 1 THEN &#34;Lâmina d&#39;água&#34;
+                ELSE &#34;sem alagamento&#34;
+                END AS qnt_alagamentos,
             CASE
                 WHEN tipo = 3 THEN &#34;extremamente crítico&#34; --&#34;Alagamento&#34;
                 WHEN tipo = 2 THEN &#34;crítico&#34; -- &#34;Bolsão d&#39;água&#34;
@@ -311,8 +346,9 @@ class constants(Enum):  # pylint: disable=c0103
                 WHEN tipo = 2 THEN &#39;#A9CBE8&#39;--&#39;#BFA230&#39;
                 WHEN tipo = 3 THEN &#39;#125999&#39;--&#39;#E0701F&#39;
                 ELSE &#39;#ffffff&#39;
-            END AS color
+            END AS color,
         FROM final_table
+        -- order by qnt_alagamentos
         &#34;&#34;&#34;,
         &#34;query_update&#34;: &#34;&#34;&#34;
             SELECT date_trunc(current_datetime(&#34;America/Sao_Paulo&#34;), minute) AS last_update
@@ -331,15 +367,15 @@ class constants(Enum):  # pylint: disable=c0103
                 WHEN id_pop = &#34;33&#34; THEN 1 -- &#34;Lâmina d&#39;água&#34;
                 END AS tipo,
                 ST_GEOGPOINT(CAST(longitude AS FLOAT64),
-                CAST(latitude AS FLOAT64)) AS geometry
+                CAST(latitude AS FLOAT64)) AS geometry,
+                status AS status_ocorrencia,
+                data_inicio,
+                data_fim,
+                row_number() OVER (PARTITION BY id_evento ORDER BY created_at DESC) AS last_update
             -- FROM `rj-cor.adm_cor_comando_staging.ocorrencias`
             FROM `rj-cor.adm_cor_comando_staging.ocorrencias_nova_api`
             WHERE id_pop IN (&#34;5&#34;, &#34;6&#34;, &#34;31&#34;, &#34;32&#34;, &#34;33&#34;)
-                AND data_particao &gt;= CAST(DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 120 MINUTE), day) AS STRING)
-                AND (CAST(data_fim AS DATETIME) &gt;= TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 120 MINUTE)
-                    -- OR data_fim IS NULL
-                    )
-                AND status = &#34;Aberto&#34;
+            AND CAST(data_particao AS DATE) &gt;= CAST(DATE_TRUNC(TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 2 HOUR), day) AS date)
             ),
 
             intersected_areas AS (
@@ -370,6 +406,13 @@ class constants(Enum):  # pylint: disable=c0103
             FROM intersected_areas
             LEFT JOIN alagamentos
                 ON ST_CONTAINS(intersected_areas.geometry, alagamentos.geometry)
+                AND alagamentos.last_update = 1
+                AND (CAST(data_inicio AS DATETIME) &gt;= TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 2 HOUR)
+                  OR CAST(data_fim AS DATETIME) &gt;= TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 2 HOUR)
+                  OR status_ocorrencia = &#34;Aberto&#34;) -- seleciona ocorrencias que iniciaram ou finalizaram nas últimas 2h ou ainda não finalizaram
+                -- AND (CAST(data_fim AS DATETIME) &gt;= TIMESTAMP_SUB(CURRENT_DATETIME(&#34;America/Sao_Paulo&#34;), INTERVAL 24 hour)
+                    -- OR data_fim IS NULL # data_fim não está confiável, temos status fechados sem esse campo
+                    -- )
             WHERE  intersected_areas.row_num = 1
             GROUP BY id_h3, bairro
             )
@@ -396,6 +439,7 @@ class constants(Enum):  # pylint: disable=c0103
                 ELSE &#39;#ffffff&#39;
             END AS color
         FROM final_table
+        # order by qnt_alagamentos
         &#34;&#34;&#34;,
         &#34;query_update&#34;: &#34;&#34;&#34;
             SELECT date_trunc(current_datetime(&#34;America/Sao_Paulo&#34;), minute) AS last_update

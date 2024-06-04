@@ -32,11 +32,12 @@
 Flows for br_rj_riodejaneiro_onibus_gps
 &#34;&#34;&#34;
 
-from prefect import Parameter, case
+from prefect import Parameter, case, task
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect.utilities.edges import unmapped
+from prefect.tasks.control_flow import merge
 
 
 # EMD Imports #
@@ -63,6 +64,7 @@ from pipelines.rj_smtr.tasks import (
     get_materialization_date_range,
     # get_local_dbt_client,
     get_raw,
+    get_rounded_timestamp,
     parse_timestamp_to_string,
     query_logs,
     save_raw_local,
@@ -76,14 +78,16 @@ from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.tasks import (
     create_api_url_onibus_gps,
     create_api_url_onibus_realocacao,
     pre_treatment_br_rj_riodejaneiro_onibus_realocacao,
+    clean_br_rj_riodejaneiro_onibus_gps,
 )
 
-from pipelines.rj_smtr.schedules import (
-    every_hour_minute_six,
-    every_minute,
-    every_10_minutes,
-)
+# from pipelines.rj_smtr.schedules import (
+#     every_hour_minute_six,
+#     every_minute,
+#     every_10_minutes,
+# )
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
+from pipelines.utils.utils import skip_if_running_handler
 
 # Flows #
 
@@ -107,7 +111,7 @@ with Flow(
     rebuild = Parameter(&#34;rebuild&#34;, False)
 
     # SETUP
-    timestamp = get_current_timestamp()
+    timestamp = get_rounded_timestamp(interval_minutes=10)
 
     rename_flow_run = rename_current_flow_run_now_time(
         prefix=realocacao_sppo.name + &#34;: &#34;, now_time=timestamp
@@ -160,7 +164,7 @@ realocacao_sppo.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-realocacao_sppo.schedule = every_10_minutes
+# realocacao_sppo.schedule = every_10_minutes
 
 
 with Flow(
@@ -182,6 +186,9 @@ with Flow(
     dataset_id = Parameter(&#34;dataset_id&#34;, default=constants.GPS_SPPO_DATASET_ID.value)
     table_id = Parameter(&#34;table_id&#34;, default=constants.GPS_SPPO_TREATED_TABLE_ID.value)
     rebuild = Parameter(&#34;rebuild&#34;, False)
+    rematerialization = Parameter(&#34;rematerialization&#34;, default=False)
+    date_range_start = Parameter(&#34;date_range_start&#34;, default=None)
+    date_range_end = Parameter(&#34;date_range_end&#34;, default=None)
 
     LABELS = get_current_flow_labels()
     MODE = get_current_flow_mode(LABELS)
@@ -192,22 +199,44 @@ with Flow(
     # dbt_client = get_local_dbt_client(host=&#34;localhost&#34;, port=3001)
 
     # Set specific run parameters #
-    date_range = get_materialization_date_range(
-        dataset_id=dataset_id,
-        table_id=table_id,
-        raw_dataset_id=raw_dataset_id,
-        raw_table_id=raw_table_id,
-        table_run_datetime_column_name=&#34;timestamp_gps&#34;,
-        mode=MODE,
-        delay_hours=constants.GPS_SPPO_MATERIALIZE_DELAY_HOURS.value,
-    )
+    with case(rematerialization, False):
+        date_range_false = get_materialization_date_range(
+            dataset_id=dataset_id,
+            table_id=table_id,
+            raw_dataset_id=raw_dataset_id,
+            raw_table_id=raw_table_id,
+            table_run_datetime_column_name=&#34;timestamp_gps&#34;,
+            mode=MODE,
+            delay_hours=constants.GPS_SPPO_MATERIALIZE_DELAY_HOURS.value,
+        )
+
+        RUN_CLEAN_FALSE = task(
+            lambda: [None],
+            checkpoint=False,
+            name=&#34;assign_none_to_previous_runs&#34;,
+        )()
+    with case(rematerialization, True):
+        date_range_true = task(
+            lambda start, end: {
+                &#34;date_range_start&#34;: start,
+                &#34;date_range_end&#34;: end,
+            }
+        )(start=date_range_start, end=date_range_end)
+
+        RUN_CLEAN_TRUE = clean_br_rj_riodejaneiro_onibus_gps(date_range_true)
+
+    RUN_CLEAN = merge(RUN_CLEAN_TRUE, RUN_CLEAN_FALSE)
+
+    date_range = merge(date_range_true, date_range_false)
+
     dataset_sha = fetch_dataset_sha(
         dataset_id=dataset_id,
+        upstream_tasks=[RUN_CLEAN],
     )
 
     # Run materialization #
     with case(rebuild, True):
-        RUN = run_dbt_model(
+        RUN_TRUE = run_dbt_model(
             dbt_client=dbt_client,
             dataset_id=dataset_id,
             table_id=table_id,
@@ -216,15 +245,9 @@ with Flow(
             _vars=[date_range, dataset_sha],
             flags=&#34;--full-refresh&#34;,
         )
-        set_last_run_timestamp(
-            dataset_id=dataset_id,
-            table_id=table_id,
-            timestamp=date_range[&#34;date_range_end&#34;],
-            wait=RUN,
-            mode=MODE,
-        )
+
     with case(rebuild, False):
-        RUN = run_dbt_model(
+        RUN_FALSE = run_dbt_model(
             dbt_client=dbt_client,
             dataset_id=dataset_id,
             table_id=table_id,
@@ -232,7 +255,11 @@ with Flow(
             _vars=[date_range, dataset_sha],
             upstream=True,
         )
-        set_last_run_timestamp(
+
+    RUN = merge(RUN_TRUE, RUN_FALSE)
+
+    with case(rematerialization, False):
+        SET_FALSE = set_last_run_timestamp(
             dataset_id=dataset_id,
             table_id=table_id,
             timestamp=date_range[&#34;date_range_end&#34;],
@@ -240,11 +267,23 @@ with Flow(
             mode=MODE,
         )
 
+    with case(rematerialization, True):
+        SET_TRUE = task(
+            lambda: [None],
+            checkpoint=False,
+            name=&#34;assign_none_to_previous_runs&#34;,
+        )()
+
+    SET = merge(SET_TRUE, SET_FALSE)
+
+    materialize_sppo.set_reference_tasks([RUN, RUN_CLEAN, SET])
+
 materialize_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
 materialize_sppo.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
+materialize_sppo.state_handlers.append(skip_if_running_handler)
 
 
 with Flow(
@@ -307,22 +346,122 @@ captura_sppo_v2.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-captura_sppo_v2.schedule = every_minute
+# captura_sppo_v2.schedule = every_minute
 
+with Flow(
+    &#34;SMTR: GPS SPPO Realocação - Recaptura (subflow)&#34;,
+    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
+) as recaptura_realocacao_sppo:
+    timestamp = Parameter(&#34;timestamp&#34;, default=None)
+    recapture_window_days = Parameter(&#34;recapture_window_days&#34;, default=1)
+
+    # SETUP #
+    LABELS = get_current_flow_labels()
+
+    # Consulta de logs para verificar erros
+    errors, timestamps, previous_errors = query_logs(
+        dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
+        table_id=constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
+        datetime_filter=get_rounded_timestamp(timestamp=timestamp, interval_minutes=10),
+        interval_minutes=10,
+        recapture_window_days=recapture_window_days,
+    )
+
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix=recaptura_realocacao_sppo.name + &#34;: &#34;,
+        now_time=get_now_time(),
+        wait=timestamps,
+    )
+
+    # Em caso de erros, executa a recaptura
+    with case(errors, True):
+        # SETUP #
+        partitions = create_date_hour_partition.map(timestamps)
+        filename = parse_timestamp_to_string.map(timestamps)
+
+        filepath = create_local_partition_path.map(
+            dataset_id=unmapped(constants.GPS_SPPO_RAW_DATASET_ID.value),
+            table_id=unmapped(constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value),
+            filename=filename,
+            partitions=partitions,
+        )
+
+        url = create_api_url_onibus_realocacao.map(timestamp=timestamps)
+
+        # EXTRACT #
+        raw_status = get_raw.map(url)
+
+        raw_filepath = save_raw_local.map(status=raw_status, file_path=filepath)
+
+        # CLEAN #
+        treated_status = pre_treatment_br_rj_riodejaneiro_onibus_realocacao.map(
+            status=raw_status, timestamp=timestamps
+        )
+
+        treated_filepath = save_treated_local.map(
+            status=treated_status, file_path=filepath
+        )
+
+        # LOAD #
+        error = bq_upload.map(
+            dataset_id=unmapped(constants.GPS_SPPO_RAW_DATASET_ID.value),
+            table_id=unmapped(constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value),
+            filepath=treated_filepath,
+            raw_filepath=raw_filepath,
+            partitions=partitions,
+            status=treated_status,
+        )
+
+        upload_logs_to_bq.map(
+            dataset_id=unmapped(constants.GPS_SPPO_RAW_DATASET_ID.value),
+            parent_table_id=unmapped(constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value),
+            error=error,
+            previous_error=previous_errors,
+            timestamp=timestamps,
+            recapture=unmapped(True),
+        )
+
+recaptura_realocacao_sppo.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+recaptura_realocacao_sppo.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
 
 with Flow(
     &#34;SMTR: GPS SPPO - Tratamento&#34;, code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;]
 ) as recaptura:
     version = Parameter(&#34;version&#34;, default=2)
-    datetime_filter = Parameter(&#34;datetime_filter&#34;, default=None)
+    datetime_filter_gps = Parameter(&#34;datetime_filter_gps&#34;, default=None)
     materialize = Parameter(&#34;materialize&#34;, default=True)
     # SETUP #
     LABELS = get_current_flow_labels()
 
+    rounded_timestamp = get_rounded_timestamp(interval_minutes=60)
+    rounded_timestamp_str = parse_timestamp_to_string(
+        timestamp=rounded_timestamp, pattern=&#34;%Y-%m-%d %H:%M:%S&#34;
+    )
+
+    # roda o subflow de recaptura da realocação
+    run_recaptura_realocacao_sppo = create_flow_run(
+        flow_name=recaptura_realocacao_sppo.name,
+        project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+        labels=LABELS,
+        run_name=recaptura_realocacao_sppo.name,
+        parameters={&#34;timestamp&#34;: rounded_timestamp_str},
+    )
+
+    wait_recaptura_realocacao_sppo = wait_for_flow_run(
+        run_recaptura_realocacao_sppo,
+        stream_states=True,
+        stream_logs=True,
+        raise_final_state=True,
+    )
+
     errors, timestamps, previous_errors = query_logs(
         dataset_id=constants.GPS_SPPO_RAW_DATASET_ID.value,
         table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
-        datetime_filter=datetime_filter,
+        datetime_filter=datetime_filter_gps,
+        upstream_tasks=[wait_recaptura_realocacao_sppo],
     )
 
     rename_flow_run = rename_current_flow_run_now_time(
@@ -415,7 +554,10 @@ recaptura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-recaptura.schedule = every_hour_minute_six</code></pre>
+
+recaptura.state_handlers.append(skip_if_running_handler)
+
+# recaptura.schedule = every_hour_minute_six</code></pre>
 </details>
 </section>
 <section>
@@ -423,6 +565,48 @@ recaptura.schedule = every_hour_minute_six</code></pre>
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.flows.RUN_CLEAN_FALSE"><code class="name flex">
+<span>def <span class="ident">RUN_CLEAN_FALSE</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">lambda: [None],</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.flows.SET_TRUE"><code class="name flex">
+<span>def <span class="ident">SET_TRUE</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">lambda: [None],</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.flows.date_range_true"><code class="name flex">
+<span>def <span class="ident">date_range_true</span></span>(<span>start, end)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">lambda start, end: {
+    &#34;date_range_start&#34;: start,
+    &#34;date_range_end&#34;: end,
+}</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -482,6 +666,13 @@ setTimeout(() => input.focus(), 100);
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps" href="index.html">pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.flows.RUN_CLEAN_FALSE" href="#pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.flows.RUN_CLEAN_FALSE">RUN_CLEAN_FALSE</a></code></li>
+<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.flows.SET_TRUE" href="#pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.flows.SET_TRUE">SET_TRUE</a></code></li>
+<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.flows.date_range_true" href="#pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps.flows.date_range_true">date_range_true</a></code></li>
 </ul>
 </li>
 </ul>

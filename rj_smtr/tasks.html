@@ -142,7 +142,7 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
 
     if refresh:
         log(&#34;Running in full refresh mode&#34;)
-        log(f&#34;DBT will run the following command:\n{run_command+&#39; --full-refresh&#39;}&#34;)
+        log(f&#34;DBT will run the following command:\n{run_command + &#39; --full-refresh&#39;}&#34;)
         dbt_client.cli(run_command + &#34; --full-refresh&#34;, sync=True)
         last_mat_date = get_table_min_max_value(
             query_project_id, dataset_id, mat_table_id, field_name, &#34;max&#34;
@@ -253,7 +253,7 @@ def create_dbt_run_vars(
             day_datetime=timestamp,
         )
 
-        final_vars.append([d.copy() for d in date_var])
+        final_vars += [d.copy() for d in date_var]
 
         log(f&#34;run_date created: {date_var}&#34;)
 
@@ -824,6 +824,29 @@ def create_request_params(
         request_url = get_vault_secret(extract_params[&#34;secret_path&#34;])[&#34;data&#34;][
             &#34;request_url&#34;
         ]
+    elif dataset_id == constants.VIAGEM_ZIRIX_RAW_DATASET_ID.value:
+        request_url = f&#34;{constants.ZIRIX_BASE_URL.value}/EnvioViagensConsolidadas&#34;
+        delay_minutes = extract_params[&#34;delay_minutes&#34;]
+        token = get_vault_secret(constants.ZIRIX_API_SECRET_PATH.value)[&#34;data&#34;]
+        token_key = list(token)[0]
+        request_params = {
+            &#34;data_inicial&#34;: (
+                timestamp - timedelta(minutes=delay_minutes + interval_minutes)
+            ).strftime(&#34;%Y-%m-%d %H:%M:%S&#34;),
+            &#34;data_final&#34;: (timestamp - timedelta(minutes=delay_minutes)).strftime(
+                &#34;%Y-%m-%d %H:%M:%S&#34;
+            ),
+            token_key: get_vault_secret(constants.ZIRIX_API_SECRET_PATH.value)[&#34;data&#34;][
+                token_key
+            ],
+        }
+        log(
+            f&#34;&#34;&#34;Params:
+            data_inicial: {request_params[&#39;data_inicial&#39;]}
+            data_final: {request_params[&#39;data_final&#39;]}&#34;&#34;&#34;
+        )
+    elif dataset_id == constants.CONTROLE_FINANCEIRO_DATASET_ID.value:
+        request_url = extract_params[&#34;base_url&#34;] + extract_params[&#34;sheet_id&#34;]
 
     return request_params, request_url
 
@@ -1463,6 +1486,13 @@ def transform_raw_to_nested_structure(
                         for col in data.columns[data.dtypes == &#34;object&#34;].to_list():
                             data[col] = data[col].str.strip()
 
+                    if (
+                        constants.GTFS_DATASET_ID.value in raw_filepath
+                        and &#34;ordem_servico&#34; in raw_filepath
+                        and &#34;tipo_os&#34; not in data.columns
+                    ):
+                        data[&#34;tipo_os&#34;] = &#34;Regular&#34;
+
                     log(
                         f&#34;Finished cleaning! Data:\n{data_info_str(data)}&#34;, level=&#34;info&#34;
                     )
@@ -1474,7 +1504,11 @@ def transform_raw_to_nested_structure(
                         data.groupby(pk_cols)
                         .apply(
                             lambda x: x[data.columns.difference(pk_cols)].to_json(
-                                orient=&#34;records&#34;
+                                orient=&#34;records&#34;,
+                                force_ascii=(
+                                    constants.CONTROLE_FINANCEIRO_DATASET_ID.value
+                                    not in raw_filepath
+                                ),
                             )
                         )
                         .str.strip(&#34;[]&#34;)
@@ -1846,7 +1880,7 @@ def build_incremental_model(  # pylint: disable=too-many-arguments
 
     if refresh:
         log(&#34;Running in full refresh mode&#34;)
-        log(f&#34;DBT will run the following command:\n{run_command+&#39; --full-refresh&#39;}&#34;)
+        log(f&#34;DBT will run the following command:\n{run_command + &#39; --full-refresh&#39;}&#34;)
         dbt_client.cli(run_command + &#34; --full-refresh&#34;, sync=True)
         last_mat_date = get_table_min_max_value(
             query_project_id, dataset_id, mat_table_id, field_name, &#34;max&#34;
@@ -2110,7 +2144,7 @@ def create_dbt_run_vars(
             day_datetime=timestamp,
         )
 
-        final_vars.append([d.copy() for d in date_var])
+        final_vars += [d.copy() for d in date_var]
 
         log(f&#34;run_date created: {date_var}&#34;)
 
@@ -2386,6 +2420,29 @@ def create_request_params(
         request_url = get_vault_secret(extract_params[&#34;secret_path&#34;])[&#34;data&#34;][
             &#34;request_url&#34;
         ]
+    elif dataset_id == constants.VIAGEM_ZIRIX_RAW_DATASET_ID.value:
+        request_url = f&#34;{constants.ZIRIX_BASE_URL.value}/EnvioViagensConsolidadas&#34;
+        delay_minutes = extract_params[&#34;delay_minutes&#34;]
+        token = get_vault_secret(constants.ZIRIX_API_SECRET_PATH.value)[&#34;data&#34;]
+        token_key = list(token)[0]
+        request_params = {
+            &#34;data_inicial&#34;: (
+                timestamp - timedelta(minutes=delay_minutes + interval_minutes)
+            ).strftime(&#34;%Y-%m-%d %H:%M:%S&#34;),
+            &#34;data_final&#34;: (timestamp - timedelta(minutes=delay_minutes)).strftime(
+                &#34;%Y-%m-%d %H:%M:%S&#34;
+            ),
+            token_key: get_vault_secret(constants.ZIRIX_API_SECRET_PATH.value)[&#34;data&#34;][
+                token_key
+            ],
+        }
+        log(
+            f&#34;&#34;&#34;Params:
+            data_inicial: {request_params[&#39;data_inicial&#39;]}
+            data_final: {request_params[&#39;data_final&#39;]}&#34;&#34;&#34;
+        )
+    elif dataset_id == constants.CONTROLE_FINANCEIRO_DATASET_ID.value:
+        request_url = extract_params[&#34;base_url&#34;] + extract_params[&#34;sheet_id&#34;]
 
     return request_params, request_url</code></pre>
 </details>
@@ -3519,6 +3576,13 @@ def transform_raw_to_nested_structure(
                         for col in data.columns[data.dtypes == &#34;object&#34;].to_list():
                             data[col] = data[col].str.strip()
 
+                    if (
+                        constants.GTFS_DATASET_ID.value in raw_filepath
+                        and &#34;ordem_servico&#34; in raw_filepath
+                        and &#34;tipo_os&#34; not in data.columns
+                    ):
+                        data[&#34;tipo_os&#34;] = &#34;Regular&#34;
+
                     log(
                         f&#34;Finished cleaning! Data:\n{data_info_str(data)}&#34;, level=&#34;info&#34;
                     )
@@ -3530,7 +3594,11 @@ def transform_raw_to_nested_structure(
                         data.groupby(pk_cols)
                         .apply(
                             lambda x: x[data.columns.difference(pk_cols)].to_json(
-                                orient=&#34;records&#34;
+                                orient=&#34;records&#34;,
+                                force_ascii=(
+                                    constants.CONTROLE_FINANCEIRO_DATASET_ID.value
+                                    not in raw_filepath
+                                ),
                             )
                         )
                         .str.strip(&#34;[]&#34;)

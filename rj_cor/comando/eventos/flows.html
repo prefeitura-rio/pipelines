@@ -51,7 +51,9 @@ from pipelines.rj_cor.comando.eventos.tasks import (
     download_data_atividades,
     get_date_interval,
     get_redis_df,
+    get_redis_max_date,
     save_data,
+    save_redis_max_date,
     treat_data_ocorrencias,
     treat_data_atividades,
 )
@@ -113,34 +115,17 @@ with Flow(
 
     dfr = download_data_ocorrencias(first_date, last_date)
 
-    dfr_redis = get_redis_df(
+    redis_max_date = get_redis_max_date(
         dataset_id=dataset_id,
         table_id=table_id,
         name=redis_name,
         mode=redis_mode,
     )
 
-    dfr_treated, dfr_redis = treat_data_ocorrencias(
+    dfr_treated, redis_max_date = treat_data_ocorrencias(
         dfr,
-        dfr_redis=dfr_redis,
-        columns=[&#34;id_evento&#34;, &#34;data_inicio&#34;, &#34;status&#34;],
+        redis_max_date,
     )
-
-    # dfr = compare_actual_df_with_redis_df(
-    #     dfr,
-    #     dfr_redis=dfr_redis,
-    #     columns=columns,
-
-    # )
-
-    # save_redis_df(
-    #     dfr_redis,
-    #     dataset_id,
-    #     table_id,
-    #     redis_name,
-    #     keep_n_days=1,
-    #     mode = mode,
-    # )
 
     path = save_data(dfr_treated)
     task_upload = create_table_and_upload_to_gcs(
@@ -151,6 +136,17 @@ with Flow(
         biglake_table=False,
         wait=path,
     )
+
+    save_redis_max_date(
+        dataset_id=dataset_id,
+        table_id=table_id,
+        name=redis_name,
+        mode=redis_mode,
+        redis_max_date=redis_max_date,
+        wait=task_upload,
+    )
+
+    # save_redis_max_date.set_upstream(task_upload)
 
     # Warning: this task won&#39;t execute if we provide a date interval
     # on parameters. The reason this happens is for if we want to

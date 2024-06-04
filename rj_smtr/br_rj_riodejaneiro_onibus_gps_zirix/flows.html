@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_smtr.veiculo.flows API documentation</title>
-<meta name="description" content="Flows for veiculos" />
+<title>pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps_zirix.flows API documentation</title>
+<meta name="description" content="Flows for br_rj_riodejaneiro_onibus_gps" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,310 +19,396 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_smtr.veiculo.flows</code></h1>
+<h1 class="title">Module <code>pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps_zirix.flows</code></h1>
 </header>
 <section id="section-intro">
-<p>Flows for veiculos</p>
+<p>Flows for br_rj_riodejaneiro_onibus_gps</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
-# pylint: disable=W0511
 &#34;&#34;&#34;
-Flows for veiculos
+Flows for br_rj_riodejaneiro_onibus_gps
 &#34;&#34;&#34;
-
-from copy import deepcopy
-from prefect import Parameter
-from prefect.tasks.control_flow import ifelse, merge
+from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
+
+from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect.utilities.edges import unmapped
+
 
 # EMD Imports #
 
 from pipelines.constants import constants as emd_constants
-from pipelines.utils.decorators import Flow
-from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
-from pipelines.utils.utils import set_default_parameters
-
 from pipelines.utils.tasks import (
     rename_current_flow_run_now_time,
+    get_now_time,
     get_current_flow_mode,
     get_current_flow_labels,
 )
+from pipelines.utils.decorators import Flow
+
+from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
 
 # SMTR Imports #
 
 from pipelines.rj_smtr.constants import constants
 
-from pipelines.rj_smtr.schedules import (
-    every_day_hour_seven,
+from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps_zirix.constants import (
+    constants as zirix_constants,
 )
+
 from pipelines.rj_smtr.tasks import (
     create_date_hour_partition,
     create_local_partition_path,
+    fetch_dataset_sha,
     get_current_timestamp,
+    get_materialization_date_range,
+    # get_local_dbt_client,
+    get_raw,
     parse_timestamp_to_string,
+    query_logs,
     save_raw_local,
     save_treated_local,
+    set_last_run_timestamp,
     upload_logs_to_bq,
     bq_upload,
-    fetch_dataset_sha,
-    get_run_dates,
-    get_join_dict,
-    get_previous_date,
+)
+from pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps_zirix.tasks import (
+    pre_treatment_br_rj_riodejaneiro_onibus_gps,
+    create_api_url_onibus_gps,
+    create_api_url_onibus_realocacao,
+    pre_treatment_br_rj_riodejaneiro_onibus_realocacao,
 )
 
-from pipelines.rj_smtr.veiculo.tasks import (
-    get_raw_ftp,
-    pre_treatment_sppo_licenciamento,
-    pre_treatment_sppo_infracao,
-    get_veiculo_raw_storage,
+from pipelines.rj_smtr.schedules import (
+    every_hour_minute_six,
+    every_minute,
+    every_10_minutes,
 )
 
 from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
-from pipelines.rj_smtr.flows import default_capture_flow
-
 # Flows #
 
-# flake8: noqa: E501
 with Flow(
-    f&#34;SMTR: {constants.VEICULO_DATASET_ID.value} {constants.SPPO_LICENCIAMENTO_TABLE_ID.value} - Captura&#34;,
+    &#34;SMTR: GPS SPPO Realocação Zirix - Captura&#34;,
     code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
-) as sppo_licenciamento_captura:
-    timestamp = Parameter(&#34;timestamp&#34;, default=None)
-    get_from_storage = Parameter(&#34;get_from_storage&#34;, default=False)
+) as realocacao_sppo_zirix:
+    # SETUP #
 
-    timestamp = get_current_timestamp(timestamp=timestamp)
+    # SETUP
+    timestamp = get_current_timestamp()
 
-    LABELS = get_current_flow_labels()
-    MODE = get_current_flow_mode(LABELS)
-
-    # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=f&#34;{sppo_licenciamento_captura.name} - &#34;, now_time=timestamp
+        prefix=realocacao_sppo_zirix.name + &#34;: &#34;, now_time=timestamp
     )
 
-    # SETUP #
-    partitions = create_date_hour_partition(timestamp, partition_date_only=True)
+    partitions = create_date_hour_partition(timestamp)
 
     filename = parse_timestamp_to_string(timestamp)
 
     filepath = create_local_partition_path(
-        dataset_id=constants.VEICULO_DATASET_ID.value,
-        table_id=constants.SPPO_LICENCIAMENTO_TABLE_ID.value,
+        dataset_id=zirix_constants.GPS_SPPO_ZIRIX_RAW_DATASET_ID.value,
+        table_id=constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
         filename=filename,
         partitions=partitions,
     )
 
-    # EXTRACT
-    raw_status_gcs = get_veiculo_raw_storage(
-        dataset_id=constants.VEICULO_DATASET_ID.value,
-        table_id=constants.SPPO_LICENCIAMENTO_TABLE_ID.value,
-        timestamp=timestamp,
-        csv_args=constants.SPPO_LICENCIAMENTO_CSV_ARGS.value,
-    )
+    url = create_api_url_onibus_realocacao(timestamp=timestamp)
 
-    raw_status_url = get_raw_ftp(
-        ftp_path=&#34;LICENCIAMENTO/CadastrodeVeiculos&#34;,
-        filetype=&#34;txt&#34;,
-        csv_args=constants.SPPO_LICENCIAMENTO_CSV_ARGS.value,
-        timestamp=timestamp,
-    )
-
-    ifelse(get_from_storage.is_equal(True), raw_status_gcs, raw_status_url)
-
-    raw_status = merge(raw_status_gcs, raw_status_url)
+    # EXTRACT #
+    raw_status = get_raw(url)
 
     raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
 
-    # TREAT
-    treated_status = pre_treatment_sppo_licenciamento(
+    # CLEAN #
+    treated_status = pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
         status=raw_status, timestamp=timestamp
     )
 
     treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
 
-    # LOAD
+    # LOAD #
     error = bq_upload(
-        dataset_id=constants.VEICULO_DATASET_ID.value,
-        table_id=constants.SPPO_LICENCIAMENTO_TABLE_ID.value,
+        dataset_id=zirix_constants.GPS_SPPO_ZIRIX_RAW_DATASET_ID.value,
+        table_id=constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
         filepath=treated_filepath,
         raw_filepath=raw_filepath,
         partitions=partitions,
         status=treated_status,
     )
+
     upload_logs_to_bq(
-        dataset_id=constants.VEICULO_DATASET_ID.value,
-        parent_table_id=constants.SPPO_LICENCIAMENTO_TABLE_ID.value,
-        timestamp=timestamp,
+        dataset_id=zirix_constants.GPS_SPPO_ZIRIX_RAW_DATASET_ID.value,
+        parent_table_id=constants.GPS_SPPO_REALOCACAO_RAW_TABLE_ID.value,
         error=error,
-    )
-    sppo_licenciamento_captura.set_dependencies(
-        task=partitions, upstream_tasks=[rename_flow_run]
+        timestamp=timestamp,
     )
 
-sppo_licenciamento_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-sppo_licenciamento_captura.run_config = KubernetesRun(
+realocacao_sppo_zirix.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+realocacao_sppo_zirix.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-sppo_licenciamento_captura.schedule = every_day_hour_seven
+realocacao_sppo_zirix.schedule = every_10_minutes
+
 
 with Flow(
-    f&#34;SMTR: {constants.VEICULO_DATASET_ID.value} {constants.SPPO_INFRACAO_TABLE_ID.value} - Captura&#34;,
+    &#34;SMTR: GPS SPPO Zirix - Materialização (subflow)&#34;,
     code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
-) as sppo_infracao_captura:
-    timestamp = Parameter(&#34;timestamp&#34;, default=None)
-    get_from_storage = Parameter(&#34;get_from_storage&#34;, default=False)
-
-    timestamp = get_current_timestamp(timestamp=timestamp)
-
-    LABELS = get_current_flow_labels()
-    MODE = get_current_flow_mode(LABELS)
-
+) as materialize_sppo_zirix:
     # Rename flow run
     rename_flow_run = rename_current_flow_run_now_time(
-        prefix=f&#34;{sppo_infracao_captura.name} - &#34;, now_time=timestamp
+        prefix=materialize_sppo_zirix.name + &#34;: &#34;, now_time=get_now_time()
     )
-
-    # SETUP #
-    partitions = create_date_hour_partition(timestamp, partition_date_only=True)
-
-    filename = parse_timestamp_to_string(timestamp)
-
-    filepath = create_local_partition_path(
-        dataset_id=constants.VEICULO_DATASET_ID.value,
-        table_id=constants.SPPO_INFRACAO_TABLE_ID.value,
-        filename=filename,
-        partitions=partitions,
-    )
-
-    # EXTRACT
-    raw_status_gcs = get_veiculo_raw_storage(
-        dataset_id=constants.VEICULO_DATASET_ID.value,
-        table_id=constants.SPPO_INFRACAO_TABLE_ID.value,
-        timestamp=timestamp,
-        csv_args=constants.SPPO_INFRACAO_CSV_ARGS.value,
-    )
-    raw_status_url = get_raw_ftp(
-        ftp_path=&#34;MULTAS/MULTAS&#34;,
-        filetype=&#34;txt&#34;,
-        csv_args=constants.SPPO_INFRACAO_CSV_ARGS.value,
-        timestamp=timestamp,
-    )
-    ifelse(get_from_storage.is_equal(True), raw_status_gcs, raw_status_url)
-
-    raw_status = merge(raw_status_gcs, raw_status_url)
-
-    raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
-
-    # TREAT
-    treated_status = pre_treatment_sppo_infracao(status=raw_status, timestamp=timestamp)
-
-    treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
-
-    # LOAD
-    error = bq_upload(
-        dataset_id=constants.VEICULO_DATASET_ID.value,
-        table_id=constants.SPPO_INFRACAO_TABLE_ID.value,
-        filepath=treated_filepath,
-        raw_filepath=raw_filepath,
-        partitions=partitions,
-        status=treated_status,
-    )
-    upload_logs_to_bq(
-        dataset_id=constants.VEICULO_DATASET_ID.value,
-        parent_table_id=constants.SPPO_INFRACAO_TABLE_ID.value,
-        timestamp=timestamp,
-        error=error,
-    )
-    sppo_infracao_captura.set_dependencies(
-        task=partitions, upstream_tasks=[rename_flow_run]
-    )
-
-sppo_infracao_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-sppo_infracao_captura.run_config = KubernetesRun(
-    image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
-)
-sppo_infracao_captura.schedule = every_day_hour_seven
-
-# flake8: noqa: E501
-with Flow(
-    f&#34;SMTR: {constants.VEICULO_DATASET_ID.value} {constants.SPPO_VEICULO_DIA_TABLE_ID.value} - Materialização (subflow)&#34;,
-    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
-) as sppo_veiculo_dia:
-    # 1. SETUP #
 
     # Get default parameters #
-    start_date = Parameter(&#34;start_date&#34;, default=get_previous_date.run(1))
-    end_date = Parameter(&#34;end_date&#34;, default=get_previous_date.run(1))
-    stu_data_versao = Parameter(&#34;stu_data_versao&#34;, default=&#34;&#34;)
-
-    run_dates = get_run_dates(start_date, end_date)
-
-    # Rename flow run #
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix=sppo_veiculo_dia.name + &#34;: &#34;,
-        now_time=run_dates,
+    raw_dataset_id = Parameter(
+        &#34;raw_dataset_id&#34;, default=zirix_constants.GPS_SPPO_ZIRIX_RAW_DATASET_ID.value
     )
+    raw_table_id = Parameter(
+        &#34;raw_table_id&#34;, default=constants.GPS_SPPO_RAW_TABLE_ID.value
+    )
+    dataset_id = Parameter(
+        &#34;dataset_id&#34;, default=zirix_constants.GPS_SPPO_ZIRIX_RAW_DATASET_ID.value
+    )
+    table_id = Parameter(
+        &#34;table_id&#34;, default=zirix_constants.GPS_SPPO_ZIRIX_TREATED_TABLE_ID.value
+    )
+    rebuild = Parameter(&#34;rebuild&#34;, False)
 
-    # Set dbt client #
     LABELS = get_current_flow_labels()
     MODE = get_current_flow_mode(LABELS)
 
+    # Set dbt client #
     dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
     # Use the command below to get the dbt client in dev mode:
     # dbt_client = get_local_dbt_client(host=&#34;localhost&#34;, port=3001)
 
-    # Get models version #
-    # TODO: include version in a column in the table
+    # Set specific run parameters #
+    date_range = get_materialization_date_range(
+        dataset_id=dataset_id,
+        table_id=&#34;gps_sppo&#34;,
+        raw_dataset_id=raw_dataset_id,
+        raw_table_id=raw_table_id,
+        table_run_datetime_column_name=&#34;timestamp_gps&#34;,
+        mode=MODE,
+        delay_hours=constants.GPS_SPPO_MATERIALIZE_DELAY_HOURS.value,
+    )
     dataset_sha = fetch_dataset_sha(
-        dataset_id=constants.VEICULO_DATASET_ID.value,
+        dataset_id=dataset_id,
     )
 
-    dict_list = get_join_dict(dict_list=run_dates, new_dict=dataset_sha)
-    _vars = get_join_dict(
-        dict_list=dict_list, new_dict={&#34;stu_data_versao&#34;: stu_data_versao}
-    )
+    # Run materialization #
+    with case(rebuild, True):
+        RUN = run_dbt_model(
+            dbt_client=dbt_client,
+            dataset_id=dataset_id,
+            table_id=table_id,
+            upstream=True,
+            exclude=&#34;+data_versao_efetiva&#34;,
+            _vars=[date_range, dataset_sha],
+            flags=&#34;--full-refresh&#34;,
+        )
+        set_last_run_timestamp(
+            dataset_id=dataset_id,
+            table_id=table_id,
+            timestamp=date_range[&#34;date_range_end&#34;],
+            wait=RUN,
+            mode=MODE,
+        )
+    with case(rebuild, False):
+        RUN = run_dbt_model(
+            dbt_client=dbt_client,
+            dataset_id=dataset_id,
+            table_id=table_id,
+            exclude=&#34;+data_versao_efetiva&#34;,
+            _vars=[date_range, dataset_sha],
+            upstream=True,
+        )
+        set_last_run_timestamp(
+            dataset_id=dataset_id,
+            table_id=table_id,
+            timestamp=date_range[&#34;date_range_end&#34;],
+            wait=RUN,
+            mode=MODE,
+        )
 
-    # 2. TREAT #
-    run_dbt_model.map(
-        dbt_client=unmapped(dbt_client),
-        dataset_id=unmapped(constants.VEICULO_DATASET_ID.value),
-        table_id=unmapped(constants.SPPO_VEICULO_DIA_TABLE_ID.value),
-        upstream=unmapped(True),
-        exclude=unmapped(&#34;+gps_sppo&#34;),
-        _vars=_vars,
-    )
-
-sppo_veiculo_dia.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-sppo_veiculo_dia.run_config = KubernetesRun(
+materialize_sppo_zirix.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+materialize_sppo_zirix.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
-veiculo_sppo_registro_agente_verao_captura = deepcopy(default_capture_flow)
-veiculo_sppo_registro_agente_verao_captura.name = f&#34;SMTR: {constants.VEICULO_DATASET_ID.value} {constants.SPPO_REGISTRO_AGENTE_VERAO_PARAMS.value[&#39;table_id&#39;]} - Captura&#34;
-veiculo_sppo_registro_agente_verao_captura.storage = GCS(
-    emd_constants.GCS_FLOWS_BUCKET.value
-)
-veiculo_sppo_registro_agente_verao_captura.run_config = KubernetesRun(
+
+with Flow(
+    &#34;SMTR: GPS SPPO Zirix - Captura&#34;,
+    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
+) as captura_sppo_zirix:
+    # SETUP #
+    timestamp = get_current_timestamp()
+
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix=captura_sppo_zirix.name + &#34;: &#34;, now_time=timestamp
+    )
+
+    partitions = create_date_hour_partition(timestamp)
+
+    filename = parse_timestamp_to_string(timestamp)
+
+    filepath = create_local_partition_path(
+        dataset_id=zirix_constants.GPS_SPPO_ZIRIX_RAW_DATASET_ID.value,
+        table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
+        filename=filename,
+        partitions=partitions,
+    )
+
+    url = create_api_url_onibus_gps(timestamp=timestamp)
+
+    # EXTRACT #
+    raw_status = get_raw(url)
+
+    raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
+
+    # CLEAN #
+    treated_status = pre_treatment_br_rj_riodejaneiro_onibus_gps(
+        status=raw_status, timestamp=timestamp, version=2
+    )
+
+    treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
+
+    # LOAD #
+    error = bq_upload(
+        dataset_id=zirix_constants.GPS_SPPO_ZIRIX_RAW_DATASET_ID.value,
+        table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
+        filepath=treated_filepath,
+        raw_filepath=raw_filepath,
+        partitions=partitions,
+        status=treated_status,
+    )
+
+    upload_logs_to_bq(
+        dataset_id=zirix_constants.GPS_SPPO_ZIRIX_RAW_DATASET_ID.value,
+        parent_table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
+        error=error,
+        timestamp=timestamp,
+    )
+
+captura_sppo_zirix.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+captura_sppo_zirix.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-veiculo_sppo_registro_agente_verao_captura.storage = GCS(
-    emd_constants.GCS_FLOWS_BUCKET.value
+captura_sppo_zirix.schedule = every_minute
+
+
+with Flow(
+    &#34;SMTR: GPS SPPO Zirix - Tratamento&#34;,
+    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
+) as recaptura_zirix:
+    datetime_filter = Parameter(&#34;datetime_filter&#34;, default=None)
+    materialize = Parameter(&#34;materialize&#34;, default=True)
+    # SETUP #
+    LABELS = get_current_flow_labels()
+
+    errors, timestamps, previous_errors = query_logs(
+        dataset_id=zirix_constants.GPS_SPPO_ZIRIX_RAW_DATASET_ID.value,
+        table_id=constants.GPS_SPPO_RAW_TABLE_ID.value,
+        datetime_filter=datetime_filter,
+    )
+
+    rename_flow_run = rename_current_flow_run_now_time(
+        prefix=recaptura_zirix.name + &#34;: &#34;, now_time=get_now_time(), wait=timestamps
+    )
+    with case(errors, False):
+        with case(materialize, True):
+            materialize_no_error = create_flow_run(
+                flow_name=materialize_sppo_zirix.name,
+                project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+                labels=LABELS,
+                run_name=materialize_sppo_zirix.name,
+            )
+            wait_materialize_no_error = wait_for_flow_run(
+                materialize_no_error,
+                stream_states=True,
+                stream_logs=True,
+                raise_final_state=True,
+            )
+    with case(errors, True):
+        # SETUP #
+        partitions = create_date_hour_partition.map(timestamps)
+        filename = parse_timestamp_to_string.map(timestamps)
+
+        filepath = create_local_partition_path.map(
+            dataset_id=unmapped(zirix_constants.GPS_SPPO_ZIRIX_RAW_DATASET_ID.value),
+            table_id=unmapped(constants.GPS_SPPO_RAW_TABLE_ID.value),
+            filename=filename,
+            partitions=partitions,
+        )
+
+        url = create_api_url_onibus_gps.map(timestamp=timestamps)
+
+        # EXTRACT #
+        raw_status = get_raw.map(url)
+
+        raw_filepath = save_raw_local.map(status=raw_status, file_path=filepath)
+
+        # # CLEAN #
+        trated_status = pre_treatment_br_rj_riodejaneiro_onibus_gps.map(
+            status=raw_status,
+            timestamp=timestamps,
+            version=unmapped(2),
+        )
+
+        treated_filepath = save_treated_local.map(
+            status=trated_status, file_path=filepath
+        )
+
+        # # LOAD #
+        error = bq_upload.map(
+            dataset_id=unmapped(zirix_constants.GPS_SPPO_ZIRIX_RAW_DATASET_ID.value),
+            table_id=unmapped(constants.GPS_SPPO_RAW_TABLE_ID.value),
+            filepath=treated_filepath,
+            raw_filepath=raw_filepath,
+            partitions=partitions,
+            status=trated_status,
+        )
+
+        UPLOAD_LOGS = upload_logs_to_bq.map(
+            dataset_id=unmapped(zirix_constants.GPS_SPPO_ZIRIX_RAW_DATASET_ID.value),
+            parent_table_id=unmapped(constants.GPS_SPPO_RAW_TABLE_ID.value),
+            error=error,
+            previous_error=previous_errors,
+            timestamp=timestamps,
+            recapture=unmapped(True),
+        )
+        with case(materialize, True):
+            run_materialize = create_flow_run(
+                flow_name=materialize_sppo_zirix.name,
+                project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+                labels=LABELS,
+                run_name=materialize_sppo_zirix.name,
+            )
+            wait_materialize = wait_for_flow_run(
+                run_materialize,
+                stream_states=True,
+                stream_logs=True,
+                raise_final_state=True,
+            )
+    recaptura_zirix.set_dependencies(
+        task=run_materialize,
+        upstream_tasks=[UPLOAD_LOGS],
+    )
+
+recaptura_zirix.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+recaptura_zirix.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-veiculo_sppo_registro_agente_verao_captura = set_default_parameters(
-    flow=veiculo_sppo_registro_agente_verao_captura,
-    default_parameters=constants.SPPO_REGISTRO_AGENTE_VERAO_PARAMS.value,
-)
-veiculo_sppo_registro_agente_verao_captura.schedule = every_day_hour_seven</code></pre>
+recaptura_zirix.schedule = every_hour_minute_six</code></pre>
 </details>
 </section>
 <section>
@@ -388,7 +474,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines.rj_smtr.veiculo" href="index.html">pipelines.rj_smtr.veiculo</a></code></li>
+<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps_zirix" href="index.html">pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps_zirix</a></code></li>
 </ul>
 </li>
 </ul>

@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>pipelines.rj_sms.dump_api_prontuario_vitacare.flows API documentation</title>
-<meta name="description" content="Vitacare healthrecord dumping flows" />
+<title>pipelines.rj_smtr.br_rj_riodejaneiro_viagem_zirix.flows API documentation</title>
+<meta name="description" content="Flows for br_rj_riodejaneiro_onibus_gps" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,152 +19,81 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pipelines.rj_sms.dump_api_prontuario_vitacare.flows</code></h1>
+<h1 class="title">Module <code>pipelines.rj_smtr.br_rj_riodejaneiro_viagem_zirix.flows</code></h1>
 </header>
 <section id="section-intro">
-<p>Vitacare healthrecord dumping flows</p>
+<p>Flows for br_rj_riodejaneiro_onibus_gps</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
-# pylint: disable=C0103
 &#34;&#34;&#34;
-Vitacare healthrecord dumping flows
+Flows for br_rj_riodejaneiro_onibus_gps
 &#34;&#34;&#34;
+from copy import deepcopy
 
-from prefect import Parameter, case
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
+
+# from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
+
+
+# EMD Imports #
+
+from pipelines.constants import constants as emd_constants
+
 from pipelines.utils.decorators import Flow
-from pipelines.constants import constants
-from pipelines.rj_sms.dump_api_prontuario_vitacare.constants import (
-    constants as vitacare_constants,
-)
-from pipelines.rj_sms.tasks import (
-    get_secret,
-    create_folders,
-    cloud_function_request,
-    create_partitions,
-    upload_to_datalake,
-)
-from pipelines.rj_sms.dump_api_prontuario_vitacare.tasks import (
-    rename_flow,
-    build_url,
-    build_params,
-    create_filename,
-    save_data_to_file,
+from pipelines.utils.utils import set_default_parameters
+
+# from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
+
+# SMTR Imports #
+
+from pipelines.rj_smtr.flows import default_capture_flow
+
+
+from pipelines.rj_smtr.br_rj_riodejaneiro_viagem_zirix.constants import (
+    constants as zirix_constants,
 )
 
-from pipelines.rj_sms.dump_api_prontuario_vitacare.schedules import (
-    vitacare_daily_update_schedule,
+from pipelines.rj_smtr.schedules import every_10_minutes, every_hour
+
+# from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
+
+# Flows #
+
+viagens_captura = deepcopy(default_capture_flow)
+viagens_captura.name = &#34;SMTR: Viagens Ônibus Zirix - Captura&#34;
+viagens_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+viagens_captura.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
-
-with Flow(
-    name=&#34;SMS: Dump VitaCare - Ingerir dados do prontuário VitaCare&#34;,
-    code_owners=[
-        &#34;thiago&#34;,
-        &#34;andre&#34;,
-        &#34;danilo&#34;,
-    ],
-) as dump_vitacare:
-    #####################################
-    # Parameters
-    #####################################
-
-    # Flow
-    RENAME_FLOW = Parameter(&#34;rename_flow&#34;, default=True)
-
-    #  Vault
-    VAULT_PATH = vitacare_constants.VAULT_PATH.value
-
-    # Vitacare API
-    AP = Parameter(&#34;ap&#34;, required=True, default=&#34;10&#34;)
-    ENDPOINT = Parameter(&#34;endpoint&#34;, required=True)
-    DATE = Parameter(&#34;date&#34;, default=&#34;today&#34;)
-
-    #  GCP
-    DATASET_ID = Parameter(&#34;dataset_id&#34;, default=vitacare_constants.DATASET_ID.value)
-    TABLE_ID = Parameter(&#34;table_id&#34;, required=True)
-
-    #####################################
-    # Rename flow run
-    ####################################
-
-    with case(RENAME_FLOW, True):
-        rename_flow_task = rename_flow(table_id=TABLE_ID, ap=AP)
-
-    ####################################
-    # Tasks section #1 - Get data
-    #####################################
-
-    get_secret_task = get_secret(secret_path=VAULT_PATH)
-
-    create_folders_task = create_folders()
-    create_folders_task.set_upstream(get_secret_task)  # pylint: disable=E1101
-
-    build_url_task = build_url(ap=AP, endpoint=ENDPOINT)
-
-    build_params_task = build_params(date_param=DATE)
-    build_params_task.set_upstream(create_folders_task)  # pylint: disable=E1101
-
-    file_name_task = create_filename(table_id=TABLE_ID, ap=AP)
-    file_name_task.set_upstream(build_params_task)
-
-    download_task = cloud_function_request(
-        url=build_url_task,
-        credential=get_secret_task,
-        request_type=&#34;GET&#34;,
-        body_params=None,
-        query_params=build_params_task,
-        env=&#34;prod&#34;,
-    )
-    download_task.set_upstream(file_name_task)  # pylint: disable=E1101
-
-    save_data_task = save_data_to_file(
-        data=download_task,
-        file_folder=create_folders_task[&#34;raw&#34;],
-        table_id=TABLE_ID,
-        ap=AP,
-        add_load_date_to_filename=True,
-        load_date=build_params_task[&#34;date&#34;],
-    )
-    save_data_task.set_upstream(download_task)  # pylint: disable=E1101
-
-    #####################################
-    # Tasks section #2 - Transform data and Create table
-    #####################################
-
-    with case(save_data_task, True):
-        create_partitions_task = create_partitions(
-            data_path=create_folders_task[&#34;raw&#34;],
-            partition_directory=create_folders_task[&#34;partition_directory&#34;],
-        )
-        create_partitions_task.set_upstream(save_data_task)
-
-        upload_to_datalake_task = upload_to_datalake(
-            input_path=create_folders_task[&#34;partition_directory&#34;],
-            dataset_id=DATASET_ID,
-            table_id=TABLE_ID,
-            if_exists=&#34;replace&#34;,
-            csv_delimiter=&#34;;&#34;,
-            if_storage_data_exists=&#34;replace&#34;,
-            biglake_table=True,
-            dataset_is_public=False,
-        )
-    upload_to_datalake_task.set_upstream(create_partitions_task)
-
-
-dump_vitacare.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
-dump_vitacare.run_config = KubernetesRun(
-    image=constants.DOCKER_IMAGE.value,
-    labels=[
-        constants.RJ_SMS_AGENT_LABEL.value,
-    ],
+viagens_captura = set_default_parameters(
+    flow=viagens_captura,
+    default_parameters=zirix_constants.VIAGEM_CAPTURE_PARAMETERS.value,
 )
 
-dump_vitacare.schedule = vitacare_daily_update_schedule</code></pre>
+viagens_captura.schedule = every_10_minutes
+
+
+viagens_recaptura = deepcopy(default_capture_flow)
+viagens_recaptura.name = &#34;SMTR: Viagens Ônibus Zirix - Recaptura&#34;
+viagens_recaptura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
+viagens_recaptura.run_config = KubernetesRun(
+    image=emd_constants.DOCKER_IMAGE.value,
+    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
+)
+
+viagens_recaptura = set_default_parameters(
+    flow=viagens_recaptura,
+    default_parameters=zirix_constants.VIAGEM_CAPTURE_PARAMETERS.value
+    | {&#34;recapture&#34;: True},
+)
+
+viagens_recaptura.schedule = every_hour</code></pre>
 </details>
 </section>
 <section>
@@ -230,7 +159,7 @@ setTimeout(() => input.focus(), 100);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pipelines.rj_sms.dump_api_prontuario_vitacare" href="index.html">pipelines.rj_sms.dump_api_prontuario_vitacare</a></code></li>
+<li><code><a title="pipelines.rj_smtr.br_rj_riodejaneiro_viagem_zirix" href="index.html">pipelines.rj_smtr.br_rj_riodejaneiro_viagem_zirix</a></code></li>
 </ul>
 </li>
 </ul>

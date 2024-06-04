@@ -656,7 +656,12 @@ def save_raw_local_func(
             json.dump(data, fi, default=custom_serialization)
 
     if filetype in (&#34;txt&#34;, &#34;csv&#34;):
-        with open(_filepath, &#34;w&#34;, encoding=&#34;utf-8&#34;) as file:
+        if constants.CONTROLE_FINANCEIRO_DATASET_ID.value in _filepath:
+            encoding = &#34;Windows-1252&#34;
+        else:
+            encoding = &#34;utf-8&#34;
+
+        with open(_filepath, &#34;w&#34;, encoding=encoding) as file:
             file.write(data)
 
     log(f&#34;Raw data saved to: {_filepath}&#34;)
@@ -952,7 +957,10 @@ def save_treated_local_func(
     _filepath = filepath.format(mode=mode, filetype=&#34;csv&#34;)
     Path(_filepath).parent.mkdir(parents=True, exist_ok=True)
     if error is None:
-        data.to_csv(_filepath, index=False)
+        data.to_csv(
+            _filepath,
+            index=False,
+        )
         log(f&#34;Treated data saved to: {_filepath}&#34;)
     return _filepath
 
@@ -2978,7 +2986,12 @@ Useful to incrementally materialize tables via DBT</p>
             json.dump(data, fi, default=custom_serialization)
 
     if filetype in (&#34;txt&#34;, &#34;csv&#34;):
-        with open(_filepath, &#34;w&#34;, encoding=&#34;utf-8&#34;) as file:
+        if constants.CONTROLE_FINANCEIRO_DATASET_ID.value in _filepath:
+            encoding = &#34;Windows-1252&#34;
+        else:
+            encoding = &#34;utf-8&#34;
+
+        with open(_filepath, &#34;w&#34;, encoding=encoding) as file:
             file.write(data)
 
     log(f&#34;Raw data saved to: {_filepath}&#34;)
@@ -3028,7 +3041,10 @@ Useful to incrementally materialize tables via DBT</p>
     _filepath = filepath.format(mode=mode, filetype=&#34;csv&#34;)
     Path(_filepath).parent.mkdir(parents=True, exist_ok=True)
     if error is None:
-        data.to_csv(_filepath, index=False)
+        data.to_csv(
+            _filepath,
+            index=False,
+        )
         log(f&#34;Treated data saved to: {_filepath}&#34;)
     return _filepath</code></pre>
 </details>

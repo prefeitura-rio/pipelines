@@ -31,6 +31,13 @@
 &#34;&#34;&#34;
 Utils for rj-cor
 &#34;&#34;&#34;
+import json
+import pandas as pd
+from pipelines.utils.utils import (
+    get_redis_client,
+    log,
+    treat_redis_output,
+)
 
 
 def build_redis_key(dataset_id: str, table_id: str, name: str, mode: str = &#34;prod&#34;):
@@ -38,7 +45,59 @@ def build_redis_key(dataset_id: str, table_id: str, name: str, mode: str = &#34;
     Helper function for building a key where to store the last updated time
     &#34;&#34;&#34;
     key = mode + &#34;.&#34; + dataset_id + &#34;.&#34; + table_id + &#34;.&#34; + name
-    return key</code></pre>
+    return key
+
+
+def get_redis_output(redis_key, is_df: bool = False):
+    &#34;&#34;&#34;
+    Get Redis output. Use get to obtain a df from redis or hgetall if is a key value pair.
+    &#34;&#34;&#34;
+    redis_client = get_redis_client()  # (host=&#34;127.0.0.1&#34;)
+
+    if is_df:
+        json_data = redis_client.get(redis_key)
+        log(f&#34;[DEGUB] json_data {json_data}&#34;)
+        if json_data:
+            # If data is found, parse the JSON string back to a Python object (dictionary)
+            data_dict = json.loads(json_data)
+            # Convert the dictionary back to a DataFrame
+            return pd.DataFrame(data_dict)
+
+        return pd.DataFrame()
+
+    output = redis_client.hgetall(redis_key)
+    if len(output) &gt; 0:
+        output = treat_redis_output(output)
+    return output
+
+
+def compare_actual_df_with_redis_df(
+    dfr: pd.DataFrame,
+    dfr_redis: pd.DataFrame,
+    columns: list,
+) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Compare df from redis to actual df and return only the rows from actual df
+    that are not already saved on redis.
+    &#34;&#34;&#34;
+    for col in columns:
+        if col not in dfr_redis.columns:
+            dfr_redis[col] = None
+        dfr_redis[col] = dfr_redis[col].astype(dfr[col].dtypes)
+    log(f&#34;\nEnded conversion types from dfr to dfr_redis: \n{dfr_redis.dtypes}&#34;)
+
+    dfr_diff = (
+        pd.merge(dfr, dfr_redis, how=&#34;left&#34;, on=columns, indicator=True)
+        .query(&#39;_merge == &#34;left_only&#34;&#39;)
+        .drop(&#34;_merge&#34;, axis=1)
+    )
+    log(
+        f&#34;\nDf resulted from the difference between dft_redis and dfr: \n{dfr_diff.head()}&#34;
+    )
+
+    updated_dfr_redis = pd.concat([dfr_redis, dfr_diff[columns]])
+
+    return dfr_diff, updated_dfr_redis</code></pre>
 </details>
 </section>
 <section>
@@ -63,6 +122,77 @@ def build_redis_key(dataset_id: str, table_id: str, name: str, mode: str = &#34;
     &#34;&#34;&#34;
     key = mode + &#34;.&#34; + dataset_id + &#34;.&#34; + table_id + &#34;.&#34; + name
     return key</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.utils.compare_actual_df_with_redis_df"><code class="name flex">
+<span>def <span class="ident">compare_actual_df_with_redis_df</span></span>(<span>dfr: pandas.core.frame.DataFrame, dfr_redis: pandas.core.frame.DataFrame, columns: list) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compare df from redis to actual df and return only the rows from actual df
+that are not already saved on redis.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compare_actual_df_with_redis_df(
+    dfr: pd.DataFrame,
+    dfr_redis: pd.DataFrame,
+    columns: list,
+) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Compare df from redis to actual df and return only the rows from actual df
+    that are not already saved on redis.
+    &#34;&#34;&#34;
+    for col in columns:
+        if col not in dfr_redis.columns:
+            dfr_redis[col] = None
+        dfr_redis[col] = dfr_redis[col].astype(dfr[col].dtypes)
+    log(f&#34;\nEnded conversion types from dfr to dfr_redis: \n{dfr_redis.dtypes}&#34;)
+
+    dfr_diff = (
+        pd.merge(dfr, dfr_redis, how=&#34;left&#34;, on=columns, indicator=True)
+        .query(&#39;_merge == &#34;left_only&#34;&#39;)
+        .drop(&#34;_merge&#34;, axis=1)
+    )
+    log(
+        f&#34;\nDf resulted from the difference between dft_redis and dfr: \n{dfr_diff.head()}&#34;
+    )
+
+    updated_dfr_redis = pd.concat([dfr_redis, dfr_diff[columns]])
+
+    return dfr_diff, updated_dfr_redis</code></pre>
+</details>
+</dd>
+<dt id="pipelines.rj_cor.utils.get_redis_output"><code class="name flex">
+<span>def <span class="ident">get_redis_output</span></span>(<span>redis_key, is_df: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get Redis output. Use get to obtain a df from redis or hgetall if is a key value pair.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_redis_output(redis_key, is_df: bool = False):
+    &#34;&#34;&#34;
+    Get Redis output. Use get to obtain a df from redis or hgetall if is a key value pair.
+    &#34;&#34;&#34;
+    redis_client = get_redis_client()  # (host=&#34;127.0.0.1&#34;)
+
+    if is_df:
+        json_data = redis_client.get(redis_key)
+        log(f&#34;[DEGUB] json_data {json_data}&#34;)
+        if json_data:
+            # If data is found, parse the JSON string back to a Python object (dictionary)
+            data_dict = json.loads(json_data)
+            # Convert the dictionary back to a DataFrame
+            return pd.DataFrame(data_dict)
+
+        return pd.DataFrame()
+
+    output = redis_client.hgetall(redis_key)
+    if len(output) &gt; 0:
+        output = treat_redis_output(output)
+    return output</code></pre>
 </details>
 </dd>
 </dl>
@@ -130,6 +260,8 @@ setTimeout(() => input.focus(), 100);
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="pipelines.rj_cor.utils.build_redis_key" href="#pipelines.rj_cor.utils.build_redis_key">build_redis_key</a></code></li>
+<li><code><a title="pipelines.rj_cor.utils.compare_actual_df_with_redis_df" href="#pipelines.rj_cor.utils.compare_actual_df_with_redis_df">compare_actual_df_with_redis_df</a></code></li>
+<li><code><a title="pipelines.rj_cor.utils.get_redis_output" href="#pipelines.rj_cor.utils.get_redis_output">get_redis_output</a></code></li>
 </ul>
 </li>
 </ul>
