@@ -65,7 +65,7 @@ controle_cct_cb_captura = set_default_parameters(
     default_parameters=constants.SHEETS_CAPTURE_DEFAULT_PARAMS.value
     | constants.SHEETS_CB_CAPTURE_PARAMS.value,
 )
-controle_cct_cb_captura.schedule = every_day
+# controle_cct_cb_captura.schedule = every_day
 
 controle_cct_cett_captura = deepcopy(default_capture_flow)
 controle_cct_cett_captura.name = "SMTR: Controle Financeiro CETT - Captura"
@@ -80,7 +80,7 @@ controle_cct_cett_captura = set_default_parameters(
     default_parameters=constants.SHEETS_CAPTURE_DEFAULT_PARAMS.value
     | constants.SHEETS_CETT_CAPTURE_PARAMS.value,
 )
-controle_cct_cett_captura.schedule = every_day
+# controle_cct_cett_captura.schedule = every_day
 
 
 with Flow(
@@ -164,4 +164,4 @@ arquivo_retorno_captura.run_config = KubernetesRun(
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
 
-arquivo_retorno_captura.schedule = every_friday_seven_thirty
+# arquivo_retorno_captura.schedule = every_friday_seven_thirty
