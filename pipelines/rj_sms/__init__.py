@@ -3,4 +3,4 @@
 Prefect flows for rj_sms project
 """
 
-from pipelines.rj_sms.dump_azureblob_estoque_tpc.flows import *
+# from pipelines.rj_sms.dump_azureblob_estoque_tpc.flows import *
