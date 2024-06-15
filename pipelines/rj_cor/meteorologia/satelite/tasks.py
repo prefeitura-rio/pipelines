@@ -10,6 +10,8 @@ import re
 from pathlib import Path
 from typing import Union
 
+import requests
+
 import pandas as pd
 import pendulum
 from prefect import task
@@ -28,9 +30,9 @@ from pipelines.rj_cor.meteorologia.satelite.satellite_utils import (
     get_variable_values,
     remap_g16,
     save_data_in_file,
-    upload_image_to_api,
+    # upload_image_to_api,
 )
-from pipelines.utils.utils import log
+from pipelines.utils.utils import log, get_vault_secret
 
 
 @task()
@@ -248,6 +250,32 @@ def create_image_and_upload_to_api(info: dict, output_filepath: Path):
         save_image_path = create_and_save_image(data, info, var)
 
         log(f"\nStart uploading image for variable {var} on API\n")
-        upload_image_to_api(var, save_image_path, point_value)
+        # upload_image_to_api(var, save_image_path, point_value)
+        var = "cp" if var == "cape" else var
+
+        log("Getting API url")
+        url_secret = get_vault_secret("rionowcast")["data"]
+        log(f"urlsecret1 {url_secret}")
+        url_secret = url_secret["url_api_satellite_products"]
+        log(f"urlsecret2 {url_secret}")
+        api_url = f"{url_secret}/{var.lower()}"
+        log(
+            f"\n Sending image {save_image_path} to API: {api_url} with value {point_value}\n"
+        )
+
+        payload = {"value": point_value}
+
+        # Convert from Path to string
+        save_image_path = str(save_image_path)
+
+        with open(save_image_path, "rb") as image_file:
+            files = {"image": (save_image_path, image_file, "image/jpeg")}
+            response = requests.post(api_url, data=payload, files=files)
+
+        if response.status_code == 200:
+            print("Finished the request successful!")
+            print(response.json())
+        else:
+            print(f"Error: {response.status_code}, {response.text}")
         log(save_image_path)
         log(f"\nEnd uploading image for variable {var} on API\n")
