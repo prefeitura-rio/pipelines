@@ -273,9 +273,9 @@ def create_image_and_upload_to_api(info: dict, output_filepath: Path):
             response = requests.post(api_url, data=payload, files=files)
 
         if response.status_code == 200:
-            print("Finished the request successful!")
-            print(response.json())
+            log("Finished the request successful!")
+            log(response.json())
         else:
-            print(f"Error: {response.status_code}, {response.text}")
+            log(f"Error: {response.status_code}, {response.text}")
         log(save_image_path)
         log(f"\nEnd uploading image for variable {var} on API\n")

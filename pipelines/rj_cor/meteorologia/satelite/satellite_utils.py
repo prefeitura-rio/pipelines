@@ -617,7 +617,7 @@ def get_point_value(
     # Get the correspondent value of this point
     point_value = data_array.isel(lat=lat_idx, lon=lon_idx).values
     log(
-        "\nThe value of the selected point is {point_value}. It will be replace by 0 if is nan.\n"
+        f"\nThe value of the selected point is {point_value}. It will be replace by 0 if is nan.\n"
     )
     point_value = 0 if np.isnan(point_value) else float(point_value)
 
@@ -641,8 +641,11 @@ def create_and_save_image(data: xr.DataArray, info: dict, variable) -> Path:
     # Define the color scale based on the channel
     colormap = "jet"  # White to black for IR channels
     # colormap = "gray_r" # White to black for IR channels
-
+    log(f"\nmax valueeeeeeeeeeeeeeeeee: {data.max()} min value: {data.min()}")
     # Plot the image
+    # data = np.random.random((100, 100))
+    info["vmin"] = data.min()
+    info["vmax"] = data.max()
     img = axis.imshow(
         data,
         origin="upper",
@@ -653,19 +656,19 @@ def create_and_save_image(data: xr.DataArray, info: dict, variable) -> Path:
         vmax=info["vmax"],
     )
 
-    # # Find shapefile file "Limite_Bairros_RJ.shp" across the entire file system
-    # for root, dirs, files in os.walk(os.sep):
-    #     if "Limite_Bairros_RJ.shp" in files:
-    #         log(f"[DEBUG] ROOT {root}")
-    #         shapefile_dir = Path(root)
-    #         break
-    # else:
-    #     print("File not found.")
+    # Find shapefile file "Limite_Bairros_RJ.shp" across the entire file system
+    for root, dirs, files in os.walk(os.sep):
+        if "Limite_Bairros_RJ.shp" in files:
+            log(f"[DEBUG] ROOT {root}")
+            shapefile_dir = Path(root)
+            break
+    else:
+        print("File not found.")
 
-    # Add coastlines, borders and gridlines
-    shapefile_dir = Path(
-        "/opt/venv/lib/python3.9/site-packages/pipelines/utils/shapefiles"
-    )
+    # # Add coastlines, borders and gridlines
+    # shapefile_dir = Path(
+    #     "/opt/venv/lib/python3.9/site-packages/pipelines/utils/shapefiles"
+    # )
     shapefile_path_neighborhood = shapefile_dir / "Limite_Bairros_RJ.shp"
     shapefile_path_state = shapefile_dir / "Limite_Estados_BR_IBGE.shp"
 
@@ -718,7 +721,7 @@ def create_and_save_image(data: xr.DataArray, info: dict, variable) -> Path:
     if not output_image_path.exists():
         output_image_path.mkdir(parents=True, exist_ok=True)
 
-    plt.savefig(save_image_path, bbox_inches="tight", pad_inches=0, dpi=300)
+    plt.savefig(save_image_path, bbox_inches="tight", pad_inches=0.1, dpi=80)
     log(f"\n Ended saving image on {save_image_path}")
     return save_image_path
 
@@ -737,7 +740,6 @@ def upload_image_to_api(var: str, save_image_path: Path, point_value: float):
     url_secret = url_secret["url_api_satellite_products"]
     log(f"urlsecret2 {url_secret}")
     api_url = f"{url_secret}/{var.lower()}"
-    # api_url = f"http://127.0.0.1:5000/upload/{var.lower()}"
     log(
         f"\n Sending image {save_image_path} to API: {api_url} with value {point_value}\n"
     )
@@ -752,7 +754,7 @@ def upload_image_to_api(var: str, save_image_path: Path, point_value: float):
         response = requests.post(api_url, data=payload, files=files)
 
     if response.status_code == 200:
-        print("Finished the request successful!")
-        print(response.json())
+        log("Finished the request successful!")
+        log(response.json())
     else:
-        print(f"Error: {response.status_code}, {response.text}")
+        log(f"Error: {response.status_code}, {response.text}")
