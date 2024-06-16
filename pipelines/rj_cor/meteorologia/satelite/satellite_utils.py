@@ -366,8 +366,16 @@ def get_info(path: str) -> dict:
     # DSIF - Derived Stability Indices: 'CAPE', 'KI', 'LI', 'SI', 'TT'
     product_caracteristics["DSIF"] = {
         "variable": ["LI", "CAPE", "TT", "SI", "KI"],
-        "vmin": 0,
-        "vmax": 1000,
+        # "vmin": 0,
+        # "vmax": 1000,
+        "vmin": {"LI": -10, "CAPE": 0, "TT": -43, "SI": -10, "KI": 0},
+        "vmax": {"LI": 40, "CAPE": 5000, "TT": 56, "SI": 10, "KI": 40},
+        # https://www.star.nesdis.noaa.gov/goesr/documents/ATBDs/Enterprise/ATBD_Enterprise_Soundings_Legacy_Atmospheric_Profiles_v3.1_2019-11-01.pdf
+        # Lifted Index: --10 to 40 K
+        # CAPE: 0 to 5000 J/kg
+        # Showalter index: >4 to -10 K
+        # Total totals Index: -43 to > 56
+        # K index: 0 to 40
         "cmap": "jet",
     }
     # FDCF - Fire-Hot Spot Characterization: 'Area', 'Mask', 'Power', 'Temp'
@@ -641,19 +649,26 @@ def create_and_save_image(data: xr.DataArray, info: dict, variable) -> Path:
     # Define the color scale based on the channel
     colormap = "jet"  # White to black for IR channels
     # colormap = "gray_r" # White to black for IR channels
-    log(f"\nmax valueeeeeeeeeeeeeeeeee: {data.max()} min value: {data.min()}")
+    log(f"\nmax valueeeeeeeeeeeeeeeeee: {np.nanmax(data)} min value: {np.nanmin(data)}")
+
+    variable = variable.upper()
+    vmin = info["vmin"]
+    vmax = info["vmax"]
+    if variable in ["LI", "CAPE", "TT", "SI", "KI"]:
+        # vmin = vmin[variable] TODO: get the correct range for each variable
+        # vmax = vmax[variable]
+        vmin = np.nanmin(data)
+        vmax = np.nanmax(data)
+
     # Plot the image
-    # data = np.random.random((100, 100))
-    info["vmin"] = data.min()
-    info["vmax"] = data.max()
     img = axis.imshow(
         data,
         origin="upper",
         extent=img_extent,
         cmap=colormap,
         alpha=0.8,
-        vmin=info["vmin"],
-        vmax=info["vmax"],
+        vmin=vmin,
+        vmax=vmax,
     )
 
     # Find shapefile file "Limite_Bairros_RJ.shp" across the entire file system
