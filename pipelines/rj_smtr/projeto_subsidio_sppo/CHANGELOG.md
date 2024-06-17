@@ -4,7 +4,7 @@
 
 ### Alterado
 
-- Incorpora novo teste para verificar se as viagens foram processadas com o feed correto do GTFS (https://github.com/prefeitura-rio/pipelines/pull/703)
+- Incorpora novo teste `check_trips_processing` para verificar se as viagens foram processadas com o feed correto do GTFS (https://github.com/prefeitura-rio/pipelines/pull/703)
 
 
 ## [1.0.0] - 2024-04-18

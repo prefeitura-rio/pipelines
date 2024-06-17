@@ -170,7 +170,12 @@ class constants(Enum):  # pylint: disable=c0103
     SUBSIDIO_SPPO_DATA_CHECKS_PARAMS = {
         "check_trips_processing": {
             "query": """SELECT
-                        s.*,
+                        s.data,
+                        s.tipo_dia,
+                        s.subtipo_dia,
+                        s.tipo_os,
+                        s.feed_version,
+                        s.feed_start_date AS feed_start_date_invalido,
                         i.feed_start_date AS feed_start_date_valido,
                         FROM (
                             SELECT
