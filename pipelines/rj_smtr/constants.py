@@ -591,7 +591,7 @@ class constants(Enum):  # pylint: disable=c0103
             "Todos os dados de status dos veículos foram devidamente tratados": {
                 "test": "check_sppo_veiculo_dia",
             },
-            "Todos os dados de viagens foram tratados com o respectivo feed correto": {
+            "Todos os dados de viagens foram tratados com o respectivo feed correto do GTFS": {
                 "test": "check_trips_processing",
             },
         }
