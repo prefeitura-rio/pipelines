@@ -655,10 +655,10 @@ def create_and_save_image(data: xr.DataArray, info: dict, variable) -> Path:
     vmin = info["vmin"]
     vmax = info["vmax"]
     if variable in ["LI", "CAPE", "TT", "SI", "KI"]:
-        # vmin = vmin[variable] TODO: get the correct range for each variable
-        # vmax = vmax[variable]
-        vmin = np.nanmin(data)
-        vmax = np.nanmax(data)
+        vmin = vmin[variable]
+        vmax = vmax[variable]
+        # vmin = np.nanmin(data)
+        # vmax = np.nanmax(data)
 
     # Plot the image
     img = axis.imshow(
