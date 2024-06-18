@@ -368,8 +368,8 @@ def get_info(path: str) -> dict:
         "variable": ["LI", "CAPE", "TT", "SI", "KI"],
         # "vmin": 0,
         # "vmax": 1000,
-        "vmin": {"LI": -10, "CAPE": 0, "TT": -43, "SI": -10, "KI": 0},
-        "vmax": {"LI": 40, "CAPE": 5000, "TT": 56, "SI": 10, "KI": 40},
+        "vmin": {"LI": -20, "CAPE": 0, "TT": 10, "SI": -20, "KI": 0},
+        "vmax": {"LI": 20, "CAPE": 8000, "TT": 70, "SI": 20, "KI": 60},
         # https://www.star.nesdis.noaa.gov/goesr/documents/ATBDs/Enterprise/ATBD_Enterprise_Soundings_Legacy_Atmospheric_Profiles_v3.1_2019-11-01.pdf
         # Lifted Index: --10 to 40 K
         # CAPE: 0 to 5000 J/kg
