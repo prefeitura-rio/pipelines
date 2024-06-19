@@ -28,9 +28,9 @@ from pipelines.utils.tasks import (
 
 from pipelines.rj_smtr.constants import constants
 
-from pipelines.rj_smtr.schedules import (
-    every_day_hour_seven,
-)
+# from pipelines.rj_smtr.schedules import (
+#     every_day_hour_seven,
+# )
 from pipelines.rj_smtr.tasks import (
     create_date_hour_partition,
     create_local_partition_path,
@@ -141,7 +141,7 @@ sppo_licenciamento_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-sppo_licenciamento_captura.schedule = every_day_hour_seven
+# sppo_licenciamento_captura.schedule = every_day_hour_seven
 
 with Flow(
     f"SMTR: {constants.VEICULO_DATASET_ID.value} {constants.SPPO_INFRACAO_TABLE_ID.value} - Captura",
@@ -220,7 +220,7 @@ sppo_infracao_captura.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-sppo_infracao_captura.schedule = every_day_hour_seven
+# sppo_infracao_captura.schedule = every_day_hour_seven
 
 # flake8: noqa: E501
 with Flow(
@@ -293,4 +293,4 @@ veiculo_sppo_registro_agente_verao_captura = set_default_parameters(
     flow=veiculo_sppo_registro_agente_verao_captura,
     default_parameters=constants.SPPO_REGISTRO_AGENTE_VERAO_PARAMS.value,
 )
-veiculo_sppo_registro_agente_verao_captura.schedule = every_day_hour_seven
+# veiculo_sppo_registro_agente_verao_captura.schedule = every_day_hour_seven
