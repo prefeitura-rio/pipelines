@@ -56,7 +56,8 @@ from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.tasks import get_current_timestamp
 
 from pipelines.rj_smtr.flows import default_capture_flow, default_materialization_flow
-from pipelines.rj_smtr.schedules import every_day
+
+# from pipelines.rj_smtr.schedules import every_day
 
 
 # CAPTURA DOS TICKETS #
@@ -135,9 +136,11 @@ with Flow(
     ]
 
     table_params = task(
-        lambda tables, exclude: [t for t in tables if t[&#34;table_id&#34;] not in exclude]
-        if exclude is not None
-        else tables,
+        lambda tables, exclude: (
+            [t for t in tables if t[&#34;table_id&#34;] not in exclude]
+            if exclude is not None
+            else tables
+        ),
         checkpoint=False,
         name=&#34;get_tables_to_run&#34;,
     )(tables=constants.SUBSIDIO_SPPO_RECURSOS_TABLE_IDS.value, exclude=exclude)
@@ -226,7 +229,7 @@ subsidio_sppo_recurso.run_config = KubernetesRun(
 )
 
 # Schedule
-subsidio_sppo_recurso.schedule = every_day</code></pre>
+# subsidio_sppo_recurso.schedule = every_day</code></pre>
 </details>
 </section>
 <section>
@@ -245,7 +248,11 @@ subsidio_sppo_recurso.schedule = every_day</code></pre>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">lambda tables, exclude: [t for t in tables if t[&#34;table_id&#34;] not in exclude]</code></pre>
+<pre><code class="python">lambda tables, exclude: (
+    [t for t in tables if t[&#34;table_id&#34;] not in exclude]
+    if exclude is not None
+    else tables
+),</code></pre>
 </details>
 </dd>
 <dt id="pipelines.rj_smtr.br_rj_riodejaneiro_recursos.flows.wait_captura_false"><code class="name flex">
