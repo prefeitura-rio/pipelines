@@ -27,7 +27,8 @@ from pipelines.rj_smtr.constants import constants
 from pipelines.rj_smtr.tasks import get_current_timestamp
 
 from pipelines.rj_smtr.flows import default_capture_flow, default_materialization_flow
-from pipelines.rj_smtr.schedules import every_day
+
+# from pipelines.rj_smtr.schedules import every_day
 
 
 # CAPTURA DOS TICKETS #
@@ -106,9 +107,11 @@ with Flow(
     ]
 
     table_params = task(
-        lambda tables, exclude: [t for t in tables if t["table_id"] not in exclude]
-        if exclude is not None
-        else tables,
+        lambda tables, exclude: (
+            [t for t in tables if t["table_id"] not in exclude]
+            if exclude is not None
+            else tables
+        ),
         checkpoint=False,
         name="get_tables_to_run",
     )(tables=constants.SUBSIDIO_SPPO_RECURSOS_TABLE_IDS.value, exclude=exclude)
@@ -197,4 +200,4 @@ subsidio_sppo_recurso.run_config = KubernetesRun(
 )
 
 # Schedule
-subsidio_sppo_recurso.schedule = every_day
+# subsidio_sppo_recurso.schedule = every_day
