@@ -197,6 +197,37 @@ class constants(Enum):  # pylint: disable=c0103
     SUBSIDIO_SPPO_DASHBOARD_STAGING_DATASET_ID = &#34;dashboard_subsidio_sppo_staging&#34;
     SUBSIDIO_SPPO_DASHBOARD_TABLE_ID = &#34;sumario_servico_dia&#34;
     SUBSIDIO_SPPO_DATA_CHECKS_PARAMS = {
+        &#34;check_trips_processing&#34;: {
+            &#34;query&#34;: &#34;&#34;&#34;SELECT
+                        s.data,
+                        s.tipo_dia,
+                        s.subtipo_dia,
+                        s.tipo_os,
+                        s.feed_version,
+                        s.feed_start_date AS feed_start_date_invalido,
+                        i.feed_start_date AS feed_start_date_valido,
+                        FROM (
+                            SELECT
+                                *
+                            FROM
+                                rj-smtr.projeto_subsidio_sppo.subsidio_data_versao_efetiva
+                            WHERE
+                                DATA &gt;= &#34;2024-04-01&#34; -- DATA_SUBSIDIO_V6_INICIO (Feature trajetos alternativos)
+                                AND DATA BETWEEN DATE(&#34;{start_timestamp}&#34;)
+                                    AND DATE(&#34;{end_timestamp}&#34;)
+                                ) AS s
+                        LEFT JOIN
+                            rj-smtr.gtfs.feed_info AS i
+                        ON
+                        (DATA BETWEEN i.feed_start_date
+                            AND i.feed_end_date
+                            OR (DATA &gt;= i.feed_start_date
+                            AND i.feed_end_date IS NULL))
+                        WHERE
+                            i.feed_start_date != s.feed_start_date
+                        &#34;&#34;&#34;,
+            &#34;order_columns&#34;: [&#34;data&#34;],
+        },
         &#34;check_gps_capture&#34;: {
             &#34;query&#34;: &#34;&#34;&#34;WITH
             t AS (
@@ -593,6 +624,9 @@ class constants(Enum):  # pylint: disable=c0103
             },
             &#34;Todos os dados de status dos veículos foram devidamente tratados&#34;: {
                 &#34;test&#34;: &#34;check_sppo_veiculo_dia&#34;,
+            },
+            &#34;Todos os dados de viagens foram tratados com o respectivo feed correto do GTFS&#34;: {
+                &#34;test&#34;: &#34;check_trips_processing&#34;,
             },
         }
     }
@@ -1773,6 +1807,37 @@ and createdDate lt {end})&#34;,
     SUBSIDIO_SPPO_DASHBOARD_STAGING_DATASET_ID = &#34;dashboard_subsidio_sppo_staging&#34;
     SUBSIDIO_SPPO_DASHBOARD_TABLE_ID = &#34;sumario_servico_dia&#34;
     SUBSIDIO_SPPO_DATA_CHECKS_PARAMS = {
+        &#34;check_trips_processing&#34;: {
+            &#34;query&#34;: &#34;&#34;&#34;SELECT
+                        s.data,
+                        s.tipo_dia,
+                        s.subtipo_dia,
+                        s.tipo_os,
+                        s.feed_version,
+                        s.feed_start_date AS feed_start_date_invalido,
+                        i.feed_start_date AS feed_start_date_valido,
+                        FROM (
+                            SELECT
+                                *
+                            FROM
+                                rj-smtr.projeto_subsidio_sppo.subsidio_data_versao_efetiva
+                            WHERE
+                                DATA &gt;= &#34;2024-04-01&#34; -- DATA_SUBSIDIO_V6_INICIO (Feature trajetos alternativos)
+                                AND DATA BETWEEN DATE(&#34;{start_timestamp}&#34;)
+                                    AND DATE(&#34;{end_timestamp}&#34;)
+                                ) AS s
+                        LEFT JOIN
+                            rj-smtr.gtfs.feed_info AS i
+                        ON
+                        (DATA BETWEEN i.feed_start_date
+                            AND i.feed_end_date
+                            OR (DATA &gt;= i.feed_start_date
+                            AND i.feed_end_date IS NULL))
+                        WHERE
+                            i.feed_start_date != s.feed_start_date
+                        &#34;&#34;&#34;,
+            &#34;order_columns&#34;: [&#34;data&#34;],
+        },
         &#34;check_gps_capture&#34;: {
             &#34;query&#34;: &#34;&#34;&#34;WITH
             t AS (
@@ -2169,6 +2234,9 @@ and createdDate lt {end})&#34;,
             },
             &#34;Todos os dados de status dos veículos foram devidamente tratados&#34;: {
                 &#34;test&#34;: &#34;check_sppo_veiculo_dia&#34;,
+            },
+            &#34;Todos os dados de viagens foram tratados com o respectivo feed correto do GTFS&#34;: {
+                &#34;test&#34;: &#34;check_trips_processing&#34;,
             },
         }
     }
