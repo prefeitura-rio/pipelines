@@ -2,18 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.10.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.0">
 <title>pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps_zirix.tasks API documentation</title>
-<meta name="description" content="Tasks for br_rj_riodejaneiro_onibus_gps" />
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
-<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<meta name="description" content="Tasks for br_rj_riodejaneiro_onibus_gps">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
-<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+})</script>
 </head>
 <body>
 <main>
@@ -23,259 +26,6 @@
 </header>
 <section id="section-intro">
 <p>Tasks for br_rj_riodejaneiro_onibus_gps</p>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python"># -*- coding: utf-8 -*-
-&#34;&#34;&#34;
-Tasks for br_rj_riodejaneiro_onibus_gps
-&#34;&#34;&#34;
-
-import traceback
-from datetime import datetime, timedelta
-from typing import Dict
-import pandas as pd
-from prefect import task
-import pendulum
-
-# EMD Imports #
-
-from pipelines.utils.utils import log, get_vault_secret
-
-# SMTR Imports #
-
-from pipelines.rj_smtr.constants import constants
-
-# Tasks #
-
-
-@task
-def create_api_url_onibus_realocacao(
-    interval_minutes: int = 10,
-    timestamp: datetime = None,
-    secret_path: str = constants.ZIRIX_API_SECRET_PATH.value,
-) -&gt; str:
-    &#34;&#34;&#34;
-    start_date: datahora mínima do sinal de GPS avaliado
-    end_date: datahora máxima do sinal de GPS avaliado
-    &#34;&#34;&#34;
-
-    # Configura parametros da URL
-    date_range = {
-        &#34;date_range_start&#34;: (timestamp - timedelta(minutes=interval_minutes)).strftime(
-            &#34;%Y-%m-%dT%H:%M:%S&#34;
-        ),
-        &#34;date_range_end&#34;: timestamp.strftime(&#34;%Y-%m-%dT%H:%M:%S&#34;),
-    }
-    url = f&#34;{constants.ZIRIX_BASE_URL.value}/EnvioViagensRetroativas?&#34;
-
-    headers = get_vault_secret(secret_path)[&#34;data&#34;]
-    key = list(headers)[0]
-    url = f&#34;{url}{key}={{secret}}&#34;
-
-    url += f&#34;&amp;dataInicial={date_range[&#39;date_range_start&#39;]}&amp;dataFinal={date_range[&#39;date_range_end&#39;]}&#34;
-
-    log(f&#34;Request data from URL:\n{url}&#34;)
-    return url.format(secret=headers[key])
-
-
-@task
-def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
-    status: dict, timestamp: datetime
-) -&gt; Dict:
-    &#34;&#34;&#34;Basic data treatment for bus gps relocation data. Converts unix time to datetime,
-    and apply filtering to stale data that may populate the API response.
-
-    Args:
-        status (dict): dict containing the status of the request made to the
-        API. Must contain keys: data and error
-
-    Returns:
-        df_realocacao: pandas.core.DataFrame containing the treated data.
-    &#34;&#34;&#34;
-
-    if status[&#34;error&#34;] is not None:
-        return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
-
-    if status[&#34;data&#34;] == []:
-        log(&#34;Data is empty, skipping treatment...&#34;)
-        return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
-
-    error = None
-
-    log(f&#34;Data received to treat: \n{status[&#39;data&#39;][:5]}&#34;)
-    df_realocacao = pd.DataFrame(status[&#34;data&#34;])  # pylint: disable=c0103
-    # df_realocacao[&#34;timestamp_captura&#34;] = timestamp
-    df_realocacao[&#34;timestamp_captura&#34;] = timestamp.isoformat()
-    # log(f&#34;Before converting, datahora is: \n{df_realocacao[&#39;datahora&#39;]}&#34;)
-
-    # Ajusta tipos de data
-    dt_cols = [
-        &#34;dataEntrada&#34;,
-        &#34;dataOperacao&#34;,
-        &#34;dataSaida&#34;,
-        &#34;dataProcessado&#34;,
-    ]
-
-    for col in dt_cols:
-        log(f&#34;Converting column {col}&#34;)
-        log(f&#34;Data received to treat: \n{df_realocacao[col]}&#34;)
-        temp_time_col_sec = pd.to_datetime(
-            df_realocacao[col], format=&#34;%Y-%m-%dT%H:%M:%S&#34;, errors=&#34;coerce&#34;
-        ).dt.tz_localize(tz=constants.TIMEZONE.value)
-        temp_time_col_msec = pd.to_datetime(
-            df_realocacao[col], format=&#34;%Y-%m-%dT%H:%M:%S.%f&#34;, errors=&#34;coerce&#34;
-        ).dt.tz_localize(tz=constants.TIMEZONE.value)
-
-        df_realocacao[col] = temp_time_col_sec.fillna(temp_time_col_msec).dt.strftime(
-            &#34;%Y-%m-%d %H:%M:%S%z&#34;
-        )
-
-        if df_realocacao[col].isna().sum() &gt; 0:
-            error = ValueError(&#34;After treating, there is null values!&#34;)
-            log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
-
-        log(f&#34;Treated data: \n{df_realocacao[col]}&#34;)
-
-    # Ajusta tempo máximo da realocação
-    df_realocacao.loc[
-        df_realocacao.dataSaida == &#34;1971-01-01 00:00:00-0300&#34;, &#34;dataSaida&#34;
-    ] = &#34;&#34;
-
-    # Renomeia colunas
-    cols = {
-        &#34;veiculo&#34;: &#34;id_veiculo&#34;,
-        &#34;dataOperacao&#34;: &#34;datetime_operacao&#34;,
-        &#34;linha&#34;: &#34;servico&#34;,
-        &#34;dataEntrada&#34;: &#34;datetime_entrada&#34;,
-        &#34;dataSaida&#34;: &#34;datetime_saida&#34;,
-        &#34;dataProcessado&#34;: &#34;timestamp_processamento&#34;,
-    }
-
-    df_realocacao = df_realocacao.rename(columns=cols)
-
-    return {&#34;data&#34;: df_realocacao.drop_duplicates(), &#34;error&#34;: error}
-
-
-@task
-def create_api_url_onibus_gps(timestamp: datetime = None) -&gt; str:
-    &#34;&#34;&#34;
-    Generates the complete URL to get data from API.
-    &#34;&#34;&#34;
-
-    if not timestamp:
-        timestamp = pendulum.now(constants.TIMEZONE.value).replace(
-            second=0, microsecond=0
-        )
-
-    headers = get_vault_secret(constants.ZIRIX_API_SECRET_PATH.value)[&#34;data&#34;]
-    key = list(headers)[0]
-    url = f&#34;{constants.ZIRIX_BASE_URL.value}/EnvioIplan?{key}={{secret}}&#34;
-
-    date_range = {
-        &#34;start&#34;: (timestamp - timedelta(minutes=6)).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
-        &#34;end&#34;: (timestamp - timedelta(minutes=5)).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
-    }
-    url += f&#34;&amp;dataInicial={date_range[&#39;start&#39;]}&amp;dataFinal={date_range[&#39;end&#39;]}&#34;
-
-    log(f&#34;Request data from URL: {url}&#34;)
-    return url.format(secret=headers[key])
-
-
-@task
-# pylint: disable=too-many-locals
-def pre_treatment_br_rj_riodejaneiro_onibus_gps(
-    status: dict, timestamp: datetime, version: int = 1, recapture: bool = False
-) -&gt; Dict:
-    &#34;&#34;&#34;Basic data treatment for bus gps data. Converts unix time to datetime,
-    and apply filtering to stale data that may populate the API response.
-
-    Args:
-        status_dict (dict): dict containing the status of the request made to the
-        API. Must contain keys: data and error
-        version (int, optional): Source API version. Temporary argument
-        for testing
-        timestamp (str): Capture data timestamp.
-
-    Returns:
-        df_gps: pandas.core.DataFrame containing the treated data.
-    &#34;&#34;&#34;
-    if status[&#34;error&#34;] is not None:
-        return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
-
-    if status[&#34;data&#34;] == []:
-        log(&#34;Data is empty, skipping treatment...&#34;)
-        return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
-
-    error = None
-    timezone = constants.TIMEZONE.value
-
-    log(f&#34;Data received to treat: \n{status[&#39;data&#39;][:5]}&#34;)
-    df_gps = pd.DataFrame(status[&#34;data&#34;])  # pylint: disable=c0103
-    df_gps[&#34;timestamp_captura&#34;] = timestamp
-    log(f&#34;Before converting, datahora is: \n{df_gps[&#39;datahora&#39;]}&#34;)
-
-    # Remove timezone and force it to be config timezone
-    if version == 1:
-        timestamp_cols = [&#34;datahora&#34;]
-    elif version == 2:
-        timestamp_cols = [&#34;datahora&#34;, &#34;datahoraenvio&#34;]
-    if recapture:
-        timestamp_cols.append(&#34;datahoraservidor&#34;)
-    for col in timestamp_cols:
-        print(f&#34;Before converting, {col} is: \n{df_gps[col].head()}&#34;)  # log
-        df_gps[col] = (
-            pd.to_datetime(df_gps[col].astype(float), unit=&#34;ms&#34;)
-            .dt.tz_localize(tz=&#34;UTC&#34;)
-            .dt.tz_convert(timezone)
-        )
-        log(f&#34;After converting the timezone, {col} is: \n{df_gps[col].head()}&#34;)
-
-    # Filter data
-    try:
-        log(f&#34;Shape before filtering: {df_gps.shape}&#34;)
-        if version == 1:
-            filter_col = &#34;timestamp_captura&#34;
-            time_delay = constants.GPS_SPPO_CAPTURE_DELAY_V1.value
-        elif version == 2:
-            filter_col = &#34;datahoraenvio&#34;
-            time_delay = constants.GPS_SPPO_CAPTURE_DELAY_V2.value
-        if recapture:
-            server_mask = (
-                df_gps[&#34;datahoraenvio&#34;] - df_gps[&#34;datahoraservidor&#34;]
-            ) &lt;= timedelta(minutes=constants.GPS_SPPO_RECAPTURE_DELAY_V2.value)
-            df_gps = df_gps[server_mask]  # pylint: disable=c0103
-
-        mask = (df_gps[filter_col] - df_gps[&#34;datahora&#34;]).apply(
-            lambda x: timedelta(seconds=-20) &lt;= x &lt;= timedelta(minutes=time_delay)
-        )
-
-        # Select and drop duplicated data
-        cols = [
-            &#34;ordem&#34;,
-            &#34;latitude&#34;,
-            &#34;longitude&#34;,
-            &#34;datahora&#34;,
-            &#34;velocidade&#34;,
-            &#34;linha&#34;,
-            &#34;timestamp_captura&#34;,
-        ]
-        df_gps = df_gps[mask][cols]  # pylint: disable=c0103
-        df_gps = df_gps.drop_duplicates(  # pylint: disable=c0103
-            [&#34;ordem&#34;, &#34;latitude&#34;, &#34;longitude&#34;, &#34;datahora&#34;, &#34;timestamp_captura&#34;]
-        )
-
-        log(f&#34;Shape after filtering: {df_gps.shape}&#34;)
-        if df_gps.shape[0] == 0:
-            error = ValueError(&#34;After filtering, the dataframe is empty!&#34;)
-            log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
-    except Exception:  # pylint: disable = W0703
-        error = traceback.format_exc()
-        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
-
-    return {&#34;data&#34;: df_gps, &#34;error&#34;: error}</code></pre>
-</details>
 </section>
 <section>
 </section>
@@ -289,34 +39,6 @@ def pre_treatment_br_rj_riodejaneiro_onibus_gps(
 </code></dt>
 <dd>
 <div class="desc"><p>Generates the complete URL to get data from API.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task
-def create_api_url_onibus_gps(timestamp: datetime = None) -&gt; str:
-    &#34;&#34;&#34;
-    Generates the complete URL to get data from API.
-    &#34;&#34;&#34;
-
-    if not timestamp:
-        timestamp = pendulum.now(constants.TIMEZONE.value).replace(
-            second=0, microsecond=0
-        )
-
-    headers = get_vault_secret(constants.ZIRIX_API_SECRET_PATH.value)[&#34;data&#34;]
-    key = list(headers)[0]
-    url = f&#34;{constants.ZIRIX_BASE_URL.value}/EnvioIplan?{key}={{secret}}&#34;
-
-    date_range = {
-        &#34;start&#34;: (timestamp - timedelta(minutes=6)).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
-        &#34;end&#34;: (timestamp - timedelta(minutes=5)).strftime(&#34;%Y-%m-%d+%H:%M:%S&#34;),
-    }
-    url += f&#34;&amp;dataInicial={date_range[&#39;start&#39;]}&amp;dataFinal={date_range[&#39;end&#39;]}&#34;
-
-    log(f&#34;Request data from URL: {url}&#34;)
-    return url.format(secret=headers[key])</code></pre>
-</details>
 </dd>
 <dt id="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps_zirix.tasks.create_api_url_onibus_realocacao"><code class="name flex">
 <span>def <span class="ident">create_api_url_onibus_realocacao</span></span>(<span>interval_minutes: int = 10, timestamp: datetime.datetime = None, secret_path: str = 'zirix_api') ‑> str</span>
@@ -324,39 +46,6 @@ def create_api_url_onibus_gps(timestamp: datetime = None) -&gt; str:
 <dd>
 <div class="desc"><p>start_date: datahora mínima do sinal de GPS avaliado
 end_date: datahora máxima do sinal de GPS avaliado</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task
-def create_api_url_onibus_realocacao(
-    interval_minutes: int = 10,
-    timestamp: datetime = None,
-    secret_path: str = constants.ZIRIX_API_SECRET_PATH.value,
-) -&gt; str:
-    &#34;&#34;&#34;
-    start_date: datahora mínima do sinal de GPS avaliado
-    end_date: datahora máxima do sinal de GPS avaliado
-    &#34;&#34;&#34;
-
-    # Configura parametros da URL
-    date_range = {
-        &#34;date_range_start&#34;: (timestamp - timedelta(minutes=interval_minutes)).strftime(
-            &#34;%Y-%m-%dT%H:%M:%S&#34;
-        ),
-        &#34;date_range_end&#34;: timestamp.strftime(&#34;%Y-%m-%dT%H:%M:%S&#34;),
-    }
-    url = f&#34;{constants.ZIRIX_BASE_URL.value}/EnvioViagensRetroativas?&#34;
-
-    headers = get_vault_secret(secret_path)[&#34;data&#34;]
-    key = list(headers)[0]
-    url = f&#34;{url}{key}={{secret}}&#34;
-
-    url += f&#34;&amp;dataInicial={date_range[&#39;date_range_start&#39;]}&amp;dataFinal={date_range[&#39;date_range_end&#39;]}&#34;
-
-    log(f&#34;Request data from URL:\n{url}&#34;)
-    return url.format(secret=headers[key])</code></pre>
-</details>
 </dd>
 <dt id="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps_zirix.tasks.pre_treatment_br_rj_riodejaneiro_onibus_gps"><code class="name flex">
 <span>def <span class="ident">pre_treatment_br_rj_riodejaneiro_onibus_gps</span></span>(<span>status: dict, timestamp: datetime.datetime, version: int = 1, recapture: bool = False) ‑> Dict</span>
@@ -380,103 +69,6 @@ and apply filtering to stale data that may populate the API response.</p>
 <dt><code>df_gps</code></dt>
 <dd>pandas.core.DataFrame containing the treated data.</dd>
 </dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task
-# pylint: disable=too-many-locals
-def pre_treatment_br_rj_riodejaneiro_onibus_gps(
-    status: dict, timestamp: datetime, version: int = 1, recapture: bool = False
-) -&gt; Dict:
-    &#34;&#34;&#34;Basic data treatment for bus gps data. Converts unix time to datetime,
-    and apply filtering to stale data that may populate the API response.
-
-    Args:
-        status_dict (dict): dict containing the status of the request made to the
-        API. Must contain keys: data and error
-        version (int, optional): Source API version. Temporary argument
-        for testing
-        timestamp (str): Capture data timestamp.
-
-    Returns:
-        df_gps: pandas.core.DataFrame containing the treated data.
-    &#34;&#34;&#34;
-    if status[&#34;error&#34;] is not None:
-        return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
-
-    if status[&#34;data&#34;] == []:
-        log(&#34;Data is empty, skipping treatment...&#34;)
-        return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
-
-    error = None
-    timezone = constants.TIMEZONE.value
-
-    log(f&#34;Data received to treat: \n{status[&#39;data&#39;][:5]}&#34;)
-    df_gps = pd.DataFrame(status[&#34;data&#34;])  # pylint: disable=c0103
-    df_gps[&#34;timestamp_captura&#34;] = timestamp
-    log(f&#34;Before converting, datahora is: \n{df_gps[&#39;datahora&#39;]}&#34;)
-
-    # Remove timezone and force it to be config timezone
-    if version == 1:
-        timestamp_cols = [&#34;datahora&#34;]
-    elif version == 2:
-        timestamp_cols = [&#34;datahora&#34;, &#34;datahoraenvio&#34;]
-    if recapture:
-        timestamp_cols.append(&#34;datahoraservidor&#34;)
-    for col in timestamp_cols:
-        print(f&#34;Before converting, {col} is: \n{df_gps[col].head()}&#34;)  # log
-        df_gps[col] = (
-            pd.to_datetime(df_gps[col].astype(float), unit=&#34;ms&#34;)
-            .dt.tz_localize(tz=&#34;UTC&#34;)
-            .dt.tz_convert(timezone)
-        )
-        log(f&#34;After converting the timezone, {col} is: \n{df_gps[col].head()}&#34;)
-
-    # Filter data
-    try:
-        log(f&#34;Shape before filtering: {df_gps.shape}&#34;)
-        if version == 1:
-            filter_col = &#34;timestamp_captura&#34;
-            time_delay = constants.GPS_SPPO_CAPTURE_DELAY_V1.value
-        elif version == 2:
-            filter_col = &#34;datahoraenvio&#34;
-            time_delay = constants.GPS_SPPO_CAPTURE_DELAY_V2.value
-        if recapture:
-            server_mask = (
-                df_gps[&#34;datahoraenvio&#34;] - df_gps[&#34;datahoraservidor&#34;]
-            ) &lt;= timedelta(minutes=constants.GPS_SPPO_RECAPTURE_DELAY_V2.value)
-            df_gps = df_gps[server_mask]  # pylint: disable=c0103
-
-        mask = (df_gps[filter_col] - df_gps[&#34;datahora&#34;]).apply(
-            lambda x: timedelta(seconds=-20) &lt;= x &lt;= timedelta(minutes=time_delay)
-        )
-
-        # Select and drop duplicated data
-        cols = [
-            &#34;ordem&#34;,
-            &#34;latitude&#34;,
-            &#34;longitude&#34;,
-            &#34;datahora&#34;,
-            &#34;velocidade&#34;,
-            &#34;linha&#34;,
-            &#34;timestamp_captura&#34;,
-        ]
-        df_gps = df_gps[mask][cols]  # pylint: disable=c0103
-        df_gps = df_gps.drop_duplicates(  # pylint: disable=c0103
-            [&#34;ordem&#34;, &#34;latitude&#34;, &#34;longitude&#34;, &#34;datahora&#34;, &#34;timestamp_captura&#34;]
-        )
-
-        log(f&#34;Shape after filtering: {df_gps.shape}&#34;)
-        if df_gps.shape[0] == 0:
-            error = ValueError(&#34;After filtering, the dataframe is empty!&#34;)
-            log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
-    except Exception:  # pylint: disable = W0703
-        error = traceback.format_exc()
-        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
-
-    return {&#34;data&#34;: df_gps, &#34;error&#34;: error}</code></pre>
-</details>
 </dd>
 <dt id="pipelines.rj_smtr.br_rj_riodejaneiro_onibus_gps_zirix.tasks.pre_treatment_br_rj_riodejaneiro_onibus_realocacao"><code class="name flex">
 <span>def <span class="ident">pre_treatment_br_rj_riodejaneiro_onibus_realocacao</span></span>(<span>status: dict, timestamp: datetime.datetime) ‑> Dict</span>
@@ -495,87 +87,6 @@ and apply filtering to stale data that may populate the API response.</p>
 <dt><code>df_realocacao</code></dt>
 <dd>pandas.core.DataFrame containing the treated data.</dd>
 </dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task
-def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
-    status: dict, timestamp: datetime
-) -&gt; Dict:
-    &#34;&#34;&#34;Basic data treatment for bus gps relocation data. Converts unix time to datetime,
-    and apply filtering to stale data that may populate the API response.
-
-    Args:
-        status (dict): dict containing the status of the request made to the
-        API. Must contain keys: data and error
-
-    Returns:
-        df_realocacao: pandas.core.DataFrame containing the treated data.
-    &#34;&#34;&#34;
-
-    if status[&#34;error&#34;] is not None:
-        return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
-
-    if status[&#34;data&#34;] == []:
-        log(&#34;Data is empty, skipping treatment...&#34;)
-        return {&#34;data&#34;: pd.DataFrame(), &#34;error&#34;: status[&#34;error&#34;]}
-
-    error = None
-
-    log(f&#34;Data received to treat: \n{status[&#39;data&#39;][:5]}&#34;)
-    df_realocacao = pd.DataFrame(status[&#34;data&#34;])  # pylint: disable=c0103
-    # df_realocacao[&#34;timestamp_captura&#34;] = timestamp
-    df_realocacao[&#34;timestamp_captura&#34;] = timestamp.isoformat()
-    # log(f&#34;Before converting, datahora is: \n{df_realocacao[&#39;datahora&#39;]}&#34;)
-
-    # Ajusta tipos de data
-    dt_cols = [
-        &#34;dataEntrada&#34;,
-        &#34;dataOperacao&#34;,
-        &#34;dataSaida&#34;,
-        &#34;dataProcessado&#34;,
-    ]
-
-    for col in dt_cols:
-        log(f&#34;Converting column {col}&#34;)
-        log(f&#34;Data received to treat: \n{df_realocacao[col]}&#34;)
-        temp_time_col_sec = pd.to_datetime(
-            df_realocacao[col], format=&#34;%Y-%m-%dT%H:%M:%S&#34;, errors=&#34;coerce&#34;
-        ).dt.tz_localize(tz=constants.TIMEZONE.value)
-        temp_time_col_msec = pd.to_datetime(
-            df_realocacao[col], format=&#34;%Y-%m-%dT%H:%M:%S.%f&#34;, errors=&#34;coerce&#34;
-        ).dt.tz_localize(tz=constants.TIMEZONE.value)
-
-        df_realocacao[col] = temp_time_col_sec.fillna(temp_time_col_msec).dt.strftime(
-            &#34;%Y-%m-%d %H:%M:%S%z&#34;
-        )
-
-        if df_realocacao[col].isna().sum() &gt; 0:
-            error = ValueError(&#34;After treating, there is null values!&#34;)
-            log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
-
-        log(f&#34;Treated data: \n{df_realocacao[col]}&#34;)
-
-    # Ajusta tempo máximo da realocação
-    df_realocacao.loc[
-        df_realocacao.dataSaida == &#34;1971-01-01 00:00:00-0300&#34;, &#34;dataSaida&#34;
-    ] = &#34;&#34;
-
-    # Renomeia colunas
-    cols = {
-        &#34;veiculo&#34;: &#34;id_veiculo&#34;,
-        &#34;dataOperacao&#34;: &#34;datetime_operacao&#34;,
-        &#34;linha&#34;: &#34;servico&#34;,
-        &#34;dataEntrada&#34;: &#34;datetime_entrada&#34;,
-        &#34;dataSaida&#34;: &#34;datetime_saida&#34;,
-        &#34;dataProcessado&#34;: &#34;timestamp_processamento&#34;,
-    }
-
-    df_realocacao = df_realocacao.rename(columns=cols)
-
-    return {&#34;data&#34;: df_realocacao.drop_duplicates(), &#34;error&#34;: error}</code></pre>
-</details>
 </dd>
 </dl>
 </section>
@@ -587,8 +98,8 @@ def pre_treatment_br_rj_riodejaneiro_onibus_realocacao(
 <input id="lunr-search" name="q" placeholder="🔎 Search ..." aria-label="Search"
 disabled minlength="2">
 </form>
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.css" integrity="sha512-j1u8eUJ4f23xPPxwOrLUPQaCD2dwzNqqmDDcWS4deWsMv2ohLqmXXuP3hU7g8TyzbMSakP/mMqoNBYWj8AEIFg==" crossorigin>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.js" integrity="sha512-plGUER9JkeEWPPqQBE4sdLqBoQug5Ap+BCGMc7bJ8BXkm+VVj6QzkpBz5Yv2yPkkq+cqg9IpkBaGCas6uDbW8g==" crossorigin></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.16.0/tingle.min.css" integrity="sha512-b+T2i3P45i1LZM7I00Ci5QquB9szqaxu+uuk5TUSGjZQ4w4n+qujQiIuvTv2BxE7WCGQCifNMksyKILDiHzsOg==" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.16.0/tingle.min.js" integrity="sha512-2B9/byNV1KKRm5nQ2RLViPFD6U4dUjDGwuW1GU+ImJh8YinPU9Zlq1GzdTMO+G2ROrB5o1qasJBy1ttYz0wCug==" crossorigin></script>
 <style>
 .modal-dialog iframe {
 width: 100vw;
@@ -629,7 +140,6 @@ setTimeout(() => input.focus(), 100);
 }).setContent('<iframe src="' + url + '"></iframe>').open();
 }
 </script>
-<h1>Index</h1>
 <div class="toc">
 <ul></ul>
 </div>
@@ -651,7 +161,7 @@ setTimeout(() => input.focus(), 100);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.0</a>.</p>
 </footer>
 </body>
 </html>

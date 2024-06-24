@@ -2,18 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.10.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.0">
 <title>pipelines.utils.utils API documentation</title>
-<meta name="description" content="General utilities for all pipelines." />
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
-<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<meta name="description" content="General utilities for all pipelines.">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
-<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+})</script>
 </head>
 <body>
 <main>
@@ -23,1121 +26,6 @@
 </header>
 <section id="section-intro">
 <p>General utilities for all pipelines.</p>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python"># -*- coding: utf-8 -*-
-# pylint: disable=C0103, C0302
-&#34;&#34;&#34;
-General utilities for all pipelines.
-&#34;&#34;&#34;
-
-import base64
-from datetime import datetime
-import json
-import logging
-from os import getenv, walk
-from os.path import join
-from pathlib import Path
-import re
-import textwrap
-from typing import Any, Dict, List, Optional, Tuple, Union
-from uuid import uuid4
-
-import basedosdados as bd
-import croniter
-from google.cloud import storage
-from google.cloud.storage.blob import Blob
-from google.oauth2 import service_account
-import hvac
-import numpy as np
-import pandas as pd
-import pendulum
-import prefect
-from prefect.client import Client
-from prefect.engine.state import Skipped, State
-from prefect.run_configs import KubernetesRun
-from prefect.utilities.graphql import (
-    with_args,
-)
-from redis_pal import RedisPal
-import requests
-import telegram
-
-from pipelines.constants import constants
-
-
-def log(msg: Any, level: str = &#34;info&#34;) -&gt; None:
-    &#34;&#34;&#34;
-    Logs a message to prefect&#39;s logger.
-    &#34;&#34;&#34;
-    levels = {
-        &#34;debug&#34;: logging.DEBUG,
-        &#34;info&#34;: logging.INFO,
-        &#34;warning&#34;: logging.WARNING,
-        &#34;error&#34;: logging.ERROR,
-        &#34;critical&#34;: logging.CRITICAL,
-    }
-
-    blank_spaces = 8 * &#34; &#34;
-    msg = blank_spaces + &#34;----\n&#34; + str(msg)
-    msg = &#34;\n&#34;.join([blank_spaces + line for line in msg.split(&#34;\n&#34;)]) + &#34;\n\n&#34;
-
-    if level not in levels:
-        raise ValueError(f&#34;Invalid log level: {level}&#34;)
-    prefect.context.logger.log(levels[level], msg)  # pylint: disable=E1101
-
-
-def log_mod(msg: Any, level: str = &#34;info&#34;, index: int = 0, mod: int = 1):
-    &#34;&#34;&#34;
-    Only logs a message if the index is a multiple of mod.
-    &#34;&#34;&#34;
-    if index % mod == 0 or index == 0:
-        log(msg=f&#34;iteration {index}:\n {msg}&#34;, level=level)
-
-
-###############
-#
-# Datetime utils
-#
-###############
-
-
-def determine_whether_to_execute_or_not(
-    cron_expression: str, datetime_now: datetime, datetime_last_execution: datetime
-) -&gt; bool:
-    &#34;&#34;&#34;
-    Determines whether the cron expression is currently valid.
-
-    Args:
-        cron_expression: The cron expression to check.
-        datetime_now: The current datetime.
-        datetime_last_execution: The last datetime the cron expression was executed.
-
-    Returns:
-        True if the cron expression should trigger, False otherwise.
-    &#34;&#34;&#34;
-    cron_expression_iterator = croniter.croniter(
-        cron_expression, datetime_last_execution
-    )
-    next_cron_expression_time = cron_expression_iterator.get_next(datetime)
-    return next_cron_expression_time &lt;= datetime_now
-
-
-###############
-#
-# Redis
-#
-###############
-
-
-def get_redis_client(
-    host: str = &#34;redis.redis.svc.cluster.local&#34;,
-    port: int = 6379,
-    db: int = 0,  # pylint: disable=C0103
-    password: str = None,
-) -&gt; RedisPal:
-    &#34;&#34;&#34;
-    Returns a Redis client.
-    &#34;&#34;&#34;
-    return RedisPal(
-        host=host,
-        port=port,
-        db=db,
-        password=password,
-    )
-
-
-def get_vault_client() -&gt; hvac.Client:
-    &#34;&#34;&#34;
-    Returns a Vault client.
-    &#34;&#34;&#34;
-    return hvac.Client(
-        url=getenv(&#34;VAULT_ADDRESS&#34;).strip(),
-        token=getenv(&#34;VAULT_TOKEN&#34;).strip(),
-    )
-
-
-def get_vault_secret(secret_path: str, client: hvac.Client = None) -&gt; dict:
-    &#34;&#34;&#34;
-    Returns a secret from Vault.
-    &#34;&#34;&#34;
-    vault_client = client or get_vault_client()
-    return vault_client.secrets.kv.read_secret_version(secret_path)[&#34;data&#34;]
-
-
-def get_username_and_password_from_secret(
-    secret_path: str,
-    client: hvac.Client = None,
-) -&gt; Tuple[str, str]:
-    &#34;&#34;&#34;
-    Returns a username and password from a secret in Vault.
-    &#34;&#34;&#34;
-    secret = get_vault_secret(secret_path, client)
-    return (
-        secret[&#34;data&#34;][&#34;username&#34;],
-        secret[&#34;data&#34;][&#34;password&#34;],
-    )
-
-
-def notify_discord_on_failure(
-    flow: prefect.Flow,
-    state: State,
-    secret_path: str,
-    code_owners: Optional[List[str]] = None,
-):
-    &#34;&#34;&#34;
-    Notifies a Discord channel when a flow fails.
-    &#34;&#34;&#34;
-    url = get_vault_secret(secret_path)[&#34;data&#34;][&#34;url&#34;]
-    flow_run_id = prefect.context.get(&#34;flow_run_id&#34;)
-    code_owners = code_owners or constants.DEFAULT_CODE_OWNERS.value
-    code_owner_dict = constants.OWNERS_DISCORD_MENTIONS.value
-    at_code_owners = []
-    for code_owner in code_owners:
-        code_owner_id = code_owner_dict[code_owner][&#34;user_id&#34;]
-        code_owner_type = code_owner_dict[code_owner][&#34;type&#34;]
-
-        if code_owner_type == &#34;user&#34;:
-            at_code_owners.append(f&#34;    - &lt;@{code_owner_id}&gt;\n&#34;)
-        elif code_owner_type == &#34;user_nickname&#34;:
-            at_code_owners.append(f&#34;    - &lt;@!{code_owner_id}&gt;\n&#34;)
-        elif code_owner_type == &#34;channel&#34;:
-            at_code_owners.append(f&#34;    - &lt;#{code_owner_id}&gt;\n&#34;)
-        elif code_owner_type == &#34;role&#34;:
-            at_code_owners.append(f&#34;    - &lt;@&amp;{code_owner_id}&gt;\n&#34;)
-
-    message = (
-        f&#34;:man_facepalming: Flow **{flow.name}** has failed.&#34;
-        + f&#39;\n  - State message: *&#34;{state.message}&#34;*&#39;
-        + &#34;\n  - Link to the failed flow: &#34;
-        + f&#34;https://prefect.dados.rio/flow-run/{flow_run_id}&#34;
-        + &#34;\n  - Extra attention:\n&#34;
-        + &#34;&#34;.join(at_code_owners)
-    )
-    send_discord_message(
-        message=message,
-        webhook_url=url,
-    )
-
-
-# pylint: disable=unused-argument
-def skip_if_running_handler(obj, old_state: State, new_state: State) -&gt; State:
-    &#34;&#34;&#34;
-    State handler that will skip a flow run if another instance of the flow is already running.
-
-    Adapted from Prefect Discourse:
-    https://tinyurl.com/4hn5uz2w
-    &#34;&#34;&#34;
-    if new_state.is_running():
-        client = Client()
-        query = &#34;&#34;&#34;
-            query($flow_id: uuid) {
-                flow_run(
-                    where: {
-                        _and: [
-                            {state: {_eq: &#34;Running&#34;}},
-                            {flow_id: {_eq: $flow_id}}
-                        ]
-                    }
-                ) {
-                    id
-                }
-            }
-        &#34;&#34;&#34;
-        # pylint: disable=no-member
-        response = client.graphql(
-            query=query,
-            variables=dict(flow_id=prefect.context.flow_id),
-        )
-        active_flow_runs = response[&#34;data&#34;][&#34;flow_run&#34;]
-        if active_flow_runs:
-            logger = prefect.context.get(&#34;logger&#34;)
-            message = &#34;Skipping this flow run since there are already some flow runs in progress&#34;
-            logger.info(message)
-            return Skipped(message)
-    return new_state
-
-
-def set_default_parameters(
-    flow: prefect.Flow, default_parameters: dict
-) -&gt; prefect.Flow:
-    &#34;&#34;&#34;
-    Sets default parameters for a flow.
-    &#34;&#34;&#34;
-    for parameter in flow.parameters():
-        if parameter.name in default_parameters:
-            parameter.default = default_parameters[parameter.name]
-    return flow
-
-
-def run_local(flow: prefect.Flow, parameters: Dict[str, Any] = None):
-    &#34;&#34;&#34;
-    Runs a flow locally.
-    &#34;&#34;&#34;
-    # Setup for local run
-    flow.storage = None
-    flow.run_config = None
-    flow.schedule = None
-
-    # Run flow
-    return flow.run(parameters=parameters) if parameters else flow.run()
-
-
-def run_cloud(
-    flow: prefect.Flow,
-    labels: List[str],
-    parameters: Dict[str, Any] = None,
-    run_description: str = &#34;&#34;,
-):
-    &#34;&#34;&#34;
-    Runs a flow on Prefect Server (must have VPN configured).
-    &#34;&#34;&#34;
-    # Setup no schedule
-    flow.schedule = None
-
-    # Change flow name for development and register
-    flow.name = f&#34;{flow.name} (development)&#34;
-    flow.run_config = KubernetesRun(image=&#34;ghcr.io/prefeitura-rio/prefect-flows:latest&#34;)
-    flow_id = flow.register(project_name=&#34;main&#34;, labels=[])
-
-    # Get Prefect Client and submit flow run
-    client = Client()
-    flow_run_id = client.create_flow_run(
-        flow_id=flow_id,
-        run_name=f&#34;TEST RUN - {run_description} - {flow.name}&#34;,
-        labels=labels,
-        parameters=parameters,
-    )
-
-    # Print flow run link so user can check it
-    print(f&#34;Run submitted: TEST RUN - {run_description} - {flow.name}&#34;)
-    print(f&#34;Please check at: https://prefect.dados.rio/flow-run/{flow_run_id}&#34;)
-
-
-def run_registered(
-    flow_name: str,
-    flow_project: str,
-    labels: List[str],
-    parameters: Dict[str, Any] = None,
-    run_description: str = &#34;&#34;,
-) -&gt; str:
-    &#34;&#34;&#34;
-    Runs an already registered flow on Prefect Server (must have credentials configured).
-    &#34;&#34;&#34;
-    # Get Prefect Client and submit flow run
-    client = Client()
-    flow_result = client.graphql(
-        {
-            &#34;query&#34;: {
-                with_args(
-                    &#34;flow&#34;,
-                    {
-                        &#34;where&#34;: {
-                            &#34;_and&#34;: [
-                                {&#34;name&#34;: {&#34;_eq&#34;: flow_name}},
-                                {&#34;archived&#34;: {&#34;_eq&#34;: False}},
-                                {&#34;project&#34;: {&#34;name&#34;: {&#34;_eq&#34;: flow_project}}},
-                            ]
-                        }
-                    },
-                ): {
-                    &#34;id&#34;,
-                }
-            }
-        }
-    )
-    flows_found = flow_result.data.flow
-    if len(flows_found) == 0:
-        raise ValueError(f&#34;Flow {flow_name} not found.&#34;)
-    if len(flows_found) &gt; 1:
-        raise ValueError(f&#34;More than one flow found for {flow_name}.&#34;)
-    flow_id = flow_result[&#34;data&#34;][&#34;flow&#34;][0][&#34;id&#34;]
-    flow_run_id = client.create_flow_run(
-        flow_id=flow_id,
-        run_name=f&#34;SUBMITTED REMOTELY - {run_description}&#34;,
-        labels=labels,
-        parameters=parameters,
-    )
-
-    # Print flow run link so user can check it
-    print(f&#34;Run submitted: SUBMITTED REMOTELY - {run_description}&#34;)
-    print(f&#34;Please check at: https://prefect.dados.rio/flow-run/{flow_run_id}&#34;)
-
-    return flow_run_id
-
-
-def query_to_line(query: str) -&gt; str:
-    &#34;&#34;&#34;
-    Converts a query to a line.
-    &#34;&#34;&#34;
-    query = textwrap.dedent(query)
-    return &#34; &#34;.join([line.strip() for line in query.split(&#34;\n&#34;)])
-
-
-def remove_tabs_from_query(query: str) -&gt; str:
-    &#34;&#34;&#34;
-    Removes tabs from a query.
-    &#34;&#34;&#34;
-    query = query_to_line(query)
-    return re.sub(r&#34;\s+&#34;, &#34; &#34;, query).strip()
-
-
-def send_discord_message(
-    message: str,
-    webhook_url: str,
-) -&gt; None:
-    &#34;&#34;&#34;
-    Sends a message to a Discord channel.
-    &#34;&#34;&#34;
-    requests.post(
-        webhook_url,
-        data={&#34;content&#34;: message},
-    )
-
-
-def send_telegram_message(
-    message: str,
-    token: str,
-    chat_id: int,
-    parse_mode: str = telegram.ParseMode.HTML,
-):
-    &#34;&#34;&#34;
-    Sends a message to a Telegram chat.
-    &#34;&#34;&#34;
-    bot = telegram.Bot(token=token)
-    bot.send_message(
-        chat_id=chat_id,
-        text=message,
-        parse_mode=parse_mode,
-    )
-
-
-def smart_split(
-    text: str,
-    max_length: int,
-    separator: str = &#34; &#34;,
-) -&gt; List[str]:
-    &#34;&#34;&#34;
-    Splits a string into a list of strings.
-    &#34;&#34;&#34;
-    if len(text) &lt;= max_length:
-        return [text]
-
-    separator_index = text.rfind(separator, 0, max_length)
-    if (separator_index &gt;= max_length) or (separator_index == -1):
-        raise ValueError(
-            f&#39;Cannot split text &#34;{text}&#34; into {max_length}&#39;
-            f&#39;characters using separator &#34;{separator}&#34;&#39;
-        )
-
-    return [
-        text[:separator_index],
-        *smart_split(
-            text[separator_index + len(separator) :],
-            max_length,
-            separator,
-        ),
-    ]
-
-
-def untuple_clocks(clocks):
-    &#34;&#34;&#34;
-    Converts a list of tuples to a list of clocks.
-    &#34;&#34;&#34;
-    return [clock[0] if isinstance(clock, tuple) else clock for clock in clocks]
-
-
-###############
-#
-# Text formatting
-#
-###############
-
-
-def human_readable(
-    value: Union[int, float],
-    unit: str = &#34;&#34;,
-    unit_prefixes: List[str] = None,
-    unit_divider: int = 1000,
-    decimal_places: int = 2,
-):
-    &#34;&#34;&#34;
-    Formats a value in a human readable way.
-    &#34;&#34;&#34;
-    if unit_prefixes is None:
-        unit_prefixes = [&#34;&#34;, &#34;k&#34;, &#34;M&#34;, &#34;G&#34;, &#34;T&#34;, &#34;P&#34;, &#34;E&#34;, &#34;Z&#34;, &#34;Y&#34;]
-    if value == 0:
-        return f&#34;{value}{unit}&#34;
-    unit_prefix = unit_prefixes[0]
-    for prefix in unit_prefixes[1:]:
-        if value &lt; unit_divider:
-            break
-        unit_prefix = prefix
-        value /= unit_divider
-    return f&#34;{value:.{decimal_places}f}{unit_prefix}{unit}&#34;
-
-
-###############
-#
-# Dataframe
-#
-###############
-
-
-def dataframe_to_csv(
-    dataframe: pd.DataFrame,
-    path: Union[str, Path],
-    build_json_dataframe: bool = False,
-    dataframe_key_column: str = None,
-) -&gt; None:
-    &#34;&#34;&#34;
-    Writes a dataframe to CSV file.
-    &#34;&#34;&#34;
-    if build_json_dataframe:
-        dataframe = to_json_dataframe(dataframe, key_column=dataframe_key_column)
-
-    # Remove filename from path
-    path = Path(path)
-    # Create directory if it doesn&#39;t exist
-    path.parent.mkdir(parents=True, exist_ok=True)
-
-    # Write dataframe to CSV
-    dataframe.to_csv(path, index=False, encoding=&#34;utf-8&#34;)
-
-
-def dataframe_to_parquet(
-    dataframe: pd.DataFrame,
-    path: Union[str, Path],
-    build_json_dataframe: bool = False,
-    dataframe_key_column: str = None,
-):
-    &#34;&#34;&#34;
-    Writes a dataframe to Parquet file with Schema as STRING.
-    &#34;&#34;&#34;
-    # Code adapted from
-    # https://stackoverflow.com/a/70817689/9944075
-
-    if build_json_dataframe:
-        dataframe = to_json_dataframe(dataframe, key_column=dataframe_key_column)
-
-    # If the file already exists, we:
-    # - Load it
-    # - Merge the new dataframe with the existing one
-    if Path(path).exists():
-        # Load it
-        original_df = pd.read_parquet(path)
-        # Merge the new dataframe with the existing one
-        dataframe = pd.concat([original_df, dataframe], sort=False)
-
-    # Write dataframe to Parquet
-    dataframe.to_parquet(path, engine=&#34;pyarrow&#34;)
-
-
-def batch_to_dataframe(batch: Tuple[Tuple], columns: List[str]) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    Converts a batch of rows to a dataframe.
-    &#34;&#34;&#34;
-    return pd.DataFrame(batch, columns=columns)
-
-
-def clean_dataframe(dataframe: pd.DataFrame) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    Cleans a dataframe.
-    &#34;&#34;&#34;
-    for col in dataframe.columns.tolist():
-        if dataframe[col].dtype == object:
-            try:
-                dataframe[col] = (
-                    dataframe[col]
-                    .astype(str)
-                    .str.replace(&#34;\x00&#34;, &#34;&#34;)
-                    .replace(&#34;None&#34;, np.nan)
-                )
-            except Exception as exc:
-                print(
-                    &#34;Column: &#34;,
-                    col,
-                    &#34;\nData: &#34;,
-                    dataframe[col].tolist(),
-                    &#34;\n&#34;,
-                    exc,
-                )
-                raise
-    return dataframe
-
-
-def remove_columns_accents(dataframe: pd.DataFrame) -&gt; list:
-    &#34;&#34;&#34;
-    Remove accents from dataframe columns.
-    &#34;&#34;&#34;
-    columns = [str(column) for column in dataframe.columns]
-    dataframe.columns = columns
-    return list(
-        dataframe.columns.str.normalize(&#34;NFKD&#34;)
-        .str.encode(&#34;ascii&#34;, errors=&#34;ignore&#34;)
-        .str.decode(&#34;utf-8&#34;)
-        .map(lambda x: x.strip())
-        .str.replace(&#34; &#34;, &#34;_&#34;)
-        .str.replace(&#34;/&#34;, &#34;_&#34;)
-        .str.replace(&#34;-&#34;, &#34;_&#34;)
-        .str.replace(&#34;\a&#34;, &#34;_&#34;)
-        .str.replace(&#34;\b&#34;, &#34;_&#34;)
-        .str.replace(&#34;\n&#34;, &#34;_&#34;)
-        .str.replace(&#34;\t&#34;, &#34;_&#34;)
-        .str.replace(&#34;\v&#34;, &#34;_&#34;)
-        .str.replace(&#34;\f&#34;, &#34;_&#34;)
-        .str.replace(&#34;\r&#34;, &#34;_&#34;)
-        .str.lower()
-        .map(final_column_treatment)
-    )
-
-
-# pylint: disable=R0913
-def to_partitions(
-    data: pd.DataFrame,
-    partition_columns: List[str],
-    savepath: str,
-    data_type: str = &#34;csv&#34;,
-    suffix: str = None,
-    build_json_dataframe: bool = False,
-    dataframe_key_column: str = None,
-) -&gt; List[Path]:  # sourcery skip: raise-specific-error
-    &#34;&#34;&#34;Save data in to hive patitions schema, given a dataframe and a list of partition columns.
-    Args:
-        data (pandas.core.frame.DataFrame): Dataframe to be partitioned.
-        partition_columns (list): List of columns to be used as partitions.
-        savepath (str, pathlib.PosixPath): folder path to save the partitions
-    Exemple:
-        data = {
-            &#34;ano&#34;: [2020, 2021, 2020, 2021, 2020, 2021, 2021,2025],
-            &#34;mes&#34;: [1, 2, 3, 4, 5, 6, 6,9],
-            &#34;sigla_uf&#34;: [&#34;SP&#34;, &#34;SP&#34;, &#34;RJ&#34;, &#34;RJ&#34;, &#34;PR&#34;, &#34;PR&#34;, &#34;PR&#34;,&#34;PR&#34;],
-            &#34;dado&#34;: [&#34;a&#34;, &#34;b&#34;, &#34;c&#34;, &#34;d&#34;, &#34;e&#34;, &#34;f&#34;, &#34;g&#34;,&#39;h&#39;],
-        }
-        to_partitions(
-            data=pd.DataFrame(data),
-            partition_columns=[&#39;ano&#39;,&#39;mes&#39;,&#39;sigla_uf&#39;],
-            savepath=&#39;partitions/&#39;
-        )
-    &#34;&#34;&#34;
-    saved_files = []
-    if isinstance(data, (pd.core.frame.DataFrame)):
-        savepath = Path(savepath)
-
-        # create unique combinations between partition columns
-        unique_combinations = (
-            data[partition_columns]
-            .drop_duplicates(subset=partition_columns)
-            .to_dict(orient=&#34;records&#34;)
-        )
-
-        for filter_combination in unique_combinations:
-            patitions_values = [
-                f&#34;{partition}={value}&#34;
-                for partition, value in filter_combination.items()
-            ]
-
-            # get filtered data
-            df_filter = data.loc[
-                data[filter_combination.keys()]
-                .isin(filter_combination.values())
-                .all(axis=1),
-                :,
-            ]
-            df_filter = df_filter.drop(columns=partition_columns).reset_index(drop=True)
-
-            # create folder tree
-            filter_save_path = Path(savepath / &#34;/&#34;.join(patitions_values))
-            filter_save_path.mkdir(parents=True, exist_ok=True)
-            if suffix is not None:
-                file_filter_save_path = (
-                    Path(filter_save_path) / f&#34;data_{suffix}.{data_type}&#34;
-                )
-            else:
-                file_filter_save_path = Path(filter_save_path) / f&#34;data.{data_type}&#34;
-
-            if build_json_dataframe:
-                df_filter = to_json_dataframe(
-                    df_filter, key_column=dataframe_key_column
-                )
-
-            if data_type == &#34;csv&#34;:
-                # append data to csv
-                df_filter.to_csv(
-                    file_filter_save_path,
-                    index=False,
-                    mode=&#34;a&#34;,
-                    header=not file_filter_save_path.exists(),
-                )
-                saved_files.append(file_filter_save_path)
-            elif data_type == &#34;parquet&#34;:
-                dataframe_to_parquet(dataframe=df_filter, path=file_filter_save_path)
-                saved_files.append(file_filter_save_path)
-            else:
-                raise ValueError(f&#34;Invalid data type: {data_type}&#34;)
-    else:
-        raise BaseException(&#34;Data need to be a pandas DataFrame&#34;)
-
-    return saved_files
-
-
-def to_json_dataframe(
-    dataframe: pd.DataFrame = None,
-    csv_path: Union[str, Path] = None,
-    key_column: str = None,
-    read_csv_kwargs: dict = None,
-    save_to: Union[str, Path] = None,
-) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    Manipulates a dataframe by keeping key_column and moving every other column
-    data to a &#34;content&#34; column in JSON format. Example:
-
-    - Input dataframe: pd.DataFrame({&#34;key&#34;: [&#34;a&#34;, &#34;b&#34;, &#34;c&#34;], &#34;col1&#34;: [1, 2, 3], &#34;col2&#34;: [4, 5, 6]})
-    - Output dataframe: pd.DataFrame({
-        &#34;key&#34;: [&#34;a&#34;, &#34;b&#34;, &#34;c&#34;],
-        &#34;content&#34;: [{&#34;col1&#34;: 1, &#34;col2&#34;: 4}, {&#34;col1&#34;: 2, &#34;col2&#34;: 5}, {&#34;col1&#34;: 3, &#34;col2&#34;: 6}]
-    })
-    &#34;&#34;&#34;
-    if dataframe is None and not csv_path:
-        raise ValueError(&#34;dataframe or dataframe_path is required&#34;)
-    if csv_path:
-        dataframe = pd.read_csv(csv_path, **read_csv_kwargs)
-    if key_column:
-        dataframe[&#34;content&#34;] = dataframe.drop(columns=[key_column]).to_dict(
-            orient=&#34;records&#34;
-        )
-        dataframe = dataframe[[&#34;key&#34;, &#34;content&#34;]]
-    else:
-        dataframe[&#34;content&#34;] = dataframe.to_dict(orient=&#34;records&#34;)
-        dataframe = dataframe[[&#34;content&#34;]]
-    if save_to:
-        dataframe.to_csv(save_to, index=False)
-    return dataframe
-
-
-###############
-#
-# Storage utils
-#
-###############
-
-
-def get_credentials_from_env(
-    mode: str = &#34;prod&#34;, scopes: List[str] = None
-) -&gt; service_account.Credentials:
-    &#34;&#34;&#34;
-    Gets credentials from env vars
-    &#34;&#34;&#34;
-    if mode not in [&#34;prod&#34;, &#34;staging&#34;]:
-        raise ValueError(&#34;Mode must be &#39;prod&#39; or &#39;staging&#39;&#34;)
-    env: str = getenv(f&#34;BASEDOSDADOS_CREDENTIALS_{mode.upper()}&#34;, &#34;&#34;)
-    if env == &#34;&#34;:
-        raise ValueError(f&#34;BASEDOSDADOS_CREDENTIALS_{mode.upper()} env var not set!&#34;)
-    info: dict = json.loads(base64.b64decode(env))
-    cred: service_account.Credentials = (
-        service_account.Credentials.from_service_account_info(info)
-    )
-    if scopes:
-        cred = cred.with_scopes(scopes)
-    return cred
-
-
-def get_storage_blobs(dataset_id: str, table_id: str, mode: str = &#34;staging&#34;) -&gt; list:
-    &#34;&#34;&#34;
-    Get all blobs from a table in a dataset.
-
-    Args:
-        dataset_id (str): dataset id
-        table_id (str): table id
-        mode (str, optional): mode to use. Defaults to &#34;staging&#34;.
-
-    Returns:
-        list: list of blobs
-    &#34;&#34;&#34;
-
-    bd_storage = bd.Storage(dataset_id=dataset_id, table_id=table_id)
-    return list(
-        bd_storage.client[&#34;storage_staging&#34;]
-        .bucket(bd_storage.bucket_name)
-        .list_blobs(prefix=f&#34;{mode}/{bd_storage.dataset_id}/{bd_storage.table_id}/&#34;)
-    )
-
-
-def list_blobs_with_prefix(
-    bucket_name: str, prefix: str, mode: str = &#34;prod&#34;
-) -&gt; List[Blob]:
-    &#34;&#34;&#34;
-    Lists all the blobs in the bucket that begin with the prefix.
-    This can be used to list all blobs in a &#34;folder&#34;, e.g. &#34;public/&#34;.
-    Mode needs to be &#34;prod&#34; or &#34;staging&#34;
-    &#34;&#34;&#34;
-
-    credentials = get_credentials_from_env(mode=mode)
-    storage_client = storage.Client(credentials=credentials)
-
-    # Note: Client.list_blobs requires at least package version 1.17.0.
-    blobs = storage_client.list_blobs(bucket_name, prefix=prefix)
-
-    return list(blobs)
-
-
-def delete_blobs_list(bucket_name: str, blobs: List[Blob], mode: str = &#34;prod&#34;) -&gt; None:
-    &#34;&#34;&#34;
-    Deletes all blobs in the bucket that are in the blobs list.
-    Mode needs to be &#34;prod&#34; or &#34;staging&#34;
-    &#34;&#34;&#34;
-
-    credentials = get_credentials_from_env(mode=mode)
-    storage_client = storage.Client(credentials=credentials)
-
-    bucket = storage_client.bucket(bucket_name)
-    bucket.delete_blobs(blobs)
-
-
-def upload_files_to_storage(
-    bucket_name: str,
-    prefix: str,
-    local_path: Union[str, Path] = None,
-    files_list: List[str] = None,
-    mode: str = &#34;prod&#34;,
-):
-    &#34;&#34;&#34;
-    Uploads all files from `local_path` to `bucket_name` with `prefix`.
-    Mode needs to be &#34;prod&#34; or &#34;staging&#34;
-    &#34;&#34;&#34;
-    # Either local_path or files_list must be provided
-    if local_path is None and files_list is None:
-        raise ValueError(&#34;Either local_path or files_list must be provided&#34;)
-
-    # If local_path is provided, get all files from it
-    if local_path is not None:
-        files_list: List[Path] = list(Path(local_path).glob(&#34;**/*&#34;))
-
-    # Assert all items in files_list are Path objects
-    files_list: List[Path] = [Path(f) for f in files_list]
-
-    credentials = get_credentials_from_env(mode=mode)
-    storage_client = storage.Client(credentials=credentials)
-
-    bucket = storage_client.bucket(bucket_name)
-
-    for file in files_list:
-        if file.is_file():
-            blob = bucket.blob(f&#34;{prefix}/{file.name}&#34;)
-            blob.upload_from_filename(file)
-
-
-def is_date(date_string: str, date_format: str = &#34;%Y-%m-%d&#34;) -&gt; Union[datetime, bool]:
-    &#34;&#34;&#34;
-    Checks whether a string is a valid date.
-    &#34;&#34;&#34;
-    try:
-        return datetime.strptime(date_string, date_format).strftime(date_format)
-    except ValueError:
-        return False
-
-
-def parser_blobs_to_partition_dict(blobs: list) -&gt; dict:
-    &#34;&#34;&#34;
-    Extracts the partition information from the blobs.
-    &#34;&#34;&#34;
-
-    partitions_dict = {}
-    for blob in blobs:
-        for folder in blob.name.split(&#34;/&#34;):
-            if &#34;=&#34; in folder:
-                key = folder.split(&#34;=&#34;)[0]
-                value = folder.split(&#34;=&#34;)[1]
-                try:
-                    partitions_dict[key].append(value)
-                except KeyError:
-                    partitions_dict[key] = [value]
-    return partitions_dict
-
-
-def dump_header_to_file(data_path: Union[str, Path], data_type: str = &#34;csv&#34;):
-    &#34;&#34;&#34;
-    Writes a header to a CSV file.
-    &#34;&#34;&#34;
-    try:
-        assert data_type in [&#34;csv&#34;, &#34;parquet&#34;]
-    except AssertionError as exc:
-        raise ValueError(f&#34;Invalid data type: {data_type}&#34;) from exc
-    # Remove filename from path
-    path = Path(data_path)
-    if not path.is_dir():
-        path = path.parent
-    # Grab first `data_type` file found
-    found: bool = False
-    file: str = None
-    for subdir, _, filenames in walk(str(path)):
-        for fname in filenames:
-            if fname.endswith(f&#34;.{data_type}&#34;):
-                file = join(subdir, fname)
-                log(f&#34;Found {data_type.upper()} file: {file}&#34;)
-                found = True
-                break
-        if found:
-            break
-
-    save_header_path = f&#34;data/{uuid4()}&#34;
-    # discover if it&#39;s a partitioned table
-    if partition_folders := [folder for folder in file.split(&#34;/&#34;) if &#34;=&#34; in folder]:
-        partition_path = &#34;/&#34;.join(partition_folders)
-        save_header_file_path = Path(
-            f&#34;{save_header_path}/{partition_path}/header.{data_type}&#34;
-        )
-        log(f&#34;Found partition path: {save_header_file_path}&#34;)
-
-    else:
-        save_header_file_path = Path(f&#34;{save_header_path}/header.{data_type}&#34;)
-        log(f&#34;Do not found partition path: {save_header_file_path}&#34;)
-
-    # Create directory if it doesn&#39;t exist
-    save_header_file_path.parent.mkdir(parents=True, exist_ok=True)
-
-    # Read just first row and write dataframe to file
-    if data_type == &#34;csv&#34;:
-        dataframe = pd.read_csv(file, nrows=1)
-        dataframe.to_csv(save_header_file_path, index=False, encoding=&#34;utf-8&#34;)
-    elif data_type == &#34;parquet&#34;:
-        dataframe = pd.read_parquet(file)[:1]
-        dataframe_to_parquet(dataframe=dataframe, path=save_header_file_path)
-
-    log(f&#34;Wrote {data_type.upper()} header at {save_header_file_path}&#34;)
-
-    return save_header_path
-
-
-def parse_date_columns(
-    dataframe: pd.DataFrame, partition_date_column: str
-) -&gt; Tuple[pd.DataFrame, List[str]]:
-    &#34;&#34;&#34;
-    Parses the date columns to the partition format.
-    &#34;&#34;&#34;
-    ano_col = &#34;ano_particao&#34;
-    mes_col = &#34;mes_particao&#34;
-    data_col = &#34;data_particao&#34;
-    cols = [ano_col, mes_col, data_col]
-    for col in cols:
-        if col in dataframe.columns:
-            raise ValueError(f&#34;Column {col} already exists, please review your model.&#34;)
-
-    dataframe[partition_date_column] = dataframe[partition_date_column].astype(str)
-    dataframe[data_col] = pd.to_datetime(
-        dataframe[partition_date_column], errors=&#34;coerce&#34;
-    )
-
-    dataframe[ano_col] = (
-        dataframe[data_col]
-        .dt.year.fillna(-1)
-        .astype(int)
-        .astype(str)
-        .replace(&#34;-1&#34;, np.nan)
-    )
-
-    dataframe[mes_col] = (
-        dataframe[data_col]
-        .dt.month.fillna(-1)
-        .astype(int)
-        .astype(str)
-        .replace(&#34;-1&#34;, np.nan)
-    )
-
-    dataframe[data_col] = dataframe[data_col].dt.date
-
-    return dataframe, [ano_col, mes_col, data_col]
-
-
-def final_column_treatment(column: str) -&gt; str:
-    &#34;&#34;&#34;
-    Adds an underline before column name if it only has numbers or remove all non alpha numeric
-    characters besides underlines (&#34;_&#34;).
-    &#34;&#34;&#34;
-    try:
-        int(column)
-        return f&#34;_{column}&#34;
-    except ValueError:  # pylint: disable=bare-except
-        non_alpha_removed = re.sub(r&#34;[\W]+&#34;, &#34;&#34;, column)
-        return non_alpha_removed
-
-
-def build_redis_key(
-    dataset_id: str, table_id: str, name: str = None, mode: str = &#34;prod&#34;
-):
-    &#34;&#34;&#34;
-    Helper function for building a key to redis
-    &#34;&#34;&#34;
-    key = dataset_id + &#34;.&#34; + table_id
-    if name:
-        key = key + &#34;.&#34; + name
-    if mode == &#34;dev&#34;:
-        key = f&#34;{mode}.{key}&#34;
-    return key
-
-
-def save_str_on_redis(
-    redis_key: str,
-    key: str,
-    value: str,
-):
-    &#34;&#34;&#34;
-    Function to save a string on redis
-    &#34;&#34;&#34;
-
-    redis_client = get_redis_client()
-    redis_client.hset(redis_key, key, value)
-
-
-def get_redis_output(redis_key):
-    &#34;&#34;&#34;
-    Get Redis output
-    Example: {b&#39;date&#39;: b&#39;2023-02-27 07:29:04&#39;}
-    &#34;&#34;&#34;
-    redis_client = get_redis_client()
-    output = redis_client.hgetall(redis_key)
-    if len(output) &gt; 0:
-        output = treat_redis_output(output)
-    return output
-
-
-def treat_redis_output(text):
-    &#34;&#34;&#34;
-    Redis returns a dict where both key and value are byte string
-    Example: {b&#39;date&#39;: b&#39;2023-02-27 07:29:04&#39;}
-    &#34;&#34;&#34;
-    return {k.decode(&#34;utf-8&#34;): v.decode(&#34;utf-8&#34;) for k, v in text.items()}
-
-
-def compare_dates_between_tables_redis(
-    key_table_1: str,
-    format_date_table_1: str,
-    key_table_2: str,
-    format_date_table_2: str,
-):
-    &#34;&#34;&#34;
-    Function that checks if the date saved on the second
-    table is bigger then the first one
-    &#34;&#34;&#34;
-
-    # get saved date on redis
-    date_1 = get_redis_output(key_table_1)
-    date_2 = get_redis_output(key_table_2)
-
-    # Return true if there is no date_1 or date_2 saved on redis
-    if (len(date_1) == 0) | (len(date_2) == 0):
-        return True
-
-    # Convert date to pendulum
-    date_1 = pendulum.from_format(date_1[&#34;date&#34;], format_date_table_1)
-    date_2 = pendulum.from_format(date_2[&#34;date&#34;], format_date_table_2)
-    comparison = date_1 &lt; date_2
-    log(f&#34;Is {date_2} bigger than {date_1}? {comparison}&#34;)
-    return comparison
-
-
-# pylint: disable=W0106
-def save_updated_rows_on_redis(  # pylint: disable=R0914
-    dataframe: pd.DataFrame,
-    dataset_id: str,
-    table_id: str,
-    unique_id: str = &#34;id_estacao&#34;,
-    date_column: str = &#34;data_medicao&#34;,
-    date_format: str = &#34;%Y-%m-%d %H:%M:%S&#34;,
-    mode: str = &#34;prod&#34;,
-) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    Acess redis to get the last time each unique_id was updated, return
-    updated unique_id as a DataFrame and save new dates on redis
-    &#34;&#34;&#34;
-
-    redis_client = get_redis_client()
-
-    key = dataset_id + &#34;.&#34; + table_id
-    if mode == &#34;dev&#34;:
-        key = f&#34;{mode}.{key}&#34;
-
-    # Access all data saved on redis with this key
-    last_updates = redis_client.hgetall(key)
-
-    if len(last_updates) == 0:
-        last_updates = pd.DataFrame(dataframe[unique_id].unique(), columns=[unique_id])
-        last_updates[&#34;last_update&#34;] = &#34;1900-01-01 00:00:00&#34;
-        log(f&#34;Redis key: {key}\nCreating Redis fake values:\n {last_updates}&#34;)
-    else:
-        # Convert data in dictionary in format with unique_id in key and last updated time as value
-        # Example &gt; {&#34;12&#34;: &#34;2022-06-06 14:45:00&#34;}
-        last_updates = {
-            k.decode(&#34;utf-8&#34;): v.decode(&#34;utf-8&#34;) for k, v in last_updates.items()
-        }
-
-        # Convert dictionary to dataframe
-        last_updates = pd.DataFrame(
-            last_updates.items(), columns=[unique_id, &#34;last_update&#34;]
-        )
-
-        log(f&#34;Redis key: {key}\nRedis actual values:\n {last_updates}&#34;)
-
-    # Garante that both are string
-    dataframe[unique_id] = dataframe[unique_id].astype(str)
-    last_updates[unique_id] = last_updates[unique_id].astype(str)
-
-    # dataframe and last_updates need to have the same index, in our case unique_id
-    missing_in_dfr = [
-        i
-        for i in last_updates[unique_id].unique()
-        if i not in dataframe[unique_id].unique()
-    ]
-    missing_in_updates = [
-        i
-        for i in dataframe[unique_id].unique()
-        if i not in last_updates[unique_id].unique()
-    ]
-
-    # If unique_id doesn&#39;t exists on updates we create a fake date for this station on updates
-    if len(missing_in_updates) &gt; 0:
-        for i, _id in enumerate(missing_in_updates):
-            last_updates.loc[-i] = [_id, &#34;1900-01-01 00:00:00&#34;]
-
-    # If unique_id doesn&#39;t exists on dataframe we remove this stations from last_updates
-    if len(missing_in_dfr) &gt; 0:
-        last_updates = last_updates[~last_updates[unique_id].isin(missing_in_dfr)]
-
-    # Merge dfs using unique_id
-    dataframe = dataframe.merge(last_updates, how=&#34;left&#34;, on=unique_id)
-    log(f&#34;Comparing times: {dataframe.sort_values(unique_id)}&#34;)
-
-    # Keep on dataframe only the stations that has a time after the one that is saved on redis
-    dataframe[date_column] = dataframe[date_column].apply(
-        pd.to_datetime, format=date_format
-    ) + pd.DateOffset(hours=0)
-
-    dataframe[&#34;last_update&#34;] = dataframe[&#34;last_update&#34;].apply(
-        pd.to_datetime, format=&#34;%Y-%m-%d %H:%M:%S&#34;
-    ) + pd.DateOffset(hours=0)
-
-    dataframe = dataframe[dataframe[date_column] &gt; dataframe[&#34;last_update&#34;]].dropna(
-        subset=[unique_id]
-    )
-    log(f&#34;Dataframe after comparison: {dataframe.sort_values(unique_id)}&#34;)
-    # Keep only the last date for each unique_id
-    keep_cols = [unique_id, date_column]
-    new_updates = dataframe[keep_cols].sort_values(keep_cols)
-    new_updates = new_updates.groupby(unique_id, as_index=False).tail(1)
-    new_updates[date_column] = new_updates[date_column].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
-    log(f&#34;&gt;&gt;&gt; Updated df: {new_updates.head(10)}&#34;)
-
-    # Convert stations with the new updates dates in a dictionary
-    new_updates = dict(zip(new_updates[unique_id], new_updates[date_column]))
-    log(f&#34;&gt;&gt;&gt; data to save in redis as a dict: {new_updates}&#34;)
-
-    # Save this new information on redis
-    [redis_client.hset(key, k, v) for k, v in new_updates.items()]
-
-    return dataframe.reset_index()</code></pre>
-</details>
 </section>
 <section>
 </section>
@@ -1151,74 +39,18 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
 </code></dt>
 <dd>
 <div class="desc"><p>Converts a batch of rows to a dataframe.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def batch_to_dataframe(batch: Tuple[Tuple], columns: List[str]) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    Converts a batch of rows to a dataframe.
-    &#34;&#34;&#34;
-    return pd.DataFrame(batch, columns=columns)</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.build_redis_key"><code class="name flex">
 <span>def <span class="ident">build_redis_key</span></span>(<span>dataset_id: str, table_id: str, name: str = None, mode: str = 'prod')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper function for building a key to redis</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def build_redis_key(
-    dataset_id: str, table_id: str, name: str = None, mode: str = &#34;prod&#34;
-):
-    &#34;&#34;&#34;
-    Helper function for building a key to redis
-    &#34;&#34;&#34;
-    key = dataset_id + &#34;.&#34; + table_id
-    if name:
-        key = key + &#34;.&#34; + name
-    if mode == &#34;dev&#34;:
-        key = f&#34;{mode}.{key}&#34;
-    return key</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.clean_dataframe"><code class="name flex">
 <span>def <span class="ident">clean_dataframe</span></span>(<span>dataframe: pandas.core.frame.DataFrame) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Cleans a dataframe.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def clean_dataframe(dataframe: pd.DataFrame) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    Cleans a dataframe.
-    &#34;&#34;&#34;
-    for col in dataframe.columns.tolist():
-        if dataframe[col].dtype == object:
-            try:
-                dataframe[col] = (
-                    dataframe[col]
-                    .astype(str)
-                    .str.replace(&#34;\x00&#34;, &#34;&#34;)
-                    .replace(&#34;None&#34;, np.nan)
-                )
-            except Exception as exc:
-                print(
-                    &#34;Column: &#34;,
-                    col,
-                    &#34;\nData: &#34;,
-                    dataframe[col].tolist(),
-                    &#34;\n&#34;,
-                    exc,
-                )
-                raise
-    return dataframe</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.compare_dates_between_tables_redis"><code class="name flex">
 <span>def <span class="ident">compare_dates_between_tables_redis</span></span>(<span>key_table_1: str, format_date_table_1: str, key_table_2: str, format_date_table_2: str)</span>
@@ -1226,103 +58,18 @@ def save_updated_rows_on_redis(  # pylint: disable=R0914
 <dd>
 <div class="desc"><p>Function that checks if the date saved on the second
 table is bigger then the first one</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def compare_dates_between_tables_redis(
-    key_table_1: str,
-    format_date_table_1: str,
-    key_table_2: str,
-    format_date_table_2: str,
-):
-    &#34;&#34;&#34;
-    Function that checks if the date saved on the second
-    table is bigger then the first one
-    &#34;&#34;&#34;
-
-    # get saved date on redis
-    date_1 = get_redis_output(key_table_1)
-    date_2 = get_redis_output(key_table_2)
-
-    # Return true if there is no date_1 or date_2 saved on redis
-    if (len(date_1) == 0) | (len(date_2) == 0):
-        return True
-
-    # Convert date to pendulum
-    date_1 = pendulum.from_format(date_1[&#34;date&#34;], format_date_table_1)
-    date_2 = pendulum.from_format(date_2[&#34;date&#34;], format_date_table_2)
-    comparison = date_1 &lt; date_2
-    log(f&#34;Is {date_2} bigger than {date_1}? {comparison}&#34;)
-    return comparison</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.dataframe_to_csv"><code class="name flex">
 <span>def <span class="ident">dataframe_to_csv</span></span>(<span>dataframe: pandas.core.frame.DataFrame, path: Union[str, pathlib.Path], build_json_dataframe: bool = False, dataframe_key_column: str = None) ‑> None</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Writes a dataframe to CSV file.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def dataframe_to_csv(
-    dataframe: pd.DataFrame,
-    path: Union[str, Path],
-    build_json_dataframe: bool = False,
-    dataframe_key_column: str = None,
-) -&gt; None:
-    &#34;&#34;&#34;
-    Writes a dataframe to CSV file.
-    &#34;&#34;&#34;
-    if build_json_dataframe:
-        dataframe = to_json_dataframe(dataframe, key_column=dataframe_key_column)
-
-    # Remove filename from path
-    path = Path(path)
-    # Create directory if it doesn&#39;t exist
-    path.parent.mkdir(parents=True, exist_ok=True)
-
-    # Write dataframe to CSV
-    dataframe.to_csv(path, index=False, encoding=&#34;utf-8&#34;)</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.dataframe_to_parquet"><code class="name flex">
 <span>def <span class="ident">dataframe_to_parquet</span></span>(<span>dataframe: pandas.core.frame.DataFrame, path: Union[str, pathlib.Path], build_json_dataframe: bool = False, dataframe_key_column: str = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Writes a dataframe to Parquet file with Schema as STRING.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def dataframe_to_parquet(
-    dataframe: pd.DataFrame,
-    path: Union[str, Path],
-    build_json_dataframe: bool = False,
-    dataframe_key_column: str = None,
-):
-    &#34;&#34;&#34;
-    Writes a dataframe to Parquet file with Schema as STRING.
-    &#34;&#34;&#34;
-    # Code adapted from
-    # https://stackoverflow.com/a/70817689/9944075
-
-    if build_json_dataframe:
-        dataframe = to_json_dataframe(dataframe, key_column=dataframe_key_column)
-
-    # If the file already exists, we:
-    # - Load it
-    # - Merge the new dataframe with the existing one
-    if Path(path).exists():
-        # Load it
-        original_df = pd.read_parquet(path)
-        # Merge the new dataframe with the existing one
-        dataframe = pd.concat([original_df, dataframe], sort=False)
-
-    # Write dataframe to Parquet
-    dataframe.to_parquet(path, engine=&#34;pyarrow&#34;)</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.delete_blobs_list"><code class="name flex">
 <span>def <span class="ident">delete_blobs_list</span></span>(<span>bucket_name: str, blobs: List[google.cloud.storage.blob.Blob], mode: str = 'prod') ‑> None</span>
@@ -1330,22 +77,6 @@ table is bigger then the first one</p></div>
 <dd>
 <div class="desc"><p>Deletes all blobs in the bucket that are in the blobs list.
 Mode needs to be "prod" or "staging"</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def delete_blobs_list(bucket_name: str, blobs: List[Blob], mode: str = &#34;prod&#34;) -&gt; None:
-    &#34;&#34;&#34;
-    Deletes all blobs in the bucket that are in the blobs list.
-    Mode needs to be &#34;prod&#34; or &#34;staging&#34;
-    &#34;&#34;&#34;
-
-    credentials = get_credentials_from_env(mode=mode)
-    storage_client = storage.Client(credentials=credentials)
-
-    bucket = storage_client.bucket(bucket_name)
-    bucket.delete_blobs(blobs)</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.determine_whether_to_execute_or_not"><code class="name flex">
 <span>def <span class="ident">determine_whether_to_execute_or_not</span></span>(<span>cron_expression: str, datetime_now: datetime.datetime, datetime_last_execution: datetime.datetime) ‑> bool</span>
@@ -1363,93 +94,12 @@ Mode needs to be "prod" or "staging"</p></div>
 </dl>
 <h2 id="returns">Returns</h2>
 <p>True if the cron expression should trigger, False otherwise.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def determine_whether_to_execute_or_not(
-    cron_expression: str, datetime_now: datetime, datetime_last_execution: datetime
-) -&gt; bool:
-    &#34;&#34;&#34;
-    Determines whether the cron expression is currently valid.
-
-    Args:
-        cron_expression: The cron expression to check.
-        datetime_now: The current datetime.
-        datetime_last_execution: The last datetime the cron expression was executed.
-
-    Returns:
-        True if the cron expression should trigger, False otherwise.
-    &#34;&#34;&#34;
-    cron_expression_iterator = croniter.croniter(
-        cron_expression, datetime_last_execution
-    )
-    next_cron_expression_time = cron_expression_iterator.get_next(datetime)
-    return next_cron_expression_time &lt;= datetime_now</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.dump_header_to_file"><code class="name flex">
 <span>def <span class="ident">dump_header_to_file</span></span>(<span>data_path: Union[str, pathlib.Path], data_type: str = 'csv')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Writes a header to a CSV file.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def dump_header_to_file(data_path: Union[str, Path], data_type: str = &#34;csv&#34;):
-    &#34;&#34;&#34;
-    Writes a header to a CSV file.
-    &#34;&#34;&#34;
-    try:
-        assert data_type in [&#34;csv&#34;, &#34;parquet&#34;]
-    except AssertionError as exc:
-        raise ValueError(f&#34;Invalid data type: {data_type}&#34;) from exc
-    # Remove filename from path
-    path = Path(data_path)
-    if not path.is_dir():
-        path = path.parent
-    # Grab first `data_type` file found
-    found: bool = False
-    file: str = None
-    for subdir, _, filenames in walk(str(path)):
-        for fname in filenames:
-            if fname.endswith(f&#34;.{data_type}&#34;):
-                file = join(subdir, fname)
-                log(f&#34;Found {data_type.upper()} file: {file}&#34;)
-                found = True
-                break
-        if found:
-            break
-
-    save_header_path = f&#34;data/{uuid4()}&#34;
-    # discover if it&#39;s a partitioned table
-    if partition_folders := [folder for folder in file.split(&#34;/&#34;) if &#34;=&#34; in folder]:
-        partition_path = &#34;/&#34;.join(partition_folders)
-        save_header_file_path = Path(
-            f&#34;{save_header_path}/{partition_path}/header.{data_type}&#34;
-        )
-        log(f&#34;Found partition path: {save_header_file_path}&#34;)
-
-    else:
-        save_header_file_path = Path(f&#34;{save_header_path}/header.{data_type}&#34;)
-        log(f&#34;Do not found partition path: {save_header_file_path}&#34;)
-
-    # Create directory if it doesn&#39;t exist
-    save_header_file_path.parent.mkdir(parents=True, exist_ok=True)
-
-    # Read just first row and write dataframe to file
-    if data_type == &#34;csv&#34;:
-        dataframe = pd.read_csv(file, nrows=1)
-        dataframe.to_csv(save_header_file_path, index=False, encoding=&#34;utf-8&#34;)
-    elif data_type == &#34;parquet&#34;:
-        dataframe = pd.read_parquet(file)[:1]
-        dataframe_to_parquet(dataframe=dataframe, path=save_header_file_path)
-
-    log(f&#34;Wrote {data_type.upper()} header at {save_header_file_path}&#34;)
-
-    return save_header_path</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.final_column_treatment"><code class="name flex">
 <span>def <span class="ident">final_column_treatment</span></span>(<span>column: str) ‑> str</span>
@@ -1457,77 +107,18 @@ Mode needs to be "prod" or "staging"</p></div>
 <dd>
 <div class="desc"><p>Adds an underline before column name if it only has numbers or remove all non alpha numeric
 characters besides underlines ("_").</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def final_column_treatment(column: str) -&gt; str:
-    &#34;&#34;&#34;
-    Adds an underline before column name if it only has numbers or remove all non alpha numeric
-    characters besides underlines (&#34;_&#34;).
-    &#34;&#34;&#34;
-    try:
-        int(column)
-        return f&#34;_{column}&#34;
-    except ValueError:  # pylint: disable=bare-except
-        non_alpha_removed = re.sub(r&#34;[\W]+&#34;, &#34;&#34;, column)
-        return non_alpha_removed</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.get_credentials_from_env"><code class="name flex">
 <span>def <span class="ident">get_credentials_from_env</span></span>(<span>mode: str = 'prod', scopes: List[str] = None) ‑> google.oauth2.service_account.Credentials</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Gets credentials from env vars</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_credentials_from_env(
-    mode: str = &#34;prod&#34;, scopes: List[str] = None
-) -&gt; service_account.Credentials:
-    &#34;&#34;&#34;
-    Gets credentials from env vars
-    &#34;&#34;&#34;
-    if mode not in [&#34;prod&#34;, &#34;staging&#34;]:
-        raise ValueError(&#34;Mode must be &#39;prod&#39; or &#39;staging&#39;&#34;)
-    env: str = getenv(f&#34;BASEDOSDADOS_CREDENTIALS_{mode.upper()}&#34;, &#34;&#34;)
-    if env == &#34;&#34;:
-        raise ValueError(f&#34;BASEDOSDADOS_CREDENTIALS_{mode.upper()} env var not set!&#34;)
-    info: dict = json.loads(base64.b64decode(env))
-    cred: service_account.Credentials = (
-        service_account.Credentials.from_service_account_info(info)
-    )
-    if scopes:
-        cred = cred.with_scopes(scopes)
-    return cred</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.get_redis_client"><code class="name flex">
 <span>def <span class="ident">get_redis_client</span></span>(<span>host: str = 'redis.redis.svc.cluster.local', port: int = 6379, db: int = 0, password: str = None) ‑> redis_pal.RedisPal.RedisPal</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns a Redis client.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_redis_client(
-    host: str = &#34;redis.redis.svc.cluster.local&#34;,
-    port: int = 6379,
-    db: int = 0,  # pylint: disable=C0103
-    password: str = None,
-) -&gt; RedisPal:
-    &#34;&#34;&#34;
-    Returns a Redis client.
-    &#34;&#34;&#34;
-    return RedisPal(
-        host=host,
-        port=port,
-        db=db,
-        password=password,
-    )</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.get_redis_output"><code class="name flex">
 <span>def <span class="ident">get_redis_output</span></span>(<span>redis_key)</span>
@@ -1535,21 +126,6 @@ characters besides underlines ("_").</p></div>
 <dd>
 <div class="desc"><p>Get Redis output
 Example: {b'date': b'2023-02-27 07:29:04'}</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_redis_output(redis_key):
-    &#34;&#34;&#34;
-    Get Redis output
-    Example: {b&#39;date&#39;: b&#39;2023-02-27 07:29:04&#39;}
-    &#34;&#34;&#34;
-    redis_client = get_redis_client()
-    output = redis_client.hgetall(redis_key)
-    if len(output) &gt; 0:
-        output = treat_redis_output(output)
-    return output</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.get_storage_blobs"><code class="name flex">
 <span>def <span class="ident">get_storage_blobs</span></span>(<span>dataset_id: str, table_id: str, mode: str = 'staging') ‑> list</span>
@@ -1570,140 +146,36 @@ Example: {b'date': b'2023-02-27 07:29:04'}</p></div>
 <dt><code>list</code></dt>
 <dd>list of blobs</dd>
 </dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_storage_blobs(dataset_id: str, table_id: str, mode: str = &#34;staging&#34;) -&gt; list:
-    &#34;&#34;&#34;
-    Get all blobs from a table in a dataset.
-
-    Args:
-        dataset_id (str): dataset id
-        table_id (str): table id
-        mode (str, optional): mode to use. Defaults to &#34;staging&#34;.
-
-    Returns:
-        list: list of blobs
-    &#34;&#34;&#34;
-
-    bd_storage = bd.Storage(dataset_id=dataset_id, table_id=table_id)
-    return list(
-        bd_storage.client[&#34;storage_staging&#34;]
-        .bucket(bd_storage.bucket_name)
-        .list_blobs(prefix=f&#34;{mode}/{bd_storage.dataset_id}/{bd_storage.table_id}/&#34;)
-    )</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.get_username_and_password_from_secret"><code class="name flex">
 <span>def <span class="ident">get_username_and_password_from_secret</span></span>(<span>secret_path: str, client: hvac.v1.Client = None) ‑> Tuple[str, str]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns a username and password from a secret in Vault.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_username_and_password_from_secret(
-    secret_path: str,
-    client: hvac.Client = None,
-) -&gt; Tuple[str, str]:
-    &#34;&#34;&#34;
-    Returns a username and password from a secret in Vault.
-    &#34;&#34;&#34;
-    secret = get_vault_secret(secret_path, client)
-    return (
-        secret[&#34;data&#34;][&#34;username&#34;],
-        secret[&#34;data&#34;][&#34;password&#34;],
-    )</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.get_vault_client"><code class="name flex">
 <span>def <span class="ident">get_vault_client</span></span>(<span>) ‑> hvac.v1.Client</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns a Vault client.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_vault_client() -&gt; hvac.Client:
-    &#34;&#34;&#34;
-    Returns a Vault client.
-    &#34;&#34;&#34;
-    return hvac.Client(
-        url=getenv(&#34;VAULT_ADDRESS&#34;).strip(),
-        token=getenv(&#34;VAULT_TOKEN&#34;).strip(),
-    )</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.get_vault_secret"><code class="name flex">
 <span>def <span class="ident">get_vault_secret</span></span>(<span>secret_path: str, client: hvac.v1.Client = None) ‑> dict</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns a secret from Vault.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_vault_secret(secret_path: str, client: hvac.Client = None) -&gt; dict:
-    &#34;&#34;&#34;
-    Returns a secret from Vault.
-    &#34;&#34;&#34;
-    vault_client = client or get_vault_client()
-    return vault_client.secrets.kv.read_secret_version(secret_path)[&#34;data&#34;]</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.human_readable"><code class="name flex">
 <span>def <span class="ident">human_readable</span></span>(<span>value: Union[int, float], unit: str = '', unit_prefixes: List[str] = None, unit_divider: int = 1000, decimal_places: int = 2)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Formats a value in a human readable way.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def human_readable(
-    value: Union[int, float],
-    unit: str = &#34;&#34;,
-    unit_prefixes: List[str] = None,
-    unit_divider: int = 1000,
-    decimal_places: int = 2,
-):
-    &#34;&#34;&#34;
-    Formats a value in a human readable way.
-    &#34;&#34;&#34;
-    if unit_prefixes is None:
-        unit_prefixes = [&#34;&#34;, &#34;k&#34;, &#34;M&#34;, &#34;G&#34;, &#34;T&#34;, &#34;P&#34;, &#34;E&#34;, &#34;Z&#34;, &#34;Y&#34;]
-    if value == 0:
-        return f&#34;{value}{unit}&#34;
-    unit_prefix = unit_prefixes[0]
-    for prefix in unit_prefixes[1:]:
-        if value &lt; unit_divider:
-            break
-        unit_prefix = prefix
-        value /= unit_divider
-    return f&#34;{value:.{decimal_places}f}{unit_prefix}{unit}&#34;</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.is_date"><code class="name flex">
 <span>def <span class="ident">is_date</span></span>(<span>date_string: str, date_format: str = '%Y-%m-%d') ‑> Union[datetime.datetime, bool]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Checks whether a string is a valid date.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def is_date(date_string: str, date_format: str = &#34;%Y-%m-%d&#34;) -&gt; Union[datetime, bool]:
-    &#34;&#34;&#34;
-    Checks whether a string is a valid date.
-    &#34;&#34;&#34;
-    try:
-        return datetime.strptime(date_string, date_format).strftime(date_format)
-    except ValueError:
-        return False</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.list_blobs_with_prefix"><code class="name flex">
 <span>def <span class="ident">list_blobs_with_prefix</span></span>(<span>bucket_name: str, prefix: str, mode: str = 'prod') ‑> List[google.cloud.storage.blob.Blob]</span>
@@ -1712,414 +184,78 @@ Example: {b'date': b'2023-02-27 07:29:04'}</p></div>
 <div class="desc"><p>Lists all the blobs in the bucket that begin with the prefix.
 This can be used to list all blobs in a "folder", e.g. "public/".
 Mode needs to be "prod" or "staging"</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def list_blobs_with_prefix(
-    bucket_name: str, prefix: str, mode: str = &#34;prod&#34;
-) -&gt; List[Blob]:
-    &#34;&#34;&#34;
-    Lists all the blobs in the bucket that begin with the prefix.
-    This can be used to list all blobs in a &#34;folder&#34;, e.g. &#34;public/&#34;.
-    Mode needs to be &#34;prod&#34; or &#34;staging&#34;
-    &#34;&#34;&#34;
-
-    credentials = get_credentials_from_env(mode=mode)
-    storage_client = storage.Client(credentials=credentials)
-
-    # Note: Client.list_blobs requires at least package version 1.17.0.
-    blobs = storage_client.list_blobs(bucket_name, prefix=prefix)
-
-    return list(blobs)</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.log"><code class="name flex">
 <span>def <span class="ident">log</span></span>(<span>msg: Any, level: str = 'info') ‑> None</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Logs a message to prefect's logger.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def log(msg: Any, level: str = &#34;info&#34;) -&gt; None:
-    &#34;&#34;&#34;
-    Logs a message to prefect&#39;s logger.
-    &#34;&#34;&#34;
-    levels = {
-        &#34;debug&#34;: logging.DEBUG,
-        &#34;info&#34;: logging.INFO,
-        &#34;warning&#34;: logging.WARNING,
-        &#34;error&#34;: logging.ERROR,
-        &#34;critical&#34;: logging.CRITICAL,
-    }
-
-    blank_spaces = 8 * &#34; &#34;
-    msg = blank_spaces + &#34;----\n&#34; + str(msg)
-    msg = &#34;\n&#34;.join([blank_spaces + line for line in msg.split(&#34;\n&#34;)]) + &#34;\n\n&#34;
-
-    if level not in levels:
-        raise ValueError(f&#34;Invalid log level: {level}&#34;)
-    prefect.context.logger.log(levels[level], msg)  # pylint: disable=E1101</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.log_mod"><code class="name flex">
 <span>def <span class="ident">log_mod</span></span>(<span>msg: Any, level: str = 'info', index: int = 0, mod: int = 1)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Only logs a message if the index is a multiple of mod.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def log_mod(msg: Any, level: str = &#34;info&#34;, index: int = 0, mod: int = 1):
-    &#34;&#34;&#34;
-    Only logs a message if the index is a multiple of mod.
-    &#34;&#34;&#34;
-    if index % mod == 0 or index == 0:
-        log(msg=f&#34;iteration {index}:\n {msg}&#34;, level=level)</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.notify_discord_on_failure"><code class="name flex">
 <span>def <span class="ident">notify_discord_on_failure</span></span>(<span>flow: prefect.core.flow.Flow, state: prefect.engine.state.State, secret_path: str, code_owners: Optional[List[str]] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Notifies a Discord channel when a flow fails.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def notify_discord_on_failure(
-    flow: prefect.Flow,
-    state: State,
-    secret_path: str,
-    code_owners: Optional[List[str]] = None,
-):
-    &#34;&#34;&#34;
-    Notifies a Discord channel when a flow fails.
-    &#34;&#34;&#34;
-    url = get_vault_secret(secret_path)[&#34;data&#34;][&#34;url&#34;]
-    flow_run_id = prefect.context.get(&#34;flow_run_id&#34;)
-    code_owners = code_owners or constants.DEFAULT_CODE_OWNERS.value
-    code_owner_dict = constants.OWNERS_DISCORD_MENTIONS.value
-    at_code_owners = []
-    for code_owner in code_owners:
-        code_owner_id = code_owner_dict[code_owner][&#34;user_id&#34;]
-        code_owner_type = code_owner_dict[code_owner][&#34;type&#34;]
-
-        if code_owner_type == &#34;user&#34;:
-            at_code_owners.append(f&#34;    - &lt;@{code_owner_id}&gt;\n&#34;)
-        elif code_owner_type == &#34;user_nickname&#34;:
-            at_code_owners.append(f&#34;    - &lt;@!{code_owner_id}&gt;\n&#34;)
-        elif code_owner_type == &#34;channel&#34;:
-            at_code_owners.append(f&#34;    - &lt;#{code_owner_id}&gt;\n&#34;)
-        elif code_owner_type == &#34;role&#34;:
-            at_code_owners.append(f&#34;    - &lt;@&amp;{code_owner_id}&gt;\n&#34;)
-
-    message = (
-        f&#34;:man_facepalming: Flow **{flow.name}** has failed.&#34;
-        + f&#39;\n  - State message: *&#34;{state.message}&#34;*&#39;
-        + &#34;\n  - Link to the failed flow: &#34;
-        + f&#34;https://prefect.dados.rio/flow-run/{flow_run_id}&#34;
-        + &#34;\n  - Extra attention:\n&#34;
-        + &#34;&#34;.join(at_code_owners)
-    )
-    send_discord_message(
-        message=message,
-        webhook_url=url,
-    )</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.parse_date_columns"><code class="name flex">
 <span>def <span class="ident">parse_date_columns</span></span>(<span>dataframe: pandas.core.frame.DataFrame, partition_date_column: str) ‑> Tuple[pandas.core.frame.DataFrame, List[str]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Parses the date columns to the partition format.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def parse_date_columns(
-    dataframe: pd.DataFrame, partition_date_column: str
-) -&gt; Tuple[pd.DataFrame, List[str]]:
-    &#34;&#34;&#34;
-    Parses the date columns to the partition format.
-    &#34;&#34;&#34;
-    ano_col = &#34;ano_particao&#34;
-    mes_col = &#34;mes_particao&#34;
-    data_col = &#34;data_particao&#34;
-    cols = [ano_col, mes_col, data_col]
-    for col in cols:
-        if col in dataframe.columns:
-            raise ValueError(f&#34;Column {col} already exists, please review your model.&#34;)
-
-    dataframe[partition_date_column] = dataframe[partition_date_column].astype(str)
-    dataframe[data_col] = pd.to_datetime(
-        dataframe[partition_date_column], errors=&#34;coerce&#34;
-    )
-
-    dataframe[ano_col] = (
-        dataframe[data_col]
-        .dt.year.fillna(-1)
-        .astype(int)
-        .astype(str)
-        .replace(&#34;-1&#34;, np.nan)
-    )
-
-    dataframe[mes_col] = (
-        dataframe[data_col]
-        .dt.month.fillna(-1)
-        .astype(int)
-        .astype(str)
-        .replace(&#34;-1&#34;, np.nan)
-    )
-
-    dataframe[data_col] = dataframe[data_col].dt.date
-
-    return dataframe, [ano_col, mes_col, data_col]</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.parser_blobs_to_partition_dict"><code class="name flex">
 <span>def <span class="ident">parser_blobs_to_partition_dict</span></span>(<span>blobs: list) ‑> dict</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Extracts the partition information from the blobs.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def parser_blobs_to_partition_dict(blobs: list) -&gt; dict:
-    &#34;&#34;&#34;
-    Extracts the partition information from the blobs.
-    &#34;&#34;&#34;
-
-    partitions_dict = {}
-    for blob in blobs:
-        for folder in blob.name.split(&#34;/&#34;):
-            if &#34;=&#34; in folder:
-                key = folder.split(&#34;=&#34;)[0]
-                value = folder.split(&#34;=&#34;)[1]
-                try:
-                    partitions_dict[key].append(value)
-                except KeyError:
-                    partitions_dict[key] = [value]
-    return partitions_dict</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.query_to_line"><code class="name flex">
 <span>def <span class="ident">query_to_line</span></span>(<span>query: str) ‑> str</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Converts a query to a line.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def query_to_line(query: str) -&gt; str:
-    &#34;&#34;&#34;
-    Converts a query to a line.
-    &#34;&#34;&#34;
-    query = textwrap.dedent(query)
-    return &#34; &#34;.join([line.strip() for line in query.split(&#34;\n&#34;)])</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.remove_columns_accents"><code class="name flex">
 <span>def <span class="ident">remove_columns_accents</span></span>(<span>dataframe: pandas.core.frame.DataFrame) ‑> list</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Remove accents from dataframe columns.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def remove_columns_accents(dataframe: pd.DataFrame) -&gt; list:
-    &#34;&#34;&#34;
-    Remove accents from dataframe columns.
-    &#34;&#34;&#34;
-    columns = [str(column) for column in dataframe.columns]
-    dataframe.columns = columns
-    return list(
-        dataframe.columns.str.normalize(&#34;NFKD&#34;)
-        .str.encode(&#34;ascii&#34;, errors=&#34;ignore&#34;)
-        .str.decode(&#34;utf-8&#34;)
-        .map(lambda x: x.strip())
-        .str.replace(&#34; &#34;, &#34;_&#34;)
-        .str.replace(&#34;/&#34;, &#34;_&#34;)
-        .str.replace(&#34;-&#34;, &#34;_&#34;)
-        .str.replace(&#34;\a&#34;, &#34;_&#34;)
-        .str.replace(&#34;\b&#34;, &#34;_&#34;)
-        .str.replace(&#34;\n&#34;, &#34;_&#34;)
-        .str.replace(&#34;\t&#34;, &#34;_&#34;)
-        .str.replace(&#34;\v&#34;, &#34;_&#34;)
-        .str.replace(&#34;\f&#34;, &#34;_&#34;)
-        .str.replace(&#34;\r&#34;, &#34;_&#34;)
-        .str.lower()
-        .map(final_column_treatment)
-    )</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.remove_tabs_from_query"><code class="name flex">
 <span>def <span class="ident">remove_tabs_from_query</span></span>(<span>query: str) ‑> str</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Removes tabs from a query.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def remove_tabs_from_query(query: str) -&gt; str:
-    &#34;&#34;&#34;
-    Removes tabs from a query.
-    &#34;&#34;&#34;
-    query = query_to_line(query)
-    return re.sub(r&#34;\s+&#34;, &#34; &#34;, query).strip()</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.run_cloud"><code class="name flex">
 <span>def <span class="ident">run_cloud</span></span>(<span>flow: prefect.core.flow.Flow, labels: List[str], parameters: Dict[str, Any] = None, run_description: str = '')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Runs a flow on Prefect Server (must have VPN configured).</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def run_cloud(
-    flow: prefect.Flow,
-    labels: List[str],
-    parameters: Dict[str, Any] = None,
-    run_description: str = &#34;&#34;,
-):
-    &#34;&#34;&#34;
-    Runs a flow on Prefect Server (must have VPN configured).
-    &#34;&#34;&#34;
-    # Setup no schedule
-    flow.schedule = None
-
-    # Change flow name for development and register
-    flow.name = f&#34;{flow.name} (development)&#34;
-    flow.run_config = KubernetesRun(image=&#34;ghcr.io/prefeitura-rio/prefect-flows:latest&#34;)
-    flow_id = flow.register(project_name=&#34;main&#34;, labels=[])
-
-    # Get Prefect Client and submit flow run
-    client = Client()
-    flow_run_id = client.create_flow_run(
-        flow_id=flow_id,
-        run_name=f&#34;TEST RUN - {run_description} - {flow.name}&#34;,
-        labels=labels,
-        parameters=parameters,
-    )
-
-    # Print flow run link so user can check it
-    print(f&#34;Run submitted: TEST RUN - {run_description} - {flow.name}&#34;)
-    print(f&#34;Please check at: https://prefect.dados.rio/flow-run/{flow_run_id}&#34;)</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.run_local"><code class="name flex">
 <span>def <span class="ident">run_local</span></span>(<span>flow: prefect.core.flow.Flow, parameters: Dict[str, Any] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Runs a flow locally.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def run_local(flow: prefect.Flow, parameters: Dict[str, Any] = None):
-    &#34;&#34;&#34;
-    Runs a flow locally.
-    &#34;&#34;&#34;
-    # Setup for local run
-    flow.storage = None
-    flow.run_config = None
-    flow.schedule = None
-
-    # Run flow
-    return flow.run(parameters=parameters) if parameters else flow.run()</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.run_registered"><code class="name flex">
 <span>def <span class="ident">run_registered</span></span>(<span>flow_name: str, flow_project: str, labels: List[str], parameters: Dict[str, Any] = None, run_description: str = '') ‑> str</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Runs an already registered flow on Prefect Server (must have credentials configured).</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def run_registered(
-    flow_name: str,
-    flow_project: str,
-    labels: List[str],
-    parameters: Dict[str, Any] = None,
-    run_description: str = &#34;&#34;,
-) -&gt; str:
-    &#34;&#34;&#34;
-    Runs an already registered flow on Prefect Server (must have credentials configured).
-    &#34;&#34;&#34;
-    # Get Prefect Client and submit flow run
-    client = Client()
-    flow_result = client.graphql(
-        {
-            &#34;query&#34;: {
-                with_args(
-                    &#34;flow&#34;,
-                    {
-                        &#34;where&#34;: {
-                            &#34;_and&#34;: [
-                                {&#34;name&#34;: {&#34;_eq&#34;: flow_name}},
-                                {&#34;archived&#34;: {&#34;_eq&#34;: False}},
-                                {&#34;project&#34;: {&#34;name&#34;: {&#34;_eq&#34;: flow_project}}},
-                            ]
-                        }
-                    },
-                ): {
-                    &#34;id&#34;,
-                }
-            }
-        }
-    )
-    flows_found = flow_result.data.flow
-    if len(flows_found) == 0:
-        raise ValueError(f&#34;Flow {flow_name} not found.&#34;)
-    if len(flows_found) &gt; 1:
-        raise ValueError(f&#34;More than one flow found for {flow_name}.&#34;)
-    flow_id = flow_result[&#34;data&#34;][&#34;flow&#34;][0][&#34;id&#34;]
-    flow_run_id = client.create_flow_run(
-        flow_id=flow_id,
-        run_name=f&#34;SUBMITTED REMOTELY - {run_description}&#34;,
-        labels=labels,
-        parameters=parameters,
-    )
-
-    # Print flow run link so user can check it
-    print(f&#34;Run submitted: SUBMITTED REMOTELY - {run_description}&#34;)
-    print(f&#34;Please check at: https://prefect.dados.rio/flow-run/{flow_run_id}&#34;)
-
-    return flow_run_id</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.save_str_on_redis"><code class="name flex">
 <span>def <span class="ident">save_str_on_redis</span></span>(<span>redis_key: str, key: str, value: str)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to save a string on redis</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def save_str_on_redis(
-    redis_key: str,
-    key: str,
-    value: str,
-):
-    &#34;&#34;&#34;
-    Function to save a string on redis
-    &#34;&#34;&#34;
-
-    redis_client = get_redis_client()
-    redis_client.hset(redis_key, key, value)</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.save_updated_rows_on_redis"><code class="name flex">
 <span>def <span class="ident">save_updated_rows_on_redis</span></span>(<span>dataframe: pandas.core.frame.DataFrame, dataset_id: str, table_id: str, unique_id: str = 'id_estacao', date_column: str = 'data_medicao', date_format: str = '%Y-%m-%d %H:%M:%S', mode: str = 'prod') ‑> pandas.core.frame.DataFrame</span>
@@ -2127,178 +263,24 @@ Mode needs to be "prod" or "staging"</p></div>
 <dd>
 <div class="desc"><p>Acess redis to get the last time each unique_id was updated, return
 updated unique_id as a DataFrame and save new dates on redis</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def save_updated_rows_on_redis(  # pylint: disable=R0914
-    dataframe: pd.DataFrame,
-    dataset_id: str,
-    table_id: str,
-    unique_id: str = &#34;id_estacao&#34;,
-    date_column: str = &#34;data_medicao&#34;,
-    date_format: str = &#34;%Y-%m-%d %H:%M:%S&#34;,
-    mode: str = &#34;prod&#34;,
-) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    Acess redis to get the last time each unique_id was updated, return
-    updated unique_id as a DataFrame and save new dates on redis
-    &#34;&#34;&#34;
-
-    redis_client = get_redis_client()
-
-    key = dataset_id + &#34;.&#34; + table_id
-    if mode == &#34;dev&#34;:
-        key = f&#34;{mode}.{key}&#34;
-
-    # Access all data saved on redis with this key
-    last_updates = redis_client.hgetall(key)
-
-    if len(last_updates) == 0:
-        last_updates = pd.DataFrame(dataframe[unique_id].unique(), columns=[unique_id])
-        last_updates[&#34;last_update&#34;] = &#34;1900-01-01 00:00:00&#34;
-        log(f&#34;Redis key: {key}\nCreating Redis fake values:\n {last_updates}&#34;)
-    else:
-        # Convert data in dictionary in format with unique_id in key and last updated time as value
-        # Example &gt; {&#34;12&#34;: &#34;2022-06-06 14:45:00&#34;}
-        last_updates = {
-            k.decode(&#34;utf-8&#34;): v.decode(&#34;utf-8&#34;) for k, v in last_updates.items()
-        }
-
-        # Convert dictionary to dataframe
-        last_updates = pd.DataFrame(
-            last_updates.items(), columns=[unique_id, &#34;last_update&#34;]
-        )
-
-        log(f&#34;Redis key: {key}\nRedis actual values:\n {last_updates}&#34;)
-
-    # Garante that both are string
-    dataframe[unique_id] = dataframe[unique_id].astype(str)
-    last_updates[unique_id] = last_updates[unique_id].astype(str)
-
-    # dataframe and last_updates need to have the same index, in our case unique_id
-    missing_in_dfr = [
-        i
-        for i in last_updates[unique_id].unique()
-        if i not in dataframe[unique_id].unique()
-    ]
-    missing_in_updates = [
-        i
-        for i in dataframe[unique_id].unique()
-        if i not in last_updates[unique_id].unique()
-    ]
-
-    # If unique_id doesn&#39;t exists on updates we create a fake date for this station on updates
-    if len(missing_in_updates) &gt; 0:
-        for i, _id in enumerate(missing_in_updates):
-            last_updates.loc[-i] = [_id, &#34;1900-01-01 00:00:00&#34;]
-
-    # If unique_id doesn&#39;t exists on dataframe we remove this stations from last_updates
-    if len(missing_in_dfr) &gt; 0:
-        last_updates = last_updates[~last_updates[unique_id].isin(missing_in_dfr)]
-
-    # Merge dfs using unique_id
-    dataframe = dataframe.merge(last_updates, how=&#34;left&#34;, on=unique_id)
-    log(f&#34;Comparing times: {dataframe.sort_values(unique_id)}&#34;)
-
-    # Keep on dataframe only the stations that has a time after the one that is saved on redis
-    dataframe[date_column] = dataframe[date_column].apply(
-        pd.to_datetime, format=date_format
-    ) + pd.DateOffset(hours=0)
-
-    dataframe[&#34;last_update&#34;] = dataframe[&#34;last_update&#34;].apply(
-        pd.to_datetime, format=&#34;%Y-%m-%d %H:%M:%S&#34;
-    ) + pd.DateOffset(hours=0)
-
-    dataframe = dataframe[dataframe[date_column] &gt; dataframe[&#34;last_update&#34;]].dropna(
-        subset=[unique_id]
-    )
-    log(f&#34;Dataframe after comparison: {dataframe.sort_values(unique_id)}&#34;)
-    # Keep only the last date for each unique_id
-    keep_cols = [unique_id, date_column]
-    new_updates = dataframe[keep_cols].sort_values(keep_cols)
-    new_updates = new_updates.groupby(unique_id, as_index=False).tail(1)
-    new_updates[date_column] = new_updates[date_column].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
-    log(f&#34;&gt;&gt;&gt; Updated df: {new_updates.head(10)}&#34;)
-
-    # Convert stations with the new updates dates in a dictionary
-    new_updates = dict(zip(new_updates[unique_id], new_updates[date_column]))
-    log(f&#34;&gt;&gt;&gt; data to save in redis as a dict: {new_updates}&#34;)
-
-    # Save this new information on redis
-    [redis_client.hset(key, k, v) for k, v in new_updates.items()]
-
-    return dataframe.reset_index()</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.send_discord_message"><code class="name flex">
 <span>def <span class="ident">send_discord_message</span></span>(<span>message: str, webhook_url: str) ‑> None</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Sends a message to a Discord channel.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def send_discord_message(
-    message: str,
-    webhook_url: str,
-) -&gt; None:
-    &#34;&#34;&#34;
-    Sends a message to a Discord channel.
-    &#34;&#34;&#34;
-    requests.post(
-        webhook_url,
-        data={&#34;content&#34;: message},
-    )</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.send_telegram_message"><code class="name flex">
 <span>def <span class="ident">send_telegram_message</span></span>(<span>message: str, token: str, chat_id: int, parse_mode: str = 'HTML')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Sends a message to a Telegram chat.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def send_telegram_message(
-    message: str,
-    token: str,
-    chat_id: int,
-    parse_mode: str = telegram.ParseMode.HTML,
-):
-    &#34;&#34;&#34;
-    Sends a message to a Telegram chat.
-    &#34;&#34;&#34;
-    bot = telegram.Bot(token=token)
-    bot.send_message(
-        chat_id=chat_id,
-        text=message,
-        parse_mode=parse_mode,
-    )</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.set_default_parameters"><code class="name flex">
 <span>def <span class="ident">set_default_parameters</span></span>(<span>flow: prefect.core.flow.Flow, default_parameters: dict) ‑> prefect.core.flow.Flow</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Sets default parameters for a flow.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def set_default_parameters(
-    flow: prefect.Flow, default_parameters: dict
-) -&gt; prefect.Flow:
-    &#34;&#34;&#34;
-    Sets default parameters for a flow.
-    &#34;&#34;&#34;
-    for parameter in flow.parameters():
-        if parameter.name in default_parameters:
-            parameter.default = default_parameters[parameter.name]
-    return flow</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.skip_if_running_handler"><code class="name flex">
 <span>def <span class="ident">skip_if_running_handler</span></span>(<span>obj, old_state: prefect.engine.state.State, new_state: prefect.engine.state.State) ‑> prefect.engine.state.State</span>
@@ -2307,83 +289,12 @@ updated unique_id as a DataFrame and save new dates on redis</p></div>
 <div class="desc"><p>State handler that will skip a flow run if another instance of the flow is already running.</p>
 <p>Adapted from Prefect Discourse:
 <a href="https://tinyurl.com/4hn5uz2w">https://tinyurl.com/4hn5uz2w</a></p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def skip_if_running_handler(obj, old_state: State, new_state: State) -&gt; State:
-    &#34;&#34;&#34;
-    State handler that will skip a flow run if another instance of the flow is already running.
-
-    Adapted from Prefect Discourse:
-    https://tinyurl.com/4hn5uz2w
-    &#34;&#34;&#34;
-    if new_state.is_running():
-        client = Client()
-        query = &#34;&#34;&#34;
-            query($flow_id: uuid) {
-                flow_run(
-                    where: {
-                        _and: [
-                            {state: {_eq: &#34;Running&#34;}},
-                            {flow_id: {_eq: $flow_id}}
-                        ]
-                    }
-                ) {
-                    id
-                }
-            }
-        &#34;&#34;&#34;
-        # pylint: disable=no-member
-        response = client.graphql(
-            query=query,
-            variables=dict(flow_id=prefect.context.flow_id),
-        )
-        active_flow_runs = response[&#34;data&#34;][&#34;flow_run&#34;]
-        if active_flow_runs:
-            logger = prefect.context.get(&#34;logger&#34;)
-            message = &#34;Skipping this flow run since there are already some flow runs in progress&#34;
-            logger.info(message)
-            return Skipped(message)
-    return new_state</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.smart_split"><code class="name flex">
 <span>def <span class="ident">smart_split</span></span>(<span>text: str, max_length: int, separator: str = ' ') ‑> List[str]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Splits a string into a list of strings.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def smart_split(
-    text: str,
-    max_length: int,
-    separator: str = &#34; &#34;,
-) -&gt; List[str]:
-    &#34;&#34;&#34;
-    Splits a string into a list of strings.
-    &#34;&#34;&#34;
-    if len(text) &lt;= max_length:
-        return [text]
-
-    separator_index = text.rfind(separator, 0, max_length)
-    if (separator_index &gt;= max_length) or (separator_index == -1):
-        raise ValueError(
-            f&#39;Cannot split text &#34;{text}&#34; into {max_length}&#39;
-            f&#39;characters using separator &#34;{separator}&#34;&#39;
-        )
-
-    return [
-        text[:separator_index],
-        *smart_split(
-            text[separator_index + len(separator) :],
-            max_length,
-            separator,
-        ),
-    ]</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.to_json_dataframe"><code class="name flex">
 <span>def <span class="ident">to_json_dataframe</span></span>(<span>dataframe: pandas.core.frame.DataFrame = None, csv_path: Union[str, pathlib.Path] = None, key_column: str = None, read_csv_kwargs: dict = None, save_to: Union[str, pathlib.Path] = None) ‑> pandas.core.frame.DataFrame</span>
@@ -2398,43 +309,6 @@ data to a "content" column in JSON format. Example:</p>
 "content": [{"col1": 1, "col2": 4}, {"col1": 2, "col2": 5}, {"col1": 3, "col2": 6}]
 })</li>
 </ul></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def to_json_dataframe(
-    dataframe: pd.DataFrame = None,
-    csv_path: Union[str, Path] = None,
-    key_column: str = None,
-    read_csv_kwargs: dict = None,
-    save_to: Union[str, Path] = None,
-) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    Manipulates a dataframe by keeping key_column and moving every other column
-    data to a &#34;content&#34; column in JSON format. Example:
-
-    - Input dataframe: pd.DataFrame({&#34;key&#34;: [&#34;a&#34;, &#34;b&#34;, &#34;c&#34;], &#34;col1&#34;: [1, 2, 3], &#34;col2&#34;: [4, 5, 6]})
-    - Output dataframe: pd.DataFrame({
-        &#34;key&#34;: [&#34;a&#34;, &#34;b&#34;, &#34;c&#34;],
-        &#34;content&#34;: [{&#34;col1&#34;: 1, &#34;col2&#34;: 4}, {&#34;col1&#34;: 2, &#34;col2&#34;: 5}, {&#34;col1&#34;: 3, &#34;col2&#34;: 6}]
-    })
-    &#34;&#34;&#34;
-    if dataframe is None and not csv_path:
-        raise ValueError(&#34;dataframe or dataframe_path is required&#34;)
-    if csv_path:
-        dataframe = pd.read_csv(csv_path, **read_csv_kwargs)
-    if key_column:
-        dataframe[&#34;content&#34;] = dataframe.drop(columns=[key_column]).to_dict(
-            orient=&#34;records&#34;
-        )
-        dataframe = dataframe[[&#34;key&#34;, &#34;content&#34;]]
-    else:
-        dataframe[&#34;content&#34;] = dataframe.to_dict(orient=&#34;records&#34;)
-        dataframe = dataframe[[&#34;content&#34;]]
-    if save_to:
-        dataframe.to_csv(save_to, index=False)
-    return dataframe</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.to_partitions"><code class="name flex">
 <span>def <span class="ident">to_partitions</span></span>(<span>data: pandas.core.frame.DataFrame, partition_columns: List[str], savepath: str, data_type: str = 'csv', suffix: str = None, build_json_dataframe: bool = False, dataframe_key_column: str = None) ‑> List[pathlib.Path]</span>
@@ -2462,97 +336,6 @@ data=pd.DataFrame(data),
 partition_columns=['ano','mes','sigla_uf'],
 savepath='partitions/'
 )</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def to_partitions(
-    data: pd.DataFrame,
-    partition_columns: List[str],
-    savepath: str,
-    data_type: str = &#34;csv&#34;,
-    suffix: str = None,
-    build_json_dataframe: bool = False,
-    dataframe_key_column: str = None,
-) -&gt; List[Path]:  # sourcery skip: raise-specific-error
-    &#34;&#34;&#34;Save data in to hive patitions schema, given a dataframe and a list of partition columns.
-    Args:
-        data (pandas.core.frame.DataFrame): Dataframe to be partitioned.
-        partition_columns (list): List of columns to be used as partitions.
-        savepath (str, pathlib.PosixPath): folder path to save the partitions
-    Exemple:
-        data = {
-            &#34;ano&#34;: [2020, 2021, 2020, 2021, 2020, 2021, 2021,2025],
-            &#34;mes&#34;: [1, 2, 3, 4, 5, 6, 6,9],
-            &#34;sigla_uf&#34;: [&#34;SP&#34;, &#34;SP&#34;, &#34;RJ&#34;, &#34;RJ&#34;, &#34;PR&#34;, &#34;PR&#34;, &#34;PR&#34;,&#34;PR&#34;],
-            &#34;dado&#34;: [&#34;a&#34;, &#34;b&#34;, &#34;c&#34;, &#34;d&#34;, &#34;e&#34;, &#34;f&#34;, &#34;g&#34;,&#39;h&#39;],
-        }
-        to_partitions(
-            data=pd.DataFrame(data),
-            partition_columns=[&#39;ano&#39;,&#39;mes&#39;,&#39;sigla_uf&#39;],
-            savepath=&#39;partitions/&#39;
-        )
-    &#34;&#34;&#34;
-    saved_files = []
-    if isinstance(data, (pd.core.frame.DataFrame)):
-        savepath = Path(savepath)
-
-        # create unique combinations between partition columns
-        unique_combinations = (
-            data[partition_columns]
-            .drop_duplicates(subset=partition_columns)
-            .to_dict(orient=&#34;records&#34;)
-        )
-
-        for filter_combination in unique_combinations:
-            patitions_values = [
-                f&#34;{partition}={value}&#34;
-                for partition, value in filter_combination.items()
-            ]
-
-            # get filtered data
-            df_filter = data.loc[
-                data[filter_combination.keys()]
-                .isin(filter_combination.values())
-                .all(axis=1),
-                :,
-            ]
-            df_filter = df_filter.drop(columns=partition_columns).reset_index(drop=True)
-
-            # create folder tree
-            filter_save_path = Path(savepath / &#34;/&#34;.join(patitions_values))
-            filter_save_path.mkdir(parents=True, exist_ok=True)
-            if suffix is not None:
-                file_filter_save_path = (
-                    Path(filter_save_path) / f&#34;data_{suffix}.{data_type}&#34;
-                )
-            else:
-                file_filter_save_path = Path(filter_save_path) / f&#34;data.{data_type}&#34;
-
-            if build_json_dataframe:
-                df_filter = to_json_dataframe(
-                    df_filter, key_column=dataframe_key_column
-                )
-
-            if data_type == &#34;csv&#34;:
-                # append data to csv
-                df_filter.to_csv(
-                    file_filter_save_path,
-                    index=False,
-                    mode=&#34;a&#34;,
-                    header=not file_filter_save_path.exists(),
-                )
-                saved_files.append(file_filter_save_path)
-            elif data_type == &#34;parquet&#34;:
-                dataframe_to_parquet(dataframe=df_filter, path=file_filter_save_path)
-                saved_files.append(file_filter_save_path)
-            else:
-                raise ValueError(f&#34;Invalid data type: {data_type}&#34;)
-    else:
-        raise BaseException(&#34;Data need to be a pandas DataFrame&#34;)
-
-    return saved_files</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.treat_redis_output"><code class="name flex">
 <span>def <span class="ident">treat_redis_output</span></span>(<span>text)</span>
@@ -2560,33 +343,12 @@ savepath='partitions/'
 <dd>
 <div class="desc"><p>Redis returns a dict where both key and value are byte string
 Example: {b'date': b'2023-02-27 07:29:04'}</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def treat_redis_output(text):
-    &#34;&#34;&#34;
-    Redis returns a dict where both key and value are byte string
-    Example: {b&#39;date&#39;: b&#39;2023-02-27 07:29:04&#39;}
-    &#34;&#34;&#34;
-    return {k.decode(&#34;utf-8&#34;): v.decode(&#34;utf-8&#34;) for k, v in text.items()}</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.untuple_clocks"><code class="name flex">
 <span>def <span class="ident">untuple_clocks</span></span>(<span>clocks)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Converts a list of tuples to a list of clocks.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def untuple_clocks(clocks):
-    &#34;&#34;&#34;
-    Converts a list of tuples to a list of clocks.
-    &#34;&#34;&#34;
-    return [clock[0] if isinstance(clock, tuple) else clock for clock in clocks]</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.utils.upload_files_to_storage"><code class="name flex">
 <span>def <span class="ident">upload_files_to_storage</span></span>(<span>bucket_name: str, prefix: str, local_path: Union[str, pathlib.Path] = None, files_list: List[str] = None, mode: str = 'prod')</span>
@@ -2594,42 +356,6 @@ Example: {b'date': b'2023-02-27 07:29:04'}</p></div>
 <dd>
 <div class="desc"><p>Uploads all files from <code>local_path</code> to <code>bucket_name</code> with <code>prefix</code>.
 Mode needs to be "prod" or "staging"</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def upload_files_to_storage(
-    bucket_name: str,
-    prefix: str,
-    local_path: Union[str, Path] = None,
-    files_list: List[str] = None,
-    mode: str = &#34;prod&#34;,
-):
-    &#34;&#34;&#34;
-    Uploads all files from `local_path` to `bucket_name` with `prefix`.
-    Mode needs to be &#34;prod&#34; or &#34;staging&#34;
-    &#34;&#34;&#34;
-    # Either local_path or files_list must be provided
-    if local_path is None and files_list is None:
-        raise ValueError(&#34;Either local_path or files_list must be provided&#34;)
-
-    # If local_path is provided, get all files from it
-    if local_path is not None:
-        files_list: List[Path] = list(Path(local_path).glob(&#34;**/*&#34;))
-
-    # Assert all items in files_list are Path objects
-    files_list: List[Path] = [Path(f) for f in files_list]
-
-    credentials = get_credentials_from_env(mode=mode)
-    storage_client = storage.Client(credentials=credentials)
-
-    bucket = storage_client.bucket(bucket_name)
-
-    for file in files_list:
-        if file.is_file():
-            blob = bucket.blob(f&#34;{prefix}/{file.name}&#34;)
-            blob.upload_from_filename(file)</code></pre>
-</details>
 </dd>
 </dl>
 </section>
@@ -2641,8 +367,8 @@ Mode needs to be "prod" or "staging"</p></div>
 <input id="lunr-search" name="q" placeholder="🔎 Search ..." aria-label="Search"
 disabled minlength="2">
 </form>
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.css" integrity="sha512-j1u8eUJ4f23xPPxwOrLUPQaCD2dwzNqqmDDcWS4deWsMv2ohLqmXXuP3hU7g8TyzbMSakP/mMqoNBYWj8AEIFg==" crossorigin>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.js" integrity="sha512-plGUER9JkeEWPPqQBE4sdLqBoQug5Ap+BCGMc7bJ8BXkm+VVj6QzkpBz5Yv2yPkkq+cqg9IpkBaGCas6uDbW8g==" crossorigin></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.16.0/tingle.min.css" integrity="sha512-b+T2i3P45i1LZM7I00Ci5QquB9szqaxu+uuk5TUSGjZQ4w4n+qujQiIuvTv2BxE7WCGQCifNMksyKILDiHzsOg==" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.16.0/tingle.min.js" integrity="sha512-2B9/byNV1KKRm5nQ2RLViPFD6U4dUjDGwuW1GU+ImJh8YinPU9Zlq1GzdTMO+G2ROrB5o1qasJBy1ttYz0wCug==" crossorigin></script>
 <style>
 .modal-dialog iframe {
 width: 100vw;
@@ -2683,7 +409,6 @@ setTimeout(() => input.focus(), 100);
 }).setContent('<iframe src="' + url + '"></iframe>').open();
 }
 </script>
-<h1>Index</h1>
 <div class="toc">
 <ul></ul>
 </div>
@@ -2744,7 +469,7 @@ setTimeout(() => input.focus(), 100);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.0</a>.</p>
 </footer>
 </body>
 </html>

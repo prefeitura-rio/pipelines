@@ -2,18 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.10.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.0">
 <title>pipelines.rj_smtr.veiculo.flows API documentation</title>
-<meta name="description" content="Flows for veiculos" />
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
-<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<meta name="description" content="Flows for veiculos">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
-<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+})</script>
 </head>
 <body>
 <main>
@@ -23,307 +26,6 @@
 </header>
 <section id="section-intro">
 <p>Flows for veiculos</p>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python"># -*- coding: utf-8 -*-
-# pylint: disable=W0511
-&#34;&#34;&#34;
-Flows for veiculos
-&#34;&#34;&#34;
-
-from copy import deepcopy
-from prefect import Parameter
-from prefect.tasks.control_flow import ifelse, merge
-from prefect.run_configs import KubernetesRun
-from prefect.storage import GCS
-from prefect.utilities.edges import unmapped
-
-# EMD Imports #
-
-from pipelines.constants import constants as emd_constants
-from pipelines.utils.decorators import Flow
-from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
-from pipelines.utils.utils import set_default_parameters
-
-from pipelines.utils.tasks import (
-    rename_current_flow_run_now_time,
-    get_current_flow_mode,
-    get_current_flow_labels,
-)
-
-# SMTR Imports #
-
-from pipelines.rj_smtr.constants import constants
-
-# from pipelines.rj_smtr.schedules import (
-#     every_day_hour_seven,
-# )
-from pipelines.rj_smtr.tasks import (
-    create_date_hour_partition,
-    create_local_partition_path,
-    get_current_timestamp,
-    parse_timestamp_to_string,
-    save_raw_local,
-    save_treated_local,
-    upload_logs_to_bq,
-    bq_upload,
-    fetch_dataset_sha,
-    get_run_dates,
-    get_join_dict,
-    get_previous_date,
-)
-
-from pipelines.rj_smtr.veiculo.tasks import (
-    get_raw_ftp,
-    pre_treatment_sppo_licenciamento,
-    pre_treatment_sppo_infracao,
-    get_veiculo_raw_storage,
-)
-
-from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
-
-from pipelines.rj_smtr.flows import default_capture_flow
-
-# Flows #
-
-# flake8: noqa: E501
-with Flow(
-    f&#34;SMTR: {constants.VEICULO_DATASET_ID.value} {constants.SPPO_LICENCIAMENTO_TABLE_ID.value} - Captura&#34;,
-    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
-) as sppo_licenciamento_captura:
-    timestamp = Parameter(&#34;timestamp&#34;, default=None)
-    get_from_storage = Parameter(&#34;get_from_storage&#34;, default=False)
-
-    timestamp = get_current_timestamp(timestamp=timestamp)
-
-    LABELS = get_current_flow_labels()
-    MODE = get_current_flow_mode(LABELS)
-
-    # Rename flow run
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix=f&#34;{sppo_licenciamento_captura.name} - &#34;, now_time=timestamp
-    )
-
-    # SETUP #
-    partitions = create_date_hour_partition(timestamp, partition_date_only=True)
-
-    filename = parse_timestamp_to_string(timestamp)
-
-    filepath = create_local_partition_path(
-        dataset_id=constants.VEICULO_DATASET_ID.value,
-        table_id=constants.SPPO_LICENCIAMENTO_TABLE_ID.value,
-        filename=filename,
-        partitions=partitions,
-    )
-
-    # EXTRACT
-    raw_status_gcs = get_veiculo_raw_storage(
-        dataset_id=constants.VEICULO_DATASET_ID.value,
-        table_id=constants.SPPO_LICENCIAMENTO_TABLE_ID.value,
-        timestamp=timestamp,
-        csv_args=constants.SPPO_LICENCIAMENTO_CSV_ARGS.value,
-    )
-
-    raw_status_url = get_raw_ftp(
-        ftp_path=&#34;LICENCIAMENTO/CadastrodeVeiculos&#34;,
-        filetype=&#34;txt&#34;,
-        csv_args=constants.SPPO_LICENCIAMENTO_CSV_ARGS.value,
-        timestamp=timestamp,
-    )
-
-    ifelse(get_from_storage.is_equal(True), raw_status_gcs, raw_status_url)
-
-    raw_status = merge(raw_status_gcs, raw_status_url)
-
-    raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
-
-    # TREAT
-    treated_status = pre_treatment_sppo_licenciamento(
-        status=raw_status, timestamp=timestamp
-    )
-
-    treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
-
-    # LOAD
-    error = bq_upload(
-        dataset_id=constants.VEICULO_DATASET_ID.value,
-        table_id=constants.SPPO_LICENCIAMENTO_TABLE_ID.value,
-        filepath=treated_filepath,
-        raw_filepath=raw_filepath,
-        partitions=partitions,
-        status=treated_status,
-    )
-    upload_logs_to_bq(
-        dataset_id=constants.VEICULO_DATASET_ID.value,
-        parent_table_id=constants.SPPO_LICENCIAMENTO_TABLE_ID.value,
-        timestamp=timestamp,
-        error=error,
-    )
-    sppo_licenciamento_captura.set_dependencies(
-        task=partitions, upstream_tasks=[rename_flow_run]
-    )
-
-sppo_licenciamento_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-sppo_licenciamento_captura.run_config = KubernetesRun(
-    image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
-)
-# sppo_licenciamento_captura.schedule = every_day_hour_seven
-
-with Flow(
-    f&#34;SMTR: {constants.VEICULO_DATASET_ID.value} {constants.SPPO_INFRACAO_TABLE_ID.value} - Captura&#34;,
-    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
-) as sppo_infracao_captura:
-    timestamp = Parameter(&#34;timestamp&#34;, default=None)
-    get_from_storage = Parameter(&#34;get_from_storage&#34;, default=False)
-
-    timestamp = get_current_timestamp(timestamp=timestamp)
-
-    LABELS = get_current_flow_labels()
-    MODE = get_current_flow_mode(LABELS)
-
-    # Rename flow run
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix=f&#34;{sppo_infracao_captura.name} - &#34;, now_time=timestamp
-    )
-
-    # SETUP #
-    partitions = create_date_hour_partition(timestamp, partition_date_only=True)
-
-    filename = parse_timestamp_to_string(timestamp)
-
-    filepath = create_local_partition_path(
-        dataset_id=constants.VEICULO_DATASET_ID.value,
-        table_id=constants.SPPO_INFRACAO_TABLE_ID.value,
-        filename=filename,
-        partitions=partitions,
-    )
-
-    # EXTRACT
-    raw_status_gcs = get_veiculo_raw_storage(
-        dataset_id=constants.VEICULO_DATASET_ID.value,
-        table_id=constants.SPPO_INFRACAO_TABLE_ID.value,
-        timestamp=timestamp,
-        csv_args=constants.SPPO_INFRACAO_CSV_ARGS.value,
-    )
-    raw_status_url = get_raw_ftp(
-        ftp_path=&#34;MULTAS/MULTAS&#34;,
-        filetype=&#34;txt&#34;,
-        csv_args=constants.SPPO_INFRACAO_CSV_ARGS.value,
-        timestamp=timestamp,
-    )
-    ifelse(get_from_storage.is_equal(True), raw_status_gcs, raw_status_url)
-
-    raw_status = merge(raw_status_gcs, raw_status_url)
-
-    raw_filepath = save_raw_local(status=raw_status, file_path=filepath)
-
-    # TREAT
-    treated_status = pre_treatment_sppo_infracao(status=raw_status, timestamp=timestamp)
-
-    treated_filepath = save_treated_local(status=treated_status, file_path=filepath)
-
-    # LOAD
-    error = bq_upload(
-        dataset_id=constants.VEICULO_DATASET_ID.value,
-        table_id=constants.SPPO_INFRACAO_TABLE_ID.value,
-        filepath=treated_filepath,
-        raw_filepath=raw_filepath,
-        partitions=partitions,
-        status=treated_status,
-    )
-    upload_logs_to_bq(
-        dataset_id=constants.VEICULO_DATASET_ID.value,
-        parent_table_id=constants.SPPO_INFRACAO_TABLE_ID.value,
-        timestamp=timestamp,
-        error=error,
-    )
-    sppo_infracao_captura.set_dependencies(
-        task=partitions, upstream_tasks=[rename_flow_run]
-    )
-
-sppo_infracao_captura.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-sppo_infracao_captura.run_config = KubernetesRun(
-    image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
-)
-# sppo_infracao_captura.schedule = every_day_hour_seven
-
-# flake8: noqa: E501
-with Flow(
-    f&#34;SMTR: {constants.VEICULO_DATASET_ID.value} {constants.SPPO_VEICULO_DIA_TABLE_ID.value} - Materialização (subflow)&#34;,
-    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
-) as sppo_veiculo_dia:
-    # 1. SETUP #
-
-    # Get default parameters #
-    start_date = Parameter(&#34;start_date&#34;, default=get_previous_date.run(1))
-    end_date = Parameter(&#34;end_date&#34;, default=get_previous_date.run(1))
-    stu_data_versao = Parameter(&#34;stu_data_versao&#34;, default=&#34;&#34;)
-
-    run_dates = get_run_dates(start_date, end_date)
-
-    # Rename flow run #
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix=sppo_veiculo_dia.name + &#34;: &#34;,
-        now_time=run_dates,
-    )
-
-    # Set dbt client #
-    LABELS = get_current_flow_labels()
-    MODE = get_current_flow_mode(LABELS)
-
-    dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
-    # Use the command below to get the dbt client in dev mode:
-    # dbt_client = get_local_dbt_client(host=&#34;localhost&#34;, port=3001)
-
-    # Get models version #
-    # TODO: include version in a column in the table
-    dataset_sha = fetch_dataset_sha(
-        dataset_id=constants.VEICULO_DATASET_ID.value,
-    )
-
-    dict_list = get_join_dict(dict_list=run_dates, new_dict=dataset_sha)
-    _vars = get_join_dict(
-        dict_list=dict_list, new_dict={&#34;stu_data_versao&#34;: stu_data_versao}
-    )
-
-    # 2. TREAT #
-    run_dbt_model.map(
-        dbt_client=unmapped(dbt_client),
-        dataset_id=unmapped(constants.VEICULO_DATASET_ID.value),
-        table_id=unmapped(constants.SPPO_VEICULO_DIA_TABLE_ID.value),
-        upstream=unmapped(True),
-        exclude=unmapped(&#34;+gps_sppo&#34;),
-        _vars=_vars,
-    )
-
-sppo_veiculo_dia.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-sppo_veiculo_dia.run_config = KubernetesRun(
-    image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
-)
-
-veiculo_sppo_registro_agente_verao_captura = deepcopy(default_capture_flow)
-veiculo_sppo_registro_agente_verao_captura.name = f&#34;SMTR: {constants.VEICULO_DATASET_ID.value} {constants.SPPO_REGISTRO_AGENTE_VERAO_PARAMS.value[&#39;table_id&#39;]} - Captura&#34;
-veiculo_sppo_registro_agente_verao_captura.storage = GCS(
-    emd_constants.GCS_FLOWS_BUCKET.value
-)
-veiculo_sppo_registro_agente_verao_captura.run_config = KubernetesRun(
-    image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
-)
-veiculo_sppo_registro_agente_verao_captura.storage = GCS(
-    emd_constants.GCS_FLOWS_BUCKET.value
-)
-veiculo_sppo_registro_agente_verao_captura = set_default_parameters(
-    flow=veiculo_sppo_registro_agente_verao_captura,
-    default_parameters=constants.SPPO_REGISTRO_AGENTE_VERAO_PARAMS.value,
-)
-# veiculo_sppo_registro_agente_verao_captura.schedule = every_day_hour_seven</code></pre>
-</details>
 </section>
 <section>
 </section>
@@ -339,8 +41,8 @@ veiculo_sppo_registro_agente_verao_captura = set_default_parameters(
 <input id="lunr-search" name="q" placeholder="🔎 Search ..." aria-label="Search"
 disabled minlength="2">
 </form>
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.css" integrity="sha512-j1u8eUJ4f23xPPxwOrLUPQaCD2dwzNqqmDDcWS4deWsMv2ohLqmXXuP3hU7g8TyzbMSakP/mMqoNBYWj8AEIFg==" crossorigin>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.js" integrity="sha512-plGUER9JkeEWPPqQBE4sdLqBoQug5Ap+BCGMc7bJ8BXkm+VVj6QzkpBz5Yv2yPkkq+cqg9IpkBaGCas6uDbW8g==" crossorigin></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.16.0/tingle.min.css" integrity="sha512-b+T2i3P45i1LZM7I00Ci5QquB9szqaxu+uuk5TUSGjZQ4w4n+qujQiIuvTv2BxE7WCGQCifNMksyKILDiHzsOg==" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.16.0/tingle.min.js" integrity="sha512-2B9/byNV1KKRm5nQ2RLViPFD6U4dUjDGwuW1GU+ImJh8YinPU9Zlq1GzdTMO+G2ROrB5o1qasJBy1ttYz0wCug==" crossorigin></script>
 <style>
 .modal-dialog iframe {
 width: 100vw;
@@ -381,7 +83,6 @@ setTimeout(() => input.focus(), 100);
 }).setContent('<iframe src="' + url + '"></iframe>').open();
 }
 </script>
-<h1>Index</h1>
 <div class="toc">
 <ul></ul>
 </div>
@@ -395,7 +96,7 @@ setTimeout(() => input.focus(), 100);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.0</a>.</p>
 </footer>
 </body>
 </html>

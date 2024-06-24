@@ -2,18 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.10.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.0">
 <title>pipelines.utils.dump_to_gcs.tasks API documentation</title>
-<meta name="description" content="Tasks for dumping data directly from BigQuery to GCS." />
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
-<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<meta name="description" content="Tasks for dumping data directly from BigQuery to GCS.">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
-<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+})</script>
 </head>
 <body>
 <main>
@@ -23,240 +26,6 @@
 </header>
 <section id="section-intro">
 <p>Tasks for dumping data directly from BigQuery to GCS.</p>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python"># -*- coding: utf-8 -*-
-# pylint: disable=E1101
-&#34;&#34;&#34;
-Tasks for dumping data directly from BigQuery to GCS.
-&#34;&#34;&#34;
-from datetime import datetime
-from time import sleep
-from typing import Union
-
-from basedosdados.download.base import google_client
-from basedosdados.upload.base import Base
-from google.cloud import bigquery
-import jinja2
-from prefect import task
-
-from pipelines.utils.dump_to_gcs.constants import constants as dump_to_gcs_constants
-from pipelines.utils.utils import (
-    determine_whether_to_execute_or_not,
-    get_redis_client,
-    human_readable,
-    list_blobs_with_prefix,
-    log,
-)
-
-
-@task
-def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
-    dataset_id: str,
-    table_id: str,
-    project_id: str = None,
-    query: Union[str, jinja2.Template] = None,
-    jinja_query_params: dict = None,
-    bd_project_mode: str = &#34;prod&#34;,
-    billing_project_id: str = None,
-    location: str = &#34;US&#34;,
-    maximum_bytes_processed: float = dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
-):
-    &#34;&#34;&#34;
-    Get data from BigQuery.
-    &#34;&#34;&#34;
-    # Try to get project_id from environment variable
-    if not project_id:
-        log(&#34;Project ID was not provided, trying to get it from environment variable&#34;)
-        try:
-            bd_base = Base()
-            project_id = bd_base.config[&#34;gcloud-projects&#34;][bd_project_mode][&#34;name&#34;]
-        except KeyError:
-            pass
-        if not project_id:
-            raise ValueError(
-                &#34;project_id must be either provided or inferred from environment variables&#34;
-            )
-        log(f&#34;Project ID was inferred from environment variables: {project_id}&#34;)
-
-    # Asserts that dataset_id and table_id are provided
-    if not dataset_id or not table_id:
-        raise ValueError(&#34;dataset_id and table_id must be provided&#34;)
-
-    # If query is not provided, build query from it
-    if not query:
-        query = f&#34;SELECT * FROM `{project_id}.{dataset_id}.{table_id}`&#34;
-        log(f&#34;Query was inferred from dataset_id and table_id: {query}&#34;)
-
-    # If query is provided, use it!
-    # If it&#39;s a template, we must render it.
-    if not query:
-        if not jinja_query_params:
-            jinja_query_params = {}
-        if isinstance(query, jinja2.Template):
-            try:
-                query = query.render(
-                    {
-                        &#34;project_id&#34;: project_id,
-                        &#34;dataset_id&#34;: dataset_id,
-                        &#34;table_id&#34;: table_id,
-                        **jinja_query_params,
-                    }
-                )
-            except jinja2.TemplateError as exc:
-                raise ValueError(f&#34;Error rendering query: {exc}&#34;) from exc
-            log(f&#34;Query was rendered: {query}&#34;)
-
-    # If query is not a string, raise an error
-    if not isinstance(query, str):
-        raise ValueError(&#34;query must be either a string or a Jinja2 template&#34;)
-    log(f&#34;Query was provided: {query}&#34;)
-
-    # Get billing project ID
-    if not billing_project_id:
-        log(
-            &#34;Billing project ID was not provided, trying to get it from environment variable&#34;
-        )
-        try:
-            bd_base = Base()
-            billing_project_id = bd_base.config[&#34;gcloud-projects&#34;][bd_project_mode][
-                &#34;name&#34;
-            ]
-        except KeyError:
-            pass
-        if not billing_project_id:
-            raise ValueError(
-                &#34;billing_project_id must be either provided or inferred from environment variables&#34;
-            )
-        log(
-            f&#34;Billing project ID was inferred from environment variables: {billing_project_id}&#34;
-        )
-
-    # Checking if data exceeds the maximum allowed size
-    log(&#34;Checking if data exceeds the maximum allowed size&#34;)
-    # pylint: disable=E1124
-    client = google_client(project_id, billing_project_id, from_file=True, reauth=False)
-    job_config = bigquery.QueryJobConfig()
-    job_config.dry_run = True
-    job = client[&#34;bigquery&#34;].query(query, job_config=job_config)
-    while not job.done():
-        sleep(1)
-    table_size = job.total_bytes_processed
-    log(f&#39;Table size: {human_readable(table_size, unit=&#34;B&#34;, unit_divider=1024)}&#39;)
-    if table_size &gt; maximum_bytes_processed:
-        max_allowed_size = human_readable(
-            maximum_bytes_processed,
-            unit=&#34;B&#34;,
-            unit_divider=1024,
-        )
-        raise ValueError(
-            f&#34;Table size exceeds the maximum allowed size: {max_allowed_size}&#34;
-        )
-
-    # Get data
-    log(&#34;Querying data from BigQuery&#34;)
-    job = client[&#34;bigquery&#34;].query(query)
-    while not job.done():
-        sleep(1)
-    # pylint: disable=protected-access
-    dest_table = job._properties[&#34;configuration&#34;][&#34;query&#34;][&#34;destinationTable&#34;]
-    dest_project_id = dest_table[&#34;projectId&#34;]
-    dest_dataset_id = dest_table[&#34;datasetId&#34;]
-    dest_table_id = dest_table[&#34;tableId&#34;]
-    log(
-        f&#34;Query results were stored in {dest_project_id}.{dest_dataset_id}.{dest_table_id}&#34;
-    )
-
-    blob_path = f&#34;gs://datario/share/{dataset_id}/{table_id}/data*.csv.gz&#34;
-    log(f&#34;Loading data to {blob_path}&#34;)
-    dataset_ref = bigquery.DatasetReference(dest_project_id, dest_dataset_id)
-    table_ref = dataset_ref.table(dest_table_id)
-    job_config = bigquery.job.ExtractJobConfig(compression=&#34;GZIP&#34;)
-    extract_job = client[&#34;bigquery&#34;].extract_table(
-        table_ref,
-        blob_path,
-        location=location,
-        job_config=job_config,
-    )
-    extract_job.result()
-    log(&#34;Data was loaded successfully&#34;)
-
-    # Get the BLOB we&#39;ve just created and make it public
-    blobs = list_blobs_with_prefix(&#34;datario&#34;, f&#34;share/{dataset_id}/{table_id}/&#34;)
-    if not blobs:
-        raise ValueError(f&#34;No blob found at {blob_path}&#34;)
-    for blob in blobs:
-        log(f&#34;Blob found at {blob.name}&#34;)
-        blob.make_public()
-        log(&#34;Blob was made public&#34;)
-
-
-@task
-def get_project_id(
-    project_id: str = None,
-    bd_project_mode: str = &#34;prod&#34;,
-):
-    &#34;&#34;&#34;
-    Get the project ID.
-    &#34;&#34;&#34;
-    if project_id:
-        return project_id
-    log(&#34;Project ID was not provided, trying to get it from environment variable&#34;)
-    try:
-        bd_base = Base()
-        project_id = bd_base.config[&#34;gcloud-projects&#34;][bd_project_mode][&#34;name&#34;]
-    except KeyError:
-        pass
-    if not project_id:
-        raise ValueError(
-            &#34;project_id must be either provided or inferred from environment variables&#34;
-        )
-    log(f&#34;Project ID was inferred from environment variables: {project_id}&#34;)
-    return project_id
-
-
-@task(nout=2)
-def trigger_cron_job(
-    project_id: str,
-    dataset_id: str,
-    table_id: str,
-    cron_expression: str,
-):
-    &#34;&#34;&#34;
-    Tells whether to trigger a cron job.
-    &#34;&#34;&#34;
-    redis_client = get_redis_client()
-    key = f&#34;{project_id}__{dataset_id}__{table_id}&#34;
-    log(f&#34;Checking if cron job should be triggered for {key}&#34;)
-    val = redis_client.get(key)
-    current_datetime = datetime.now()
-    if val and val is dict and &#34;last_trigger&#34; in val:
-        last_trigger = val[&#34;last_trigger&#34;]
-        log(f&#34;Last trigger: {last_trigger}&#34;)
-        if last_trigger:
-            return determine_whether_to_execute_or_not(
-                cron_expression, current_datetime, last_trigger
-            )
-    log(f&#34;No last trigger found for {key}&#34;)
-    return True, current_datetime
-
-
-@task
-def update_last_trigger(
-    project_id: str,
-    dataset_id: str,
-    table_id: str,
-    execution_time: datetime,
-):
-    &#34;&#34;&#34;
-    Update the last trigger.
-    &#34;&#34;&#34;
-    redis_client = get_redis_client()
-    key = f&#34;{project_id}__{dataset_id}__{table_id}&#34;
-    redis_client.set(key, {&#34;last_trigger&#34;: execution_time})</code></pre>
-</details>
 </section>
 <section>
 </section>
@@ -270,242 +39,24 @@ def update_last_trigger(
 </code></dt>
 <dd>
 <div class="desc"><p>Get data from BigQuery.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task
-def download_data_to_gcs(  # pylint: disable=R0912,R0913,R0914,R0915
-    dataset_id: str,
-    table_id: str,
-    project_id: str = None,
-    query: Union[str, jinja2.Template] = None,
-    jinja_query_params: dict = None,
-    bd_project_mode: str = &#34;prod&#34;,
-    billing_project_id: str = None,
-    location: str = &#34;US&#34;,
-    maximum_bytes_processed: float = dump_to_gcs_constants.MAX_BYTES_PROCESSED_PER_TABLE.value,
-):
-    &#34;&#34;&#34;
-    Get data from BigQuery.
-    &#34;&#34;&#34;
-    # Try to get project_id from environment variable
-    if not project_id:
-        log(&#34;Project ID was not provided, trying to get it from environment variable&#34;)
-        try:
-            bd_base = Base()
-            project_id = bd_base.config[&#34;gcloud-projects&#34;][bd_project_mode][&#34;name&#34;]
-        except KeyError:
-            pass
-        if not project_id:
-            raise ValueError(
-                &#34;project_id must be either provided or inferred from environment variables&#34;
-            )
-        log(f&#34;Project ID was inferred from environment variables: {project_id}&#34;)
-
-    # Asserts that dataset_id and table_id are provided
-    if not dataset_id or not table_id:
-        raise ValueError(&#34;dataset_id and table_id must be provided&#34;)
-
-    # If query is not provided, build query from it
-    if not query:
-        query = f&#34;SELECT * FROM `{project_id}.{dataset_id}.{table_id}`&#34;
-        log(f&#34;Query was inferred from dataset_id and table_id: {query}&#34;)
-
-    # If query is provided, use it!
-    # If it&#39;s a template, we must render it.
-    if not query:
-        if not jinja_query_params:
-            jinja_query_params = {}
-        if isinstance(query, jinja2.Template):
-            try:
-                query = query.render(
-                    {
-                        &#34;project_id&#34;: project_id,
-                        &#34;dataset_id&#34;: dataset_id,
-                        &#34;table_id&#34;: table_id,
-                        **jinja_query_params,
-                    }
-                )
-            except jinja2.TemplateError as exc:
-                raise ValueError(f&#34;Error rendering query: {exc}&#34;) from exc
-            log(f&#34;Query was rendered: {query}&#34;)
-
-    # If query is not a string, raise an error
-    if not isinstance(query, str):
-        raise ValueError(&#34;query must be either a string or a Jinja2 template&#34;)
-    log(f&#34;Query was provided: {query}&#34;)
-
-    # Get billing project ID
-    if not billing_project_id:
-        log(
-            &#34;Billing project ID was not provided, trying to get it from environment variable&#34;
-        )
-        try:
-            bd_base = Base()
-            billing_project_id = bd_base.config[&#34;gcloud-projects&#34;][bd_project_mode][
-                &#34;name&#34;
-            ]
-        except KeyError:
-            pass
-        if not billing_project_id:
-            raise ValueError(
-                &#34;billing_project_id must be either provided or inferred from environment variables&#34;
-            )
-        log(
-            f&#34;Billing project ID was inferred from environment variables: {billing_project_id}&#34;
-        )
-
-    # Checking if data exceeds the maximum allowed size
-    log(&#34;Checking if data exceeds the maximum allowed size&#34;)
-    # pylint: disable=E1124
-    client = google_client(project_id, billing_project_id, from_file=True, reauth=False)
-    job_config = bigquery.QueryJobConfig()
-    job_config.dry_run = True
-    job = client[&#34;bigquery&#34;].query(query, job_config=job_config)
-    while not job.done():
-        sleep(1)
-    table_size = job.total_bytes_processed
-    log(f&#39;Table size: {human_readable(table_size, unit=&#34;B&#34;, unit_divider=1024)}&#39;)
-    if table_size &gt; maximum_bytes_processed:
-        max_allowed_size = human_readable(
-            maximum_bytes_processed,
-            unit=&#34;B&#34;,
-            unit_divider=1024,
-        )
-        raise ValueError(
-            f&#34;Table size exceeds the maximum allowed size: {max_allowed_size}&#34;
-        )
-
-    # Get data
-    log(&#34;Querying data from BigQuery&#34;)
-    job = client[&#34;bigquery&#34;].query(query)
-    while not job.done():
-        sleep(1)
-    # pylint: disable=protected-access
-    dest_table = job._properties[&#34;configuration&#34;][&#34;query&#34;][&#34;destinationTable&#34;]
-    dest_project_id = dest_table[&#34;projectId&#34;]
-    dest_dataset_id = dest_table[&#34;datasetId&#34;]
-    dest_table_id = dest_table[&#34;tableId&#34;]
-    log(
-        f&#34;Query results were stored in {dest_project_id}.{dest_dataset_id}.{dest_table_id}&#34;
-    )
-
-    blob_path = f&#34;gs://datario/share/{dataset_id}/{table_id}/data*.csv.gz&#34;
-    log(f&#34;Loading data to {blob_path}&#34;)
-    dataset_ref = bigquery.DatasetReference(dest_project_id, dest_dataset_id)
-    table_ref = dataset_ref.table(dest_table_id)
-    job_config = bigquery.job.ExtractJobConfig(compression=&#34;GZIP&#34;)
-    extract_job = client[&#34;bigquery&#34;].extract_table(
-        table_ref,
-        blob_path,
-        location=location,
-        job_config=job_config,
-    )
-    extract_job.result()
-    log(&#34;Data was loaded successfully&#34;)
-
-    # Get the BLOB we&#39;ve just created and make it public
-    blobs = list_blobs_with_prefix(&#34;datario&#34;, f&#34;share/{dataset_id}/{table_id}/&#34;)
-    if not blobs:
-        raise ValueError(f&#34;No blob found at {blob_path}&#34;)
-    for blob in blobs:
-        log(f&#34;Blob found at {blob.name}&#34;)
-        blob.make_public()
-        log(&#34;Blob was made public&#34;)</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.dump_to_gcs.tasks.get_project_id"><code class="name flex">
 <span>def <span class="ident">get_project_id</span></span>(<span>project_id: str = None, bd_project_mode: str = 'prod')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get the project ID.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task
-def get_project_id(
-    project_id: str = None,
-    bd_project_mode: str = &#34;prod&#34;,
-):
-    &#34;&#34;&#34;
-    Get the project ID.
-    &#34;&#34;&#34;
-    if project_id:
-        return project_id
-    log(&#34;Project ID was not provided, trying to get it from environment variable&#34;)
-    try:
-        bd_base = Base()
-        project_id = bd_base.config[&#34;gcloud-projects&#34;][bd_project_mode][&#34;name&#34;]
-    except KeyError:
-        pass
-    if not project_id:
-        raise ValueError(
-            &#34;project_id must be either provided or inferred from environment variables&#34;
-        )
-    log(f&#34;Project ID was inferred from environment variables: {project_id}&#34;)
-    return project_id</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.dump_to_gcs.tasks.trigger_cron_job"><code class="name flex">
 <span>def <span class="ident">trigger_cron_job</span></span>(<span>project_id: str, dataset_id: str, table_id: str, cron_expression: str)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Tells whether to trigger a cron job.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task(nout=2)
-def trigger_cron_job(
-    project_id: str,
-    dataset_id: str,
-    table_id: str,
-    cron_expression: str,
-):
-    &#34;&#34;&#34;
-    Tells whether to trigger a cron job.
-    &#34;&#34;&#34;
-    redis_client = get_redis_client()
-    key = f&#34;{project_id}__{dataset_id}__{table_id}&#34;
-    log(f&#34;Checking if cron job should be triggered for {key}&#34;)
-    val = redis_client.get(key)
-    current_datetime = datetime.now()
-    if val and val is dict and &#34;last_trigger&#34; in val:
-        last_trigger = val[&#34;last_trigger&#34;]
-        log(f&#34;Last trigger: {last_trigger}&#34;)
-        if last_trigger:
-            return determine_whether_to_execute_or_not(
-                cron_expression, current_datetime, last_trigger
-            )
-    log(f&#34;No last trigger found for {key}&#34;)
-    return True, current_datetime</code></pre>
-</details>
 </dd>
 <dt id="pipelines.utils.dump_to_gcs.tasks.update_last_trigger"><code class="name flex">
 <span>def <span class="ident">update_last_trigger</span></span>(<span>project_id: str, dataset_id: str, table_id: str, execution_time: datetime.datetime)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Update the last trigger.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@task
-def update_last_trigger(
-    project_id: str,
-    dataset_id: str,
-    table_id: str,
-    execution_time: datetime,
-):
-    &#34;&#34;&#34;
-    Update the last trigger.
-    &#34;&#34;&#34;
-    redis_client = get_redis_client()
-    key = f&#34;{project_id}__{dataset_id}__{table_id}&#34;
-    redis_client.set(key, {&#34;last_trigger&#34;: execution_time})</code></pre>
-</details>
 </dd>
 </dl>
 </section>
@@ -517,8 +68,8 @@ def update_last_trigger(
 <input id="lunr-search" name="q" placeholder="🔎 Search ..." aria-label="Search"
 disabled minlength="2">
 </form>
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.css" integrity="sha512-j1u8eUJ4f23xPPxwOrLUPQaCD2dwzNqqmDDcWS4deWsMv2ohLqmXXuP3hU7g8TyzbMSakP/mMqoNBYWj8AEIFg==" crossorigin>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.js" integrity="sha512-plGUER9JkeEWPPqQBE4sdLqBoQug5Ap+BCGMc7bJ8BXkm+VVj6QzkpBz5Yv2yPkkq+cqg9IpkBaGCas6uDbW8g==" crossorigin></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.16.0/tingle.min.css" integrity="sha512-b+T2i3P45i1LZM7I00Ci5QquB9szqaxu+uuk5TUSGjZQ4w4n+qujQiIuvTv2BxE7WCGQCifNMksyKILDiHzsOg==" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.16.0/tingle.min.js" integrity="sha512-2B9/byNV1KKRm5nQ2RLViPFD6U4dUjDGwuW1GU+ImJh8YinPU9Zlq1GzdTMO+G2ROrB5o1qasJBy1ttYz0wCug==" crossorigin></script>
 <style>
 .modal-dialog iframe {
 width: 100vw;
@@ -559,7 +110,6 @@ setTimeout(() => input.focus(), 100);
 }).setContent('<iframe src="' + url + '"></iframe>').open();
 }
 </script>
-<h1>Index</h1>
 <div class="toc">
 <ul></ul>
 </div>
@@ -581,7 +131,7 @@ setTimeout(() => input.focus(), 100);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.0</a>.</p>
 </footer>
 </body>
 </html>

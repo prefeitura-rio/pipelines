@@ -2,18 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.10.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.0">
 <title>pipelines.rj_smtr.flows API documentation</title>
-<meta name="description" content="Flows for rj_smtr" />
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
-<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<meta name="description" content="Flows for rj_smtr">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
-<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+})</script>
 </head>
 <body>
 <main>
@@ -23,301 +26,6 @@
 </header>
 <section id="section-intro">
 <p>Flows for rj_smtr</p>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python"># -*- coding: utf-8 -*-
-&#34;&#34;&#34;
-Flows for rj_smtr
-&#34;&#34;&#34;
-
-from prefect.run_configs import KubernetesRun
-from prefect.storage import GCS
-from prefect import case, Parameter, task
-from prefect.utilities.edges import unmapped
-from prefect.tasks.control_flow import merge
-
-# EMD Imports #
-
-from pipelines.constants import constants as emd_constants
-from pipelines.utils.decorators import Flow
-from pipelines.utils.tasks import (
-    rename_current_flow_run_now_time,
-    get_now_time,
-    get_current_flow_labels,
-    get_current_flow_mode,
-)
-from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
-
-# SMTR Imports #
-
-from pipelines.rj_smtr.tasks import (
-    create_date_hour_partition,
-    create_local_partition_path,
-    get_rounded_timestamp,
-    parse_timestamp_to_string,
-    transform_raw_to_nested_structure,
-    create_dbt_run_vars,
-    set_last_run_timestamp,
-    coalesce_task,
-    upload_raw_data_to_gcs,
-    upload_staging_data_to_gcs,
-    get_raw_from_sources,
-    create_request_params,
-    query_logs,
-    unpack_mapped_results_nout2,
-    check_mapped_query_logs_output,
-)
-
-from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
-
-with Flow(
-    &#34;SMTR: Captura&#34;,
-    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;, &#34;rafaelpinheiro&#34;],
-) as default_capture_flow:
-    # Configuração #
-
-    # Parâmetros Gerais #
-    table_id = Parameter(&#34;table_id&#34;, default=None)
-    dataset_id = Parameter(&#34;dataset_id&#34;, default=None)
-    partition_date_only = Parameter(&#34;partition_date_only&#34;, default=None)
-    partition_date_name = Parameter(&#34;partition_date_name&#34;, default=&#34;data&#34;)
-    save_bucket_name = Parameter(&#34;save_bucket_name&#34;, default=None)
-
-    # Parâmetros Captura #
-    extract_params = Parameter(&#34;extract_params&#34;, default=None)
-    secret_path = Parameter(&#34;secret_path&#34;, default=None)
-    source_type = Parameter(&#34;source_type&#34;, default=None)
-    interval_minutes = Parameter(&#34;interval_minutes&#34;, default=None)
-    recapture = Parameter(&#34;recapture&#34;, default=False)
-    recapture_window_days = Parameter(&#34;recapture_window_days&#34;, default=1)
-    timestamp = Parameter(&#34;timestamp&#34;, default=None)
-
-    # Parâmetros Pré-tratamento #
-    primary_key = Parameter(&#34;primary_key&#34;, default=None)
-    pre_treatment_reader_args = Parameter(&#34;pre_treatment_reader_args&#34;, default=None)
-
-    get_run_name_prefix = task(
-        lambda recap: &#34;Recaptura&#34; if recap else &#34;Captura&#34;,
-        name=&#34;get_run_name_prefix&#34;,
-        checkpoint=False,
-    )
-
-    current_timestamp = get_rounded_timestamp(
-        timestamp=timestamp, interval_minutes=interval_minutes
-    )
-
-    with case(recapture, True):
-        _, recapture_timestamps, recapture_previous_errors = query_logs(
-            dataset_id=dataset_id,
-            table_id=table_id,
-            datetime_filter=current_timestamp,
-            interval_minutes=interval_minutes,
-            recapture_window_days=recapture_window_days,
-        )
-
-    with case(recapture, False):
-        capture_timestamp = [current_timestamp]
-        capture_previous_errors = task(
-            lambda: [None], checkpoint=False, name=&#34;assign_none_to_previous_errors&#34;
-        )()
-
-    timestamps = merge(recapture_timestamps, capture_timestamp)
-    previous_errors = merge(recapture_previous_errors, capture_previous_errors)
-
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix=&#34;SMTR: &#34; + get_run_name_prefix(recap=recapture) + &#34; &#34; + table_id + &#34;: &#34;,
-        now_time=get_now_time(),
-    )
-
-    partitions = create_date_hour_partition.map(
-        timestamps,
-        partition_date_name=unmapped(partition_date_name),
-        partition_date_only=unmapped(partition_date_only),
-    )
-
-    filenames = parse_timestamp_to_string.map(timestamps)
-
-    filepaths = create_local_partition_path.map(
-        dataset_id=unmapped(dataset_id),
-        table_id=unmapped(table_id),
-        filename=filenames,
-        partitions=partitions,
-    )
-
-    # Extração #
-    create_request_params_returns = create_request_params.map(
-        dataset_id=unmapped(dataset_id),
-        extract_params=unmapped(extract_params),
-        table_id=unmapped(table_id),
-        timestamp=timestamps,
-        interval_minutes=unmapped(interval_minutes),
-    )
-
-    request_params, request_paths = unpack_mapped_results_nout2(
-        mapped_results=create_request_params_returns
-    )
-
-    get_raw_from_sources_returns = get_raw_from_sources.map(
-        source_type=unmapped(source_type),
-        local_filepath=filepaths,
-        source_path=request_paths,
-        dataset_id=unmapped(dataset_id),
-        table_id=unmapped(table_id),
-        secret_path=unmapped(secret_path),
-        request_params=request_params,
-    )
-
-    errors, raw_filepaths = unpack_mapped_results_nout2(
-        mapped_results=get_raw_from_sources_returns
-    )
-
-    errors = upload_raw_data_to_gcs.map(
-        error=errors,
-        raw_filepath=raw_filepaths,
-        table_id=unmapped(table_id),
-        dataset_id=unmapped(dataset_id),
-        partitions=partitions,
-        bucket_name=unmapped(save_bucket_name),
-    )
-
-    # Pré-tratamento #
-
-    nested_structure_returns = transform_raw_to_nested_structure.map(
-        raw_filepath=raw_filepaths,
-        filepath=filepaths,
-        error=errors,
-        timestamp=timestamps,
-        primary_key=unmapped(primary_key),
-        flag_private_data=unmapped(
-            task(
-                lambda bucket: bucket is not None,
-                checkpoint=False,
-                name=&#34;create_flag_private_data&#34;,
-            )(bucket=save_bucket_name)
-        ),
-        reader_args=unmapped(pre_treatment_reader_args),
-    )
-
-    errors, staging_filepaths = unpack_mapped_results_nout2(
-        mapped_results=nested_structure_returns
-    )
-
-    STAGING_UPLOADED = upload_staging_data_to_gcs.map(
-        error=errors,
-        staging_filepath=staging_filepaths,
-        timestamp=timestamps,
-        table_id=unmapped(table_id),
-        dataset_id=unmapped(dataset_id),
-        partitions=partitions,
-        previous_error=previous_errors,
-        recapture=unmapped(recapture),
-        bucket_name=unmapped(save_bucket_name),
-    )
-
-default_capture_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-default_capture_flow.run_config = KubernetesRun(
-    image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
-)
-
-with Flow(
-    &#34;SMTR: Materialização&#34;,
-    code_owners=[&#34;caio&#34;, &#34;fernanda&#34;, &#34;boris&#34;, &#34;rodrigo&#34;],
-) as default_materialization_flow:
-    # SETUP #
-
-    timestamp = Parameter(&#34;timestamp&#34;, default=None)
-
-    # Parametros Verificação de Recapturas
-    source_dataset_ids = Parameter(&#34;source_dataset_ids&#34;, default=[])
-    source_table_ids = Parameter(&#34;source_table_ids&#34;, default=[])
-    capture_intervals_minutes = Parameter(&#34;capture_intervals_minutes&#34;, default=[])
-
-    # Parametros DBT
-    dataset_id = Parameter(&#34;dataset_id&#34;, default=None)
-    table_id = Parameter(&#34;table_id&#34;, default=None)
-    raw_table_id = Parameter(&#34;raw_table_id&#34;, default=None)
-    dbt_alias = Parameter(&#34;dbt_alias&#34;, default=False)
-    upstream = Parameter(&#34;upstream&#34;, default=None)
-    downstream = Parameter(&#34;downstream&#34;, default=None)
-    exclude = Parameter(&#34;exclude&#34;, default=None)
-    flags = Parameter(&#34;flags&#34;, default=None)
-    dbt_vars = Parameter(&#34;dbt_vars&#34;, default=dict())
-
-    LABELS = get_current_flow_labels()
-    MODE = get_current_flow_mode(LABELS)
-
-    timestamp = get_rounded_timestamp(timestamp=timestamp)
-
-    query_logs_timestamps = get_rounded_timestamp.map(
-        timestamp=unmapped(timestamp), interval_minutes=capture_intervals_minutes
-    )
-
-    query_logs_output = query_logs.map(
-        dataset_id=source_dataset_ids,
-        table_id=source_table_ids,
-        interval_minutes=capture_intervals_minutes,
-        datetime_filter=query_logs_timestamps,
-    )
-
-    has_recaptures = check_mapped_query_logs_output(query_logs_output)
-
-    _vars, date_var, flag_date_range = create_dbt_run_vars(
-        dataset_id=dataset_id,
-        dbt_vars=dbt_vars,
-        table_id=table_id,
-        raw_dataset_id=dataset_id,
-        raw_table_id=raw_table_id,
-        mode=MODE,
-        timestamp=timestamp,
-    )
-
-    # Rename flow run
-
-    flow_name_prefix = coalesce_task([table_id, dataset_id])
-
-    flow_name_now_time = coalesce_task([date_var, get_now_time()])
-
-    rename_flow_run = rename_current_flow_run_now_time(
-        prefix=default_materialization_flow.name + &#34; &#34; + flow_name_prefix + &#34;: &#34;,
-        now_time=flow_name_now_time,
-    )
-
-    with case(has_recaptures, False):
-        dbt_client = get_k8s_dbt_client(mode=MODE, wait=rename_flow_run)
-
-        RUNS = run_dbt_model.map(
-            dbt_client=unmapped(dbt_client),
-            dataset_id=unmapped(dataset_id),
-            table_id=unmapped(table_id),
-            _vars=_vars,
-            dbt_alias=unmapped(dbt_alias),
-            upstream=unmapped(upstream),
-            downstream=unmapped(downstream),
-            exclude=unmapped(exclude),
-            flags=unmapped(flags),
-        )
-
-        with case(flag_date_range, True):
-            SET_TIMESTAMP_TASK = set_last_run_timestamp(
-                dataset_id=dataset_id,
-                table_id=table_id,
-                timestamp=date_var[&#34;date_range_end&#34;],
-                wait=RUNS,
-                mode=MODE,
-            )
-
-    default_materialization_flow.set_reference_tasks([RUNS, SET_TIMESTAMP_TASK])
-
-
-default_materialization_flow.storage = GCS(emd_constants.GCS_FLOWS_BUCKET.value)
-default_materialization_flow.run_config = KubernetesRun(
-    image=emd_constants.DOCKER_IMAGE.value,
-    labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
-)</code></pre>
-</details>
 </section>
 <section>
 </section>
@@ -331,24 +39,12 @@ default_materialization_flow.run_config = KubernetesRun(
 </code></dt>
 <dd>
 <div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">lambda: [None], checkpoint=False, name=&#34;assign_none_to_previous_errors&#34;</code></pre>
-</details>
 </dd>
 <dt id="pipelines.rj_smtr.flows.get_run_name_prefix"><code class="name flex">
 <span>def <span class="ident">get_run_name_prefix</span></span>(<span>recap)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">lambda recap: &#34;Recaptura&#34; if recap else &#34;Captura&#34;,</code></pre>
-</details>
 </dd>
 </dl>
 </section>
@@ -360,8 +56,8 @@ default_materialization_flow.run_config = KubernetesRun(
 <input id="lunr-search" name="q" placeholder="🔎 Search ..." aria-label="Search"
 disabled minlength="2">
 </form>
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.css" integrity="sha512-j1u8eUJ4f23xPPxwOrLUPQaCD2dwzNqqmDDcWS4deWsMv2ohLqmXXuP3hU7g8TyzbMSakP/mMqoNBYWj8AEIFg==" crossorigin>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.js" integrity="sha512-plGUER9JkeEWPPqQBE4sdLqBoQug5Ap+BCGMc7bJ8BXkm+VVj6QzkpBz5Yv2yPkkq+cqg9IpkBaGCas6uDbW8g==" crossorigin></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.16.0/tingle.min.css" integrity="sha512-b+T2i3P45i1LZM7I00Ci5QquB9szqaxu+uuk5TUSGjZQ4w4n+qujQiIuvTv2BxE7WCGQCifNMksyKILDiHzsOg==" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.16.0/tingle.min.js" integrity="sha512-2B9/byNV1KKRm5nQ2RLViPFD6U4dUjDGwuW1GU+ImJh8YinPU9Zlq1GzdTMO+G2ROrB5o1qasJBy1ttYz0wCug==" crossorigin></script>
 <style>
 .modal-dialog iframe {
 width: 100vw;
@@ -402,7 +98,6 @@ setTimeout(() => input.focus(), 100);
 }).setContent('<iframe src="' + url + '"></iframe>').open();
 }
 </script>
-<h1>Index</h1>
 <div class="toc">
 <ul></ul>
 </div>
@@ -422,7 +117,7 @@ setTimeout(() => input.focus(), 100);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.0</a>.</p>
 </footer>
 </body>
 </html>

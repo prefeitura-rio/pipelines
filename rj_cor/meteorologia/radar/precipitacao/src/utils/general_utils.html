@@ -2,18 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.10.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.0">
 <title>pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.general_utils API documentation</title>
-<meta name="description" content="" />
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
-<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<meta name="description" content="">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
-<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+})</script>
 </head>
 <body>
 <main>
@@ -22,458 +25,6 @@
 <h1 class="title">Module <code>pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.general_utils</code></h1>
 </header>
 <section id="section-intro">
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python"># -*- coding: utf-8 -*-
-# Attention: This file is licensed through the EULA license present in the license file at the root
-# of this repository. Copying any part of this code is prohibited.
-# flake8: noqa: E501
-# pylint: skip-file
-import datetime
-import time
-import warnings
-from typing import Any, List, Optional, Tuple
-
-import h5py
-import numpy as np
-
-
-def print_error(
-    message: str = &#34;ERROR&#34;,
-    verbose: bool = True,
-    skip_line_before: bool = True,
-    skip_line_after: bool = True,
-    bold: bool = False,
-) -&gt; None:
-    &#34;&#34;&#34;Print message in red.&#34;&#34;&#34;
-    if verbose:
-        string_before = &#34;\n&#34; if skip_line_before else &#34;&#34;
-        string_after = &#34;\n&#34; if skip_line_after else &#34;&#34;
-        if bold:
-            print(f&#34;{string_before}\x1b[1;30;41m[ {message} ]\x1b[0m{string_after}&#34;)
-        else:
-            print(f&#34;{string_before}\x1b[31m{message}\x1b[0m{string_after}&#34;)
-
-
-def print_warning(
-    message: str = &#34;WARNING&#34;,
-    verbose: bool = True,
-    skip_line_before: bool = True,
-    skip_line_after: bool = True,
-    bold: bool = False,
-) -&gt; None:
-    &#34;&#34;&#34;Print message in yellow.&#34;&#34;&#34;
-    if verbose:
-        string_before = &#34;\n&#34; if skip_line_before else &#34;&#34;
-        string_after = &#34;\n&#34; if skip_line_after else &#34;&#34;
-        if bold:
-            print(f&#34;{string_before}\x1b[1;30;43m[ {message} ]\x1b[0m{string_after}&#34;)
-        else:
-            print(f&#34;{string_before}\x1b[33m{message}\x1b[0m{string_after}&#34;)
-
-
-def print_ok(
-    message: str = &#34;OK&#34;,
-    verbose: bool = True,
-    skip_line_before: bool = True,
-    skip_line_after: bool = True,
-    bold: bool = False,
-) -&gt; None:
-    &#34;&#34;&#34;Print message in green.&#34;&#34;&#34;
-    if verbose:
-        string_before = &#34;\n&#34; if skip_line_before else &#34;&#34;
-        string_after = &#34;\n&#34; if skip_line_after else &#34;&#34;
-        if bold:
-            print(f&#34;{string_before}\x1b[1;30;42m[ {message} ]\x1b[0m{string_after}&#34;)
-        else:
-            print(f&#34;{string_before}\x1b[32m{message}\x1b[0m{string_after}&#34;)
-
-
-def print_info(
-    message: str,
-    verbose: bool = True,
-    skip_line_before: bool = False,
-    skip_line_after: bool = False,
-) -&gt; None:
-    if verbose:
-        string_before = &#34;\n&#34; if skip_line_before else &#34;&#34;
-        string_after = &#34;\n&#34; if skip_line_after else &#34;&#34;
-        print(f&#34;{string_before}{message}{string_after}&#34;)
-
-
-def parse_dates_argument(dates_str: str, format: str = &#34;%Y%m%d&#34;) -&gt; list:
-    pre_dates = dates_str.split(&#34;,&#34;)
-    dates = []
-    for pre_date in pre_dates:
-        if &#34;-&#34; in pre_date:
-            date_range = pre_date.split(&#34;-&#34;)
-            if len(date_range) != 2:
-                raise Exception(&#34;Error: wrong formatting for dates&#34;)
-            start = datetime.datetime.strptime(date_range[0], &#34;%Y%m%d&#34;).date()
-            end = datetime.datetime.strptime(date_range[1], &#34;%Y%m%d&#34;).date()
-            delta = end - start
-            dates_between = [
-                (start + datetime.timedelta(days=i)).strftime(format)
-                for i in range(delta.days + 1)
-            ]
-            dates = list(set(dates).union(set(dates_between)))
-
-        else:
-            try:
-                new_pre_date = datetime.datetime.strptime(pre_date, &#34;%Y%m%d&#34;).strftime(
-                    format
-                )
-            except ValueError:
-                raise Exception(&#34;Error: wrong formatting for dates&#34;)
-
-            if pre_date not in dates:
-                dates.append(new_pre_date)
-    return sorted(dates)
-
-
-def is_strictly_increasing(lst):
-    stack = []
-    for i in lst:
-        if stack and i &lt;= stack[-1]:
-            return False
-        stack.append(i)
-    return True
-
-
-class _TicToc(object):
-    &#34;&#34;&#34;
-    Author: Hector Sanchez
-    Date: 2018-07-26
-    Description: Class that allows you to do &#39;tic toc&#39; to your code.
-    This class was based on https://github.com/hector-sab/ttictoc, which is
-    distributed under the MIT license. It prints time information between
-    successive tic() and toc() calls.
-    Example:
-        from src.utils.general_utils import tic,toc
-        tic()
-        tic()
-        toc()
-        toc()
-    &#34;&#34;&#34;
-
-    def __init__(
-        self,
-        name: str = &#34;&#34;,
-        method: Any = &#34;time&#34;,
-        nested: bool = False,
-        print_toc: bool = True,
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Args:
-            name (str): Just informative, not needed
-            method (int|str|ftn|clss): Still trying to understand the default
-                options. &#39;time&#39; uses the &#39;real wold&#39; clock, while the other
-                two use the cpu clock. To use your own method,
-                do it through this argument
-                Valid int values:
-                    0: time.time | 1: time.perf_counter | 2: time.proces_time
-                    3: time.time_ns | 4: time.perf_counter_ns
-                    5: time.proces_time_ns
-                Valid str values:
-                  &#39;time&#39;: time.time | &#39;perf_counter&#39;: time.perf_counter
-                  &#39;process_time&#39;: time.proces_time | &#39;time_ns&#39;: time.time_ns
-                  &#39;perf_counter_ns&#39;: time.perf_counter_ns
-                  &#39;proces_time_ns&#39;: time.proces_time_ns
-                Others:
-                  Whatever you want to use as time.time
-            nested (bool): Allows to do tic toc with nested with a
-                single object. If True, you can put several tics using the
-                same object, and each toc will correspond to the respective tic.
-                If False, it will only register one single tic, and
-                return the respective elapsed time of the future tocs.
-            print_toc (bool): Indicates if the toc method will print
-                the elapsed time or not.
-        &#34;&#34;&#34;
-        self.name = name
-        self.nested = nested
-        self.tstart: Any[List, None] = None
-        if self.nested:
-            self.set_nested(True)
-
-        self._print_toc = print_toc
-
-        self._int2strl = [
-            &#34;time&#34;,
-            &#34;perf_counter&#34;,
-            &#34;process_time&#34;,
-            &#34;time_ns&#34;,
-            &#34;perf_counter_ns&#34;,
-            &#34;process_time_ns&#34;,
-        ]
-        self._str2fn = {
-            &#34;time&#34;: [time.time, &#34;s&#34;],
-            &#34;perf_counter&#34;: [time.perf_counter, &#34;s&#34;],
-            &#34;process_time&#34;: [time.process_time, &#34;s&#34;],
-            &#34;time_ns&#34;: [time.time_ns, &#34;ns&#34;],
-            &#34;perf_counter_ns&#34;: [time.perf_counter_ns, &#34;ns&#34;],
-            &#34;process_time_ns&#34;: [time.process_time_ns, &#34;ns&#34;],
-        }
-
-        if type(method) is not int and type(method) is not str:
-            self._get_time = method
-
-        if type(method) is int and method &lt; len(self._int2strl):
-            method = self._int2strl[method]
-        elif type(method) is int and method &gt; len(self._int2strl):
-            method = &#34;time&#34;
-
-        if type(method) is str and method in self._str2fn:
-            self._get_time = self._str2fn[method][0]
-            self._measure = self._str2fn[method][1]
-        elif type(method) is str and method not in self._str2fn:
-            self._get_time = self._str2fn[&#34;time&#34;][0]
-            self._measure = self._str2fn[&#34;time&#34;][1]
-
-    def _print_elapsed(self) -&gt; None:
-        &#34;&#34;&#34;
-        Prints the elapsed time
-        &#34;&#34;&#34;
-        if self.name != &#34;&#34;:
-            name = &#34;[{}] &#34;.format(self.name)
-        else:
-            name = self.name
-        print(
-            &#34;-{0}elapsed time: {1:.3g} ({2})&#34;.format(name, self.elapsed, self._measure)
-        )
-
-    def tic(self) -&gt; None:
-        &#34;&#34;&#34;
-        Defines the start of the timing.
-        &#34;&#34;&#34;
-        if self.nested:
-            self.tstart.append(self._get_time())
-        else:
-            self.tstart = self._get_time()
-
-    def toc(self, print_elapsed: Optional[bool] = None) -&gt; None:
-        &#34;&#34;&#34;
-        Defines the end of the timing.
-        &#34;&#34;&#34;
-        self.tend = self._get_time()
-        if self.nested:
-            if len(self.tstart) &gt; 0:
-                self.elapsed = self.tend - self.tstart.pop()
-            else:
-                self.elapsed = None
-        else:
-            if self.tstart:
-                self.elapsed = self.tend - self.tstart
-            else:
-                self.elapsed = None
-
-        if print_elapsed is None:
-            if self._print_toc:
-                self._print_elapsed()
-        else:
-            if print_elapsed:
-                self._print_elapsed()
-
-        # return(self.elapsed)
-
-    def set_print_toc(self, set_print: bool) -&gt; None:
-        &#34;&#34;&#34;
-        Indicate if you want the timed time printed out or not.
-        Args:
-          set_print (bool): If True, a message with the elapsed time
-            will be printed.
-        &#34;&#34;&#34;
-        if type(set_print) is bool:
-            self._print_toc = set_print
-        else:
-            warnings.warn(
-                &#34;Parameter &#39;set_print&#39; not boolean. &#34; &#34;Ignoring the command.&#34;,
-                Warning,
-            )
-
-    def set_nested(self, nested: bool) -&gt; None:
-        &#34;&#34;&#34;
-        Sets the nested functionality.
-        &#34;&#34;&#34;
-        # Assert that the input is a boolean
-        if type(nested) is bool:
-            # Check if the request is actually changing the
-            # behaviour of the nested tictoc
-            if nested != self.nested:
-                self.nested = nested
-
-                if self.nested:
-                    self.tstart = []
-                else:
-                    self.tstart = None
-        else:
-            warnings.warn(
-                &#34;Parameter &#39;nested&#39; not boolean. &#34; &#34;Ignoring the command.&#34;,
-                Warning,
-            )
-
-
-class TicToc(_TicToc):
-    def tic(self, nested: bool = True) -&gt; None:
-        &#34;&#34;&#34;
-        Defines the start of the timing.
-        &#34;&#34;&#34;
-        if nested:
-            self.set_nested(True)
-
-        if self.nested:
-            self.tstart.append(self._get_time())
-        else:
-            self.tstart = self._get_time()
-
-
-__TICTOC_8320947502983745 = TicToc()
-tic = __TICTOC_8320947502983745.tic
-toc = __TICTOC_8320947502983745.toc
-
-
-def read_attributes(hval):
-    attr = {}
-    for k in hval.attrs:
-        attr[k] = hval.attrs[k]
-    return attr
-
-
-# returns summary of group.
-# the only element for comparison here is the group&#39;s attributes
-def read_group(hval):
-    desc = {}
-    desc[&#34;attr&#34;] = read_attributes(hval)
-    desc[&#34;htype&#34;] = &#34;group&#34;
-    return desc
-
-
-# returns summary of dataset
-# the only elements for comparison here are the dataset&#39;s attributes,
-#   and the dataset
-def read_data(hval):
-    desc = {}
-    desc[&#34;attr&#34;] = read_attributes(hval)
-    desc[&#34;htype&#34;] = &#34;dataset&#34;
-    desc[&#34;data&#34;] = np.array(hval)
-    return desc
-
-
-# creates and returns a summary description for every element in a group
-def evaluate_group(path, grp):
-    desc = {}
-    for k, v in grp.items():
-        if isinstance(v, h5py.Dataset):
-            desc[k] = read_data(v)
-        elif isinstance(v, h5py.Group):
-            desc[k] = read_group(v)
-        else:
-            raise Exception(f&#34;Unknown h5py type: {type(v)} ({path} --  {k})&#34;)
-    return desc
-
-
-def diff_groups(file1, grp1, file2, grp2, path):
-    desc1 = evaluate_group(path, grp1)
-    desc2 = evaluate_group(path, grp2)
-
-    diff = []
-
-    keys1 = set(desc1.keys())
-    keys2 = set(desc2.keys())
-
-    diff_keys1 = keys1.difference(keys2)
-    diff_keys2 = keys2.difference(keys1)
-
-    if len(diff_keys1):
-        diff.append(f&#34;{path}: Elements {diff_keys1} only in &#39;{file1}&#39; (DIFF_UNIQUE_A)&#34;)
-
-    if len(diff_keys2):
-        diff.append(f&#34;{path}: Elements {diff_keys2} only in &#39;{file2}&#39; (DIFF_UNIQUE_B)&#34;)
-    common = keys1.intersection(keys2)
-
-    if len(common) == 0:
-        return diff
-
-    for name in common:
-        path_to_element = path + name
-
-        # compare types
-        h1 = desc1[name][&#34;htype&#34;]
-        h2 = desc2[name][&#34;htype&#34;]
-        if h1 != h2:
-            diff.append(
-                f&#34;{path_to_element}: Different element types: &#39;{h1}&#39; and &#39;{h2}&#39; (DIFF_OBJECTS)&#34;
-            )
-            continue  # different hdf5 types -- don&#39;t try to compare further
-        # compare attributes
-        keys_attrs1 = set(desc1[name][&#34;attr&#34;].keys())
-        keys_attrs2 = set(desc2[name][&#34;attr&#34;].keys())
-
-        diff_keys1 = keys_attrs1.difference(keys_attrs2)
-        diff_keys2 = keys_attrs2.difference(keys_attrs1)
-
-        if len(diff_keys1):
-            diff.append(
-                f&#34;{path_to_element}: Attributes {diff_keys1} only in &#39;{file1}&#39; (DIFF_UNIQ_ATTR_A)&#34;
-            )
-        if len(diff_keys2):
-            diff.append(
-                f&#34;{path_to_element}: Attributes {diff_keys2} only in &#39;{file2}&#39; (DIFF_UNIQ_ATTR_B)&#34;
-            )
-        common_keys_attr = keys_attrs1.intersection(keys_attrs2)
-        for k in common_keys_attr:
-            v1 = desc1[name][&#34;attr&#34;][k]
-            v2 = desc2[name][&#34;attr&#34;][k]
-            try:
-                if v1 != v2:
-                    diff.append(
-                        f&#34;{path_to_element}: Attribute &#39;{k}&#39; has different values: &#39;{v1}&#39; and &#39;{v2}&#39; (DIFF_ATTR)&#34;
-                    )
-            except ValueError:
-                if not np.array_equal(v1, v2):
-                    diff.append(
-                        f&#34;{path_to_element}: Attribute &#39;{k}&#39; has different values (and are numpy ndarrays) (DIFF_ATTR)&#34;
-                    )
-        # handle datasets first
-        if h1 != &#34;dataset&#34;:
-            continue
-        # compare data
-        data1 = desc1[name][&#34;data&#34;]
-        data2 = desc2[name][&#34;data&#34;]
-        if type(data1) != type(data2):
-            diff.append(
-                f&#34;{path_to_element}: Different dtypes: &#39;{type(data1)}&#39; and &#39;{type(data2)}&#39; (DIFF_DTYPE)&#34;
-            )
-        if not np.array_equal(data1, data2):
-            diff.append(f&#34;{path_to_element}: Different datasets (DIFF_DATASET)&#34;)
-    for name in common:
-        # compare types
-        if desc1[name][&#34;htype&#34;] != desc2[name][&#34;htype&#34;]:
-            continue  # problem already reported
-        if desc1[name][&#34;htype&#34;] != &#34;group&#34;:
-            continue
-        # recurse into subgroup
-        diff.extend(
-            diff_groups(file1, grp1[name], file2, grp2[name], path + name + &#34;/&#34;)
-        )
-
-    return diff
-
-
-def diff_hdf_files(file1, file2):
-    try:
-        hdf1 = h5py.File(file1, &#34;r&#34;)
-    except IOError:
-        print(f&#34;Unable to open file {file1}&#34;)
-        exit()
-    try:
-        hdf2 = h5py.File(file2, &#34;r&#34;)
-    except IOError:
-        print(f&#34;Unable to open file {file2}&#34;)
-        exit()
-    return diff_groups(file1, hdf1[&#34;/&#34;], file2, hdf2[&#34;/&#34;], &#34;/&#34;)</code></pre>
-</details>
 </section>
 <section>
 </section>
@@ -487,403 +38,84 @@ def diff_hdf_files(file1, file2):
 </code></dt>
 <dd>
 <div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def diff_groups(file1, grp1, file2, grp2, path):
-    desc1 = evaluate_group(path, grp1)
-    desc2 = evaluate_group(path, grp2)
-
-    diff = []
-
-    keys1 = set(desc1.keys())
-    keys2 = set(desc2.keys())
-
-    diff_keys1 = keys1.difference(keys2)
-    diff_keys2 = keys2.difference(keys1)
-
-    if len(diff_keys1):
-        diff.append(f&#34;{path}: Elements {diff_keys1} only in &#39;{file1}&#39; (DIFF_UNIQUE_A)&#34;)
-
-    if len(diff_keys2):
-        diff.append(f&#34;{path}: Elements {diff_keys2} only in &#39;{file2}&#39; (DIFF_UNIQUE_B)&#34;)
-    common = keys1.intersection(keys2)
-
-    if len(common) == 0:
-        return diff
-
-    for name in common:
-        path_to_element = path + name
-
-        # compare types
-        h1 = desc1[name][&#34;htype&#34;]
-        h2 = desc2[name][&#34;htype&#34;]
-        if h1 != h2:
-            diff.append(
-                f&#34;{path_to_element}: Different element types: &#39;{h1}&#39; and &#39;{h2}&#39; (DIFF_OBJECTS)&#34;
-            )
-            continue  # different hdf5 types -- don&#39;t try to compare further
-        # compare attributes
-        keys_attrs1 = set(desc1[name][&#34;attr&#34;].keys())
-        keys_attrs2 = set(desc2[name][&#34;attr&#34;].keys())
-
-        diff_keys1 = keys_attrs1.difference(keys_attrs2)
-        diff_keys2 = keys_attrs2.difference(keys_attrs1)
-
-        if len(diff_keys1):
-            diff.append(
-                f&#34;{path_to_element}: Attributes {diff_keys1} only in &#39;{file1}&#39; (DIFF_UNIQ_ATTR_A)&#34;
-            )
-        if len(diff_keys2):
-            diff.append(
-                f&#34;{path_to_element}: Attributes {diff_keys2} only in &#39;{file2}&#39; (DIFF_UNIQ_ATTR_B)&#34;
-            )
-        common_keys_attr = keys_attrs1.intersection(keys_attrs2)
-        for k in common_keys_attr:
-            v1 = desc1[name][&#34;attr&#34;][k]
-            v2 = desc2[name][&#34;attr&#34;][k]
-            try:
-                if v1 != v2:
-                    diff.append(
-                        f&#34;{path_to_element}: Attribute &#39;{k}&#39; has different values: &#39;{v1}&#39; and &#39;{v2}&#39; (DIFF_ATTR)&#34;
-                    )
-            except ValueError:
-                if not np.array_equal(v1, v2):
-                    diff.append(
-                        f&#34;{path_to_element}: Attribute &#39;{k}&#39; has different values (and are numpy ndarrays) (DIFF_ATTR)&#34;
-                    )
-        # handle datasets first
-        if h1 != &#34;dataset&#34;:
-            continue
-        # compare data
-        data1 = desc1[name][&#34;data&#34;]
-        data2 = desc2[name][&#34;data&#34;]
-        if type(data1) != type(data2):
-            diff.append(
-                f&#34;{path_to_element}: Different dtypes: &#39;{type(data1)}&#39; and &#39;{type(data2)}&#39; (DIFF_DTYPE)&#34;
-            )
-        if not np.array_equal(data1, data2):
-            diff.append(f&#34;{path_to_element}: Different datasets (DIFF_DATASET)&#34;)
-    for name in common:
-        # compare types
-        if desc1[name][&#34;htype&#34;] != desc2[name][&#34;htype&#34;]:
-            continue  # problem already reported
-        if desc1[name][&#34;htype&#34;] != &#34;group&#34;:
-            continue
-        # recurse into subgroup
-        diff.extend(
-            diff_groups(file1, grp1[name], file2, grp2[name], path + name + &#34;/&#34;)
-        )
-
-    return diff</code></pre>
-</details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.general_utils.diff_hdf_files"><code class="name flex">
 <span>def <span class="ident">diff_hdf_files</span></span>(<span>file1, file2)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def diff_hdf_files(file1, file2):
-    try:
-        hdf1 = h5py.File(file1, &#34;r&#34;)
-    except IOError:
-        print(f&#34;Unable to open file {file1}&#34;)
-        exit()
-    try:
-        hdf2 = h5py.File(file2, &#34;r&#34;)
-    except IOError:
-        print(f&#34;Unable to open file {file2}&#34;)
-        exit()
-    return diff_groups(file1, hdf1[&#34;/&#34;], file2, hdf2[&#34;/&#34;], &#34;/&#34;)</code></pre>
-</details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.general_utils.evaluate_group"><code class="name flex">
 <span>def <span class="ident">evaluate_group</span></span>(<span>path, grp)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def evaluate_group(path, grp):
-    desc = {}
-    for k, v in grp.items():
-        if isinstance(v, h5py.Dataset):
-            desc[k] = read_data(v)
-        elif isinstance(v, h5py.Group):
-            desc[k] = read_group(v)
-        else:
-            raise Exception(f&#34;Unknown h5py type: {type(v)} ({path} --  {k})&#34;)
-    return desc</code></pre>
-</details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.general_utils.is_strictly_increasing"><code class="name flex">
 <span>def <span class="ident">is_strictly_increasing</span></span>(<span>lst)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def is_strictly_increasing(lst):
-    stack = []
-    for i in lst:
-        if stack and i &lt;= stack[-1]:
-            return False
-        stack.append(i)
-    return True</code></pre>
-</details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.general_utils.parse_dates_argument"><code class="name flex">
 <span>def <span class="ident">parse_dates_argument</span></span>(<span>dates_str: str, format: str = '%Y%m%d') ‑> list</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def parse_dates_argument(dates_str: str, format: str = &#34;%Y%m%d&#34;) -&gt; list:
-    pre_dates = dates_str.split(&#34;,&#34;)
-    dates = []
-    for pre_date in pre_dates:
-        if &#34;-&#34; in pre_date:
-            date_range = pre_date.split(&#34;-&#34;)
-            if len(date_range) != 2:
-                raise Exception(&#34;Error: wrong formatting for dates&#34;)
-            start = datetime.datetime.strptime(date_range[0], &#34;%Y%m%d&#34;).date()
-            end = datetime.datetime.strptime(date_range[1], &#34;%Y%m%d&#34;).date()
-            delta = end - start
-            dates_between = [
-                (start + datetime.timedelta(days=i)).strftime(format)
-                for i in range(delta.days + 1)
-            ]
-            dates = list(set(dates).union(set(dates_between)))
-
-        else:
-            try:
-                new_pre_date = datetime.datetime.strptime(pre_date, &#34;%Y%m%d&#34;).strftime(
-                    format
-                )
-            except ValueError:
-                raise Exception(&#34;Error: wrong formatting for dates&#34;)
-
-            if pre_date not in dates:
-                dates.append(new_pre_date)
-    return sorted(dates)</code></pre>
-</details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.general_utils.print_error"><code class="name flex">
 <span>def <span class="ident">print_error</span></span>(<span>message: str = 'ERROR', verbose: bool = True, skip_line_before: bool = True, skip_line_after: bool = True, bold: bool = False) ‑> None</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Print message in red.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def print_error(
-    message: str = &#34;ERROR&#34;,
-    verbose: bool = True,
-    skip_line_before: bool = True,
-    skip_line_after: bool = True,
-    bold: bool = False,
-) -&gt; None:
-    &#34;&#34;&#34;Print message in red.&#34;&#34;&#34;
-    if verbose:
-        string_before = &#34;\n&#34; if skip_line_before else &#34;&#34;
-        string_after = &#34;\n&#34; if skip_line_after else &#34;&#34;
-        if bold:
-            print(f&#34;{string_before}\x1b[1;30;41m[ {message} ]\x1b[0m{string_after}&#34;)
-        else:
-            print(f&#34;{string_before}\x1b[31m{message}\x1b[0m{string_after}&#34;)</code></pre>
-</details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.general_utils.print_info"><code class="name flex">
 <span>def <span class="ident">print_info</span></span>(<span>message: str, verbose: bool = True, skip_line_before: bool = False, skip_line_after: bool = False) ‑> None</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def print_info(
-    message: str,
-    verbose: bool = True,
-    skip_line_before: bool = False,
-    skip_line_after: bool = False,
-) -&gt; None:
-    if verbose:
-        string_before = &#34;\n&#34; if skip_line_before else &#34;&#34;
-        string_after = &#34;\n&#34; if skip_line_after else &#34;&#34;
-        print(f&#34;{string_before}{message}{string_after}&#34;)</code></pre>
-</details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.general_utils.print_ok"><code class="name flex">
 <span>def <span class="ident">print_ok</span></span>(<span>message: str = 'OK', verbose: bool = True, skip_line_before: bool = True, skip_line_after: bool = True, bold: bool = False) ‑> None</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Print message in green.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def print_ok(
-    message: str = &#34;OK&#34;,
-    verbose: bool = True,
-    skip_line_before: bool = True,
-    skip_line_after: bool = True,
-    bold: bool = False,
-) -&gt; None:
-    &#34;&#34;&#34;Print message in green.&#34;&#34;&#34;
-    if verbose:
-        string_before = &#34;\n&#34; if skip_line_before else &#34;&#34;
-        string_after = &#34;\n&#34; if skip_line_after else &#34;&#34;
-        if bold:
-            print(f&#34;{string_before}\x1b[1;30;42m[ {message} ]\x1b[0m{string_after}&#34;)
-        else:
-            print(f&#34;{string_before}\x1b[32m{message}\x1b[0m{string_after}&#34;)</code></pre>
-</details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.general_utils.print_warning"><code class="name flex">
 <span>def <span class="ident">print_warning</span></span>(<span>message: str = 'WARNING', verbose: bool = True, skip_line_before: bool = True, skip_line_after: bool = True, bold: bool = False) ‑> None</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Print message in yellow.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def print_warning(
-    message: str = &#34;WARNING&#34;,
-    verbose: bool = True,
-    skip_line_before: bool = True,
-    skip_line_after: bool = True,
-    bold: bool = False,
-) -&gt; None:
-    &#34;&#34;&#34;Print message in yellow.&#34;&#34;&#34;
-    if verbose:
-        string_before = &#34;\n&#34; if skip_line_before else &#34;&#34;
-        string_after = &#34;\n&#34; if skip_line_after else &#34;&#34;
-        if bold:
-            print(f&#34;{string_before}\x1b[1;30;43m[ {message} ]\x1b[0m{string_after}&#34;)
-        else:
-            print(f&#34;{string_before}\x1b[33m{message}\x1b[0m{string_after}&#34;)</code></pre>
-</details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.general_utils.read_attributes"><code class="name flex">
 <span>def <span class="ident">read_attributes</span></span>(<span>hval)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read_attributes(hval):
-    attr = {}
-    for k in hval.attrs:
-        attr[k] = hval.attrs[k]
-    return attr</code></pre>
-</details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.general_utils.read_data"><code class="name flex">
 <span>def <span class="ident">read_data</span></span>(<span>hval)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read_data(hval):
-    desc = {}
-    desc[&#34;attr&#34;] = read_attributes(hval)
-    desc[&#34;htype&#34;] = &#34;dataset&#34;
-    desc[&#34;data&#34;] = np.array(hval)
-    return desc</code></pre>
-</details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.general_utils.read_group"><code class="name flex">
 <span>def <span class="ident">read_group</span></span>(<span>hval)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read_group(hval):
-    desc = {}
-    desc[&#34;attr&#34;] = read_attributes(hval)
-    desc[&#34;htype&#34;] = &#34;group&#34;
-    return desc</code></pre>
-</details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.general_utils.tic"><code class="name flex">
 <span>def <span class="ident">tic</span></span>(<span>nested: bool = True) ‑> None</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Defines the start of the timing.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def tic(self, nested: bool = True) -&gt; None:
-    &#34;&#34;&#34;
-    Defines the start of the timing.
-    &#34;&#34;&#34;
-    if nested:
-        self.set_nested(True)
-
-    if self.nested:
-        self.tstart.append(self._get_time())
-    else:
-        self.tstart = self._get_time()</code></pre>
-</details>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.src.utils.general_utils.toc"><code class="name flex">
 <span>def <span class="ident">toc</span></span>(<span>print_elapsed: Optional[bool] = None) ‑> None</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Defines the end of the timing.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def toc(self, print_elapsed: Optional[bool] = None) -&gt; None:
-    &#34;&#34;&#34;
-    Defines the end of the timing.
-    &#34;&#34;&#34;
-    self.tend = self._get_time()
-    if self.nested:
-        if len(self.tstart) &gt; 0:
-            self.elapsed = self.tend - self.tstart.pop()
-        else:
-            self.elapsed = None
-    else:
-        if self.tstart:
-            self.elapsed = self.tend - self.tstart
-        else:
-            self.elapsed = None
-
-    if print_elapsed is None:
-        if self._print_toc:
-            self._print_elapsed()
-    else:
-        if print_elapsed:
-            self._print_elapsed()
-
-    # return(self.elapsed)</code></pre>
-</details>
 </dd>
 </dl>
 </section>
@@ -964,22 +196,6 @@ the elapsed time or not.</dd>
 </code></dt>
 <dd>
 <div class="desc"><p>Defines the start of the timing.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def tic(self, nested: bool = True) -&gt; None:
-    &#34;&#34;&#34;
-    Defines the start of the timing.
-    &#34;&#34;&#34;
-    if nested:
-        self.set_nested(True)
-
-    if self.nested:
-        self.tstart.append(self._get_time())
-    else:
-        self.tstart = self._get_time()</code></pre>
-</details>
 </dd>
 </dl>
 </dd>
@@ -991,8 +207,8 @@ the elapsed time or not.</dd>
 <input id="lunr-search" name="q" placeholder="🔎 Search ..." aria-label="Search"
 disabled minlength="2">
 </form>
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.css" integrity="sha512-j1u8eUJ4f23xPPxwOrLUPQaCD2dwzNqqmDDcWS4deWsMv2ohLqmXXuP3hU7g8TyzbMSakP/mMqoNBYWj8AEIFg==" crossorigin>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.js" integrity="sha512-plGUER9JkeEWPPqQBE4sdLqBoQug5Ap+BCGMc7bJ8BXkm+VVj6QzkpBz5Yv2yPkkq+cqg9IpkBaGCas6uDbW8g==" crossorigin></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.16.0/tingle.min.css" integrity="sha512-b+T2i3P45i1LZM7I00Ci5QquB9szqaxu+uuk5TUSGjZQ4w4n+qujQiIuvTv2BxE7WCGQCifNMksyKILDiHzsOg==" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.16.0/tingle.min.js" integrity="sha512-2B9/byNV1KKRm5nQ2RLViPFD6U4dUjDGwuW1GU+ImJh8YinPU9Zlq1GzdTMO+G2ROrB5o1qasJBy1ttYz0wCug==" crossorigin></script>
 <style>
 .modal-dialog iframe {
 width: 100vw;
@@ -1033,7 +249,6 @@ setTimeout(() => input.focus(), 100);
 }).setContent('<iframe src="' + url + '"></iframe>').open();
 }
 </script>
-<h1>Index</h1>
 <div class="toc">
 <ul></ul>
 </div>
@@ -1075,7 +290,7 @@ setTimeout(() => input.focus(), 100);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.0</a>.</p>
 </footer>
 </body>
 </html>
