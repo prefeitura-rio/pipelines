@@ -292,7 +292,7 @@ def parse_comma_separated_string_to_list(text: str) -> List[str]:
     return result
 
 
-@task
+@task(max_retries=3, retry_delay=timedelta(seconds=300))
 def dump_upload_batch(
     database: Database,
     batch_size: int,
