@@ -9,9 +9,10 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 from pipelines.constants import constants
-from pipelines.rj_smfp.goals_dashboard_dbt.schedules import (
-    smfp_dashboard_metas_daily_update_schedule,
-)
+
+# from pipelines.rj_smfp.goals_dashboard_dbt.schedules import (
+#     smfp_dashboard_metas_daily_update_schedule,
+# )
 from pipelines.utils.execute_dbt_model.flows import utils_run_dbt_model_flow
 from pipelines.utils.utils import set_default_parameters
 
@@ -34,4 +35,4 @@ run_dbt_smfp_dashboard_metas_flow = set_default_parameters(
     default_parameters=smfp_dashboard_metas_default_parameters,
 )
 
-run_dbt_smfp_dashboard_metas_flow.schedule = smfp_dashboard_metas_daily_update_schedule
+# run_dbt_smfp_dashboard_metas_flow.schedule = smfp_dashboard_metas_daily_update_schedule
