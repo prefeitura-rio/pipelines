@@ -115,12 +115,14 @@ def georeference_dataframe(
         locations.append(location)
 
     geolocated_addresses = [
-        {
-            "latitude": location.latitude,
-            "longitude": location.longitude,
-        }
-        if location is not None
-        else {"latitude": None, "longitude": None}
+        (
+            {
+                "latitude": location.latitude,
+                "longitude": location.longitude,
+            }
+            if location is not None
+            else {"latitude": None, "longitude": None}
+        )
         for location in locations
     ]
 
