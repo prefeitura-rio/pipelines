@@ -44,33 +44,10 @@ dados_mestres_tables = {
         "convert_to_crs_4326": True,
         "geometry_column": "geometry",
     },
-    "zoneamento_setores": {
-        # source: https://www.data.rio/datasets/PCRJ::setores-1/about
-        "url": "https://opendata.arcgis.com/api/v3/datasets/2c56c0ca74d74bcd8b44378e20af707f_1/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",  # noqa
-        "dataset_id": "dados_mestres",
-        "dump_mode": "overwrite",
-        "materialize_after_dump": True,
-        "materialize_to_datario": True,
-        "dump_to_gcs": True,
-        "materialization_mode": "dev",
-        "convert_to_crs_4326": True,
-        "geometry_column": "geometry",
-    },
-    "zoneamento_subzonas_subsetores": {
-        # source: https://www.data.rio/datasets/PCRJ::subzonas-e-subsetores-1/about
-        "url": "https://opendata.arcgis.com/api/v3/datasets/815b62790a0942519020d4ad28e99fee_2/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",  # noqa
-        "dataset_id": "dados_mestres",
-        "dump_mode": "overwrite",
-        "materialize_after_dump": True,
-        "materialize_to_datario": True,
-        "dump_to_gcs": True,
-        "materialization_mode": "dev",
-        "convert_to_crs_4326": True,
-        "geometry_column": "geometry",
-    },
-    "zoneamento_zonas": {
-        # source: https://www.data.rio/datasets/PCRJ::zonas-1/about
-        "url": "https://opendata.arcgis.com/api/v3/datasets/d668fb697bd245229d3165aed0ee5193_3/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",  # noqa
+    "zoneamento": {
+        # source: https://www.data.rio/maps/PCRJ::zoneamento-urbano-vigente/about
+        # https://www.arcgis.com/home/item.html?id=23de66d35c394fc89a5c5bca844373b4
+        "url": "https://opendata.arcgis.com/api/v3/datasets/23de66d35c394fc89a5c5bca844373b4/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",  # noqa
         "dataset_id": "dados_mestres",
         "dump_mode": "overwrite",
         "materialize_after_dump": True,
