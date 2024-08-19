@@ -47,7 +47,8 @@ dados_mestres_tables = {
     "zoneamento": {
         # source: https://www.data.rio/maps/PCRJ::zoneamento-urbano-vigente/about
         # https://www.arcgis.com/home/item.html?id=23de66d35c394fc89a5c5bca844373b4
-        "url": "https://opendata.arcgis.com/api/v3/datasets/23de66d35c394fc89a5c5bca844373b4/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",  # noqa
+        "url": "https://pgeo3.rio.rj.gov.br/arcgis/rest/services/Urbanismo/LBB_Zoneamento_urbano_vigente/MapServer/0/query?outFields=*&where=1%3D1&f=geojson",  # noqa
+        # "url": "https://opendata.arcgis.com/api/v3/datasets/23de66d35c394fc89a5c5bca844373b4/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1",  # noqa
         "dataset_id": "dados_mestres",
         "dump_mode": "overwrite",
         "materialize_after_dump": True,
