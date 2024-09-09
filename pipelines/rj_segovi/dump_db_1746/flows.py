@@ -25,10 +25,10 @@ dump_1746_flow.run_config = KubernetesRun(
     labels=[
         constants.RJ_SEGOVI_AGENT_LABEL.value,
     ],
-    cpu_limit="500m",
-    cpu_request="500m",
-    memory_limit="2Gi",
-    memory_request="2Gi",
+    cpu_limit="1000m",
+    cpu_request="1000m",
+    memory_limit="4Gi",
+    memory_request="4Gi",
 )
 
 _1746_default_parameters = {
