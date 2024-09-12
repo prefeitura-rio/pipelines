@@ -26,6 +26,12 @@ gsheets_urls = {
         "materialize_after_dump": True,
         "dataset_id": "educacao_basica_alocacao",
     },
+    "bimestral_2024": {
+        "dump_mode": "overwrite",
+        "url": "https://drive.google.com/file/d/1PDMoh5HiJvDaL-31NUZJg32EvyOLPAWx/view?usp=drive_link",
+        "url_type": "google_drive",
+        "materialize_after_dump": True,
+        "dataset_id": "educacao_basica_avaliacao",
     "bimestral_2023": {
         "dump_mode": "overwrite",
         "url": "https://drive.google.com/file/d/1bC-I6mT9SdRVDDL583WpeK8WOJMuIhfz/view?usp=drive_link",
