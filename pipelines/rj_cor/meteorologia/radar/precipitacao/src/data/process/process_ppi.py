@@ -316,18 +316,18 @@ def process_ppi(
                 : hdf[primary_key]["where"].attrs["nbins"],
                 el_index,
             ] = rhohv_data_array
-        full_startazA_matrix[
-            indices_dict[primary_key]["indices"], :, el_index
-        ] = startazA.reshape(startazA.shape[0], 1)
-        full_stopazA_matrix[
-            indices_dict[primary_key]["indices"], :, el_index
-        ] = stopazA.reshape(stopazA.shape[0], 1)
-        full_startazT_matrix[
-            indices_dict[primary_key]["indices"], :, el_index
-        ] = startazT.reshape(startazT.shape[0], 1)
-        full_stopazT_matrix[
-            indices_dict[primary_key]["indices"], :, el_index
-        ] = stopazT.reshape(stopazT.shape[0], 1)
+        full_startazA_matrix[indices_dict[primary_key]["indices"], :, el_index] = (
+            startazA.reshape(startazA.shape[0], 1)
+        )
+        full_stopazA_matrix[indices_dict[primary_key]["indices"], :, el_index] = (
+            stopazA.reshape(stopazA.shape[0], 1)
+        )
+        full_startazT_matrix[indices_dict[primary_key]["indices"], :, el_index] = (
+            startazT.reshape(startazT.shape[0], 1)
+        )
+        full_stopazT_matrix[indices_dict[primary_key]["indices"], :, el_index] = (
+            stopazT.reshape(stopazT.shape[0], 1)
+        )
 
         full_elevation_matrix[:, :, el_index] = hdf[primary_key]["where"].attrs[
             "elangle"
