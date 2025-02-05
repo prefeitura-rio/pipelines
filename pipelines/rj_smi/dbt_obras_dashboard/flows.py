@@ -9,9 +9,10 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 from pipelines.constants import constants
-from pipelines.rj_smi.dbt_obras_dashboard.schedules import (
-    smi_dashboard_obras_monthly_update_schedule,
-)
+
+# from pipelines.rj_smi.dbt_obras_dashboard.schedules import (
+#     smi_dashboard_obras_monthly_update_schedule,
+# )
 from pipelines.utils.execute_dbt_model.flows import utils_run_dbt_model_flow
 from pipelines.utils.utils import set_default_parameters
 
@@ -32,4 +33,4 @@ run_dbt_smi_dashboard_obras_flow = set_default_parameters(
     default_parameters=smi_dashboard_obras_default_parameters,
 )
 
-run_dbt_smi_dashboard_obras_flow.schedule = smi_dashboard_obras_monthly_update_schedule
+# run_dbt_smi_dashboard_obras_flow.schedule = smi_dashboard_obras_monthly_update_schedule

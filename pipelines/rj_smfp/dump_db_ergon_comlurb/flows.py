@@ -10,9 +10,9 @@ from prefect.storage import GCS
 
 from pipelines.constants import constants
 
-from pipelines.rj_smfp.dump_db_ergon_comlurb.schedules import (
-    ergon_comlurb_monthly_update_schedule,
-)
+# from pipelines.rj_smfp.dump_db_ergon_comlurb.schedules import (
+#     ergon_comlurb_monthly_update_schedule,
+# )
 from pipelines.utils.dump_db.flows import dump_sql_flow
 from pipelines.utils.utils import set_default_parameters
 
@@ -39,4 +39,4 @@ dump_ergon_flow = set_default_parameters(
     dump_ergon_flow, default_parameters=ergon_default_parameters
 )
 
-dump_ergon_flow.schedule = ergon_comlurb_monthly_update_schedule
+# dump_ergon_flow.schedule = ergon_comlurb_monthly_update_schedule

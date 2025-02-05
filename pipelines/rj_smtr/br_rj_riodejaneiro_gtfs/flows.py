@@ -66,6 +66,9 @@ with Flow(
     data_versao_gtfs = Parameter("data_versao_gtfs", default=None)
     capture = Parameter("capture", default=True)
     materialize = Parameter("materialize", default=True)
+    project_name = Parameter(
+        "project_name", default=emd_constants.PREFECT_DEFAULT_PROJECT.value
+    )
 
     timestamp = get_current_timestamp()
 
@@ -84,7 +87,7 @@ with Flow(
 
         run_captura = create_flow_run.map(
             flow_name=unmapped(gtfs_captura.name),
-            project_name=unmapped(emd_constants.PREFECT_DEFAULT_PROJECT.value),
+            project_name=unmapped(project_name),
             parameters=gtfs_capture_parameters,
             labels=unmapped(LABELS),
             scheduled_start_time=get_scheduled_start_times(
@@ -92,6 +95,7 @@ with Flow(
                 parameters=gtfs_capture_parameters,
                 intervals={"agency": timedelta(minutes=11)},
             ),
+            run_config=unmapped(gtfs_captura_tratamento.run_config),
         )
 
         wait_captura_true = wait_for_flow_run.map(
@@ -120,7 +124,7 @@ with Flow(
 
         run_materializacao = create_flow_run(
             flow_name=gtfs_materializacao.name,
-            project_name=emd_constants.PREFECT_DEFAULT_PROJECT.value,
+            project_name=project_name,
             parameters=gtfs_materializacao_parameters,
             labels=LABELS,
             upstream_tasks=[wait_captura],

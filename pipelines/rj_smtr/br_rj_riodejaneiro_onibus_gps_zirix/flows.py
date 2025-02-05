@@ -124,7 +124,7 @@ realocacao_sppo_zirix.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-realocacao_sppo_zirix.schedule = every_10_minutes
+# realocacao_sppo_zirix.schedule = every_10_minutes
 
 
 with Flow(
@@ -273,7 +273,7 @@ captura_sppo_zirix.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-captura_sppo_zirix.schedule = every_minute
+# captura_sppo_zirix.schedule = every_minute
 
 
 with Flow(
@@ -379,4 +379,4 @@ recaptura_zirix.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-recaptura_zirix.schedule = every_hour_minute_six
+# recaptura_zirix.schedule = every_hour_minute_six
