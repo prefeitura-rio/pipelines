@@ -11,9 +11,9 @@ from prefect.storage import GCS
 from pipelines.constants import constants
 
 # importa o schedule
-from pipelines.rj_pgm.dump_db_divida_ativa.schedules import (
-    divida_ativa_daily_update_schedule,
-)
+# from pipelines.rj_pgm.dump_db_divida_ativa.schedules import (
+#     divida_ativa_daily_update_schedule,
+# )
 from pipelines.utils.dump_db.flows import dump_sql_flow
 from pipelines.utils.utils import set_default_parameters
 
@@ -44,4 +44,4 @@ rj_pgm_dump_db_divida_ativa_flow = set_default_parameters(
     default_parameters=rj_pgm_dump_db_divida_ativa_default_parameters,
 )
 
-rj_pgm_dump_db_divida_ativa_flow.schedule = divida_ativa_daily_update_schedule
+# rj_pgm_dump_db_divida_ativa_flow.schedule = divida_ativa_daily_update_schedule

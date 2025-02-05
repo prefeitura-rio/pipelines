@@ -9,9 +9,10 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 from pipelines.constants import constants
-from pipelines.rj_smac.materialize_povo_comunidades_tradicionais.schedules import (
-    materialize_povo_comunidades_tradicionais_schedule,
-)
+
+# from pipelines.rj_smac.materialize_povo_comunidades_tradicionais.schedules import (
+#     materialize_povo_comunidades_tradicionais_schedule,
+# )
 from pipelines.utils.execute_dbt_model.flows import utils_run_dbt_model_flow
 
 materialize_povo_comunidades_tradicionais_flow = deepcopy(utils_run_dbt_model_flow)
@@ -27,6 +28,6 @@ materialize_povo_comunidades_tradicionais_flow.run_config = KubernetesRun(
         constants.RJ_SMAC_AGENT_LABEL.value,
     ],
 )
-materialize_povo_comunidades_tradicionais_flow.schedule = (
-    materialize_povo_comunidades_tradicionais_schedule
-)
+# materialize_povo_comunidades_tradicionais_flow.schedule = (
+#     materialize_povo_comunidades_tradicionais_schedule
+# )

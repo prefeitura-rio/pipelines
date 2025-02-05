@@ -10,9 +10,9 @@ from prefect.storage import GCS
 
 from pipelines.constants import constants
 
-from pipelines.rj_sme.dump_url_educacao_basica.schedules import (
-    gsheets_year_update_schedule,
-)
+# from pipelines.rj_sme.dump_url_educacao_basica.schedules import (
+#     gsheets_year_update_schedule,
+# )
 from pipelines.utils.dump_url.flows import dump_url_flow
 from pipelines.utils.utils import set_default_parameters
 
@@ -33,4 +33,4 @@ sme_gsheets_flow.run_config = KubernetesRun(
 #     sme_gsheets_flow, default_parameters=sme_gsheets_default_parameters
 # )
 
-sme_gsheets_flow.schedule = gsheets_year_update_schedule
+# sme_gsheets_flow.schedule = gsheets_year_update_schedule
