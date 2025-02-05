@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.1">
+<meta name="generator" content="pdoc3 0.11.5">
 <title>pipelines.rj_cor.meteorologia.satelite.satellite_utils API documentation</title>
 <meta name="description" content="Funções úteis no tratamento de dados de satélite">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -38,6 +49,46 @@ hljs.highlightAll();
 <span>def <span class="ident">choose_file_to_download</span></span>(<span>storage_files_path: list, base_path: str, redis_files: str, ref_filename=None)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def choose_file_to_download(
+    storage_files_path: list, base_path: str, redis_files: str, ref_filename=None
+):
+    &#34;&#34;&#34;
+    We can treat only one file each run, so we will first eliminate files that were
+    already trated and saved on redis and keep only the first one from this partition
+    &#34;&#34;&#34;
+    # keep only ref_filename if it exists
+    if ref_filename is not None:
+        # extract this part of the name s_20222911230206_e20222911239514
+        ref_date = ref_filename[ref_filename.find(&#34;_s&#34;) + 1 : ref_filename.find(&#34;_e&#34;)]
+        log(f&#34;\n\n[DEBUG]: ref_date: {ref_date}&#34;)
+        match_text = re.compile(f&#34;.*{ref_date}&#34;)
+        storage_files_path = list(filter(match_text.match, storage_files_path))
+
+    log(f&#34;\n\n[DEBUG]: storage_files_path: {storage_files_path}&#34;)
+
+    # keep the first file if it is not on redis
+    storage_files_path.sort()
+    destination_file_path, download_file = None, None
+
+    for path_file in storage_files_path:
+        filename = path_file.split(&#34;/&#34;)[-1]
+
+        log(f&#34;\n\nChecking if {filename} is in redis&#34;)
+        if filename not in redis_files:
+            log(f&#34;\n\n {filename} not in redis&#34;)
+            redis_files.append(filename)
+            destination_file_path = os.path.join(base_path, filename)
+            download_file = path_file
+            # log(f&#34;[DEBUG]: filename to be append on redis_files: {redis_files}&#34;)
+            break
+        log(f&#34;\n{filename} is already in redis&#34;)
+
+    return redis_files, destination_file_path, download_file</code></pre>
+</details>
 <div class="desc"><p>We can treat only one file each run, so we will first eliminate files that were
 already trated and saved on redis and keep only the first one from this partition</p></div>
 </dd>
@@ -45,6 +96,29 @@ already trated and saved on redis and keep only the first one from this partitio
 <span>def <span class="ident">convert_julian_to_conventional_day</span></span>(<span>year: int, julian_day: int)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def convert_julian_to_conventional_day(year: int, julian_day: int):
+    &#34;&#34;&#34;Convert julian day to conventional
+
+    Parameters
+    year (int): 2022 (20222901900203)
+    julian_day (int): 290 (20222901900203)
+
+    Returns
+    date_save (str): 19 (20222901900203)&#34;&#34;&#34;
+
+    # Subtracting 1 because the year starts at day &#34;0&#34;
+    julian_day = julian_day - 1
+    dayconventional = datetime.datetime(year, 1, 1) + datetime.timedelta(julian_day)
+
+    # Format the date according to the strftime directives
+    date_save = dayconventional.strftime(&#34;%Y%m%d&#34;)
+
+    return date_save</code></pre>
+</details>
 <div class="desc"><p>Convert julian day to conventional</p>
 <p>Parameters
 year (int): 2022 (20222901900203)
@@ -56,6 +130,21 @@ date_save (str): 19 (20222901900203)</p></div>
 <span>def <span class="ident">converte_timezone</span></span>(<span>datetime_save: str) ‑> str</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def converte_timezone(datetime_save: str) -&gt; str:
+    &#34;&#34;&#34;
+    Get UTC date-hour on &#39;YYYYMMDD HHmm&#39; format and returns im the same format but
+    on São Paulo timezone.
+    &#34;&#34;&#34;
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; datetime_save {datetime_save}&#34;)
+    datahora = pendulum.from_format(datetime_save, &#34;YYYYMMDD HHmmss&#34;)
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt; datahora {datahora}&#34;)
+    datahora = datahora.in_tz(&#34;America/Sao_Paulo&#34;)
+    return datahora.format(&#34;YYYYMMDD HHmmss&#34;)</code></pre>
+</details>
 <div class="desc"><p>Get UTC date-hour on 'YYYYMMDD HHmm' format and returns im the same format but
 on São Paulo timezone.</p></div>
 </dd>
@@ -63,12 +152,142 @@ on São Paulo timezone.</p></div>
 <span>def <span class="ident">create_and_save_image</span></span>(<span>data: xarray.core.dataarray.DataArray, info: dict, variable) ‑> pathlib.Path</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def create_and_save_image(data: xr.DataArray, info: dict, variable) -&gt; Path:
+    &#34;&#34;&#34;
+    Create image from xarray ans save it as png file.
+    &#34;&#34;&#34;
+
+    plt.figure(figsize=(10, 10))
+
+    # Use the Geostationary projection in cartopy
+    axis = plt.axes(projection=ccrs.PlateCarree())
+
+    extent = info[&#34;extent&#34;]
+    img_extent = [extent[0], extent[2], extent[1], extent[3]]
+
+    # Define the color scale based on the channel
+    colormap = &#34;jet&#34;  # White to black for IR channels
+    # colormap = &#34;gray_r&#34; # White to black for IR channels
+
+    # Plot the image
+    img = axis.imshow(data, origin=&#34;upper&#34;, extent=img_extent, cmap=colormap, alpha=0.8)
+
+    # # Find shapefile file &#34;Limite_Bairros_RJ.shp&#34; across the entire file system
+    # for root, dirs, files in os.walk(os.sep):
+    #     if &#34;Limite_Bairros_RJ.shp&#34; in files:
+    #         log(f&#34;[DEBUG] ROOT {root}&#34;)
+    #         shapefile_dir = root
+    #         break
+    # else:
+    #     print(&#34;File not found.&#34;)
+
+    # Add coastlines, borders and gridlines
+    shapefile_dir = Path(
+        &#34;/opt/venv/lib/python3.9/site-packages/pipelines/utils/shapefiles&#34;
+    )
+    shapefile_path_neighborhood = shapefile_dir / &#34;Limite_Bairros_RJ.shp&#34;
+    shapefile_path_state = shapefile_dir / &#34;Limite_Estados_BR_IBGE.shp&#34;
+
+    log(&#34;\nImporting shapefiles&#34;)
+    fiona.os.environ[&#34;SHAPE_RESTORE_SHX&#34;] = &#34;YES&#34;
+    reader_neighborhood = shpreader.Reader(shapefile_path_neighborhood)
+    reader_state = shpreader.Reader(shapefile_path_state)
+    state = [record.geometry for record in reader_state.records()]
+    neighborhood = [record.geometry for record in reader_neighborhood.records()]
+    log(&#34;\nShapefiles imported&#34;)
+    axis.add_geometries(
+        state, ccrs.PlateCarree(), facecolor=&#34;none&#34;, edgecolor=&#34;black&#34;, linewidth=0.7
+    )
+    axis.add_geometries(
+        neighborhood,
+        ccrs.PlateCarree(),
+        facecolor=&#34;none&#34;,
+        edgecolor=&#34;black&#34;,
+        linewidth=0.2,
+    )
+    # axis.coastlines(resolution=&#39;10m&#39;, color=&#39;black&#39;, linewidth=1.0)
+    # axis.add_feature(cartopy.feature.BORDERS, edgecolor=&#39;black&#39;, linewidth=1.0)
+    grdln = axis.gridlines(
+        crs=ccrs.PlateCarree(),
+        color=&#34;gray&#34;,
+        alpha=0.7,
+        linestyle=&#34;--&#34;,
+        linewidth=0.7,
+        xlocs=np.arange(-180, 180, 1),
+        ylocs=np.arange(-90, 90, 1),
+        draw_labels=True,
+    )
+    grdln.top_labels = False
+    grdln.right_labels = False
+
+    plt.colorbar(
+        img,
+        label=variable.upper(),
+        extend=&#34;both&#34;,
+        orientation=&#34;horizontal&#34;,
+        pad=0.05,
+        fraction=0.05,
+    )
+
+    log(&#34;\n Start saving image&#34;)
+    output_image_path = Path(os.getcwd()) / &#34;output&#34; / &#34;images&#34;
+
+    save_image_path = output_image_path / (f&#34;{variable}_{info[&#39;datetime_save&#39;]}.png&#34;)
+
+    if not output_image_path.exists():
+        output_image_path.mkdir(parents=True, exist_ok=True)
+
+    plt.savefig(save_image_path, bbox_inches=&#34;tight&#34;, pad_inches=0, dpi=300)
+    log(&#34;\n Ended saving image&#34;)
+    return save_image_path</code></pre>
+</details>
 <div class="desc"><p>Create image from xarray ans save it as png file.</p></div>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.download_blob"><code class="name flex">
-<span>def <span class="ident">download_blob</span></span>(<span>bucket_name: str, source_blob_name: str, destination_file_name: Union[str, pathlib.Path], mode: str = 'prod')</span>
+<span>def <span class="ident">download_blob</span></span>(<span>bucket_name: str,<br>source_blob_name: str,<br>destination_file_name: str | pathlib.Path,<br>mode: str = 'prod')</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def download_blob(
+    bucket_name: str,
+    source_blob_name: str,
+    destination_file_name: Union[str, Path],
+    mode: str = &#34;prod&#34;,
+):
+    &#34;&#34;&#34;
+    Downloads a blob from the bucket.
+    Mode needs to be &#34;prod&#34; or &#34;staging&#34;
+
+    # The ID of your GCS bucket
+    # bucket_name = &#34;your-bucket-name&#34;
+
+    # The ID of your GCS object
+    # source_blob_name = &#34;storage-object-name&#34;
+
+    # The path to which the file should be downloaded
+    # destination_file_name = &#34;local/path/to/file&#34;
+    &#34;&#34;&#34;
+
+    credentials = get_credentials_from_env(mode=mode)
+    storage_client = storage.Client(credentials=credentials)
+
+    bucket = storage_client.bucket(bucket_name)
+
+    blob = bucket.blob(source_blob_name)
+    blob.download_to_filename(destination_file_name)
+
+    log(
+        f&#34;Downloaded storage object {source_blob_name} from bucket\
+        {bucket_name} to local file {destination_file_name}.&#34;
+    )</code></pre>
+</details>
 <div class="desc"><p>Downloads a blob from the bucket.
 Mode needs to be "prod" or "staging"</p>
 <h1 id="the-id-of-your-gcs-bucket">The ID of your GCS bucket</h1>
@@ -82,6 +301,37 @@ Mode needs to be "prod" or "staging"</p>
 <span>def <span class="ident">extract_julian_day_and_hour_from_filename</span></span>(<span>filename: str)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def extract_julian_day_and_hour_from_filename(filename: str):
+    &#34;&#34;&#34;
+    Extract julian day and hour from satelite filename
+
+    Parameters
+    filename (str): &#39;OR_ABI-L2-TPWF-M6_G16_s20222901900203_e20222901909511_c20222901911473.nc&#39;
+
+    Returns
+    year (int): 2022 (20222901900203)
+    julian_day (int): 290 (20222901900203)
+    hour_utc (str): 1900 (20222901900203)
+    &#34;&#34;&#34;
+    # Search for the Scan start in the file name
+    start = filename[filename.find(&#34;_s&#34;) + 2 : filename.find(&#34;_e&#34;)]
+    # Get year
+    year = int(start[0:4])
+    # Get julian day
+    julian_day = int(start[4:7])
+
+    # Time (UTC) as string
+    hour_utc = start[7:13]
+
+    # Time of the start of the Scan
+    # time = start[7:9] + &#34;:&#34; + start[9:11] + &#34;:&#34; + start[11:13] + &#34; UTC&#34;
+
+    return year, julian_day, hour_utc</code></pre>
+</details>
 <div class="desc"><p>Extract julian day and hour from satelite filename</p>
 <p>Parameters
 filename (str): 'OR_ABI-L2-TPWF-M6_G16_s20222901900203_e20222901909511_c20222901911473.nc'</p>
@@ -94,6 +344,20 @@ hour_utc (str): 1900 (20222901900203)</p></div>
 <span>def <span class="ident">get_blob_with_prefix</span></span>(<span>bucket_name: str, prefix: str, mode: str = 'prod') ‑> str</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_blob_with_prefix(bucket_name: str, prefix: str, mode: str = &#34;prod&#34;) -&gt; str:
+    &#34;&#34;&#34;
+    Lists all the blobs in the bucket that begin with the prefix.
+    This can be used to list all blobs in a &#34;folder&#34;, e.g. &#34;public/&#34;.
+    Mode needs to be &#34;prod&#34; or &#34;staging&#34;
+    &#34;&#34;&#34;
+    files = [b.name for b in list_blobs_with_prefix(bucket_name, prefix, mode)]
+    files.sort()
+    return files[0]</code></pre>
+</details>
 <div class="desc"><p>Lists all the blobs in the bucket that begin with the prefix.
 This can be used to list all blobs in a "folder", e.g. "public/".
 Mode needs to be "prod" or "staging"</p></div>
@@ -102,18 +366,262 @@ Mode needs to be "prod" or "staging"</p></div>
 <span>def <span class="ident">get_files_from_aws</span></span>(<span>partition_path)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_files_from_aws(partition_path):
+    &#34;&#34;&#34;
+    Get all available files from aws that is inside the partition path
+    &#34;&#34;&#34;
+    log(&#34;Acessing AWS to get files&#34;)
+    # Use the anonymous credentials to access public data
+    s3_fs = s3fs.S3FileSystem(anon=True)
+
+    # Get all files of GOES-16 data (multiband format) at this hour
+    storage_files_path = np.sort(
+        np.array(
+            s3_fs.find(f&#34;noaa-goes16/{partition_path}&#34;)
+            # s3_fs.find(f&#34;noaa-goes16/ABI-L2-CMIPF/2022/270/10/OR_ABI-L2-CMIPF-M6C13_G16_s20222701010208_e20222701019528_c20222701020005.nc&#34;)
+        )
+    )
+    storage_origin = &#34;aws&#34;
+
+    return storage_files_path, storage_origin, s3_fs</code></pre>
+</details>
 <div class="desc"><p>Get all available files from aws that is inside the partition path</p></div>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_files_from_gcp"><code class="name flex">
 <span>def <span class="ident">get_files_from_gcp</span></span>(<span>partition_path)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_files_from_gcp(partition_path):
+    &#34;&#34;&#34;
+    Get all available files from gcp that is inside the partition path
+    &#34;&#34;&#34;
+    log(&#34;Acessing GCP to get files&#34;)
+    bucket_name = &#34;gcp-public-data-goes-16&#34;
+    storage_files_path = get_blob_with_prefix(
+        bucket_name=bucket_name, prefix=partition_path, mode=&#34;prod&#34;
+    )
+    storage_origin = &#34;gcp&#34;
+    return storage_files_path, storage_origin, bucket_name</code></pre>
+</details>
 <div class="desc"><p>Get all available files from gcp that is inside the partition path</p></div>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.get_info"><code class="name flex">
 <span>def <span class="ident">get_info</span></span>(<span>path: str) ‑> dict</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_info(path: str) -&gt; dict:
+    &#34;&#34;&#34;
+    # Getting Information From the File Name  (Time, Date,
+    # Product Type, Variable and Defining the CMAP)
+    &#34;&#34;&#34;
+    year, julian_day, hour_utc = extract_julian_day_and_hour_from_filename(path)
+
+    date_save = convert_julian_to_conventional_day(year, julian_day)
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;date_save {date_save}&#34;)
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; hour_utc {hour_utc}&#34;)
+    log(f&#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;julian_day  {julian_day}&#34;)
+    datetime_save = str(date_save) + &#34; &#34; + str(hour_utc)
+
+    # Converte data/hora de UTC para horário de São Paulo
+    datetime_save = converte_timezone(datetime_save=datetime_save)
+
+    # =====================================================================
+    # Detect the product type
+    # =====================================================================
+    procura_m = path.find(&#34;-M6&#34;)
+    # Se não encontra o termo &#34;M6&#34; tenta encontrar &#34;M3&#34; e depois &#34;M4&#34;
+    if procura_m == -1:
+        procura_m = path.find(&#34;-M3&#34;)
+    if procura_m == -1:
+        procura_m = path.find(&#34;-M4&#34;)
+    product = path[path.find(&#34;L2-&#34;) + 3 : procura_m]
+
+    # Nem todos os produtos foram adicionados no dicionário de características
+    # dos produtos. Olhar arquivo original caso o produto não estaja aqui
+    # https://www.dropbox.com/s/yfopijdrplq5sjr/GNC-A%20Blog%20-%20GOES-R-Level-2-Products%20-%20Superimpose.py?dl=0
+    # GNC-A Blog - GOES-R-Level-2-Products - Superimpose
+    # https://geonetcast.wordpress.com/2018/06/28/goes-r-level-2-products-a-python-script/
+    # https://www.dropbox.com/s/2zylbwfjfkx9a7i/GNC-A%20Blog%20-%20GOES-R-Level-2-Products.py?dl=0
+    product_caracteristics = {}
+
+    # ACHAF - Cloud Top Height: &#39;HT&#39;
+    product_caracteristics[&#34;ACHAF&#34;] = {
+        &#34;variable&#34;: [&#34;HT&#34;],
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 15000,
+        &#34;cmap&#34;: &#34;rainbow&#34;,
+    }
+    # CMIPF - Cloud and Moisture Imagery: &#39;CMI&#39;
+    product_caracteristics[&#34;CMIPF&#34;] = {
+        &#34;variable&#34;: [&#34;CMI&#34;],
+        &#34;vmin&#34;: -50,
+        &#34;vmax&#34;: 50,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # ACHAF - Cloud Top Height: &#39;HT&#39;
+    product_caracteristics[&#34;ACHAF&#34;] = {
+        &#34;variable&#34;: [&#34;HT&#34;],
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 15000,
+        &#34;cmap&#34;: &#34;rainbow&#34;,
+    }
+    # ACHTF - Cloud Top Temperature: &#39;TEMP&#39;
+    product_caracteristics[&#34;ACHATF&#34;] = {
+        &#34;variable&#34;: [&#34;TEMP&#34;],
+        &#34;vmin&#34;: 180,
+        &#34;vmax&#34;: 300,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # ACMF - Clear Sky Masks: &#39;BCM&#39;
+    product_caracteristics[&#34;ACMF&#34;] = {
+        &#34;variable&#34;: [&#34;BCM&#34;],
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 1,
+        &#34;cmap&#34;: &#34;gray&#34;,
+    }
+    # ACTPF - Cloud Top Phase: &#39;Phase&#39;
+    product_caracteristics[&#34;ACTPF&#34;] = {
+        &#34;variable&#34;: [&#34;Phase&#34;],
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 5,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # ADPF - Aerosol Detection: &#39;Smoke&#39;
+    product_caracteristics[&#34;ADPF&#34;] = {
+        &#34;variable&#34;: [&#34;Smoke&#34;],
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 255,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # AODF - Aerosol Optical Depth: &#39;AOD&#39;
+    product_caracteristics[&#34;AODF&#34;] = {
+        &#34;variable&#34;: [&#34;AOD&#34;],
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 2,
+        &#34;cmap&#34;: &#34;rainbow&#34;,
+    }
+    # CODF - Cloud Optical Depth: &#39;COD&#39;
+    product_caracteristics[&#34;CODF&#34;] = {
+        &#34;variable&#34;: [&#34;CODF&#34;],
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 100,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # CPSF - Cloud Particle Size: &#39;PSD&#39;
+    product_caracteristics[&#34;CPSF&#34;] = {
+        &#34;variable&#34;: [&#34;PSD&#34;],
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 80,
+        &#34;cmap&#34;: &#34;rainbow&#34;,
+    }
+    # CTPF - Cloud Top Pressure: &#39;PRES&#39;
+    product_caracteristics[&#34;CTPF&#34;] = {
+        &#34;variable&#34;: [&#34;PRES&#34;],
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 1100,
+        &#34;cmap&#34;: &#34;rainbow&#34;,
+    }
+    # DSIF - Derived Stability Indices: &#39;CAPE&#39;, &#39;KI&#39;, &#39;LI&#39;, &#39;SI&#39;, &#39;TT&#39;
+    product_caracteristics[&#34;DSIF&#34;] = {
+        &#34;variable&#34;: [&#34;LI&#34;, &#34;CAPE&#34;, &#34;TT&#34;, &#34;SI&#34;, &#34;KI&#34;],
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 1000,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # FDCF - Fire-Hot Spot Characterization: &#39;Area&#39;, &#39;Mask&#39;, &#39;Power&#39;, &#39;Temp&#39;
+    product_caracteristics[&#34;FDCF&#34;] = {
+        &#34;variable&#34;: [&#34;Area&#34;, &#34;Mask&#34;, &#34;Power&#34;, &#34;Temp&#34;],
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 255,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # LSTF - Land Surface (Skin) Temperature: &#39;LST&#39;
+    product_caracteristics[&#34;LSTF&#34;] = {
+        &#34;variable&#34;: [&#34;LST&#34;],
+        &#34;vmin&#34;: 213,
+        &#34;vmax&#34;: 330,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # RRQPEF - Rainfall Rate - Quantitative Prediction Estimate: &#39;RRQPE&#39;
+    product_caracteristics[&#34;RRQPEF&#34;] = {
+        &#34;variable&#34;: [&#34;RRQPE&#34;],
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 50,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # SSTF - Sea Surface (Skin) Temperature: &#39;SST&#39;
+    product_caracteristics[&#34;SSTF&#34;] = {
+        &#34;variable&#34;: [&#34;SST&#34;],
+        &#34;vmin&#34;: 268,
+        &#34;vmax&#34;: 308,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # TPWF - Total Precipitable Water: &#39;TPW&#39;
+    product_caracteristics[&#34;TPWF&#34;] = {
+        &#34;variable&#34;: [&#34;TPW&#34;],
+        &#34;vmin&#34;: 0,
+        &#34;vmax&#34;: 60,
+        &#34;cmap&#34;: &#34;jet&#34;,
+    }
+    # MCMIPF - Cloud and Moisture Imagery: &#39;MCMIP&#39;
+    # https://developers.google.com/earth-engine/datasets/catalog/NOAA_GOES_16_MCMIPM#bands
+
+    product_caracteristics[&#34;MCMIPF&#34;] = {
+        &#34;variable&#34;: [
+            &#34;CMI_C01&#34;,
+            &#34;CMI_C02&#34;,
+            &#34;CMI_C03&#34;,
+            &#34;CMI_C04&#34;,
+            &#34;CMI_C05&#34;,
+            &#34;CMI_C06&#34;,
+            &#34;CMI_C07&#34;,
+            &#34;CMI_C08&#34;,
+            &#34;CMI_C09&#34;,
+            &#34;CMI_C10&#34;,
+            &#34;CMI_C11&#34;,
+            &#34;CMI_C12&#34;,
+            &#34;CMI_C13&#34;,
+            &#34;CMI_C14&#34;,
+            &#34;CMI_C15&#34;,
+            &#34;CMI_C16&#34;,
+        ],
+    }
+
+    # variable = product_caracteristics[product][&#39;variable&#39;]
+    # vmin = product_caracteristics[product][&#39;vmin&#39;]
+    # vmax = product_caracteristics[product][&#39;vmax&#39;]
+    # cmap = product_caracteristics[product][&#39;cmap&#39;]
+    product_caracteristics = product_caracteristics[product]
+    product_caracteristics[&#34;product&#34;] = product
+    product_caracteristics[&#34;filename&#34;] = path
+    product_caracteristics[&#34;datetime_save&#34;] = datetime_save
+
+    if product_caracteristics[&#34;variable&#34;] == [&#34;CMI&#34;]:
+        # Search for the GOES-16 channel in the file name
+        pattern = r&#34;M(\d+)C(\d+)_G16&#34;
+        match = re.search(pattern, path)
+        print(match)
+        print(match.group(1))
+        product_caracteristics[&#34;band&#34;] = match.group(2)
+    else:
+        product_caracteristics[&#34;band&#34;] = np.nan
+
+    log(f&#34;Product Caracteristics: {product_caracteristics}&#34;)
+
+    return product_caracteristics</code></pre>
+</details>
 <div class="desc"><h1 id="getting-information-from-the-file-name-time-date">Getting Information From the File Name
 (Time, Date,</h1>
 <h1 id="product-type-variable-and-defining-the-cmap">Product Type, Variable and Defining the CMAP)</h1></div>
@@ -122,6 +630,38 @@ Mode needs to be "prod" or "staging"</p></div>
 <span>def <span class="ident">get_variable_values</span></span>(<span>dfr: pandas.core.frame.DataFrame, variable: str) ‑> xarray.core.dataarray.DataArray</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_variable_values(dfr: pd.DataFrame, variable: str) -&gt; xr.DataArray:
+    &#34;&#34;&#34;
+    Convert pandas dataframe to a matrix with latitude on rows, longitudes on
+    columns and the correspondent values on a xarray DataArray
+    &#34;&#34;&#34;
+
+    log(&#34;Fill matrix&#34;)
+    dfr = dfr.sort_values(by=[&#34;latitude&#34;, &#34;longitude&#34;], ascending=[False, True])
+    matrix_temp = dfr.pivot(index=&#34;latitude&#34;, columns=&#34;longitude&#34;, values=variable)
+    matrix_temp = matrix_temp.sort_index(ascending=False)
+    log(
+        f&#34;[DEBUG]: matriz de conversão deve estar com a latitude em ordem descendente\
+             e a longitude em ascendente: {matrix_temp.head(10)}&#34;
+    )
+
+    # Create a NumPy matriz NumPy
+    matrix = matrix_temp.values
+
+    longitudes = list(matrix_temp.columns)
+    latitudes = list(matrix_temp.index)
+
+    log(&#34;Convert to xr dataarray&#34;)
+    data_array = xr.DataArray(
+        matrix, dims=(&#34;lat&#34;, &#34;lon&#34;), coords={&#34;lon&#34;: longitudes, &#34;lat&#34;: latitudes}
+    )
+    log(&#34;end&#34;)
+    return data_array</code></pre>
+</details>
 <div class="desc"><p>Convert pandas dataframe to a matrix with latitude on rows, longitudes on
 columns and the correspondent values on a xarray DataArray</p></div>
 </dd>
@@ -129,6 +669,40 @@ columns and the correspondent values on a xarray DataArray</p></div>
 <span>def <span class="ident">read_netcdf</span></span>(<span>file_path: str) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_netcdf(file_path: str) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Function to extract data from NetCDF file and convert it to pandas DataFrame
+    with the name of columns the same as the variable saved on the filename
+    &#34;&#34;&#34;
+    dxr = xr.open_dataset(file_path)
+
+    pattern = r&#34;variable-(.*?)\.nc&#34;
+
+    match = re.search(pattern, file_path)
+
+    if match:
+        # Extract the content between &#34;variable-&#34; and &#34;.nc&#34;
+        variable = match.group(1)
+
+        dfr = (
+            dxr.to_dataframe()
+            .reset_index()[[&#34;lat&#34;, &#34;lon&#34;, &#34;Band1&#34;]]
+            .rename(
+                {
+                    &#34;lat&#34;: &#34;latitude&#34;,
+                    &#34;lon&#34;: &#34;longitude&#34;,
+                    &#34;Band1&#34;: f&#34;{variable}&#34;,
+                },
+                axis=1,
+            )
+        )
+
+    return dfr</code></pre>
+</details>
 <div class="desc"><p>Function to extract data from NetCDF file and convert it to pandas DataFrame
 with the name of columns the same as the variable saved on the filename</p></div>
 </dd>
@@ -136,6 +710,38 @@ with the name of columns the same as the variable saved on the filename</p></div
 <span>def <span class="ident">remap_g16</span></span>(<span>path: str, extent: list, product: str, variable: list)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def remap_g16(
+    path: str,
+    extent: list,
+    product: str,
+    variable: list,
+):
+    &#34;&#34;&#34;
+    the GOES-16 image is reprojected to the rectangular projection in the extent region.
+    If netcdf file has more than one variable remap function will save each variable in
+    a different netcdf file inside temp/ folder.
+    &#34;&#34;&#34;
+
+    n_variables = len(variable)
+    print(variable, n_variables)
+    remap_path = f&#34;{os.getcwd()}/temp/treated/{product}/&#34;
+
+    # This removing old files step is important to do backfill
+    if os.path.exists(remap_path):
+        print(&#34;Removing old files&#34;)
+        shutil.rmtree(remap_path)
+
+    os.makedirs(remap_path)
+    for i in range(n_variables):
+        log(
+            f&#34;Starting remap for path: {path}, remap_path: {remap_path}, variable: {variable[i]}&#34;
+        )
+        remap(path, remap_path, variable[i], extent)</code></pre>
+</details>
 <div class="desc"><p>the GOES-16 image is reprojected to the rectangular projection in the extent region.
 If netcdf file has more than one variable remap function will save each variable in
 a different netcdf file inside temp/ folder.</p></div>
@@ -144,12 +750,98 @@ a different netcdf file inside temp/ folder.</p></div>
 <span>def <span class="ident">save_data_in_file</span></span>(<span>product: str, variable: list, datetime_save: str, mode_redis: str = 'prod')</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_data_in_file(
+    product: str, variable: list, datetime_save: str, mode_redis: str = &#34;prod&#34;
+):
+    &#34;&#34;&#34;
+    Read all nc or tif files and save them in a unique file inside a partition
+    &#34;&#34;&#34;
+    date_save = datetime_save[:8]
+    time_save = str(int(datetime_save[9:11]))
+
+    year = date_save[:4]
+    month = str(int(date_save[4:6]))
+    day = str(int(date_save[6:8]))
+    date = year + &#34;-&#34; + month.zfill(2) + &#34;-&#34; + day.zfill(2)
+    partitions = os.path.join(
+        f&#34;ano_particao={year}&#34;,
+        f&#34;mes_particao={month}&#34;,
+        f&#34;data_particao={date}&#34;,
+        f&#34;hora_particao={time_save}&#34;,
+    )
+
+    folder_path = f&#34;{os.getcwd()}/temp/treated/{product}/&#34;
+    # cria pasta de partições se elas não existem
+    output_path = os.path.join(os.getcwd(), &#34;temp&#34;, &#34;output&#34;, mode_redis, product)
+    partitions_path = os.path.join(output_path, partitions)
+
+    if not os.path.exists(partitions_path):
+        os.makedirs(partitions_path)
+
+    # Loop through all NetCDF files in the folder
+    data = pd.DataFrame()
+    files = [i for i in os.listdir(folder_path) if i.endswith(&#34;.nc&#34;)]
+    for i, file_name in enumerate(files):
+        saved_file_path = os.path.join(folder_path, file_name)
+        data_temp = read_netcdf(saved_file_path)
+        if i == 0:
+            data = data_temp.copy()
+        else:
+            data = data.merge(data_temp, on=[&#34;latitude&#34;, &#34;longitude&#34;], how=&#34;outer&#34;)
+
+    # Guarda horário do arquivo na coluna
+    data[&#34;horario&#34;] = pendulum.from_format(
+        datetime_save, &#34;YYYYMMDD HHmmss&#34;
+    ).to_time_string()
+
+    print(f&#34;Final df: {data.head()}&#34;)
+    # Fixa ordem das colunas
+    data = data[[&#34;longitude&#34;, &#34;latitude&#34;, &#34;horario&#34;] + [i.lower() for i in variable]]
+    print(&#34;cols&#34;, data.columns)
+
+    file_name = files[0].split(&#34;_variable-&#34;)[0]
+    print(f&#34;\n\n[DEGUB]: Saving {file_name} on {output_path}\n&#34;)
+    print(f&#34;Data_save: {date_save}, time_save: {time_save}&#34;)
+    # log(f&#34;\n\n[DEGUB]: Saving {file_name} on {parquet_path}\n\n&#34;)
+    # log(f&#34;Data_save: {date_save}, time_save: {time_save}&#34;)
+    file_path = os.path.join(partitions_path, f&#34;{file_name}.csv&#34;)
+    data.to_csv(file_path, index=False)
+    return output_path, file_path</code></pre>
+</details>
 <div class="desc"><p>Read all nc or tif files and save them in a unique file inside a partition</p></div>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.satellite_utils.upload_image_to_api"><code class="name flex">
 <span>def <span class="ident">upload_image_to_api</span></span>(<span>info: dict, save_image_path: pathlib.Path)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def upload_image_to_api(info: dict, save_image_path: Path):
+    &#34;&#34;&#34;
+    Upload image to api
+    &#34;&#34;&#34;
+    username = &#34;your-username&#34;
+    password = &#34;your-password&#34;
+
+    image = base64.b64encode(open(save_image_path, &#34;rb&#34;).read()).decode()
+
+    response = requests.post(
+        &#34;https://api.example.com/upload-image&#34;,
+        data={&#34;image&#34;: image, &#34;timestamp&#34;: info[&#34;datetime_save&#34;]},
+        auth=(username, password),
+    )
+
+    if response.status_code == 200:
+        print(&#34;Image sent to API&#34;)
+    else:
+        print(&#34;Problem senting imagem to API&#34;)</code></pre>
+</details>
 <div class="desc"><p>Upload image to api</p></div>
 </dd>
 </dl>
@@ -236,7 +928,7 @@ setTimeout(() => input.focus(), 100);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
 </footer>
 </body>
 </html>

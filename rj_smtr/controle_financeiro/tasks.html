@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.1">
+<meta name="generator" content="pdoc3 0.11.5">
 <title>pipelines.rj_smtr.controle_financeiro.tasks API documentation</title>
 <meta name="description" content="tasks for rj-smtr.controle_financeiro">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -38,6 +49,62 @@ hljs.highlightAll();
 <span>def <span class="ident">cct_arquivo_retorno_save_redis</span></span>(<span>redis_key: str, raw_filepath: str)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def cct_arquivo_retorno_save_redis(redis_key: str, raw_filepath: str):
+    &#34;&#34;&#34;
+    Set control info on Redis
+
+    Args:
+        redis_key (str): Key on Redis
+        raw_filepath (str): Filepath to raw data
+    &#34;&#34;&#34;
+    df = pd.read_json(raw_filepath)
+    df[&#34;dataOrdem&#34;] = pd.to_datetime(df[&#34;dataOrdem&#34;]).dt.strftime(&#34;%Y-%m-%d&#34;)
+    all_returned_dates = df[&#34;dataOrdem&#34;].unique().tolist()
+    df = (
+        df.groupby(  # pylint: disable=E1101
+            [
+                &#34;idConsorcio&#34;,
+                &#34;idOperadora&#34;,
+                &#34;dataOrdem&#34;,
+            ]
+        )[&#34;isPago&#34;]
+        .max()
+        .reset_index()
+    )
+    pending_dates = df.loc[~df[&#34;isPago&#34;]][&#34;dataOrdem&#34;].unique().tolist()
+
+    log(f&#34;The API returned the following dates: {sorted(all_returned_dates)}&#34;)
+    log(f&#34;the following dates are not paid: {sorted(pending_dates)}&#34;)
+
+    redis_client = get_redis_client()
+    redis_return = redis_client.get(redis_key)
+
+    if redis_return is None:
+        redis_return = {}
+
+    redis_return[&#34;last_date&#34;] = max(
+        [df[&#34;dataOrdem&#34;].max(), redis_return.get(&#34;last_date&#34;, &#34;2024-05-09&#34;)]
+    )
+
+    redis_return[&#34;pending_dates&#34;] = pending_dates + [
+        d for d in redis_return.get(&#34;pending_dates&#34;, []) if d not in all_returned_dates
+    ]
+
+    log(
+        f&#34;&#34;&#34;
+        Saving values on redis
+        last_date: {redis_return[&#34;last_date&#34;]}
+        pending_dates: {sorted(redis_return[&#34;pending_dates&#34;])}
+        &#34;&#34;&#34;
+    )
+
+    redis_client.set(redis_key, redis_return)</code></pre>
+</details>
 <div class="desc"><p>Set control info on Redis</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -48,9 +115,68 @@ hljs.highlightAll();
 </dl></div>
 </dd>
 <dt id="pipelines.rj_smtr.controle_financeiro.tasks.create_cct_arquivo_retorno_params"><code class="name flex">
-<span>def <span class="ident">create_cct_arquivo_retorno_params</span></span>(<span>redis_key: str, start_date: Optional[str], end_date: Optional[str]) ‑> tuple[dict, list[dict]]</span>
+<span>def <span class="ident">create_cct_arquivo_retorno_params</span></span>(<span>redis_key: str, start_date: str | None, end_date: str | None) ‑> tuple[dict, list[dict]]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(nout=2)
+def create_cct_arquivo_retorno_params(
+    redis_key: str, start_date: Union[str, None], end_date: Union[str, None]
+) -&gt; tuple[dict, list[dict]]:
+    &#34;&#34;&#34;
+    Create parameters to get data from cct api&#39;s arquivoPublicacao
+
+    Args:
+        redis_key (str): Redis key to get pending dates
+        start_date (str): Initial data_ordem to filter
+        end_date (str): Final data_ordem to filter
+
+    Returns:
+        dict: headers
+        list[dict]: parameters
+    &#34;&#34;&#34;
+    auth_resp = requests.post(
+        f&#34;{constants.CCT_API_BASE_URL.value}/auth/admin/email/login&#34;,
+        data=get_vault_secret(constants.CCT_API_SECRET_PATH.value)[&#34;data&#34;],
+    )
+    auth_resp.raise_for_status()
+    headers = {&#34;Authorization&#34;: f&#34;Bearer {auth_resp.json()[&#39;token&#39;]}&#34;}
+
+    if start_date is not None and end_date is not None:
+        return headers, [
+            {
+                &#34;dt_inicio&#34;: start_date,
+                &#34;dt_fim&#34;: end_date,
+            }
+        ]
+
+    redis_client = get_redis_client()
+
+    log(f&#34;Getting pending dates on Redis. key = {redis_key}&#34;)
+    redis_return = redis_client.get(redis_key)
+    log(f&#34;Got value from Redis: {redis_return}&#34;)
+
+    if redis_return is None:
+        params = [
+            {
+                &#34;dt_inicio&#34;: &#34;2024-05-09&#34;,
+                &#34;dt_fim&#34;: date.today().isoformat(),
+            }
+        ]
+
+    else:
+        pending_dates = redis_return[&#34;pending_dates&#34;]
+
+        params = get_date_ranges(
+            last_date=redis_return[&#34;last_date&#34;],
+            pending_dates=pending_dates,
+        )
+
+    return headers, params</code></pre>
+</details>
 <div class="desc"><p>Create parameters to get data from cct api's arquivoPublicacao</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -73,6 +199,29 @@ hljs.highlightAll();
 <span>def <span class="ident">get_cct_arquivo_retorno_redis_key</span></span>(<span>mode: str) ‑> str</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_cct_arquivo_retorno_redis_key(mode: str) -&gt; str:
+    &#34;&#34;&#34;
+    Gets the key to search and store pending dates on Redis
+
+    Args:
+        mode (str): dev or prod
+
+    Returns:
+        str: Redis key
+    &#34;&#34;&#34;
+    return (
+        mode
+        + &#34;.&#34;
+        + smtr_constants.CONTROLE_FINANCEIRO_DATASET_ID.value
+        + &#34;.&#34;
+        + constants.ARQUIVO_RETORNO_TABLE_ID.value
+    )</code></pre>
+</details>
 <div class="desc"><p>Gets the key to search and store pending dates on Redis</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -89,6 +238,48 @@ hljs.highlightAll();
 <span>def <span class="ident">get_raw_cct_arquivo_retorno</span></span>(<span>headers: dict, params: list[dict], local_filepath: str) ‑> str</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_raw_cct_arquivo_retorno(
+    headers: dict, params: list[dict], local_filepath: str
+) -&gt; str:
+    &#34;&#34;&#34;
+    Get data from cct api arquivoPublicacao
+
+    Args:
+        headers (dict): Request headers
+        params (list[dict]): List of request query params
+        local_filepath (str): Path to save the data
+
+    Returns:
+        str: filepath to raw data
+    &#34;&#34;&#34;
+    data = []
+    url = f&#34;{constants.CCT_API_BASE_URL.value}/cnab/arquivoPublicacao&#34;
+    for param in params:
+        log(
+            f&#34;&#34;&#34;Getting raw data:
+            url: {url},
+            params: {param}&#34;&#34;&#34;
+        )
+        resp = requests.get(
+            url,
+            headers=headers,
+            params=param,
+        )
+
+        resp.raise_for_status()
+        new_data = resp.json()
+
+        data += new_data
+
+        log(f&#34;returned {len(new_data)} rows&#34;)
+
+    return save_raw_local_func(data=data, filepath=local_filepath)</code></pre>
+</details>
 <div class="desc"><p>Get data from cct api arquivoPublicacao</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -178,7 +369,7 @@ setTimeout(() => input.focus(), 100);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
 </footer>
 </body>
 </html>

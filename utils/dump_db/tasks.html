@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.1">
+<meta name="generator" content="pdoc3 0.11.5">
 <title>pipelines.utils.dump_db.tasks API documentation</title>
 <meta name="description" content="General purpose tasks for dumping database data.">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -35,9 +46,50 @@ hljs.highlightAll();
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pipelines.utils.dump_db.tasks.database_execute"><code class="name flex">
-<span>def <span class="ident">database_execute</span></span>(<span>database: <a title="pipelines.utils.dump_db.db.Database" href="db.html#pipelines.utils.dump_db.db.Database">Database</a>, query: str, wait=None, flow_name: str = None, labels: List[str] = None, dataset_id: str = None, table_id: str = None) ‑> None</span>
+<span>def <span class="ident">database_execute</span></span>(<span>database: <a title="pipelines.utils.dump_db.db.Database" href="db.html#pipelines.utils.dump_db.db.Database">Database</a>,<br>query: str,<br>wait=None,<br>flow_name: str = None,<br>labels: List[str] = None,<br>dataset_id: str = None,<br>table_id: str = None) ‑> None</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    checkpoint=False,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def database_execute(
+    database: Database,
+    query: str,
+    wait=None,  # pylint: disable=unused-argument
+    flow_name: str = None,
+    labels: List[str] = None,
+    dataset_id: str = None,
+    table_id: str = None,
+) -&gt; None:
+    &#34;&#34;&#34;
+    Executes a query on the database.
+
+    Args:
+        database: The database object.
+        query: The query to execute.
+    &#34;&#34;&#34;
+    start_time = time()
+    log(f&#34;Query parsed: {query}&#34;)
+    query = remove_tabs_from_query(query)
+    log(f&#34;Executing query line: {query}&#34;)
+    database.execute_query(query)
+    time_elapsed = time() - start_time
+    doc = format_document(
+        flow_name=flow_name,
+        labels=labels,
+        event_type=&#34;db_execute&#34;,
+        dataset_id=dataset_id,
+        table_id=table_id,
+        metrics={&#34;db_execute&#34;: time_elapsed},
+    )
+    index_document(doc)</code></pre>
+</details>
 <div class="desc"><p>Executes a query on the database.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -48,15 +100,100 @@ hljs.highlightAll();
 </dl></div>
 </dd>
 <dt id="pipelines.utils.dump_db.tasks.database_fetch"><code class="name flex">
-<span>def <span class="ident">database_fetch</span></span>(<span>database: <a title="pipelines.utils.dump_db.db.Database" href="db.html#pipelines.utils.dump_db.db.Database">Database</a>, batch_size: str, wait=None, flow_name: str = None, labels: List[str] = None, dataset_id: str = None, table_id: str = None)</span>
+<span>def <span class="ident">database_fetch</span></span>(<span>database: <a title="pipelines.utils.dump_db.db.Database" href="db.html#pipelines.utils.dump_db.db.Database">Database</a>,<br>batch_size: str,<br>wait=None,<br>flow_name: str = None,<br>labels: List[str] = None,<br>dataset_id: str = None,<br>table_id: str = None)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    checkpoint=False,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def database_fetch(
+    database: Database,
+    batch_size: str,
+    wait=None,  # pylint: disable=unused-argument
+    flow_name: str = None,
+    labels: List[str] = None,
+    dataset_id: str = None,
+    table_id: str = None,
+):
+    &#34;&#34;&#34;
+    Fetches the results of a query on the database.
+    &#34;&#34;&#34;
+    start_time = time()
+    if batch_size == &#34;all&#34;:
+        log(f&#34;columns: {database.get_columns()}&#34;)
+        log(f&#34;All rows: { database.fetch_all()}&#34;)
+    else:
+        try:
+            batch_size_no = int(batch_size)
+        except ValueError as error:
+            raise ValueError(f&#34;Invalid batch size: {batch_size}&#34;) from error
+        log(f&#34;columns: {database.get_columns()}&#34;)
+        log(f&#34;{batch_size_no} rows: {database.fetch_batch(batch_size_no)}&#34;)
+    time_elapsed = time() - start_time
+    doc = format_document(
+        flow_name=flow_name,
+        labels=labels,
+        event_type=&#34;db_fetch&#34;,
+        dataset_id=dataset_id,
+        table_id=table_id,
+        metrics={&#34;db_fetch&#34;: time_elapsed},
+    )
+    index_document(doc)</code></pre>
+</details>
 <div class="desc"><p>Fetches the results of a query on the database.</p></div>
 </dd>
 <dt id="pipelines.utils.dump_db.tasks.database_get"><code class="name flex">
-<span>def <span class="ident">database_get</span></span>(<span>database_type: str, hostname: str, port: int, user: str, password: str, database: str, wait=None) ‑> <a title="pipelines.utils.dump_db.db.Database" href="db.html#pipelines.utils.dump_db.db.Database">Database</a></span>
+<span>def <span class="ident">database_get</span></span>(<span>database_type: str,<br>hostname: str,<br>port: int,<br>user: str,<br>password: str,<br>database: str,<br>wait=None) ‑> <a title="pipelines.utils.dump_db.db.Database" href="db.html#pipelines.utils.dump_db.db.Database">Database</a></span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    checkpoint=False,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def database_get(
+    database_type: str,
+    hostname: str,
+    port: int,
+    user: str,
+    password: str,
+    database: str,
+    wait=None,  # pylint: disable=unused-argument
+) -&gt; Database:
+    &#34;&#34;&#34;
+    Returns a database object.
+
+    Args:
+        database_type: The type of the database.
+        hostname: The hostname of the database.
+        port: The port of the database.
+        user: The username of the database.
+        password: The password of the database.
+        database: The database name.
+
+    Returns:
+        A database object.
+    &#34;&#34;&#34;
+    if database_type not in DATABASE_MAPPING:
+        raise ValueError(f&#34;Unknown database type: {database_type}&#34;)
+    return DATABASE_MAPPING[database_type](
+        hostname=hostname,
+        port=port,
+        user=user,
+        password=password,
+        database=database,
+    )</code></pre>
+</details>
 <div class="desc"><p>Returns a database object.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -77,27 +214,720 @@ hljs.highlightAll();
 <p>A database object.</p></div>
 </dd>
 <dt id="pipelines.utils.dump_db.tasks.dump_batches_to_file"><code class="name flex">
-<span>def <span class="ident">dump_batches_to_file</span></span>(<span>database: <a title="pipelines.utils.dump_db.db.Database" href="db.html#pipelines.utils.dump_db.db.Database">Database</a>, batch_size: int, prepath: Union[str, pathlib.Path], partition_columns: List[str] = None, batch_data_type: str = 'csv', wait=None, flow_name: str = None, labels: List[str] = None, dataset_id: str = None, table_id: str = None) ‑> pathlib.Path</span>
+<span>def <span class="ident">dump_batches_to_file</span></span>(<span>database: <a title="pipelines.utils.dump_db.db.Database" href="db.html#pipelines.utils.dump_db.db.Database">Database</a>,<br>batch_size: int,<br>prepath: str | pathlib.Path,<br>partition_columns: List[str] = None,<br>batch_data_type: str = 'csv',<br>wait=None,<br>flow_name: str = None,<br>labels: List[str] = None,<br>dataset_id: str = None,<br>table_id: str = None) ‑> pathlib.Path</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+    nout=2,
+)
+def dump_batches_to_file(  # pylint: disable=too-many-locals,too-many-statements
+    database: Database,
+    batch_size: int,
+    prepath: Union[str, Path],
+    partition_columns: List[str] = None,
+    batch_data_type: str = &#34;csv&#34;,
+    wait=None,  # pylint: disable=unused-argument
+    flow_name: str = None,
+    labels: List[str] = None,
+    dataset_id: str = None,
+    table_id: str = None,
+) -&gt; Path:
+    &#34;&#34;&#34;
+    Dumps batches of data to FILE.
+    &#34;&#34;&#34;
+    # Get columns
+    columns = database.get_columns()
+    log(f&#34;Got columns: {columns}&#34;)
+
+    new_query_cols = build_query_new_columns(table_columns=columns)
+    log(&#34;New query columns without accents:&#34;)
+    log(f&#34;{new_query_cols}&#34;)
+
+    prepath = Path(prepath)
+    log(f&#34;Got prepath: {prepath}&#34;)
+
+    if not partition_columns or partition_columns[0] == &#34;&#34;:
+        partition_column = None
+    else:
+        partition_column = partition_columns[0]
+
+    if not partition_column:
+        log(&#34;NO partition column specified! Writing unique files&#34;)
+    else:
+        log(f&#34;Partition column: {partition_column} FOUND!! Write to partitioned files&#34;)
+
+    # Initialize queues
+    batches = Queue()
+    dataframes = Queue()
+
+    # Define thread functions
+    def thread_batch_to_dataframe(
+        batches: Queue,
+        dataframes: Queue,
+        done: Event,
+        columns: List[str],
+        flow_name: str,
+        labels: List[str],
+        dataset_id: str,
+        table_id: str,
+    ):
+        while not done.is_set():
+            try:
+                batch = batches.get(timeout=1)
+                start_time = time()
+                dataframe = batch_to_dataframe(batch, columns)
+                elapsed_time = time() - start_time
+                dataframes.put(dataframe)
+                doc = format_document(
+                    flow_name=flow_name,
+                    labels=labels,
+                    event_type=&#34;batch_to_dataframe&#34;,
+                    dataset_id=dataset_id,
+                    table_id=table_id,
+                    metrics={&#34;batch_to_dataframe&#34;: elapsed_time},
+                )
+                index_document(doc)
+                batches.task_done()
+            except Empty:
+                sleep(1)
+
+    def thread_dataframe_to_csv(
+        dataframes: Queue,
+        done: Event,
+        flow_name: str,
+        labels: List[str],
+        dataset_id: str,
+        table_id: str,
+        partition_column: str,
+        partition_columns: List[str],
+        prepath: Path,
+        batch_data_type: str,
+        eventid: str,
+    ):
+        while not done.is_set():
+            try:
+                # Get dataframe from queue
+                dataframe: pd.DataFrame = dataframes.get(timeout=1)
+                # Clean dataframe
+                start_time = time()
+                old_columns = dataframe.columns.tolist()
+                dataframe.columns = remove_columns_accents(dataframe)
+                new_columns_dict = dict(zip(old_columns, dataframe.columns.tolist()))
+                dataframe = clean_dataframe(dataframe)
+                elapsed_time = time() - start_time
+                doc = format_document(
+                    flow_name=flow_name,
+                    labels=labels,
+                    event_type=&#34;clean_dataframe&#34;,
+                    dataset_id=dataset_id,
+                    table_id=table_id,
+                    metrics={&#34;clean_dataframe&#34;: elapsed_time},
+                )
+                index_document(doc)
+                # Dump dataframe to file
+                start_time = time()
+                if partition_column:
+                    dataframe, date_partition_columns = parse_date_columns(
+                        dataframe, new_columns_dict[partition_column]
+                    )
+                    partitions = date_partition_columns + [
+                        new_columns_dict[col] for col in partition_columns[1:]
+                    ]
+                    to_partitions(
+                        data=dataframe,
+                        partition_columns=partitions,
+                        savepath=prepath,
+                        data_type=batch_data_type,
+                    )
+                elif batch_data_type == &#34;csv&#34;:
+                    dataframe_to_csv(dataframe, prepath / f&#34;{eventid}-{uuid4()}.csv&#34;)
+                elif batch_data_type == &#34;parquet&#34;:
+                    dataframe_to_parquet(
+                        dataframe, prepath / f&#34;{eventid}-{uuid4()}.parquet&#34;
+                    )
+                elapsed_time = time() - start_time
+                doc = format_document(
+                    flow_name=flow_name,
+                    labels=labels,
+                    event_type=f&#34;batch_to_{batch_data_type}&#34;,
+                    dataset_id=dataset_id,
+                    table_id=table_id,
+                    metrics={f&#34;batch_to_{batch_data_type}&#34;: elapsed_time},
+                )
+                index_document(doc)
+                dataframes.task_done()
+            except Empty:
+                sleep(1)
+
+    # Initialize threads
+    done = Event()
+    eventid = datetime.now().strftime(&#34;%Y%m%d-%H%M%S&#34;)
+    worker_batch_to_dataframe = Thread(
+        target=thread_batch_to_dataframe,
+        args=(
+            batches,
+            dataframes,
+            done,
+            columns,
+            flow_name,
+            labels,
+            dataset_id,
+            table_id,
+        ),
+    )
+    worker_dataframe_to_csv = Thread(
+        target=thread_dataframe_to_csv,
+        args=(
+            dataframes,
+            done,
+            flow_name,
+            labels,
+            dataset_id,
+            table_id,
+            partition_column,
+            partition_columns,
+            prepath,
+            batch_data_type,
+            eventid,
+        ),
+    )
+    worker_batch_to_dataframe.start()
+    worker_dataframe_to_csv.start()
+
+    # Dump batches
+    start_fetch_batch = time()
+    batch = database.fetch_batch(batch_size)
+    time_fetch_batch = time() - start_fetch_batch
+    doc = format_document(
+        flow_name=flow_name,
+        labels=labels,
+        event_type=&#34;fetch_batch&#34;,
+        dataset_id=dataset_id,
+        table_id=table_id,
+        metrics={&#34;fetch_batch&#34;: time_fetch_batch},
+    )
+    index_document(doc)
+    idx = 0
+    while len(batch) &gt; 0:
+        if idx % 100 == 0:
+            log(f&#34;Dumping batch {idx} with size {len(batch)}&#34;)
+        # Add current batch to queue
+        batches.put(batch)
+        # Get next batch
+        start_fetch_batch = time()
+        batch = database.fetch_batch(batch_size)
+        time_fetch_batch = time() - start_fetch_batch
+        doc = format_document(
+            flow_name=flow_name,
+            labels=labels,
+            event_type=&#34;fetch_batch&#34;,
+            dataset_id=dataset_id,
+            table_id=table_id,
+            metrics={&#34;fetch_batch&#34;: time_fetch_batch},
+        )
+        index_document(doc)
+        idx += 1
+
+    log(&#34;Waiting for batches queue...&#34;)
+    start_sleep = 1
+    max_sleep = 300
+    while batches.unfinished_tasks &gt; 0:
+        sleep(start_sleep)
+        start_sleep = min(start_sleep * 2, max_sleep)
+        log(
+            f&#34;Waiting for {batches.unfinished_tasks} batches to be parsed as dataframes...&#34;
+        )
+    batches.join()
+    start_sleep = 1
+    log(&#34;Waiting for dataframes queue...&#34;)
+    while dataframes.unfinished_tasks &gt; 0:
+        sleep(start_sleep)
+        start_sleep = min(start_sleep * 2, max_sleep)
+        log(f&#34;Waiting for {dataframes.unfinished_tasks} dataframes to be dumped...&#34;)
+    dataframes.join()
+    done.set()
+
+    log(&#34;Waiting for threads to finish...&#34;)
+    worker_batch_to_dataframe.join()
+    worker_dataframe_to_csv.join()
+
+    log(
+        f&#34;Successfully dumped {idx} batches with size {len(batch)}, total of {idx*batch_size}&#34;
+    )
+
+    return prepath, idx</code></pre>
+</details>
 <div class="desc"><p>Dumps batches of data to FILE.</p></div>
 </dd>
 <dt id="pipelines.utils.dump_db.tasks.dump_upload_batch"><code class="name flex">
-<span>def <span class="ident">dump_upload_batch</span></span>(<span>database: <a title="pipelines.utils.dump_db.db.Database" href="db.html#pipelines.utils.dump_db.db.Database">Database</a>, batch_size: int, dataset_id: str, table_id: str, dump_mode: str, partition_columns: List[str] = None, batch_data_type: str = 'csv', biglake_table: bool = True, log_number_of_batches: int = 100)</span>
+<span>def <span class="ident">dump_upload_batch</span></span>(<span>database: <a title="pipelines.utils.dump_db.db.Database" href="db.html#pipelines.utils.dump_db.db.Database">Database</a>,<br>batch_size: int,<br>dataset_id: str,<br>table_id: str,<br>dump_mode: str,<br>partition_columns: List[str] = None,<br>batch_data_type: str = 'csv',<br>biglake_table: bool = True,<br>log_number_of_batches: int = 100)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def dump_upload_batch(
+    database: Database,
+    batch_size: int,
+    dataset_id: str,
+    table_id: str,
+    dump_mode: str,
+    partition_columns: List[str] = None,
+    batch_data_type: str = &#34;csv&#34;,
+    biglake_table: bool = True,
+    log_number_of_batches: int = 100,
+):
+    &#34;&#34;&#34;
+    This task will dump and upload batches of data, sequentially.
+    &#34;&#34;&#34;
+    # Log BD version
+    bd_version = bd.__version__
+    log(f&#34;Using basedosdados@{bd_version}&#34;)
+
+    # Keep track of cleared stuff
+    prepath = f&#34;data/{uuid4()}/&#34;
+    cleared_partitions = set()
+    cleared_table = False
+
+    # Get data columns
+    columns = database.get_columns()
+    log(f&#34;Got columns: {columns}&#34;)
+
+    new_query_cols = build_query_new_columns(table_columns=columns)
+    log(f&#34;New query columns without accents: {new_query_cols}&#34;)
+
+    prepath = Path(prepath)
+    log(f&#34;Got prepath: {prepath}&#34;)
+
+    if not partition_columns or partition_columns[0] == &#34;&#34;:
+        partition_column = None
+    else:
+        partition_column = partition_columns[0]
+
+    if not partition_column:
+        log(&#34;NO partition column specified! Writing unique files&#34;)
+    else:
+        log(f&#34;Partition column: {partition_column} FOUND!! Write to partitioned files&#34;)
+
+    # Now loop until we have no more data.
+    batch = database.fetch_batch(batch_size)
+    idx = 0
+    while len(batch) &gt; 0:
+        # Log progress each 100 batches.
+        log_mod(
+            msg=f&#34;Dumping batch {idx} with size {len(batch)}&#34;,
+            index=idx,
+            mod=log_number_of_batches,
+        )
+
+        # Dump batch to file.
+        dataframe = batch_to_dataframe(batch, columns)
+        old_columns = dataframe.columns.tolist()
+        dataframe.columns = remove_columns_accents(dataframe)
+        new_columns_dict = dict(zip(old_columns, dataframe.columns.tolist()))
+        dataframe = clean_dataframe(dataframe)
+        saved_files = []
+        if partition_column:
+            dataframe, date_partition_columns = parse_date_columns(
+                dataframe, new_columns_dict[partition_column]
+            )
+            partitions = date_partition_columns + [
+                new_columns_dict[col] for col in partition_columns[1:]
+            ]
+            saved_files = to_partitions(
+                data=dataframe,
+                partition_columns=partitions,
+                savepath=prepath,
+                data_type=batch_data_type,
+                suffix=f&#34;{datetime.now().strftime(&#39;%Y%m%d-%H%M%S&#39;)}&#34;,
+            )
+        elif batch_data_type == &#34;csv&#34;:
+            fname = prepath / f&#34;{uuid4()}.csv&#34;
+            dataframe_to_csv(dataframe, fname)
+            saved_files = [fname]
+        elif batch_data_type == &#34;parquet&#34;:
+            fname = prepath / f&#34;{uuid4()}.parquet&#34;
+            dataframe_to_parquet(dataframe, fname)
+            saved_files = [fname]
+        else:
+            raise ValueError(f&#34;Unknown data type: {batch_data_type}&#34;)
+
+        # Log progress each 100 batches.
+
+        log_mod(
+            msg=f&#34;Batch generated {len(saved_files)} files. Will now upload.&#34;,
+            index=idx,
+            mod=log_number_of_batches,
+        )
+
+        # Upload files.
+        tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
+        table_staging = f&#34;{tb.table_full_name[&#39;staging&#39;]}&#34;
+        st = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+        storage_path = f&#34;{st.bucket_name}.staging.{dataset_id}.{table_id}&#34;
+        storage_path_link = (
+            f&#34;https://console.cloud.google.com/storage/browser/{st.bucket_name}&#34;
+            f&#34;/staging/{dataset_id}/{table_id}&#34;
+        )
+        dataset_is_public = tb.client[&#34;bigquery_prod&#34;].project == &#34;datario&#34;
+        # If we have a partition column
+        if partition_column:
+            # Extract the partition from the filenames
+            partitions = []
+            for saved_file in saved_files:
+                # Remove the prepath and filename. This is the partition.
+                partition = str(saved_file).replace(str(prepath), &#34;&#34;)
+                partition = partition.replace(saved_file.name, &#34;&#34;)
+                # Strip slashes from beginning and end.
+                partition = partition.strip(&#34;/&#34;)
+                # Add to list.
+                partitions.append(partition)
+            # Remove duplicates.
+            partitions = list(set(partitions))
+            log_mod(
+                msg=f&#34;Got partitions: {partitions}&#34;,
+                index=idx,
+                mod=log_number_of_batches,
+            )
+            # Loop through partitions and delete files from GCS.
+            blobs_to_delete = []
+            for partition in partitions:
+                if partition not in cleared_partitions:
+                    blobs = list_blobs_with_prefix(
+                        bucket_name=st.bucket_name,
+                        prefix=f&#34;staging/{dataset_id}/{table_id}/{partition}&#34;,
+                    )
+                    blobs_to_delete.extend(blobs)
+                cleared_partitions.add(partition)
+            if blobs_to_delete:
+                delete_blobs_list(bucket_name=st.bucket_name, blobs=blobs_to_delete)
+                log_mod(
+                    msg=f&#34;Deleted {len(blobs_to_delete)} blobs from GCS: {blobs_to_delete}&#34;,
+                    index=idx,
+                    mod=log_number_of_batches,
+                )
+        if dump_mode == &#34;append&#34;:
+            if tb.table_exists(mode=&#34;staging&#34;):
+                log_mod(
+                    msg=(
+                        &#34;MODE APPEND: Table ALREADY EXISTS:&#34;
+                        + f&#34;\n{table_staging}&#34;
+                        + f&#34;\n{storage_path_link}&#34;
+                    ),
+                    index=idx,
+                    mod=log_number_of_batches,
+                )
+            else:
+                # the header is needed to create a table when dosen&#39;t exist
+                log_mod(
+                    msg=&#34;MODE APPEND: Table DOESN&#39;T EXISTS\nStart to CREATE HEADER file&#34;,
+                    index=idx,
+                    mod=log_number_of_batches,
+                )
+                header_path = dump_header_to_file(data_path=saved_files[0])
+                log_mod(
+                    msg=&#34;MODE APPEND: Created HEADER file:\n&#34; f&#34;{header_path}&#34;,
+                    index=idx,
+                    mod=log_number_of_batches,
+                )
+
+                tb.create(
+                    path=header_path,
+                    if_storage_data_exists=&#34;replace&#34;,
+                    if_table_exists=&#34;replace&#34;,
+                    biglake_table=biglake_table,
+                    dataset_is_public=dataset_is_public,
+                )
+
+                log_mod(
+                    msg=(
+                        &#34;MODE APPEND: Sucessfully CREATED A NEW TABLE:\n&#34;
+                        + f&#34;{table_staging}\n&#34;
+                        + f&#34;{storage_path_link}&#34;
+                    ),
+                    index=idx,
+                    mod=log_number_of_batches,
+                )  # pylint: disable=C0301
+
+                if not cleared_table:
+                    st.delete_table(
+                        mode=&#34;staging&#34;,
+                        bucket_name=st.bucket_name,
+                        not_found_ok=True,
+                    )
+                    log_mod(
+                        msg=(
+                            &#34;MODE APPEND: Sucessfully REMOVED HEADER DATA from Storage:\n&#34;
+                            + f&#34;{storage_path}\n&#34;
+                            + f&#34;{storage_path_link}&#34;
+                        ),
+                        index=idx,
+                        mod=log_number_of_batches,
+                    )  # pylint: disable=C0301
+                    cleared_table = True
+        elif dump_mode == &#34;overwrite&#34;:
+            if tb.table_exists(mode=&#34;staging&#34;) and not cleared_table:
+                log_mod(
+                    msg=(
+                        &#34;MODE OVERWRITE: Table ALREADY EXISTS, DELETING OLD DATA!\n&#34;
+                        + f&#34;{storage_path}\n&#34;
+                        + f&#34;{storage_path_link}&#34;
+                    ),
+                    index=idx,
+                    mod=log_number_of_batches,
+                )  # pylint: disable=C0301
+                st.delete_table(
+                    mode=&#34;staging&#34;, bucket_name=st.bucket_name, not_found_ok=True
+                )
+                log_mod(
+                    msg=(
+                        &#34;MODE OVERWRITE: Sucessfully DELETED OLD DATA from Storage:\n&#34;
+                        + f&#34;{storage_path}\n&#34;
+                        + f&#34;{storage_path_link}&#34;
+                    ),
+                    index=idx,
+                    mod=log_number_of_batches,
+                )  # pylint: disable=C0301
+                # delete only staging table and let DBT overwrite the prod table
+                tb.delete(mode=&#34;staging&#34;)
+                log_mod(
+                    msg=(
+                        &#34;MODE OVERWRITE: Sucessfully DELETED TABLE:\n&#34;
+                        + f&#34;{table_staging}\n&#34;
+                    ),
+                    index=idx,
+                    mod=log_number_of_batches,
+                )  # pylint: disable=C0301
+
+            if not cleared_table:
+                # the header is needed to create a table when dosen&#39;t exist
+                # in overwrite mode the header is always created
+                st.delete_table(
+                    mode=&#34;staging&#34;, bucket_name=st.bucket_name, not_found_ok=True
+                )
+                log_mod(
+                    msg=(
+                        &#34;MODE OVERWRITE: Sucessfully DELETED OLD DATA from Storage:\n&#34;
+                        + f&#34;{storage_path}\n&#34;
+                        + f&#34;{storage_path_link}&#34;
+                    ),
+                    index=idx,
+                    mod=log_number_of_batches,
+                )  # pylint: disable=C0301
+
+                log_mod(
+                    msg=&#34;MODE OVERWRITE: Table DOSEN&#39;T EXISTS\nStart to CREATE HEADER file&#34;,
+                    index=idx,
+                    mod=log_number_of_batches,
+                )
+                header_path = dump_header_to_file(data_path=saved_files[0])
+                log_mod(
+                    &#34;MODE OVERWRITE: Created HEADER file:\n&#34; f&#34;{header_path}&#34;,
+                    index=idx,
+                    mod=log_number_of_batches,
+                )
+
+                tb.create(
+                    path=header_path,
+                    if_storage_data_exists=&#34;replace&#34;,
+                    if_table_exists=&#34;replace&#34;,
+                    biglake_table=biglake_table,
+                    dataset_is_public=dataset_is_public,
+                )
+
+                log_mod(
+                    msg=(
+                        &#34;MODE OVERWRITE: Sucessfully CREATED TABLE\n&#34;
+                        + f&#34;{table_staging}\n&#34;
+                        + f&#34;{storage_path_link}&#34;
+                    ),
+                    index=idx,
+                    mod=log_number_of_batches,
+                )
+
+                st.delete_table(
+                    mode=&#34;staging&#34;, bucket_name=st.bucket_name, not_found_ok=True
+                )
+                log_mod(
+                    msg=(
+                        f&#34;MODE OVERWRITE: Sucessfully REMOVED HEADER DATA from Storage\n:&#34;
+                        + f&#34;{storage_path}\n&#34;
+                        + f&#34;{storage_path_link}&#34;
+                    ),
+                    index=idx,
+                    mod=log_number_of_batches,
+                )  # pylint: disable=C0301
+                cleared_table = True
+
+        log_mod(
+            msg=&#34;STARTING UPLOAD TO GCS&#34;,
+            index=idx,
+            mod=log_number_of_batches,
+        )
+        if tb.table_exists(mode=&#34;staging&#34;):
+            # Upload them all at once
+            tb.append(filepath=prepath, if_exists=&#34;replace&#34;)
+            log_mod(
+                msg=&#34;STEP UPLOAD: Sucessfully uploaded all batch files to Storage&#34;,
+                index=idx,
+                mod=log_number_of_batches,
+            )
+            for saved_file in saved_files:
+                # Delete the files
+                saved_file.unlink()
+        else:
+            # pylint: disable=C0301
+            log_mod(
+                msg=&#34;STEP UPLOAD: Table does not exist in STAGING, need to create first&#34;,
+                index=idx,
+                mod=log_number_of_batches,
+            )
+
+        # Get next batch.
+        batch = database.fetch_batch(batch_size)
+        idx += 1
+
+    log(
+        msg=f&#34;Successfully dumped {idx} batches with size {len(batch)}, total of {idx*batch_size}&#34;,
+    )</code></pre>
+</details>
 <div class="desc"><p>This task will dump and upload batches of data, sequentially.</p></div>
 </dd>
 <dt id="pipelines.utils.dump_db.tasks.format_partitioned_query"><code class="name flex">
-<span>def <span class="ident">format_partitioned_query</span></span>(<span>query: str, dataset_id: str, table_id: str, database_type: str, partition_columns: List[str] = None, lower_bound_date: str = None, date_format: str = None, wait=None)</span>
+<span>def <span class="ident">format_partitioned_query</span></span>(<span>query: str,<br>dataset_id: str,<br>table_id: str,<br>database_type: str,<br>partition_columns: List[str] = None,<br>lower_bound_date: str = None,<br>date_format: str = None,<br>wait=None)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    checkpoint=False,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def format_partitioned_query(
+    query: str,
+    dataset_id: str,
+    table_id: str,
+    database_type: str,
+    partition_columns: List[str] = None,
+    lower_bound_date: str = None,
+    date_format: str = None,
+    wait=None,  # pylint: disable=unused-argument
+):
+    &#34;&#34;&#34;
+    Formats a query for fetching partitioned data.
+    &#34;&#34;&#34;
+    # If no partition column is specified, return the query as is.
+    if not partition_columns or partition_columns[0] == &#34;&#34;:
+        log(&#34;NO partition column specified. Returning query as is&#34;)
+        return query
+
+    partition_column = partition_columns[0]
+
+    # Check if the table already exists in BigQuery.
+    table = bd.Table(dataset_id, table_id)
+
+    # If it doesn&#39;t, return the query as is, so we can fetch the whole table.
+    if not table.table_exists(mode=&#34;staging&#34;):
+        log(&#34;NO tables was found. Returning query as is&#34;)
+        return query
+
+    blobs = get_storage_blobs(dataset_id, table_id)
+
+    # extract only partitioned folders
+    storage_partitions_dict = parser_blobs_to_partition_dict(blobs)
+    # get last partition date
+    last_partition_date = extract_last_partition_date(
+        storage_partitions_dict, date_format
+    )
+
+    if lower_bound_date == &#34;current_year&#34;:
+        lower_bound_date = datetime.now().replace(month=1, day=1).strftime(&#34;%Y-%m-%d&#34;)
+        log(f&#34;Using lower_bound_date current_year: {lower_bound_date}&#34;)
+    elif lower_bound_date == &#34;current_month&#34;:
+        lower_bound_date = datetime.now().replace(day=1).strftime(&#34;%Y-%m-%d&#34;)
+        log(f&#34;Using lower_bound_date current_month: {lower_bound_date}&#34;)
+    elif lower_bound_date == &#34;current_day&#34;:
+        lower_bound_date = datetime.now().strftime(&#34;%Y-%m-%d&#34;)
+        log(f&#34;Using lower_bound_date current_day: {lower_bound_date}&#34;)
+
+    if lower_bound_date:
+        last_date = min(str(lower_bound_date), str(last_partition_date))
+        log(f&#34;Using lower_bound_date: {last_date}&#34;)
+
+    else:
+        last_date = str(last_partition_date)
+        log(f&#34;Using last_date from storage: {last_date}&#34;)
+
+    # Using the last partition date, get the partitioned query.
+    # `aux_name` must be unique and start with a letter, for better compatibility with
+    # multiple DBMSs.
+    aux_name = f&#34;a{uuid4().hex}&#34;[:8]
+
+    log(
+        f&#34;Partitioned DETECTED: {partition_column}, retuning a NEW QUERY &#34;
+        &#34;with partitioned columns and filters&#34;
+    )
+    if database_type == &#34;oracle&#34;:
+        oracle_date_format = &#34;YYYY-MM-DD&#34; if date_format == &#34;%Y-%m-%d&#34; else date_format
+
+        return f&#34;&#34;&#34;
+        with {aux_name} as ({query})
+        select * from {aux_name}
+        where {partition_column} &gt;= TO_DATE(&#39;{last_date}&#39;, &#39;{oracle_date_format}&#39;)
+        &#34;&#34;&#34;
+
+    return f&#34;&#34;&#34;
+    with {aux_name} as ({query})
+    select * from {aux_name}
+    where {partition_column} &gt;= &#39;{last_date}&#39;
+    &#34;&#34;&#34;</code></pre>
+</details>
 <div class="desc"><p>Formats a query for fetching partitioned data.</p></div>
 </dd>
 <dt id="pipelines.utils.dump_db.tasks.parse_comma_separated_string_to_list"><code class="name flex">
 <span>def <span class="ident">parse_comma_separated_string_to_list</span></span>(<span>text: str) ‑> List[str]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def parse_comma_separated_string_to_list(text: str) -&gt; List[str]:
+    &#34;&#34;&#34;
+    Parses a comma separated string to a list.
+
+    Args:
+        text: The text to parse.
+
+    Returns:
+        A list of strings.
+    &#34;&#34;&#34;
+    if text is None or not text:
+        return []
+    # Remove extras.
+    text = text.replace(&#34;\n&#34;, &#34;&#34;)
+    text = text.replace(&#34;\r&#34;, &#34;&#34;)
+    text = text.replace(&#34;\t&#34;, &#34;&#34;)
+    while &#34;,,&#34; in text:
+        text = text.replace(&#34;,,&#34;, &#34;,&#34;)
+    while text.endswith(&#34;,&#34;):
+        text = text[:-1]
+    result = [x.strip() for x in text.split(&#34;,&#34;)]
+    result = [item for item in result if item != &#34;&#34; and item is not None]
+    return result</code></pre>
+</details>
 <div class="desc"><p>Parses a comma separated string to a list.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -183,7 +1013,7 @@ setTimeout(() => input.focus(), 100);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
 </footer>
 </body>
 </html>

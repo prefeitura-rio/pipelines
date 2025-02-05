@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.1">
+<meta name="generator" content="pdoc3 0.11.5">
 <title>pipelines.utils.dump_db.db API documentation</title>
 <meta name="description" content="Database definitions for SQL pipelines.">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -41,21 +52,6 @@ hljs.highlightAll();
 <span>(</span><span>hostname: str, port: int, user: str, password: str, database: str)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Database abstract class.</p>
-<p>Initializes the database.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>hostname</code></strong></dt>
-<dd>The hostname of the database.</dd>
-<dt><strong><code>port</code></strong></dt>
-<dd>The port of the database.</dd>
-<dt><strong><code>user</code></strong></dt>
-<dd>The username of the database.</dd>
-<dt><strong><code>password</code></strong></dt>
-<dd>The password of the database.</dd>
-<dt><strong><code>database</code></strong></dt>
-<dd>The database name.</dd>
-</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -131,6 +127,21 @@ hljs.highlightAll();
         Fetches all rows from the database.
         &#34;&#34;&#34;</code></pre>
 </details>
+<div class="desc"><p>Database abstract class.</p>
+<p>Initializes the database.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>hostname</code></strong></dt>
+<dd>The hostname of the database.</dd>
+<dt><strong><code>port</code></strong></dt>
+<dd>The port of the database.</dd>
+<dt><strong><code>user</code></strong></dt>
+<dd>The username of the database.</dd>
+<dt><strong><code>password</code></strong></dt>
+<dd>The password of the database.</dd>
+<dt><strong><code>database</code></strong></dt>
+<dd>The database name.</dd>
+</dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>abc.ABC</li>
@@ -147,12 +158,35 @@ hljs.highlightAll();
 <span>def <span class="ident">connect</span></span>(<span>self)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def connect(self):
+    &#34;&#34;&#34;
+    Connect to the database.
+    &#34;&#34;&#34;</code></pre>
+</details>
 <div class="desc"><p>Connect to the database.</p></div>
 </dd>
 <dt id="pipelines.utils.dump_db.db.Database.execute_query"><code class="name flex">
 <span>def <span class="ident">execute_query</span></span>(<span>self, query: str) ‑> None</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def execute_query(self, query: str) -&gt; None:
+    &#34;&#34;&#34;
+    Execute query on the database.
+
+    Args:
+        query: The query to execute.
+    &#34;&#34;&#34;</code></pre>
+</details>
 <div class="desc"><p>Execute query on the database.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -164,24 +198,64 @@ hljs.highlightAll();
 <span>def <span class="ident">fetch_all</span></span>(<span>self) ‑> List[List]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def fetch_all(self) -&gt; List[List]:
+    &#34;&#34;&#34;
+    Fetches all rows from the database.
+    &#34;&#34;&#34;</code></pre>
+</details>
 <div class="desc"><p>Fetches all rows from the database.</p></div>
 </dd>
 <dt id="pipelines.utils.dump_db.db.Database.fetch_batch"><code class="name flex">
 <span>def <span class="ident">fetch_batch</span></span>(<span>self, batch_size: int) ‑> List[List]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def fetch_batch(self, batch_size: int) -&gt; List[List]:
+    &#34;&#34;&#34;
+    Fetches a batch of rows from the database.
+    &#34;&#34;&#34;</code></pre>
+</details>
 <div class="desc"><p>Fetches a batch of rows from the database.</p></div>
 </dd>
 <dt id="pipelines.utils.dump_db.db.Database.get_columns"><code class="name flex">
 <span>def <span class="ident">get_columns</span></span>(<span>self) ‑> List[str]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def get_columns(self) -&gt; List[str]:
+    &#34;&#34;&#34;
+    Returns the column names of the database.
+    &#34;&#34;&#34;</code></pre>
+</details>
 <div class="desc"><p>Returns the column names of the database.</p></div>
 </dd>
 <dt id="pipelines.utils.dump_db.db.Database.get_cursor"><code class="name flex">
 <span>def <span class="ident">get_cursor</span></span>(<span>self)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def get_cursor(self):
+    &#34;&#34;&#34;
+    Returns a cursor for the database.
+    &#34;&#34;&#34;</code></pre>
+</details>
 <div class="desc"><p>Returns a cursor for the database.</p></div>
 </dd>
 </dl>
@@ -191,21 +265,6 @@ hljs.highlightAll();
 <span>(</span><span>hostname: str, user: str, password: str, database: str, port: int = 3306)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MySQL database.</p>
-<p>Initializes the MySQL database.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>hostname</code></strong></dt>
-<dd>The hostname of the database.</dd>
-<dt><strong><code>port</code></strong></dt>
-<dd>The port of the database.</dd>
-<dt><strong><code>user</code></strong></dt>
-<dd>The username of the database.</dd>
-<dt><strong><code>password</code></strong></dt>
-<dd>The password of the database.</dd>
-<dt><strong><code>database</code></strong></dt>
-<dd>The database name.</dd>
-</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -289,63 +348,8 @@ hljs.highlightAll();
         &#34;&#34;&#34;
         return [list(item) for item in self._cursor.fetchall()]</code></pre>
 </details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="pipelines.utils.dump_db.db.Database" href="#pipelines.utils.dump_db.db.Database">Database</a></li>
-<li>abc.ABC</li>
-</ul>
-<h3>Methods</h3>
-<dl>
-<dt id="pipelines.utils.dump_db.db.MySql.connect"><code class="name flex">
-<span>def <span class="ident">connect</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Connect to the MySQL.</p></div>
-</dd>
-<dt id="pipelines.utils.dump_db.db.MySql.execute_query"><code class="name flex">
-<span>def <span class="ident">execute_query</span></span>(<span>self, query: str) ‑> None</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Execute query on the MySQL.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>query</code></strong></dt>
-<dd>The query to execute.</dd>
-</dl></div>
-</dd>
-<dt id="pipelines.utils.dump_db.db.MySql.fetch_all"><code class="name flex">
-<span>def <span class="ident">fetch_all</span></span>(<span>self) ‑> List[List]</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Fetches all rows from the MySQL.</p></div>
-</dd>
-<dt id="pipelines.utils.dump_db.db.MySql.fetch_batch"><code class="name flex">
-<span>def <span class="ident">fetch_batch</span></span>(<span>self, batch_size: int) ‑> List[List]</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Fetches a batch of rows from the MySQL.</p></div>
-</dd>
-<dt id="pipelines.utils.dump_db.db.MySql.get_columns"><code class="name flex">
-<span>def <span class="ident">get_columns</span></span>(<span>self) ‑> List[str]</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Returns the column names of the MySQL.</p></div>
-</dd>
-<dt id="pipelines.utils.dump_db.db.MySql.get_cursor"><code class="name flex">
-<span>def <span class="ident">get_cursor</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Returns a cursor for the MySQL.</p></div>
-</dd>
-</dl>
-</dd>
-<dt id="pipelines.utils.dump_db.db.Oracle"><code class="flex name class">
-<span>class <span class="ident">Oracle</span></span>
-<span>(</span><span>hostname: str, user: str, password: str, database: str, port: int = 1521)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Oracle Database</p>
-<p>Initializes the Oracle database.</p>
+<div class="desc"><p>MySQL database.</p>
+<p>Initializes the MySQL database.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>hostname</code></strong></dt>
@@ -359,6 +363,131 @@ hljs.highlightAll();
 <dt><strong><code>database</code></strong></dt>
 <dd>The database name.</dd>
 </dl></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pipelines.utils.dump_db.db.Database" href="#pipelines.utils.dump_db.db.Database">Database</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="pipelines.utils.dump_db.db.MySql.connect"><code class="name flex">
+<span>def <span class="ident">connect</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def connect(self):
+    &#34;&#34;&#34;
+    Connect to the MySQL.
+    &#34;&#34;&#34;
+    # pylint: disable=E1101
+    return pymysql.connect(
+        host=self._hostname,
+        port=self._port,
+        user=self._user,
+        password=self._password,
+        database=self._database,
+    )</code></pre>
+</details>
+<div class="desc"><p>Connect to the MySQL.</p></div>
+</dd>
+<dt id="pipelines.utils.dump_db.db.MySql.execute_query"><code class="name flex">
+<span>def <span class="ident">execute_query</span></span>(<span>self, query: str) ‑> None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def execute_query(self, query: str) -&gt; None:
+    &#34;&#34;&#34;
+    Execute query on the MySQL.
+
+    Args:
+        query: The query to execute.
+    &#34;&#34;&#34;
+    self._cursor.execute(query)</code></pre>
+</details>
+<div class="desc"><p>Execute query on the MySQL.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>query</code></strong></dt>
+<dd>The query to execute.</dd>
+</dl></div>
+</dd>
+<dt id="pipelines.utils.dump_db.db.MySql.fetch_all"><code class="name flex">
+<span>def <span class="ident">fetch_all</span></span>(<span>self) ‑> List[List]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fetch_all(self) -&gt; List[List]:
+    &#34;&#34;&#34;
+    Fetches all rows from the MySQL.
+    &#34;&#34;&#34;
+    return [list(item) for item in self._cursor.fetchall()]</code></pre>
+</details>
+<div class="desc"><p>Fetches all rows from the MySQL.</p></div>
+</dd>
+<dt id="pipelines.utils.dump_db.db.MySql.fetch_batch"><code class="name flex">
+<span>def <span class="ident">fetch_batch</span></span>(<span>self, batch_size: int) ‑> List[List]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fetch_batch(self, batch_size: int) -&gt; List[List]:
+    &#34;&#34;&#34;
+    Fetches a batch of rows from the MySQL.
+    &#34;&#34;&#34;
+    return [list(item) for item in self._cursor.fetchmany(batch_size)]</code></pre>
+</details>
+<div class="desc"><p>Fetches a batch of rows from the MySQL.</p></div>
+</dd>
+<dt id="pipelines.utils.dump_db.db.MySql.get_columns"><code class="name flex">
+<span>def <span class="ident">get_columns</span></span>(<span>self) ‑> List[str]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_columns(self) -&gt; List[str]:
+    &#34;&#34;&#34;
+    Returns the column names of the MySQL.
+    &#34;&#34;&#34;
+    return [column[0] for column in self._cursor.description]</code></pre>
+</details>
+<div class="desc"><p>Returns the column names of the MySQL.</p></div>
+</dd>
+<dt id="pipelines.utils.dump_db.db.MySql.get_cursor"><code class="name flex">
+<span>def <span class="ident">get_cursor</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_cursor(self):
+    &#34;&#34;&#34;
+    Returns a cursor for the MySQL.
+    &#34;&#34;&#34;
+    return self._connection.cursor()</code></pre>
+</details>
+<div class="desc"><p>Returns a cursor for the MySQL.</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="pipelines.utils.dump_db.db.Oracle"><code class="flex name class">
+<span>class <span class="ident">Oracle</span></span>
+<span>(</span><span>hostname: str, user: str, password: str, database: str, port: int = 1521)</span>
+</code></dt>
+<dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -438,6 +567,21 @@ hljs.highlightAll();
         &#34;&#34;&#34;
         return [list(item) for item in self._cursor.fetchall()]</code></pre>
 </details>
+<div class="desc"><p>Oracle Database</p>
+<p>Initializes the Oracle database.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>hostname</code></strong></dt>
+<dd>The hostname of the database.</dd>
+<dt><strong><code>port</code></strong></dt>
+<dd>The port of the database.</dd>
+<dt><strong><code>user</code></strong></dt>
+<dd>The username of the database.</dd>
+<dt><strong><code>password</code></strong></dt>
+<dd>The password of the database.</dd>
+<dt><strong><code>database</code></strong></dt>
+<dd>The database name.</dd>
+</dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="pipelines.utils.dump_db.db.Database" href="#pipelines.utils.dump_db.db.Database">Database</a></li>
@@ -449,12 +593,39 @@ hljs.highlightAll();
 <span>def <span class="ident">connect</span></span>(<span>self)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def connect(self):
+    &#34;&#34;&#34;
+    Connect to the Oracle.
+    &#34;&#34;&#34;
+    # pylint: disable=E1101
+    return cx_Oracle.connect(
+        f&#34;{self._user}/{self._password}@&#34;
+        f&#34;{self._hostname}:{self._port}/{self._database}&#34;
+    )</code></pre>
+</details>
 <div class="desc"><p>Connect to the Oracle.</p></div>
 </dd>
 <dt id="pipelines.utils.dump_db.db.Oracle.execute_query"><code class="name flex">
 <span>def <span class="ident">execute_query</span></span>(<span>self, query: str) ‑> None</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def execute_query(self, query: str) -&gt; None:
+    &#34;&#34;&#34;
+    Execute query on the Oracle.
+
+    Args:
+        query: The query to execute.
+    &#34;&#34;&#34;
+    self._cursor.execute(query)</code></pre>
+</details>
 <div class="desc"><p>Execute query on the Oracle.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -466,24 +637,64 @@ hljs.highlightAll();
 <span>def <span class="ident">fetch_all</span></span>(<span>self) ‑> List[List]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fetch_all(self) -&gt; List[List]:
+    &#34;&#34;&#34;
+    Fetches all rows from the Oracle.
+    &#34;&#34;&#34;
+    return [list(item) for item in self._cursor.fetchall()]</code></pre>
+</details>
 <div class="desc"><p>Fetches all rows from the Oracle.</p></div>
 </dd>
 <dt id="pipelines.utils.dump_db.db.Oracle.fetch_batch"><code class="name flex">
 <span>def <span class="ident">fetch_batch</span></span>(<span>self, batch_size: int) ‑> List[List]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fetch_batch(self, batch_size: int) -&gt; List[List]:
+    &#34;&#34;&#34;
+    Fetches a batch of rows from the Oracle.
+    &#34;&#34;&#34;
+    return [list(item) for item in self._cursor.fetchmany(batch_size)]</code></pre>
+</details>
 <div class="desc"><p>Fetches a batch of rows from the Oracle.</p></div>
 </dd>
 <dt id="pipelines.utils.dump_db.db.Oracle.get_columns"><code class="name flex">
 <span>def <span class="ident">get_columns</span></span>(<span>self) ‑> List[str]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_columns(self) -&gt; List[str]:
+    &#34;&#34;&#34;
+    Returns the column names of the Oracle.
+    &#34;&#34;&#34;
+    return [column[0] for column in self._cursor.description]</code></pre>
+</details>
 <div class="desc"><p>Returns the column names of the Oracle.</p></div>
 </dd>
 <dt id="pipelines.utils.dump_db.db.Oracle.get_cursor"><code class="name flex">
 <span>def <span class="ident">get_cursor</span></span>(<span>self)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_cursor(self):
+    &#34;&#34;&#34;
+    Returns a cursor for the Oracle.
+    &#34;&#34;&#34;
+    return self._connection.cursor()</code></pre>
+</details>
 <div class="desc"><p>Returns a cursor for the Oracle.</p></div>
 </dd>
 </dl>
@@ -493,21 +704,6 @@ hljs.highlightAll();
 <span>(</span><span>hostname: str, user: str, password: str, database: str, port: int = 1433)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>SQL Server database.</p>
-<p>Initializes the SQL Server database.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>hostname</code></strong></dt>
-<dd>The hostname of the SQL Server.</dd>
-<dt><strong><code>port</code></strong></dt>
-<dd>The port of the SQL Server.</dd>
-<dt><strong><code>user</code></strong></dt>
-<dd>The username of the SQL Server.</dd>
-<dt><strong><code>password</code></strong></dt>
-<dd>The password of the SQL Server.</dd>
-<dt><strong><code>database</code></strong></dt>
-<dd>The database name.</dd>
-</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -592,6 +788,21 @@ hljs.highlightAll();
         &#34;&#34;&#34;
         return [list(item) for item in self._cursor.fetchall()]</code></pre>
 </details>
+<div class="desc"><p>SQL Server database.</p>
+<p>Initializes the SQL Server database.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>hostname</code></strong></dt>
+<dd>The hostname of the SQL Server.</dd>
+<dt><strong><code>port</code></strong></dt>
+<dd>The port of the SQL Server.</dd>
+<dt><strong><code>user</code></strong></dt>
+<dd>The username of the SQL Server.</dd>
+<dt><strong><code>password</code></strong></dt>
+<dd>The password of the SQL Server.</dd>
+<dt><strong><code>database</code></strong></dt>
+<dd>The database name.</dd>
+</dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="pipelines.utils.dump_db.db.Database" href="#pipelines.utils.dump_db.db.Database">Database</a></li>
@@ -603,12 +814,44 @@ hljs.highlightAll();
 <span>def <span class="ident">connect</span></span>(<span>self)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def connect(self):
+    &#34;&#34;&#34;
+    Connect to the SQL Server.
+    &#34;&#34;&#34;
+    conn_str = (
+        f&#34;DRIVER={{ODBC Driver 17 for SQL Server}};&#34;
+        f&#34;SERVER={self._hostname},{self._port};&#34;
+        f&#34;DATABASE={self._database};&#34;
+        f&#34;UID={self._user};&#34;
+        f&#34;PWD={self._password};&#34;
+        &#34;Encrypt=no;&#34;
+        &#34;TrustServerCertificate=yes;&#34;
+    )
+    return pyodbc.connect(conn_str)</code></pre>
+</details>
 <div class="desc"><p>Connect to the SQL Server.</p></div>
 </dd>
 <dt id="pipelines.utils.dump_db.db.SqlServer.execute_query"><code class="name flex">
 <span>def <span class="ident">execute_query</span></span>(<span>self, query: str) ‑> None</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def execute_query(self, query: str) -&gt; None:
+    &#34;&#34;&#34;
+    Execute query on the SQL Server.
+
+    Args:
+        query: The query to execute.
+    &#34;&#34;&#34;
+    self._cursor.execute(query)</code></pre>
+</details>
 <div class="desc"><p>Execute query on the SQL Server.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -620,24 +863,64 @@ hljs.highlightAll();
 <span>def <span class="ident">fetch_all</span></span>(<span>self) ‑> List[List]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fetch_all(self) -&gt; List[List]:
+    &#34;&#34;&#34;
+    Fetches all rows from the SQL Server.
+    &#34;&#34;&#34;
+    return [list(item) for item in self._cursor.fetchall()]</code></pre>
+</details>
 <div class="desc"><p>Fetches all rows from the SQL Server.</p></div>
 </dd>
 <dt id="pipelines.utils.dump_db.db.SqlServer.fetch_batch"><code class="name flex">
 <span>def <span class="ident">fetch_batch</span></span>(<span>self, batch_size: int) ‑> List[List]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fetch_batch(self, batch_size: int) -&gt; List[List]:
+    &#34;&#34;&#34;
+    Fetches a batch of rows from the SQL Server.
+    &#34;&#34;&#34;
+    return [list(item) for item in self._cursor.fetchmany(batch_size)]</code></pre>
+</details>
 <div class="desc"><p>Fetches a batch of rows from the SQL Server.</p></div>
 </dd>
 <dt id="pipelines.utils.dump_db.db.SqlServer.get_columns"><code class="name flex">
 <span>def <span class="ident">get_columns</span></span>(<span>self) ‑> List[str]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_columns(self) -&gt; List[str]:
+    &#34;&#34;&#34;
+    Returns the column names of the SQL Server.
+    &#34;&#34;&#34;
+    return [column[0] for column in self._cursor.description]</code></pre>
+</details>
 <div class="desc"><p>Returns the column names of the SQL Server.</p></div>
 </dd>
 <dt id="pipelines.utils.dump_db.db.SqlServer.get_cursor"><code class="name flex">
 <span>def <span class="ident">get_cursor</span></span>(<span>self)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_cursor(self):
+    &#34;&#34;&#34;
+    Returns a cursor for the SQL Server.
+    &#34;&#34;&#34;
+    return self._connection.cursor()</code></pre>
+</details>
 <div class="desc"><p>Returns a cursor for the SQL Server.</p></div>
 </dd>
 </dl>
@@ -753,7 +1036,7 @@ setTimeout(() => input.focus(), 100);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
 </footer>
 </body>
 </html>

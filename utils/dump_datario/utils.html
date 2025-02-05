@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.1">
+<meta name="generator" content="pdoc3 0.11.5">
 <title>pipelines.utils.dump_datario.utils API documentation</title>
 <meta name="description" content="General utilities for interacting with datario-dump">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -35,21 +46,143 @@ hljs.highlightAll();
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pipelines.utils.dump_datario.utils.generate_dump_datario_schedules"><code class="name flex">
-<span>def <span class="ident">generate_dump_datario_schedules</span></span>(<span>interval: datetime.timedelta, start_date: datetime.datetime, labels: List[str], table_parameters: dict, runs_interval_minutes: int = 15) ‑> List[prefect.schedules.clocks.IntervalClock]</span>
+<span>def <span class="ident">generate_dump_datario_schedules</span></span>(<span>interval: datetime.timedelta,<br>start_date: datetime.datetime,<br>labels: List[str],<br>table_parameters: dict,<br>runs_interval_minutes: int = 15) ‑> List[prefect.schedules.clocks.IntervalClock]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def generate_dump_datario_schedules(  # pylint: disable=too-many-arguments,too-many-locals
+    interval: timedelta,
+    start_date: datetime,
+    labels: List[str],
+    table_parameters: dict,
+    runs_interval_minutes: int = 15,
+) -&gt; List[IntervalClock]:
+    &#34;&#34;&#34;
+    Generates multiple schedules for dumping datario tables.
+    &#34;&#34;&#34;
+    clocks = []
+    for count, (table_id, parameters) in enumerate(table_parameters.items()):
+        parameter_defaults = {
+            &#34;url&#34;: parameters[&#34;url&#34;],
+            &#34;dataset_id&#34;: parameters[&#34;dataset_id&#34;],
+            &#34;dump_mode&#34;: parameters[&#34;dump_mode&#34;],
+            &#34;table_id&#34;: table_id,
+        }
+        if &#34;materialize_after_dump&#34; in parameters:
+            parameter_defaults[&#34;materialize_after_dump&#34;] = parameters[
+                &#34;materialize_after_dump&#34;
+            ]
+        if &#34;materialization_mode&#34; in parameters:
+            parameter_defaults[&#34;materialization_mode&#34;] = parameters[
+                &#34;materialization_mode&#34;
+            ]
+        if &#34;geometry_column&#34; in parameters:
+            parameter_defaults[&#34;geometry_column&#34;] = parameters[&#34;geometry_column&#34;]
+        if &#34;convert_to_crs_4326&#34; in parameters:
+            parameter_defaults[&#34;convert_to_crs_4326&#34;] = parameters[
+                &#34;convert_to_crs_4326&#34;
+            ]
+        if &#34;geometry_3d_to_2d&#34; in parameters:
+            parameter_defaults[&#34;geometry_3d_to_2d&#34;] = parameters[&#34;geometry_3d_to_2d&#34;]
+
+        new_interval = parameters[&#34;interval&#34;] if &#34;interval&#34; in parameters else interval
+        clocks.append(
+            IntervalClock(
+                interval=new_interval,
+                start_date=start_date
+                + timedelta(minutes=runs_interval_minutes * count),
+                labels=labels,
+                parameter_defaults=parameter_defaults,
+            )
+        )
+    return clocks</code></pre>
+</details>
 <div class="desc"><p>Generates multiple schedules for dumping datario tables.</p></div>
 </dd>
 <dt id="pipelines.utils.dump_datario.utils.load_wkt"><code class="name flex">
 <span>def <span class="ident">load_wkt</span></span>(<span>x)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_wkt(x):
+    &#34;&#34;&#34;
+    Fromt text to geometry
+    &#34;&#34;&#34;
+    try:
+        return wkt.loads(x)
+    except Exception:
+        return None</code></pre>
+</details>
 <div class="desc"><p>Fromt text to geometry</p></div>
 </dd>
 <dt id="pipelines.utils.dump_datario.utils.remove_third_dimension"><code class="name flex">
 <span>def <span class="ident">remove_third_dimension</span></span>(<span>geom)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def remove_third_dimension(geom):
+    &#34;&#34;&#34;
+    Remove third dimension from geometry
+    &#34;&#34;&#34;
+    if geom is None:
+        return None
+
+    if geom.is_empty:
+        return geom
+
+    if isinstance(geom, Polygon):
+        exterior = geom.exterior
+        new_exterior = remove_third_dimension(exterior)
+
+        interiors = geom.interiors
+        new_interiors = [remove_third_dimension(int) for int in interiors]
+        return Polygon(new_exterior, new_interiors)
+
+    elif isinstance(geom, LinearRing):
+        return LinearRing([xy[:2] for xy in list(geom.coords)])
+
+    elif isinstance(geom, LineString):
+        return LineString([xy[:2] for xy in list(geom.coords)])
+
+    elif isinstance(geom, Point):
+        return Point([xy[:2] for xy in list(geom.coords)])
+
+    elif isinstance(geom, MultiPoint):
+        points = list(geom.geoms)
+        new_points = [remove_third_dimension(point) for point in points]
+        return MultiPoint(new_points)
+
+    elif isinstance(geom, MultiLineString):
+        lines = list(geom.geoms)
+        new_lines = [remove_third_dimension(line) for line in lines]
+        return MultiLineString(new_lines)
+
+    elif isinstance(geom, MultiPolygon):
+        pols = list(geom.geoms)
+
+        new_pols = [remove_third_dimension(pol) for pol in pols]
+        return MultiPolygon(new_pols)
+
+    elif isinstance(geom, GeometryCollection):
+        geoms = list(geom.geoms)
+
+        new_geoms = [remove_third_dimension(geom) for geom in geoms]
+        return GeometryCollection(new_geoms)
+
+    else:
+        raise RuntimeError(
+            f&#34;Currently this type of geometry is not supported: {type(geom)}&#34;
+        )</code></pre>
+</details>
 <div class="desc"><p>Remove third dimension from geometry</p></div>
 </dd>
 </dl>
@@ -124,7 +257,7 @@ setTimeout(() => input.focus(), 100);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
 </footer>
 </body>
 </html>

@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.1">
+<meta name="generator" content="pdoc3 0.11.5">
 <title>pipelines.utils.execute_dbt_model.tasks API documentation</title>
 <meta name="description" content="Tasks related to DBT flows.">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -38,30 +49,110 @@ hljs.highlightAll();
 <span>def <span class="ident">get_k8s_dbt_client</span></span>(<span>mode: str = 'dev', wait=None) ‑> dbt_client.dbt_client.DbtClient</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    checkpoint=False,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def get_k8s_dbt_client(
+    mode: str = &#34;dev&#34;,
+    wait=None,
+) -&gt; DbtClient:
+    &#34;&#34;&#34;
+    Get a DBT client for the Kubernetes cluster.
+    &#34;&#34;&#34;
+    if mode not in [&#34;dev&#34;, &#34;prod&#34;]:
+        raise ValueError(f&#34;Invalid mode: {mode}&#34;)
+    return get_dbt_client(
+        host=f&#34;dbt-rpc-{mode}&#34;,
+    )</code></pre>
+</details>
 <div class="desc"><p>Get a DBT client for the Kubernetes cluster.</p></div>
 </dd>
 <dt id="pipelines.utils.execute_dbt_model.tasks.is_running_at_datario"><code class="name flex">
 <span>def <span class="ident">is_running_at_datario</span></span>(<span>current_flow_labels: List[str]) ‑> bool</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(checkpoint=False)
+def is_running_at_datario(current_flow_labels: List[str]) -&gt; bool:
+    &#34;&#34;&#34;
+    Check if the current flow is running at datario agent.
+    &#34;&#34;&#34;
+    return &#34;datario&#34; in current_flow_labels</code></pre>
+</details>
 <div class="desc"><p>Check if the current flow is running at datario agent.</p></div>
 </dd>
 <dt id="pipelines.utils.execute_dbt_model.tasks.is_valid_dictionary"><code class="name flex">
 <span>def <span class="ident">is_valid_dictionary</span></span>(<span>dictionary: Dict[Any, Any]) ‑> Dict[str, Any]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def is_valid_dictionary(dictionary: Dict[Any, Any]) -&gt; Dict[str, Any]:
+    &#34;&#34;&#34;
+    Checks whether the dictionary is in the format Dict[str, str].
+    &#34;&#34;&#34;
+    if not isinstance(dictionary, dict):
+        raise ValueError(&#34;The dictionary is not a dictionary.&#34;)
+    if not all(isinstance(key, str) for key in dictionary.keys()):
+        raise ValueError(&#34;The dictionary keys are not strings.&#34;)
+    return dictionary</code></pre>
+</details>
 <div class="desc"><p>Checks whether the dictionary is in the format Dict[str, str].</p></div>
 </dd>
 <dt id="pipelines.utils.execute_dbt_model.tasks.merge_dictionaries"><code class="name flex">
 <span>def <span class="ident">merge_dictionaries</span></span>(<span>dict1: Dict[str, Any], dict2: Dict[str, Any]) ‑> Dict[str, Any]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def merge_dictionaries(dict1: Dict[str, Any], dict2: Dict[str, Any]) -&gt; Dict[str, Any]:
+    &#34;&#34;&#34;
+    Merge dictionaries.
+    &#34;&#34;&#34;
+    return {**dict1, **dict2}</code></pre>
+</details>
 <div class="desc"><p>Merge dictionaries.</p></div>
 </dd>
 <dt id="pipelines.utils.execute_dbt_model.tasks.model_parameters_from_secrets"><code class="name flex">
 <span>def <span class="ident">model_parameters_from_secrets</span></span>(<span>dictionary: Dict[str, str]) ‑> Dict[str, Any]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def model_parameters_from_secrets(dictionary: Dict[str, str]) -&gt; Dict[str, Any]:
+    &#34;&#34;&#34;
+    Gets model parameters from Vault secrets.
+
+    Args:
+        dictionary (Dict[str, str]): Dictionary with the parameter name as key and the secret path
+        as value. The secret must contain a single key called &#34;value&#34; with the parameter value.
+
+    Returns:
+        Dict[str, Any]: Dictionary with the parameter name as key and the secret value as value.
+    &#34;&#34;&#34;
+    return {
+        key: get_vault_secret(value)[&#34;data&#34;][&#34;value&#34;]
+        for key, value in dictionary.items()
+    }</code></pre>
+</details>
 <div class="desc"><p>Gets model parameters from Vault secrets.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -76,9 +167,99 @@ hljs.highlightAll();
 </dl></div>
 </dd>
 <dt id="pipelines.utils.execute_dbt_model.tasks.run_dbt_model"><code class="name flex">
-<span>def <span class="ident">run_dbt_model</span></span>(<span>dbt_client: dbt_client.dbt_client.DbtClient, dataset_id: str, table_id: str = None, dbt_alias: bool = False, upstream: bool = None, downstream: bool = None, exclude: str = None, flags: str = None, sync: bool = True, wait=None)</span>
+<span>def <span class="ident">run_dbt_model</span></span>(<span>dbt_client: dbt_client.dbt_client.DbtClient,<br>dataset_id: str,<br>table_id: str = None,<br>dbt_alias: bool = False,<br>upstream: bool = None,<br>downstream: bool = None,<br>exclude: str = None,<br>flags: str = None,<br>sync: bool = True,<br>wait=None)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    checkpoint=False,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+# pylint: disable=too-many-arguments, too-many-locals
+def run_dbt_model(
+    dbt_client: DbtClient,
+    dataset_id: str,
+    table_id: str = None,
+    dbt_alias: bool = False,
+    upstream: bool = None,
+    downstream: bool = None,
+    exclude: str = None,
+    flags: str = None,
+    _vars: Union[dict, List[Dict]] = None,
+    sync: bool = True,
+    wait=None,
+):
+    &#34;&#34;&#34;
+    Run a DBT model.
+
+    Args:
+        dbt_client (DbtClient): DBT client.
+        dataset_id (str): Dataset ID of the dbt model.
+        table_id (str, optional): Table ID of the dbt model. If None, the
+        whole dataset will be run.
+        dbt_alias (bool, optional): If True, the model will be run by
+        its alias. Defaults to False.
+        upstream (bool, optional): If True, the upstream models will be run.
+        downstream (bool, optional): If True, the downstream models will
+        be run.
+        exclude (str, optional): Models to exclude from the run.
+        flags (str, optional): Flags to pass to the dbt run command.
+        See:
+        https://docs.getdbt.com/reference/dbt-jinja-functions/flags/
+        _vars (Union[dict, List[Dict]], optional): Variables to pass to
+        dbt. Defaults to None.
+        sync (bool, optional): Whether to run the command synchronously.
+    &#34;&#34;&#34;
+
+    # Set models and upstream/downstream for dbt
+    run_command = &#34;dbt run --select &#34;
+
+    if upstream:
+        run_command += &#34;+&#34;
+
+    if table_id:
+        if dbt_alias:
+            table_id = f&#34;{dataset_id}.{dataset_id}__{table_id}&#34;
+        else:
+            table_id = f&#34;{dataset_id}.{table_id}&#34;
+    else:
+        table_id = dataset_id
+
+    run_command += f&#34;{table_id}&#34;
+
+    if downstream:
+        run_command += &#34;+&#34;
+
+    if exclude:
+        run_command += f&#34; --exclude {exclude}&#34;
+
+    if _vars:
+        if isinstance(_vars, list):
+            vars_dict = {}
+            for elem in _vars:
+                vars_dict.update(elem)
+            vars_str = f&#39;&#34;{vars_dict}&#34;&#39;
+            run_command += f&#34; --vars {vars_str}&#34;
+        else:
+            vars_str = f&#39;&#34;{_vars}&#34;&#39;
+            run_command += f&#34; --vars {vars_str}&#34;
+
+    if flags:
+        run_command += f&#34; {flags}&#34;
+
+    log(f&#34;Will run the following command:\n{run_command}&#34;)
+    logs_dict = dbt_client.cli(
+        run_command,
+        sync=sync,
+        logs=True,
+    )
+    parse_dbt_logs(logs_dict, log_queries=True)
+    return log(&#34;Finished running dbt model&#34;)</code></pre>
+</details>
 <div class="desc"><p>Run a DBT model.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -185,7 +366,7 @@ setTimeout(() => input.focus(), 100);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
 </footer>
 </body>
 </html>

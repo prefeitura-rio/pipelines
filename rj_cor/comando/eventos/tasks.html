@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.1">
+<meta name="generator" content="pdoc3 0.11.5">
 <title>pipelines.rj_cor.comando.eventos.tasks API documentation</title>
 <meta name="description" content="Tasks for comando">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -38,18 +49,86 @@ hljs.highlightAll();
 <span>def <span class="ident">download_data_atividades</span></span>(<span>first_date, last_date, wait=None) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    nout=1,
+    max_retries=3,
+    retry_delay=timedelta(seconds=60),
+)
+def download_data_atividades(first_date, last_date, wait=None) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Download data from API
+    &#34;&#34;&#34;
+
+    url_secret = get_vault_secret(&#34;comando&#34;)[&#34;data&#34;]
+    url_atividades_evento = url_secret[&#34;endpoint_atividades_evento&#34;]
+
+    dfr = pd.read_json(
+        f&#34;{url_atividades_evento}/?data_i={first_date}&amp;data_f={last_date}&#34;
+    )
+
+    return dfr</code></pre>
+</details>
 <div class="desc"><p>Download data from API</p></div>
 </dd>
 <dt id="pipelines.rj_cor.comando.eventos.tasks.download_data_ocorrencias"><code class="name flex">
 <span>def <span class="ident">download_data_ocorrencias</span></span>(<span>first_date, last_date, wait=None) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    nout=1,
+    max_retries=3,
+    retry_delay=timedelta(seconds=60),
+)
+def download_data_ocorrencias(first_date, last_date, wait=None) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Download data from API
+    &#34;&#34;&#34;
+    # auth_token = get_token()
+
+    url_secret = get_vault_secret(&#34;comando&#34;)[&#34;data&#34;]
+    url_eventos = url_secret[&#34;endpoint_eventos&#34;]
+
+    log(f&#34;\n\nDownloading data from {first_date} to {last_date} (not included)&#34;)
+    dfr = pd.read_json(f&#34;{url_eventos}/?data_i={first_date}&amp;data_f={last_date}&#34;)
+
+    return dfr</code></pre>
+</details>
 <div class="desc"><p>Download data from API</p></div>
 </dd>
 <dt id="pipelines.rj_cor.comando.eventos.tasks.get_date_interval"><code class="name flex">
 <span>def <span class="ident">get_date_interval</span></span>(<span>first_date, last_date) ‑> Tuple[dict, str]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_date_interval(first_date, last_date) -&gt; Tuple[dict, str]:
+    &#34;&#34;&#34;
+    If `first_date` and `last_date` are provided, format it to DD/MM/YYYY. Else,
+    get data from last 3 days.
+    first_date: str YYYY-MM-DD
+    last_date: str YYYY-MM-DD
+    &#34;&#34;&#34;
+    if first_date and last_date:
+        first_date, last_date = format_date(first_date, last_date)
+    else:
+        last_date = pendulum.today(tz=&#34;America/Sao_Paulo&#34;).date()
+        first_date = last_date.subtract(days=3)
+        first_date, last_date = format_date(
+            first_date.strftime(&#34;%Y-%m-%d&#34;), last_date.strftime(&#34;%Y-%m-%d&#34;)
+        )
+    return first_date, last_date</code></pre>
+</details>
 <div class="desc"><p>If <code>first_date</code> and <code>last_date</code> are provided, format it to DD/MM/YYYY. Else,
 get data from last 3 days.
 first_date: str YYYY-MM-DD
@@ -59,6 +138,44 @@ last_date: str YYYY-MM-DD</p></div>
 <span>def <span class="ident">get_redis_df</span></span>(<span>dataset_id: str, table_id: str, name: str, mode: str = 'prod') ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_redis_df(
+    dataset_id: str,
+    table_id: str,
+    name: str,
+    mode: str = &#34;prod&#34;,
+) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Acess redis to get the last saved df and compare to actual df,
+    return only the rows from actual df that are not already saved.
+    &#34;&#34;&#34;
+    redis_key = build_redis_key(dataset_id, table_id, name, mode)
+    log(f&#34;Acessing redis_key: {redis_key}&#34;)
+
+    dfr_redis = get_redis_output(redis_key)
+    # dfr_redis = get_redis_output(redis_key, is_df=True)
+    log(f&#34;Redis output: {dfr_redis}&#34;)
+
+    # if len(dfr_redis) == 0:
+    #     dfr_redis = pd.DataFrame()
+    #     dict_redis = {k: None for k in columns}
+    #     print(f&#34;\nCreating Redis fake values for key: {redis_key}\n&#34;)
+    #     print(dict_redis)
+    #     dfr_redis = pd.DataFrame(
+    #         dict_redis, index=[0]
+    #     )
+    # else:
+    #     dfr_redis = pd.DataFrame(
+    #         dict_redis.items(), columns=columns
+    #         )
+    # print(f&#34;\nConverting redis dict to df: \n{dfr_redis.head()}&#34;)
+
+    return dfr_redis</code></pre>
+</details>
 <div class="desc"><p>Acess redis to get the last saved df and compare to actual df,
 return only the rows from actual df that are not already saved.</p></div>
 </dd>
@@ -66,42 +183,333 @@ return only the rows from actual df that are not already saved.</p></div>
 <span>def <span class="ident">get_redis_max_date</span></span>(<span>dataset_id: str, table_id: str, name: str = None, mode: str = 'prod') ‑> str</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_redis_max_date(
+    dataset_id: str,
+    table_id: str,
+    name: str = None,
+    mode: str = &#34;prod&#34;,
+) -&gt; str:
+    &#34;&#34;&#34;
+    Acess redis to get the last saved date and compare to actual df.
+    &#34;&#34;&#34;
+    redis_key = build_redis_key(dataset_id, table_id, name, mode)
+    log(f&#34;Acessing redis_key: {redis_key}&#34;)
+
+    redis_max_date = get_redis_output(redis_key)
+
+    try:
+        redis_max_date = redis_max_date[&#34;max_date&#34;]
+    except KeyError:
+        redis_max_date = &#34;1990-01-01&#34;
+        log(&#34;Creating a fake date because this key doesn&#39;t exist.&#34;)
+
+    log(f&#34;Redis output: {redis_max_date}&#34;)
+    return redis_max_date</code></pre>
+</details>
 <div class="desc"><p>Acess redis to get the last saved date and compare to actual df.</p></div>
 </dd>
 <dt id="pipelines.rj_cor.comando.eventos.tasks.not_none"><code class="name flex">
 <span>def <span class="ident">not_none</span></span>(<span>something: Any) ‑> bool</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def not_none(something: Any) -&gt; bool:
+    &#34;&#34;&#34;
+    Returns True if something is not None.
+    &#34;&#34;&#34;
+    return something is not None</code></pre>
+</details>
 <div class="desc"><p>Returns True if something is not None.</p></div>
 </dd>
 <dt id="pipelines.rj_cor.comando.eventos.tasks.save_data"><code class="name flex">
-<span>def <span class="ident">save_data</span></span>(<span>dataframe: pandas.core.frame.DataFrame) ‑> Union[str, pathlib.Path]</span>
+<span>def <span class="ident">save_data</span></span>(<span>dataframe: pandas.core.frame.DataFrame) ‑> str | pathlib.Path</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def save_data(dataframe: pd.DataFrame) -&gt; Union[str, Path]:
+    &#34;&#34;&#34;
+    Save data on a csv file to be uploaded to GCP
+    &#34;&#34;&#34;
+
+    prepath = Path(&#34;/tmp/data/&#34;)
+    prepath.mkdir(parents=True, exist_ok=True)
+
+    partition_column = &#34;data_inicio&#34;
+    dataframe, partitions = parse_date_columns(dataframe, partition_column)
+
+    to_partitions(
+        data=dataframe,
+        partition_columns=partitions,
+        savepath=prepath,
+        data_type=&#34;csv&#34;,
+    )
+    log(f&#34;[DEBUG] Files saved on {prepath}&#34;)
+    return prepath</code></pre>
+</details>
 <div class="desc"><p>Save data on a csv file to be uploaded to GCP</p></div>
 </dd>
 <dt id="pipelines.rj_cor.comando.eventos.tasks.save_no_partition"><code class="name flex">
 <span>def <span class="ident">save_no_partition</span></span>(<span>dataframe: pandas.core.frame.DataFrame, append: bool = False) ‑> str</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def save_no_partition(dataframe: pd.DataFrame, append: bool = False) -&gt; str:
+    &#34;&#34;&#34;
+    Saves a dataframe to a temporary directory and returns the path to the directory.
+    &#34;&#34;&#34;
+
+    if &#34;sigla&#34; in dataframe.columns:
+        dataframe = dataframe.sort_values([&#34;id_pop&#34;, &#34;sigla&#34;, &#34;acao&#34;])
+    else:
+        dataframe = dataframe.sort_values(&#34;id_pop&#34;)
+
+    path_to_directory = &#34;/tmp/&#34; + str(uuid4().hex) + &#34;/&#34;
+    os.makedirs(path_to_directory, exist_ok=True)
+    if append:
+        current_time = pendulum.now(&#34;America/Sao_Paulo&#34;).strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+        dataframe.to_csv(path_to_directory + f&#34;dados_{current_time}.csv&#34;, index=False)
+    else:
+        dataframe.to_csv(path_to_directory + &#34;dados.csv&#34;, index=False)
+    return path_to_directory</code></pre>
+</details>
 <div class="desc"><p>Saves a dataframe to a temporary directory and returns the path to the directory.</p></div>
 </dd>
 <dt id="pipelines.rj_cor.comando.eventos.tasks.save_redis_max_date"><code class="name flex">
-<span>def <span class="ident">save_redis_max_date</span></span>(<span>dataset_id: str, table_id: str, name: str = None, mode: str = 'prod', redis_max_date: str = None, wait=None)</span>
+<span>def <span class="ident">save_redis_max_date</span></span>(<span>dataset_id: str,<br>table_id: str,<br>name: str = None,<br>mode: str = 'prod',<br>redis_max_date: str = None,<br>wait=None)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def save_redis_max_date(  # pylint: disable=too-many-arguments
+    dataset_id: str,
+    table_id: str,
+    name: str = None,
+    mode: str = &#34;prod&#34;,
+    redis_max_date: str = None,
+    wait=None,  # pylint: disable=unused-argument
+):
+    &#34;&#34;&#34;
+    Acess redis to save last date.
+    &#34;&#34;&#34;
+    redis_key = build_redis_key(dataset_id, table_id, name, mode)
+    log(f&#34;Acessing redis_key: {redis_key}&#34;)
+
+    save_str_on_redis(redis_key, &#34;max_date&#34;, redis_max_date)</code></pre>
+</details>
 <div class="desc"><p>Acess redis to save last date.</p></div>
 </dd>
 <dt id="pipelines.rj_cor.comando.eventos.tasks.treat_data_atividades"><code class="name flex">
-<span>def <span class="ident">treat_data_atividades</span></span>(<span>dfr: pandas.core.frame.DataFrame, dfr_redis: pandas.core.frame.DataFrame, columns: list) ‑> Tuple[pandas.core.frame.DataFrame, pandas.core.frame.DataFrame]</span>
+<span>def <span class="ident">treat_data_atividades</span></span>(<span>dfr: pandas.core.frame.DataFrame,<br>dfr_redis: pandas.core.frame.DataFrame,<br>columns: list) ‑> Tuple[pandas.core.frame.DataFrame, pandas.core.frame.DataFrame]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(nout=2)
+def treat_data_atividades(
+    dfr: pd.DataFrame,
+    dfr_redis: pd.DataFrame,
+    columns: list,
+) -&gt; Tuple[pd.DataFrame, pd.DataFrame]:
+    &#34;&#34;&#34;
+    Normalize data to be similiar to old API.
+    &#34;&#34;&#34;
+
+    print(&#34;Start treating data&#34;)
+    dfr.orgao = dfr.orgao.replace([&#34;\r&#34;, &#34;\n&#34;], [&#34;&#34;, &#34;&#34;], regex=True)
+
+    print(f&#34;Dataframe before comparing with last data saved on redis {dfr.head()}&#34;)
+
+    dfr, dfr_redis = compare_actual_df_with_redis_df(
+        dfr,
+        dfr_redis,
+        columns,
+    )
+    print(f&#34;Dataframe after comparing with last data saved on redis {dfr.head()}&#34;)
+
+    # If df is empty stop flow
+    if dfr.shape[0] == 0:
+        skip_text = &#34;No new data available on API&#34;
+        print(skip_text)
+        raise ENDRUN(state=Skipped(skip_text))
+
+    mandatory_cols = [
+        &#34;id_evento&#34;,
+        &#34;sigla&#34;,
+        &#34;orgao&#34;,  # esse não tem na tabela antiga
+        &#34;data_chegada&#34;,
+        &#34;data_inicio&#34;,
+        &#34;data_fim&#34;,
+        &#34;descricao&#34;,
+        &#34;status&#34;,
+    ]
+
+    # Create cols if they don exist on new API
+    for col in mandatory_cols:
+        if col not in dfr.columns:
+            dfr[col] = None
+
+    categorical_cols = [
+        &#34;sigla&#34;,
+        &#34;orgao&#34;,
+        &#34;descricao&#34;,
+        &#34;status&#34;,
+    ]
+
+    print(&#34;\n\nDEBUG&#34;, dfr[categorical_cols])
+    for i in categorical_cols:
+        dfr[i] = dfr[i].str.capitalize()
+        # dfr[i] = dfr[i].apply(unidecode)
+
+    for col in [&#34;data_inicio&#34;, &#34;data_fim&#34;, &#34;data_chegada&#34;]:
+        dfr[col] = pd.to_datetime(dfr[col], errors=&#34;coerce&#34;)
+
+    # TODO: Essa conversão é temporária
+    for col in [&#34;data_inicio&#34;, &#34;data_fim&#34;, &#34;data_chegada&#34;]:
+        dfr[col] = dfr[col].dt.tz_convert(&#34;America/Sao_Paulo&#34;)
+
+    for col in [&#34;data_inicio&#34;, &#34;data_fim&#34;, &#34;data_chegada&#34;]:
+        dfr[col] = dfr[col].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+
+    # Set the order to match the original table
+    dfr = dfr[mandatory_cols]
+
+    # Create a column with time of row creation to keep last event on dbt
+    dfr[&#34;created_at&#34;] = pendulum.now(tz=&#34;America/Sao_Paulo&#34;).strftime(
+        &#34;%Y-%m-%d %H:%M:%S&#34;
+    )
+
+    return dfr.drop_duplicates(), dfr_redis</code></pre>
+</details>
 <div class="desc"><p>Normalize data to be similiar to old API.</p></div>
 </dd>
 <dt id="pipelines.rj_cor.comando.eventos.tasks.treat_data_ocorrencias"><code class="name flex">
 <span>def <span class="ident">treat_data_ocorrencias</span></span>(<span>dfr: pandas.core.frame.DataFrame, redis_max_date: str) ‑> Tuple[pandas.core.frame.DataFrame, pandas.core.frame.DataFrame]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(nout=2)
+def treat_data_ocorrencias(
+    dfr: pd.DataFrame,
+    redis_max_date: str,
+) -&gt; Tuple[pd.DataFrame, pd.DataFrame]:
+    &#34;&#34;&#34;
+    Rename cols and normalize data.
+    &#34;&#34;&#34;
+
+    log(&#34;Start treating data&#34;)
+    dfr = dfr.rename(
+        columns={
+            &#34;id&#34;: &#34;id_evento&#34;,
+            &#34;pop_id&#34;: &#34;id_pop&#34;,
+            &#34;inicio&#34;: &#34;data_inicio&#34;,
+            &#34;fim&#34;: &#34;data_fim&#34;,
+            &#34;pop&#34;: &#34;pop_titulo&#34;,
+            &#34;titulo&#34;: &#34;pop_especificacao&#34;,
+        }
+    )
+
+    log(f&#34;First row: \n{dfr.iloc[0]}&#34;)
+
+    dfr[&#34;id_evento&#34;] = dfr[&#34;id_evento&#34;].astype(float).astype(int).astype(str)
+
+    for col in [&#34;data_inicio&#34;, &#34;data_fim&#34;]:
+        dfr[col] = pd.to_datetime(dfr[col], errors=&#34;coerce&#34;)
+    max_date = dfr[[&#34;data_inicio&#34;, &#34;data_fim&#34;]].max().max()
+    max_date = max_date.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+    log(f&#34;Last API data was {max_date} and last redis uptade was {redis_max_date}&#34;)
+
+    if max_date &lt;= redis_max_date:
+        skip_text = &#34;No new data available on API&#34;
+        print(skip_text)
+        raise ENDRUN(state=Skipped(skip_text))
+
+    # Get new max_date to save on redis
+    redis_max_date = max_date
+
+    dfr[&#34;tipo&#34;] = dfr[&#34;tipo&#34;].replace(
+        {
+            &#34;Primária&#34;: &#34;Primario&#34;,
+            &#34;Secundária&#34;: &#34;Secundario&#34;,
+        }
+    )
+    dfr[&#34;descricao&#34;] = dfr[&#34;descricao&#34;].apply(unidecode)
+
+    mandatory_cols = [
+        &#34;id_pop&#34;,
+        &#34;id_evento&#34;,
+        &#34;bairro&#34;,
+        &#34;data_inicio&#34;,
+        &#34;data_fim&#34;,
+        &#34;prazo&#34;,
+        &#34;descricao&#34;,
+        &#34;gravidade&#34;,
+        &#34;latitude&#34;,
+        &#34;longitude&#34;,
+        &#34;status&#34;,
+        &#34;tipo&#34;,
+    ]
+    # Create cols if they don exist on new API
+    for col in mandatory_cols:
+        if col not in dfr.columns:
+            dfr[col] = None
+
+    categorical_cols = [
+        &#34;bairro&#34;,
+        &#34;descricao&#34;,
+        &#34;gravidade&#34;,
+        &#34;status&#34;,
+        &#34;tipo&#34;,
+        &#34;pop_titulo&#34;,
+    ]
+    for i in categorical_cols:
+        dfr[i] = dfr[i].str.capitalize()
+
+    # This treatment is temporary. Now the id_pop from API is comming with the same value as id_evento
+    dfr = treat_wrong_id_pop(dfr)
+    log(f&#34;This id_pop are missing {dfr[dfr.id_pop.isna()]} they were replaced by 99&#34;)
+    dfr[&#34;id_pop&#34;] = dfr[&#34;id_pop&#34;].fillna(99)
+
+    # Treat id_pop col
+    dfr[&#34;id_pop&#34;] = dfr[&#34;id_pop&#34;].astype(float).astype(int)
+
+    for col in [&#34;data_inicio&#34;, &#34;data_fim&#34;]:
+        dfr[col] = dfr[col].dt.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+
+    # Set the order to match the original table
+    dfr = dfr[mandatory_cols]
+
+    # Create a column with time of row creation to keep last event on dbt
+    dfr[&#34;created_at&#34;] = pendulum.now(tz=&#34;America/Sao_Paulo&#34;).strftime(
+        &#34;%Y-%m-%d %H:%M:%S&#34;
+    )
+
+    return dfr.drop_duplicates(), redis_max_date</code></pre>
+</details>
 <div class="desc"><p>Rename cols and normalize data.</p></div>
 </dd>
 </dl>
@@ -184,7 +592,7 @@ setTimeout(() => input.focus(), 100);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
 </footer>
 </body>
 </html>

@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.1">
+<meta name="generator" content="pdoc3 0.11.5">
 <title>pipelines.rj_cor.meteorologia.radar.precipitacao.src.data.process.integrity.check_integrity_ppi_hdf API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -37,6 +48,216 @@ hljs.highlightAll();
 <span>def <span class="ident">main</span></span>(<span>path_list, verbose=True)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def main(path_list, verbose=True):
+    filepaths = []
+
+    # Save constants here
+    RADAR_LATITUDE = -22.9932804107666
+    RADAR_LONGITUDE = -43.58795928955078
+
+    # Obtain all files associated with the input
+    # You may input files and folders
+
+    if isinstance(path_list, str):
+        filepaths = [pathlib.Path(path_list)]
+    else:
+        for path_string in path_list:
+            path = pathlib.Path(path_string)
+            if path.is_dir():
+                filepaths.extend(path.glob(&#34;**/*.*&#34;))
+            elif path.is_file():
+                filepaths.append(path)
+            else:
+                print_error(f&#34;{path} is neither a directory nor a file.&#34;)
+                exit()
+
+    # HDF structure is given by hdf[primary_key][secondary_keys]
+    # The primary key indicates the elevation angle of the radar, while the secondary key indicates the product
+    # The variables dict can be used to find which product is associated with each entry
+
+    primary_keys = [
+        &#34;dataset1&#34;,
+        &#34;dataset2&#34;,
+        &#34;dataset3&#34;,
+        &#34;dataset4&#34;,
+        &#34;dataset5&#34;,
+        &#34;dataset6&#34;,
+        &#34;dataset7&#34;,
+        &#34;how&#34;,
+        &#34;what&#34;,
+        &#34;where&#34;,
+    ]
+    secondary_keys = [
+        &#34;data1&#34;,
+        &#34;data10&#34;,
+        &#34;data11&#34;,
+        &#34;data2&#34;,
+        &#34;data3&#34;,
+        &#34;data4&#34;,
+        &#34;data5&#34;,
+        &#34;data6&#34;,
+        &#34;data7&#34;,
+        &#34;data8&#34;,
+        &#34;data9&#34;,
+        &#34;how&#34;,
+        &#34;what&#34;,
+        &#34;where&#34;,
+    ]
+    variables_dict = {
+        &#34;data1&#34;: &#34;TH&#34;,
+        &#34;data10&#34;: &#34;VRAD&#34;,
+        &#34;data11&#34;: &#34;WRAD&#34;,
+        &#34;data2&#34;: &#34;TV&#34;,
+        &#34;data3&#34;: &#34;DBZH&#34;,
+        &#34;data4&#34;: &#34;DBZV&#34;,
+        &#34;data5&#34;: &#34;ZDR&#34;,
+        &#34;data6&#34;: &#34;RHOHV&#34;,
+        &#34;data7&#34;: &#34;PHIDP&#34;,
+        &#34;data8&#34;: &#34;SQI&#34;,
+        &#34;data9&#34;: &#34;SNR&#34;,
+    }
+
+    # Iterate over all given files
+    for filepath in filepaths:
+        locator = f&#34;{filepath}: &#34;
+
+        assert filepath.suffix == &#34;.hdf&#34;, locator + &#34;Filepath extension is not .hdf.&#34;
+        hdf = h5py.File(filepath)
+
+        # Check if latitude and longitude is close to where the radar is located
+        assert np.isclose(hdf[&#34;where&#34;].attrs[&#34;lat&#34;], RADAR_LATITUDE), (
+            locator + &#34;Radar latitude is inconsistent.&#34;
+        )
+        assert np.isclose(hdf[&#34;where&#34;].attrs[&#34;lon&#34;], RADAR_LONGITUDE), (
+            locator + &#34;Radar longitude is inconsistent.&#34;
+        )
+
+        # Date and time should be the same as those indicated in file name
+        assert f&#34;-{hdf[&#39;what&#39;].attrs[&#39;date&#39;].decode(&#39;UTF-8&#39;)}-&#34; in filepath.name, (
+            locator + &#34;Date in metadata different from date in file name.&#34;
+        )
+        assert f&#34;-{hdf[&#39;what&#39;].attrs[&#39;time&#39;].decode(&#39;UTF-8&#39;)}-&#34; in filepath.name, (
+            locator + &#34;Time in metadata different from time in file name.&#34;
+        )
+
+        # All processed files must be PPI files
+        assert hdf[&#34;what&#34;].attrs[&#34;object&#34;].decode(&#34;UTF-8&#34;) == &#34;PVOL&#34;, (
+            locator + &#34;File is not PPIVol.&#34;
+        )
+
+        # Verify the list of keys is the same as the expected primary keys (i.e. no elevation has been added or is missing)
+        assert list(hdf.keys()) == primary_keys, (
+            locator + &#34;File primary keys are not as expected.&#34;
+        )
+
+        for primary_key in hdf.keys():
+            if primary_key in [&#34;how&#34;, &#34;what&#34;, &#34;where&#34;]:
+                continue
+
+            locator = f&#34;{filepath}/{primary_key}: &#34;
+            assert list(hdf[primary_key].keys()) == secondary_keys, (
+                locator + &#34;File secondary keys are not as expected.&#34;
+            )
+
+            # Verify parameters indicating grid structure
+            nbins = hdf[primary_key][&#34;where&#34;].attrs[&#34;nbins&#34;]
+            nrays = hdf[primary_key][&#34;where&#34;].attrs[&#34;nrays&#34;]
+            rscale = hdf[primary_key][&#34;where&#34;].attrs[&#34;rscale&#34;]
+            rstart = hdf[primary_key][&#34;where&#34;].attrs[&#34;rstart&#34;]
+
+            assert isinstance(nbins, (np.integer, int)) and nbins &gt; 0, (
+                locator + &#34;nbins variable is not a positive integer.&#34;
+            )
+            assert isinstance(nrays, (np.integer, int)) and nrays &gt; 0, (
+                locator + &#34;nrays variable is not a positive integer.&#34;
+            )
+            assert isinstance(rscale, (np.floating, float)) and rscale &gt; 0, (
+                locator + &#34;rscale variable is not a positive float.&#34;
+            )
+            assert isinstance(rstart, (np.floating, float)) and rstart &gt;= 0, (
+                locator + &#34;rstart variable is not a non negative float.&#34;
+            )
+
+            # Verify if azimuth array has the right number of rays
+            startazA = np.array(hdf[primary_key][&#34;how&#34;].attrs[&#34;startazA&#34;])
+            stopazA = np.array(hdf[primary_key][&#34;how&#34;].attrs[&#34;stopazA&#34;])
+
+            assert startazA.shape == (nrays,), (
+                locator + &#34;Array of start azimuth angles has inconsistent shape.&#34;
+            )
+            assert stopazA.shape == (nrays,), (
+                locator + &#34;Array of stop azimuth angles has inconsistent shape.&#34;
+            )
+
+            assert np.all(startazA &gt;= 0) and np.all(startazA &lt; NRAYS), (
+                locator + &#34;Values for start azimuth angles are invalid.&#34;
+            )
+            assert np.all(stopazA &gt;= 0) and np.all(stopazA &lt; NRAYS), (
+                locator + &#34;Values for stop azimuth angles are invalid.&#34;
+            )
+
+            # Ensure data is not simulated data
+            assert (
+                hdf[primary_key][&#34;how&#34;].attrs[&#34;simulated&#34;].decode(&#34;UTF-8&#34;) == &#34;False&#34;
+            ), (locator + &#34;Input data is simulated.&#34;)
+
+            for secondary_key in hdf[primary_key].keys():
+                if secondary_key in [&#34;how&#34;, &#34;what&#34;, &#34;where&#34;]:
+                    continue
+
+                locator = f&#34;{filepath}/{primary_key}/{secondary_key}: &#34;
+
+                # Verify if variable names are correct
+                assert (
+                    hdf[primary_key][secondary_key][&#34;what&#34;]
+                    .attrs[&#34;quantity&#34;]
+                    .decode(&#34;UTF-8&#34;)
+                    == variables_dict[secondary_key]
+                ), (locator + &#34;Unexpected variable name.&#34;)
+
+                # For each product within secondary keys, should only contain data and its description
+                assert list(hdf[primary_key][secondary_key].keys()) == [
+                    &#34;data&#34;,
+                    &#34;what&#34;,
+                ], (
+                    locator + &#34;Data variable keys not expected.&#34;
+                )
+
+                # Verify if gain and offset parameters are appropriate
+                gain = hdf[primary_key][secondary_key][&#34;what&#34;].attrs[&#34;gain&#34;]
+                offset = hdf[primary_key][secondary_key][&#34;what&#34;].attrs[&#34;offset&#34;]
+
+                assert isinstance(gain, (np.floating, float)), (
+                    locator + &#34;gain variable is not a float.&#34;
+                )
+                assert isinstance(offset, (np.floating, float)), (
+                    locator + &#34;offset variable is not a float.&#34;
+                )
+
+                # Obtain data array and ensure its size is consistent
+                data_array = np.array(hdf[primary_key][secondary_key][&#34;data&#34;])
+
+                assert data_array.shape == (nrays, nbins), (
+                    locator
+                    + &#34;Data array shape is inconsistent with nrays and nbins variables.&#34;
+                )
+
+                # Data should be non-negative, where NAs = 0
+                assert np.all(data_array &gt;= 0), (
+                    locator + &#34;Not all entries of data array are non-negative.&#34;
+                )
+                assert not np.all(data_array == 0), (
+                    locator + &#34;All entries of data array are zero.&#34;
+                )
+
+        print_ok(f&#34;{str(filepath)} passed through all tests successfully.&#34;, verbose)
+    if len(filepaths) &gt; 1:
+        print_ok(&#34;All files passed through all tests successfully.&#34;, verbose)</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 </dl>
@@ -109,7 +330,7 @@ setTimeout(() => input.focus(), 100);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
 </footer>
 </body>
 </html>

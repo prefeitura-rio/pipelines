@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.1">
+<meta name="generator" content="pdoc3 0.11.5">
 <title>pipelines.rj_escritorio.flooding_detection.tasks API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -37,6 +48,28 @@ hljs.highlightAll();
 <span>def <span class="ident">get_last_update</span></span>(<span>rain_api_update_url: str) ‑> datetime.datetime</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_last_update(
+    rain_api_update_url: str,
+) -&gt; datetime:
+    &#34;&#34;&#34;
+    Gets the last update datetime from the rain API.
+
+    Args:
+        rain_api_update_url: The rain API update url.
+
+    Returns:
+        The last update datetime.
+    &#34;&#34;&#34;
+    data = requests.get(rain_api_update_url).text
+    data = data.strip(&#39;&#34;&#39;)
+    log(f&#34;Last update: {data}&#34;)
+    return datetime.strptime(data, &#34;%d/%m/%Y %H:%M:%S&#34;)</code></pre>
+</details>
 <div class="desc"><p>Gets the last update datetime from the rain API.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -50,6 +83,24 @@ hljs.highlightAll();
 <span>def <span class="ident">get_openai_api_key</span></span>(<span>secret_path: str) ‑> str</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_openai_api_key(secret_path: str) -&gt; str:
+    &#34;&#34;&#34;
+    Gets the OpenAI API key.
+
+    Args:
+        secret_path: The secret path.
+
+    Returns:
+        The OpenAI API key.
+    &#34;&#34;&#34;
+    secret = get_vault_secret(secret_path)[&#34;data&#34;]
+    return secret[&#34;api_key&#34;]</code></pre>
+</details>
 <div class="desc"><p>Gets the OpenAI API key.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -60,9 +111,123 @@ hljs.highlightAll();
 <p>The OpenAI API key.</p></div>
 </dd>
 <dt id="pipelines.rj_escritorio.flooding_detection.tasks.get_prediction"><code class="name flex">
-<span>def <span class="ident">get_prediction</span></span>(<span>camera_with_image: Dict[str, Union[str, float]], flooding_prompt: str, openai_api_key: str, openai_api_model: str, openai_api_max_tokens: int = 300, openai_api_url: str = 'https://api.openai.com/v1/chat/completions') ‑> Dict[str, Union[str, float, bool]]</span>
+<span>def <span class="ident">get_prediction</span></span>(<span>camera_with_image: Dict[str, str | float],<br>flooding_prompt: str,<br>openai_api_key: str,<br>openai_api_model: str,<br>openai_api_max_tokens: int = 300,<br>openai_api_url: str = 'https://api.openai.com/v1/chat/completions') ‑> Dict[str, str | float | bool]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_prediction(
+    camera_with_image: Dict[str, Union[str, float]],
+    flooding_prompt: str,
+    openai_api_key: str,
+    openai_api_model: str,
+    openai_api_max_tokens: int = 300,
+    openai_api_url: str = &#34;https://api.openai.com/v1/chat/completions&#34;,
+) -&gt; Dict[str, Union[str, float, bool]]:
+    &#34;&#34;&#34;
+    Gets the flooding detection prediction from OpenAI API.
+
+    Args:
+        camera_with_image: The camera with image in the following format:
+            {
+                &#34;id_camera&#34;: &#34;1&#34;,
+                &#34;url_camera&#34;: &#34;rtsp://...&#34;,
+                &#34;latitude&#34;: -22.912,
+                &#34;longitude&#34;: -43.230,
+                &#34;image_base64&#34;: &#34;base64...&#34;,
+                &#34;attempt_classification&#34;: True,
+            }
+        flooding_prompt: The flooding prompt.
+        openai_api_key: The OpenAI API key.
+        openai_api_model: The OpenAI API model.
+        openai_api_max_tokens: The OpenAI API max tokens.
+        openai_api_url: The OpenAI API URL.
+
+    Returns: The camera with image and classification in the following format:
+        {
+            &#34;id_camera&#34;: &#34;1&#34;,
+            &#34;url_camera&#34;: &#34;rtsp://...&#34;,
+            &#34;latitude&#34;: -22.912,
+            &#34;longitude&#34;: -43.230,
+            &#34;image_base64&#34;: &#34;base64...&#34;,
+            &#34;ai_classification&#34;: [
+                {
+                    &#34;object&#34;: &#34;alagamento&#34;,
+                    &#34;label&#34;: True,
+                    &#34;confidence&#34;: 0.7,
+                }
+            ],
+        }
+    &#34;&#34;&#34;
+    # TODO:
+    # - Add confidence value
+    # Setup the request
+    if not camera_with_image[&#34;attempt_classification&#34;]:
+        camera_with_image[&#34;ai_classification&#34;] = [
+            {
+                &#34;object&#34;: &#34;alagamento&#34;,
+                &#34;label&#34;: False,
+                &#34;confidence&#34;: 0.7,
+            }
+        ]
+        return camera_with_image
+    if not camera_with_image[&#34;image_base64&#34;]:
+        camera_with_image[&#34;ai_classification&#34;] = [
+            {
+                &#34;object&#34;: &#34;alagamento&#34;,
+                &#34;label&#34;: None,
+                &#34;confidence&#34;: 0.7,
+            }
+        ]
+        return camera_with_image
+    headers = {
+        &#34;Content-Type&#34;: &#34;application/json&#34;,
+        &#34;Authorization&#34;: f&#34;Bearer {openai_api_key}&#34;,
+    }
+    payload = {
+        &#34;model&#34;: openai_api_model,
+        &#34;messages&#34;: [
+            {
+                &#34;role&#34;: &#34;user&#34;,
+                &#34;content&#34;: [
+                    {
+                        &#34;type&#34;: &#34;text&#34;,
+                        &#34;text&#34;: flooding_prompt,
+                    },
+                    {
+                        &#34;type&#34;: &#34;image_url&#34;,
+                        &#34;image_url&#34;: {
+                            &#34;url&#34;: f&#34;data:image/jpeg;base64,{camera_with_image[&#39;image_base64&#39;]}&#34;
+                        },
+                    },
+                ],
+            }
+        ],
+        &#34;max_tokens&#34;: openai_api_max_tokens,
+    }
+    response = requests.post(openai_api_url, headers=headers, json=payload)
+    data: dict = response.json()
+    if data.get(&#34;error&#34;):
+        flooding_detected = None
+        log(f&#34;Failed to get prediction: {data[&#39;error&#39;]}&#34;)
+    else:
+        content: str = data[&#34;choices&#34;][0][&#34;message&#34;][&#34;content&#34;]
+        json_string = content.replace(&#34;```json\n&#34;, &#34;&#34;).replace(&#34;\n```&#34;, &#34;&#34;)
+        json_object = json.loads(json_string)
+        flooding_detected = json_object[&#34;flooding_detected&#34;]
+        log(f&#34;Successfully got prediction: {flooding_detected}&#34;)
+    camera_with_image[&#34;ai_classification&#34;] = [
+        {
+            &#34;object&#34;: &#34;alagamento&#34;,
+            &#34;label&#34;: flooding_detected,
+            &#34;confidence&#34;: 0.7,
+        }
+    ]
+    return camera_with_image</code></pre>
+</details>
 <div class="desc"><p>Gets the flooding detection prediction from OpenAI API.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -104,9 +269,63 @@ hljs.highlightAll();
 }</p></div>
 </dd>
 <dt id="pipelines.rj_escritorio.flooding_detection.tasks.get_snapshot"><code class="name flex">
-<span>def <span class="ident">get_snapshot</span></span>(<span>camera: Dict[str, Union[str, float]]) ‑> Dict[str, Union[str, float]]</span>
+<span>def <span class="ident">get_snapshot</span></span>(<span>camera: Dict[str, str | float]) ‑> Dict[str, str | float]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    max_retries=2,
+    retry_delay=timedelta(seconds=1),
+)
+def get_snapshot(
+    camera: Dict[str, Union[str, float]],
+) -&gt; Dict[str, Union[str, float]]:
+    &#34;&#34;&#34;
+    Gets a snapshot from a camera.
+
+    Args:
+        camera: The camera in the following format:
+            {
+                &#34;id_camera&#34;: &#34;1&#34;,
+                &#34;url_camera&#34;: &#34;rtsp://...&#34;,
+                &#34;latitude&#34;: -22.912,
+                &#34;longitude&#34;: -43.230,
+                &#34;attempt_classification&#34;: True,
+            }
+
+    Returns:
+        The camera with image in the following format:
+            {
+                &#34;id_camera&#34;: &#34;1&#34;,
+                &#34;url_camera&#34;: &#34;rtsp://...&#34;,
+                &#34;latitude&#34;: -22.912,
+                &#34;longitude&#34;: -43.230,
+                &#34;attempt_classification&#34;: True,
+                &#34;image_base64&#34;: &#34;base64...&#34;,
+            }
+    &#34;&#34;&#34;
+    try:
+        rtsp_url = camera[&#34;url_camera&#34;]
+        cap = cv2.VideoCapture(rtsp_url)
+        ret, frame = cap.read()
+        if not ret:
+            raise RuntimeError(f&#34;Failed to get snapshot from URL {rtsp_url}.&#34;)
+        cap.release()
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        img = Image.fromarray(frame)
+        buffer = io.BytesIO()
+        img.save(buffer, format=&#34;JPEG&#34;)
+        img_b64 = base64.b64encode(buffer.getvalue()).decode(&#34;utf-8&#34;)
+        log(f&#34;Successfully got snapshot from URL {rtsp_url}.&#34;)
+        camera[&#34;image_base64&#34;] = img_b64
+    except Exception:
+        log(f&#34;Failed to get snapshot from URL {rtsp_url}.&#34;)
+        camera[&#34;image_base64&#34;] = None
+    return camera</code></pre>
+</details>
 <div class="desc"><p>Gets a snapshot from a camera.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -132,9 +351,107 @@ hljs.highlightAll();
 }</p></div>
 </dd>
 <dt id="pipelines.rj_escritorio.flooding_detection.tasks.pick_cameras"><code class="name flex">
-<span>def <span class="ident">pick_cameras</span></span>(<span>rain_api_data_url: str, cameras_data_url: str, last_update: datetime.datetime, predictions_buffer_key: str, number_mock_rain_cameras: int = 0) ‑> List[Dict[str, Union[str, float]]]</span>
+<span>def <span class="ident">pick_cameras</span></span>(<span>rain_api_data_url: str,<br>cameras_data_url: str,<br>last_update: datetime.datetime,<br>predictions_buffer_key: str,<br>number_mock_rain_cameras: int = 0) ‑> List[Dict[str, str | float]]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def pick_cameras(
+    rain_api_data_url: str,
+    cameras_data_url: str,
+    last_update: datetime,
+    predictions_buffer_key: str,
+    number_mock_rain_cameras: int = 0,
+) -&gt; List[Dict[str, Union[str, float]]]:
+    &#34;&#34;&#34;
+    Picks cameras based on the raining hexagons and last update.
+
+    Args:
+        rain_api_data_url: The rain API data url.
+        last_update: The last update datetime.
+        predictions_buffer_key: The Redis key for the predictions buffer.
+
+    Returns:
+        A list of cameras in the following format:
+            [
+                {
+                    &#34;id_camera&#34;: &#34;1&#34;,
+                    &#34;url_camera&#34;: &#34;rtsp://...&#34;,
+                    &#34;latitude&#34;: -22.912,
+                    &#34;longitude&#34;: -43.230,
+                    &#34;attempt_classification&#34;: True,
+                },
+                ...
+            ]
+    &#34;&#34;&#34;
+    # Download the cameras data
+    cameras_data_path = Path(&#34;/tmp&#34;) / &#34;cameras_geo_min.csv&#34;
+    if not download_file(url=cameras_data_url, output_path=cameras_data_path):
+        raise RuntimeError(&#34;Failed to download the cameras data.&#34;)
+    cameras = pd.read_csv(cameras_data_path)
+    cameras = cameras.drop(columns=[&#34;geometry&#34;])
+    geometry = [Point(xy) for xy in zip(cameras[&#34;longitude&#34;], cameras[&#34;latitude&#34;])]
+    df_cameras = gpd.GeoDataFrame(cameras, geometry=geometry)
+    df_cameras.crs = {&#34;init&#34;: &#34;epsg:4326&#34;}
+    log(&#34;Successfully downloaded cameras data.&#34;)
+    log(f&#34;Cameras shape: {df_cameras.shape}&#34;)
+
+    # Get rain data
+    rain_data = requests.get(rain_api_data_url).json()
+    df_rain = pd.DataFrame(rain_data)
+    df_rain[&#34;last_update&#34;] = last_update
+    log(&#34;Successfully downloaded rain data.&#34;)
+    log(f&#34;Rain data shape: {df_rain.shape}&#34;)
+
+    # Join the dataframes
+    df_cameras_h3 = pd.merge(df_cameras, df_rain, how=&#34;left&#34;, on=&#34;id_h3&#34;)
+    log(&#34;Successfully joined the dataframes.&#34;)
+    log(f&#34;Cameras H3 shape: {df_cameras_h3.shape}&#34;)
+
+    # Modify status based on buffers
+    for _, row in df_cameras_h3.iterrows():
+        predictions_buffer_camera_key = f&#34;{predictions_buffer_key}_{row[&#39;id_camera&#39;]}&#34;
+        predictions_buffer = redis_get_prediction_buffer(predictions_buffer_camera_key)
+        # Get most common prediction
+        most_common_prediction = max(
+            set(predictions_buffer), key=predictions_buffer.count
+        )
+        # Get last prediction
+        last_prediction = predictions_buffer[-1]
+        # Add classifications
+        if most_common_prediction or last_prediction:
+            row[&#34;status&#34;] = &#34;chuva moderada&#34;
+
+    # Mock a few cameras when argument is set
+    if number_mock_rain_cameras &gt; 0:
+        df_len = len(df_cameras_h3)
+        for _ in range(number_mock_rain_cameras):
+            mocked_index = random.randint(0, df_len)
+            df_cameras_h3.loc[mocked_index, &#34;status&#34;] = &#34;chuva moderada&#34;
+            log(f&#39;Mocked camera ID: {df_cameras_h3.loc[mocked_index][&#34;id_camera&#34;]}&#39;)
+
+    # Set output
+    output = []
+    for _, row in df_cameras_h3.iterrows():
+        output.append(
+            {
+                &#34;id_camera&#34;: row[&#34;id_camera&#34;],
+                &#34;nome_camera&#34;: row[&#34;nome&#34;],
+                &#34;url_camera&#34;: row[&#34;rtsp&#34;],
+                &#34;latitude&#34;: row[&#34;geometry&#34;].y,
+                &#34;longitude&#34;: row[&#34;geometry&#34;].x,
+                # &#34;attempt_classification&#34;: (
+                #     row[&#34;status&#34;] not in [&#34;sem chuva&#34;, &#34;chuva fraca&#34;]
+                # ),
+                &#34;attempt_classification&#34;: True,
+            }
+        )
+    log(f&#34;Picked cameras: {output}&#34;)
+    return output</code></pre>
+</details>
 <div class="desc"><p>Picks cameras based on the raining hexagons and last update.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -159,9 +476,105 @@ hljs.highlightAll();
 ]</p></div>
 </dd>
 <dt id="pipelines.rj_escritorio.flooding_detection.tasks.update_flooding_api_data"><code class="name flex">
-<span>def <span class="ident">update_flooding_api_data</span></span>(<span>cameras_with_image_and_classification: List[Dict[str, Union[str, float, bool]]], data_key: str, last_update_key: str, predictions_buffer_key: str) ‑> None</span>
+<span>def <span class="ident">update_flooding_api_data</span></span>(<span>cameras_with_image_and_classification: List[Dict[str, str | float | bool]],<br>data_key: str,<br>last_update_key: str,<br>predictions_buffer_key: str) ‑> None</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def update_flooding_api_data(
+    cameras_with_image_and_classification: List[Dict[str, Union[str, float, bool]]],
+    data_key: str,
+    last_update_key: str,
+    predictions_buffer_key: str,
+) -&gt; None:
+    &#34;&#34;&#34;
+    Updates Redis keys with flooding detection data and last update datetime (now).
+
+    Args:
+        cameras_with_image_and_classification: The cameras with image and classification
+            in the following format:
+                [
+                    {
+                        &#34;id_camera&#34;: &#34;1&#34;,
+                        &#34;url_camera&#34;: &#34;rtsp://...&#34;,
+                        &#34;latitude&#34;: -22.912,
+                        &#34;longitude&#34;: -43.230,
+                        &#34;image_base64&#34;: &#34;base64...&#34;,
+                        &#34;ai_classification&#34;: [
+                            {
+                                &#34;object&#34;: &#34;alagamento&#34;,
+                                &#34;label&#34;: True,
+                                &#34;confidence&#34;: 0.7,
+                            }
+                        ],
+                    },
+                    ...
+                ]
+        data_key: The Redis key for the flooding detection data.
+        last_update_key: The Redis key for the last update datetime.
+        predictions_buffer_key: The Redis key for the predictions buffer.
+    &#34;&#34;&#34;
+    # Build API data
+    last_update = pendulum.now(tz=&#34;America/Sao_Paulo&#34;)
+    api_data = []
+    for camera_with_image_and_classification in cameras_with_image_and_classification:
+        # Get AI classifications
+        ai_classification = []
+        current_prediction = camera_with_image_and_classification[&#34;ai_classification&#34;][
+            0
+        ][&#34;label&#34;]
+        if current_prediction is None:
+            api_data.append(
+                {
+                    &#34;datetime&#34;: last_update.to_datetime_string(),
+                    &#34;id_camera&#34;: camera_with_image_and_classification[&#34;id_camera&#34;],
+                    &#34;url_camera&#34;: camera_with_image_and_classification[&#34;url_camera&#34;],
+                    &#34;latitude&#34;: camera_with_image_and_classification[&#34;latitude&#34;],
+                    &#34;longitude&#34;: camera_with_image_and_classification[&#34;longitude&#34;],
+                    &#34;image_base64&#34;: camera_with_image_and_classification[
+                        &#34;image_base64&#34;
+                    ],
+                    &#34;ai_classification&#34;: ai_classification,
+                }
+            )
+            continue
+        predictions_buffer_camera_key = f&#34;{predictions_buffer_key}_{camera_with_image_and_classification[&#39;id_camera&#39;]}&#34;  # noqa
+        predictions_buffer = redis_add_to_prediction_buffer(
+            predictions_buffer_camera_key, current_prediction
+        )
+        # Get most common prediction
+        most_common_prediction = max(
+            set(predictions_buffer), key=predictions_buffer.count
+        )
+        # Add classifications
+        ai_classification.append(
+            {
+                &#34;object&#34;: &#34;alagamento&#34;,
+                &#34;label&#34;: most_common_prediction,
+                &#34;confidence&#34;: 0.7,
+            }
+        )
+        api_data.append(
+            {
+                &#34;datetime&#34;: last_update.to_datetime_string(),
+                &#34;id_camera&#34;: camera_with_image_and_classification[&#34;id_camera&#34;],
+                &#34;url_camera&#34;: camera_with_image_and_classification[&#34;url_camera&#34;],
+                &#34;latitude&#34;: camera_with_image_and_classification[&#34;latitude&#34;],
+                &#34;longitude&#34;: camera_with_image_and_classification[&#34;longitude&#34;],
+                &#34;image_base64&#34;: camera_with_image_and_classification[&#34;image_base64&#34;],
+                &#34;ai_classification&#34;: ai_classification,
+            }
+        )
+
+    # Update API data
+    redis_client = get_redis_client(db=1)
+    redis_client.set(data_key, api_data)
+    redis_client.set(last_update_key, last_update.to_datetime_string())
+    log(&#34;Successfully updated flooding detection data.&#34;)</code></pre>
+</details>
 <div class="desc"><p>Updates Redis keys with flooding detection data and last update datetime (now).</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -268,7 +681,7 @@ setTimeout(() => input.focus(), 100);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
 </footer>
 </body>
 </html>

@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.1">
+<meta name="generator" content="pdoc3 0.11.5">
 <title>pipelines.rj_cor.meteorologia.radar.precipitacao.tasks API documentation</title>
 <meta name="description" content="Tasks for setting rain dashboard using radar data.">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -38,31 +49,184 @@ hljs.highlightAll();
 <span>def <span class="ident">change_predict_rain_specs</span></span>(<span>files_to_model: list, destination_path: str) ‑> None</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task()
+def change_predict_rain_specs(files_to_model: list, destination_path: str) -&gt; None:
+    &#34;&#34;&#34;
+    Change name of radar files inside json file
+    &#34;&#34;&#34;
+    json_file = (
+        &#34;pipelines/rj_cor/meteorologia/radar/precipitacao/src/predict_rain_specs.json&#34;
+    )
+    with open(json_file, &#34;r&#34;) as file:
+        predict_specs = json.load(file)
+    log(&#34;load&#34;)
+    filenames = [destination_path + i.split(&#34;/&#34;)[-1] for i in files_to_model]
+    log(f&#34;filenames to save on json file: {filenames}&#34;)
+    predict_specs[&#34;radar_ppi_hdfs&#34;] = filenames
+    log(f&#34;predict_specs : {predict_specs}&#34;)
+    with open(json_file, &#34;w&#34;) as file:
+        json.dump(predict_specs, file)
+
+    # verifica arquivo
+    with open(json_file, &#34;r&#34;) as file:
+        predict_specs_valida = json.load(file)
+    log(f&#34;predict_specs after updates: {predict_specs_valida}&#34;)</code></pre>
+</details>
 <div class="desc"><p>Change name of radar files inside json file</p></div>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.tasks.download_files_storage"><code class="name flex">
 <span>def <span class="ident">download_files_storage</span></span>(<span>bucket_name: str, files_to_download: list, destination_path: str) ‑> None</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task()
+def download_files_storage(
+    bucket_name: str, files_to_download: list, destination_path: str
+) -&gt; None:
+    &#34;&#34;&#34;
+    Realiza o download dos arquivos listados em files_to_download no bucket especificado
+    &#34;&#34;&#34;
+
+    os.makedirs(destination_path, exist_ok=True)
+
+    for file in files_to_download:
+        source_blob_name, destination_file_name = file, file.split(&#34;/&#34;)[-1]
+        destination_file_name = Path(destination_path, destination_file_name)
+        download_blob(bucket_name, source_blob_name, destination_file_name)</code></pre>
+</details>
 <div class="desc"><p>Realiza o download dos arquivos listados em files_to_download no bucket especificado</p></div>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.tasks.get_filenames_storage"><code class="name flex">
-<span>def <span class="ident">get_filenames_storage</span></span>(<span>bucket_name: str = 'rj-escritorio-dev', radar: str = 'gua', files_saved_redis: list = []) ‑> list</span>
+<span>def <span class="ident">get_filenames_storage</span></span>(<span>bucket_name: str = 'rj-escritorio-dev',<br>radar: str = 'gua',<br>files_saved_redis: list = []) ‑> list</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task()
+def get_filenames_storage(
+    bucket_name: str = &#34;rj-escritorio-dev&#34;,
+    radar: str = &#34;gua&#34;,
+    files_saved_redis: list = [],
+) -&gt; list:
+    &#34;&#34;&#34;Esc&#34;&#34;&#34;
+    last_30min = pendulum.now(&#34;UTC&#34;).subtract(minutes=30).to_datetime_string()
+    today = pendulum.now(&#34;UTC&#34;).format(&#34;YYYY-MM-DD&#34;)
+
+    # Get data from yesterday if the date from last_30min is different from today
+    log(f&#34;day of last 30 min: {last_30min[:10]}&#34;)
+    if today == last_30min[:10]:
+        filter_partition_days = [today]
+    else:
+        filter_partition_days = [last_30min[:10], today]
+
+    log(f&#34;filter_partition_days: {filter_partition_days}&#34;)
+
+    files_on_storage_list = []
+    for i in filter_partition_days:
+        base_path = &#34;raw/meio_ambiente_clima/inea_radar_hdf5/&#34;
+        prefix = base_path + f&#34;radar={radar}/produto=ppi/data_particao={i}/&#34;
+        log(f&#34;DEBUG prefix {prefix}&#34;)
+        files_on_storage = list_blobs_with_prefix(bucket_name, prefix, delimiter=None)
+        log(f&#34;debug files on storage {files_on_storage}&#34;)
+        files_on_storage_list.extend([blob.name for blob in files_on_storage])
+        log(f&#34;debug files on storage list {files_on_storage_list[-3:]}&#34;)
+
+    files_on_storage_list = list(set(files_on_storage_list))
+    files_on_storage_list.sort()
+    files_on_storage_list = files_on_storage_list[-3:]
+
+    files_saved_redis.sort()
+
+    log(f&#34;[DEBUG] Last radar files: {files_on_storage_list}&#34;)
+    log(f&#34;[DEBUG] Last redis files: {files_saved_redis}&#34;)
+
+    # if we have the same files on redis and on radar, skip flow
+    if files_on_storage_list == files_saved_redis:
+        log(&#34;No available files on API&#34;)
+        skip = Skipped(&#34;No available files on API&#34;)
+        raise ENDRUN(state=skip)
+
+    return files_on_storage_list</code></pre>
+</details>
 <div class="desc"><p>Esc</p></div>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.tasks.run_model"><code class="name flex">
-<span>def <span class="ident">run_model</span></span>(<span>wait=None) ‑> Tuple[pandas.core.frame.DataFrame, Union[str, pathlib.Path]]</span>
+<span>def <span class="ident">run_model</span></span>(<span>wait=None) ‑> Tuple[pandas.core.frame.DataFrame, str | pathlib.Path]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    nout=2,
+    max_retries=constants.TASK_MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
+)
+def run_model(wait=None) -&gt; Tuple[pd.DataFrame, Union[str, Path]]:
+    &#34;&#34;&#34;
+    Call a shell task to run model
+    https://github.com/BioBD/sgwfc-gene-python/blob/7dadf7b854a7a37405ee203331671f8cd61b114b/workflow/modules.py
+    &#34;&#34;&#34;
+    log(&#34;[DEBUG] Start runing model&#34;)
+    base_path = &#34;pipelines/rj_cor/meteorologia/radar/precipitacao&#34;
+    data_path = f&#34;{base_path}/predictions/&#34;
+    path = Path(data_path)
+    if path.exists():
+        log(&#34;DEBUG predictions path exists&#34;)
+    else:
+        os.makedirs(data_path, exist_ok=True)
+
+    dfr = run_model_prediction(base_path=base_path)
+
+    log(&#34;[DEBUG] End runing model&#34;)
+
+    return dfr</code></pre>
+</details>
 <div class="desc"><p>Call a shell task to run model
 <a href="https://github.com/BioBD/sgwfc-gene-python/blob/7dadf7b854a7a37405ee203331671f8cd61b114b/workflow/modules.py">https://github.com/BioBD/sgwfc-gene-python/blob/7dadf7b854a7a37405ee203331671f8cd61b114b/workflow/modules.py</a></p></div>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.tasks.save_data"><code class="name flex">
-<span>def <span class="ident">save_data</span></span>(<span>dfr: pandas.core.frame.DataFrame) ‑> Union[str, pathlib.Path]</span>
+<span>def <span class="ident">save_data</span></span>(<span>dfr: pandas.core.frame.DataFrame) ‑> str | pathlib.Path</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def save_data(dfr: pd.DataFrame) -&gt; Union[str, Path]:
+    &#34;&#34;&#34;
+    Save treated data in csv partitioned by date
+    &#34;&#34;&#34;
+
+    prepath = Path(&#34;/tmp/precipitacao_radar/&#34;)
+    prepath.mkdir(parents=True, exist_ok=True)
+
+    partition_column = &#34;data_medicao&#34;
+    dataframe, partitions = parse_date_columns(dfr, partition_column)
+    suffix = pd.to_datetime(dataframe[partition_column]).max().strftime(&#34;%Y%m%d%H%M%S&#34;)
+
+    # Cria partições a partir da data
+    to_partitions(
+        data=dataframe,
+        partition_columns=partitions,
+        savepath=prepath,
+        data_type=&#34;csv&#34;,
+        suffix=suffix,
+    )
+    log(f&#34;[DEBUG] Files saved on {prepath}&#34;)
+    return prepath</code></pre>
+</details>
 <div class="desc"><p>Save treated data in csv partitioned by date</p></div>
 </dd>
 </dl>
@@ -139,7 +303,7 @@ setTimeout(() => input.focus(), 100);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
 </footer>
 </body>
 </html>

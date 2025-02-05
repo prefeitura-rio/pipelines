@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.1">
+<meta name="generator" content="pdoc3 0.11.5">
 <title>pipelines.rj_smtr.utils API documentation</title>
 <meta name="description" content="General purpose functions for rj_smtr">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -38,6 +49,23 @@ hljs.highlightAll();
 <span>def <span class="ident">bq_project</span></span>(<span>kind: str = 'bigquery_prod')</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def bq_project(kind: str = &#34;bigquery_prod&#34;):
+    &#34;&#34;&#34;Get the set BigQuery project_id
+
+    Args:
+        kind (str, optional): Which client to get the project name from.
+        Options are &#39;bigquery_staging&#39;, &#39;bigquery_prod&#39; and &#39;storage_staging&#39;
+        Defaults to &#39;bigquery_prod&#39;.
+
+    Returns:
+        str: the requested project_id
+    &#34;&#34;&#34;
+    return bd.upload.base.Base().client[kind].project</code></pre>
+</details>
 <div class="desc"><p>Get the set BigQuery project_id</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -56,6 +84,40 @@ Defaults to 'bigquery_prod'.</p>
 <span>def <span class="ident">check_not_null</span></span>(<span>data: pandas.core.frame.DataFrame, columns: list, subset_query: str = None)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_not_null(data: pd.DataFrame, columns: list, subset_query: str = None):
+    &#34;&#34;&#34;
+    Check if there are null values in columns.
+
+    Args:
+        columns (list): list of columns to check
+        subset_query (str): query to check if there are important data
+        being removed
+
+    Returns:
+        None
+    &#34;&#34;&#34;
+
+    for col in columns:
+        remove = data.query(f&#34;{col} != {col}&#34;)  # null values
+        log(
+            f&#34;[data-check] There are {len(remove)} rows with null values in &#39;{col}&#39;&#34;,
+            level=&#34;info&#34;,
+        )
+
+        if subset_query is not None:
+            # Check if there are important data being removed
+            remove = remove.query(subset_query)
+            if len(remove) &gt; 0:
+                log(
+                    f&#34;&#34;&#34;[data-check] There are {len(remove)} critical rows with
+                    null values in &#39;{col}&#39; (query: {subset_query})&#34;&#34;&#34;,
+                    level=&#34;warning&#34;,
+                )</code></pre>
+</details>
 <div class="desc"><p>Check if there are null values in columns.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -72,6 +134,51 @@ Defaults to 'bigquery_prod'.</p>
 <span>def <span class="ident">check_relation</span></span>(<span>data: pandas.core.frame.DataFrame, columns: list)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_relation(data: pd.DataFrame, columns: list):
+    &#34;&#34;&#34;
+    Check relation between collumns.
+
+    Args:
+        data (pd.DataFrame): dataframe to be modified
+        columns (list): list of lists of columns to be checked
+
+    Returns:
+        None
+    &#34;&#34;&#34;
+
+    for cols in columns:
+        df_dup = (
+            data[~data.duplicated(subset=cols)]
+            .groupby(cols)
+            .count()
+            .reset_index()
+            .iloc[:, :1]
+        )
+
+        for col in cols:
+            df_dup_col = (
+                data[~data.duplicated(subset=col)]
+                .groupby(col)
+                .count()
+                .reset_index()
+                .iloc[:, :1]
+            )
+
+            if len(df_dup_col[~df_dup_col[col].duplicated()]) == len(df_dup):
+                log(
+                    f&#34;[data-check] Comparing &#39;{col}&#39; in &#39;{cols}&#39;, there are no duplicated values&#34;,
+                    level=&#34;info&#34;,
+                )
+            else:
+                log(
+                    f&#34;[data-check] Comparing &#39;{col}&#39; in &#39;{cols}&#39;, there are duplicated values&#34;,
+                    level=&#34;warning&#34;,
+                )</code></pre>
+</details>
 <div class="desc"><p>Check relation between collumns.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -87,6 +194,29 @@ Defaults to 'bigquery_prod'.</p>
 <span>def <span class="ident">close_db_connection</span></span>(<span>connection, engine: str)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def close_db_connection(connection, engine: str):
+    &#34;&#34;&#34;
+    Safely close a database connection
+
+    Args:
+        connection: the database connection
+        engine (str): The datase management system
+    &#34;&#34;&#34;
+    if engine == &#34;postgresql&#34;:
+        if not connection.closed:
+            connection.close()
+            log(&#34;Database connection closed&#34;)
+    elif engine == &#34;mysql&#34;:
+        if connection.open:
+            connection.close()
+            log(&#34;Database connection closed&#34;)
+    else:
+        raise NotImplementedError(f&#34;Engine {engine} not supported&#34;)</code></pre>
+</details>
 <div class="desc"><p>Safely close a database connection</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -100,6 +230,28 @@ Defaults to 'bigquery_prod'.</p>
 <span>def <span class="ident">connect_ftp</span></span>(<span>secret_path: str = None, secure: bool = True)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def connect_ftp(secret_path: str = None, secure: bool = True):
+    &#34;&#34;&#34;Connect to FTP
+
+    Returns:
+        ImplicitFTP_TLS: ftp client
+    &#34;&#34;&#34;
+
+    ftp_data = get_vault_secret(secret_path)[&#34;data&#34;]
+    if secure:
+        ftp_client = ImplicitFtpTls()
+    else:
+        ftp_client = FTP()
+    ftp_client.connect(host=ftp_data[&#34;host&#34;], port=int(ftp_data[&#34;port&#34;]))
+    ftp_client.login(user=ftp_data[&#34;username&#34;], passwd=ftp_data[&#34;pwd&#34;])
+    if secure:
+        ftp_client.prot_p()
+    return ftp_client</code></pre>
+</details>
 <div class="desc"><p>Connect to FTP</p>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -111,6 +263,50 @@ Defaults to 'bigquery_prod'.</p>
 <span>def <span class="ident">create_bq_external_table</span></span>(<span>table_obj: basedosdados.upload.table.Table, path: str, bucket_name: str)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def create_bq_external_table(table_obj: Table, path: str, bucket_name: str):
+    &#34;&#34;&#34;Creates an BigQuery External table based on sample data
+
+    Args:
+        table_obj (Table): BD Table object
+        path (str): Table data local path
+        bucket_name (str, Optional): The bucket name where the data is located
+    &#34;&#34;&#34;
+
+    Storage(
+        dataset_id=table_obj.dataset_id,
+        table_id=table_obj.table_id,
+        bucket_name=bucket_name,
+    ).upload(
+        path=path,
+        mode=&#34;staging&#34;,
+        if_exists=&#34;replace&#34;,
+    )
+
+    bq_table = bigquery.Table(table_obj.table_full_name[&#34;staging&#34;])
+    project_name = table_obj.client[&#34;bigquery_prod&#34;].project
+    table_full_name = table_obj.table_full_name[&#34;prod&#34;].replace(
+        project_name, f&#34;{project_name}.{bucket_name}&#34;, 1
+    )
+    bq_table.description = f&#34;staging table for `{table_full_name}`&#34;
+
+    bq_table.external_data_configuration = Datatype(
+        dataset_id=table_obj.dataset_id,
+        table_id=table_obj.table_id,
+        schema=create_bq_table_schema(
+            data_sample_path=path,
+        ),
+        mode=&#34;staging&#34;,
+        bucket_name=bucket_name,
+        partitioned=True,
+        biglake_connection_id=None,
+    ).external_config
+
+    table_obj.client[&#34;bigquery_staging&#34;].create_table(bq_table)</code></pre>
+</details>
 <div class="desc"><p>Creates an BigQuery External table based on sample data</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -123,9 +319,46 @@ Defaults to 'bigquery_prod'.</p>
 </dl></div>
 </dd>
 <dt id="pipelines.rj_smtr.utils.create_bq_table_schema"><code class="name flex">
-<span>def <span class="ident">create_bq_table_schema</span></span>(<span>data_sample_path: Union[str, pathlib.Path]) ‑> list[google.cloud.bigquery.schema.SchemaField]</span>
+<span>def <span class="ident">create_bq_table_schema</span></span>(<span>data_sample_path: str | pathlib.Path) ‑> list[google.cloud.bigquery.schema.SchemaField]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def create_bq_table_schema(
+    data_sample_path: Union[str, Path],
+) -&gt; list[bigquery.SchemaField]:
+    &#34;&#34;&#34;
+    Create the bq schema based on the structure of data_sample_path.
+
+    Args:
+        data_sample_path (str, Path): Data sample path to auto complete columns names
+
+    Returns:
+        list[bigquery.SchemaField]: The table schema
+    &#34;&#34;&#34;
+
+    data_sample_path = Path(data_sample_path)
+
+    if data_sample_path.is_dir():
+        data_sample_path = [
+            f
+            for f in data_sample_path.glob(&#34;**/*&#34;)
+            if f.is_file() and f.suffix == &#34;.csv&#34;
+        ][0]
+
+    columns = Datatype(source_format=&#34;csv&#34;).header(
+        data_sample_path=data_sample_path, csv_delimiter=&#34;,&#34;
+    )
+
+    schema = []
+    for col in columns:
+        schema.append(
+            bigquery.SchemaField(name=col, field_type=&#34;STRING&#34;, description=None)
+        )
+    return schema</code></pre>
+</details>
 <div class="desc"><p>Create the bq schema based on the structure of data_sample_path.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -139,9 +372,79 @@ Defaults to 'bigquery_prod'.</p>
 </dl></div>
 </dd>
 <dt id="pipelines.rj_smtr.utils.create_or_append_table"><code class="name flex">
-<span>def <span class="ident">create_or_append_table</span></span>(<span>dataset_id: str, table_id: str, path: str, partitions: str = None, bucket_name: str = None)</span>
+<span>def <span class="ident">create_or_append_table</span></span>(<span>dataset_id: str,<br>table_id: str,<br>path: str,<br>partitions: str = None,<br>bucket_name: str = None)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def create_or_append_table(
+    dataset_id: str,
+    table_id: str,
+    path: str,
+    partitions: str = None,
+    bucket_name: str = None,
+):
+    &#34;&#34;&#34;Conditionally create table or append data to its relative GCS folder.
+
+    Args:
+        dataset_id (str): target dataset_id on BigQuery
+        table_id (str): target table_id on BigQuery
+        path (str): Path to .csv data file
+        partitions (str): partition string.
+        bucket_name (str, Optional): The bucket name to save the data.
+    &#34;&#34;&#34;
+    table_arguments = {&#34;table_id&#34;: table_id, &#34;dataset_id&#34;: dataset_id}
+    if bucket_name is not None:
+        table_arguments[&#34;bucket_name&#34;] = bucket_name
+
+    tb_obj = Table(**table_arguments)
+    dirpath = path.split(partitions)[0]
+
+    if bucket_name is not None:
+        create_func = partial(
+            create_bq_external_table,
+            table_obj=tb_obj,
+            path=dirpath,
+            bucket_name=bucket_name,
+        )
+
+        append_func = partial(
+            Storage(
+                dataset_id=dataset_id, table_id=table_id, bucket_name=bucket_name
+            ).upload,
+            path=path,
+            mode=&#34;staging&#34;,
+            if_exists=&#34;replace&#34;,
+            partitions=partitions,
+        )
+
+    else:
+        create_func = partial(
+            tb_obj.create,
+            path=dirpath,
+            if_table_exists=&#34;pass&#34;,
+            if_storage_data_exists=&#34;replace&#34;,
+        )
+
+        append_func = partial(
+            tb_obj.append,
+            filepath=path,
+            if_exists=&#34;replace&#34;,
+            timeout=600,
+            partitions=partitions,
+        )
+
+    if not tb_obj.table_exists(&#34;staging&#34;):
+        log(&#34;Table does not exist in STAGING, creating table...&#34;)
+        create_func()
+        log(&#34;Table created in STAGING&#34;)
+    else:
+        log(&#34;Table already exists in STAGING, appending to it...&#34;)
+        append_func()
+        log(&#34;Appended to table on STAGING successfully.&#34;)</code></pre>
+</details>
 <div class="desc"><p>Conditionally create table or append data to its relative GCS folder.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -161,6 +464,30 @@ Defaults to 'bigquery_prod'.</p>
 <span>def <span class="ident">custom_serialization</span></span>(<span>obj: Any) ‑> Any</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def custom_serialization(obj: Any) -&gt; Any:
+    &#34;&#34;&#34;
+    Function to serialize not JSON serializable objects
+
+    Args:
+        obj (Any): Object to serialize
+
+    Returns:
+        Any: Serialized object
+    &#34;&#34;&#34;
+    if isinstance(obj, (pd.Timestamp, date)):
+        if isinstance(obj, pd.Timestamp):
+            if obj.tzinfo is None:
+                obj = obj.tz_localize(&#34;UTC&#34;).tz_convert(
+                    emd_constants.DEFAULT_TIMEZONE.value
+                )
+        return obj.isoformat()
+
+    raise TypeError(f&#34;Object of type {type(obj)} is not JSON serializable&#34;)</code></pre>
+</details>
 <div class="desc"><p>Function to serialize not JSON serializable objects</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -177,6 +504,24 @@ Defaults to 'bigquery_prod'.</p>
 <span>def <span class="ident">data_info_str</span></span>(<span>data: pandas.core.frame.DataFrame)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def data_info_str(data: pd.DataFrame):
+    &#34;&#34;&#34;
+    Return dataframe info as a str to log
+
+    Args:
+        data (pd.DataFrame): dataframe
+
+    Returns:
+        data.info() as a string
+    &#34;&#34;&#34;
+    buffer = io.StringIO()
+    data.info(buf=buffer)
+    return buffer.getvalue()</code></pre>
+</details>
 <div class="desc"><p>Return dataframe info as a str to log</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -190,6 +535,22 @@ Defaults to 'bigquery_prod'.</p>
 <span>def <span class="ident">dict_contains_keys</span></span>(<span>input_dict: dict, keys: list[str]) ‑> bool</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dict_contains_keys(input_dict: dict, keys: list[str]) -&gt; bool:
+    &#34;&#34;&#34;
+    Test if the input dict has all keys present in the list
+
+    Args:
+        input_dict (dict): the dict to test if has the keys
+        keys (list[str]): the list containing the keys to check
+    Returns:
+        bool: True if the input_dict has all the keys otherwise False
+    &#34;&#34;&#34;
+    return all(x in input_dict.keys() for x in keys)</code></pre>
+</details>
 <div class="desc"><p>Test if the input dict has all keys present in the list</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -208,6 +569,52 @@ Defaults to 'bigquery_prod'.</p>
 <span>def <span class="ident">execute_db_query</span></span>(<span>engine: str, query: str, connection, connector, connection_info: dict) ‑> list[dict]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def execute_db_query(
+    engine: str,
+    query: str,
+    connection,
+    connector,
+    connection_info: dict,
+) -&gt; list[dict]:
+    &#34;&#34;&#34;
+    Execute a query if retries
+
+    Args:
+        query (str): the SQL Query to execute
+        engine (str): The database management system
+        connection: The database connection
+        connector: The database connector (to do reconnections)
+        connection_info (dict): The database connector params (to do reconnections)
+
+    Returns:
+        list[dict]: The query results
+
+    &#34;&#34;&#34;
+    retries = 10
+    for retry in range(retries):
+        try:
+            log(f&#34;Executing query:\n{query}&#34;)
+            data = pd.read_sql(sql=query, con=connection).to_dict(orient=&#34;records&#34;)
+            for d in data:
+                for k, v in d.items():
+                    if pd.isna(v):
+                        d[k] = None
+            break
+        except Exception as err:
+            log(f&#34;[ATTEMPT {retry}]: {err}&#34;)
+            close_db_connection(connection=connection, engine=engine)
+            if retry &lt; retries - 1:
+                connection = connector(**connection_info)
+            else:
+                raise err
+
+    close_db_connection(connection=connection, engine=engine)
+    return data</code></pre>
+</details>
 <div class="desc"><p>Execute a query if retries</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -232,6 +639,41 @@ Defaults to 'bigquery_prod'.</p>
 <span>def <span class="ident">filter_data</span></span>(<span>data: pandas.core.frame.DataFrame, filters: list, subset_query: str = None)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def filter_data(data: pd.DataFrame, filters: list, subset_query: str = None):
+    &#34;&#34;&#34;
+    Filter data from a dataframe
+
+    Args:
+        data (pd.DataFrame): data DataFrame
+        filters (list): list of queries to filter data
+
+    Returns:
+        pandas.DataFrame: data without filter data
+    &#34;&#34;&#34;
+    for item in filters:
+        remove = data.query(item)
+        data = data.drop(remove.index)
+        log(
+            f&#34;[data-filter] Removed {len(remove)} rows from filter: {item}&#34;,
+            level=&#34;info&#34;,
+        )
+
+        if subset_query is not None:
+            # Check if there are important data being removed
+            remove = remove.query(subset_query)
+            if len(remove) &gt; 0:
+                log(
+                    f&#34;&#34;&#34;[data-filter] Removed {len(remove)} critical rows
+                    from filter: {item} (subquery: {subset_query})&#34;&#34;&#34;,
+                    level=&#34;warning&#34;,
+                )
+
+    return data</code></pre>
+</details>
 <div class="desc"><p>Filter data from a dataframe</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -250,6 +692,42 @@ Defaults to 'bigquery_prod'.</p>
 <span>def <span class="ident">filter_null</span></span>(<span>data: pandas.core.frame.DataFrame, columns: list, subset_query: str = None)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def filter_null(data: pd.DataFrame, columns: list, subset_query: str = None):
+    &#34;&#34;&#34;
+    Filter null values in columns.
+
+    Args:
+        columns (list): list of columns to check
+        subset_query (str): query to check if there are important data
+        being removed
+
+    Returns:
+        pandas.DataFrame: data without null values
+    &#34;&#34;&#34;
+
+    for col in columns:
+        remove = data.query(f&#34;{col} != {col}&#34;)  # null values
+        data = data.drop(remove.index)
+        log(
+            f&#34;[data-filter] Removed {len(remove)} rows with null &#39;{col}&#39;&#34;,
+            level=&#34;info&#34;,
+        )
+
+        if subset_query is not None:
+            # Check if there are important data being removed
+            remove = remove.query(subset_query)
+            if len(remove) &gt; 0:
+                log(
+                    f&#34;[data-filter] Removed {len(remove)} critical rows with null &#39;{col}&#39;&#34;,
+                    level=&#34;warning&#34;,
+                )
+
+    return data</code></pre>
+</details>
 <div class="desc"><p>Filter null values in columns.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -269,6 +747,49 @@ Defaults to 'bigquery_prod'.</p>
 <span>def <span class="ident">format_send_discord_message</span></span>(<span>formatted_messages: list, webhook_url: str)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def format_send_discord_message(formatted_messages: list, webhook_url: str):
+    &#34;&#34;&#34;
+    Format and send a message to discord
+
+    Args:
+        formatted_messages (list): The formatted messages
+        webhook_url (str): The webhook url
+
+    Returns:
+        None
+    &#34;&#34;&#34;
+    formatted_message = &#34;&#34;.join(formatted_messages)
+    log(formatted_message)
+    msg_ext = len(formatted_message)
+    if msg_ext &gt; 2000:
+        log(
+            f&#34;** Message too long ({msg_ext} characters), will be split into multiple messages **&#34;
+        )
+        # Split message into lines
+        lines = formatted_message.split(&#34;\n&#34;)
+        message_chunks = []
+        chunk = &#34;&#34;
+        for line in lines:
+            if len(chunk) + len(line) + 1 &gt; 2000:  # +1 for the newline character
+                message_chunks.append(chunk)
+                chunk = &#34;&#34;
+            chunk += line + &#34;\n&#34;
+        message_chunks.append(chunk)  # Append the last chunk
+        for chunk in message_chunks:
+            send_discord_message(
+                message=chunk,
+                webhook_url=webhook_url,
+            )
+    else:
+        send_discord_message(
+            message=formatted_message,
+            webhook_url=webhook_url,
+        )</code></pre>
+</details>
 <div class="desc"><p>Format and send a message to discord</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -284,6 +805,27 @@ Defaults to 'bigquery_prod'.</p>
 <span>def <span class="ident">generate_df_and_save</span></span>(<span>data: dict, fname: pathlib.Path)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def generate_df_and_save(data: dict, fname: Path):
+    &#34;&#34;&#34;Save DataFrame as csv
+
+    Args:
+        data (dict): dict with the data which to build the DataFrame
+        fname (Path): _description_
+    &#34;&#34;&#34;
+    # Generate dataframe
+    dataframe = pd.DataFrame()
+    dataframe[data[&#34;key_column&#34;]] = [
+        piece[data[&#34;key_column&#34;]] for piece in data[&#34;data&#34;]
+    ]
+    dataframe[&#34;content&#34;] = list(data[&#34;data&#34;])
+
+    # Save dataframe to CSV
+    dataframe.to_csv(fname, index=False)</code></pre>
+</details>
 <div class="desc"><p>Save DataFrame as csv</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -294,9 +836,55 @@ Defaults to 'bigquery_prod'.</p>
 </dl></div>
 </dd>
 <dt id="pipelines.rj_smtr.utils.generate_execute_schedules"><code class="name flex">
-<span>def <span class="ident">generate_execute_schedules</span></span>(<span>clock_interval: datetime.timedelta, labels: List[str], table_parameters: Union[list[dict], dict], runs_interval_minutes: int = 15, start_date: datetime.datetime = datetime.datetime(2020, 1, 1, 0, 0, tzinfo=&lt;DstTzInfo &#x27;America/Sao_Paulo&#x27; LMT-1 day, 20:54:00 STD&gt;), **general_flow_params) ‑> List[prefect.schedules.clocks.IntervalClock]</span>
+<span>def <span class="ident">generate_execute_schedules</span></span>(<span>clock_interval: datetime.timedelta,<br>labels: List[str],<br>table_parameters: list[dict] | dict,<br>runs_interval_minutes: int = 15,<br>start_date: datetime.datetime = datetime.datetime(2020, 1, 1, 0, 0, tzinfo=&lt;DstTzInfo &#x27;America/Sao_Paulo&#x27; LMT-1 day, 20:54:00 STD&gt;),<br>**general_flow_params) ‑> List[prefect.schedules.clocks.IntervalClock]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def generate_execute_schedules(  # pylint: disable=too-many-arguments,too-many-locals
+    clock_interval: timedelta,
+    labels: List[str],
+    table_parameters: Union[list[dict], dict],
+    runs_interval_minutes: int = 15,
+    start_date: datetime = datetime(
+        2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)
+    ),
+    **general_flow_params,
+) -&gt; List[IntervalClock]:
+    &#34;&#34;&#34;
+    Generates multiple schedules
+
+    Args:
+        clock_interval (timedelta): The interval to run the schedule
+        labels (List[str]): The labels to be added to the schedule
+        table_parameters (list): The table parameters to iterate over
+        runs_interval_minutes (int, optional): The interval between each schedule. Defaults to 15.
+        start_date (datetime, optional): The start date of the schedule.
+            Defaults to datetime(2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIMEZONE.value)).
+        general_flow_params: Any param that you want to pass to the flow
+    Returns:
+        List[IntervalClock]: The list of schedules
+
+    &#34;&#34;&#34;
+    if isinstance(table_parameters, dict):
+        table_parameters = [table_parameters]
+
+    clocks = []
+    for count, parameters in enumerate(table_parameters):
+        parameter_defaults = parameters | general_flow_params
+        clocks.append(
+            IntervalClock(
+                interval=clock_interval,
+                start_date=start_date
+                + timedelta(minutes=runs_interval_minutes * count),
+                labels=labels,
+                parameter_defaults=parameter_defaults,
+            )
+        )
+    return clocks</code></pre>
+</details>
 <div class="desc"><p>Generates multiple schedules</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -324,6 +912,35 @@ Defaults to datetime(2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIME
 <span>def <span class="ident">get_datetime_range</span></span>(<span>timestamp: datetime.datetime, interval: datetime.timedelta) ‑> dict</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_datetime_range(
+    timestamp: datetime,
+    interval: timedelta,
+) -&gt; dict:
+    &#34;&#34;&#34;
+    Task to get datetime range in UTC
+
+    Args:
+        timestamp (datetime): timestamp to get datetime range
+        interval (timedelta): interval to get datetime range
+
+    Returns:
+        dict: datetime range
+    &#34;&#34;&#34;
+
+    start = (
+        (timestamp - interval)
+        .astimezone(tz=pytz.timezone(&#34;UTC&#34;))
+        .strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+    )
+
+    end = timestamp.astimezone(tz=pytz.timezone(&#34;UTC&#34;)).strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+
+    return {&#34;start&#34;: start, &#34;end&#34;: end}</code></pre>
+</details>
 <div class="desc"><p>Task to get datetime range in UTC</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -342,6 +959,42 @@ Defaults to datetime(2020, 1, 1, tzinfo=pytz.timezone(emd_constants.DEFAULT_TIME
 <span>def <span class="ident">get_last_run_timestamp</span></span>(<span>dataset_id: str, table_id: str, mode: str = 'prod') ‑> str</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_last_run_timestamp(dataset_id: str, table_id: str, mode: str = &#34;prod&#34;) -&gt; str:
+    &#34;&#34;&#34;
+    Query redis to retrive the time for when the last materialization
+    ran.
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): model filename on the queries repo.
+        eg: if you have a model defined in the file &lt;filename&gt;.sql,
+        the table_id should be &lt;filename&gt;
+        mode (str):
+
+    Returns:
+        Union[str, None]: _description_
+    &#34;&#34;&#34;
+    redis_client = get_redis_client()
+    key = dataset_id + &#34;.&#34; + table_id
+    log(f&#34;Fetching key {key} from redis, working on mode {mode}&#34;)
+    if mode == &#34;dev&#34;:
+        key = f&#34;{mode}.{key}&#34;
+    runs = redis_client.get(key)
+    # if runs is None:
+    #     redis_client.set(key, &#34;&#34;)
+    try:
+        last_run_timestamp = runs[&#34;last_run_timestamp&#34;]
+    except KeyError:
+        return None
+    except TypeError:
+        return None
+    log(f&#34;Got value {last_run_timestamp}&#34;)
+    return last_run_timestamp</code></pre>
+</details>
 <div class="desc"><p>Query redis to retrive the time for when the last materialization
 ran.</p>
 <h2 id="args">Args</h2>
@@ -365,6 +1018,56 @@ mode (str):</p>
 <span>def <span class="ident">get_raw_data_api</span></span>(<span>url: str, secret_path: str = None, api_params: dict = None, filetype: str = None) ‑> tuple[str, str, str]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_raw_data_api(  # pylint: disable=R0912
+    url: str,
+    secret_path: str = None,
+    api_params: dict = None,
+    filetype: str = None,
+) -&gt; tuple[str, str, str]:
+    &#34;&#34;&#34;
+    Request data from URL API
+
+    Args:
+        url (str): URL to request data
+        secret_path (str, optional): Secret path to get headers. Defaults to None.
+        api_params (dict, optional): Parameters to pass to API. Defaults to None.
+        filetype (str, optional): Filetype to save raw file. Defaults to None.
+
+    Returns:
+        tuple[str, str, str]: Error, data and filetype
+    &#34;&#34;&#34;
+    error = None
+    data = None
+    try:
+        if secret_path is None:
+            headers = secret_path
+        else:
+            headers = get_vault_secret(secret_path)[&#34;data&#34;]
+
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=constants.MAX_TIMEOUT_SECONDS.value,
+            params=api_params,
+        )
+
+        response.raise_for_status()
+
+        if filetype == &#34;json&#34;:
+            data = response.json()
+        else:
+            data = response.text
+
+    except Exception:
+        error = traceback.format_exc()
+        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+
+    return error, data, filetype</code></pre>
+</details>
 <div class="desc"><p>Request data from URL API</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -384,9 +1087,94 @@ mode (str):</p>
 </dl></div>
 </dd>
 <dt id="pipelines.rj_smtr.utils.get_raw_data_db"><code class="name flex">
-<span>def <span class="ident">get_raw_data_db</span></span>(<span>query: str, engine: str, host: str, secret_path: str, database: str, page_size: int = None, max_pages: int = None) ‑> tuple[str, str, str]</span>
+<span>def <span class="ident">get_raw_data_db</span></span>(<span>query: str,<br>engine: str,<br>host: str,<br>secret_path: str,<br>database: str,<br>page_size: int = None,<br>max_pages: int = None) ‑> tuple[str, str, str]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_raw_data_db(
+    query: str,
+    engine: str,
+    host: str,
+    secret_path: str,
+    database: str,
+    page_size: int = None,
+    max_pages: int = None,
+) -&gt; tuple[str, str, str]:
+    &#34;&#34;&#34;
+    Get data from Databases
+
+    Args:
+        query (str): the SQL Query to execute
+        engine (str): The database management system
+        host (str): The database host
+        secret_path (str): Secret path to get credentials
+        database (str): The database to connect
+        page_size (int, Optional): The maximum number of rows returned by the paginated query
+            if you set a value for this argument, the query will have LIMIT and OFFSET appended to it
+        max_pages (int, Optional): The maximum number of paginated queries to execute
+
+    Returns:
+        tuple[str, str, str]: Error, data and filetype
+    &#34;&#34;&#34;
+    connector_mapping = {
+        &#34;postgresql&#34;: psycopg2.connect,
+        &#34;mysql&#34;: pymysql.connect,
+    }
+
+    data = None
+    error = None
+
+    if max_pages is None:
+        max_pages = 1
+
+    full_data = []
+    credentials = get_vault_secret(secret_path)[&#34;data&#34;]
+
+    connector = connector_mapping[engine]
+
+    try:
+        connection_info = {
+            &#34;host&#34;: host,
+            &#34;user&#34;: credentials[&#34;user&#34;],
+            &#34;password&#34;: credentials[&#34;password&#34;],
+            &#34;database&#34;: database,
+        }
+        connection = connector(**connection_info)
+
+        for page in range(max_pages):
+            if page_size is not None:
+                paginated_query = (
+                    query + f&#34; LIMIT {page_size} OFFSET {page * page_size}&#34;
+                )
+            else:
+                paginated_query = query
+
+            data = execute_db_query(
+                engine=engine,
+                query=paginated_query,
+                connection=connection,
+                connector=connector,
+                connection_info=connection_info,
+            )
+
+            full_data += data
+
+            log(f&#34;Returned {len(data)} rows&#34;)
+
+            if page_size is None or len(data) &lt; page_size:
+                log(&#34;Database Extraction Finished&#34;)
+                break
+
+    except Exception:
+        full_data = []
+        error = traceback.format_exc()
+        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+
+    return error, full_data, &#34;json&#34;</code></pre>
+</details>
 <div class="desc"><p>Get data from Databases</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -416,6 +1204,57 @@ if you set a value for this argument, the query will have LIMIT and OFFSET appen
 <span>def <span class="ident">get_raw_data_gcs</span></span>(<span>dataset_id: str, table_id: str, zip_filename: str = None, bucket_name: str = None) ‑> tuple[str, str, str]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_raw_data_gcs(
+    dataset_id: str, table_id: str, zip_filename: str = None, bucket_name: str = None
+) -&gt; tuple[str, str, str]:
+    &#34;&#34;&#34;
+    Get raw data from GCS
+
+    Args:
+        dataset_id (str): The dataset id on BigQuery.
+        table_id (str): The table id on BigQuery.
+        zip_filename (str, optional): The zip file name. Defaults to None.
+        bucket_name (str, Optional): The bucket name to get the data.
+
+    Returns:
+        tuple[str, str, str]: Error, data and filetype
+    &#34;&#34;&#34;
+    error = None
+    data = None
+    filetype = None
+
+    try:
+        blob_search_name = zip_filename or table_id
+        blob = get_upload_storage_blob(
+            dataset_id=dataset_id, filename=blob_search_name, bucket_name=bucket_name
+        )
+
+        filename = blob.name
+        filetype = filename.split(&#34;.&#34;)[-1]
+
+        data = blob.download_as_bytes()
+
+        if filetype == &#34;zip&#34;:
+            with zipfile.ZipFile(io.BytesIO(data), &#34;r&#34;) as zipped_file:
+                filenames = zipped_file.namelist()
+                filename = list(
+                    filter(lambda x: x.split(&#34;.&#34;)[0] == table_id, filenames)
+                )[0]
+                filetype = filename.split(&#34;.&#34;)[-1]
+                data = zipped_file.read(filename)
+
+        data = data.decode(encoding=&#34;utf-8&#34;)
+
+    except Exception:
+        error = traceback.format_exc()
+        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+
+    return error, data, filetype</code></pre>
+</details>
 <div class="desc"><p>Get raw data from GCS</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -438,12 +1277,117 @@ if you set a value for this argument, the query will have LIMIT and OFFSET appen
 <span>def <span class="ident">get_raw_recursos</span></span>(<span>request_url: str, request_params: dict) ‑> tuple[str, str, str]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_raw_recursos(
+    request_url: str,
+    request_params: dict,
+) -&gt; tuple[str, str, str]:
+    &#34;&#34;&#34;
+    Returns a dataframe with recursos data from movidesk api.
+    &#34;&#34;&#34;
+    all_records = False
+    top = 1000
+    skip = 0
+    error = None
+    filetype = &#34;json&#34;
+    data = []
+
+    while not all_records:
+        try:
+            request_params[&#34;$top&#34;] = top
+            request_params[&#34;$skip&#34;] = skip
+
+            log(f&#39;top: {request_params[&#34;$top&#34;]}, skip: {request_params[&#34;$skip&#34;]}&#39;)
+
+            log(f&#34;Request url {request_url}&#34;)
+
+            MAX_RETRIES = 3
+
+            for retry in range(MAX_RETRIES):
+                response = requests.get(
+                    request_url,
+                    params=request_params,
+                    timeout=constants.MAX_TIMEOUT_SECONDS.value,
+                )
+                if response.ok:
+                    break
+                elif response.status_code &gt;= 500:
+                    log(f&#34;Server error {response.status_code}&#34;)
+                    if retry == MAX_RETRIES - 1:
+                        response.raise_for_status()
+                    time.sleep(60)
+
+                else:
+                    response.raise_for_status()
+
+            paginated_data = response.json()
+
+            if isinstance(paginated_data, dict):
+                paginated_data = [paginated_data]
+
+            if len(paginated_data) == top:
+                skip += top
+                time.sleep(60)
+            else:
+                if len(paginated_data) == 0:
+                    log(&#34;Nenhum dado para tratar.&#34;)
+
+                all_records = True
+            data += paginated_data
+
+            log(f&#34;Dados (paginados): {len(data)}&#34;)
+
+        except Exception as error:
+            error = traceback.format_exc()
+            log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+            data = []
+            break
+
+    log(f&#34;Request concluído, tamanho dos dados: {len(data)}.&#34;)
+
+    return error, data, filetype</code></pre>
+</details>
 <div class="desc"><p>Returns a dataframe with recursos data from movidesk api.</p></div>
 </dd>
 <dt id="pipelines.rj_smtr.utils.get_table_min_max_value"><code class="name flex">
-<span>def <span class="ident">get_table_min_max_value</span></span>(<span>query_project_id: str, dataset_id: str, table_id: str, field_name: str, kind: str, wait=None)</span>
+<span>def <span class="ident">get_table_min_max_value</span></span>(<span>query_project_id: str,<br>dataset_id: str,<br>table_id: str,<br>field_name: str,<br>kind: str,<br>wait=None)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_table_min_max_value(  # pylint: disable=R0913
+    query_project_id: str,
+    dataset_id: str,
+    table_id: str,
+    field_name: str,
+    kind: str,
+    wait=None,  # pylint: disable=unused-argument
+):
+    &#34;&#34;&#34;Query a table to get the maximum value for the chosen field.
+    Useful to incrementally materialize tables via DBT
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+        field_name (str): column name to query
+        kind (str): which value to get. Accepts min and max
+    &#34;&#34;&#34;
+    log(f&#34;Getting {kind} value for {table_id}&#34;)
+    query = f&#34;&#34;&#34;
+        SELECT
+            {kind}({field_name})
+        FROM {query_project_id}.{dataset_id}.{table_id}
+    &#34;&#34;&#34;
+    log(f&#34;Will run query:\n{query}&#34;)
+    result = bd.read_sql(query=query, billing_project_id=bq_project())
+
+    return result.iloc[0][0]</code></pre>
+</details>
 <div class="desc"><p>Query a table to get the maximum value for the chosen field.
 Useful to incrementally materialize tables via DBT</p>
 <h2 id="args">Args</h2>
@@ -462,6 +1406,40 @@ Useful to incrementally materialize tables via DBT</p>
 <span>def <span class="ident">get_upload_storage_blob</span></span>(<span>dataset_id: str, filename: str, bucket_name: str = None) ‑> google.cloud.storage.blob.Blob</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_upload_storage_blob(
+    dataset_id: str,
+    filename: str,
+    bucket_name: str = None,
+) -&gt; Blob:
+    &#34;&#34;&#34;
+    Get a blob from upload zone in storage
+
+    Args:
+        dataset_id (str): The dataset id on BigQuery.
+        filename (str): The filename in GCS.
+        bucket_name (str, Optional): The bucket name to get the data.
+
+    Returns:
+        Blob: blob object
+    &#34;&#34;&#34;
+    bucket_arguments = {&#34;dataset_id&#34;: &#34;&#34;, &#34;table_id&#34;: &#34;&#34;}
+    if bucket_name is not None:
+        bucket_arguments[&#34;bucket_name&#34;] = bucket_name
+
+    bucket = bd.Storage(**bucket_arguments)
+    log(f&#34;Filename: {filename}, dataset_id: {dataset_id}&#34;)
+    blob_list = list(
+        bucket.client[&#34;storage_staging&#34;]
+        .bucket(bucket.bucket_name)
+        .list_blobs(prefix=f&#34;upload/{dataset_id}/{filename}.&#34;)
+    )
+
+    return blob_list[0]</code></pre>
+</details>
 <div class="desc"><p>Get a blob from upload zone in storage</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -482,6 +1460,22 @@ Useful to incrementally materialize tables via DBT</p>
 <span>def <span class="ident">log_critical</span></span>(<span>message: str, secret_path: str = 'critical_webhook')</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def log_critical(message: str, secret_path: str = constants.CRITICAL_SECRET_PATH.value):
+    &#34;&#34;&#34;Logs message to critical discord channel specified
+
+    Args:
+        message (str): Message to post on the channel
+        secret_path (str, optional): Secret path storing the webhook to critical channel.
+        Defaults to constants.CRITICAL_SECRETPATH.value.
+
+    &#34;&#34;&#34;
+    url = get_vault_secret(secret_path=secret_path)[&#34;data&#34;][&#34;url&#34;]
+    return send_discord_message(message=message, webhook_url=url)</code></pre>
+</details>
 <div class="desc"><p>Logs message to critical discord channel specified</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -496,12 +1490,65 @@ Useful to incrementally materialize tables via DBT</p>
 <span>def <span class="ident">map_dict_keys</span></span>(<span>data: dict, mapping: dict) ‑> None</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def map_dict_keys(data: dict, mapping: dict) -&gt; None:
+    &#34;&#34;&#34;
+    Map old keys to new keys in a dict.
+    &#34;&#34;&#34;
+    for old_key, new_key in mapping.items():
+        data[new_key] = data.pop(old_key)
+    return data</code></pre>
+</details>
 <div class="desc"><p>Map old keys to new keys in a dict.</p></div>
 </dd>
 <dt id="pipelines.rj_smtr.utils.perform_check"><code class="name flex">
 <span>def <span class="ident">perform_check</span></span>(<span>desc: str, check_params: dict, request_params: dict) ‑> dict</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def perform_check(desc: str, check_params: dict, request_params: dict) -&gt; dict:
+    &#34;&#34;&#34;
+    Perform a check on a query
+
+    Args:
+        desc (str): The check description
+        check_params (dict): The check parameters
+            * query (str): SQL query to be executed
+            * order_columns (list): order columns for query log results, in case of failure (optional)
+        request_params (dict): The request parameters
+
+    Returns:
+        dict: The check status
+    &#34;&#34;&#34;
+    try:
+        q = check_params[&#34;query&#34;].format(**request_params)
+        order_columns = check_params.get(&#34;order_columns&#34;, None)
+    except KeyError as e:
+        raise ValueError(f&#34;Missing key in check_params: {e}&#34;) from e
+
+    log(q)
+    df = bd.read_sql(q)
+
+    check_status = df.empty
+
+    check_status_dict = {&#34;desc&#34;: desc, &#34;status&#34;: check_status}
+
+    log(f&#34;Check status:\n{check_status_dict}&#34;)
+
+    if not check_status:
+        log(f&#34;Data info:\n{data_info_str(df)}&#34;)
+        log(
+            f&#34;Sorted data:\n{df.sort_values(by=order_columns) if order_columns else df}&#34;
+        )
+
+    return check_status_dict</code></pre>
+</details>
 <div class="desc"><p>Perform a check on a query</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -524,6 +1571,40 @@ Useful to incrementally materialize tables via DBT</p>
 <span>def <span class="ident">perform_checks_for_table</span></span>(<span>table_id: str, request_params: dict, test_check_list: dict, check_params: dict) ‑> dict</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def perform_checks_for_table(
+    table_id: str, request_params: dict, test_check_list: dict, check_params: dict
+) -&gt; dict:
+    &#34;&#34;&#34;
+    Perform checks for a table
+
+    Args:
+        table_id (str): The table id
+        request_params (dict): The request parameters
+        test_check_list (dict): The test check list
+        check_params (dict): The check parameters
+
+    Returns:
+        dict: The checks
+    &#34;&#34;&#34;
+    request_params[&#34;table_id&#34;] = table_id
+    checks = list()
+
+    for description, test_check in test_check_list.items():
+        request_params[&#34;expression&#34;] = test_check.get(&#34;expression&#34;, &#34;&#34;)
+        checks.append(
+            perform_check(
+                description,
+                check_params.get(test_check.get(&#34;test&#34;, &#34;expression_is_true&#34;)),
+                request_params | test_check.get(&#34;params&#34;, {}),
+            )
+        )
+
+    return checks</code></pre>
+</details>
 <div class="desc"><p>Perform checks for a table</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -546,6 +1627,43 @@ Useful to incrementally materialize tables via DBT</p>
 <span>def <span class="ident">read_raw_data</span></span>(<span>filepath: str, reader_args: dict = None) ‑> tuple[str, pandas.core.frame.DataFrame]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_raw_data(filepath: str, reader_args: dict = None) -&gt; tuple[str, pd.DataFrame]:
+    &#34;&#34;&#34;
+    Read raw data from file
+
+    Args:
+        filepath (str): filepath to read
+        reader_args (dict): arguments to pass to pandas.read_csv or read_json
+
+    Returns:
+        tuple[str, pd.DataFrame]: error and data
+    &#34;&#34;&#34;
+    error = None
+    data = None
+    if reader_args is None:
+        reader_args = {}
+    try:
+        file_type = filepath.split(&#34;.&#34;)[-1]
+
+        if file_type == &#34;json&#34;:
+            data = pd.read_json(filepath, **reader_args)
+
+            # data = json.loads(data)
+        elif file_type in (&#34;txt&#34;, &#34;csv&#34;):
+            data = pd.read_csv(filepath, **reader_args)
+        else:
+            error = &#34;Unsupported raw file extension. Supported only: json, csv and txt&#34;
+
+    except Exception:
+        error = traceback.format_exc()
+        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+
+    return error, data</code></pre>
+</details>
 <div class="desc"><p>Read raw data from file</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -564,12 +1682,68 @@ Useful to incrementally materialize tables via DBT</p>
 <span>def <span class="ident">safe_cast</span></span>(<span>val, to_type, default=None)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def safe_cast(val, to_type, default=None):
+    &#34;&#34;&#34;
+    Safe cast value.
+    &#34;&#34;&#34;
+    try:
+        return to_type(val)
+    except ValueError:
+        return default</code></pre>
+</details>
 <div class="desc"><p>Safe cast value.</p></div>
 </dd>
 <dt id="pipelines.rj_smtr.utils.save_raw_local_func"><code class="name flex">
-<span>def <span class="ident">save_raw_local_func</span></span>(<span>data: Union[dict, str], filepath: str, mode: str = 'raw', filetype: str = 'json') ‑> str</span>
+<span>def <span class="ident">save_raw_local_func</span></span>(<span>data: dict | str, filepath: str, mode: str = 'raw', filetype: str = 'json') ‑> str</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_raw_local_func(
+    data: Union[dict, str],
+    filepath: str,
+    mode: str = &#34;raw&#34;,
+    filetype: str = &#34;json&#34;,
+) -&gt; str:
+    &#34;&#34;&#34;
+    Saves json response from API to .json file.
+    Args:
+        data (Union[dict, str]): Raw data to save
+        filepath (str): Path which to save raw file
+        mode (str, optional): Folder to save locally, later folder which to upload to GCS.
+        filetype (str, optional): The file format
+    Returns:
+        str: Path to the saved file
+    &#34;&#34;&#34;
+
+    # diferentes tipos de arquivos para salvar
+    _filepath = filepath.format(mode=mode, filetype=filetype)
+    Path(_filepath).parent.mkdir(parents=True, exist_ok=True)
+
+    if filetype == &#34;json&#34;:
+        if isinstance(data, str):
+            data = json.loads(data)
+        with Path(_filepath).open(&#34;w&#34;, encoding=&#34;utf-8&#34;) as fi:
+            json.dump(data, fi, default=custom_serialization)
+
+    if filetype in (&#34;txt&#34;, &#34;csv&#34;):
+        if constants.CONTROLE_FINANCEIRO_DATASET_ID.value in _filepath:
+            encoding = &#34;Windows-1252&#34;
+        else:
+            encoding = &#34;utf-8&#34;
+
+        with open(_filepath, &#34;w&#34;, encoding=encoding) as file:
+            file.write(data)
+
+    log(f&#34;Raw data saved to: {_filepath}&#34;)
+    return _filepath</code></pre>
+</details>
 <div class="desc"><p>Saves json response from API to .json file.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -589,9 +1763,38 @@ Useful to incrementally materialize tables via DBT</p>
 </dl></div>
 </dd>
 <dt id="pipelines.rj_smtr.utils.save_treated_local_func"><code class="name flex">
-<span>def <span class="ident">save_treated_local_func</span></span>(<span>filepath: str, data: pandas.core.frame.DataFrame, error: str, mode: str = 'staging') ‑> str</span>
+<span>def <span class="ident">save_treated_local_func</span></span>(<span>filepath: str,<br>data: pandas.core.frame.DataFrame,<br>error: str,<br>mode: str = 'staging') ‑> str</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_treated_local_func(
+    filepath: str, data: pd.DataFrame, error: str, mode: str = &#34;staging&#34;
+) -&gt; str:
+    &#34;&#34;&#34;
+    Save treated file to CSV.
+
+    Args:
+        filepath (str): Path to save file
+        data (pd.DataFrame): Dataframe to save
+        error (str): Error catched during execution
+        mode (str, optional): Folder to save locally, later folder which to upload to GCS.
+
+    Returns:
+        str: Path to the saved file
+    &#34;&#34;&#34;
+    _filepath = filepath.format(mode=mode, filetype=&#34;csv&#34;)
+    Path(_filepath).parent.mkdir(parents=True, exist_ok=True)
+    if error is None:
+        data.to_csv(
+            _filepath,
+            index=False,
+        )
+        log(f&#34;Treated data saved to: {_filepath}&#34;)
+    return _filepath</code></pre>
+</details>
 <div class="desc"><p>Save treated file to CSV.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -614,6 +1817,43 @@ Useful to incrementally materialize tables via DBT</p>
 <span>def <span class="ident">set_redis_rdo_files</span></span>(<span>redis_client, dataset_id: str, table_id: str)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_redis_rdo_files(redis_client, dataset_id: str, table_id: str):
+    &#34;&#34;&#34;
+    Register downloaded files to Redis
+
+    Args:
+        redis_client (_type_): _description_
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+
+    Returns:
+        bool: if the key was properly set
+    &#34;&#34;&#34;
+    try:
+        content = redis_client.get(f&#34;{dataset_id}.{table_id}&#34;)[&#34;files&#34;]
+    except TypeError as e:
+        log(f&#34;Caught error {e}. Will set unexisting key&#34;)
+        # set key to empty dict for filling later
+        redis_client.set(f&#34;{dataset_id}.{table_id}&#34;, {&#34;files&#34;: []})
+        content = redis_client.get(f&#34;{dataset_id}.{table_id}&#34;)
+    # update content
+    st_client = bd.Storage(dataset_id=dataset_id, table_id=table_id)
+    blob_names = [
+        blob.name
+        for blob in st_client.client[&#34;storage_staging&#34;].list_blobs(
+            st_client.bucket, prefix=f&#34;staging/{dataset_id}/{table_id}&#34;
+        )
+    ]
+    files = [blob_name.split(&#34;/&#34;)[-1].replace(&#34;.csv&#34;, &#34;&#34;) for blob_name in blob_names]
+    log(f&#34;When setting key, found {len(files)} files. Will register on redis...&#34;)
+    content[&#34;files&#34;] = files
+    # set key
+    return redis_client.set(f&#34;{dataset_id}.{table_id}&#34;, content)</code></pre>
+</details>
 <div class="desc"><p>Register downloaded files to Redis</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -631,9 +1871,82 @@ Useful to incrementally materialize tables via DBT</p>
 </dl></div>
 </dd>
 <dt id="pipelines.rj_smtr.utils.upload_run_logs_to_bq"><code class="name flex">
-<span>def <span class="ident">upload_run_logs_to_bq</span></span>(<span>dataset_id: str, parent_table_id: str, timestamp: str, error: str = None, previous_error: str = None, recapture: bool = False, mode: str = 'raw', bucket_name: str = None)</span>
+<span>def <span class="ident">upload_run_logs_to_bq</span></span>(<span>dataset_id: str,<br>parent_table_id: str,<br>timestamp: str,<br>error: str = None,<br>previous_error: str = None,<br>recapture: bool = False,<br>mode: str = 'raw',<br>bucket_name: str = None)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def upload_run_logs_to_bq(  # pylint: disable=R0913
+    dataset_id: str,
+    parent_table_id: str,
+    timestamp: str,
+    error: str = None,
+    previous_error: str = None,
+    recapture: bool = False,
+    mode: str = &#34;raw&#34;,
+    bucket_name: str = None,
+):
+    &#34;&#34;&#34;
+    Upload execution status table to BigQuery.
+    Table is uploaded to the same dataset, named {parent_table_id}_logs.
+    If passing status_dict, should not pass timestamp and error.
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        parent_table_id (str): table_id on BigQuery
+        timestamp (str): timestamp to get datetime range
+        error (str): error catched during execution
+        previous_error (str): previous error catched during execution
+        recapture (bool): if the execution was a recapture
+        mode (str): folder to save locally, later folder which to upload to GCS
+        bucket_name (str, Optional): The bucket name to save the data.
+
+    Returns:
+        None
+    &#34;&#34;&#34;
+    table_id = parent_table_id + &#34;_logs&#34;
+    # Create partition directory
+    filename = f&#34;{table_id}_{timestamp.isoformat()}&#34;
+    partition = f&#34;data={timestamp.date()}&#34;
+    filepath = Path(
+        f&#34;&#34;&#34;data/{mode}/{dataset_id}/{table_id}/{partition}/{filename}.csv&#34;&#34;&#34;
+    )
+    filepath.parent.mkdir(exist_ok=True, parents=True)
+    # Create dataframe to be uploaded
+    if not error and recapture is True:
+        # if the recapture is succeeded, update the column erro
+        dataframe = pd.DataFrame(
+            {
+                &#34;timestamp_captura&#34;: [timestamp],
+                &#34;sucesso&#34;: [True],
+                &#34;erro&#34;: [f&#34;[recapturado]{previous_error}&#34;],
+            }
+        )
+        log(f&#34;Recapturing {timestamp} with previous error:\n{previous_error}&#34;)
+    else:
+        # not recapturing or error during flow execution
+        dataframe = pd.DataFrame(
+            {
+                &#34;timestamp_captura&#34;: [timestamp],
+                &#34;sucesso&#34;: [error is None],
+                &#34;erro&#34;: [error],
+            }
+        )
+    # Save data local
+    dataframe.to_csv(filepath, index=False)
+    # Upload to Storage
+    create_or_append_table(
+        dataset_id=dataset_id,
+        table_id=table_id,
+        path=filepath.as_posix(),
+        partitions=partition,
+        bucket_name=bucket_name,
+    )
+    if error is not None:
+        raise Exception(f&#34;Pipeline failed with error: {error}&#34;)</code></pre>
+</details>
 <div class="desc"><p>Upload execution status table to BigQuery.
 Table is uploaded to the same dataset, named {parent_table_id}_logs.
 If passing status_dict, should not pass timestamp and error.</p>
@@ -763,7 +2076,7 @@ setTimeout(() => input.focus(), 100);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
 </footer>
 </body>
 </html>

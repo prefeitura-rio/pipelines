@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.1">
+<meta name="generator" content="pdoc3 0.11.5">
 <title>pipelines.rj_cor.meteorologia.radar.precipitacao.src.data.process.process_ppi API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -37,36 +48,583 @@ hljs.highlightAll();
 <span>def <span class="ident">get_azimuth_indices</span></span>(<span>sweep_info: dict) ‑> dict</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_azimuth_indices(sweep_info: dict) -&gt; dict:
+    indices_dict = dict()
+
+    for primary_key in sweep_info.keys():
+        startazA = sweep_info[primary_key][&#34;startazA&#34;]
+        stopazA = sweep_info[primary_key][&#34;stopazA&#34;]
+
+        pos_dist = ((stopazA - startazA) % 360) / 2
+        neg_dist = 180 - pos_dist
+
+        dist = np.minimum(pos_dist, neg_dist)
+
+        avgazA = (startazA + (2 * (pos_dist &lt; neg_dist) - 1) * dist) % 360
+        hist, bins = np.histogram(avgazA, bins=np.arange(0, NRAYS + 1, 1))
+        indices_dict[primary_key] = dict()
+        indices_dict[primary_key][&#34;repeated_indices&#34;] = dict()
+
+        repeated_indices = np.asarray(hist &gt; 1).nonzero()[0]
+        for i in repeated_indices:
+            indices_dict[primary_key][&#34;repeated_indices&#34;][i] = []
+            for j, az in enumerate(avgazA):
+                if bins[i] &lt;= az &lt; bins[i + 1]:
+                    indices_dict[primary_key][&#34;repeated_indices&#34;][i].append(j)
+
+        indices_dict[primary_key][&#34;missing_indices&#34;] = np.asarray(hist == 0).nonzero()[
+            0
+        ]
+        indices_dict[primary_key][&#34;indices&#34;] = np.digitize(avgazA, bins) - 1
+
+    return indices_dict</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.src.data.process.process_ppi.partition_consecutive_mod_n"><code class="name flex">
 <span>def <span class="ident">partition_consecutive_mod_n</span></span>(<span>l1: list, n: int)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def partition_consecutive_mod_n(l1: list, n: int):
+    if n &lt;= 0:
+        raise ValueError(&#34;Integer n must be positive.&#34;)
+
+    if len(l1) == 0:
+        raise ValueError(&#34;List is empty.&#34;)
+
+    l2 = sorted(l1)
+
+    partition_dict = {l2[0]: [l2[0]]}
+
+    last_partition_representative = l2[0]
+    for k in l2[1:]:
+        if k &gt;= n:
+            raise ValueError(
+                &#34;There is a number in list that is greater or equal than n.&#34;
+            )
+
+        if (k - 1) in partition_dict[last_partition_representative]:
+            partition_dict[last_partition_representative].append(k)
+        else:
+            partition_dict[k] = [k]
+            last_partition_representative = k
+
+    if l2[0] == 0 and n - 1 in partition_dict[last_partition_representative]:
+        partition_dict[last_partition_representative].extend(partition_dict[l2[0]])
+        del partition_dict[l2[0]]
+
+    return partition_dict</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.src.data.process.process_ppi.prj0"><code class="name flex">
 <span>def <span class="ident">prj0</span></span>(<span>x, y)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def prj0(x, y):
+    return x</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.src.data.process.process_ppi.prj1"><code class="name flex">
 <span>def <span class="ident">prj1</span></span>(<span>x, y)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def prj1(x, y):
+    return y</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.src.data.process.process_ppi.process_data"><code class="name flex">
 <span>def <span class="ident">process_data</span></span>(<span>full_matrix: <built-in function array>, operator) ‑> dict</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process_data(full_matrix: np.array, operator) -&gt; dict:
+    processed_data, index_matrix = operator(full_matrix)
+
+    return processed_data, index_matrix</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.radar.precipitacao.src.data.process.process_ppi.process_ppi"><code class="name flex">
-<span>def <span class="ident">process_ppi</span></span>(<span>verbose: bool, feature: str, process_type: str, filepath: str, index_matrix: <built-in function array> = None)</span>
+<span>def <span class="ident">process_ppi</span></span>(<span>verbose: bool,<br>feature: str,<br>process_type: str,<br>filepath: str,<br>index_matrix: <built-in function array> = None)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process_ppi(
+    verbose: bool,
+    feature: str,
+    process_type: str,
+    filepath: str,
+    index_matrix: np.array = None,
+):
+    if feature not in VARIABLES_DICT.keys():
+        print_error(&#34;Error: Specified feature not allowed.&#34;)
+        exit()
+
+    load_index_matrix = &#34;_&#34; in process_type
+    if load_index_matrix:
+        indices_process_type, indices_feature = process_type.split(&#34;_&#34;)
+
+    possible_process_types = [&#34;CMAX&#34;, &#34;CAPPI&#34;, &#34;PSEUDO-CAPPI&#34;, &#34;CAVG&#34;, &#34;RHOHV-CAVG&#34;]
+
+    if (
+        (not load_index_matrix and process_type not in possible_process_types)
+        or (load_index_matrix and indices_process_type not in possible_process_types)
+        or (load_index_matrix and indices_feature not in VARIABLES_DICT.keys())
+    ):
+        print_error(&#34;Error: Specified process type not allowed.&#34;)
+        exit()
+
+    hdf = h5py.File(filepath)
+
+    lat = hdf[&#34;where&#34;].attrs[&#34;lat&#34;]
+    lon = hdf[&#34;where&#34;].attrs[&#34;lon&#34;]
+
+    file_date = hdf[&#34;what&#34;].attrs[&#34;date&#34;].decode(&#34;UTF-8&#34;)
+    time = hdf[&#34;what&#34;].attrs[&#34;time&#34;].decode(&#34;UTF-8&#34;)
+
+    gains = []
+    offsets = []
+    if process_type == &#34;RHOHV-CAVG&#34;:
+        rhohv_gains = []
+        rhohv_offsets = []
+
+    secondary_key = VARIABLES_DICT[feature]
+    sweep_info = dict(
+        [
+            (primary_key, dict())
+            for primary_key in hdf.keys()
+            if primary_key not in [&#34;how&#34;, &#34;what&#34;, &#34;where&#34;]
+        ]
+    )
+
+    dataset_keys = [key for key in hdf.keys() if key not in [&#34;how&#34;, &#34;what&#34;, &#34;where&#34;]]
+    for elevation, primary_key in enumerate(dataset_keys):
+        sweep_info[primary_key][&#34;nrays&#34;] = hdf[primary_key][&#34;where&#34;].attrs[&#34;nrays&#34;]
+        sweep_info[primary_key][&#34;nbins&#34;] = hdf[primary_key][&#34;where&#34;].attrs[&#34;nbins&#34;]
+
+        rscale = hdf[primary_key][&#34;where&#34;].attrs[&#34;rscale&#34;]
+        rstart = hdf[primary_key][&#34;where&#34;].attrs[&#34;rstart&#34;]
+
+        assert rstart == RSTART, f&#34;rstart not {RSTART} as expected.&#34;
+        assert rscale == RSCALE, f&#34;rscale not {RSCALE} as expected.&#34;
+
+        sweep_info[primary_key][&#34;startazA&#34;] = np.array(
+            hdf[primary_key][&#34;how&#34;].attrs[&#34;startazA&#34;]
+        )
+        sweep_info[primary_key][&#34;stopazA&#34;] = np.array(
+            hdf[primary_key][&#34;how&#34;].attrs[&#34;stopazA&#34;]
+        )
+        gains.append(hdf[primary_key][secondary_key][&#34;what&#34;].attrs[&#34;gain&#34;])
+        offsets.append(hdf[primary_key][secondary_key][&#34;what&#34;].attrs[&#34;offset&#34;])
+        if process_type == &#34;RHOHV-CAVG&#34;:
+            rhohv_gains.append(
+                hdf[primary_key][VARIABLES_DICT[&#34;RHOHV&#34;]][&#34;what&#34;].attrs[&#34;gain&#34;]
+            )
+            rhohv_offsets.append(
+                hdf[primary_key][VARIABLES_DICT[&#34;RHOHV&#34;]][&#34;what&#34;].attrs[&#34;offset&#34;]
+            )
+
+    assert gains.count(gains[0]) == len(gains), &#34;Not all gains are identical.&#34;
+    assert offsets.count(offsets[0]) == len(offsets), &#34;Not all offsets are identical.&#34;
+    gain = gains[0]
+    offset = offsets[0]
+
+    assert gain &gt; 0, &#34;gain variable less or equal than zero.&#34;
+    del gains
+    del offsets
+    if process_type == &#34;RHOHV-CAVG&#34;:
+        assert rhohv_gains.count(rhohv_gains[0]) == len(
+            rhohv_gains
+        ), &#34;Not all gains are identical.&#34;
+        assert rhohv_offsets.count(rhohv_offsets[0]) == len(
+            rhohv_offsets
+        ), &#34;Not all offsets are identical.&#34;
+        rhohv_gain = rhohv_gains[0]
+        rhohv_offset = rhohv_offsets[0]
+
+        assert rhohv_gain &gt; 0, &#34;gain variable less or equal than zero.&#34;
+        del rhohv_gains
+        del rhohv_offsets
+
+    nrays_max = max(
+        [sweep_info[primary_key][&#34;nrays&#34;] for primary_key in sweep_info.keys()]
+    )
+    nbins_max = max(
+        [sweep_info[primary_key][&#34;nbins&#34;] for primary_key in sweep_info.keys()]
+    )
+    assert nrays_max == NRAYS, f&#34;Maximum value of nrays over elevations is not {NRAYS}.&#34;
+    try:
+        assert (
+            nbins_max == 1000
+        ), f&#34;Maximum value of nbins over elevations is not 1000 in file {filepath}.&#34;
+    except AssertionError as e:
+        print_warning(e, verbose)
+    indices_dict = get_azimuth_indices(sweep_info)
+
+    # except AssertionError as e:
+    full_matrix = -np.ones((nrays_max, nbins_max, len(dataset_keys)))
+    if process_type == &#34;RHOHV-CAVG&#34;:
+        rhohv_full_matrix = -np.ones((nrays_max, nbins_max, len(dataset_keys)))
+
+    full_startazA_matrix = -np.ones((nrays_max, nbins_max, len(dataset_keys)))
+    full_stopazA_matrix = -np.ones((nrays_max, nbins_max, len(dataset_keys)))
+    full_startazT_matrix = -np.ones((nrays_max, nbins_max, len(dataset_keys)))
+    full_stopazT_matrix = -np.ones((nrays_max, nbins_max, len(dataset_keys)))
+    full_elevation_matrix = np.empty((nrays_max, nbins_max, len(dataset_keys)))
+
+    for el_index, primary_key in enumerate(dataset_keys):
+        if len(indices_dict[primary_key][&#34;missing_indices&#34;]) &gt; 0:
+            print_warning(
+                f&#34;Warning: missing indices in {filepath} at {primary_key}.&#34;, verbose
+            )
+        if len(indices_dict[primary_key][&#34;repeated_indices&#34;].keys()) &gt; 0:
+            print_warning(
+                f&#34;Warning: repeated indices in {filepath} at {primary_key}.&#34;, verbose
+            )
+
+        data_array = np.array(hdf[primary_key][secondary_key][&#34;data&#34;])
+
+        if process_type == &#34;RHOHV-CAVG&#34;:
+            rhohv_data_array = np.array(
+                hdf[primary_key][VARIABLES_DICT[&#34;RHOHV&#34;]][&#34;data&#34;]
+            )
+
+        for i in indices_dict[primary_key][&#34;repeated_indices&#34;].keys():
+            repeated_list = indices_dict[primary_key][&#34;repeated_indices&#34;][i]
+
+            nonzero_repeated_list = repeated_list
+
+            zero_line_indices = np.where(
+                np.all(data_array[repeated_list, :] == 0, axis=1)
+            )[0]
+
+            succeding_ray_index = (i + 1) % NRAYS
+            while succeding_ray_index in indices_dict[primary_key][&#34;missing_indices&#34;]:
+                succeding_ray_index = (succeding_ray_index + 1) % NRAYS
+            preceding_ray_index = (i - 1) % NRAYS
+            while preceding_ray_index in indices_dict[primary_key][&#34;missing_indices&#34;]:
+                preceding_ray_index = (preceding_ray_index - 1) % NRAYS
+
+            # Warn when a whole repeated line is zero. If this is the case, take the mean of non-zero repeated lines
+            if len(zero_line_indices):
+                print_warning(
+                    f&#34;Warning: Data array at one of the repeated indices in {filepath} at {primary_key} is all zeros.&#34;,
+                    verbose,
+                )
+                nonzero_repeated_list = list(
+                    set(repeated_list)
+                    - set([repeated_list[ind] for ind in zero_line_indices])
+                )
+
+            nonzero_repeated_list += [
+                list(indices_dict[primary_key][&#34;indices&#34;]).index(preceding_ray_index),
+                list(indices_dict[primary_key][&#34;indices&#34;]).index(succeding_ray_index),
+            ]
+
+            data_array[repeated_list, :] = np.median(
+                data_array[list(nonzero_repeated_list), :], axis=0
+            ).reshape((1, data_array.shape[1]))
+
+        startazA = np.array(hdf[primary_key][&#34;how&#34;].attrs[&#34;startazA&#34;])
+        stopazA = np.array(hdf[primary_key][&#34;how&#34;].attrs[&#34;stopazA&#34;])
+        startazT = np.array(hdf[primary_key][&#34;how&#34;].attrs[&#34;startazT&#34;])
+        stopazT = np.array(hdf[primary_key][&#34;how&#34;].attrs[&#34;stopazT&#34;])
+        full_matrix[
+            indices_dict[primary_key][&#34;indices&#34;],
+            : hdf[primary_key][&#34;where&#34;].attrs[&#34;nbins&#34;],
+            el_index,
+        ] = data_array
+        if process_type == &#34;RHOHV-CAVG&#34;:
+            rhohv_full_matrix[
+                indices_dict[primary_key][&#34;indices&#34;],
+                : hdf[primary_key][&#34;where&#34;].attrs[&#34;nbins&#34;],
+                el_index,
+            ] = rhohv_data_array
+        full_startazA_matrix[
+            indices_dict[primary_key][&#34;indices&#34;], :, el_index
+        ] = startazA.reshape(startazA.shape[0], 1)
+        full_stopazA_matrix[
+            indices_dict[primary_key][&#34;indices&#34;], :, el_index
+        ] = stopazA.reshape(stopazA.shape[0], 1)
+        full_startazT_matrix[
+            indices_dict[primary_key][&#34;indices&#34;], :, el_index
+        ] = startazT.reshape(startazT.shape[0], 1)
+        full_stopazT_matrix[
+            indices_dict[primary_key][&#34;indices&#34;], :, el_index
+        ] = stopazT.reshape(stopazT.shape[0], 1)
+
+        full_elevation_matrix[:, :, el_index] = hdf[primary_key][&#34;where&#34;].attrs[
+            &#34;elangle&#34;
+        ]
+
+        missing_indices_partition = None
+        try:
+            missing_indices_partition = partition_consecutive_mod_n(
+                indices_dict[primary_key][&#34;missing_indices&#34;], NRAYS
+            )
+        except ValueError:
+            missing_indices_partition = {}
+
+        for class_representative in missing_indices_partition.keys():
+            m = len(missing_indices_partition[class_representative])
+            preceding_ray_index = (class_representative - 1) % NRAYS
+            succeding_ray_index = (
+                missing_indices_partition[class_representative][-1] + 1
+            ) % NRAYS
+
+            for i, ind in enumerate(missing_indices_partition[class_representative]):
+                full_matrix[ind, :, el_index] = np.average(
+                    full_matrix[
+                        [preceding_ray_index, succeding_ray_index], :, el_index
+                    ],
+                    axis=0,
+                    weights=[(i + 1) / (m + 1), 1 - (i + 1) / (m + 1)],
+                ).reshape((1, nbins_max))
+
+                if process_type == &#34;RHOHV-CAVG&#34;:
+                    rhohv_full_matrix[ind, :, el_index] = np.zeros((1, nbins_max))
+    if process_type == &#34;RHOHV-CAVG&#34;:
+        rhohv_full_matrix = rhohv_full_matrix * rhohv_gain + rhohv_offset
+    ind0 = np.fromfunction(prj0, (nrays_max, nbins_max)).astype(int)
+    ind1 = np.fromfunction(prj1, (nrays_max, nbins_max)).astype(int)
+
+    operator = None
+    if load_index_matrix:
+
+        def operator(full_matrix):
+            def from_list(x):
+                return x[0]
+
+            indices = np.vectorize(from_list)(index_matrix)
+            return full_matrix[ind0, ind1, indices], index_matrix
+
+    elif process_type == &#34;CMAX&#34;:
+
+        def operator(full_matrix):
+            index_matrix = np.argmax(full_matrix, axis=2)
+
+            def to_list(x):
+                return [x]
+
+            return full_matrix[ind0, ind1, index_matrix], np.vectorize(
+                to_list, otypes=[&#34;object&#34;]
+            )(index_matrix)
+
+    # elif process_type==&#39;CAPPI&#39;:
+    elif process_type == &#34;PSEUDO-CAPPI&#34;:
+        ranges = (rstart + rscale / 2) + np.arange(0, nbins_max) * rscale
+        elevations = full_elevation_matrix[0, 0, :]
+
+        assert np.all(elevations &lt; 90), &#34;Unexpected value for elevation angles.&#34;
+
+        altitude = 1500
+        elevations_per_range = (np.arctan(altitude / ranges) * 180 / np.pi).flatten()
+        digitized = np.digitize(elevations_per_range, elevations) - 1
+        down_elevations = np.asarray(digitized == -1).nonzero()[0]
+        up_elevations = np.asarray(digitized == len(elevations) - 1).nonzero()[0]
+        mid_elevations = np.asarray(
+            np.logical_and(digitized &gt;= 0, digitized &lt; len(elevations) - 1)
+        ).nonzero()[0]
+
+        def to_list(x):
+            return [x]
+
+        def with_successor_to_list(x):
+            return [x, x + 1]
+
+        v_to_list = np.vectorize(to_list, otypes=[&#34;object&#34;])
+        v_with_successor_to_list = np.vectorize(
+            with_successor_to_list, otypes=[&#34;object&#34;]
+        )
+        elevation_indices_per_range = np.hstack(
+            [
+                v_to_list(digitized[up_elevations]),
+                v_with_successor_to_list(digitized[mid_elevations]),
+                v_to_list(digitized[down_elevations]),
+            ]
+        )
+        mid_elevations_ratios = (
+            elevations_per_range[mid_elevations] - elevations[digitized[mid_elevations]]
+        ) / (
+            elevations[digitized[mid_elevations] + 1]
+            - elevations[digitized[mid_elevations]]
+        )
+        weights_matrix = np.empty((nrays_max, len(mid_elevations), 2))
+        weights_matrix[::] = np.vstack(
+            [mid_elevations_ratios, 1 - mid_elevations_ratios]
+        ).T.reshape(1, -1, 2)
+        down_indices_matrix = np.empty((nrays_max, len(down_elevations)), dtype=&#34;int&#34;)
+        up_indices_matrix = np.empty((nrays_max, len(up_elevations)), dtype=&#34;int&#34;)
+
+        down_indices_matrix[:, :] = digitized[down_elevations].reshape(1, -1)
+        up_indices_matrix[:, :] = digitized[up_elevations].reshape(1, -1)
+        mid_indices_matrix = np.empty(
+            (nrays_max, len(mid_elevations_ratios), 2), dtype=&#34;int&#34;
+        )
+
+        mid_indices_matrix[:] = np.array(
+            list(v_with_successor_to_list(digitized[mid_elevations])), dtype=&#34;int&#34;
+        )
+
+        def operator(full_matrix):
+            index_matrix = np.empty((nrays_max, nbins_max), dtype=&#34;object&#34;)
+            index_matrix[:] = elevation_indices_per_range.reshape(1, -1)
+
+            ind0up = np.fromfunction(prj0, (nrays_max, len(up_elevations))).astype(int)
+            ind1up = np.fromfunction(prj1, (nrays_max, len(up_elevations))).astype(int)
+
+            def prj0mid(x, y, z):
+                return x
+
+            def prj1mid(x, y, z):
+                return y
+
+            ind0mid = np.fromfunction(
+                prj0mid, (nrays_max, len(mid_elevations), 2)
+            ).astype(int)
+            ind1mid = np.fromfunction(
+                prj1mid, (nrays_max, len(mid_elevations), 2)
+            ).astype(int)
+
+            ind0down = np.fromfunction(prj0, (nrays_max, len(down_elevations))).astype(
+                int
+            )
+            ind1down = np.fromfunction(prj1, (nrays_max, len(down_elevations))).astype(
+                int
+            )
+            processed_data_matrix = np.hstack(
+                [
+                    full_matrix[:, 0 : len(up_elevations), :][
+                        ind0up, ind1up, up_indices_matrix
+                    ],
+                    np.average(
+                        full_matrix[
+                            :,
+                            len(up_elevations) : len(up_elevations)
+                            + len(mid_elevations),
+                            :,
+                        ][ind0mid, ind1mid, mid_indices_matrix],
+                        axis=2,
+                        weights=weights_matrix,
+                    ),
+                    full_matrix[:, 0 : len(down_elevations), :][
+                        ind0down, ind1down, down_indices_matrix
+                    ],
+                ]
+            )
+
+            return processed_data_matrix, index_matrix
+
+    elif process_type == &#34;CAVG&#34;:
+
+        def operator(full_matrix):
+            index_matrix = np.empty(shape=(nrays_max, nbins_max), dtype=&#34;object&#34;)
+            for i in range(nrays_max):
+                for j in range(nbins_max):
+                    index_matrix[i][j] = list(np.where(full_matrix[i, j, :] != -1)[0])
+
+            nan_full_matrix = np.where(full_matrix != -1, full_matrix, np.nan)
+            processed_data_matrix = np.nanmean(nan_full_matrix, axis=2)
+
+            return processed_data_matrix, index_matrix
+
+    elif process_type == &#34;RHOHV-CAVG&#34;:
+
+        def operator(full_matrix):
+            index_matrix = np.empty(shape=(nrays_max, nbins_max), dtype=&#34;object&#34;)
+            for i in range(nrays_max):
+                for j in range(nbins_max):
+                    index_matrix[i][j] = list(np.where(full_matrix[i, j, :] != -1)[0])
+
+            nan_full_matrix = np.where(full_matrix != -1, full_matrix, np.nan)
+            nan_rhohv_full_matrix = np.where(
+                rhohv_full_matrix != -1, rhohv_full_matrix, np.nan
+            )
+
+            nan_rhohv_full_matrix = np.where(
+                np.isnan(nan_full_matrix), np.nan, nan_rhohv_full_matrix
+            )
+            nan_full_matrix = np.where(
+                np.isnan(nan_rhohv_full_matrix), np.nan, nan_full_matrix
+            )
+
+            np.nansum(nan_rhohv_full_matrix, axis=2)
+            processed_data_matrix = np.nansum(
+                nan_full_matrix * nan_rhohv_full_matrix, axis=2
+            ) / np.nansum(nan_rhohv_full_matrix, axis=2)
+            processed_data_matrix = np.where(
+                np.isnan(processed_data_matrix), 0, processed_data_matrix
+            )
+
+            return processed_data_matrix, index_matrix
+
+    else:
+        print_error(&#34;Processing type not yet implemented.&#34;)
+        exit()
+
+    processed_data, index_matrix = process_data(full_matrix, operator)
+
+    def get_from_indices(data, indices):
+        new_data = np.empty((nrays_max, nbins_max), dtype=&#34;object&#34;)
+        index_permutations = (
+            (n % nrays_max, int(n / nrays_max)) for n in range(nrays_max * nbins_max)
+        )
+        for i, j in index_permutations:
+            new_data[i, j] = data[i, j, indices[i, j]]
+        return new_data
+
+    startazA_matrix = get_from_indices(full_startazA_matrix, index_matrix)
+    stopazA_matrix = get_from_indices(full_stopazA_matrix, index_matrix)
+    startazT_matrix = get_from_indices(full_startazT_matrix, index_matrix)
+    stopazT_matrix = get_from_indices(full_stopazT_matrix, index_matrix)
+    elevation_matrix = get_from_indices(full_elevation_matrix, index_matrix)
+
+    radar_data = RadarData(
+        processed_data,
+        process_type,
+        gain,
+        offset,
+        feature,
+        nrays_max,
+        nbins_max,
+        index_matrix,
+        startazA_matrix,
+        stopazA_matrix,
+        startazT_matrix,
+        stopazT_matrix,
+        elevation_matrix,
+        file_date,
+        time,
+        lat,
+        lon,
+    )
+    return radar_data</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 </dl>
@@ -144,7 +702,7 @@ setTimeout(() => input.focus(), 100);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
 </footer>
 </body>
 </html>

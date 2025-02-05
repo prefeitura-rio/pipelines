@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.1">
+<meta name="generator" content="pdoc3 0.11.5">
 <title>pipelines.rj_smtr.tasks API documentation</title>
 <meta name="description" content="Tasks for rj_smtr">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -35,9 +46,81 @@ hljs.highlightAll();
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pipelines.rj_smtr.tasks.bq_upload"><code class="name flex">
-<span>def <span class="ident">bq_upload</span></span>(<span>dataset_id: str, table_id: str, filepath: str, raw_filepath: str = None, partitions: str = None, status: dict = None)</span>
+<span>def <span class="ident">bq_upload</span></span>(<span>dataset_id: str,<br>table_id: str,<br>filepath: str,<br>raw_filepath: str = None,<br>partitions: str = None,<br>status: dict = None)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def bq_upload(
+    dataset_id: str,
+    table_id: str,
+    filepath: str,
+    raw_filepath: str = None,
+    partitions: str = None,
+    status: dict = None,
+):  # pylint: disable=R0913
+    &#34;&#34;&#34;
+    Upload raw and treated data to GCS and BigQuery.
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+        filepath (str): Path to the saved treated .csv file
+        raw_filepath (str, optional): Path to raw .json file. Defaults to None.
+        partitions (str, optional): Partitioned directory structure, ie &#34;ano=2022/mes=03/data=01&#34;.
+        Defaults to None.
+        status (dict, optional): Dict containing `error` key from
+        upstream tasks.
+
+    Returns:
+        None
+    &#34;&#34;&#34;
+    log(
+        f&#34;&#34;&#34;
+    Received inputs:
+    raw_filepath = {raw_filepath}, type = {type(raw_filepath)}
+    treated_filepath = {filepath}, type = {type(filepath)}
+    dataset_id = {dataset_id}, type = {type(dataset_id)}
+    table_id = {table_id}, type = {type(table_id)}
+    partitions = {partitions}, type = {type(partitions)}
+    &#34;&#34;&#34;
+    )
+    if status[&#34;error&#34;] is not None:
+        return status[&#34;error&#34;]
+
+    error = None
+
+    try:
+        # Upload raw to staging
+        if raw_filepath:
+            st_obj = Storage(table_id=table_id, dataset_id=dataset_id)
+            log(
+                f&#34;&#34;&#34;Uploading raw file to bucket {st_obj.bucket_name} at
+                {st_obj.bucket_name}/{dataset_id}/{table_id}&#34;&#34;&#34;
+            )
+            st_obj.upload(
+                path=raw_filepath,
+                partitions=partitions,
+                mode=&#34;raw&#34;,
+                if_exists=&#34;replace&#34;,
+            )
+
+        # Creates and publish table if it does not exist, append to it otherwise
+        create_or_append_table(
+            dataset_id=dataset_id,
+            table_id=table_id,
+            path=filepath,
+            partitions=partitions,
+        )
+    except Exception:
+        error = traceback.format_exc()
+        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+
+    return error</code></pre>
+</details>
 <div class="desc"><p>Upload raw and treated data to GCS and BigQuery.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -63,6 +146,43 @@ hljs.highlightAll();
 <span>def <span class="ident">bq_upload_from_dict</span></span>(<span>paths: dict, dataset_id: str, partition_levels: int = 1)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def bq_upload_from_dict(paths: dict, dataset_id: str, partition_levels: int = 1):
+    &#34;&#34;&#34;Upload multiple tables from a dict structured as {table_id: csv_path}.
+        Present use case assumes table partitioned once. Adjust the parameter
+        &#39;partition_levels&#39; to best suit new uses.
+        i.e. if your csv is saved as:
+            &lt;table_id&gt;/date=&lt;run_date&gt;/&lt;filename&gt;.csv
+        it has 1 level of partition.
+        if your csv file is saved as:
+            &lt;table_id&gt;/date=&lt;run_date&gt;/hour=&lt;run_hour&gt;/&lt;filename&gt;.csv
+        it has 2 levels of partition
+
+    Args:
+        paths (dict): _description_
+        dataset_id (str): _description_
+
+    Returns:
+        _type_: _description_
+    &#34;&#34;&#34;
+    for key in paths.keys():
+        log(&#34;#&#34; * 80)
+        log(f&#34;KEY = {key}&#34;)
+        tb_dir = paths[key].parent
+        # climb up the partition directories to reach the table dir
+        for i in range(partition_levels):  # pylint: disable=unused-variable
+            tb_dir = tb_dir.parent
+        log(f&#34;tb_dir = {tb_dir}&#34;)
+        create_or_append_table(dataset_id=dataset_id, table_id=key, path=tb_dir)
+
+    log(f&#34;Returning -&gt; {tb_dir.parent}&#34;)
+
+    return tb_dir.parent</code></pre>
+</details>
 <div class="desc"><p>Upload multiple tables from a dict structured as {table_id: csv_path}.
 Present use case assumes table partitioned once. Adjust the parameter
 'partition_levels' to best suit new uses.
@@ -86,9 +206,85 @@ it has 2 levels of partition</p>
 </dl></div>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.build_incremental_model"><code class="name flex">
-<span>def <span class="ident">build_incremental_model</span></span>(<span>dbt_client: dbt_client.dbt_client.DbtClient, dataset_id: str, base_table_id: str, mat_table_id: str, field_name: str = 'data_versao', refresh: bool = False, wait=None)</span>
+<span>def <span class="ident">build_incremental_model</span></span>(<span>dbt_client: dbt_client.dbt_client.DbtClient,<br>dataset_id: str,<br>base_table_id: str,<br>mat_table_id: str,<br>field_name: str = 'data_versao',<br>refresh: bool = False,<br>wait=None)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(max_retries=3, retry_delay=timedelta(seconds=10))
+def build_incremental_model(  # pylint: disable=too-many-arguments
+    dbt_client: DbtClient,
+    dataset_id: str,
+    base_table_id: str,
+    mat_table_id: str,
+    field_name: str = &#34;data_versao&#34;,
+    refresh: bool = False,
+    wait=None,  # pylint: disable=unused-argument
+):
+    &#34;&#34;&#34;
+        Utility task for backfilling table in predetermined steps.
+        Assumes the step sizes will be defined on the .sql file.
+
+    Args:
+        dbt_client (DbtClient): DBT interface object
+        dataset_id (str): Dataset id on BigQuery
+        base_table_id (str): Base table from which to materialize (usually, an external table)
+        mat_table_id (str): Target table id for materialization
+        field_name (str, optional): Key field (column) for dbt incremental filters.
+        Defaults to &#34;data_versao&#34;.
+        refresh (bool, optional): If True, rebuild the table from scratch. Defaults to False.
+        wait (NoneType, optional): Placeholder parameter, used to wait previous tasks finish.
+        Defaults to None.
+
+    Returns:
+        bool: whether the table was fully built or not.
+    &#34;&#34;&#34;
+
+    query_project_id = bq_project()
+    last_mat_date = get_table_min_max_value(
+        query_project_id, dataset_id, mat_table_id, field_name, &#34;max&#34;
+    )
+    last_base_date = get_table_min_max_value(
+        query_project_id, dataset_id, base_table_id, field_name, &#34;max&#34;
+    )
+    log(
+        f&#34;&#34;&#34;
+    Base table last version: {last_base_date}
+    Materialized table last version: {last_mat_date}
+    &#34;&#34;&#34;
+    )
+    run_command = f&#34;run --select models/{dataset_id}/{mat_table_id}.sql&#34;
+
+    if refresh:
+        log(&#34;Running in full refresh mode&#34;)
+        log(f&#34;DBT will run the following command:\n{run_command + &#39; --full-refresh&#39;}&#34;)
+        dbt_client.cli(run_command + &#34; --full-refresh&#34;, sync=True)
+        last_mat_date = get_table_min_max_value(
+            query_project_id, dataset_id, mat_table_id, field_name, &#34;max&#34;
+        )
+
+    if last_base_date &gt; last_mat_date:
+        log(&#34;Running interval step materialization&#34;)
+        log(f&#34;DBT will run the following command:\n{run_command}&#34;)
+        while last_base_date &gt; last_mat_date:
+            running = dbt_client.cli(run_command, sync=True)
+            last_mat_date = get_table_min_max_value(
+                query_project_id,
+                dataset_id,
+                mat_table_id,
+                field_name,
+                &#34;max&#34;,
+                wait=running,
+            )
+            log(f&#34;After this step, materialized table last version is: {last_mat_date}&#34;)
+            if last_mat_date == last_base_date:
+                log(&#34;Materialized table reached base table version!&#34;)
+                return True
+    log(&#34;Did not run interval step materialization...&#34;)
+    return False</code></pre>
+</details>
 <div class="desc"><p>Utility task for backfilling table in predetermined steps.
 Assumes the step sizes will be defined on the .sql file.</p>
 <h2 id="args">Args</h2>
@@ -120,6 +316,28 @@ Assumes the step sizes will be defined on the .sql file.</p>
 <span>def <span class="ident">check_mapped_query_logs_output</span></span>(<span>query_logs_output: list[tuple]) ‑> bool</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def check_mapped_query_logs_output(query_logs_output: list[tuple]) -&gt; bool:
+    &#34;&#34;&#34;
+    Task to check if there is recaptures pending
+
+    Args:
+        query_logs_output (list[tuple]): the return from a mapped query_logs execution
+
+    Returns:
+        bool: True if there is recaptures to do, otherwise False
+    &#34;&#34;&#34;
+
+    if len(query_logs_output) == 0:
+        return False
+
+    recapture_list = [i[0] for i in query_logs_output]
+    return any(recapture_list)</code></pre>
+</details>
 <div class="desc"><p>Task to check if there is recaptures pending</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -136,6 +354,26 @@ Assumes the step sizes will be defined on the .sql file.</p>
 <span>def <span class="ident">coalesce_task</span></span>(<span>value_list: Iterable)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(checkpoint=False)
+def coalesce_task(value_list: Iterable):
+    &#34;&#34;&#34;
+    Task to get the first non None value of a list
+
+    Args:
+        value_list (Iterable): a iterable object with the values
+    Returns:
+        any: value_list&#39;s first non None item
+    &#34;&#34;&#34;
+
+    try:
+        return next(value for value in value_list if value is not None)
+    except StopIteration:
+        return None</code></pre>
+</details>
 <div class="desc"><p>Task to get the first non None value of a list</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -149,9 +387,35 @@ Assumes the step sizes will be defined on the .sql file.</p>
 </dl></div>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.create_date_hour_partition"><code class="name flex">
-<span>def <span class="ident">create_date_hour_partition</span></span>(<span>timestamp: datetime.datetime, partition_date_name: str = 'data', partition_date_only: bool = False) ‑> str</span>
+<span>def <span class="ident">create_date_hour_partition</span></span>(<span>timestamp: datetime.datetime,<br>partition_date_name: str = 'data',<br>partition_date_only: bool = False) ‑> str</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def create_date_hour_partition(
+    timestamp: datetime,
+    partition_date_name: str = &#34;data&#34;,
+    partition_date_only: bool = False,
+) -&gt; str:
+    &#34;&#34;&#34;
+    Create a date (and hour) Hive partition structure from timestamp.
+
+    Args:
+        timestamp (datetime): timestamp to be used as reference
+        partition_date_name (str, optional): partition name. Defaults to &#34;data&#34;.
+        partition_date_only (bool, optional): whether to add hour partition or not
+
+    Returns:
+        str: partition string
+    &#34;&#34;&#34;
+    partition = f&#34;{partition_date_name}={timestamp.strftime(&#39;%Y-%m-%d&#39;)}&#34;
+    if not partition_date_only:
+        partition += f&#34;/hora={timestamp.strftime(&#39;%H&#39;)}&#34;
+    return partition</code></pre>
+</details>
 <div class="desc"><p>Create a date (and hour) Hive partition structure from timestamp.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -169,9 +433,124 @@ Assumes the step sizes will be defined on the .sql file.</p>
 </dl></div>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.create_dbt_run_vars"><code class="name flex">
-<span>def <span class="ident">create_dbt_run_vars</span></span>(<span>dataset_id: str, dbt_vars: dict, table_id: str, raw_dataset_id: str, raw_table_id: str, mode: str, timestamp: datetime.datetime) ‑> tuple[list[dict], typing.Union[list[dict], dict, NoneType], bool]</span>
+<span>def <span class="ident">create_dbt_run_vars</span></span>(<span>dataset_id: str,<br>dbt_vars: dict,<br>table_id: str,<br>raw_dataset_id: str,<br>raw_table_id: str,<br>mode: str,<br>timestamp: datetime.datetime) ‑> tuple[list[dict], list[dict] | dict | None, bool]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(checkpoint=False, nout=3)
+def create_dbt_run_vars(
+    dataset_id: str,
+    dbt_vars: dict,
+    table_id: str,
+    raw_dataset_id: str,
+    raw_table_id: str,
+    mode: str,
+    timestamp: datetime,
+) -&gt; tuple[list[dict], Union[list[dict], dict, None], bool]:
+    &#34;&#34;&#34;
+    Create the variables to be used in dbt materialization based on a dict
+
+    Args:
+        dataset_id (str): the dataset_id to get the variables
+        dbt_vars (dict): dict containing the parameters
+        table_id (str): the table_id get the date_range variable
+        raw_dataset_id (str): the raw_dataset_id get the date_range variable
+        raw_table_id (str): the raw_table_id get the date_range variable
+        mode (str): the mode to get the date_range variable
+
+    Returns:
+        list[dict]: the variables to be used in DBT
+        Union[list[dict], dict, None]: the date variable (date_range or run_date)
+        bool: a flag that indicates if the date_range variable came from Redis
+    &#34;&#34;&#34;
+
+    log(f&#34;Creating DBT variables. Parameter received: {dbt_vars}&#34;)
+
+    if not dbt_vars:
+        log(&#34;dbt_vars are blank. Skiping task...&#34;)
+        return [None], None, False
+
+    final_vars = []
+    date_var = None
+    flag_date_range = False
+
+    if &#34;date_range&#34; in dbt_vars.keys():
+        log(&#34;Creating date_range variable&#34;)
+
+        # Set date_range variable manually
+        if dict_contains_keys(
+            dbt_vars[&#34;date_range&#34;], [&#34;date_range_start&#34;, &#34;date_range_end&#34;]
+        ):
+            date_var = {
+                &#34;date_range_start&#34;: dbt_vars[&#34;date_range&#34;][&#34;date_range_start&#34;],
+                &#34;date_range_end&#34;: dbt_vars[&#34;date_range&#34;][&#34;date_range_end&#34;],
+            }
+        # Create date_range using Redis
+        else:
+            if not table_id:
+                log(&#34;table_id is blank. Skiping task...&#34;)
+                return [None], None, False
+
+            raw_table_id = raw_table_id or table_id
+
+            date_var = get_materialization_date_range.run(
+                dataset_id=dataset_id,
+                table_id=dbt_vars[&#34;date_range&#34;].get(&#34;table_alias&#34;, table_id),
+                raw_dataset_id=raw_dataset_id,
+                raw_table_id=raw_table_id,
+                table_run_datetime_column_name=dbt_vars[&#34;date_range&#34;].get(
+                    &#34;table_run_datetime_column_name&#34;
+                ),
+                mode=mode,
+                delay_hours=dbt_vars[&#34;date_range&#34;].get(&#34;delay_hours&#34;, 0),
+                end_ts=timestamp,
+            )
+
+            flag_date_range = True
+
+        final_vars.append(date_var.copy())
+
+        log(f&#34;date_range created: {date_var}&#34;)
+
+    elif &#34;run_date&#34; in dbt_vars.keys():
+        log(&#34;Creating run_date variable&#34;)
+
+        date_var = get_run_dates.run(
+            date_range_start=dbt_vars[&#34;run_date&#34;].get(&#34;date_range_start&#34;, False),
+            date_range_end=dbt_vars[&#34;run_date&#34;].get(&#34;date_range_end&#34;, False),
+            day_datetime=timestamp,
+        )
+
+        final_vars += [d.copy() for d in date_var]
+
+        log(f&#34;run_date created: {date_var}&#34;)
+
+    elif &#34;data_versao_gtfs&#34; in dbt_vars.keys():
+        log(&#34;Creating data_versao_gtfs variable&#34;)
+
+        date_var = {&#34;data_versao_gtfs&#34;: dbt_vars[&#34;data_versao_gtfs&#34;]}
+
+        final_vars.append(date_var.copy())
+
+    if &#34;version&#34; in dbt_vars.keys():
+        log(&#34;Creating version variable&#34;)
+        dataset_sha = fetch_dataset_sha.run(dataset_id=dataset_id)
+
+        # if there are other variables inside the list, update each item adding the version variable
+        if final_vars:
+            final_vars = get_join_dict.run(dict_list=final_vars, new_dict=dataset_sha)
+        else:
+            final_vars.append(dataset_sha)
+
+        log(f&#34;version created: {dataset_sha}&#34;)
+
+    log(f&#34;All variables was created, final value is: {final_vars}&#34;)
+
+    return final_vars, date_var, flag_date_range</code></pre>
+</details>
 <div class="desc"><p>Create the variables to be used in dbt materialization based on a dict</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -202,6 +581,33 @@ Assumes the step sizes will be defined on the .sql file.</p>
 <span>def <span class="ident">create_local_partition_path</span></span>(<span>dataset_id: str, table_id: str, filename: str, partitions: str = None) ‑> str</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def create_local_partition_path(
+    dataset_id: str, table_id: str, filename: str, partitions: str = None
+) -&gt; str:
+    &#34;&#34;&#34;
+    Create the full path sctructure which to save data locally before
+    upload.
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+        filename (str, optional): Single csv name
+        partitions (str, optional): Partitioned directory structure, ie &#34;ano=2022/mes=03/data=01&#34;
+    Returns:
+        str: String path having `mode` and `filetype` to be replaced afterwards,
+    either to save raw or staging files.
+    &#34;&#34;&#34;
+    data_folder = os.getenv(&#34;DATA_FOLDER&#34;, &#34;data&#34;)
+    file_path = f&#34;{os.getcwd()}/{data_folder}/{{mode}}/{dataset_id}/{table_id}&#34;
+    file_path += f&#34;/{partitions}/{filename}.{{filetype}}&#34;
+    log(f&#34;Creating file path: {file_path}&#34;)
+    return file_path</code></pre>
+</details>
 <div class="desc"><p>Create the full path sctructure which to save data locally before
 upload.</p>
 <h2 id="args">Args</h2>
@@ -223,9 +629,207 @@ upload.</p>
 <p>either to save raw or staging files.</p></div>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.create_request_params"><code class="name flex">
-<span>def <span class="ident">create_request_params</span></span>(<span>extract_params: dict, table_id: str, dataset_id: str, timestamp: datetime.datetime, interval_minutes: int) ‑> tuple[str, str]</span>
+<span>def <span class="ident">create_request_params</span></span>(<span>extract_params: dict,<br>table_id: str,<br>dataset_id: str,<br>timestamp: datetime.datetime,<br>interval_minutes: int) ‑> tuple[str, str]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(checkpoint=False, nout=2)
+def create_request_params(
+    extract_params: dict,
+    table_id: str,
+    dataset_id: str,
+    timestamp: datetime,
+    interval_minutes: int,
+) -&gt; tuple[str, str]:
+    &#34;&#34;&#34;
+    Task to create request params
+
+    Args:
+        extract_params (dict): extract parameters
+        table_id (str): table_id on BigQuery
+        dataset_id (str): dataset_id on BigQuery
+        timestamp (datetime): timestamp for flow run
+        interval_minutes (int): interval in minutes between each capture
+
+    Returns:
+        request_params: host, database and query to request data
+        request_url: url to request data
+    &#34;&#34;&#34;
+    request_params = None
+    request_url = None
+
+    if dataset_id == constants.BILHETAGEM_DATASET_ID.value:
+        database = constants.BILHETAGEM_GENERAL_CAPTURE_PARAMS.value[&#34;databases&#34;][
+            extract_params[&#34;database&#34;]
+        ]
+        request_url = database[&#34;host&#34;]
+
+        request_params = {
+            &#34;database&#34;: extract_params[&#34;database&#34;],
+            &#34;engine&#34;: database[&#34;engine&#34;],
+            &#34;query&#34;: extract_params[&#34;query&#34;],
+        }
+
+        if table_id == constants.BILHETAGEM_TRACKING_CAPTURE_PARAMS.value[&#34;table_id&#34;]:
+            project = bq_project(kind=&#34;bigquery_staging&#34;)
+            log(f&#34;project = {project}&#34;)
+            try:
+                logs_query = f&#34;&#34;&#34;
+                SELECT
+                    timestamp_captura
+                FROM
+                    `{project}.{dataset_id}_staging.{table_id}_logs`
+                WHERE
+                    data &lt;= &#39;{timestamp.strftime(&#34;%Y-%m-%d&#34;)}&#39;
+                    AND sucesso = &#34;True&#34;
+                ORDER BY
+                    timestamp_captura DESC
+                &#34;&#34;&#34;
+                last_success_dates = bd.read_sql(
+                    query=logs_query, billing_project_id=project
+                )
+                last_success_dates = last_success_dates.iloc[:, 0].to_list()
+                for success_ts in last_success_dates:
+                    success_ts = datetime.fromisoformat(success_ts)
+                    last_id_query = f&#34;&#34;&#34;
+                    SELECT
+                        MAX(id)
+                    FROM
+                        `{project}.{dataset_id}_staging.{table_id}`
+                    WHERE
+                        data = &#39;{success_ts.strftime(&#34;%Y-%m-%d&#34;)}&#39;
+                        and hora = &#34;{success_ts.strftime(&#34;%H&#34;)}&#34;;
+                    &#34;&#34;&#34;
+
+                    last_captured_id = bd.read_sql(
+                        query=last_id_query, billing_project_id=project
+                    )
+                    last_captured_id = last_captured_id.iloc[0][0]
+                    if last_captured_id is None:
+                        print(&#34;ID is None, trying next timestamp&#34;)
+                    else:
+                        log(f&#34;last_captured_id = {last_captured_id}&#34;)
+                        break
+            except GenericGBQException as err:
+                if &#34;404 Not found&#34; in str(err):
+                    log(&#34;Table Not found, returning id = 0&#34;)
+                    last_captured_id = 0
+
+            request_params[&#34;query&#34;] = request_params[&#34;query&#34;].format(
+                last_id=last_captured_id,
+                max_id=int(last_captured_id)
+                + extract_params[&#34;page_size&#34;] * extract_params[&#34;max_pages&#34;],
+            )
+            request_params[&#34;page_size&#34;] = extract_params[&#34;page_size&#34;]
+            request_params[&#34;max_pages&#34;] = extract_params[&#34;max_pages&#34;]
+        else:
+            if &#34;get_updates&#34; in extract_params.keys():
+                project = bq_project()
+                log(f&#34;project = {project}&#34;)
+                columns_to_concat_bq = [
+                    c.split(&#34;.&#34;)[-1] for c in extract_params[&#34;get_updates&#34;]
+                ]
+                concat_arg = &#34;,&#39;_&#39;,&#34;
+
+                try:
+                    query = f&#34;&#34;&#34;
+                    SELECT
+                        CONCAT(&#34;&#39;&#34;, {concat_arg.join(columns_to_concat_bq)}, &#34;&#39;&#34;)
+                    FROM
+                        `{project}.{dataset_id}_staging.{table_id}`
+                    &#34;&#34;&#34;
+                    log(query)
+                    last_values = bd.read_sql(query=query, billing_project_id=project)
+
+                    last_values = last_values.iloc[:, 0].to_list()
+                    last_values = &#34;, &#34;.join(last_values)
+                    update_condition = f&#34;&#34;&#34;CONCAT(
+                            {concat_arg.join(extract_params[&#39;get_updates&#39;])}
+                        ) NOT IN ({last_values})
+                    &#34;&#34;&#34;
+
+                except GenericGBQException as err:
+                    if &#34;404 Not found&#34; in str(err):
+                        log(&#34;table not found, setting updates to 1=1&#34;)
+                        update_condition = &#34;1=1&#34;
+
+                request_params[&#34;query&#34;] = request_params[&#34;query&#34;].format(
+                    update=update_condition
+                )
+
+            datetime_range = get_datetime_range(
+                timestamp=timestamp, interval=timedelta(minutes=interval_minutes)
+            )
+
+            request_params[&#34;query&#34;] = request_params[&#34;query&#34;].format(**datetime_range)
+
+    elif dataset_id == constants.GTFS_DATASET_ID.value:
+        request_params = {&#34;zip_filename&#34;: extract_params[&#34;filename&#34;]}
+
+    elif dataset_id == constants.SUBSIDIO_SPPO_RECURSOS_DATASET_ID.value:
+        request_params = {}
+        data_recurso = extract_params.get(&#34;data_recurso&#34;, timestamp)
+        if isinstance(data_recurso, str):
+            data_recurso = datetime.fromisoformat(data_recurso)
+        extract_params[&#34;token&#34;] = get_vault_secret(
+            constants.SUBSIDIO_SPPO_RECURSO_API_SECRET_PATH.value
+        )[&#34;data&#34;][&#34;token&#34;]
+        start = datetime.strftime(
+            data_recurso - timedelta(minutes=interval_minutes), &#34;%Y-%m-%dT%H:%M:%S.%MZ&#34;
+        )
+        end = datetime.strftime(data_recurso, &#34;%Y-%m-%dT%H:%M:%S.%MZ&#34;)
+        log(f&#34; Start date {start}, end date {end}&#34;)
+
+        service = constants.SUBSIDIO_SPPO_RECURSO_TABLE_CAPTURE_PARAMS.value[table_id]
+
+        recurso_params = {
+            &#34;start&#34;: start,
+            &#34;end&#34;: end,
+            &#34;service&#34;: service,
+        }
+
+        extract_params[&#34;$filter&#34;] = extract_params[&#34;$filter&#34;].format(**recurso_params)
+
+        request_params = extract_params
+
+        request_url = constants.SUBSIDIO_SPPO_RECURSO_API_BASE_URL.value
+
+    elif dataset_id == constants.STU_DATASET_ID.value:
+        request_params = {&#34;bucket_name&#34;: constants.STU_BUCKET_NAME.value}
+
+    elif dataset_id == constants.VEICULO_DATASET_ID.value:
+        request_url = get_vault_secret(extract_params[&#34;secret_path&#34;])[&#34;data&#34;][
+            &#34;request_url&#34;
+        ]
+    elif dataset_id == constants.VIAGEM_ZIRIX_RAW_DATASET_ID.value:
+        request_url = f&#34;{constants.ZIRIX_BASE_URL.value}/EnvioViagensConsolidadas&#34;
+        delay_minutes = extract_params[&#34;delay_minutes&#34;]
+        token = get_vault_secret(constants.ZIRIX_API_SECRET_PATH.value)[&#34;data&#34;]
+        token_key = list(token)[0]
+        request_params = {
+            &#34;data_inicial&#34;: (
+                timestamp - timedelta(minutes=delay_minutes + interval_minutes)
+            ).strftime(&#34;%Y-%m-%d %H:%M:%S&#34;),
+            &#34;data_final&#34;: (timestamp - timedelta(minutes=delay_minutes)).strftime(
+                &#34;%Y-%m-%d %H:%M:%S&#34;
+            ),
+            token_key: get_vault_secret(constants.ZIRIX_API_SECRET_PATH.value)[&#34;data&#34;][
+                token_key
+            ],
+        }
+        log(
+            f&#34;&#34;&#34;Params:
+            data_inicial: {request_params[&#39;data_inicial&#39;]}
+            data_final: {request_params[&#39;data_final&#39;]}&#34;&#34;&#34;
+        )
+    elif dataset_id == constants.CONTROLE_FINANCEIRO_DATASET_ID.value:
+        request_url = extract_params[&#34;base_url&#34;] + extract_params[&#34;sheet_id&#34;]
+
+    return request_params, request_url</code></pre>
+</details>
 <div class="desc"><p>Task to create request params</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -252,6 +856,25 @@ upload.</p>
 <span>def <span class="ident">delay_now_time</span></span>(<span>timestamp: str, delay_minutes=6)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def delay_now_time(timestamp: str, delay_minutes=6):
+    &#34;&#34;&#34;Return timestamp string delayed by &lt;delay_minutes&gt;
+
+    Args:
+        timestamp (str): Isoformat timestamp string
+        delay_minutes (int, optional): Minutes to delay timestamp by Defaults to 6.
+
+    Returns:
+        str : timestamp string formatted as &#34;%Y-%m-%dT%H-%M-%S&#34;
+    &#34;&#34;&#34;
+    ts_obj = datetime.fromisoformat(timestamp)
+    ts_obj = ts_obj - timedelta(minutes=delay_minutes)
+    return ts_obj.strftime(&#34;%Y-%m-%dT%H-%M-%S&#34;)</code></pre>
+</details>
 <div class="desc"><p>Return timestamp string delayed by <delay_minutes></p>
 <h2 id="args">Args</h2>
 <dl>
@@ -270,12 +893,60 @@ upload.</p>
 <span>def <span class="ident">fetch_dataset_sha</span></span>(<span>dataset_id: str)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def fetch_dataset_sha(dataset_id: str):
+    &#34;&#34;&#34;Fetches the SHA of a branch from Github&#34;&#34;&#34;
+    url = &#34;https://api.github.com/repos/prefeitura-rio/queries-rj-smtr&#34;
+    url += f&#34;/commits?queries-rj-smtr/rj_smtr/{dataset_id}&#34;
+    response = requests.get(url)
+
+    if response.status_code != 200:
+        return None
+
+    dataset_version = response.json()[0][&#34;sha&#34;]
+    return {&#34;version&#34;: dataset_version}</code></pre>
+</details>
 <div class="desc"><p>Fetches the SHA of a branch from Github</p></div>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.get_current_timestamp"><code class="name flex">
-<span>def <span class="ident">get_current_timestamp</span></span>(<span>timestamp=None, truncate_minute: bool = True, return_str: bool = False) ‑> Union[datetime.datetime, str]</span>
+<span>def <span class="ident">get_current_timestamp</span></span>(<span>timestamp=None, truncate_minute: bool = True, return_str: bool = False) ‑> datetime.datetime | str</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_current_timestamp(
+    timestamp=None, truncate_minute: bool = True, return_str: bool = False
+) -&gt; Union[datetime, str]:
+    &#34;&#34;&#34;
+    Get current timestamp for flow run.
+
+    Args:
+        timestamp: timestamp to be used as reference (optionally, it can be a string)
+        truncate_minute: whether to truncate the timestamp to the minute or not
+        return_str: if True, the return will be an isoformatted datetime string
+                    otherwise it returns a datetime object
+
+    Returns:
+        Union[datetime, str]: timestamp for flow run
+    &#34;&#34;&#34;
+    if isinstance(timestamp, str):
+        timestamp = datetime.fromisoformat(timestamp)
+    if not timestamp:
+        timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
+    if truncate_minute:
+        timestamp = timestamp.replace(second=0, microsecond=0)
+    if return_str:
+        timestamp = timestamp.isoformat()
+
+    return timestamp</code></pre>
+</details>
 <div class="desc"><p>Get current timestamp for flow run.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -297,12 +968,45 @@ otherwise it returns a datetime object</dd>
 <span>def <span class="ident">get_join_dict</span></span>(<span>dict_list: list, new_dict: dict) ‑> List</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_join_dict(dict_list: list, new_dict: dict) -&gt; List:
+    &#34;&#34;&#34;
+    Updates a list of dictionaries with a new dictionary.
+    &#34;&#34;&#34;
+    for dict_temp in dict_list:
+        dict_temp.update(new_dict)
+
+    log(f&#34;get_join_dict: {dict_list}&#34;)
+    return dict_list</code></pre>
+</details>
 <div class="desc"><p>Updates a list of dictionaries with a new dictionary.</p></div>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.get_local_dbt_client"><code class="name flex">
 <span>def <span class="ident">get_local_dbt_client</span></span>(<span>host: str, port: int)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_local_dbt_client(host: str, port: int):
+    &#34;&#34;&#34;Set a DBT client for running CLI commands. Requires
+    building container image for your queries repository.
+
+    Args:
+        host (str): hostname. When running locally, usually &#39;localhost&#39;
+        port (int): the port number in which the DBT rpc is running
+
+    Returns:
+        DbtClient: object used to run DBT commands.
+    &#34;&#34;&#34;
+    return get_dbt_client(host=host, port=port)</code></pre>
+</details>
 <div class="desc"><p>Set a DBT client for running CLI commands. Requires
 building container image for your queries repository.</p>
 <h2 id="args">Args</h2>
@@ -319,9 +1023,111 @@ building container image for your queries repository.</p>
 </dl></div>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.get_materialization_date_range"><code class="name flex">
-<span>def <span class="ident">get_materialization_date_range</span></span>(<span>dataset_id: str, table_id: str, raw_dataset_id: str, raw_table_id: str, table_run_datetime_column_name: str = None, mode: str = 'prod', delay_hours: int = 0, end_ts: datetime.datetime = None)</span>
+<span>def <span class="ident">get_materialization_date_range</span></span>(<span>dataset_id: str,<br>table_id: str,<br>raw_dataset_id: str,<br>raw_table_id: str,<br>table_run_datetime_column_name: str = None,<br>mode: str = 'prod',<br>delay_hours: int = 0,<br>end_ts: datetime.datetime = None)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    checkpoint=False,
+    max_retries=constants.MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.RETRY_DELAY.value),
+)
+def get_materialization_date_range(  # pylint: disable=R0913
+    dataset_id: str,
+    table_id: str,
+    raw_dataset_id: str,
+    raw_table_id: str,
+    table_run_datetime_column_name: str = None,
+    mode: str = &#34;prod&#34;,
+    delay_hours: int = 0,
+    end_ts: datetime = None,
+):
+    &#34;&#34;&#34;
+    Task for generating dict with variables to be passed to the
+    --vars argument on DBT.
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): model filename on the queries repo.
+        eg: if you have a model defined in the file &lt;filename&gt;.sql,
+        the table_id should be &lt;filename&gt;
+        table_date_column_name (Optional, str): if it&#39;s the first time this
+        is ran, will query the table for the maximum value on this field.
+        If rebuild is true, will query the table for the minimum value
+        on this field.
+        rebuild (Optional, bool): if true, queries the minimum date value on the
+        table and return a date range from that value to the datetime.now() time
+        delay(Optional, int): hours delayed from now time for materialization range
+        end_ts(Optional, datetime): date range&#39;s final date
+    Returns:
+        dict: containing date_range_start and date_range_end
+    &#34;&#34;&#34;
+    timestr = &#34;%Y-%m-%dT%H:%M:%S&#34;
+    # get start from redis
+    last_run = get_last_run_timestamp(
+        dataset_id=dataset_id, table_id=table_id, mode=mode
+    )
+    # if there&#39;s no timestamp set on redis, get max timestamp on source table
+    if last_run is None:
+        log(&#34;Failed to fetch key from Redis...\n Querying tables for last suceeded run&#34;)
+        if Table(dataset_id=dataset_id, table_id=table_id).table_exists(&#34;prod&#34;):
+            last_run = get_table_min_max_value(
+                query_project_id=bq_project(),
+                dataset_id=dataset_id,
+                table_id=table_id,
+                field_name=table_run_datetime_column_name,
+                kind=&#34;max&#34;,
+            )
+            log(
+                f&#34;&#34;&#34;
+            Queried last run from {dataset_id}.{table_id}
+            Got:
+            {last_run} as type {type(last_run)}
+            &#34;&#34;&#34;
+            )
+        else:
+            last_run = get_table_min_max_value(
+                query_project_id=bq_project(),
+                dataset_id=raw_dataset_id,
+                table_id=raw_table_id,
+                field_name=table_run_datetime_column_name,
+                kind=&#34;max&#34;,
+            )
+        log(
+            f&#34;&#34;&#34;
+            Queried last run from {raw_dataset_id}.{raw_table_id}
+            Got:
+            {last_run} as type {type(last_run)}
+            &#34;&#34;&#34;
+        )
+    else:
+        last_run = datetime.strptime(last_run, timestr)
+
+    if (not isinstance(last_run, datetime)) and (isinstance(last_run, date)):
+        last_run = datetime(last_run.year, last_run.month, last_run.day)
+
+    # set start to last run hour (H)
+    start_ts = last_run.replace(minute=0, second=0, microsecond=0).strftime(timestr)
+
+    # set end to now - delay
+
+    if not end_ts:
+        end_ts = pendulum.now(constants.TIMEZONE.value).replace(
+            tzinfo=None, minute=0, second=0, microsecond=0
+        )
+
+    end_ts = (end_ts - timedelta(hours=delay_hours)).replace(
+        minute=0, second=0, microsecond=0
+    )
+
+    end_ts = end_ts.strftime(timestr)
+
+    date_range = {&#34;date_range_start&#34;: start_ts, &#34;date_range_end&#34;: end_ts}
+    log(f&#34;Got date_range as: {date_range}&#34;)
+    return date_range</code></pre>
+</details>
 <div class="desc"><p>Task for generating dict with variables to be passed to the
 &ndash;vars argument on DBT.</p>
 <h2 id="args">Args</h2>
@@ -354,12 +1160,97 @@ end_ts(Optional, datetime): date range's final date</p>
 <span>def <span class="ident">get_previous_date</span></span>(<span>days)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(checkpoint=False)
+def get_previous_date(days):
+    &#34;&#34;&#34;
+    Returns the date of {days} days ago in YYYY-MM-DD.
+    &#34;&#34;&#34;
+    now = pendulum.now(pendulum.timezone(&#34;America/Sao_Paulo&#34;)).subtract(days=days)
+
+    return now.to_date_string()</code></pre>
+</details>
 <div class="desc"><p>Returns the date of {days} days ago in YYYY-MM-DD.</p></div>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.get_raw"><code class="name flex">
-<span>def <span class="ident">get_raw</span></span>(<span>url: str, headers: str = None, filetype: str = 'json', csv_args: dict = None, params: dict = None) ‑> Dict</span>
+<span>def <span class="ident">get_raw</span></span>(<span>url: str,<br>headers: str = None,<br>filetype: str = 'json',<br>csv_args: dict = None,<br>params: dict = None) ‑> Dict</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_raw(  # pylint: disable=R0912
+    url: str,
+    headers: str = None,
+    filetype: str = &#34;json&#34;,
+    csv_args: dict = None,
+    params: dict = None,
+) -&gt; Dict:
+    &#34;&#34;&#34;
+    Request data from URL API
+
+    Args:
+        url (str): URL to send request
+        headers (str, optional): Path to headers guardeded on Vault, if needed.
+        filetype (str, optional): Filetype to be formatted (supported only: json, csv and txt)
+        csv_args (dict, optional): Arguments for read_csv, if needed
+        params (dict, optional): Params to be sent on request
+
+    Returns:
+        dict: Containing keys
+          * `data` (json): data result
+          * `error` (str): catched error, if any. Otherwise, returns None
+    &#34;&#34;&#34;
+    data = None
+    error = None
+
+    try:
+        if headers is not None:
+            headers = get_vault_secret(headers)[&#34;data&#34;]
+
+            # remove from headers, if present
+            remove_headers = [&#34;host&#34;, &#34;databases&#34;]
+            for remove_header in remove_headers:
+                if remove_header in list(headers.keys()):
+                    del headers[remove_header]
+
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=constants.MAX_TIMEOUT_SECONDS.value,
+            params=params,
+        )
+
+        if response.ok:  # status code is less than 400
+            if filetype == &#34;json&#34;:
+                data = response.json()
+
+                # todo: move to data check on specfic API # pylint: disable=W0102
+                if isinstance(data, dict) and &#34;DescricaoErro&#34; in data.keys():
+                    error = data[&#34;DescricaoErro&#34;]
+
+            elif filetype in (&#34;txt&#34;, &#34;csv&#34;):
+                if csv_args is None:
+                    csv_args = {}
+                data = pd.read_csv(io.StringIO(response.text), **csv_args).to_dict(
+                    orient=&#34;records&#34;
+                )
+            else:
+                error = (
+                    &#34;Unsupported raw file extension. Supported only: json, csv and txt&#34;
+                )
+
+    except Exception:
+        error = traceback.format_exc()
+        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+
+    return {&#34;data&#34;: data, &#34;error&#34;: error}</code></pre>
+</details>
 <div class="desc"><p>Request data from URL API</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -383,9 +1274,85 @@ end_ts(Optional, datetime): date range's final date</p>
 </dl></div>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.get_raw_from_sources"><code class="name flex">
-<span>def <span class="ident">get_raw_from_sources</span></span>(<span>source_type: str, local_filepath: str, source_path: str = None, dataset_id: str = None, table_id: str = None, secret_path: str = None, request_params: dict = None) ‑> tuple[str, str]</span>
+<span>def <span class="ident">get_raw_from_sources</span></span>(<span>source_type: str,<br>local_filepath: str,<br>source_path: str = None,<br>dataset_id: str = None,<br>table_id: str = None,<br>secret_path: str = None,<br>request_params: dict = None) ‑> tuple[str, str]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(checkpoint=False, nout=2)
+def get_raw_from_sources(
+    source_type: str,
+    local_filepath: str,
+    source_path: str = None,
+    dataset_id: str = None,
+    table_id: str = None,
+    secret_path: str = None,
+    request_params: dict = None,
+) -&gt; tuple[str, str]:
+    &#34;&#34;&#34;
+    Task to get raw data from sources
+
+    Args:
+        source_type (str): source type
+        local_filepath (str): local filepath
+        source_path (str, optional): source path. Defaults to None.
+        dataset_id (str, optional): dataset_id on BigQuery. Defaults to None.
+        table_id (str, optional): table_id on BigQuery. Defaults to None.
+        secret_path (str, optional): secret path. Defaults to None.
+        request_params (dict, optional): request parameters. Defaults to None.
+
+    Returns:
+        error: error catched from upstream tasks
+        filepath: filepath to raw data
+    &#34;&#34;&#34;
+    error = None
+    filepath = None
+    data = None
+
+    source_values = source_type.split(&#34;-&#34;, 1)
+
+    source_type, filetype = (
+        source_values if len(source_values) == 2 else (source_values[0], None)
+    )
+
+    log(f&#34;Getting raw data from source type: {source_type}&#34;)
+
+    try:
+        if source_type == &#34;api&#34;:
+            error, data, filetype = get_raw_data_api(
+                url=source_path,
+                secret_path=secret_path,
+                api_params=request_params,
+                filetype=filetype,
+            )
+        elif source_type == &#34;gcs&#34;:
+            error, data, filetype = get_raw_data_gcs(
+                dataset_id=dataset_id, table_id=table_id, **request_params
+            )
+        elif source_type == &#34;db&#34;:
+            error, data, filetype = get_raw_data_db(
+                host=source_path, secret_path=secret_path, **request_params
+            )
+        elif source_type == &#34;movidesk&#34;:
+            error, data, filetype = get_raw_recursos(
+                request_url=source_path, request_params=request_params
+            )
+        else:
+            raise NotImplementedError(f&#34;{source_type} not supported&#34;)
+
+        filepath = save_raw_local_func(
+            data=data, filepath=local_filepath, filetype=filetype
+        )
+
+    except NotImplementedError:
+        error = traceback.format_exc()
+        log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+
+    log(f&#34;Raw extraction ended returned values: {error}, {filepath}&#34;)
+    return error, filepath</code></pre>
+</details>
 <div class="desc"><p>Task to get raw data from sources</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -413,9 +1380,50 @@ end_ts(Optional, datetime): date range's final date</p>
 </dl></div>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.get_rounded_timestamp"><code class="name flex">
-<span>def <span class="ident">get_rounded_timestamp</span></span>(<span>timestamp: Union[str, datetime.datetime, ForwardRef(None)] = None, interval_minutes: Optional[int] = None) ‑> datetime.datetime</span>
+<span>def <span class="ident">get_rounded_timestamp</span></span>(<span>timestamp: str | datetime.datetime | None = None,<br>interval_minutes: int | None = None) ‑> datetime.datetime</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_rounded_timestamp(
+    timestamp: Union[str, datetime, None] = None,
+    interval_minutes: Union[int, None] = None,
+) -&gt; datetime:
+    &#34;&#34;&#34;
+    Calculate rounded timestamp for flow run.
+
+    Args:
+        timestamp (Union[str, datetime, None]): timestamp to be used as reference
+        interval_minutes (Union[int, None], optional): interval in minutes between each recapture
+
+    Returns:
+        datetime: timestamp for flow run
+    &#34;&#34;&#34;
+    if isinstance(timestamp, str):
+        timestamp = datetime.fromisoformat(timestamp)
+
+    if not timestamp:
+        timestamp = datetime.now(tz=timezone(constants.TIMEZONE.value))
+
+    timestamp = timestamp.replace(second=0, microsecond=0)
+
+    if interval_minutes:
+        if interval_minutes &gt;= 60:
+            hours = interval_minutes / 60
+            interval_minutes = round(((hours) % 1) * 60)
+
+        if interval_minutes == 0:
+            rounded_minutes = interval_minutes
+        else:
+            rounded_minutes = (timestamp.minute // interval_minutes) * interval_minutes
+
+        timestamp = timestamp.replace(minute=rounded_minutes)
+
+    return timestamp</code></pre>
+</details>
 <div class="desc"><p>Calculate rounded timestamp for flow run.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -431,9 +1439,43 @@ end_ts(Optional, datetime): date range's final date</p>
 </dl></div>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.get_run_dates"><code class="name flex">
-<span>def <span class="ident">get_run_dates</span></span>(<span>date_range_start: str, date_range_end: str, day_datetime: datetime.datetime = None) ‑> List</span>
+<span>def <span class="ident">get_run_dates</span></span>(<span>date_range_start: str,<br>date_range_end: str,<br>day_datetime: datetime.datetime = None) ‑> List</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_run_dates(
+    date_range_start: str, date_range_end: str, day_datetime: datetime = None
+) -&gt; List:
+    &#34;&#34;&#34;
+    Generates a list of dates between date_range_start and date_range_end.
+
+    Args:
+        date_range_start (str): the start date to create the date range
+        date_range_end (str): the end date to create the date range
+        day_datetime (datetime, Optional): a timestamp to use as run_date
+                                            if the range start or end is False
+
+    Returns:
+        list: the list of run_dates
+    &#34;&#34;&#34;
+    if (date_range_start is False) or (date_range_end is False):
+        if day_datetime:
+            run_date = day_datetime.strftime(&#34;%Y-%m-%d&#34;)
+        else:
+            run_date = get_now_date.run()
+        dates = [{&#34;run_date&#34;: run_date}]
+    else:
+        dates = [
+            {&#34;run_date&#34;: d.strftime(&#34;%Y-%m-%d&#34;)}
+            for d in pd.date_range(start=date_range_start, end=date_range_end)
+        ]
+    log(f&#34;Will run the following dates: {dates}&#34;)
+    return dates</code></pre>
+</details>
 <div class="desc"><p>Generates a list of dates between date_range_start and date_range_end.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -452,9 +1494,49 @@ if the range start or end is False</dd>
 </dl></div>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.get_scheduled_start_times"><code class="name flex">
-<span>def <span class="ident">get_scheduled_start_times</span></span>(<span>timestamp: datetime.datetime, parameters: list, intervals: Optional[None] = None)</span>
+<span>def <span class="ident">get_scheduled_start_times</span></span>(<span>timestamp: datetime.datetime, parameters: list, intervals: dict | None = None)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_scheduled_start_times(
+    timestamp: datetime, parameters: list, intervals: Union[None, dict] = None
+):
+    &#34;&#34;&#34;
+    Task to get start times to schedule flows
+
+    Args:
+        timestamp (datetime): initial flow run timestamp
+        parameters (list): parameters for the flow
+        intervals (Union[None, dict], optional): intervals between each flow run. Defaults to None.
+            Optionally, you can pass specific intervals for some table_ids.
+            Suggests to pass intervals based on previous table observed execution times.
+            Defaults to dict(default=timedelta(minutes=2)).
+
+    Returns:
+        list[datetime]: list of scheduled start times
+    &#34;&#34;&#34;
+
+    if intervals is None:
+        intervals = dict()
+
+    if &#34;default&#34; not in intervals.keys():
+        intervals[&#34;default&#34;] = timedelta(minutes=2)
+
+    timestamps = [None]
+    last_schedule = timestamp
+
+    for param in parameters[1:]:
+        last_schedule += intervals.get(
+            param.get(&#34;table_id&#34;, &#34;default&#34;), intervals[&#34;default&#34;]
+        )
+        timestamps.append(last_schedule)
+
+    return timestamps</code></pre>
+</details>
 <div class="desc"><p>Task to get start times to schedule flows</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -478,12 +1560,150 @@ Defaults to dict(default=timedelta(minutes=2)).</dd>
 <span>def <span class="ident">parse_timestamp_to_string</span></span>(<span>timestamp: datetime.datetime, pattern='%Y-%m-%d-%H-%M-%S') ‑> str</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def parse_timestamp_to_string(timestamp: datetime, pattern=&#34;%Y-%m-%d-%H-%M-%S&#34;) -&gt; str:
+    &#34;&#34;&#34;
+    Parse timestamp to string pattern.
+    &#34;&#34;&#34;
+    return timestamp.strftime(pattern)</code></pre>
+</details>
 <div class="desc"><p>Parse timestamp to string pattern.</p></div>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.query_logs"><code class="name flex">
-<span>def <span class="ident">query_logs</span></span>(<span>dataset_id: str, table_id: str, datetime_filter=None, max_recaptures: int = 90, interval_minutes: int = 1, recapture_window_days: int = 1)</span>
+<span>def <span class="ident">query_logs</span></span>(<span>dataset_id: str,<br>table_id: str,<br>datetime_filter=None,<br>max_recaptures: int = 90,<br>interval_minutes: int = 1,<br>recapture_window_days: int = 1)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(nout=3, max_retries=3, retry_delay=timedelta(seconds=5))
+def query_logs(
+    dataset_id: str,
+    table_id: str,
+    datetime_filter=None,
+    max_recaptures: int = 90,
+    interval_minutes: int = 1,
+    recapture_window_days: int = 1,
+):
+    &#34;&#34;&#34;
+    Queries capture logs to check for errors
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): table_id on BigQuery
+        datetime_filter (pendulum.datetime.DateTime, optional):
+        filter passed to query. This task will query the logs table
+        for the last n (n = recapture_window_days) days before datetime_filter
+        max_recaptures (int, optional): maximum number of recaptures to be done
+        interval_minutes (int, optional): interval in minutes between each recapture
+        recapture_window_days (int, optional): Number of days to query for erros
+
+    Returns:
+        lists: errors (bool),
+        timestamps (list of pendulum.datetime.DateTime),
+        previous_errors (list of previous errors)
+    &#34;&#34;&#34;
+
+    if not datetime_filter:
+        datetime_filter = pendulum.now(constants.TIMEZONE.value).replace(
+            second=0, microsecond=0
+        )
+    elif isinstance(datetime_filter, str):
+        datetime_filter = datetime.fromisoformat(datetime_filter).replace(
+            second=0, microsecond=0
+        )
+
+    datetime_filter = datetime_filter.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+
+    query = f&#34;&#34;&#34;
+    WITH
+        t AS (
+        SELECT
+            DATETIME(timestamp_array) AS timestamp_array
+        FROM
+            UNNEST(
+                GENERATE_TIMESTAMP_ARRAY(
+                    TIMESTAMP_SUB(&#39;{datetime_filter}&#39;, INTERVAL {recapture_window_days} day),
+                    TIMESTAMP(&#39;{datetime_filter}&#39;),
+                    INTERVAL {interval_minutes} minute) )
+            AS timestamp_array
+        WHERE
+            timestamp_array &lt; &#39;{datetime_filter}&#39; ),
+        logs_table AS (
+            SELECT
+                SAFE_CAST(DATETIME(TIMESTAMP(timestamp_captura),
+                        &#34;America/Sao_Paulo&#34;) AS DATETIME) timestamp_captura,
+                SAFE_CAST(sucesso AS BOOLEAN) sucesso,
+                SAFE_CAST(erro AS STRING) erro,
+                SAFE_CAST(DATA AS DATE) DATA
+            FROM
+                {bq_project(kind=&#34;bigquery_staging&#34;)}.{dataset_id}_staging.{table_id}_logs AS t
+        ),
+        logs AS (
+            SELECT
+                *,
+                TIMESTAMP_TRUNC(timestamp_captura, minute) AS timestamp_array
+            FROM
+                logs_table
+            WHERE
+                DATA BETWEEN DATE(DATETIME_SUB(&#39;{datetime_filter}&#39;,
+                                INTERVAL {recapture_window_days} day))
+                AND DATE(&#39;{datetime_filter}&#39;)
+                AND timestamp_captura BETWEEN
+                    DATETIME_SUB(&#39;{datetime_filter}&#39;, INTERVAL {recapture_window_days} day)
+                AND &#39;{datetime_filter}&#39;
+        )
+    SELECT
+        CASE
+            WHEN logs.timestamp_captura IS NOT NULL THEN logs.timestamp_captura
+        ELSE
+            t.timestamp_array
+        END
+            AS timestamp_captura,
+            logs.erro
+    FROM
+        t
+    LEFT JOIN
+        logs
+    ON
+        logs.timestamp_array = t.timestamp_array
+    WHERE
+        logs.sucesso IS NOT TRUE
+    &#34;&#34;&#34;
+    log(f&#34;Run query to check logs:\n{query}&#34;)
+    results = bd.read_sql(query=query, billing_project_id=bq_project())
+
+    if len(results) &gt; 0:
+        results = results.sort_values([&#34;timestamp_captura&#34;])
+        results[&#34;timestamp_captura&#34;] = (
+            pd.to_datetime(results[&#34;timestamp_captura&#34;])
+            .dt.tz_localize(constants.TIMEZONE.value)
+            .to_list()
+        )
+        log(f&#34;Recapture data for the following {len(results)} timestamps:\n{results}&#34;)
+        if len(results) &gt; max_recaptures:
+            message = f&#34;&#34;&#34;
+            [SPPO - Recaptures]
+            Encontradas {len(results)} timestamps para serem recapturadas.
+            Essa run processará as seguintes:
+            #####
+            {results[:max_recaptures]}
+            #####
+            Sobraram as seguintes para serem recapturadas na próxima run:
+            #####
+            {results[max_recaptures:]}
+            #####
+            &#34;&#34;&#34;
+            log_critical(message)
+            results = results[:max_recaptures]
+        return True, results[&#34;timestamp_captura&#34;].to_list(), results[&#34;erro&#34;].to_list()
+    return False, [], []</code></pre>
+</details>
 <div class="desc"><p>Queries capture logs to check for errors</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -513,6 +1733,30 @@ previous_errors (list of previous errors)</p></div>
 <span>def <span class="ident">save_raw_local</span></span>(<span>file_path: str, status: dict, mode: str = 'raw') ‑> str</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def save_raw_local(file_path: str, status: dict, mode: str = &#34;raw&#34;) -&gt; str:
+    &#34;&#34;&#34;
+    Saves json response from API to .json file.
+    Args:
+        file_path (str): Path which to save raw file
+        status (dict): Must contain keys
+          * data: json returned from API
+          * error: error catched from API request
+        mode (str, optional): Folder to save locally, later folder which to upload to GCS.
+    Returns:
+        str: Path to the saved file
+    &#34;&#34;&#34;
+    _file_path = file_path.format(mode=mode, filetype=&#34;json&#34;)
+    Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
+    if status[&#34;error&#34;] is None:
+        json.dump(status[&#34;data&#34;], Path(_file_path).open(&#34;w&#34;, encoding=&#34;utf-8&#34;))
+        log(f&#34;Raw data saved to: {_file_path}&#34;)
+    return _file_path</code></pre>
+</details>
 <div class="desc"><p>Saves json response from API to .json file.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -535,6 +1779,37 @@ previous_errors (list of previous errors)</p></div>
 <span>def <span class="ident">save_treated_local</span></span>(<span>file_path: str, status: dict, mode: str = 'staging') ‑> str</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def save_treated_local(file_path: str, status: dict, mode: str = &#34;staging&#34;) -&gt; str:
+    &#34;&#34;&#34;
+    Save treated file to CSV.
+
+    Args:
+        file_path (str): Path which to save treated file
+        status (dict): Must contain keys
+          * `data`: dataframe returned from treatement
+          * `error`: error catched from data treatement
+        mode (str, optional): Folder to save locally, later folder which to upload to GCS.
+
+    Returns:
+        str: Path to the saved file
+    &#34;&#34;&#34;
+
+    log(f&#34;Saving treated data to: {file_path}, {status}&#34;)
+
+    _file_path = file_path.format(mode=mode, filetype=&#34;csv&#34;)
+
+    Path(_file_path).parent.mkdir(parents=True, exist_ok=True)
+    if status[&#34;error&#34;] is None:
+        status[&#34;data&#34;].to_csv(_file_path, index=False)
+        log(f&#34;Treated data saved to: {_file_path}&#34;)
+
+    return _file_path</code></pre>
+</details>
 <div class="desc"><p>Save treated file to CSV.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -557,6 +1832,42 @@ previous_errors (list of previous errors)</p></div>
 <span>def <span class="ident">set_last_run_timestamp</span></span>(<span>dataset_id: str, table_id: str, timestamp: str, mode: str = 'prod', wait=None)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def set_last_run_timestamp(
+    dataset_id: str, table_id: str, timestamp: str, mode: str = &#34;prod&#34;, wait=None
+):  # pylint: disable=unused-argument
+    &#34;&#34;&#34;
+    Set the `last_run_timestamp` key for the dataset_id/table_id pair
+    to datetime.now() time. Used after running a materialization to set the
+    stage for the next to come
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        table_id (str): model filename on the queries repo.
+        timestamp: Last run timestamp end.
+        wait (Any, optional): Used for defining dependencies inside the flow,
+        in general, pass the output of the task which should be run imediately
+        before this. Defaults to None.
+
+    Returns:
+        _type_: _description_
+    &#34;&#34;&#34;
+    log(f&#34;Saving timestamp {timestamp} on Redis for {dataset_id}.{table_id}&#34;)
+    redis_client = get_redis_client()
+    key = dataset_id + &#34;.&#34; + table_id
+    if mode == &#34;dev&#34;:
+        key = f&#34;{mode}.{key}&#34;
+    content = redis_client.get(key)
+    if not content:
+        content = {}
+    content[&#34;last_run_timestamp&#34;] = timestamp
+    redis_client.set(key, content)
+    return True</code></pre>
+</details>
 <div class="desc"><p>Set the <code>last_run_timestamp</code> key for the dataset_id/table_id pair
 to datetime.now() time. Used after running a materialization to set the
 stage for the next to come</p>
@@ -580,9 +1891,118 @@ before this. Defaults to None.</p>
 </dl></div>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.transform_raw_to_nested_structure"><code class="name flex">
-<span>def <span class="ident">transform_raw_to_nested_structure</span></span>(<span>raw_filepath: str, filepath: str, error: str, timestamp: datetime.datetime, primary_key: list = None, flag_private_data: bool = False, reader_args: dict = None) ‑> tuple[str, str]</span>
+<span>def <span class="ident">transform_raw_to_nested_structure</span></span>(<span>raw_filepath: str,<br>filepath: str,<br>error: str,<br>timestamp: datetime.datetime,<br>primary_key: list = None,<br>flag_private_data: bool = False,<br>reader_args: dict = None) ‑> tuple[str, str]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(nout=2)
+def transform_raw_to_nested_structure(
+    raw_filepath: str,
+    filepath: str,
+    error: str,
+    timestamp: datetime,
+    primary_key: list = None,
+    flag_private_data: bool = False,
+    reader_args: dict = None,
+) -&gt; tuple[str, str]:
+    &#34;&#34;&#34;
+    Task to transform raw data to nested structure
+
+    Args:
+        raw_filepath (str): Path to the saved raw .json file
+        filepath (str): Path to the saved treated .csv file
+        error (str): Error catched from upstream tasks
+        timestamp (datetime): timestamp for flow run
+        primary_key (list, optional): Primary key to be used on nested structure
+        flag_private_data (bool, optional): Flag to indicate if the task should log the data
+        reader_args (dict): arguments to pass to pandas.read_csv or read_json
+
+    Returns:
+        str: Error traceback
+        str: Path to the saved treated .csv file
+    &#34;&#34;&#34;
+    if error is None:
+        try:
+            # leitura do dado raw
+            error, data = read_raw_data(filepath=raw_filepath, reader_args=reader_args)
+
+            if primary_key is None:
+                primary_key = []
+
+            if not flag_private_data:
+                log(
+                    f&#34;&#34;&#34;
+                    Received inputs:
+                    - timestamp:\n{timestamp}
+                    - data:\n{data.head()}&#34;&#34;&#34;
+                )
+
+            if error is None:
+                # Check empty dataframe
+                if data.empty:
+                    log(&#34;Empty dataframe, skipping transformation...&#34;)
+
+                else:
+                    log(f&#34;Raw data:\n{data_info_str(data)}&#34;, level=&#34;info&#34;)
+
+                    log(&#34;Adding captured timestamp column...&#34;, level=&#34;info&#34;)
+                    data[&#34;timestamp_captura&#34;] = timestamp
+
+                    if &#34;customFieldValues&#34; not in data:
+                        log(&#34;Striping string columns...&#34;, level=&#34;info&#34;)
+                        for col in data.columns[data.dtypes == &#34;object&#34;].to_list():
+                            data[col] = data[col].str.strip()
+
+                    if (
+                        constants.GTFS_DATASET_ID.value in raw_filepath
+                        and &#34;ordem_servico&#34; in raw_filepath
+                        and &#34;tipo_os&#34; not in data.columns
+                    ):
+                        data[&#34;tipo_os&#34;] = &#34;Regular&#34;
+
+                    log(
+                        f&#34;Finished cleaning! Data:\n{data_info_str(data)}&#34;, level=&#34;info&#34;
+                    )
+
+                    log(&#34;Creating nested structure...&#34;, level=&#34;info&#34;)
+                    pk_cols = primary_key + [&#34;timestamp_captura&#34;]
+
+                    data = (
+                        data.groupby(pk_cols)
+                        .apply(
+                            lambda x: x[data.columns.difference(pk_cols)].to_json(
+                                orient=&#34;records&#34;,
+                                force_ascii=(
+                                    constants.CONTROLE_FINANCEIRO_DATASET_ID.value
+                                    not in raw_filepath
+                                ),
+                            )
+                        )
+                        .str.strip(&#34;[]&#34;)
+                        .reset_index(name=&#34;content&#34;)[
+                            primary_key + [&#34;content&#34;, &#34;timestamp_captura&#34;]
+                        ]
+                    )
+
+                    log(
+                        f&#34;Finished nested structure! Data:\n{data_info_str(data)}&#34;,
+                        level=&#34;info&#34;,
+                    )
+
+            # save treated local
+            filepath = save_treated_local_func(
+                data=data, error=error, filepath=filepath
+            )
+
+        except Exception:  # pylint: disable=W0703
+            error = traceback.format_exc()
+            log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+
+    return error, filepath</code></pre>
+</details>
 <div class="desc"><p>Task to transform raw data to nested structure</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -613,6 +2033,28 @@ before this. Defaults to None.</p>
 <span>def <span class="ident">unpack_mapped_results_nout2</span></span>(<span>mapped_results: Iterable) ‑> tuple[list[typing.Any], list[typing.Any]]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(checkpoint=False, nout=2)
+def unpack_mapped_results_nout2(
+    mapped_results: Iterable,
+) -&gt; tuple[list[Any], list[Any]]:
+    &#34;&#34;&#34;
+    Task to unpack the results from an nout=2 tasks in 2 lists when it is mapped
+
+    Args:
+        mapped_results (Iterable): The mapped task return
+
+    Returns:
+        tuple[list[Any], list[Any]]: The task original return splited in 2 lists:
+            - 1st list being all the first return
+            - 2nd list being all the second return
+
+    &#34;&#34;&#34;
+    return [r[0] for r in mapped_results], [r[1] for r in mapped_results]</code></pre>
+</details>
 <div class="desc"><p>Task to unpack the results from an nout=2 tasks in 2 lists when it is mapped</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -628,9 +2070,75 @@ before this. Defaults to None.</p>
 </dl></div>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.upload_logs_to_bq"><code class="name flex">
-<span>def <span class="ident">upload_logs_to_bq</span></span>(<span>dataset_id: str, parent_table_id: str, timestamp: str, error: str = None, previous_error: str = None, recapture: bool = False)</span>
+<span>def <span class="ident">upload_logs_to_bq</span></span>(<span>dataset_id: str,<br>parent_table_id: str,<br>timestamp: str,<br>error: str = None,<br>previous_error: str = None,<br>recapture: bool = False)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def upload_logs_to_bq(  # pylint: disable=R0913
+    dataset_id: str,
+    parent_table_id: str,
+    timestamp: str,
+    error: str = None,
+    previous_error: str = None,
+    recapture: bool = False,
+):
+    &#34;&#34;&#34;
+    Upload execution status table to BigQuery.
+    Table is uploaded to the same dataset, named {parent_table_id}_logs.
+    If passing status_dict, should not pass timestamp and error.
+
+    Args:
+        dataset_id (str): dataset_id on BigQuery
+        parent_table_id (str): Parent table id related to the status table
+        timestamp (str): ISO formatted timestamp string
+        error (str, optional): String associated with error caught during execution
+    Returns:
+        None
+    &#34;&#34;&#34;
+    table_id = parent_table_id + &#34;_logs&#34;
+    # Create partition directory
+    filename = f&#34;{table_id}_{timestamp.isoformat()}&#34;
+    partition = f&#34;data={timestamp.date()}&#34;
+    filepath = Path(
+        f&#34;&#34;&#34;data/staging/{dataset_id}/{table_id}/{partition}/{filename}.csv&#34;&#34;&#34;
+    )
+    filepath.parent.mkdir(exist_ok=True, parents=True)
+    # Create dataframe to be uploaded
+    if not error and recapture is True:
+        # if the recapture is succeeded, update the column erro
+        dataframe = pd.DataFrame(
+            {
+                &#34;timestamp_captura&#34;: [timestamp],
+                &#34;sucesso&#34;: [True],
+                &#34;erro&#34;: [f&#34;[recapturado]{previous_error}&#34;],
+            }
+        )
+        log(f&#34;Recapturing {timestamp} with previous error:\n{error}&#34;)
+    else:
+        # not recapturing or error during flow execution
+        dataframe = pd.DataFrame(
+            {
+                &#34;timestamp_captura&#34;: [timestamp],
+                &#34;sucesso&#34;: [error is None],
+                &#34;erro&#34;: [error],
+            }
+        )
+    # Save data local
+    dataframe.to_csv(filepath, index=False)
+    # Upload to Storage
+    create_or_append_table(
+        dataset_id=dataset_id,
+        table_id=table_id,
+        path=filepath.as_posix(),
+        partitions=partition,
+    )
+    if error is not None:
+        raise Exception(f&#34;Pipeline failed with error: {error}&#34;)</code></pre>
+</details>
 <div class="desc"><p>Upload execution status table to BigQuery.
 Table is uploaded to the same dataset, named {parent_table_id}_logs.
 If passing status_dict, should not pass timestamp and error.</p>
@@ -649,9 +2157,56 @@ If passing status_dict, should not pass timestamp and error.</p>
 <p>None</p></div>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.upload_raw_data_to_gcs"><code class="name flex">
-<span>def <span class="ident">upload_raw_data_to_gcs</span></span>(<span>error: str, raw_filepath: str, table_id: str, dataset_id: str, partitions: list, bucket_name: str = None) ‑> Optional[str]</span>
+<span>def <span class="ident">upload_raw_data_to_gcs</span></span>(<span>error: str,<br>raw_filepath: str,<br>table_id: str,<br>dataset_id: str,<br>partitions: list,<br>bucket_name: str = None) ‑> str | None</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def upload_raw_data_to_gcs(
+    error: str,
+    raw_filepath: str,
+    table_id: str,
+    dataset_id: str,
+    partitions: list,
+    bucket_name: str = None,
+) -&gt; Union[str, None]:
+    &#34;&#34;&#34;
+    Upload raw data to GCS.
+
+    Args:
+        error (str): Error catched from upstream tasks.
+        raw_filepath (str): Path to the saved raw .json file
+        table_id (str): table_id on BigQuery
+        dataset_id (str): dataset_id on BigQuery
+        partitions (list): list of partition strings
+
+    Returns:
+        Union[str, None]: if there is an error returns it traceback, otherwise returns None
+    &#34;&#34;&#34;
+    if error is None:
+        try:
+            st_obj = Storage(
+                table_id=table_id, dataset_id=dataset_id, bucket_name=bucket_name
+            )
+            log(
+                f&#34;&#34;&#34;Uploading raw file to bucket {st_obj.bucket_name} at
+                {st_obj.bucket_name}/{dataset_id}/{table_id}&#34;&#34;&#34;
+            )
+            st_obj.upload(
+                path=raw_filepath,
+                partitions=partitions,
+                mode=&#34;raw&#34;,
+                if_exists=&#34;replace&#34;,
+            )
+        except Exception:
+            error = traceback.format_exc()
+            log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+
+    return error</code></pre>
+</details>
 <div class="desc"><p>Upload raw data to GCS.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -673,9 +2228,70 @@ If passing status_dict, should not pass timestamp and error.</p>
 </dl></div>
 </dd>
 <dt id="pipelines.rj_smtr.tasks.upload_staging_data_to_gcs"><code class="name flex">
-<span>def <span class="ident">upload_staging_data_to_gcs</span></span>(<span>error: str, staging_filepath: str, timestamp: datetime.datetime, table_id: str, dataset_id: str, partitions: str, previous_error: str = None, recapture: bool = False, bucket_name: str = None) ‑> Optional[str]</span>
+<span>def <span class="ident">upload_staging_data_to_gcs</span></span>(<span>error: str,<br>staging_filepath: str,<br>timestamp: datetime.datetime,<br>table_id: str,<br>dataset_id: str,<br>partitions: str,<br>previous_error: str = None,<br>recapture: bool = False,<br>bucket_name: str = None) ‑> str | None</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def upload_staging_data_to_gcs(
+    error: str,
+    staging_filepath: str,
+    timestamp: datetime,
+    table_id: str,
+    dataset_id: str,
+    partitions: str,
+    previous_error: str = None,
+    recapture: bool = False,
+    bucket_name: str = None,
+) -&gt; Union[str, None]:
+    &#34;&#34;&#34;
+    Upload staging data to GCS.
+
+    Args:
+        error (str): Error catched from upstream tasks.
+        staging_filepath (str): Path to the saved treated .csv file.
+        timestamp (datetime): timestamp for flow run.
+        table_id (str): table_id on BigQuery.
+        dataset_id (str): dataset_id on BigQuery.
+        partitions (str): partition string.
+        previous_error (str, Optional): Previous error on recaptures.
+        recapture: (bool, Optional): Flag that indicates if the run is recapture or not.
+        bucket_name (str, Optional): The bucket name to save the data.
+
+    Returns:
+        Union[str, None]: if there is an error returns it traceback, otherwise returns None
+    &#34;&#34;&#34;
+    log(f&#34;FILE PATH: {staging_filepath}&#34;)
+    if error is None:
+        try:
+            # Creates and publish table if it does not exist, append to it otherwise
+            create_or_append_table(
+                dataset_id=dataset_id,
+                table_id=table_id,
+                path=staging_filepath,
+                partitions=partitions,
+                bucket_name=bucket_name,
+            )
+        except Exception:
+            error = traceback.format_exc()
+            log(f&#34;[CATCHED] Task failed with error: \n{error}&#34;, level=&#34;error&#34;)
+
+    upload_run_logs_to_bq(
+        dataset_id=dataset_id,
+        parent_table_id=table_id,
+        error=error,
+        timestamp=timestamp,
+        mode=&#34;staging&#34;,
+        previous_error=previous_error,
+        recapture=recapture,
+        bucket_name=bucket_name,
+    )
+
+    return error</code></pre>
+</details>
 <div class="desc"><p>Upload staging data to GCS.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -804,7 +2420,7 @@ setTimeout(() => input.focus(), 100);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
 </footer>
 </body>
 </html>

@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.1">
+<meta name="generator" content="pdoc3 0.11.5">
 <title>pipelines.rj_escritorio.inea.tasks API documentation</title>
 <meta name="description" content="Tasks for INEA.">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -35,9 +46,58 @@ hljs.highlightAll();
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pipelines.rj_escritorio.inea.tasks.convert_vol_file"><code class="name flex">
-<span>def <span class="ident">convert_vol_file</span></span>(<span>downloaded_file: str, output_format: str = 'HDF5', convert_params: str = '-k=ODIM2.1 -M=All') ‑> List[str]</span>
+<span>def <span class="ident">convert_vol_file</span></span>(<span>downloaded_file: str,<br>output_format: str = 'HDF5',<br>convert_params: str = '-k=ODIM2.1 -M=All') ‑> List[str]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def convert_vol_file(
+    downloaded_file: str,
+    output_format: str = &#34;HDF5&#34;,
+    convert_params: str = &#34;-k=ODIM2.1 -M=All&#34;,
+) -&gt; List[str]:
+    &#34;&#34;&#34;
+    Convert VOL files to NetCDF using the `volconvert` CLI tool.
+    For output_format = &#34;NetCDF&#34; convert_params must be
+      &#34;-f=Whole -k=CFext -r=Short -p=Radar -M=All -z&#34;
+    For output_format = &#34;HDF5&#34; convert_params must be &#34;-k=ODIM2.1 -M=All&#34; for all products
+    Args:
+        output_format (str): &#34;NetCDF&#34; or &#34;HDF5&#34;
+    &#34;&#34;&#34;
+    # Run volconvert
+    log(f&#34;Converting file {downloaded_file} to {output_format}...&#34;)
+    command = (
+        f&#39;/opt/edge/bin/volconvert {downloaded_file} &#34;{output_format}.&#39;
+        + &#34;{&#34;
+        + convert_params
+        + &#39;}&#34;&#39;
+    )
+    log(f&#34;Running command: {command}&#34;)
+    child = pexpect.spawn(command)
+    try:
+        log(f&#34;before expect {str(child)}&#34;)
+        # Look for the &#34;OutFiles:...&#34; row and get only that row
+        child.expect(&#34;OutFiles:(.*)\n&#34;)
+        # Get the output file name
+        log(f&#34;after expect {str(child)}&#34;)
+        converted_file = child.match.group(1).decode(&#34;utf-8&#34;).strip()
+        log(f&#34;after match.group expect {str(child)}&#34;)
+        # Log the output file name
+        log(f&#34;Output file: {converted_file}&#34;)
+        # Go to the end of the command log
+        child.expect(pexpect.EOF)
+    except Exception as exc:
+        # Log the error
+        log(child.before.decode(&#34;utf-8&#34;))
+        raise exc
+    # Delete the VOL file
+    Path(downloaded_file).unlink()
+    # Return the name of the converted file
+    return converted_file</code></pre>
+</details>
 <div class="desc"><p>Convert VOL files to NetCDF using the <code>volconvert</code> CLI tool.
 For output_format = "NetCDF" convert_params must be
 "-f=Whole -k=CFext -r=Short -p=Radar -M=All -z"
@@ -49,15 +109,106 @@ For output_format = "HDF5" convert_params must be "-k=ODIM2.1 -M=All" for all pr
 </dl></div>
 </dd>
 <dt id="pipelines.rj_escritorio.inea.tasks.execute_shell_command"><code class="name flex">
-<span>def <span class="ident">execute_shell_command</span></span>(<span>command: str, stdout_callback: Callable = &lt;function log&gt;, stderr_callback: Callable = functools.partial(&lt;function log&gt;, level=&#x27;error&#x27;))</span>
+<span>def <span class="ident">execute_shell_command</span></span>(<span>command: str,<br>stdout_callback: Callable = &lt;function log&gt;,<br>stderr_callback: Callable = functools.partial(&lt;function log&gt;, level=&#x27;error&#x27;))</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def execute_shell_command(
+    command: str,
+    stdout_callback: Callable = log,
+    stderr_callback: Callable = partial(log, level=&#34;error&#34;),
+):
+    &#34;&#34;&#34;
+    Executes a shell command and logs output
+    &#34;&#34;&#34;
+    # pylint: disable=consider-using-with
+    popen = subprocess.Popen(
+        command,
+        shell=True,
+        stdout=subprocess.PIPE,
+        universal_newlines=True,
+        stderr=subprocess.PIPE,
+    )
+    for stdout_line in iter(popen.stdout.readline, &#34;&#34;):
+        stdout_callback(stdout_line)
+    for stderr_line in iter(popen.stderr.readline, &#34;&#34;):
+        stderr_callback(stderr_line)
+    popen.stdout.close()
+    return_code = popen.wait()
+    if return_code:
+        log(f&#34;Command {command} failed with return code {return_code}&#34;, &#34;error&#34;)
+    else:
+        log(f&#34;Command {command} executed successfully&#34;)</code></pre>
+</details>
 <div class="desc"><p>Executes a shell command and logs output</p></div>
 </dd>
 <dt id="pipelines.rj_escritorio.inea.tasks.fetch_vol_file"><code class="name flex">
-<span>def <span class="ident">fetch_vol_file</span></span>(<span>remote_file: str, radar: str, output_directory: str = '/var/escritoriodedados/temp/')</span>
+<span>def <span class="ident">fetch_vol_file</span></span>(<span>remote_file: str,<br>radar: str,<br>output_directory: str = '/var/escritoriodedados/temp/')</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    max_retries=2,
+    retry_delay=timedelta(seconds=30),
+)
+def fetch_vol_file(
+    remote_file: str,
+    radar: str,
+    output_directory: str = &#34;/var/escritoriodedados/temp/&#34;,
+):
+    &#34;&#34;&#34;
+    Fetch files from INEA server
+
+    Args:
+        remote_file (str): Remote file to be fetched
+        radar (str): Radar name. Must be `gua` or `mac`
+        output_directory (str): Directory where the files will be saved
+    &#34;&#34;&#34;
+
+    # Create vars based on radar name
+    if radar == &#34;gua&#34;:
+        env_variable = &#34;INEA_SSH_PASSWORD&#34;
+        hostname = &#34;a9921&#34;
+    elif radar == &#34;mac&#34;:
+        env_variable = &#34;INEA_MAC_SSH_PASSWORD&#34;
+        hostname = &#34;a9915&#34;
+
+    # APAGAR LOG
+    log(f&#34;Radar: {radar} env {env_variable}&#34;)
+    # Get SSH password from env
+    ssh_password = getenv(env_variable)
+
+    # Open SSH client
+    ssh_client = SSHClient()
+    ssh_client.load_system_host_keys()
+    ssh_client.connect(
+        hostname=hostname,
+        username=&#34;root&#34;,
+        password=ssh_password,
+        timeout=300,
+        auth_timeout=300,
+        banner_timeout=300,
+    )
+
+    # Open SCP client
+    scp = SCPClient(ssh_client.get_transport(), sanitize=lambda x: x)
+
+    # Fetch VOL file
+    scp.get(remote_file, local_path=str(output_directory))
+
+    # Close connection
+    scp.close()
+
+    # Return local file path
+    return Path(output_directory) / remote_file.split(&#34;/&#34;)[-1]</code></pre>
+</details>
 <div class="desc"><p>Fetch files from INEA server</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -70,9 +221,218 @@ For output_format = "HDF5" convert_params must be "-k=ODIM2.1 -M=All" for all pr
 </dl></div>
 </dd>
 <dt id="pipelines.rj_escritorio.inea.tasks.list_vol_files"><code class="name flex">
-<span>def <span class="ident">list_vol_files</span></span>(<span>bucket_name: str, prefix: str, radar: str, product: str, date: str = None, greater_than: str = None, get_only_last_file: bool = True, mode: str = 'prod', output_directory: str = '/var/escritoriodedados/temp/', vols_remote_directory: str = '/var/opt/edge/vols') ‑> Tuple[List[str], str]</span>
+<span>def <span class="ident">list_vol_files</span></span>(<span>bucket_name: str,<br>prefix: str,<br>radar: str,<br>product: str,<br>date: str = None,<br>greater_than: str = None,<br>get_only_last_file: bool = True,<br>mode: str = 'prod',<br>output_directory: str = '/var/escritoriodedados/temp/',<br>vols_remote_directory: str = '/var/opt/edge/vols') ‑> Tuple[List[str], str]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    nout=2,
+    max_retries=2,
+    retry_delay=timedelta(seconds=10),
+)
+# pylint: disable=too-many-arguments,too-many-locals, too-many-branches
+def list_vol_files(
+    bucket_name: str,
+    prefix: str,
+    radar: str,
+    product: str,
+    date: str = None,
+    greater_than: str = None,
+    get_only_last_file: bool = True,
+    mode: str = &#34;prod&#34;,
+    output_directory: str = &#34;/var/escritoriodedados/temp/&#34;,
+    vols_remote_directory: str = &#34;/var/opt/edge/vols&#34;,
+) -&gt; Tuple[List[str], str]:
+    &#34;&#34;&#34;
+    List files from INEA server
+
+    Args:
+        product (str): &#34;ppi&#34;
+        date (str): Date of the files to be fetched (e.g. 20220125)
+        greater_than (str): Fetch files with a date greater than this one
+        less_than (str): Fetch files with a date less than this one
+        output_directory (str): Directory where the files will be saved
+        radar (str): Radar name. Must be `gua` or `mac`
+        get_only_last_file (bool): Treat only the last file available
+
+    How to use:
+        to get real time data:
+            let `greater_than` and `date` as None and `get_only_last_file` as True
+            This will prevent the flow to be stucked treating all files when something happend
+            and stoped the flow. Otherwise the flow will take a long time to treat all files
+            and came back to real time.
+        to fill missing files up to two days ago:
+            let `greater_than` and `date` as None and `get_only_last_file` as False
+        for backfill or to fill missing files for dates greather than two days ago:
+            add a `greater_than` date and let `date` as None and `get_only_last_file` as False
+        get all files for one day
+            let `greater_than` as None and `get_only_last_file` as False and fill `date`
+    &#34;&#34;&#34;
+
+    # If none of `date`, `greater_than` are provided, find blob with the latest date
+    if date is None:
+        # First, we build the search prefix
+        search_prefix = f&#34;{prefix}/radar={radar}/produto={product}&#34;
+        if greater_than is None:
+            log(&#34;No date or greater_than provided. Finding latest blob...&#34;)
+            # Then, we add the current date partition
+            current_date = datetime.now()
+            current_date_str = current_date.strftime(&#34;%Y-%m-%d&#34;)
+            today_blobs = list_blobs_with_prefix(
+                bucket_name=bucket_name,
+                prefix=f&#34;{search_prefix}/data_particao={current_date_str}&#34;,
+                mode=mode,
+            )
+            log(
+                f&#34;Searched for blobs with prefix {search_prefix}/data_particao={current_date_str}&#34;
+            )
+            # Next, we get past day blobs
+            past_date = current_date - timedelta(days=1)
+            past_date_str = past_date.strftime(&#34;%Y-%m-%d&#34;)
+            past_blobs = list_blobs_with_prefix(
+                bucket_name=bucket_name,
+                prefix=f&#34;{search_prefix}/data_particao={past_date_str}&#34;,
+                mode=mode,
+            )
+            log(
+                f&#34;Searched for blobs with prefix {search_prefix}/data_particao={past_date_str}&#34;
+            )
+            # Then, we merge the two lists
+            blobs = today_blobs + past_blobs
+        else:
+            blobs = list_blobs_with_prefix(
+                bucket_name=bucket_name,
+                prefix=f&#34;{search_prefix}/&#34;,
+                mode=mode,
+            )
+
+        # Now, we sort it by `blob.name`
+        blobs.sort(key=lambda blob: blob.name)
+        # Get only the filenames
+        datalake_files = [blob.name.split(&#34;/&#34;)[-1] for blob in blobs]
+        # Format of the name is 9921GUA-20221017-070010-PPIVol-0000.nc.gz
+        # We need to join 20221017 and 070010
+        # Format of the name is 9921GUA-PPIVol-20220930-121010-0004.hdf
+        # We need to join 20220930 and 121010
+        datalake_files = [fname.replace(&#34;-PPIVol&#34;, &#34;&#34;) for fname in datalake_files]
+        datalake_files = [
+            fname.split(&#34;-&#34;)[1] + fname.split(&#34;-&#34;)[2] for fname in datalake_files
+        ]
+        # Define greater_than depending if you want last file or fill missing files
+        if greater_than is None:
+            if get_only_last_file:
+                # Finally, we get the latest date
+                greater_than = datalake_files[-1][:8]
+            else:
+                # Keep all files since last day to be compared with remote files
+                greater_than = past_date_str.replace(&#34;-&#34;, &#34;&#34;)
+            log(f&#34;Latest blob date: {greater_than}&#34;)
+
+    # Creating temporary directory
+    if date:
+        output_directory_path = Path(output_directory) / date
+    else:
+        output_directory_path = Path(output_directory) / f&#34;greaterthan-{greater_than}&#34;
+    output_directory_path.mkdir(parents=True, exist_ok=True)
+    log(f&#34;Temporary directory created: {output_directory_path}&#34;)
+
+    # Create vars based on radar name
+    if radar == &#34;gua&#34;:
+        env_variable = &#34;INEA_SSH_PASSWORD&#34;
+        hostname = &#34;a9921&#34;
+        startswith = &#34;9921GUA&#34;
+    elif radar == &#34;mac&#34;:
+        dicionario = get_vault_secret(&#34;inea_mac_ssh_password&#34;)
+        env_variable = dicionario[&#34;data&#34;][&#34;password&#34;]
+        hostname = &#34;a9915&#34;
+        startswith = &#34;9915MAC&#34;
+
+    # Get SSH password from env
+    ssh_password = getenv(env_variable)
+
+    # Open SSH client
+    ssh_client = SSHClient()
+    ssh_client.load_system_host_keys()
+    ssh_client.connect(
+        hostname=hostname,
+        username=&#34;root&#34;,
+        password=ssh_password,
+        timeout=300,
+        auth_timeout=300,
+        banner_timeout=300,
+    )
+
+    # List remote files
+    log(f&#34;Listing remote files for radar {startswith}...&#34;)
+    if date:
+        _, stdout, _ = ssh_client.exec_command(
+            f&#34;find {vols_remote_directory} -name &#39;{startswith}{date}*.vol&#39;&#34;
+        )
+        remote_files = stdout.read().decode(&#34;utf-8&#34;).splitlines()
+        if len(remote_files) == 0:
+            _, stdout, _ = ssh_client.exec_command(
+                f&#34;find {vols_remote_directory} -name &#39;*{startswith}*.vol&#39;&#34;
+            )
+            remote_files = stdout.read().decode(&#34;utf-8&#34;).splitlines()
+            remote_files = [i[26:34] for i in remote_files]
+            remote_files.sort()
+            remote_files = set(remote_files)
+            log(
+                f&#34;Remote dates identified when specified date was not found: {remote_files}&#34;
+            )
+            skip = Skipped(f&#34;No files where found for date {date}&#34;)
+            raise ENDRUN(state=skip)
+        log(f&#34;Remote files identified: {remote_files}&#34;)
+    else:
+        _, stdout, _ = ssh_client.exec_command(
+            f&#34;find {vols_remote_directory} -name &#39;{startswith}*.vol&#39;&#34;
+        )
+        all_files = stdout.read().decode(&#34;utf-8&#34;).splitlines()
+        # Adjust greather_than if user didn&#39;t gave hour, minutes and seconds
+        greater_than = greater_than.ljust(14, &#34;0&#34;)
+        remote_files = [
+            file
+            for file in all_files
+            if file.split(&#34;/&#34;)[-1][: len(greater_than) + 7]
+            &gt;= f&#34;{startswith}{greater_than}&#34;
+        ]
+        log(f&#34;Remote files identified: {remote_files}&#34;)
+        if get_only_last_file:
+            remote_files.sort()
+            remote_files = [remote_files[-1]]
+            log(f&#34;Last remote file: {remote_files}&#34;)
+        else:
+            # Remove from remote_files files that are already on datalake
+            remote_files = [
+                item1
+                for item1 in remote_files
+                if not any(item2 in item1 for item2 in datalake_files)
+            ]
+            log(f&#34;Remote files missing on datalake: {remote_files}&#34;)
+
+    # Stop flow if there is no new file
+    if len(remote_files) == 0:
+        skip = Skipped(&#34;No new available files&#34;)
+        raise ENDRUN(state=skip)
+
+    # Filter files with same filename
+    filenames = set()
+    filtered_remote_files = []
+    for file in remote_files:
+        filename = file.split(&#34;/&#34;)[-1]
+        log(f&#34;filename split: {filename}&#34;)
+        if filename not in filenames:
+            filtered_remote_files.append(file)
+            filenames.add(filename)
+    remote_files = filtered_remote_files
+
+    log(f&#34;Found {len(remote_files)} files to be treated.&#34;)
+    log(f&#34;Remote files to be treated: {remote_files}&#34;)
+    return remote_files, output_directory_path</code></pre>
+</details>
 <div class="desc"><p>List files from INEA server</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -108,12 +468,74 @@ let <code>greater_than</code> as None and <code>get_only_last_file</code> as Fal
 <span>def <span class="ident">print_environment_variables</span></span>(<span>)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def print_environment_variables():
+    &#34;&#34;&#34;
+    Print all environment variables
+    &#34;&#34;&#34;
+    log(&#34;Environment variables:&#34;)
+    for key, value in environ.items():
+        log(f&#34;{key}={value}&#34;)</code></pre>
+</details>
 <div class="desc"><p>Print all environment variables</p></div>
 </dd>
 <dt id="pipelines.rj_escritorio.inea.tasks.upload_file_to_gcs"><code class="name flex">
-<span>def <span class="ident">upload_file_to_gcs</span></span>(<span>converted_file: str, bucket_name: str, prefix: str, radar: str, product: str, mode='prod', task_mode='partitioned', unlink: bool = True)</span>
+<span>def <span class="ident">upload_file_to_gcs</span></span>(<span>converted_file: str,<br>bucket_name: str,<br>prefix: str,<br>radar: str,<br>product: str,<br>mode='prod',<br>task_mode='partitioned',<br>unlink: bool = True)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(
+    max_retries=3,
+    retry_delay=timedelta(seconds=30),
+)
+# pylint: disable=too-many-arguments, too-many-locals
+def upload_file_to_gcs(
+    converted_file: str,
+    bucket_name: str,
+    prefix: str,
+    radar: str,
+    product: str,
+    mode=&#34;prod&#34;,
+    task_mode=&#34;partitioned&#34;,
+    unlink: bool = True,
+):
+    &#34;&#34;&#34;
+    Upload files to GCS
+    &#34;&#34;&#34;
+    credentials = get_credentials_from_env(mode=mode)
+    storage_client = storage.Client(credentials=credentials)
+
+    bucket = storage_client.bucket(bucket_name)
+
+    file = Path(converted_file)
+    if file.is_file():
+        if task_mode == &#34;partitioned&#34;:
+            # Converted file path is in the format:
+            # /var/opt/edge/.../YYYYMMDD/&lt;filename&gt;.nc.gz
+            # We need to get the datetime for the file
+            date_str = file.parent.name
+            date = datetime.strptime(date_str, &#34;%Y%m%d&#34;).strftime(&#34;%Y-%m-%d&#34;)
+            blob_name = f&#34;{prefix}/radar={radar}/produto={product}/data_particao={date}/{file.name}&#34;
+            blob_name = blob_name.replace(&#34;//&#34;, &#34;/&#34;)
+        elif task_mode == &#34;raw&#34;:
+            blob_name = f&#34;{prefix}/{file.name}&#34;
+        else:
+            raise ValueError(f&#34;Invalid task_mode: {task_mode}&#34;)
+        log(f&#34;Uploading file {file} to GCS...&#34;)
+        log(f&#34;Blob name will be {blob_name}&#34;)
+        blob = bucket.blob(blob_name)
+        blob.upload_from_filename(file)
+        log(f&#34;File {file} uploaded to GCS.&#34;)
+        if unlink:
+            file.unlink()</code></pre>
+</details>
 <div class="desc"><p>Upload files to GCS</p></div>
 </dd>
 </dl>
@@ -191,7 +613,7 @@ setTimeout(() => input.focus(), 100);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
 </footer>
 </body>
 </html>

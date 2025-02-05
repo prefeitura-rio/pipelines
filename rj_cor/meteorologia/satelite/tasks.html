@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.1">
+<meta name="generator" content="pdoc3 0.11.5">
 <title>pipelines.rj_cor.meteorologia.satelite.tasks API documentation</title>
 <meta name="description" content="Tasks for emd">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -38,12 +49,120 @@ hljs.highlightAll();
 <span>def <span class="ident">create_image_and_upload_to_api</span></span>(<span>info: dict, output_filepath: pathlib.Path)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def create_image_and_upload_to_api(info: dict, output_filepath: Path):
+    &#34;&#34;&#34;
+    Create image from dataframe and send it to API
+    &#34;&#34;&#34;
+
+    dfr = pd.read_csv(output_filepath)
+
+    dfr = dfr.sort_values(by=[&#34;latitude&#34;, &#34;longitude&#34;], ascending=[False, True])
+
+    for var in info[&#34;variable&#34;]:
+        log(f&#34;\nStart creating image for variable {var}\n&#34;)
+
+        var = var.lower()
+        data_array = get_variable_values(dfr, var)
+
+        # Get the pixel values
+        data = data_array.data[:]
+        log(f&#34;\n[DEBUG] data {data}&#34;)
+        save_image_path = create_and_save_image(data, info, var)
+        log(f&#34;\nStart uploading image for variable {var} on API\n&#34;)
+        # upload_image_to_api(info, save_image_path)
+        log(save_image_path)
+        log(f&#34;\nEnd uploading image for variable {var} on API\n&#34;)</code></pre>
+</details>
 <div class="desc"><p>Create image from dataframe and send it to API</p></div>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.tasks.download"><code class="name flex">
-<span>def <span class="ident">download</span></span>(<span>product: str, date_hour_info: dict, band: str = None, ref_filename: str = None, redis_files: list = [], wait=None, mode_redis: str = 'prod') ‑> Union[str, pathlib.Path]</span>
+<span>def <span class="ident">download</span></span>(<span>product: str,<br>date_hour_info: dict,<br>band: str = None,<br>ref_filename: str = None,<br>redis_files: list = [],<br>wait=None,<br>mode_redis: str = 'prod') ‑> str | pathlib.Path</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(nout=2, max_retries=10, retry_delay=dt.timedelta(seconds=60))
+def download(
+    product: str,
+    date_hour_info: dict,
+    band: str = None,
+    ref_filename: str = None,
+    redis_files: list = [],
+    wait=None,
+    mode_redis: str = &#34;prod&#34;,
+) -&gt; Union[str, Path]:
+    &#34;&#34;&#34;
+    Access S3 or GCP and download the first file on this specified date hour
+    that is not already saved on redis
+    &#34;&#34;&#34;
+
+    year = date_hour_info[&#34;year&#34;]
+    julian_day = date_hour_info[&#34;julian_day&#34;]
+    hour_utc = date_hour_info[&#34;hour_utc&#34;][:2]
+    partition_path = f&#34;ABI-L2-{product}/{year}/{julian_day}/{hour_utc}/&#34;
+    log(f&#34;Getting files from {partition_path}&#34;)
+
+    storage_files_path, storage_origin, storage_conection = get_files_from_aws(
+        partition_path
+    )
+    log(storage_files_path)
+    if len(storage_files_path) == 0:
+        storage_files_path, storage_origin, storage_conection = get_files_from_gcp(
+            partition_path
+        )
+
+    # Keep only files from specified band
+    if product == &#34;CMIPF&#34;:
+        # para capturar banda 13
+        storage_files_path = [
+            f for f in storage_files_path if bool(re.search(&#34;C&#34; + band, f))
+        ]
+
+    # Skip task if there is no file on API
+    if len(storage_files_path) == 0:
+        log(&#34;No available files on API&#34;)
+        skip = Skipped(&#34;No available files on API&#34;)
+        raise ENDRUN(state=skip)
+
+    base_path = os.path.join(os.getcwd(), &#34;temp&#34;, &#34;input&#34;, mode_redis, product[:-1])
+
+    if not os.path.exists(base_path):
+        os.makedirs(base_path)
+
+    # Seleciona primeiro arquivo que não tem o nome salvo no redis
+    log(f&#34;\n\n[DEBUG]: available files on API: {storage_files_path}&#34;)
+    log(f&#34;\n\n[DEBUG]: filenames that are already saved on redis_files: {redis_files}&#34;)
+
+    redis_files, destination_file_path, download_file = choose_file_to_download(
+        storage_files_path, base_path, redis_files, ref_filename
+    )
+
+    # Skip task if there is no new file
+    if download_file is None:
+        log(&#34;No new available files&#34;)
+        skip = Skipped(&#34;No new available files&#34;)
+        raise ENDRUN(state=skip)
+
+    # Download file from aws or gcp
+    if storage_origin == &#34;aws&#34;:
+        storage_conection.get(download_file, destination_file_path)
+    else:
+        download_blob(
+            bucket_name=storage_conection,
+            source_blob_name=download_file,
+            destination_file_name=destination_file_path,
+            mode=&#34;prod&#34;,
+        )
+
+    return destination_file_path, redis_files</code></pre>
+</details>
 <div class="desc"><p>Access S3 or GCP and download the first file on this specified date hour
 that is not already saved on redis</p></div>
 </dd>
@@ -51,6 +170,26 @@ that is not already saved on redis</p></div>
 <span>def <span class="ident">get_dates</span></span>(<span>current_time, product) ‑> str</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task()
+def get_dates(current_time, product) -&gt; str:
+    &#34;&#34;&#34;
+    Task para obter o dia atual caso nenhuma data tenha sido passada
+    Subtraimos 5 minutos da hora atual pois o último arquivo que sobre na aws
+    sempre cai na hora seguinte (Exemplo: o arquivo
+    OR_ABI-L2-RRQPEF-M6_G16_s20230010850208_e20230010859516_c20230010900065.nc
+    cujo início da medição foi às 08:50 foi salvo na AWS às 09:00:33).
+    &#34;&#34;&#34;
+    if current_time is None:
+        current_time = pendulum.now(&#34;UTC&#34;).subtract(minutes=5).to_datetime_string()
+    # Product sst is updating one hour later
+    if product == &#34;SSTF&#34;:
+        current_time = pendulum.now(&#34;UTC&#34;).subtract(minutes=55).to_datetime_string()
+    return current_time</code></pre>
+</details>
 <div class="desc"><p>Task para obter o dia atual caso nenhuma data tenha sido passada
 Subtraimos 5 minutos da hora atual pois o último arquivo que sobre na aws
 sempre cai na hora seguinte (Exemplo: o arquivo
@@ -58,21 +197,128 @@ OR_ABI-L2-RRQPEF-M6_G16_s20230010850208_e20230010859516_c20230010900065.nc
 cujo início da medição foi às 08:50 foi salvo na AWS às 09:00:33).</p></div>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.tasks.save_data"><code class="name flex">
-<span>def <span class="ident">save_data</span></span>(<span>info: dict, mode_redis: str = 'prod') ‑> Union[str, pathlib.Path]</span>
+<span>def <span class="ident">save_data</span></span>(<span>info: dict, mode_redis: str = 'prod') ‑> str | pathlib.Path</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(nout=2)
+def save_data(info: dict, mode_redis: str = &#34;prod&#34;) -&gt; Union[str, Path]:
+    &#34;&#34;&#34;
+    Concat all netcdf data and save partitioned by date on a csv
+    &#34;&#34;&#34;
+
+    log(&#34;Start saving product on a csv&#34;)
+    output_path, output_filepath = save_data_in_file(
+        product=info[&#34;product&#34;],
+        variable=info[&#34;variable&#34;],
+        datetime_save=info[&#34;datetime_save&#34;],
+        mode_redis=mode_redis,
+    )
+    return output_path, output_filepath</code></pre>
+</details>
 <div class="desc"><p>Concat all netcdf data and save partitioned by date on a csv</p></div>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.tasks.slice_data"><code class="name flex">
 <span>def <span class="ident">slice_data</span></span>(<span>current_time: str, ref_filename: str = None) ‑> dict</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(nout=1)
+def slice_data(current_time: str, ref_filename: str = None) -&gt; dict:
+    &#34;&#34;&#34;
+    slice data to separate in year, julian_day, month, day and hour in UTC
+    &#34;&#34;&#34;
+    if ref_filename is not None:
+        year, julian_day, hour_utc = extract_julian_day_and_hour_from_filename(
+            ref_filename
+        )
+        month = None
+        day = None
+    else:
+        year = current_time[:4]
+        month = current_time[5:7]
+        day = current_time[8:10]
+        hour_utc = current_time[11:13]
+        julian_day = dt.datetime.strptime(current_time, &#34;%Y-%m-%d %H:%M:%S&#34;).strftime(
+            &#34;%j&#34;
+        )
+
+    date_hour_info = {
+        &#34;year&#34;: str(year),
+        &#34;julian_day&#34;: str(julian_day),
+        &#34;month&#34;: str(month),
+        &#34;day&#34;: str(day),
+        &#34;hour_utc&#34;: str(hour_utc),
+    }
+
+    return date_hour_info</code></pre>
+</details>
 <div class="desc"><p>slice data to separate in year, julian_day, month, day and hour in UTC</p></div>
 </dd>
 <dt id="pipelines.rj_cor.meteorologia.satelite.tasks.tratar_dados"><code class="name flex">
 <span>def <span class="ident">tratar_dados</span></span>(<span>filename: str) ‑> dict</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def tratar_dados(filename: str) -&gt; dict:
+    &#34;&#34;&#34;
+    Convert X, Y coordinates from netcdf file to a latlon coordinates
+    and select only the specified region on extent variable.
+    &#34;&#34;&#34;
+    log(f&#34;\n Started treating file: {filename}&#34;)
+    # Create the basemap reference for the Rectangular Projection.
+    # You may choose the region you want.
+
+    # Full Disk Extent
+    # extent = [-156.00, -81.30, 6.30, 81.30]
+
+    # Brazil region
+    # extent = [-90.0, -40.0, -20.0, 10.0]
+
+    # Estado do RJ
+    # lat_max, lon_max = (-20.69080839963545, -40.28483671464648)
+    # lat_min, lon_min = (-23.801876626302175, -45.05290312102409)
+
+    # Região da cidade do Rio de Janeiro
+    # lat_max, lon_min = (-22.802842397418548, -43.81200531887697)
+    # lat_min, lon_max = (-23.073487725280266, -43.11300020870994)
+
+    # Recorte da região da cidade do Rio de Janeiro segundo meteorologista
+    lat_max, lon_max = (
+        -21.699774257353113,
+        -42.35676996062447,
+    )  # canto superior direito
+    lat_min, lon_min = (
+        -23.801876626302175,
+        -45.05290312102409,
+    )  # canto inferior esquerdo
+
+    extent = [lon_min, lat_min, lon_max, lat_max]
+
+    # Get informations from the nc file
+    product_caracteristics = get_info(filename)
+    product_caracteristics[&#34;extent&#34;] = extent
+
+    # Call the remap function to convert x, y to lon, lat and save converted file
+    remap_g16(
+        filename,
+        extent,
+        product=product_caracteristics[&#34;product&#34;],
+        variable=product_caracteristics[&#34;variable&#34;],
+    )
+
+    return product_caracteristics</code></pre>
+</details>
 <div class="desc"><p>Convert X, Y coordinates from netcdf file to a latlon coordinates
 and select only the specified region on extent variable.</p></div>
 </dd>
@@ -151,7 +397,7 @@ setTimeout(() => input.focus(), 100);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
 </footer>
 </body>
 </html>

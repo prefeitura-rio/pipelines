@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.1">
+<meta name="generator" content="pdoc3 0.11.5">
 <title>pipelines.rj_escritorio.dump_ftp_inea.tasks API documentation</title>
 <meta name="description" content="Tasks to dump data from a INEA FTP to BigQuery">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -38,12 +49,125 @@ hljs.highlightAll();
 <span>def <span class="ident">download_files</span></span>(<span>client, files, radar) ‑> List[str]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(max_retries=3, retry_delay=timedelta(seconds=30))
+def download_files(client, files, radar) -&gt; List[str]:
+    &#34;&#34;&#34;
+    Download files from FTP
+    &#34;&#34;&#34;
+
+    save_path = Path(radar.upper())
+    save_path.mkdir(parents=True, exist_ok=True)
+
+    client.connect()
+    files_downloaded = []
+    for file in files:
+        log(f&#34;Downloading file: {file}&#34;)
+        # file_path = save_path / file
+        file_path = file
+        client.download(remote_path=file, local_path=file_path)
+        files_downloaded.append(file_path)
+    log(f&#34;Downloaded: {files_downloaded}&#34;)
+    file = Path(files_downloaded[0])
+    log(f&#34;DEBUGGGG: {file.name.split(&#39;-&#39;)[2]}&#34;)
+    return files_downloaded</code></pre>
+</details>
 <div class="desc"><p>Download files from FTP</p></div>
 </dd>
 <dt id="pipelines.rj_escritorio.dump_ftp_inea.tasks.get_files_datalake"><code class="name flex">
-<span>def <span class="ident">get_files_datalake</span></span>(<span>bucket_name: str, prefix: str, radar: str, product: str, date: str = None, greater_than: str = None, check_datalake_files: bool = True, mode: str = 'prod', wait=None) ‑> List[str]</span>
+<span>def <span class="ident">get_files_datalake</span></span>(<span>bucket_name: str,<br>prefix: str,<br>radar: str,<br>product: str,<br>date: str = None,<br>greater_than: str = None,<br>check_datalake_files: bool = True,<br>mode: str = 'prod',<br>wait=None) ‑> List[str]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(nout=2, max_retries=2, retry_delay=timedelta(seconds=10))
+# pylint: disable=too-many-arguments,too-many-locals, too-many-branches
+def get_files_datalake(
+    bucket_name: str,
+    prefix: str,
+    radar: str,
+    product: str,
+    date: str = None,
+    greater_than: str = None,
+    check_datalake_files: bool = True,
+    mode: str = &#34;prod&#34;,
+    wait=None,  # pylint: disable=unused-argument
+) -&gt; List[str]:
+    &#34;&#34;&#34;
+    List files from INEA saved on datalake
+
+    Args:
+        product (str): &#34;ppi&#34;
+        date (str): Date of the files to be fetched (e.g. 2022-01-25)
+        greater_than (str): Fetch files with a date greater than this one (e.g. 2022-01-25)
+        radar (str): Radar name. Must be `gua` or `mac`
+        get_only_last_file (bool): Treat only the last file available
+
+    How to use:
+        to get real time data:
+            let `greater_than` and `date` as None and `get_only_last_file` as True
+            This will prevent the flow to be stucked treating all files when something happend
+            and stoped the flow. Otherwise the flow will take a long time to treat all files
+            and came back to real time.
+        to fill missing files up to two days ago:
+            let `greater_than` and `date` as None and `get_only_last_file` as False
+        for backfill or to fill missing files for dates greather than two days ago:
+            add a `greater_than` date and let `date` as None and `get_only_last_file` as False
+        get all files for one day
+            let `greater_than` as None and `get_only_last_file` as False and fill `date`
+    &#34;&#34;&#34;
+
+    if check_datalake_files:
+        search_prefix = f&#34;{prefix}/radar={radar}/produto={product}&#34;
+
+        # Get today&#39;s blobs
+        if date:
+            current_date = datetime.strptime(date, &#34;%Y-%m-%d&#34;)
+        else:
+            current_date = datetime.now().date()
+
+        if greater_than is None:
+            past_date = current_date - timedelta(days=1)
+        else:
+            past_date = datetime.strptime(greater_than, &#34;%Y-%m-%d&#34;)
+            past_date = past_date.date()
+
+        blobs = []
+        # Next, we get past day&#39;s blobs
+        while past_date &lt;= current_date:
+            past_date_str = past_date.strftime(&#34;%Y-%m-%d&#34;)
+            past_blobs = list_blobs_with_prefix(
+                bucket_name=bucket_name,
+                prefix=f&#34;{search_prefix}/data_particao={past_date_str}&#34;,
+                mode=mode,
+            )
+            log(
+                f&#34;Searched for blobs with prefix {search_prefix}/data_particao={past_date_str}&#34;
+            )
+            # Then, we merge the two lists
+            blobs += past_blobs
+            past_date += timedelta(days=1)
+
+        # Now, we sort it by `blob.name`
+        blobs.sort(key=lambda blob: blob.name)
+        # Get only the filenames
+        datalake_files = [blob.name.split(&#34;/&#34;)[-1] for blob in blobs]
+        # Format of the name is 9921GUA-PPIVol-20220930-121010-0004.hdf
+        # We need remove the last characters to stay with 9921GUA-PPIVol-20220930-121010
+        datalake_files = [&#34;-&#34;.join(fname.split(&#34;-&#34;)[:-1]) for fname in datalake_files]
+        log(f&#34;Last 10 datalake files: {datalake_files[-10:]}&#34;)
+
+    else:
+        datalake_files = []
+        log(&#34;This run is not considering datalake files&#34;)
+
+    return datalake_files</code></pre>
+</details>
 <div class="desc"><p>List files from INEA saved on datalake</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -75,18 +199,152 @@ let <code>greater_than</code> as None and <code>get_only_last_file</code> as Fal
 <span>def <span class="ident">get_files_from_ftp</span></span>(<span>client, radar: str) ‑> List[str]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(max_retries=3, retry_delay=timedelta(seconds=30))
+# pylint: disable=too-many-arguments
+def get_files_from_ftp(
+    client,
+    radar: str,
+) -&gt; List[str]:
+    &#34;&#34;&#34;
+    List and get files to download FTP
+    &#34;&#34;&#34;
+
+    client.connect()
+    files = client.list_files(path=f&#34;./{radar.upper()}/&#34;)
+
+    # Skip task if there is no new file on FTP
+    if len(files) == 0:
+        log(&#34;No new available files on FTP&#34;)
+        skip = Skipped(&#34;No new available files on FTP&#34;)
+        raise ENDRUN(state=skip)
+
+    log(f&#34;Last 10 files on FTP: {files[-10:]} {len(files)}&#34;)
+    log(f&#34;files on FTP: {files}&#34;)
+
+    return files</code></pre>
+</details>
 <div class="desc"><p>List and get files to download FTP</p></div>
 </dd>
 <dt id="pipelines.rj_escritorio.dump_ftp_inea.tasks.get_ftp_client"><code class="name flex">
 <span>def <span class="ident">get_ftp_client</span></span>(<span>wait=None)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task
+def get_ftp_client(wait=None):
+    &#34;&#34;&#34;
+    Get FTP client
+    &#34;&#34;&#34;
+    inea_secret = get_vault_secret(&#34;ftp_inea_radar&#34;)
+    hostname = inea_secret[&#34;data&#34;][&#34;hostname&#34;]
+    username = inea_secret[&#34;data&#34;][&#34;username&#34;]
+    password = inea_secret[&#34;data&#34;][&#34;password&#34;]
+
+    return FTPClient(hostname=hostname, username=username, password=password)</code></pre>
+</details>
 <div class="desc"><p>Get FTP client</p></div>
 </dd>
 <dt id="pipelines.rj_escritorio.dump_ftp_inea.tasks.select_files_to_download"><code class="name flex">
-<span>def <span class="ident">select_files_to_download</span></span>(<span>files: list, redis_files: list, datalake_files: list, date: str = None, greater_than: str = None, get_only_last_file: bool = True) ‑> List[str]</span>
+<span>def <span class="ident">select_files_to_download</span></span>(<span>files: list,<br>redis_files: list,<br>datalake_files: list,<br>date: str = None,<br>greater_than: str = None,<br>get_only_last_file: bool = True) ‑> List[str]</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(max_retries=3, retry_delay=timedelta(seconds=30))
+# pylint: disable=too-many-arguments
+def select_files_to_download(
+    files: list,
+    redis_files: list,
+    datalake_files: list,
+    date: str = None,
+    greater_than: str = None,
+    get_only_last_file: bool = True,
+) -&gt; List[str]:
+    &#34;&#34;&#34;
+    Select files to download
+
+    Args:
+        radar (str): Radar name. Must be `gua` or `mac`
+        redis_files (list): List with last files saved on GCP and redis
+        datalake_files (list): List with filenames saved on GCP
+        date (str): Date of the files to be fetched (e.g. 2022-01-25)
+        greater_than (str): Fetch files with a date greater than this one (e.g. 2022-01-25)
+        get_only_last_file (bool): Treat only the last file available
+
+    How to use:
+        to get real time data:
+            let `greater_than` and `date` as None and `get_only_last_file` as True
+            This will prevent the flow to be stucked treating all files when something happend
+            and stoped the flow. Otherwise the flow will take a long time to treat all files
+            and came back to real time.
+        to fill missing files up to two days ago:
+            let `greater_than` and `date` as None and `get_only_last_file` as False
+        for backfill or to fill missing files for dates greather than two days ago:
+            add a `greater_than` date and let `date` as None and `get_only_last_file` as False
+        get all files for one day
+            let `greater_than` as None and `get_only_last_file` as False and fill `date`
+    &#34;&#34;&#34;
+
+    # log(f&#34;\n\nAvailable files on FTP: {files}&#34;)
+    # log(f&#34;\nFiles already saved on redis_files: {redis_files}&#34;)
+
+    # Files obtained direct from INEA ends with 0000 as &#34;9915MAC-PPIVol-20230921-123000-0000.hdf&#34;
+    # Files from FTP ends with an alphanumeric string as &#34;9915MAC-PPIVol-20230921-142000-54d4.hdf&#34;
+    # We need to be careful when changing one pipeline to other
+
+    # Get specific files based on date and greater_than parameters
+    if date:
+        files = [file for file in files if file.split(&#34;-&#34;)[2] == date.replace(&#34;-&#34;, &#34;&#34;)]
+        log(f&#34;Last 10 files on FTP for date {date}: {files[-10:]}&#34;)
+
+    if greater_than:
+        files = [
+            file
+            for file in files
+            if file.split(&#34;-&#34;)[2] &gt;= greater_than.replace(&#34;-&#34;, &#34;&#34;)
+        ]
+        log(
+            f&#34;Last 10 files on FTP for date  greater than {greater_than}: {files[-10:]}&#34;
+        )
+
+    # Check if files are already on redis
+    files = [file for file in files if file not in redis_files]
+    log(f&#34;Last 10 files on FTP that are not on redis: {files[-10:]}&#34;)
+
+    # Check if files are already on datalake
+    # Some datalake files use the pattern &#34;9915MAC-PPIVol-20230921-123000-0000.hdf&#34;
+    # Files from FTP use the pattern &#34;./MAC/9915MAC-PPIVol-20230921-123000-3f28.hdf&#34;
+    # We are going to compare &#34;9915MAC-PPIVol-20230921-123000&#34; from both places
+    if len(datalake_files) &gt; 0:
+        log(&#34;Removing files that are already on datalake&#34;)
+        files = [
+            file
+            for file in files
+            if &#34;-&#34;.join(file.split(&#34;/&#34;)[-1].split(&#34;-&#34;)[:-1]) not in datalake_files
+        ]
+
+    # Skip task if there is no new file
+    if len(files) == 0:
+        log(&#34;No new available files&#34;)
+        skip = Skipped(&#34;No new available files&#34;)
+        raise ENDRUN(state=skip)
+
+    files.sort()
+
+    if get_only_last_file:
+        files = [files[-1]]
+    log(f&#34;\nFiles to be downloaded: {files}&#34;)
+    return files</code></pre>
+</details>
 <div class="desc"><p>Select files to download</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -117,9 +375,53 @@ get all files for one day
 let <code>greater_than</code> as None and <code>get_only_last_file</code> as False and fill <code>date</code></p></div>
 </dd>
 <dt id="pipelines.rj_escritorio.dump_ftp_inea.tasks.upload_file_to_gcs"><code class="name flex">
-<span>def <span class="ident">upload_file_to_gcs</span></span>(<span>file_to_upload: str, bucket_name: str, prefix: str, radar: str, product: str, mode='prod', task_mode='partitioned', unlink: bool = True)</span>
+<span>def <span class="ident">upload_file_to_gcs</span></span>(<span>file_to_upload: str,<br>bucket_name: str,<br>prefix: str,<br>radar: str,<br>product: str,<br>mode='prod',<br>task_mode='partitioned',<br>unlink: bool = True)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@task(max_retries=3, retry_delay=timedelta(seconds=30))
+# pylint: disable=too-many-arguments, too-many-locals
+def upload_file_to_gcs(
+    file_to_upload: str,
+    bucket_name: str,
+    prefix: str,
+    radar: str,
+    product: str,
+    mode=&#34;prod&#34;,
+    task_mode=&#34;partitioned&#34;,
+    unlink: bool = True,
+):
+    &#34;&#34;&#34;
+    Upload files to GCS
+    &#34;&#34;&#34;
+    credentials = get_credentials_from_env(mode=mode)
+    storage_client = storage.Client(credentials=credentials)
+
+    bucket = storage_client.bucket(bucket_name)
+
+    file = Path(file_to_upload)
+    if task_mode == &#34;partitioned&#34;:
+        log(f&#34;DEBUG: {file} e {file.name}&#34;)
+        date_str = file.name.split(&#34;-&#34;)[2]
+        date = datetime.strptime(date_str, &#34;%Y%m%d&#34;).strftime(&#34;%Y-%m-%d&#34;)
+        blob_name = (
+            f&#34;{prefix}/radar={radar}/produto={product}/data_particao={date}/{file.name}&#34;
+        )
+        blob_name = blob_name.replace(&#34;//&#34;, &#34;/&#34;)
+    elif task_mode == &#34;raw&#34;:
+        blob_name = f&#34;{prefix}/{file.name}&#34;
+
+    log(f&#34;Uploading file {file} to GCS...&#34;)
+    log(f&#34;Blob name will be {blob_name}&#34;)
+    blob = bucket.blob(blob_name)
+    blob.upload_from_filename(file)
+    log(f&#34;File {file} uploaded to GCS.&#34;)
+    if unlink:
+        file.unlink()</code></pre>
+</details>
 <div class="desc"><p>Upload files to GCS</p></div>
 </dd>
 </dl>
@@ -197,7 +499,7 @@ setTimeout(() => input.focus(), 100);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
 </footer>
 </body>
 </html>
