@@ -8,16 +8,19 @@ Imports all flows for every project so we can register all of them.
 ###############################################################################
 from pipelines.datario import *
 from pipelines.rj_cor import *
-from pipelines.rj_cetrio import *
+
+# from pipelines.rj_cetrio import *
 from pipelines.rj_escritorio import *
 
 # from pipelines.rj_iplanrio import *
 # from pipelines.rj_pgm import *
 from pipelines.rj_rioaguas import *
-from pipelines.rj_smac import *
+
+# from pipelines.rj_smac import *
 from pipelines.rj_seconserva import *
 from pipelines.rj_segovi import *
-from pipelines.rj_seop import *
+
+# from pipelines.rj_seop import *
 from pipelines.rj_setur import *
 
 # from pipelines.rj_sme import *

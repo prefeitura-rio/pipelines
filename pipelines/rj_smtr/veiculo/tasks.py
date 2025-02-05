@@ -5,7 +5,7 @@ Tasks for veiculos
 import traceback
 import zipfile
 import io
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
 from prefect import task
@@ -246,7 +246,10 @@ def pre_treatment_sppo_infracao(status: dict, timestamp: datetime):
     return {"data": data, "error": error}
 
 
-@task
+@task(
+    max_retries=constants.MAX_RETRIES.value,
+    retry_delay=timedelta(seconds=constants.RETRY_DELAY.value),
+)
 def get_raw_ftp(
     ftp_path: str,
     filetype: str,

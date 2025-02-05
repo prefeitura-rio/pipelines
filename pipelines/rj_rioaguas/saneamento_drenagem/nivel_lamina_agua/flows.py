@@ -138,4 +138,5 @@ rioaguas_lamina_agua.run_config = KubernetesRun(
         constants.RJ_RIOAGUAS_AGENT_LABEL.value,
     ],
 )
-rioaguas_lamina_agua.schedule = MINUTE_SCHEDULE
+# rioaguas_lamina_agua.schedule = MINUTE_SCHEDULE
+rioaguas_lamina_agua.schedule = None

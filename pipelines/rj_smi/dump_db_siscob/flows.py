@@ -9,9 +9,10 @@ from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
 from pipelines.constants import constants
-from pipelines.rj_smi.dump_db_siscob.schedules import (
-    siscob_update_schedule,
-)
+
+# from pipelines.rj_smi.dump_db_siscob.schedules import (
+#     siscob_update_schedule,
+# )
 from pipelines.utils.dump_db.flows import dump_sql_flow
 from pipelines.utils.utils import set_default_parameters
 
@@ -38,4 +39,4 @@ dump_siscob_flow = set_default_parameters(
     dump_siscob_flow, default_parameters=siscob_default_parameters
 )
 
-dump_siscob_flow.schedule = siscob_update_schedule
+# dump_siscob_flow.schedule = siscob_update_schedule

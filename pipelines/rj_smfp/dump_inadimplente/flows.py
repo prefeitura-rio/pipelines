@@ -10,9 +10,9 @@ from prefect.storage import GCS
 
 from pipelines.constants import constants
 
-from pipelines.rj_smfp.dump_inadimplente.schedules import (
-    inadimplente_weekly_update_schedule,
-)
+# from pipelines.rj_smfp.dump_inadimplente.schedules import (
+#     inadimplente_weekly_update_schedule,
+# )
 from pipelines.utils.dump_db.flows import dump_sql_flow
 from pipelines.utils.utils import set_default_parameters
 
@@ -38,4 +38,4 @@ smfp_inadimplente_flow = set_default_parameters(
     smfp_inadimplente_flow, default_parameters=inadimplente_default_parameters
 )
 
-smfp_inadimplente_flow.schedule = inadimplente_weekly_update_schedule
+# smfp_inadimplente_flow.schedule = inadimplente_weekly_update_schedule

@@ -10,7 +10,7 @@ from prefect.storage import GCS
 
 from pipelines.constants import constants
 
-from pipelines.rj_smfp.dump_db_metas.schedules import egp_web_weekly_update_schedule
+# from pipelines.rj_smfp.dump_db_metas.schedules import egp_web_weekly_update_schedule
 from pipelines.utils.dump_db.flows import dump_sql_flow
 from pipelines.utils.utils import set_default_parameters
 
@@ -38,4 +38,4 @@ smfp_egpweb_flow = set_default_parameters(
     smfp_egpweb_flow, default_parameters=egpweb_default_parameters
 )
 
-smfp_egpweb_flow.schedule = egp_web_weekly_update_schedule
+# smfp_egpweb_flow.schedule = egp_web_weekly_update_schedule
