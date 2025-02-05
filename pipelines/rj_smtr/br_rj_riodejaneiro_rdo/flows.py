@@ -24,7 +24,8 @@ from pipelines.rj_smtr.tasks import (
     get_current_timestamp,
     set_last_run_timestamp,
 )
-from pipelines.rj_smtr.schedules import every_day
+
+# from pipelines.rj_smtr.schedules import every_day
 
 # from pipelines.rj_smtr.br_rj_riodejaneiro_rdo.schedules import every_two_weeks
 from pipelines.utils.decorators import Flow
@@ -184,7 +185,7 @@ rho_captura_tratamento.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-rho_captura_tratamento.schedule = every_day
+# rho_captura_tratamento.schedule = every_day
 
 with Flow(
     "SMTR: RDO - Captura",
@@ -232,7 +233,7 @@ captura_sppo_rdo.run_config = KubernetesRun(
     image=emd_constants.DOCKER_IMAGE.value,
     labels=[emd_constants.RJ_SMTR_AGENT_LABEL.value],
 )
-captura_sppo_rdo.schedule = every_day
+# captura_sppo_rdo.schedule = every_day
 
 
 # captura_sppo_rho = deepcopy(captura_sppo_rdo)

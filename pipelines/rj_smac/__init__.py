@@ -3,4 +3,4 @@
 Prefect flows for rj_smac project in RJ
 """
 
-from pipelines.rj_smac.materialize_povo_comunidades_tradicionais.flows import *
+# from pipelines.rj_smac.materialize_povo_comunidades_tradicionais.flows import *

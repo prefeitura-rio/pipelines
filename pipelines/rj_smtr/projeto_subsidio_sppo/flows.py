@@ -5,52 +5,44 @@ Flows for projeto_subsidio_sppo
 """
 
 from prefect import Parameter, case, task
-from prefect.tasks.control_flow import merge
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
+from prefect.tasks.control_flow import merge
 from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 from prefect.utilities.edges import unmapped
 
-# EMD Imports #
-
 from pipelines.constants import constants
-from pipelines.utils.tasks import (
-    rename_current_flow_run_now_time,
-    get_now_date,
-    get_current_flow_mode,
-    get_current_flow_labels,
-)
-from pipelines.utils.decorators import Flow
-from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
-
-# SMTR Imports #
-
 from pipelines.rj_smtr.constants import constants as smtr_constants
-
-from pipelines.rj_smtr.tasks import (
-    fetch_dataset_sha,
-    get_run_dates,
-    get_join_dict,
-    get_previous_date,
-    # get_local_dbt_client,
-    # set_last_run_timestamp,
-)
-
 from pipelines.rj_smtr.materialize_to_datario.flows import (
     smtr_materialize_to_datario_viagem_sppo_flow,
 )
-
-from pipelines.rj_smtr.veiculo.flows import (
-    sppo_veiculo_dia,
-)
-
-from pipelines.rj_smtr.schedules import every_day_hour_five, every_day_hour_seven
-from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
-
 from pipelines.rj_smtr.projeto_subsidio_sppo.tasks import (
     check_param,
     subsidio_data_quality_check,
 )
+from pipelines.rj_smtr.tasks import (  # get_local_dbt_client,; set_last_run_timestamp,
+    fetch_dataset_sha,
+    get_join_dict,
+    get_previous_date,
+    get_run_dates,
+)
+from pipelines.rj_smtr.veiculo.flows import sppo_veiculo_dia
+from pipelines.utils.decorators import Flow
+
+# from pipelines.rj_smtr.schedules import every_day_hour_five, every_day_hour_seven
+from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client, run_dbt_model
+from pipelines.utils.tasks import (
+    get_current_flow_labels,
+    get_current_flow_mode,
+    get_now_date,
+    rename_current_flow_run_now_time,
+)
+
+# EMD Imports #
+
+
+# SMTR Imports #
+
 
 # Flows #
 
@@ -99,7 +91,7 @@ viagens_sppo.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value, labels=[constants.RJ_SMTR_AGENT_LABEL.value]
 )
 
-viagens_sppo.schedule = every_day_hour_five
+# viagens_sppo.schedule = every_day_hour_five
 
 with Flow(
     "SMTR: Subsídio SPPO Apuração - Tratamento",
@@ -266,4 +258,4 @@ subsidio_sppo_apuracao.storage = GCS(constants.GCS_FLOWS_BUCKET.value)
 subsidio_sppo_apuracao.run_config = KubernetesRun(
     image=constants.DOCKER_IMAGE.value, labels=[constants.RJ_SMTR_AGENT_LABEL.value]
 )
-subsidio_sppo_apuracao.schedule = every_day_hour_seven
+# subsidio_sppo_apuracao.schedule = every_day_hour_seven

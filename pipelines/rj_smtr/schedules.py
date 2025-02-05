@@ -163,3 +163,18 @@ every_dayofmonth_one_and_sixteen = Schedule(
         ),
     ]
 )
+
+
+every_friday_seven_thirty = Schedule(
+    clocks=[
+        CronClock(
+            cron="30 19 * * 5",
+            start_date=datetime(
+                2024, 5, 24, 19, 30, tzinfo=timezone(constants.TIMEZONE.value)
+            ),
+            labels=[
+                emd_constants.RJ_SMTR_AGENT_LABEL.value,
+            ],
+        )
+    ]
+)

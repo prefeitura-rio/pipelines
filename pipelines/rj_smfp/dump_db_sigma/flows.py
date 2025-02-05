@@ -11,9 +11,9 @@ from prefect.storage import GCS
 from pipelines.constants import constants
 
 # importa o schedule
-from pipelines.rj_smfp.dump_db_sigma.schedules import (
-    sigma_daily_update_schedule,
-)
+# from pipelines.rj_smfp.dump_db_sigma.schedules import (
+#     sigma_daily_update_schedule,
+# )
 from pipelines.utils.dump_db.flows import dump_sql_flow
 from pipelines.utils.utils import set_default_parameters
 
@@ -44,4 +44,4 @@ rj_smfp_dump_db_sigma_flow = set_default_parameters(
     default_parameters=rj_smfp_dump_db_sigma_default_parameters,
 )
 
-rj_smfp_dump_db_sigma_flow.schedule = sigma_daily_update_schedule
+# rj_smfp_dump_db_sigma_flow.schedule = sigma_daily_update_schedule

@@ -161,13 +161,44 @@ class constants(Enum):  # pylint: disable=c0103
     SUBSIDIO_SPPO_DATASET_ID = "projeto_subsidio_sppo"
     SUBSIDIO_SPPO_SECRET_PATH = "projeto_subsidio_sppo"
     SUBSIDIO_SPPO_TABLE_ID = "viagem_completa"
-    SUBSIDIO_SPPO_CODE_OWNERS = ["rodrigo"]
+    SUBSIDIO_SPPO_CODE_OWNERS = ["dados_smtr"]
 
     # SUBSÍDIO DASHBOARD
     SUBSIDIO_SPPO_DASHBOARD_DATASET_ID = "dashboard_subsidio_sppo"
     SUBSIDIO_SPPO_DASHBOARD_STAGING_DATASET_ID = "dashboard_subsidio_sppo_staging"
     SUBSIDIO_SPPO_DASHBOARD_TABLE_ID = "sumario_servico_dia"
     SUBSIDIO_SPPO_DATA_CHECKS_PARAMS = {
+        "check_trips_processing": {
+            "query": """SELECT
+                        s.data,
+                        s.tipo_dia,
+                        s.subtipo_dia,
+                        s.tipo_os,
+                        s.feed_version,
+                        s.feed_start_date AS feed_start_date_invalido,
+                        i.feed_start_date AS feed_start_date_valido,
+                        FROM (
+                            SELECT
+                                *
+                            FROM
+                                rj-smtr.projeto_subsidio_sppo.subsidio_data_versao_efetiva
+                            WHERE
+                                DATA >= "2024-04-01" -- DATA_SUBSIDIO_V6_INICIO (Feature trajetos alternativos)
+                                AND DATA BETWEEN DATE("{start_timestamp}")
+                                    AND DATE("{end_timestamp}")
+                                ) AS s
+                        LEFT JOIN
+                            rj-smtr.gtfs.feed_info AS i
+                        ON
+                        (DATA BETWEEN i.feed_start_date
+                            AND i.feed_end_date
+                            OR (DATA >= i.feed_start_date
+                            AND i.feed_end_date IS NULL))
+                        WHERE
+                            i.feed_start_date != s.feed_start_date
+                        """,
+            "order_columns": ["data"],
+        },
         "check_gps_capture": {
             "query": """WITH
             t AS (
@@ -564,6 +595,9 @@ class constants(Enum):  # pylint: disable=c0103
             },
             "Todos os dados de status dos veículos foram devidamente tratados": {
                 "test": "check_sppo_veiculo_dia",
+            },
+            "Todos os dados de viagens foram tratados com o respectivo feed correto do GTFS": {
+                "test": "check_trips_processing",
             },
         }
     }
@@ -1197,7 +1231,7 @@ class constants(Enum):  # pylint: disable=c0103
         },
     ]
 
-    BILHETAGEM_EXCLUDE = "+operadoras +consorcios"
+    BILHETAGEM_EXCLUDE = "+operadoras +consorcios +servicos"
 
     BILHETAGEM_JAE_DASHBOARD_DATASET_ID = "dashboard_bilhetagem_jae"
 
@@ -1258,7 +1292,7 @@ class constants(Enum):  # pylint: disable=c0103
         "dataset_id": BILHETAGEM_DATASET_ID,
         "upstream": True,
         "downstream": True,
-        "exclude": BILHETAGEM_EXCLUDE,
+        "exclude": f"{BILHETAGEM_EXCLUDE} veiculo_validacao veiculo_indicadores_dia",
         "dbt_vars": {
             "date_range": {
                 "table_run_datetime_column_name": "datetime_captura",
@@ -1280,7 +1314,7 @@ class constants(Enum):  # pylint: disable=c0103
     BILHETAGEM_MATERIALIZACAO_VALIDACAO_JAE_PARAMS = {
         "dataset_id": "validacao_dados_jae",
         "upstream": True,
-        "exclude": "+gps_sppo +sppo_veiculo_dia +gps_validador +transacao\
+        "exclude": "+gps_sppo +sppo_veiculo_dia +gps_validador +transacao \
 +ordem_pagamento_dia +integracao +servicos",
         "dbt_vars": {
             "run_date": {},
@@ -1289,7 +1323,7 @@ class constants(Enum):  # pylint: disable=c0103
     }
 
     # GTFS
-    GTFS_DATASET_ID = "gtfs"
+    GTFS_DATASET_ID = "br_rj_riodejaneiro_gtfs"
 
     GTFS_GENERAL_CAPTURE_PARAMS = {
         "partition_date_only": True,
@@ -1346,12 +1380,12 @@ class constants(Enum):  # pylint: disable=c0103
         },
         {
             "table_id": "ordem_servico",
-            "primary_key": ["servico"],
+            "primary_key": ["servico", "tipo_os"],
             "extract_params": {"filename": "ordem_servico"},
         },
         {
             "table_id": "ordem_servico_trajeto_alternativo",
-            "primary_key": ["servico"],
+            "primary_key": ["servico", "tipo_os", "evento"],
             "extract_params": {"filename": "ordem_servico_trajeto_alternativo"},
         },
         {
@@ -1361,7 +1395,7 @@ class constants(Enum):  # pylint: disable=c0103
     ]
 
     GTFS_MATERIALIZACAO_PARAMS = {
-        "dataset_id": GTFS_DATASET_ID,
+        "dataset_id": "gtfs",
         "dbt_vars": {
             "data_versao_gtfs": "",
             "version": {},
@@ -1559,3 +1593,5 @@ and createdDate lt {end})",
     ZIRIX_API_SECRET_PATH = "zirix_api"
     VIAGEM_ZIRIX_RAW_DATASET_ID = "br_rj_riodejaneiro_viagem_zirix"
     ZIRIX_BASE_URL = "https://integration.systemsatx.com.br/Globalbus/SMTR"
+
+    CONTROLE_FINANCEIRO_DATASET_ID = "controle_financeiro"
