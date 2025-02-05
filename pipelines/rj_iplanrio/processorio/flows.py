@@ -11,9 +11,9 @@ from prefect.storage import GCS
 from pipelines.constants import constants
 
 # importa o schedule
-from pipelines.rj_iplanrio.processorio.schedules import (
-    processorio_infra_daily_update_schedule,
-)
+# from pipelines.rj_iplanrio.processorio.schedules import (
+#     processorio_infra_daily_update_schedule,
+# )
 from pipelines.utils.dump_db.flows import dump_sql_flow
 from pipelines.utils.utils import set_default_parameters
 
@@ -47,4 +47,4 @@ rj_iplanrio_processorio_flow = set_default_parameters(
     default_parameters=processorio_default_parameters,
 )
 
-rj_iplanrio_processorio_flow.schedule = processorio_infra_daily_update_schedule
+# rj_iplanrio_processorio_flow.schedule = processorio_infra_daily_update_schedule

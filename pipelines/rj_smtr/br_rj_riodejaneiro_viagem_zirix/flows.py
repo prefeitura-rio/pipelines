@@ -7,28 +7,27 @@ from copy import deepcopy
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GCS
 
+from pipelines.constants import constants as emd_constants
+from pipelines.rj_smtr.br_rj_riodejaneiro_viagem_zirix.constants import (
+    constants as zirix_constants,
+)
+from pipelines.rj_smtr.flows import default_capture_flow
+
+# from pipelines.utils.decorators import Flow
+from pipelines.utils.utils import set_default_parameters
+
 # from prefect.tasks.prefect import create_flow_run, wait_for_flow_run
 
 
 # EMD Imports #
 
-from pipelines.constants import constants as emd_constants
-
-from pipelines.utils.decorators import Flow
-from pipelines.utils.utils import set_default_parameters
 
 # from pipelines.utils.execute_dbt_model.tasks import get_k8s_dbt_client
 
 # SMTR Imports #
 
-from pipelines.rj_smtr.flows import default_capture_flow
 
-
-from pipelines.rj_smtr.br_rj_riodejaneiro_viagem_zirix.constants import (
-    constants as zirix_constants,
-)
-
-from pipelines.rj_smtr.schedules import every_10_minutes, every_hour
+# from pipelines.rj_smtr.schedules import every_10_minutes, every_hour
 
 # from pipelines.utils.execute_dbt_model.tasks import run_dbt_model
 
@@ -47,7 +46,7 @@ viagens_captura = set_default_parameters(
     default_parameters=zirix_constants.VIAGEM_CAPTURE_PARAMETERS.value,
 )
 
-viagens_captura.schedule = every_10_minutes
+# viagens_captura.schedule = every_10_minutes
 
 
 viagens_recaptura = deepcopy(default_capture_flow)
@@ -64,4 +63,4 @@ viagens_recaptura = set_default_parameters(
     | {"recapture": True},
 )
 
-viagens_recaptura.schedule = every_hour
+# viagens_recaptura.schedule = every_hour

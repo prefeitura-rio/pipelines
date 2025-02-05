@@ -22,9 +22,6 @@ from pipelines.utils.tasks import rename_current_flow_run_now_time, get_now_time
 
 with Flow(
     name="EMD: escritorio - Alertas Waze",
-    code_owners=[
-        "diego",
-    ],
 ) as flow:
     dataset_id = "transporte_rodoviario_waze"
     table_id = "alertas"
