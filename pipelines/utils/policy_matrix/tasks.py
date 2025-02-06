@@ -81,7 +81,7 @@ def merge_iam_policies(
 
 @task(checkpoint=False)
 def generate_roles_matrix(
-    policies: Dict[str, List[Dict[str, Union[str, List[str]]]]]
+    policies: Dict[str, List[Dict[str, Union[str, List[str]]]]],
 ) -> Dict[str, Dict[str, List[str]]]:
     """
     Generates a roles matrix from the given IAM policies in the format:
@@ -106,7 +106,7 @@ def generate_roles_matrix(
 
 @task(checkpoint=False)
 def roles_matrix_to_pandas_dataframe(
-    roles_matrix: Dict[str, Dict[str, List[str]]]
+    roles_matrix: Dict[str, Dict[str, List[str]]],
 ) -> pd.DataFrame:
     """
     Converts the roles matrix to a pandas dataframe with the following format:

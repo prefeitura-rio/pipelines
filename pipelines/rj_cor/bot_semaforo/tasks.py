@@ -154,7 +154,7 @@ def format_message(dataframe: pd.DataFrame) -> pd.Series:
 
     # Builds all alert messages
     alert = None
-    thumbs_up_emoji = "\U0001F44D"
+    thumbs_up_emoji = "\U0001f44d"
     current_minus_1h, current = current_date_time()
 
     mask = (dataframe["initial_ts"] > current_minus_1h) & (
@@ -176,7 +176,7 @@ def format_message(dataframe: pd.DataFrame) -> pd.Series:
         )
         alert = "".join(filered_alerts["alert"].tolist())
 
-    traffic_light_emoji = "\U0001F6A6"
+    traffic_light_emoji = "\U0001f6a6"
     msg_header = (
         traffic_light_emoji
         + " CETRIO"
