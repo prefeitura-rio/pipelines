@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Flows for emd
+Flows for emd.
 """
 
 # pylint: disable=C0103
