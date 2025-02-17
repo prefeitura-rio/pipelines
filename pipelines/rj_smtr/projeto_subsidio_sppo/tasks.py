@@ -63,9 +63,9 @@ def subsidio_data_quality_check(
 
     if mode == "pos":
         request_params["end_timestamp"] = f"""{params["end_date"]} 00:00:00"""
-        request_params[
-            "dataset_id"
-        ] = smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value
+        request_params["dataset_id"] = (
+            smtr_constants.SUBSIDIO_SPPO_DASHBOARD_DATASET_ID.value
+        )
 
     checks_list = (
         smtr_constants.SUBSIDIO_SPPO_DATA_CHECKS_PRE_LIST.value
@@ -139,14 +139,21 @@ def subsidio_data_quality_check(
 
     if not test_check:
         at_code_owners = [
-            f'    - <@{constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["user_id"]}>\n'
-            if constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["type"] == "user"
-            else f'    - <@!{constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["user_id"]}>\n'
-            if constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["type"]
-            == "user_nickname"
-            else f'    - <#{constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["user_id"]}>\n'
-            if constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["type"] == "channel"
-            else f'    - <@&{constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["user_id"]}>\n'
+            (
+                f'    - <@{constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["user_id"]}>\n'
+                if constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["type"] == "user"
+                else (
+                    f'    - <@!{constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["user_id"]}>\n'
+                    if constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["type"]
+                    == "user_nickname"
+                    else (
+                        f'    - <#{constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["user_id"]}>\n'
+                        if constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["type"]
+                        == "channel"
+                        else f'    - <@&{constants.OWNERS_DISCORD_MENTIONS.value[code_owner]["user_id"]}>\n'
+                    )
+                )
+            )
             for code_owner in code_owners
         ]
 

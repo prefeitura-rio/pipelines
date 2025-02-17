@@ -114,9 +114,9 @@ def run_model_prediction(
                 )
 
             assert new_radar_data.nrays == NRAYS, f"nrays should be {NRAYS}."
-            radar_data_dict[
-                f"{specs_dict['process_type']}-{specs_dict['feature']}"
-            ] = new_radar_data
+            radar_data_dict[f"{specs_dict['process_type']}-{specs_dict['feature']}"] = (
+                new_radar_data
+            )
 
         radar_data_hdfs.append(radar_data_dict)
 
