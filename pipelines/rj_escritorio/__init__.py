@@ -6,7 +6,8 @@ Prefect flows for emd project
 # Automatically managed, please do not touch
 ###############################################################################
 from pipelines.rj_escritorio.bot_sistemas.flows import *
-from pipelines.rj_escritorio.dados_mestres_dump_datario.flows import *
+
+# from pipelines.rj_escritorio.dados_mestres_dump_datario.flows import *
 from pipelines.rj_escritorio.data_catalog.flows import *
 from pipelines.rj_escritorio.dummy_predict.flows import *
 from pipelines.rj_escritorio.notify_flooding.flows import *
