@@ -18,6 +18,7 @@ from prefect import task
 
 from pipelines.utils.dump_db.db import (
     Database,
+    MongoDB,
     MySql,
     Oracle,
     SqlServer,
@@ -49,6 +50,7 @@ from pipelines.constants import constants
 from pipelines.utils.utils import log, log_mod
 
 DATABASE_MAPPING: Dict[str, Database] = {
+    "mongodb": MongoDB,
     "mysql": MySql,
     "oracle": Oracle,
     "sql_server": SqlServer,
@@ -577,7 +579,7 @@ def dump_upload_batch(
                 )
                 log_mod(
                     msg=(
-                        f"MODE OVERWRITE: Sucessfully REMOVED HEADER DATA from Storage\n:"
+                        "MODE OVERWRITE: Sucessfully REMOVED HEADER DATA from Storage\n:"
                         + f"{storage_path}\n"
                         + f"{storage_path_link}"
                     ),
