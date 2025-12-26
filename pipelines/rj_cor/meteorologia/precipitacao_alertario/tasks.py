@@ -34,7 +34,7 @@ from pipelines.utils.utils import (
 
 @task(
     nout=2,
-    max_retries=constants.TASK_MAX_RETRIES.value,
+    max_retries=10,  # constants.TASK_MAX_RETRIES.value,
     retry_delay=timedelta(seconds=constants.TASK_RETRY_DELAY.value),
 )
 def download_data() -> pd.DataFrame:
