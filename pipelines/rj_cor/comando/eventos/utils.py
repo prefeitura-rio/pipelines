@@ -3,17 +3,15 @@
 General purpose functions for the comando project
 """
 # pylint: disable=W0611
-import json
+from urllib.error import HTTPError
 import requests
 from requests.adapters import HTTPAdapter, Retry
 
-import pendulum
 import pandas as pd
+import pendulum
 from pipelines.utils.utils import (
-    get_redis_client,
     get_vault_secret,
     log,
-    treat_redis_output,
 )
 
 
@@ -27,58 +25,6 @@ def format_date(first_date, last_date):
         pendulum.from_format(last_date, "YYYY-MM-DD").add(days=1).strftime("%d/%m/%Y")
     )
     return first_date, last_date
-
-
-def get_redis_output(redis_key, is_df: bool = False):
-    """
-    Get Redis output. Use get to obtain a df from redis or hgetall if is a key value pair.
-    """
-    redis_client = get_redis_client()  # (host="127.0.0.1")
-
-    if is_df:
-        json_data = redis_client.get(redis_key)
-        log(f"[DEGUB] json_data {json_data}")
-        if json_data:
-            # If data is found, parse the JSON string back to a Python object (dictionary)
-            data_dict = json.loads(json_data)
-            # Convert the dictionary back to a DataFrame
-            return pd.DataFrame(data_dict)
-
-        return pd.DataFrame()
-
-    output = redis_client.hgetall(redis_key)
-    if len(output) > 0:
-        output = treat_redis_output(output)
-    return output
-
-
-def compare_actual_df_with_redis_df(
-    dfr: pd.DataFrame,
-    dfr_redis: pd.DataFrame,
-    columns: list,
-) -> pd.DataFrame:
-    """
-    Compare df from redis to actual df and return only the rows from actual df
-    that are not already saved on redis.
-    """
-    for col in columns:
-        if col not in dfr_redis.columns:
-            dfr_redis[col] = None
-        dfr_redis[col] = dfr_redis[col].astype(dfr[col].dtypes)
-    log(f"\nEnded conversion types from dfr to dfr_redis: \n{dfr_redis.dtypes}")
-
-    dfr_diff = (
-        pd.merge(dfr, dfr_redis, how="left", on=columns, indicator=True)
-        .query('_merge == "left_only"')
-        .drop("_merge", axis=1)
-    )
-    log(
-        f"\nDf resulted from the difference between dft_redis and dfr: \n{dfr_diff.head()}"
-    )
-
-    updated_dfr_redis = pd.concat([dfr_redis, dfr_diff[columns]])
-
-    return dfr_diff, updated_dfr_redis
 
 
 def treat_wrong_id_pop(dfr):
@@ -175,3 +121,26 @@ def get_url(url, parameters: dict = None, token: str = None):  # pylint: disable
         log(f"This resulted in the following error: {exc}")
         response = {"response": None}
     return response
+
+
+def download_data(first_date, last_date, url) -> pd.DataFrame:
+    """
+    Download data from API adding one day at a time so we can save
+    the date in a new column `data_particao` that will be used to
+    create the partitions when saving data.
+    """
+    dfr = pd.DataFrame()
+    temp_date = first_date.add(days=1)
+    fmt = "%d/%m/%Y"
+    while temp_date <= last_date:
+        log(f"\n\nDownloading data from {first_date} to {temp_date} (not included)")
+        try:
+            dfr_temp = pd.read_json(
+                f"{url}/?data_i={first_date.strftime(fmt)}&data_f={temp_date.strftime(fmt)}"
+            )
+            dfr_temp["create_partition"] = first_date.strftime("%Y-%m-%d")
+            dfr = pd.concat([dfr, dfr_temp])
+        except HTTPError as error:
+            print(f"Error downloading this data: {error}")
+        first_date, temp_date = first_date.add(days=1), temp_date.add(days=1)
+    return dfr
